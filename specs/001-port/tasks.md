@@ -54,23 +54,48 @@ parity is exact only on the maintainer's machine; CI runs tolerance mode.
 
 - [x] P3.0a Architecture review pass: candidates recorded in `architecture.md`
 - [ ] P3.0 Fatten P3 and P4 into slices from `architecture.md`; plan-reviewer pass
-- [ ] P3.1 `maps/track.py`: `Track`, `from_gpx`, `bounding_box`
-- [ ] P3.2 `maps/providers/base.py`: `Features`, `Elevation`, `Credit`
-- [ ] P3.3 `maps/providers/overpass.py`: `OverpassFeatures`
-- [ ] P3.4 `maps/providers/opentopodata.py`: `OpenTopoData`, budget
-- [ ] P3.5 `maps/cache.py`: hash-keyed `Cache`
-- [ ] P3.6 `maps/style.py`: `Style` from TOML; regenerate goldens once
-- [ ] P3.7 Façade: `fetch`, `paint`, `letter`, `compose`
-- [ ] P3.8 Attribution drawn by `compose`
-- [ ] P3.9 `maps/cli.py`: `pyntpot map`
-- [ ] P3.10 Top-level exports and `__version__`
-- [ ] P3.11 Parity test on the façade, exact against the new goldens
+- [ ] P3.1 Golden harness (`make_golden.py`, `--golden-dir`) and the maps package skeleton
+- [ ] P3.2 One card frame; ADR 0003 (A4)
+- [ ] P3.3 One polyline module, moves only (A5)
+- [ ] P3.4 Typed `Basemap` and `Projection` (A4)
+- [ ] P3.5 Typed `Plates` and `Manifest` (A4)
+- [ ] P3.6 `Track` with a GPX reader and `BoundingBox` (parallel line 2)
+- [ ] P3.7 `Features`, `Elevation`, `Credit`; ADR 0004 (parallel line 2)
+- [ ] P3.8 `OverpassFeatures` (parallel with P3.9, P3.10)
+- [ ] P3.9 `OpenTopoData` with a call budget (parallel with P3.8, P3.10)
+- [ ] P3.10 Fetch `Cache` keyed by box, margin and providers (parallel with P3.8, P3.9)
+- [ ] P3.11 Style groups by layer and the TOML theme, unwired; ADR 0005 (parallel line 3, A6)
+- [ ] P3.12 Wire the style, hash the typed inputs; opens the regeneration window (A6, A7)
+- [ ] P3.13 Drop the one-decimal round trip, the second parser and `route0` (A4, window)
+- [ ] P3.14 Merge the polyline duplicates (A5, window)
+- [ ] P3.15 Regenerate the goldens once; ADR 0006 (closes the window)
+- [ ] P3.16 Façade `fetch` and `paint`; fixture payloads renamed to cache keys
+- [ ] P3.17 Façade `letter` and `compose`; lettering shims deleted (A3 shape)
+- [ ] P3.18 Attribution drawn by `compose`
+- [ ] P3.19 `pyntpot map` CLI
+- [ ] P3.20 Top-level exports and `__version__`; ADR 0007
+- [ ] P3.21 Golden parity driven through the façade
 
 ## P4. Split and layer
 
-- [ ] P4.1 Split files over 400 lines, pure moves; `Hand` takes `Mark`s
-- [ ] P4.2 Add the layers contract and the `ink`/`letters` forbidden contract
-- [ ] P4.3 Fix clock reads, delete `from_style`, empty exemptions, delete `_port`, relax pins
+- [ ] P4.1 Design the hand's setting; ADR 0008 (A2)
+- [ ] P4.2 The hand writes settings; map furniture moves to maps (A2)
+- [ ] P4.3 The nib plate moves into letters (A2)
+- [ ] P4.4 Split the outline font into `letters/{font,skeleton,trace}`
+- [ ] P4.5 Ink engine part 1: noise, sheet, raster, io, wash, pigment (A1)
+- [ ] P4.6 Ink engine part 2: brush, tip, stamp, pad (A1)
+- [ ] P4.7 Plate painter in maps; the nine clock reads and manifest timings go (A1)
+- [ ] P4.8 Style groups replace `PaintStyle`; `from_style` deleted (A6)
+- [ ] P4.9 Design the candidates facility; ADR 0009; delete dead code (A8)
+- [ ] P4.10 Candidates facility in `maps/candidates/` (A8)
+- [ ] P4.11 Split geo part 1: relief, generalisation, rivers
+- [ ] P4.12 Split geo part 2: OSM layers, cover, assembly; delete `geo.py`
+- [ ] P4.13 One cache for fetches and plates (A7)
+- [ ] P4.14 Split labels part 1: placement
+- [ ] P4.15 Split labels part 2: spans
+- [ ] P4.16 Split labels part 3: picks, compose, strands; delete the port modules (A3)
+- [ ] P4.17 Layers and forbidden contracts; empty exemptions; delete `_port`; ADR 0010
+- [ ] P4.18 Relax the D22 pins to floors
 
 ## P5. Property tests, coverage, mutation, benchmarks
 
