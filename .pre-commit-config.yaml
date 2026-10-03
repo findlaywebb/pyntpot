@@ -1,0 +1,43 @@
+# Commit gates (prek — https://prek.j178.dev/). The architecture lives in these checks:
+# agents self-correct on a red hook, not on a paragraph of prose. Keep the full run <5s.
+#
+# YAML (not the older prek.toml): the filename is what prek discovers.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        language: system
+        entry: uv run ruff format
+        files: '\.py$'
+      - id: ruff
+        name: ruff lint
+        language: system
+        entry: uv run ruff check --fix
+        files: '\.py$'
+      - id: ty
+        name: ty type check
+        language: system
+        entry: uv run ty check
+        pass_filenames: false
+        files: '\.py$'
+      - id: import-linter
+        name: import-linter boundaries
+        language: system
+        entry: uv run lint-imports
+        pass_filenames: false
+        files: '\.py$|pyproject\.toml$'
+      - id: architecture-tests
+        name: architecture fitness tests
+        language: system
+        entry: uv run pytest tests/architecture
+        pass_filenames: false
+        files: '\.py$'
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: ['--markdown-linebreak-ext=md']
+      - id: check-merge-conflict
+      - id: debug-statements

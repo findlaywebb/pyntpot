@@ -1,0 +1,2 @@
+# One markdown file per out-of-scope issue found while doing something else (pre-existing
+# bug, adjacent smell). Keeps the current diff focused while not losing the finding.

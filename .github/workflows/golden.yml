@@ -1,0 +1,29 @@
+name: Golden
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Exact golden comparison is the local gate only: a CI runner's OS or BLAS build is not
+# guaranteed to match the machine the goldens were made on, bit for bit.
+jobs:
+  golden:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6.0.3
+
+      - uses: astral-sh/setup-uv@v8.2.0
+        with:
+          enable-cache: true
+          version: "0.11.21"
+
+      - name: Sync
+        run: uv sync --locked
+
+      - name: Golden parity (tolerance)
+        run: uv run pytest -m golden --golden-tolerance

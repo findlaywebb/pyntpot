@@ -1,0 +1,10 @@
+{
+  // ty ([tool.ty] in pyproject.toml) is the SOLE type gate for this repo (see CLAUDE.md:
+  // "ty is the sole type gate (no pyright/mypy)"). This file exists only to stand the
+  // editor's Pyright/Pylance language server down, so it does not surface a second,
+  // divergent set of diagnostics — notably false "unresolved import" errors on the
+  // pyntpot.* PEP-420 namespace packages. It does not affect CI, which runs `uv run ty check`.
+  "typeCheckingMode": "off",
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none"
+}

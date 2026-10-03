@@ -1,0 +1,225 @@
+[project]
+name = "pyntpot"
+version = "0.1.0"
+description = "Hand-drawn watercolour and pen-and-ink painting for Python, with route maps"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "MIT"
+license-files = ["LICENSE", "LICENSE-FONT"]
+authors = [{ name = "Findlay Webb" }]
+keywords = ["watercolour", "pen-and-ink", "painting", "maps", "gpx", "raster"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Topic :: Multimedia :: Graphics",
+    "Typing :: Typed",
+]
+dependencies = [
+    "numpy==2.5.2",
+    "pillow==12.3.0",
+    "fonttools==4.63.0",
+    "httpx>=0.28",
+    "pydantic>=2.13",
+]
+
+[project.urls]
+Homepage = "https://github.com/findlaywebb/pyntpot"
+Repository = "https://github.com/findlaywebb/pyntpot"
+Issues = "https://github.com/findlaywebb/pyntpot/issues"
+
+[build-system]
+requires = ["uv_build>=0.8,<0.9"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9",
+    "hypothesis>=6.168",
+    "pytest-randomly>=4.1",
+    "pytest-cov>=7.1",
+    "pytest-benchmark>=5.3",
+    "pytest-codspeed>=5.0",
+    "mutmut>=3.8",
+    "import-linter>=2.11",
+    "ruff>=0.15",
+    "ty>=0.0.49",
+    "vulture>=2.16",
+]
+
+# ---------------------------------------------------------------------------
+# Boundary contract — dependencies point inward (docs/decisions/0002)
+# ---------------------------------------------------------------------------
+
+[tool.importlinter]
+root_packages = ["pyntpot"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "No plotting, dataframe, template or YAML dependencies"
+type = "forbidden"
+source_modules = ["pyntpot"]
+forbidden_modules = ["matplotlib", "pandas", "jinja2", "yaml"]
+
+# ---------------------------------------------------------------------------
+# Lint / format
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = ["src"]
+# .claude/ holds vendored agent skills/agents (their own scripts, not app code) —
+# keep them out of the app's lint gates.
+extend-exclude = [".claude"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "UP",       # pyupgrade
+    "A",        # flake8-builtins — agents shadow id/type/list reflexively
+    "ANN",      # annotations everywhere — ty is the sole type gate; gaps weaken it
+    "ASYNC",    # flake8-async
+    "B",        # flake8-bugbear
+    "BLE",      # no blind except — fail loud, never swallow
+    "C4",       # flake8-comprehensions
+    "C90",      # mccabe complexity
+    "D",        # pydocstyle — docstring *presence*; contract-quality is handwritten
+    "DTZ",      # naive-datetime ban — backs the canonical-UTC timestamp rule
+    "ERA",      # no commented-out code — delete it, git remembers
+    "FBT",      # boolean traps — flags become keyword-only
+    "G",        # logging format
+    "ICN",      # import naming conventions
+    "ISC",      # implicit str concat — the missing-comma-in-a-list bug
+    "N",        # pep8 naming
+    "PL",       # full pylint set (PLC/PLE/PLR/PLW)
+    "PTH",      # pathlib over os.path
+    "RET",      # flake8-return
+    "SIM",      # flake8-simplify
+    "T20",      # no print — lint-speed twin of the architecture AST test
+    "TC",       # type-checking import placement
+    "TID",      # tidy imports + banned APIs below
+    "TRY",      # tryceratops — bad exception patterns
+    "FURB",     # refurb — idiomatic Python
+    "RUF",      # ruff-native
+]
+ignore = [
+    "E501",     # line length is the formatter's job
+    "TRY003",   # long exception messages are fine
+    "ISC001",   # conflicts with the ruff formatter
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pylint]
+max-args = 6
+max-branches = 10
+max-returns = 5
+max-statements = 40
+
+# `support` (tests/support, reached via the pytest `pythonpath` setting below,
+# not an installed package) would otherwise land in the same "first-party" isort bucket
+# as `pyntpot.*` and sort alphabetically against it — stable only by luck of the
+# package name. Giving it its own local-folder section makes import order independent
+# of the package name.
+[tool.ruff.lint.isort]
+known-local-folder = ["support"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"os.environ".msg = "Config is injected; never read the environment directly."
+"os.getenv".msg = "Config is injected; never read the environment directly."
+
+[tool.ruff.lint.per-file-ignores]
+# D deliberately stays ON in tests: a test's docstring states what it proves.
+"tests/**" = [
+    "PLR2004",  # magic values are fine in assertions
+    "ANN",      # fixture/test signatures stay unannotated-friendly (ty still checks bodies)
+    "FBT",      # fixtures pass flags positionally
+]
+
+# Interim: the ported engine tests are exempt until the P4 split empties it.
+"tests/unit/test_geo.py" = [
+    "PLC0415", "RUF059", "D210", "RUF007", "RUF046", "SIM300", "RUF012", "PLR0913", "PLR0917",
+]
+"tests/unit/test_paint.py" = [
+    "PLC0415", "RUF059", "D210", "RUF007", "RUF046", "SIM300", "RUF012", "PLR0913", "PLR0917",
+]
+# Interim: the ported engine is exempt until the P4 split empties it.
+"src/pyntpot/_port/*" = [
+    "PLR2004", "ANN401", "PLR0913", "PLR0917", "PLC0415", "C901", "PLR0912", "PLR0915",
+    "FBT", "BLE001", "PLR0914", "PLR0911", "ERA001", "D",
+    # Codes the first run reported beyond the list above.
+    "RUF046", "RUF007", "C408", "PLW2901", "RUF005", "TC001", "TC003", "SIM300", "FURB136",
+    "PLR1730", "PLR1714", "C416",
+]
+
+# ---------------------------------------------------------------------------
+# Types — ty is the sole type gate (no pyright/mypy)
+# ---------------------------------------------------------------------------
+
+[tool.ty.environment]
+python-version = "3.13"
+root = [
+    "src",
+    "tests",  # resolves the `support` test-helper package (pytest pythonpath twin)
+]
+
+[tool.ty.rules]
+all = "error"
+unresolved-import = "warn"  # third-party stubs are sometimes missing
+
+[tool.ty.src]
+include = ["src", "tests"]
+# Interim: the ported engine and its tests are exempt until the P4 split.
+# make_golden_old.py imports the pre-port package from the originating project; it is excluded here because that package is not installable.
+exclude = [
+    "src/pyntpot/_port",
+    "tests/unit/test_geo.py",
+    "tests/unit/test_paint.py",
+    "tests/golden/make_golden_old.py",
+]
+
+# ---------------------------------------------------------------------------
+# Dead code (run weekly, warn-level — not a commit gate)
+# ---------------------------------------------------------------------------
+
+[tool.vulture]
+paths = ["src"]
+min_confidence = 80
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers --strict-config -q"
+pythonpath = ["tests"]
+filterwarnings = ["error"]
+xfail_strict = true
+markers = ["golden: slow parity tests"]
+personal_terms_file = "~/personal/pyntpot-private/banned_terms.txt"
+
+# ---------------------------------------------------------------------------
+# Coverage — the gate is the CI-only `uv run pytest --cov` invocation; plain
+# `uv run pytest` stays coverage-free for fast local loops. No threshold yet.
+# ---------------------------------------------------------------------------
+
+[tool.coverage.run]
+branch = true
+source = ["pyntpot"]
+
+[tool.coverage.report]
+show_missing = true
+
+# ---------------------------------------------------------------------------
+# Mutation testing — golden tests are excluded (too slow per mutant)
+# ---------------------------------------------------------------------------
+
+[tool.mutmut]
+source_paths = ["src/"]
+pytest_add_cli_args_test_selection = ["tests/", "-m", "not golden"]
