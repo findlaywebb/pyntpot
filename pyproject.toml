@@ -27,7 +27,7 @@ Repository = "https://github.com/findlaywebb/pyntpot"
 Issues = "https://github.com/findlaywebb/pyntpot/issues"
 
 [build-system]
-requires = ["uv_build>=0.8,<0.9"]
+requires = ["uv_build>=0.8,<0.13"]
 build-backend = "uv_build"
 
 [dependency-groups]
