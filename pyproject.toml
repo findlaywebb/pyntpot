@@ -16,7 +16,7 @@ classifiers = [
 dependencies = [
     "numpy==2.5.2",
     "pillow==12.3.0",
-    "fonttools==4.63.0",
+    "fonttools==4.66.1",
     "httpx>=0.28",
     "pydantic>=2.13",
 ]
