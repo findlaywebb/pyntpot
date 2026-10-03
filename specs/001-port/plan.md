@@ -436,13 +436,10 @@ Each bullet becomes a `tasks.md` item with its own test before P3 starts.
 2. **Recover the design inputs.** The papers and blogs read while
    designing the map rules are not recorded in the source tree. Recover
    them from whatever record exists (see the open question in `spec.md`)
-   and match them to the inventory. Recorded 2026-10-04: two of the three
-   design conversations report that no external source was read, fetched
-   or cited; every rule came from the existing code, rendered-output
-   measurement, stated preferences and sketches, and live OSM tag data.
-   One conversation remains to be asked. If it also reports none, every
-   entry takes the canonical source for the technique and says the
-   original design reading was not recorded.
+   and match them to the inventory. Done 2026-10-04: the recovered list
+   is `design-sources.md` in this directory. Two of the three design
+   conversations read nothing external; the third read the papers and
+   pages listed there. Every entry is unverified until step 3.
 3. **Verify and write `docs/explanation/references.md`**: one entry per
    technique with the canonical source (author, year, title, DOI or URL),
    verified live, plus the design-input source where one was recovered.
