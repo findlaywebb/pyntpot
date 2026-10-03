@@ -4,6 +4,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Parity pins for the golden test; remove when the pins are relaxed.
+    ignore:
+      - dependency-name: numpy
+      - dependency-name: pillow
+      - dependency-name: fonttools
   - package-ecosystem: github-actions
     directory: /
     schedule:

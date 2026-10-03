@@ -11,6 +11,8 @@ uv sync && uv run prek run --all-files && uv run pytest
 A red gate means fix the code. Never loosen a contract or a budget to get green. Changing
 a contract is an ADR in `docs/decisions/`.
 
+`numpy`, `pillow` and `fonttools` are pinned exactly for the golden parity test, and Dependabot ignores them.
+
 ## Spec flow
 
 One feature is one spec dir under `specs/NNN-name/`, one branch and one pull request.
