@@ -55,6 +55,8 @@ and a bibliography.
 | D23 | Style for P1 to P3 is the **resolved** default-theme style dumped from the old code (`PaintStyle`, `GeoOptions`, `RouteInk` per sport), not the theme JSON. No `ChartStyle` and no theme merge logic is ported. |
 | D24 | Every technique the code implements cites its source: a `docs/explanation/references.md` bibliography with one entry per technique, and the implementing docstring names the entry's key. Sources are verified live, never from memory. Techniques whose design input was a paper or blog read during the original design get that source if it can be recovered, otherwise the canonical source for the technique. |
 | D25 | Two quality passes run after P4 and before the docs: a docstring audit over every public and private docstring, then a prose audit over docstrings, comments, README and `docs/`. |
+| D26 | Example and test place names are real UK countryside names spread across regions (Monmouth, Abergavenny, St Ives, the Lake District, the Peak District, the Yorkshire Dales, the Highlands, the Cairngorms), with a few landmark city names such as Regent's Park. Invented names are not used. Coordinates still follow D10. The convention is written in `CONTRIBUTING.md`. |
+| D27 | Architecture round outcome, decided 2026-10-03: all eight candidates in `architecture.md` are accepted (A1 to A8). A7 brings the plate cache under D9. A8 keeps the candidate logic in scope, split out and generalised into a reusable `candidates` facility; the six zero-caller functions are deleted. |
 
 Approaches rejected: painter-only extraction (leaves the policy problem
 upstream and keeps the activity-ID cache); two distributions (doubles

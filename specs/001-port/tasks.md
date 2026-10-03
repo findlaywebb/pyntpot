@@ -39,11 +39,21 @@ Sequence for `plan.md`. Tick a line when its gate is green and committed.
 - [x] P2.8a Review fix round: findings from the leak and rule-loss review cleared
 - [x] P2.8b Move the private-terms list outside the repo; the test skips when it is absent
 - [x] P2.8c Apply the naming convention: real UK countryside names, invented names out
-- [ ] P2.9 Tree scan, orphan commit, public repo, remote history scan (pending)
+- [x] P2.9 Tree scan, orphan commit, public repo, remote history scan
+
+## Handoff (2026-10-03)
+
+P0 to P2 are complete and published. The next step is **P3.0**: fatten P3
+and P4 in `plan.md` into slices a sub-agent can execute, following
+`architecture.md` (A1 to A8, all accepted under D27) and the sequencing
+there: A4 first, one golden regeneration, A2 before the split. Run the
+plan-reviewer agent on the fattened section before any code moves. Golden
+parity is exact only on the maintainer's machine; CI runs tolerance mode.
 
 ## P3. Façade, providers, policy, style, CLI
 
-- [ ] P3.0 Architecture review pass; fold accepted candidates into this list
+- [x] P3.0a Architecture review pass: candidates recorded in `architecture.md`
+- [ ] P3.0 Fatten P3 and P4 into slices from `architecture.md`; plan-reviewer pass
 - [ ] P3.1 `maps/track.py`: `Track`, `from_gpx`, `bounding_box`
 - [ ] P3.2 `maps/providers/base.py`: `Features`, `Elevation`, `Credit`
 - [ ] P3.3 `maps/providers/overpass.py`: `OverpassFeatures`
