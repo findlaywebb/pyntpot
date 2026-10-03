@@ -428,12 +428,20 @@ Each bullet becomes a `tasks.md` item with its own test before P3 starts.
    (`geo.py` 2314 onward), Douglas-Peucker style simplification, label
    placement rules (clearance, set-along-a-line, one name a place),
    watercolour wash effects (edge darkening, granulation, bloom,
-   backruns), brush and nib stroke models. Today none of these carries a
-   citation; the five modules contain no paper, blog or DOI reference.
+   backruns), brush and nib stroke models, Chaikin corner cutting
+   (`geo.py`, the drawn road and river lines), Catmull-Rom splines (span
+   marks), WCAG relative-luminance contrast (route and river-name inks,
+   applied from memory). Today none of these carries a citation; the
+   five modules contain no paper, blog or DOI reference.
 2. **Recover the design inputs.** The papers and blogs read while
    designing the map rules are not recorded in the source tree. Recover
    them from whatever record exists (see the open question in `spec.md`)
-   and match them to the inventory.
+   and match them to the inventory. Recorded so far (2026-10-04): the
+   label-styling design conversation read no external source at all; its
+   rules came from the existing code, stated preferences, live OSM tag
+   data and pixel measurement. Two more design conversations remain to be
+   asked. If they also report none, every entry takes the canonical
+   source and says so.
 3. **Verify and write `docs/explanation/references.md`**: one entry per
    technique with the canonical source (author, year, title, DOI or URL),
    verified live, plus the design-input source where one was recovered.
