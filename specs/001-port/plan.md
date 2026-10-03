@@ -1467,6 +1467,167 @@ and updates its documentation. Verification: the same activity rendered
 through `pyntpot` with `attribution=False` produces a PNG with the recorded
 hash, before anything is deleted. This phase touches only the upstream repo.
 
+### P9. Post-port cleanup
+
+Scaffolding the port needed and the finished port does not. Every slice here
+deletes or simplifies; none adds behaviour. The slice rules and gate commands
+are those of "P3 and P4: how to run a slice" (test first where a test
+changes, no shims, G-here, commit message imperative on one line with no
+trailers, tick `tasks.md` in the same commit). Nothing here removes a gate
+that `CLAUDE.md` requires, touches the tolerance bound
+(`MAX_DIFFERING_FRACTION`, `MAX_CHANNEL_DELTA`) or the D22 pin handling, or
+edits a Key decisions row beyond the one appended note named in P9.1.
+
+**Precondition for the whole phase.** P4.18, P7.4 and P8 are done and ticked,
+and the maintainer has confirmed the release (P7.4 already requires that
+confirmation). The order is P9.1, P9.2, P9.3, P9.4. P9.1 and P9.2 both edit
+`tests/architecture/_text_scan.py`, `tests/conftest.py` and `BOUNDARIES.md`,
+so they never run in parallel; P9.3 and P9.4 touch disjoint files and may run
+in parallel with each other after P9.2.
+
+**ADR numbers.** P3 and P4 pre-assign 0003 to 0010. P5.2, P5.3 and P7.3 also
+write ADRs but assign no numbers, so by P9 `0011` will be taken. Before
+writing, run `ls docs/decisions` and take the next free number: P9.1 takes it
+(this plan calls it NNNN; 0011 if nothing else has landed) and P9.2 takes the
+one after (MMMM).
+
+#### P9.1 Retire the banned-term test
+
+- Implements D16 (retires one of its enforcement mechanisms); predecessors
+  P7.4 and P8.
+- Dependencies found. Nothing in P3 to P8 needs the test to exist after P2.9,
+  but three steps run it and must be finished first. P2.9 and the
+  remote-history check use the private list; P3.12 adds one `re:` entry to
+  it and P3.15 runs the test over the regenerated `plates.json`; the spec's
+  Verification step 3 ("the banned-term, coordinate and remote-history scans
+  return nothing") is satisfied at the P7.4 release. P7.1 to P7.3 add the
+  README, `docs/` and ADRs, which the scan covers, so the retiring slice runs
+  the test once more, on the maintainer's machine where the list exists, and
+  records "green" in its hand-off. The test skips in public CI and in this
+  environment (the `1 skipped` in G-here), so the gates here never relied on
+  it.
+- Owner files: delete `tests/architecture/test_no_personal_content.py`; edit
+  `pyproject.toml` (remove `personal_terms_file` from
+  `[tool.pytest.ini_options]`), `tests/conftest.py` (remove the
+  `parser.addini("personal_terms_file", ...)` call; the
+  `--golden-tolerance` and `--golden-dir` options stay),
+  `tests/architecture/_text_scan.py` (module docstring says "banned terms,
+  coordinates"; it becomes "coordinates"; `test_coordinates.py` stays its only
+  caller), `BOUNDARIES.md` (the "No personal content" bullet keeps only the
+  coordinate allowlist), `specs/001-port/spec.md` (append to the end of the
+  D16 row only: ` Retired after the port by P9.1, ADR NNNN.`; no other word
+  of the row or the table changes), create
+  `docs/decisions/NNNN-retire-banned-term-test.md`. Leave alone:
+  `tests/architecture/test_coordinates.py` (D10 allowlist, stays),
+  `CLAUDE.md`, `CONTRIBUTING.md`, `docs/architecture.md` (none mentions the
+  test or the option; confirm with the grep below), ADR 0002 (append-only; its
+  sentence listing "the banned-term scan" stays true as history and the new
+  ADR amends it), and plan.md P0 to P8 text.
+- ADR NNNN: `# NNNN — Retire the banned-term test`, `Status: accepted`,
+  `## Context` (D16 asked for a banned-term test, a manual pass and a history
+  scan while the port carried personal content; the list is personal and never
+  in the repository, so public CI always skipped the test), `## Decision`
+  (delete the test and the `personal_terms_file` option; the list outside the
+  repository stays the maintainer's to keep or delete; the D10 coordinate
+  allowlist remains as the standing guard), `## Consequences` (a new
+  contribution is not scanned for terms; review and the coordinate test carry
+  that; G-here no longer reports a skip; the amendment to ADR 0002 is stated).
+  Heading shape as `0002-hexagonal-layers.md`.
+- Tests: no new test. The safety proof is that the suite still collects under
+  `--strict-config` with the option gone, `uv run pytest
+  tests/architecture` passes with no skips, and
+  `grep -rnE "personal_terms|test_no_personal_content|banned_terms\.txt" --exclude-dir=.git --exclude-dir=.venv .`
+  matches only `spec.md` (D16 and Verification), `plan.md`, ADR 0002 and ADR
+  NNNN.
+- Gate: G-here.
+- Commit: `Retire the banned-term test and its pytest option`
+
+#### P9.2 Retire the exemptions mechanism
+
+- Implements the end state of D5's interim relaxation; predecessor P9.1
+  (shared files), which itself follows P4.17.
+- Why it is dead. P4.17 deletes `_port`, removes its per-file-ignores and `ty`
+  exclude, and reduces `tests/architecture/exemptions/line_budget.txt`,
+  `gates_off.txt` and `NOTES.md` to a header comment. P2 already removed the
+  two entries from `gates_off.txt`, and nothing is added to it afterwards.
+  What is left is code that reads empty files. The 400-line test and the
+  clock and random bans stay; they simply run with no exceptions.
+- Owner files: delete `tests/architecture/exemptions/` (all three files) and
+  `tests/support/exemptions.py`; edit `tests/conftest.py` (remove
+  `pytest_collection_modifyitems`, its `read_exemption_lines` import and the
+  module docstring clause about the gates-off hook),
+  `tests/architecture/test_boundaries.py` (`test_no_oversized_files` scans
+  `src/` with no skip list), `tests/architecture/test_purity.py` (the clock
+  and random bans apply to all of `src/pyntpot`), `tests/architecture/_text_scan.py`
+  (drop the `EXEMPTIONS_DIR` import and the `EXEMPTIONS_DIR in path.parents`
+  test), and their docstrings that mention the exemptions files; `CLAUDE.md`
+  (the toolchain paragraph that calls the exemptions directory "the one
+  sanctioned relaxation" and the line-budget bullet's last sentence, "Files in
+  `exemptions/line_budget.txt` are exempt until they are split", are deleted;
+  the rule that a red gate is fixed in code, never loosened, stays in full),
+  `BOUNDARIES.md` (the two "exempt until they are split" clauses),
+  `docs/architecture.md` (the `## Exemptions` section), `GLOSSARY.md` if it
+  defines an exemption term; create
+  `docs/decisions/MMMM-retire-exemptions.md` (Status accepted; context: the
+  mechanism existed for `_port` only; decision: no relaxation mechanism
+  remains, a future over-budget file is split, not listed; consequences: the
+  budget and purity tests have no escape hatch). Leave alone: the 400-line
+  limit, the clock and random bans, `test_docstring_conventions.py`,
+  `test_testing_discipline.py` and every other gate.
+- Tests: `uv run pytest tests/architecture` passes; `grep -rn "exemption"
+  --include=*.py --include=*.md --include=*.toml --exclude-dir=.git
+  --exclude-dir=.venv .` finds only the two ADRs, `spec.md`, `plan.md` and
+  `tasks.md`; `test_no_oversized_files` and the purity tests still fail on a
+  scratch 401-line file and a scratch `time.time()` call (run by hand, not
+  committed), showing the gates were not weakened.
+- Gate: G-here.
+- Commit: `Retire the exemptions mechanism now that the port is split`
+
+#### P9.3 Drop the historical golden script and the last `ty` exclude
+
+- Implements nothing new; predecessors P9.2 and P8.
+- Why it is dead. `tests/golden/make_golden_old.py` imports the pre-port
+  package from the originating project, is documented as historical, and is
+  the only entry left in `[tool.ty.src] exclude` after P4.16 and P4.17 remove
+  the `_port` and ported-test entries. The goldens were regenerated once in
+  P3.15 by `tests/golden/make_golden.py` and ADR 0006 records the old and new
+  hashes, and P8 has reproduced the recorded render through the public API,
+  so the script's provenance role is finished.
+- Owner files: delete `tests/golden/make_golden_old.py`; edit `pyproject.toml`
+  (remove `exclude` and its two comment lines from `[tool.ty.src]`, so `ty`
+  checks all of `src` and `tests`; remove any `_port` per-file-ignore, ty
+  exclude or comment P4.16 and P4.17 left behind, including the "Interim"
+  comments). Leave alone: `tests/golden/make_golden.py`, `test_parity.py`,
+  `tests/support/golden.py`, the `--golden-dir` and `--golden-tolerance`
+  options and the bound constants (G-self stays available for future
+  refactors), `uv.lock` and the D22 floors.
+- Tests: `uv run ty check` is green with no `exclude`;
+  `grep -rn "make_golden_old\|_port" pyproject.toml tests docs *.md` returns
+  nothing outside ADRs and `specs/`; the golden tests are unchanged and pass.
+- Gate: G-here.
+- Commit: `Delete the historical golden script and the last ty exclude`
+
+#### P9.4 Fold the design sources into the references
+
+- Implements D24 and D25's end state; predecessors P6.3 and P9.2 (an
+  ordering choice; the files are disjoint from P9.3).
+- Why it is dead. `specs/001-port/design-sources.md` is a working list whose
+  header says every entry stays unverified until P6.3 writes
+  `docs/explanation/references.md`; P6.3 gives each technique its canonical
+  source plus the recovered design input, or the line "canonical source;
+  original design reading not recorded".
+- Owner files: delete `specs/001-port/design-sources.md`. Leave alone every
+  mention of it in `plan.md`, `tasks.md` and `spec.md` (they are the history of
+  how the references were recovered), and `references.md` itself.
+- Tests: before deleting, a scripted check that every URL in
+  `design-sources.md` appears in `references.md`:
+  `grep -oE 'https?://[^ )]+' specs/001-port/design-sources.md | while read -r u; do grep -qF "$u" docs/explanation/references.md || echo "missing $u"; done`
+  prints nothing; any entry it names is added to `references.md` as "cited in
+  design, not verified" in the same commit. The coordinate test and G-here
+  still pass.
+- Gate: G-here.
+- Commit: `Delete the design sources list now folded into the references`
+
 ## Known facts
 
 - Overpass mirror `overpass.openstreetmap.ru` is retired (502);

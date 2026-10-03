@@ -122,3 +122,10 @@ parity is exact only on the maintainer's machine; CI runs tolerance mode.
 ## P8. Upstream migration
 
 - [ ] P8.1 The upstream consumer migrates to the public API, with the recorded render hash reproduced first
+
+## P9. Post-port cleanup
+
+- [ ] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR
+- [ ] P9.2 Retire the exemptions mechanism; ADR
+- [ ] P9.3 Delete `make_golden_old.py` and the last `ty` exclude
+- [ ] P9.4 Delete `design-sources.md` once `references.md` covers it
