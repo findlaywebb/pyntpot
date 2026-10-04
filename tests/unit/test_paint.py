@@ -14,11 +14,15 @@ import pytest
 
 from pyntpot._port import geo, paint
 from pyntpot.ink.chains import chain_lines
+from pyntpot.ink.io import save_rgba
+from pyntpot.ink.noise import blur, edt, smoothstep
 from pyntpot.ink.polyline import deform_line, foot_on, length, meet, simplify
+from pyntpot.ink.sheet import Sheet, rgb
+from pyntpot.ink.wash import WashOptions, wash
 from pyntpot.maps.basemap import Basemap, Layers, Line, River, Road
 from pyntpot.maps.card import Card
 from pyntpot.maps.projection import Projection, track_projection
-from pyntpot.maps.style import Style
+from pyntpot.maps.style import PAINT_GROUPS, Style
 
 from support.measure import flat_measure
 from support.paths import FIXTURE_DIR, KEY
@@ -38,6 +42,18 @@ DIGEST = "0123456789abcdef"
 def tiny_style(**over: object) -> paint.PaintStyle:
     """The approved style, painted small enough to be a unit test."""
     return paint.PaintStyle(display_px=80, supersample=2, **over)
+
+
+def as_style(pstyle: paint.PaintStyle) -> Style:
+    """The packaged style with every painter field read from a flat painter style."""
+    base = Style.default()
+    groups = {
+        name: type(getattr(base, name))(
+            **{f.name: getattr(pstyle, f.name) for f in dataclasses.fields(getattr(base, name))}
+        )
+        for name in PAINT_GROUPS
+    }
+    return base.model_copy(update=groups)
 
 
 def square(cx: float, cy: float, r: float) -> Line:
@@ -96,7 +112,7 @@ def test_a_tiny_box_paints_a_card_a_wash_and_a_manifest(tmp_path):
     """The painter writes two plates plus the pen, and says what it did."""
     style = tiny_style()
     plates = paint.paint(
-        tiny_basemap(style=style), style, tmp_path, key="iTINY", style_digest=DIGEST
+        tiny_basemap(style=style), as_style(style), tmp_path, key="iTINY", style_digest=DIGEST
     )
     manifest = plates.manifest
     assert set(manifest.files) == {"paper", "wash", "pen"}
@@ -115,7 +131,7 @@ def test_the_plates_are_webp_the_size_they_were_painted(tmp_path):
 
     style = tiny_style()
     plates = paint.paint(
-        tiny_basemap(style=style), style, tmp_path, key="iTINY", style_digest=DIGEST
+        tiny_basemap(style=style), as_style(style), tmp_path, key="iTINY", style_digest=DIGEST
     )
     with Image.open(plates.paths["wash"]) as img:
         assert img.format == "WEBP"
@@ -138,7 +154,11 @@ def test_a_repaint_is_only_needed_when_the_style_or_the_data_changes(tmp_path):
     )
     assert paint.paint_hash(moved, DIGEST) != first
     plates = paint.paint(
-        basemap, style, paint.plates_dir("iTINY", tmp_path), key="iTINY", style_digest=DIGEST
+        basemap,
+        as_style(style),
+        paint.plates_dir("iTINY", tmp_path),
+        key="iTINY",
+        style_digest=DIGEST,
     )
     loaded = paint.load_plates("iTINY", tmp_path)
     assert loaded is not None
@@ -197,7 +217,7 @@ def test_every_class_the_plate_paints_has_a_brush():
 
 def test_a_dry_brush_breaks_where_a_wet_one_does_not():
     """Dryness is one number, and it is what makes a track scratchy."""
-    sheet = paint.Sheet(60, 220, gran_px=6.0, seed=3)
+    sheet = Sheet(60, 220, gran_px=6.0, seed=3)
     line = np.stack([np.linspace(10, 210, 80), np.full(80, 30.0)], axis=1)
     marks = {}
     for key, brush_id in (("wet", "RIV1-a"), ("dry", "TRK4-d")):
@@ -232,7 +252,7 @@ def test_the_pen_sets_down_where_it_touches_and_nowhere_else():
 
 def test_two_strokes_crossing_never_double():
     """Saturation is what stops a crossing reaching twice the black."""
-    sheet = paint.Sheet(60, 60, gran_px=6.0, seed=2)
+    sheet = Sheet(60, 60, gran_px=6.0, seed=2)
     brush, _ = paint.brush_from_id("MAJ2-a", 3.0, 2.0, paint.PaintStyle())
     across = np.stack([np.linspace(5, 55, 40), np.full(40, 30.0)], axis=1)
     down = np.stack([np.full(40, 30.0), np.linspace(5, 55, 40)], axis=1)
@@ -297,7 +317,7 @@ def long_stroke(
     h = 44
     style = paint.PaintStyle(**style_over)
     brush, _ = paint.brush_from_id(brush_id, width_px, 2.0, style, over)
-    sheet = paint.Sheet(h, length, gran_px=9.0, seed=11)
+    sheet = Sheet(h, length, gran_px=9.0, seed=11)
     pts = np.stack([np.linspace(20.0, length - 20.0, 900), np.full(900, h / 2)], axis=1)
     acc = np.zeros((h, length), np.float32)
     aux = paint.ink_aux((h, length), brush)
@@ -326,7 +346,9 @@ def test_the_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
     import hashlib
 
     style, basemap = smoke_box()
-    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE", style_digest=DIGEST).manifest
+    manifest = paint.paint(
+        basemap, as_style(style), tmp_path, key="iSMOKE", style_digest=DIGEST
+    ).manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest.files.items()
@@ -339,7 +361,9 @@ def test_every_flag_on_together_still_paints_the_box(tmp_path):
     import hashlib
 
     style, basemap = smoke_box(ink_starve=True, dry_directional=True, pen_starve=True)
-    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE", style_digest=DIGEST).manifest
+    manifest = paint.paint(
+        basemap, as_style(style), tmp_path, key="iSMOKE", style_digest=DIGEST
+    ).manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest.files.items()
@@ -384,14 +408,12 @@ def test_the_reservoir_is_read_off_the_final_density_not_the_deposits():
         assert patchiness(on) > patchiness(off) * 1.1, brush_id
 
 
-def turned_stroke(
-    vertical: bool, **style_over: object
-) -> tuple[np.ndarray, paint.Sheet, paint.Brush]:
+def turned_stroke(vertical: bool, **style_over: object) -> tuple[np.ndarray, Sheet, paint.Brush]:
     """The same dry brush drawn across the same sheet, one way then the other."""
     size = 420
     style = paint.PaintStyle(**style_over)
     brush, _ = paint.brush_from_id("TRK4-d", 6.0, 2.0, style, "track")
-    sheet = paint.Sheet(size, size, gran_px=9.0, seed=11)
+    sheet = Sheet(size, size, gran_px=9.0, seed=11)
     t = np.linspace(20.0, size - 20.0, 600)
     mid = np.full(600, size / 2)
     pts = np.stack([mid, t] if vertical else [t, mid], axis=1)
@@ -411,7 +433,7 @@ def test_a_directional_break_follows_the_stroke_not_the_sheet():
     explaining where the mark is thin.
     """
 
-    def explained(dens: np.ndarray, sheet: paint.Sheet) -> float:
+    def explained(dens: np.ndarray, sheet: Sheet) -> float:
         inked = dens > 0.02
         return abs(
             float(np.corrcoef(sheet.paper[inked].astype(float), dens[inked].astype(float))[0, 1])
@@ -491,7 +513,7 @@ def padded(
     """One straight stroke's density, through the pad the painter uses."""
     style = paint.PaintStyle(**style_over)
     brush, _ = paint.brush_from_id(brush_id, width_px, 2.0, style, over)
-    sheet = paint.Sheet(h, length, gran_px=9.0, seed=sheet_seed)
+    sheet = Sheet(h, length, gran_px=9.0, seed=sheet_seed)
     pts = np.stack([np.linspace(20.0, length - 20.0, 900), np.full(900, h / 2)], axis=1)
     pad = paint.InkPad((h, length), brush, style)
     pad.lay([(brush, pts)], np.random.default_rng(seed))
@@ -686,7 +708,9 @@ def test_the_phase_2_brush_flags_on_together_still_paint_the_box(tmp_path):
     import hashlib
 
     style, basemap = smoke_box(brush_organic=True, ink_joins=True, stroke_smooth=True, ink_ss=2)
-    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE", style_digest=DIGEST).manifest
+    manifest = paint.paint(
+        basemap, as_style(style), tmp_path, key="iSMOKE", style_digest=DIGEST
+    ).manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest.files.items()
@@ -735,7 +759,7 @@ def test_a_road_split_into_ways_is_one_mark_again():
     whole = np.stack([np.linspace(20.0, w - 20.0, 901), np.full(901, h / 2)], axis=1)
     pieces = [whole[i * 150 : (i + 1) * 150 + 1] for i in range(6)]
     assert len(chain_lines(pieces, 2.5)) == 1
-    sheet = paint.Sheet(h, w, gran_px=9.0, seed=11)
+    sheet = Sheet(h, w, gran_px=9.0, seed=11)
 
     def lay(lines: list[np.ndarray], **style_over: object) -> np.ndarray:
         style = paint.PaintStyle(**style_over)
@@ -777,7 +801,7 @@ def test_a_corner_is_rounded_to_the_brush_rather_than_stamped_through():
     leg_a = np.stack([np.linspace(20.0, 100.0, 300), np.full(300, 60.0)], axis=1)
     leg_b = np.stack([np.full(300, 100.0), np.linspace(60.0, 180.0, 300)], axis=1)
     pts = np.concatenate([leg_a, leg_b])
-    sheet = paint.Sheet(h, w, gran_px=9.0, seed=11)
+    sheet = Sheet(h, w, gran_px=9.0, seed=11)
     yy, xx = np.mgrid[0:h, 0:w]
     outside = (xx > 100) & (yy < 60)
 
@@ -811,7 +835,7 @@ def test_a_finer_grid_converges_on_the_mark_the_brush_describes():
     h, w = 40, 500
     t = np.linspace(20.0, w - 20.0, 900)
     pts = np.stack([t, 8.0 + t / 7.0], axis=1)  # a shallow diagonal: the worst case
-    sheet = paint.Sheet(h, w, gran_px=9.0, seed=11)
+    sheet = Sheet(h, w, gran_px=9.0, seed=11)
 
     def at(ss: int) -> np.ndarray:
         style = paint.PaintStyle(ink_ss=ss)
@@ -850,12 +874,12 @@ def _loop_distance(size: int = 120) -> np.ndarray:
     mask[89, 30:90] = True
     mask[30:90, 30] = True
     mask[30:90, 89] = True
-    return paint.edt(mask)
+    return edt(mask)
 
 
 def test_the_ribbon_fills_the_inside_of_a_loop():
     """A loop is a shape, not a band: what the outside cannot reach is painted."""
-    sheet = paint.Sheet(120, 120, gran_px=6.0, seed=4)
+    sheet = Sheet(120, 120, gran_px=6.0, seed=4)
     d = _loop_distance()
     filled, _ = paint.ribbon_alpha(d, 6.0, sheet, True, 1.0)
     band, _ = paint.ribbon_alpha(d, 6.0, sheet, False, 1.0)
@@ -878,7 +902,7 @@ def test_the_ribbon_radius_is_the_fitted_curve_times_the_slider():
 
 def test_the_coast_is_a_hard_edge_the_ribbon_never_crosses():
     """The torn edge stops at the surveyed line; the sea takes over there."""
-    sheet = paint.Sheet(120, 120, gran_px=6.0, seed=4)
+    sheet = Sheet(120, 120, gran_px=6.0, seed=4)
     d = _loop_distance()
     land = np.ones((120, 120), np.float32)
     land[:, 70:] = 0.0
@@ -907,15 +931,17 @@ def test_land_cover_is_one_class_per_pixel_with_the_wood_on_top(tmp_path):
         },
         cover_order=("farmland", "wood"),
     )
-    manifest = paint.paint(basemap, style, tmp_path, key="iTINY", style_digest=DIGEST).manifest
+    manifest = paint.paint(
+        basemap, as_style(style), tmp_path, key="iTINY", style_digest=DIGEST
+    ).manifest
     from PIL import Image
 
     with Image.open(tmp_path / manifest.files["wash"]) as img:
         arr = np.asarray(img.convert("RGB"), np.float32) / 255
     h, w, _ = arr.shape
     centre = arr[h // 2, w // 2]
-    wood = paint.rgb(style.pigments["wood"])
-    farmland = paint.rgb(style.pigments["farmland"])
+    wood = rgb(style.pigments["wood"])
+    farmland = rgb(style.pigments["farmland"])
     assert abs(centre[1] - centre[2]) > abs(farmland[1] - farmland[2]) * 0.5
     # The wood alone, never the two multiplied together.
     assert centre[2] > (wood * farmland)[2] + 0.02
@@ -1051,16 +1077,6 @@ def test_the_real_box_offers_candidates_and_no_climb_without_elevation():
 # asks for it. After that, one test a flag, stating what the flag is for.
 
 
-def two_squares(h: int = 200, w: int = 320) -> tuple:
-    """Two land classes meeting along a seam, on a sheet, for the wash tests."""
-    sheet = paint.Sheet(h, w, gran_px=8.0, seed=5)
-    left = np.zeros((h, w), np.float32)
-    left[40:160, 40:160] = 1.0
-    right = np.zeros((h, w), np.float32)
-    right[40:160, 160:280] = 1.0
-    return sheet, left, right
-
-
 def test_every_phase_one_option_is_off_by_default():
     """The default plates paint as before until a theme turns one on."""
     style = paint.PaintStyle()
@@ -1069,200 +1085,6 @@ def test_every_phase_one_option_is_off_by_default():
     assert not style.wet_bleed
     assert not style.flow_rim
     assert not style.blooms
-
-
-def test_a_wash_given_no_option_is_the_wash_it_always_was():
-    """Passing the phase 1 arguments at their inert values changes nothing."""
-    sheet, left, _ = two_squares()
-    plain = paint.wash(left, sheet, 0.52, 0.20, rim_px=7.0)
-    same = paint.wash(
-        left, sheet, 0.52, 0.20, rim_px=7.0, wet=None, gran_gamma=0.0, flow=None, blooms=None
-    )
-    assert np.array_equal(plain, same)
-
-
-def test_a_sheet_with_no_fibre_is_the_sheet_it_always_was():
-    """The fibre draws last, so the five fields and the stream after them hold."""
-    plain = paint.Sheet(60, 90, gran_px=6.0, seed=4)
-    same = paint.Sheet(60, 90, gran_px=6.0, seed=4, fibre=0.0)
-    laid = paint.Sheet(60, 90, gran_px=6.0, seed=4, fibre=0.35)
-    for name in ("paper", "coarse", "fine", "wet", "gran"):
-        assert np.array_equal(getattr(plain, name), getattr(same, name))
-        if name != "paper":
-            assert np.array_equal(getattr(plain, name), getattr(laid, name))
-    assert np.array_equal(plain.noise(20.0), same.noise(20.0))
-    assert not np.array_equal(plain.paper, laid.paper)
-
-
-def test_multiply_is_still_multiply_when_glazing_is_off():
-    """The compositing path with the flag off is the arithmetic it replaced."""
-    sheet, left, right = two_squares(80, 120)
-    layers = [
-        (paint.wash(left, sheet, 0.52, 0.20), paint.rgb(paint.PIGMENTS["farmland"]), 0.10),
-        (paint.wash(right, sheet, 0.72, 0.30), paint.rgb(paint.PIGMENTS["wood"])),
-    ]
-    base = np.ones((80, 120, 3), np.float32)
-    assert np.array_equal(
-        paint.composite(layers, base, paint.PaintStyle()),
-        np.clip(base * paint.multiply_plate(layers, 80, 120), 0, 1),
-    )
-
-
-# --- 1: Kubelka-Munk glazing
-
-
-def test_a_full_wash_over_white_gives_back_its_own_pigment():
-    """The step that is easy to miss: S derived from Rw and Rb, or all goes black."""
-    for key in ("wood", "water", "heath", "relief"):
-        pig = paint.rgb(paint.PIGMENTS[key])
-        thick = np.ones((2, 2), np.float32)
-        out = paint.km_plate(
-            [(thick, pig, paint.TRANSPARENCY[key])], np.ones((2, 2, 3), np.float32)
-        )
-        assert out[0, 0] == pytest.approx(pig, abs=2e-3), key
-        # And nothing laid down is nothing changed.
-        clear = paint.km_plate(
-            [(np.zeros((2, 2), np.float32), pig, 0.05)], np.ones((2, 2, 3), np.float32)
-        )
-        assert clear[0, 0] == pytest.approx([1.0, 1.0, 1.0], abs=1e-4)
-
-
-def test_a_wash_crossing_another_keeps_its_own_hue_under_glazing():
-    """Multiply averages two pigments into an olive; glazing does not."""
-
-    def hue(c: np.ndarray) -> float:
-        mx, mn = float(c.max()), float(c.min())
-        if mx - mn < 1e-9:
-            return 0.0
-        r, g, b = (float(v) for v in c)
-        i = int(np.argmax(c))
-        turn = (
-            ((g - b) / (mx - mn)) % 6
-            if i == 0
-            else (2 + (b - r) / (mx - mn))
-            if i == 1
-            else (4 + (r - g) / (mx - mn))
-        )
-        return turn * 60.0
-
-    wood = paint.rgb(paint.PIGMENTS["wood"])
-    water = paint.rgb(paint.PIGMENTS["water"])
-    under = np.ones((4, 4), np.float32)
-    over = np.full((4, 4), 0.6, np.float32)
-    base = np.ones((4, 4, 3), np.float32)
-    mul = paint.multiply_plate([(under, water), (over, wood)], 4, 4)[0, 0]
-    glazed = paint.km_plate([(under, water, 0.04), (over, wood, 0.05)], base)[0, 0]
-    # The wood is the top wash, so the crossing should read as wood over water,
-    # not as the two colours multiplied into one another.
-    assert abs(hue(glazed) - hue(wood)) < abs(hue(mul) - hue(wood)) - 5.0
-
-
-# --- 2: one cold-press paper field, with granulation bound to it
-
-
-def test_the_fibre_field_lies_along_one_axis():
-    """Cold press has a direction: a fibre is about three times longer than wide."""
-    rng = np.random.default_rng(1)
-    iso = paint.fbm(200, 300, 4.2, 3, np.random.default_rng(1))
-    laid = paint.fbm_aniso(200, 300, 4.2, 3, rng, 3.0, 0.42)
-
-    def ratio(f: np.ndarray) -> float:
-        return float(np.abs(np.diff(f, axis=0)).mean() / np.abs(np.diff(f, axis=1)).mean())
-
-    assert ratio(iso) == pytest.approx(1.0, abs=0.06)
-    assert ratio(laid) > 1.4
-
-
-def test_granulation_settles_in_the_pits_the_dry_brush_breaks_on():
-    """Bound to the paper's own height, not to an fbm unrelated to it."""
-    sheet = paint.Sheet(200, 300, gran_px=8.0, seed=5, fibre=0.35)
-    square_m = np.zeros((200, 300), np.float32)
-    square_m[40:160, 60:240] = 1.0
-    body = square_m > 0.5
-    loose = paint.wash(square_m, sheet, 0.55, 0.22, rim_px=7.0)
-    bound = paint.wash(square_m, sheet, 0.55, 0.22, rim_px=7.0, gran_gamma=1.7)
-
-    def follows(d: np.ndarray) -> float:
-        a = d[body] - d[body].mean()
-        b = sheet.paper[body] - sheet.paper[body].mean()
-        return float((a * b).mean() / (a.std() * b.std()))
-
-    # Negative because the pits are where the paper is low and the pigment high.
-    assert follows(bound) < follows(loose) - 0.20
-
-
-# --- 3: one wet-area map shared across the classes
-
-
-def test_two_classes_wet_at_once_bleed_into_each_other_rather_than_butt():
-    """A boundary inside the land is not an edge; the outer silhouette still is."""
-    sheet, left, right = two_squares()
-    union = np.clip(left + right, 0, 1)
-    wet = paint.smoothstep(paint.edt(union < 0.5) - np.float32(16.0), 16.0)
-    assert wet[100, 160] > 0.9, "the seam is inside the wet area"
-    assert wet[100, 41] < 0.1, "the outer edge is not"
-
-    def total(**kw):
-        return paint.wash(left, sheet, 0.52, 0.20, rim_px=7.0, **kw) + paint.wash(
-            right, sheet, 0.58, 0.26, rim_px=7.0, **kw
-        )
-
-    dry = total()
-    damp = total(wet=wet, bleed_px=5.0, bleed_mix=0.55, rim_drop=0.7)
-    seam, band = slice(150, 172), slice(70, 130)
-
-    def step(d: np.ndarray) -> float:
-        return float(np.abs(np.diff(d[band, seam], axis=1)).mean())
-
-    assert step(damp) < step(dry) * 0.6
-    assert damp[band, seam].max() < dry[band, seam].max() - 0.1
-    # The land's own outer edge keeps its rim: the wet area ends before it.
-    assert damp[band, 38:48].max() == pytest.approx(dry[band, 38:48].max(), abs=2e-3)
-
-
-# --- 4: edge darkening from an outward flow term
-
-
-def test_the_flow_rim_is_wider_on_a_bigger_wash():
-    """Mask minus blur is one width everywhere; a drying edge is not."""
-    sheet = paint.Sheet(260, 400, gran_px=8.0, seed=5)
-    depths = {}
-    for tag, radius in (("small", 18), ("big", 90)):
-        yy, xx = np.ogrid[:260, :400]
-        disc = ((yy - 130) ** 2 + (xx - 200) ** 2 < radius * radius).astype(np.float32)
-        a = np.clip((paint.blur(disc, 2.4) - 0.5) * 3.2 + 0.5, 0, 1)
-        inward = paint.edt(~(a > 0.5))
-        for name, rim in (
-            ("old", np.clip(a - paint.blur(a, 7.0), 0, 1)),
-            ("flow", paint.flow_edge(a, sheet, 7.0, 0.125, 0.02, 0.38)),
-        ):
-            depths[name, tag] = float((rim * inward).sum() / max(rim.sum(), 1e-6))
-    grew = depths["flow", "big"] / depths["flow", "small"]
-    held = depths["old", "big"] / depths["old", "small"]
-    assert grew > held * 1.3
-    assert depths["flow", "small"] < depths["old", "small"], "it sits in against the edge"
-
-
-# --- 5: blooms
-
-
-def test_a_bloom_lifts_the_centre_and_deposits_it_at_the_front():
-    """A backrun: lighter inside, a darker crenellated ridge where it stopped."""
-    sheet, left, _ = two_squares()
-    body = left > 0.5
-    core = body & (paint.edt(~body) > 12)
-    flat = paint.wash(left, sheet, 0.52, 0.20, rim_px=7.0)
-    blown = paint.wash(
-        left, sheet, 0.52, 0.20, rim_px=7.0, blooms=(np.random.default_rng(3), 3, 0.17, 0.45, 0.45)
-    )
-    assert blown[core].std() > flat[core].std() * 1.5
-    assert blown[core].min() < flat[core].min() - 0.1, "a lighter centre"
-    assert blown[core].max() > flat[core].max() + 0.05, "and a darker ring"
-    # Deterministic from the seed it is given, like everything else here.
-    again = paint.wash(
-        left, sheet, 0.52, 0.20, rim_px=7.0, blooms=(np.random.default_rng(3), 3, 0.17, 0.45, 0.45)
-    )
-    assert np.array_equal(blown, again)
 
 
 # ------------------------------------------------------- phase 2: the wash flags
@@ -1292,7 +1114,9 @@ def painted(tmp_path, **over: object) -> dict[str, str]:
 
     style, basemap = cover_box(**over)
     out = tmp_path / ("on" if over else "off")
-    manifest = paint.paint(basemap, style, out, key="iSMOKE", style_digest=DIGEST).manifest
+    manifest = paint.paint(
+        basemap, as_style(style), out, key="iSMOKE", style_digest=DIGEST
+    ).manifest
     return {
         name: hashlib.sha256((out / fn).read_bytes()).hexdigest()
         for name, fn in manifest.files.items()
@@ -1312,7 +1136,9 @@ def test_the_wash_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
     import hashlib
 
     style, basemap = smoke_box()
-    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE", style_digest=DIGEST).manifest
+    manifest = paint.paint(
+        basemap, as_style(style), tmp_path, key="iSMOKE", style_digest=DIGEST
+    ).manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest.files.items()
@@ -1330,57 +1156,6 @@ def test_each_wash_flag_moves_the_plate_and_none_of_them_moves_the_card(tmp_path
         assert on["pen"] == off["pen"], flag  # nor the route's own plate
 
 
-# --- 7: polygon deformation for the wash silhouette
-
-
-def ring_of(n: int = 96, r: float = 200.0) -> list[tuple[float, float]]:
-    """A circle, as the ring the deformation is given."""
-    a = np.linspace(0, 2 * math.pi, n, endpoint=False)
-    return [(float(r * math.cos(t)), float(r * math.sin(t))) for t in a]
-
-
-def test_an_outline_given_no_deform_is_the_outline_it_was():
-    """The inert path hands back the same objects, not a copy of them."""
-    rings = [ring_of(), ring_of(40, 90.0)]
-    assert paint.deform_rings(rings, None) is rings
-
-
-def test_the_deformed_outline_wobbles_at_more_than_one_scale():
-    """One frequency everywhere is what the blurred-mask edge already does."""
-    ring = np.asarray(ring_of(), float)
-    out = paint.deform_ring(ring, np.random.default_rng(5), 0.26, 4, 0.55, 16.0, 0.5)
-    assert len(out) == len(ring) * 16
-    rad = np.hypot(out[:, 0], out[:, 1]) - 200.0
-    # Split the deviation into what a long smoothing keeps and what it removes.
-    k = np.ones(33) / 33.0
-    coarse = np.convolve(np.concatenate([rad[-16:], rad, rad[:16]]), k, "same")[16:-16]
-    fine = rad - coarse
-    assert coarse.std() > 1.0, "no wobble the eye reads as a lobe"
-    assert fine.std() > 0.3, "no wobble at the scale of a brush edge"
-    # Neither scale swamps the other: that mixture is the whole point of it.
-    assert 0.15 < fine.std() / coarse.std() < 6.0
-    # And it is a deformation, not a new shape: the ring keeps its place.
-    assert abs(float(out[:, 0].mean())) < 12.0
-    assert abs(float(np.hypot(out[:, 0], out[:, 1]).mean()) - 200.0) < 12.0
-
-
-def test_no_one_displacement_runs_away_with_a_long_segment():
-    """A field boundary drawn as two points must not be thrown across the sheet."""
-    box = [(0.0, 0.0), (4000.0, 0.0), (4000.0, 3000.0), (0.0, 3000.0)]
-    out = paint.deform_ring(box, np.random.default_rng(2), 0.26, 4, 0.55, 16.0, 0.5)
-    # Every point stays within the cap of the straight edge it came off, give or
-    # take the caps the earlier rounds already spent.
-    assert float(np.abs(out[:, 1]).min()) < 1e-9
-    assert float(out[:, 1].max()) < 3000.0 + 16.0 * 4
-
-
-def test_the_deformation_is_the_same_ring_from_the_same_seed():
-    """Everything in the painter has to come back the same from its seed."""
-    a = paint.deform_ring(ring_of(), np.random.default_rng(9), 0.26, 4, 0.55, 16.0, 0.5)
-    b = paint.deform_ring(ring_of(), np.random.default_rng(9), 0.26, 4, 0.55, 16.0, 0.5)
-    assert np.array_equal(a, b)
-
-
 def test_the_surveyed_coast_is_not_deformed(tmp_path):
     """The coast is a fact. Only the land cover's own outlines are pushed about."""
     import hashlib
@@ -1393,116 +1168,12 @@ def test_the_surveyed_coast_is_not_deformed(tmp_path):
             lakes=(((800.0, 20.0), (1000.0, 20.0), (1000.0, 120.0), (800.0, 120.0)),),
         )
         out = tmp_path / ("on" if over else "off")
-        manifest = paint.paint(basemap, style, out, key="iSMOKE", style_digest=DIGEST).manifest
+        manifest = paint.paint(
+            basemap, as_style(style), out, key="iSMOKE", style_digest=DIGEST
+        ).manifest
         return hashlib.sha256((out / manifest.files["wash"]).read_bytes()).hexdigest()
 
     assert sea_only(silhouette_deform=True) == sea_only()
-
-
-# --- 8: two-pigment washes on the Kubelka-Munk path
-
-
-def test_a_class_that_is_not_named_stays_the_one_wash_it_was():
-    """Only the classes a theme names separate, and only when the flag is on."""
-    sheet, left, _ = two_squares(80, 120)
-    dens = paint.wash(left, sheet, 0.72, 0.30, rim_px=7.0)
-    pig = paint.rgb(paint.PIGMENTS["wood"])
-    for style in (paint.PaintStyle(), paint.PaintStyle(pigment_separation=True)):
-        out = paint.separated(dens, "heath", pig, 0.14, sheet, style)
-        assert len(out) == 1
-        assert out[0][0] is dens
-
-
-def test_the_heavy_pigment_settles_in_the_tooth_and_the_light_one_floats():
-    """Two pigments out of one wash: one in the pits, one over them."""
-    sheet, left, _ = two_squares(200, 320)
-    dens = paint.wash(left, sheet, 0.72, 0.30, rim_px=7.0)
-    style = paint.PaintStyle(pigment_separation=True)
-    light, heavy = paint.separated(
-        dens, "wood", paint.rgb(paint.PIGMENTS["wood"]), 0.05, sheet, style
-    )
-    body = left > 0.5
-
-    def follows(d: np.ndarray) -> float:
-        a = d[body] - d[body].mean()
-        b = sheet.paper[body] - sheet.paper[body].mean()
-        return float((a * b).mean() / (a.std() * b.std()))
-
-    # Negative because the pits are where the paper is low and the pigment high.
-    assert follows(heavy[0]) < follows(light[0]) - 0.5
-    # The wash is redistributed, not added to: the two together are what one was.
-    assert (light[0] + heavy[0])[body].mean() == pytest.approx(dens[body].mean(), rel=0.06)
-    assert heavy[1].tolist() != light[1].tolist(), "and it is a second pigment"
-    assert light[0][body].std() < heavy[0][body].std()
-
-
-# --- 9: one bounded shallow-water pass
-
-
-def fluid_fields(h: int = 96, w: int = 128) -> tuple:
-    """A wet area, some pigment in it, and a sheet of paper under it."""
-    rng = np.random.default_rng(4)
-    wet = np.zeros((h, w), np.float32)
-    wet[12:84, 16:112] = 1.0
-    pig = paint.fbm(h, w, 20.0, 2, rng)
-    paper = paint.fbm(h, w, 4.0, 3, rng)
-    return wet, pig, paper
-
-
-def test_the_fluid_pass_is_deterministic_because_it_counts_rather_than_converges():
-    """A tolerance would make the iteration count depend on the arithmetic."""
-    wet, pig, paper = fluid_fields()
-    a = paint.shallow_water(wet, pig, paper, 20, 4, 41, 0.6)
-    b = paint.shallow_water(wet, pig, paper, 20, 4, 41, 0.6)
-    assert np.array_equal(a, b)
-    assert np.isfinite(a).all(), "the relaxation has to stay bounded"
-    assert not np.array_equal(a, paint.shallow_water(wet, pig, paper, 30, 4, 41, 0.6))
-
-
-def test_the_water_carries_pigment_out_to_the_edge_it_dries_at():
-    """FlowOutward is what puts the deposit at the contact line, not the middle."""
-    wet, _, paper = fluid_fields()
-    # A flat pigment field, so what shows is the water's own doing and not the
-    # noise it was handed.
-    dep = paint.shallow_water(wet, np.ones_like(wet), paper, 40, 4, 41, 0.6)
-    inside = wet > 0.5
-    d = paint.edt(~inside)
-    near = inside & (d <= 3)
-    deep = inside & (d > 14)
-    assert dep[near].mean() > dep[deep].mean() * 1.1
-    # And it varies around the shape rather than being one ring: that is the
-    # thing a rim of a fixed width cannot do.
-    band = dep[12:84, 16:19].mean(axis=1)
-    assert band.std() / max(band.mean(), 1e-6) > 0.15
-
-
-def test_the_fluid_pass_modulates_the_washes_and_never_becomes_them():
-    """The rule the pass is held to: a failure degrades to today's plate."""
-    wet, _, _ = fluid_fields()
-    sheet = paint.Sheet(96, 128, gran_px=8.0, seed=5)
-    style = paint.PaintStyle(fluid_pass=True)
-    before = paint.wash(wet, sheet, 0.55, 0.22, rim_px=7.0)
-    layers = [(before.copy(), paint.rgb(paint.PIGMENTS["wood"]), 0.05)]
-    after = paint.fluid_modulate(layers, wet, sheet, style)[0][0]
-    body = wet > 0.5
-    assert after.min() >= 0.0 and after.max() <= 1.0
-    a = after[body] - after[body].mean()
-    b = before[body] - before[body].mean()
-    assert float((a * b).mean() / (a.std() * b.std())) > 0.8, "still the same wash"
-    assert not np.allclose(after[body], before[body]), "but it has been worked"
-    # Dry paper is dry paper: away from the wet area nothing is touched at all.
-    dry = paint.edt(body) > 8
-    assert np.array_equal(after[dry], before[dry])
-
-
-def test_a_sheet_with_nothing_wet_on_it_comes_back_untouched():
-    """A pass that has nothing to do hands the plate straight back."""
-    sheet = paint.Sheet(64, 64, gran_px=8.0, seed=5)
-    layers = [(np.zeros((64, 64), np.float32), paint.rgb(paint.PIGMENTS["wood"]))]
-    same = paint.fluid_modulate(
-        layers, np.zeros((64, 64), np.float32), sheet, paint.PaintStyle(fluid_pass=True)
-    )
-    assert same is layers
 
 
 # ------------------------------------------------------------------ phase 2: tuning and sea
@@ -1527,14 +1198,14 @@ def _sea_cover(h: int = 160, w: int = 220) -> np.ndarray:
 def test_the_sea_dries_in_broad_patches_rather_than_flat():
     """The largest wash on the card stops reading as a fill."""
     cov = _sea_cover()
-    sheet = paint.Sheet(*cov.shape, gran_px=8.0, seed=5)
+    sheet = Sheet(*cov.shape, gran_px=8.0, seed=5)
     style = paint.PaintStyle(sea_variation=True)
-    flat = paint.wash(cov, sheet, 0.60, 0.34, rim_px=7.0)
+    flat = wash(cov, sheet, 0.60, 0.34, WashOptions(rim_px=7.0))
     varied = paint.sea_patches(flat, cov, 3.0, style)
     body = cov > 0.5
     assert varied.min() >= 0.0 and varied.max() <= 1.0
     # Broader variation than the wash had, and still the same sea.
-    coarse = paint.blur(varied, 24.0)[body].std() / paint.blur(flat, 24.0)[body].std()
+    coarse = blur(varied, 24.0)[body].std() / blur(flat, 24.0)[body].std()
     assert coarse > 1.5
     assert abs(float(varied[body].mean() - flat[body].mean())) < 0.06
     # Deterministic: the same card paints the same sea every time.
@@ -1547,10 +1218,10 @@ def test_the_sea_dries_in_broad_patches_rather_than_flat():
 def test_the_streaking_runs_along_the_coast_not_across_it():
     """The direction is read off the shore, not chosen in advance."""
     cov = _sea_cover()
-    angle = paint.coast_run(paint.edt(cov <= 0.5), cov > 0.5, 40.0)
+    angle = paint.coast_run(edt(cov <= 0.5), cov > 0.5, 40.0)
     # The shore runs down the card, so the run of it is about a quarter turn.
     assert abs(abs(angle) - math.pi / 2) < 0.35
-    turned = paint.coast_run(paint.edt(cov.T <= 0.5), cov.T > 0.5, 40.0)
+    turned = paint.coast_run(edt(cov.T <= 0.5), cov.T > 0.5, 40.0)
     assert abs(turned) < 0.35  # the same coast laid the other way
 
 
@@ -1568,14 +1239,14 @@ def test_closing_the_cover_puts_the_class_seams_under_water():
     label[20:100, 110:180] = 2  # a two pixel hairline between the two classes
     seam = np.zeros((h, w), bool)
     seam[20:100, 106:112] = True
-    raw = paint.smoothstep(paint.edt(label == 0) - np.float32(12.0), 12.0)
+    raw = smoothstep(edt(label == 0) - np.float32(12.0), 12.0)
     gap = np.float32(5.0)
-    closed_dry = ~(paint.edt(~(paint.edt(label > 0) <= gap)) > gap)
-    closed = paint.smoothstep(paint.edt(closed_dry) - np.float32(12.0), 12.0)
+    closed_dry = ~(edt(~(edt(label > 0) <= gap)) > gap)
+    closed = smoothstep(edt(closed_dry) - np.float32(12.0), 12.0)
     assert float(raw[seam].mean()) < 0.05
     assert float(closed[seam].mean()) > 0.5
     # The outer silhouette keeps its dry margin: the close only fills gaps.
-    outside = paint.edt(label > 0) > 2.0
+    outside = edt(label > 0) > 2.0
     assert not closed_dry[label > 0].any()
     assert closed_dry[outside].all()
 
@@ -1751,20 +1422,6 @@ def test_an_open_line_deforms_without_moving_its_ends(tmp_path):
     assert np.allclose(out, again)
 
 
-def test_a_plate_can_carry_its_own_colour_and_its_own_alpha(tmp_path):
-    """Multiply can only darken; a backing wash in the paper's colour lightens."""
-    from PIL import Image
-
-    rgb = np.zeros((4, 6, 3), np.float32)
-    rgb[..., 0] = 1.0
-    alpha = np.linspace(0.0, 1.0, 24, dtype=np.float32).reshape(4, 6)
-    path = tmp_path / "labels.webp"
-    assert paint.save_rgba(rgb, alpha, path) > 0
-    back = Image.open(path).convert("RGBA")
-    assert back.size == (6, 4)
-    assert back.getchannel("A").getextrema()[0] == 0
-
-
 # ----------------------------------------------------------------- letterforms
 
 
@@ -1839,7 +1496,9 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
     from pyntpot._port import labels as lb
     from pyntpot._port import paint
 
-    plates = paint.paint(tiny_basemap(), tiny_style(), tmp_path, key="iTINY", style_digest=DIGEST)
+    plates = paint.paint(
+        tiny_basemap(), as_style(tiny_style()), tmp_path, key="iTINY", style_digest=DIGEST
+    )
     placed = [
         lb.Label(
             name="Aviemore",
@@ -1868,78 +1527,6 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
 # ------------------------------------------------------ the encoder and the ramp
 
 
-def _ramp_plate(h: int = 96, w: int = 96) -> np.ndarray:
-    """A card carrying narrow coloured marks on a grainy ground.
-
-    Three or four pixels wide, drawn at an angle, on paper with fine noise on
-    it: the plate the lossy encoder is worst at and the one the painter writes.
-    """
-    rng = np.random.default_rng(3)
-    arr = np.full((h, w, 3), 0.93, np.float32)
-    arr -= rng.random((h, w, 1)).astype(np.float32) * 0.03
-    yy = np.arange(h, dtype=np.float32)[:, None]
-    xx = np.arange(w, dtype=np.float32)[None, :]
-    for x0, pig in ((22.0, (0.42, 0.24, 0.13)), (58.0, (0.15, 0.36, 0.50))):
-        d = np.abs(xx - (x0 + yy * 0.32))
-        cov = np.clip(1.0 - d / 1.9, 0.0, 1.0) ** 0.8
-        arr *= 1.0 - cov[..., None] * (1.0 - np.array(pig, np.float32))
-    return np.clip(arr, 0.0, 1.0)
-
-
-def _plateau_share(arr: np.ndarray) -> float:
-    """Share of steps across the marks that do not move at all.
-
-    The fault, as a number: a ramp that is two
-    flats and a jump spends most of its width not changing, and a continuous
-    one moves at nearly every pixel.
-    """
-    got = []
-    grey = arr.mean(axis=2)
-    for r in range(8, arr.shape[0] - 8):
-        for c in (22, 58):
-            x0 = int(c + r * 0.32)
-            seg = grey[r, max(x0 - 5, 0) : x0 + 6]
-            if seg.size > 6:
-                got.append(float((np.abs(np.diff(np.round(seg * 255))) < 1).mean()))
-    return float(np.mean(got))
-
-
-def _grain(arr: np.ndarray) -> float:
-    """High-frequency energy: what is left of the paper after a 3 by 3 mean."""
-    a = arr.mean(axis=2)
-    k = (a[:-2, 1:-1] + a[2:, 1:-1] + a[1:-1, :-2] + a[1:-1, 2:] + a[1:-1, 1:-1]) / 5.0
-    return float(np.abs(a[1:-1, 1:-1] - k).mean())
-
-
-def test_the_lossy_encoder_is_what_flattens_a_narrow_strokes_ramp(tmp_path):
-    """The two plateaus and the step between them are the encoder, not the paint.
-
-    A mark under four pixels wide is narrower than the 4 by 4 block the lossy
-    encoder transforms in and than the half resolution chroma plane it carries,
-    so its edge-to-centre ramp comes back as a light flat, a jump and a dark
-    flat. Lossless returns the ramp the painter composed, exactly.
-    """
-    from PIL import Image
-
-    truth = _ramp_plate()
-    img = paint.to_img(truth, np.random.default_rng(23))
-    ref = np.asarray(img, np.float32) / 255.0
-
-    lossy = tmp_path / "lossy.webp"
-    clean = tmp_path / "clean.webp"
-    n_lossy = paint.save_webp(img, lossy, quality=74)
-    n_clean = paint.save_webp(img, clean, quality=74, lossless=True)
-    back_lossy = np.asarray(Image.open(lossy).convert("RGB"), np.float32) / 255.0
-    back_clean = np.asarray(Image.open(clean).convert("RGB"), np.float32) / 255.0
-
-    assert np.array_equal(back_clean, ref)  # exactly what was composed
-    assert np.abs(back_lossy - ref).max() > 0.02  # and the lossy one is not
-    # The fault itself: flats across the mark, and the paper's grain gone.
-    assert _plateau_share(back_lossy) > _plateau_share(back_clean) * 1.4
-    assert _grain(back_lossy) < _grain(back_clean) * 0.75
-    assert n_clean > n_lossy  # which is what it costs
-
-
 def test_the_style_decides_how_the_plates_are_written(tmp_path):
     """Lossless is the default, and turning it off is the old encoder back."""
     from PIL import Image
@@ -1947,9 +1534,13 @@ def test_the_style_decides_how_the_plates_are_written(tmp_path):
     assert paint.PaintStyle().plate_lossless
 
     style, basemap = smoke_box(plate_lossless=False)
-    lossy = paint.paint(basemap, style, tmp_path / "lossy", key="iSMOKE", style_digest=DIGEST)
+    lossy = paint.paint(
+        basemap, as_style(style), tmp_path / "lossy", key="iSMOKE", style_digest=DIGEST
+    )
     style, basemap = smoke_box()
-    clean = paint.paint(basemap, style, tmp_path / "clean", key="iSMOKE", style_digest=DIGEST)
+    clean = paint.paint(
+        basemap, as_style(style), tmp_path / "clean", key="iSMOKE", style_digest=DIGEST
+    )
     assert clean.manifest.bytes > lossy.manifest.bytes
 
     # The pen plate is alpha, which WebP already stored losslessly, so the flag
@@ -2585,8 +2176,8 @@ def test_the_label_plate_is_written_losslessly_like_the_others(tmp_path):
 
     clean = tmp_path / "clean.webp"
     lossy = tmp_path / "lossy.webp"
-    paint.save_rgba(rgb, alpha, clean)
-    paint.save_rgba(rgb, alpha, lossy, lossless=False)
+    save_rgba(rgb, alpha, clean)
+    save_rgba(rgb, alpha, lossy, lossless=False)
     ref = np.clip(rgb * 255.0 + 0.5, 0, 255).astype(np.uint8)
     want_a = np.clip(alpha * 255.0 + 0.5, 0, 255).astype(np.uint8)
     back = np.asarray(Image.open(clean).convert("RGBA"), np.uint8)

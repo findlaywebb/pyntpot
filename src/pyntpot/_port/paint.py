@@ -33,68 +33,22 @@ from PIL import Image
 
 from pyntpot._port.style import coerce_like
 from pyntpot.ink.chains import chain_lines
+from pyntpot.ink.io import save_alpha, save_rgba, save_webp, to_img
+from pyntpot.ink.noise import F32, blur, edt, fbm, fbm_aniso, fill_holes, smoothstep
+from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, Layer, composite
+from pyntpot.ink.raster import Deform, deform_rings, fill_cov, stroke_mask
+from pyntpot.ink.sheet import PAPER, Canvas, Sheet, rgb
+from pyntpot.ink.wash import WashOptions, fluid_modulate, separated, wash
 
 if TYPE_CHECKING:
     from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
     from pyntpot.maps.plates import Plates
+    from pyntpot.maps.style import Style
 
-F32 = np.float32
 Pt = tuple[float, float]
-#: One layer of the pigment stack: its density, its pigment over white, and,
-#: where the caller knows it, what that pigment shows over black as a share of
-#: that. Only Kubelka-Munk glazing reads the third; multiply ignores it.
-Layer = tuple[np.ndarray | None, np.ndarray] | tuple[np.ndarray | None, np.ndarray, float]
-
 #: Painted plates live inside the geo cache, one directory per activity, so a
 #: caller that redirects the cache redirects the plates with it.
 PLATES_SUBDIR = "plates"
-
-#: The card's own cream, before anything is laid on it.
-PAPER = "#f3ead6"
-
-#: Multiply colours: what a full-strength wash of each pigment transmits. The
-#: inks are darker than the washes, because a mark is not a wash.
-PIGMENTS = {
-    "farmland": "#dfe0b0",
-    "meadow": "#cfdfae",
-    "orchard": "#d5dda2",
-    "scrub": "#c9d5a4",
-    "heath": "#e0cda2",
-    "sand": "#ecdfbe",
-    "rock": "#dcd6c6",
-    "wetland": "#bfd2cd",
-    "built": "#ddd3c3",
-    "works": "#d2cbc0",
-    "wood": "#a8c286",
-    "pale": "#d5e0b4",
-    "water": "#9ec4de",
-    "relief": "#c9bda4",
-    "rim": "#c2ad91",
-}
-
-#: What each pigment shows over black, as a share of what it shows over white.
-#: This is the one number Kubelka-Munk glazing needs beyond the hex, and it is
-#: the honest place to record which pigments stain: near 0 is a transparent
-#: glaze that lets the layer under it through, near 1 is a covering body colour.
-#: The wood green and the water blue stain; the relief grey and the built greys
-#: sit on the surface. Anything not named here takes `km_transparency`.
-TRANSPARENCY = {
-    "farmland": 0.10,
-    "meadow": 0.09,
-    "orchard": 0.09,
-    "scrub": 0.08,
-    "heath": 0.14,
-    "sand": 0.16,
-    "rock": 0.22,
-    "wetland": 0.08,
-    "built": 0.26,
-    "works": 0.28,
-    "wood": 0.05,
-    "pale": 0.12,
-    "water": 0.04,
-    "relief": 0.30,
-    "rim": 0.18,
-}
 
 #: How dark a wash of each class goes, and how hard its edge pools.
 COVER_CFG = {
@@ -895,943 +849,10 @@ class PaintStyle:
         return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
 
-# --------------------------------------------------------------------------- colour
-
-
-def rgb(hex_s: str) -> np.ndarray:
-    """One hex colour as three floats in 0 to 1."""
-    h = hex_s.lstrip("#")
-    return np.array([int(h[i : i + 2], 16) / 255.0 for i in (0, 2, 4)], F32)
-
-
-# --------------------------------------------------------------------------- noise
-
-
-def value_noise(h: int, w: int, cell: float, rng: np.random.Generator) -> np.ndarray:
-    """Smooth value noise on a grid of `cell` pixels."""
-    cell = max(cell, 1.0)
-    gh, gw = int(h / cell) + 3, int(w / cell) + 3
-    g = rng.random((gh, gw)).astype(F32)
-    ys = np.arange(h, dtype=F32) / cell
-    xs = np.arange(w, dtype=F32) / cell
-    y0 = np.floor(ys).astype(np.int32)
-    x0 = np.floor(xs).astype(np.int32)
-    fy = ys - y0
-    fx = xs - x0
-    fy = (fy * fy * (3 - 2 * fy))[:, None]
-    fx = fx * fx * (3 - 2 * fx)
-    a = g[y0][:, x0]
-    b = g[y0][:, x0 + 1]
-    c = g[y0 + 1][:, x0]
-    d = g[y0 + 1][:, x0 + 1]
-    top = a + (b - a) * fx
-    bot = c + (d - c) * fx
-    return top + (bot - top) * fy
-
-
-def fbm(h: int, w: int, cell: float, octaves: int, rng: np.random.Generator) -> np.ndarray:
-    """Fractal noise, normalised to 0 to 1."""
-    out = np.zeros((h, w), F32)
-    amp, total = 1.0, 0.0
-    for i in range(octaves):
-        out += amp * value_noise(h, w, cell / (2**i), rng)
-        total += amp
-        amp *= 0.5
-    out /= total
-    lo, hi = float(out.min()), float(out.max())
-    return (out - lo) / max(hi - lo, 1e-6)
-
-
-def _value_noise_at(
-    u: np.ndarray, v: np.ndarray, cell: float, rng: np.random.Generator
-) -> np.ndarray:
-    """Smooth value noise sampled at arbitrary coordinates rather than a grid.
-
-    `value_noise` walks the pixel grid, so it can only make an isotropic field.
-    This takes the coordinates it is given, which is what lets a caller squash
-    or rotate them first.
-
-    Args:
-        u: Column coordinate per pixel, in the same units as `cell`.
-        v: Row coordinate per pixel.
-        cell: The lattice spacing.
-        rng: The generator the lattice is drawn from.
-
-    Returns:
-        The field, in 0 to 1, with the shape of `u`.
-    """
-    cell = max(cell, 1.0)
-    us, vs = u / cell, v / cell
-    u0f, v0f = np.floor(us), np.floor(vs)
-    umin, vmin = float(u0f.min()), float(v0f.min())
-    gw = int(u0f.max() - umin) + 3
-    gh = int(v0f.max() - vmin) + 3
-    g = rng.random((gh, gw)).astype(F32)
-    ix = (u0f - umin).astype(np.int32)
-    iy = (v0f - vmin).astype(np.int32)
-    fx = (us - u0f).astype(F32)
-    fy = (vs - v0f).astype(F32)
-    fx = fx * fx * (3 - 2 * fx)
-    fy = fy * fy * (3 - 2 * fy)
-    a = g[iy, ix]
-    b = g[iy, ix + 1]
-    c = g[iy + 1, ix]
-    d = g[iy + 1, ix + 1]
-    top = a + (b - a) * fx
-    bot = c + (d - c) * fx
-    return top + (bot - top) * fy
-
-
-def fbm_aniso(
-    h: int,
-    w: int,
-    cell: float,
-    octaves: int,
-    rng: np.random.Generator,
-    stretch: float,
-    angle: float,
-) -> np.ndarray:
-    """Fractal noise stretched along one axis: a laid fibre, not concrete.
-
-    Cold-press paper has a direction. Squashing one axis of the sampling
-    coordinates by `stretch` before the lattice is read gives a field whose
-    features are that many times longer than they are wide, all lying at the
-    same sheet-wide angle.
-
-    Args:
-        h: Rows.
-        w: Columns.
-        cell: The coarsest lattice spacing, across the fibre.
-        octaves: How many halvings to sum.
-        rng: The generator the lattice is drawn from.
-        stretch: How much longer than wide a fibre is.
-        angle: The grain's angle in radians.
-
-    Returns:
-        The field, normalised to 0 to 1.
-    """
-    yy = np.arange(h, dtype=F32)[:, None]
-    xx = np.arange(w, dtype=F32)[None, :]
-    ca, sa = math.cos(angle), math.sin(angle)
-    u = (xx * ca + yy * sa) / max(stretch, 1e-3)
-    v = yy * ca - xx * sa
-    out = np.zeros((h, w), F32)
-    amp, total = 1.0, 0.0
-    for i in range(octaves):
-        out += amp * _value_noise_at(u, v, cell / (2**i), rng)
-        total += amp
-        amp *= 0.5
-    out /= total
-    lo, hi = float(out.min()), float(out.max())
-    return (out - lo) / max(hi - lo, 1e-6)
-
-
-def _box1(a: np.ndarray, r: int, axis: int) -> np.ndarray:
-    """One box blur pass along one axis."""
-    if r < 1:
-        return a
-    a = np.moveaxis(a, axis, -1)
-    n = a.shape[-1]
-    pad = np.pad(a, [(0, 0)] * (a.ndim - 1) + [(r + 1, r)], mode="edge")
-    cs = np.cumsum(pad, axis=-1, dtype=F32)
-    out = (cs[..., 2 * r + 1 :] - cs[..., :n]) / F32(2 * r + 1)
-    return np.moveaxis(out, -1, axis)
-
-
-def blur(a: np.ndarray, sigma: float) -> np.ndarray:
-    """Three box passes, which is a Gaussian to the eye and much cheaper."""
-    if sigma <= 0.4:
-        return a.astype(F32, copy=False)
-    r = max(1, int(round(sigma * 0.95)))
-    out = a.astype(F32, copy=True)
-    for _ in range(3):
-        out = _box1(out, r, 1)
-        out = _box1(out, r, 0)
-    return out
-
-
-def edt(mask: np.ndarray) -> np.ndarray:
-    """Chamfer distance in pixels to the nearest True cell."""
-    inf = F32(1e6)
-    d = np.where(mask, F32(0), inf).astype(F32)
-    if not mask.any():
-        return d
-    h, w = d.shape
-    idx = np.arange(w, dtype=F32)
-    dd, one = F32(1.41421356), F32(1.0)
-    for r in range(h):
-        row = d[r].copy()
-        if r:
-            p = d[r - 1]
-            np.minimum(row, p + one, out=row)
-            np.minimum(row[:-1], p[1:] + dd, out=row[:-1])
-            np.minimum(row[1:], p[:-1] + dd, out=row[1:])
-        np.minimum(row, np.minimum.accumulate(row - idx) + idx, out=row)
-        d[r] = row
-    for r in range(h - 1, -1, -1):
-        row = d[r].copy()
-        if r < h - 1:
-            p = d[r + 1]
-            np.minimum(row, p + one, out=row)
-            np.minimum(row[:-1], p[1:] + dd, out=row[:-1])
-            np.minimum(row[1:], p[:-1] + dd, out=row[1:])
-        rev = row[::-1].copy()
-        np.minimum(rev, np.minimum.accumulate(rev - idx) + idx, out=rev)
-        d[r] = rev[::-1]
-    return d
-
-
-def smoothstep(x: np.ndarray, w: float) -> np.ndarray:
-    """A soft step of width `w` about zero."""
-    t = np.clip(x / w + 0.5, 0.0, 1.0)
-    return t * t * (3 - 2 * t)
-
-
-def fill_holes(mask: np.ndarray, step: int = 6) -> np.ndarray:
-    """Fill anything the outside cannot reach: the inside of a loop is land.
-
-    Done on a coarse copy, because the flood is a propagation and the answer is
-    a shape, not a pixel.
-
-    Args:
-        mask: The dilated track.
-        step: Coarsening factor for the flood.
-
-    Returns:
-        The mask with its enclosed holes filled.
-    """
-    small = mask[::step, ::step]
-    free = ~small
-    reach = np.zeros_like(free)
-    reach[0, :] |= free[0, :]
-    reach[-1, :] |= free[-1, :]
-    reach[:, 0] |= free[:, 0]
-    reach[:, -1] |= free[:, -1]
-    for i in range(4000):
-        grown = reach.copy()
-        grown[1:, :] |= reach[:-1, :]
-        grown[:-1, :] |= reach[1:, :]
-        grown[:, 1:] |= reach[:, :-1]
-        grown[:, :-1] |= reach[:, 1:]
-        grown &= free
-        if i % 20 == 0 and np.array_equal(grown, reach):
-            break
-        if not grown.sum() > reach.sum():
-            reach = grown
-            break
-        reach = grown
-    holes = free & ~reach
-    if not holes.any():
-        return mask
-    big = np.repeat(np.repeat(holes, step, 0), step, 1)[: mask.shape[0], : mask.shape[1]]
-    if big.shape != mask.shape:
-        pad = np.zeros_like(mask)
-        pad[: big.shape[0], : big.shape[1]] = big
-        big = pad
-    return mask | big
-
-
-# --------------------------------------------------------------------------- the plate
-
-
-@dataclass
-class Plate:
-    """The card's metre box and the pixel grid it is painted on."""
-
-    x0: float
-    y0: float
-    x1: float
-    y1: float
-    w: int
-    h: int
-
-    @property
-    def scale(self) -> float:
-        """Render pixels per metre."""
-        return self.w / (self.x1 - self.x0)
-
-    def px(self, pts: Any) -> np.ndarray:
-        """Project metre points into render pixels, north up."""
-        a = np.asarray(pts, dtype=np.float64)
-        s = self.scale
-        out = np.empty_like(a)
-        out[:, 0] = (a[:, 0] - self.x0) * s
-        out[:, 1] = (self.y1 - a[:, 1]) * s
-        return out
-
-
-@dataclass
-class Sheet:
-    """The paper's own noise fields, shared by every wash and every mark."""
-
-    h: int
-    w: int
-    gran_px: float
-    seed: int = 11
-    #: Cold press. Above 0 a second noise field, stretched along one sheet-wide
-    #: axis, is mixed into the tooth at this weight, so the paper reads as a
-    #: laid fibre rather than as concrete. 0 is the isotropic sheet.
-    fibre: float = 0.0
-    fibre_stretch: float = 3.0
-    fibre_angle: float = 0.42
-    fibre_cell: float = 4.2
-    paper: np.ndarray = field(init=False)
-    coarse: np.ndarray = field(init=False)
-    fine: np.ndarray = field(init=False)
-    wet: np.ndarray = field(init=False)
-    gran: np.ndarray = field(init=False)
-
-    def __post_init__(self) -> None:
-        """Build the five fields from one seeded generator."""
-        rng = np.random.default_rng(self.seed)
-        self.paper = np.clip(
-            0.5 * fbm(self.h, self.w, 3.6, 3, rng) + 0.5 * fbm(self.h, self.w, 92.0, 3, rng), 0, 1
-        )
-        self.coarse = fbm(self.h, self.w, 74.0, 3, rng)
-        self.fine = fbm(self.h, self.w, 5.0, 2, rng)
-        self.wet = fbm(self.h, self.w, 130.0, 2, rng)
-        self.gran = fbm(self.h, self.w, self.gran_px, 2, rng)
-        if self.fibre > 0:
-            # Drawn last, so a sheet with no fibre is the sheet it always was:
-            # the five fields above have already taken their draws.
-            grain = fbm_aniso(
-                self.h, self.w, self.fibre_cell, 3, rng, self.fibre_stretch, self.fibre_angle
-            )
-            self.paper = np.clip((1.0 - self.fibre) * self.paper + self.fibre * grain, 0, 1)
-        self._rng = rng
-
-    def pits(self, gamma: float) -> np.ndarray:
-        """How readily pigment settles, from the paper's own height.
-
-        Granulation on real paper is deposition following the tooth: the
-        hollows take the heavy pigment, and they are the same hollows a dry
-        brush skips over. Taking it from `paper` rather than from an unrelated
-        field is what ties the two together.
-
-        Args:
-            gamma: How sharply it follows. Above 1 a pigment has to reach a
-                real hollow before it settles.
-
-        Returns:
-            A field about 0 to 1, high in the pits.
-        """
-        return np.clip(1.0 - self.paper, 0.0, 1.0) ** F32(max(gamma, 0.05))
-
-    def noise(self, cell: float, octaves: int = 2) -> np.ndarray:
-        """One more noise field at this scale."""
-        return fbm(self.h, self.w, cell, octaves, self._rng)
-
-
-def _edge(acc: np.ndarray, x0: float, y0: float, x1: float, y1: float, hs: int, ws: int) -> None:
-    """Add one polygon edge's winding contribution to a scanline accumulator."""
-    if y0 == y1:
-        return
-    d = 1
-    if y1 < y0:
-        x0, y0, x1, y1 = x1, y1, x0, y0
-        d = -1
-    r0 = max(int(math.ceil(y0 - 0.5)), 0)
-    r1 = min(int(math.ceil(y1 - 0.5)), hs)
-    if r1 <= r0:
-        return
-    rr = np.arange(r0, r1)
-    xx = x0 + (rr + 0.5 - y0) * (x1 - x0) / (y1 - y0)
-    cc = np.clip(np.ceil(xx - 0.5).astype(np.int32), 0, ws + 1)
-    np.add.at(acc, (rr, cc), d)
-
-
-#: What one class's outlines are deformed by: the generator, the first round's
-#: variance as a share of a segment, the rounds, what each round hands its
-#: children, the ceiling on one displacement and the segment length to stop at,
-#: both in the rings' own metres.
-Deform = tuple[np.random.Generator, float, int, float, float, float]
-
-
-def deform_ring(
-    ring: Any,
-    rng: np.random.Generator,
-    amount: float,
-    depth: int,
-    decay: float,
-    cap: float,
-    min_seg: float,
-) -> np.ndarray:
-    """Recursive midpoint displacement of one closed outline.
-
-    Hobbs' construction: each segment carries its own variance, is split at a
-    midpoint pushed off the line by that variance times its own length, and
-    hands each half a decayed and separately randomised share of it. Carrying
-    the variance per segment rather than per round is the whole point. A single
-    global amplitude gives an outline that wobbles at one frequency everywhere,
-    which is what the blurred-mask edge already does; per-segment variance is
-    what makes one stretch of a wood loose and the next stretch tight.
-
-    Args:
-        ring: The outline, in the rings' own metre coordinates.
-        rng: The generator the displacements are drawn from.
-        amount: The first round's variance, as a share of a segment's length.
-        depth: How many rounds. Each doubles the point count.
-        decay: What each round hands its children, before the randomisation.
-        cap: The largest one displacement may be, in metres.
-        min_seg: Stop once the typical segment is shorter than this.
-
-    Returns:
-        The deformed ring, `(n, 2)`.
-    """
-    p = np.asarray(ring, dtype=np.float64)
-    if p.ndim != 2 or len(p) < 3:
-        return p
-    var = np.full(len(p), max(amount, 0.0))
-    for _ in range(max(int(depth), 0)):
-        n = len(p)
-        if n > 24000:
-            break
-        q = np.roll(p, -1, axis=0)
-        d = q - p
-        seg = np.hypot(d[:, 0], d[:, 1])
-        if float(np.median(seg)) < min_seg:
-            break
-        ln = np.maximum(seg, 1e-9)
-        off = np.clip(rng.normal(0.0, 1.0, n) * var * seg, -cap, cap)
-        mid = 0.5 * (p + q)
-        mid[:, 0] -= d[:, 1] / ln * off
-        mid[:, 1] += d[:, 0] / ln * off
-        out = np.empty((2 * n, 2))
-        out[0::2] = p
-        out[1::2] = mid
-        p = out
-        var = np.repeat(var, 2) * decay * rng.uniform(0.75, 1.25, 2 * n)
-    return p
-
-
-def deform_rings(rings: list[list[Pt]], deform: Deform | None) -> list[Any]:
-    """Every outline of one class deformed, or the outlines unchanged.
-
-    Args:
-        rings: The class's outlines, in metres.
-        deform: The settings, or None to leave them exactly as they are.
-
-    Returns:
-        The rings, deformed or the same objects.
-    """
-    if deform is None:
-        return rings
-    return [deform_ring(r, *deform) for r in rings]
-
-
-def fill_cov(rings: list[list[Pt]], plate: Plate, ss: int = 2) -> np.ndarray:
-    """Coverage of a set of rings, supersampled and averaged down."""
-    hs, ws = plate.h * ss, plate.w * ss
-    acc = np.zeros((hs, ws + 2), np.int16)
-    for ring in rings:
-        if len(ring) < 3:
-            continue
-        p = plate.px(ring) * ss
-        xs, ys = p[:, 0], p[:, 1]
-        for a, b, c, d in zip(xs, ys, np.roll(xs, -1), np.roll(ys, -1), strict=True):
-            _edge(acc, a, b, c, d, hs, ws)
-    inside = np.cumsum(acc, axis=1, dtype=np.int32)[:, :ws] != 0
-    return inside.reshape(plate.h, ss, plate.w, ss).mean(axis=(1, 3), dtype=F32)
-
-
-def stroke_mask(lines: list[list[Pt]], plate: Plate, width_px: float) -> np.ndarray:
-    """A binary mask of polylines stroked at a fixed width."""
-    hits = np.zeros((plate.h, plate.w), bool)
-    for pts in lines:
-        p = plate.px(pts)
-        seg = np.hypot(np.diff(p[:, 0]), np.diff(p[:, 1]))
-        total = float(seg.sum())
-        if total < 1:
-            continue
-        cum = np.concatenate([[0.0], np.cumsum(seg)])
-        t = np.linspace(0, total, max(int(total / 0.6), 2))
-        ix = np.clip(np.round(np.interp(t, cum, p[:, 0])).astype(np.int32), 0, plate.w - 1)
-        iy = np.clip(np.round(np.interp(t, cum, p[:, 1])).astype(np.int32), 0, plate.h - 1)
-        hits[iy, ix] = True
-    if width_px <= 1:
-        return hits
-    return edt(hits) < width_px * 0.5
-
-
 # --------------------------------------------------------------------------- washes
 
 
-def flow_edge(
-    a: np.ndarray, sheet: Sheet, rim_px: float, exp: float, ref_frac: float, frac: float = 0.38
-) -> np.ndarray:
-    """Edge darkening as an outward flow term, decaying inward from the edge.
-
-    Mask minus blur is symmetric about the geometric edge and one width
-    everywhere. Real edge darkening is pigment carried out by evaporation at a
-    pinned contact line, so it sits inside the wet boundary and is wider on a
-    large wash than on a small one. Coarse noise then breaks it up, because a
-    contact line does not pin evenly.
-
-    Args:
-        a: The wash's own alpha, in 0 to 1.
-        sheet: The paper's noise fields.
-        rim_px: The rim's width at the reference area.
-        exp: How fast the width grows with area.
-        ref_frac: The reference area, as a share of the sheet.
-        frac: The decay length as a share of `rim_px`.
-
-    Returns:
-        The rim, in 0 to 1.
-    """
-    inside = a > 0.5
-    area = float(inside.sum())
-    if area < 4:
-        return np.zeros_like(a)
-    ref = max(a.size * ref_frac, 1.0)
-    width = max(rim_px * frac * (area / ref) ** exp, 0.8)
-    d = edt(~inside)
-    rim = np.exp(-d / F32(width)) * a * (0.6 + 0.8 * sheet.coarse)
-    return np.clip(rim, 0.0, 1.0)
-
-
-def bloom(
-    dens: np.ndarray,
-    a: np.ndarray,
-    sheet: Sheet,
-    rng: np.random.Generator,
-    count: int,
-    radius_frac: float,
-    lift: float,
-    warp: float,
-) -> None:
-    """Backruns, as a re-wet event with no solver. Modifies `dens` in place.
-
-    A backrun is a second front of liquid pushing already-deposited pigment out
-    ahead of it: the centre goes lighter than the wash around it and the front
-    dries as a dark crenellated ridge. Seeded where the wash is thick, grown
-    outward, and warped off a circle by fractal noise, which is what makes the
-    ridge read as a cauliflower rather than a halo. Cropped to the bloom's own
-    box, so the cost does not scale with the plate.
-
-    Args:
-        dens: The wash's density, changed in place.
-        a: The wash's alpha, so a bloom stops at the wash's edge.
-        sheet: The paper's noise fields.
-        rng: The generator the seeds and the warp are drawn from.
-        count: How many blooms to lay.
-        radius_frac: Radius as a share of the root of the wash's area.
-        lift: How much pigment the front takes out of the centre.
-        warp: How far the fbm pushes the front off a circle.
-    """
-    inside = np.flatnonzero((a > 0.6).ravel())
-    if count < 1 or inside.size < 64:
-        return
-    h, w = dens.shape
-    radius = float(np.clip(radius_frac * math.sqrt(inside.size), 5.0, 0.22 * min(h, w)))
-    flat = dens.ravel()
-    for _ in range(count):
-        # Seeded toward the thick: a handful of candidates, the wettest wins.
-        cand = rng.choice(inside, size=min(24, inside.size), replace=False)
-        cy, cx = divmod(int(cand[int(np.argmax(flat[cand]))]), w)
-        r = radius * float(rng.uniform(0.7, 1.3))
-        span = int(r * 1.9) + 3
-        y0, y1 = max(cy - span, 0), min(cy + span + 1, h)
-        x0, x1 = max(cx - span, 0), min(cx + span + 1, w)
-        if y1 - y0 < 5 or x1 - x0 < 5:
-            continue
-        bh, bw = y1 - y0, x1 - x0
-        yy = (np.arange(y0, y1, dtype=F32) - cy)[:, None]
-        xx = (np.arange(x0, x1, dtype=F32) - cx)[None, :]
-        d = np.hypot(yy, xx) + warp * (fbm(bh, bw, r * 0.55, 3, rng) - 0.5) * r
-        front = np.exp(-(((d - r) / F32(max(r * 0.09, 1.6))) ** 2))
-        box_a = a[y0:y1, x0:x1]
-        box = dens[y0:y1, x0:x1]
-        core = (d < r) * box_a
-        held = float(box[core > 0.5].mean()) if (core > 0.5).any() else 0.0
-        box *= 1.0 - lift * core
-        box += held * lift * 1.5 * front * box_a
-        np.clip(box, 0.0, 1.0, out=box)
-
-
-def wash(
-    cover: np.ndarray,
-    sheet: Sheet,
-    base: float,
-    pool: float,
-    wobble: float = 3.6,
-    dry: float = 1.8,
-    rim_px: float = 7.0,
-    gran: float = 0.26,
-    uneven: float = 0.22,
-    tooth: float = 0.34,
-    wet: np.ndarray | None = None,
-    bleed_px: float = 5.0,
-    bleed_mix: float = 0.55,
-    rim_drop: float = 0.7,
-    gran_gamma: float = 0.0,
-    flow: tuple[float, float, float] | None = None,
-    blooms: tuple[np.random.Generator, int, float, float, float] | None = None,
-) -> np.ndarray:
-    """One pigment's density from a coverage mask.
-
-    The edge is the blurred mask thresholded against two noise scales, which is
-    cheaper than a signed distance field and, at this resolution, the same
-    picture. Pooling is the mask minus its own blur, so pigment sits just inside
-    the edge instead of fading out of it.
-
-    Everything from `wet` on is a phase 1 option and is inert when it is not
-    given, so a caller that passes none of it paints the wash it always did.
-
-    Args:
-        cover: Coverage in 0 to 1.
-        sheet: The paper's noise fields.
-        base: Density of the flat body of the wash.
-        pool: Extra density where the pigment pools at the edge.
-        wobble: Coarse noise on the edge, in mask units.
-        dry: Fine noise on the edge.
-        rim_px: Width of the pooled edge, in render pixels.
-        gran: Granulation, as a share of the body density.
-        uneven: Slow variation across the wash.
-        tooth: How much the paper's tooth lightens it.
-        wet: The shared wet-area map, when there is one. Inside it this wash
-            bleeds into whatever is beside it and gives up most of its rim,
-            because a class boundary under water is not an edge.
-        bleed_px: How far the bleed carries, in render pixels.
-        bleed_mix: How much of the bleed is taken, at the centre of a wet area.
-        rim_drop: How much of the rim the wet area removes.
-        gran_gamma: Above 0, granulation follows the paper's own pits at this
-            gamma rather than the unrelated `sheet.gran` field.
-        flow: `(exp, ref_frac, frac)` to take the rim from `flow_edge` instead.
-        blooms: `(rng, count, radius_frac, lift, warp)` to lay backruns.
-
-    Returns:
-        Density in 0 to 1.
-    """
-    if not cover.any():
-        return np.zeros_like(cover)
-    soft = blur(cover, 2.4)
-    edge = (wobble * (sheet.coarse - 0.5) + dry * (sheet.fine - 0.5)) * 0.06
-    a = np.clip((soft - 0.5 + edge) * 3.2 + 0.5, 0.0, 1.0)
-    if flow is not None:
-        rim = flow_edge(a, sheet, rim_px, flow[0], flow[1], flow[2])
-    else:
-        rim = np.clip(a - blur(a, rim_px), 0.0, 1.0)
-    peak = float(rim.max())
-    if peak > 1e-5:
-        rim = rim / peak
-    if wet is not None:
-        rim = rim * (1.0 - wet * rim_drop)
-    dens = a * base + rim * pool
-    dens *= 1.0 + uneven * (sheet.wet - 0.5) * 2.0
-    if gran_gamma > 0:
-        pits = sheet.pits(gran_gamma)
-        dens *= 1.0 + gran * (pits - float(pits.mean())) * 2.4
-    else:
-        dens *= 1.0 + gran * np.clip((sheet.gran - 0.5) * 2.4, -0.7, 1.0)
-    dens *= 1.0 - tooth * (sheet.paper - 0.5)
-    if wet is not None and bleed_px > 0.4:
-        m_wet = wet * bleed_mix
-        dens = dens * (1.0 - m_wet) + blur(dens, bleed_px) * m_wet
-    if blooms is not None:
-        bloom(dens, a, sheet, blooms[0], int(blooms[1]), blooms[2], blooms[3], blooms[4])
-    b1 = blur(dens, 1.6)
-    b2 = blur(dens, 4.4)
-    m = sheet.wet
-    lo = np.clip(m * 2.0, 0, 1)
-    hi = np.clip(m * 2.0 - 1.0, 0, 1)
-    return np.clip(dens * (1 - lo) + b1 * (lo - hi) + b2 * hi, 0.0, 1.0)
-
-
-def separated(
-    dens: np.ndarray,
-    key: str,
-    pig: np.ndarray,
-    transparency: float,
-    sheet: Sheet,
-    style: PaintStyle,
-) -> list[Layer]:
-    """One wash as one pigment, or as the two it is really mixed from.
-
-    A tube green is a staining green with a heavier blue-black in it, and the
-    two come apart as the wash dries: the heavy one drops into the paper's
-    hollows and the light one floats over the tooth. Curtis' pigment
-    separation, taken as one extra layer rather than a second solver. The total
-    density is what it was, because the heavy field is normalised to a mean of
-    one before its share is taken out of the light one: the flag redistributes
-    a wash, it does not add to it.
-
-    The pair only reads as two pigments through `km_glazing`. Under multiply
-    the layers still stack, but the two hues average where they overlap, which
-    is exactly what glazing was brought in to stop.
-
-    Args:
-        dens: The wash's density.
-        key: The land class, which is what decides whether it separates.
-        pig: The pigment over white.
-        transparency: What that pigment shows over black, as a share.
-        sheet: The paper's noise fields, for the pits the heavy one settles in.
-        style: The paint style.
-
-    Returns:
-        One layer, or the light one and then the heavy one over it.
-    """
-    hex2 = style.separation_pigments.get(key) if style.pigment_separation else None
-    if not hex2:
-        return [(dens, pig, transparency)]
-    share = float(np.clip(style.separation_share, 0.0, 0.9))
-    heavy = dens * sheet.pits(style.separation_gamma)
-    # Scaled against this wash's own pigment rather than against the sheet's
-    # mean tooth, so the heavy pigment is exactly the share of the wash it is
-    # said to be wherever the wash happens to lie. The pits say where it goes,
-    # not how much of it there is.
-    total = float(heavy.sum())
-    if total < 1e-9:
-        return [(dens, pig, transparency)]
-    heavy = heavy * F32(share * float(dens.sum()) / total)
-    return [
-        (dens * F32(1.0 - share), pig, transparency),
-        (np.clip(heavy, 0.0, 1.0), rgb(hex2), float(style.separation_transparency)),
-    ]
-
-
-def shallow_water(
-    wet: np.ndarray,
-    pig: np.ndarray,
-    paper: np.ndarray,
-    steps: int,
-    relax: int,
-    seed: int,
-    gran: float,
-) -> np.ndarray:
-    """Curtis' shallow water layer, cut down to a bounded number of steps.
-
-    Velocities come from the pressure gradient, `RelaxDivergence` hands each
-    cell's divergence to its two neighbours a fixed number of times, the
-    outward flow lifts the pressure at the wet boundary, and what settles
-    follows the paper's own height. Pigment moves as a flux between cells
-    rather than by sampling, which is what lets it pile up against a contact
-    line the water cannot cross: that pile is the edge darkening.
-
-    Every count here is a count and not a tolerance. A convergence test would
-    make the number of iterations depend on the arithmetic, and the plate would
-    stop being reproducible from its seed.
-
-    Args:
-        wet: The wet area on this grid, in 0 to 1.
-        pig: Pigment in suspension at the start, in 0 to 1.
-        paper: The paper's height on this grid, in 0 to 1.
-        steps: How many steps to run.
-        relax: Relaxation iterations inside one step.
-        seed: The generator's seed, for the water's own unevenness.
-        gran: How much the settling follows the paper's height.
-
-    Returns:
-        What has been deposited, normalised to 0 to 1.
-    """
-    h, w = wet.shape
-    rng = np.random.default_rng(seed)
-    hgt = (wet * (0.85 + 0.30 * rng.random((h, w)))).astype(F32)
-    u = np.zeros((h, w), F32)
-    v = np.zeros((h, w), F32)
-    g = (pig * wet).astype(F32)
-    dep = np.zeros((h, w), F32)
-    tooth = (paper - float(paper.mean())).astype(F32)
-    mask = (wet > 0.05).astype(F32)
-    edge = np.clip(mask - blur(mask, 3.0), 0.0, 1.0)
-    hold = (F32(0.05) * (1.0 + gran * (0.5 - paper) * 2.0)).astype(F32)
-    #: Where pigment may pass: nothing crosses the edge of the wet area.
-    wall_x = (mask * np.roll(mask, -1, 1)).astype(F32)
-    wall_y = (mask * np.roll(mask, -1, 0)).astype(F32)
-
-    def dx(a: np.ndarray) -> np.ndarray:
-        return np.roll(a, -1, 1) - a
-
-    def dy(a: np.ndarray) -> np.ndarray:
-        return np.roll(a, -1, 0) - a
-
-    for _ in range(max(int(steps), 0)):
-        p = hgt + F32(0.40) * tooth
-        u = (u - F32(0.35) * dx(p)) * F32(0.94) * mask
-        v = (v - F32(0.35) * dy(p)) * F32(0.94) * mask
-        for _ in range(max(int(relax), 0)):
-            d = (F32(0.1) * (dx(u) + dy(v))).astype(F32)
-            hgt += d
-            u += d - np.roll(d, 1, 1)
-            v += d - np.roll(d, 1, 0)
-            u *= mask
-            v *= mask
-        np.clip(u, -0.45, 0.45, out=u)
-        np.clip(v, -0.45, 0.45, out=v)
-        hgt = np.maximum(hgt - F32(0.03) * edge, 0.0) * mask
-        # Pigment moves as a flux between cells, upwind, and no flux crosses
-        # the wet boundary. Advecting it by sampling instead would carry it
-        # about without ever piling it up, and piling it up against a contact
-        # line the water cannot cross is exactly what edge darkening is.
-        fx = np.where(u > 0, g, np.roll(g, -1, 1)) * u * wall_x
-        g = g - fx + np.roll(fx, 1, 1)
-        fy = np.where(v > 0, g, np.roll(g, -1, 0)) * v * wall_y
-        g = g - fy + np.roll(fy, 1, 0)
-        settle = g * hold
-        dep += settle
-        g -= settle
-    top = float(dep.max())
-    return (dep / top).astype(F32) if top > 1e-6 else dep
-
-
-def fluid_modulate(
-    layers: list[Layer], wet: np.ndarray, sheet: Sheet, style: PaintStyle
-) -> list[Layer]:
-    """Modulate a stack of washes by one coarse shallow-water pass.
-
-    The rule this holds to is that the pass modulates the painter and never
-    becomes it: the water is run on a grid a quarter of the plate's size,
-    against the densities the painter has already laid, and what comes back
-    multiplies them. A pass that produced nothing leaves the plate it was given.
-
-    The densities are modulated in place, because they were built for this
-    stack a few lines earlier and nothing else holds them: a plate carrying
-    fourteen layers cannot afford a second copy of every one.
-
-    Args:
-        layers: The washes to modulate. Their densities are changed in place.
-        wet: The wet area at plate resolution, in 0 to 1.
-        sheet: The paper's noise fields.
-        style: The paint style.
-
-    Returns:
-        The same layers, for a caller that would rather read it that way.
-    """
-    q = max(int(style.fluid_grid), 1)
-    h, w = wet.shape
-    qh, qw = max(h // q, 8), max(w // q, 8)
-
-    def down(a: np.ndarray) -> np.ndarray:
-        return a[: qh * q, : qw * q].reshape(qh, q, qw, q).mean(axis=(1, 3), dtype=F32)
-
-    wet_q = down(wet)
-    if not (wet_q > 0.05).any():
-        return layers
-    total = np.zeros((h, w), F32)
-    for layer in layers:
-        if layer[0] is not None:
-            total += layer[0]
-    dep = shallow_water(
-        wet_q,
-        np.clip(down(total), 0.0, 1.0),
-        down(sheet.paper),
-        style.fluid_steps,
-        style.fluid_relax,
-        style.fluid_seed,
-        style.fluid_gran,
-    )
-    # Read against its own middle and its own spread inside the wash, not
-    # against its maximum: a deposit field piles up hard in a few cells, and
-    # scaling by the largest of them would leave every other cell untouched.
-    seen = dep[wet_q > 0.05]
-    lo, mid, hi = (float(v) for v in np.percentile(seen, [10, 50, 90]))
-    gain_q = 1.0 + style.fluid_amount * np.clip((dep - mid) / max(hi - lo, 1e-6), -1.5, 1.5)
-    # The whole gain is built on the coarse grid, the fade out to dry paper
-    # included, and brought back up bilinearly in one step. Anything done at
-    # plate resolution here costs more than the pass that earned it: a single
-    # blur over 1800 by 1529 is a fifth of the solver.
-    gain_q = gain_q * wet_q + (1.0 - wet_q)
-    gain = np.asarray(Image.fromarray(gain_q.astype(F32), "F").resize((w, h), Image.BILINEAR), F32)
-    for layer in layers:
-        if layer[0] is not None:
-            np.multiply(layer[0], gain, out=layer[0])
-            np.clip(layer[0], 0.0, 1.0, out=layer[0])
-    return layers
-
-
-def multiply_plate(layers: list[Layer], h: int, w: int) -> np.ndarray:
-    """Stack densities into one white-backed multiply plate."""
-    out = np.ones((h, w, 3), F32)
-    for layer in layers:
-        dens, pig = layer[0], layer[1]
-        if dens is None or not dens.any():
-            continue
-        out *= 1.0 - dens[..., None] * (1.0 - pig)
-    return np.clip(out, 0.0, 1.0)
-
-
-def km_rt(dens: np.ndarray, pig: np.ndarray, transparency: float) -> tuple[np.ndarray, np.ndarray]:
-    """One wash's reflectance and transmittance, per Kubelka-Munk.
-
-    The pigment hex the painter already carries is Rw, what a unit wash of it
-    shows over white. The one number this needs beyond that is Rb, what the
-    same wash shows over black, which is what says whether the pigment stains
-    or covers. K and S follow from the pair, and the painter's own density is
-    the layer's thickness.
-
-    The step that is easy to miss is deriving S from Rw and Rb rather than
-    picking it: without it the round trip does not return Rw and every wash
-    goes black.
-
-    Args:
-        dens: Layer thickness, the wash's density in 0 to 1.
-        pig: The pigment over white, three channels in 0 to 1.
-        transparency: Rb over Rw. Near 0 the pigment is a transparent glaze
-            that lets the layer under it through; near 1 it covers.
-
-    Returns:
-        Reflectance and transmittance, each `dens.shape + (3,)`.
-    """
-    rw = np.clip(pig, 1e-3, 0.999).astype(np.float64)
-    rb = np.clip(rw * float(np.clip(transparency, 1e-3, 0.95)), 1e-4, rw - 1e-4)
-    a = 0.5 * (rw + (rb - rw + 1.0) / rb)
-    b = np.sqrt(np.maximum(a * a - 1.0, 1e-9))
-    z = (b * b - (a - rw) * (a - 1.0)) / (b * (1.0 - rw))
-    s = (1.0 / b) * 0.5 * np.log((z + 1.0) / (z - 1.0))
-    # a, b and S are three numbers a channel; only the thickness is a plate, so
-    # the hyperbolics run in float32 and the plate stays half the size.
-    x = np.clip(dens, 0.0, 1.0).astype(F32)[..., None]
-    bsx = np.clip((b * s).astype(F32)[None, None, :] * x, 0.0, 40.0)
-    sh, ch = np.sinh(bsx), np.cosh(bsx)
-    af = a.astype(F32)[None, None, :]
-    bf = b.astype(F32)[None, None, :]
-    c = np.maximum(af * sh + bf * ch, F32(1e-9))
-    return sh / c, bf / c
-
-
-def km_plate(layers: list[Layer], base: np.ndarray, transparency: float = 0.06) -> np.ndarray:
-    """Glaze the layers optically over a backing, bottom layer first.
-
-    Multiply is transmission with no scattering, so two washes crossing lose
-    their chroma and go grey. Kubelka-Munk keeps the scattering, so a green
-    over a blue is still green over blue where they meet.
-
-    Args:
-        layers: Density, pigment, and optionally the pigment's transparency.
-        base: What the stack is laid over, `(h, w, 3)`.
-        transparency: The default, for a layer that does not name one.
-
-    Returns:
-        The glazed plate, in 0 to 1.
-    """
-    out = base.astype(F32, copy=True)
-    for layer in layers:
-        dens, pig = layer[0], layer[1]
-        if dens is None or not dens.any():
-            continue
-        t = float(layer[2]) if len(layer) > 2 else transparency
-        r, tr = km_rt(dens, pig, t)
-        out = r + tr * tr * out / np.maximum(1.0 - r * out, 1e-6)
-    return np.clip(out, 0.0, 1.0)
-
-
-def composite(layers: list[Layer], base: np.ndarray, style: PaintStyle) -> np.ndarray:
-    """Stack one set of layers over a backing, the way the style asks.
-
-    Args:
-        layers: Density, pigment, and optionally a transparency.
-        base: What the stack is laid over, `(h, w, 3)`.
-        style: The paint style, for `km_glazing`.
-
-    Returns:
-        The composited plate.
-    """
-    if style.km_glazing:
-        return km_plate(layers, base, style.km_transparency)
-    h, w = base.shape[:2]
-    return np.clip(base * multiply_plate(layers, h, w), 0.0, 1.0)
-
-
-def relief_density(grid: ElevationPatch, plate: Plate, sheet: Sheet) -> np.ndarray:
+def relief_density(grid: ElevationPatch, plate: Canvas, sheet: Sheet) -> np.ndarray:
     """A quiet shaded relief from the SRTM grid, in pigment density."""
     n = grid.n
     v = np.asarray(grid.values, F32).reshape(n, n)
@@ -2856,7 +1877,7 @@ def ribbon_alpha(
 # --------------------------------------------------------------------------- the card
 
 
-def paper_plate(sheet: Sheet, plate: Plate, style: PaintStyle) -> np.ndarray:
+def paper_plate(sheet: Sheet, plate: Canvas, style: PaintStyle) -> np.ndarray:
     """The notebook card: cream rag, a worn border, a little foxing, no grid."""
     h, w = plate.h, plate.w
     base = rgb(style.paper_hex)
@@ -2879,106 +1900,6 @@ def paper_plate(sheet: Sheet, plate: Plate, style: PaintStyle) -> np.ndarray:
         line = np.clip(rows * 1.0 + cols * 0.55, 0, 1).astype(F32)
         img *= (1.0 - style.grid_opacity * 0.30 * line)[..., None]
     return np.clip(img, 0, 1)
-
-
-def to_img(arr: np.ndarray, rng: np.random.Generator) -> Image.Image:
-    """An RGB image with a little dither, so a flat wash has no banding."""
-    d = (rng.random(arr.shape, dtype=np.float32) - rng.random(arr.shape, dtype=np.float32)) * 0.5
-    return Image.fromarray(np.clip(arr * 255.0 + 0.5 + d, 0, 255).astype(np.uint8), "RGB")
-
-
-def save_webp(img: Image.Image, path: Path, quality: int = 74, lossless: bool = False) -> int:
-    """Write one WebP plate and return its size in bytes.
-
-    Args:
-        img: The plate.
-        path: Where to write it.
-        quality: The lossy encoder's quality, used only when `lossless` is off.
-        lossless: Write the exact pixels the painter composed. This is what the
-            ink wants: the lossy encoder works in 4 by 4 blocks on a half
-            resolution chroma plane, which is wider than most of the marks on
-            the plate, so it replaces a stroke's ramp with two flats and a step
-            and takes the paper's grain with it.
-
-    Returns:
-        The file's size in bytes.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if lossless:
-        img.save(path, format="WEBP", lossless=True, method=5)
-    else:
-        img.save(path, format="WEBP", quality=quality, method=5)
-    return path.stat().st_size
-
-
-def save_alpha(alpha: np.ndarray, path: Path, quality: int = 82, lossless: bool = False) -> int:
-    """Write a white plate carrying alpha, for one the page tints itself.
-
-    White rather than black, because an SVG mask reads luminance times alpha by
-    default: a black plate would mask everything out whichever way it is read.
-
-    WebP already stores the alpha channel losslessly, so this plate was never
-    the one the encoder was hurting; `lossless` covers the flat white beside it
-    and costs nothing, the file coming out slightly smaller than the lossy one.
-
-    Args:
-        alpha: The plate's alpha, in 0 to 1.
-        path: Where to write it.
-        quality: The lossy encoder's quality for the colour channels, used only
-            when `lossless` is off.
-        lossless: Write the exact pixels.
-
-    Returns:
-        The file's size in bytes.
-    """
-    h, w = alpha.shape
-    rgba = np.full((h, w, 4), 255, np.uint8)
-    rgba[..., 3] = np.clip(alpha * 255 + 0.5, 0, 255).astype(np.uint8)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    img = Image.fromarray(rgba, "RGBA")
-    if lossless:
-        img.save(path, format="WEBP", lossless=True, method=4)
-    else:
-        img.save(path, format="WEBP", quality=quality, method=4)
-    return path.stat().st_size
-
-
-def save_rgba(
-    rgb: np.ndarray, alpha: np.ndarray, path: Path, quality: int = 88, lossless: bool = True
-) -> int:
-    """Write a plate carrying its own colour and its own alpha.
-
-    The label plate is composited normally rather than multiplied, so it needs
-    both: multiply can only darken, and a backing wash in the paper's own colour
-    has to be able to lighten.
-
-    Lossless by default, and for the same reason the base plates are: the lossy
-    encoder transforms in 4 by 4 blocks on a half resolution chroma plane, and
-    a thinned glyph stroke is between one and three pixels wide. It is the
-    worst case the encoder has, not a marginal one, and a name is the thing on
-    the card a reader looks at closest.
-
-    Args:
-        rgb: The colour, `(h, w, 3)` in 0 to 1.
-        alpha: The coverage, `(h, w)` in 0 to 1.
-        path: Where to write.
-        quality: The lossy encoder's quality, used only when `lossless` is off.
-        lossless: Write the exact pixels that were composed.
-
-    Returns:
-        The file's size in bytes.
-    """
-    h, w = alpha.shape
-    out = np.empty((h, w, 4), np.uint8)
-    out[..., :3] = np.clip(rgb * 255.0 + 0.5, 0, 255).astype(np.uint8)
-    out[..., 3] = np.clip(alpha * 255.0 + 0.5, 0, 255).astype(np.uint8)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    img = Image.fromarray(out, "RGBA")
-    if lossless:
-        img.save(path, format="WEBP", lossless=True, method=4)
-    else:
-        img.save(path, format="WEBP", quality=quality, method=4)
-    return path.stat().st_size
 
 
 # --------------------------------------------------------------------------- lettering
@@ -3236,9 +2157,11 @@ def _backing_wash(
         sheet,
         0.85,
         0.3,
-        rim_px=max(reach * 0.4, 3.0),
-        gran=0.3,
-        gran_gamma=style.gran_gamma if style.paper_fibre else 0.0,
+        WashOptions(
+            rim_px=max(reach * 0.4, 3.0),
+            gran=0.3,
+            gran_gamma=style.gran_gamma if style.paper_fibre else 0.0,
+        ),
     )
     floor = style.label_wash_dark_floor
     gate = np.clip((dark - floor) / max(1.0 - floor, 1e-3), 0.0, 1.0)
@@ -3419,7 +2342,7 @@ def sea_patches(dens: np.ndarray, sea_cov: np.ndarray, mpp: float, style: PaintS
         band = max(style.sea_variation_band_m / mpp, 4.0)
         angle = coast_run(d_sea, wet, band)
         streak = fbm_aniso(
-            h, w, max(cell * 0.22, 3.0), 2, rng, max(style.sea_variation_elong, 1.0), angle
+            (h, w), max(cell * 0.22, 3.0), 2, rng, max(style.sea_variation_elong, 1.0), angle
         )
         swing = swing + streak_w * centred(streak) * np.exp(-d_sea / F32(band))
         swing /= 1.0 + streak_w
@@ -3433,7 +2356,7 @@ def _lines(lines: tuple[Line, ...]) -> list[list[Pt]]:
 
 def paint(
     basemap: Basemap,
-    style: PaintStyle | None = None,
+    style: Style,
     out_dir: Path | None = None,
     *,
     key: str,
@@ -3449,10 +2372,10 @@ def paint(
 
     Args:
         basemap: The basemap from `geo.journal_layers`.
-        style: The paint style; the defaults when it is not given.
+        pstyle: The paint pstyle; the defaults when it is not given.
         out_dir: Where to write; `data/geo/plates/<id>/` by default.
         key: The activity, naming the default plates directory.
-        style_digest: The digest of the style groups the base plates read,
+        style_digest: The digest of the pstyle groups the base plates read,
             hashed into the manifest with the basemap.
 
     Returns:
@@ -3461,7 +2384,7 @@ def paint(
     """
     from pyntpot.maps.plates import DarkGrid, Manifest, Plates
 
-    style = style or PaintStyle()
+    pstyle = style.paint_style()
     aid = key
     out_dir = out_dir if out_dir is not None else plates_dir(aid)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -3469,29 +2392,29 @@ def paint(
     card, layers = basemap.card, basemap.layers
     cx0, cy0, cx1, cy1 = card.box
     rw, rh = card.render
-    plate = Plate(cx0, cy0, cx1, cy1, rw, rh)
+    plate = Canvas(cx0, cy0, cx1, cy1, rw, rh)
     mpp = card.mpp
     sheet = Sheet(
         rh,
         rw,
         gran_px=max(layers.gran_m / mpp, 3.0),
-        seed=style.sheet_seed,
-        fibre=style.paper_fibre_mix if style.paper_fibre else 0.0,
-        fibre_stretch=style.paper_fibre_stretch,
-        fibre_angle=style.paper_fibre_angle,
-        fibre_cell=max(style.paper_fibre_cell_px * rw / 1800.0, 1.6),
+        seed=pstyle.sheet_seed,
+        fibre=pstyle.paper_fibre_mix if pstyle.paper_fibre else 0.0,
+        fibre_stretch=pstyle.paper_fibre_stretch,
+        fibre_angle=pstyle.paper_fibre_angle,
+        fibre_cell=max(pstyle.paper_fibre_cell_px * rw / 1800.0, 1.6),
     )
     scale = rw / max(card.display[0], 1)
     # The phase 1 options, gathered once so every wash on this plate is laid the
     # same way: the granulation, the rim and the blooms, and the shared wet map.
-    gran_gamma = style.gran_gamma if style.paper_fibre else 0.0
+    gran_gamma = pstyle.gran_gamma if pstyle.paper_fibre else 0.0
     rim_cov = max(5.0, 90.0 / mpp)
     flow = (
-        (style.flow_rim_exp, style.flow_rim_ref_frac, style.flow_rim_frac)
-        if style.flow_rim
+        (pstyle.flow_rim_exp, pstyle.flow_rim_ref_frac, pstyle.flow_rim_frac)
+        if pstyle.flow_rim
         else None
     )
-    bloom_rng = np.random.default_rng(style.bloom_seed) if style.blooms else None
+    bloom_rng = np.random.default_rng(pstyle.bloom_seed) if pstyle.blooms else None
 
     def bloom_arg(cov: np.ndarray) -> tuple | None:
         """The bloom argument for one wash, sized against its own area.
@@ -3501,18 +2424,18 @@ def paint(
         the ridge is laid from what the centre gave up. So one multiplier
         turns a demonstration of a backrun into a mark on the paper.
         """
-        if bloom_rng is None or style.bloom_density <= 0:
+        if bloom_rng is None or pstyle.bloom_density <= 0:
             return None
         area = float((cov > 0.5).sum())
         n = int(
             np.clip(
-                round(style.bloom_density * math.sqrt(area) / 260.0),
+                round(pstyle.bloom_density * math.sqrt(area) / 260.0),
                 1 if area > 400 else 0,
-                style.bloom_max,
+                pstyle.bloom_max,
             )
         )
-        lift = style.bloom_lift * max(style.bloom_strength, 0.0)
-        return (bloom_rng, n, style.bloom_radius_frac, lift, style.bloom_warp) if n else None
+        lift = pstyle.bloom_lift * max(pstyle.bloom_strength, 0.0)
+        return (bloom_rng, n, pstyle.bloom_radius_frac, lift, pstyle.bloom_warp) if n else None
 
     # ---- water first: it is cut out of every land pigment
     sea_rings = _lines(layers.sea)
@@ -3526,36 +2449,38 @@ def paint(
     # it is polygon work rather than pixel work, and the surveyed coast and the
     # lakes above are already filled, so neither of them is touched by it.
     cover_deform: Deform | None = None
-    if style.silhouette_deform:
-        floor_m, mult = style.silhouette_deform_max_m
+    if pstyle.silhouette_deform:
+        floor_m, mult = pstyle.silhouette_deform_max_m
         cover_deform = (
-            np.random.default_rng(style.silhouette_deform_seed),
-            style.silhouette_deform_amount,
-            int(style.silhouette_deform_depth),
-            style.silhouette_deform_decay,
+            np.random.default_rng(pstyle.silhouette_deform_seed),
+            pstyle.silhouette_deform_amount,
+            int(pstyle.silhouette_deform_depth),
+            pstyle.silhouette_deform_decay,
             max(floor_m, mult * mpp),
-            style.silhouette_deform_min_px * mpp,
+            pstyle.silhouette_deform_min_px * mpp,
         )
     order = [c for c in layers.cover_order if c in layers.cover]
     label = np.zeros((rh, rw), np.uint8)
-    if style.land_cover:
+    if pstyle.land_cover:
         for i, cls in enumerate(order, 1):
             rings = _lines(layers.cover[cls])
             if rings:
                 label[fill_cov(deform_rings(rings, cover_deform), plate) > 0.5] = i
         label[water] = 0
     wood_i = order.index("wood") + 1 if "wood" in order else -1
-    wood_mask = (label == wood_i) if (wood_i > 0 and style.land_cover) else np.zeros((rh, rw), bool)
+    wood_mask = (
+        (label == wood_i) if (wood_i > 0 and pstyle.land_cover) else np.zeros((rh, rw), bool)
+    )
 
     # One wet field over the union of the cover, not one per class. Inside it
     # the classes are wet at the same time, so they bleed into each other and
     # no boundary between two of them carries its own rim; the outer silhouette
     # of the land sits outside it and keeps the edge it should have.
     wet_map = None
-    if style.wet_bleed and style.land_cover and label.any():
-        back = max(rim_cov * style.wet_bleed_edge_mult, 4.0)
+    if pstyle.wet_bleed and pstyle.land_cover and label.any():
+        back = max(rim_cov * pstyle.wet_bleed_edge_mult, 4.0)
         dry = label == 0
-        if style.wet_close_px > 0:
+        if pstyle.wet_close_px > 0:
             # The classes do not abut: they meet along hairlines of unmapped
             # ground a pixel or two wide, so the union of the cover taken as it
             # stands is cut through by dry lines exactly where two washes meet,
@@ -3563,18 +2488,18 @@ def paint(
             # this wide first is what puts the seams under water; it is a
             # dilate and an erode by the same distance, so the land's outer
             # silhouette comes back where it was.
-            gap = F32(style.wet_close_px)
+            gap = F32(pstyle.wet_close_px)
             dry = ~(edt(~(edt(label > 0) <= gap)) > gap)
         wet_map = smoothstep(edt(dry) - F32(back), back)
 
     def transp(key: str) -> float:
         """What this pigment shows over black, as a share of over white."""
-        return float(style.pigment_transparency.get(key, style.km_transparency))
+        return float(pstyle.pigment_transparency.get(key, pstyle.km_transparency))
 
     trimmed: list[Layer] = []
-    if style.land_cover:
+    if pstyle.land_cover:
         for i, cls in enumerate(order, 1):
-            base, pool = style.cover_cfg.get(cls, (0.5, 0.2))
+            base, pool = pstyle.cover_cfg.get(cls, (0.5, 0.2))
             cov = (label == i).astype(F32)
             if cov.any():
                 trimmed.extend(
@@ -3584,20 +2509,22 @@ def paint(
                             sheet,
                             base,
                             pool,
-                            rim_px=rim_cov,
-                            wet=wet_map,
-                            bleed_px=style.wet_bleed_px,
-                            bleed_mix=style.wet_bleed_mix,
-                            rim_drop=style.wet_rim_drop,
-                            gran_gamma=gran_gamma,
-                            flow=flow,
-                            blooms=bloom_arg(cov),
+                            WashOptions(
+                                rim_px=rim_cov,
+                                wet=wet_map,
+                                bleed_px=pstyle.wet_bleed_px,
+                                bleed_mix=pstyle.wet_bleed_mix,
+                                rim_drop=pstyle.wet_rim_drop,
+                                gran_gamma=gran_gamma,
+                                flow=flow,
+                                blooms=bloom_arg(cov),
+                            ),
                         ),
                         cls,
-                        rgb(style.pigments[cls]),
+                        rgb(pstyle.pigments[cls]),
                         transp(cls),
                         sheet,
-                        style,
+                        style.wash,
                     )
                 )
     else:
@@ -3607,14 +2534,16 @@ def paint(
                 wash(
                     pale,
                     sheet,
-                    style.pale_base,
-                    style.pale_pool,
-                    rim_px=max(6.0, 120.0 / mpp),
-                    gran_gamma=gran_gamma,
-                    flow=flow,
-                    blooms=bloom_arg(pale),
+                    pstyle.pale_base,
+                    pstyle.pale_pool,
+                    WashOptions(
+                        rim_px=max(6.0, 120.0 / mpp),
+                        gran_gamma=gran_gamma,
+                        flow=flow,
+                        blooms=bloom_arg(pale),
+                    ),
                 ),
-                rgb(style.pigments["pale"]),
+                rgb(pstyle.pigments["pale"]),
                 transp("pale"),
             )
         )
@@ -3622,23 +2551,23 @@ def paint(
     # ---- the wood, as a texture and a scatter of dabs. Both cross fade over
     # three printed scales, because a texture's scale cannot be changed after it
     # is printed; the two sliders walk between them.
-    rng = np.random.default_rng(style.dither_seed)
+    rng = np.random.default_rng(pstyle.dither_seed)
     blotch_px = max(layers.blotch_m / mpp, 6.0)
     for weight, (sc, strength) in zip(
-        _crossfade(style.wood_texture, len(style.wood_tex_scales)),
-        zip(style.wood_tex_scales, style.wood_tex_strengths, strict=True),
+        _crossfade(pstyle.wood_texture, len(pstyle.wood_tex_scales)),
+        zip(pstyle.wood_tex_scales, pstyle.wood_tex_strengths, strict=True),
         strict=True,
     ):
         if weight <= 0.002 or not wood_mask.any():
             continue
         field_n = fbm(rh, rw, blotch_px * sc, 3, rng)
         dens = np.clip((field_n - 0.40) * 1.7, 0, 1) * wood_mask * strength * weight
-        trimmed.append((blur(dens, 2.0), rgb(style.pigments["wood"]), transp("wood")))
+        trimmed.append((blur(dens, 2.0), rgb(pstyle.pigments["wood"]), transp("wood")))
 
     dab_px = max(layers.dab_spacing_m / mpp, 26.0)
     for weight, (spacing, strength) in zip(
-        _crossfade(style.wood_dabs, len(style.dab_spacings)),
-        zip(style.dab_spacings, style.dab_strengths, strict=True),
+        _crossfade(pstyle.wood_dabs, len(pstyle.dab_spacings)),
+        zip(pstyle.dab_spacings, pstyle.dab_strengths, strict=True),
         strict=True,
     ):
         if weight <= 0.002 or not wood_mask.any():
@@ -3656,7 +2585,7 @@ def paint(
         dabs[jy[keep], jx[keep]] = 1.0
         dab_r = max(step * 0.17, 4.0)
         dens = np.clip(blur(dabs, dab_r) * (dab_r**2) * 1.5, 0, 1) * wood_mask
-        trimmed.append((dens * strength * weight, rgb(style.pigments["wood"]), transp("wood")))
+        trimmed.append((dens * strength * weight, rgb(pstyle.pigments["wood"]), transp("wood")))
 
     # ---- lakes are trimmed with the rest of the land cover, so a reservoir two
     # valleys away does not float on the paper. The sea is not.
@@ -3668,23 +2597,25 @@ def paint(
                     sheet,
                     0.62,
                     0.32,
-                    wobble=2.4,
-                    dry=1.2,
-                    rim_px=max(5.0, 70.0 / mpp),
-                    gran=0.22,
-                    gran_gamma=gran_gamma,
-                    flow=flow,
-                    blooms=bloom_arg(lake_cov),
+                    WashOptions(
+                        wobble=2.4,
+                        dry=1.2,
+                        rim_px=max(5.0, 70.0 / mpp),
+                        gran=0.22,
+                        gran_gamma=gran_gamma,
+                        flow=flow,
+                        blooms=bloom_arg(lake_cov),
+                    ),
                 ),
-                rgb(style.pigments["water"]),
+                rgb(pstyle.pigments["water"]),
                 transp("water"),
             )
         )
-    if style.relief and layers.elevation is not None:
+    if pstyle.relief and layers.elevation is not None:
         trimmed.append(
             (
                 relief_density(layers.elevation, plate, sheet),
-                rgb(style.pigments["relief"]),
+                rgb(pstyle.pigments["relief"]),
                 transp("relief"),
             )
         )
@@ -3695,18 +2626,18 @@ def paint(
     # where one wash stops and the next begins, so the drying runs across a
     # class boundary the way it does on paper. What comes back multiplies the
     # densities that are already there.
-    if style.fluid_pass and trimmed:
+    if pstyle.fluid_pass and trimmed:
         wet_all = (
             np.clip((label != 0).astype(F32) + lake_cov, 0.0, 1.0)
-            if style.land_cover
+            if pstyle.land_cover
             else np.clip(1.0 - sea_cov, 0.0, 1.0)
         )
-        trimmed = fluid_modulate(trimmed, wet_all, sheet, style)
+        trimmed = fluid_modulate(trimmed, wet_all, sheet, style.wash)
 
     # ---- the ink. Roads and watercourses are painted with the same machinery
     # as the wash: no vector stroke is drawn over the top.
-    br = plate_brushes(style, scale, dict(layers.wet_px))
-    ink_rng = np.random.default_rng(style.ink_seed)
+    br = plate_brushes(pstyle, scale, dict(layers.wet_px))
+    ink_rng = np.random.default_rng(pstyle.ink_seed)
     untrimmed: list[Layer] = []
 
     def lines_of(line: Line) -> list[np.ndarray]:
@@ -3715,7 +2646,7 @@ def paint(
     # Every watercourse lands in the one pad and is read back with the major
     # river's brush, so the reservoir and the break texture are collected
     # against that brush too.
-    water_pad = InkPad((rh, rw), br["major"][0], style)
+    water_pad = InkPad((rh, rw), br["major"][0], pstyle)
     water_lines: list[tuple[Brush, np.ndarray]] = []
     # A watercourse is drawn at its own width where the payload measured one,
     # so a large river is a quarter of a kilometre wide on the sheet because it is
@@ -3728,11 +2659,11 @@ def paint(
     for r in layers.rivers:
         cls = r.cls
         brush, _hex = br.get(cls, br["minor"])
-        px = float(r.width_px or 0.0) * style.river_mult
+        px = float(r.width_px or 0.0) * pstyle.river_mult
         if px > brush.width / scale:
             key = (cls, round(px, 2))
             if key not in wide:
-                wide[key] = brush_from_id(style.brushes[cls], px, scale, style, cls)[0]
+                wide[key] = brush_from_id(pstyle.brushes[cls], px, scale, pstyle, cls)[0]
             brush = wide[key]
         # `wp` is the width along the river as a share of its widest point, so
         # an estuary narrows to a channel over its own length instead of being
@@ -3754,7 +2685,7 @@ def paint(
         if key != "road_major" and not layers.minor_roads:
             continue
         band = {"road_major": "major", "lane": "minor", "track": "path"}[key]
-        pad = InkPad((rh, rw), br[key][0], style)
+        pad = InkPad((rh, rw), br[key][0], pstyle)
         pad.lay(
             [
                 (br[key][0], line)
@@ -3770,72 +2701,74 @@ def paint(
     # ---- the ribbon, and the card
     route_mask = stroke_mask([list(layers.route)], plate, 2.0)
     d_route = edt(route_mask)
-    tear_px = max(rw * style.ribbon_tear_frac, style.ribbon_tear_floor_px)
+    tear_px = max(rw * pstyle.ribbon_tear_frac, pstyle.ribbon_tear_floor_px)
     land = None
-    if style.coast_hard_mask and sea_cov.any():
+    if pstyle.coast_hard_mask and sea_cov.any():
         # The land side of the surveyed coast, antialiased by one pixel, no more.
         land = np.clip(1.0 - blur(sea_cov, 0.8) * 1.6, 0.0, 1.0)
     r_px = layers.ribbon_m / mpp
-    alpha, rim = ribbon_alpha(d_route, r_px, sheet, style.ribbon_fill, tear_px, land)
+    alpha, rim = ribbon_alpha(d_route, r_px, sheet, pstyle.ribbon_fill, tear_px, land)
 
     # The stack is laid over white, because the page multiplies the wash plate
     # over the card; the ribbon then fades the ground out toward the tear, and
     # the sea, the rim and the ink go on top of what is left.
-    ground = composite(trimmed, np.ones((rh, rw, 3), F32), style)
+    ground = composite(trimmed, np.ones((rh, rw, 3), F32), style.paper)
     ground = 1.0 - alpha[..., None] * (1.0 - ground)
     over: list[Layer] = []
-    if sea_cov.any() and style.sea_to_edge:
+    if sea_cov.any() and pstyle.sea_to_edge:
         sea_dens = wash(
             sea_cov,
             sheet,
             0.60,
             0.34,
-            wobble=2.0,
-            dry=1.0,
-            rim_px=max(6.0, 110.0 / mpp),
-            gran=0.22,
-            gran_gamma=gran_gamma,
-            flow=flow,
-            blooms=bloom_arg(sea_cov),
+            WashOptions(
+                wobble=2.0,
+                dry=1.0,
+                rim_px=max(6.0, 110.0 / mpp),
+                gran=0.22,
+                gran_gamma=gran_gamma,
+                flow=flow,
+                blooms=bloom_arg(sea_cov),
+            ),
         )
-        if style.sea_variation:
-            sea_dens = sea_patches(sea_dens, sea_cov, mpp, style)
-        over.append((sea_dens, rgb(style.pigments["water"]), transp("water")))
+        if pstyle.sea_variation:
+            sea_dens = sea_patches(sea_dens, sea_cov, mpp, pstyle)
+        over.append((sea_dens, rgb(pstyle.pigments["water"]), transp("water")))
     over.append(
-        (np.clip(rim * style.rim_strength, 0, 1), rgb(style.pigments["rim"]), transp("rim"))
+        (np.clip(rim * pstyle.rim_strength, 0, 1), rgb(pstyle.pigments["rim"]), transp("rim"))
     )
     over.extend(untrimmed)
-    wash_plate = composite(over, ground, style)
-    paper = paper_plate(sheet, plate, style)
+    wash_plate = composite(over, ground, style.paper)
+    paper = paper_plate(sheet, plate, pstyle)
 
     files, sizes = {}, {}
     for name, arr, quality in (
-        ("paper", paper, style.paper_quality),
-        ("wash", wash_plate, style.webp_quality),
+        ("paper", paper, pstyle.paper_quality),
+        ("wash", wash_plate, pstyle.webp_quality),
     ):
         path = out_dir / f"{name}.webp"
-        sizes[name] = save_webp(to_img(arr, rng), path, quality, style.plate_lossless)
+        sizes[name] = save_webp(to_img(arr, rng), path, quality, lossless=pstyle.plate_lossless)
         files[name] = path.name
-    if style.route_pen:
-        # The one route style that is not vector: the route drawn with the same
+    if pstyle.route_pen:
+        # The one route pstyle that is not vector: the route drawn with the same
         # brush engine, as alpha the page tints with whatever ink it is set to.
         pen_brush, _ = brush_from_id(
-            style.route_pen_brush, style.route_pen_width_px, scale, style, "route"
+            pstyle.route_pen_brush, pstyle.route_pen_width_px, scale, pstyle, "route"
         )
-        pen_pad = InkPad((rh, rw), pen_brush, style)
+        pen_pad = InkPad((rh, rw), pen_brush, pstyle)
         pen_pad.lay(
-            [(pen_brush, plate.px(list(layers.route)))], np.random.default_rng(style.ink_seed + 1)
+            [(pen_brush, plate.px(list(layers.route)))], np.random.default_rng(pstyle.ink_seed + 1)
         )
         path = out_dir / "pen.webp"
         sizes["pen"] = save_alpha(
-            pen_pad.read(pen_brush, sheet), path, lossless=style.plate_lossless
+            pen_pad.read(pen_brush, sheet), path, lossless=pstyle.plate_lossless
         )
         files["pen"] = path.name
 
     # ---- a coarse map of how dark the sheet is, so a label can be placed on
     # light ground rather than across a wood.
     lum = (paper * wash_plate).mean(axis=2)
-    gw, gh = style.dark_grid
+    gw, gh = pstyle.dark_grid
     ys = np.linspace(0, rh, gh + 1).astype(int)
     xs = np.linspace(0, rw, gw + 1).astype(int)
     dark = [

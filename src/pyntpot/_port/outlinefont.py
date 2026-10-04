@@ -36,6 +36,7 @@ from typing import Any
 
 import numpy as np
 
+from pyntpot.ink.noise import edt
 from pyntpot.ink.polyline import normals
 
 Pt = tuple[float, float]
@@ -619,13 +620,11 @@ def _centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     strokes that made them, and a blob the thinning ate whole comes back as a
     dot.
     """
-    from pyntpot._port import paint
-
     img, ox, oy = _fill(contours, upem)
     skel = thin(img)
     # Distance from an inked pixel to the nearest blank one, which at a
     # terminal is half the stroke's own width: exactly what thinning ate.
-    reach = paint.edt(img == 0)
+    reach = edt(img == 0)
     k = upem / RASTER_EM
     half = _half_width(skel, reach) if skel.any() else 1.0
     on = {(int(r), int(c)) for r, c in zip(*np.nonzero(skel), strict=True)}

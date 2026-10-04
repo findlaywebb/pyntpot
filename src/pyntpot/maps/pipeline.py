@@ -128,9 +128,7 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
     digest = style.base_digest()
     plates = _current(out_dir, painter.paint_hash(basemap, digest))
     if plates is None:
-        plates = painter.paint(
-            basemap, style.paint_style(), out_dir, key=out_dir.name, style_digest=digest
-        )
+        plates = painter.paint(basemap, style, out_dir, key=out_dir.name, style_digest=digest)
     else:
         log.info("plates in %s are current, nothing repainted", out_dir)
     card = basemap.card

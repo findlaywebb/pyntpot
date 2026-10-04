@@ -5,8 +5,8 @@ add the term here when you coin one. The ported code keeps its old names until t
 
 | Term | Meaning |
 |---|---|
-| sheet | The paper's noise fields, seeded. Today `paint.Sheet`. |
-| canvas | A world-unit box and the pixel grid it paints to. Today `paint.Plate`. |
+| sheet | The paper's noise fields, seeded. `ink.sheet.Sheet`. |
+| canvas | A world-unit box and the pixel grid it paints to. `ink.sheet.Canvas`. |
 | plate | One painted raster layer written to disk: paper, wash, pen, labels. |
 | plates | The set of plates plus its manifest for one render. Today `plates.json`. |
 | brush | One mark-making tool. Today `paint.Brush`. |
@@ -20,7 +20,7 @@ add the term here when you coin one. The ported code keeps its old names until t
 | annotations | Caller-supplied landmarks, roads, places and span requests. `maps.annotations.Annotations`. |
 | span | The placed stretch of the route with a name and an intent: resolved to a pair of track indices and drawn beside the route. Today `labels.Span`. |
 | span request | A caller's ask to mark a stretch of the route, each end stated once by point index, kilometre or seconds from the start; lettering resolves it into a span. `maps.annotations.SpanRequest`. |
-| card | The coordinate frame of one map: a box in card metres and the display and render pixel grids it maps to; converts between them. A canvas (today `paint.Plate`) is the raster a plate is painted on; a card is the frame that says where things go on it. |
+| card | The coordinate frame of one map: a box in card metres and the display and render pixel grids it maps to; converts between them. A canvas (`ink.sheet.Canvas`) is the raster a plate is painted on; a card is the frame that says where things go on it. |
 | manifest | The plates' sidecar record (`plates.json`): the base hash, the files written and the measurements later stages read. |
 | style | Every style group a map is painted, lettered and composed with, as one value (`maps.style.Style`). |
 | style group | One layer's share of the style, a frozen dataclass of the fields its readers read: `PaperStyle`, `NibStyle`, `BasemapStyle` and the rest. |

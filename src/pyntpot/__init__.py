@@ -6,16 +6,18 @@ and the painting engine's `Sheet`, `Brush`, `Canvas`, `stamp`, `wash`,
 `composite` and `Hand`. Everything else is private.
 
 It does not export the layer packages' contents or any provider, cache or
-command-line name: those are reached through `pyntpot.maps`. The engine names
-are re-exported from the interim `_port` code, so their `__module__` is
-private. `__version__` is the installed distribution's version.
+command-line name: those are reached through `pyntpot.maps`. `Sheet`, `Canvas`, `wash` and `composite` are re-exported from `ink`;
+`Brush`, `stamp` and `Hand` from the interim `_port` code, so their
+`__module__` is private. `__version__` is the installed distribution's version.
 """
 
 from importlib.metadata import version
 
 from pyntpot._port.labels import Hand
-from pyntpot._port.paint import Brush, Sheet, composite, stamp, wash
-from pyntpot._port.paint import Plate as Canvas
+from pyntpot._port.paint import Brush, stamp
+from pyntpot.ink.pigment import composite
+from pyntpot.ink.sheet import Canvas, Sheet
+from pyntpot.ink.wash import wash
 from pyntpot.maps import (
     Annotations,
     Basemap,
