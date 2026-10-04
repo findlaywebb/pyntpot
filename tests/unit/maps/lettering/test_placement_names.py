@@ -76,7 +76,7 @@ def test_the_repeat_guard_is_per_kind_so_the_major_river_keeps_both_names():
     """A long river is read in pieces and is deliberately named twice."""
     # A guard that were one number for the whole sheet would either letter the
     # Lyn once or letter Elm twice, so the allowance belongs to the family.
-    wye = [
+    river_repeats = [
         _named("Lyn", "river", TIER_RIVER, 100, 100),
         _named("Lyn", "river", TIER_RIVER, 300, 260),
     ]
@@ -84,7 +84,7 @@ def test_the_repeat_guard_is_per_kind_so_the_major_river_keeps_both_names():
         _named("Grasmere", "settlement", TIER_SETTLEMENT, 40, 40),
         _named("Grasmere", "settlement", TIER_SETTLEMENT, 340, 240),
     ]
-    kept = dedupe_names(wye + towns, sheet_card())
+    kept = dedupe_names(river_repeats + towns, sheet_card())
     names = [label.name for label in kept]
     assert names.count("Lyn") == MAJOR_RIVER_LABELS == 2
     assert names.count("Grasmere") == 1
