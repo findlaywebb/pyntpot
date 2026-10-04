@@ -50,7 +50,7 @@ class TestSetting:
         """A setting cannot be changed after it is built."""
         setting = Setting("Hawes", 16.0, anchor=(5.0, 6.0))
         with pytest.raises(dataclasses.FrozenInstanceError):
-            setting.text = "Malham"  # ty: ignore[invalid-assignment]
+            delattr(setting, "text")
 
     @pytest.mark.parametrize(
         "kwargs",
