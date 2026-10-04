@@ -49,7 +49,8 @@ from pyntpot.ink.polyline import (
 
 if TYPE_CHECKING:
     from pyntpot._port.paint import PaintStyle
-    from pyntpot.maps.plates import Manifest, Plates
+    from pyntpot.maps.basemap import Basemap, Line
+    from pyntpot.maps.plates import Plates
 
 log = logging.getLogger(__name__)
 
@@ -58,6 +59,10 @@ CHAR_W = 0.55  # width of one label character as a fraction of its font size
 Anchor = Literal["start", "middle", "end"]
 Pt = tuple[float, float]
 Box = tuple[float, float, float, float]
+#: The named lines a label may be set along, by kind: `roads` and `rivers`
+#: (one entry a named line), `coast` and `crossings` (bare point lists), in
+#: card metres. `named_lines` builds it from a basemap.
+NamedLines = dict[str, list[Any]]
 
 #: The order names claim their boxes in. A settlement cannot move, because it is
 #: its place; a river can slide along its own water but not off it; a climb's
@@ -509,7 +514,7 @@ class Span:
 # --------------------------------------------------------------------------- picks
 
 
-def journal_picks(picks: Any, manifest: Manifest, cap: int) -> list[dict[str, Any]]:
+def journal_picks(picks: Any, basemap: Basemap, cap: int) -> list[dict[str, Any]]:
     """The payload's landmarks, each with a position, in the payload's order.
 
     A pick states its own latitude and longitude, which is what the label agent
@@ -519,7 +524,7 @@ def journal_picks(picks: Any, manifest: Manifest, cap: int) -> list[dict[str, An
     wanted = list(getattr(picks, "landmarks", None) or [])
     if not wanted:
         return []
-    by_name = {c["name"]: c for c in manifest.candidates}
+    by_name = {c["name"]: c for c in basemap.candidates}
     out: list[dict[str, Any]] = []
     for entry in wanted:
         if isinstance(entry, str):
@@ -556,10 +561,10 @@ def journal_picks(picks: Any, manifest: Manifest, cap: int) -> list[dict[str, An
     return out
 
 
-def journal_heuristic(manifest: Manifest, cap: int) -> list[dict[str, Any]]:
+def journal_heuristic(basemap: Basemap, cap: int) -> list[dict[str, Any]]:
     """The fallback when the payload named none: the nearest named things."""
     out = []
-    for c in manifest.candidates:
+    for c in basemap.candidates:
         out.append(
             {
                 "name": c["name"],
@@ -658,7 +663,82 @@ def _places_to_avoid(labels: list[Label]) -> list[tuple[float, float, float, flo
     ]
 
 
-def road_lines(manifest: Manifest, card: Any) -> list[list[Pt]]:
+def named_lines(basemap: Basemap, tol_px: float) -> NamedLines:
+    """The lines a name can be set along, simplified, in the card's own metres.
+
+    The named centrelines and the coastline, at a tolerance that is generous
+    because a baseline is read at a glance and never measured. Every point is
+    rounded to a tenth of a metre.
+
+    Args:
+        basemap: The basemap, for its roads, watercourses and coastline.
+        tol_px: Simplification tolerance in display pixels.
+
+    Returns:
+        `{"roads": [...], "rivers": [...], "coast": [...], "crossings": [...]}`:
+        each road and river entry a name, a class, a road number where OSM has
+        one, the painted widths and a polyline `d`; each coast and crossing
+        entry a bare polyline.
+    """
+    layers = basemap.layers
+    tol = max(tol_px * float(basemap.card.mpp_display), 1.0)
+
+    def kept_lines(line: Line) -> list[list[list[float]]]:
+        out = []
+        for piece in [list(line)] if len(line) > 1 else []:
+            kept = simplify(piece, tol)
+            if len(kept) > 1:
+                out.append([[round(x, 1), round(y, 1)] for x, y in kept])
+        return out
+
+    named: dict[str, list[dict[str, Any]]] = {
+        "roads": [
+            {"n": r.name, "c": r.cls, "r": r.ref, "w": 0.0, "wn": 0.0, "line": r.line}
+            for r in layers.roads
+        ],
+        "rivers": [
+            {
+                "n": r.name,
+                "c": r.cls,
+                "r": "",
+                "w": r.width_px,
+                "wn": r.name_width_px,
+                "line": r.line,
+            }
+            for r in layers.rivers
+        ],
+    }
+    geom: NamedLines = {"roads": [], "rivers": [], "coast": [], "crossings": []}
+    for key in ("roads", "rivers"):
+        for entry in named[key]:
+            for line in kept_lines(entry["line"]):
+                if entry["n"]:
+                    # `w` is the width this watercourse was actually painted at,
+                    # which is its own where one could be measured and the class
+                    # floor where it could not. A name clears the ink it is set
+                    # beside, so it has to be the ink that was laid down and not
+                    # what the class would have laid down.
+                    geom[key].append(
+                        {
+                            "n": entry["n"],
+                            "c": entry["c"],
+                            "r": entry["r"],
+                            "w": entry["w"],
+                            "wn": entry["wn"],
+                            "d": line,
+                        }
+                    )
+                else:
+                    # An unnamed lane can carry no name of its own, so a label
+                    # could be laid across one for nothing. It is kept, without
+                    # a name, purely so the crossing cost can see it.
+                    geom["crossings"].append(line)
+    for coast in layers.coastline:
+        geom["coast"].extend(kept_lines(coast))
+    return geom
+
+
+def road_lines(lines: NamedLines, card: Any) -> list[list[Pt]]:
     """Everything on the card a name should not be laid across, in card pixels.
 
     The named roads, the unnamed lanes, and the watercourses. All three are
@@ -666,11 +746,10 @@ def road_lines(manifest: Manifest, card: Any) -> list[list[Pt]]:
     the named roads were the only ones charged, so a label could sit on an
     unnamed lane for nothing and "Swell" could sit on its own river. The
     lanes have no name and cannot carry one, so they are kept in `crossings`
-    purely for this; a manifest painted before that key simply has fewer lines
-    in it and charges what it always did.
+    purely for this.
     """
     out: list[list[Pt]] = []
-    geom = manifest.label_geom
+    geom = lines
     for key in ("roads", "rivers"):
         for entry in geom.get(key) or []:
             line = [card.xy(x, y) for x, y in entry.get("d") or []]
@@ -1670,14 +1749,14 @@ def _tilt_max(line: list[Pt]) -> float:
     return worst
 
 
-def _journal_picks(picks: Any, manifest: Manifest, cap: int) -> list[dict[str, Any]]:
+def _journal_picks(picks: Any, basemap: Basemap, cap: int) -> list[dict[str, Any]]:
     """Compatibility name for `journal_picks`."""
-    return journal_picks(picks, manifest, cap)
+    return journal_picks(picks, basemap, cap)
 
 
-def _journal_heuristic(manifest: Manifest, cap: int) -> list[dict[str, Any]]:
+def _journal_heuristic(basemap: Basemap, cap: int) -> list[dict[str, Any]]:
     """Compatibility name for `journal_heuristic`."""
-    return journal_heuristic(manifest, cap)
+    return journal_heuristic(basemap, cap)
 
 
 def _place_journal_labels(
@@ -3143,15 +3222,15 @@ def _stem(name: str) -> str:
     return re.sub(rf"^({'|'.join(QUALIFIERS)})\s+", "", str(name)).strip()
 
 
-def settlements(manifest: Manifest) -> list[dict[str, Any]]:
+def settlements(basemap: Basemap) -> list[dict[str, Any]]:
     """Every settlement the painted box holds, merged into places.
 
     The candidates already carry them: `journal_layers` asks for every named
-    thing, so a place node is in the manifest whether or not it is a landmark.
+    thing, so a place node is in the basemap whether or not it is a landmark.
     Nothing here is fetched and nothing is repainted.
     """
     found: list[dict[str, Any]] = []
-    for c in manifest.candidates:
+    for c in basemap.candidates:
         if c.get("class") != "place":
             continue
         kind = str((c.get("tags") or {}).get("place", ""))
@@ -3193,7 +3272,7 @@ def settlement_budget(display_px: float) -> int:
 
 
 def pick_settlements(
-    manifest: Manifest,
+    basemap: Basemap,
     card: Any,
     route_px: list[Pt],
     always: list[str] | None = None,
@@ -3208,7 +3287,7 @@ def pick_settlements(
     budget and never compete with the landmarks for a slot.
 
     Args:
-        manifest: The painted plates' manifest, for its candidates.
+        basemap: The basemap, for its candidates.
         card: The card, for the projection and its size.
         route_px: The track in card pixels.
         always: Names the user's own file says to letter whenever the box
@@ -3224,7 +3303,7 @@ def pick_settlements(
     budget = budget if budget is not None else settlement_budget(card.w)
     ends = [route_px[0], route_px[-1]] if route_px else []
     reach = length_indexed(route_px) * SETTLEMENT_ENDPOINT_FRAC
-    found = settlements(manifest)
+    found = settlements(basemap)
     scored: list[tuple[float, bool, dict[str, Any], Pt]] = []
     for entry in found:
         if entry["off_route_m"] > SETTLEMENT_MAX_OFF_M:
@@ -3435,7 +3514,11 @@ def dedupe_names(labels: list[Label], card: Any) -> list[Label]:
 
 
 def pick_rivers(
-    manifest: Manifest, card: Any, route_px: list[Pt], budget: int = RIVER_MAX
+    basemap: Basemap,
+    lines: NamedLines,
+    card: Any,
+    route_px: list[Pt],
+    budget: int = RIVER_MAX,
 ) -> list[Label]:
     """Which watercourses the sheet names, by run inside the card and proximity.
 
@@ -3445,7 +3528,8 @@ def pick_rivers(
     worth naming.
 
     Args:
-        manifest: The painted plates' manifest, for its `label_geom`.
+        basemap: The basemap, for the width each class was painted at.
+        lines: The named lines, for the watercourses.
         card: The card, for the projection and its size.
         route_px: The track in card pixels.
         budget: How many to letter.
@@ -3454,7 +3538,7 @@ def pick_rivers(
         One `Label` a river, best first, anchored on its own water and carrying
         the water as its baseline.
     """
-    geom = manifest.label_geom.get("rivers") or []
+    geom = lines.get("rivers") or []
     thin = route_px[::3] or route_px
     typical: dict[str, float] = {}
     scored: list[tuple[float, str, list[Pt]]] = []
@@ -3471,13 +3555,13 @@ def pick_rivers(
         score = run_m / 1000.0 * min(max(1.0 - near_m / 500.0, 0.2), 1.0)
         widths[name] = max(
             widths.get(name, 0.0),
-            feature_px(manifest, "river", str(entry.get("c")), float(entry.get("w") or 0.0)),
+            feature_px(basemap, "river", str(entry.get("c")), float(entry.get("w") or 0.0)),
         )
         # The width the river is typically drawn at, which is what decides
         # whether its own name fits in it.
         typical[name] = max(
             typical.get(name, 0.0),
-            feature_px(manifest, "river", str(entry.get("c")), float(entry.get("wn") or 0.0)),
+            feature_px(basemap, "river", str(entry.get("c")), float(entry.get("wn") or 0.0)),
         )
         scored.append((score, name, line))
     # One river arrives as a dozen ways, and taking the longest of them threw
@@ -3535,7 +3619,7 @@ def river_name(name: str) -> str:
 # --------------------------------------------------------------------------- the ground
 
 
-def home_places(manifest: Manifest, card: Any) -> list[Label]:
+def home_places(basemap: Basemap, card: Any) -> list[Label]:
     """The user's own places, as labels, for the ones with no glyph of their own.
 
     An entry with a symbol is drawn by the caller as it always was, glyph and
@@ -3545,7 +3629,7 @@ def home_places(manifest: Manifest, card: Any) -> list[Label]:
     marker would say wrongly.
     """
     out: list[Label] = []
-    for place in manifest.places:
+    for place in basemap.places:
         if place.get("kind") != "settlement":
             continue
         x, y = card.xy(place["x"], place["y"])
@@ -3566,20 +3650,25 @@ def home_places(manifest: Manifest, card: Any) -> list[Label]:
 
 
 def ground_labels(
-    manifest: Manifest, card: Any, route_px: list[Pt], picks: Any | None = None
+    basemap: Basemap,
+    lines: NamedLines,
+    card: Any,
+    route_px: list[Pt],
+    picks: Any | None = None,
 ) -> list[Label]:
     """The names the ground is entitled to, whatever the payload asked for.
 
     Settlements and watercourses are already in the data and have simply never
-    been lettered: the settlements sit in the manifest's candidates and the
-    watercourses in its `label_geom`. Choosing them is a rule, not a judgement,
+    been lettered: the settlements sit in the basemap's candidates and the
+    watercourses in its named lines. Choosing them is a rule, not a judgement,
     so it runs by default and the payload only ever adds to it.
 
     Three tiers own the answer, in this order: the rule, the user's own file
     for a standing exception, and `map.places` in the payload for this session.
 
     Args:
-        manifest: The painted plates' manifest.
+        basemap: The basemap, for its places and candidates.
+        lines: The named lines, for the watercourses.
         card: The card, for the projection and its size.
         route_px: The track in card pixels.
         picks: The payload's `map` block, whose `places` name this session's
@@ -3590,8 +3679,8 @@ def ground_labels(
         The user's places, then the settlements, then the rivers, in the
         order they claim their boxes.
     """
-    mine = home_places(manifest, card)
-    always = [p.get("n", "") for p in manifest.places if p.get("always")] + [lb.name for lb in mine]
+    mine = home_places(basemap, card)
+    always = [p.get("n", "") for p in basemap.places if p.get("always")] + [lb.name for lb in mine]
     wanted = list(getattr(picks, "places", None) or [])
     # The user writes "Swell" and OSM has Upper and Lower; the entry
     # carries its own position and it is authoritative, so a group within about
@@ -3599,14 +3688,14 @@ def ground_labels(
     near = MERGE_M * card.scale
     settled = [
         lb
-        for lb in pick_settlements(manifest, card, route_px, always=always, wanted=wanted)
+        for lb in pick_settlements(basemap, card, route_px, always=always, wanted=wanted)
         if all(
             lb.name.casefold() != own.name.casefold()
             and math.dist((lb.px, lb.py), (own.px, own.py)) > near
             for own in mine
         )
     ]
-    return mine + settled + pick_rivers(manifest, card, route_px)
+    return mine + settled + pick_rivers(basemap, lines, card, route_px)
 
 
 def _text_width(text: str, size: float) -> float:
@@ -3639,9 +3728,9 @@ def road_min_px(size: float) -> float:
 ROAD_MAX = 2
 
 
-#: What each class of watercourse is painted at when the manifest predates the
-#: key, in display pixels. The painter's own defaults, so an old plate letters
-#: its rivers where a fresh one does.
+#: What each class of watercourse is painted at when the layers carry no width
+#: for the class, in display pixels. The painter's own defaults, so such a map
+#: letters its rivers where any other does.
 WET_PX_DEFAULT = {"major": 8.4, "medium": 5.5, "minor": 2.2}
 
 #: What a named road is painted at, in display pixels. The number sits over the
@@ -3650,7 +3739,7 @@ ROAD_PX_DEFAULT = {"major": 5.0, "medium": 3.4}
 
 
 #: What the painter's brush really lays down, as a multiple of the nominal
-#: width the manifest carries. A brush is not a rule: it bleeds, smooths and
+#: width the layers carry. A brush is not a rule: it bleeds, smooths and
 #: drifts past its own nominal edge, and a clearance taken against the nominal
 #: width stands a name off less water than it has to clear. Measured on the
 #: painted plates, the major watercourse's ink reaches 1.30 times its nominal
@@ -3660,10 +3749,10 @@ ROAD_PX_DEFAULT = {"major": 5.0, "medium": 3.4}
 WET_SPREAD = 1.35
 
 
-def feature_px(manifest: Manifest, kind: str, cls: str, own: float = 0.0) -> float:
+def feature_px(basemap: Basemap, kind: str, cls: str, own: float = 0.0) -> float:
     """How wide the painter's ink really is for one watercourse or road.
 
-    The manifest's `wet_px` is the brush's nominal width, not its footprint, so
+    The layers' `wet_px` is the brush's nominal width, not its footprint, so
     the spread the brush adds is put back on here.
 
     `own` is the width this particular watercourse was painted at, which is its
@@ -3673,14 +3762,18 @@ def feature_px(manifest: Manifest, kind: str, cls: str, own: float = 0.0) -> flo
     the major class floor would be set in the water.
     """
     if kind == "river":
-        wet = manifest.wet_px
+        wet = basemap.layers.wet_px
         floor = float(wet.get(cls, WET_PX_DEFAULT.get(cls, 2.2)))
         return max(floor, float(own or 0.0)) * WET_SPREAD
     return float(ROAD_PX_DEFAULT.get(cls, 3.4)) * WET_SPREAD
 
 
 def pick_roads(
-    manifest: Manifest, card: Any, route_px: list[Pt], budget: int = ROAD_MAX
+    basemap: Basemap,
+    lines: NamedLines,
+    card: Any,
+    route_px: list[Pt],
+    budget: int = ROAD_MAX,
 ) -> list[Label]:
     """Which named roads the sheet numbers, set along their own tarmac.
 
@@ -3701,7 +3794,8 @@ def pick_roads(
     name is only the fallback for a lane that has none.
 
     Args:
-        manifest: The painted plates' manifest, for its `label_geom`.
+        basemap: The basemap, for the width each class was painted at.
+        lines: The named lines, for the roads.
         card: The card, for the projection and its size.
         route_px: The track in card pixels.
         budget: How many to letter.
@@ -3709,7 +3803,7 @@ def pick_roads(
     Returns:
         One `Label` a road, best first, carrying the tarmac as its baseline.
     """
-    geom = manifest.label_geom.get("roads") or []
+    geom = lines.get("roads") or []
     thin = route_px[::4] or route_px
     pieces: dict[str, list[list[Pt]]] = {}
     widths: dict[str, float] = {}
@@ -3722,7 +3816,7 @@ def pick_roads(
             key = road_ref(entry.get("r")) or name
             pieces.setdefault(key, []).append(line)
             widths[key] = max(
-                widths.get(key, 0.0), feature_px(manifest, "road", str(entry.get("c")))
+                widths.get(key, 0.0), feature_px(basemap, "road", str(entry.get("c")))
             )
     size = DEFAULT_LINE_PX * 0.7
     shortest = road_min_px(size)
@@ -4324,7 +4418,7 @@ HOME_NAME_DROP = 25.0
 
 
 def home_labels(
-    manifest: Manifest, card: Any, pstyle: PaintStyle, measure_fn: Measure | None = None
+    basemap: Basemap, card: Any, pstyle: PaintStyle, measure_fn: Measure | None = None
 ) -> tuple[list[Label], list[Box]]:
     """The user's marked places, already placed, and the room they need.
 
@@ -4333,7 +4427,7 @@ def home_labels(
     goes into the placer's `taken` list so nothing else is written across it.
 
     Args:
-        manifest: The painted plates' manifest, for its places.
+        basemap: The basemap, for its places.
         card: The card, for the projection and its size.
         pstyle: The paint style, for the type size and whether to draw at all.
         measure_fn: How wide a name is; the module default when not given.
@@ -4346,7 +4440,7 @@ def home_labels(
     size = pstyle.label_size_px * 0.85
     out: list[Label] = []
     boxes: list[Box] = []
-    for place in manifest.places:
+    for place in basemap.places:
         if place.get("sym") != "house":
             continue
         x, y = card.xy(place["x"], place["y"])

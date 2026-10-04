@@ -20,7 +20,6 @@ from pyntpot.maps.card import Card
 from pyntpot.maps.projection import Projection, track_projection
 from pyntpot.maps.style import Style
 
-from support.manifests import manifest_for_test
 from support.paths import FIXTURE_DIR, KEY
 
 FIXTURE_GPX = FIXTURE_DIR / "track.gpx"
@@ -1583,12 +1582,12 @@ def test_closing_the_cover_puts_the_class_seams_under_water():
 # --------------------------------------------------------------------------- labels
 
 
-def test_the_manifest_keeps_the_lines_a_name_can_be_set_along(tmp_path):
-    """Named roads and watercourses survive the paint; unnamed ones do not.
+def test_the_named_lines_keep_what_a_name_can_be_set_along():
+    """Named roads and watercourses become named lines; unnamed ones do not.
 
     The geo payload is transient and re-deriving it at label time costs seven
     seconds and a network the renderer must not need, so the centrelines a
-    curved baseline is taken from are kept beside the plates.
+    curved baseline is taken from are read from the basemap the plates came from.
     """
     basemap = tiny_basemap(
         roads=(
@@ -1600,17 +1599,16 @@ def test_the_manifest_keeps_the_lines_a_name_can_be_set_along(tmp_path):
         ),
         coastline=(((0.0, 10.0), (900.0, 12.0)),),
     )
-    manifest = paint.paint(
-        basemap, tiny_style(), tmp_path, key="iTINY", style_digest=DIGEST
-    ).manifest
-    geom = manifest.label_geom
+    from pyntpot._port import labels as lb
+
+    geom = lb.named_lines(basemap, tiny_style().label_geom_tol_px)
     assert [r["n"] for r in geom["roads"]] == ["A39"]
     assert [r["n"] for r in geom["rivers"]] == ["River Lyn"]
     assert len(geom["coast"]) == 1
     assert all(len(line["d"]) >= 2 for line in geom["roads"] + geom["rivers"])
 
 
-def test_the_labels_hash_moves_when_the_picks_do(tmp_path):
+def test_the_labels_hash_moves_when_the_picks_do():
     """A plate lettered from yesterday's picks must be tellable from today's.
 
     `paint_hash` cannot see the picks: they live in the analysis payload, not
@@ -1622,24 +1620,23 @@ def test_the_labels_hash_moves_when_the_picks_do(tmp_path):
     assert paint.labels_hash(one, style) == paint.labels_hash(list(one), style)
     assert paint.labels_hash(one, style) != paint.labels_hash(two, style)
     assert paint.labels_hash(one, style) != paint.labels_hash(one, tiny_style(label_seed=2))
-    manifest = paint.paint(
-        tiny_basemap(), style, tmp_path, labels=one, key="iTINY", style_digest=DIGEST
-    ).manifest
-    assert manifest.labels_hash == paint.labels_hash(one, style)
 
 
-def _labelled_card(tmp_path, **basemap_over):
-    """A painted tiny box and the card that projects into it, for the label rules."""
-    manifest = paint.paint(
-        tiny_basemap(**basemap_over), tiny_style(), tmp_path, key="iTINY", style_digest=DIGEST
-    ).manifest
-    card = manifest.card
+def _labelled_card(**basemap_over):
+    """A tiny basemap and the card that projects into it, for the label rules."""
+    basemap = tiny_basemap(**basemap_over)
+    card = basemap.card
     route = [(float(x), 40.0 + 30.0 * math.sin(x / 260.0)) for x in range(0, 1400, 40)]
-    return manifest, card, [card.xy(x, y) for x, y in route]
+    return basemap, card, [card.xy(x, y) for x, y in route]
+
+
+def label_basemap(**over: object) -> Basemap:
+    """A tiny basemap whose layers carry no painted widths, for the label readers."""
+    return tiny_basemap(**{"wet_px": {}, **over})
 
 
 def _place_node(name, kind, x, y, off):
-    """One settlement as `journal_candidates` writes it into the manifest."""
+    """One settlement as `journal_candidates` writes it into the basemap."""
     return {
         "name": name,
         "class": "place",
@@ -1652,29 +1649,27 @@ def _place_node(name, kind, x, y, off):
     }
 
 
-def test_upper_and_lower_are_one_place_under_their_shared_stem(tmp_path):
+def test_upper_and_lower_are_one_place_under_their_shared_stem():
     """A reader says Grasmere; OSM has two nodes and neither is called that."""
     from pyntpot._port import labels as lb
 
-    manifest, card, route_px = _labelled_card(
-        tmp_path,
+    basemap, card, route_px = _labelled_card(
         candidates=[
             _place_node("Upper Grasmere", "village", 200.0, 44.0, 241),
             _place_node("Lower Grasmere", "village", 340.0, 40.0, 70),
         ],
     )
-    found = lb.settlements(manifest)
+    found = lb.settlements(basemap)
     assert [e["name"] for e in found] == ["Grasmere"]
     # Positioned on the member the route actually came nearest.
     assert found[0]["off_route_m"] == 70
 
 
-def test_the_settlements_are_chosen_by_rank_and_by_route_not_by_distance(tmp_path):
+def test_the_settlements_are_chosen_by_rank_and_by_route_not_by_distance():
     """A distance sort spends every slot inside one town. This one does not."""
     from pyntpot._port import labels as lb
 
-    manifest, card, route_px = _labelled_card(
-        tmp_path,
+    basemap, card, route_px = _labelled_card(
         candidates=[
             _place_node("Little Combes", "hamlet", 100.0, 42.0, 4),
             _place_node("Tarns Bridge", "hamlet", 180.0, 44.0, 18),
@@ -1683,45 +1678,41 @@ def test_the_settlements_are_chosen_by_rank_and_by_route_not_by_distance(tmp_pat
             _place_node("Faraway", "village", 700.0, 60.0, 4000),
         ],
     )
-    picked = [lb.name for lb in lb.pick_settlements(manifest, card, route_px)]
+    picked = [lb.name for lb in lb.pick_settlements(basemap, card, route_px)]
     assert "Abergavenny" in picked and "Monmouth" in picked
     assert "Faraway" not in picked, "over 1.5 km off the route is not this ride"
     assert len(picked) <= lb.settlement_budget(card.w)
 
 
-def test_a_hamlet_alone_in_empty_country_is_not_worth_a_name(tmp_path):
+def test_a_hamlet_alone_in_empty_country_is_not_worth_a_name():
     """A floor, so a run through nowhere gets one label or none, not three."""
     from pyntpot._port import labels as lb
 
-    manifest, card, route_px = _labelled_card(
-        tmp_path,
+    basemap, card, route_px = _labelled_card(
         candidates=[
             _place_node("Brendon", "hamlet", 300.0, 44.0, 700),
         ],
     )
-    assert lb.pick_settlements(manifest, card, route_px) == []
+    assert lb.pick_settlements(basemap, card, route_px) == []
 
 
-def test_the_river_the_route_crossed_beats_the_one_it_did_not(tmp_path):
+def test_the_river_the_route_crossed_beats_the_one_it_did_not():
     """Run length alone cannot separate two tributaries; the route can."""
     from pyntpot._port import labels as lb
 
     crossed = [[float(x), 40.0 + 30.0 * math.sin(x / 260.0)] for x in range(0, 1400, 40)]
     away = [[float(x), 900.0] for x in range(0, 1400, 40)]
-    manifest, card, route_px = _labelled_card(tmp_path)
-    manifest = dataclasses.replace(
-        manifest,
-        label_geom={
-            "roads": [],
-            "coast": [],
-            "rivers": [
-                {"n": "River Heddon", "c": "medium", "d": crossed},
-                {"n": "River Medway", "c": "medium", "d": away},
-                {"n": "Hebden Beck", "c": "minor", "d": crossed},
-            ],
-        },
-    )
-    named = [x.name for x in lb.pick_rivers(manifest, card, route_px)]
+    basemap, card, route_px = _labelled_card()
+    lines = {
+        "roads": [],
+        "coast": [],
+        "rivers": [
+            {"n": "River Heddon", "c": "medium", "d": crossed},
+            {"n": "River Medway", "c": "medium", "d": away},
+            {"n": "Hebden Beck", "c": "minor", "d": crossed},
+        ],
+    }
+    named = [x.name for x in lb.pick_rivers(basemap, lines, card, route_px)]
     assert named[0] == "Heddon", "the name loses its 'River', the water says it"
     assert "Hebden Beck" not in named, "a beck is noise at this scale"
 
@@ -2133,14 +2124,12 @@ def test_the_major_river_carries_its_name_twice_and_the_others_once():
 
     big = [[round(float(x), 1), 0.0] for x in range(0, 4000, 25)]
     small = [[500.0, round(float(y), 1)] for y in range(0, 900, 25)]
-    manifest = manifest_for_test(
-        label_geom={
-            "rivers": [
-                {"n": "River Lyn", "c": "major", "d": big},
-                {"n": "Heddon", "c": "medium", "d": small},
-            ]
-        }
-    )
+    lines = {
+        "rivers": [
+            {"n": "River Lyn", "c": "major", "d": big},
+            {"n": "Heddon", "c": "medium", "d": small},
+        ]
+    }
 
     class FlatCard:
         w, h, scale = 400.0, 300.0, 0.1
@@ -2151,7 +2140,7 @@ def test_the_major_river_carries_its_name_twice_and_the_others_once():
             return (x * 0.1, y * 0.1 + 40.0)
 
     route = [(float(x), 60.0) for x in range(0, 400, 10)]
-    got = lb.pick_rivers(manifest, FlatCard(), route)
+    got = lb.pick_rivers(label_basemap(), lines, FlatCard(), route)
     names = [label.name for label in got]
     assert names.count("Lyn") == lb.MAJOR_RIVER_LABELS == 2
     assert names.count("Heddon") == 1
@@ -2616,14 +2605,12 @@ def test_a_road_is_lettered_by_its_number_and_falls_back_to_its_name():
 
     numbered = [[round(float(x), 1), 0.0] for x in range(0, 4000, 25)]
     unnumbered = [[round(float(x), 1), 200.0] for x in range(0, 4000, 25)]
-    manifest = manifest_for_test(
-        label_geom={
-            "roads": [
-                {"n": "Lyn Valley Road", "c": "major", "r": "A361", "d": numbered},
-                {"n": "Aviemore Road", "c": "major", "r": "", "d": unnumbered},
-            ]
-        }
-    )
+    lines = {
+        "roads": [
+            {"n": "Lyn Valley Road", "c": "major", "r": "A361", "d": numbered},
+            {"n": "Aviemore Road", "c": "major", "r": "", "d": unnumbered},
+        ]
+    }
 
     class FlatCard:
         w, h, scale = 400.0, 300.0, 0.1
@@ -2634,7 +2621,7 @@ def test_a_road_is_lettered_by_its_number_and_falls_back_to_its_name():
             return (x * 0.1, y * 0.1 + 40.0)
 
     route = [(float(x), 45.0) for x in range(0, 400, 10)]
-    got = lb.pick_roads(manifest, FlatCard(), route, budget=2)
+    got = lb.pick_roads(label_basemap(), lines, FlatCard(), route, budget=2)
     names = {label.name for label in got}
     assert "A361" in names, "the numbered road is lettered by its number"
     assert "Lyn Valley Road" not in names
@@ -3298,17 +3285,17 @@ def test_a_river_name_is_lifted_clear_of_the_water_it_names():
 
 
 def test_the_painted_width_of_a_watercourse_reaches_the_label_layer():
-    """The label layer sees a centreline; the manifest tells it the brush."""
+    """The label layer sees a centreline; the layers tell it the brush."""
     from pyntpot._port import labels as lb
 
-    fresh = manifest_for_test(wet_px={"major": 9.5, "medium": 6.0, "minor": 2.4})
-    # The manifest carries the brush's nominal width and the brush lays down
+    fresh = label_basemap(wet_px={"major": 9.5, "medium": 6.0, "minor": 2.4})
+    # The layers carry the brush's nominal width and the brush lays down
     # more than that, so what reaches the label layer is the footprint.
     assert lb.feature_px(fresh, "river", "major") == pytest.approx(9.5 * lb.WET_SPREAD)
-    # A manifest painted before the key falls back to the painter's defaults
-    # rather than to nothing, so an old plate letters its rivers where a new
-    # one does.
-    assert lb.feature_px(manifest_for_test(wet_px={}), "river", "major") == pytest.approx(
+    # Layers with no width for the class fall back to the painter's defaults
+    # rather than to nothing, so such a map letters its rivers where any
+    # other does.
+    assert lb.feature_px(label_basemap(), "river", "major") == pytest.approx(
         lb.WET_PX_DEFAULT["major"] * lb.WET_SPREAD
     )
 
@@ -3330,21 +3317,19 @@ def _river_label(width_px):
     """One river of a given painted width, placed."""
     from pyntpot._port import labels as lb
 
-    manifest = manifest_for_test(
-        label_geom={
-            "rivers": [
-                {
-                    "n": "Severn",
-                    "c": "major",
-                    "w": width_px,
-                    "wn": width_px,
-                    "d": [[100, 400], [800, 400]],
-                }
-            ]
-        },
-        wet_px={"major": 11.0},
-    )
-    return lb.pick_rivers(manifest, _WideCard(), [(100.0, 100.0), (800.0, 100.0)])[0]
+    lines = {
+        "rivers": [
+            {
+                "n": "Severn",
+                "c": "major",
+                "w": width_px,
+                "wn": width_px,
+                "d": [[100, 400], [800, 400]],
+            }
+        ]
+    }
+    basemap = label_basemap(wet_px={"major": 11.0})
+    return lb.pick_rivers(basemap, lines, _WideCard(), [(100.0, 100.0), (800.0, 100.0)])[0]
 
 
 def test_a_wide_river_carries_its_name_on_the_water():
@@ -3483,13 +3468,9 @@ def test_the_second_river_name_is_earned_by_the_run():
             return (float(x), float(y))
 
     def rivers(x1):
-        manifest = manifest_for_test(
-            label_geom={
-                "rivers": [{"n": "Severn", "c": "major", "w": 30.0, "d": [[100, 400], [x1, 400]]}]
-            },
-            wet_px={"major": 11.0},
-        )
-        return lb.pick_rivers(manifest, FlatCard(), [(100.0, 100.0), (800.0, 100.0)])
+        lines = {"rivers": [{"n": "Severn", "c": "major", "w": 30.0, "d": [[100, 400], [x1, 400]]}]}
+        basemap = label_basemap(wet_px={"major": 11.0})
+        return lb.pick_rivers(basemap, lines, FlatCard(), [(100.0, 100.0), (800.0, 100.0)])
 
     short = [lb.name for lb in rivers(395)]  # 295 px of water
     assert short == ["Severn"], "a corner of river was lettered twice"
@@ -3523,14 +3504,12 @@ def test_an_unnamed_lane_and_a_watercourse_both_cost_a_name_that_crosses_them():
         def xy(x, y):
             return (float(x), float(y))
 
-    manifest = manifest_for_test(
-        label_geom={
-            "roads": [{"n": "A361", "c": "major", "d": [[0, 10], [400, 10]]}],
-            "rivers": [{"n": "Lyn", "c": "major", "d": [[0, 60], [400, 60]]}],
-            "crossings": [[[0, 120], [400, 120]]],
-        }
-    )
-    lines = lb.road_lines(manifest, FlatCard())
+    named = {
+        "roads": [{"n": "A361", "c": "major", "d": [[0, 10], [400, 10]]}],
+        "rivers": [{"n": "Lyn", "c": "major", "d": [[0, 60], [400, 60]]}],
+        "crossings": [[[0, 120], [400, 120]]],
+    }
+    lines = lb.road_lines(named, FlatCard())
     assert len(lines) == 3, "the lanes and the water are not in the crossing cost"
     for y in (10.0, 60.0, 120.0):
         assert lb._on_road((100.0, y - 4, 200.0, y + 4), lines) == 1.0
@@ -3705,7 +3684,7 @@ def test_the_box_a_curved_name_reserves_is_centred_on_its_own_ink():
 
 
 def test_the_clearance_scales_with_the_water_the_painter_actually_laid_down():
-    """The manifest carries the brush's nominal width, not its footprint.
+    """The layers carry the brush's nominal width, not its footprint.
 
     A brush bleeds, smooths and drifts past its own nominal edge, so a
     clearance taken against the nominal width stands the name off less water
@@ -3714,8 +3693,8 @@ def test_the_clearance_scales_with_the_water_the_painter_actually_laid_down():
     from pyntpot._port import labels as lb
 
     assert lb.WET_SPREAD > 1.0
-    wide = manifest_for_test(wet_px={"major": 12.0, "medium": 3.0, "minor": 1.0})
-    narrow = manifest_for_test(wet_px={"major": 4.0, "medium": 3.0, "minor": 1.0})
+    wide = label_basemap(wet_px={"major": 12.0, "medium": 3.0, "minor": 1.0})
+    narrow = label_basemap(wet_px={"major": 4.0, "medium": 3.0, "minor": 1.0})
     big = lb.Label(
         name="Lyn",
         kind="river",
@@ -3768,15 +3747,13 @@ def test_a_numbered_road_is_gathered_by_its_number_not_by_its_street_name():
     def leg(x0, x1, y):
         return [[round(float(x), 1), float(y)] for x in range(x0, x1 + 1, 25)]
 
-    manifest = manifest_for_test(
-        label_geom={
-            "roads": [
-                {"n": "Hollow Lane", "c": "major", "r": "A3052", "d": leg(0, 500, 0)},
-                {"n": "Coastguard Road", "c": "major", "r": "A3052", "d": leg(500, 1000, 0)},
-                {"n": "New Road", "c": "major", "r": "A3052", "d": leg(1000, 1500, 0)},
-            ]
-        }
-    )
+    lines = {
+        "roads": [
+            {"n": "Hollow Lane", "c": "major", "r": "A3052", "d": leg(0, 500, 0)},
+            {"n": "Coastguard Road", "c": "major", "r": "A3052", "d": leg(500, 1000, 0)},
+            {"n": "New Road", "c": "major", "r": "A3052", "d": leg(1000, 1500, 0)},
+        ]
+    }
 
     class FlatCard:
         w, h, scale = 400.0, 300.0, 0.1
@@ -3787,7 +3764,7 @@ def test_a_numbered_road_is_gathered_by_its_number_not_by_its_street_name():
             return (x * 0.1, y * 0.1 + 40.0)
 
     route = [(float(x), 41.0) for x in range(0, 150, 5)]
-    got = lb.pick_roads(manifest, FlatCard(), route, budget=2)
+    got = lb.pick_roads(label_basemap(), lines, FlatCard(), route, budget=2)
     assert [label.name for label in got] == ["A3052"]
     # No one leg is long enough on its own; the number is what gathers them.
     assert length_indexed(got[0].baseline) > lb.road_min_px(got[0].size)

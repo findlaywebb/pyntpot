@@ -37,6 +37,7 @@ first 16 hex digits of its SHA-256, a hyphen, and the style's base digest.
 |---|---|---|---|
 | 0 | `020c3ff` | baseline, made on the window's starting commit | none |
 | 1 | `Hash plates from the typed basemap and the style groups` | all five outputs byte-identical to step 0; the hash differs | `--require-identical all --require-hash differ` |
+| 2 | `Read lettering geometry from the basemap and settle the manifest` | all five outputs byte-identical to step 1; the hash equal; `labels.txt` written for the first time | `--require-identical all --require-hash equal` |
 
 Step 1 wires the grouped style into the painter: the flat painter style, the effective
 basemap options and the route ink all come from the packaged default theme, and the base
@@ -68,11 +69,59 @@ manifest hash: 87624a4cd49063df-e5a5f1b4b3ca2177 here, c034e1a4d60bad70-77dce82b
 The four outputs that are not byte-identical to the committed goldens were already so on
 the starting commit, in this environment; they are within the channel bound everywhere.
 
+Step 2 moves the lettering's inputs from the manifest to the basemap: the places, the
+candidates and the named lines a label is set along are read from the basemap the plates
+were painted from, and the route is the basemap's own track rather than a second
+projection of the recorded points. The manifest takes its final shape. These keys are
+removed: `id`, `route0`, `places`, `candidates`, `label_geom`, `labels_hash`, `sources`,
+`timing`. These sixteen remain, final: `hash`, `files`, `sizes`, `bytes`, `card`,
+`display`, `render`, `mpp`, `mpp_display`, `ribbon_m`, `span_m`, `wet_px`, `gran_px`,
+`dark`, `wood_px`, `water_px`.
+
+Step 2 compare, against step 1 (the gate):
+
+```
+paper.webp: identical yes, differing fraction 0.000000
+wash.webp: identical yes, differing fraction 0.000000
+pen.webp: identical yes, differing fraction 0.000000
+labels-centreline.webp: identical yes, differing fraction 0.000000
+map.png: identical yes, differing fraction 0.000000
+manifest hash: 87624a4cd49063df-e5a5f1b4b3ca2177 here, 87624a4cd49063df-e5a5f1b4b3ca2177 in step 1
+```
+
+Step 2 compare, against the committed goldens (cumulative record):
+
+```
+paper.webp: identical no, differing fraction 0.000000
+wash.webp: identical no, differing fraction 0.000000
+pen.webp: identical yes, differing fraction 0.000000
+labels-centreline.webp: identical no, differing fraction 0.000000
+map.png: identical no, differing fraction 0.000000
+manifest hash: 87624a4cd49063df-e5a5f1b4b3ca2177 here, c034e1a4d60bad70-77dce82bec370944 in the goldens
+```
+
+The window's pinned label list, `labels.txt` as step 2 wrote it (the placed label names,
+in placement order). Every later step must write the same list:
+
+```
+Lynton
+Barbrook
+East Lyn
+East Lyn
+A39
+B3234
+Saint Mary the Virgin
+Hollerday Hill
+Lyn Valley Art and Craft Centre
+start
+```
+
 ### Hashes
 
 - Old manifest hash (the committed goldens): `c034e1a4d60bad70-77dce82bec370944`.
 - New manifest hash after step 1: `87624a4cd49063df-e5a5f1b4b3ca2177`, whose suffix is
   the default style's pinned base digest.
+- Manifest hash after step 2: `87624a4cd49063df-e5a5f1b4b3ca2177`, unchanged.
 
 ## Consequences
 

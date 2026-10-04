@@ -16,7 +16,8 @@ MAX_CHANNEL_DELTA = 2
 @pytest.fixture(scope="module")
 def painted(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
     """Paint and compose the fixture into a fresh copy, returning each output's path."""
-    return paint_fixture(tmp_path_factory.mktemp("lynmouth"))
+    paths, _placed = paint_fixture(tmp_path_factory.mktemp("lynmouth"))
+    return paths
 
 
 def _compare(name: str, got: Path, want: Path, tolerant: bool) -> None:

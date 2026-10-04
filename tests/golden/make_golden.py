@@ -3,7 +3,9 @@
 Run as `PYTHONPATH=tests uv run python tests/golden/make_golden.py OUT [--compare DIR ...]`.
 It paints into a temporary copy of the fixture and writes the five outputs and
 `plates.json` into `OUT`; when `OUT` is not the committed golden directory it
-also writes `baseline.json`, the commit painted and whether the tree was dirty.
+also writes `baseline.json`, the commit painted and whether the tree was dirty,
+and `labels.txt`, the names of the labels placed on the card, one a line in
+placement order.
 Each `--compare DIR` logs one line per output (byte-identical or not, and the
 fraction of pixels past the parity channel bound) and one line with both
 manifest hashes. The gate options apply to the first `--compare` only; any
@@ -75,13 +77,14 @@ def _git(*args: str) -> str:
 
 
 def _write(out: Path) -> None:
-    """Paint into a temporary copy and write the outputs, and the baseline record, to `out`."""
+    """Paint into a temporary copy and write the outputs, the labels and the baseline, to `out`."""
     out.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
-        painted = paint_fixture(Path(tmp))
+        painted, placed = paint_fixture(Path(tmp))
         for name in (*OUTPUTS, MANIFEST):
             shutil.copyfile(painted[name], out / name)
     if out.resolve() != GOLDEN_DIR:
+        (out / LABELS).write_text("".join(f"{name}\n" for name in placed))
         baseline = {
             "commit": _git("rev-parse", "HEAD"),
             "dirty": bool(_git("status", "--porcelain")),

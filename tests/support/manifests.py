@@ -17,26 +17,18 @@ CARD = Card(
 
 #: The manifest every override starts from.
 _DEFAULT = Manifest(
-    key="iTEST",
     hash="0123456789abcdef",
-    route0=(0.0, 0.0),
     files={"paper": "paper.webp", "wash": "wash.webp", "pen": "pen.webp"},
     sizes={"paper": 1, "wash": 1, "pen": 1},
     bytes=3,
     card=CARD,
     ribbon_m=40,
     span_m=800,
-    places=(),
-    candidates=(),
-    label_geom={"roads": [], "rivers": [], "coast": [], "crossings": []},
     wet_px={},
     gran_px=6.0,
-    labels_hash="fedcba9876543210",
-    sources=(),
     dark=DarkGrid(w=2, h=2, values=((0.0, 0.0), (0.0, 0.0))),
     wood_px=0,
     water_px=0,
-    timing={},
 )
 
 

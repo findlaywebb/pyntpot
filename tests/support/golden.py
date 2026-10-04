@@ -24,15 +24,16 @@ PLATES: tuple[str, ...] = ("paper.webp", "wash.webp", "pen.webp", "labels-centre
 OUTPUTS: tuple[str, ...] = (*PLATES, "map.png")
 
 
-def paint_fixture(work: Path) -> dict[str, Path]:
+def paint_fixture(work: Path) -> tuple[dict[str, Path], list[str]]:
     """Copy the fixture into `work`, paint and compose it in the default style, and save `map.png`.
 
     Returns:
-        Each name in `OUTPUTS`, plus `plates.json` (the manifest), mapped to its path.
+        Each name in `OUTPUTS`, plus `plates.json` (the manifest), mapped to its path;
+        and the names of the labels placed on the card, in placement order.
 
     Raises:
-        RuntimeError: When painting or composing yields nothing, or a plate was not
-            freshly written in `work`.
+        RuntimeError: When painting yields nothing, or a plate was not freshly
+            written in `work`.
     """
     shutil.copytree(FIXTURE_DIR, work, dirs_exist_ok=True)
     sentinel = work / "copied.marker"
@@ -45,19 +46,17 @@ def paint_fixture(work: Path) -> dict[str, Path]:
     painted = paint.paint_activity(KEY, lat, lng, style, cache_dir=work, places=[], force=True)
     if painted is None:
         raise RuntimeError("painting the fixture wrote no manifest")
-    plates = painted.directory
-    _require_fresh([plates / name for name in PLATES[:3]], copied_ns)
+    basemap, plates = painted
+    _require_fresh([plates.directory / name for name in PLATES[:3]], copied_ns)
 
-    card = mapcard.compose(KEY, lat, lng, style, None, True, work)
-    if card is None:
-        raise RuntimeError("composing the fixture made no card")
-    _require_fresh([plates / PLATES[3]], copied_ns)
+    card, placed = mapcard.compose(basemap, plates, style, None, True)
+    _require_fresh([plates.directory / PLATES[3]], copied_ns)
     card.save(work / "map.png")
 
-    paths = {name: plates / name for name in PLATES}
+    paths = {name: plates.directory / name for name in PLATES}
     paths["map.png"] = work / "map.png"
-    paths["plates.json"] = plates / "plates.json"
-    return paths
+    paths["plates.json"] = plates.directory / "plates.json"
+    return paths, [label.name for label in placed]
 
 
 def _require_fresh(paths: list[Path], since_ns: int) -> None:

@@ -23,7 +23,6 @@ import hashlib
 import json
 import math
 import re
-import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field, fields, replace
 from pathlib import Path
@@ -34,7 +33,6 @@ from PIL import Image
 
 from pyntpot._port.style import coerce_like
 from pyntpot.ink.chains import chain_lines
-from pyntpot.ink.polyline import simplify
 
 if TYPE_CHECKING:
     from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
@@ -471,8 +469,8 @@ class PaintStyle:
     #: name, so an unchanged map letters identically on every render and a
     #: deliberate reshuffle is one number.
     label_seed: int = 17
-    #: How far a named road or watercourse is simplified before it is kept in
-    #: the manifest for a label to be set along, in display pixels.
+    #: How far a named road or watercourse is simplified before a label is set
+    #: along it, in display pixels.
     label_geom_tol_px: float = 8.0
     #: How a glyph is turned into something the pen follows. `centreline` thins
     #: the face's own outline to a written skeleton; `outline` draws round the
@@ -3288,90 +3286,13 @@ def paint_hash(basemap: Basemap, style_digest: str) -> str:
     return hashlib.sha256(basemap.canonical().encode()).hexdigest()[:16] + "-" + style_digest
 
 
-def label_geom(basemap: Basemap, tol_px: float) -> dict[str, Any]:
-    """The lines a name can be set along, clipped to the card and simplified.
-
-    The roads and the watercourses are in the geo payload and nowhere else, and
-    the geo payload is transient: re-deriving it at label time costs seven
-    seconds and a fetch that may not be possible. So the named centrelines and
-    the coastline are kept here, in the card's own metres, at a tolerance that
-    is generous because a baseline is read at a glance and never measured.
-
-    Args:
-        basemap: The basemap from `geo.journal_layers`.
-        tol_px: Simplification tolerance in display pixels.
-
-    Returns:
-        `{"roads": [...], "rivers": [...], "coast": [...]}`, each entry a name,
-        a class, a road number where OSM has one, and a polyline in card
-        metres.
-    """
-    layers = basemap.layers
-    tol = max(tol_px * float(basemap.card.mpp_display), 1.0)
-
-    def lines(line: Line) -> list[list[list[float]]]:
-        out = []
-        for piece in [list(line)] if len(line) > 1 else []:
-            kept = simplify(piece, tol)
-            if len(kept) > 1:
-                out.append([[round(x, 1), round(y, 1)] for x, y in kept])
-        return out
-
-    named: dict[str, list[dict[str, Any]]] = {
-        "roads": [
-            {"n": r.name, "c": r.cls, "r": r.ref, "w": 0.0, "wn": 0.0, "line": r.line}
-            for r in layers.roads
-        ],
-        "rivers": [
-            {
-                "n": r.name,
-                "c": r.cls,
-                "r": "",
-                "w": r.width_px,
-                "wn": r.name_width_px,
-                "line": r.line,
-            }
-            for r in layers.rivers
-        ],
-    }
-    geom: dict[str, Any] = {"roads": [], "rivers": [], "coast": [], "crossings": []}
-    for key in ("roads", "rivers"):
-        for entry in named[key]:
-            for line in lines(entry["line"]):
-                if entry["n"]:
-                    # `w` is the width this watercourse was actually painted at,
-                    # which is its own where one could be measured and the class
-                    # floor where it could not. A name clears the ink it is set
-                    # beside, so it has to be the ink that was laid down and not
-                    # what the class would have laid down.
-                    geom[key].append(
-                        {
-                            "n": entry["n"],
-                            "c": entry["c"],
-                            "r": entry["r"],
-                            "w": entry["w"],
-                            "wn": entry["wn"],
-                            "d": line,
-                        }
-                    )
-                else:
-                    # An unnamed lane can carry no name of its own, so it was
-                    # left out of the geometry altogether and a label could be
-                    # laid across one for nothing. It is kept here, without a
-                    # name, purely so the crossing cost can see it.
-                    geom["crossings"].append(line)
-    for coast in layers.coastline:
-        geom["coast"].extend(lines(coast))
-    return geom
-
-
 def labels_hash(labels: list[dict[str, Any]] | None, style: PaintStyle) -> str:
     """A hash over what is lettered and how, so a stale label plate is caught.
 
     The picks live in the analysis payload, not the geo payload, so `paint_hash`
     cannot see them and a plate keyed on it alone would letter yesterday's names
-    over today's map. A caller compares this against the manifest's own before
-    it draws a label plate, and draws nothing when they differ.
+    over today's map. The label plate is keyed on this, so a plate lettered
+    from other names or another hand is never drawn.
 
     Args:
         labels: The resolved labels, or None when nothing is lettered.
@@ -3532,7 +3453,6 @@ def paint(
     basemap: Basemap,
     style: PaintStyle | None = None,
     out_dir: Path | None = None,
-    labels: list[dict[str, Any]] | None = None,
     *,
     key: str,
     style_digest: str,
@@ -3549,17 +3469,13 @@ def paint(
         basemap: The basemap from `geo.journal_layers`.
         style: The paint style; the defaults when it is not given.
         out_dir: Where to write; `data/geo/plates/<id>/` by default.
-        labels: The resolved labels, when the caller has them. They are hashed
-            into the manifest so a label plate painted from them can be told
-            from a stale one. This module never resolves or places a label
-            itself: `labels.py` imports from here and never the other way.
-        key: The activity, written into the manifest as its `id`.
+        key: The activity, naming the default plates directory.
         style_digest: The digest of the style groups the base plates read,
             hashed into the manifest with the basemap.
 
     Returns:
-        The plates, with their manifest: files, byte counts, timings and the
-        darkness grid.
+        The plates, with their manifest: files, byte counts, measurements and
+        the darkness grid.
     """
     from pyntpot.maps.plates import DarkGrid, Manifest, Plates
 
@@ -3567,7 +3483,6 @@ def paint(
     aid = key
     out_dir = out_dir if out_dir is not None else plates_dir(aid)
     out_dir.mkdir(parents=True, exist_ok=True)
-    t0 = time.perf_counter()
 
     card, layers = basemap.card, basemap.layers
     cx0, cy0, cx1, cy1 = card.box
@@ -3623,7 +3538,6 @@ def paint(
     sea_cov = fill_cov(sea_rings, plate) if sea_rings else np.zeros((rh, rw), F32)
     lake_cov = fill_cov(lake_rings, plate) if lake_rings else np.zeros((rh, rw), F32)
     water = np.maximum(sea_cov, lake_cov) > 0.5
-    t_water = time.perf_counter()
 
     # ---- land cover: one label per pixel, so two land pigments cannot stack.
     # The outlines are deformed here, in metres, before anything is rasterised:
@@ -3722,7 +3636,6 @@ def paint(
                 transp("pale"),
             )
         )
-    t_cover = time.perf_counter()
 
     # ---- the wood, as a texture and a scatter of dabs. Both cross fade over
     # three printed scales, because a texture's scale cannot be changed after it
@@ -3762,7 +3675,6 @@ def paint(
         dab_r = max(step * 0.17, 4.0)
         dens = np.clip(blur(dabs, dab_r) * (dab_r**2) * 1.5, 0, 1) * wood_mask
         trimmed.append((dens * strength * weight, rgb(style.pigments["wood"]), transp("wood")))
-    t_wood = time.perf_counter()
 
     # ---- lakes are trimmed with the rest of the land cover, so a reservoir two
     # valleys away does not float on the paper. The sea is not.
@@ -3794,7 +3706,6 @@ def paint(
                 transp("relief"),
             )
         )
-    t_relief = time.perf_counter()
 
     # ---- one bounded shallow-water pass over everything the ribbon carries,
     # on a quarter-resolution grid. It is run once for the whole sheet rather
@@ -3809,7 +3720,6 @@ def paint(
             else np.clip(1.0 - sea_cov, 0.0, 1.0)
         )
         trimmed = fluid_modulate(trimmed, wet_all, sheet, style)
-    t_fluid = time.perf_counter()
 
     # ---- the ink. Roads and watercourses are painted with the same machinery
     # as the wash: no vector stroke is drawn over the top.
@@ -3874,7 +3784,6 @@ def paint(
         )
         if pad.any():
             untrimmed.append((pad.read(br[key][0], sheet), rgb(br[key][1])))
-    t_ink = time.perf_counter()
 
     # ---- the ribbon, and the card
     route_mask = stroke_mask([list(layers.route)], plate, 2.0)
@@ -3916,7 +3825,6 @@ def paint(
     over.extend(untrimmed)
     wash_plate = composite(over, ground, style)
     paper = paper_plate(sheet, plate, style)
-    t_end = time.perf_counter()
 
     files, sizes = {}, {}
     for name, arr, quality in (
@@ -3954,22 +3862,13 @@ def paint(
     ]
 
     manifest = Manifest(
-        key=aid,
         hash=paint_hash(basemap, style_digest),
-        # The first track point in the painter's own metre space, so a caller
-        # whose projection took a different origin can pin the two together.
-        route0=layers.route[0],
         files=files,
         sizes=sizes,
         bytes=sum(sizes.values()),
         card=card,
         ribbon_m=layers.ribbon_m,
         span_m=basemap.span_m,
-        places=tuple(basemap.places),
-        candidates=tuple(basemap.candidates),
-        # The named lines a label can be set along, which are in the geo payload
-        # and nowhere else once this returns.
-        label_geom=label_geom(basemap, style.label_geom_tol_px),
         # How wide each class of watercourse was actually painted, in display
         # pixels, so a river's name can be set clear of its own water rather
         # than in it. The label layer has no other way to know: it sees the
@@ -3978,21 +3877,9 @@ def paint(
         # The paper the ink was gated on, so a plate painted later gates on the
         # same sheet rather than on a second one that only looks similar.
         gran_px=round(max(layers.gran_m / mpp, 3.0), 3),
-        labels_hash=labels_hash(labels, style),
-        sources=tuple(basemap.sources),
         dark=DarkGrid(w=gw, h=gh, values=tuple(tuple(row) for row in dark)),
         wood_px=int(wood_mask.sum()),
         water_px=int(water.sum()),
-        timing={
-            "water_ms": round((t_water - t0) * 1000),
-            "cover_ms": round((t_cover - t_water) * 1000),
-            "wood_ms": round((t_wood - t_cover) * 1000),
-            "relief_ms": round((t_relief - t_wood) * 1000),
-            "fluid_ms": round((t_fluid - t_relief) * 1000),
-            "ink_ms": round((t_ink - t_fluid) * 1000),
-            "ribbon_ms": round((t_end - t_ink) * 1000),
-            "total_ms": round((time.perf_counter() - t0) * 1000),
-        },
     )
     (out_dir / "plates.json").write_text(manifest.to_json())
     return Plates(out_dir, manifest)
@@ -4020,7 +3907,7 @@ def paint_activity(
     cache_dir: Path,
     places: list[dict[str, Any]],
     force: bool = False,
-) -> Plates | None:
+) -> tuple[Basemap, Plates] | None:
     """Assemble the layers for one activity and paint them, unless they are current.
 
     Args:
@@ -4035,8 +3922,9 @@ def paint_activity(
         force: Repaint even when the cached plates match.
 
     Returns:
-        The plates, freshly painted or already current, or None when there is
-        nothing cached for this box.
+        The basemap the plates were painted from, and the plates, freshly
+        painted or already current; None when there is nothing cached for
+        this box.
     """
     from pyntpot._port import geo
 
@@ -4057,8 +3945,8 @@ def paint_activity(
     want = paint_hash(basemap, digest)
     existing = load_plates(key, cache_dir)
     if existing is not None and existing.hash == want and not force:
-        return existing
-    return paint(basemap, pstyle, out_dir, key=key, style_digest=digest)
+        return basemap, existing
+    return basemap, paint(basemap, pstyle, out_dir, key=key, style_digest=digest)
 
 
 def with_display(style: PaintStyle, display_px: int) -> PaintStyle:

@@ -6,11 +6,11 @@ answer when the map sits beside the numbers; it is the wrong answer when all
 that is wanted is the picture. This module composes the same plates into a
 single raster card instead, so the map can be handed straight over.
 
-Nothing here paints and nothing here fetches: it reads
-`data/geo/plates/<id>/`, which `python -m analysis.report paint` fills, and
-returns None when that cache is empty. The route comes from `charts` and the
-label placement from `labels`, which the page uses too, so the card and the
-page put a name in the same place.
+Nothing here paints and nothing here fetches: it takes the basemap and the
+plates the painter made from it. The route is the basemap's own track, and the
+label placement comes from `labels`, which the page uses too, so the card and
+the page put a name in the same place. The places, candidates and named lines a
+label is set by are read from the basemap, never from the plates' manifest.
 """
 
 from __future__ import annotations
@@ -28,6 +28,7 @@ from pyntpot._port import paint
 from pyntpot._port.card import STRAND_GAP_WIDTHS, separate_strands
 from pyntpot._port.labels import (
     Label,
+    Span,
     draw_plate,
     ground_labels,
     home_labels,
@@ -42,6 +43,8 @@ from pyntpot._port.labels import (
 from pyntpot.ink.polyline import cumulative_m
 
 if TYPE_CHECKING:
+    from pyntpot.maps.basemap import Basemap
+    from pyntpot.maps.card import Card
     from pyntpot.maps.plates import Plates
     from pyntpot.maps.style import Style
 
@@ -126,69 +129,64 @@ def _paste_labels(card_img: Image.Image, plate: Path) -> None:
     card_img.paste(ink, (0, 0), ink.getchannel("A"))
 
 
-def compose(
-    key: str,
-    lat: list[float],
-    lng: list[float],
-    style: Style,
-    picks: Any | None,
-    labels: bool,
-    cache_dir: Path,
-) -> Image.Image | None:
-    """The painted route map for one activity, as one image.
+def pinned_card(basemap: Basemap) -> Card:
+    """The basemap's card, offset so its track's first point lands on the painter's route."""
+    first, start = basemap.layers.route[0], basemap.track[0]
+    return replace(basemap.card, offset=(first[0] - start[0], first[1] - start[1]))
+
+
+def route_pixels(basemap: Basemap, style: Style) -> list[tuple[float, float]]:
+    """The drawn route in display pixels: the basemap's track, its strands pulled apart.
+
+    The track is placed through the pinned card, then separated where it runs
+    back over itself by the gap the route ink leaves between strands.
+    """
+    card = pinned_card(basemap)
+    ink = style.route_ink()
+    return separate_strands([card.xy(x, y) for x, y in basemap.track], ink.px * STRAND_GAP_WIDTHS)
+
+
+def letter_card(
+    basemap: Basemap, plates: Plates, style: Style, picks: Any | None
+) -> tuple[list[Label], list[Span], Path | None]:
+    """Place the card's names and spans and stroke them into a label plate.
 
     Args:
-        key: The cache key, naming the plate cache.
-        lat: Track latitudes, in recorded order.
-        lng: Track longitudes, same length.
-        style: The style: the route is drawn in its route ink and the card is
-            lettered with its flat painter style.
+        basemap: The basemap the plates were painted from, for the places, the
+            candidates, the named lines and the projection.
+        plates: The painted plates, beside which the label plate is written.
+        style: The style: its flat painter style letters the card.
         picks: A payload's `map` block, naming the landmarks to letter. Without
             one the nearest named features are lettered instead.
-        labels: Letter the card at all. False leaves the route on the painting.
-        cache_dir: Where the plates are cached.
 
     Returns:
-        The card, or None when nothing is painted for this activity.
+        The placed labels in placement order, the placed spans, and the label
+        plate, or None when there is no hand or nothing to draw.
     """
-    from pyntpot.maps.projection import track_projection
-
-    plates = paint.load_plates(key, cache_dir)
-    if plates is None:
-        return None
     pstyle = style.paint_style()
     manifest = plates.manifest
-    card_img = _plates(plates)
-    k = card_img.width / max(plates.card.display[0], 1)
-
-    _proj, pts = track_projection(lat, lng)
-    first = manifest.route0 or pts[0]
-    card = replace(plates.card, offset=(first[0] - pts[0][0], first[1] - pts[0][1]))
-    ink = style.route_ink()
-    route_px = separate_strands([card.xy(x, y) for x, y in pts], ink.px * STRAND_GAP_WIDTHS)
-
-    _route(card_img, plates, route_px, ink, k)
-    if not labels:
-        return card_img
+    card = pinned_card(basemap)
+    route_px = route_pixels(basemap, style)
+    lines = lb_mod.named_lines(basemap, pstyle.label_geom_tol_px)
 
     hand = lb_mod.hand(pstyle)
-    home, taken = home_labels(manifest, card, pstyle, hand.measure if hand else None)
+    home, taken = home_labels(basemap, card, pstyle, hand.measure if hand else None)
     ground = (
-        ground_labels(manifest, card, route_px, picks)
-        + pick_roads(manifest, card, route_px)
+        ground_labels(basemap, lines, card, route_px, picks)
+        + pick_roads(basemap, lines, card, route_px)
         + route_markers(route_px)
         if pstyle.label_ground
         else []
     )
-    wanted = journal_picks(picks, manifest, pstyle.label_max) if picks else []
+    wanted = journal_picks(picks, basemap, pstyle.label_max) if picks else []
     if not wanted:
-        wanted = journal_heuristic(manifest, pstyle.label_max)
+        wanted = journal_heuristic(basemap, pstyle.label_max)
     anchored = []
     for lb in wanted:
         if "x" in lb:
             x, y = card.xy(lb["x"], lb["y"])
         else:
-            x, y = card.xy(*_proj(lb["lat"], lb["lng"]))
+            x, y = card.xy(*basemap.projection(lb["lat"], lb["lng"]))
         if 0 < x < card.w and 0 < y < card.h:
             anchored.append(
                 Label(
@@ -211,14 +209,42 @@ def compose(
         {"w": manifest.dark.w, "h": manifest.dark.h, "v": manifest.dark.values},
         taken,
         hand.measure if hand else None,
-        road_lines(manifest, card),
+        road_lines(lines, card),
     )
     plate = draw_plate(plates, placed, spans, route_px, pstyle) if hand else None
+    return placed, spans, plate
+
+
+def compose(
+    basemap: Basemap, plates: Plates, style: Style, picks: Any | None, labels: bool
+) -> tuple[Image.Image, list[Label]]:
+    """The painted route map for one activity, as one image.
+
+    Args:
+        basemap: The basemap the plates were painted from.
+        plates: The painted plates.
+        style: The style: the route is drawn in its route ink and the card is
+            lettered with its flat painter style.
+        picks: A payload's `map` block, naming the landmarks to letter. Without
+            one the nearest named features are lettered instead.
+        labels: Letter the card at all. False leaves the route on the painting.
+
+    Returns:
+        The card, and the labels placed on it in placement order (none when
+        `labels` is false).
+    """
+    card_img = _plates(plates)
+    k = card_img.width / max(plates.card.display[0], 1)
+    ink = style.route_ink()
+    _route(card_img, plates, route_pixels(basemap, style), ink, k)
+    if not labels:
+        return card_img, []
+    placed, _spans, plate = letter_card(basemap, plates, style, picks)
     if plate is None:
-        log.info("no label plate for %s, the card is handed over bare", key)
-        return card_img
+        log.info("no label plate in %s, the card is handed over bare", plates.directory)
+        return card_img, placed
     _paste_labels(card_img, plate)
-    return card_img
+    return card_img, placed
 
 
 #: What the alphabet sheet writes: the whole character set a place name can use,

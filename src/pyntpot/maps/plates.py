@@ -8,7 +8,9 @@ dark the painted sheet is.
 
 It does not paint, hash or letter anything, and it does not decide whether a
 manifest is current: the painter writes one, the lettering and the compose
-step read one. `Manifest.to_json` writes the record in a fixed key order with
+step read one. It carries no lettering input: the places, the candidates and
+the named lines a label is set along are read from the basemap, not from
+here. `Manifest.to_json` writes the record in a fixed key order with
 the card as its five frame keys (`card`, `display`, `render`, `mpp`,
 `mpp_display`); the card's offset is never written.
 
@@ -29,8 +31,6 @@ from pyntpot.maps.card import Card
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from pathlib import Path
-
-    from pyntpot.ink.polyline import Pt
 
 
 @dataclass(frozen=True)
@@ -54,49 +54,33 @@ class Manifest:
     """The sidecar record of one map's painted plates.
 
     Attributes:
-        key: The activity the plates belong to, written as `id`.
         hash: The base hash of the card and layers the plates were painted from.
-        route0: The first route point, in card metres.
         files: The file name of each plate, by plate name.
         sizes: The bytes written for each plate, by plate name.
         bytes: The bytes written for every plate together.
         card: The frame the plates were painted on.
         ribbon_m: The ribbon radius, in card metres.
         span_m: The longer side of the track's own box, in whole metres.
-        places: The places of interest marked on the map.
-        candidates: The named things a label may be set on.
-        label_geom: The named lines a label may be set along, by kind.
         wet_px: The painted width floor of each watercourse class, in display
             pixels.
         gran_px: The paper granulation's cell size, in render pixels.
-        labels_hash: The hash of the labels the plates were painted for.
-        sources: The data sources the layers were built from.
         dark: How dark the painted sheet is.
         wood_px: Render pixels painted as wood.
         water_px: Render pixels painted as water.
-        timing: Milliseconds spent on each painting stage, by stage.
     """
 
-    key: str
     hash: str
-    route0: Pt
     files: Mapping[str, str]
     sizes: Mapping[str, int]
     bytes: int
     card: Card
     ribbon_m: int
     span_m: int
-    places: tuple[Mapping[str, Any], ...]
-    candidates: tuple[Mapping[str, Any], ...]
-    label_geom: Mapping[str, Any]
     wet_px: Mapping[str, float]
     gran_px: float
-    labels_hash: str
-    sources: tuple[str, ...]
     dark: DarkGrid
     wood_px: int
     water_px: int
-    timing: Mapping[str, int]
 
     def to_json(self) -> str:
         """The manifest as the compact JSON written to `plates.json`.
@@ -106,9 +90,7 @@ class Manifest:
         """
         card = self.card
         record = {
-            "id": self.key,
             "hash": self.hash,
-            "route0": list(self.route0),
             "files": dict(self.files),
             "sizes": dict(self.sizes),
             "bytes": self.bytes,
@@ -119,17 +101,11 @@ class Manifest:
             "mpp_display": card.mpp_display,
             "ribbon_m": self.ribbon_m,
             "span_m": self.span_m,
-            "places": [dict(place) for place in self.places],
-            "candidates": [dict(candidate) for candidate in self.candidates],
-            "label_geom": dict(self.label_geom),
             "wet_px": dict(self.wet_px),
             "gran_px": self.gran_px,
-            "labels_hash": self.labels_hash,
-            "sources": list(self.sources),
             "dark": {"w": self.dark.w, "h": self.dark.h, "v": [list(r) for r in self.dark.values]},
             "wood_px": self.wood_px,
             "water_px": self.water_px,
-            "timing": dict(self.timing),
         }
         return json.dumps(record, separators=(",", ":"))
 
@@ -156,29 +132,20 @@ class Manifest:
             KeyError: When a key is missing.
         """
         record = json.loads(text)
-        x0, y0 = record["route0"]
         dark = record["dark"]
         return cls(
-            key=record["id"],
             hash=record["hash"],
-            route0=(x0, y0),
             files=dict(record["files"]),
             sizes=dict(record["sizes"]),
             bytes=record["bytes"],
             card=Card.from_manifest(record),
             ribbon_m=record["ribbon_m"],
             span_m=record["span_m"],
-            places=tuple(record["places"]),
-            candidates=tuple(record["candidates"]),
-            label_geom=dict(record["label_geom"]),
             wet_px=dict(record["wet_px"]),
             gran_px=record["gran_px"],
-            labels_hash=record["labels_hash"],
-            sources=tuple(record["sources"]),
             dark=DarkGrid(w=dark["w"], h=dark["h"], values=tuple(tuple(row) for row in dark["v"])),
             wood_px=record["wood_px"],
             water_px=record["water_px"],
-            timing=dict(record["timing"]),
         )
 
 
