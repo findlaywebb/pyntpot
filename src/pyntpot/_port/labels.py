@@ -667,8 +667,7 @@ def named_lines(basemap: Basemap, tol_px: float) -> NamedLines:
     """The lines a name can be set along, simplified, in the card's own metres.
 
     The named centrelines and the coastline, at a tolerance that is generous
-    because a baseline is read at a glance and never measured. Every point is
-    rounded to a tenth of a metre.
+    because a baseline is read at a glance and never measured.
 
     Args:
         basemap: The basemap, for its roads, watercourses and coastline.
@@ -688,7 +687,7 @@ def named_lines(basemap: Basemap, tol_px: float) -> NamedLines:
         for piece in [list(line)] if len(line) > 1 else []:
             kept = simplify(piece, tol)
             if len(kept) > 1:
-                out.append([[round(x, 1), round(y, 1)] for x, y in kept])
+                out.append([[x, y] for x, y in kept])
         return out
 
     named: dict[str, list[dict[str, Any]]] = {

@@ -29,10 +29,9 @@ def test_box_corners_map_to_the_display_corners() -> None:
     assert card.xy(x1, y1) == pytest.approx((card.w, 0.0), abs=1e-9)
 
 
-@pytest.mark.parametrize("offset", [(0.0, 0.0), (13.5, -6.25)], ids=["no-offset", "offset"])
-def test_xy_then_metres_round_trips(offset: tuple[float, float]) -> None:
+def test_xy_then_metres_round_trips() -> None:
     """Metres taken to display pixels and back come home to within 1e-9."""
-    card = Card.from_manifest(MANIFEST, offset=offset)
+    card = Card.from_manifest(MANIFEST)
     for (x, y), _ in PINNED_XY:
         assert card.metres(*card.xy(x, y)) == pytest.approx((x, y), abs=1e-9)
 
@@ -46,7 +45,6 @@ def test_from_manifest_yields_the_pinned_frame() -> None:
     assert card.box == (-1234.5, -876.25, 1965.5, 1311.25)
     assert card.render == (3072, 2100)
     assert (card.mpp, card.mpp_display) == (1.0416667, 3.125)
-    assert card.offset == (0.0, 0.0)
 
 
 @pytest.mark.parametrize(("point", "want"), PINNED_XY, ids=["origin", "inside", "near-top-right"])
@@ -55,12 +53,6 @@ def test_xy_matches_the_replaced_card_class(
 ) -> None:
     """`xy` puts each pinned point exactly where the replaced card class did."""
     assert Card.from_manifest(MANIFEST).xy(*point) == want
-
-
-def test_xy_with_an_offset_matches_the_replaced_card_class() -> None:
-    """An offset shifts the point before projecting, exactly as the replaced card class did."""
-    card = Card.from_manifest(MANIFEST, offset=(13.5, -6.25))
-    assert card.xy(512.3, -77.7) == (563.296, 446.464)
 
 
 def test_to_render_scales_display_pixels_to_the_render_grid() -> None:

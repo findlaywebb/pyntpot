@@ -35,8 +35,6 @@ class Card:
         render: The render pixel grid the plates are painted at, width and height.
         mpp: Metres per render pixel.
         mpp_display: Metres per display pixel.
-        offset: Card metres added to every point before it is placed, which
-            pins a track projected from another origin onto the card.
     """
 
     box: tuple[float, float, float, float]
@@ -44,7 +42,6 @@ class Card:
     render: tuple[int, int]
     mpp: float
     mpp_display: float
-    offset: tuple[float, float] = (0.0, 0.0)
 
     @property
     def w(self) -> int:
@@ -78,9 +75,8 @@ class Card:
             The display pixel, x right and y down from the top left.
         """
         x0, _y0, _x1, y1 = self.box
-        dx, dy = self.offset
         scale = self.scale
-        return ((x + dx - x0) * scale, (y1 - (y + dy)) * scale)
+        return ((x - x0) * scale, (y1 - y) * scale)
 
     def metres(self, px: float, py: float) -> tuple[float, float]:
         """One display pixel as a point in card metres, the inverse of `xy`.
@@ -90,12 +86,11 @@ class Card:
             py: Display pixels down from the top edge.
 
         Returns:
-            The point in card metres, before the offset was added.
+            The point in card metres.
         """
         x0, _y0, _x1, y1 = self.box
-        dx, dy = self.offset
         scale = self.scale
-        return (px / scale + x0 - dx, y1 - py / scale - dy)
+        return (px / scale + x0, y1 - py / scale)
 
     def to_render(self, x: float, y: float) -> tuple[float, float]:
         """One point in card metres as render pixels.
@@ -112,16 +107,13 @@ class Card:
         return (px * k, py * k)
 
     @classmethod
-    def from_manifest(
-        cls, manifest: Mapping[str, Any], offset: tuple[float, float] = (0.0, 0.0)
-    ) -> Card:
+    def from_manifest(cls, manifest: Mapping[str, Any]) -> Card:
         """The card a plates manifest was painted on.
 
         Args:
             manifest: The plates manifest, read for its `card`, `display`,
                 `render`, `mpp` and `mpp_display` keys. A manifest without
                 `mpp_display` reads as one metre per display pixel.
-            offset: Card metres added to every point before it is placed.
 
         Returns:
             The card.
@@ -135,5 +127,4 @@ class Card:
             render=(rw, rh),
             mpp=manifest["mpp"],
             mpp_display=manifest.get("mpp_display", 1.0),
-            offset=offset,
         )

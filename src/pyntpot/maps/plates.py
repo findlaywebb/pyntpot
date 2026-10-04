@@ -12,7 +12,7 @@ step read one. It carries no lettering input: the places, the candidates and
 the named lines a label is set along are read from the basemap, not from
 here. `Manifest.to_json` writes the record in a fixed key order with
 the card as its five frame keys (`card`, `display`, `render`, `mpp`,
-`mpp_display`); the card's offset is never written.
+`mpp_display`).
 
 Invariants: every value here is immutable and compares by value;
 `Manifest.from_json(m.to_json()) == m`, and `to_json` of a manifest read with

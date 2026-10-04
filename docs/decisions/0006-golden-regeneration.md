@@ -38,6 +38,7 @@ first 16 hex digits of its SHA-256, a hyphen, and the style's base digest.
 | 0 | `020c3ff` | baseline, made on the window's starting commit | none |
 | 1 | `Hash plates from the typed basemap and the style groups` | all five outputs byte-identical to step 0; the hash differs | `--require-identical all --require-hash differ` |
 | 2 | `Read lettering geometry from the basemap and settle the manifest` | all five outputs byte-identical to step 1; the hash equal; `labels.txt` written for the first time | `--require-identical all --require-hash equal` |
+| 3 | `Keep basemap geometry as full-precision point lists` | each output within the bound of step 2; the hash differs; `labels.txt` equal | `--max-fraction 0.005 --require-hash differ --require-labels-equal` |
 
 Step 1 wires the grouped style into the painter: the flat painter style, the effective
 basemap options and the route ink all come from the packaged default theme, and the base
@@ -116,17 +117,113 @@ Lyn Valley Art and Craft Centre
 start
 ```
 
+### Step 3
+
+Step 3 stops the seam between the basemap and the painter rounding geometry to a tenth of
+a metre. `journal_layers` hands the painter its route, cover, lakes, sea and coastline at
+full precision, and the elevation patch corners unrounded; `paint.parse_d` goes, as does
+the route offset the lettering used to pin the card onto the painter's rounded route
+(`Card.offset`), and `named_lines` no longer rounds its points. The vector map's own
+output is unchanged: `basemap()` still writes 0.1 m path data, and `journal_layers` still
+reads roads, water areas and rivers through `geo.parse_path`.
+
+Step 3 compare, against step 2 (the gate):
+
+```
+paper.webp: identical yes, differing fraction 0.000000
+wash.webp: identical no, differing fraction 0.207338
+pen.webp: identical no, differing fraction 0.000225
+labels-centreline.webp: identical no, differing fraction 0.042485
+map.png: identical no, differing fraction 0.193396
+manifest hash: 340a7f6e260ee1e2-e5a5f1b4b3ca2177 here, 87624a4cd49063df-e5a5f1b4b3ca2177 in step 2
+```
+
+`labels.txt` is equal to step 2's. The wash, the labels-centreline plate and the map
+exceed the per-step bound of 0.005, so the gate failed and the step was not committed
+until the drift was explained.
+
+Step 3 compare, against the committed goldens (cumulative record):
+
+```
+paper.webp: identical no, differing fraction 0.000000
+wash.webp: identical no, differing fraction 0.207337
+pen.webp: identical no, differing fraction 0.000225
+labels-centreline.webp: identical no, differing fraction 0.042485
+map.png: identical no, differing fraction 0.193396
+manifest hash: 340a7f6e260ee1e2-e5a5f1b4b3ca2177 here, c034e1a4d60bad70-77dce82bec370944 in the goldens
+```
+
+Visible differences in `map.png`, step 3 beside step 2:
+
+- The pale blooms in the sea sit in different places: the tall column of blooms north of
+  Lynton is gone, and a row of smaller blooms now runs along the coast.
+- The mottling of the land cover wash differs in pattern, most visibly the darker green
+  patches in the middle of the loop and south of it.
+- The lettering, the route, the roads, the rivers and the coastline look the same.
+
+**Why it moved.** Each point moves by at most 0.05 m, a small fraction of a render pixel.
+The drift comes entirely from three families of discrete threshold decision, each of
+which feeds a random generator shared down a sequence, so one flipped decision changes
+everything drawn after it from that generator:
+
+- **a. Deform rounds.** `deform_ring` stops deforming a ring when the median segment is
+  shorter than its minimum. One generator is shared by every cover ring, so once the
+  first ring ends with a different round count, the later rings' midpoints and medians
+  change too: 57 rings end with a different round count.
+- **b. Bloom placement.** `bloom` picks its candidate centres by rank in raster order
+  among the pixels above an alpha threshold, then takes the argmax among them; the bloom
+  radius, its clipping at the edge and the bloom count (from the rounded square root of
+  the area) set how much the shared `bloom_rng` consumes. A sub-pixel change to a coast
+  or cover edge changes the rank count, so the same draws land on pixels several columns
+  away, and the shared generator then desynchronises every later wash, the sea included.
+- **c. Lettering.** `Hand._label_marks` seeds each label from its position rounded to a
+  tenth of a pixel. The A39 label sits 0.0016 px from a rounding boundary, and both the
+  removed card offset and the removed `named_lines` rounding push it across; its new
+  seed changes its stroke count in `stamp`, and the whole map-ink group shares one
+  label generator. One along-line label also changes window in `_place_along`'s argmin.
+  The rest of the labels-centreline drift is downstream of the wash: `label_plate` reads
+  the painter's darkness grid through `_dark_field` for the ink tint and the backing wash.
+
+**Proof.** Each family was neutralised in a diagnostic copy only: (a) the round count
+computed on the 0.1 m ring and forced on the full-precision one, (b) the step-2 bloom
+centre, radius and post-draw generator state replayed for each bloom, (c) the card pin and
+the `named_lines` rounding restored. Differing fraction against step 2:
+
+| Variant | paper | wash | pen | labels-centreline | map |
+|---|---|---|---|---|---|
+| step 3 as committed | 0 | 0.207338 | 0.000225 | 0.042485 | 0.193396 |
+| a only (wash only) | 0 | 0.097679 | 0.000225 | | |
+| b only (wash only) | 0 | 0.088510 | 0.000225 | | |
+| a + b | 0 | 0.002286 | 0.000225 | 0.008066 | 0.004086 |
+| a + b + pin | 0 | 0.002286 | 0.000225 | 0.007752 | 0.003818 |
+| a + b + pin + `named_lines` rounding | 0 | 0.002286 | 0.000225 | 0.000002 | 0.001737 |
+
+With all three neutralised every output is within 0.005 and `labels.txt` is equal
+throughout. What remains is continuous: edge antialiasing in the wash and the map, and a
+route that moves by at most 0.05 m in the pen.
+
+**Conclusion.** The step-3 drift is fully explained, with no behaviour defect: every
+mechanism is legitimate amplification of a sub-pixel change through a discrete decision
+and a shared generator. Removing the card offset is itself a correctness fix, since step
+2 shifted all lettering by the route's rounding residual. The fragility of shared
+generators is recorded in `docs/issues/shared-generators.md`.
+
+Accepted by the maintainer as the one exception in the window; the per-step bound and the
+parity tolerance are unchanged.
+
 ### Hashes
 
 - Old manifest hash (the committed goldens): `c034e1a4d60bad70-77dce82bec370944`.
 - New manifest hash after step 1: `87624a4cd49063df-e5a5f1b4b3ca2177`, whose suffix is
   the default style's pinned base digest.
 - Manifest hash after step 2: `87624a4cd49063df-e5a5f1b4b3ca2177`, unchanged.
+- Manifest hash after step 3: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`.
 
 ## Consequences
 
 - Inside the window the golden-marked tests are known stale: the manifest-hash parity test
-  fails until the goldens are regenerated, and the pixel cases still pass in tolerance.
+  fails until the goldens are regenerated. The paper and pen cases still pass in
+  tolerance; from step 3 the wash, labels-centreline and map cases fail too.
 - The hash no longer depends on any hand-kept key list, and a last-bit difference in a
   machine's maths library cannot move it.
 - A lettering-only or route-ink style change no longer moves the base hash.

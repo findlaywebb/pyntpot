@@ -190,8 +190,8 @@ class Basemap:
         grid and both scales, and every layer field. Tuples are written as
         lists and every float as a string to three decimals, with negative
         zero written as zero; ints, bools and strings are kept as they are.
-        The card's offset, the track, its times, the places, candidates,
-        sources and credits are not in it.
+        The track, its times, the places, candidates, sources and credits are
+        not in it.
         """
         card = self.card
         frame = [card.box, card.display, card.render, card.mpp, card.mpp_display]

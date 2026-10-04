@@ -172,12 +172,6 @@ class TestCanonical:
         changed = dataclasses.replace(basemap, **{field: value})
         assert changed.canonical() == basemap.canonical()
 
-    def test_the_card_offset_leaves_it(self) -> None:
-        """Changing the card's offset leaves the canonical text unchanged."""
-        basemap = synthetic_basemap()
-        card = dataclasses.replace(basemap.card, offset=(3.0, -4.0))
-        assert dataclasses.replace(basemap, card=card).canonical() == basemap.canonical()
-
     def test_a_road_point_moved_a_centimetre_changes_it(self) -> None:
         """Moving one road point by 0.01 m changes the canonical text."""
         basemap = synthetic_basemap()

@@ -1223,23 +1223,6 @@ class Sheet:
         return fbm(self.h, self.w, cell, octaves, self._rng)
 
 
-def parse_d(d: str) -> list[list[Pt]]:
-    """The point lists inside one `M x,y L x,y` path."""
-    rings = []
-    for chunk in d.split("M"):
-        chunk = chunk.strip().rstrip("Z").strip()
-        if not chunk:
-            continue
-        pts = []
-        for tok in chunk.replace("L", " ").split():
-            if "," in tok:
-                a, b = tok.split(",")
-                pts.append((float(a), float(b)))
-        if len(pts) > 1:
-            rings.append(pts)
-    return rings
-
-
 def _edge(acc: np.ndarray, x0: float, y0: float, x1: float, y1: float, hs: int, ws: int) -> None:
     """Add one polygon edge's winding contribution to a scanline accumulator."""
     if y0 == y1:

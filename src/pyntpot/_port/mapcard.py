@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -44,7 +43,6 @@ from pyntpot.ink.polyline import cumulative_m
 
 if TYPE_CHECKING:
     from pyntpot.maps.basemap import Basemap
-    from pyntpot.maps.card import Card
     from pyntpot.maps.plates import Plates
     from pyntpot.maps.style import Style
 
@@ -129,19 +127,13 @@ def _paste_labels(card_img: Image.Image, plate: Path) -> None:
     card_img.paste(ink, (0, 0), ink.getchannel("A"))
 
 
-def pinned_card(basemap: Basemap) -> Card:
-    """The basemap's card, offset so its track's first point lands on the painter's route."""
-    first, start = basemap.layers.route[0], basemap.track[0]
-    return replace(basemap.card, offset=(first[0] - start[0], first[1] - start[1]))
-
-
 def route_pixels(basemap: Basemap, style: Style) -> list[tuple[float, float]]:
     """The drawn route in display pixels: the basemap's track, its strands pulled apart.
 
-    The track is placed through the pinned card, then separated where it runs
-    back over itself by the gap the route ink leaves between strands.
+    The track is placed through the basemap's card, then separated where it
+    runs back over itself by the gap the route ink leaves between strands.
     """
-    card = pinned_card(basemap)
+    card = basemap.card
     ink = style.route_ink()
     return separate_strands([card.xy(x, y) for x, y in basemap.track], ink.px * STRAND_GAP_WIDTHS)
 
@@ -165,7 +157,7 @@ def letter_card(
     """
     pstyle = style.paint_style()
     manifest = plates.manifest
-    card = pinned_card(basemap)
+    card = basemap.card
     route_px = route_pixels(basemap, style)
     lines = lb_mod.named_lines(basemap, pstyle.label_geom_tol_px)
 

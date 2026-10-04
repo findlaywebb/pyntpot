@@ -3086,18 +3086,14 @@ def journal_geometry(route: list[Pt], style: Any) -> dict[str, Any]:
     }
 
 
-def _quantised(points: list[Pt]) -> Line:
-    """A polyline at the one decimal its path data has always carried.
-
-    The same rounding `path_d` writes and a parse of it reads back, so a line
-    taken from here paints exactly as one read back from its path data.
-    """
-    return tuple((float(f"{x:.1f}"), float(f"{y:.1f}")) for x, y in points)
+def _line(points: list[Pt]) -> Line:
+    """A polyline as the basemap carries it: float pairs at full precision."""
+    return tuple((float(x), float(y)) for x, y in points)
 
 
 def _drawn(piece: list[Pt], tol: float) -> Line:
     """Simplify, then Chaikin: a line someone drew, not a line surveyed."""
-    return _quantised(smooth(simplify(piece, tol), passes=2))
+    return _line(smooth(simplify(piece, tol), passes=2))
 
 
 def _elevation_patch(key: str, proj: Projection, cache_dir: Path) -> ElevationPatch | None:
@@ -3112,10 +3108,10 @@ def _elevation_patch(key: str, proj: Projection, cache_dir: Path) -> ElevationPa
     gx1, gy1 = proj(grid["lats"][-1], grid["lons"][-1])
     return ElevationPatch(
         n=grid["n"],
-        x0=round(gx0, 1),
-        y0=round(gy0, 1),
-        x1=round(gx1, 1),
-        y1=round(gy1, 1),
+        x0=gx0,
+        y0=gy0,
+        x1=gx1,
+        y1=gy1,
         values=tuple(round(float(v), 1) for v in grid["elev"]),
         low=round(min(grid["elev"])),
         high=round(max(grid["elev"])),
@@ -3286,12 +3282,12 @@ def journal_layers(
             )
 
     layers = Layers(
-        route=tuple((round(x, 1), round(y, 1)) for x, y in track),
-        cover={k: tuple(_quantised(r) for r in v) for k, v in cover.items()},
+        route=_line(track),
+        cover={k: tuple(_line(r) for r in v) for k, v in cover.items()},
         cover_order=tuple(c for c in COVER_ORDER if c in cover),
-        lakes=tuple(_quantised(r) for r in lakes if len(r) > 3),
-        sea=tuple(_quantised(r) for r in sea),
-        coastline=tuple(_quantised(c) for c in coast),
+        lakes=tuple(_line(r) for r in lakes if len(r) > 3),
+        sea=tuple(_line(r) for r in sea),
+        coastline=tuple(_line(c) for c in coast),
         roads=tuple(roads),
         rivers=tuple(rivers),
         elevation=_elevation_patch(key, proj, cache_dir),
