@@ -21,6 +21,9 @@ dependencies = [
     "pydantic>=2.13",
 ]
 
+[project.scripts]
+pyntpot = "pyntpot.maps.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/findlaywebb/pyntpot"
 Repository = "https://github.com/findlaywebb/pyntpot"
