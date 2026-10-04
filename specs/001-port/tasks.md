@@ -68,7 +68,7 @@ recorded in ADR 0006, not a re-baseline.
 - [ ] P3.8 `OverpassFeatures` with a query budget and copied query templates (parallel with P3.9, P3.10)
 - [ ] P3.9 `OpenTopoData` with a call budget (parallel with P3.8, P3.10)
 - [ ] P3.10 Fetch `Cache` keyed by box, margin and providers; `ensure` fetches features, landcover, elevation in that order, each written before the next (parallel with P3.8, P3.9)
-- [ ] P3.11a Style groups from the field-to-group table pinned in the plan (base or lettering by reader, layer, section; `CONSUMER_ONLY` for `PaintStyle` only), effective basemap options (all 27), fixed route ink; ADR 0005 (parallel line 3, A6)
+- [x] P3.11a Style groups from the field-to-group table pinned in the plan (base or lettering by reader, layer, section; `CONSUMER_ONLY` for `PaintStyle` only), effective basemap options (all 27), fixed route ink; ADR 0005 (parallel line 3, A6)
 - [ ] P3.11b `Style` model, the TOML theme, pinned digests, unwired (parallel line 3, A6)
 - [ ] P3.12 Wire the style, final hash form; opens the regeneration window, step 1 byte-identical (A6, A7)
 - [ ] P3.13 Lettering reads the basemap, final manifest keys (step 2, byte-identical); drop the seam's one-decimal round trip, `paint.parse_d` and `route0`, keeping `geo.parse_path` for `basemap()`'s output (step 3, bounded) (A4, window)
