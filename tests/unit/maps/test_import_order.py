@@ -36,6 +36,7 @@ MODULES: tuple[str, ...] = (
     "pyntpot.ink.brush_style",
     "pyntpot.letters.style",
     "pyntpot.letters.setting",
+    "pyntpot.letters.hand",
     "pyntpot.letters.font",
     "pyntpot.letters.skeleton",
     "pyntpot.letters.trace",
@@ -69,6 +70,9 @@ MODULES: tuple[str, ...] = (
     "pyntpot.maps.annotations",
     "pyntpot.maps.lettering",
     "pyntpot.maps.attribution",
+    "pyntpot.maps.lettering_marks",
+    "pyntpot.maps.lettering_furniture",
+    "pyntpot.maps.lettering_window",
     "pyntpot.maps.cli",
     "pyntpot",
 )
@@ -80,6 +84,9 @@ ADAPTERS: tuple[str, ...] = (
     "pyntpot.maps.pipeline",
     "pyntpot.maps.lettering",
     "pyntpot.maps.attribution",
+    "pyntpot.maps.lettering_marks",
+    "pyntpot.maps.lettering_furniture",
+    "pyntpot.maps.lettering_window",
 )
 
 #: The one `_port` module an adapter may import names from.

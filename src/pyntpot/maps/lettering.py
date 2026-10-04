@@ -28,11 +28,13 @@ otherwise names a file inside `Plates.directory`.
 
 import logging
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 
 from pyntpot._port import labels as placer
 from pyntpot._port import paint as painter
 from pyntpot.ink.polyline import Pt, cumulative_length
+from pyntpot.maps import lettering_marks
 from pyntpot.maps.annotations import Annotations
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.plates import Plates
@@ -77,14 +79,15 @@ def letter(
         when there is no hand to letter with.
     """
     pstyle = style.paint_style()
-    hand = placer.hand(pstyle)
+    hand = lettering_marks.open_hand(style) if style.lettering.labels else None
     if hand is None:
         log.info("no hand to letter %s with, nothing is lettered", plates.directory)
         return Lettering((), (), None)
+    measure = partial(lettering_marks.box_size, hand)
     card = basemap.card
     strands = list(plates.strands)
     lines = placer.named_lines(basemap, pstyle.label_geom_tol_px)
-    home, taken = placer.home_labels(basemap, card, pstyle, hand.measure)
+    home, taken = placer.home_labels(basemap, card, pstyle, measure)
     ground = _ground(basemap, lines, strands, annotations, pstyle)
     anchored = _anchored(basemap, annotations, pstyle)
     spans = _spans(plates, basemap, annotations, strands)
@@ -96,7 +99,7 @@ def letter(
         strands,
         {"w": dark.w, "h": dark.h, "v": dark.values},
         taken,
-        hand.measure,
+        measure,
         placer.road_lines(lines, card),
     )
     plate = placer.draw_plate(plates, placed, spans, strands, pstyle, style.brush)

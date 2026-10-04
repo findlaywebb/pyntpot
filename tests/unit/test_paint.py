@@ -846,6 +846,14 @@ def test_an_open_line_deforms_without_moving_its_ends(tmp_path):
 # ----------------------------------------------------------------- letterforms
 
 
+def _open_hand():
+    """The default hand, as the style's face and seed open it."""
+    from pyntpot.letters.hand import Hand
+    from pyntpot.letters.style import FaceStyle, HandStyle
+
+    return Hand(FaceStyle(), HandStyle())
+
+
 def test_the_face_measures_a_name_instead_of_counting_its_characters():
     """The flat eight pixels a character is what every placement fault came from.
 
@@ -853,11 +861,9 @@ def test_the_face_measures_a_name_instead_of_counting_its_characters():
     width, and the default cannot: it counts characters. This is the change
     that moves every label on the sheet.
     """
-    from pyntpot._port import labels as lb
-    from pyntpot._port import paint
     from pyntpot.letters.font import OutlineFont
 
-    hand = lb.Hand(paint.PaintStyle())
+    hand = _open_hand()
     assert isinstance(hand.font, OutlineFont)
     narrow = hand.measure("iiiiiiiiiii", 20.0)[0]
     wide = hand.measure("WWWWWWWWWWW", 20.0)[0]
@@ -874,17 +880,17 @@ def test_a_name_is_never_set_along_a_line_that_turns_too_far():
     import math
 
     from pyntpot._port import labels as lb
-    from pyntpot._port import paint
+    from pyntpot.maps.lettering_window import baseline
 
-    hand = lb.Hand(paint.PaintStyle())
+    hand = _open_hand()
     straight = [(float(x), 100.0 + 4.0 * math.sin(x / 90.0)) for x in range(0, 400, 8)]
     hairpin = [
         (100.0 + 40.0 * math.cos(a / 9.0), 100.0 + 40.0 * math.sin(a / 9.0)) for a in range(0, 80)
     ]
     gentle = lb.Label(name="Heddon", kind="river", px=200.0, py=100.0, size=14.0, baseline=straight)
     tight = lb.Label(name="Heddon", kind="river", px=100.0, py=100.0, size=14.0, baseline=hairpin)
-    assert hand._baseline(gentle, hand.font.measure("Heddon", 14.0)[0])
-    assert hand._baseline(tight, hand.font.measure("Heddon", 14.0)[0]) is None
+    assert baseline(gentle, hand.font.measure("Heddon", 14.0)[0])
+    assert baseline(tight, hand.font.measure("Heddon", 14.0)[0]) is None
 
 
 def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
@@ -1914,11 +1920,10 @@ def test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_sheet(
 def test_the_hand_writes_both_lines_of_a_wrapped_name():
     """The placer reserving two lines is only half of it; the hand has to write them."""
     from pyntpot._port import labels as lb
-    from pyntpot._port import paint
+    from pyntpot.maps.lettering_marks import label_marks
 
-    pstyle = paint.PaintStyle()
     try:
-        hand = lb.Hand(pstyle)
+        hand = _open_hand()
     except (ImportError, OSError):  # no fonttools or no face on disk
         pytest.skip("no face to letter with")
     one = lb.Label(
@@ -1946,8 +1951,8 @@ def test_the_hand_writes_both_lines_of_a_wrapped_name():
         flat=True,
         lines=["the long climb", "out of Aviemore"],
     )
-    marks_one = [m for m in hand._label_marks(one) if m.role == "glyph"]
-    marks_two = [m for m in hand._label_marks(two) if m.role == "glyph"]
+    marks_one = [m for m in label_marks(hand, one) if m.role == "glyph"]
+    marks_two = [m for m in label_marks(hand, two) if m.role == "glyph"]
     assert marks_one and marks_two
     wide_one = max(x for m in marks_one for x, _y in m.pts) - min(
         x for m in marks_one for x, _y in m.pts
@@ -2124,13 +2129,10 @@ def _contrast(a: str, b: str) -> float:
 
 def test_a_name_on_the_water_takes_its_own_ink():
     """The water ink is the colour of the thing the name is now written on."""
-    from pyntpot._port import labels as lb
-    from pyntpot._port import paint
+    from pyntpot.maps.lettering_marks import _ink
 
-    hand = lb.hand(paint.PaintStyle())
-    assert hand is not None
-    assert hand._ink(_river_label(40.0)) == "in_water"
-    assert hand._ink(_river_label(11.0)) == "water"
+    assert _ink(_river_label(40.0)) == "in_water"
+    assert _ink(_river_label(11.0)) == "water"
 
 
 def test_the_in_water_ink_beats_a_dark_one_on_the_river():
@@ -2149,12 +2151,11 @@ def test_the_in_water_ink_beats_a_dark_one_on_the_river():
 
 def test_a_name_on_the_water_asks_for_no_backing_wash():
     """A pale blob on a river reads as a hole in the water."""
-    from pyntpot._port import labels as lb
-    from pyntpot._port import paint
+    from pyntpot.maps.lettering_marks import label_marks
 
-    hand = lb.hand(paint.PaintStyle())
-    wet = hand._label_marks(_river_label(40.0))
-    dry = hand._label_marks(_river_label(11.0))
+    hand = _open_hand()
+    wet = label_marks(hand, _river_label(40.0))
+    dry = label_marks(hand, _river_label(11.0))
     assert wet and not any(m.wash for m in wet)
     assert dry and all(m.wash for m in dry)
 
@@ -2181,10 +2182,13 @@ def test_a_name_is_not_charged_for_crossing_the_thing_it_names():
 def test_a_name_on_the_water_is_moved_off_a_bridge():
     """A bridge drawn through the letters is not ordinary cartography."""
     from pyntpot._port import labels as lb
-    from pyntpot._port import paint
 
     assert lb.IN_WATER_ROAD_COST > lb.ROAD_CROSS_COST
-    hand = lb.hand(paint.PaintStyle())
+    from functools import partial
+
+    from pyntpot.maps.lettering_marks import box_size
+
+    hand = _open_hand()
     name = _river_label(40.0)
     bridge = [(450.0, 300.0), (450.0, 500.0)]
     dark = {"w": 2, "h": 2, "v": [[0.6, 0.6], [0.6, 0.6]]}
@@ -2195,7 +2199,7 @@ def test_a_name_on_the_water_is_moved_off_a_bridge():
         [(0.0, 0.0)],
         dark,
         [],
-        hand.measure if hand else None,
+        partial(box_size, hand),
         [name.baseline, bridge],
     )
     cells = lb._curved_boxes(name.window, name, name.size, hand.measure)

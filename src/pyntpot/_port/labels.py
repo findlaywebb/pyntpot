@@ -31,7 +31,6 @@ from __future__ import annotations
 import logging
 import math
 import re
-import zlib
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
@@ -40,15 +39,13 @@ from pyntpot.ink.chains import joined
 from pyntpot.ink.curves import offset_curve, spline
 from pyntpot.ink.polyline import (
     cumulative_length,
-    deform_line,
     foot_on,
     length,
     meet,
     seg_gap,
     simplify,
 )
-from pyntpot.letters.font import load as load_font
-from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark
+from pyntpot.letters.setting import DEFAULT_LINE_PX
 
 if TYPE_CHECKING:
     from pyntpot._port.paint import PaintStyle
@@ -430,22 +427,6 @@ class Label:
 SPAN_GROUND = ("climb", "drag", "descent", "road", "water")
 SPAN_EFFORT = ("fast", "hard_set", "best_effort", "fade", "walk", "headwind", "steady", "other")
 
-#: What a span's intent is written in. The review agent states meaning and this
-#: table states the colour, so a payload never carries a hex and the whole
-#: palette can be retuned here without touching one. Four intents, four inks:
-#: purple for a remark, green for something that went as it should, red for
-#: something that went wrong, gold for a best effort.
-#:
-#: Kept darker than the pigments a watercolour would give, because these are
-#: written at a 14 px cap height on a granulated cream ground and a pale one
-#: does not read.
-SPAN_INTENT_INK = {
-    "note": "#5b3f8c",
-    "good": "#2f6b3d",
-    "warning": "#a3282d",
-    "celebration": "#9a7212",
-}
-
 #: How many spans one card carries. Four made the sheet cluttered: with the
 #: settlements, the rivers, the roads and the landmarks already on it, three
 #: brackets is where the card still reads as a map rather than as a diagram.
@@ -467,7 +448,8 @@ class Span:
     name: str
     kind: str = "climb"
     why: str = ""
-    #: One of `SPAN_INTENT_INK`, which is what decides the colour it is drawn in.
+    #: One of the intents `maps.lettering_marks.SPAN_INTENT_INK` names, which is what decides
+    #: the colour it is drawn in.
     intent: str = "note"
     i0: int = 0
     i1: int = 0
@@ -3844,366 +3826,6 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
     ]
 
 
-# --------------------------------------------------------------------------- the hand
-
-#: Which ink a kind is written in. The ground is the map's own dark, the water
-#: is the water, and the session is the route's colour. Everything else in the
-#: hierarchy follows from that one rule.
-KIND_INK = {"river": "water", "marker": "route"}
-
-#: Extra letter spacing a kind is set with, in em units. Water is set wide
-#: because that is how a printed map has always said "this is a river" without
-#: changing the size, and a road is set slightly wide for the same reason.
-KIND_TRACKING = {"river": 0.24, "road": 0.10, "settlement": 0.05}
-
-#: How far a kind leans. Water is italic by convention.
-KIND_SLANT = {"river": 0.22}
-
-
-def _seed(base: int, *parts: Any) -> int:
-    """A seed from the style's own number and whatever names this instance.
-
-    Every draw a label makes comes from here, so an unchanged map letters
-    identically on every render and a deliberate reshuffle is one number in the
-    paint style.
-    """
-    blob = "|".join(str(p) for p in parts).encode()
-    return (int(base) ^ zlib.crc32(blob)) & 0x7FFFFFFF
-
-
-class Hand:
-    """The writer: a real face, per-instance variation, and marks to stroke.
-
-    The face gives the proportions, which is the whole reason for taking one: a
-    stroke font is a skeleton somebody plotted and a handwriting face is a hand
-    somebody drew. What is added here is everything a designed face has no way
-    to say, because a font is by construction the same shape every time: a
-    letter leans a shade differently in every word, a baseline drifts, and the
-    pen is never held at quite the same angle twice.
-
-    Args:
-        pstyle: The paint style, for the face, the seed and the hierarchy.
-        route: `centreline` or `outline`; the paint style's when not given.
-    """
-
-    def __init__(self, pstyle: PaintStyle, route: str | None = None) -> None:
-        """Open the face the style names."""
-        self.pstyle = pstyle
-        self.route = route or pstyle.label_route
-        face = pstyle.label_face or None
-        self.font = load_font(face, self.route)
-        self.seed = int(pstyle.label_seed)
-
-    def measure(self, text: str, size: float) -> tuple[float, float]:
-        """How wide and how tall a name is, from the face's own metrics.
-
-        This replaces the flat eight pixels a character every box on the sheet
-        was sized by, which is the single change that moves every label: the
-        placer stops sizing a serif's box for a cursive, and the standalone
-        card stops shrinking its type to fit boxes drawn for a hand it is not
-        setting in.
-        """
-        w, h = self.font.measure(text, size)
-        return w + size * 0.5, h
-
-    # ------------------------------------------------------------------ marks
-
-    def marks(self, placed: list[Label], spans: list[Span], route_px: list[Pt]) -> list[Mark]:
-        """Everything on the label layer, as strokes in card pixels.
-
-        Args:
-            placed: The placed labels, in the order they claimed their boxes.
-            spans: The placed spans, whose lines and ticks are drawn here too.
-            route_px: The track in card pixels.
-
-        Returns:
-            The marks, in the order they are laid down.
-        """
-        out: list[Mark] = []
-        for span in spans:
-            out.extend(self._span_marks(span, route_px))
-        for lb in placed:
-            out.extend(self._label_marks(lb))
-        return out
-
-    def _ink(self, lb: Label) -> str:
-        """Which ink a label is written in: one of the three tokens, or a colour.
-
-        A span is the one thing on the sheet whose colour is a judgement rather
-        than a category, and the judgement is the payload's `intent`. It is
-        resolved here, once, from `SPAN_INTENT_INK`, so the review agent never
-        sees a hex and the palette is one table.
-        """
-        if lb.tier == TIER_SPAN:
-            return SPAN_INTENT_INK.get(lb.intent or "note", SPAN_INTENT_INK["note"])
-        if lb.in_water:
-            # On the water, not beside it: the water ink is the colour of the
-            # thing the name is now written on, so it takes its own.
-            return "in_water"
-        return KIND_INK.get(lb.kind, "map")
-
-    def _span_marks(self, span: Span, route_px: list[Pt]) -> list[Mark]:
-        """A span's own line and its two end ticks: one gesture with its name."""
-        out: list[Mark] = []
-        ink = SPAN_INTENT_INK.get(span.intent or "note", SPAN_INTENT_INK["note"])
-        size = span.label.size if span.label else DEFAULT_LINE_PX
-        rng = self._rng(span.name, span.i0, "span")
-        if span.line:
-            out.append(
-                Mark(
-                    pts=self._wobble(span.line, rng, 0.4),
-                    role="span",
-                    ink=ink,
-                    size=size,
-                    pen=float(rng.normal(0.0, 0.06)),
-                )
-            )
-        for tick in span.ticks:
-            out.append(Mark(pts=self._wobble(tick, rng, 0.25), role="tick", ink=ink, size=size))
-        # The name is not drawn here. It went through the placer with every
-        # other name and comes back in `placed`, which is what stops a span
-        # from claiming paper nothing else knows about.
-        return out
-
-    def _label_marks(self, lb: Label) -> list[Mark]:
-        """One name, and whatever furniture its kind is entitled to.
-
-        `lb.lift` is which side of its own baseline a curved name sits on:
-        above it for a river or a road, outboard of the route for a span.
-        """
-        lift = lb.lift
-        out: list[Mark] = []
-        rng = self._rng(lb.name, round(lb.px, 1), round(lb.py, 1))
-        ink = self._ink(lb)
-        pen = float(rng.normal(0.0, 0.09))
-        track = KIND_TRACKING.get(lb.kind, 0.0)
-        slant = KIND_SLANT.get(lb.kind, 0.0)
-        if lb.tier == TIER_SPAN and lb.kind in SPAN_EFFORT:
-            slant = 0.16
-        width = max(self.font.measure(line, lb.size, track)[0] for line in lb.text_lines)
-        base = self._baseline(lb, width) if len(lb.text_lines) == 1 else None
-        glyphs = (
-            self._along(lb, base, track, slant, rng, lift)
-            if base
-            else self._flat(lb, width, track, slant, rng)
-        )
-        wash = not lb.in_water
-        out.extend(
-            Mark(pts=g, role="glyph", ink=ink, size=lb.size, pen=pen, wash=wash) for g in glyphs
-        )
-        # A span never takes a leader. Its name sits in clear paper beside its
-        # own bracket, and a connector between two marks a reader can already
-        # see belong together is one more line on a card that has enough.
-        if base is None and lb.leader and lb.kind not in NO_LEADER and lb.tier != TIER_SPAN:
-            out.append(Mark(pts=self._pin(lb, rng), role="pin", ink=ink, size=lb.size))
-            out.append(Mark(pts=self._leader(lb, rng), role="leader", ink=ink, size=lb.size))
-        if lb.kind == "home":
-            out.append(
-                Mark(
-                    pts=self._wobble([(lb.px + x, lb.py + y) for x, y in HOME_GLYPH], rng, 0.35),
-                    role="span",
-                    ink=ink,
-                    size=lb.size,
-                )
-            )
-        if base is None and lb.kind == "settlement" and lb.size >= DEFAULT_LINE_PX:
-            out.append(
-                Mark(pts=self._underline(lb, width, rng), role="underline", ink=ink, size=lb.size)
-            )
-        return out
-
-    def _rng(self, *parts: Any) -> Any:
-        """This instance's own generator."""
-        import numpy as np
-
-        return np.random.default_rng(_seed(self.seed, *parts))
-
-    # --------------------------------------------------------------- baselines
-
-    def _baseline(self, lb: Label, width: float) -> list[Pt] | None:
-        """The run of line this name is set along, or None to set it flat.
-
-        The placer chooses this, against everything already on the sheet, and
-        leaves it on the label; this is the fallback for a label that never
-        went through it, and it is what the old placer did.
-
-        A label anchored to a line is set along that line and a label anchored
-        to a point is set horizontally beside it. Rivers, roads and spans
-        curve; settlements, landmarks and route markers do not, and a name the
-        reader would have to work at is never curved whatever it is anchored
-        to: past about sixty degrees of turning the run is rejected and the
-        name is set flat instead.
-        """
-        if lb.window:
-            return lb.window
-        if lb.flat or not lb.baseline or len(lb.name) < MIN_CURVED_CHARS:
-            return None
-        want = width * 1.02
-        line = _resample(lb.baseline, max(want / 24.0, 2.0))
-        if length(line) < want:
-            return None
-        near = (lb.px, lb.py)
-        best: float | None = None
-        at: list[Pt] | None = None
-        step = max(len(line) // 40, 1)
-        for i in range(0, len(line), step):
-            window = _window(line, i, want)
-            if window is None:
-                break
-            turn = _turning(window)
-            if turn > MAX_TURN_DEG:
-                continue
-            chord = math.dist(window[0], window[-1]) or 1.0
-            if _bow(window) / chord > MAX_BOW_FRAC:
-                continue
-            cost = math.dist(window[len(window) // 2], near) + turn * 1.5
-            if best is None or cost < best:
-                best, at = cost, window
-        if at is None:
-            return None
-        # Never upside down: a run whose text would read right to left is
-        # written along the same line the other way.
-        return at[::-1] if at[-1][0] < at[0][0] else at
-
-    def _along(
-        self, lb: Label, base: list[Pt], track: float, slant: float, rng: Any, side: float = 1.0
-    ) -> list[list[Pt]]:
-        """The name set along a line, each glyph on its own tangent.
-
-        The pen walks the *lifted* line rather than the feature's own, because
-        that is the line the letters sit on. Walking the feature and lifting
-        afterwards spaces the word by the wrong arc: on the outside of a bend
-        the letters spread and on the inside they crowd, which at a span's lift
-        and a tight lane's radius is a fifth of an advance either way and reads
-        as bad kerning rather than as a curve.
-        """
-        walk = _offset_line(base, lift_baseline(lb, side))
-        cum = cumulative_length(walk)
-        out = []
-        for _ch, pen_x, adv, paths in self.font.run(lb.name, lb.size, track):
-            if not paths:
-                continue
-            (ox, oy), theta = _on_line(walk, cum, pen_x + adv * 0.5)
-            cos_t, sin_t = math.cos(theta), math.sin(theta)
-            drift = float(rng.normal(0.0, lb.size * 0.02))
-            for path in paths:
-                pts = []
-                for gx, gy in self._vary(path, lb, slant, rng):
-                    x, y = gx - adv * 0.5, gy + drift
-                    pts.append((ox + x * cos_t + y * sin_t, oy + x * sin_t - y * cos_t))
-                out.append(self._wobble(pts, rng, 0.14))
-        return out
-
-    def _flat(
-        self, lb: Label, width: float, track: float, slant: float, rng: Any
-    ) -> list[list[Pt]]:
-        """The name set horizontally, from the anchor the placer chose.
-
-        A wrapped name is written line by line down from `lb.ty`, each line
-        aligned on its own width to the anchor the block was placed on, so the
-        two lines sit under each other the way the reserved box says they do.
-        """
-        tilt = float(rng.normal(0.0, 0.012))
-        cos_t, sin_t = math.cos(tilt), math.sin(tilt)
-        out = []
-        for row, text in enumerate(lb.text_lines):
-            run = self.font.measure(text, lb.size, track)[0]
-            # Each line is aligned on the block, not on itself, so a "start"
-            # block stays flush left and a "middle" block stays centred.
-            pad = (
-                0.0
-                if lb.anchor == "start"
-                else (width - run)
-                if lb.anchor == "end"
-                else (width - run) / 2
-            )
-            x0 = (
-                lb.tx
-                - (width if lb.anchor == "end" else width / 2 if lb.anchor == "middle" else 0.0)
-                + pad
-            )
-            baseline = lb.ty + row * lb.size * WRAP_LEADING
-            for _ch, pen_x, _adv, paths in self.font.run(text, lb.size, track):
-                if not paths:
-                    continue
-                drift = float(rng.normal(0.0, lb.size * 0.022))
-                for path in paths:
-                    pts = []
-                    for gx, gy in self._vary(path, lb, slant, rng):
-                        x, y = pen_x + gx, gy + drift
-                        pts.append((x0 + x * cos_t + y * sin_t, baseline + x * sin_t - y * cos_t))
-                    out.append(self._wobble(pts, rng, 0.14))
-        return out
-
-    def _vary(self, path: list[Pt], lb: Label, slant: float, rng: Any) -> list[Pt]:
-        """One glyph's own shape, this time.
-
-        A font is by construction the same shape at every occurrence, which is
-        the one thing a hand never is. The face keeps the proportions; the
-        letter is leaned, squared and nudged a little differently in every word
-        it appears in, seeded so the same map letters the same way twice.
-        """
-        lean = slant + float(rng.normal(0.0, 0.03))
-        sx = 1.0 + float(rng.normal(0.0, 0.022))
-        sy = 1.0 + float(rng.normal(0.0, 0.028))
-        rot = float(rng.normal(0.0, 0.024))
-        dx = float(rng.normal(0.0, lb.size * 0.012))
-        cos_r, sin_r = math.cos(rot), math.sin(rot)
-        out = []
-        for x, y in path:
-            gx, gy = x * sx, y * sy
-            gx += lean * gy
-            out.append((gx * cos_r - gy * sin_r + dx, gx * sin_r + gy * cos_r))
-        return out
-
-    def _wobble(self, pts: list[Pt], rng: Any, amount: float) -> list[Pt]:
-        """A hand's own wander along a line, a different curve every instance."""
-        if amount <= 0 or len(pts) < 2:
-            return list(pts)
-        got = deform_line(pts, (rng, amount * 0.14, 2, 0.55, amount * 1.3, 1.4))
-        return [(float(x), float(y)) for x, y in got]
-
-    # ------------------------------------------------------------ the furniture
-
-    def _leader(self, lb: Label, rng: Any) -> list[Pt]:
-        """A curve from the pin to the name, bent a different way each time.
-
-        A leader exists only to disambiguate a pin, so it is the quietest mark
-        on the sheet and it never leaves at the same angle twice. It over-runs
-        the pin very slightly, because a real pen does not stop on the dot.
-        """
-        (ax, ay), (bx, by) = lb.leader
-        run = math.hypot(bx - ax, by - ay) or 1.0
-        over = 2.0 / run
-        ax, ay = ax - (bx - ax) * over, ay - (by - ay) * over
-        bend = float(rng.normal(0.0, 0.15)) * run
-        mx, my = (ax + bx) / 2, (ay + by) / 2
-        nx, ny = -(by - ay) / run, (bx - ax) / run
-        quad = [(ax, ay), (mx + nx * bend, my + ny * bend), (bx, by)]
-        return self._wobble([_quad_at(quad, t / 12.0) for t in range(13)], rng, 0.5)
-
-    def _pin(self, lb: Label, rng: Any) -> list[Pt]:
-        """The dot the leader points at, drawn round rather than filled."""
-        r = max(lb.size * 0.14, 2.2)
-        ring = [
-            (lb.px + r * math.cos(a * math.tau / 14), lb.py + r * math.sin(a * math.tau / 14))
-            for a in range(15)
-        ]
-        return self._wobble(ring, rng, 0.2)
-
-    def _underline(self, lb: Label, width: float, rng: Any) -> list[Pt]:
-        """A hand-drawn rule under a town's name, never quite level.
-
-        One stroke, not one a word, and it lifts very slightly to the right,
-        which is what a rule drawn quickly under a word actually does.
-        """
-        x0 = lb.tx - (width if lb.anchor == "end" else width / 2 if lb.anchor == "middle" else 0.0)
-        y0 = lb.ty + lb.size * 0.22
-        rise = lb.size * (0.05 + abs(float(rng.normal(0.0, 0.04))))
-        line = [(x0 - lb.size * 0.06, y0), (x0 + width + lb.size * 0.1, y0 - rise)]
-        return self._wobble(_resample(line, max(width / 10.0, 3.0)), rng, 0.45)
-
-
 # --------------------------------------------------------------------------- geometry
 
 
@@ -4303,22 +3925,9 @@ def _bisect(cum: list[float], at: float) -> int:
     return lo
 
 
-def _quad_at(quad: list[Pt], t: float) -> Pt:
-    """One point on a three point quadratic."""
-    u = 1.0 - t
-    return (
-        u * u * quad[0][0] + 2 * u * t * quad[1][0] + t * t * quad[2][0],
-        u * u * quad[0][1] + 2 * u * t * quad[1][1] + t * t * quad[2][1],
-    )
-
-
 # --------------------------------------------------------------------------- home
 
-#: The user's own place, as a small house in card pixels with y down. The
-#: page drew this in vector and the card drew nothing, which is the one place
-#: the two outputs disagreed; it is drawn here now, once, in the map's own ink,
-#: so both of them get the same pixels and both reserve the same room for it.
-HOME_GLYPH = [(-7.0, 1.5), (0.0, -6.5), (7.0, 1.5), (7.0, 8.0), (-7.0, 8.0), (-7.0, 1.5)]
+#: How far below its house a user's own place has its name written.
 HOME_NAME_DROP = 25.0
 
 
@@ -4371,23 +3980,6 @@ def home_labels(
 
 
 # --------------------------------------------------------------------------- the plate
-
-
-def hand(pstyle: PaintStyle, route: str | None = None) -> Hand | None:
-    """The writer, or None when this machine cannot open the face.
-
-    Both drawing paths ask for it before they place anything, because the
-    face's own metrics are what the boxes are sized from. A machine without
-    `fonttools`, or without the vendored file, letters in vector as it always
-    did rather than failing to draw a map.
-    """
-    if not pstyle.labels:
-        return None
-    try:
-        return Hand(pstyle, route)
-    except (ImportError, OSError) as exc:
-        log.info("no face to letter with: %s", exc)
-        return None
 
 
 def plate_key(placed: list[Label], spans: list[Span], pstyle: Any, base: str = "") -> str:
@@ -4473,8 +4065,16 @@ def draw_plate(
         from pyntpot._port import paint
     except ImportError:  # no numpy or no Pillow: the caller letters in vector
         return None
+    from pyntpot.letters.hand import Hand
+    from pyntpot.letters.style import FaceStyle, HandStyle
+    from pyntpot.maps import lettering_marks
+
     try:
-        hand = Hand(pstyle, route)
+        hand = Hand(
+            FaceStyle(label_route=pstyle.label_route, label_face=pstyle.label_face),
+            HandStyle(label_seed=pstyle.label_seed),
+            route,
+        )
     except (ImportError, OSError) as exc:  # no fonttools, or no face on disk
         log.info("no face to letter with: %s", exc)
         return None
@@ -4488,7 +4088,7 @@ def draw_plate(
                 return path
         except (OSError, ValueError):  # a half-written key is not a crash
             pass
-    marks = hand.marks(placed, spans, route_px)
+    marks = lettering_marks.marks(hand, placed, spans)
     if not marks:
         return None
     written = paint.label_plate(plates.manifest.to_dict(), marks, pstyle, brush, path)

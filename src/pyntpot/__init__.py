@@ -8,18 +8,17 @@ and the painting engine's `Sheet`, `Brush`, `Canvas`, `stamp`, `wash`,
 It does not export the layer packages' contents or any provider, cache or
 command-line name: those are reached through `pyntpot.maps`. `Sheet`,
 `Canvas`, `wash`, `composite`, `Brush` and `stamp` are re-exported from `ink`;
-`Hand` from the interim `_port` code, so its `__module__` is private.
-`__version__` is the installed distribution's version.
+`Hand` from `letters`. `__version__` is the installed distribution's version.
 """
 
 from importlib.metadata import version
 
-from pyntpot._port.labels import Hand
 from pyntpot.ink.brush import Brush
 from pyntpot.ink.pigment import composite
 from pyntpot.ink.sheet import Canvas, Sheet
 from pyntpot.ink.stamp import stamp
 from pyntpot.ink.wash import wash
+from pyntpot.letters.hand import Hand
 from pyntpot.maps import (
     Annotations,
     Basemap,

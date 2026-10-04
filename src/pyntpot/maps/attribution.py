@@ -25,6 +25,7 @@ from PIL import Image
 
 from pyntpot._port import labels as placer
 from pyntpot._port import paint as painter
+from pyntpot.maps import lettering_marks
 from pyntpot.maps.credit import Credit
 from pyntpot.maps.style import Style
 
@@ -56,21 +57,22 @@ def draw_attribution(image: Image.Image, text: str, style: Style) -> None:
     if not text:
         return
     pstyle = style.paint_style()
-    hand = placer.hand(pstyle)
+    hand = lettering_marks.open_hand(style) if style.lettering.labels else None
     if hand is None:
         log.info("no hand to write the attribution with, none is drawn")
         return
     size = ATTRIBUTION_SIZE_PX
-    width, height = hand.measure(text, size)
+    width, height = lettering_marks.box_size(hand, text, size)
     base = _PAD_PX + size
     block = (
         math.ceil(width + 2 * _PAD_PX),
         math.ceil(base + (height - size) + size * 0.5 + _PAD_PX),
     )
-    marks = hand._label_marks(
+    marks = lettering_marks.label_marks(
+        hand,
         placer.Label(
             name=text, kind="landmark", px=_PAD_PX, py=base, tx=_PAD_PX, ty=base, size=size
-        )
+        ),
     )
     with tempfile.TemporaryDirectory() as work:
         manifest = {
