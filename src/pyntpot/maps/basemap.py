@@ -5,6 +5,10 @@ by its `Card`; `Layers`, the part of it the painter reads, which is what the
 base hash covers together with the card; `Road`, `River` and
 `ElevationPatch`, the entries inside it. `Line` is a polyline in card metres.
 
+`Basemap.canonical` writes the part of a basemap the base plates depend on,
+the card frame and the `Layers`, as one fixed text that the base hash is taken
+over.
+
 It does not fetch, project, paint or hash anything: the fetch builds a
 basemap, the painter reads one. It carries no cache key, because the cache
 owns its keys. Geometry is carried as point lists in card metres, never as
@@ -13,19 +17,21 @@ path strings.
 Invariants: every value here is immutable and compares by value; every point
 is in the card metres of the basemap's own `card` and `projection`; `track`
 holds every track point in recorded order, while `Layers.route` holds the
-simplified track the painter draws.
+simplified track the painter draws. `canonical` writes every float to three
+decimals, so two machines whose maths differ in the last bit write the same
+text, and it reads nothing outside the card frame and the layers.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
 
 from pyntpot.ink.polyline import Pt
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-
     from pyntpot.maps.card import Card
     from pyntpot.maps.credit import Credit
     from pyntpot.maps.projection import Projection
@@ -176,3 +182,30 @@ class Basemap:
     candidates: tuple[Mapping[str, Any], ...] = ()
     sources: tuple[str, ...] = ()
     credits: tuple[Credit, ...] = ()
+
+    def canonical(self) -> str:
+        """The card frame and the layers as one fixed text, the input of the base hash.
+
+        Compact JSON with sorted keys of the card's box, display grid, render
+        grid and both scales, and every layer field. Tuples are written as
+        lists and every float as a string to three decimals, with negative
+        zero written as zero; ints, bools and strings are kept as they are.
+        The card's offset, the track, its times, the places, candidates,
+        sources and credits are not in it.
+        """
+        card = self.card
+        frame = [card.box, card.display, card.render, card.mpp, card.mpp_display]
+        blob = {"card": frame, "layers": asdict(self.layers)}
+        return json.dumps(_fixed(blob), sort_keys=True, separators=(",", ":"))
+
+
+def _fixed(value: object) -> object:
+    """Return a JSON-ready copy of `value` with every float written to three decimals."""
+    if isinstance(value, float):
+        text = format(value, ".3f")
+        return "0.000" if text == "-0.000" else text
+    if isinstance(value, Mapping):
+        return {str(key): _fixed(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_fixed(item) for item in value]
+    return value

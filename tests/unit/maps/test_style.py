@@ -1,11 +1,11 @@
 """`Style`: the default theme is the resolved default style, themes are strict, digests are pinned.
 
-The resolved style is read from the interim engine's own dump of it, and the
-effective basemap options from the literal overrides the basemap applies.
+The resolved style is pinned as literals for a sample of fields, one or more per
+group, and the effective basemap options as the literal overrides the basemap
+applies.
 """
 
 import dataclasses
-import json
 from pathlib import Path
 from typing import Any
 
@@ -20,10 +20,9 @@ from pyntpot.maps.style_groups import CONSUMER_ONLY
 
 from support import REPO_ROOT
 
-RESOLVED = Path(paint.__file__).parent / "themes" / "default.json"
 THEME = REPO_ROOT / "src" / "pyntpot" / "maps" / "themes" / "default.toml"
 
-#: The `Style` fields whose values come from the resolved `paint` section.
+#: The `Style` fields that make up the flat painter style.
 PAINT_GROUPS: tuple[str, ...] = (
     "paper",
     "wash",
@@ -38,32 +37,60 @@ PAINT_GROUPS: tuple[str, ...] = (
     "lettering",
 )
 
-#: The resolved `route_ink` section's sport names, with the `RouteInks` field for each.
-SPORTS: tuple[tuple[str, str], ...] = (
-    ("Run", "run"),
-    ("Ride", "ride"),
-    ("Swim", "swim"),
-    ("Other", "other"),
+#: A sample of resolved default values, as group, field and pinned value.
+RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
+    ("paper", "paper_hex", "#f3ead6"),
+    ("paper", "sheet_seed", 11),
+    ("paper", "webp_quality", 74),
+    ("wash", "wet_bleed_px", 20.0),
+    ("wash", "bloom_strength", 0.65),
+    ("wash", "fluid_steps", 40),
+    ("brush", "ink_seed", 91),
+    ("brush", "brush_width_px", {"lane": 1.8, "road_major": 3.6, "track": 2.4}),
+    ("face", "label_route", "centreline"),
+    ("face", "label_face", ""),
+    ("nib", "label_size_px", 20.0),
+    ("nib", "label_ink", "#241c14"),
+    ("hand", "label_seed", 17),
+    ("card", "display_px", 900),
+    ("card", "supersample", 2),
+    ("card", "dark_grid", (80, 60)),
+    ("ribbon", "ribbon_mult", 1.0),
+    ("ribbon", "card_pad_frac", 0.09),
+    ("cover", "dither_seed", 23),
+    ("cover", "wood_texture", 0.75),
+    ("route", "route_pen_brush", "MAJ6-e"),
+    ("route", "route_pen_width_px", 3.0),
+    ("lettering", "label_max", 3),
+    ("lettering", "labels", True),
+    ("lettering", "home_glyph", True),
+    ("lettering", "label_geom_tol_px", 8.0),
 )
+
+#: The route ink the reference sheets were painted with, pinned.
+RIDE_INK = RouteInk(
+    colour="#c22050",
+    px=5.4,
+    style="solid",
+    effect={
+        "adaptive_pct": 0.0,
+        "blend": "normal",
+        "casing_colour": "cream",
+        "casing_px": 0.25,
+        "glow_opacity": 0.8,
+        "glow_px": 2.5,
+        "shadow_blur_px": 0.0,
+        "shadow_px": 0.0,
+    },
+)
+
+#: The other sports' route inks share one dotted ink, pinned without its effect.
+DOTTED_SPORTS: tuple[str, ...] = ("run", "swim", "other")
 
 #: The default style's three digests, pinned.
 DIGEST = "25ae6fee082ebff5"
 BASE_DIGEST = "e5a5f1b4b3ca2177"
 LETTERING_DIGEST = "d15ae2f30e9ca5ce"
-
-
-def _resolved() -> dict[str, Any]:
-    """Return the interim engine's resolved default style dump."""
-    return json.loads(RESOLVED.read_text())
-
-
-def _tuples(value: Any) -> Any:
-    """Return a JSON value with every list turned into a tuple, recursively."""
-    if isinstance(value, list):
-        return tuple(_tuples(item) for item in value)
-    if isinstance(value, dict):
-        return {key: _tuples(item) for key, item in value.items()}
-    return value
 
 
 def _theme_with(tmp_path: Path, old: str, new: str) -> Path:
@@ -78,27 +105,35 @@ def _theme_with(tmp_path: Path, old: str, new: str) -> Path:
 class TestDefaultIsResolved:
     """The packaged default theme reproduces the resolved default style."""
 
-    @pytest.mark.parametrize("group", PAINT_GROUPS, ids=PAINT_GROUPS)
-    def test_group_matches_the_resolved_paint_section(self, group: str) -> None:
-        """Each group field equals the resolved `paint` value, lists read as tuples."""
-        resolved = _resolved()["paint"]
-        values = dataclasses.asdict(getattr(Style.default(), group))
-        for name, value in values.items():
-            assert value == _tuples(resolved[name]), name
+    @pytest.mark.parametrize(
+        ("group", "name", "value"),
+        RESOLVED_SAMPLE,
+        ids=[f"{group}.{name}" for group, name, _ in RESOLVED_SAMPLE],
+    )
+    def test_sampled_field_equals_its_pinned_value(self, group: str, name: str, value: Any) -> None:
+        """A sampled group field equals its pinned resolved value, a tuple read as a tuple."""
+        got = getattr(getattr(Style.default(), group), name)
+        assert got == value
+        assert type(got) is type(value)
 
-    def test_every_resolved_paint_field_is_grouped(self) -> None:
-        """Every resolved `paint` field but the consumer-only ones is in some group."""
+    def test_every_painter_field_is_grouped(self) -> None:
+        """Every painter style field but the consumer-only ones is in some group."""
         style = Style.default()
         grouped = {
             name for group in PAINT_GROUPS for name in dataclasses.asdict(getattr(style, group))
         }
-        assert grouped == set(_resolved()["paint"]) - set(CONSUMER_ONLY)
+        painter = {spec.name for spec in dataclasses.fields(paint.PaintStyle)}
+        assert grouped == painter - set(CONSUMER_ONLY)
 
-    @pytest.mark.parametrize(("sport", "field"), SPORTS, ids=[field for _, field in SPORTS])
-    def test_route_ink_matches_the_resolved_route_ink(self, sport: str, field: str) -> None:
-        """Each sport's route ink equals the resolved `route_ink` entry."""
-        expected = RouteInk(**_resolved()["route_ink"][sport])
-        assert getattr(Style.default().route_inks, field) == expected
+    def test_ride_ink_is_pinned(self) -> None:
+        """The ride ink equals its pinned resolved value."""
+        assert Style.default().route_inks.ride == RIDE_INK
+
+    @pytest.mark.parametrize("sport", DOTTED_SPORTS, ids=DOTTED_SPORTS)
+    def test_other_inks_are_the_dotted_ink(self, sport: str) -> None:
+        """Every other sport's ink is the resolved dotted ink in the same colour."""
+        ink = getattr(Style.default().route_inks, sport)
+        assert (ink.colour, ink.px, ink.style) == ("#c22050", 4.8, "dotted")
 
     def test_basemap_is_the_effective_options(self) -> None:
         """The basemap group equals the options the basemap is drawn with, field by field."""
@@ -121,17 +156,23 @@ class TestDefaultIsResolved:
 class TestEngineAdapters:
     """The flat painter style and the route ink handed to the interim engine."""
 
-    def test_paint_style_matches_the_resolved_painter_style(self) -> None:
-        """`paint_style()` equals the engine's own resolved style on every grouped field."""
-        expected = paint.PaintStyle.from_resolved(_resolved()["paint"])
-        got = Style.default().paint_style()
-        for spec in dataclasses.fields(paint.PaintStyle):
-            if spec.name not in CONSUMER_ONLY:
-                assert getattr(got, spec.name) == getattr(expected, spec.name), spec.name
+    def test_paint_style_carries_every_grouped_value(self) -> None:
+        """`paint_style()` holds each group's value in the painter field of the same name."""
+        style = Style.default()
+        flat = style.paint_style()
+        for group in PAINT_GROUPS:
+            for name, value in dataclasses.asdict(getattr(style, group)).items():
+                assert getattr(flat, name) == value, name
+
+    def test_paint_style_leaves_consumer_fields_at_their_defaults(self) -> None:
+        """The consumer-only painter fields keep the painter's class defaults."""
+        flat = Style.default().paint_style()
+        for name in CONSUMER_ONLY:
+            assert getattr(flat, name) == getattr(paint.PaintStyle(), name), name
 
     def test_route_ink_is_the_ride_ink(self) -> None:
         """`route_ink()` is the resolved ride ink the reference sheets were painted with."""
-        assert Style.default().route_ink() == RouteInk(**_resolved()["route_ink"]["Ride"])
+        assert Style.default().route_ink() == RIDE_INK
 
 
 class TestThemeIsStrict:

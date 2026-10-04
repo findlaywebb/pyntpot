@@ -14,8 +14,8 @@ base plates read, `lettering_digest` over the groups only the lettering reads, a
 the first 16 hex digits of the SHA-256 of its group digests joined in field order.
 
 `paint_style` and `route_ink` hand the interim engine the flat painter style and the
-route's ink. The style paints, letters and fetches nothing, and nothing reads it yet:
-the painter still takes its own flat style. The route ink is always the ride ink;
+route's ink, and the basemap group says what the basemap draws. The style paints,
+letters and fetches nothing itself. The route ink is always the ride ink;
 there is no sport selection. The consumer-only painter fields are not in the style,
 so `paint_style` leaves them at the painter's class defaults.
 

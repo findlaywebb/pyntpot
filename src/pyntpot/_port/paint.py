@@ -39,6 +39,7 @@ from pyntpot.ink.polyline import simplify
 if TYPE_CHECKING:
     from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
     from pyntpot.maps.plates import Plates
+    from pyntpot.maps.style import Style
 
 F32 = np.float32
 Pt = tuple[float, float]
@@ -445,7 +446,7 @@ class PaintStyle:
 
     # --- the crisp layer, read by `charts.route_track` rather than here
     #: The hand. A stack ending in cursive, never a webfont the page depends on.
-    label_font: str = '"Caveat","Patrick Hand","Segoe Script",cursive'
+    label_font: str = '"Patrick Hand",cursive'
     label_size_px: float = 20.0
     #: The landmark cap. Five was the count before the ground was lettered:
     #: with no settlements, watercourses or road numbers on the sheet, five
@@ -3273,90 +3274,18 @@ def plates_dir(key: str, cache_dir: Path) -> Path:
     return Path(cache_dir) / PLATES_SUBDIR / key
 
 
-def _hashed_layers(basemap: Basemap) -> dict[str, Any]:
-    """The card and the layers in the form the base hash has always read them.
-
-    Every line is written back as its one-decimal path data and every entry
-    under its short key, so the hash of a basemap equals the hash of the
-    payload dict it replaced.
-    """
-    from pyntpot._port import geo
-
-    card, layers = basemap.card, basemap.layers
-
-    def closed(lines: tuple[Line, ...]) -> list[str]:
-        return [geo.path_d(list(line), close=True) for line in lines]
-
-    rivers = []
-    for river in layers.rivers:
-        entry: dict[str, Any] = {
-            "c": river.cls,
-            "n": river.name,
-            "w": river.width_px,
-            "wn": river.name_width_px,
-        }
-        if river.profile:
-            entry["wp"] = list(river.profile)
-        entry["d"] = geo.path_d(list(river.line))
-        rivers.append(entry)
-    patch = layers.elevation
-    return {
-        "card": list(card.box),
-        "render": list(card.render),
-        "display": list(card.display),
-        "mpp": card.mpp,
-        "route": [list(p) for p in layers.route],
-        "cover": {k: closed(v) for k, v in layers.cover.items()},
-        "cover_order": list(layers.cover_order),
-        "sea": closed(layers.sea),
-        "lakes": closed(layers.lakes),
-        "coastline": [geo.path_d(list(line)) for line in layers.coastline],
-        "roads": [
-            {
-                "c": road.cls,
-                "b": road.band,
-                "k": road.highway,
-                "n": road.name,
-                "r": road.ref,
-                "d": geo.path_d(list(road.line)),
-            }
-            for road in layers.roads
-        ],
-        "rivers": rivers,
-        "ribbon_m": layers.ribbon_m,
-        "wet_px": dict(layers.wet_px),
-        "minor_roads": layers.minor_roads,
-        "blotch_m": layers.blotch_m,
-        "dab_spacing_m": layers.dab_spacing_m,
-        "gran_m": layers.gran_m,
-        "elev_grid": None
-        if patch is None
-        else {
-            "n": patch.n,
-            "x0": patch.x0,
-            "y0": patch.y0,
-            "x1": patch.x1,
-            "y1": patch.y1,
-            "v": list(patch.values),
-            "min": patch.low,
-            "max": patch.high,
-        },
-    }
-
-
-def paint_hash(basemap: Basemap, style: PaintStyle) -> str:
-    """A hash over the layers and the style, so a repaint is only ever needed once.
+def paint_hash(basemap: Basemap, style_digest: str) -> str:
+    """A hash over the basemap and the style, so a repaint is only ever needed once.
 
     Args:
-        basemap: The basemap `geo.journal_layers` assembled; its card and its
-            layers are hashed.
-        style: The paint style.
+        basemap: The basemap `geo.journal_layers` assembled; its canonical text,
+            the card frame and the layers, is hashed.
+        style_digest: The digest of the style groups the base plates read.
 
     Returns:
-        A short hex digest.
+        A short hex digest of the canonical text, a hyphen, and the style digest.
     """
-    blob = json.dumps(_hashed_layers(basemap), sort_keys=True, separators=(",", ":"), default=str)
-    return hashlib.sha256(blob.encode()).hexdigest()[:16] + "-" + style.digest()
+    return hashlib.sha256(basemap.canonical().encode()).hexdigest()[:16] + "-" + style_digest
 
 
 def label_geom(basemap: Basemap, tol_px: float) -> dict[str, Any]:
@@ -3606,6 +3535,7 @@ def paint(
     labels: list[dict[str, Any]] | None = None,
     *,
     key: str,
+    style_digest: str,
 ) -> Plates:
     """Paint one activity's plates and write them, with a manifest beside them.
 
@@ -3624,6 +3554,8 @@ def paint(
             from a stale one. This module never resolves or places a label
             itself: `labels.py` imports from here and never the other way.
         key: The activity, written into the manifest as its `id`.
+        style_digest: The digest of the style groups the base plates read,
+            hashed into the manifest with the basemap.
 
     Returns:
         The plates, with their manifest: files, byte counts, timings and the
@@ -4023,7 +3955,7 @@ def paint(
 
     manifest = Manifest(
         key=aid,
-        hash=paint_hash(basemap, style),
+        hash=paint_hash(basemap, style_digest),
         # The first track point in the painter's own metre space, so a caller
         # whose projection took a different origin can pin the two together.
         route0=layers.route[0],
@@ -4083,8 +4015,7 @@ def paint_activity(
     key: str,
     lat: list[float],
     lng: list[float],
-    style: PaintStyle | None = None,
-    route: list[Pt] | None = None,
+    style: Style,
     *,
     cache_dir: Path,
     places: list[dict[str, Any]],
@@ -4096,8 +4027,8 @@ def paint_activity(
         key: The activity, naming both the geo cache and the plates.
         lat: Track latitudes.
         lng: Track longitudes.
-        style: The paint style.
-        route: The already-projected track, when the caller has one.
+        style: The style: its flat painter style paints, its basemap group says
+            what the basemap draws, and its base digest goes into the hash.
         cache_dir: Where the OSM, SRTM and land cover payloads live, and where
             the plates are written under `plates/`.
         places: The places to mark on the sheet.
@@ -4109,18 +4040,25 @@ def paint_activity(
     """
     from pyntpot._port import geo
 
-    style = style or PaintStyle()
+    pstyle = style.paint_style()
     basemap = geo.journal_layers(
-        key, lat, lng, style, route=route, cache_dir=cache_dir, places=places
+        key,
+        lat,
+        lng,
+        pstyle,
+        cache_dir=cache_dir,
+        places=places,
+        basemap_style=style.basemap,
     )
     if basemap is None:
         return None
     out_dir = plates_dir(key, cache_dir)
-    want = paint_hash(basemap, style)
+    digest = style.base_digest()
+    want = paint_hash(basemap, digest)
     existing = load_plates(key, cache_dir)
     if existing is not None and existing.hash == want and not force:
         return existing
-    return paint(basemap, style, out_dir, key=key)
+    return paint(basemap, pstyle, out_dir, key=key, style_digest=digest)
 
 
 def with_display(style: PaintStyle, display_px: int) -> PaintStyle:

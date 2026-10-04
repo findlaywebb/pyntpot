@@ -48,6 +48,7 @@ from pyntpot.ink.polyline import (
 )
 
 if TYPE_CHECKING:
+    from pyntpot._port.paint import PaintStyle
     from pyntpot.maps.plates import Manifest, Plates
 
 log = logging.getLogger(__name__)
@@ -3884,15 +3885,15 @@ class Hand:
         route: `centreline` or `outline`; the paint style's when not given.
     """
 
-    def __init__(self, pstyle: Any, route: str | None = None) -> None:
+    def __init__(self, pstyle: PaintStyle, route: str | None = None) -> None:
         """Open the face the style names."""
         from pyntpot._port import outlinefont
 
         self.pstyle = pstyle
-        self.route = route or getattr(pstyle, "label_route", "centreline")
-        face = getattr(pstyle, "label_face", "") or None
+        self.route = route or pstyle.label_route
+        face = pstyle.label_face or None
         self.font = outlinefont.load(face, self.route)
-        self.seed = int(getattr(pstyle, "label_seed", 17))
+        self.seed = int(pstyle.label_seed)
 
     def measure(self, text: str, size: float) -> tuple[float, float]:
         """How wide and how tall a name is, from the face's own metrics.
@@ -4323,7 +4324,7 @@ HOME_NAME_DROP = 25.0
 
 
 def home_labels(
-    manifest: Manifest, card: Any, pstyle: Any, measure_fn: Measure | None = None
+    manifest: Manifest, card: Any, pstyle: PaintStyle, measure_fn: Measure | None = None
 ) -> tuple[list[Label], list[Box]]:
     """The user's marked places, already placed, and the room they need.
 
@@ -4340,9 +4341,9 @@ def home_labels(
     Returns:
         The labels, and the boxes they have already claimed.
     """
-    if not getattr(pstyle, "home_glyph", True):
+    if not pstyle.home_glyph:
         return [], []
-    size = getattr(pstyle, "label_size_px", DEFAULT_LINE_PX) * 0.85
+    size = pstyle.label_size_px * 0.85
     out: list[Label] = []
     boxes: list[Box] = []
     for place in manifest.places:
@@ -4373,7 +4374,7 @@ def home_labels(
 # --------------------------------------------------------------------------- the plate
 
 
-def hand(pstyle: Any, route: str | None = None) -> Hand | None:
+def hand(pstyle: PaintStyle, route: str | None = None) -> Hand | None:
     """The writer, or None when this machine cannot open the face.
 
     Both drawing paths ask for it before they place anything, because the
@@ -4381,7 +4382,7 @@ def hand(pstyle: Any, route: str | None = None) -> Hand | None:
     `fonttools`, or without the vendored file, letters in vector as it always
     did rather than failing to draw a map.
     """
-    if not getattr(pstyle, "labels", True):
+    if not pstyle.labels:
         return None
     try:
         return Hand(pstyle, route)

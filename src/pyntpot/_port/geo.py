@@ -24,7 +24,7 @@ import re
 import struct
 import time
 import zlib
-from dataclasses import dataclass, fields
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -43,6 +43,7 @@ from pyntpot.ink.polyline import (
 if TYPE_CHECKING:
     from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
     from pyntpot.maps.projection import Projection
+    from pyntpot.maps.style_groups import BasemapStyle
 
 log = logging.getLogger(__name__)
 
@@ -3130,6 +3131,7 @@ def journal_layers(
     *,
     cache_dir: Path,
     places: list[dict[str, Any]],
+    basemap_style: BasemapStyle,
 ) -> Basemap | None:
     """Everything the painter needs for one activity, from the cache.
 
@@ -3145,6 +3147,8 @@ def journal_layers(
         route: The already-projected track, when the caller has one.
         cache_dir: Where the cached payloads live.
         places: User-supplied places of interest.
+        basemap_style: What the basemap draws; the clip margin is the card's
+            own longer side, derived here.
 
     Returns:
         The basemap in card metres, or None when nothing is cached for this box.
@@ -3162,13 +3166,7 @@ def journal_layers(
     eps = max(geometry["mpp"] * 1.1, 2.0)
 
     options = GeoOptions(
-        hillshade_mode="off",
-        roads="key",
-        rivers="key",
-        generalise=False,
-        landmarks="all",
-        landmark_max=40,
-        clip_margin_m=max(clip[2] - clip[0], clip[3] - clip[1]),
+        **asdict(basemap_style), clip_margin_m=max(clip[2] - clip[0], clip[3] - clip[1])
     )
     base = basemap(key, lat, lng, options=options, cache_dir=cache_dir, places=places, route=track)
     if base is None:

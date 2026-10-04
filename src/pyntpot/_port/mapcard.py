@@ -39,11 +39,11 @@ from pyntpot._port.labels import (
     road_lines,
     route_markers,
 )
-from pyntpot._port.style import RouteInk
 from pyntpot.ink.polyline import cumulative_m
 
 if TYPE_CHECKING:
     from pyntpot.maps.plates import Plates
+    from pyntpot.maps.style import Style
 
 log = logging.getLogger(__name__)
 
@@ -130,8 +130,7 @@ def compose(
     key: str,
     lat: list[float],
     lng: list[float],
-    route_ink: RouteInk,
-    pstyle: paint.PaintStyle,
+    style: Style,
     picks: Any | None,
     labels: bool,
     cache_dir: Path,
@@ -142,8 +141,8 @@ def compose(
         key: The cache key, naming the plate cache.
         lat: Track latitudes, in recorded order.
         lng: Track longitudes, same length.
-        route_ink: The route's ink for the sport.
-        pstyle: The paint style the card takes.
+        style: The style: the route is drawn in its route ink and the card is
+            lettered with its flat painter style.
         picks: A payload's `map` block, naming the landmarks to letter. Without
             one the nearest named features are lettered instead.
         labels: Letter the card at all. False leaves the route on the painting.
@@ -157,6 +156,7 @@ def compose(
     plates = paint.load_plates(key, cache_dir)
     if plates is None:
         return None
+    pstyle = style.paint_style()
     manifest = plates.manifest
     card_img = _plates(plates)
     k = card_img.width / max(plates.card.display[0], 1)
@@ -164,7 +164,7 @@ def compose(
     _proj, pts = track_projection(lat, lng)
     first = manifest.route0 or pts[0]
     card = replace(plates.card, offset=(first[0] - pts[0][0], first[1] - pts[0][1]))
-    ink = route_ink
+    ink = style.route_ink()
     route_px = separate_strands([card.xy(x, y) for x, y in pts], ink.px * STRAND_GAP_WIDTHS)
 
     _route(card_img, plates, route_px, ink, k)

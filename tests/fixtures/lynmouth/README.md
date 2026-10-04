@@ -11,7 +11,6 @@ tests and the golden parity test.
 | `overpass-lynmouth.json` | OSM features for the feature box, from Overpass. |
 | `landcover-lynmouth.json` | OSM land cover for the wider land cover box, from Overpass. |
 | `elevation-lynmouth.json` | 80 by 80 SRTM grid over the feature box, from OpenTopoData. |
-| `style.json` | The resolved default style the plates were painted with. |
 
 ## Source
 

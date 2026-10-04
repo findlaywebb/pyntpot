@@ -6,7 +6,6 @@ way. It does not compare against goldens or decide pass and fail; callers
 hold the bounds.
 """
 
-import json
 import shutil
 from pathlib import Path
 
@@ -14,7 +13,7 @@ import numpy as np
 from PIL import Image
 
 from pyntpot._port import geo, mapcard, paint
-from pyntpot._port.style import RouteInk
+from pyntpot.maps.style import Style
 
 from support.paths import FIXTURE_DIR, KEY
 
@@ -24,11 +23,9 @@ PLATES: tuple[str, ...] = ("paper.webp", "wash.webp", "pen.webp", "labels-centre
 #: Every compared image output: the plates and the composed card.
 OUTPUTS: tuple[str, ...] = (*PLATES, "map.png")
 
-_THEME = Path(paint.__file__).parent / "themes" / "default.json"
-
 
 def paint_fixture(work: Path) -> dict[str, Path]:
-    """Copy the fixture into `work`, paint and compose it, and save `map.png` there.
+    """Copy the fixture into `work`, paint and compose it in the default style, and save `map.png`.
 
     Returns:
         Each name in `OUTPUTS`, plus `plates.json` (the manifest), mapped to its path.
@@ -42,18 +39,16 @@ def paint_fixture(work: Path) -> dict[str, Path]:
     sentinel.write_text("")
     copied_ns = sentinel.stat().st_mtime_ns
 
-    default = json.loads(_THEME.read_text())
-    pstyle = paint.PaintStyle.from_resolved(default["paint"])
-    route_ink = RouteInk(**default["route_ink"]["Ride"])
+    style = Style.default()
     lat, lng = geo.read_gpx(work / "track.gpx")
 
-    painted = paint.paint_activity(KEY, lat, lng, pstyle, cache_dir=work, places=[], force=True)
+    painted = paint.paint_activity(KEY, lat, lng, style, cache_dir=work, places=[], force=True)
     if painted is None:
         raise RuntimeError("painting the fixture wrote no manifest")
     plates = painted.directory
     _require_fresh([plates / name for name in PLATES[:3]], copied_ns)
 
-    card = mapcard.compose(KEY, lat, lng, route_ink, pstyle, None, True, work)
+    card = mapcard.compose(KEY, lat, lng, style, None, True, work)
     if card is None:
         raise RuntimeError("composing the fixture made no card")
     _require_fresh([plates / PLATES[3]], copied_ns)
