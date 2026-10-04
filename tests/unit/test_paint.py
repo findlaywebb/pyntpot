@@ -20,6 +20,7 @@ from pyntpot.maps.card import Card
 from pyntpot.maps.projection import Projection, track_projection
 from pyntpot.maps.style import Style
 
+from support.measure import flat_measure
 from support.paths import FIXTURE_DIR, KEY
 
 FIXTURE_GPX = FIXTURE_DIR / "track.gpx"
@@ -1782,7 +1783,6 @@ def test_the_face_measures_a_name_instead_of_counting_its_characters():
     narrow = hand.measure("iiiiiiiiiii", 20.0)[0]
     wide = hand.measure("WWWWWWWWWWW", 20.0)[0]
     assert wide > narrow * 1.8, "the face is not measuring, it is counting"
-    assert lb.measure("iiiiiiiiiii", 20.0) == lb.measure("WWWWWWWWWWW", 20.0)
 
 
 def test_both_letterform_routes_draw_every_glyph_of_a_name():
@@ -1999,7 +1999,7 @@ def test_a_span_takes_its_name_along_it_only_when_it_runs_across_the_sheet():
     for line, along in ((across, True), (down, False)):
         span = lb.Span(name="the long drag up the valley", kind="drag", i0=0, i1=2)
         span.line = list(line)
-        label = lb._span_label(span, [(0.0, 0.0), (1.0, 1.0), (2.0, 2.0)], 14.0, lb.measure)
+        label = lb._span_label(span, [(0.0, 0.0), (1.0, 1.0), (2.0, 2.0)], 14.0, flat_measure)
         assert bool(label.baseline) is along
         # Never a leader, either way: a name beside its own bracket needs none.
         assert label.tier == lb.TIER_SPAN
@@ -2070,7 +2070,9 @@ def test_a_curved_label_reserves_the_room_it_actually_takes():
         tier=lb.TIER_LANDMARK,
         size=14.0,
     )
-    got = lb.place([river, later], [], card, [(0.0, 290.0), (400.0, 290.0)], _flat_dark(), [])
+    got = lb.place(
+        [river, later], [], card, [(0.0, 290.0), (400.0, 290.0)], _flat_dark(), [], flat_measure
+    )
     assert river.window, "the river was not set along its own water"
     assert not river.flat
     # A box that follows the water, rather than one drawn round the anchor.
@@ -2101,14 +2103,14 @@ def test_a_road_crossing_costs_and_a_longer_leader_is_the_cheaper_answer():
     card = _Sheet()
     route = [(0.0, 290.0), (400.0, 290.0)]
     free = lb.Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
-    lb.place([free], [], card, route, _flat_dark(), [], None, [])
+    lb.place([free], [], card, route, _flat_dark(), [], flat_measure, [])
     # A road laid straight down the middle of the box the placer just chose.
     x0, y0, x1, y1 = free.box
     road = [[((x0 + x1) / 2, 0.0), ((x0 + x1) / 2, 300.0)]]
     assert lb._crossings(free.box, road) > 0
 
     moved = lb.Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
-    lb.place([moved], [], card, route, _flat_dark(), [], None, road)
+    lb.place([moved], [], card, route, _flat_dark(), [], flat_measure, road)
     assert lb._crossings(moved.box, road) == 0, "the road was not avoided"
     assert moved.box != free.box
 
@@ -2293,7 +2295,7 @@ def test_a_span_on_a_bend_is_drawn_on_the_convex_side_of_the_route():
     for turn, radius in ((45.0, 110.0), (-45.0, 110.0), (-80.0, 110.0)):
         route = _arc(turn, r=radius)
         span = lb.Span(name="the bend", kind="climb", i0=0, i1=len(route) - 1)
-        assert lb.place_spans([span], card, route, _flat_dark(), cap_px=14.0)
+        assert lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
         assert sum(math.dist(p, centre) for p in span.line) / len(span.line) > radius, (
             f"the {turn:+.0f} degree bend drew its bracket on the inside"
         )
@@ -2314,7 +2316,7 @@ def test_a_span_mark_never_crosses_any_piece_of_the_route():
     card = _Sheet()
     for name, route in _shapes().items():
         span = lb.Span(name=name, kind="climb", i0=0, i1=len(route) - 1)
-        placed = lb.place_spans([span], card, route, _flat_dark(), cap_px=14.0)
+        placed = lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
         if not placed:  # a shape with no room for a mark says so, and stops
             continue
         for part in (span.line, *span.ticks):
@@ -2394,7 +2396,7 @@ def test_the_mark_follows_the_shape_in_a_few_strokes_and_does_not_hold_its_gap()
     route += [(150.0 + i * 2.1, 120.0 + i * 2.1) for i in range(1, 25)]
     route += [(202.0 + i * 3.0, 172.0) for i in range(1, 30)]
     span = lb.Span(name="the corner", kind="climb", i0=0, i1=len(route) - 1)
-    assert lb.place_spans([span], card, route, _flat_dark(), cap_px=14.0)
+    assert lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
     gaps = [foot_on(p, route)[0] for p in span.line]
     # It stands off the route the whole way, and it does not hold one distance.
     assert min(gaps) >= 14.0 * lb.SPAN_CLEAR_CAPS
@@ -2419,7 +2421,7 @@ def test_the_mark_stops_short_of_a_tangle_rather_than_pushing_through_it():
     # A lane across the far end of the stretch, on both sides of it.
     route += [(300.0, 150.0 + i * 4.0) for i in range(1, 12)]
     span = lb.Span(name="the lane", kind="climb", i0=0, i1=59)
-    assert lb.place_spans([span], card, route, _flat_dark(), cap_px=14.0)
+    assert lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
     assert not _crosses(span.line, route)
     assert max(x for x, _ in span.line) < 300.0, (
         "the mark ran through the lane at the end of the stretch"
@@ -2443,7 +2445,7 @@ def test_a_span_with_nowhere_to_go_is_dropped_and_says_so(caplog):
         route += legs if row % 2 == 0 else list(reversed(legs))
     span = lb.Span(name="the tangle", kind="climb", i0=900, i1=989)
     with caplog.at_level(logging.INFO, logger="pyntpot._port.labels"):
-        placed = lb.place_spans([span], card, route, _flat_dark(), cap_px=14.0)
+        placed = lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
     assert placed == [], "a mark was drawn where none can clear the route"
     assert any("clears the route" in r.message for r in caplog.records)
 
@@ -2464,15 +2466,17 @@ def test_a_mark_prefers_clear_paper_to_lying_along_a_river():
     north, south = [], []
     for lines, out in ((None, north), (river, south)):
         span = lb.Span(name="the lane", kind="climb", i0=0, i1=59)
-        assert lb.place_spans([span], card, route, _flat_dark(), cap_px=14.0, lines=lines)
+        assert lb.place_spans(
+            [span], card, route, _flat_dark(), flat_measure, cap_px=14.0, lines=lines
+        )
         out.append(sum(y for _, y in span.line) / len(span.line))
     assert south[0] > 150.0, "the mark stayed on the water"
     # And the river only tips a choice: it is not allowed to lose the mark.
     span = lb.Span(name="the lane", kind="climb", i0=0, i1=59)
     both = [[(60.0 + i * 4.0, 150.0 + s) for i in range(60)] for s in (-20.0, 20.0)]
-    assert lb.place_spans([span], card, route, _flat_dark(), cap_px=14.0, lines=both), (
-        "water on both sides lost the mark"
-    )
+    assert lb.place_spans(
+        [span], card, route, _flat_dark(), flat_measure, cap_px=14.0, lines=both
+    ), "water on both sides lost the mark"
 
 
 def test_the_module_signs_a_side_one_way_and_the_mark_lands_on_it():
@@ -2515,7 +2519,7 @@ def test_an_end_tick_stops_short_of_the_route_rather_than_touching_it():
     card = _Sheet()
     route = [(60.0 + i * 4.0, 150.0) for i in range(60)]
     span = lb.Span(name="the lane", kind="climb", i0=0, i1=59)
-    assert lb.place_spans([span], card, route, _flat_dark(), cap_px=14.0)
+    assert lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
     assert len(span.ticks) == 2
     clear = 14.0 * lb.SPAN_CLEAR_CAPS
     for tick in span.ticks:
@@ -2661,7 +2665,7 @@ def test_a_river_follows_its_bend_even_when_the_bend_runs_down_the_sheet():
         size=14.0,
         baseline=water,
     )
-    lb.place([river], [], card, [(0.0, 295.0), (400.0, 295.0)], _flat_dark(), [])
+    lb.place([river], [], card, [(0.0, 295.0), (400.0, 295.0)], _flat_dark(), [], flat_measure)
     assert river.window, "a vertical river was not set along its own water"
     assert not river.flat
     assert lb._tilt(river.window) > lb.MAX_TILT_DEG, "this window is a steep one"
@@ -2677,7 +2681,7 @@ def test_the_tilt_test_still_holds_for_everything_that_is_not_a_river():
     road = lb.Label(
         name="A361", kind="road", px=200.0, py=150.0, tier=lb.TIER_ROAD, size=14.0, baseline=tarmac
     )
-    lb.place([road], [], card, [(0.0, 295.0), (400.0, 295.0)], _flat_dark(), [])
+    lb.place([road], [], card, [(0.0, 295.0), (400.0, 295.0)], _flat_dark(), [], flat_measure)
     assert road.flat, "a steep road window was accepted"
 
 
@@ -2737,8 +2741,8 @@ def test_a_long_span_name_breaks_over_two_lines_and_reserves_the_block():
         assert min(len(part) for part in form) >= floor
     assert ["the", "long climb out of Aviemore"] not in forms
 
-    wide, tall = lb.block_size(["the long climb", "out of Aviemore"], 14.0, lb.measure)
-    one_wide, one_tall = lb.block_size(["the long climb out of Aviemore"], 14.0, lb.measure)
+    wide, tall = lb.block_size(["the long climb", "out of Aviemore"], 14.0, flat_measure)
+    one_wide, one_tall = lb.block_size(["the long climb out of Aviemore"], 14.0, flat_measure)
     assert wide < one_wide, "the block is not narrower than the single line"
     assert tall > one_tall, "the block did not reserve the second line"
 
@@ -2830,7 +2834,9 @@ def test_a_span_name_lands_beside_the_bracket_it_belongs_to():
         span_range=(0, 15),
         anchors=[(115.0, 150.0), (145.0, 150.0), (175.0, 150.0)],
     )
-    lb.place([span], [], card, route, {"w": 2, "h": 2, "v": [[0.0, 0.0], [0.0, 0.0]]}, [])
+    lb.place(
+        [span], [], card, route, {"w": 2, "h": 2, "v": [[0.0, 0.0], [0.0, 0.0]]}, [], flat_measure
+    )
     x0, y0, x1, y1 = span.box
     near = min(min(math.dist(((x0 + x1) / 2, y), q) for q in bracket) for y in (y0, y1))
     assert near < 3.0 * span.size, f"the name landed {near:.0f} px off its bracket"
@@ -2869,7 +2875,7 @@ def test_a_wrapped_name_is_written_on_the_lines_it_reserved():
         size=14.0,
     )
     name.lines = ["the long climb", "out of Aviemore"]
-    wide, tall = lb.block_size(name.lines, name.size, lb.measure)
+    wide, tall = lb.block_size(name.lines, name.size, flat_measure)
     lb._place_flat(name, wide, tall, card, [(route, 1.0)], _flat_dark(), [], [], len(name.lines))
     assert name.text_lines == name.lines
     assert name.box[3] - name.box[1] == pytest.approx(tall)
@@ -2899,7 +2905,9 @@ def test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_sheet(
     second = lb.Label(
         name="Lyn", kind="river", px=150.0, py=90.0, tier=lb.TIER_RIVER, size=13.0, baseline=water
     )
-    lb.place([river, second], [], card, [(0.0, 295.0), (400.0, 295.0)], _flat_dark(), [])
+    lb.place(
+        [river, second], [], card, [(0.0, 295.0), (400.0, 295.0)], _flat_dark(), [], flat_measure
+    )
     assert river.window and second.window, "the second name lost its water"
     # Far apart along the water, and that is what the guard measures.
     assert math.dist((river.tx, river.ty), (second.tx, second.ty)) > 20.0

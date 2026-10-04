@@ -1,17 +1,18 @@
 """What the map letters, where each name sits, and how wide it is.
 
 One module owns the label layer, so the page and the standalone card put a
-name in the same place: `charts.journal_map` and `mapcard.compose` both resolve
-their picks here and both call `place`. Nothing here draws. A caller takes the
+name in the same place: `charts.journal_map` and the map's lettering stage both
+resolve their picks here and both call `place`. Nothing here draws. A caller takes the
 placed `Label`s and the placed `Span`s and strokes them with whatever machinery
 it has, vector on the page or a brush on a plate.
 
 Three things are worth knowing before changing anything in here.
 
-**`measure` is a hook, not a metric.** Every box on the sheet is sized by it,
-and the default reproduces the fixed 8 pixels a character the placer has always
-used, faults and all, so replacing it is the one change that moves every label.
-A caller with real font metrics passes its own.
+**The measure is the caller's, and it is required.** Every box on the sheet is
+sized by the `measure` a caller passes to `place`, `place_spans` and
+`home_labels`; there is no default. The map letters with the hand's own
+`Hand.measure`, so the boxes the placer defends are the widths the letterforms
+really take.
 
 **A span is not a pin.** A climb has an extent, and the extent is thrown away
 the moment it becomes a latitude and a longitude. `Span` carries the extent
@@ -54,8 +55,6 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-CHAR_W = 0.55  # width of one label character as a fraction of its font size
-
 Anchor = Literal["start", "middle", "end"]
 Pt = tuple[float, float]
 Box = tuple[float, float, float, float]
@@ -79,13 +78,8 @@ TIER_MARKER = 70
 #: The kinds whose name sits on its own mark, so a leader would only decorate.
 NO_LEADER = ("settlement", "river", "road", "marker")
 
-#: What the placer has always assumed a character is worth, in display pixels,
-#: and what a line of text is tall. Neither depends on the font or the size,
-#: which is the fault every placement fault on the sheet comes back to. They are
-#: named here so the default `measure` is honest about being that assumption
-#: rather than a measurement.
-DEFAULT_ADVANCE_PX = 8.0
-DEFAULT_SIDE_PX = 8.0
+#: The type size a label takes when nothing sets one, in display pixels, and
+#: the yardstick the other kinds' sizes are set as shares of.
 DEFAULT_LINE_PX = 20.0
 
 #: `measure(text, size) -> (width, height)`, both in display pixels.
@@ -313,26 +307,6 @@ WRAP_LEADING = 1.06
 #: line and the placer wanted the block one line tall wherever it could get it.
 WRAP_MIN_CHARS = 3
 WRAP_MIN_SHARE = 0.25
-
-
-def measure(text: str, size: float) -> tuple[float, float]:
-    """How wide and how tall one line of label text is, in display pixels.
-
-    This default is the placer's historical assumption written down: a fixed
-    advance a character and a fixed line height, neither of which knows the
-    font or the size it was asked about. It is kept exactly as it was so that
-    moving the placer into this module changes no pixel; a caller that can
-    actually measure its own letterforms passes its own `measure` to `place`
-    and gets boxes that fit.
-
-    Args:
-        text: The label.
-        size: The type size in display pixels, which this default ignores.
-
-    Returns:
-        `(width, height)` in display pixels.
-    """
-    return len(str(text)) * DEFAULT_ADVANCE_PX + DEFAULT_SIDE_PX, DEFAULT_LINE_PX
 
 
 @dataclass
@@ -589,7 +563,7 @@ def place(
     route_px: list[Pt],
     dark: dict[str, Any],
     taken: list[Box],
-    measure_fn: Measure | None = None,
+    measure_fn: Measure,
     roads: list[list[Pt]] | None = None,
 ) -> list[Label]:
     """Put every name somewhere, cheapest cost first, in tier order.
@@ -617,7 +591,7 @@ def place(
         route_px: The track in card pixels.
         dark: The painter's darkness grid, `{"w", "h", "v"}`.
         taken: Boxes already spoken for, such as the home glyph's.
-        measure_fn: How wide a name is. The module default when not given.
+        measure_fn: How wide and tall a name is.
         roads: Named road centrelines in card pixels. A name laid across one is
             costed, never forbidden.
 
@@ -633,13 +607,13 @@ def place(
             card,
             route_px,
             dark,
-            measure_fn=measure_fn or measure,
+            measure_fn=measure_fn,
             avoid=_places_to_avoid(labels),
             lines=roads or [],
         )
         todo += [span.label for span in spans if span.label is not None]
     ordered = sorted(dedupe_names(todo, card), key=lambda lb: lb.tier)
-    return _place(ordered, card, route_px, dark, boxes, measure_fn or measure, roads or [])
+    return _place(ordered, card, route_px, dark, boxes, measure_fn, roads or [])
 
 
 #: How far a settlement's own ground reaches, in multiples of the size its
@@ -1748,44 +1722,6 @@ def _tilt_max(line: list[Pt]) -> float:
     return worst
 
 
-def _journal_picks(picks: Any, basemap: Basemap, cap: int) -> list[dict[str, Any]]:
-    """Compatibility name for `journal_picks`."""
-    return journal_picks(picks, basemap, cap)
-
-
-def _journal_heuristic(basemap: Basemap, cap: int) -> list[dict[str, Any]]:
-    """Compatibility name for `journal_heuristic`."""
-    return journal_heuristic(basemap, cap)
-
-
-def _place_journal_labels(
-    labels: list[dict[str, Any]],
-    card: Any,
-    route_px: list[Pt],
-    dark: dict[str, Any],
-    taken: list[Box],
-) -> list[dict[str, Any]]:
-    """Place labels given and returned as dictionaries, as the callers once did."""
-    out = place(
-        [
-            Label(
-                name=lb["name"],
-                kind=lb.get("kind", ""),
-                why=lb.get("why", ""),
-                px=lb["px"],
-                py=lb["py"],
-            )
-            for lb in labels
-        ],
-        [],
-        card,
-        route_px,
-        dark,
-        taken,
-    )
-    return [{**src, **lb.as_dict()} for src, lb in zip(labels, out, strict=True)]
-
-
 # --------------------------------------------------------------------------- spans
 
 
@@ -1897,9 +1833,9 @@ def place_spans(
     card: Any,
     route_px: list[Pt],
     dark: dict[str, Any],
+    measure_fn: Measure,
     cap_px: float = 14.0,
     rails: int = 3,
-    measure_fn: Measure | None = None,
     along_max_deg: float = SPAN_ALONG_MAX_BEARING_DEG,
     avoid: list[tuple[float, float, float, float]] | None = None,
     lines: list[list[Pt]] | None = None,
@@ -1925,10 +1861,10 @@ def place_spans(
         card: The card, for its size in display pixels.
         route_px: The track in card pixels.
         dark: The painter's darkness grid.
-        cap_px: The lettering's cap height, which sets the ladder's spacing.
-        rails: How many rungs a side carries before a span is dropped.
         measure_fn: How wide a name is, so a span too short to carry its own
             name along it is known before the window search is tried.
+        cap_px: The lettering's cap height, which sets the ladder's spacing.
+        rails: How many rungs a side carries before a span is dropped.
         along_max_deg: The bearing threshold, in degrees off horizontal.
         avoid: Places the mark would rather not be drawn through, each an
             `(x, y, weight, radius)` in card pixels. A cost and never a rule:
@@ -1940,7 +1876,6 @@ def place_spans(
         The spans that were placed. A span past the last rung is left out, and
         so is one no arc of whose envelope clears the route.
     """
-    measure_fn = measure_fn or measure
     placed: list[Span] = []
     used: dict[int, list[tuple[int, int, int]]] = {1: [], -1: []}
     for span in spans:
@@ -3694,11 +3629,6 @@ def ground_labels(
     return mine + settled + pick_rivers(basemap, lines, card, route_px)
 
 
-def _text_width(text: str, size: float) -> float:
-    """Rough pixel width of a label, good enough to decide where it fits."""
-    return len(str(text)) * size * CHAR_W
-
-
 # --------------------------------------------------------------------------- roads
 
 #: How long a named road has to run inside the card before its number is worth
@@ -4414,7 +4344,7 @@ HOME_NAME_DROP = 25.0
 
 
 def home_labels(
-    basemap: Basemap, card: Any, pstyle: PaintStyle, measure_fn: Measure | None = None
+    basemap: Basemap, card: Any, pstyle: PaintStyle, measure_fn: Measure
 ) -> tuple[list[Label], list[Box]]:
     """The user's marked places, already placed, and the room they need.
 
@@ -4426,7 +4356,7 @@ def home_labels(
         basemap: The basemap, for its places.
         card: The card, for the projection and its size.
         pstyle: The paint style, for the type size and whether to draw at all.
-        measure_fn: How wide a name is; the module default when not given.
+        measure_fn: How wide a name is.
 
     Returns:
         The labels, and the boxes they have already claimed.
@@ -4441,7 +4371,7 @@ def home_labels(
             continue
         x, y = card.xy(place["x"], place["y"])
         name = str(place.get("n") or "home")
-        wide = max((measure_fn or measure)(name, size)[0], 26.0)
+        wide = max(measure_fn(name, size)[0], 26.0)
         out.append(
             Label(
                 name=name,

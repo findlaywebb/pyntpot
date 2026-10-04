@@ -12,9 +12,9 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from pyntpot._port import mapcard
 from pyntpot.maps import pipeline
 from pyntpot.maps.cache import Cache
+from pyntpot.maps.lettering import letter
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 
@@ -29,10 +29,11 @@ OUTPUTS: tuple[str, ...] = (*PLATES, "map.png")
 
 
 def paint_fixture(work: Path) -> tuple[dict[str, Path], list[str]]:
-    """Copy the fixture into `work`, fetch, paint and compose it in the default style, and save `map.png`.
+    """Copy the fixture into `work`, fetch, paint, letter and compose it in the default style, and save `map.png`.
 
     The fetch runs over the copied payloads with the fixture providers, so no
-    provider is called.
+    provider is called. The card is lettered with no annotations and composed
+    without an attribution.
 
     Returns:
         Each name in `OUTPUTS`, plus `plates.json` (the manifest), mapped to its path;
@@ -56,14 +57,15 @@ def paint_fixture(work: Path) -> tuple[dict[str, Path], list[str]]:
     plates = pipeline.paint(basemap, style, out_dir)
     _require_fresh([plates.directory / name for name in PLATES[:3]], copied_ns)
 
-    card, placed = mapcard.compose(basemap, plates, style, None, labels=True)
+    lettering = letter(plates, basemap, None, style)
     _require_fresh([plates.directory / PLATES[3]], copied_ns)
+    card = pipeline.compose(plates, lettering, basemap, style, attribution=False)
     card.save(work / "map.png")
 
     paths = {name: plates.directory / name for name in PLATES}
     paths["map.png"] = work / "map.png"
     paths["plates.json"] = plates.directory / "plates.json"
-    return paths, [label.name for label in placed]
+    return paths, [label.name for label in lettering.labels]
 
 
 def _require_fresh(paths: list[Path], since_ns: int) -> None:

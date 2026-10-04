@@ -1,10 +1,12 @@
-"""The map's first two stages: fetch a track's basemap, then paint its plates.
+"""The map's stages around the lettering: fetch a basemap, paint its plates, compose the card.
 
 Key names: `fetch`, which fills a `Cache` for a `Track` through the providers it
 is handed and builds the track's `Basemap` from the cached payloads; `paint`,
 which paints a basemap's plates into a directory, or hands back the plates
-already there when their manifest carries the current hash; `FetchError`, raised
-when the cached features are gone once the fetch has run.
+already there when their manifest carries the current hash; `compose`, which
+lays the painted plates, the route and the label plate into one raster card;
+`FetchError`, raised when the cached features are gone once the fetch has run.
+The stage between `paint` and `compose` is `maps.lettering.letter`.
 
 `fetch` takes the style, because the card, the ribbon and the watercourse widths
 are fitted to it. `paint` uses the basemap's card and layers as given: a basemap
@@ -13,7 +15,12 @@ in the second style's pigments. `paint` places the basemap's track on the card
 for the plates it returns, both as recorded and pulled apart into strands where
 the route runs back over itself, the line the route is drawn along.
 
-It does not letter or compose a card, and it reaches no network except through
+`compose` draws the route along `Plates.strands` in the style's route ink and
+pastes the label plate over it when the lettering has one; with no label plate
+the card is handed over bare. It does not draw an attribution: its
+`attribution` flag is accepted and has no effect.
+
+It does not letter a card, and it reaches no network except through
 the providers it is handed. It reads no configuration from the environment and
 resolves no path against the working directory: the cache and the plates
 directory are always arguments.
@@ -31,11 +38,14 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+from PIL import Image
+
 from pyntpot._port import card as strand_card
-from pyntpot._port import geo
+from pyntpot._port import geo, mapcard
 from pyntpot._port import paint as painter
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
+from pyntpot.maps.lettering import Lettering
 from pyntpot.maps.plates import Manifest, Plates
 from pyntpot.maps.providers.base import Elevation, Features
 from pyntpot.maps.style import Style
@@ -127,6 +137,42 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
     gap_px = style.route_ink().px * strand_card.STRAND_GAP_WIDTHS
     strands = tuple(strand_card.separate_strands(list(route_px), gap_px))
     return dataclasses.replace(plates, route_px=route_px, strands=strands)
+
+
+def compose(
+    plates: Plates,
+    lettering: Lettering,
+    basemap: Basemap,
+    style: Style,
+    *,
+    attribution: bool = True,
+) -> Image.Image:
+    """Compose painted, lettered plates into one raster card.
+
+    The wash is multiplied over the paper, the route is drawn along
+    `plates.strands` in the style's route ink (tinting the pen plate when the
+    ink is a pen), and the label plate is pasted over both when there is one.
+
+    Args:
+        plates: The painted plates, with their strands set.
+        lettering: The lettering; its label plate, when set, is pasted last.
+        basemap: The basemap the plates were painted from, whose credits are
+            owed on the card.
+        style: The style whose route ink draws the route.
+        attribution: Accepted and not read: no attribution is drawn on the
+            card.
+
+    Returns:
+        The card, at the size of the paper plate.
+    """
+    card = mapcard._plates(plates)
+    k = card.width / max(plates.card.display[0], 1)
+    mapcard._route(card, plates, list(plates.strands), style.route_ink(), k)
+    if lettering.plate_path is None:
+        log.info("no label plate for %s, the card is handed over bare", plates.directory)
+        return card
+    mapcard._paste_labels(card, lettering.plate_path)
+    return card
 
 
 def _current(out_dir: Path, want: str) -> Plates | None:
