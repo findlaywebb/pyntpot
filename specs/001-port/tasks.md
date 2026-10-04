@@ -65,7 +65,7 @@ recorded in ADR 0006, not a re-baseline.
 - [ ] P3.5 Typed `Plates` and `Manifest` (A4)
 - [x] P3.6 `Track` with a GPX reader and `BoundingBox` (parallel line 2)
 - [x] P3.7 `Features`, `Elevation`, `ProviderBudgetExceededError`, fixture providers with the shipped ids, the local test server; ADR 0004 (parallel line 2)
-- [ ] P3.8 `OverpassFeatures` with a query budget and copied query templates (parallel with P3.9, P3.10)
+- [x] P3.8 `OverpassFeatures` with a query budget and copied query templates (parallel with P3.9, P3.10)
 - [x] P3.9 `OpenTopoData` with a call budget (parallel with P3.8, P3.10)
 - [x] P3.10 Fetch `Cache` keyed by box, margin and providers; `ensure` fetches features, landcover, elevation in that order, each written before the next (parallel with P3.8, P3.9)
 - [x] P3.11a Style groups from the field-to-group table pinned in the plan (base or lettering by reader, layer, section; `CONSUMER_ONLY` for `PaintStyle` only), effective basemap options (all 27), fixed route ink; ADR 0005 (parallel line 3, A6)
