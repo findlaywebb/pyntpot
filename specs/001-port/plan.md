@@ -118,8 +118,7 @@ shape.
      `README.md`, `CHANGELOG.md`, `GLOSSARY.md` and `specs/`, excluding the
      `exemptions/` directory, `LICENSE`, `CODEOWNERS` and `uv.lock`. The
      list covers personal names, personal place names, road numbers,
-     upstream product names and identifier patterns. The previous label
-     font name is added in P3, not before.
+     upstream product names and identifier patterns. The previous label font stack was removed from the code in P3.12; it is not added to the banned-term list.
    - `test_coordinates.py`: every decimal pair that looks like a British
      latitude and longitude (`5\d\.\d{3,}` near `-?[0-9]\.\d{3,}`) in the
      scanned set must fall inside the D10 box. Exempt by name:
@@ -1391,8 +1390,7 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   `src/pyntpot/_port/themes/default.json` and
   `tests/fixtures/lynmouth/style.json` (both carry the old font stack); edit
   `tests/fixtures/lynmouth/README.md` (drop the `style.json` row) and
-  `specs/001-port/design-sources.md` only if the banned entry below matches
-  it; create `docs/decisions/0006-golden-regeneration.md` (Status: proposed).
+  `specs/001-port/design-sources.md` only if it still names the old stack; create `docs/decisions/0006-golden-regeneration.md` (Status: proposed).
 - Changes:
   - `Basemap.canonical() -> str`: compact JSON (sorted keys, separators
     `(",", ":")`) of `{"card": [box, display, render, mpp, mpp_display], "layers": asdict(layers)}`
@@ -1409,11 +1407,7 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
     `compose(key, lat, lng, style: Style, picks, labels, cache_dir)`.
   - `PaintStyle.label_font` default becomes `'"Patrick Hand",cursive'` (the
     vendored face) so the old stack leaves the tree; it is consumer-only and
-    not in `Style`. Add the old stack as one `re:` entry to the private
-    banned-term list at `~/personal/pyntpot-private/banned_terms.txt` if that
-    file exists here; if it does not, say so in the hand-off so the
-    maintainer adds it. Use the full quoted stack, not the bare first family
-    name, which `design-sources.md` cites as a design input.
+    not in `Style`. The previous label font stack was removed from the code in P3.12; it is not added to the banned-term list.
 - Tests: `test_style.py`: the default-equality test now compares against
   pinned literals for a sample of fields (the JSON file is gone).
   `test_basemap.py`: `canonical()` is unchanged when every float in a small
