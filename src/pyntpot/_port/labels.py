@@ -51,6 +51,7 @@ from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark
 
 if TYPE_CHECKING:
     from pyntpot._port.paint import PaintStyle
+    from pyntpot.ink.brush_style import BrushStyle
     from pyntpot.maps.basemap import Basemap, Line
     from pyntpot.maps.plates import Plates
 
@@ -4437,6 +4438,7 @@ def draw_plate(
     spans: list[Span],
     route_px: list[Pt],
     pstyle: Any,
+    brush: BrushStyle,
     route: str | None = None,
 ) -> Any:
     """Stroke the placed names into an RGBA plate beside the other plates.
@@ -4457,6 +4459,7 @@ def draw_plate(
         spans: The placed spans.
         route_px: The track in card pixels.
         pstyle: The paint style.
+        brush: The brush style the lettering's brushes and ink pads are made with.
         route: `centreline` or `outline`; the style's when not given.
 
     Returns:
@@ -4489,7 +4492,7 @@ def draw_plate(
     marks = hand.marks(placed, spans, route_px)
     if not marks:
         return None
-    written = paint.label_plate(plates.manifest.to_dict(), marks, pstyle, path)
+    written = paint.label_plate(plates.manifest.to_dict(), marks, pstyle, brush, path)
     if written is not None:
         side.write_text(json.dumps({"key": key, "face": hand.font.name, "route": hand.route}))
     return written

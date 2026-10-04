@@ -13,7 +13,8 @@ import numpy as np
 import pytest
 
 from pyntpot._port import geo, paint
-from pyntpot.ink.chains import chain_lines
+from pyntpot.ink.brush import BRUSH_COLOURS
+from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.io import save_rgba
 from pyntpot.ink.noise import blur, edt, smoothstep
 from pyntpot.ink.polyline import deform_line, foot_on, length, meet, simplify
@@ -181,89 +182,11 @@ def test_the_plates_live_under_the_geo_cache(tmp_path):
 # --------------------------------------------------------------------------- brushes
 
 
-def test_a_brush_id_names_a_treatment_and_a_colour():
-    """The five approved picks resolve to the rows and inks they name."""
-    style = paint.PaintStyle()
-    major, colour = paint.brush_from_id("MAJ2-a", 3.6, 2.0, style)
-    assert colour == "#b5623f"
-    assert major.width == pytest.approx(7.2)
-    track, olive = paint.brush_from_id("TRK4-d", 2.4, 2.0, style)
-    assert olive == "#6f6636"
-    assert track.dry > major.dry  # the track is the dry, broken brush
-    lane, umber = paint.brush_from_id("LAN5-a", 1.8, 2.0, style, "lane")
-    assert umber == "#6b4423"
-    assert lane.pool == pytest.approx(1.4)  # the pen touch-down, as last tuned
-    river, cobalt = paint.brush_from_id("RIV1-a", 8.4, 2.0, style)
-    assert cobalt == "#255d80"
-    assert river.dry < track.dry
-
-
-def test_a_brush_id_that_names_nothing_is_refused():
-    """A style naming a brush the sheet does not carry fails where it is set."""
-    with pytest.raises(ValueError, match="no such brush"):
-        paint.brush_from_id("MAJ9-a", 3.0, 2.0, paint.PaintStyle())
-    with pytest.raises(ValueError, match="no such brush"):
-        paint.brush_from_id("RIV1-z", 3.0, 2.0, paint.PaintStyle())
-
-
 def test_every_class_the_plate_paints_has_a_brush():
     """The plate's brush table covers every class the layers can carry."""
-    brushes = paint.plate_brushes(
-        paint.PaintStyle(), 2.0, {"major": 8.0, "medium": 5.0, "minor": 2.0}
-    )
+    brushes = paint.plate_brushes(BrushStyle(), 2.0, {"major": 8.0, "medium": 5.0, "minor": 2.0})
     assert set(brushes) == {"major", "medium", "minor", "coast", "road_major", "lane", "track"}
     assert brushes["coast"][0].width < brushes["medium"][0].width
-
-
-def test_a_dry_brush_breaks_where_a_wet_one_does_not():
-    """Dryness is one number, and it is what makes a track scratchy."""
-    sheet = Sheet(60, 220, gran_px=6.0, seed=3)
-    line = np.stack([np.linspace(10, 210, 80), np.full(80, 30.0)], axis=1)
-    marks = {}
-    for key, brush_id in (("wet", "RIV1-a"), ("dry", "TRK4-d")):
-        brush, _ = paint.brush_from_id(brush_id, 3.0, 2.0, paint.PaintStyle())
-        acc = np.zeros((60, 220), np.float32)
-        paint.stamp(acc, line, brush, np.random.default_rng(7))
-        marks[key] = paint.ink_density(acc, brush, sheet)
-    band = slice(24, 37)
-    wet = marks["wet"][band] > 0.25
-    dry = marks["dry"][band] > 0.25
-    assert wet.mean() > dry.mean()
-    assert dry.any()  # broken, not absent
-
-
-def test_the_pen_sets_down_where_it_touches_and_nowhere_else():
-    """A nib meeting the paper: extra ink over about a width, then nothing."""
-    from dataclasses import replace
-
-    tuned, _ = paint.brush_from_id("LAN5-a", 2.0, 2.0, paint.PaintStyle(), "lane")
-    assert tuned.load > 0 and tuned.pool > 0
-    assert tuned.load_px == pytest.approx(tuned.width * 0.85)
-    bare = replace(tuned, load=0.0, pool=0.0)
-    line = np.stack([np.linspace(10, 190, 90), np.full(90, 20.0)], axis=1)
-    marks = []
-    for brush in (tuned, bare):
-        acc = np.zeros((40, 200), np.float32)
-        paint.stamp(acc, line, brush, np.random.default_rng(5))
-        marks.append(acc)
-    assert marks[0][:, 8:18].sum() > marks[1][:, 8:18].sum() * 1.3
-    assert marks[0][:, 60:160].sum() == pytest.approx(marks[1][:, 60:160].sum(), rel=1e-4)
-
-
-def test_two_strokes_crossing_never_double():
-    """Saturation is what stops a crossing reaching twice the black."""
-    sheet = Sheet(60, 60, gran_px=6.0, seed=2)
-    brush, _ = paint.brush_from_id("MAJ2-a", 3.0, 2.0, paint.PaintStyle())
-    across = np.stack([np.linspace(5, 55, 40), np.full(40, 30.0)], axis=1)
-    down = np.stack([np.full(40, 30.0), np.linspace(5, 55, 40)], axis=1)
-    one = np.zeros((60, 60), np.float32)
-    paint.stamp(one, across, brush, np.random.default_rng(1))
-    both = one.copy()
-    paint.stamp(both, down, brush, np.random.default_rng(1))
-    d_one = paint.ink_density(one, brush, sheet)
-    d_both = paint.ink_density(both, brush, sheet)
-    assert d_both.max() <= 1.0
-    assert d_both[28:33, 28:33].max() <= d_one.max() + 0.05
 
 
 # ------------------------------------------------------- phase 1: the brush flags
@@ -310,37 +233,6 @@ def smoke_box(**over: object) -> tuple[paint.PaintStyle, Basemap]:
     return style, tiny_basemap(style=style, roads=SMOKE_ROADS, rivers=SMOKE_RIVERS)
 
 
-def long_stroke(
-    brush_id: str, width_px: float, over: str = "", length: int = 1500, **style_over: object
-) -> tuple[np.ndarray, paint.Brush]:
-    """One straight 1500 px stroke's density, as the swatch sheet paints it."""
-    h = 44
-    style = paint.PaintStyle(**style_over)
-    brush, _ = paint.brush_from_id(brush_id, width_px, 2.0, style, over)
-    sheet = Sheet(h, length, gran_px=9.0, seed=11)
-    pts = np.stack([np.linspace(20.0, length - 20.0, 900), np.full(900, h / 2)], axis=1)
-    acc = np.zeros((h, length), np.float32)
-    aux = paint.ink_aux((h, length), brush)
-    paint.stamp(acc, pts, brush, np.random.default_rng(91), aux=aux)
-    return paint.ink_density(acc, brush, sheet, aux), brush
-
-
-def thirds(dens: np.ndarray) -> list[float]:
-    """Ink per column, averaged over each third of the stroke."""
-    cols = dens.sum(axis=0)
-    n = len(cols)
-    return [float(cols[i * n // 3 : (i + 1) * n // 3].mean()) for i in range(3)]
-
-
-def test_every_phase_1_brush_flag_is_off_by_default():
-    """A field added here must not move a plate until a theme asks for it."""
-    style = paint.PaintStyle()
-    assert not (style.ink_starve or style.dry_directional or style.pen_starve)
-    brush, _ = paint.brush_from_id("TRK4-d", 2.4, 2.0, style, "track")
-    assert not (brush.starve or brush.dir_dry or brush.pen_starve)
-    assert paint.ink_aux((8, 8), brush) is None
-
-
 def test_the_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
     """The whole point of the flags: the same seed still writes the same bytes."""
     import hashlib
@@ -373,334 +265,7 @@ def test_every_flag_on_together_still_paints_the_box(tmp_path):
     assert got["pen"] != SMOKE_SHA["pen"]
 
 
-def test_a_starved_brush_runs_out_along_the_stroke():
-    """The mark starts loaded and breaks into skips, rather than fading evenly."""
-    off, _ = long_stroke("TRK4-d", 2.4, "track")
-    on, brush = long_stroke("TRK4-d", 2.4, "track", ink_starve=True)
-    assert brush.starve and brush.run_px > 0
-    # Against the same stroke unstarved, because a path's own ink wanders: what
-    # the reservoir has to do is take more out of the end than out of the start.
-    kept = [n / f for n, f in zip(thirds(on), thirds(off), strict=True)]
-    assert kept[2] < kept[0] * 0.9
-    assert thirds(off)[2] > thirds(on)[2] * 1.3
-    assert on[:, -400:].max() > 0.2  # broken, not absent
-
-
-def test_the_reservoir_is_read_off_the_final_density_not_the_deposits():
-    """A per-sample gate is diluted by the splat: the mark must break, not thin.
-
-    With the gate on the deposits alone a starved mark comes out evenly paler.
-    Reading it off the accumulated density instead is what puts holes in it, so
-    the last third loses more of its area than it loses of its ink.
-    """
-
-    def patchiness(dens: np.ndarray) -> float:
-        cols = dens[:, -500:].sum(axis=0)
-        return float(cols.std() / max(cols.mean(), 1e-6))
-
-    for brush_id, width, over in (
-        ("TRK4-d", 2.4, "track"),
-        ("STR3-a", 2.2, "minor"),
-        ("MAJ2-a", 3.6, "road_major"),
-    ):
-        off, _ = long_stroke(brush_id, width, over)
-        on, _ = long_stroke(brush_id, width, over, ink_starve=True)
-        assert patchiness(on) > patchiness(off) * 1.1, brush_id
-
-
-def turned_stroke(vertical: bool, **style_over: object) -> tuple[np.ndarray, Sheet, paint.Brush]:
-    """The same dry brush drawn across the same sheet, one way then the other."""
-    size = 420
-    style = paint.PaintStyle(**style_over)
-    brush, _ = paint.brush_from_id("TRK4-d", 6.0, 2.0, style, "track")
-    sheet = Sheet(size, size, gran_px=9.0, seed=11)
-    t = np.linspace(20.0, size - 20.0, 600)
-    mid = np.full(600, size / 2)
-    pts = np.stack([mid, t] if vertical else [t, mid], axis=1)
-    acc = np.zeros((size, size), np.float32)
-    aux = paint.ink_aux((size, size), brush)
-    paint.stamp(acc, pts, brush, np.random.default_rng(91), aux=aux)
-    return paint.ink_density(acc, brush, sheet, aux), sheet, brush
-
-
-def test_a_directional_break_follows_the_stroke_not_the_sheet():
-    """Where the mark breaks stops being a fact about the paper under it.
-
-    The isotropic gate reads `sheet.paper` at the pixel, so a dry mark breaks
-    wherever the paper happens to be low and the break is the same blotch
-    whichever way the stroke was drawn. On the flag the break comes from a
-    texture in the stroke's own frame, stretched along it, so the paper stops
-    explaining where the mark is thin.
-    """
-
-    def explained(dens: np.ndarray, sheet: Sheet) -> float:
-        inked = dens > 0.02
-        return abs(
-            float(np.corrcoef(sheet.paper[inked].astype(float), dens[inked].astype(float))[0, 1])
-        )
-
-    for vertical in (False, True):
-        off, sheet, base = turned_stroke(vertical)
-        on, _, brush = turned_stroke(vertical, dry_directional=True)
-        assert brush.dir_dry and not base.dir_dry
-        assert explained(off, sheet) > 0.2
-        assert explained(on, sheet) < explained(off, sheet) * 0.4
-        # It swaps where the break falls; it does not remove it or darken it.
-        assert (on[on > 0.02] < 0.35).mean() > 0.1
-        assert on.sum() == pytest.approx(off.sum(), rel=0.12)
-
-
-def test_a_wet_brush_is_left_alone_by_the_directional_break():
-    """A river is not a dry brush, so the flag barely moves it."""
-    off, _ = long_stroke("RIV1-a", 8.4)
-    on, _ = long_stroke("RIV1-a", 8.4, dry_directional=True)
-    assert on.sum() == pytest.approx(off.sum(), rel=0.03)
-
-
-def test_a_nib_thins_and_lightens_as_it_runs_down():
-    """A pen does not break, it runs down: the line narrows and pales."""
-    off, base = long_stroke("LAN5-a", 1.8, "lane")
-    on, brush = long_stroke("LAN5-a", 1.8, "lane", pen_starve=True)
-    assert brush.pen and brush.pen_starve and not brush.starve
-    assert not base.pen_starve
-    a, _b, c = thirds(on)
-    assert c < a  # it runs down along the stroke
-    wide = [(on[:, i * 500 : (i + 1) * 500] > 0.25).sum(axis=0).mean() for i in range(3)]
-    assert wide[2] < wide[0]
-    assert thirds(off)[2] > c  # and it is lighter than the same nib full
-
-
-def test_a_nib_comes_back_at_the_reload():
-    """The seam a dip leaves is what makes a long line look drawn."""
-    run, _ = long_stroke("MAJ6-e", 3.0, "route", length=9000, pen_starve=True, pen_reservoir=60.0)
-    cols = (run > 0.25).sum(axis=0).astype(float)
-    # Somewhere past the first dip the line is back to its full width.
-    assert cols[3000:8000].max() >= cols[200:800].max() * 0.95
-
-
-def test_a_brush_never_takes_the_nib_treatment_or_the_other_way_round():
-    """The two reservoirs are separate flags on separate tools."""
-    both = paint.PaintStyle(ink_starve=True, pen_starve=True)
-    track, _ = paint.brush_from_id("TRK4-d", 2.4, 2.0, both, "track")
-    lane, _ = paint.brush_from_id("LAN5-a", 1.8, 2.0, both, "lane")
-    assert track.starve and not track.pen_starve
-    assert lane.pen_starve and not lane.starve
-    assert paint.PEN_ROWS == frozenset({"5", "6", "8"})
-
-
 # ---------------------------------------------------- phase 2: brush quality
-
-#: The classes whose repeat was worth measuring, with the brush and width the
-#: plate paints each of them at.
-REPEATERS = [
-    ("MAJ6-e", 3.0, "route"),
-    ("RIV1-a", 8.4, ""),
-    ("LAN5-a", 1.8, "lane"),
-    ("MAJ2-a", 3.6, "road_major"),
-]
-
-
-def padded(
-    brush_id: str,
-    width_px: float,
-    over: str = "",
-    length: int = 1500,
-    seed: int = 91,
-    sheet_seed: int = 11,
-    h: int = 44,
-    **style_over: object,
-) -> np.ndarray:
-    """One straight stroke's density, through the pad the painter uses."""
-    style = paint.PaintStyle(**style_over)
-    brush, _ = paint.brush_from_id(brush_id, width_px, 2.0, style, over)
-    sheet = Sheet(h, length, gran_px=9.0, seed=sheet_seed)
-    pts = np.stack([np.linspace(20.0, length - 20.0, 900), np.full(900, h / 2)], axis=1)
-    pad = paint.InkPad((h, length), brush, style)
-    pad.lay([(brush, pts)], np.random.default_rng(seed))
-    return pad.read(brush, sheet)
-
-
-def shared_repeat(
-    brush_id: str, width_px: float, over: str, seeds: int = 6, **style_over: object
-) -> tuple[float, int]:
-    """The strongest repeat a class carries beyond the bristle scale.
-
-    An autocorrelation along one stroke cannot tell a period from a lucky run
-    of noise. Averaging it over strokes drawn on different sheets with
-    different bristles can: what the brush itself repeats stays where it is and
-    everything else cancels. Lags under 120 render pixels are left out, because
-    the bristles, the tip and the paper's own coarse cell all live under that
-    and are meant to.
-
-    Args:
-        brush_id: The brush sheet cell.
-        width_px: The display width the class is painted at.
-        over: The class's key in the style's brush overrides.
-        seeds: How many strokes to average over.
-        style_over: Paint style fields to move.
-
-    Returns:
-        The strongest correlation beyond that lag, and the lag it sits at.
-    """
-    acs = []
-    for s in range(seeds):
-        dens = padded(
-            brush_id, width_px, over, seed=91 + 7 * s, sheet_seed=11 + 3 * s, **style_over
-        )
-        x = dens.sum(axis=0)[80:-80].astype(float)
-        k = 201
-        trend = np.convolve(np.pad(x, k // 2, mode="edge"), np.ones(k) / k, mode="valid")[: len(x)]
-        x = x - trend
-        f = np.fft.rfft(x, 2 * len(x))
-        ac = np.fft.irfft(f * np.conj(f))[:900]
-        acs.append(ac / max(ac[0], 1e-9))
-    mean = np.mean(acs, axis=0)[120:]
-    return float(mean.max()), int(np.argmax(mean)) + 120
-
-
-def test_every_phase_2_brush_flag_but_the_ink_grid_is_off_by_default():
-    """A field added here must not move a plate until a theme asks for it.
-
-    `ink_ss` is the one exception and is on at 3, because a mark under four
-    render pixels wide cannot be held by the plate's own grid: that is the
-    stair that reads as scratchiness. The rest still have to be
-    inert, and `ink_ss` back at 1 still has to be the pad it always was.
-    """
-    style = paint.PaintStyle()
-    assert style.ink_ss == 3
-    assert not (style.brush_organic or style.ink_joins or style.stroke_smooth)
-    brush, _ = paint.brush_from_id("TRK4-d", 2.4, 2.0, style, "track")
-    assert not brush.organic and brush.smooth == 0.0 and brush.unit == 1.0
-    assert paint.scaled_brush(brush, 1) is brush
-    pad = paint.InkPad((8, 8), brush, paint.PaintStyle(ink_ss=1))
-    assert pad.ss == 1 and pad.tol == 0.0 and not pad.any()
-    assert paint.InkPad((8, 8), brush, style).ss == 3
-
-
-def tip_across(
-    brush_id: str,
-    width_px: float,
-    over: str = "",
-    ss: int = 3,
-    seeds: tuple[int, ...] = (91, 7, 33),
-    **style_over: object,
-) -> np.ndarray:
-    """One stroke's accumulator sampled across the tip, on the ink's own grid.
-
-    The fault the tip knobs are for lives in the accumulator, before the paper
-    gate and before the reduce, so this reads it there. Each profile is
-    normalised by its own mean, so what comes back is the shape of the tip and
-    not how much ink it carried.
-
-    Args:
-        brush_id: The brush sheet cell.
-        width_px: The display width the class is painted at.
-        over: The class's key in the style's brush overrides.
-        ss: The ink grid, as a multiple of the plate's.
-        seeds: The tip patterns to pool over, because one draw is one tip.
-        style_over: Paint style fields to move.
-
-    Returns:
-        `(windows, samples across)`, each row a normalised cross-tip profile.
-    """
-    style = paint.PaintStyle(**style_over)
-    b, _ = paint.brush_from_id(brush_id, width_px, 2.0, style, over)
-    sb = paint.scaled_brush(b, ss)
-    h, w = 150 * ss, 360 * ss
-    # A shallow diagonal, so the tip crosses the pixel grid the way a road on
-    # the card does rather than landing on whole rows.
-    ang = np.radians(20.0)
-    s = np.linspace(0.0, 320.0 * ss, 700)
-    x0, y0 = 20.0 * ss, 40.0 * ss
-    pts = np.stack([x0 + s * np.cos(ang), y0 + s * np.sin(ang)], 1).astype(np.float32)
-    s = np.arange(60.0 * ss, 260.0 * ss)
-    cx, cy = x0 + s * np.cos(ang), y0 + s * np.sin(ang)
-    u = np.linspace(-0.28, 0.28, 61) * sb.width
-    px = cx[:, None] - np.sin(ang) * u[None, :]
-    py = cy[:, None] + np.cos(ang) * u[None, :]
-    ix = np.clip(np.floor(px).astype(int), 0, w - 2)
-    iy = np.clip(np.floor(py).astype(int), 0, h - 2)
-    fx, fy = px - ix, py - iy
-    rows = []
-    for seed in seeds:
-        acc = np.zeros((h, w), np.float32)
-        paint.stamp(acc, pts, sb, np.random.default_rng(seed))
-        val = (
-            acc[iy, ix] * (1 - fx) * (1 - fy)
-            + acc[iy, ix + 1] * fx * (1 - fy)
-            + acc[iy + 1, ix] * (1 - fx) * fy
-            + acc[iy + 1, ix + 1] * fx * fy
-        )
-        n = len(val) // 40 * 40
-        rows.append(val[:n].reshape(-1, 40, val.shape[1]).mean(1))
-    prof = np.concatenate(rows)
-    # Against the mark's own envelope rather than its mean, so what comes back
-    # is the holes and steps inside the mark and not the tip's bell, nor the
-    # sideways wander of the whole mark, which is a wander and not a fault.
-    env = paint._tip_band(prof, prof.shape[1] / 5.0)
-    return prof / np.maximum(env, 1e-9)
-
-
-def test_the_tip_no_longer_folds_over_itself():
-    """Streaking: a tip laying filaments, not a band.
-
-    Every bristle's sideways drift was drawn independently of the one beside
-    it, and on `road_major` that drift is 0.55 render pixels either way against
-    a bristle spacing of 0.23. So neighbours crossed, the tip collapsed into
-    four or five coincident filaments with bare paper between them, and because
-    the phases do not change along the stroke those gaps ran its whole length.
-    Sharing the drift across a quarter of the tip is what makes it a tip again.
-    """
-    was = tip_across(
-        "MAJ2-a", 3.6, "road_major", bristle_drift_coherence=0.0, bristle_bandlimit_px=0.0
-    )
-    now = tip_across("MAJ2-a", 3.6, "road_major")
-    # The deepest hole inside the mark, against the mark's own envelope. A
-    # quarter is a bristle's worth of nearly bare paper in the middle of a
-    # road; a tip laying a band sits close to 1.
-    assert float(was.min(1).mean()) < 0.30
-    assert float(now.min(1).mean()) > 0.85
-    # And the step from one lane to the next, which is what reads as harsh.
-    assert (
-        float(np.abs(np.diff(now, axis=1)).max()) < float(np.abs(np.diff(was, axis=1)).max()) * 0.45
-    )
-
-
-def test_both_tip_knobs_are_wired_and_each_one_earns_its_place():
-    """The fold and the bandlimit are two faults, and both have to be fixed.
-
-    The tip carries a fixed number of logical bristles whatever it is painted
-    at, so most of its detail is finer than the plate can draw and comes back
-    as an alias. That is a second fault under the fold, and it only shows once
-    the fold is gone: with the drift shared but the weights unbandlimited the
-    tip is still twice as uneven as it needs to be.
-    """
-    style = paint.PaintStyle()
-    assert style.bristle_drift_coherence == 0.25
-    assert style.bristle_bandlimit_px == 0.9
-    assert style.bristle_contrast == 1.0
-    b, _ = paint.brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
-    assert (b.coherence, b.band_px, b.contrast) == (0.25, 0.9, 1.0)
-    assert paint.scaled_brush(b, 3).coherence == 0.25
-
-    both = float(tip_across("MAJ2-a", 3.6, "road_major").std(1).mean())
-    drift_only = float(
-        tip_across("MAJ2-a", 3.6, "road_major", bristle_bandlimit_px=0.0).std(1).mean()
-    )
-    neither = float(
-        tip_across(
-            "MAJ2-a", 3.6, "road_major", bristle_drift_coherence=0.0, bristle_bandlimit_px=0.0
-        )
-        .std(1)
-        .mean()
-    )
-    assert drift_only < neither * 0.55
-    assert both < drift_only * 0.35
-    # And the contrast knob is the user's, so it has to move the tip both
-    # ways: down to a smoother lane and up to a harder one.
-    softer = float(tip_across("MAJ2-a", 3.6, "road_major", bristle_contrast=0.5).std(1).mean())
-    harder = float(tip_across("MAJ2-a", 3.6, "road_major", bristle_contrast=2.0).std(1).mean())
-    assert softer < both < harder
 
 
 def test_the_phase_2_brush_flags_on_together_still_paint_the_box(tmp_path):
@@ -718,150 +283,6 @@ def test_the_phase_2_brush_flags_on_together_still_paint_the_box(tmp_path):
     assert got["paper"] == SMOKE_SHA["paper"]  # nothing here touches the card
     assert got["wash"] != SMOKE_SHA["wash"]
     assert got["pen"] != SMOKE_SHA["pen"]
-
-
-def test_the_drift_along_a_stroke_repeats_and_the_flag_stops_it():
-    """The complaint was repetition, and it was four sines saying the same thing.
-
-    Every wander in a stroke was a sine, so a long mark came back to itself:
-    the bristle drift every 390 render pixels and every bristle in step with
-    the rest, the line's wobble every 210, the pressure every 2 pi cells, and
-    each bristle's break between 116 and 215 with a beat near 500 where two of
-    them differed a little. The route pen carries it plainest, because nothing
-    else is happening on a nib.
-    """
-    off, lag = shared_repeat("MAJ6-e", 3.0, "route")
-    assert off > 0.4
-    assert 340 <= lag <= 430  # the bristle drift, 2 pi times its own 62 px
-    for brush_id, width_px, over in REPEATERS:
-        was, _ = shared_repeat(brush_id, width_px, over)
-        now, _ = shared_repeat(brush_id, width_px, over, brush_organic=True)
-        assert now < 0.15, brush_id
-        # MAJ2-a no longer clears the second bar, and the reason is worth
-        # keeping: its own repeat fell from 0.22 to 0.09 when the bristle drift
-        # stopped being drawn independently per bristle. What carried the
-        # sine's period into the density on a road was the tip folding into
-        # filaments and the whole set of them swinging together; with the tip
-        # laying a band there is almost nothing left for the sine to modulate,
-        # so the flag has no period to remove and only the bar above applies.
-        if was >= 0.15:
-            assert now < was * 0.7, brush_id
-
-
-def test_a_road_split_into_ways_is_one_mark_again():
-    """OSM splits a road wherever a tag changes, and the joins show.
-
-    Each way took a fresh tip pattern, a fresh set-down blob and a lift taper
-    at both ends, so a road arrived as a chain of tapered lozenges. Joined
-    first, the same six pieces paint the mark that was drawn in one.
-    """
-    h, w = 44, 1200
-    whole = np.stack([np.linspace(20.0, w - 20.0, 901), np.full(901, h / 2)], axis=1)
-    pieces = [whole[i * 150 : (i + 1) * 150 + 1] for i in range(6)]
-    assert len(chain_lines(pieces, 2.5)) == 1
-    sheet = Sheet(h, w, gran_px=9.0, seed=11)
-
-    def lay(lines: list[np.ndarray], **style_over: object) -> np.ndarray:
-        style = paint.PaintStyle(**style_over)
-        brush, _ = paint.brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
-        pad = paint.InkPad((h, w), brush, style)
-        pad.lay([(brush, line) for line in lines], np.random.default_rng(91))
-        return pad.read(brush, sheet).sum(axis=0)[60:-60]
-
-    ref = lay([whole])
-    thin = float(np.median(ref)) * 0.6
-    assert (lay(pieces) < thin).sum() > 40  # the tapers, in the mark's body
-    assert (lay(pieces, ink_joins=True) < thin).sum() == 0
-    assert lay(pieces, ink_joins=True) == pytest.approx(ref, abs=1e-4)
-
-
-def test_a_way_that_arrives_backwards_is_still_joined():
-    """A junction hands the painter whichever end it has; both are the mark."""
-    a = np.stack([np.linspace(0.0, 100.0, 60), np.zeros(60)], axis=1)
-    b = np.stack([np.linspace(220.0, 100.0, 60), np.zeros(60)], axis=1)
-    chains = chain_lines([a, b], 2.5)
-    assert len(chains) == 1
-    assert chains[0][0][0] == pytest.approx(0.0)
-    assert chains[0][-1][0] == pytest.approx(220.0)
-    # And two that meet nowhere are left as the two marks they are.
-    far = np.stack([np.linspace(400.0, 500.0, 60), np.zeros(60)], axis=1)
-    assert len(chain_lines([a, far], 2.5)) == 2
-
-
-def test_a_corner_is_rounded_to_the_brush_rather_than_stamped_through():
-    """A tip stamped through a 90 degree vertex folds over itself.
-
-    The generalised track turns 82 degrees at the 95th percentile of its
-    vertices. The normal swings through a turn like that in a couple of
-    samples, the far side of the tip runs backwards, and what lands is a bead
-    sitting in the quadrant outside the corner. No brush draws a corner
-    tighter than it is wide.
-    """
-    h = w = 200
-    leg_a = np.stack([np.linspace(20.0, 100.0, 300), np.full(300, 60.0)], axis=1)
-    leg_b = np.stack([np.full(300, 100.0), np.linspace(60.0, 180.0, 300)], axis=1)
-    pts = np.concatenate([leg_a, leg_b])
-    sheet = Sheet(h, w, gran_px=9.0, seed=11)
-    yy, xx = np.mgrid[0:h, 0:w]
-    outside = (xx > 100) & (yy < 60)
-
-    def mark(smooth: bool) -> tuple[np.ndarray, paint.Brush]:
-        style = paint.PaintStyle(stroke_smooth=smooth)
-        brush, _ = paint.brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
-        acc = np.zeros((h, w), np.float32)
-        aux = paint.ink_aux((h, w), brush)
-        paint.stamp(acc, pts, brush, np.random.default_rng(91), aux=aux)
-        return paint.ink_density(acc, brush, sheet, aux), brush
-
-    off, base = mark(False)
-    on, brush = mark(True)
-    assert base.smooth == 0.0
-    assert brush.smooth == pytest.approx(brush.width * 0.7)
-    assert float(on[outside].sum()) < float(off[outside].sum()) * 0.75
-    # It rounds the corner; it does not shorten the road or thin it.
-    assert on.sum() == pytest.approx(off.sum(), rel=0.06)
-    assert on[58:63, 25:75].sum() == pytest.approx(off[58:63, 25:75].sum(), rel=0.05)
-
-
-def test_a_finer_grid_converges_on_the_mark_the_brush_describes():
-    """What the eye reads as pixelation is the ink's own grid.
-
-    The saturation and the paper gate are per pixel, so the plate's grid is
-    where a thin mark's edge is decided. Painting the whole ink pipeline on a
-    finer grid and reducing the density back converges: against a stroke
-    painted six times finer, the plate's own grid is most of twice as far off
-    as a grid twice as fine.
-    """
-    h, w = 40, 500
-    t = np.linspace(20.0, w - 20.0, 900)
-    pts = np.stack([t, 8.0 + t / 7.0], axis=1)  # a shallow diagonal: the worst case
-    sheet = Sheet(h, w, gran_px=9.0, seed=11)
-
-    def at(ss: int) -> np.ndarray:
-        style = paint.PaintStyle(ink_ss=ss)
-        brush, _ = paint.brush_from_id("MAJ6-e", 3.0, 2.0, style, "route")
-        pad = paint.InkPad((h, w), brush, style)
-        assert pad.acc.shape == (h * ss, w * ss)
-        pad.lay([(brush, pts)], np.random.default_rng(91))
-        return pad.read(brush, sheet)
-
-    ref = at(6)
-    err = [float(np.abs(at(ss) - ref).mean()) for ss in (1, 2, 3)]
-    assert err[0] > err[1] > err[2]
-    assert err[1] < err[0] * 0.7
-
-
-def test_a_finer_grid_lays_the_same_weight_of_ink():
-    """The accumulator holds a thickness, not a count of deposits.
-
-    Without the grid factor in the normalisation the same mark on a grid twice
-    as fine comes out half as dark, which is a bug and not a look.
-    """
-    for brush_id, width_px, over in REPEATERS:
-        one = float(padded(brush_id, width_px, over, ink_ss=1).sum())
-        two = float(padded(brush_id, width_px, over, ink_ss=2).sum())
-        assert two == pytest.approx(one, rel=0.2), brush_id
-        assert two < one  # a sharper mark spreads less, and is honest about it
 
 
 # --------------------------------------------------------------------------- ribbon
@@ -1512,7 +933,8 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
             box=(10.0, 15.0, 60.0, 30.0),
         )
     ]
-    plate = lb.draw_plate(plates, placed, [], [(10.0, 10.0), (70.0, 40.0)], tiny_style())
+    brush = as_style(tiny_style()).brush
+    plate = lb.draw_plate(plates, placed, [], [(10.0, 10.0), (70.0, 40.0)], tiny_style(), brush)
     assert plate is not None and plate.exists()
     img = Image.open(plate)
     assert img.mode == "RGBA"
@@ -1520,7 +942,10 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
     assert img.getchannel("A").getextrema()[1] > 0, "nothing was written"
     # And it is cached on what is lettered, so a second call writes nothing new.
     stamp = plate.stat().st_mtime_ns
-    assert lb.draw_plate(plates, placed, [], [(10.0, 10.0), (70.0, 40.0)], tiny_style()) == plate
+    assert (
+        lb.draw_plate(plates, placed, [], [(10.0, 10.0), (70.0, 40.0)], tiny_style(), brush)
+        == plate
+    )
     assert plate.stat().st_mtime_ns == stamp
 
 
@@ -2987,7 +2412,7 @@ def test_the_in_water_ink_beats_a_dark_one_on_the_river():
     from pyntpot._port import paint
 
     style = paint.PaintStyle()
-    river = paint.BRUSH_COLOURS["RIV"]["a"]
+    river = BRUSH_COLOURS["RIV"]["a"]
     assert _contrast(style.label_in_water_ink, river) > _contrast("#0f1216", river)
     assert _contrast(style.label_in_water_ink, river) > 4.5
 

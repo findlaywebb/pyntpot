@@ -79,7 +79,9 @@ def draw_attribution(image: Image.Image, text: str, style: Style) -> None:
             "gran_px": 6.0,
             "dir": work,
         }
-        path = painter.label_plate(manifest, marks, pstyle, Path(work) / "attribution.webp")
+        path = painter.label_plate(
+            manifest, marks, pstyle, style.brush, Path(work) / "attribution.webp"
+        )
         if path is None:
             log.info("the attribution drew nothing")
             return

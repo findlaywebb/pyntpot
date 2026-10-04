@@ -9,7 +9,8 @@ add the term here when you coin one. The ported code keeps its old names until t
 | canvas | A world-unit box and the pixel grid it paints to. `ink.sheet.Canvas`. |
 | plate | One painted raster layer written to disk: paper, wash, pen, labels. |
 | plates | The set of plates plus its manifest for one render. Today `plates.json`. |
-| brush | One mark-making tool. Today `paint.Brush`. |
+| brush | One mark-making tool, in render pixels: a tip of bristles stamped along a path. `ink.brush.Brush`. |
+| brush sheet | The catalogue of brush cells: stroke treatments by row `"1"` to `"8"`, the rows that are a nib, and ink colours by the id's three-letter prefix and column. A brush id `<PREFIX><row>-<column>` such as `MAJ2-a` is an opaque cell name; `ink` never reads the prefix as a map class. `ink.brush.BRUSH_TREATMENTS`, `PEN_ROWS`, `BRUSH_COLOURS`. |
 | wash | A pigment field laid on the sheet. |
 | hand | The lettering writer. Today `labels.Hand`. |
 | trace | How a glyph becomes strokes: centreline or outline. Today `outlinefont.route`. |

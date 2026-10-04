@@ -32,9 +32,11 @@ import numpy as np
 from PIL import Image
 
 from pyntpot._port.style import coerce_like
-from pyntpot.ink.chains import chain_lines
+from pyntpot.ink.brush import Brush, brush_from_id
+from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.io import save_alpha, save_rgba, save_webp, to_img
 from pyntpot.ink.noise import F32, blur, edt, fbm, fbm_aniso, fill_holes, smoothstep
+from pyntpot.ink.pad import InkPad
 from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, Layer, composite
 from pyntpot.ink.raster import Deform, deform_rings, fill_cov, stroke_mask
 from pyntpot.ink.sheet import PAPER, Canvas, Sheet, rgb
@@ -63,138 +65,6 @@ COVER_CFG = {
     "built": (0.55, 0.20),
     "works": (0.58, 0.22),
     "wood": (0.72, 0.30),
-}
-
-#: The eight stroke treatments of the brush sheet, by row. A brush id is a
-#: class, a row and a colour: `MAJ2-a` is the A and B road width, treatment 2,
-#: colour a. Widths live in `PaintStyle`, because the same treatment is drawn at
-#: a river's width on one plate and a lane's on another.
-BRUSH_TREATMENTS: dict[str, dict[str, float]] = {
-    "1": dict(
-        name_wet=1.0,
-        darkness=1.8,
-        bristles=26,
-        gap=0.03,
-        dry=0.15,
-        thr=0.34,
-        texture=0.32,
-        press=0.14,
-        load=0.6,
-        pool=0.0,
-        bleed=1.5,
-        lift=34,
-    ),
-    "2": dict(
-        darkness=2.0,
-        bristles=22,
-        gap=0.09,
-        dry=0.30,
-        thr=0.38,
-        texture=0.42,
-        press=0.20,
-        load=0.55,
-        pool=0.0,
-        bleed=1.1,
-        lift=30,
-    ),
-    "3": dict(
-        darkness=2.4,
-        bristles=16,
-        gap=0.14,
-        dry=0.42,
-        thr=0.42,
-        texture=0.55,
-        press=0.26,
-        load=0.5,
-        pool=0.0,
-        bleed=0.9,
-        lift=26,
-    ),
-    "4": dict(
-        darkness=4.8,
-        bristles=18,
-        gap=0.28,
-        dry=0.72,
-        thr=0.48,
-        texture=0.82,
-        press=0.34,
-        load=0.7,
-        pool=0.0,
-        bleed=0.5,
-        lift=28,
-    ),
-    "5": dict(
-        darkness=7.2,
-        bristles=5,
-        gap=0.04,
-        dry=0.22,
-        thr=0.40,
-        texture=0.40,
-        press=0.18,
-        load=1.6,
-        pool=1.4,
-        bleed=0.3,
-        lift=12,
-    ),
-    "6": dict(
-        darkness=6.0,
-        bristles=6,
-        gap=0.0,
-        dry=0.10,
-        thr=0.32,
-        texture=0.16,
-        press=0.10,
-        load=0.5,
-        pool=0.9,
-        bleed=0.45,
-        lift=16,
-        solid=0.75,
-    ),
-    "7": dict(
-        darkness=7.4,
-        bristles=8,
-        gap=0.44,
-        dry=0.82,
-        thr=0.53,
-        texture=0.86,
-        press=0.45,
-        load=0.4,
-        pool=0.0,
-        bleed=0.35,
-        lift=14,
-    ),
-    "8": dict(
-        darkness=6.4,
-        bristles=4,
-        gap=0.02,
-        dry=0.20,
-        thr=0.40,
-        texture=0.36,
-        press=0.14,
-        load=1.2,
-        pool=0.8,
-        bleed=0.25,
-        lift=14,
-    ),
-}
-#: The treatment rows that are a nib rather than a brush: a flat core, a
-#: touch-down blot, and a line that thins rather than breaking when it runs low.
-PEN_ROWS = frozenset({"5", "6", "8"})
-
-#: The colour column of a brush id, per class.
-BRUSH_COLOURS: dict[str, dict[str, str]] = {
-    "RIV": {"a": "#255d80"},
-    "STR": {"a": "#255d80"},
-    "MAJ": {"a": "#b5623f", "b": "#8a5a2c", "c": "#6b4423", "d": "#7b7266", "e": "#2b2620"},
-    "LAN": {"a": "#6b4423"},
-    "TRK": {
-        "a": "#6b4423",
-        "b": "#b5623f",
-        "c": "#7d7468",
-        "d": "#6f6636",
-        "e": "#95584a",
-        "f": "#2b2620",
-    },
 }
 
 
@@ -888,166 +758,13 @@ def relief_density(grid: ElevationPatch, plate: Canvas, sheet: Sheet) -> np.ndar
 # --------------------------------------------------------------------------- brushes
 
 
-@dataclass
-class Brush:
-    """One mark-making tool, in render pixels.
-
-    A stroke is a brush tip stamped along the path. The tip is a row of
-    bristles: a one dimensional profile of weights with gaps in it, each
-    bristle drifting slowly sideways as the stroke goes on, so the same
-    bristles leave the same streaks the whole way down the mark. Pressure varies
-    slowly and drives width and darkness together; the paper's own tooth gates
-    the ink, so a dry brush breaks where the paper is low.
-    """
-
-    width: float  # full width of the tip at neutral pressure
-    darkness: float  # ink laid per stamp
-    bristles: int  # tines across the tip
-    gap: float  # share of them missing
-    dry: float  # 0 a loaded wet brush, 1 bone dry
-    thr: float  # paper height at which a dry mark starts to break
-    jitter: float  # how far a bristle wanders sideways
-    press: float  # slow pressure variation
-    press_cell: float  # pixels per pressure cycle
-    wobble: float  # slow wander of the whole line, for a pen
-    load: float  # extra ink where the brush is first set down
-    pool: float  # a blot at the start, for a nib
-    bleed: float  # blur radius of the soft edge
-    lift: float  # pixels over which the stroke lifts to a point
-    texture: float = 0.7  # how much the bristles show: 0 a flat band, 1 grain
-    step: float = 0.40  # spacing of the stamps along the path
-    profile_px: float = 0.55  # spacing the tip's profile is sampled at
-    solid: float = 0.0  # a flat core under the bristles, for a loaded pen
-    load_px: float = 0.0  # how fast the set-down ink runs out; 0 derives it
-    pool_radius_frac: float = 0.5
-    pool_gain: float = 1.9
-    # --- phase 1: the reservoir and the directional break. All inert at these
-    # defaults, so a brush built without the flags is the brush that was there.
-    starve: bool = False  # spend a per-bristle load along the stroke
-    run_px: float = 0.0  # how far one load carries, in render pixels
-    res_floor: float = 0.38  # what is left in a nominally empty bristle
-    dip_px: float = 0.0  # distance between reloads; 0 is never reload
-    knee: float = 0.62  # ink kept at empty, before the paper gate
-    dir_dry: bool = False  # stretch the break texture along the stroke
-    dir_elong: float = 5.0
-    dir_cell: float = 7.0  # width of one break across the mark, in pixels
-    dir_gain: float = 1.0  # 1 is the paper's own contrast, more is harsher
-    dir_mix: float = 0.8
-    pen: bool = False  # this treatment is a nib, not a brush
-    pen_starve: bool = False  # the nib thins and lightens as it runs down
-    pen_thin: float = 0.26
-    # --- phase 2: brush quality. Inert at these defaults, so a brush built
-    # without the flags is the brush that was there.
-    organic: bool = False  # drift and pressure from a lattice, not a sine
-    org_oct: int = 4
-    org_lac: float = 2.17
-    org_mult: float = 0.5  # lattice cell, as a share of the sine's wavelength
-    smooth: float = 0.0  # corner radius in render pixels; 0 leaves the path
-    #: Pixels of the brush's own grid per render pixel. 1 is the plate itself;
-    #: `scaled_brush` sets it when the ink is painted on a finer grid, so the
-    #: wavelengths written into the code below stay the lengths they were.
-    unit: float = 1.0
-    #: How far the tip's own weights are smoothed across the mark, in render
-    #: pixels. 0 leaves the tip as it was.
-    band_px: float = 0.0
-    #: A multiplier on the tip's variation about its own mean weight.
-    contrast: float = 1.0
-    #: How much of its sideways drift a bristle shares with its neighbours, as
-    #: a share of the tip. 0 draws every bristle's phase independently.
-    coherence: float = 0.0
-
-
-def brush_from_id(
-    brush_id: str, width_display_px: float, scale: float, style: PaintStyle, override: str = ""
-) -> tuple[Brush, str]:
-    """One class's brush and ink colour, from a brush sheet id.
-
-    Args:
-        brush_id: A cell on the brush sheet, `RIV1-a` or `TRK4-d`.
-        width_display_px: The width this class is painted at on screen.
-        scale: Render pixels per display pixel.
-        style: The paint style, for the shared geometry and the overrides.
-        override: Key into `style.brush_overrides`, when the class has one.
-
-    Returns:
-        The brush in render pixels, and its ink colour as hex.
-
-    Raises:
-        ValueError: When the id names a row or a colour that does not exist.
-    """
-    cls, rest = brush_id[:3], brush_id[3:]
-    row, _, col = rest.partition("-")
-    if row not in BRUSH_TREATMENTS or col not in BRUSH_COLOURS.get(cls, {}):
-        raise ValueError(f"no such brush {brush_id!r}")
-    t = dict(BRUSH_TREATMENTS[row])
-    t.pop("name_wet", None)
-    over = style.brush_overrides.get(override or cls.lower(), {})
-    jitter = over.get("jitter_px", style.brush_jitter_px)
-    press_cell = over.get("press_cell_px", style.brush_press_cell_px)
-    wobble = over.get("wobble_px", style.brush_wobble_px)
-    brush = Brush(
-        width=max(width_display_px, 0.4) * scale,
-        darkness=over.get("darkness", t["darkness"]),
-        bristles=int(over.get("bristles", t["bristles"])),
-        gap=over.get("gap", t["gap"]),
-        dry=over.get("dry", t["dry"]),
-        thr=over.get("thr", t["thr"]),
-        texture=over.get("texture", t["texture"]),
-        jitter=jitter * scale,
-        press=over.get("press", t["press"]),
-        press_cell=press_cell * scale,
-        wobble=wobble * scale,
-        load=over.get("load", t["load"]),
-        pool=over.get("pool", t["pool"]),
-        bleed=over.get("bleed", t["bleed"]) * scale,
-        lift=over.get("lift", t["lift"]) * scale,
-        solid=over.get("solid", t.get("solid", 0.0)),
-        step=style.brush_step,
-        profile_px=style.brush_profile_px,
-        pool_radius_frac=style.pen_pool_radius_frac,
-        pool_gain=style.pen_pool_gain,
-    )
-    brush.load_px = max(brush.width * style.pen_load_px_frac, 2.0)
-    brush.pen = row in PEN_ROWS
-    # The reservoir. A brush breaks when it runs down and a nib thins, so the
-    # two flags are separate and a brush never takes the nib's treatment.
-    if style.ink_starve and not brush.pen:
-        brush.starve = True
-        brush.run_px = max(brush.width * style.ink_reservoir, 1.0)
-        brush.res_floor = style.ink_res_floor
-        brush.dip_px = max(brush.run_px * style.ink_dip_mult, 1.0)
-        brush.knee = style.ink_knee
-    if style.pen_starve and brush.pen:
-        brush.pen_starve = True
-        brush.run_px = max(brush.width * style.pen_reservoir, 1.0)
-        brush.dip_px = max(brush.run_px * style.ink_dip_mult, 1.0)
-        brush.pen_thin = style.pen_thin
-    if style.dry_directional and brush.dry > 0.0:
-        brush.dir_dry = True
-        brush.dir_elong = style.dry_dir_elong
-        brush.dir_cell = max(style.dry_dir_cell_px * scale, 1.0)
-        brush.dir_gain = style.dry_dir_gain
-        brush.dir_mix = style.dry_dir_mix
-    if style.brush_organic:
-        brush.organic = True
-        brush.org_oct = max(int(style.organic_octaves), 1)
-        brush.org_lac = max(style.organic_lacunarity, 1.1)
-        brush.org_mult = max(style.organic_cell_mult, 0.05)
-    if style.stroke_smooth:
-        brush.smooth = max(brush.width * style.stroke_smooth_mult, 0.0)
-    brush.band_px = max(style.bristle_bandlimit_px, 0.0)
-    brush.contrast = max(style.bristle_contrast, 0.0)
-    brush.coherence = max(style.bristle_drift_coherence, 0.0)
-    return brush, BRUSH_COLOURS[cls][col]
-
-
 def plate_brushes(
-    style: PaintStyle, scale: float, wet_px: dict[str, float]
+    style: BrushStyle, scale: float, wet_px: dict[str, float]
 ) -> dict[str, tuple[Brush, str]]:
     """Every class's brush for one plate, sized against its own display pixel.
 
     Args:
-        style: The paint style.
+        style: The brush style.
         scale: Render pixels per display pixel.
         wet_px: Painted width in display pixels per watercourse class, from the
             river importance curve.
@@ -1068,768 +785,6 @@ def plate_brushes(
     return {
         key: brush_from_id(style.brushes[key], widths[key], scale, style, key) for key in widths
     }
-
-
-def ink_aux(shape: tuple[int, int], b: Brush) -> dict[str, np.ndarray] | None:
-    """The extra accumulators a brush's phase 1 flags need, or None.
-
-    Both are weighted sums over the same deposits as the ink itself, so
-    dividing one by the ink gives a per-pixel weighted mean of whatever it
-    carries. That is the whole trick: the reservoir and the break texture have
-    to be read off the final density, because the splat and the `1 - exp(-acc)`
-    saturation dilute a per-sample gate to nothing.
-
-    Args:
-        shape: The plate's pixel shape.
-        b: The brush whose flags decide what is needed.
-
-    Returns:
-        Accumulators by name, or None when the brush asks for neither.
-    """
-    aux: dict[str, np.ndarray] = {}
-    if b.starve:
-        aux["res"] = np.zeros(shape, F32)
-    if b.dir_dry:
-        aux["tooth"] = np.zeros(shape, F32)
-    return aux or None
-
-
-def _tip_band(w: np.ndarray, sigma: float) -> np.ndarray:
-    """Bandlimit one stamp's weights across the tip.
-
-    A treatment names its bristle count once, so a tip is the same number of
-    logical bristles whether the mark is 3 render pixels wide or 17. On a
-    narrow mark that puts most of the tip's structure past what the plate can
-    carry, and what lands is an alias of it: hard-edged rails at about the
-    plate's Nyquist, running the whole length of the stroke because the tip's
-    weights do not change along it. Smoothing across the tip is the honest fix
-    and not a blur of the mark: the deposit positions are untouched, so the
-    mark keeps its width and its edge, and only the detail no pixel could have
-    shown is graded away.
-
-    Three box passes, which is a Gaussian to the eye, with the ends held by
-    edge padding so the outermost bristles are not pulled inward.
-
-    Args:
-        w: The weights, `(samples along the stroke, samples across the tip)`.
-        sigma: The smoothing, in samples across the tip.
-
-    Returns:
-        The smoothed weights, or `w` itself when the tip is already narrower
-        than the smoothing would be.
-    """
-    r = int(round(sigma * 0.95))
-    if r < 1 or w.shape[1] < 3:
-        return w
-    r = min(r, (w.shape[1] - 1) // 2)
-    if r < 1:
-        return w
-    out = w
-    for _ in range(3):
-        pad = np.pad(out, ((0, 0), (r, r)), mode="edge")
-        cs = np.cumsum(pad, axis=1, dtype=F32)
-        cs = np.concatenate([np.zeros((len(out), 1), F32), cs], axis=1)
-        out = (cs[:, 2 * r + 1 :] - cs[:, : out.shape[1]]) / F32(2 * r + 1)
-    return out.astype(F32)
-
-
-def _tip_drift(m: int, b: Brush, rng: np.random.Generator) -> np.ndarray:
-    """Each bristle's sideways drift, as a quadrature pair per bristle.
-
-    A bristle wanders sideways as the stroke goes on, and every bristle used to
-    be given its own phase, drawn independently of the one beside it. On a
-    narrow mark that is not a brush: the drift is wider than the gap between
-    two bristles, so neighbours cross each other, the tip collapses into a few
-    coincident filaments with bare paper between them, and the gaps run the
-    whole length of the stroke because the phases do not change along it.
-
-    Smoothing the drift across the tip is what makes it a tip again. The pair
-    is renormalised afterwards, so each bristle still drifts by exactly the
-    brush's own amplitude and only the phase is shared.
-
-    Args:
-        m: Logical bristles across the tip.
-        b: The brush, for how much of the tip a drift is shared over.
-        rng: The generator the phases are drawn from.
-
-    Returns:
-        `(2, m)`, the cosine and sine of each bristle's drift phase.
-    """
-    q = rng.normal(size=(2, m)).astype(F32)
-    q = _tip_band(q, b.coherence * m)
-    return q / np.maximum(np.hypot(q[0], q[1]), F32(1e-6))
-
-
-def _unfold(
-    off: np.ndarray, base: np.ndarray, jitter: np.ndarray, keep: float = 0.25
-) -> np.ndarray:
-    """Scale a drift back until the tip stops crossing itself.
-
-    Even a shared drift can close the gap between two bristles where the tip
-    is at its narrowest, and a closed gap is a filament with a hole beside it.
-    The whole stroke's drift is scaled by one number rather than clipped per
-    sample, so the mark keeps its wander and only loses the amplitude that
-    would have folded it.
-
-    Args:
-        off: The offsets across the tip, `(samples, tip)`.
-        base: The same without the drift.
-        jitter: The drift alone.
-        keep: The share of the nominal bristle spacing that has to survive.
-
-    Returns:
-        The offsets, with the drift scaled back if it had to be.
-    """
-    if off.shape[1] < 2:
-        return off
-    dbase = np.diff(base, axis=1)
-    djit = np.diff(jitter, axis=1)
-    close = djit < 0
-    if not close.any():
-        return off
-    room = (dbase * F32(1.0 - keep))[close] / -djit[close]
-    k = float(room.min())
-    if k >= 1.0:
-        return off
-    return base + jitter * F32(k)
-
-
-def _fbm1(
-    t: np.ndarray, cell: float, b: Brush, rng: np.random.Generator, rows: int = 1
-) -> np.ndarray:
-    """Fractal noise along a stroke, with no period in it, in about -1 to 1.
-
-    The wanders in a stroke were sines, so a long mark repeated itself at 2 pi
-    times whatever cell each one was given. This is the same feature size drawn
-    from a lattice instead: the values are random, the interpolation is smooth,
-    and there is nothing for the eye to lock onto. `rows` independent copies
-    come out of one call, which is how each bristle gets its own drift without
-    a Python loop over the tip.
-
-    The output is normalised to a sine's own spread, so swapping one for the
-    other changes what repeats and not how hard the brush is worked.
-
-    Args:
-        t: Arc length along the stroke, in render pixels.
-        cell: The coarsest lattice spacing, in the same units.
-        b: The brush, for the octave count and the lacunarity.
-        rng: The generator the lattice is drawn from.
-        rows: How many independent fields to draw.
-
-    Returns:
-        The field, `(len(t), rows)`.
-    """
-    out = np.zeros((len(t), rows), F32)
-    span = max(float(t[-1] - t[0]), 1.0)
-    amp, total = 1.0, 0.0
-    for i in range(b.org_oct):
-        c = max(cell / (b.org_lac**i), 1.5)
-        n = int(span / c) + 3
-        g = rng.random((n, rows)).astype(F32) * F32(2.0) - F32(1.0)
-        u = (t - t[0]) / c
-        i0 = np.clip(np.floor(u).astype(np.int32), 0, n - 2)
-        f = (u - i0).astype(F32)
-        f = (f * f * (3 - 2 * f))[:, None]
-        out += F32(amp) * (g[i0] + (g[i0 + 1] - g[i0]) * f)
-        total += amp
-        amp *= 0.5
-    out /= F32(max(total, 1e-6))
-    # A sine's standard deviation is 0.707, and the caller's amplitudes were
-    # tuned against one. The floor keeps a short stroke, whose own spread is not
-    # yet the field's, from being amplified into a swing it never had.
-    sd = float(out.std())
-    return np.clip(out * F32(0.707 / max(sd, 0.30)), -1.6, 1.6)
-
-
-def _spread(vals: np.ndarray, u_log: np.ndarray, u: np.ndarray) -> np.ndarray:
-    """Resample a per-logical-bristle field across the sampled tip.
-
-    The tip is a handful of logical bristles, then sampled across at sub-pixel
-    spacing. A field drawn per logical bristle has to be carried over to that
-    sampling the same way the bristle weights are, or the drift would step from
-    one bristle to the next instead of running continuously across the mark.
-
-    Args:
-        vals: The field, `(samples, logical bristles)`.
-        u_log: The logical bristles' positions across the tip, ascending.
-        u: The sampled positions across the tip.
-
-    Returns:
-        The field at `(samples, len(u))`.
-    """
-    idx = np.clip(np.searchsorted(u_log, u) - 1, 0, len(u_log) - 2)
-    span = u_log[idx + 1] - u_log[idx]
-    f = ((u - u_log[idx]) / np.where(span == 0, 1.0, span)).astype(F32)
-    return vals[:, idx] * (1.0 - f) + vals[:, idx + 1] * f
-
-
-def _smooth_path(
-    x: np.ndarray, y: np.ndarray, radius: float, step: float
-) -> tuple[np.ndarray, np.ndarray]:
-    """Round a polyline's corners to a brush's own width.
-
-    A generalised track turns 82 degrees at the 95th percentile of its
-    vertices. A tip stamped straight through a corner like that folds over
-    itself: the normal swings through the turn in a couple of samples, the far
-    side of the tip runs backwards, and what lands is a bead. No brush draws a
-    corner tighter than it is wide, so the path is smoothed to that radius
-    before anything is stamped along it.
-
-    Two box passes, which is a quadratic kernel: enough to take the cusp off
-    without pulling a long straight off its line. The ends are held by edge
-    padding, so a mark still starts and finishes where the way does.
-
-    Args:
-        x: Column coordinate per sample, in render pixels.
-        y: Row coordinate per sample.
-        radius: The corner radius, in render pixels.
-        step: The spacing of the samples, in render pixels.
-
-    Returns:
-        The smoothed coordinates.
-    """
-    r = int(min(max(round(radius / max(step, 1e-3)), 1), max(len(x) // 3, 1)))
-    for _ in range(2):
-        for arr in (x, y):
-            pad = np.pad(arr, (r, r), mode="edge")
-            cs = np.cumsum(np.concatenate([[F32(0)], pad]), dtype=F32)
-            arr[:] = (cs[2 * r + 1 :] - cs[: len(arr)]) / F32(2 * r + 1)
-    return x, y
-
-
-def stamp(
-    acc: np.ndarray,
-    pts: np.ndarray,
-    b: Brush,
-    rng: np.random.Generator,
-    wmul: float = 1.0,
-    aux: dict[str, np.ndarray] | None = None,
-    wprof: np.ndarray | None = None,
-) -> None:
-    """Stamp one stroke's bristles into an ink accumulator.
-
-    Args:
-        acc: The accumulator, added to in place.
-        pts: The path in render pixels.
-        b: The brush.
-        rng: The generator the bristle pattern is drawn from.
-        wmul: A width multiplier for this stroke.
-        aux: The accumulators from `ink_aux`, added to in place alongside the
-            ink. None when neither reservoir nor directional break is on.
-        wprof: A width multiplier along the stroke, sampled evenly from its
-            start to its end and interpolated onto the stamps. This is what a
-            broad nib is: the mark thickens and thins with the angle between
-            the stroke and the nib, and there is no other way to say so,
-            because pressure is generated inside here and width follows it.
-    """
-    h, w = acc.shape
-    if len(pts) < 2:
-        return
-    d = np.diff(pts, axis=0)
-    seg = np.hypot(d[:, 0], d[:, 1])
-    total = float(seg.sum())
-    if total < 2.5:
-        return
-    cum = np.concatenate([[0.0], np.cumsum(seg)])
-    n = max(int(total / b.step) + 2, 3)
-    t = np.linspace(0.0, total, n).astype(F32)
-    x = np.interp(t, cum, pts[:, 0]).astype(F32)
-    y = np.interp(t, cum, pts[:, 1]).astype(F32)
-    if b.smooth > 0:
-        # Before the tangent, because the fold at a cusp is in the normal.
-        x, y = _smooth_path(x, y, b.smooth, total / max(n - 1, 1))
-    tx = np.gradient(x)
-    ty = np.gradient(y)
-    ln = np.hypot(tx, ty)
-    ln[ln < 1e-5] = 1.0
-    nx, ny = (-ty / ln).astype(F32), (tx / ln).astype(F32)
-
-    ph = float(rng.random()) * 6.283
-    if b.organic:
-        # The pressure was two sines, so it came back every 2 pi press cells.
-        press = 1.0 + b.press * _fbm1(t, 6.283 * b.press_cell * b.org_mult, b, rng)[:, 0]
-    else:
-        press = 1.0 + b.press * (
-            np.sin(ph + t / b.press_cell) * 0.6 + np.sin(ph * 1.7 + t / (b.press_cell * 0.36)) * 0.4
-        )
-    # Set down loaded, lift to a point. Both ends taper by pressure, never by
-    # opacity, and the lift is capped at a third of the stroke's own length.
-    lift_px = max(min(b.lift, total * 0.34), 1.0)
-    ends = np.clip(np.minimum(t, total - t) / lift_px, 0.0, 1.0) ** 0.7
-    # The set-down is a nib touching the paper: a lot of ink in the first few
-    # stamps, gone within about a width of travel, not a swelling.
-    load_px = b.load_px if b.load_px > 0 else max(b.width * 0.85, 2.0)
-    press = press * ends * (1.0 + b.load * np.exp(-t / load_px))
-    width = b.width * wmul * (0.62 + 0.38 * press)
-    if wprof is not None and len(wprof) > 1:
-        width = width * np.interp(t, np.linspace(0.0, total, len(wprof)), np.asarray(wprof, F32))
-    nib = None
-    if b.pen_starve:
-        # A nib does not break, it runs down: the line thins over a long run and
-        # comes back full at the reload. The thinning is put on the width rather
-        # than on the pressure because a pen's ink is saturated long before the
-        # accumulator is, so darkness alone would not show.
-        spent = 1.0 - np.exp(-np.mod(np.cumsum(press) * b.step, b.dip_px) / b.run_px)
-        nib = (1.0 - b.pen_thin * spent).astype(F32)
-        width = width * nib
-
-    if b.organic:
-        # And the line's own wander came back every 210 render pixels, which on
-        # a road drawn end to end is the thing the eye picks out first.
-        wob = b.wobble * _fbm1(t, 6.283 * 33.45 * b.unit * b.org_mult, b, rng)[:, 0]
-    else:
-        wob = b.wobble * (
-            np.sin(ph * 2.3 + t / (46.0 * b.step / 0.55)) * 0.6
-            + np.sin(ph * 3.1 + t / (15.0 * b.step / 0.55)) * 0.4
-        )
-    x = x + nx * wob
-    y = y + ny * wob
-
-    # The tip, as a handful of logical bristles: this is the pattern, not the
-    # sampling. A real brush has two or three heavy tines and some fine ones,
-    # so a low-frequency profile clumps them rather than leaving a comb.
-    m = max(b.bristles, 2)
-    u_log = np.linspace(-1.0, 1.0, m)
-    keep = (rng.random(m) > b.gap).astype(np.float64)
-    clump = 0.55 + 0.45 * np.sin(
-        float(rng.random()) * 6.283 + u_log * float(rng.uniform(2.2, 5.5)) * 3.14
-    )
-    tex = b.texture
-    bw_log = (rng.random(m) * 0.55 + 0.62) * keep * ((1.0 - tex) + tex * clump)
-    drift_log = _tip_drift(m, b, rng)
-    fp_log = rng.random(m) * 6.283
-    fq_log = rng.random(m) * 0.6 + 0.7
-    # Each bristle sets off with its own load, and the fat ones carry more, so
-    # a mark thins from its edges in as the brush runs down.
-    res_log = (0.55 + 0.9 * rng.random(m)) * (0.5 + 0.5 * bw_log) if b.starve else None
-    dir_ph = rng.random(3) * 6.283 if b.dir_dry else None
-    # The two fields that were a sine per bristle: the drift sideways, which was
-    # one wavelength shared by the whole tip so the streaks breathed together,
-    # and the break, whose per-bristle frequencies beat against each other into
-    # a long section. Drawn per logical bristle and spread across the tip below.
-    jit_log = along_log = None
-    if b.organic:
-        jit_log = _fbm1(t, 6.283 * 62.0 * b.unit * b.org_mult, b, rng, m)
-        if b.coherence > 0:
-            # The same sharing as the sine's phases, and for the same reason:
-            # each bristle's drift was its own field and neighbours were driven
-            # apart far enough to cross. Rescaled to the spread it had, because
-            # smoothing independent fields together flattens them and the point
-            # is who drifts with whom, not how far.
-            was = float(jit_log.std())
-            jit_log = _tip_band(jit_log, b.coherence * m)
-            jit_log = jit_log * F32(was / max(float(jit_log.std()), 1e-6))
-        along_log = _fbm1(t, 6.283 * 24.0 * b.unit * b.org_mult, b, rng, m)
-
-    # The tip is then sampled across at sub-pixel spacing, so a wide brush is a
-    # continuous edge rather than a row of separate lines, and no step shows.
-    mean_w = float(np.mean(width))
-    # Sampled across the tip's own width plus the room the drift needs. The tip
-    # is not rigid: two bristles a nominal spacing apart can be driven twice
-    # that apart, and a sampling that only covers the nominal width leaves the
-    # stretched places with gaps between deposits, which is a light lane by a
-    # different route. The drift is only counted when it is coherent, so a tip
-    # left on the old draw is sampled exactly as it was.
-    reach = mean_w + 4.0 * b.jitter if b.coherence > 0 else mean_w
-    m_hi = int(min(max(m, reach / max(b.profile_px, 0.1) + 2), 512))
-    u = np.linspace(-1.0, 1.0, m_hi).astype(F32)
-    bw = np.interp(u, u_log, bw_log).astype(F32)
-    dc = np.interp(u, u_log, drift_log[0]).astype(F32)
-    ds = np.interp(u, u_log, drift_log[1]).astype(F32)
-    fp = np.interp(u, u_log, fp_log).astype(F32)
-    fq = np.interp(u, u_log, fq_log).astype(F32)
-    res0 = np.interp(u, u_log, res_log).astype(F32) if b.starve else None
-    prof = ((1.0 - 0.32 * np.abs(u)) ** 1.3).astype(F32)
-    if b.solid > 0:
-        # A loaded pen or fine liner: a flat core the bristles sit on top of.
-        prof = prof * (1.0 - b.solid) + b.solid * np.clip((1.0 - np.abs(u)) * 6.0, 0.0, 1.0)
-        bw = bw * (1.0 - b.solid) + b.solid
-
-    if jit_log is not None:
-        jitter = b.jitter * _spread(jit_log, u_log, u)
-    else:
-        # The same drift the sine always laid, written as a quadrature pair so
-        # the phase can be shared across the tip: `dc` and `ds` are the cosine
-        # and sine of one bristle's phase and square to 1, so the amplitude is
-        # the brush's own and only who drifts with whom has changed.
-        ph = (t / (62.0 * b.unit)).astype(F32)
-        jitter = b.jitter * (dc[None, :] * np.sin(ph)[:, None] + ds[None, :] * np.cos(ph)[:, None])
-    base = u[None, :] * width[:, None] * F32(0.5)
-    off = base + jitter
-    if b.coherence > 0:
-        off = _unfold(off, base, jitter)
-    px = x[:, None] + nx[:, None] * off
-    py = y[:, None] + ny[:, None] * off
-    # Each bristle carries and loses ink as it goes, and on a dry brush it lifts
-    # off the paper entirely for a stretch: that is where the mark breaks.
-    if along_log is not None:
-        along = 0.5 + 0.5 * _spread(along_log, u_log, u)
-    else:
-        along = 0.5 + 0.5 * np.sin(fp[None, :] + t[:, None] * fq[None, :] / (24.0 * b.unit))
-    cut = b.dry * 0.5
-    along = np.clip((along - cut) / max(1.0 - cut, 1e-3), 0.0, 1.0)
-    along = (1.0 - tex) + tex * along
-    # Ink per stamp is normalised against the sampling, so the darkness numbers
-    # mean the same thing whatever the step and the profile spacing are set to.
-    # `unit` is in there because what the accumulator holds is a thickness and
-    # not a count: on a grid twice as fine the same mark is spread across twice
-    # as many pixels of tip, and without the factor it comes out half as dark.
-    norm = (b.step / 0.55) * (m / m_hi) * b.unit
-    # The tip's lanes: what the bristles weigh and where the brush is breaking,
-    # which is everything that varies across the mark apart from its own shape.
-    lane = (bw[None, :] * along).astype(F32)
-    if b.band_px > 0 and mean_w > 0:
-        # Held to what a mark this wide can show, so the bristle weights, the
-        # dropped lanes and the break texture are all bandlimited together. The
-        # stroke's own length is untouched, and so are the deposit positions:
-        # the mark keeps its width and its edge.
-        lane = _tip_band(lane, b.band_px * b.unit * m_hi / mean_w)
-    if b.contrast != 1.0:
-        # How hard the lanes are, about the tip's own mean, so the knob moves
-        # the streaking and not the mark's profile or how much ink it carries.
-        mid = lane.mean(axis=1, keepdims=True)
-        lane = np.maximum(mid + (lane - mid) * b.contrast, F32(0.0))
-    wgt = (prof[None, :] * lane * press[:, None] * b.darkness * norm).astype(F32)
-    if b.coherence > 0 and m_hi > 2:
-        # Each sample carries the strip of tip it actually stands on, not an
-        # equal share of it. Once the bristles drift the samples are no longer
-        # evenly spaced, and an equal share per sample turns every bunch into a
-        # dark filament and every spread into a light one, which is the rest of
-        # the streaking after the fold is gone. The strips sum to the tip's own
-        # width, so the mark carries exactly the ink it did.
-        span = np.empty_like(off)
-        span[:, 1:-1] = (off[:, 2:] - off[:, :-2]) * F32(0.5)
-        span[:, 0] = off[:, 1] - off[:, 0]
-        span[:, -1] = off[:, -1] - off[:, -2]
-        wgt = wgt * (span * F32(m_hi - 1) / np.maximum(width[:, None], 1e-6))
-
-    if nib is not None:
-        # And it lightens with it, by about half as much again: what the eye
-        # reads on a pen line is the width, not the black.
-        wgt = (wgt * (1.0 - 0.5 * b.pen_thin * spent)[:, None]).astype(F32)
-
-    wgt_r = wgt_t = None
-    if aux is not None and "res" in aux and not b.starve:
-        # A brush sharing an accumulator with one that is on the reservoir but
-        # not on it itself reads as full, never as empty.
-        wgt_r = wgt
-    if aux is not None and "tooth" in aux and not b.dir_dry:
-        wgt_t = (wgt * F32(0.5)).astype(F32)
-    if b.starve and aux is not None:
-        # Ink is spent in proportion to what is laid down, so a heavy bristle
-        # empties first and pressure spends it faster. `dip_px` is the reload:
-        # the seam it leaves is what makes a long line look drawn.
-        phase = np.mod(np.cumsum(press) * b.step, b.dip_px)[:, None]
-        res = np.clip(
-            b.res_floor + (1.0 - b.res_floor) * res0[None, :] * np.exp(-phase / b.run_px), 0.0, 1.3
-        ).astype(F32)
-        wgt = (wgt * (b.knee + (1.0 - b.knee) * res)).astype(F32)
-        wgt_r = (wgt * res).astype(F32)
-    if b.dir_dry and aux is not None:
-        # The break texture, in the stroke's own frame: `dir_elong` times
-        # longer along the mark than across it, so a dry brush leaves scratches
-        # running with the line rather than blotches sitting on it.
-        kx = F32(6.283 / max(b.dir_cell * b.dir_elong, 1.0))
-        ky = F32(6.283 / max(b.dir_cell, 1.0))
-        sl = t[:, None] * kx
-        ul = off * ky
-        tex_d = (
-            0.50 * np.sin(sl + ul * 0.85 + dir_ph[0])
-            + 0.30 * np.sin(sl * 2.3 - ul * 1.7 + dir_ph[1])
-            + 0.20 * np.sin(sl * 0.55 + ul * 0.4 + dir_ph[2])
-        )
-        # Clipped rather than scaled, so the texture keeps its flats: the splat
-        # averages it once and the gate would otherwise read a grey mush.
-        wgt_t = (wgt * np.clip(0.5 + 0.85 * tex_d, 0.0, 1.0)).astype(F32)
-
-    # Bilinear deposition. Rounding to the nearest pixel is what put the steps
-    # and the stair-edges in the earlier marks.
-    fx0 = np.floor(px)
-    fy0 = np.floor(py)
-    ax = (px - fx0).astype(F32)
-    ay = (py - fy0).astype(F32)
-    ix0 = fx0.astype(np.int32)
-    iy0 = fy0.astype(np.int32)
-    for dy in (0, 1):
-        wy = ay if dy else (1.0 - ay)
-        iy = np.clip(iy0 + dy, 0, h - 1)
-        for dx in (0, 1):
-            wx = ax if dx else (1.0 - ax)
-            ix = np.clip(ix0 + dx, 0, w - 1)
-            at = (iy.ravel(), ix.ravel())
-            np.add.at(acc, at, (wgt * wx * wy).ravel())
-            if wgt_r is not None:
-                np.add.at(aux["res"], at, (wgt_r * wx * wy).ravel())
-            if wgt_t is not None:
-                np.add.at(aux["tooth"], at, (wgt_t * wx * wy).ravel())
-
-    if b.pool > 0:
-        # And it leaves a blot: tighter and denser than a swelling, so it reads
-        # as the first touch rather than a bulge in the line.
-        r = max(b.width * b.pool_radius_frac, 1.2)
-        span = int(r * 2)
-        yy, xx = np.ogrid[-span : span + 1, -span : span + 1]
-        blob = np.exp(-(xx * xx + yy * yy) / (2 * r * r)).astype(F32) * b.pool * b.pool_gain
-        cy, cx = int(round(float(y[0]))), int(round(float(x[0])))
-        y0, y1 = max(cy - span, 0), min(cy + span + 1, h)
-        x0, x1 = max(cx - span, 0), min(cx + span + 1, w)
-        if y1 > y0 and x1 > x0:
-            acc[y0:y1, x0:x1] += blob[
-                y0 - cy + span : y1 - cy + span, x0 - cx + span : x1 - cx + span
-            ]
-
-
-def ink_density(
-    acc: np.ndarray,
-    b: Brush,
-    sheet: Sheet,
-    aux: dict[str, np.ndarray] | None = None,
-    paper: np.ndarray | None = None,
-    bleed: bool = True,
-) -> np.ndarray:
-    """Turn an accumulator into ink: saturate, gate on the paper, then bleed.
-
-    Saturating with 1 - exp(-acc) is what stops a crossing from doubling: two
-    strokes over each other reach the same black as one heavy one.
-
-    The gate is where the reservoir and the directional break land, rather than
-    inside `stamp`: a per-sample gate is diluted by the splat and then by the
-    saturation, and what comes out is a mark that is evenly thinner instead of
-    one that breaks.
-
-    Args:
-        acc: The ink accumulator.
-        b: The brush.
-        sheet: The paper's noise fields.
-        aux: The accumulators `stamp` filled alongside the ink, when the brush
-            asked for them.
-        paper: The paper's own height on the accumulator's grid, when the ink
-            is painted on a finer grid than the sheet. `sheet.paper` when it is
-            not given, which is every caller that paints on the plate itself.
-        bleed: Whether to wick the mark's edge out here. Off when the ink is
-            painted on a finer grid: the bleed is a blur, a blur costs the same
-            whatever its radius, and doing it after the reduce is cheaper by
-            the square of the grid and no different to look at.
-
-    Returns:
-        Density in 0 to 1.
-    """
-    if not acc.any():
-        return np.zeros_like(acc)
-    pap = sheet.paper if paper is None else paper
-    dens = 1.0 - np.exp(-acc)
-    if aux is None:
-        gate = 1.0 - b.dry * (1.0 - np.clip((pap - b.thr) * 5.5 + 0.5, 0, 1))
-    else:
-        safe = np.maximum(acc, F32(1e-6))
-        tooth = pap
-        if "tooth" in aux:
-            # Matched to the paper's own mean and spread under the mark, so the
-            # flag swaps the direction of the break and nothing else: a texture
-            # with more contrast than the paper would gate less often and come
-            # out darker, which is not what the flag is for. `dir_gain` above 1
-            # is then an honest ask for a harsher tooth than the paper's.
-            here = acc > 0
-            r = aux["tooth"] / safe
-            src, dst = r[here], pap[here]
-            k = b.dir_gain * float(dst.std()) / max(float(src.std()), 1e-4)
-            streak = np.clip((r - float(src.mean())) * k + float(dst.mean()), 0.0, 1.0)
-            tooth = pap * (1.0 - b.dir_mix) + streak * b.dir_mix
-        thr, dry, slope = b.thr, b.dry, 5.5
-        if "res" in aux:
-            # A harder gate, so an empty brush skips rather than fades. It comes
-            # with the reservoir, which is what raises the threshold under it.
-            slope = 8.0
-            # How wet the brush was where each pixel was laid down. An empty
-            # brush needs higher paper to make a mark, so the gate tightens
-            # along the stroke rather than breaking the whole mark at once.
-            spent = 1.0 - np.clip(aux["res"] / safe, 0.0, 1.0)
-            thr = np.minimum(b.thr + 0.20 * spent, 0.72)
-            dry = np.minimum(b.dry * (0.85 + 0.5 * spent), 1.0)
-        gate = 1.0 - dry * (1.0 - np.clip((tooth - thr) * slope + 0.5, 0, 1))
-    dens = dens * gate
-    if bleed:
-        dens = _bleed(dens, b)
-    return np.clip(dens, 0.0, 1.0)
-
-
-def _bleed(dens: np.ndarray, b: Brush) -> np.ndarray:
-    """The mark's soft edge: what the paper wicks out past the bristles."""
-    if b.bleed <= 0.4:
-        return dens
-    return np.clip(np.maximum(dens, blur(dens, b.bleed) * 1.35), 0, 1)
-
-
-def scaled_brush(b: Brush, k: int) -> Brush:
-    """The same brush on a grid `k` times finer than the plate's own.
-
-    Everything the brush measures in pixels moves with the grid. `unit` carries
-    the factor, so the wavelengths written into `stamp` stay the lengths they
-    were rather than shrinking with the grid they are sampled on. The stamp
-    spacing and the tip's own sampling are capped rather than scaled: a finer
-    grid is asked for precisely so those two land under a pixel.
-
-    Args:
-        b: The brush on the plate's grid.
-        k: Pixels of the finer grid per plate pixel.
-
-    Returns:
-        The brush on that grid, or `b` itself at `k` of 1.
-    """
-    if k <= 1:
-        return b
-    return replace(
-        b,
-        width=b.width * k,
-        jitter=b.jitter * k,
-        press_cell=b.press_cell * k,
-        wobble=b.wobble * k,
-        bleed=b.bleed * k,
-        lift=b.lift * k,
-        load_px=b.load_px * k,
-        run_px=b.run_px * k,
-        dip_px=b.dip_px * k,
-        dir_cell=b.dir_cell * k,
-        smooth=b.smooth * k,
-        unit=b.unit * k,
-        step=min(b.step * k, 0.9),
-        profile_px=min(b.profile_px * k, 0.7),
-    )
-
-
-def _grow(a: np.ndarray, h: int, w: int) -> np.ndarray:
-    """One smooth field carried up to a finer grid, bilinear."""
-    img = Image.fromarray(np.asarray(a, F32), "F").resize((w, h), Image.BILINEAR)
-    return np.asarray(img, F32)
-
-
-def _reduce(a: np.ndarray, h: int, w: int) -> np.ndarray:
-    """One plane Lanczos-reduced to the plate's own grid.
-
-    Lanczos rather than an area mean because the mark's edge is what is being
-    saved: an area mean is a box filter and leaves the stair it was asked to
-    remove. It overshoots a hard edge slightly, which is why the result is
-    clipped back into range.
-    """
-    if a.shape == (h, w):
-        return np.asarray(a, F32)
-    img = Image.fromarray(np.asarray(a, F32), "F").resize((w, h), Image.LANCZOS)
-    return np.clip(np.asarray(img, F32), 0.0, 1.0)
-
-
-class InkPad:
-    """One class's ink, painted on the plate's grid or on a finer one.
-
-    The plate is written at `supersample` times the display size and shown at
-    up to one render pixel per device pixel, so the ink's own grid is what the
-    eye reads as pixelation: a lane is under four render pixels wide and its
-    splat lands on a visible stair. `ink_ss` paints the whole ink pipeline, the
-    saturation and the paper gate included, on a grid that many times finer and
-    Lanczos-reduces the density back. Doing it after the gate rather than
-    before is the point: the reduce then averages ink, which is what the eye
-    does, instead of averaging deposits and gating the average.
-
-    At `ink_ss` of 1 the pad is the plate's own accumulator and every call is
-    the call it was.
-    """
-
-    def __init__(self, shape: tuple[int, int], b: Brush, style: PaintStyle) -> None:
-        """Open an accumulator for one class.
-
-        Args:
-            shape: The plate's pixel shape.
-            b: The brush the class is read back with, for the accumulators its
-                flags need.
-            style: The paint style, for the grid and the joining.
-        """
-        self.h, self.w = shape
-        self.ss = max(int(style.ink_ss), 1)
-        self.tol = style.ink_join_tol_px if style.ink_joins else 0.0
-        self.acc = np.zeros((self.h * self.ss, self.w * self.ss), F32)
-        self.aux = ink_aux(self.acc.shape, b)
-        self._brushes: dict[int, Brush] = {}
-
-    def _at(self, b: Brush) -> Brush:
-        """This brush on the pad's own grid, made once per brush."""
-        got = self._brushes.get(id(b))
-        if got is None:
-            got = self._brushes[id(b)] = scaled_brush(b, self.ss)
-        return got
-
-    def lay(
-        self,
-        items: list[tuple[Brush, np.ndarray]],
-        rng: np.random.Generator,
-        profiles: list[np.ndarray | None] | None = None,
-    ) -> None:
-        """Stamp a class's strokes.
-
-        With joining off the strokes are stamped in the order they arrive, one
-        polyline at a time, which is what the painter always did. With it on
-        they are grouped by brush, in first-seen order, and the ways in each
-        group are chained end to end first.
-
-        Args:
-            items: Brush and polyline per stroke, in render pixels.
-            rng: The generator the bristle patterns are drawn from.
-            profiles: A width profile per stroke, or None per stroke that wants
-                none. Chaining is skipped when they are given: two strokes
-                joined end to end are one stroke and their two profiles are
-                not, and lettering does not want its glyphs chained anyway.
-        """
-        if profiles is not None:
-            for (b, line), prof in zip(items, profiles, strict=True):
-                stamp(
-                    self.acc,
-                    line * self.ss if self.ss > 1 else line,
-                    self._at(b),
-                    rng,
-                    aux=self.aux,
-                    wprof=prof,
-                )
-            return
-        if self.tol <= 0:
-            for b, line in items:
-                stamp(
-                    self.acc,
-                    line * self.ss if self.ss > 1 else line,
-                    self._at(b),
-                    rng,
-                    aux=self.aux,
-                )
-            return
-        groups: dict[int, tuple[Brush, list[np.ndarray]]] = {}
-        for b, line in items:
-            groups.setdefault(id(b), (b, []))[1].append(line)
-        for b, lines in groups.values():
-            for line in chain_lines(lines, self.tol):
-                stamp(
-                    self.acc,
-                    line * self.ss if self.ss > 1 else line,
-                    self._at(b),
-                    rng,
-                    aux=self.aux,
-                )
-
-    def any(self) -> bool:
-        """Whether anything was laid down."""
-        return bool(self.acc.any())
-
-    def read(self, b: Brush, sheet: Sheet) -> np.ndarray:
-        """The class's density on the plate's own grid.
-
-        Args:
-            b: The brush the class is read back with.
-            sheet: The paper's noise fields, on the plate's grid.
-
-        Returns:
-            Density in 0 to 1, `(plate h, plate w)`.
-        """
-        if self.ss == 1:
-            return ink_density(self.acc, b, sheet, self.aux)
-        paper = _grow(sheet.paper, *self.acc.shape)
-        dens = ink_density(self.acc, self._at(b), sheet, self.aux, paper, bleed=False)
-        return _bleed(_reduce(dens, self.h, self.w), b)
 
 
 # --------------------------------------------------------------------------- ribbon
@@ -1918,7 +873,9 @@ MARK_WEIGHT = {
 }
 
 
-def label_brushes(style: PaintStyle, scale: float) -> Callable[[str, float], Brush]:
+def label_brushes(
+    style: PaintStyle, brush_style: BrushStyle, scale: float
+) -> Callable[[str, float], Brush]:
     """A brush per role and type size, made once and kept.
 
     A nib rather than a brush, and with the route's own set-down turned right
@@ -1927,6 +884,7 @@ def label_brushes(style: PaintStyle, scale: float) -> Callable[[str, float], Bru
 
     Args:
         style: The paint style, for the label brushes and their widths.
+        brush_style: The brush style the sheet cells are read with.
         scale: Render pixels per display pixel.
 
     Returns:
@@ -1949,7 +907,7 @@ def label_brushes(style: PaintStyle, scale: float) -> Callable[[str, float], Bru
             style.label_brush if pen else style.label_leader_brush,
             wid * MARK_WEIGHT.get(role, 1.0),
             scale,
-            style,
+            brush_style,
             "label",
         )
         b = made[key]
@@ -2010,7 +968,11 @@ _HEX = re.compile(r"#[0-9a-fA-F]{6}")
 
 
 def label_plate(
-    manifest: dict[str, Any], marks: list[Any], style: PaintStyle, path: Path | None = None
+    manifest: dict[str, Any],
+    marks: list[Any],
+    style: PaintStyle,
+    brush_style: BrushStyle,
+    path: Path | None = None,
 ) -> Path | None:
     """Write the names, the leaders and the spans as one RGBA plate.
 
@@ -2027,6 +989,7 @@ def label_plate(
             naming its weight, an `ink` naming its colour, the type `size` it
             belongs to and the `pen` angle it was written with.
         style: The paint style.
+        brush_style: The brush style the lettering's brushes and ink pads are made with.
         path: Where to write; `labels.webp` beside the other plates by default.
 
     Returns:
@@ -2046,7 +1009,7 @@ def label_plate(
         fibre_angle=style.paper_fibre_angle,
         fibre_cell=max(style.paper_fibre_cell_px * rw / 1800.0, 1.6),
     )
-    brush = label_brushes(style, scale)
+    brush = label_brushes(style, brush_style, scale)
     angle = math.radians(style.label_pen_angle_deg)
     inks = {
         "map": style.label_ink,
@@ -2087,7 +1050,7 @@ def label_plate(
     tint = (1.0 + 0.20 * (dark - 0.35))[..., None]
     for ink, items in groups.items():
         base = items[0][0]
-        pad = InkPad((rh, rw), base, style)
+        pad = InkPad((rh, rw), base, brush_style)
         pad.lay(
             [(b, line) for b, line, _p, _w in items],
             rng,
@@ -2101,7 +1064,7 @@ def label_plate(
             if all(w for _b, _l, _p, w in items):
                 cover = np.maximum(cover, dens)
             else:
-                keep = InkPad((rh, rw), base, style)
+                keep = InkPad((rh, rw), base, brush_style)
                 keep.lay(
                     [(b, line) for b, line, _p, w in items if w],
                     rng,
@@ -2636,7 +1599,7 @@ def paint(
 
     # ---- the ink. Roads and watercourses are painted with the same machinery
     # as the wash: no vector stroke is drawn over the top.
-    br = plate_brushes(pstyle, scale, dict(layers.wet_px))
+    br = plate_brushes(style.brush, scale, dict(layers.wet_px))
     ink_rng = np.random.default_rng(pstyle.ink_seed)
     untrimmed: list[Layer] = []
 
@@ -2646,7 +1609,7 @@ def paint(
     # Every watercourse lands in the one pad and is read back with the major
     # river's brush, so the reservoir and the break texture are collected
     # against that brush too.
-    water_pad = InkPad((rh, rw), br["major"][0], pstyle)
+    water_pad = InkPad((rh, rw), br["major"][0], style.brush)
     water_lines: list[tuple[Brush, np.ndarray]] = []
     # A watercourse is drawn at its own width where the payload measured one,
     # so a large river is a quarter of a kilometre wide on the sheet because it is
@@ -2663,7 +1626,7 @@ def paint(
         if px > brush.width / scale:
             key = (cls, round(px, 2))
             if key not in wide:
-                wide[key] = brush_from_id(pstyle.brushes[cls], px, scale, pstyle, cls)[0]
+                wide[key] = brush_from_id(style.brush.brushes[cls], px, scale, style.brush, cls)[0]
             brush = wide[key]
         # `wp` is the width along the river as a share of its widest point, so
         # an estuary narrows to a channel over its own length instead of being
@@ -2685,7 +1648,7 @@ def paint(
         if key != "road_major" and not layers.minor_roads:
             continue
         band = {"road_major": "major", "lane": "minor", "track": "path"}[key]
-        pad = InkPad((rh, rw), br[key][0], pstyle)
+        pad = InkPad((rh, rw), br[key][0], style.brush)
         pad.lay(
             [
                 (br[key][0], line)
@@ -2753,9 +1716,9 @@ def paint(
         # The one route pstyle that is not vector: the route drawn with the same
         # brush engine, as alpha the page tints with whatever ink it is set to.
         pen_brush, _ = brush_from_id(
-            pstyle.route_pen_brush, pstyle.route_pen_width_px, scale, pstyle, "route"
+            pstyle.route_pen_brush, pstyle.route_pen_width_px, scale, style.brush, "route"
         )
-        pen_pad = InkPad((rh, rw), pen_brush, pstyle)
+        pen_pad = InkPad((rh, rw), pen_brush, style.brush)
         pen_pad.lay(
             [(pen_brush, plate.px(list(layers.route)))], np.random.default_rng(pstyle.ink_seed + 1)
         )
