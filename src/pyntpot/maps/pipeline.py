@@ -42,11 +42,11 @@ from PIL import Image
 
 from pyntpot._port import card as strand_card
 from pyntpot._port import geo, mapcard
-from pyntpot._port import paint as painter
 from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.lettering import Lettering
+from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.providers.base import Elevation, Features
 from pyntpot.maps.style import Style
@@ -124,7 +124,7 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
     """
     plates = _current(out_dir, Cache.base_key(basemap, style))
     if plates is None:
-        plates = painter.paint(basemap, style, out_dir)
+        plates = paint_plates(basemap, style, out_dir)
     else:
         log.info("plates in %s are current, nothing repainted", out_dir)
     card = basemap.card

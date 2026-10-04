@@ -20,6 +20,8 @@ from pyntpot.ink.polyline import deform_line, foot_on, length, meet, simplify
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.maps.basemap import Basemap, Layers, Line, River, Road
 from pyntpot.maps.card import Card
+from pyntpot.maps.painter.plates import paint_plates
+from pyntpot.maps.painter.ribbon import ribbon_alpha
 from pyntpot.maps.projection import Projection, track_projection
 from pyntpot.maps.style import PAINT_GROUPS, Style
 
@@ -107,7 +109,7 @@ def tiny_basemap(style: paint.PaintStyle | None = None, **over: object) -> Basem
 def test_a_tiny_box_paints_a_card_a_wash_and_a_manifest(tmp_path):
     """The painter writes two plates plus the pen, and says what it did."""
     style = tiny_style()
-    plates = paint.paint(tiny_basemap(style=style), as_style(style), tmp_path)
+    plates = paint_plates(tiny_basemap(style=style), as_style(style), tmp_path)
     manifest = plates.manifest
     assert set(manifest.files) == {"paper", "wash", "pen"}
     for path in plates.paths.values():
@@ -124,7 +126,7 @@ def test_the_plates_are_webp_the_size_they_were_painted(tmp_path):
     from PIL import Image
 
     style = tiny_style()
-    plates = paint.paint(tiny_basemap(style=style), as_style(style), tmp_path)
+    plates = paint_plates(tiny_basemap(style=style), as_style(style), tmp_path)
     with Image.open(plates.paths["wash"]) as img:
         assert img.format == "WEBP"
         assert img.size == plates.card.render
@@ -181,7 +183,7 @@ def test_the_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
     import hashlib
 
     style, basemap = smoke_box()
-    manifest = paint.paint(basemap, as_style(style), tmp_path).manifest
+    manifest = paint_plates(basemap, as_style(style), tmp_path).manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest.files.items()
@@ -194,7 +196,7 @@ def test_every_flag_on_together_still_paints_the_box(tmp_path):
     import hashlib
 
     style, basemap = smoke_box(ink_starve=True, dry_directional=True, pen_starve=True)
-    manifest = paint.paint(basemap, as_style(style), tmp_path).manifest
+    manifest = paint_plates(basemap, as_style(style), tmp_path).manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest.files.items()
@@ -212,7 +214,7 @@ def test_the_phase_2_brush_flags_on_together_still_paint_the_box(tmp_path):
     import hashlib
 
     style, basemap = smoke_box(brush_organic=True, ink_joins=True, stroke_smooth=True, ink_ss=2)
-    manifest = paint.paint(basemap, as_style(style), tmp_path).manifest
+    manifest = paint_plates(basemap, as_style(style), tmp_path).manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest.files.items()
@@ -239,8 +241,8 @@ def test_the_ribbon_fills_the_inside_of_a_loop():
     """A loop is a shape, not a band: what the outside cannot reach is painted."""
     sheet = Sheet(120, 120, gran_px=6.0, seed=4)
     d = _loop_distance()
-    filled, _ = paint.ribbon_alpha(d, 6.0, sheet, True, 1.0)
-    band, _ = paint.ribbon_alpha(d, 6.0, sheet, False, 1.0)
+    filled, _ = ribbon_alpha(d, 6.0, sheet, 1.0, fill=True)
+    band, _ = ribbon_alpha(d, 6.0, sheet, 1.0, fill=False)
     assert filled[60, 60] > 0.9
     assert band[60, 60] < 0.1
     assert filled[5, 5] < 0.1  # and it still stops well short of the corner
@@ -264,8 +266,8 @@ def test_the_coast_is_a_hard_edge_the_ribbon_never_crosses():
     d = _loop_distance()
     land = np.ones((120, 120), np.float32)
     land[:, 70:] = 0.0
-    free, _ = paint.ribbon_alpha(d, 6.0, sheet, True, 1.0)
-    masked, rim = paint.ribbon_alpha(d, 6.0, sheet, True, 1.0, land)
+    free, _ = ribbon_alpha(d, 6.0, sheet, 1.0, fill=True)
+    masked, rim = ribbon_alpha(d, 6.0, sheet, 1.0, fill=True, land=land)
     assert free[60, 80] > 0.5
     assert masked[:, 70:].max() == 0.0
     assert rim[:, 70:].max() == 0.0
@@ -289,7 +291,7 @@ def test_land_cover_is_one_class_per_pixel_with_the_wood_on_top(tmp_path):
         },
         cover_order=("farmland", "wood"),
     )
-    manifest = paint.paint(basemap, as_style(style), tmp_path).manifest
+    manifest = paint_plates(basemap, as_style(style), tmp_path).manifest
     from PIL import Image
 
     with Image.open(tmp_path / manifest.files["wash"]) as img:
@@ -470,7 +472,7 @@ def painted(tmp_path, **over: object) -> dict[str, str]:
 
     style, basemap = cover_box(**over)
     out = tmp_path / ("on" if over else "off")
-    manifest = paint.paint(basemap, as_style(style), out).manifest
+    manifest = paint_plates(basemap, as_style(style), out).manifest
     return {
         name: hashlib.sha256((out / fn).read_bytes()).hexdigest()
         for name, fn in manifest.files.items()
@@ -490,7 +492,7 @@ def test_the_wash_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
     import hashlib
 
     style, basemap = smoke_box()
-    manifest = paint.paint(basemap, as_style(style), tmp_path).manifest
+    manifest = paint_plates(basemap, as_style(style), tmp_path).manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest.files.items()
@@ -520,7 +522,7 @@ def test_the_surveyed_coast_is_not_deformed(tmp_path):
             lakes=(((800.0, 20.0), (1000.0, 20.0), (1000.0, 120.0), (800.0, 120.0)),),
         )
         out = tmp_path / ("on" if over else "off")
-        manifest = paint.paint(basemap, as_style(style), out).manifest
+        manifest = paint_plates(basemap, as_style(style), out).manifest
         return hashlib.sha256((out / manifest.files["wash"]).read_bytes()).hexdigest()
 
     assert sea_only(silhouette_deform=True) == sea_only()
@@ -754,9 +756,8 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
     from PIL import Image
 
     from pyntpot._port import labels as lb
-    from pyntpot._port import paint
 
-    plates = paint.paint(tiny_basemap(), as_style(tiny_style()), tmp_path)
+    plates = paint_plates(tiny_basemap(), as_style(tiny_style()), tmp_path)
     placed = [
         lb.Label(
             name="Aviemore",
@@ -795,9 +796,9 @@ def test_the_style_decides_how_the_plates_are_written(tmp_path):
     assert paint.PaintStyle().plate_lossless
 
     style, basemap = smoke_box(plate_lossless=False)
-    lossy = paint.paint(basemap, as_style(style), tmp_path / "lossy")
+    lossy = paint_plates(basemap, as_style(style), tmp_path / "lossy")
     style, basemap = smoke_box()
-    clean = paint.paint(basemap, as_style(style), tmp_path / "clean")
+    clean = paint_plates(basemap, as_style(style), tmp_path / "clean")
     assert clean.manifest.bytes > lossy.manifest.bytes
 
     # The pen plate is alpha, which WebP already stored losslessly, so the flag
