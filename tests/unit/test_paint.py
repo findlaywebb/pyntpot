@@ -19,6 +19,7 @@ from pyntpot.maps.basemap import Basemap, Layers, Line, River, Road
 from pyntpot.maps.card import Card
 from pyntpot.maps.projection import Projection, track_projection
 
+from support.manifests import manifest_for_test
 from support.paths import FIXTURE_DIR, KEY
 
 FIXTURE_GPX = FIXTURE_DIR / "track.gpx"
@@ -90,15 +91,16 @@ def tiny_basemap(style: paint.PaintStyle | None = None, **over: object) -> Basem
 def test_a_tiny_box_paints_a_card_a_wash_and_a_manifest(tmp_path):
     """The painter writes two plates plus the pen, and says what it did."""
     style = tiny_style()
-    manifest = paint.paint(tiny_basemap(style=style), style, tmp_path, key="iTINY")
-    assert set(manifest["files"]) == {"paper", "wash", "pen"}
-    for name in manifest["files"].values():
-        assert (tmp_path / name).stat().st_size > 0
+    plates = paint.paint(tiny_basemap(style=style), style, tmp_path, key="iTINY")
+    manifest = plates.manifest
+    assert set(manifest.files) == {"paper", "wash", "pen"}
+    for path in plates.paths.values():
+        assert path.stat().st_size > 0
     assert (tmp_path / "plates.json").exists()
-    assert manifest["display"][0] == 80
-    assert manifest["render"][0] == 160
-    assert manifest["dark"]["w"] == style.dark_grid[0]
-    assert len(manifest["dark"]["v"]) == style.dark_grid[1]
+    assert manifest.card.display[0] == 80
+    assert manifest.card.render[0] == 160
+    assert manifest.dark.w == style.dark_grid[0]
+    assert len(manifest.dark.values) == style.dark_grid[1]
 
 
 def test_the_plates_are_webp_the_size_they_were_painted(tmp_path):
@@ -106,11 +108,11 @@ def test_the_plates_are_webp_the_size_they_were_painted(tmp_path):
     from PIL import Image
 
     style = tiny_style()
-    manifest = paint.paint(tiny_basemap(style=style), style, tmp_path, key="iTINY")
-    with Image.open(tmp_path / manifest["files"]["wash"]) as img:
+    plates = paint.paint(tiny_basemap(style=style), style, tmp_path, key="iTINY")
+    with Image.open(plates.paths["wash"]) as img:
         assert img.format == "WEBP"
-        assert img.size == tuple(manifest["render"])
-    with Image.open(tmp_path / manifest["files"]["pen"]) as img:
+        assert img.size == plates.card.render
+    with Image.open(plates.paths["pen"]) as img:
         assert img.mode in ("RGBA", "P")
 
 
@@ -126,8 +128,10 @@ def test_a_repaint_is_only_needed_when_the_style_or_the_data_changes(tmp_path):
         rivers=(River(((0.0, 0.0), (100.0, 100.0)), "minor", "", 0.0, 0.0),),
     )
     assert paint.paint_hash(moved, style) != first
-    manifest = paint.paint(basemap, style, paint.plates_dir("iTINY", tmp_path), key="iTINY")
-    assert paint.load_plates("iTINY", tmp_path)["hash"] == manifest["hash"]
+    plates = paint.paint(basemap, style, paint.plates_dir("iTINY", tmp_path), key="iTINY")
+    loaded = paint.load_plates("iTINY", tmp_path)
+    assert loaded is not None
+    assert loaded.hash == plates.hash
 
 
 def test_no_plates_is_not_an_error(tmp_path):
@@ -311,10 +315,10 @@ def test_the_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
     import hashlib
 
     style, basemap = smoke_box()
-    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE")
+    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE").manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
-        for name, fn in manifest["files"].items()
+        for name, fn in manifest.files.items()
     }
     assert got == SMOKE_SHA
 
@@ -324,10 +328,10 @@ def test_every_flag_on_together_still_paints_the_box(tmp_path):
     import hashlib
 
     style, basemap = smoke_box(ink_starve=True, dry_directional=True, pen_starve=True)
-    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE")
+    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE").manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
-        for name, fn in manifest["files"].items()
+        for name, fn in manifest.files.items()
     }
     assert got["paper"] == SMOKE_SHA["paper"]  # nothing here touches the card
     assert got["wash"] != SMOKE_SHA["wash"]
@@ -671,10 +675,10 @@ def test_the_phase_2_brush_flags_on_together_still_paint_the_box(tmp_path):
     import hashlib
 
     style, basemap = smoke_box(brush_organic=True, ink_joins=True, stroke_smooth=True, ink_ss=2)
-    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE")
+    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE").manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
-        for name, fn in manifest["files"].items()
+        for name, fn in manifest.files.items()
     }
     assert got["paper"] == SMOKE_SHA["paper"]  # nothing here touches the card
     assert got["wash"] != SMOKE_SHA["wash"]
@@ -892,10 +896,10 @@ def test_land_cover_is_one_class_per_pixel_with_the_wood_on_top(tmp_path):
         },
         cover_order=("farmland", "wood"),
     )
-    manifest = paint.paint(basemap, style, tmp_path, key="iTINY")
+    manifest = paint.paint(basemap, style, tmp_path, key="iTINY").manifest
     from PIL import Image
 
-    with Image.open(tmp_path / manifest["files"]["wash"]) as img:
+    with Image.open(tmp_path / manifest.files["wash"]) as img:
         arr = np.asarray(img.convert("RGB"), np.float32) / 255
     h, w, _ = arr.shape
     centre = arr[h // 2, w // 2]
@@ -1271,10 +1275,10 @@ def painted(tmp_path, **over: object) -> dict[str, str]:
 
     style, basemap = cover_box(**over)
     out = tmp_path / ("on" if over else "off")
-    manifest = paint.paint(basemap, style, out, key="iSMOKE")
+    manifest = paint.paint(basemap, style, out, key="iSMOKE").manifest
     return {
         name: hashlib.sha256((out / fn).read_bytes()).hexdigest()
-        for name, fn in manifest["files"].items()
+        for name, fn in manifest.files.items()
     }
 
 
@@ -1291,10 +1295,10 @@ def test_the_wash_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
     import hashlib
 
     style, basemap = smoke_box()
-    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE")
+    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE").manifest
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
-        for name, fn in manifest["files"].items()
+        for name, fn in manifest.files.items()
     }
     assert got == SMOKE_SHA
 
@@ -1372,8 +1376,8 @@ def test_the_surveyed_coast_is_not_deformed(tmp_path):
             lakes=(((800.0, 20.0), (1000.0, 20.0), (1000.0, 120.0), (800.0, 120.0)),),
         )
         out = tmp_path / ("on" if over else "off")
-        manifest = paint.paint(basemap, style, out, key="iSMOKE")
-        return hashlib.sha256((out / manifest["files"]["wash"]).read_bytes()).hexdigest()
+        manifest = paint.paint(basemap, style, out, key="iSMOKE").manifest
+        return hashlib.sha256((out / manifest.files["wash"]).read_bytes()).hexdigest()
 
     assert sea_only(silhouette_deform=True) == sea_only()
 
@@ -1579,8 +1583,8 @@ def test_the_manifest_keeps_the_lines_a_name_can_be_set_along(tmp_path):
         ),
         coastline=(((0.0, 10.0), (900.0, 12.0)),),
     )
-    manifest = paint.paint(basemap, tiny_style(), tmp_path, key="iTINY")
-    geom = manifest["label_geom"]
+    manifest = paint.paint(basemap, tiny_style(), tmp_path, key="iTINY").manifest
+    geom = manifest.label_geom
     assert [r["n"] for r in geom["roads"]] == ["A39"]
     assert [r["n"] for r in geom["rivers"]] == ["River Lyn"]
     assert len(geom["coast"]) == 1
@@ -1599,16 +1603,16 @@ def test_the_labels_hash_moves_when_the_picks_do(tmp_path):
     assert paint.labels_hash(one, style) == paint.labels_hash(list(one), style)
     assert paint.labels_hash(one, style) != paint.labels_hash(two, style)
     assert paint.labels_hash(one, style) != paint.labels_hash(one, tiny_style(label_seed=2))
-    manifest = paint.paint(tiny_basemap(), style, tmp_path, labels=one, key="iTINY")
-    assert manifest["labels_hash"] == paint.labels_hash(one, style)
+    manifest = paint.paint(tiny_basemap(), style, tmp_path, labels=one, key="iTINY").manifest
+    assert manifest.labels_hash == paint.labels_hash(one, style)
 
 
 def _labelled_card(tmp_path, **basemap_over):
     """A painted tiny box and the card that projects into it, for the label rules."""
-    from pyntpot.maps.card import Card
-
-    manifest = paint.paint(tiny_basemap(**basemap_over), tiny_style(), tmp_path, key="iTINY")
-    card = Card.from_manifest(manifest)
+    manifest = paint.paint(
+        tiny_basemap(**basemap_over), tiny_style(), tmp_path, key="iTINY"
+    ).manifest
+    card = manifest.card
     route = [(float(x), 40.0 + 30.0 * math.sin(x / 260.0)) for x in range(0, 1400, 40)]
     return manifest, card, [card.xy(x, y) for x, y in route]
 
@@ -1684,15 +1688,18 @@ def test_the_river_the_route_crossed_beats_the_one_it_did_not(tmp_path):
     crossed = [[float(x), 40.0 + 30.0 * math.sin(x / 260.0)] for x in range(0, 1400, 40)]
     away = [[float(x), 900.0] for x in range(0, 1400, 40)]
     manifest, card, route_px = _labelled_card(tmp_path)
-    manifest["label_geom"] = {
-        "roads": [],
-        "coast": [],
-        "rivers": [
-            {"n": "River Heddon", "c": "medium", "d": crossed},
-            {"n": "River Medway", "c": "medium", "d": away},
-            {"n": "Hebden Beck", "c": "minor", "d": crossed},
-        ],
-    }
+    manifest = dataclasses.replace(
+        manifest,
+        label_geom={
+            "roads": [],
+            "coast": [],
+            "rivers": [
+                {"n": "River Heddon", "c": "medium", "d": crossed},
+                {"n": "River Medway", "c": "medium", "d": away},
+                {"n": "Hebden Beck", "c": "minor", "d": crossed},
+            ],
+        },
+    )
     named = [x.name for x in lb.pick_rivers(manifest, card, route_px)]
     assert named[0] == "Heddon", "the name loses its 'River', the water says it"
     assert "Hebden Beck" not in named, "a beck is noise at this scale"
@@ -1820,8 +1827,7 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
     from pyntpot._port import labels as lb
     from pyntpot._port import paint
 
-    manifest = paint.paint(tiny_basemap(), tiny_style(), tmp_path, key="iTINY")
-    manifest["dir"] = str(tmp_path)
+    plates = paint.paint(tiny_basemap(), tiny_style(), tmp_path, key="iTINY")
     placed = [
         lb.Label(
             name="Aviemore",
@@ -1835,15 +1841,15 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
             box=(10.0, 15.0, 60.0, 30.0),
         )
     ]
-    plate = lb.draw_plate(manifest, placed, [], [(10.0, 10.0), (70.0, 40.0)], tiny_style())
+    plate = lb.draw_plate(plates, placed, [], [(10.0, 10.0), (70.0, 40.0)], tiny_style())
     assert plate is not None and plate.exists()
     img = Image.open(plate)
     assert img.mode == "RGBA"
-    assert img.size == tuple(manifest["render"])
+    assert img.size == plates.card.render
     assert img.getchannel("A").getextrema()[1] > 0, "nothing was written"
     # And it is cached on what is lettered, so a second call writes nothing new.
     stamp = plate.stat().st_mtime_ns
-    assert lb.draw_plate(manifest, placed, [], [(10.0, 10.0), (70.0, 40.0)], tiny_style()) == plate
+    assert lb.draw_plate(plates, placed, [], [(10.0, 10.0), (70.0, 40.0)], tiny_style()) == plate
     assert plate.stat().st_mtime_ns == stamp
 
 
@@ -1932,15 +1938,15 @@ def test_the_style_decides_how_the_plates_are_written(tmp_path):
     lossy = paint.paint(basemap, style, tmp_path / "lossy", key="iSMOKE")
     style, basemap = smoke_box()
     clean = paint.paint(basemap, style, tmp_path / "clean", key="iSMOKE")
-    assert clean["bytes"] > lossy["bytes"]
+    assert clean.manifest.bytes > lossy.manifest.bytes
 
     # The pen plate is alpha, which WebP already stored losslessly, so the flag
     # only tidies the flat white beside it and the plate does not grow.
-    assert clean["sizes"]["pen"] <= lossy["sizes"]["pen"]
+    assert clean.manifest.sizes["pen"] <= lossy.manifest.sizes["pen"]
     for name in ("paper", "wash"):
-        assert clean["sizes"][name] > lossy["sizes"][name] * 4
+        assert clean.manifest.sizes[name] > lossy.manifest.sizes[name] * 4
 
-    with Image.open(tmp_path / "clean" / clean["files"]["wash"]) as got:
+    with Image.open(tmp_path / "clean" / clean.manifest.files["wash"]) as got:
         assert got.size == basemap.card.render
 
 
@@ -2106,14 +2112,14 @@ def test_the_major_river_carries_its_name_twice_and_the_others_once():
 
     big = [[round(float(x), 1), 0.0] for x in range(0, 4000, 25)]
     small = [[500.0, round(float(y), 1)] for y in range(0, 900, 25)]
-    manifest = {
-        "label_geom": {
+    manifest = manifest_for_test(
+        label_geom={
             "rivers": [
                 {"n": "River Lyn", "c": "major", "d": big},
                 {"n": "Heddon", "c": "medium", "d": small},
             ]
         }
-    }
+    )
 
     class FlatCard:
         w, h, scale = 400.0, 300.0, 0.1
@@ -2589,14 +2595,14 @@ def test_a_road_is_lettered_by_its_number_and_falls_back_to_its_name():
 
     numbered = [[round(float(x), 1), 0.0] for x in range(0, 4000, 25)]
     unnumbered = [[round(float(x), 1), 200.0] for x in range(0, 4000, 25)]
-    manifest = {
-        "label_geom": {
+    manifest = manifest_for_test(
+        label_geom={
             "roads": [
                 {"n": "Lyn Valley Road", "c": "major", "r": "A361", "d": numbered},
                 {"n": "Aviemore Road", "c": "major", "r": "", "d": unnumbered},
             ]
         }
-    }
+    )
 
     class FlatCard:
         w, h, scale = 400.0, 300.0, 0.1
@@ -3274,14 +3280,14 @@ def test_the_painted_width_of_a_watercourse_reaches_the_label_layer():
     """The label layer sees a centreline; the manifest tells it the brush."""
     from pyntpot._port import labels as lb
 
-    fresh = {"wet_px": {"major": 9.5, "medium": 6.0, "minor": 2.4}}
+    fresh = manifest_for_test(wet_px={"major": 9.5, "medium": 6.0, "minor": 2.4})
     # The manifest carries the brush's nominal width and the brush lays down
     # more than that, so what reaches the label layer is the footprint.
     assert lb.feature_px(fresh, "river", "major") == pytest.approx(9.5 * lb.WET_SPREAD)
     # A manifest painted before the key falls back to the painter's defaults
     # rather than to nothing, so an old plate letters its rivers where a new
     # one does.
-    assert lb.feature_px({}, "river", "major") == pytest.approx(
+    assert lb.feature_px(manifest_for_test(wet_px={}), "river", "major") == pytest.approx(
         lb.WET_PX_DEFAULT["major"] * lb.WET_SPREAD
     )
 
@@ -3303,8 +3309,8 @@ def _river_label(width_px):
     """One river of a given painted width, placed."""
     from pyntpot._port import labels as lb
 
-    manifest = {
-        "label_geom": {
+    manifest = manifest_for_test(
+        label_geom={
             "rivers": [
                 {
                     "n": "Severn",
@@ -3315,8 +3321,8 @@ def _river_label(width_px):
                 }
             ]
         },
-        "wet_px": {"major": 11.0},
-    }
+        wet_px={"major": 11.0},
+    )
     return lb.pick_rivers(manifest, _WideCard(), [(100.0, 100.0), (800.0, 100.0)])[0]
 
 
@@ -3456,12 +3462,12 @@ def test_the_second_river_name_is_earned_by_the_run():
             return (float(x), float(y))
 
     def rivers(x1):
-        manifest = {
-            "label_geom": {
+        manifest = manifest_for_test(
+            label_geom={
                 "rivers": [{"n": "Severn", "c": "major", "w": 30.0, "d": [[100, 400], [x1, 400]]}]
             },
-            "wet_px": {"major": 11.0},
-        }
+            wet_px={"major": 11.0},
+        )
         return lb.pick_rivers(manifest, FlatCard(), [(100.0, 100.0), (800.0, 100.0)])
 
     short = [lb.name for lb in rivers(395)]  # 295 px of water
@@ -3496,13 +3502,13 @@ def test_an_unnamed_lane_and_a_watercourse_both_cost_a_name_that_crosses_them():
         def xy(x, y):
             return (float(x), float(y))
 
-    manifest = {
-        "label_geom": {
+    manifest = manifest_for_test(
+        label_geom={
             "roads": [{"n": "A361", "c": "major", "d": [[0, 10], [400, 10]]}],
             "rivers": [{"n": "Lyn", "c": "major", "d": [[0, 60], [400, 60]]}],
             "crossings": [[[0, 120], [400, 120]]],
         }
-    }
+    )
     lines = lb.road_lines(manifest, FlatCard())
     assert len(lines) == 3, "the lanes and the water are not in the crossing cost"
     for y in (10.0, 60.0, 120.0):
@@ -3687,8 +3693,8 @@ def test_the_clearance_scales_with_the_water_the_painter_actually_laid_down():
     from pyntpot._port import labels as lb
 
     assert lb.WET_SPREAD > 1.0
-    wide = {"wet_px": {"major": 12.0, "medium": 3.0, "minor": 1.0}}
-    narrow = {"wet_px": {"major": 4.0, "medium": 3.0, "minor": 1.0}}
+    wide = manifest_for_test(wet_px={"major": 12.0, "medium": 3.0, "minor": 1.0})
+    narrow = manifest_for_test(wet_px={"major": 4.0, "medium": 3.0, "minor": 1.0})
     big = lb.Label(
         name="Lyn",
         kind="river",
@@ -3741,15 +3747,15 @@ def test_a_numbered_road_is_gathered_by_its_number_not_by_its_street_name():
     def leg(x0, x1, y):
         return [[round(float(x), 1), float(y)] for x in range(x0, x1 + 1, 25)]
 
-    manifest = {
-        "label_geom": {
+    manifest = manifest_for_test(
+        label_geom={
             "roads": [
                 {"n": "Hollow Lane", "c": "major", "r": "A3052", "d": leg(0, 500, 0)},
                 {"n": "Coastguard Road", "c": "major", "r": "A3052", "d": leg(500, 1000, 0)},
                 {"n": "New Road", "c": "major", "r": "A3052", "d": leg(1000, 1500, 0)},
             ]
         }
-    }
+    )
 
     class FlatCard:
         w, h, scale = 400.0, 300.0, 0.1

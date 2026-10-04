@@ -47,10 +47,10 @@ def paint_fixture(work: Path) -> dict[str, Path]:
     route_ink = RouteInk(**default["route_ink"]["Ride"])
     lat, lng = geo.read_gpx(work / "track.gpx")
 
-    manifest = paint.paint_activity(KEY, lat, lng, pstyle, cache_dir=work, places=[], force=True)
-    if manifest is None:
+    painted = paint.paint_activity(KEY, lat, lng, pstyle, cache_dir=work, places=[], force=True)
+    if painted is None:
         raise RuntimeError("painting the fixture wrote no manifest")
-    plates = paint.plates_dir(KEY, work)
+    plates = painted.directory
     _require_fresh([plates / name for name in PLATES[:3]], copied_ns)
 
     card = mapcard.compose(KEY, lat, lng, route_ink, pstyle, None, True, work)

@@ -38,6 +38,7 @@ from pyntpot.ink.polyline import simplify
 
 if TYPE_CHECKING:
     from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
+    from pyntpot.maps.plates import Plates
 
 F32 = np.float32
 Pt = tuple[float, float]
@@ -3488,25 +3489,27 @@ def labels_hash(labels: list[dict[str, Any]] | None, style: PaintStyle) -> str:
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
 
-def load_plates(key: str, cache_dir: Path) -> dict[str, Any] | None:
-    """The manifest of an activity's painted plates, or None when there are none.
+def load_plates(key: str, cache_dir: Path) -> Plates | None:
+    """An activity's painted plates, or None when there are none.
 
     The renderer never paints: a page with no plates draws the vector map and
     says so, which is the honest answer offline and the same answer whether the
-    painter has not been run or the activity is new.
+    painter has not been run or the activity is new. A manifest that cannot be
+    read, or that names a plate no longer on disk, reads as no plates.
     """
+    from pyntpot.maps.plates import Manifest, Plates
+
     path = plates_dir(key, cache_dir) / "plates.json"
     if not path.exists():
         return None
     try:
-        manifest = json.loads(path.read_text())
-    except (OSError, ValueError):
+        manifest = Manifest.from_json(path.read_text())
+    except (OSError, ValueError, KeyError, TypeError):
         return None
-    root = path.parent
-    if not all((root / name).exists() for name in manifest.get("files", {}).values()):
+    plates = Plates(path.parent, manifest)
+    if not all(plate.exists() for plate in plates.paths.values()):
         return None
-    manifest["dir"] = str(root)
-    return manifest
+    return plates
 
 
 def coast_run(d_sea: np.ndarray, wet: np.ndarray, band: float) -> float:
@@ -3603,7 +3606,7 @@ def paint(
     labels: list[dict[str, Any]] | None = None,
     *,
     key: str,
-) -> dict[str, Any]:
+) -> Plates:
     """Paint one activity's plates and write them, with a manifest beside them.
 
     Two plates come out. `paper` is the card itself, drawn as it is. `wash`
@@ -3623,8 +3626,11 @@ def paint(
         key: The activity, written into the manifest as its `id`.
 
     Returns:
-        The manifest: files, byte counts, timings and the darkness grid.
+        The plates, with their manifest: files, byte counts, timings and the
+        darkness grid.
     """
+    from pyntpot.maps.plates import DarkGrid, Manifest, Plates
+
     style = style or PaintStyle()
     aid = key
     out_dir = out_dir if out_dir is not None else plates_dir(aid)
@@ -4015,41 +4021,37 @@ def paint(
         for r in range(gh)
     ]
 
-    manifest = {
-        "id": aid,
-        "hash": paint_hash(basemap, style),
+    manifest = Manifest(
+        key=aid,
+        hash=paint_hash(basemap, style),
         # The first track point in the painter's own metre space, so a caller
         # whose projection took a different origin can pin the two together.
-        "route0": list(layers.route[0]),
-        "files": files,
-        "sizes": sizes,
-        "bytes": sum(sizes.values()),
-        "card": list(card.box),
-        "display": list(card.display),
-        "render": list(card.render),
-        "mpp": card.mpp,
-        "mpp_display": card.mpp_display,
-        "ribbon_m": layers.ribbon_m,
-        "span_m": basemap.span_m,
-        "places": list(basemap.places),
-        "candidates": list(basemap.candidates),
+        route0=layers.route[0],
+        files=files,
+        sizes=sizes,
+        bytes=sum(sizes.values()),
+        card=card,
+        ribbon_m=layers.ribbon_m,
+        span_m=basemap.span_m,
+        places=tuple(basemap.places),
+        candidates=tuple(basemap.candidates),
         # The named lines a label can be set along, which are in the geo payload
         # and nowhere else once this returns.
-        "label_geom": label_geom(basemap, style.label_geom_tol_px),
+        label_geom=label_geom(basemap, style.label_geom_tol_px),
         # How wide each class of watercourse was actually painted, in display
         # pixels, so a river's name can be set clear of its own water rather
         # than in it. The label layer has no other way to know: it sees the
         # centreline and not the brush that was run along it.
-        "wet_px": dict(layers.wet_px),
+        wet_px=dict(layers.wet_px),
         # The paper the ink was gated on, so a plate painted later gates on the
         # same sheet rather than on a second one that only looks similar.
-        "gran_px": round(max(layers.gran_m / mpp, 3.0), 3),
-        "labels_hash": labels_hash(labels, style),
-        "sources": list(basemap.sources),
-        "dark": {"w": gw, "h": gh, "v": dark},
-        "wood_px": int(wood_mask.sum()),
-        "water_px": int(water.sum()),
-        "timing": {
+        gran_px=round(max(layers.gran_m / mpp, 3.0), 3),
+        labels_hash=labels_hash(labels, style),
+        sources=tuple(basemap.sources),
+        dark=DarkGrid(w=gw, h=gh, values=tuple(tuple(row) for row in dark)),
+        wood_px=int(wood_mask.sum()),
+        water_px=int(water.sum()),
+        timing={
             "water_ms": round((t_water - t0) * 1000),
             "cover_ms": round((t_cover - t_water) * 1000),
             "wood_ms": round((t_wood - t_cover) * 1000),
@@ -4059,10 +4061,9 @@ def paint(
             "ribbon_ms": round((t_end - t_ink) * 1000),
             "total_ms": round((time.perf_counter() - t0) * 1000),
         },
-    }
-    (out_dir / "plates.json").write_text(json.dumps(manifest, separators=(",", ":")))
-    manifest["dir"] = str(out_dir)
-    return manifest
+    )
+    (out_dir / "plates.json").write_text(manifest.to_json())
+    return Plates(out_dir, manifest)
 
 
 def _crossfade(value: float, n: int) -> list[float]:
@@ -4088,7 +4089,7 @@ def paint_activity(
     cache_dir: Path,
     places: list[dict[str, Any]],
     force: bool = False,
-) -> dict[str, Any] | None:
+) -> Plates | None:
     """Assemble the layers for one activity and paint them, unless they are current.
 
     Args:
@@ -4103,7 +4104,8 @@ def paint_activity(
         force: Repaint even when the cached plates match.
 
     Returns:
-        The manifest, or None when there is nothing cached for this box.
+        The plates, freshly painted or already current, or None when there is
+        nothing cached for this box.
     """
     from pyntpot._port import geo
 
@@ -4116,12 +4118,9 @@ def paint_activity(
     out_dir = plates_dir(key, cache_dir)
     want = paint_hash(basemap, style)
     existing = load_plates(key, cache_dir)
-    if existing and existing.get("hash") == want and not force:
-        existing["repainted"] = False
+    if existing is not None and existing.hash == want and not force:
         return existing
-    manifest = paint(basemap, style, out_dir, key=key)
-    manifest["repainted"] = True
-    return manifest
+    return paint(basemap, style, out_dir, key=key)
 
 
 def with_display(style: PaintStyle, display_px: int) -> PaintStyle:

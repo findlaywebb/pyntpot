@@ -47,6 +47,7 @@ MODULES: tuple[str, ...] = (
     "pyntpot.maps.providers.overpass",
     "pyntpot.maps.projection",
     "pyntpot.maps.basemap",
+    "pyntpot.maps.plates",
 )
 
 #: The `maps` modules allowed to import `_port`, binding its modules.

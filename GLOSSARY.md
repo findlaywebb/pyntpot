@@ -28,3 +28,4 @@ add the term here when you coin one. The ported code keeps its old names until t
 | elevation grid | An n by n lattice of elevations over a bounding box, as an elevation provider returns it and the fetch cache stores it. `maps.providers.base.ElevationGrid`. |
 | layers | The typed geometry and measurements of a basemap that the painter reads; the base hash covers exactly these and the card. `maps.basemap.Layers`. |
 | elevation patch | The elevation samples a basemap carries, placed in card metres. `maps.basemap.ElevationPatch`. |
+| dark grid | The painter's coarse grid of how dark the painted sheet is, cell by cell, which label placement reads to keep names on light ground. `maps.plates.DarkGrid`. |

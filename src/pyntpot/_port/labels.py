@@ -33,7 +33,7 @@ import re
 import zlib
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pyntpot.ink.chains import joined
 from pyntpot.ink.curves import offset_curve, spline
@@ -46,6 +46,9 @@ from pyntpot.ink.polyline import (
     seg_gap,
     simplify,
 )
+
+if TYPE_CHECKING:
+    from pyntpot.maps.plates import Manifest, Plates
 
 log = logging.getLogger(__name__)
 
@@ -505,7 +508,7 @@ class Span:
 # --------------------------------------------------------------------------- picks
 
 
-def journal_picks(picks: Any, manifest: dict[str, Any], cap: int) -> list[dict[str, Any]]:
+def journal_picks(picks: Any, manifest: Manifest, cap: int) -> list[dict[str, Any]]:
     """The payload's landmarks, each with a position, in the payload's order.
 
     A pick states its own latitude and longitude, which is what the label agent
@@ -515,7 +518,7 @@ def journal_picks(picks: Any, manifest: dict[str, Any], cap: int) -> list[dict[s
     wanted = list(getattr(picks, "landmarks", None) or [])
     if not wanted:
         return []
-    by_name = {c["name"]: c for c in manifest.get("candidates", [])}
+    by_name = {c["name"]: c for c in manifest.candidates}
     out: list[dict[str, Any]] = []
     for entry in wanted:
         if isinstance(entry, str):
@@ -552,10 +555,10 @@ def journal_picks(picks: Any, manifest: dict[str, Any], cap: int) -> list[dict[s
     return out
 
 
-def journal_heuristic(manifest: dict[str, Any], cap: int) -> list[dict[str, Any]]:
+def journal_heuristic(manifest: Manifest, cap: int) -> list[dict[str, Any]]:
     """The fallback when the payload named none: the nearest named things."""
     out = []
-    for c in manifest.get("candidates", []):
+    for c in manifest.candidates:
         out.append(
             {
                 "name": c["name"],
@@ -654,7 +657,7 @@ def _places_to_avoid(labels: list[Label]) -> list[tuple[float, float, float, flo
     ]
 
 
-def road_lines(manifest: dict[str, Any], card: Any) -> list[list[Pt]]:
+def road_lines(manifest: Manifest, card: Any) -> list[list[Pt]]:
     """Everything on the card a name should not be laid across, in card pixels.
 
     The named roads, the unnamed lanes, and the watercourses. All three are
@@ -666,7 +669,7 @@ def road_lines(manifest: dict[str, Any], card: Any) -> list[list[Pt]]:
     in it and charges what it always did.
     """
     out: list[list[Pt]] = []
-    geom = manifest.get("label_geom") or {}
+    geom = manifest.label_geom
     for key in ("roads", "rivers"):
         for entry in geom.get(key) or []:
             line = [card.xy(x, y) for x, y in entry.get("d") or []]
@@ -1666,12 +1669,12 @@ def _tilt_max(line: list[Pt]) -> float:
     return worst
 
 
-def _journal_picks(picks: Any, manifest: dict[str, Any], cap: int) -> list[dict[str, Any]]:
+def _journal_picks(picks: Any, manifest: Manifest, cap: int) -> list[dict[str, Any]]:
     """Compatibility name for `journal_picks`."""
     return journal_picks(picks, manifest, cap)
 
 
-def _journal_heuristic(manifest: dict[str, Any], cap: int) -> list[dict[str, Any]]:
+def _journal_heuristic(manifest: Manifest, cap: int) -> list[dict[str, Any]]:
     """Compatibility name for `journal_heuristic`."""
     return journal_heuristic(manifest, cap)
 
@@ -3139,7 +3142,7 @@ def _stem(name: str) -> str:
     return re.sub(rf"^({'|'.join(QUALIFIERS)})\s+", "", str(name)).strip()
 
 
-def settlements(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+def settlements(manifest: Manifest) -> list[dict[str, Any]]:
     """Every settlement the painted box holds, merged into places.
 
     The candidates already carry them: `journal_layers` asks for every named
@@ -3147,7 +3150,7 @@ def settlements(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     Nothing here is fetched and nothing is repainted.
     """
     found: list[dict[str, Any]] = []
-    for c in manifest.get("candidates", []):
+    for c in manifest.candidates:
         if c.get("class") != "place":
             continue
         kind = str((c.get("tags") or {}).get("place", ""))
@@ -3189,7 +3192,7 @@ def settlement_budget(display_px: float) -> int:
 
 
 def pick_settlements(
-    manifest: dict[str, Any],
+    manifest: Manifest,
     card: Any,
     route_px: list[Pt],
     always: list[str] | None = None,
@@ -3431,7 +3434,7 @@ def dedupe_names(labels: list[Label], card: Any) -> list[Label]:
 
 
 def pick_rivers(
-    manifest: dict[str, Any], card: Any, route_px: list[Pt], budget: int = RIVER_MAX
+    manifest: Manifest, card: Any, route_px: list[Pt], budget: int = RIVER_MAX
 ) -> list[Label]:
     """Which watercourses the sheet names, by run inside the card and proximity.
 
@@ -3450,7 +3453,7 @@ def pick_rivers(
         One `Label` a river, best first, anchored on its own water and carrying
         the water as its baseline.
     """
-    geom = (manifest.get("label_geom") or {}).get("rivers") or []
+    geom = manifest.label_geom.get("rivers") or []
     thin = route_px[::3] or route_px
     typical: dict[str, float] = {}
     scored: list[tuple[float, str, list[Pt]]] = []
@@ -3531,7 +3534,7 @@ def river_name(name: str) -> str:
 # --------------------------------------------------------------------------- the ground
 
 
-def home_places(manifest: dict[str, Any], card: Any) -> list[Label]:
+def home_places(manifest: Manifest, card: Any) -> list[Label]:
     """The user's own places, as labels, for the ones with no glyph of their own.
 
     An entry with a symbol is drawn by the caller as it always was, glyph and
@@ -3541,7 +3544,7 @@ def home_places(manifest: dict[str, Any], card: Any) -> list[Label]:
     marker would say wrongly.
     """
     out: list[Label] = []
-    for place in manifest.get("places", []):
+    for place in manifest.places:
         if place.get("kind") != "settlement":
             continue
         x, y = card.xy(place["x"], place["y"])
@@ -3562,7 +3565,7 @@ def home_places(manifest: dict[str, Any], card: Any) -> list[Label]:
 
 
 def ground_labels(
-    manifest: dict[str, Any], card: Any, route_px: list[Pt], picks: Any | None = None
+    manifest: Manifest, card: Any, route_px: list[Pt], picks: Any | None = None
 ) -> list[Label]:
     """The names the ground is entitled to, whatever the payload asked for.
 
@@ -3587,9 +3590,7 @@ def ground_labels(
         order they claim their boxes.
     """
     mine = home_places(manifest, card)
-    always = [p.get("n", "") for p in manifest.get("places", []) if p.get("always")] + [
-        lb.name for lb in mine
-    ]
+    always = [p.get("n", "") for p in manifest.places if p.get("always")] + [lb.name for lb in mine]
     wanted = list(getattr(picks, "places", None) or [])
     # The user writes "Swell" and OSM has Upper and Lower; the entry
     # carries its own position and it is authoritative, so a group within about
@@ -3658,7 +3659,7 @@ ROAD_PX_DEFAULT = {"major": 5.0, "medium": 3.4}
 WET_SPREAD = 1.35
 
 
-def feature_px(manifest: dict[str, Any], kind: str, cls: str, own: float = 0.0) -> float:
+def feature_px(manifest: Manifest, kind: str, cls: str, own: float = 0.0) -> float:
     """How wide the painter's ink really is for one watercourse or road.
 
     The manifest's `wet_px` is the brush's nominal width, not its footprint, so
@@ -3671,14 +3672,14 @@ def feature_px(manifest: dict[str, Any], kind: str, cls: str, own: float = 0.0) 
     the major class floor would be set in the water.
     """
     if kind == "river":
-        wet = manifest.get("wet_px") or {}
+        wet = manifest.wet_px
         floor = float(wet.get(cls, WET_PX_DEFAULT.get(cls, 2.2)))
         return max(floor, float(own or 0.0)) * WET_SPREAD
     return float(ROAD_PX_DEFAULT.get(cls, 3.4)) * WET_SPREAD
 
 
 def pick_roads(
-    manifest: dict[str, Any], card: Any, route_px: list[Pt], budget: int = ROAD_MAX
+    manifest: Manifest, card: Any, route_px: list[Pt], budget: int = ROAD_MAX
 ) -> list[Label]:
     """Which named roads the sheet numbers, set along their own tarmac.
 
@@ -3707,7 +3708,7 @@ def pick_roads(
     Returns:
         One `Label` a road, best first, carrying the tarmac as its baseline.
     """
-    geom = (manifest.get("label_geom") or {}).get("roads") or []
+    geom = manifest.label_geom.get("roads") or []
     thin = route_px[::4] or route_px
     pieces: dict[str, list[list[Pt]]] = {}
     widths: dict[str, float] = {}
@@ -4322,7 +4323,7 @@ HOME_NAME_DROP = 25.0
 
 
 def home_labels(
-    manifest: dict[str, Any], card: Any, pstyle: Any, measure_fn: Measure | None = None
+    manifest: Manifest, card: Any, pstyle: Any, measure_fn: Measure | None = None
 ) -> tuple[list[Label], list[Box]]:
     """The user's marked places, already placed, and the room they need.
 
@@ -4344,7 +4345,7 @@ def home_labels(
     size = getattr(pstyle, "label_size_px", DEFAULT_LINE_PX) * 0.85
     out: list[Label] = []
     boxes: list[Box] = []
-    for place in manifest.get("places", []):
+    for place in manifest.places:
         if place.get("sym") != "house":
             continue
         x, y = card.xy(place["x"], place["y"])
@@ -4431,7 +4432,7 @@ def plate_key(placed: list[Label], spans: list[Span], pstyle: Any, base: str = "
 
 
 def draw_plate(
-    manifest: dict[str, Any],
+    plates: Plates,
     placed: list[Label],
     spans: list[Span],
     route_px: list[Pt],
@@ -4451,7 +4452,7 @@ def draw_plate(
     rather than lettering yesterday's names over today's map.
 
     Args:
-        manifest: The painted plates' manifest.
+        plates: The painted plates, beside which the label plate is written.
         placed: The placed labels.
         spans: The placed spans.
         route_px: The track in card pixels.
@@ -4463,7 +4464,6 @@ def draw_plate(
         engine to draw it with.
     """
     import json
-    from pathlib import Path
 
     if not placed and not spans:
         return None
@@ -4476,10 +4476,10 @@ def draw_plate(
     except (ImportError, OSError) as exc:  # no fonttools, or no face on disk
         log.info("no face to letter with: %s", exc)
         return None
-    root = Path(manifest["dir"])
+    root = plates.directory
     stem = f"labels-{hand.route}"
     path, side = root / f"{stem}.webp", root / f"{stem}.json"
-    key = plate_key(placed, spans, pstyle, str(manifest.get("hash", "")))
+    key = plate_key(placed, spans, pstyle, plates.hash)
     if path.exists() and side.exists():
         try:
             if json.loads(side.read_text()).get("key") == key:
@@ -4489,7 +4489,7 @@ def draw_plate(
     marks = hand.marks(placed, spans, route_px)
     if not marks:
         return None
-    written = paint.label_plate(manifest, marks, pstyle, path)
+    written = paint.label_plate(plates.manifest.to_dict(), marks, pstyle, path)
     if written is not None:
         side.write_text(json.dumps({"key": key, "face": hand.font.name, "route": hand.route}))
     return written

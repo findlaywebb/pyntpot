@@ -17,8 +17,9 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from PIL import Image, ImageChops, ImageDraw
 
@@ -41,6 +42,9 @@ from pyntpot._port.labels import (
 from pyntpot._port.style import RouteInk
 from pyntpot.ink.polyline import cumulative_m
 
+if TYPE_CHECKING:
+    from pyntpot.maps.plates import Plates
+
 log = logging.getLogger(__name__)
 
 #: What the route is drawn at, in card pixels per card pixel, before it is
@@ -62,11 +66,11 @@ def _rgb(colour: str) -> tuple[int, int, int]:
     return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
 
 
-def _plates(manifest: dict[str, Any]) -> Image.Image:
+def _plates(plates: Plates) -> Image.Image:
     """The card itself: the wash multiplied over the paper, as the painter composed it."""
-    root = Path(manifest["dir"])
-    paper = Image.open(root / manifest["files"]["paper"]).convert("RGB")
-    wash = Image.open(root / manifest["files"]["wash"]).convert("RGB")
+    paths = plates.paths
+    paper = Image.open(paths["paper"]).convert("RGB")
+    wash = Image.open(paths["wash"]).convert("RGB")
     if wash.size != paper.size:
         wash = wash.resize(paper.size, Image.LANCZOS)
     return ImageChops.multiply(paper, wash)
@@ -74,7 +78,7 @@ def _plates(manifest: dict[str, Any]) -> Image.Image:
 
 def _route(
     card_img: Image.Image,
-    manifest: dict[str, Any],
+    plates: Plates,
     route_px: list[tuple[float, float]],
     ink: Any,
     k: float,
@@ -85,10 +89,9 @@ def _route(
     the same plate is tinted here. A style with no pen plate draws the line.
     """
     colour = _rgb(ink.colour)
-    root = Path(manifest["dir"])
-    name = manifest.get("files", {}).get("pen")
+    name = plates.manifest.files.get("pen")
     if name and ink.style == "pen":
-        pen = Image.open(root / name).convert("RGBA")
+        pen = Image.open(plates.directory / name).convert("RGBA")
         if pen.size != card_img.size:
             pen = pen.resize(card_img.size, Image.LANCZOS)
         card_img.paste(Image.new("RGB", card_img.size, colour), (0, 0), pen.getchannel("A"))
@@ -149,22 +152,22 @@ def compose(
     Returns:
         The card, or None when nothing is painted for this activity.
     """
-    from pyntpot.maps.card import Card
     from pyntpot.maps.projection import track_projection
 
-    manifest = paint.load_plates(key, cache_dir)
-    if manifest is None:
+    plates = paint.load_plates(key, cache_dir)
+    if plates is None:
         return None
-    card_img = _plates(manifest)
-    k = card_img.width / max(manifest["display"][0], 1)
+    manifest = plates.manifest
+    card_img = _plates(plates)
+    k = card_img.width / max(plates.card.display[0], 1)
 
     _proj, pts = track_projection(lat, lng)
-    first = manifest.get("route0") or pts[0]
-    card = Card.from_manifest(manifest, offset=(first[0] - pts[0][0], first[1] - pts[0][1]))
+    first = manifest.route0 or pts[0]
+    card = replace(plates.card, offset=(first[0] - pts[0][0], first[1] - pts[0][1]))
     ink = route_ink
     route_px = separate_strands([card.xy(x, y) for x, y in pts], ink.px * STRAND_GAP_WIDTHS)
 
-    _route(card_img, manifest, route_px, ink, k)
+    _route(card_img, plates, route_px, ink, k)
     if not labels:
         return card_img
 
@@ -205,12 +208,12 @@ def compose(
         spans,
         card,
         route_px,
-        manifest["dark"],
+        {"w": manifest.dark.w, "h": manifest.dark.h, "v": manifest.dark.values},
         taken,
         hand.measure if hand else None,
         road_lines(manifest, card),
     )
-    plate = draw_plate(manifest, placed, spans, route_px, pstyle) if hand else None
+    plate = draw_plate(plates, placed, spans, route_px, pstyle) if hand else None
     if plate is None:
         log.info("no label plate for %s, the card is handed over bare", key)
         return card_img
