@@ -24,3 +24,5 @@ add the term here when you coin one. The ported code keeps its old names until t
 | style | Every style group a map is painted, lettered and composed with, as one value (`maps.style.Style`). |
 | style group | One layer's share of the style, a frozen dataclass of the fields its readers read: `PaperStyle`, `NibStyle`, `BasemapStyle` and the rest. |
 | theme | A TOML file holding one style, a table per style group. The packaged default theme is the resolved default style. |
+| credit | One data source's attribution: the full text, a link, and the short line drawn on the map. `maps.credit.Credit`. |
+| elevation grid | An n by n lattice of elevations over a bounding box, as an elevation provider returns it and the fetch cache stores it. `maps.providers.base.ElevationGrid`. |
