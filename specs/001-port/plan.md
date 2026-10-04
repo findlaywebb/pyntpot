@@ -1134,14 +1134,25 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   `plates_dir(key) -> Path`;
   `ensure(track, features, elevation, *, force: bool = False) -> str` that
   fetches whatever is missing (landcover over `LANDCOVER_MARGIN_M`) and
-  returns the key.
+  returns the key. **Pinned order:** features, then landcover, then
+  elevation (today's `geo.fetch_activity`, `geo.py:1597-1614`, does
+  features, elevation, landcover; the order moves no byte of any payload),
+  each payload written to its path as soon as its call
+  returns, before the next call; the docstring states it, and P3.16's
+  `FetchError` test relies on it.
 - Tests: the key for the Lynmouth track with the fixture providers is a pinned
   literal; `key(track, OverpassFeatures("test"), OpenTopoData("test")) == key(track, FixtureFeatures(), FixtureElevation())`
   if P3.8 and P3.9 have landed (otherwise P3.16 adds this assertion; their
   constructors make no request); changing the margin or a provider id
   changes the key; `ensure` into an empty `tmp_path` calls each fixture
   provider once and writes three files whose bytes equal the fixture files;
-  a second `ensure` calls nothing.
+  a second `ensure` calls nothing. Order: a test-local `_RecordingFeatures`
+  and `_RecordingElevation` (hand-written real objects wrapping the fixture
+  providers, forwarding `id` and `credit`, appending to one shared
+  `calls: list[str]`; at each call they also record which of the three
+  cache paths exist) prove `calls == ["features", "landcover", "elevation"]`
+  and that the features file exists when `landcover` is called and the
+  features and landcover files exist when `grid` is called.
 - Parity: exact, current goldens. G-here.
 - Commit: `Key the fetch cache by box, margin and provider`
 
@@ -1213,13 +1224,15 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
      |---|---|---|
      | `paint.brush_from_id`, `InkPad.__init__` | `ink/brush.py`, `ink/pad.py` | ink |
      | `paint.composite`; `separated`, `fluid_modulate` | `ink/pigment.py`; `ink/wash.py` | ink |
-     | `paint.label_brushes`, `label_plate`, `_backing_wash`, `_pen_profile`, `_dark_field` | `letters/nib.py` | letters |
+     | `paint.label_brushes`, `label_plate`, `_backing_wash`, `_pen_profile` | `letters/nib.py` | letters |
      | `labels.Hand.__init__` | `letters/hand.py` | letters |
      | `paint.paint` (and its nested `transp`, `bloom_arg`), `paper_plate`, `plate_brushes`, `sea_patches` | `maps/painter/*` | maps base |
      | `geo.journal_geometry`, `journal_layers`, and every `GeoOptions` reader | `maps/layers.py`, `maps/osm.py` | maps base |
      | `mapcard.compose`, `labels.home_labels`, `labels.named_lines` (P3.13) | `maps/lettering/*`, `maps/compose.py` | maps lettering |
      | `labels.hand()` (`labels`), `mapcard.alphabet_sheet` | deleted (P4.5, P3.17); `letter` takes over the `labels` check in P4.5 | maps lettering |
 
+     `paint._dark_field` reads no style field, so it decides nothing here;
+     P4.6 moves it to `maps/plates.py` as `dark_array`.
      `label_geom_tol_px` is read today by `paint.paint` (for `label_geom`),
      but P3.13 moves that read into `labels.named_lines`, so its final
      reader is maps lettering.
@@ -1438,12 +1451,17 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   `tests/unit/test_geo.py`, `docs/decisions/0006-golden-regeneration.md`.
 - **Commit 1 (step 2), pixel-neutral:** `Read lettering geometry from the basemap and settle the manifest`
   - `paint_activity(...) -> tuple[Basemap, Plates] | None`;
-    `mapcard.compose(basemap: Basemap, plates: Plates, style: Style, picks: Any, labels: bool) -> Image`,
+    `mapcard.compose(basemap: Basemap, plates: Plates, style: Style, picks: Any, labels: bool) -> tuple[Image, list[Label]]`
+    (the placed labels are `letter_card`'s first element, in placement
+    order; `[]` when `labels` is false),
     with its lettering steps split out as
     `mapcard.letter_card(basemap, plates, style, picks) -> tuple[list[Label], list[Span], Path | None]`
     (P3.17 moves this into `maps/lettering.py` as `letter`).
-    `paint_fixture` returns the placed label names too, and `make_golden`
-    writes them to `labels.txt`, one per line, in placement order.
+    `paint_fixture` returns the placed label names too, taken from
+    `compose`'s second element (`label.name` for each), and `make_golden`
+    writes them to `labels.txt`, one per line, in placement order. P3.17
+    keeps the same names: there `paint_fixture` reads them from `letter`'s
+    result.
   - `route_px` comes from `basemap.track` through the card with the offset
     `route0` gave: `basemap.layers.route[0]` minus `basemap.track[0]`. No
     second `track_projection`. It is then separated exactly as today,
@@ -1609,9 +1627,15 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   `src/pyntpot/maps/__init__.py` (import leaves first, then the pipeline),
   `src/pyntpot/maps/plates.py` (`route_px`, `strands`),
   `tests/support/golden.py` (`paint_fixture` runs the new stages, below),
-  `_port/paint.py` (delete `paint_activity`), `tests/unit/test_paint.py`
-  (its `paint_activity` callers near lines 969 to 990 call `fetch` and
-  `pipeline.paint`),
+  `_port/paint.py` (delete `paint_activity`; its only callers are
+  `tests/golden/test_parity.py:40`, which P3.1 already replaced with
+  `paint_fixture`, and `tests/golden/make_golden_old.py:32`, which is left
+  alone: it calls the pre-port `analysis.report.paint`, not
+  `pyntpot._port.paint` (its line 17), is never run, only linted,
+  `ty`-excluded and deleted at P9.3; `tests/unit/test_paint.py` has no
+  `paint_activity` caller, and its `geo.journal_layers` and
+  `geo.landmark_export` tests near lines 966 to 995 are not rewritten onto
+  `fetch`: they only take the new key, below),
   `tests/support/paths.py` (`KEY` becomes the cache key; since P3.1 it is
   the only fixture-key constant, read by `tests/support/golden.py`,
   `tests/unit/test_geo.py` and `tests/unit/test_paint.py`, whose uses near
@@ -1654,24 +1678,33 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   (`tests/support/providers.py`, P3.7) and `Style.default()`, then
   `pipeline.paint`, then P3.13's
   `mapcard.compose(basemap, plates, style, None, labels=True)` (no picks,
-  as today), which still separates the route itself from `basemap.track`. G-self proves
+  as today; it unpacks the image and the placed labels, P3.13), which still separates the route itself from `basemap.track`. G-self proves
   the switch is byte-identical before P3.17 makes `compose` read
   `plates.strands`.
 - `fetch` raises `FetchError(RuntimeError)` (defined in
   `maps/pipeline.py`, message naming the key and the missing features
   path) when `journal_layers` returns `None`, which it does only when the
   features payload is absent after `cache.ensure`, for example a cache
-  directory changed underneath. Not unit-tested: no real provider and
-  cache can reach it without deleting a file between two calls inside
-  `fetch`; the docstring states it.
+  directory changed underneath.
 - Tests: `fetch` with the fixture providers over a copy of the fixture dir
   calls no provider and returns a `Basemap` with the pinned road count and
   `credits` equal to the two fixture credits; `paint` writes three plates
   and returns a `Plates` whose `hash` equals the regenerated golden's and
   whose `route_px` and `strands` both have 400 points, with the first
-  three `strands` points equal to pinned literals taken once from today's
-  `mapcard.compose` (the pixel proof is P3.17's G-self run); a
-  second `paint` repaints nothing (mtimes unchanged).
+  three `strands` points equal, by `pytest.approx(abs=1e-6)`, to pinned
+  literals taken once from today's `mapcard.compose` (they pass through
+  `Projection`'s `math.cos`, so they are not machine-independent and are
+  not compared exactly; the pixel proof is P3.17's G-self run); a
+  second `paint` repaints nothing (mtimes unchanged). `FetchError`: a
+  test-local `_VanishingElevation(cache_dir: Path)` (a hand-written real
+  provider, not golden-marked, fast because `journal_layers` returns
+  before any geometry) wraps `FixtureElevation`, forwards `id` and
+  `credit`, and its `grid()` unlinks every `overpass-*.json` in
+  `cache_dir` before returning the fixture grid; since P3.10 pins
+  `ensure`'s order (features written before `grid` is called),
+  `fetch(track, Cache(tmp_path), FixtureFeatures(), _VanishingElevation(tmp_path), Style.default())`
+  raises `FetchError` whose message contains the key and the features
+  path.
 - Parity: exact, regenerated goldens. G-here plus G-self.
 - Commit: `Add the fetch and paint façade over typed stages`
 
@@ -2070,22 +2103,29 @@ no new `maps` module ever needs a `_port` import (import rule 2).
 - Implements A2; predecessor P4.5.
 - Owner files: create `src/pyntpot/letters/nib.py`,
   `tests/unit/letters/test_nib.py`; edit `src/pyntpot/letters/style.py`
-  (`NibGroups`), `_port/paint.py` (delete
+  (`NibGroups`), `src/pyntpot/maps/plates.py` and
+  `tests/unit/maps/test_plates.py` (`dark_array`, below),
+  `_port/paint.py` (delete
   `label_brushes`, `_pen_profile`, `_dark_field`, `label_plate`,
   `_backing_wash`, `MARK_WEIGHT`, `_HEX`), `_port/labels.py`
   (`draw_plate`), `maps/lettering.py`, `maps/attribution.py` (uses
   `letters.nib.plate`; leaves `ADAPTERS`), `_port/mapcard.py` if it still
   calls the label plate, `test_import_order.py`.
 - Names: `nib_brushes(nib: NibStyle, face: FaceStyle, brush: BrushStyle, scale: float) -> Callable[[str, float], Brush]`;
-  `NibSurface(canvas: Canvas, sheet: Sheet, dark: np.ndarray, gran_px: float)`
-  (frozen dataclass, `eq=False`: what the nib writes on) and
+  `NibSurface(canvas: Canvas, scale: float, dark: np.ndarray, gran_px: float)`
+  (frozen dataclass, `eq=False`: what the nib writes on; `scale` is the
+  display-to-render factor every mark is multiplied by and `nib_brushes`
+  and `_backing_wash` take, which `Canvas` cannot give because it has no
+  display width; callers pass `Card.render_scale`, P3.2's
+  `render[0] / max(display[0], 1)`, exactly `label_plate`'s formula at
+  `paint.py:3250` today) and
   `NibGroups(nib: NibStyle, face: FaceStyle, hand: HandStyle, brush: BrushStyle, paper: PaperStyle)`
   (frozen dataclass in `letters/style.py`: the groups the nib reads), so
   `plate(marks: Sequence[Mark], surface: NibSurface, groups: NibGroups, path: Path) -> Path | None`
   stays inside ruff's `max-args = 6` with no `noqa`.
   The group parameters are ADR 0005's table applied to what
-  `label_brushes`, `_pen_profile`, `_dark_field`, `label_plate` and
-  `_backing_wash` read (P3.11a, measured): `label_size_px`, the label pen,
+  `label_brushes`, `_pen_profile`, `label_plate` and `_backing_wash` read
+  (`_dark_field` reads no style field) (P3.11a, measured): `label_size_px`, the label pen,
   leader, wash and ink fields in `NibStyle`; `label_route` in `FaceStyle`;
   `label_seed` in `HandStyle`; the fields `brush_from_id` reads in
   `BrushStyle`; `paper_hex`, `sheet_seed`, `plate_lossless`,
@@ -2094,12 +2134,35 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   shows one, stop and report (the table would be wrong, and fixing it moves
   a frozen digest).
   `render`, `display` and `gran_px`, read from the manifest mapping until
-  now (P3.5), become `surface.canvas` and `surface.gran_px`.
-  `dark` is the darkness grid as an `h` by `w` float array in [0, 1]; the
-  maps caller converts `Plates.manifest.dark` (`DarkGrid`) to it, because
-  `letters` cannot import `maps.plates` (import rule 1).
-- Tests: a plate from three marks on a 64 by 48 canvas is written and has
-  non-zero alpha only near the marks.
+  now (P3.5), become `surface.canvas` (render `w` and `h`),
+  `surface.scale` and `surface.gran_px`.
+  **The Sheet is built in one place, `plate`.** `plate` builds its own
+  `Sheet` exactly as `label_plate` does today (`paint.py:3251-3260`): size
+  `surface.canvas.h` by `surface.canvas.w`, `gran_px=surface.gran_px`,
+  and `seed`, `fibre`, `fibre_stretch`, `fibre_angle` and `fibre_cell`
+  from `groups.paper` (`fibre_cell` scaled by `canvas.w / 1800.0`, floored at 1.6). This is
+  not the painter's Sheet (`paint.py:3680`, `gran_px` from `gran_m / mpp`),
+  so neither caller builds one, and the `PaperStyle` reads stay in the nib,
+  as ADR 0005's table says.
+  **The dark field is built in one place, `maps.plates.dark_array`.**
+  `dark` is the darkness grid as an `h` by `w` float array in [0, 1].
+  `letters` cannot import `maps.plates` (import rule 1), so the conversion
+  lives beside `DarkGrid`:
+  `dark_array(grid: DarkGrid | None, h: int, w: int) -> np.ndarray`, the
+  body of today's `_dark_field` moved verbatim (bilinear resize of the
+  grid; `np.full((h, w), 0.35, F32)` when the grid is `None` or its
+  `values` are empty). The two callers of `plate` both call it, and
+  nothing else converts a `DarkGrid`: `draw_plate` (in `_port/labels.py`,
+  reached from `maps/lettering.py`'s `letter`, until P4.18 moves it to
+  `maps/lettering/pipeline.py`; it imports `dark_array` inside its
+  body, rule 3, and `letters.nib` at module level) and `maps/attribution.py`.
+  `maps/plates.py` stays a leaf (numpy and PIL only).
+- Tests: a plate from three marks on a 64 by 48 canvas with `scale=1.0` is
+  written and has non-zero alpha only near the marks; the same marks with
+  `scale=2.0` on a 128 by 96 canvas put the alpha near the doubled
+  positions. `test_plates.py`: `dark_array(None, 4, 6)` and a `DarkGrid`
+  with empty `values` are all 0.35 with shape `(4, 6)`; a uniform 2 by 2
+  grid of 0.5 resizes to all 0.5.
 - Commit: `Move the nib and label plate into letters`
 
 #### P4.7 One cache for fetches and plates (A7)
@@ -2292,9 +2355,20 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   the function. `geo`'s remaining callers (`journal_layers` ->
   `journal_candidates`, `basemap` -> `pick_landmarks`, `_osm_layers` ->
   `classify`, `OFFERED_CLASSES`) import inside their bodies (rule 3).
-  `tests/unit/maps/candidates/`; the tests at `test_paint.py` about lines
-  915 to 990 and the candidate tests in `test_geo.py` move here;
+  `tests/unit/maps/candidates/`; the climbs and `classify` tests at
+  `test_paint.py` lines 907 to 962 (the `# --- climbs` section up to
+  `# --- real data`) and the candidate tests in `test_geo.py` move here.
+  The two real-data tests after it stay: the `journal_layers` test at 966
+  until P4.15 moves it with `build_basemap`, the `landmark_export` test
+  at 981 until P4.15 moves it to `test_export.py`;
   `test_import_order.py`. Every new module is a leaf (no `_port` import).
+  `maps/candidates/__init__.py` holds a docstring and
+  `__all__: list[str] = []` only, as `maps/lettering/__init__.py` does, and
+  never imports `export` (P4.15) or re-exports anything: `osm` imports
+  `candidates.landmarks`, which runs the package `__init__`, so a
+  re-export of `landmark_export` would close the `export -> layers -> osm`
+  cycle through the package. The cold-import test would catch it; this
+  rule keeps it from being written.
 - Commit: `Generalise map candidates into one facility`
 
 #### P4.14 Split geo, part 1: rings, paths, track index, relief, generalisation, rivers
@@ -2341,7 +2415,8 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   `journal_layers` renamed `build_basemap`, `basemap`, `_derived`,
   `scale_for`, `REFERENCE_SPAN_M`, `MAX_SCALE`, `_place_marks`,
   `_relief_layers`, `_sea_path`), then a new top module
-  `maps/candidates/export.py` with `landmark_export`, `CANDIDATE_BASEMAP`
+  `maps/candidates/export.py` (never imported by `candidates/__init__.py`,
+  P4.13) with `landmark_export`, `CANDIDATE_BASEMAP`
   (P4.10's `candidate_basemap()` as a module constant) and
   `CANDIDATE_CLIP_MARGIN_M`. Not `maps/candidates/landmarks.py`: that
   would close a cycle, because `landmark_export` reads `basemap`
@@ -2369,7 +2444,9 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   | `overpass_path`, `elevation_path`, `landcover_path` | deleted; their readers (`basemap`, `wood_rings`, `coastline_chains`, `cover_rings`, `build_basemap`, `landmark_export`) take the paths from `Cache.features_path`, `landcover_path`, `elevation_path`, which give the same file names (P3.10) |
   | `GeoOptions` | already deleted (P4.10) |
 
-- Owner files: the modules above and their tests; delete `_port/geo.py`,
+- Owner files: the modules above and their tests (the `journal_layers`
+  real-data test at `test_paint.py` near line 966 moves to
+  `tests/unit/maps/test_layers.py`); delete `_port/geo.py`,
   its `line_budget.txt` line, and the emptied `tests/unit/test_geo.py` with
   its per-file-ignores block, `ty` exclude and `line_budget.txt` line;
   `tests/unit/maps/providers/test_overpass.py` (the copy-equality test),
