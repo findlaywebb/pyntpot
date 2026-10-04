@@ -79,7 +79,7 @@ recorded in ADR 0006, not a re-baseline.
 - [x] P3.18 Attribution drawn by `compose` from `Basemap.credits`
 - [x] P3.19 `pyntpot map` CLI
 - [x] P3.20 Top-level exports and `__version__`; ADR 0007
-- [ ] P3.21 Golden harness imports only the public names; no `_port` import under `tests/golden`
+- [x] P3.21 Golden harness imports only the public names; no `_port` import under `tests/golden`
 
 ## P4. Split and layer
 

@@ -12,11 +12,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from pyntpot.maps import pipeline
+from pyntpot import Style, Track, compose, fetch, letter, paint
 from pyntpot.maps.cache import Cache
-from pyntpot.maps.lettering import letter
-from pyntpot.maps.style import Style
-from pyntpot.maps.track import Track
 
 from support.paths import FIXTURE_DIR
 from support.providers import FixtureElevation, FixtureFeatures
@@ -52,14 +49,14 @@ def paint_fixture(work: Path) -> tuple[dict[str, Path], list[str]]:
     cache = Cache(work)
     features, elevation = FixtureFeatures(), FixtureElevation()
 
-    basemap = pipeline.fetch(track, cache, features, elevation, style)
+    basemap = fetch(track, cache, features, elevation, style)
     out_dir = cache.plates_dir(cache.key(track, features, elevation))
-    plates = pipeline.paint(basemap, style, out_dir)
+    plates = paint(basemap, style, out_dir)
     _require_fresh([plates.directory / name for name in PLATES[:3]], copied_ns)
 
     lettering = letter(plates, basemap, None, style)
     _require_fresh([plates.directory / PLATES[3]], copied_ns)
-    card = pipeline.compose(plates, lettering, basemap, style, attribution=False)
+    card = compose(plates, lettering, basemap, style, attribution=False)
     card.save(work / "map.png")
 
     paths = {name: plates.directory / name for name in PLATES}
