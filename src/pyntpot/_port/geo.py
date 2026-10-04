@@ -16,14 +16,11 @@ draws the bare track.
 
 from __future__ import annotations
 
-import base64
 import json
 import logging
 import math
 import re
-import struct
 import time
-import zlib
 from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -33,8 +30,6 @@ from pyntpot.ink.polyline import (
     clip_line,
     eased,
     length,
-    normal_at,
-    segments_cross,
     simplify,
     smooth,
 )
@@ -43,7 +38,9 @@ if TYPE_CHECKING:
     from pyntpot.ink.brush_style import BrushStyle
     from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
     from pyntpot.maps.projection import Projection
+    from pyntpot.maps.rings import Rings
     from pyntpot.maps.style_groups import BasemapStyle, CardStyle, RibbonStyle
+    from pyntpot.maps.track_index import TrackIndex
 
 log = logging.getLogger(__name__)
 
@@ -88,438 +85,13 @@ def bounding_box(
 # --------------------------------------------------------------------------- geometry
 
 
-def signed_area(ring: list[Pt]) -> float:
-    """Twice the signed area of a ring; positive is counter-clockwise."""
-    total = 0.0
-    for i in range(len(ring)):
-        x1, y1 = ring[i]
-        x2, y2 = ring[(i + 1) % len(ring)]
-        total += x1 * y2 - x2 * y1
-    return total
-
-
-def orient(ring: list[Pt], counter_clockwise: bool = True) -> list[Pt]:
-    """The ring wound the way asked for.
-
-    Every filled layer is drawn as one path with `fill-rule="nonzero"`, so an
-    outer ring must wind one way and a hole the other. That is what stops two
-    overlapping woods stacking their alpha into a darker patch.
-    """
-    if (signed_area(ring) > 0) != counter_clockwise:
-        return list(reversed(ring))
-    return list(ring)
-
-
-def point_in_ring(x: float, y: float, ring: list[Pt]) -> bool:
-    """Even-odd point-in-polygon test."""
-    inside = False
-    n = len(ring)
-    for i in range(n):
-        x1, y1 = ring[i]
-        x2, y2 = ring[(i + 1) % n]
-        if (y1 > y) != (y2 > y):
-            xc = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
-            if x < xc:
-                inside = not inside
-    return inside
-
-
-def clip_ring(ring: list[Pt], box: tuple[float, float, float, float]) -> list[Pt]:
-    """Sutherland-Hodgman clip of a ring to an axis-aligned rectangle.
-
-    A wood relation that covers the whole sheet is not dropped for being big:
-    it is cut down to the sheet, so a large wood still shades the corner of the
-    sheet it covers.
-
-    Args:
-        ring: Closed ring in metres.
-        box: (xmin, ymin, xmax, ymax) in metres.
-
-    Returns:
-        The clipped ring, empty when nothing survives.
-    """
-    xmin, ymin, xmax, ymax = box
-    edges = (
-        (lambda p: p[0] >= xmin, 0, xmin),
-        (lambda p: p[0] <= xmax, 0, xmax),
-        (lambda p: p[1] >= ymin, 1, ymin),
-        (lambda p: p[1] <= ymax, 1, ymax),
-    )
-    out = list(ring)
-    for keep, axis, at in edges:
-        if not out:
-            return []
-        nxt: list[Pt] = []
-        for i in range(len(out)):
-            cur, prev = out[i], out[i - 1]
-            cur_in, prev_in = keep(cur), keep(prev)
-            if cur_in != prev_in:
-                span = cur[axis] - prev[axis]
-                t = 0.0 if span == 0 else (at - prev[axis]) / span
-                nxt.append((prev[0] + t * (cur[0] - prev[0]), prev[1] + t * (cur[1] - prev[1])))
-            if cur_in:
-                nxt.append(cur)
-        out = nxt
-    return out
-
-
-def path_d(points: list[Pt], close: bool = False, places: int = 1) -> str:
-    """SVG path data for one polyline, rounded to `places` decimals."""
-    if len(points) < 2:
-        return ""
-    d = "M" + " L".join(f"{x:.{places}f},{y:.{places}f}" for x, y in points)
-    return d + "Z" if close else d
-
-
-def stroke_d(points: list[Pt]) -> str:
-    """Compact path data for a short stroke: absolute start, relative steps.
-
-    A hachure field is thousands of six-point lines. Written as absolute
-    coordinates it is most of a megabyte; written as deltas of a dozen metres
-    it is a fifth of that and draws identically.
-    """
-    if len(points) < 2:
-        return ""
-    out = f"M{points[0][0]:.0f},{points[0][1]:.0f}"
-    prev = points[0]
-    for x, y in points[1:]:
-        out += f"l{x - prev[0]:.0f},{y - prev[1]:.0f}"
-        prev = (x, y)
-    return out
-
-
-def rings_path(rings: list[list[Pt]], holes: list[list[Pt]] | None = None) -> str:
-    """One path holding every ring of a layer, wound for `fill-rule="nonzero"`.
-
-    Args:
-        rings: Filled rings.
-        holes: Rings that punch through them.
-
-    Returns:
-        The concatenated path data, empty when there is nothing to fill.
-    """
-    parts = [path_d(orient(r, True), close=True) for r in rings if len(r) > 2]
-    parts += [path_d(orient(r, False), close=True) for r in (holes or []) if len(r) > 2]
-    return "".join(p for p in parts if p)
-
-
 # --------------------------------------------------------------------------- proximity
 
 
-class TrackIndex:
-    """A grid index over the track, for asking how near a feature ran to it.
-
-    A road is on the map because the session met it, not because it exists, so
-    every minor road and every stream is asked this question once.
-    """
-
-    def __init__(self, points: list[Pt], cell_m: float = 120.0) -> None:
-        """Index the track.
-
-        Args:
-            points: The track in metres.
-            cell_m: Bucket size; queries scan the nine buckets around a point.
-        """
-        self.cell = cell_m
-        self.points = points
-        self.buckets: dict[tuple[int, int], list[Pt]] = {}
-        for p in points:
-            self.buckets.setdefault((int(p[0] // cell_m), int(p[1] // cell_m)), []).append(p)
-
-    def distance(self, x: float, y: float, cap_m: float = 400.0) -> float:
-        """Metres to the nearest track point, or `cap_m` when nothing is near.
-
-        Args:
-            x: Easting in metres.
-            y: Northing in metres.
-            cap_m: The answer given when no track point is within the scan.
-
-        Returns:
-            The distance, never more than `cap_m`.
-        """
-        rings = max(1, int(cap_m // self.cell) + 1)
-        cx, cy = int(x // self.cell), int(y // self.cell)
-        best = cap_m
-        for i in range(-rings, rings + 1):
-            for j in range(-rings, rings + 1):
-                for px, py in self.buckets.get((cx + i, cy + j), ()):
-                    d = math.hypot(px - x, py - y)
-                    if d < best:
-                        best = d
-        return best
-
-    def interacts(self, line: list[Pt], within_m: float, run_m: float) -> bool:
-        """True when the track ran alongside this line, or crossed it.
-
-        Args:
-            line: The feature in metres.
-            within_m: How close counts as alongside.
-            run_m: How much of that contact is needed. A crossing needs none.
-
-        Returns:
-            Whether the feature is part of the session's story.
-        """
-        dense = _densify(line, step_m=20.0)
-        near = [self.distance(x, y, cap_m=within_m + 1) <= within_m for x, y in dense]
-        if not any(near):
-            return False
-        run = 0.0
-        for i in range(1, len(dense)):
-            if near[i] and near[i - 1]:
-                run += math.dist(dense[i - 1], dense[i])
-                if run >= run_m:
-                    return True
-            else:
-                run = 0.0
-        return self._crosses(line)
-
-    def _crosses(self, line: list[Pt]) -> bool:
-        """True when a feature segment intersects a track segment."""
-        for a, b in zip(line, line[1:], strict=False):
-            for c, d in zip(self.points, self.points[1:], strict=False):
-                if max(c[0], d[0]) < min(a[0], b[0]) or min(c[0], d[0]) > max(a[0], b[0]):
-                    continue
-                if max(c[1], d[1]) < min(a[1], b[1]) or min(c[1], d[1]) > max(a[1], b[1]):
-                    continue
-                if segments_cross(a, b, c, d):
-                    return True
-        return False
-
-
-def _densify(line: list[Pt], step_m: float) -> list[Pt]:
-    """A polyline resampled so no two points are more than `step_m` apart."""
-    out: list[Pt] = []
-    for a, b in zip(line, line[1:], strict=False):
-        steps = max(1, int(math.dist(a, b) // step_m))
-        for k in range(steps):
-            t = k / steps
-            out.append((a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])))
-    out.append(line[-1])
-    return out
-
-
-#: How far apart the samples are when a watercourse is measured against the
-#: water it flows in, in metres.
-WIDTH_STEP_M = 25.0
 #: The share of a watercourse's own length OSM has to tag as underground before
 #: none of it is drawn. Half: a river passing under a bridge or a short culvert
 #: is an open river, and a river that is mostly in a pipe is a sewer.
 BURIED_FRAC = 0.5
-
-#: How many samples either side the sideways correction is averaged over, so a
-#: river slides into the middle of its channel rather than stepping into it.
-CHANNEL_EASE_SAMPLES = 4
-#: How far a watercourse has to run *inside* a mapped water area before that
-#: area is taken as its own banks, in metres. A river is as wide as the water it
-#: runs along, not as the water it runs into: a stream that meets a big river
-#: inside the river's own polygon would otherwise measure 212 m and be drawn as
-#: the main river of the sheet.
-WIDTH_RUN_M = 250.0
-
-
-def _ring_boxes(rings: list[list[Pt]]) -> list[tuple[list[Pt], tuple[float, ...]]]:
-    """Each ring with its bounding box, so a point tests against few of them."""
-    out = []
-    for ring in rings:
-        if len(ring) < 3:
-            continue
-        xs = [p[0] for p in ring]
-        ys = [p[1] for p in ring]
-        out.append((ring, (min(xs), min(ys), max(xs), max(ys))))
-    return out
-
-
-def _ray_to_ring(p: Pt, d: Pt, ring: list[Pt]) -> float | None:
-    """Distance from `p` along the unit direction `d` to the first bank ahead."""
-    best: float | None = None
-    for a, b in zip(ring, ring[1:] + ring[:1], strict=False):
-        ex, ey = b[0] - a[0], b[1] - a[1]
-        den = d[0] * ey - d[1] * ex
-        if abs(den) < 1e-12:
-            continue
-        t = ((a[0] - p[0]) * ey - (a[1] - p[1]) * ex) / den
-        u = ((a[0] - p[0]) * d[1] - (a[1] - p[1]) * d[0]) / den
-        if t > 1e-6 and 0.0 <= u <= 1.0 and (best is None or t < best):
-            best = t
-    return best
-
-
-def _ring_at(p: Pt, boxed: list[tuple[list[Pt], tuple[float, ...]]]) -> list[Pt] | None:
-    """The mapped water area this point falls inside, or None."""
-    for ring, (x0, y0, x1, y1) in boxed:
-        if x0 <= p[0] <= x1 and y0 <= p[1] <= y1 and point_in_ring(p[0], p[1], ring):
-            return ring
-    return None
-
-
-def channel(line: list[Pt], rings: list[list[Pt]]) -> tuple[list[Pt], list[float | None]]:
-    """One watercourse re-centred in its own channel, and how wide it is.
-
-    OSM's centreline says where a river goes; it does not promise to run down
-    the middle of it. A centreline can hug one bank for half its run, and a
-    stroke a quarter of a kilometre wide centred on that line overshoots one
-    bank and falls short of the other.
-
-    So the banks are found rather than assumed. At each sample the local normal
-    is cast both ways to the water's edge: the width is what the two rays
-    together measure, and the middle of them is where the line should have been.
-    Where only one ray lands the width is twice it and the point is left where
-    it was, because one bank cannot say where the middle is. The sideways
-    correction is eased along the line so the water does not step.
-
-    Args:
-        line: A watercourse centreline, in metres.
-        rings: Every mapped water area on the card, in metres.
-
-    Returns:
-        The line resampled every `WIDTH_STEP_M` and re-centred where it could
-        be, and the width in metres at each of those samples, or None at a
-        sample that is not in mapped water.
-    """
-    pts = _densify(line, WIDTH_STEP_M)
-    boxed = _ring_boxes(rings)
-    widths: list[float | None] = []
-    offsets: list[float] = []
-    normals: list[Pt] = []
-    for i, p in enumerate(pts):
-        n = normal_at(pts, i)
-        normals.append(n)
-        ring = _ring_at(p, boxed) if boxed else None
-        if ring is None:
-            widths.append(None)
-            offsets.append(0.0)
-            continue
-        left = _ray_to_ring(p, n, ring)
-        right = _ray_to_ring(p, (-n[0], -n[1]), ring)
-        if left is not None and right is not None:
-            widths.append(left + right)
-            offsets.append((left - right) / 2)
-        elif left is not None or right is not None:
-            widths.append(2.0 * (left if left is not None else right))
-            offsets.append(0.0)
-        else:
-            widths.append(None)
-            offsets.append(0.0)
-    offsets = eased(offsets, CHANNEL_EASE_SAMPLES)
-    moved = [
-        (p[0] + n[0] * off, p[1] + n[1] * off)
-        for p, n, off in zip(pts, normals, offsets, strict=False)
-    ]
-    return moved, widths
-
-
-def _accepted(widths: list[float | None]) -> list[float]:
-    """The widths from runs long enough to be the watercourse's own banks.
-
-    A river is as wide as the water it runs along, not as the water it runs
-    into: a tributary's mouth inside the main river's polygon is a handful of
-    samples and buys no measurement at all.
-    """
-    kept: list[float] = []
-    run: list[float] = []
-    for w in [*widths, None]:
-        if w is not None:
-            run.append(w)
-            continue
-        if len(run) * WIDTH_STEP_M >= WIDTH_RUN_M:
-            kept += run
-        run = []
-    return kept
-
-
-def measured_width_m(lines: list[list[Pt]], rings: list[list[Pt]]) -> float | None:
-    """How wide one watercourse really is, from the water area it runs in.
-
-    OSM maps a big river twice: a centreline that says where it goes and a
-    polygon that says how much room it takes. The card only ever read the
-    centreline, so a big river was drawn at the width the importance curve chose
-    for it and not at the quarter kilometre it actually occupies.
-
-    Args:
-        lines: The watercourse's centrelines, in metres.
-        rings: Every mapped water area on the card, in metres.
-
-    Returns:
-        The median width in metres over the accepted runs, or None where the
-        watercourse never runs far enough inside a mapped area.
-    """
-    if not rings:
-        return None
-    kept: list[float] = []
-    for line in lines:
-        if len(line) > 1:
-            kept += _accepted(channel(line, rings)[1])
-    if not kept:
-        return None
-    kept.sort()
-    return kept[len(kept) // 2]
-
-
-def painted_width_px(floor_px: float, measured_m: float, mppd: float) -> float:
-    """How wide one watercourse is drawn, in display pixels.
-
-    **Thin water is exaggerated up to the class floor; wide water is drawn at
-    its own width and never narrowed to fit.** The importance curve is what a
-    watercourse is drawn at when nothing else says: a brook two metres across
-    has to be exaggerated fortyfold to appear on the sheet at all, and every map
-    ever drawn does that. It is a floor and not a target. A river that measures
-    wider than its floor is drawn at what it measures, and is not exaggerated
-    on top of that: a river wider than its floor is never narrowed and never
-    exaggerated further.
-
-    Args:
-        floor_px: What this class is drawn at when nothing is measured.
-        measured_m: The width off the water's own area, or zero for none.
-        mppd: Metres per display pixel.
-
-    Returns:
-        The painted width in display pixels.
-    """
-    return round(max(floor_px, measured_m / max(mppd, 1e-9)), 2)
-
-
-def major_rivers(
-    pieces_by: dict[str, list[list[Pt]]], rings: list[list[Pt]], rel_frac: float
-) -> tuple[set[str], dict[str, float]]:
-    """Which watercourses are the main ones of a box, and how wide each is.
-
-    **The main river of a box is the widest water in it, not the longest.** Run
-    inside the box is a fact about the box rather than about the river: it can
-    make a buried sewer with 4.8 km of culvert across the sheet the main river,
-    and leave the wide river medium on the 2.6 km it clips off a corner.
-
-    Width is measured off the water's own mapped area, which is what OSM maps
-    for exactly the rivers that have one. Where the box holds no mapped area at
-    all, which is the ordinary case away from a big river, the old rule stands
-    and the longest run wins; and a river with no area of its own never outranks
-    one that has been measured, because a measurement is evidence and a run
-    length is a coincidence of framing.
-
-    Args:
-        pieces_by: The clipped centrelines of each watercourse, by name.
-        rings: Every mapped water area on the card, in metres.
-        rel_frac: The share of the winner a watercourse has to reach to share
-            the title.
-
-    Returns:
-        The names drawn as major, and the measured width in metres of every
-        watercourse that had one.
-    """
-    widths: dict[str, float] = {}
-    for name, lines in pieces_by.items():
-        if not name:
-            continue
-        found = measured_width_m(lines, rings)
-        if found:
-            widths[name] = found
-    if widths:
-        widest = max(widths.values())
-        return ({n for n, w in widths.items() if w >= rel_frac * widest}, widths)
-    lengths = {
-        name: sum(length(line) for line in lines) for name, lines in pieces_by.items() if name
-    }
-    longest = max(lengths.values(), default=0.0)
-    return ({n for n, ln in lengths.items() if longest > 0 and ln >= rel_frac * longest}, widths)
 
 
 # --------------------------------------------------------------------------- osm
@@ -528,9 +100,6 @@ def major_rivers(
 def _geom(entry: dict[str, Any], proj: Projection) -> list[Pt]:
     """Project one Overpass `geometry` array into metres."""
     return [proj(g["lat"], g["lon"]) for g in entry.get("geometry") or [] if g]
-
-
-Rings = tuple[list[list[Pt]], list[list[Pt]]]
 
 
 def _polygon_rings(entry: dict[str, Any], proj: Projection) -> Rings:
@@ -551,430 +120,6 @@ def _polygon_rings(entry: dict[str, Any], proj: Projection) -> Rings:
 
 
 # --------------------------------------------------------------------------- relief
-
-
-def _png(width: int, height: int, rows: list[bytes], colour_type: int = 4) -> bytes:
-    """Encode raster rows as a PNG.
-
-    Args:
-        width: Pixels across.
-        height: Pixels down.
-        rows: One `bytes` per row, already in the sample layout `colour_type` wants.
-        colour_type: 0 for greyscale, 4 for greyscale plus alpha.
-
-    Returns:
-        The PNG file.
-    """
-    raw = b"".join(b"\x00" + row for row in rows)
-
-    def chunk(tag: bytes, body: bytes) -> bytes:
-        return (
-            struct.pack(">I", len(body))
-            + tag
-            + body
-            + struct.pack(">I", zlib.crc32(tag + body) & 0xFFFFFFFF)
-        )
-
-    header = struct.pack(">IIBBBBB", width, height, 8, colour_type, 0, 0, 0)
-    return (
-        b"\x89PNG\r\n\x1a\n"
-        + chunk(b"IHDR", header)
-        + chunk(b"IDAT", zlib.compress(raw, 9))
-        + chunk(b"IEND", b"")
-    )
-
-
-def _resample(grid: list[list[float]], factor: int) -> list[list[float]]:
-    """Bilinear upsample of a square grid, so the shading has somewhere to bend."""
-    if factor <= 1:
-        return grid
-    n = len(grid)
-    out_n = (n - 1) * factor + 1
-    out = [[0.0] * out_n for _ in range(out_n)]
-    for r in range(out_n):
-        fr = r / factor
-        r0 = min(int(fr), n - 2)
-        tr = fr - r0
-        for c in range(out_n):
-            fc = c / factor
-            c0 = min(int(fc), n - 2)
-            tc = fc - c0
-            top = grid[r0][c0] * (1 - tc) + grid[r0][c0 + 1] * tc
-            bot = grid[r0 + 1][c0] * (1 - tc) + grid[r0 + 1][c0 + 1] * tc
-            out[r][c] = top * (1 - tr) + bot * tr
-    return out
-
-
-def _shade(
-    fine: list[list[float]], sx: float, sy: float, azimuth: float, altitude: float, z_factor: float
-) -> list[list[float]]:
-    """Signed illumination per cell: positive is lit, negative is in shadow.
-
-    numpy is used when it is installed and the plain loop when it is not; the
-    two agree to within floating point, so the picture does not depend on which
-    ran.
-    """
-    zen = math.radians(90.0 - altitude)
-    az = math.radians(360.0 - azimuth + 90.0)
-    flat = math.cos(zen)
-    try:
-        import numpy as np
-    except ImportError:
-        np = None
-    if np is not None:
-        z = np.asarray(fine, dtype=float)
-        dzdy, dzdx = np.gradient(z, sy, sx)
-        slope = np.arctan(z_factor * np.hypot(dzdx, dzdy))
-        aspect = np.arctan2(dzdy, -dzdx)
-        illum = np.cos(zen) * np.cos(slope) + np.sin(zen) * np.sin(slope) * np.cos(az - aspect)
-        return np.clip((illum - flat) * 2.6, -1.0, 1.0).tolist()
-    n = len(fine)
-    out = [[0.0] * n for _ in range(n)]
-    for r in range(n):
-        r0, r1 = max(r - 1, 0), min(r + 1, n - 1)
-        for c in range(n):
-            c0, c1 = max(c - 1, 0), min(c + 1, n - 1)
-            dzdx = (fine[r][c1] - fine[r][c0]) / ((c1 - c0) * sx)
-            dzdy = (fine[r1][c] - fine[r0][c]) / ((r1 - r0) * sy)
-            slope = math.atan(z_factor * math.hypot(dzdx, dzdy))
-            aspect = math.atan2(dzdy, -dzdx)
-            illum = math.cos(zen) * math.cos(slope) + math.sin(zen) * math.sin(slope) * math.cos(
-                az - aspect
-            )
-            out[r][c] = max(-1.0, min(1.0, (illum - flat) * 2.6))
-    return out
-
-
-def hillshade_png(
-    grid: list[list[float]],
-    dx: float,
-    dy: float,
-    azimuth: float = 315.0,
-    altitude: float = 42.0,
-    z_factor: float = 1.4,
-    upsample: int = 2,
-) -> tuple[str, int, int]:
-    """Shade a terrain grid and return it as a data URI.
-
-    The image is greyscale plus alpha rather than plain grey: a lit slope paints
-    white and a shaded one paints black, both over a transparent flat ground, so
-    the same PNG reads as relief on a pale sheet and on a dark one and the page
-    needs no blend mode to make it work.
-
-    Args:
-        grid: Elevation rows, row 0 southernmost.
-        dx: Metres between columns.
-        dy: Metres between rows.
-        azimuth: Sun bearing in degrees clockwise from north.
-        altitude: Sun height in degrees above the horizon.
-        z_factor: Vertical exaggeration. Relief at this scale is gentle.
-        upsample: Bilinear factor applied before shading.
-
-    Returns:
-        The `data:` URI, and the image's width and height in pixels.
-    """
-    fine = _resample(grid, upsample)
-    n = len(fine)
-    signal = _shade(fine, dx / upsample, dy / upsample, azimuth, altitude, z_factor)
-    # Rows are emitted north first, because SVG y grows downward and the grid's
-    # row 0 is its southern edge.
-    rows = [
-        bytes(
-            bytearray(
-                b
-                for value in row
-                for b in (255 if value > 0 else 0, min(255, int(abs(value) * 255)))
-            )
-        )
-        for row in reversed(signal)
-    ]
-    png = _png(n, n, rows, colour_type=4)
-    return "data:image/png;base64," + base64.b64encode(png).decode(), n, n
-
-
-def marching_squares(grid: list[list[float]], level: float) -> list[list[Pt]]:
-    """Contour polylines for one level, in fractional (column, row) grid space.
-
-    Args:
-        grid: Rows of samples, row 0 southernmost.
-        level: The value to trace.
-
-    Returns:
-        Polylines; a ring comes back with its first and last point equal.
-    """
-    rows, cols = len(grid), len(grid[0])
-    segs: list[tuple[Pt, Pt]] = []
-
-    def interp(a: float, b: float) -> float:
-        return 0.5 if b == a else (level - a) / (b - a)
-
-    table = {
-        1: ((0, 3),),
-        2: ((0, 1),),
-        3: ((3, 1),),
-        4: ((1, 2),),
-        5: ((0, 1), (3, 2)),
-        6: ((0, 2),),
-        7: ((3, 2),),
-        8: ((3, 2),),
-        9: ((0, 2),),
-        10: ((0, 3), (1, 2)),
-        11: ((1, 2),),
-        12: ((3, 1),),
-        13: ((0, 1),),
-        14: ((0, 3),),
-    }
-    for r in range(rows - 1):
-        for c in range(cols - 1):
-            v = (grid[r][c], grid[r][c + 1], grid[r + 1][c + 1], grid[r + 1][c])
-            idx = sum(1 << i for i, val in enumerate(v) if val >= level)
-            if idx in (0, 15):
-                continue
-            edge = (
-                (c + interp(v[0], v[1]), float(r)),
-                (float(c + 1), r + interp(v[1], v[2])),
-                (c + interp(v[3], v[2]), float(r + 1)),
-                (float(c), r + interp(v[0], v[3])),
-            )
-            for a, b in table[idx]:
-                segs.append((edge[a], edge[b]))
-    return _stitch(segs)
-
-
-def _stitch(segs: list[tuple[Pt, Pt]]) -> list[list[Pt]]:
-    """Join contour segments end to end into polylines."""
-
-    def key(p: Pt) -> tuple[float, float]:
-        return (round(p[0], 4), round(p[1], 4))
-
-    starts: dict[tuple[float, float], list[int]] = {}
-    for i, (a, _) in enumerate(segs):
-        starts.setdefault(key(a), []).append(i)
-    ends: dict[tuple[float, float], list[int]] = {}
-    for i, (_, b) in enumerate(segs):
-        ends.setdefault(key(b), []).append(i)
-    used = [False] * len(segs)
-    out: list[list[Pt]] = []
-    for i, (a, b) in enumerate(segs):
-        if used[i]:
-            continue
-        used[i] = True
-        line = [a, b]
-        while True:
-            nxt = next((j for j in starts.get(key(line[-1]), ()) if not used[j]), None)
-            if nxt is None:
-                break
-            used[nxt] = True
-            line.append(segs[nxt][1])
-        while True:
-            prev = next((j for j in ends.get(key(line[0]), ()) if not used[j]), None)
-            if prev is None:
-                break
-            used[prev] = True
-            line.insert(0, segs[prev][0])
-        out.append(line)
-    return join_chains(out, tol=1e-6)
-
-
-def _grid_line_to_metres(
-    line: list[Pt], lats: list[float], lons: list[float], proj: Projection, pad: int = 0
-) -> list[Pt]:
-    """Map a polyline in fractional grid space to route metres.
-
-    Args:
-        line: Points as (column, row), possibly fractional.
-        lats: Grid latitudes, ascending.
-        lons: Grid longitudes, ascending.
-        proj: The activity's projection.
-        pad: Rings of padding added around the grid before contouring.
-
-    Returns:
-        The polyline in metres.
-    """
-    dlat = lats[1] - lats[0]
-    dlon = lons[1] - lons[0]
-    out = []
-    for col, row in line:
-        out.append(proj(lats[0] + (row - pad) * dlat, lons[0] + (col - pad) * dlon))
-    return out
-
-
-def _pad(grid: list[list[float]], value: float) -> list[list[float]]:
-    """A copy of the grid with one ring of `value` around it, so every level closes."""
-    width = len(grid[0]) + 2
-    edge = [value] * width
-    return [edge] + [[value] + list(row) + [value] for row in grid] + [edge]
-
-
-def shade_bands(
-    grid: list[list[float]],
-    lats: list[float],
-    lons: list[float],
-    proj: Projection,
-    dx: float,
-    dy: float,
-    levels: int = 5,
-    azimuth: float = 315.0,
-    altitude: float = 42.0,
-    z_factor: float = 1.4,
-    upsample: int = 2,
-    eps: float = 14.0,
-) -> list[dict[str, Any]]:
-    """Posterised hillshade as filled vector bands.
-
-    The shade is computed exactly as the raster is, then cut into a few levels
-    and traced. Nesting does the work a gradient would: every band is drawn at
-    the same low opacity, so where four of them overlap the ground is four steps
-    darker and the ramp costs no extra alpha bookkeeping.
-
-    Args:
-        grid: Elevation rows, row 0 southernmost.
-        lats: Grid latitudes, ascending.
-        lons: Grid longitudes, ascending.
-        proj: The activity's projection.
-        dx: Metres between columns.
-        dy: Metres between rows.
-        levels: Bands across the whole range, split between shadow and light.
-        azimuth: Sun bearing in degrees clockwise from north.
-        altitude: Sun height in degrees above the horizon.
-        z_factor: Vertical exaggeration.
-        upsample: Bilinear factor applied before shading.
-        eps: Simplification tolerance in metres.
-
-    Returns:
-        Bands from the widest to the tightest, each `{"s": -1 or 1, "t": level,
-        "d": path}`; `s` says whether the band is shadow or light.
-    """
-    fine = _resample(grid, upsample)
-    signal = _pad(_shade(fine, dx / upsample, dy / upsample, azimuth, altitude, z_factor), 0.0)
-    fine_lats = [lats[0] + (lats[-1] - lats[0]) * i / (len(fine) - 1) for i in range(len(fine))]
-    fine_lons = [lons[0] + (lons[-1] - lons[0]) * i / (len(fine) - 1) for i in range(len(fine))]
-    steps = max(1, levels // 2)
-    out: list[dict[str, Any]] = []
-    for sign in (-1, 1):
-        for i in range(1, steps + 1):
-            level = sign * (i / (steps + 0.35))
-            flipped = signal if sign > 0 else [[-v for v in row] for row in signal]
-            rings = marching_squares(flipped, abs(level))
-            parts = []
-            for ring in rings:
-                metres = _grid_line_to_metres(ring, fine_lats, fine_lons, proj, pad=1)
-                metres = simplify(smooth(metres, passes=1, closed=False), eps)
-                if len(metres) > 3:
-                    parts.append(path_d(metres, close=True))
-            if parts:
-                out.append({"s": sign, "t": round(abs(level), 3), "d": "".join(parts)})
-    return out
-
-
-def contour_lines(
-    grid: list[list[float]],
-    lats: list[float],
-    lons: list[float],
-    proj: Projection,
-    interval: float,
-    eps: float = 18.0,
-) -> list[dict[str, Any]]:
-    """Sparse, smoothed contours at one interval.
-
-    Args:
-        grid: Elevation rows, row 0 southernmost.
-        lats: Grid latitudes, ascending.
-        lons: Grid longitudes, ascending.
-        proj: The activity's projection.
-        interval: Metres between lines. Zero draws none.
-        eps: Simplification tolerance in metres.
-
-    Returns:
-        One entry per traced line, `{"e": metres, "major": bool, "d": path}`.
-    """
-    if interval <= 0:
-        return []
-    flat = [v for row in grid for v in row]
-    lo = math.floor(min(flat) / interval) * interval + interval
-    hi = math.ceil(max(flat) / interval) * interval
-    out = []
-    level = lo
-    while level < hi:
-        for line in marching_squares(grid, level):
-            metres = _grid_line_to_metres(line, lats, lons, proj)
-            metres = simplify(smooth(metres, passes=2, closed=False), eps)
-            if len(metres) > 2:
-                out.append(
-                    {
-                        "e": int(level),
-                        "major": int(level) % (interval * 5) == 0,
-                        "d": path_d(metres),
-                    }
-                )
-        level += interval
-    return out
-
-
-def sea_rings(
-    grid: list[list[float]],
-    lats: list[float],
-    lons: list[float],
-    proj: Projection,
-    sea_level: float = 0.0,
-    eps: float = 12.0,
-) -> Rings:
-    """Water and island rings traced from the elevation grid at the shoreline.
-
-    SRTM reports the sea as exactly zero rather than as anything below it, so
-    the shoreline is traced on a mask of "at or below sea level" rather than on
-    the elevation itself: contouring the elevation at 0 m finds nothing, because
-    the sea and the beach are both at 0 m.
-
-    The mask is padded with a ring of dry ground first, so every sea region
-    comes back as a closed loop rather than a line running off the sheet. The
-    padding sits outside the fetched box, which is already 1.5 km wider than the
-    track, so the seam is never on the drawn sheet.
-
-    Args:
-        grid: Elevation rows, row 0 southernmost.
-        lats: Grid latitudes, ascending.
-        lons: Grid longitudes, ascending.
-        proj: The activity's projection.
-        sea_level: Metres at or below which a cell is water.
-        eps: Simplification tolerance in metres.
-
-    Returns:
-        Water rings and island rings, both in metres.
-    """
-    mask = [[1.0 if value <= sea_level else 0.0 for value in row] for row in grid]
-    if not any(value for row in mask for value in row):
-        return [], []
-    padded = _pad(mask, 0.0)
-    water: list[list[Pt]] = []
-    islands: list[list[Pt]] = []
-    for ring in marching_squares(padded, 0.5):
-        if len(ring) < 4:
-            continue
-        wet = _ring_is_wet(ring, padded, 0.5)
-        metres = _grid_line_to_metres(ring, lats, lons, proj, pad=1)
-        metres = simplify(smooth(metres, passes=2, closed=True), eps)
-        if len(metres) > 3:
-            (water if wet else islands).append(metres)
-    return water, islands
-
-
-def _ring_is_wet(ring: list[Pt], padded: list[list[float]], level: float) -> bool:
-    """True when the cells a ring encloses are on the wet side of `level`."""
-    cols = [c for c, _ in ring]
-    rows = [r for _, r in ring]
-    lo_c, hi_c = int(min(cols)), int(max(cols)) + 1
-    lo_r, hi_r = int(min(rows)), int(max(rows)) + 1
-    below = above = 0
-    for r in range(lo_r, min(hi_r + 1, len(padded))):
-        for c in range(lo_c, min(hi_c + 1, len(padded[0]))):
-            if not point_in_ring(c + 0.5, r + 0.5, ring):
-                continue
-            if padded[r][c] >= level:
-                below += 1
-            else:
-                above += 1
-    return below >= above
 
 
 # --------------------------------------------------------------------------- fetch
@@ -1344,6 +489,7 @@ def basemap(
     """
     from pyntpot.maps.projection import track_projection
     from pyntpot.maps.style_groups import BasemapStyle
+    from pyntpot.maps.track_index import TrackIndex, _densify
 
     options = options or BasemapStyle()
     osm_file = overpass_path(key, cache_dir)
@@ -1430,6 +576,10 @@ def _relief_layers(
     index: TrackIndex | None = None,
 ) -> dict[str, Any]:
     """Every relief and water layer the SRTM grid can carry."""
+    from pyntpot.maps.contours import contour_lines, sea_rings
+    from pyntpot.maps.relief import Terrain, hillshade_png, shade_bands
+    from pyntpot.maps.relief_strokes import Field, Hatching, hachures, wave_strokes
+
     data = json.loads(path.read_text())
     n = data["n"]
     values = data["elev"]
@@ -1455,12 +605,7 @@ def _relief_layers(
     if every or mode == "bands":
         levels = 2 if options.generalise else max(3, min(8, options.hillshade_levels))
         out["hillshade_bands"] = shade_bands(
-            grid,
-            lats,
-            lons,
-            proj,
-            dx,
-            dy,
+            Terrain(grid, lats, lons, proj, dx, dy),
             levels=levels,
             eps=derived["cell_m"] * 0.8 if options.generalise else derived["wood_eps_m"] * 0.6,
         )
@@ -1485,9 +630,11 @@ def _relief_layers(
             field,
             clip,
             index,
-            spacing_m=derived["hachure_spacing_m"],
-            min_slope=options.hachure_min_slope,
-            max_length_m=derived["hachure_length_m"],
+            Hatching(
+                spacing_m=derived["hachure_spacing_m"],
+                min_slope=options.hachure_min_slope,
+                max_length_m=derived["hachure_length_m"],
+            ),
         )
     if out["sea"]["d"] and (every or options.sea_style == "waves"):
         out["sea_waves"] = wave_strokes(
@@ -1521,6 +668,10 @@ def _sea_path(
     derived: dict[str, Any],
 ) -> dict[str, str]:
     """The sea as one wash, with a lighter dry-brush edge pulled in from it."""
+    from pyntpot.maps.generalise import Finish, Generalisation, generalise_layer
+    from pyntpot.maps.rings import clip_ring
+    from pyntpot.maps.svg_path import path_d, rings_path
+
     cut = [clip_ring(r, clip) for r in water]
     holes = [clip_ring(r, clip) for r in islands]
     if not options.generalise:
@@ -1529,13 +680,17 @@ def _sea_path(
         [r for r in cut if len(r) > 2],
         [r for r in holes if len(r) > 2],
         clip,
-        derived["cell_m"],
-        options.morph_cells,
-        derived["min_area_ha"],
-        options.smooth_passes,
-        jitter_m=derived["blob_jitter_m"] * 0.6,
-        inset_cells=options.inset_cells,
-        seed=4,
+        Generalisation(
+            derived["cell_m"],
+            options.morph_cells,
+            derived["min_area_ha"],
+            options.smooth_passes,
+        ),
+        Finish(
+            jitter_m=derived["blob_jitter_m"] * 0.6,
+            inset_cells=options.inset_cells,
+            seed=4,
+        ),
     )
     return {
         "d": "".join(path_d(r, close=True) for r in layer["outer"]),
@@ -1569,6 +724,9 @@ def _osm_layers(
         The vector layers, in metres.
     """
     from pyntpot.maps.candidates.landmark_classes import OFFERED_CLASSES, classify
+    from pyntpot.maps.generalise import Finish, Generalisation, generalise_layer
+    from pyntpot.maps.rings import clip_ring
+    from pyntpot.maps.svg_path import path_d, rings_path
 
     payload = json.loads(path.read_text())
     within = derived["interaction_m"]
@@ -1745,13 +903,17 @@ def _osm_layers(
             wood,
             wood_holes,
             clip,
-            cell,
-            options.morph_cells,
-            derived["min_area_ha"],
-            options.smooth_passes,
-            jitter_m=derived["blob_jitter_m"],
-            inset_cells=options.inset_cells,
-            seed_spacing_m=derived["tree_spacing_m"],
+            Generalisation(
+                cell,
+                options.morph_cells,
+                derived["min_area_ha"],
+                options.smooth_passes,
+            ),
+            Finish(
+                jitter_m=derived["blob_jitter_m"],
+                inset_cells=options.inset_cells,
+                seed_spacing_m=derived["tree_spacing_m"],
+            ),
         )
         wood_path = "".join(path_d(r, close=True) for r in layer["outer"])
         wood_inner = "".join(path_d(r, close=True) for r in layer["inner"])
@@ -1761,13 +923,13 @@ def _osm_layers(
             park,
             [],
             clip,
-            cell * 1.5,
-            options.morph_cells,
-            derived["min_area_ha"] * 3,
-            options.smooth_passes,
-            jitter_m=derived["blob_jitter_m"],
-            inset_cells=0,
-            seed=9,
+            Generalisation(
+                cell * 1.5,
+                options.morph_cells,
+                derived["min_area_ha"] * 3,
+                options.smooth_passes,
+            ),
+            Finish(jitter_m=derived["blob_jitter_m"], inset_cells=0, seed=9),
         )
         park_path = "".join(path_d(r, close=True) for r in park_layer["outer"])
         park_n = len(park_layer["outer"])
@@ -1803,536 +965,7 @@ def _dedupe(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
 # --------------------------------------------------------------------------- hachures
 
 
-class Field:
-    """The elevation grid sampled in route metre space.
-
-    Hachures and waves are drawn in metres, not in grid cells, so both need to
-    ask the terrain a question at an arbitrary point rather than at a post.
-    """
-
-    def __init__(
-        self, grid: list[list[float]], lats: list[float], lons: list[float], proj: Projection
-    ) -> None:
-        """Wrap a grid with its geography.
-
-        Args:
-            grid: Elevation rows, row 0 southernmost.
-            lats: Grid latitudes, ascending.
-            lons: Grid longitudes, ascending.
-            proj: The activity's projection.
-        """
-        self.grid = grid
-        self.n = len(grid)
-        self.proj = proj
-        self.lat0, self.lon0 = lats[0], lons[0]
-        self.dlat = lats[1] - lats[0]
-        self.dlon = lons[1] - lons[0]
-        self.dx = self.dlon * proj.kx
-        self.dy = self.dlat * proj.ky
-        x0, y0 = proj(lats[0], lons[0])
-        x1, y1 = proj(lats[-1], lons[-1])
-        self.box = (x0, y0, x1, y1)
-
-    def at(self, x: float, y: float) -> float:
-        """Bilinear elevation at a point in metres."""
-        col = (x - self.box[0]) / self.dx
-        row = (y - self.box[1]) / self.dy
-        c0 = min(max(int(col), 0), self.n - 2)
-        r0 = min(max(int(row), 0), self.n - 2)
-        tc = min(max(col - c0, 0.0), 1.0)
-        tr = min(max(row - r0, 0.0), 1.0)
-        top = self.grid[r0][c0] * (1 - tc) + self.grid[r0][c0 + 1] * tc
-        bot = self.grid[r0 + 1][c0] * (1 - tc) + self.grid[r0 + 1][c0 + 1] * tc
-        return top * (1 - tr) + bot * tr
-
-    def slope(self, x: float, y: float) -> tuple[float, float]:
-        """Downhill direction and gradient magnitude at a point in metres."""
-        h = max(self.dx, self.dy) * 0.5
-        gx = (self.at(x + h, y) - self.at(x - h, y)) / (2 * h)
-        gy = (self.at(x, y + h) - self.at(x, y - h)) / (2 * h)
-        return (-gx, -gy), math.hypot(gx, gy)
-
-
-def _jitter(i: int, j: int, salt: int = 0) -> tuple[float, float]:
-    """Two repeatable pseudo-random numbers in [-0.5, 0.5) for one grid cell.
-
-    Repeatable matters: a hachure field that moved every time the page was
-    rebuilt would make two screenshots impossible to compare.
-    """
-    h = (i * 73856093) ^ (j * 19349663) ^ (salt * 83492791)
-    h &= 0x7FFFFFFF
-    return (((h % 1000) / 1000.0) - 0.5, (((h // 1000) % 1000) / 1000.0) - 0.5)
-
-
-def hachures(
-    field: Field,
-    clip: tuple[float, float, float, float],
-    index: TrackIndex | None = None,
-    spacing_m: float = 55.0,
-    min_slope: float = 0.035,
-    max_length_m: float = 90.0,
-    buffer_m: float = 40.0,
-    steps: int = 5,
-    buckets: int = 4,
-) -> list[dict[str, Any]]:
-    """Lines of descent, the way a hand-drawn sketch shows hills.
-
-    Each stroke starts on a jittered grid and walks downhill; its length and its
-    weight follow the slope, so flat ground stays empty paper and a steep face
-    fills with dark strokes. Seeds near the track are skipped, because a hachure
-    crossing the line is the one mark on the sheet that reads as an error.
-
-    Args:
-        field: The terrain.
-        clip: (xmin, ymin, xmax, ymax) in metres.
-        index: The track, for the buffer. None draws hachures everywhere.
-        spacing_m: Metres between seeds.
-        min_slope: Gradient below which no stroke is drawn.
-        max_length_m: The longest a stroke gets, on the steepest ground.
-        buffer_m: Metres of clear paper kept either side of the track.
-        steps: Integration steps per stroke.
-        buckets: How many opacity levels the strokes are grouped into, so the
-            layer ships as a handful of paths rather than a thousand.
-
-    Returns:
-        One entry per weight, `{"o": opacity, "d": path}`, lightest first.
-    """
-    xmin, ymin, xmax, ymax = clip
-    groups: list[list[str]] = [[] for _ in range(buckets)]
-    cols = int((xmax - xmin) / spacing_m) + 1
-    rows = int((ymax - ymin) / spacing_m) + 1
-    for j in range(rows):
-        for i in range(cols):
-            jx, jy = _jitter(i, j)
-            x = xmin + (i + 0.5 + jx * 0.8) * spacing_m
-            y = ymin + (j + 0.5 + jy * 0.8) * spacing_m
-            if not (xmin <= x <= xmax and ymin <= y <= ymax):
-                continue
-            (dx, dy), grad = field.slope(x, y)
-            if grad < min_slope:
-                continue
-            if index is not None and index.distance(x, y, cap_m=buffer_m + 1) <= buffer_m:
-                continue
-            weight = min(1.0, (grad - min_slope) / max(min_slope * 3.0, 1e-6))
-            length = max_length_m * (0.35 + 0.65 * weight)
-            line = [(x, y)]
-            px, py = x, y
-            for _ in range(steps):
-                (dx, dy), grad = field.slope(px, py)
-                norm = math.hypot(dx, dy)
-                if norm == 0 or grad < min_slope * 0.6:
-                    break
-                px += dx / norm * (length / steps)
-                py += dy / norm * (length / steps)
-                if index is not None and index.distance(px, py, cap_m=buffer_m + 1) <= buffer_m:
-                    break
-                line.append((px, py))
-            if len(line) < 2 or math.dist(line[0], line[-1]) < spacing_m * 0.15:
-                continue
-            groups[min(buckets - 1, int(weight * buckets))].append(stroke_d(line))
-    return [
-        {"o": round((k + 1) / buckets, 3), "d": "".join(parts)}
-        for k, parts in enumerate(groups)
-        if parts
-    ]
-
-
-def wave_strokes(
-    field: Field,
-    clip: tuple[float, float, float, float],
-    sea_level: float = 0.0,
-    spacing_m: float = 130.0,
-    length_m: float = 70.0,
-) -> str:
-    """Sparse S-curves over the water, for the hand-drawn sea.
-
-    A flat fill states where the sea is; these state that it is sea. Both are
-    offered, because which one belongs on the page is a judgement about the
-    drawing rather than about the data.
-
-    Args:
-        field: The terrain, which is what says where the water is.
-        clip: (xmin, ymin, xmax, ymax) in metres.
-        sea_level: Metres at or below which a point is water.
-        spacing_m: Metres between strokes.
-        length_m: How long each stroke is.
-
-    Returns:
-        One path holding every stroke, empty when there is no water.
-    """
-    xmin, ymin, xmax, ymax = clip
-    parts = []
-    cols = int((xmax - xmin) / spacing_m) + 1
-    rows = int((ymax - ymin) / spacing_m) + 1
-    for j in range(rows):
-        for i in range(cols):
-            jx, jy = _jitter(i, j, salt=7)
-            x = xmin + (i + 0.5 + jx) * spacing_m
-            y = ymin + (j + 0.5 + jy) * spacing_m
-            if not (xmin <= x <= xmax and ymin <= y <= ymax):
-                continue
-            if field.at(x, y) > sea_level:
-                continue
-            half = length_m / 2
-            amp = length_m * 0.14
-            parts.append(
-                f"M{x - half:.0f},{y:.0f}"
-                f"C{x - half / 2:.0f},{y + amp:.0f} {x - half / 4:.0f},{y - amp:.0f} "
-                f"{x:.0f},{y:.0f}"
-                f"C{x + half / 4:.0f},{y + amp:.0f} {x + half / 2:.0f},{y - amp:.0f} "
-                f"{x + half:.0f},{y:.0f}"
-            )
-    return "".join(parts)
-
-
 # --------------------------------------------------------------------------- generalise
-
-
-def _fill_ring(
-    mask: list[bytearray], ring: list[Pt], x0: float, y0: float, cell: float, value: int
-) -> None:
-    """Scanline-fill one ring into a mask, in place.
-
-    Testing every cell against every ring is the obvious way and far too slow on
-    a ride's sheet; a scanline costs one pass over the ring's own points per row
-    it covers.
-
-    Args:
-        mask: Rows of cells, row 0 southernmost.
-        ring: Closed ring in metres.
-        x0: Metres at the mask's western edge.
-        y0: Metres at the mask's southern edge.
-        cell: Metres per cell.
-        value: 1 to paint, 0 to erase.
-    """
-    rows, cols = len(mask), len(mask[0])
-    ys = [p[1] for p in ring]
-    lo = max(0, int((min(ys) - y0) / cell))
-    hi = min(rows - 1, int((max(ys) - y0) / cell) + 1)
-    for r in range(lo, hi + 1):
-        y = y0 + (r + 0.5) * cell
-        crossings = []
-        for i in range(len(ring)):
-            (ax, ay), (bx, by) = ring[i], ring[(i + 1) % len(ring)]
-            if (ay > y) == (by > y):
-                continue
-            crossings.append(ax + (y - ay) * (bx - ax) / (by - ay))
-        crossings.sort()
-        row = mask[r]
-        for a, b in zip(crossings[0::2], crossings[1::2], strict=False):
-            ca = max(0, int(math.ceil((a - x0) / cell - 0.5)))
-            cb = min(cols - 1, int((b - x0) / cell - 0.5))
-            for c in range(ca, cb + 1):
-                row[c] = value
-
-
-def rasterise(
-    rings: list[list[Pt]],
-    holes: list[list[Pt]],
-    clip: tuple[float, float, float, float],
-    cell: float,
-) -> list[bytearray]:
-    """The union of a set of rings as a coarse binary mask.
-
-    Rasterising is what turns "one hundred overlapping wood polygons" into one
-    shape. Every later step, the smoothing and the speck removal, works on the
-    shape rather than on the hundred.
-
-    Args:
-        rings: Filled rings in metres.
-        holes: Rings that punch through them.
-        clip: (xmin, ymin, xmax, ymax) in metres.
-        cell: Metres per cell.
-
-    Returns:
-        Rows of cells, row 0 southernmost.
-    """
-    xmin, ymin, xmax, ymax = clip
-    cols = max(1, int((xmax - xmin) / cell) + 1)
-    rows = max(1, int((ymax - ymin) / cell) + 1)
-    mask = [bytearray(cols) for _ in range(rows)]
-    for ring in rings:
-        if len(ring) > 2:
-            _fill_ring(mask, ring, xmin, ymin, cell, 1)
-    for ring in holes:
-        if len(ring) > 2:
-            _fill_ring(mask, ring, xmin, ymin, cell, 0)
-    return mask
-
-
-def _spread(mask: list[bytearray], radius: int, grow: bool) -> list[bytearray]:
-    """Dilate or erode a mask by a square of `radius` cells, separably."""
-    if radius <= 0:
-        return [bytearray(row) for row in mask]
-    rows, cols = len(mask), len(mask[0])
-    hit = 1 if grow else 0
-    out = [bytearray(row) for row in mask]
-    for r in range(rows):
-        src, dst = mask[r], out[r]
-        for c in range(cols):
-            lo, hi = max(0, c - radius), min(cols - 1, c + radius)
-            dst[c] = hit if any(src[i] == hit for i in range(lo, hi + 1)) else src[c]
-    final = [bytearray(row) for row in out]
-    for c in range(cols):
-        column = [out[r][c] for r in range(rows)]
-        for r in range(rows):
-            lo, hi = max(0, r - radius), min(rows - 1, r + radius)
-            if any(column[i] == hit for i in range(lo, hi + 1)):
-                final[r][c] = hit
-    return final
-
-
-def _components(mask: list[bytearray], value: int) -> list[list[tuple[int, int]]]:
-    """Four-connected components of the cells equal to `value`."""
-    rows, cols = len(mask), len(mask[0])
-    seen = [bytearray(cols) for _ in range(rows)]
-    out = []
-    for r0 in range(rows):
-        for c0 in range(cols):
-            if seen[r0][c0] or mask[r0][c0] != value:
-                continue
-            stack = [(r0, c0)]
-            seen[r0][c0] = 1
-            blob = []
-            while stack:
-                r, c = stack.pop()
-                blob.append((r, c))
-                for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                    nr, nc = r + dr, c + dc
-                    if (
-                        0 <= nr < rows
-                        and 0 <= nc < cols
-                        and not seen[nr][nc]
-                        and mask[nr][nc] == value
-                    ):
-                        seen[nr][nc] = 1
-                        stack.append((nr, nc))
-            out.append(blob)
-    return out
-
-
-def declutter(mask: list[bytearray], min_cells: int) -> list[bytearray]:
-    """Drop specks and fill pinholes below `min_cells` in area.
-
-    A wood the size of four cells is noise on a sheet this size, and so is a
-    clearing the same size. Both go, which is what leaves few big shapes.
-    """
-    out = [bytearray(row) for row in mask]
-    for blob in _components(out, 1):
-        if len(blob) < min_cells:
-            for r, c in blob:
-                out[r][c] = 0
-    rows, cols = len(out), len(out[0])
-    for blob in _components(out, 0):
-        touches_edge = any(r in (0, rows - 1) or c in (0, cols - 1) for r, c in blob)
-        if not touches_edge and len(blob) < min_cells:
-            for r, c in blob:
-                out[r][c] = 1
-    return out
-
-
-def trace_mask(
-    mask: list[bytearray],
-    clip: tuple[float, float, float, float],
-    cell: float,
-    eps: float = 18.0,
-    passes: int = 3,
-) -> list[list[Pt]]:
-    """Trace a mask back into smooth rings.
-
-    Args:
-        mask: Rows of cells, row 0 southernmost.
-        clip: (xmin, ymin, xmax, ymax) in metres.
-        cell: Metres per cell.
-        eps: Douglas-Peucker tolerance in metres, applied before the smoothing.
-        passes: Chaikin passes. Two or three is the difference between a
-            staircase and a brush stroke.
-
-    Returns:
-        Closed rings in metres, filled rings and holes both, wound so one
-        `fill-rule="nonzero"` path fills the union once.
-    """
-    xmin, ymin, _, _ = clip
-    padded = [[0.0] * (len(mask[0]) + 2)]
-    padded += [[0.0] + [float(v) for v in row] + [0.0] for row in mask]
-    padded += [[0.0] * (len(mask[0]) + 2)]
-    out = []
-    for ring in marching_squares(padded, 0.5):
-        if len(ring) < 4:
-            continue
-        wet = _ring_is_wet(ring, padded, 0.5)
-        metres = [(xmin + (col - 1) * cell, ymin + (row - 1) * cell) for col, row in ring]
-        metres = smooth(simplify(metres, eps), passes=passes, closed=True)
-        metres = simplify(metres, eps * 0.3)
-        if len(metres) > 3:
-            out.append(orient(metres, wet))
-    return out
-
-
-def generalise(
-    rings: list[list[Pt]],
-    holes: list[list[Pt]],
-    clip: tuple[float, float, float, float],
-    cell: float,
-    morph_cells: int = 2,
-    min_area_ha: float = 4.0,
-    passes: int = 3,
-) -> list[list[Pt]]:
-    """Raster generalisation: union, close, open, declutter, trace, smooth.
-
-    This is the whole answer to "too intricate, too many greens". Everything
-    that reaches the sheet has been through one grid, so what comes out is a
-    few big shapes with soft edges rather than a hundred outlines stacked on
-    each other.
-
-    Args:
-        rings: Filled rings in metres.
-        holes: Rings that punch through them.
-        clip: (xmin, ymin, xmax, ymax) in metres.
-        cell: Metres per cell of the working grid.
-        morph_cells: Radius of the close and the open, in cells.
-        min_area_ha: Hectares below which a blob or a hole is dropped.
-        passes: Chaikin passes on the traced outline.
-
-    Returns:
-        Rings ready to concatenate into one filled path.
-    """
-    if not rings:
-        return []
-    mask = rasterise(rings, holes, clip, cell)
-    mask = _spread(_spread(mask, morph_cells, grow=True), morph_cells, grow=False)
-    mask = _spread(_spread(mask, morph_cells, grow=False), morph_cells, grow=True)
-    min_cells = max(1, int(min_area_ha * 10000.0 / (cell * cell)))
-    mask = declutter(mask, min_cells)
-    return trace_mask(mask, clip, cell, eps=cell * 0.55, passes=passes)
-
-
-def jitter_ring(ring: list[Pt], amplitude: float, seed: int = 0) -> list[Pt]:
-    """Push a ring's outline in and out along its own normals.
-
-    A generalised mask traces as a smooth but obviously computed curve. The
-    hand-drawn maps do not have accurate edges, they have loose ones, so every vertex is moved along its outward normal by a low-frequency
-    wave: the shape stays the shape and the edge stops looking measured.
-
-    Args:
-        ring: A closed ring in metres.
-        amplitude: Metres of movement at the peak of the wave.
-        seed: Shifts the wave, so two layers do not wobble in step.
-
-    Returns:
-        The moved ring, the same length.
-    """
-    n = len(ring)
-    if n < 4 or amplitude <= 0:
-        return ring
-    outward = 1.0 if signed_area(ring) > 0 else -1.0
-    phase = (seed % 17) * 0.37
-    out = []
-    for i, (x, y) in enumerate(ring):
-        ax, ay = ring[i - 1]
-        bx, by = ring[(i + 1) % n]
-        dx, dy = bx - ax, by - ay
-        norm = math.hypot(dx, dy) or 1.0
-        nx, ny = dy / norm * outward, -dx / norm * outward
-        t = i / n * math.tau
-        wave = 0.62 * math.sin(3 * t + phase) + 0.38 * math.sin(7 * t + phase * 2.3)
-        out.append((x + nx * amplitude * wave, y + ny * amplitude * wave))
-    return out
-
-
-def scatter(
-    mask: list[bytearray],
-    clip: tuple[float, float, float, float],
-    cell: float,
-    spacing_m: float,
-    salt: int = 3,
-) -> list[Pt]:
-    """Points on a jittered grid that fall well inside a mask.
-
-    For the tree glyphs: a wood is a wash, and a handful of little conifers in
-    it is what says the wash is a wood rather than a field.
-
-    Args:
-        mask: Rows of cells, row 0 southernmost.
-        clip: (xmin, ymin, xmax, ymax) in metres.
-        cell: Metres per cell of the mask.
-        spacing_m: Metres between seeds. Zero scatters nothing.
-        salt: Shifts the jitter.
-
-    Returns:
-        Points in metres, repeatable between builds.
-    """
-    if spacing_m <= 0:
-        return []
-    inner = _spread(mask, 1, grow=False)
-    xmin, ymin, xmax, ymax = clip
-    out: list[Pt] = []
-    cols = int((xmax - xmin) / spacing_m) + 1
-    rows = int((ymax - ymin) / spacing_m) + 1
-    for j in range(rows):
-        for i in range(cols):
-            jx, jy = _jitter(i, j, salt)
-            x = xmin + (i + 0.5 + jx * 0.9) * spacing_m
-            y = ymin + (j + 0.5 + jy * 0.9) * spacing_m
-            c, r = int((x - xmin) / cell), int((y - ymin) / cell)
-            if 0 <= r < len(inner) and 0 <= c < len(inner[0]) and inner[r][c]:
-                out.append((round(x, 1), round(y, 1)))
-    return out
-
-
-def generalise_layer(
-    rings: list[list[Pt]],
-    holes: list[list[Pt]],
-    clip: tuple[float, float, float, float],
-    cell: float,
-    morph_cells: int = 2,
-    min_area_ha: float = 4.0,
-    passes: int = 3,
-    jitter_m: float = 0.0,
-    inset_cells: int = 2,
-    seed_spacing_m: float = 0.0,
-    seed: int = 0,
-) -> dict[str, Any]:
-    """The generalisation stage, and the two extra passes a wash wants.
-
-    Args:
-        rings: Filled rings in metres.
-        holes: Rings that punch through them.
-        clip: (xmin, ymin, xmax, ymax) in metres.
-        cell: Metres per cell of the working grid.
-        morph_cells: Radius of the close and the open, in cells.
-        min_area_ha: Hectares below which a blob, or a hole, is dropped.
-        passes: Chaikin passes on the traced outline.
-        jitter_m: Metres of loose-edge wobble. Zero draws the measured edge.
-        inset_cells: Cells to pull in for the second, darker pass of pigment.
-        seed_spacing_m: Metres between tree seeds. Zero scatters none.
-        seed: Shifts the wobble, so two layers do not move in step.
-
-    Returns:
-        `outer` rings, the `inner` second-pass rings, and the tree `seeds`.
-    """
-    empty: dict[str, Any] = {"outer": [], "inner": [], "seeds": []}
-    if not rings:
-        return empty
-    mask = rasterise(rings, holes, clip, cell)
-    mask = _spread(_spread(mask, morph_cells, grow=True), morph_cells, grow=False)
-    mask = _spread(_spread(mask, morph_cells, grow=False), morph_cells, grow=True)
-    min_cells = max(1, int(min_area_ha * 10000.0 / (cell * cell)))
-    mask = declutter(mask, min_cells)
-    eps = cell * 0.55
-
-    def traced(source: list[bytearray], salt: int) -> list[list[Pt]]:
-        out = []
-        for ring in trace_mask(source, clip, cell, eps=eps, passes=passes):
-            out.append(jitter_ring(ring, jitter_m, salt) if jitter_m else ring)
-        return out
-
-    inner_mask = declutter(_spread(mask, max(1, inset_cells), grow=False), min_cells)
-    return {
-        "outer": traced(mask, seed),
-        "inner": traced(inner_mask, seed + 5) if inset_cells > 0 else [],
-        "seeds": scatter(mask, clip, cell, seed_spacing_m),
-    }
 
 
 # --------------------------------------------------------------------------- land cover
@@ -2479,6 +1112,8 @@ def cover_rings(
     Returns:
         Rings by class; empty when there is no land cover cached.
     """
+    from pyntpot.maps.rings import clip_ring
+
     path = landcover_path(key, cache_dir)
     out: dict[str, list[list[Pt]]] = {}
     if not path.exists():
@@ -2505,6 +1140,8 @@ def wood_rings(
     key: str, proj: Projection, clip: tuple[float, float, float, float], eps: float, cache_dir: Path
 ) -> list[list[Pt]]:
     """Wood rings straight from the renderer's own Overpass cache."""
+    from pyntpot.maps.rings import clip_ring
+
     path = overpass_path(key, cache_dir)
     rings: list[list[Pt]] = []
     if not path.exists():
@@ -2570,6 +1207,8 @@ def sea_from_coast(
     Returns:
         One closed ring, or an empty list when no chain crosses the card.
     """
+    from pyntpot.maps.rings import point_in_ring
+
     xmin, ymin, xmax, ymax = clip
     corners = [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)]
 
@@ -2789,6 +1428,9 @@ def journal_layers(
     from pyntpot.maps.candidates.landmarks import rank_landmarks
     from pyntpot.maps.card import Card
     from pyntpot.maps.projection import track_projection
+    from pyntpot.maps.rings import clip_ring
+    from pyntpot.maps.rivers import CHANNEL_EASE_SAMPLES, channel, major_rivers, painted_width_px
+    from pyntpot.maps.svg_path import parse_path
 
     if not overpass_path(key, cache_dir).exists():
         return None
@@ -2956,23 +1598,6 @@ def journal_layers(
         ),
         sources=tuple(base.get("sources", [])),
     )
-
-
-def parse_path(d: str) -> list[list[Pt]]:
-    """The point lists inside one `M x,y L x,y` path, the inverse of `path_d`."""
-    out: list[list[Pt]] = []
-    for chunk in d.split("M"):
-        chunk = chunk.strip().rstrip("Z").strip()
-        if not chunk:
-            continue
-        pts: list[Pt] = []
-        for token in chunk.replace("L", " ").split():
-            if "," in token:
-                a, b = token.split(",")
-                pts.append((float(a), float(b)))
-        if len(pts) > 1:
-            out.append(pts)
-    return out
 
 
 #: Metres of ground kept around the track's bounding box for the candidates.
