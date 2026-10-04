@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from pyntpot._port import geo
 from pyntpot.maps.track import BoundingBox, Track
+
 from support import REPO_ROOT
 
 GPX = REPO_ROOT / "tests" / "fixtures" / "lynmouth" / "track.gpx"
@@ -50,12 +51,21 @@ class TestFixtureTrack:
         lat, lng = geo.read_gpx(GPX)
         assert (list(track.lat), list(track.lng)) == (lat, lng)
 
-    def test_bounding_box_is_pinned(self) -> None:
-        """The 1500 m box equals the pinned tuple, in millionths of a degree."""
-        box = Track.from_gpx(GPX).bounding_box(1500.0)
+    @pytest.mark.parametrize(
+        ("margin", "expected"),
+        [
+            (0.0, (51.214138, -3.852012, 51.232043, -3.80824)),
+            (500.0, (51.209615, -3.859184, 51.236566, -3.801068)),
+        ],
+        ids=["none", "500m"],
+    )
+    def test_bounding_box_is_pinned(
+        self, margin: float, expected: tuple[float, float, float, float]
+    ) -> None:
+        """The box equals the pinned tuple to a millionth of a degree."""
+        box = Track.from_gpx(GPX).bounding_box(margin)
         assert isinstance(box, BoundingBox)
-        micro = tuple(round(value * 1_000_000) for value in box)
-        assert micro == (51200568, -3873527, 51245613, -3786725)
+        assert tuple(box) == pytest.approx(expected, abs=1e-6)
 
     @pytest.mark.parametrize("margin", [0.0, 750.0, 1500.0], ids=["none", "half", "full"])
     def test_bounding_box_matches_port(self, margin: float) -> None:
