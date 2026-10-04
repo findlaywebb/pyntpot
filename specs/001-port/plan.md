@@ -559,8 +559,8 @@ Write it out in full in commands; it is abbreviated here only.
   slice's clean starting commit, run `$MG "$SCRATCH/before"`. The script
   writes `baseline.json` there with `{"commit": <git rev-parse HEAD>, "dirty": <bool>}`;
   the hand-off quotes it, and a dirty baseline is invalid. After the change,
-  `uv run pytest -m golden --golden-dir "$SCRATCH/before"`. This is
-  byte-exact (images and manifest hash) against the same machine's own
+  `uv run pytest -m golden --golden-dir="$SCRATCH/before"`. Pass `--golden-dir` with `=`; a space-separated path is read as a test path and the option is never registered.
+  This is byte-exact (images and manifest hash) against the same machine's own
   output, so it proves a refactor moved no pixel even where committed goldens
   only hold in tolerance.
 - **G-window** (P3.12 to P3.15, once per window step; a step is one commit):
@@ -732,7 +732,7 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
 - Parity: exact, current goldens. G-here; then G-self against a baseline made
   with the new script on this commit (the script's first use proves it).
 - Commit: `Add a same-machine golden harness and the package skeletons`
-- Done when: `uv run pytest -m golden --golden-dir "$SCRATCH/before"` passes
+- Done when: `uv run pytest -m golden --golden-dir="$SCRATCH/before"` passes
   byte-exact; `--compare` logs six lines; a second run with
   `--compare "$SCRATCH/before" --require-identical all --require-hash equal`
   exits 0, and the same run with `--require-hash differ` exits 1 (the gate
