@@ -87,7 +87,7 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 
 - [x] P4.1 Design the hand's setting; ADR 0008 (A2)
 - [x] P4.2 Ink engine part 1: noise, sheet, raster, io, wash, pigment (A1)
-- [ ] P4.3 Ink engine part 2: brush with the brush-sheet tables, tip, stamp, pad (A1)
+- [x] P4.3 Ink engine part 2: brush with the brush-sheet tables, tip, stamp, pad (A1)
 - [ ] P4.4 Split the outline font into `letters/{font,skeleton,trace}`
 - [ ] P4.5 The hand writes settings; map furniture moves to maps (A2)
 - [ ] P4.6 The nib plate moves into letters (A2); `NibSurface` carries the render `scale`, `plate` builds its own Sheet, `maps.plates.dark_array` builds the dark field for both callers
