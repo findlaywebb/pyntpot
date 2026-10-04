@@ -86,7 +86,7 @@ recorded in ADR 0006, not a re-baseline.
 Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table. After the second review (`33f12be`) P4.16 and P4.17 swapped content (spans before placement, bottom-up) and P3.11 split into P3.11a and P3.11b. After the third review (`f63bb61`) slice IDs are unchanged; `paint_activity`'s deletion moved from P3.21 to P3.16. After the fourth review (`7b55c7d`) slice IDs are unchanged.
 
 - [x] P4.1 Design the hand's setting; ADR 0008 (A2)
-- [ ] P4.2 Ink engine part 1: noise, sheet, raster, io, wash, pigment (A1)
+- [x] P4.2 Ink engine part 1: noise, sheet, raster, io, wash, pigment (A1)
 - [ ] P4.3 Ink engine part 2: brush with the brush-sheet tables, tip, stamp, pad (A1)
 - [ ] P4.4 Split the outline font into `letters/{font,skeleton,trace}`
 - [ ] P4.5 The hand writes settings; map furniture moves to maps (A2)
