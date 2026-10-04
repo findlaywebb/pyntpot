@@ -1,0 +1,1 @@
+# Files exempt from the line budget and the clock and random bans. Empty: nothing is exempt.

@@ -5,27 +5,25 @@ One page: who owns what, who may import whom. The machine-readable version is
 the contract**; this page is the orientation read. Changing a boundary is an ADR
 (`docs/decisions/`).
 
-The target layering is `maps -> letters -> ink`: dependencies point towards `ink`. The
-layers contract is added when the port is split. Until then everything lives in the
-private `pyntpot._port` subpackage, which has no layer contract.
+The layering is `maps -> letters -> ink`: dependencies point towards `ink`. import-linter
+enforces it as a layers contract, and a second contract keeps `httpx` and `pydantic` out of
+`ink` and `letters` (ADR 0010).
 
 | Layer | Owns | May import |
 |---|---|---|
 | `pyntpot.ink` | The painting engine: sheet, noise, brush, stamp, wash, pigment, raster I/O | nothing outside `ink` |
 | `pyntpot.letters` | Hand lettering: the font, tracing glyphs to strokes, the hand | `ink` |
 | `pyntpot.maps` | Route maps: providers, cache, projection, layers, plates, placement, compose, style, CLI | `letters`, `ink` |
-| `pyntpot._port` | Interim home of the ported code, until the split | anything in the package |
 
 Hard rules the checks enforce:
 
 - `pyntpot` imports no `matplotlib`, `pandas`, `jinja2` or `yaml`.
+- `ink` and `letters` import neither `httpx` nor `pydantic`.
 - The package never touches `os.environ` / `os.getenv`: config is injected.
-- No clock reads, no module-level randomness, no `uuid` imports. Files listed in
-  `tests/architecture/exemptions/line_budget.txt` are exempt from the clock and random
-  bans until they are split.
+- No clock reads, no module-level randomness, no `uuid` imports. The exemptions
+  directory (`tests/architecture/exemptions/`) is empty.
 - No `print()` anywhere in `src/`; logging only.
-- Soft file budget of 400 lines. A spike signals a god module; split it. Listed files are
-  exempt until they are split.
+- Soft file budget of 400 lines. A spike signals a god module; split it.
 - No personal content: banned terms and the coordinate allowlist apply to `src/`,
   `tests/`, `docs/` and the root docs.
 

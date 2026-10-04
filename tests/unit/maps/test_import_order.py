@@ -1,11 +1,9 @@
-"""The import rule between the layered packages and the interim `_port` code.
+"""The import rule between the layered packages, and the cold import of every module.
 
-`ink` never imports `letters`, `maps` or `_port`; `letters` imports only `ink`
-from the package. A `maps` module imports `_port` only when it is a pinned
-adapter, and an adapter binds `_port` modules, never names from them; no adapter
-is left, so `ADAPTERS` is empty. `_port` reaches `maps` only inside a function or
-under `if TYPE_CHECKING:`. The checks read the AST of `src/pyntpot`, counting direct
-imports only; the cold-import test proves the chains.
+`ink` never imports `letters` or `maps`; `letters` imports only `ink` from the
+package. The checks read the AST of `src/pyntpot`, counting direct imports only; the
+cold-import test proves the chains. import-linter's layers contract enforces the same
+direction over the whole graph.
 """
 
 import ast
@@ -131,9 +129,6 @@ MODULES: tuple[str, ...] = (
     "pyntpot",
 )
 
-#: The `maps` modules allowed to import `_port`, binding its modules.
-ADAPTERS: tuple[str, ...] = ()
-
 
 def _module_name(path: Path) -> str:
     """Return the dotted module name of a source file under `src`."""
@@ -191,32 +186,6 @@ def _violations(package: str, allowed: tuple[str, ...]) -> list[str]:
     return found
 
 
-def _is_type_checking(node: ast.If) -> bool:
-    """Return whether an `if` statement tests `TYPE_CHECKING`."""
-    test = node.test
-    if isinstance(test, ast.Name):
-        return test.id == "TYPE_CHECKING"
-    return isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
-
-
-def _module_level(body: list[ast.stmt]) -> Iterator[ast.stmt]:
-    """Yield statements that run at import time, skipping functions and TYPE_CHECKING blocks."""
-    for stmt in body:
-        yield stmt
-        if isinstance(stmt, ast.FunctionDef | ast.AsyncFunctionDef):
-            continue
-        if isinstance(stmt, ast.If):
-            if not _is_type_checking(stmt):
-                yield from _module_level(stmt.body)
-            yield from _module_level(stmt.orelse)
-            continue
-        for field in ("body", "orelse", "finalbody"):
-            nested = getattr(stmt, field, [])
-            yield from _module_level([s for s in nested if isinstance(s, ast.stmt)])
-        for handler in getattr(stmt, "handlers", []):
-            yield from _module_level(handler.body)
-
-
 @pytest.mark.parametrize("name", MODULES, ids=MODULES)
 def test_each_module_imports_cold(name: str) -> None:
     """A fresh interpreter imports the module without tripping an import cycle."""
@@ -224,57 +193,10 @@ def test_each_module_imports_cold(name: str) -> None:
 
 
 def test_ink_imports_no_other_layer() -> None:
-    """No `ink` module imports `letters`, `maps` or `_port`, at any level."""
+    """No `ink` module imports `letters` or `maps`, at any level."""
     assert _violations("ink", ("pyntpot.ink",)) == []
 
 
 def test_letters_imports_only_ink() -> None:
     """No `letters` module imports anything from `pyntpot` but `ink` and itself."""
     assert _violations("letters", ("pyntpot.ink", "pyntpot.letters")) == []
-
-
-def test_only_adapters_in_maps_import_port() -> None:
-    """No `maps` module outside `ADAPTERS` imports `_port`, at any level."""
-    found = [
-        f"{module}: {target}"
-        for module, path in _modules("maps")
-        if module not in ADAPTERS
-        for node in _imports(path)
-        for target in _targets(node, module, path)
-        if _under(target, "pyntpot._port")
-    ]
-    assert found == []
-
-
-def test_adapters_bind_port_modules_not_names() -> None:
-    """An adapter imports `_port` modules, never names from them."""
-    found: list[str] = []
-    for module, path in _modules("maps"):
-        if module not in ADAPTERS:
-            continue
-        for node in _imports(path):
-            if not isinstance(node, ast.ImportFrom):
-                continue
-            base = _base(node, module, path)
-            if not _under(base, "pyntpot._port"):
-                continue
-            for alias in node.names:
-                bound = PACKAGE / "_port" / alias.name
-                is_module = bound.with_suffix(".py").is_file() or bound.is_dir()
-                if base != "pyntpot._port" or not is_module:
-                    found.append(f"{module}: {base}.{alias.name}")
-    assert found == []
-
-
-def test_port_imports_maps_only_inside_functions() -> None:
-    """No `_port` module imports `maps` at module level outside `if TYPE_CHECKING:`."""
-    found: list[str] = []
-    for module, path in _modules("_port"):
-        tree = ast.parse(path.read_text(), filename=str(path))
-        for stmt in _module_level(tree.body):
-            if not isinstance(stmt, ast.Import | ast.ImportFrom):
-                continue
-            for target in _targets(stmt, module, path):
-                if _under(target, "pyntpot.maps"):
-                    found.append(f"{module}: {target}")
-    assert found == []

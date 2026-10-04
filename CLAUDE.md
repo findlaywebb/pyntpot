@@ -32,15 +32,13 @@ prek run --all-files     # everything the commit hook runs
 The gates are wired into prek + CI. **A red gate is the architecture speaking: fix the
 code, never loosen a contract or budget to get green.** Contract changes are ADRs. The
 one sanctioned relaxation is the exemptions directory
-(`tests/architecture/exemptions/`), which lists the interim `_port` code until it is
-split.
+(`tests/architecture/exemptions/`), which is empty.
 
 ## The boundary rule
 
-Target layering, a P4 outcome: `maps -> letters -> ink`, each importing only the layers
-to its right. Until the split, all code lives in the private `pyntpot._port` subpackage
-with no layer contract. See `BOUNDARIES.md`; enforced by import-linter and
-`tests/architecture/`.
+Layering: `maps -> letters -> ink`, each importing only the layers to its right; `ink`
+and `letters` import neither `httpx` nor `pydantic`. See `BOUNDARIES.md`; enforced by
+import-linter and `tests/architecture/`.
 
 ## Conventions (the non-inferable ones)
 

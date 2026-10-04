@@ -1,1 +1,1 @@
-# Gates switched off until the P2 scrub removes personal content from the ported code.
+# Tests switched off by node id. Empty: nothing is switched off.

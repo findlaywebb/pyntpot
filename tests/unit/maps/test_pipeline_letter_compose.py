@@ -39,13 +39,8 @@ PINNED_LABELS = (
 #: Ten seconds a point over the fixture track's 400 points.
 SYNTHETIC_TIME = tuple(10.0 * i for i in range(400))
 
-#: The interim port modules this stage and the compose stage replaced.
-DELETED: tuple[str, ...] = (
-    "pyntpot._port.labels",
-    "pyntpot._port.mapcard",
-    "pyntpot._port.card",
-    "pyntpot._port.style",
-)
+#: The interim port package the split emptied and deleted.
+DELETED: tuple[str, ...] = ("pyntpot._port",)
 
 
 class Painted(NamedTuple):
@@ -76,11 +71,11 @@ def lettered(painted: Painted) -> Lettering:
 
 
 class TestDeleted:
-    """The port modules the lettering and compose stages replaced are gone."""
+    """The interim port package is gone."""
 
     @pytest.mark.parametrize("module", DELETED, ids=DELETED)
     def test_the_module_is_gone(self, module: str) -> None:
-        """The deleted port module can no longer be found."""
+        """The deleted port package can no longer be found."""
         assert importlib.util.find_spec(module) is None
 
 

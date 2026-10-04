@@ -1,20 +1,19 @@
 # Glossary
 
 One canonical name per concept; no synonyms. Check here before introducing a term, and
-add the term here when you coin one. The ported code keeps its old names until the split.
-
+add the term here when you coin one.
 | Term | Meaning |
 |---|---|
 | sheet | The paper's noise fields, seeded. `ink.sheet.Sheet`. |
 | canvas | A world-unit box and the pixel grid it paints to. `ink.sheet.Canvas`. |
 | plate | One painted raster layer written to disk: paper, wash, pen, labels. |
-| plates | The set of plates plus its manifest for one render. Today `plates.json`. |
+| plates | The set of plates plus its manifest for one render. `maps.plates.Plates`, with its manifest `plates.json`. |
 | brush | One mark-making tool, in render pixels: a tip of bristles stamped along a path. `ink.brush.Brush`. |
 | brush sheet | The catalogue of brush cells: stroke treatments by row `"1"` to `"8"`, the rows that are a nib, and ink colours by the id's three-letter prefix and column. A brush id `<PREFIX><row>-<column>` such as `MAJ2-a` is an opaque cell name; `ink` never reads the prefix as a map class. `ink.brush.BRUSH_TREATMENTS`, `PEN_ROWS`, `BRUSH_COLOURS`. |
 | wash | A pigment field laid on the sheet. |
-| hand | The lettering writer. Today `labels.Hand`, reading its face through `letters.font.OutlineFont`. |
+| hand | The lettering writer. `letters.hand.Hand`, reading its face through `letters.font.OutlineFont`. |
 | trace | How a glyph becomes strokes: centreline or outline. `letters.trace.CENTRELINE` or `OUTLINE`, chosen by `letters.font.OutlineFont`. |
-| track | The GPS path being mapped. Today `lat, lng` lists. |
+| track | The GPS path being mapped. `maps.track.Track`. |
 | route | The painted line of the track on the map. |
 | basemap | The fetched and projected layers for a bounding box. |
 | lettering | Placed labels and spans plus their painted plate. |
