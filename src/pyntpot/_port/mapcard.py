@@ -24,7 +24,7 @@ from PIL import Image, ImageChops, ImageDraw
 
 from pyntpot._port import geo, paint
 from pyntpot._port import labels as lb_mod
-from pyntpot._port.card import STRAND_GAP_WIDTHS, _Card, separate_strands
+from pyntpot._port.card import STRAND_GAP_WIDTHS, separate_strands
 from pyntpot._port.labels import (
     Label,
     cumulative_m,
@@ -149,6 +149,8 @@ def compose(
     Returns:
         The card, or None when nothing is painted for this activity.
     """
+    from pyntpot.maps.card import Card
+
     manifest = paint.load_plates(key, cache_dir)
     if manifest is None:
         return None
@@ -157,7 +159,7 @@ def compose(
 
     _proj, pts = geo.track_projection(lat, lng)
     first = manifest.get("route0") or pts[0]
-    card = _Card(manifest, first[0] - pts[0][0], first[1] - pts[0][1])
+    card = Card.from_manifest(manifest, offset=(first[0] - pts[0][0], first[1] - pts[0][1]))
     ink = route_ink
     route_px = separate_strands([card.xy(x, y) for x, y in pts], ink.px * STRAND_GAP_WIDTHS)
 

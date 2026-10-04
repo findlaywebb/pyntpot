@@ -1,26 +1,8 @@
-"""The painted card geometry: metre box to pixels, and strand separation."""
+"""Strand separation: the two limbs of a doubled-back route drawn beside each other."""
 
 from __future__ import annotations
 
 import math
-from typing import Any
-
-
-class _Card:
-    """The painted card's metre box, in the display pixels the SVG is drawn in."""
-
-    def __init__(self, manifest: dict[str, Any], dx: float = 0.0, dy: float = 0.0) -> None:
-        cx0, _cy0, cx1, cy1 = manifest["card"]
-        self.w, self.h = manifest["display"]
-        self.scale = self.w / (cx1 - cx0)
-        self.x0, self.y1 = cx0, cy1
-        self.dx, self.dy = dx, dy
-        self.mppd = manifest.get("mpp_display", 1.0)
-
-    def xy(self, x: float, y: float) -> tuple[float, float]:
-        """One point in route metre space as a point on the card."""
-        return ((x + self.dx - self.x0) * self.scale, (self.y1 - (y + self.dy)) * self.scale)
-
 
 #: How far apart the two strands of one route are drawn where the session came
 #: back along its own path, as a multiple of the route's own stroke width. A

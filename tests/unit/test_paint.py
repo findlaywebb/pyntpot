@@ -1591,10 +1591,10 @@ def test_the_labels_hash_moves_when_the_picks_do(tmp_path):
 
 def _labelled_card(tmp_path, **payload_over):
     """A painted tiny box and the card that projects into it, for the label rules."""
-    from pyntpot._port.card import _Card
+    from pyntpot.maps.card import Card
 
     manifest = paint.paint(tiny_payload(**payload_over), tiny_style(), tmp_path)
-    card = _Card(manifest)
+    card = Card.from_manifest(manifest)
     route = [(float(x), 40.0 + 30.0 * math.sin(x / 260.0)) for x in range(0, 1400, 40)]
     return manifest, card, [card.xy(x, y) for x, y in route]
 
@@ -2101,7 +2101,7 @@ def test_the_major_river_carries_its_name_twice_and_the_others_once():
         }
     }
 
-    class _Card:
+    class FlatCard:
         w, h, scale = 400.0, 300.0, 0.1
 
         @staticmethod
@@ -2110,7 +2110,7 @@ def test_the_major_river_carries_its_name_twice_and_the_others_once():
             return (x * 0.1, y * 0.1 + 40.0)
 
     route = [(float(x), 60.0) for x in range(0, 400, 10)]
-    got = lb.pick_rivers(manifest, _Card(), route)
+    got = lb.pick_rivers(manifest, FlatCard(), route)
     names = [label.name for label in got]
     assert names.count("Lyn") == lb.MAJOR_RIVER_LABELS == 2
     assert names.count("Heddon") == 1
@@ -2584,7 +2584,7 @@ def test_a_road_is_lettered_by_its_number_and_falls_back_to_its_name():
         }
     }
 
-    class _Card:
+    class FlatCard:
         w, h, scale = 400.0, 300.0, 0.1
 
         @staticmethod
@@ -2593,7 +2593,7 @@ def test_a_road_is_lettered_by_its_number_and_falls_back_to_its_name():
             return (x * 0.1, y * 0.1 + 40.0)
 
     route = [(float(x), 45.0) for x in range(0, 400, 10)]
-    got = lb.pick_roads(manifest, _Card(), route, budget=2)
+    got = lb.pick_roads(manifest, FlatCard(), route, budget=2)
     names = {label.name for label in got}
     assert "A361" in names, "the numbered road is lettered by its number"
     assert "Lyn Valley Road" not in names
@@ -3432,7 +3432,7 @@ def test_the_second_river_name_is_earned_by_the_run():
     """
     from pyntpot._port import labels as lb
 
-    class _Card:
+    class FlatCard:
         w = 900
         h = 671
         scale = 1.0
@@ -3448,7 +3448,7 @@ def test_the_second_river_name_is_earned_by_the_run():
             },
             "wet_px": {"major": 11.0},
         }
-        return lb.pick_rivers(manifest, _Card(), [(100.0, 100.0), (800.0, 100.0)])
+        return lb.pick_rivers(manifest, FlatCard(), [(100.0, 100.0), (800.0, 100.0)])
 
     short = [lb.name for lb in rivers(395)]  # 295 px of water
     assert short == ["Severn"], "a corner of river was lettered twice"
@@ -3473,7 +3473,7 @@ def test_an_unnamed_lane_and_a_watercourse_both_cost_a_name_that_crosses_them():
     """
     from pyntpot._port import labels as lb
 
-    class _Card:
+    class FlatCard:
         w = 400
         h = 300
         scale = 1.0
@@ -3489,7 +3489,7 @@ def test_an_unnamed_lane_and_a_watercourse_both_cost_a_name_that_crosses_them():
             "crossings": [[[0, 120], [400, 120]]],
         }
     }
-    lines = lb.road_lines(manifest, _Card())
+    lines = lb.road_lines(manifest, FlatCard())
     assert len(lines) == 3, "the lanes and the water are not in the crossing cost"
     for y in (10.0, 60.0, 120.0):
         assert lb._on_road((100.0, y - 4, 200.0, y + 4), lines) == 1.0
@@ -3737,7 +3737,7 @@ def test_a_numbered_road_is_gathered_by_its_number_not_by_its_street_name():
         }
     }
 
-    class _Card:
+    class FlatCard:
         w, h, scale = 400.0, 300.0, 0.1
 
         @staticmethod
@@ -3746,7 +3746,7 @@ def test_a_numbered_road_is_gathered_by_its_number_not_by_its_street_name():
             return (x * 0.1, y * 0.1 + 40.0)
 
     route = [(float(x), 41.0) for x in range(0, 150, 5)]
-    got = lb.pick_roads(manifest, _Card(), route, budget=2)
+    got = lb.pick_roads(manifest, FlatCard(), route, budget=2)
     assert [label.name for label in got] == ["A3052"]
     # No one leg is long enough on its own; the number is what gathers them.
     assert lb._run(got[0].baseline) > lb.road_min_px(got[0].size)
