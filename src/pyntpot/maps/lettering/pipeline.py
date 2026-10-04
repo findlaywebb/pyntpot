@@ -37,6 +37,8 @@ from pyntpot.maps import lettering_marks
 from pyntpot.maps.annotations import Annotations
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.lettering.label import Label, Span
+from pyntpot.maps.lettering.placement import place
+from pyntpot.maps.lettering.placement_costs import Backdrop
 from pyntpot.maps.lettering.spans import resolve_spans
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.style import Style
@@ -92,16 +94,13 @@ def letter(
     anchored = _anchored(basemap, annotations, style)
     spans = _spans(plates, basemap, annotations, strands)
     dark = plates.manifest.dark
-    placed = home + placer.place(
-        ground + anchored,
-        spans,
+    backdrop = Backdrop(
         card,
         strands,
         {"w": dark.w, "h": dark.h, "v": dark.values},
-        taken,
-        measure,
         placer.road_lines(lines, card),
     )
+    placed = home + place(ground + anchored, spans, backdrop, taken, measure)
     plate = placer.draw_plate(plates, placed, spans, strands, style)
     return Lettering(tuple(placed), tuple(spans), plate)
 

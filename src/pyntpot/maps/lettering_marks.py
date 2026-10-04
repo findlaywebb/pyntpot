@@ -29,11 +29,11 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from pyntpot._port import labels as placer
 from pyntpot.ink.polyline import Pt
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark, Setting
 from pyntpot.maps.lettering.label import NO_LEADER, SPAN_EFFORT, TIER_SPAN, Label, Span
+from pyntpot.maps.lettering.placement_lift import _offset_line, lift_baseline
 from pyntpot.maps.lettering_furniture import leader, pin, underline
 from pyntpot.maps.lettering_window import baseline
 from pyntpot.maps.style import Style
@@ -190,7 +190,7 @@ def _setting(lb: Label, base: list[Pt] | None, track: float) -> Setting:
     ink = _ink(lb)
     wash = not lb.in_water
     if base:
-        walk = tuple(placer._offset_line(base, placer.lift_baseline(lb, lb.lift)))
+        walk = tuple(_offset_line(base, lift_baseline(lb, lb.lift)))
         return Setting(lb.name, lb.size, path=walk, slant=slant, tracking=track, ink=ink, wash=wash)
     return Setting(
         lb.name,

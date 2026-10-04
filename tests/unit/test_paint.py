@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import dataclasses
 import math
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -15,69 +16,33 @@ from pyntpot.ink.brush import BRUSH_COLOURS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.io import save_rgba
 from pyntpot.ink.noise import edt
-from pyntpot.ink.polyline import deform_line, length, meet
+from pyntpot.ink.polyline import deform_line, length
 from pyntpot.ink.sheet import Sheet, rgb
-from pyntpot.maps.basemap import Basemap, Layers, Line, River, Road
-from pyntpot.maps.card import Card
+from pyntpot.maps.basemap import Basemap, Line, River, Road
 from pyntpot.maps.card_geometry import journal_geometry
 from pyntpot.maps.lettering.label import (
-    TIER_LANDMARK,
-    TIER_RIVER,
-    TIER_ROAD,
-    TIER_SETTLEMENT,
-    TIER_SPAN,
     WET_PX_DEFAULT,
     WET_SPREAD,
-    WRAP_LEADING,
     Label,
-    block_size,
     feature_px,
 )
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.painter.ribbon import ribbon_alpha
-from pyntpot.maps.projection import track_projection
-from pyntpot.maps.style import Style
 from pyntpot.maps.style_groups import CardStyle, RibbonStyle
 
-from support.lettering import flat_dark, open_hand, sheet_card
-from support.measure import flat_measure
-
-#: The `Style` groups the painter and the lettering read, which `class_style` builds.
-PAINT_GROUPS: tuple[str, ...] = (
-    "paper",
-    "wash",
-    "brush",
-    "face",
-    "nib",
-    "hand",
-    "card",
-    "ribbon",
-    "cover",
-    "route",
-    "lettering",
+from support.basemaps import (
+    PAINT_GROUPS,
+    class_style,
+    label_basemap,
+    river_label,
+    tiny_basemap,
+    tiny_style,
+    with_fields,
 )
+from support.lettering import open_hand
 
-#: A short synthetic track inside the Lynmouth box.
-LATS = [51.2250 + 2e-5 * i for i in range(60)]
-
-
-LNGS = [-3.8400 + 0.00040 * i for i in range(60)]
-
-
-def class_style(**over: object) -> Style:
-    """The packaged style with every painted group at its class defaults and `over` moved.
-
-    Each override is named by the field it moves and goes to the group that holds it.
-    """
-    base = Style.default()
-    left = dict(over)
-    groups = {}
-    for name in PAINT_GROUPS:
-        group = type(getattr(base, name))
-        mine = {f.name: left.pop(f.name) for f in dataclasses.fields(group) if f.name in left}
-        groups[name] = group(**mine)
-    assert not left, f"no group holds {sorted(left)}"
-    return base.model_copy(update=groups)
+if TYPE_CHECKING:
+    from pyntpot.maps.style import Style
 
 
 def read(style: Style, name: str) -> object:
@@ -89,59 +54,10 @@ def read(style: Style, name: str) -> object:
     raise KeyError(name)
 
 
-def tiny_style(**over: object) -> Style:
-    """The approved style, painted small enough to be a unit test."""
-    return class_style(display_px=80, supersample=2, **over)
-
-
 def square(cx: float, cy: float, r: float) -> Line:
     """One closed square ring at a tenth of a metre, in metres."""
     pts = [(cx - r, cy - r), (cx + r, cy - r), (cx + r, cy + r), (cx - r, cy + r)]
     return tuple((round(x, 1), round(y, 1)) for x, y in pts)
-
-
-def with_fields(basemap: Basemap, **over: object) -> Basemap:
-    """The basemap with any of its own or its layers' fields replaced."""
-    names = {f.name for f in dataclasses.fields(Layers)}
-    layers = dataclasses.replace(basemap.layers, **{k: v for k, v in over.items() if k in names})
-    rest = {k: v for k, v in over.items() if k not in names}
-    return dataclasses.replace(basemap, layers=layers, **rest)
-
-
-def tiny_basemap(style: Style | None = None, **over: object) -> Basemap:
-    """A whole basemap for a small box, with nothing in it but the route."""
-    style = style or tiny_style()
-    route = [(float(x), 40.0 + 30.0 * math.sin(x / 260.0)) for x in range(0, 1400, 40)]
-    full = style
-    geometry = journal_geometry(route, full.card, full.ribbon, full.brush)
-    layers = Layers(
-        route=tuple((round(x, 1), round(y, 1)) for x, y in route),
-        cover={},
-        cover_order=(),
-        lakes=(),
-        sea=(),
-        coastline=(),
-        roads=(),
-        rivers=(),
-        elevation=None,
-        ribbon_m=geometry["ribbon_m"],
-        wet_px=geometry["wet_px"],
-        minor_roads=geometry["minor_roads"],
-        blotch_m=geometry["blotch_m"],
-        dab_spacing_m=geometry["dab_spacing_m"],
-        gran_m=geometry["gran_m"],
-    )
-    bx0, by0, bx1, by1 = geometry["bounds"]
-    basemap = Basemap(
-        projection=track_projection(LATS, LNGS)[0],
-        card=Card.from_manifest(geometry),
-        layers=layers,
-        bounds=(bx0, by0, bx1, by1),
-        span_m=geometry["span_m"],
-        ribbon_fitted_m=geometry["ribbon_fitted_m"],
-        track=tuple(route),
-    )
-    return with_fields(basemap, **over)
 
 
 # --------------------------------------------------------------------------- painter
@@ -494,11 +410,6 @@ def _labelled_card(**basemap_over):
     return basemap, card, [card.xy(x, y) for x, y in route]
 
 
-def label_basemap(**over: object) -> Basemap:
-    """A tiny basemap whose layers carry no painted widths, for the label readers."""
-    return tiny_basemap(**{"wet_px": {}, **over})
-
-
 def _place_node(name, kind, x, y, off):
     """One settlement as `journal_candidates` writes it into the basemap."""
     return {
@@ -680,117 +591,6 @@ def test_the_style_decides_how_the_plates_are_written(tmp_path):
 # ------------------------------------------------------------------- the V5 rules
 
 
-def test_a_curved_label_reserves_the_room_it_actually_takes():
-    """The fault every variant shared: a curved name defended the wrong box.
-
-    A river used to claim the box its anchor fell in and then be set along a
-    window chosen afterwards, so nothing placed later avoided the pixels the
-    reader saw. The window is chosen in the placer now and contributes a run of
-    small boxes, and this asserts both: that the boxes follow the water, and
-    that a name placed afterwards is pushed off them.
-    """
-    from pyntpot._port import labels as lb
-
-    card = sheet_card()
-    water = [(float(x), 150.0 + 18.0 * math.sin(x / 70.0)) for x in range(20, 380, 6)]
-    river = Label(
-        name="Heddon",
-        kind="river",
-        px=200.0,
-        py=150.0,
-        tier=TIER_RIVER,
-        size=14.0,
-        baseline=water,
-    )
-    later = Label(
-        name="Monmouth Castle",
-        kind="monument",
-        px=200.0,
-        py=150.0,
-        tier=TIER_LANDMARK,
-        size=14.0,
-    )
-    got = lb.place(
-        [river, later], [], card, [(0.0, 290.0), (400.0, 290.0)], flat_dark(), [], flat_measure
-    )
-    assert river.window, "the river was not set along its own water"
-    assert not river.flat
-    # A box that follows the water, rather than one drawn round the anchor.
-    assert river.box is not None
-    assert river.box[2] - river.box[0] > 20.0
-    # And the name that came after it is not sitting on top of it.
-    x0, y0, x1, y1 = later.box
-    for bx0, by0, bx1, by1 in [river.box]:
-        assert not (min(x1, bx1) > max(x0, bx0) and min(y1, by1) > max(y0, by0)), (
-            "the later name was placed on top of the curved one"
-        )
-    assert got == [river, later]
-
-
-def test_a_road_crossing_costs_and_a_longer_leader_is_the_cheaper_answer():
-    """The rule: shift the name and spend leader instead.
-
-    Not a constraint. Sometimes there is nowhere else and a name that vanished
-    would be worse than one that crosses a lane, so it is priced, and priced
-    against the leader so the two are directly comparable. That ordering is the
-    rule: a crossing has to cost more than the placer could ever spend on
-    leader, or the cheap answer stays the one on the tarmac.
-    """
-    from pyntpot._port import labels as lb
-
-    assert lb.ROAD_CROSS_COST > max(lb.LEADER_RUNGS) * lb.LEADER_COST_PX
-
-    card = sheet_card()
-    route = [(0.0, 290.0), (400.0, 290.0)]
-    free = Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
-    lb.place([free], [], card, route, flat_dark(), [], flat_measure, [])
-    # A road laid straight down the middle of the box the placer just chose.
-    x0, y0, x1, y1 = free.box
-    road = [[((x0 + x1) / 2, 0.0), ((x0 + x1) / 2, 300.0)]]
-    assert lb._crossings(free.box, road) > 0
-
-    moved = Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
-    lb.place([moved], [], card, route, flat_dark(), [], flat_measure, road)
-    assert lb._crossings(moved.box, road) == 0, "the road was not avoided"
-    assert moved.box != free.box
-
-
-def test_the_major_river_carries_its_name_twice_and_the_others_once():
-    """A long feature is met in pieces, so it is named in pieces.
-
-    Only the major one: a tributary that runs a third of the card twice-named is
-    repetition rather than help. And the two have to be far apart, or they read
-    as one name written twice.
-    """
-    from pyntpot._port import labels as lb
-
-    big = [[round(float(x), 1), 0.0] for x in range(0, 4000, 25)]
-    small = [[500.0, round(float(y), 1)] for y in range(0, 900, 25)]
-    lines = {
-        "rivers": [
-            {"n": "River Lyn", "c": "major", "d": big},
-            {"n": "Heddon", "c": "medium", "d": small},
-        ]
-    }
-
-    class FlatCard:
-        w, h, scale = 400.0, 300.0, 0.1
-
-        @staticmethod
-        def xy(x, y):
-            """Metres to card pixels, at a tenth of a pixel a metre."""
-            return (x * 0.1, y * 0.1 + 40.0)
-
-    route = [(float(x), 60.0) for x in range(0, 400, 10)]
-    got = lb.pick_rivers(label_basemap(), lines, FlatCard(), route)
-    names = [label.name for label in got]
-    assert names.count("Lyn") == lb.MAJOR_RIVER_LABELS == 2
-    assert names.count("Heddon") == 1
-    a, b = [label for label in got if label.name == "Lyn"]
-    apart = math.dist((a.px, a.py), (b.px, b.py))
-    assert apart > length(a.baseline) * lb.RIVER_REPEAT_FRAC * 0.9
-
-
 def test_the_label_plate_is_written_losslessly_like_the_others(tmp_path):
     """Thin glyphs are the encoder's worst case, not a marginal one.
 
@@ -867,248 +667,6 @@ def test_a_concurrent_road_number_is_written_once():
     assert lb.road_ref("CFG") == ""
 
 
-def test_a_river_follows_its_bend_even_when_the_bend_runs_down_the_sheet():
-    """The rule that overrules the tilt test for rivers only.
-
-    A river name says which water it is by sitting on that water. A steep
-    window used to be refused outright, which put the Heddon and the lower Lyn
-    in clear paper beside their own bends; a name read sideways is better than
-    one that could be about anything.
-    """
-    from pyntpot._port import labels as lb
-
-    card = sheet_card()
-    water = [(200.0 + 12.0 * math.sin(y / 60.0), float(y)) for y in range(20, 280, 5)]
-    river = Label(
-        name="Heddon",
-        kind="river",
-        px=200.0,
-        py=150.0,
-        tier=TIER_RIVER,
-        size=14.0,
-        baseline=water,
-    )
-    lb.place([river], [], card, [(0.0, 295.0), (400.0, 295.0)], flat_dark(), [], flat_measure)
-    assert river.window, "a vertical river was not set along its own water"
-    assert not river.flat
-    assert lb._tilt(river.window) > lb.MAX_TILT_DEG, "this window is a steep one"
-    assert "river" in lb.TILT_EXEMPT_KINDS
-
-
-def test_the_tilt_test_still_holds_for_everything_that_is_not_a_river():
-    """A road is not exempt: the rule that was overruled was about water."""
-    from pyntpot._port import labels as lb
-
-    card = sheet_card()
-    tarmac = [(200.0 + 12.0 * math.sin(y / 60.0), float(y)) for y in range(20, 280, 5)]
-    road = Label(
-        name="A361", kind="road", px=200.0, py=150.0, tier=TIER_ROAD, size=14.0, baseline=tarmac
-    )
-    lb.place([road], [], card, [(0.0, 295.0), (400.0, 295.0)], flat_dark(), [], flat_measure)
-    assert road.flat, "a steep road window was accepted"
-
-
-def test_a_name_on_a_line_that_runs_upwards_is_turned_to_read_downwards():
-    """Turning a window round is not rejecting it, which is the whole rule."""
-    from pyntpot._port import labels as lb
-
-    up = [(100.0, float(y)) for y in range(300, 100, -5)]
-    assert lb._reading(up)[-1][1] > lb._reading(up)[0][1]
-    leftwards = [(float(x), 100.0) for x in range(300, 100, -5)]
-    assert lb._reading(leftwards)[-1][0] > lb._reading(leftwards)[0][0]
-    assert len(lb._reading(up)) == len(up), "a window was dropped, not turned"
-
-
-def test_a_road_name_stays_near_the_road_it_names():
-    """ "Aviemore Road" sat far enough off its tarmac to be a guess.
-
-    With no leader drawn, the only thing joining a road name to its road is
-    that they are near each other, so distance from its own centreline is a
-    cost in its own right.
-    """
-    from pyntpot._port import labels as lb
-
-    tarmac = [(float(x), 150.0) for x in range(20, 380, 5)]
-    near = Label(
-        name="A361", kind="road", px=200.0, py=150.0, tier=TIER_ROAD, size=14.0, baseline=tarmac
-    )
-    far = Label(
-        name="A361", kind="road", px=200.0, py=150.0, tier=TIER_ROAD, size=14.0, baseline=tarmac
-    )
-    close = (0.0, 0.0, 40.0, 40.0)
-    assert lb._off_own_feature(close, far) > 0.0
-    assert lb._off_own_feature((190.0, 140.0, 230.0, 160.0), near) == 0.0
-
-
-def test_a_span_name_is_charged_for_every_corner_of_its_block():
-    """A short bracket's name read as detached, and the cost could not see it.
-
-    The gap a leaderless name pays for is the clear space between its anchor
-    and the near edge of its block, which says nothing at all about where the
-    rest of the block went. Off the end of a short bracket a long single line
-    clears the anchor by one rung and then runs on for its own width: near by
-    that measure, and belonging to nothing by eye. A span is measured over its
-    whole block against its whole bracket instead.
-    """
-    from pyntpot._port import labels as lb
-
-    bracket = [(100.0 + i * 8.0, 100.0) for i in range(11)]
-    span = Label(
-        name="the long climb out of Aviemore",
-        kind="climb",
-        tier=TIER_SPAN,
-        size=14.0,
-        px=140.0,
-        py=80.0,
-        mark=bracket,
-    )
-    beside = (108.0, 62.0, 194.0, 93.0)  # a two-line block over the middle
-    off_end = (188.0, 72.0, 349.0, 88.0)  # one line, off the far end
-    assert lb._mark_gap(off_end, span, 7.0) > lb._mark_gap(beside, span, 7.0)
-    # And the rung the old measure would have reported is the same for both,
-    # which is exactly why it could not tell them apart.
-    assert lb._mark_gap(off_end, Label(name="x"), 7.0) == 7.0
-
-
-def test_a_span_name_sits_outboard_of_its_bracket_and_never_across_it():
-    """The order the eye crosses is route, line, name.
-
-    The proximity pull that keeps a name beside its own bracket, left alone,
-    pulls it onto the bracket and then into the gap between the bracket and the
-    road it belongs to: the cheapest block of all is the one centred on the
-    line. Both are priced, so a name beside its own line beats a name over it
-    and a name outboard beats a name inboard.
-    """
-    from pyntpot._port import labels as lb
-
-    bracket = [(100.0 + i * 8.0, 100.0) for i in range(11)]
-    # The anchor is outboard, which is what says which side outboard is.
-    span = Label(
-        name="the long climb",
-        kind="climb",
-        tier=TIER_SPAN,
-        size=14.0,
-        px=140.0,
-        py=80.0,
-        mark=bracket,
-    )
-    outboard = (110.0, 60.0, 190.0, 90.0)
-    across = (110.0, 88.0, 190.0, 118.0)
-    inboard = (110.0, 110.0, 190.0, 140.0)
-    assert lb._mark_through(outboard, span) == 0.0
-    assert lb._mark_through(across, span) >= lb.SPAN_MARK_THROUGH_COST
-    assert lb._mark_through(inboard, span) == pytest.approx(lb.SPAN_INBOARD_COST)
-    # Nothing that is not a span pays either: a river has its own rules.
-    river = Label(name="Lyn", kind="river")
-    assert lb._mark_through(across, river) == 0.0
-
-
-def test_a_span_name_lands_beside_the_bracket_it_belongs_to():
-    """End to end, on a bracket short enough for the fault to bite.
-
-    The whole point of the two costs above is what the placer does with them.
-    A name whose block is a good deal wider than its own bracket still has to
-    end up beside the bracket, on the outboard side, without the line through
-    the words.
-    """
-    from pyntpot._port import labels as lb
-
-    card = sheet_card()
-    route = [(100.0 + i * 6.0, 200.0) for i in range(16)]
-    bracket = [(100.0 + i * 6.0, 170.0) for i in range(16)]
-    span = Label(
-        name="the long climb out of Aviemore",
-        kind="climb",
-        tier=TIER_SPAN,
-        size=14.0,
-        px=145.0,
-        py=150.0,
-        mark=bracket,
-        span_range=(0, 15),
-        anchors=[(115.0, 150.0), (145.0, 150.0), (175.0, 150.0)],
-    )
-    lb.place(
-        [span], [], card, route, {"w": 2, "h": 2, "v": [[0.0, 0.0], [0.0, 0.0]]}, [], flat_measure
-    )
-    x0, y0, x1, y1 = span.box
-    near = min(min(math.dist(((x0 + x1) / 2, y), q) for q in bracket) for y in (y0, y1))
-    assert near < 3.0 * span.size, f"the name landed {near:.0f} px off its bracket"
-    assert (y0 + y1) / 2 < 170.0, "the name sat between the bracket and the road"
-    assert lb._mark_through(span.box, span) == 0.0
-
-
-def test_a_wrapped_name_is_written_on_the_lines_it_reserved():
-    """The box is the block's, and the hand writes the block, not the name."""
-    from pyntpot._port import labels as lb
-
-    card = sheet_card()
-    route = [(0.0, 295.0), (400.0, 295.0)]
-    name = Label(
-        name="the long climb out of Aviemore",
-        kind="span",
-        tier=TIER_SPAN,
-        px=200.0,
-        py=150.0,
-        size=14.0,
-    )
-    name.lines = ["the long climb", "out of Aviemore"]
-    wide, tall = block_size(name.lines, name.size, flat_measure)
-    lb._place_flat(name, wide, tall, card, [(route, 1.0)], flat_dark(), [], [], len(name.lines))
-    assert name.text_lines == name.lines
-    assert name.box[3] - name.box[1] == pytest.approx(tall)
-    # The two baselines both sit inside the box the placer reserved.
-    second = name.ty + name.size * WRAP_LEADING
-    assert name.box[1] < name.ty < name.box[3]
-    assert name.box[1] < second < name.box[3] + name.size
-
-
-def test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_sheet():
-    """A river doubles back, so a straight line between two names is not the gap.
-
-    The guard used to measure the distance across the paper, which on a
-    meandering river is a fraction of the water between the two, and on the Lyn
-    it rejected every window the second name had left.
-    """
-    from pyntpot._port import labels as lb
-
-    card = sheet_card()
-    # A hairpin: two long reaches whose ends are near each other on the sheet.
-    down = [(60.0 + x * 0.6, 60.0 + x * 0.02) for x in range(0, 300, 4)]
-    back = [(240.0 - x * 0.6, 74.0 + x * 0.02) for x in range(0, 300, 4)]
-    water = down + back
-    river = Label(
-        name="Lyn", kind="river", px=150.0, py=70.0, tier=TIER_RIVER, size=13.0, baseline=water
-    )
-    second = Label(
-        name="Lyn", kind="river", px=150.0, py=90.0, tier=TIER_RIVER, size=13.0, baseline=water
-    )
-    lb.place(
-        [river, second], [], card, [(0.0, 295.0), (400.0, 295.0)], flat_dark(), [], flat_measure
-    )
-    assert river.window and second.window, "the second name lost its water"
-    # Far apart along the water, and that is what the guard measures.
-    assert math.dist((river.tx, river.ty), (second.tx, second.ty)) > 20.0
-
-
-def test_a_river_name_is_lifted_clear_of_the_water_it_names():
-    """The centreline is not the water: the Lyn is painted nine pixels wide.
-
-    The name was lifted half a type size off the middle of the river, which put
-    the letters in it. The clearance carries the painted half-width of the
-    watercourse now, so a wide river pushes its name further out than a thin
-    one and a card drawn at another size scales with it.
-    """
-    from pyntpot._port import labels as lb
-
-    thin = Label(name="Heddon", kind="river", size=18.0, feature_px=2.2)
-    wide = Label(name="Lyn", kind="river", size=18.0, feature_px=8.4)
-    assert lb.lift_px(wide) > lb.lift_px(thin), "a wide river lifts no further"
-    # And both clear their own water: the baseline is off the centreline by
-    # more than half the mark is wide.
-    for label in (thin, wide):
-        assert lb.lift_px(label) > label.feature_px * 0.5
-
-
 def test_the_painted_width_of_a_watercourse_reaches_the_label_layer():
     """The label layer sees a centreline; the layers tell it the brush."""
     fresh = label_basemap(wet_px={"major": 9.5, "medium": 6.0, "minor": 2.4})
@@ -1124,56 +682,6 @@ def test_the_painted_width_of_a_watercourse_reaches_the_label_layer():
 
 
 # ------------------------------------------------- a name on its own water
-
-
-class _WideCard:
-    w = 900
-    h = 671
-    scale = 1.0
-
-    @staticmethod
-    def xy(x, y):
-        return (float(x), float(y))
-
-
-def _river_label(width_px):
-    """One river of a given painted width, placed."""
-    from pyntpot._port import labels as lb
-
-    lines = {
-        "rivers": [
-            {
-                "n": "Severn",
-                "c": "major",
-                "w": width_px,
-                "wn": width_px,
-                "d": [[100, 400], [800, 400]],
-            }
-        ]
-    }
-    basemap = label_basemap(wet_px={"major": 11.0})
-    return lb.pick_rivers(basemap, lines, _WideCard(), [(100.0, 100.0), (800.0, 100.0)])[0]
-
-
-def test_a_wide_river_carries_its_name_on_the_water():
-    """Now that the Severn is drawn at the width it occupies, the name goes in it."""
-    from pyntpot._port import labels as lb
-
-    wide = _river_label(40.0)
-    assert wide.in_water
-    assert lb.lift_px(wide) == 0.0
-    # The band of ink straddles the centreline rather than sitting off it.
-    assert lb.lift_middle(wide, 1.0) == pytest.approx(0.0, abs=0.01)
-
-
-def test_a_river_drawn_at_the_floor_keeps_its_name_beside_the_water():
-    """A brook exaggerated up to be visible has no room for its own name."""
-    from pyntpot._port import labels as lb
-
-    thin = _river_label(11.0)
-    assert not thin.in_water
-    assert lb.lift_px(thin) > 0.0
-    assert lb.lift_middle(thin, 1.0) != pytest.approx(0.0, abs=0.01)
 
 
 def _contrast(a: str, b: str) -> float:
@@ -1195,8 +703,8 @@ def test_a_name_on_the_water_takes_its_own_ink():
     """The water ink is the colour of the thing the name is now written on."""
     from pyntpot.maps.lettering_marks import _ink
 
-    assert _ink(_river_label(40.0)) == "in_water"
-    assert _ink(_river_label(11.0)) == "water"
+    assert _ink(river_label(40.0)) == "in_water"
+    assert _ink(river_label(11.0)) == "water"
 
 
 def test_the_in_water_ink_beats_a_dark_one_on_the_river():
@@ -1216,57 +724,10 @@ def test_a_name_on_the_water_asks_for_no_backing_wash():
     from pyntpot.maps.lettering_marks import label_marks
 
     hand = open_hand()
-    wet = label_marks(hand, _river_label(40.0))
-    dry = label_marks(hand, _river_label(11.0))
+    wet = label_marks(hand, river_label(40.0))
+    dry = label_marks(hand, river_label(11.0))
     assert wet and not any(m.wash for m in wet)
     assert dry and all(m.wash for m in dry)
-
-
-def test_a_name_is_not_charged_for_crossing_the_thing_it_names():
-    """`road_lines` holds the watercourses as well as the tarmac.
-
-    For a name set along its own feature that includes the feature itself, so
-    every candidate window scored as "on a road" and the term cancelled out: the
-    Severn could not be moved off a bridge because it was on a road wherever it
-    went.
-    """
-    from pyntpot._port import labels as lb
-
-    water = [(100.0, 400.0), (800.0, 400.0)]
-    bridge = [(500.0, 300.0), (500.0, 500.0)]
-    name = _river_label(40.0)
-    kept = lb._off_own([water, bridge], name)
-    assert kept == [bridge]
-    # A name beside its feature is filtered the same way; everything else stays.
-    assert lb._off_own([bridge], name) == [bridge]
-
-
-def test_a_name_on_the_water_is_moved_off_a_bridge():
-    """A bridge drawn through the letters is not ordinary cartography."""
-    from pyntpot._port import labels as lb
-
-    assert lb.IN_WATER_ROAD_COST > lb.ROAD_CROSS_COST
-    from functools import partial
-
-    from pyntpot.maps.lettering_marks import box_size
-
-    hand = open_hand()
-    name = _river_label(40.0)
-    bridge = [(450.0, 300.0), (450.0, 500.0)]
-    dark = {"w": 2, "h": 2, "v": [[0.6, 0.6], [0.6, 0.6]]}
-    lb.place(
-        [name],
-        [],
-        _WideCard(),
-        [(0.0, 0.0)],
-        dark,
-        [],
-        partial(box_size, hand),
-        [name.baseline, bridge],
-    )
-    cells = lb._curved_boxes(name.window, name, name.size, hand.measure)
-    assert cells
-    assert sum(lb._on_road(c, [bridge]) for c in cells) == 0
 
 
 def test_the_second_river_name_is_earned_by_the_run():
@@ -1298,248 +759,10 @@ def test_the_second_river_name_is_earned_by_the_run():
     assert long == ["Severn", "Severn"], "a river across the sheet lost its second name"
 
 
-def test_a_river_name_may_sit_on_either_side_of_its_own_water():
-    """Which side is a question about what is underneath, not about the river."""
-    from pyntpot._port import labels as lb
-
-    assert "river" in lb.TWO_SIDED_KINDS
-    assert "road" in lb.TWO_SIDED_KINDS
-    assert "settlement" not in lb.TWO_SIDED_KINDS
-
-
-def test_an_unnamed_lane_and_a_watercourse_both_cost_a_name_that_crosses_them():
-    """A mark on the paper is a mark on the paper, named or not.
-
-    Only the named roads were charged, so a label could be laid across an
-    unnamed lane for nothing and a settlement could sit on its own river.
-    """
-    from pyntpot._port import labels as lb
-
-    class FlatCard:
-        w = 400
-        h = 300
-        scale = 1.0
-
-        @staticmethod
-        def xy(x, y):
-            return (float(x), float(y))
-
-    named = {
-        "roads": [{"n": "A361", "c": "major", "d": [[0, 10], [400, 10]]}],
-        "rivers": [{"n": "Lyn", "c": "major", "d": [[0, 60], [400, 60]]}],
-        "crossings": [[[0, 120], [400, 120]]],
-    }
-    lines = lb.road_lines(named, FlatCard())
-    assert len(lines) == 3, "the lanes and the water are not in the crossing cost"
-    for y in (10.0, 60.0, 120.0):
-        assert lb._on_road((100.0, y - 4, 200.0, y + 4), lines) == 1.0
-
-
 # ------------------------------------------------- one name, and one for a place
 
 
-def _named(name, kind, tier, x, y):
-    """One label at a point, for the repeat and near-duplicate guards."""
-    from pyntpot._port import labels as lb
-
-    return Label(
-        name=name, kind=kind, why="", px=float(x), py=float(y), tier=tier, size=lb.DEFAULT_LINE_PX
-    )
-
-
-def test_a_settlement_is_lettered_once_however_many_pools_found_it():
-    """ "Elm" arrived as a settlement and again as the nearest named feature.
-
-    The settlement pool and the landmark pool have never known about each
-    other, so a village could be lettered twice, the second
-    time at the end of a long leader from the top of the sheet. The guard is in
-    the one funnel both pools go through.
-    """
-    from pyntpot._port import labels as lb
-
-    elm_settlement = _named("Elm", "settlement", TIER_SETTLEMENT, 495, 168)
-    elm_landmark = _named("Elm", "place", TIER_LANDMARK, 495, 168)
-    kept = lb.dedupe_names([elm_settlement, elm_landmark], sheet_card())
-    assert [label.name for label in kept] == ["Elm"]
-    assert kept[0] is elm_settlement, "the lower tier is the one that survives"
-
-
-def test_the_repeat_guard_is_per_kind_so_the_major_river_keeps_both_names():
-    """A long river is read in pieces and is deliberately named twice.
-
-    A guard that were one number for the whole sheet would either letter the
-    Lyn once or letter Elm twice, so the allowance belongs to the family.
-    """
-    from pyntpot._port import labels as lb
-
-    wye = [
-        _named("Lyn", "river", TIER_RIVER, 100, 100),
-        _named("Lyn", "river", TIER_RIVER, 300, 260),
-    ]
-    towns = [
-        _named("Grasmere", "settlement", TIER_SETTLEMENT, 40, 40),
-        _named("Grasmere", "settlement", TIER_SETTLEMENT, 340, 240),
-    ]
-    kept = lb.dedupe_names(wye + towns, sheet_card())
-    names = [label.name for label in kept]
-    assert names.count("Lyn") == lb.MAJOR_RIVER_LABELS == 2
-    assert names.count("Grasmere") == 1
-    assert lb.NAME_ALLOWANCE["water"] == lb.MAJOR_RIVER_LABELS
-
-
-def test_two_names_for_one_place_keep_the_shorter_more_general_one():
-    """High Cup Nick and High Cup Nick Cairn are the same headland.
-
-    Five metres apart, and one name is the other with a structure on the end of
-    it. The tiers rank what a name is, so a tie between two landmarks is broken
-    by the shorter and more general name: the headland, not the chimney
-    standing on it.
-    """
-    from pyntpot._port import labels as lb
-
-    headland = _named("High Cup Nick", "viewpoint", TIER_LANDMARK, 248, 554)
-    chimney = _named("High Cup Nick Cairn", "ruin", TIER_LANDMARK, 249, 553)
-    kept = lb.dedupe_names([chimney, headland], sheet_card())
-    assert [label.name for label in kept] == ["High Cup Nick"]
-
-
-def test_a_town_and_a_monument_in_it_are_two_places_and_both_letter():
-    """The string relationship alone is not enough, and neither is the distance.
-
-    Monmouth and Monmouth War Memorial stand in the same word relationship as
-    High Cup Nick and its chimney. What tells them apart is 485 m against five.
-    """
-    from pyntpot._port import labels as lb
-
-    town = _named("Monmouth", "settlement", TIER_SETTLEMENT, 294, 592)
-    memorial = _named(
-        "Monmouth War Memorial", "monument", TIER_LANDMARK, 294 + lb.NEAR_DUPLICATE_M * 2.0, 592
-    )
-    kept = lb.dedupe_names([town, memorial], sheet_card())
-    assert len(kept) == 2, "far enough apart to be a town and a thing in it"
-    # And near enough, they are one place again.
-    close = _named(
-        "Monmouth War Memorial", "monument", TIER_LANDMARK, 294 + lb.NEAR_DUPLICATE_M * 0.1, 592
-    )
-    assert [label.name for label in lb.dedupe_names([town, close], sheet_card())] == ["Monmouth"]
-
-
-def test_a_shared_word_is_not_a_shared_place():
-    """Two names that only overlap in the middle are two names."""
-    from pyntpot._port import labels as lb
-
-    assert lb._one_place("High Cup Nick", "High Cup Nick Cairn")
-    assert lb._one_place("Grasmere", "Upper Grasmere"), "a qualifier is stripped"
-    assert not lb._one_place("High Cup Nick", "High Cup Nicks")
-    assert not lb._one_place("Abergavenny", "Lyn Valley Walk")
-    assert not lb._one_place("Monmouth", "Monmouth Castle Field Museum")
-
-
-def test_a_span_name_is_never_deduped():
-    """A span's name is prose about a stretch, not a name for somewhere."""
-    from pyntpot._port import labels as lb
-
-    twice = [
-        _named("the steady middle hour", "climb", TIER_SPAN, 100, 100),
-        _named("the steady middle hour", "fast", TIER_SPAN, 110, 100),
-    ]
-    assert len(lb.dedupe_names(twice, sheet_card())) == 2
-
-
 # ------------------------------------------------- the clearance a name keeps
-
-
-def test_a_name_clears_its_own_feature_on_whichever_side_it_takes():
-    """The clearance is a fact about the ink, and a baseline is not the ink.
-
-    The lift used to be applied to the baseline, and letters sit above their
-    baseline rather than straddling it: one side cleared the feature and the
-    other wrote the whole ascent back across it. Both "Lyn" labels
-    took the second side and seven glyph pixels in ten were in the river.
-    """
-    from pyntpot._port import labels as lb
-
-    river = Label(
-        name="Lyn",
-        kind="river",
-        why="",
-        px=0.0,
-        py=0.0,
-        tier=TIER_RIVER,
-        size=18.0,
-        feature_px=11.4,
-    )
-    want = lb.lift_px(river)
-    for side in (1.0, -1.0):
-        base = lb.lift_baseline(river, side)
-        # Letters sit above their baseline whichever side of the line the
-        # baseline was put on, so the ink band is the same way up both times
-        # and only one of its two edges is the near one.
-        edges = (base + river.size * lb.INK_ASCENT_CAPS, base - river.size * lb.INK_DESCENT_CAPS)
-        near = min(abs(e) for e in edges)
-        assert near == pytest.approx(want), f"side {side} does not clear"
-        assert base * side > 0.0, "the baseline is on the side that was chosen"
-
-
-def test_the_box_a_curved_name_reserves_is_centred_on_its_own_ink():
-    """The placer defends boxes and the pen writes glyphs, and they are one thing."""
-    from pyntpot._port import labels as lb
-
-    road = Label(
-        name="A361",
-        kind="road",
-        why="",
-        px=0.0,
-        py=0.0,
-        tier=TIER_ROAD,
-        size=14.0,
-        feature_px=6.75,
-    )
-    for side in (1.0, -1.0):
-        base = lb.lift_baseline(road, side)
-        middle = lb.lift_middle(road, side)
-        top = base + road.size * lb.INK_ASCENT_CAPS
-        bottom = base - road.size * lb.INK_DESCENT_CAPS
-        assert middle == pytest.approx((top + bottom) / 2)
-
-
-def test_the_clearance_scales_with_the_water_the_painter_actually_laid_down():
-    """The layers carry the brush's nominal width, not its footprint.
-
-    A brush bleeds, smooths and drifts past its own nominal edge, so a
-    clearance taken against the nominal width stands the name off less water
-    than it has to clear.
-    """
-    from pyntpot._port import labels as lb
-
-    assert WET_SPREAD > 1.0
-    wide = label_basemap(wet_px={"major": 12.0, "medium": 3.0, "minor": 1.0})
-    narrow = label_basemap(wet_px={"major": 4.0, "medium": 3.0, "minor": 1.0})
-    big = Label(
-        name="Lyn",
-        kind="river",
-        why="",
-        px=0.0,
-        py=0.0,
-        tier=TIER_RIVER,
-        size=18.0,
-        feature_px=feature_px(wide, "river", "major"),
-    )
-    small = Label(
-        name="Lyn",
-        kind="river",
-        why="",
-        px=0.0,
-        py=0.0,
-        tier=TIER_RIVER,
-        size=18.0,
-        feature_px=feature_px(narrow, "river", "major"),
-    )
-    assert lb.lift_px(big) > lb.lift_px(small)
-    # The clearance starts where the painted ink stops: the whole painted
-    # half-width, then `LIFT_CAPS` of the type size as paper.
-    assert lb.LIFT_FEATURE_FRAC == 1.0
-    assert lb.lift_px(big) - big.feature_px * 0.5 == pytest.approx(big.size * lb.LIFT_CAPS)
 
 
 def test_a_road_number_needs_a_run_of_road_measured_against_its_own_type():
@@ -1646,112 +869,6 @@ def test_the_strands_part_and_rejoin_as_a_curve():
 
 
 # ------------------------------------------------- leaders that cross
-
-
-def _leadered(name, x, y):
-    """One landmark waiting to be placed."""
-    from pyntpot._port import labels as lb
-
-    return Label(
-        name=name,
-        kind="monument",
-        why="",
-        px=float(x),
-        py=float(y),
-        tier=TIER_LANDMARK,
-        size=lb.DEFAULT_LINE_PX,
-    )
-
-
-class _FlatCard:
-    w = 400
-    h = 300
-    scale = 1.0
-
-    @staticmethod
-    def xy(x, y):
-        return (float(x), float(y))
-
-
-def _dark():
-    return {"w": 2, "h": 2, "v": [[0.1, 0.1], [0.1, 0.1]]}
-
-
-def _seat(label, cx, cy, width):
-    """Sit one placed name's block on a point, as the placer would have."""
-    from pyntpot._port import labels as lb
-
-    label.box = (cx - width / 2, cy - 10, cx + width / 2, cy + 10)
-    label.flat = True
-    label.leader = ((label.px, label.py), (cx, cy))
-    lb._reseat(label, cx, cy)
-
-
-def test_two_leaders_that_cross_are_swapped_over():
-    """The placer is greedy, so two names can reach past each other.
-
-    A reader meeting a crossing follows the wrong line to the wrong pin, and
-    swapping the two names over is what shortens both leaders at once.
-    """
-    from pyntpot._port import labels as lb
-
-    a, b = _leadered("Alpha", 100.0, 100.0), _leadered("Beta", 100.0, 200.0)
-    # Seated deliberately the wrong way round: each name is off past the other.
-    _seat(a, 300.0, 200.0, 60.0)
-    _seat(b, 300.0, 100.0, 60.0)
-    assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
-    lb._uncross_leaders(
-        [a, b], _FlatCard(), [(0.0, 10.0), (400.0, 10.0)], [(0.0, 10.0), (400.0, 10.0)], _dark(), []
-    )
-    assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is None
-    assert a.leader[1][1] < b.leader[1][1], "each name is still past the other"
-
-
-def test_a_swap_that_reads_worse_is_refused():
-    """The swap is offered, not imposed: a name is never pushed off the sheet.
-
-    A wide name and a narrow one can cross, and the wide one does not fit where
-    the narrow one is sitting. A shorter pair of leaders is not worth a name in
-    the torn margin.
-    """
-    from pyntpot._port import labels as lb
-
-    a, b = _leadered("Alpha", 100.0, 100.0), _leadered("Beta", 340.0, 100.0)
-    _seat(a, 365.0, 200.0, 40.0)
-    _seat(b, 110.0, 200.0, 160.0)
-    assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
-    seats = (a.box, b.box)
-    lb._uncross_leaders(
-        [a, b], _FlatCard(), [(0.0, 10.0), (400.0, 10.0)], [(0.0, 10.0), (400.0, 10.0)], _dark(), []
-    )
-    assert (a.box, b.box) == seats, "a name was swapped off the paper"
-
-
-def test_a_name_on_its_own_mark_is_never_swapped():
-    """A settlement is its place: it has no leader and cannot be moved."""
-    from pyntpot._port import labels as lb
-
-    a = _leadered("Alpha", 150.0, 150.0)
-    a.box, a.flat, a.leader = (270.0, 140.0, 330.0, 160.0), True, ((150.0, 150.0), (300.0, 150.0))
-    town = Label(
-        name="Elm",
-        kind="settlement",
-        px=250.0,
-        py=150.0,
-        tier=TIER_SETTLEMENT,
-        size=lb.DEFAULT_LINE_PX,
-    )
-    town.box, town.flat, town.leader = (70.0, 140.0, 130.0, 160.0), True, None
-    seat = town.box
-    lb._uncross_leaders(
-        [a, town],
-        _FlatCard(),
-        [(0.0, 10.0), (400.0, 10.0)],
-        [(0.0, 10.0), (400.0, 10.0)],
-        _dark(),
-        [],
-    )
-    assert town.box == seat
 
 
 def test_a_lettering_only_style_change_leaves_the_base_key_and_the_plates_alone(tmp_path):
