@@ -47,8 +47,12 @@ P0 to P2 are complete and published. The next step is **P3.0**: fatten P3
 and P4 in `plan.md` into slices a sub-agent can execute, following
 `architecture.md` (A1 to A8, all accepted under D27) and the sequencing
 there: A4 first, one golden regeneration, A2 before the split. Run the
-plan-reviewer agent on the fattened section before any code moves. Golden
-parity is exact only on the maintainer's machine; CI runs tolerance mode.
+plan-reviewer agent on the fattened section before any code moves. Today
+the committed goldens are exact only on the maintainer's machine and this
+environment runs them in tolerance mode; the one regeneration (P3.15) is
+made in this environment, after which G-here runs them byte-exact here, CI
+stays in tolerance mode, and the maintainer's exact run is a follow-up check
+recorded in ADR 0006, not a re-baseline.
 
 ## P3. Façade, providers, policy, style, CLI
 
@@ -64,25 +68,26 @@ parity is exact only on the maintainer's machine; CI runs tolerance mode.
 - [ ] P3.8 `OverpassFeatures` with a query budget and copied query templates (parallel with P3.9, P3.10)
 - [ ] P3.9 `OpenTopoData` with a call budget (parallel with P3.8, P3.10)
 - [ ] P3.10 Fetch `Cache` keyed by box, margin and providers (parallel with P3.8, P3.9)
-- [ ] P3.11 Style groups by layer, effective basemap options, fixed route ink, the TOML theme, unwired; ADR 0005 (parallel line 3, A6)
+- [ ] P3.11a Style groups by the lowest reading layer, the field-to-group table, effective basemap options, fixed route ink; ADR 0005 (parallel line 3, A6)
+- [ ] P3.11b `Style` model, the TOML theme, pinned digests, unwired (parallel line 3, A6)
 - [ ] P3.12 Wire the style, final hash form; opens the regeneration window, step 1 byte-identical (A6, A7)
-- [ ] P3.13 Lettering reads the basemap, final manifest keys (step 2, byte-identical); drop the one-decimal round trip, the second parser and `route0` (step 3, bounded) (A4, window)
-- [ ] P3.14 Merge the polyline duplicates, one bounded step each (A5, window)
+- [ ] P3.13 Lettering reads the basemap, final manifest keys (step 2, byte-identical); drop the seam's one-decimal round trip, `paint.parse_d` and `route0`, keeping `geo.parse_path` for `basemap()`'s output (step 3, bounded) (A4, window)
+- [ ] P3.14 Merge the polyline duplicates that compute the same thing, one gated step each; keep the rest apart, recorded (A5, window)
 - [ ] P3.15 Regenerate the goldens once; ADR 0006; push the window to `main` (closes the window)
-- [ ] P3.16 Façade `fetch` (takes the style) and `paint`; fixture payloads renamed to cache keys
-- [ ] P3.17 Façade `letter` and `compose`; `Annotations`; lettering shims, `alphabet_sheet` and `sport_from_gpx` deleted (A3 shape)
+- [ ] P3.16 Façade `fetch` (takes the style) and `paint`; `Plates.route_px` and `strands` (the separated route); fixture payloads renamed to cache keys
+- [ ] P3.17 Façade `letter` and `compose` on `Plates.strands`; `Annotations`; lettering shims, `alphabet_sheet` and `sport_from_gpx` deleted; tests use `flat_measure` (A3 shape)
 - [ ] P3.18 Attribution drawn by `compose` from `Basemap.credits`
 - [ ] P3.19 `pyntpot map` CLI
 - [ ] P3.20 Top-level exports and `__version__`; ADR 0007
-- [ ] P3.21 Golden parity driven through the façade
+- [ ] P3.21 Golden parity driven through the façade; `paint_activity` deleted
 
 ## P4. Split and layer
 
-Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
+Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table. After the second review (`33f12be`) P4.16 and P4.17 swapped content (spans before placement, bottom-up) and P3.11 split into P3.11a and P3.11b.
 
 - [ ] P4.1 Design the hand's setting; ADR 0008 (A2)
 - [ ] P4.2 Ink engine part 1: noise, sheet, raster, io, wash, pigment (A1)
-- [ ] P4.3 Ink engine part 2: brush, tip, stamp, pad (A1)
+- [ ] P4.3 Ink engine part 2: brush with the brush-sheet tables, tip, stamp, pad (A1)
 - [ ] P4.4 Split the outline font into `letters/{font,skeleton,trace}`
 - [ ] P4.5 The hand writes settings; map furniture moves to maps (A2)
 - [ ] P4.6 The nib plate moves into letters (A2)
@@ -93,10 +98,10 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 - [ ] P4.11 Style groups part 2: lettering readers; `PaintStyle` and `_port/paint.py` deleted (A6)
 - [ ] P4.12 Design the candidates facility; ADR 0009 (A8)
 - [ ] P4.13 Candidates facility in `maps/candidates/` (A8)
-- [ ] P4.14 Split geo part 1: relief, generalisation, rivers
-- [ ] P4.15 Split geo part 2: OSM layers, cover, assembly; delete `geo.py`
-- [ ] P4.16 Split labels part 1: placement
-- [ ] P4.17 Split labels part 2: spans
+- [ ] P4.14 Split geo part 1: rings, SVG paths, track index, relief, generalisation, rivers
+- [ ] P4.15 Split geo part 2: OSM layers, cover, assembly, `landmark_export`; delete `geo.py`
+- [ ] P4.16 Split labels part 1: label types and spans
+- [ ] P4.17 Split labels part 2: placement
 - [ ] P4.18 Split labels part 3: picks, compose, strands; delete the port modules (A3)
 - [ ] P4.19 Layers and forbidden contracts; empty exemptions; delete `_port`; ADR 0010
 - [ ] P4.20 Relax the D22 pins to floors
@@ -129,7 +134,7 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 
 ## P9. Post-port cleanup
 
-- [ ] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR 0022
+- [ ] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR 0022 supersedes D16's enforcement clause for the post-port tree (the rule stands)
 - [ ] P9.2 Retire the exemptions mechanism; ADR 0023
 - [ ] P9.3 Delete `make_golden_old.py` and the last `ty` exclude
 - [ ] P9.4 Delete `design-sources.md` once `references.md` covers it
