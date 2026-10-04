@@ -57,7 +57,7 @@ recorded in ADR 0006, not a re-baseline.
 ## P3. Façade, providers, policy, style, CLI
 
 - [x] P3.0a Architecture review pass: candidates recorded in `architecture.md`
-- [ ] P3.0 Fatten P3 and P4 into slices from `architecture.md`; plan-reviewer pass
+- [x] P3.0 Fatten P3 and P4 into slices from `architecture.md`; plan-reviewer pass
 - [ ] P3.1 Golden harness (`make_golden.py` with provenance, `--golden-dir`), package skeletons, `Credit`, the import-rule test
 - [ ] P3.2 One card frame; ADR 0003 (A4)
 - [ ] P3.3 One polyline module, moves only; `Pt` in `ink.polyline` (A5)
