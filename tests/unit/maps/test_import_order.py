@@ -36,6 +36,7 @@ MODULES: tuple[str, ...] = (
     "pyntpot.ink.brush_style",
     "pyntpot.letters.style",
     "pyntpot.maps.style_groups",
+    "pyntpot.maps.track",
 )
 
 #: The `maps` modules allowed to import `_port`, binding its modules.
