@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from pyntpot._port import geo
+from pyntpot.ink.chains import join_strokes, join_ways
+from pyntpot.ink.polyline import clip_line
 
 from support.paths import FIXTURE_DIR, KEY
 
@@ -171,7 +173,7 @@ def test_an_unnamed_way_is_still_decided_on_its_own(tmp_path):
 def test_the_pieces_of_one_road_are_chained_into_one_stroke():
     """A street cut at its junctions is one line again before it is painted."""
     pieces = [[(0.0, 0.0), (10.0, 0.0)], [(20.0, 0.0), (30.0, 0.0)], [(10.0, 0.0), (20.0, 0.0)]]
-    chains = geo.join_strokes(pieces, tol=1.0)
+    chains = join_strokes(pieces, tol=1.0)
     assert len(chains) == 1
     assert chains[0][0] == (0.0, 0.0) and chains[0][-1] == (30.0, 0.0)
 
@@ -179,14 +181,14 @@ def test_the_pieces_of_one_road_are_chained_into_one_stroke():
 def test_a_piece_taken_from_the_middle_grows_out_to_both_ends():
     """Whichever piece the chain starts from, it reaches both ends of the road."""
     pieces = [[(10.0, 0.0), (20.0, 0.0)], [(0.0, 0.0), (10.0, 0.0)], [(20.0, 0.0), (30.0, 0.0)]]
-    chain = geo.join_strokes(pieces, tol=1.0)[0]
+    chain = join_strokes(pieces, tol=1.0)[0]
     assert {chain[0], chain[-1]} == {(0.0, 0.0), (30.0, 0.0)}
 
 
 def test_a_piece_is_reversed_where_that_is_how_it_joins():
     """OSM way direction is not the direction a road is drawn in."""
     pieces = [[(0.0, 0.0), (10.0, 0.0)], [(20.0, 0.0), (10.0, 0.0)]]
-    chain = geo.join_strokes(pieces, tol=1.0)[0]
+    chain = join_strokes(pieces, tol=1.0)[0]
     assert len(chain) == 3
     assert {chain[0], chain[-1]} == {(0.0, 0.0), (20.0, 0.0)}
 
@@ -194,14 +196,14 @@ def test_a_piece_is_reversed_where_that_is_how_it_joins():
 def test_a_chain_is_left_open():
     """A road is a line, not a ring: closing one draws a street that is not there."""
     ends = [[(0.0, 0.0), (10.0, 0.0)], [(10.0, 0.0), (10.0, 10.0)]]
-    chain = geo.join_strokes(ends, tol=1.0)[0]
+    chain = join_strokes(ends, tol=1.0)[0]
     assert chain[0] != chain[-1]
 
 
 def test_pieces_that_do_not_meet_stay_apart():
     """A gap wider than the tolerance is a gap, not a join to make up."""
     apart = [[(0.0, 0.0), (10.0, 0.0)], [(40.0, 0.0), (50.0, 0.0)]]
-    assert len(geo.join_strokes(apart, tol=1.0)) == 2
+    assert len(join_strokes(apart, tol=1.0)) == 2
 
 
 # ------------------------------------------------- how wide a river really is
@@ -545,7 +547,7 @@ def test_rings_are_wound_so_overlapping_fills_never_stack():
 
 def test_a_relation_split_across_ways_is_joined_into_one_ring():
     """The Ilkley Moor is one boundary cut into pieces; the pieces are chained."""
-    rings = geo.join_ways(
+    rings = join_ways(
         [
             [(0.0, 0.0), (10.0, 0.0)],
             [(10.0, 0.0), (10.0, 10.0)],
@@ -723,7 +725,7 @@ def test_distance_is_capped_so_a_far_feature_costs_nothing():
 def test_clip_line_splits_a_road_that_leaves_and_returns():
     """A road that leaves the sheet comes back as two pieces, not one long jump."""
     line = [(0.0, 0.0), (50.0, 0.0), (500.0, 0.0), (50.0, 50.0), (10.0, 50.0)]
-    pieces = geo.clip_line(line, (0.0, 0.0, 100.0, 100.0))
+    pieces = clip_line(line, (0.0, 0.0, 100.0, 100.0))
     assert len(pieces) == 2
     assert math.dist(pieces[0][0], (0.0, 0.0)) < 1e-9
 

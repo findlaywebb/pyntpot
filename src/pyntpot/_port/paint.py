@@ -33,6 +33,8 @@ import numpy as np
 from PIL import Image
 
 from pyntpot._port.style import coerce_like
+from pyntpot.ink.chains import chain_lines
+from pyntpot.ink.polyline import simplify
 
 F32 = np.float32
 Pt = tuple[float, float]
@@ -1310,64 +1312,6 @@ def deform_ring(
         mid[:, 0] -= d[:, 1] / ln * off
         mid[:, 1] += d[:, 0] / ln * off
         out = np.empty((2 * n, 2))
-        out[0::2] = p
-        out[1::2] = mid
-        p = out
-        var = np.repeat(var, 2) * decay * rng.uniform(0.75, 1.25, 2 * n)
-    return p
-
-
-def deform_line(
-    line: Any,
-    rng: np.random.Generator,
-    amount: float,
-    depth: int,
-    decay: float,
-    cap: float,
-    min_seg: float,
-) -> np.ndarray:
-    """The same recursive midpoint displacement, on an open polyline.
-
-    `deform_ring` is the closed version and the only thing closure changes is
-    that the last point joins the first. A leader, an underline and a span line
-    are all open, and they all want the same thing a wood's edge wants: a
-    different wobble frequency in different parts of the line, so no two
-    instances of the same gesture are the same curve.
-
-    The ends are left where they were, because a leader that misses its pin is
-    not a hand-drawn leader, it is a wrong one.
-
-    Args:
-        line: The polyline, `(n, 2)` in whatever units the caller works in.
-        rng: The generator the displacements are drawn from.
-        amount: The first round's variance, as a share of a segment's length.
-        depth: How many rounds. Each doubles the point count.
-        decay: What each round hands its children, before the randomisation.
-        cap: The largest one displacement may be, in the caller's units.
-        min_seg: Stop once the typical segment is shorter than this.
-
-    Returns:
-        The deformed line, `(m, 2)`, with the first and last points unmoved.
-    """
-    p = np.asarray(line, dtype=np.float64)
-    if p.ndim != 2 or len(p) < 2:
-        return p
-    var = np.full(max(len(p) - 1, 1), max(amount, 0.0))
-    for _ in range(max(int(depth), 0)):
-        n = len(p) - 1
-        if n < 1 or len(p) > 24000:
-            break
-        a, b = p[:-1], p[1:]
-        d = b - a
-        seg = np.hypot(d[:, 0], d[:, 1])
-        if float(np.median(seg)) < min_seg:
-            break
-        ln = np.maximum(seg, 1e-9)
-        off = np.clip(rng.normal(0.0, 1.0, n) * var * seg, -cap, cap)
-        mid = 0.5 * (a + b)
-        mid[:, 0] -= d[:, 1] / ln * off
-        mid[:, 1] += d[:, 0] / ln * off
-        out = np.empty((2 * n + 1, 2))
         out[0::2] = p
         out[1::2] = mid
         p = out
@@ -2747,68 +2691,6 @@ def scaled_brush(b: Brush, k: int) -> Brush:
     )
 
 
-def chain_lines(lines: list[np.ndarray], tol: float) -> list[np.ndarray]:
-    """Join polylines that meet end to end, so one road is one mark.
-
-    OSM splits a road wherever a tag changes, so what arrives is a heap of
-    short ways rather than a line: a woodland plate's A road is 43 of them, 25
-    under 60 render pixels. Stamped separately each one takes a fresh tip
-    pattern, a fresh set-down blob and a lift taper at both ends, and the road
-    comes out as a chain of tapered lozenges with a bead at every join. Joined
-    first, it is one stroke, which is also what a painter would have drawn.
-
-    Greedy and deterministic: the ways are walked in the order they arrive,
-    each is extended from its tail and then from its head, and a way is used
-    once. A junction where three ways meet takes whichever arrived first, which
-    is the honest answer with no more information than an endpoint.
-
-    Args:
-        lines: The polylines, in render pixels.
-        tol: How close two ends have to be to be the same mark, in pixels.
-
-    Returns:
-        The chains, each a single polyline.
-    """
-    if len(lines) < 2 or tol <= 0:
-        return list(lines)
-    q = max(tol, 0.1)
-    ends: dict[tuple[int, int], list[tuple[int, int]]] = {}
-    for i, ln in enumerate(lines):
-        for e, p in ((0, ln[0]), (1, ln[-1])):
-            ends.setdefault((int(round(p[0] / q)), int(round(p[1] / q))), []).append((i, e))
-    used = [False] * len(lines)
-
-    def hook(p: np.ndarray) -> tuple[int, int] | None:
-        """An unused end within the tolerance of this point."""
-        kx, ky = int(round(p[0] / q)), int(round(p[1] / q))
-        for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                for i, e in ends.get((kx + dx, ky + dy), ()):
-                    if used[i]:
-                        continue
-                    o = lines[i][0] if e == 0 else lines[i][-1]
-                    if abs(o[0] - p[0]) <= q and abs(o[1] - p[1]) <= q:
-                        return i, e
-        return None
-
-    out: list[np.ndarray] = []
-    for i0 in range(len(lines)):
-        if used[i0]:
-            continue
-        used[i0] = True
-        chain = [lines[i0]]
-        while (hit := hook(chain[-1][-1])) is not None:
-            i, e = hit
-            used[i] = True
-            chain.append(lines[i] if e == 0 else lines[i][::-1])
-        while (hit := hook(chain[0][0])) is not None:
-            i, e = hit
-            used[i] = True
-            chain.insert(0, lines[i][::-1] if e == 0 else lines[i])
-        out.append(np.concatenate(chain) if len(chain) > 1 else chain[0])
-    return out
-
-
 def _grow(a: np.ndarray, h: int, w: int) -> np.ndarray:
     """One smooth field carried up to a finer grid, bilinear."""
     img = Image.fromarray(np.asarray(a, F32), "F").resize((w, h), Image.BILINEAR)
@@ -3449,7 +3331,7 @@ def label_geom(payload: dict[str, Any], tol_px: float) -> dict[str, Any]:
     def lines(d: str) -> list[list[list[float]]]:
         out = []
         for piece in geo.parse_path(d):
-            kept = geo.simplify(piece, tol)
+            kept = simplify(piece, tol)
             if len(kept) > 1:
                 out.append([[round(x, 1), round(y, 1)] for x, y in kept])
         return out

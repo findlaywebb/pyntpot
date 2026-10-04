@@ -36,6 +36,8 @@ from typing import Any
 
 import numpy as np
 
+from pyntpot.ink.polyline import normals
+
 Pt = tuple[float, float]
 
 #: The vendored face and its licence.
@@ -428,17 +430,6 @@ def _radii(pts: list[Pt], reach: np.ndarray) -> list[float]:
     return out
 
 
-def _normals(pts: list[Pt]) -> list[Pt]:
-    """A unit normal at every point of a run, from a smoothed tangent."""
-    n = len(pts)
-    out = []
-    for i in range(n):
-        a, b = pts[max(i - 3, 0)], pts[min(i + 3, n - 1)]
-        run = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
-        out.append((-(b[1] - a[1]) / run, (b[0] - a[0]) / run))
-    return out
-
-
 def _edge(img: np.ndarray, at: Pt, along: Pt, cap: float) -> float:
     """How far the ink reaches from a point in one direction, up to `cap`."""
     h, w = img.shape
@@ -485,7 +476,7 @@ def _flank(pts: list[Pt], img: np.ndarray, half: float, side: float) -> list[Pt]
     if len(pts) < 4:
         return None
     cap = half * FLANK_CAP
-    norms = _normals(pts)
+    norms = normals(pts)
     raw = []
     for (x, y), (nx, ny) in zip(pts, norms, strict=True):
         reach = _edge(img, (x, y), (nx * side, ny * side), cap)

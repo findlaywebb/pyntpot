@@ -13,6 +13,8 @@ import numpy as np
 import pytest
 
 from pyntpot._port import geo, paint
+from pyntpot.ink.chains import chain_lines
+from pyntpot.ink.polyline import deform_line, foot_on, length_indexed, meet, simplify
 
 from support.paths import FIXTURE_DIR, KEY
 
@@ -694,7 +696,7 @@ def test_a_road_split_into_ways_is_one_mark_again():
     h, w = 44, 1200
     whole = np.stack([np.linspace(20.0, w - 20.0, 901), np.full(901, h / 2)], axis=1)
     pieces = [whole[i * 150 : (i + 1) * 150 + 1] for i in range(6)]
-    assert len(paint.chain_lines(pieces, 2.5)) == 1
+    assert len(chain_lines(pieces, 2.5)) == 1
     sheet = paint.Sheet(h, w, gran_px=9.0, seed=11)
 
     def lay(lines: list[np.ndarray], **style_over: object) -> np.ndarray:
@@ -715,13 +717,13 @@ def test_a_way_that_arrives_backwards_is_still_joined():
     """A junction hands the painter whichever end it has; both are the mark."""
     a = np.stack([np.linspace(0.0, 100.0, 60), np.zeros(60)], axis=1)
     b = np.stack([np.linspace(220.0, 100.0, 60), np.zeros(60)], axis=1)
-    chains = paint.chain_lines([a, b], 2.5)
+    chains = chain_lines([a, b], 2.5)
     assert len(chains) == 1
     assert chains[0][0][0] == pytest.approx(0.0)
     assert chains[0][-1][0] == pytest.approx(220.0)
     # And two that meet nowhere are left as the two marks they are.
     far = np.stack([np.linspace(400.0, 500.0, 60), np.zeros(60)], axis=1)
-    assert len(paint.chain_lines([a, far], 2.5)) == 2
+    assert len(chain_lines([a, far], 2.5)) == 2
 
 
 def test_a_corner_is_rounded_to_the_brush_rather_than_stamped_through():
@@ -1706,14 +1708,14 @@ def test_an_open_line_deforms_without_moving_its_ends(tmp_path):
     """A leader that misses its pin is not hand-drawn, it is wrong."""
     rng = np.random.default_rng(3)
     line = [(0.0, 0.0), (40.0, 0.0), (80.0, 0.0)]
-    out = paint.deform_line(line, rng, 0.06, 4, 0.62, 6.0, 1.0)
+    out = deform_line(line, (rng, 0.06, 4, 0.62, 6.0, 1.0))
     assert len(out) > len(line)
     assert tuple(out[0]) == (0.0, 0.0)
     assert tuple(out[-1]) == (80.0, 0.0)
     assert abs(out[:, 1]).max() > 0.0, "the line did not move at all"
     assert abs(out[:, 1]).max() <= 6.0
     # Seeded, so the same leader is the same curve on every render.
-    again = paint.deform_line(line, np.random.default_rng(3), 0.06, 4, 0.62, 6.0, 1.0)
+    again = deform_line(line, (np.random.default_rng(3), 0.06, 4, 0.62, 6.0, 1.0))
     assert np.allclose(out, again)
 
 
@@ -2116,7 +2118,7 @@ def test_the_major_river_carries_its_name_twice_and_the_others_once():
     assert names.count("Heddon") == 1
     a, b = [label for label in got if label.name == "Lyn"]
     apart = math.dist((a.px, a.py), (b.px, b.py))
-    assert apart > lb._run(a.baseline) * lb.RIVER_REPEAT_FRAC * 0.9
+    assert apart > length_indexed(a.baseline) * lb.RIVER_REPEAT_FRAC * 0.9
 
 
 def test_a_span_that_doubles_back_is_still_one_open_gesture():
@@ -2138,7 +2140,7 @@ def test_a_span_that_doubles_back_is_still_one_open_gesture():
     line = lb.span_line(doubled, 0, len(doubled) - 1, 1, 14.0, card)
     assert line, "a doubled-back span drew nothing at all"
     # Not a ring: it does not come back to where it started.
-    assert math.dist(line[0], line[-1]) > 0.33 * lb._run(line)
+    assert math.dist(line[0], line[-1]) > 0.33 * length_indexed(line)
     # And it stands off the stretch it belongs to rather than wrapping it.
     assert min(min(math.dist(p, q) for q in doubled) for p in line) > 8.0
 
@@ -2310,7 +2312,7 @@ def test_a_doubled_back_stretch_is_enclosed_rather_than_cut_across():
     back = [(x, y + 26.0) for x, y in reversed(out)]
     route = out + back
     line = lb.span_line(route, 0, len(route) - 1, 1, 20.0, card)
-    assert lb._run(line) > 2.0 * 20.0, "the doubled-back stretch drew no mark"
+    assert length_indexed(line) > 2.0 * 20.0, "the doubled-back stretch drew no mark"
     assert not _crosses(line, route), "the mark cuts across the loop"
     # Corners, because the loop's own turns are corners: a route that turns
     # right round in a few pixels is not drawn as an arc. So the mark is a few
@@ -2341,7 +2343,7 @@ def test_a_hairpin_takes_the_short_way_over_its_own_mouth():
     assert not _crosses(line, route)
     # Over the mouth, which is the west end where the two ends of the span are,
     # and nothing like the length of the stretch itself.
-    assert lb._run(line) < 0.4 * lb._run(route)
+    assert length_indexed(line) < 0.4 * length_indexed(route)
     assert sum(x for x, _ in line) / len(line) < 100.0
 
 
@@ -2365,7 +2367,7 @@ def test_the_mark_follows_the_shape_in_a_few_strokes_and_does_not_hold_its_gap()
     route += [(202.0 + i * 3.0, 172.0) for i in range(1, 30)]
     span = lb.Span(name="the corner", kind="climb", i0=0, i1=len(route) - 1)
     assert lb.place_spans([span], card, route, _flat_dark(), cap_px=14.0)
-    gaps = [lb._foot_on(p, route)[0] for p in span.line]
+    gaps = [foot_on(p, route)[0] for p in span.line]
     # It stands off the route the whole way, and it does not hold one distance.
     assert min(gaps) >= 14.0 * lb.SPAN_CLEAR_CAPS
     assert max(gaps) - min(gaps) > 0.25 * span.offset_px, (
@@ -2373,7 +2375,7 @@ def test_the_mark_follows_the_shape_in_a_few_strokes_and_does_not_hold_its_gap()
     )
     # It has the corner in it, and it has only a few turns in all.
     assert 1 <= _corners(span.line) <= 6, f"{_corners(span.line)} turns is not a few strokes"
-    assert _corners(span.line) >= _corners(geo.simplify(route, 3.0)) - 2
+    assert _corners(span.line) >= _corners(simplify(route, 3.0)) - 2
 
 
 def test_the_mark_stops_short_of_a_tangle_rather_than_pushing_through_it():
@@ -2490,7 +2492,7 @@ def test_an_end_tick_stops_short_of_the_route_rather_than_touching_it():
     clear = 14.0 * lb.SPAN_CLEAR_CAPS
     for tick in span.ticks:
         assert lb.clear_of_route(tick, route, clear)
-        assert lb._run(tick) > 0.0
+        assert length_indexed(tick) > 0.0
 
 
 def _shapes() -> dict[str, list[tuple[float, float]]]:
@@ -2531,7 +2533,7 @@ def _corners(pts: list[tuple[float, float]], tol: float = 3.0) -> int:
     A spline is a hundred points that each turn a degree; what a person counts
     is the corners left when the line is simplified to what it looks like.
     """
-    return max(len(geo.simplify(pts, tol)) - 2, 0)
+    return max(len(simplify(pts, tol)) - 2, 0)
 
 
 def test_the_label_plate_is_written_losslessly_like_the_others(tmp_path):
@@ -3749,7 +3751,7 @@ def test_a_numbered_road_is_gathered_by_its_number_not_by_its_street_name():
     got = lb.pick_roads(manifest, FlatCard(), route, budget=2)
     assert [label.name for label in got] == ["A3052"]
     # No one leg is long enough on its own; the number is what gathers them.
-    assert lb._run(got[0].baseline) > lb.road_min_px(got[0].size)
+    assert length_indexed(got[0].baseline) > lb.road_min_px(got[0].size)
 
 
 # ------------------------------------------------- two strands of one route
@@ -3861,11 +3863,11 @@ def test_two_leaders_that_cross_are_swapped_over():
     # Seated deliberately the wrong way round: each name is off past the other.
     _seat(a, 300.0, 200.0, 60.0)
     _seat(b, 300.0, 100.0, 60.0)
-    assert lb._meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
+    assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
     lb._uncross_leaders(
         [a, b], _FlatCard(), [(0.0, 10.0), (400.0, 10.0)], [(0.0, 10.0), (400.0, 10.0)], _dark(), []
     )
-    assert lb._meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is None
+    assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is None
     assert a.leader[1][1] < b.leader[1][1], "each name is still past the other"
 
 
@@ -3881,7 +3883,7 @@ def test_a_swap_that_reads_worse_is_refused():
     a, b = _leadered("Alpha", 100.0, 100.0), _leadered("Beta", 340.0, 100.0)
     _seat(a, 365.0, 200.0, 40.0)
     _seat(b, 110.0, 200.0, 160.0)
-    assert lb._meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
+    assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
     seats = (a.box, b.box)
     lb._uncross_leaders(
         [a, b], _FlatCard(), [(0.0, 10.0), (400.0, 10.0)], [(0.0, 10.0), (400.0, 10.0)], _dark(), []

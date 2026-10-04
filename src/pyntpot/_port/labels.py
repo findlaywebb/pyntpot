@@ -35,6 +35,18 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from pyntpot.ink.chains import joined
+from pyntpot.ink.curves import offset_curve, spline
+from pyntpot.ink.polyline import (
+    deform_line,
+    foot_on,
+    length_indexed,
+    meet,
+    running_length,
+    seg_gap,
+    simplify,
+)
+
 log = logging.getLogger(__name__)
 
 CHAR_W = 0.55  # width of one label character as a fraction of its font size
@@ -938,7 +950,7 @@ def _swap_seats(
     here, there = _centre(a.box), _centre(b.box)
     _reseat(a, *there)
     _reseat(b, *here)
-    crossed = _meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
+    crossed = meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
     after = _pair_cost(a, b, card, route_px, thin, dark, roads, others)
     if not crossed and after < before:
         return True
@@ -975,7 +987,7 @@ def _uncross_leaders(
         swapped = False
         for i, a in enumerate(seats):
             for b in seats[i + 1 :]:
-                if _meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is None:
+                if meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is None:
                     continue
                 swapped |= _swap_seats(a, b, placed, card, route_px, thin, dark, roads)
         if not swapped:
@@ -996,7 +1008,7 @@ def _is_own_feature(line: list[Pt], baseline: list[Pt]) -> bool:
         return False
     near = 0
     for p in line:
-        if _foot_on(p, baseline)[0] <= OWN_LINE_PX:
+        if foot_on(p, baseline)[0] <= OWN_LINE_PX:
             near += 1
     return near >= OWN_LINE_FRAC * len(line)
 
@@ -1152,9 +1164,7 @@ def _mark_gap(box: Box, lb: Label, fallback: float) -> float:
     slack = lb.size * SPAN_MARK_SLACK
     at = [((x0 + x1) / 2, (y0 + y1) / 2), (x0, y0), (x1, y0), (x1, y1), (x0, y1)]
     gaps = [
-        max(
-            (_foot_on(p, lb.mark)[0] if len(lb.mark) > 1 else math.dist(p, lb.mark[0])) - slack, 0.0
-        )
+        max((foot_on(p, lb.mark)[0] if len(lb.mark) > 1 else math.dist(p, lb.mark[0])) - slack, 0.0)
         for p in at
     ]
     return sum(gaps) / len(gaps)
@@ -1182,7 +1192,7 @@ def _mark_through(box: Box, lb: Label) -> float:
     run = math.hypot(*out)
     if run < 1e-6:
         return cost
-    _d, foot = _foot_on((cx, cy), lb.mark)
+    _d, foot = foot_on((cx, cy), lb.mark)
     side = ((cx - foot[0]) * out[0] + (cy - foot[1]) * out[1]) / run
     if side < 0.0:
         cost += SPAN_INBOARD_COST
@@ -1371,10 +1381,10 @@ def _place_along(
     turn_max = SPAN_MAX_TURN_DEG if span else MAX_TURN_DEG
     bow_max = SPAN_MAX_BOW_FRAC if span else MAX_BOW_FRAC
     line = _resample(lb.baseline, max(want / 24.0, 2.0))
-    if _run(line) < want:
+    if length_indexed(line) < want:
         return None
-    apart = max(_run(line) * RIVER_REPEAT_FRAC, want)
-    cum = _cum(line)
+    apart = max(length_indexed(line) * RIVER_REPEAT_FRAC, want)
+    cum = running_length(line)
     # A span's bracket is a contour and a contour can loop, so which side of it
     # is "away from the route" is not one answer for the whole line: it was
     # read once at the bracket's middle and applied everywhere, which is how
@@ -1620,7 +1630,7 @@ def _curved_boxes(window: list[Pt], lb: Label, th: float, side: float | None = N
         The boxes, in order along the window.
     """
     walk = _offset_line(window, lift_middle(lb, lb.lift if side is None else side))
-    cum = _cum(walk)
+    cum = running_length(walk)
     total = cum[-1] or 1.0
     step = max(th * 0.9, 6.0)
     out: list[Box] = []
@@ -1767,14 +1777,6 @@ def _span_index(entry: Any, end: str, times: list[float], dist_m: list[float]) -
 def _nearest(values: list[float], target: float) -> int:
     """The index of the route point nearest a value on a monotone stream."""
     return min(range(len(values)), key=lambda i: abs(values[i] - target))
-
-
-def cumulative_m(route_px: list[Pt], scale: float) -> list[float]:
-    """Metres covered at each route point, from the track drawn in card pixels."""
-    out = [0.0]
-    for i in range(1, len(route_px)):
-        out.append(out[-1] + math.dist(route_px[i - 1], route_px[i]) / max(scale, 1e-9))
-    return out
 
 
 #: How far off the route a span's line sits, in cap heights, and how far apart
@@ -1984,7 +1986,9 @@ def _drawn_side(
         for side in (span.side, -span.side)
     }
     worth = {
-        side: (_run(line) - _feature_cost(line, avoid) - _on_line_cost(line, lines, cap_px))
+        side: (
+            length_indexed(line) - _feature_cost(line, avoid) - _on_line_cost(line, lines, cap_px)
+        )
         for side, line in drawn.items()
     }
     other = -span.side
@@ -2020,7 +2024,7 @@ def _on_line_cost(line: list[Pt], lines: list[list[Pt]] | None, cap_px: float) -
     """
     if not lines or len(line) < 2:
         return 0.0
-    run = _run(line)
+    run = length_indexed(line)
     if run <= 0.0:
         return 0.0
     reach = cap_px * SPAN_LINE_REACH_CAPS
@@ -2029,7 +2033,7 @@ def _on_line_cost(line: list[Pt], lines: list[list[Pt]] | None, cap_px: float) -
     near = [other for other in near if len(other) > 1]
     if not near:
         return 0.0
-    on = sum(1 for q in pts if min(_foot_on(q, other)[0] for other in near) < reach)
+    on = sum(1 for q in pts if min(foot_on(q, other)[0] for other in near) < reach)
     return (on / len(pts)) * run * SPAN_LINE_COST
 
 
@@ -2043,7 +2047,7 @@ def _feature_cost(line: list[Pt], avoid: list[tuple[float, float, float, float]]
     """
     if not avoid or len(line) < 2:
         return 0.0
-    run = _run(line)
+    run = length_indexed(line)
     if run <= 0.0:
         return 0.0
     pts = _resample(line, max(run / 60.0, 1.0))
@@ -2517,7 +2521,7 @@ def span_line(
     if len(shape) < 2:
         return []
     line = _uncross(
-        _forward_only(_drop_folds(_offset_curve(shape, side, offset_px), shape, offset_px), shape)
+        _forward_only(_drop_folds(offset_curve(shape, side, offset_px), shape, offset_px), shape)
     )
     return _clear_of(line, route_px, clear_px)
 
@@ -2532,14 +2536,12 @@ def shape_curve(raw: list[Pt], offset_px: float) -> list[Pt]:
     spline is broken at any turn sharp enough to be a corner, so a corner stays
     a corner. See `_corners_of`.
     """
-    from pyntpot._port import geo
-
     step = max(offset_px * SHAPE_STEP_FRAC, 1.0)
     even = _resample(raw, step)
-    corners = geo.simplify(even, offset_px * SHAPE_SIMPLIFY_FRAC)
+    corners = simplify(even, offset_px * SHAPE_SIMPLIFY_FRAC)
     if len(corners) < 2:
         return list(raw)
-    return _spline(corners, step, _corners_of(even, corners, offset_px))
+    return spline(corners, step, _corners_of(even, corners, offset_px))
 
 
 #: How much a stretch has to turn inside one offset's worth of path before the
@@ -2589,116 +2591,6 @@ def _turn_over(path: list[Pt], at: int, reach: float) -> float:
     return abs(math.degrees((t2 - t1 + math.pi) % (2 * math.pi) - math.pi))
 
 
-def _spline(pts: list[Pt], step: float, corners: set[int] | None = None) -> list[Pt]:
-    """A Catmull-Rom curve through every one of `pts`, sampled every `step`.
-
-    Through them and not near them: the points are the turns the road makes,
-    and a curve that only approaches them has lost the shape it was given.
-
-    Broken at every point in `corners`. A Catmull-Rom curve is smooth
-    everywhere by construction, so a corner run through it comes out as an arc,
-    and a corner drawn as an arc is too rounded where the route gives clear
-    bends to follow. Splining each run between corners on its own leaves
-    the corner as a corner and the rest as curve.
-    """
-    if len(pts) < 3:
-        return list(pts)
-    cuts = sorted(corners or set())
-    if cuts:
-        out: list[Pt] = []
-        edges = [0, *cuts, len(pts) - 1]
-        for a, b in zip(edges, edges[1:], strict=False):
-            run = _spline(pts[a : b + 1], step)
-            out.extend(run if not out else run[1:])
-        return out
-    ends = [pts[0], *pts, pts[-1]]
-    out = [pts[0]]
-    for i in range(len(pts) - 1):
-        p0, p1, p2, p3 = ends[i], ends[i + 1], ends[i + 2], ends[i + 3]
-        n = max(int(math.dist(p1, p2) / step), 2)
-        for k in range(1, n + 1):
-            t = k / n
-            t2, t3 = t * t, t * t * t
-            out.append(
-                (
-                    0.5
-                    * (
-                        (2 * p1[0])
-                        + (-p0[0] + p2[0]) * t
-                        + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2
-                        + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3
-                    ),
-                    0.5
-                    * (
-                        (2 * p1[1])
-                        + (-p0[1] + p2[1]) * t
-                        + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2
-                        + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3
-                    ),
-                )
-            )
-    return out
-
-
-#: How far a mitred corner may reach past the offset before it is cut off, as
-#: a multiple of the offset. A corner pushed off along its own bisector stands
-#: out by one over the cosine of half its turn, which runs away as the turn
-#: approaches a hairpin: two and a half offsets is about a 132 degree turn, and
-#: past that the corner is bevelled instead.
-MITER_LIMIT = 2.5
-
-
-def _offset_curve(shape: list[Pt], side: int, offset_px: float) -> list[Pt]:
-    """The shape pushed off to one side by the offset, mitred at its corners.
-
-    Point by point along the normals is right in the middle of a segment and
-    wrong at a corner: the two offset limbs either side of a convex corner do
-    not meet, and joining their end points cuts the corner off. Each point is
-    pushed along the bisector of its two segments instead, far enough that both
-    limbs stand off by the offset, which is a mitre and keeps the corner. Past
-    `MITER_LIMIT` the mitre is cut back to a bevel, so a hairpin does not throw
-    a spike across the sheet.
-
-    `side` is signed the way `_side_at` signs it, +1 for the left of travel in
-    card pixels, which is the module's only convention since `_bracket` went.
-    """
-    out: list[Pt] = []
-    for i, p in enumerate(shape):
-        before = _unit_normal(shape, i - 1, i)
-        after = _unit_normal(shape, i, i + 1)
-        if before is None and after is None:
-            continue
-        n1 = before or after
-        n2 = after or before
-        mx, my = n1[0] + n2[0], n1[1] + n2[1]
-        share = 1.0 + n1[0] * n2[0] + n1[1] * n2[1]
-        if share < 1e-9:  # the line doubles back on itself: no mitre exists
-            out.append((p[0] + side * n1[0] * offset_px, p[1] + side * n1[1] * offset_px))
-            continue
-        mx, my = mx / share, my / share
-        reach = math.hypot(mx, my)
-        if reach > MITER_LIMIT:
-            # Cut the mitre back along its own bisector rather than replacing
-            # it with the two limb ends: a pair of points either side of a turn
-            # of a hundred and seventy degrees is a spike, not a corner, and
-            # the junction by the river drew one.
-            mx, my = mx / reach * MITER_LIMIT, my / reach * MITER_LIMIT
-        out.append((p[0] + side * mx * offset_px, p[1] + side * my * offset_px))
-    return out
-
-
-def _unit_normal(pts: list[Pt], i: int, j: int) -> Pt | None:
-    """The unit normal of one segment, or None when there is no segment."""
-    if i < 0 or j > len(pts) - 1:
-        return None
-    ax, ay = pts[i]
-    bx, by = pts[j]
-    run = math.hypot(bx - ax, by - ay)
-    if run < 1e-9:
-        return None
-    return ((by - ay) / run, -(bx - ax) / run)
-
-
 #: How near the shape a point of the offset line may fall before it is thrown
 #: away, as a share of the offset. Seven tenths: a mitre cut back to the limit
 #: still stands off by more than that, and a fold does not.
@@ -2718,7 +2610,7 @@ def _drop_folds(line: list[Pt], shape: list[Pt], offset_px: float) -> list[Pt]:
     """
     if len(line) < 3 or len(shape) < 2:
         return list(line)
-    keep = [p for p in line if _foot_on(p, shape)[0] >= offset_px * FOLD_KEEP_FRAC]
+    keep = [p for p in line if foot_on(p, shape)[0] >= offset_px * FOLD_KEEP_FRAC]
     return keep if len(keep) >= 2 else list(line)
 
 
@@ -2766,24 +2658,10 @@ def _first_loop(line: list[Pt]) -> tuple[int, int, Pt] | None:
     """The first place a line crosses itself, and where the crossing is."""
     for i in range(len(line) - 1):
         for j in range(i + 2, len(line) - 1):
-            at = _meet(line[i], line[i + 1], line[j], line[j + 1])
+            at = meet(line[i], line[i + 1], line[j], line[j + 1])
             if at is not None:
                 return i, j, at
     return None
-
-
-def _meet(a: Pt, b: Pt, c: Pt, d: Pt) -> Pt | None:
-    """Where two segments cross, or None when they do not."""
-    rx, ry = b[0] - a[0], b[1] - a[1]
-    sx, sy = d[0] - c[0], d[1] - c[1]
-    den = rx * sy - ry * sx
-    if abs(den) < 1e-12:
-        return None
-    t = ((c[0] - a[0]) * sy - (c[1] - a[1]) * sx) / den
-    u = ((c[0] - a[0]) * ry - (c[1] - a[1]) * rx) / den
-    if not (0.0 < t < 1.0 and 0.0 < u < 1.0):
-        return None
-    return (a[0] + rx * t, a[1] + ry * t)
 
 
 def doubling_px(sub: list[Pt], apart: float = 0.25) -> float:
@@ -2849,7 +2727,7 @@ def _mouth_path(raw: list[Pt], offset_px: float) -> list[Pt]:
     # it is: the path here is walked slowly and sampled densely, and the piece
     # that crosses the mouth is seventy samples of twenty pixels.
     runs = [run for run in runs if math.dist(run[0], run[-1]) > math.dist(a, b) * 0.5]
-    piece = min(runs, key=_run) if runs else [a, b]
+    piece = min(runs, key=length_indexed) if runs else [a, b]
     if math.dist(piece[0], piece[-1]) >= offset_px * MOUTH_MIN_SPAN:
         return piece
     # An out-and-back that finishes where it started has no mouth to cross, so
@@ -2895,21 +2773,9 @@ def clear_of_route(line: list[Pt], route_px: list[Pt], clear_px: float) -> bool:
         return True
     for a, b in zip(line, line[1:], strict=False):
         for c, d in zip(near, near[1:], strict=False):
-            if _seg_gap(a, b, c, d) < clear_px:
+            if seg_gap(a, b, c, d) < clear_px:
                 return False
     return True
-
-
-def _seg_gap(a: Pt, b: Pt, c: Pt, d: Pt) -> float:
-    """The distance between two segments. Zero when they cross."""
-    if _meet(a, b, c, d) is not None:
-        return 0.0
-    return min(
-        _foot_on(a, [c, d])[0],
-        _foot_on(b, [c, d])[0],
-        _foot_on(c, [a, b])[0],
-        _foot_on(d, [a, b])[0],
-    )
 
 
 def _route_near(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
@@ -2974,7 +2840,7 @@ def _clear_of(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
         near = _route_near(out, route_px, clear_px * 6.0)
         if len(near) < 2:
             return out
-        feet = [_foot_on(p, near) for p in out]
+        feet = [foot_on(p, near) for p in out]
         want = _blur([max(0.0, clear_px * 1.3 - d) for d, _ in feet], CLEAR_BLUR)
         moved: list[Pt] = []
         for i, (p, (d, foot), push) in enumerate(zip(out, feet, want, strict=True)):
@@ -3016,7 +2882,7 @@ def _longest_clear(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[
     if len(line) < 3:
         return []
     near = _route_near(line, route_px, clear_px)
-    ok = [_foot_on(p, near)[0] >= clear_px * 1.05 for p in line] if near else [True] * len(line)
+    ok = [foot_on(p, near)[0] >= clear_px * 1.05 for p in line] if near else [True] * len(line)
     best: tuple[int, int] = (0, 0)
     at = None
     for i, good in enumerate([*ok, False]):
@@ -3027,10 +2893,10 @@ def _longest_clear(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[
                 best = (at, i)
             at = None
     lo, hi = best
-    want = _run(line) * CLEAR_KEEP_FRAC
+    want = length_indexed(line) * CLEAR_KEEP_FRAC
     while hi - lo >= 3:
         cut = line[lo:hi]
-        if _run(cut) < want:
+        if length_indexed(cut) < want:
             break
         if clear_of_route(cut, route_px, clear_px):
             return cut
@@ -3045,31 +2911,6 @@ def _away_from(poly: list[Pt], p: Pt) -> Pt:
     b = poly[min(at + 1, len(poly) - 1)]
     run = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
     return (-(b[1] - a[1]) / run, (b[0] - a[0]) / run)
-
-
-def _foot_on(p: Pt, poly: list[Pt]) -> tuple[float, Pt]:
-    """The distance from a point to a polyline, and the point it lands on.
-
-    Segments, not vertices. A track sampled every few pixels and a bracket
-    sampled every one measure differently against the two, and it is the
-    segment that is the road.
-    """
-    best = (float("inf"), poly[0])
-    for i in range(len(poly) - 1):
-        ax, ay = poly[i]
-        bx, by = poly[i + 1]
-        vx, vy = bx - ax, by - ay
-        run = vx * vx + vy * vy
-        if run <= 1e-12:
-            foot = (ax, ay)
-        else:
-            t = ((p[0] - ax) * vx + (p[1] - ay) * vy) / run
-            t = 0.0 if t < 0.0 else (1.0 if t > 1.0 else t)
-            foot = (ax + t * vx, ay + t * vy)
-        d = math.dist(p, foot)
-        if d < best[0]:
-            best = (d, foot)
-    return best
 
 
 def _blur(series: list[float], passes: int) -> list[float]:
@@ -3122,11 +2963,6 @@ def _side_of(sub: list[Pt], p: Pt) -> int:
     b = sub[min(at + 1, len(sub) - 1)]
     cross = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])
     return 1 if cross < 0 else -1
-
-
-def _run(pts: list[Pt]) -> float:
-    """The length of a polyline."""
-    return sum(math.dist(pts[i], pts[i + 1]) for i in range(len(pts) - 1))
 
 
 def _span_ticks(span: Span, route_px: list[Pt], cap_px: float) -> list[list[Pt]]:
@@ -3185,7 +3021,7 @@ def _span_label(
     along = (
         bool(span.line)
         and span_bearing(span.line) <= along_max_deg
-        and _run(span.line) >= width * 1.02
+        and length_indexed(span.line) >= width * 1.02
     )
     anchors: list[Pt] = []
     if not along and span.line:
@@ -3237,7 +3073,7 @@ def _beside(line: list[Pt], frac: float, push: Pt) -> Pt:
     of it points where a local normal at the other end came from: anchors built
     that way put a name on the far side of the road from its own mark.
     """
-    run = _run(line)
+    run = length_indexed(line)
     want, walked = run * frac, 0.0
     at = len(line) - 1
     for i in range(len(line) - 1):
@@ -3383,7 +3219,7 @@ def pick_settlements(
     wanted_set = {str(n).casefold() for n in (wanted or [])}
     budget = budget if budget is not None else settlement_budget(card.w)
     ends = [route_px[0], route_px[-1]] if route_px else []
-    reach = _run(route_px) * SETTLEMENT_ENDPOINT_FRAC
+    reach = length_indexed(route_px) * SETTLEMENT_ENDPOINT_FRAC
     found = settlements(manifest)
     scored: list[tuple[float, bool, dict[str, Any], Pt]] = []
     for entry in found:
@@ -3626,7 +3462,7 @@ def pick_rivers(
         line = [card.xy(x, y) for x, y in entry.get("d") or []]
         if len(line) < 2:
             continue
-        run_m = _run(line) / max(card.scale, 1e-9)
+        run_m = length_indexed(line) / max(card.scale, 1e-9)
         near_m = min(min(math.dist(p, q) for q in thin) for p in line[::2]) / max(card.scale, 1e-9)
         score = run_m / 1000.0 * min(max(1.0 - near_m / 500.0, 0.2), 1.0)
         widths[name] = max(
@@ -3650,7 +3486,8 @@ def pick_rivers(
         pieces.setdefault(name, []).append(line)
         totals[name] = totals.get(name, 0.0) + score
     merged: dict[str, tuple[float, list[Pt]]] = {
-        name: (totals[name], max(_joined(parts), key=_run)) for name, parts in pieces.items()
+        name: (totals[name], max(joined(parts), key=length_indexed))
+        for name, parts in pieces.items()
     }
     order = sorted(merged.items(), key=lambda kv: -kv[1][0])
     out: list[Label] = []
@@ -3662,12 +3499,12 @@ def pick_rivers(
         # water so the placer starts them in different halves; each is then free
         # to move anywhere along the whole line from there, and the repeat guard
         # in `place` keeps them from converging on the same window.
-        run = _run(line)
+        run = length_indexed(line)
         twice = run >= MAJOR_RIVER_TWICE_FRAC * max(card.w, card.h)
         times = MAJOR_RIVER_LABELS if rank == 0 and twice else 1
         for n in range(times):
             at = (n + 1) / (times + 1)
-            anchor = _on_line(line, _cum(line), run * at)[0]
+            anchor = _on_line(line, running_length(line), run * at)[0]
             size = DEFAULT_LINE_PX * 0.9
             out.append(
                 Label(
@@ -3683,14 +3520,6 @@ def pick_rivers(
                     feature_px=widths.get(name, 0.0),
                 )
             )
-    return out
-
-
-def _cum(line: list[Pt]) -> list[float]:
-    """Cumulative length at each point of a polyline."""
-    out = [0.0]
-    for i in range(1, len(line)):
-        out.append(out[-1] + math.dist(line[i - 1], line[i]))
     return out
 
 
@@ -3897,13 +3726,13 @@ def pick_roads(
     shortest = road_min_px(size)
     best: dict[str, tuple[float, list[Pt]]] = {}
     for key, parts in pieces.items():
-        line = max(_joined(parts), key=_run)
-        if _run(line) < shortest:
+        line = max(joined(parts), key=length_indexed)
+        if length_indexed(line) < shortest:
             continue
         near = min(min(math.dist(p, q) for q in thin) for p in line[::2])
         if near > 40.0:  # a road the session was never on is not this map's
             continue
-        best[key] = (_run(line) - near, line)
+        best[key] = (length_indexed(line) - near, line)
     out: list[Label] = []
     for key, (_score, line) in sorted(best.items(), key=lambda kv: -kv[1][0])[:budget]:
         mid = line[len(line) // 2]
@@ -3944,24 +3773,6 @@ def road_ref(raw: Any) -> str:
     """
     text = str(raw or "").strip().split(";")[0].strip()
     return text if any(ch.isdigit() for ch in text) else ""
-
-
-def _joined(parts: list[list[Pt]], tol: float = 8.0) -> list[list[Pt]]:
-    """One road's pieces chained end to end, so a name has a road to sit on.
-
-    OSM cuts a road at every junction and every change of surface, so a street
-    arrives as fifteen fragments none of which is longer than the name written
-    on it. The painter already chains ways for the brush; the same thing has to
-    happen before a road is judged too short to letter.
-    """
-    try:
-        import numpy as np
-
-        from pyntpot._port import paint
-    except ImportError:  # no numpy: the longest single piece has to do
-        return parts
-    chained = paint.chain_lines([np.asarray(part, float) for part in parts], tol)
-    return [[(float(x), float(y)) for x, y in c] for c in chained] or parts
 
 
 def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> list[Label]:
@@ -4228,7 +4039,7 @@ class Hand:
             return None
         want = width * 1.02
         line = _resample(lb.baseline, max(want / 24.0, 2.0))
-        if _run(line) < want:
+        if length_indexed(line) < want:
             return None
         near = (lb.px, lb.py)
         best: float | None = None
@@ -4266,7 +4077,7 @@ class Hand:
         as bad kerning rather than as a curve.
         """
         walk = _offset_line(base, lift_baseline(lb, side))
-        cum = _cum(walk)
+        cum = running_length(walk)
         out = []
         for _ch, pen_x, adv, paths in self.font.run(lb.name, lb.size, track):
             if not paths:
@@ -4348,11 +4159,7 @@ class Hand:
         """A hand's own wander along a line, a different curve every instance."""
         if amount <= 0 or len(pts) < 2:
             return list(pts)
-        try:
-            from pyntpot._port import paint
-        except ImportError:  # no numpy: the marks are drawn as they are
-            return list(pts)
-        got = paint.deform_line(pts, rng, amount * 0.14, 2, 0.55, amount * 1.3, 1.4)
+        got = deform_line(pts, (rng, amount * 0.14, 2, 0.55, amount * 1.3, 1.4))
         return [(float(x), float(y)) for x, y in got]
 
     # ------------------------------------------------------------ the furniture

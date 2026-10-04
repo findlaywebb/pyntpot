@@ -27,7 +27,6 @@ from pyntpot._port import labels as lb_mod
 from pyntpot._port.card import STRAND_GAP_WIDTHS, separate_strands
 from pyntpot._port.labels import (
     Label,
-    cumulative_m,
     draw_plate,
     ground_labels,
     home_labels,
@@ -40,6 +39,7 @@ from pyntpot._port.labels import (
     route_markers,
 )
 from pyntpot._port.style import RouteInk
+from pyntpot.ink.polyline import cumulative_m
 
 log = logging.getLogger(__name__)
 

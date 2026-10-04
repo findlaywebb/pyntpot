@@ -29,6 +29,16 @@ from pathlib import Path
 from typing import Any
 
 from pyntpot._port.style import coerce_like
+from pyntpot.ink.chains import join_chains, join_strokes, join_ways
+from pyntpot.ink.polyline import (
+    clip_line,
+    eased,
+    length,
+    normal_at,
+    segments_cross,
+    simplify,
+    smooth,
+)
 
 log = logging.getLogger(__name__)
 
@@ -237,72 +247,6 @@ def bounding_box(
 # --------------------------------------------------------------------------- geometry
 
 
-def simplify(points: list[Pt], eps: float) -> list[Pt]:
-    """Douglas-Peucker simplification, iterative so a long ring cannot recurse away.
-
-    Args:
-        points: Polyline in metres.
-        eps: Tolerance in metres. Larger is more stylised.
-
-    Returns:
-        The kept subset; the first and last point are always kept.
-    """
-    if len(points) < 3:
-        return list(points)
-    keep = [False] * len(points)
-    keep[0] = keep[-1] = True
-    stack = [(0, len(points) - 1)]
-    while stack:
-        lo, hi = stack.pop()
-        if hi <= lo + 1:
-            continue
-        ax, ay = points[lo]
-        bx, by = points[hi]
-        dx, dy = bx - ax, by - ay
-        den = math.hypot(dx, dy)
-        best, bi = -1.0, lo
-        for i in range(lo + 1, hi):
-            px, py = points[i]
-            if den == 0:
-                d = math.hypot(px - ax, py - ay)
-            else:
-                d = abs(dy * px - dx * py + bx * ay - by * ax) / den
-            if d > best:
-                best, bi = d, i
-        if best > eps:
-            keep[bi] = True
-            stack.append((lo, bi))
-            stack.append((bi, hi))
-    return [p for p, k in zip(points, keep, strict=True) if k]
-
-
-def smooth(points: list[Pt], passes: int = 2, closed: bool = False) -> list[Pt]:
-    """Chaikin corner cutting, which rounds a marching-squares staircase off.
-
-    Args:
-        points: Polyline in metres.
-        passes: How many rounds of cutting.
-        closed: Treat the polyline as a ring.
-
-    Returns:
-        The smoothed polyline.
-    """
-    out = list(points)
-    for _ in range(passes):
-        if len(out) < 3:
-            return out
-        nxt: list[Pt] = [] if closed else [out[0]]
-        span = len(out) if closed else len(out) - 1
-        for i in range(span):
-            (ax, ay), (bx, by) = out[i], out[(i + 1) % len(out)]
-            nxt.append((ax + 0.25 * (bx - ax), ay + 0.25 * (by - ay)))
-            nxt.append((ax + 0.75 * (bx - ax), ay + 0.75 * (by - ay)))
-        if not closed:
-            nxt.append(out[-1])
-        out = nxt
-    return out
-
-
 def signed_area(ring: list[Pt]) -> float:
     """Twice the signed area of a ring; positive is counter-clockwise."""
     total = 0.0
@@ -375,27 +319,6 @@ def clip_ring(ring: list[Pt], box: tuple[float, float, float, float]) -> list[Pt
             if cur_in:
                 nxt.append(cur)
         out = nxt
-    return out
-
-
-def clip_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[list[Pt]]:
-    """Split a polyline into the pieces that lie inside a rectangle."""
-    xmin, ymin, xmax, ymax = box
-
-    def inside(p: Pt) -> bool:
-        return xmin <= p[0] <= xmax and ymin <= p[1] <= ymax
-
-    out: list[list[Pt]] = []
-    run: list[Pt] = []
-    for p in line:
-        if inside(p):
-            run.append(p)
-        else:
-            if len(run) > 1:
-                out.append(run)
-            run = []
-    if len(run) > 1:
-        out.append(run)
     return out
 
 
@@ -517,7 +440,7 @@ class TrackIndex:
                     continue
                 if max(c[1], d[1]) < min(a[1], b[1]) or min(c[1], d[1]) > max(a[1], b[1]):
                     continue
-                if _segments_cross(a, b, c, d):
+                if segments_cross(a, b, c, d):
                     return True
         return False
 
@@ -551,14 +474,6 @@ CHANNEL_EASE_SAMPLES = 4
 #: inside the river's own polygon would otherwise measure 212 m and be drawn as
 #: the main river of the sheet.
 WIDTH_RUN_M = 250.0
-
-
-def _point_to_seg(p: Pt, a: Pt, b: Pt) -> float:
-    """Distance from a point to a segment."""
-    dx, dy = b[0] - a[0], b[1] - a[1]
-    run = dx * dx + dy * dy
-    t = 0.0 if run < 1e-12 else max(0.0, min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / run))
-    return math.dist(p, (a[0] + dx * t, a[1] + dy * t))
 
 
 def _ring_boxes(rings: list[list[Pt]]) -> list[tuple[list[Pt], tuple[float, ...]]]:
@@ -596,26 +511,6 @@ def _ring_at(p: Pt, boxed: list[tuple[list[Pt], tuple[float, ...]]]) -> list[Pt]
     return None
 
 
-def _normal_at(pts: list[Pt], i: int) -> Pt:
-    """The unit left normal of a polyline at one of its points."""
-    a = pts[max(i - 1, 0)]
-    b = pts[min(i + 1, len(pts) - 1)]
-    dx, dy = b[0] - a[0], b[1] - a[1]
-    run = math.hypot(dx, dy)
-    return (-dy / run, dx / run) if run > 1e-9 else (0.0, 1.0)
-
-
-def _eased(values: list[float], reach: int) -> list[float]:
-    """A moving average over `reach` samples either side, ends held."""
-    if reach < 1 or len(values) < 3:
-        return values
-    out = []
-    for i in range(len(values)):
-        lo, hi = max(i - reach, 0), min(i + reach + 1, len(values))
-        out.append(sum(values[lo:hi]) / (hi - lo))
-    return out
-
-
 def channel(line: list[Pt], rings: list[list[Pt]]) -> tuple[list[Pt], list[float | None]]:
     """One watercourse re-centred in its own channel, and how wide it is.
 
@@ -646,7 +541,7 @@ def channel(line: list[Pt], rings: list[list[Pt]]) -> tuple[list[Pt], list[float
     offsets: list[float] = []
     normals: list[Pt] = []
     for i, p in enumerate(pts):
-        n = _normal_at(pts, i)
+        n = normal_at(pts, i)
         normals.append(n)
         ring = _ring_at(p, boxed) if boxed else None
         if ring is None:
@@ -664,7 +559,7 @@ def channel(line: list[Pt], rings: list[list[Pt]]) -> tuple[list[Pt], list[float
         else:
             widths.append(None)
             offsets.append(0.0)
-    offsets = _eased(offsets, CHANNEL_EASE_SAMPLES)
+    offsets = eased(offsets, CHANNEL_EASE_SAMPLES)
     moved = [
         (p[0] + n[0] * off, p[1] + n[1] * off)
         for p, n, off in zip(pts, normals, offsets, strict=False)
@@ -779,21 +674,11 @@ def major_rivers(
     if widths:
         widest = max(widths.values())
         return ({n for n, w in widths.items() if w >= rel_frac * widest}, widths)
-    lengths = {name: sum(_run(line) for line in lines) for name, lines in pieces_by.items() if name}
+    lengths = {
+        name: sum(length(line) for line in lines) for name, lines in pieces_by.items() if name
+    }
     longest = max(lengths.values(), default=0.0)
     return ({n for n, ln in lengths.items() if longest > 0 and ln >= rel_frac * longest}, widths)
-
-
-def _side(a: Pt, b: Pt, c: Pt) -> float:
-    """Cross product of ab and ac; its sign says which side of ab c lies."""
-    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
-
-
-def _segments_cross(a: Pt, b: Pt, c: Pt, d: Pt) -> bool:
-    """True when segment ab properly crosses segment cd."""
-    d1, d2 = _side(c, d, a), _side(c, d, b)
-    d3, d4 = _side(a, b, c), _side(a, b, d)
-    return ((d1 > 0) != (d2 > 0)) and ((d3 > 0) != (d4 > 0))
 
 
 # --------------------------------------------------------------------------- osm
@@ -802,116 +687,6 @@ def _segments_cross(a: Pt, b: Pt, c: Pt, d: Pt) -> bool:
 def _geom(entry: dict[str, Any], proj: Projection) -> list[Pt]:
     """Project one Overpass `geometry` array into metres."""
     return [proj(g["lat"], g["lon"]) for g in entry.get("geometry") or [] if g]
-
-
-def join_ways(ways: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
-    """Chain member ways of a multipolygon into closed rings.
-
-    Overpass hands a relation back as loose ways. Treating each one as its own
-    ring is what left a large wood unshaded: the outer boundary is split across
-    dozens of ways and not one of them closes.
-
-    Args:
-        ways: Member geometries in metres.
-        tol: Metres within which two endpoints are the same node.
-
-    Returns:
-        Closed rings. An open chain is closed across its ends.
-    """
-    pool = [list(w) for w in ways if len(w) > 1]
-    rings: list[list[Pt]] = []
-    while pool:
-        chain = pool.pop()
-        joined = True
-        while joined and math.dist(chain[0], chain[-1]) > tol:
-            joined = False
-            for i, cand in enumerate(pool):
-                if math.dist(chain[-1], cand[0]) <= tol:
-                    chain += cand[1:]
-                elif math.dist(chain[-1], cand[-1]) <= tol:
-                    chain += list(reversed(cand))[1:]
-                elif math.dist(chain[0], cand[-1]) <= tol:
-                    chain = cand[:-1] + chain
-                elif math.dist(chain[0], cand[0]) <= tol:
-                    chain = list(reversed(cand))[:-1] + chain
-                else:
-                    continue
-                pool.pop(i)
-                joined = True
-                break
-        if len(chain) > 3:
-            rings.append(chain)
-    return rings
-
-
-def join_strokes(lines: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
-    """Chain open polylines head to tail wherever their ends meet.
-
-    OSM cuts a road at every junction, every bridge and every change of tag, so
-    what a person calls one street arrives as dozens of ways. The lettering
-    already gathers them (`labels.pick_roads`, "a numbered road is one road");
-    the painting did not, and painting them apart is what made the map look
-    broken. Each piece was a stroke of its own: a nib set down with a blot,
-    tapered to a point at both ends, and lifted again. A median piece of 2.5
-    display pixels against a 30 px lift is all taper and blot and never a line,
-    and thousands of such pieces can stand in for a few hundred roads.
-
-    Unlike `join_ways` this leaves a chain open: a road is a line, not a ring,
-    and closing one across its ends would draw a street that is not there.
-
-    Args:
-        lines: Polylines in metres. Only ones that belong together should be
-            passed in one call, because anything whose ends meet will join.
-        tol: Metres within which two endpoints are the same node.
-
-    Returns:
-        The chains, each as one polyline.
-    """
-    cell = max(tol, 1e-6)
-
-    def near(p: Pt) -> list[int]:
-        """Every piece with an end in this point's cell or the eight round it."""
-        cx, cy = int(p[0] // cell), int(p[1] // cell)
-        out: list[int] = []
-        for gx in (cx - 1, cx, cx + 1):
-            for gy in (cy - 1, cy, cy + 1):
-                out += at.get((gx, gy), ())
-        return out
-
-    live = {i: list(line) for i, line in enumerate(lines) if len(line) > 1}
-    at: dict[tuple[int, int], list[int]] = {}
-    for i, line in live.items():
-        for p in (line[0], line[-1]):
-            at.setdefault((int(p[0] // cell), int(p[1] // cell)), []).append(i)
-    out: list[list[Pt]] = []
-    while live:
-        start, chain = live.popitem()
-        # The tail first, then the head, so a piece taken from the middle of a
-        # street still grows out to both of its ends.
-        for head in (False, True):
-            grow = True
-            while grow:
-                grow = False
-                tip = chain[0] if head else chain[-1]
-                for j in near(tip):
-                    if j == start or j not in live:
-                        continue
-                    cand = live[j]
-                    if head and math.dist(tip, cand[-1]) <= tol:
-                        chain = cand[:-1] + chain
-                    elif head and math.dist(tip, cand[0]) <= tol:
-                        chain = list(reversed(cand))[:-1] + chain
-                    elif not head and math.dist(tip, cand[0]) <= tol:
-                        chain = chain + cand[1:]
-                    elif not head and math.dist(tip, cand[-1]) <= tol:
-                        chain = chain + list(reversed(cand))[1:]
-                    else:
-                        continue
-                    del live[j]
-                    grow = True
-                    break
-        out.append(chain)
-    return out
 
 
 Rings = tuple[list[list[Pt]], list[list[Pt]]]
@@ -1154,47 +929,7 @@ def _stitch(segs: list[tuple[Pt, Pt]]) -> list[list[Pt]]:
             used[prev] = True
             line.insert(0, segs[prev][0])
         out.append(line)
-    return _join_chains(out)
-
-
-def _join_chains(lines: list[list[Pt]], tol: float = 1e-6) -> list[list[Pt]]:
-    """Chain polylines that share an endpoint into as few pieces as possible.
-
-    A saddle cell hands marching squares two segments through one vertex, so a
-    ring that crosses one comes back as two open chains. Closing each of those
-    with a straight line draws a chord across the map: it can leave a wedge of
-    land lying over the sea. Joining them first is the fix.
-
-    Args:
-        lines: Polylines, in whatever space they were traced.
-        tol: Distance within which two endpoints are the same point.
-
-    Returns:
-        The joined polylines.
-    """
-    pool = [line for line in lines if len(line) > 1]
-    out: list[list[Pt]] = []
-    while pool:
-        chain = pool.pop()
-        joined = True
-        while joined and math.dist(chain[0], chain[-1]) > tol:
-            joined = False
-            for i, cand in enumerate(pool):
-                if math.dist(chain[-1], cand[0]) <= tol:
-                    chain = chain + cand[1:]
-                elif math.dist(chain[-1], cand[-1]) <= tol:
-                    chain = chain + list(reversed(cand))[1:]
-                elif math.dist(chain[0], cand[-1]) <= tol:
-                    chain = cand[:-1] + chain
-                elif math.dist(chain[0], cand[0]) <= tol:
-                    chain = list(reversed(cand))[:-1] + chain
-                else:
-                    continue
-                pool.pop(i)
-                joined = True
-                break
-        out.append(chain)
-    return out
+    return join_chains(out)
 
 
 def _grid_line_to_metres(
@@ -2362,7 +2097,7 @@ def _osm_layers(
                 # How much of this watercourse OSM says is underground, gathered
                 # by name so the question is asked of the river and not of each
                 # way. A river passing under one bridge is not a buried river.
-                run = _run(line)
+                run = length(line)
                 key = name or f"~{entry.get('id')}"
                 under[key] = under.get(key, 0.0) + (run if buried else 0.0)
                 overall[key] = overall.get(key, 0.0) + run
@@ -3400,11 +3135,6 @@ def journal_geometry(route: list[Pt], style: Any) -> dict[str, Any]:
     }
 
 
-def _run(line: list[Pt]) -> float:
-    """How long a polyline is, end to end along itself."""
-    return sum(math.dist(a, b) for a, b in zip(line, line[1:], strict=False))
-
-
 def _drawn(piece: list[Pt], tol: float) -> str:
     """Simplify, then Chaikin: a line someone drew, not a line surveyed."""
     return path_d(smooth(simplify(piece, tol), passes=2))
@@ -3504,7 +3234,7 @@ def journal_layers(
         band = road_key[0]
         floor = style.brush_width_px.get(band_width[band], 2.0) * geometry["mpp_display"]
         for chain in join_strokes(lines, tol=max(eps, 1.0)):
-            if _run(chain) < floor:
+            if length(chain) < floor:
                 continue
             roads.append({**meta[road_key], "d": _drawn(chain, eps)})
 
@@ -3541,7 +3271,7 @@ def journal_layers(
                 profile = [
                     painted_width_px(floor, w or 0.0, geometry["mpp_display"]) for w in along
                 ]
-                profile = _eased(profile, CHANNEL_EASE_SAMPLES)
+                profile = eased(profile, CHANNEL_EASE_SAMPLES)
                 widest = max(profile)
                 entry["w"] = round(widest, 2)
                 # And the width it is *typically* drawn at, which is the one a

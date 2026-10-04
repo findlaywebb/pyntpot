@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import math
 
+from pyntpot.ink.polyline import ease_along, tangent_at
+
 #: How far apart the two strands of one route are drawn where the session came
 #: back along its own path, as a multiple of the route's own stroke width. A
 #: doubled-back stretch drawn on its own true line is two sets of dots landing
@@ -22,38 +24,6 @@ STRAND_MIN_ARC = 10.0
 #: the gap. The strands have to part and rejoin somewhere, and a step there is a
 #: kink in the line; over three gaps of running it is a curve.
 STRAND_EASE_WIDTHS = 3.0
-
-
-def _tangent_at(pts: list[tuple[float, float]], i: int) -> tuple[float, float]:
-    """The unit direction of travel at one point, by central difference."""
-    a = pts[max(i - 1, 0)]
-    b = pts[min(i + 1, len(pts) - 1)]
-    dx, dy = b[0] - a[0], b[1] - a[1]
-    run = math.hypot(dx, dy)
-    return (dx / run, dy / run) if run > 1e-9 else (1.0, 0.0)
-
-
-def _ease_along(push: list[float], cum: list[float], reach: float) -> list[float]:
-    """A moving average of the displacement over `reach` of path either side.
-
-    In path length rather than in samples, because the track is downsampled for
-    display and a window counted in points is a different length of ground at
-    each end of it.
-    """
-    if reach <= 0:
-        return push
-    out = [0.0] * len(push)
-    lo = hi = 0
-    total = 0.0
-    for i, at in enumerate(cum):
-        while hi < len(push) and cum[hi] <= at + reach:
-            total += push[hi]
-            hi += 1
-        while cum[lo] < at - reach:
-            total -= push[lo]
-            lo += 1
-        out[i] = total / max(hi - lo, 1)
-    return out
 
 
 def separate_strands(
@@ -113,18 +83,18 @@ def separate_strands(
         if near is None:
             continue
         d, j = near
-        tx, ty = _tangent_at(route_px, i)
-        ox, oy = _tangent_at(route_px, j)
+        tx, ty = tangent_at(route_px, i)
+        ox, oy = tangent_at(route_px, j)
         # Against each other: each keeps its own left, which puts them on
         # opposite sides of the line they share however near it they are. The
         # same way: the earlier pass takes the left and the later one the right.
         side = -1.0 if tx * ox + ty * oy >= 0 and cum[i] > cum[j] else 1.0
         push[i] = side * (gap_px - d) / 2
-    push = _ease_along(push, cum, gap_px * STRAND_EASE_WIDTHS)
+    push = ease_along(push, cum, gap_px * STRAND_EASE_WIDTHS)
     if not any(push):
         return route_px
     out: list[tuple[float, float]] = []
     for i, (x, y) in enumerate(route_px):
-        tx, ty = _tangent_at(route_px, i)
+        tx, ty = tangent_at(route_px, i)
         out.append((x - ty * push[i], y + tx * push[i]))
     return out
