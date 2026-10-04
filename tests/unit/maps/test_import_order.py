@@ -27,7 +27,6 @@ MODULES: tuple[str, ...] = (
     "pyntpot.letters",
     "pyntpot.maps",
     "pyntpot.maps.credit",
-    "pyntpot._port.paint",
     "pyntpot._port.labels",
     "pyntpot._port.mapcard",
     "pyntpot._port.geo",

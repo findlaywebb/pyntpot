@@ -32,7 +32,6 @@ from functools import partial
 from pathlib import Path
 
 from pyntpot._port import labels as placer
-from pyntpot._port import paint as painter
 from pyntpot.ink.polyline import Pt, cumulative_length
 from pyntpot.maps import lettering_marks
 from pyntpot.maps.annotations import Annotations
@@ -78,7 +77,6 @@ def letter(
         The placed labels and spans and the label plate; empty, with no plate,
         when there is no hand to letter with.
     """
-    pstyle = style.paint_style()
     hand = lettering_marks.open_hand(style) if style.lettering.labels else None
     if hand is None:
         log.info("no hand to letter %s with, nothing is lettered", plates.directory)
@@ -86,10 +84,10 @@ def letter(
     measure = partial(lettering_marks.box_size, hand)
     card = basemap.card
     strands = list(plates.strands)
-    lines = placer.named_lines(basemap, pstyle.label_geom_tol_px)
-    home, taken = placer.home_labels(basemap, card, pstyle, measure)
-    ground = _ground(basemap, lines, strands, annotations, pstyle)
-    anchored = _anchored(basemap, annotations, pstyle)
+    lines = placer.named_lines(basemap, style.lettering.label_geom_tol_px)
+    home, taken = placer.home_labels(basemap, card, style, measure)
+    ground = _ground(basemap, lines, strands, annotations, style)
+    anchored = _anchored(basemap, annotations, style)
     spans = _spans(plates, basemap, annotations, strands)
     dark = plates.manifest.dark
     placed = home + placer.place(
@@ -111,10 +109,10 @@ def _ground(
     lines: placer.NamedLines,
     strands: list[Pt],
     annotations: Annotations | None,
-    pstyle: painter.PaintStyle,
+    style: Style,
 ) -> list[placer.Label]:
     """The settlements, rivers, road numbers and route markers, when the style letters the ground."""
-    if not pstyle.label_ground:
+    if not style.lettering.label_ground:
         return []
     card = basemap.card
     return (
@@ -125,10 +123,10 @@ def _ground(
 
 
 def _anchored(
-    basemap: Basemap, annotations: Annotations | None, pstyle: painter.PaintStyle
+    basemap: Basemap, annotations: Annotations | None, style: Style
 ) -> list[placer.Label]:
     """The landmarks to letter, the caller's or the nearest named, anchored on the card."""
-    cap = pstyle.label_max
+    cap = style.lettering.label_max
     wanted = placer.journal_picks(annotations, basemap, cap) if annotations is not None else []
     if not wanted:
         wanted = placer.journal_heuristic(basemap, cap)
@@ -147,7 +145,7 @@ def _anchored(
                     why=entry.get("why", ""),
                     px=x,
                     py=y,
-                    size=pstyle.label_size_px,
+                    size=style.nib.label_size_px,
                 )
             )
     return anchored

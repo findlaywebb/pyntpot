@@ -36,26 +36,6 @@ CASING_COLOURS = {"cream": "#f2e9d4", "dark": "#241c14", "white": "#ffffff"}
 ROUTE_SHADOW = "#120d07"
 
 
-def coerce_like(default: Any, value: Any) -> Any:
-    """Return `value` with the types `default` has, so JSON round-trips exactly.
-
-    JSON turns tuples into lists and whole floats into ints. Where `default` is
-    a tuple, a dict or a scalar, `value` is rebuilt as the same kind, recursing
-    into tuple elements and into dict values whose key `default` also has.
-    """
-    if isinstance(default, tuple) and isinstance(value, (list, tuple)):
-        if len(default) == len(value):
-            return tuple(coerce_like(d, v) for d, v in zip(default, value, strict=True))
-        return tuple(value)
-    if isinstance(default, dict) and isinstance(value, dict):
-        return {k: coerce_like(default[k], v) if k in default else v for k, v in value.items()}
-    if isinstance(default, bool) or default is None:
-        return value
-    if isinstance(default, (int, float, str)) and isinstance(value, (int, float, str)):
-        return type(default)(value)
-    return value
-
-
 @dataclass(frozen=True)
 class RouteInk:
     """One sport's route treatment, with every effect key already filled in."""

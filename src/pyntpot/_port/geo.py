@@ -3811,7 +3811,7 @@ def landmark_export(
         lat: Track latitudes.
         lng: Track longitudes.
         ele: Track elevations, when the GPX carries them.
-        style: A `paint.PaintStyle`, for the card the candidates are inside.
+        style: The style, for the card the candidates are inside.
         route: The already-projected track, when the caller has one.
         cache_dir: Where the cached payloads live.
         places: User-supplied places of interest.

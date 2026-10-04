@@ -13,11 +13,9 @@ base plates read, `lettering_digest` over the groups only the lettering reads, a
 16 hex digits of the SHA-256 of its fields as sorted-key JSON; a combined digest is
 the first 16 hex digits of the SHA-256 of its group digests joined in field order.
 
-`paint_style` and `route_ink` hand the interim engine the flat painter style and the
-route's ink, and the basemap group says what the basemap draws. The style paints,
-letters and fetches nothing itself. The route ink is always the ride ink;
-there is no sport selection. The consumer-only painter fields are not in the style,
-so `paint_style` leaves them at the painter's class defaults.
+`route_ink` hands the compose step the route's ink, and the basemap group says what
+the basemap draws. The style paints, letters and fetches nothing itself. The route ink
+is always the ride ink; there is no sport selection.
 
 Invariants: a theme naming an unknown key, at the top level, inside a group or
 inside a route ink, is rejected; a style never changes once built; changing a route
@@ -31,11 +29,10 @@ import tomllib
 import typing
 from importlib import resources
 from pathlib import Path
-from typing import Any, Self
+from typing import Self
 
 import pydantic
 
-from pyntpot._port import paint
 from pyntpot._port.style import RouteInk
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.style import PaperStyle, WashStyle
@@ -63,21 +60,6 @@ BASE_GROUPS: tuple[str, ...] = (
 )
 #: The groups only the lettering reads, in field order.
 LETTERING_GROUPS: tuple[str, ...] = ("face", "nib", "hand", "lettering")
-#: The groups whose fields make up the interim engine's flat painter style.
-PAINT_GROUPS: tuple[str, ...] = (
-    "paper",
-    "wash",
-    "brush",
-    "face",
-    "nib",
-    "hand",
-    "card",
-    "ribbon",
-    "cover",
-    "route",
-    "lettering",
-)
-
 _DIGEST_HEX = 16
 
 
@@ -161,13 +143,6 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
     def lettering_digest(self) -> str:
         """A short hash of the groups only the lettering reads."""
         return _combined(self, LETTERING_GROUPS)
-
-    def paint_style(self) -> paint.PaintStyle:
-        """The interim engine's flat painter style, with every grouped field filled in."""
-        values: dict[str, Any] = {}
-        for name in PAINT_GROUPS:
-            values.update(dataclasses.asdict(getattr(self, name)))
-        return paint.PaintStyle(**values)
 
     def route_ink(self) -> RouteInk:
         """The route's ink: always the ride ink, as there is no sport selection."""

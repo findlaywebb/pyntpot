@@ -1,4 +1,3 @@
-src/pyntpot/_port/paint.py
 src/pyntpot/_port/labels.py
 src/pyntpot/_port/geo.py
 src/pyntpot/_port/mapcard.py

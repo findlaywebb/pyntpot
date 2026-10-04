@@ -32,7 +32,7 @@ import logging
 import math
 import re
 from collections.abc import Callable
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
 from pyntpot.ink.chains import joined
@@ -46,14 +46,11 @@ from pyntpot.ink.polyline import (
     simplify,
 )
 from pyntpot.ink.sheet import Canvas
-from pyntpot.ink.style import PaperStyle
 from pyntpot.letters import nib
 from pyntpot.letters.setting import DEFAULT_LINE_PX
-from pyntpot.letters.style import FaceStyle, HandStyle, NibGroups, NibStyle
+from pyntpot.letters.style import NibGroups
 
 if TYPE_CHECKING:
-    from pyntpot._port.paint import PaintStyle
-    from pyntpot.ink.brush_style import BrushStyle
     from pyntpot.maps.basemap import Basemap, Line
     from pyntpot.maps.plates import Plates
     from pyntpot.maps.style import Style
@@ -3937,7 +3934,7 @@ HOME_NAME_DROP = 25.0
 
 
 def home_labels(
-    basemap: Basemap, card: Any, pstyle: PaintStyle, measure_fn: Measure
+    basemap: Basemap, card: Any, style: Style, measure_fn: Measure
 ) -> tuple[list[Label], list[Box]]:
     """The user's marked places, already placed, and the room they need.
 
@@ -3948,15 +3945,15 @@ def home_labels(
     Args:
         basemap: The basemap, for its places.
         card: The card, for the projection and its size.
-        pstyle: The paint style, for the type size and whether to draw at all.
+        style: The style, for the type size and whether to draw at all.
         measure_fn: How wide a name is.
 
     Returns:
         The labels, and the boxes they have already claimed.
     """
-    if not pstyle.home_glyph:
+    if not style.lettering.home_glyph:
         return [], []
-    size = pstyle.label_size_px * 0.85
+    size = style.nib.label_size_px * 0.85
     out: list[Label] = []
     boxes: list[Box] = []
     for place in basemap.places:
@@ -3985,16 +3982,6 @@ def home_labels(
 
 
 # --------------------------------------------------------------------------- the plate
-
-
-def _nib_groups(pstyle: Any, brush: BrushStyle) -> NibGroups:
-    """The groups the nib reads, filled from the flat painter style."""
-
-    def read(group: type) -> Any:
-        """One group built from the flat style's fields of the same names."""
-        return group(**{f.name: getattr(pstyle, f.name) for f in fields(group)})
-
-    return NibGroups(read(NibStyle), read(FaceStyle), read(HandStyle), brush, read(PaperStyle))
 
 
 def draw_plate(
@@ -4040,13 +4027,8 @@ def draw_plate(
     from pyntpot.maps.cache import Cache
     from pyntpot.maps.plates import dark_array
 
-    pstyle = style.paint_style()
     try:
-        hand = Hand(
-            FaceStyle(label_route=pstyle.label_route, label_face=pstyle.label_face),
-            HandStyle(label_seed=pstyle.label_seed),
-            route,
-        )
+        hand = Hand(style.face, style.hand, route)
     except (ImportError, OSError) as exc:  # no fonttools, or no face on disk
         log.info("no face to letter with: %s", exc)
         return None
@@ -4071,7 +4053,9 @@ def draw_plate(
         dark_array(plates.manifest.dark, rh, rw),
         plates.manifest.gran_px,
     )
-    written = nib.plate(marks, surface, _nib_groups(pstyle, style.brush), path)
+    written = nib.plate(
+        marks, surface, NibGroups(style.nib, style.face, style.hand, style.brush, style.paper), path
+    )
     if written is not None:
         side.write_text(json.dumps({"key": key, "face": hand.font.name, "route": hand.route}))
     return written

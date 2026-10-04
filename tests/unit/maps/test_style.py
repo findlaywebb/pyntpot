@@ -12,29 +12,13 @@ from typing import Any
 import pydantic
 import pytest
 
-from pyntpot._port import paint
 from pyntpot._port.style import RouteInk
 from pyntpot.maps.style import Style
-from pyntpot.maps.style_groups import CONSUMER_ONLY, BasemapStyle
+from pyntpot.maps.style_groups import BasemapStyle
 
 from support import REPO_ROOT
 
 THEME = REPO_ROOT / "src" / "pyntpot" / "maps" / "themes" / "default.toml"
-
-#: The `Style` fields that make up the flat painter style.
-PAINT_GROUPS: tuple[str, ...] = (
-    "paper",
-    "wash",
-    "brush",
-    "face",
-    "nib",
-    "hand",
-    "card",
-    "ribbon",
-    "cover",
-    "route",
-    "lettering",
-)
 
 #: A sample of resolved default values, as group, field and pinned value.
 RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
@@ -115,15 +99,6 @@ class TestDefaultIsResolved:
         assert got == value
         assert type(got) is type(value)
 
-    def test_every_painter_field_is_grouped(self) -> None:
-        """Every painter style field but the consumer-only ones is in some group."""
-        style = Style.default()
-        grouped = {
-            name for group in PAINT_GROUPS for name in dataclasses.asdict(getattr(style, group))
-        }
-        painter = {spec.name for spec in dataclasses.fields(paint.PaintStyle)}
-        assert grouped == painter - set(CONSUMER_ONLY)
-
     def test_ride_ink_is_pinned(self) -> None:
         """The ride ink equals its pinned resolved value."""
         assert Style.default().route_inks.ride == RIDE_INK
@@ -154,21 +129,7 @@ class TestDefaultIsResolved:
 
 
 class TestEngineAdapters:
-    """The flat painter style and the route ink handed to the interim engine."""
-
-    def test_paint_style_carries_every_grouped_value(self) -> None:
-        """`paint_style()` holds each group's value in the painter field of the same name."""
-        style = Style.default()
-        flat = style.paint_style()
-        for group in PAINT_GROUPS:
-            for name, value in dataclasses.asdict(getattr(style, group)).items():
-                assert getattr(flat, name) == value, name
-
-    def test_paint_style_leaves_consumer_fields_at_their_defaults(self) -> None:
-        """The consumer-only painter fields keep the painter's class defaults."""
-        flat = Style.default().paint_style()
-        for name in CONSUMER_ONLY:
-            assert getattr(flat, name) == getattr(paint.PaintStyle(), name), name
+    """The route ink handed to the compose step."""
 
     def test_route_ink_is_the_ride_ink(self) -> None:
         """`route_ink()` is the resolved ride ink the reference sheets were painted with."""

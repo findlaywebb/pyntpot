@@ -1,17 +1,19 @@
 """The style groups partition the painter's and the basemap's fields by reader.
 
-Every `PaintStyle` field is in exactly one group or in `CONSUMER_ONLY`, every
-basemap option is in `BasemapStyle`, each group's
-defaults are its source class's defaults (`BasemapStyle`'s are pinned literals), and each group's field names, in
-order, are pinned here as literals, which pins the whole field-to-group table.
+Every painter field is in exactly one group or in `CONSUMER_ONLY`, every
+basemap option is in `BasemapStyle`, each group's defaults are pinned (the
+sourced groups by a digest of their fields, `BasemapStyle`'s as literals), and
+each group's field names, in order, are pinned here as literals, which pins the
+whole field-to-group table.
 """
 
 import dataclasses
+import hashlib
+import json
 from typing import Any
 
 import pytest
 
-from pyntpot._port.paint import PaintStyle
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.style import PaperStyle, WashStyle
 from pyntpot.letters.style import FaceStyle, HandStyle, NibStyle
@@ -238,9 +240,21 @@ PINNED: dict[type, tuple[str, ...]] = {
     RouteInks: ("run", "ride", "swim", "other"),
 }
 
-#: The groups whose defaults copy a source class, with that class.
-SOURCED: dict[type, type] = {
-    group: PaintStyle for group in PINNED if group not in (RouteInks, BasemapStyle)
+#: The groups that were copied from the flat painter style, each with the
+#: pinned digest of its default fields: the first 16 hex digits of the SHA-256
+#: of the fields as sorted-key JSON, which tells `0.2` from `0`.
+SOURCED: dict[type, str] = {
+    PaperStyle: "fe2d6474dad3b304",
+    WashStyle: "e160d14a7793f90a",
+    BrushStyle: "4160d6cacd208480",
+    FaceStyle: "760ec6039a286528",
+    HandStyle: "b25b34674433d32c",
+    NibStyle: "76aa066043386bcf",
+    CardStyle: "5e73ba4b178084f2",
+    RibbonStyle: "6c8fdf4184013394",
+    CoverStyle: "f201b60695520db7",
+    RouteStyle: "e7af799eb721f445",
+    LetteringPolicy: "252f33e095df0b01",
 }
 
 #: `BasemapStyle`'s defaults, the basemap options' class defaults, as pinned literals.
@@ -300,12 +314,6 @@ def _grouped() -> list[str]:
     return [name for group in PINNED for name in _names(group)] + list(CONSUMER_ONLY)
 
 
-def test_groups_cover_every_source_field() -> None:
-    """The groups and `CONSUMER_ONLY` hold every source field and nothing else."""
-    expected = set(_names(PaintStyle)) | set(BASEMAP_DEFAULTS) | set(_names(RouteInks))
-    assert set(_grouped()) == expected
-
-
 def test_no_field_is_in_two_groups() -> None:
     """No field name appears in two groups or in a group and `CONSUMER_ONLY`."""
     grouped = _grouped()
@@ -328,22 +336,11 @@ def test_group_fields_match_the_pinned_table(group: type, names: tuple[str, ...]
     assert tuple(_names(group)) == names
 
 
-@pytest.mark.parametrize(("group", "source"), SOURCED.items(), ids=SOURCED_IDS)
-def test_group_defaults_equal_source_defaults(group: type, source: type) -> None:
-    """Each group's dataclass defaults equal its source class's defaults, field by field."""
-    built: Any = group()
-    reference: Any = source()
-    for name in _names(group):
-        assert getattr(built, name) == getattr(reference, name), name
-
-
-@pytest.mark.parametrize(("group", "source"), SOURCED.items(), ids=SOURCED_IDS)
-def test_group_default_types_equal_source_types(group: type, source: type) -> None:
-    """Each copied default has the same Python type as the source default, so 0.2 never reads as 0."""
-    built: Any = group()
-    reference: Any = source()
-    for name in _names(group):
-        assert type(getattr(built, name)) is type(getattr(reference, name)), name
+@pytest.mark.parametrize(("group", "digest"), SOURCED.items(), ids=SOURCED_IDS)
+def test_group_defaults_equal_the_pinned_digest(group: type, digest: str) -> None:
+    """Each group's default fields, values and types, hash to the digest pinned for them."""
+    blob = json.dumps(dataclasses.asdict(group()), sort_keys=True, default=str)
+    assert hashlib.sha256(blob.encode()).hexdigest()[:16] == digest
 
 
 @pytest.mark.parametrize(("name", "group"), MULTI_LAYER, ids=[name for name, _ in MULTI_LAYER])
