@@ -85,7 +85,7 @@ def paint_plates(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
     """Paint one activity's plates and write them, with a manifest beside them.
 
     Args:
-        basemap: The basemap from `geo.journal_layers`.
+        basemap: The basemap from `layers.build_basemap`.
         style: The style the plates are painted in; its base digest is hashed into
             the manifest with the basemap.
         out_dir: Where to write; created when missing.

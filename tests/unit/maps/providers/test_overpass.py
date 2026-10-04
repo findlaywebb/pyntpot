@@ -1,4 +1,4 @@
-"""The Overpass provider's requests, usage limits and copied query templates."""
+"""The Overpass provider's requests, usage limits and query templates."""
 
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
@@ -8,8 +8,6 @@ from urllib.parse import parse_qs
 import httpx
 import pytest
 
-from pyntpot._port import geo
-from pyntpot.maps.providers import overpass
 from pyntpot.maps.providers.base import Features, ProviderBudgetExceededError, ProviderError
 from pyntpot.maps.providers.overpass import OverpassFeatures
 from pyntpot.maps.track import BoundingBox
@@ -18,22 +16,6 @@ from support.http_server import Request, Server, serve
 
 #: A box around Lynmouth, inside the fixture box.
 LYNMOUTH = BoundingBox(51.2, -3.86, 51.24, -3.82)
-
-#: Names `geo` and this module both define, which must stay equal until `geo`'s go.
-COPIED = (
-    ("FEATURE_QUERY", "OVERPASS_QUERY"),
-    ("LANDCOVER_QUERY", "LANDCOVER_QUERY"),
-    ("MAJOR_ROADS", "MAJOR_ROADS"),
-    ("MINOR_ROADS", "MINOR_ROADS"),
-    ("TOURISM_LANDMARKS", "TOURISM_LANDMARKS"),
-    ("MANMADE_LANDMARKS", "MANMADE_LANDMARKS"),
-    ("BUILDING_LANDMARKS", "BUILDING_LANDMARKS"),
-    ("AMENITY_LANDMARKS", "AMENITY_LANDMARKS"),
-    ("LEISURE_LANDMARKS", "LEISURE_LANDMARKS"),
-    ("LANDCOVER_LANDUSE", "LANDCOVER_LANDUSE"),
-    ("LANDCOVER_NATURAL", "LANDCOVER_NATURAL"),
-    ("LANDCOVER_LEISURE", "LANDCOVER_LEISURE"),
-)
 
 
 @contextmanager
@@ -130,7 +112,12 @@ def test_landcover_query_carries_the_size_bound() -> None:
     assert _sent_query(server.requests[0]).startswith("[out:json][maxsize:67108864][timeout:300];")
 
 
-@pytest.mark.parametrize(("ours", "theirs"), COPIED, ids=[ours for ours, _ in COPIED])
-def test_copied_constant_equals_the_painters(ours: str, theirs: str) -> None:
-    """Each query template and tag list equals the painter's own copy."""
-    assert getattr(overpass, ours) == getattr(geo, theirs)
+def test_the_query_asks_for_the_things_a_runner_would_pick() -> None:
+    """Buildings, bridges and zoos are in the box's own question to OSM."""
+    with serve([(200, "{}")]) as server, _client() as client:
+        OverpassFeatures("walker@example.org", (server.url,), client=client).features(LYNMOUTH)
+    query = _sent_query(server.requests[0])
+    assert "zoo" in query
+    assert '"bridge"' in query
+    assert "cathedral" in query
+    assert "place_of_worship" in query

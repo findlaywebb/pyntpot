@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from pyntpot._port import geo
 from pyntpot.letters.setting import Mark
 from pyntpot.maps.cache import (
     ELEVATION_SAMPLES,
@@ -210,12 +209,12 @@ class TestLetteringKey:
 class TestPaths:
     """Payload and plate paths sit under the explicit directory."""
 
-    def test_payload_names_match_the_painter(self, tmp_path: Path) -> None:
-        """The three payload paths use the painter's file names for the key."""
+    def test_payload_names_are_pinned(self, tmp_path: Path) -> None:
+        """The three payload paths use the pinned file names for the key."""
         cache = Cache(tmp_path)
-        assert cache.features_path("k") == geo.overpass_path("k", tmp_path)
-        assert cache.landcover_path("k") == geo.landcover_path("k", tmp_path)
-        assert cache.elevation_path("k") == geo.elevation_path("k", tmp_path)
+        assert cache.features_path("k") == tmp_path / "overpass-k.json"
+        assert cache.landcover_path("k") == tmp_path / "landcover-k.json"
+        assert cache.elevation_path("k") == tmp_path / "elevation-k.json"
 
     def test_plates_dir_is_under_the_directory(self, tmp_path: Path) -> None:
         """The plates directory for a key is `plates/<key>` and is not created."""
@@ -224,17 +223,17 @@ class TestPaths:
         assert not plates.exists()
 
     @pytest.mark.parametrize(
-        ("ours", "theirs"),
+        ("ours", "pinned"),
         [
-            (MARGIN_M, geo.MARGIN_M),
-            (LANDCOVER_MARGIN_M, geo.LANDCOVER_MARGIN_M),
-            (ELEVATION_SAMPLES, geo.ELEV_N),
+            (MARGIN_M, 1500.0),
+            (LANDCOVER_MARGIN_M, 2600.0),
+            (ELEVATION_SAMPLES, 80),
         ],
         ids=["margin", "landcover-margin", "elevation-samples"],
     )
-    def test_constants_equal_the_painter(self, ours: float, theirs: float) -> None:
-        """The copied fetch constants equal the painter's."""
-        assert ours == theirs
+    def test_constants_are_pinned(self, ours: float, pinned: float) -> None:
+        """The fetch constants equal their pinned values."""
+        assert ours == pinned
 
 
 class TestEnsure:

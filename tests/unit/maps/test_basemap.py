@@ -1,4 +1,4 @@
-"""The typed basemap `journal_layers` assembles from the Lynmouth fixture, and its canonical text."""
+"""The typed basemap `build_basemap` assembles from the Lynmouth fixture, and its canonical text."""
 
 import dataclasses
 import math
@@ -6,14 +6,16 @@ import shutil
 
 import pytest
 
-from pyntpot._port import geo
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.maps.basemap import Basemap, ElevationPatch, Layers, River, Road
+from pyntpot.maps.cache import Cache
 from pyntpot.maps.card import Card
 from pyntpot.maps.credit import Credit
+from pyntpot.maps.layers import BasemapInputs, build_basemap
 from pyntpot.maps.projection import Projection
 from pyntpot.maps.style import Style
 from pyntpot.maps.style_groups import CardStyle, RibbonStyle
+from pyntpot.maps.track import Track
 
 from support.paths import FIXTURE_DIR, KEY
 
@@ -37,18 +39,11 @@ def basemap(tmp_path_factory: pytest.TempPathFactory) -> Basemap:
     """The fixture box's basemap, assembled once from a copy of the fixture."""
     work = tmp_path_factory.mktemp("lynmouth")
     shutil.copytree(FIXTURE_DIR, work, dirs_exist_ok=True)
-    lat, lng = geo.read_gpx(work / "track.gpx")
-    built = geo.journal_layers(
-        KEY,
-        lat,
-        lng,
-        CardStyle(),
-        RibbonStyle(),
-        BrushStyle(),
-        cache_dir=work,
-        places=[],
-        basemap_style=Style.default().basemap,
+    track = Track.from_gpx(work / "track.gpx")
+    style = Style.default().model_copy(
+        update={"card": CardStyle(), "ribbon": RibbonStyle(), "brush": BrushStyle()}
     )
+    built = build_basemap(BasemapInputs(KEY, track, Cache(work), []), style)
     assert built is not None
     return built
 

@@ -41,10 +41,11 @@ from typing import Any
 from PIL import Image
 
 from pyntpot._port import card as strand_card
-from pyntpot._port import geo, mapcard
+from pyntpot._port import mapcard
 from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
+from pyntpot.maps.layers import BasemapInputs, build_basemap
 from pyntpot.maps.lettering import Lettering
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.plates import Plates
@@ -87,17 +88,8 @@ def fetch(
             when the cache directory was changed underneath it.
     """
     key = cache.ensure(track, features, elevation)
-    basemap = geo.journal_layers(
-        key,
-        list(track.lat),
-        list(track.lng),
-        style.card,
-        style.ribbon,
-        style.brush,
-        cache_dir=cache.directory,
-        places=[dict(place) for place in places],
-        basemap_style=style.basemap,
-    )
+    inputs = BasemapInputs(key, track, cache, [dict(place) for place in places])
+    basemap = build_basemap(inputs, style)
     if basemap is None:
         raise FetchError(f"no cached features for key {key}: {cache.features_path(key)} is missing")
     return dataclasses.replace(

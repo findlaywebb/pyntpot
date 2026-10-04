@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from pyntpot._port import geo
 from pyntpot.maps.track import BoundingBox, Track
 
 from support import REPO_ROOT
@@ -45,12 +44,6 @@ class TestFixtureTrack:
         track = Track.from_gpx(GPX)
         assert (track.lat[0], track.lng[0]) == (51.230678, -3.828447)
 
-    def test_agrees_with_the_port_reader(self) -> None:
-        """Latitudes and longitudes equal the interim reader's lists."""
-        track = Track.from_gpx(GPX)
-        lat, lng = geo.read_gpx(GPX)
-        assert (list(track.lat), list(track.lng)) == (lat, lng)
-
     @pytest.mark.parametrize(
         ("margin", "expected"),
         [
@@ -66,13 +59,6 @@ class TestFixtureTrack:
         box = Track.from_gpx(GPX).bounding_box(margin)
         assert isinstance(box, BoundingBox)
         assert tuple(box) == pytest.approx(expected, abs=1e-6)
-
-    @pytest.mark.parametrize("margin", [0.0, 750.0, 1500.0], ids=["none", "half", "full"])
-    def test_bounding_box_matches_port(self, margin: float) -> None:
-        """The box equals `geo.bounding_box` exactly at several margins."""
-        track = Track.from_gpx(GPX)
-        lat, lng = geo.read_gpx(GPX)
-        assert tuple(track.bounding_box(margin)) == geo.bounding_box(lat, lng, margin)
 
     def test_box_fields_are_named(self) -> None:
         """The box unpacks as south, west, north, east."""

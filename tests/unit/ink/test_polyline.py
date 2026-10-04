@@ -48,3 +48,11 @@ def test_cumulative_length_is_pinned() -> None:
 def test_cumulative_length_divides_by_the_scale() -> None:
     """Metres covered are the pixel distance over pixels per metre."""
     assert cumulative_length(HYPOTENUSE, 2.0) == [0.0, 1.25, 2.5]
+
+
+def test_clip_line_splits_a_road_that_leaves_and_returns() -> None:
+    """A road that leaves the sheet comes back as two pieces, not one long jump."""
+    line = [(0.0, 0.0), (50.0, 0.0), (500.0, 0.0), (50.0, 50.0), (10.0, 50.0)]
+    pieces = clip_line(line, (0.0, 0.0, 100.0, 100.0))
+    assert len(pieces) == 2
+    assert pieces[0][0] == (0.0, 0.0)

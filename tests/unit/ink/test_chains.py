@@ -115,3 +115,40 @@ class TestToleranceHandling:
 def test_joined_chains_point_lists_like_chain_lines(parts, expected) -> None:
     """`joined` gives `chain_lines`' chains back as point lists."""
     assert joined(parts, 8.0) == expected
+
+
+def test_the_pieces_of_one_road_are_chained_into_one_stroke() -> None:
+    """A street cut at its junctions is one line again before it is painted."""
+    pieces = [[(0.0, 0.0), (10.0, 0.0)], [(20.0, 0.0), (30.0, 0.0)], [(10.0, 0.0), (20.0, 0.0)]]
+    chains = join_strokes(pieces, tol=1.0)
+    assert len(chains) == 1
+    assert chains[0][0] == (0.0, 0.0)
+    assert chains[0][-1] == (30.0, 0.0)
+
+
+def test_a_piece_taken_from_the_middle_grows_out_to_both_ends() -> None:
+    """Whichever piece the chain starts from, it reaches both ends of the road."""
+    pieces = [[(10.0, 0.0), (20.0, 0.0)], [(0.0, 0.0), (10.0, 0.0)], [(20.0, 0.0), (30.0, 0.0)]]
+    chain = join_strokes(pieces, tol=1.0)[0]
+    assert {chain[0], chain[-1]} == {(0.0, 0.0), (30.0, 0.0)}
+
+
+def test_a_piece_is_reversed_where_that_is_how_it_joins() -> None:
+    """OSM way direction is not the direction a road is drawn in."""
+    pieces = [[(0.0, 0.0), (10.0, 0.0)], [(20.0, 0.0), (10.0, 0.0)]]
+    chain = join_strokes(pieces, tol=1.0)[0]
+    assert len(chain) == 3
+    assert {chain[0], chain[-1]} == {(0.0, 0.0), (20.0, 0.0)}
+
+
+def test_a_chain_is_left_open() -> None:
+    """A road is a line, not a ring: closing one draws a street that is not there."""
+    ends = [[(0.0, 0.0), (10.0, 0.0)], [(10.0, 0.0), (10.0, 10.0)]]
+    chain = join_strokes(ends, tol=1.0)[0]
+    assert chain[0] != chain[-1]
+
+
+def test_pieces_that_do_not_meet_stay_apart() -> None:
+    """A gap wider than the tolerance is a gap, not a join to make up."""
+    apart = [[(0.0, 0.0), (10.0, 0.0)], [(40.0, 0.0), (50.0, 0.0)]]
+    assert len(join_strokes(apart, tol=1.0)) == 2

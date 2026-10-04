@@ -6,13 +6,11 @@ Everything here paints a box a few dozen pixels across, so the suite stays fast.
 from __future__ import annotations
 
 import dataclasses
-import json
 import math
 
 import numpy as np
 import pytest
 
-from pyntpot._port import geo
 from pyntpot.ink.brush import BRUSH_COLOURS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.io import save_rgba
@@ -21,16 +19,14 @@ from pyntpot.ink.polyline import deform_line, foot_on, length, meet, simplify
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.maps.basemap import Basemap, Layers, Line, River, Road
 from pyntpot.maps.card import Card
+from pyntpot.maps.card_geometry import journal_geometry
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.painter.ribbon import ribbon_alpha
-from pyntpot.maps.projection import Projection, track_projection
+from pyntpot.maps.projection import track_projection
 from pyntpot.maps.style import Style
 from pyntpot.maps.style_groups import CardStyle, RibbonStyle
 
 from support.measure import flat_measure
-from support.paths import FIXTURE_DIR, KEY
-
-FIXTURE_GPX = FIXTURE_DIR / "track.gpx"
 
 #: The `Style` groups the painter and the lettering read, which `class_style` builds.
 PAINT_GROUPS: tuple[str, ...] = (
@@ -103,7 +99,7 @@ def tiny_basemap(style: Style | None = None, **over: object) -> Basemap:
     style = style or tiny_style()
     route = [(float(x), 40.0 + 30.0 * math.sin(x / 260.0)) for x in range(0, 1400, 40)]
     full = style
-    geometry = geo.journal_geometry(route, full.card, full.ribbon, full.brush)
+    geometry = journal_geometry(route, full.card, full.ribbon, full.brush)
     layers = Layers(
         route=tuple((round(x, 1), round(y, 1)) for x, y in route),
         cover={},
@@ -283,10 +279,10 @@ def test_the_ribbon_radius_is_the_fitted_curve_times_the_slider():
     """7.15 times the root of the box plus 158 m, then the slider."""
     card, brush = CardStyle(), BrushStyle()
     route = [(0.0, 0.0), (3200.0, 0.0), (3200.0, 900.0)]
-    fitted = geo.journal_geometry(route, card, RibbonStyle(), brush)
+    fitted = journal_geometry(route, card, RibbonStyle(), brush)
     want = 7.15 * math.sqrt(3200.0) + 158.0
     assert fitted["ribbon_m"] == round(want)
-    wider = geo.journal_geometry(route, card, RibbonStyle(ribbon_mult=1.25), brush)
+    wider = journal_geometry(route, card, RibbonStyle(ribbon_mult=1.25), brush)
     assert wider["ribbon_m"] == round(want * 1.25)
     assert wider["card"] == fitted["card"]  # the card is framed the same either way
 
@@ -334,75 +330,6 @@ def test_land_cover_is_one_class_per_pixel_with_the_wood_on_top(tmp_path):
     assert abs(centre[1] - centre[2]) > abs(farmland[1] - farmland[2]) * 0.5
     # The wood alone, never the two multiplied together.
     assert centre[2] > (wood * farmland)[2] + 0.02
-
-
-def test_the_tag_lookup_takes_the_last_class_that_matches(tmp_path):
-    """A way tagged both ways is the one further down the table, which is the wood."""
-    way = {
-        "type": "way",
-        "tags": {"landuse": "meadow", "natural": "wood"},
-        "geometry": [
-            {"lat": 51.2250, "lon": -3.8400},
-            {"lat": 51.2250, "lon": -3.8380},
-            {"lat": 51.2270, "lon": -3.8380},
-            {"lat": 51.2270, "lon": -3.8400},
-            {"lat": 51.2250, "lon": -3.8400},
-        ],
-    }
-    (tmp_path / "landcover-iTAGS.json").write_text(json.dumps({"elements": [way]}))
-    proj, _ = track_projection(LATS, LNGS)
-    rings = geo.cover_rings("iTAGS", proj, (-9000.0, -9000.0, 9000.0, 9000.0), 2.0, tmp_path)
-    assert list(rings) == ["wood"]
-
-
-def test_a_box_with_no_land_cover_cached_is_bare_paper(tmp_path):
-    """Where nobody has drawn a field the ground stays paper, and that is honest."""
-    proj, _ = track_projection(LATS, LNGS)
-    assert geo.cover_rings("iNONE", proj, (-100.0, -100.0, 100.0, 100.0), 2.0, tmp_path) == {}
-
-
-# --------------------------------------------------------------------------- real data
-
-
-def test_the_real_box_assembles_the_layers_the_painter_needs():
-    """The Lynmouth box: land cover, roads by brush, and the fitted ribbon."""
-    lat, lng = geo.read_gpx(FIXTURE_GPX)
-    basemap = geo.journal_layers(
-        KEY,
-        lat,
-        lng,
-        CardStyle(),
-        RibbonStyle(),
-        BrushStyle(),
-        cache_dir=FIXTURE_DIR,
-        places=[],
-        basemap_style=Style.default().basemap,
-    )
-    assert basemap is not None
-    layers = basemap.layers
-    assert layers.ribbon_m == 553
-    assert basemap.card.display == (900, 728)
-    assert "wood" in layers.cover
-    assert layers.cover_order[-1] == "wood"
-    assert {r.band for r in layers.roads} <= {"major", "minor", "path"}
-    assert layers.minor_roads is True
-
-
-def test_the_real_box_offers_candidates_and_no_climb_without_elevation():
-    """What the label step reads: named things and how far off; no climbs without elevation."""
-    lat, lng = geo.read_gpx(FIXTURE_GPX)
-    export = geo.landmark_export(
-        KEY,
-        lat,
-        lng,
-        None,
-        cache_dir=FIXTURE_DIR,
-        places=[],
-    )
-    names = {c["name"] for c in export["candidates"]}
-    assert {"Lynmouth", "Lynton", "Countisbury"} <= names
-    assert all(c["distance_m"] is not None for c in export["candidates"])
-    assert export["climbs"] == [], "the fixture track carries no elevation"
 
 
 # ------------------------------------------------- phase 1: compositing and paper
@@ -638,24 +565,6 @@ def test_the_river_the_route_crossed_beats_the_one_it_did_not():
     named = [x.name for x in lb.pick_rivers(basemap, lines, card, route_px)]
     assert named[0] == "Heddon", "the name loses its 'River', the water says it"
     assert "Hebden Beck" not in named, "a beck is noise at this scale"
-
-
-def test_home_is_untouched_by_the_new_keys():
-    """`Home` has a symbol, no kind and no always_label, and draws as it always did."""
-    entries = [{"name": "Home", "symbol": "house", "lat": 51.2255, "lng": -3.835}]
-    assert entries[0]["name"] == "Home"
-    marks = geo._place_marks(
-        entries,
-        Projection(
-            lat0=51.225,
-            lat_ref=51.225,
-            lng_ref=-3.840,
-        ),
-        (-9e9, -9e9, 9e9, 9e9),
-    )
-    assert marks[0]["sym"] == "house"
-    assert marks[0]["kind"] == "marker"
-    assert marks[0]["always"] is False
 
 
 def test_an_open_line_deforms_without_moving_its_ends(tmp_path):
