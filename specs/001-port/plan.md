@@ -1010,7 +1010,7 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   `class Elevation(Protocol)`: `id`, `credit`,
   `grid(box: BoundingBox, n: int) -> ElevationGrid`.
   `class ProviderError(RuntimeError)`;
-  `class ProviderBudgetExceeded(ProviderError)` (raised by both shipped
+  `class ProviderBudgetExceededError(ProviderError)` (raised by both shipped
   providers before the call that would pass their budget).
   `tests/support/providers.py`: `FixtureFeatures` with `id = "overpass"` and
   `FixtureElevation` with `id = "opentopodata-srtm30m"` (the shipped
@@ -1074,7 +1074,7 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   time; on 429, `sleep(30.0)` then the next endpoint; any other HTTP error
   tries the next endpoint; when all fail, `ProviderError` raised from the
   last `httpx.HTTPError`; the 101st query on one instance raises
-  `ProviderBudgetExceeded` before any request. No blanket
+  `ProviderBudgetExceededError` before any request. No blanket
   `except Exception`. User-Agent `pyntpot/<version> (<contact>)` with the
   version from `importlib.metadata.version("pyntpot")` (not
   `pyntpot.__version__`: from P3.20 the top-level `__init__` imports `maps`
@@ -1084,7 +1084,7 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   User-Agent carries the contact; a 429 then a 200 calls `sleep` with 30.0
   once (the injected `sleep` is a list's `append`) and returns the second
   endpoint's body; all endpoints failing raises `ProviderError`; `budget=1`
-  makes the second query raise `ProviderBudgetExceeded` with one request
+  makes the second query raise `ProviderBudgetExceededError` with one request
   recorded; the query body starts with `[out:json][maxsize:67108864]` and
   contains the box formatted as `fetch_overpass`
   does (pinned string for a Lynmouth box); each copied constant equals
@@ -1106,11 +1106,11 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   100 points a call, `sleep(1.1)` after each call (no clock read), `None`
   elevations as `0.0`, status other than `OK` raises `ProviderError`; the
   budget is a call counter on the instance (ADR 0004) and raises
-  `ProviderBudgetExceeded` before the call that would exceed it. User-Agent
+  `ProviderBudgetExceededError` before the call that would exceed it. User-Agent
   and contact handling as P3.8.
 - Tests (with `serve`): a 3 by 3 grid makes one call and returns the served
   values in order; `n = 11` (121 points) makes two calls and sleeps twice;
-  `budget=1` with `n = 11` raises `ProviderBudgetExceeded` after one call;
+  `budget=1` with `n = 11` raises `ProviderBudgetExceededError` after one call;
   the User-Agent carries the contact.
 - Parity: exact, current goldens. G-here.
 - Commit: `Add the OpenTopoData elevation provider with a call budget`
