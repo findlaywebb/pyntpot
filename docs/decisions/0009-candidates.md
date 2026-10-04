@@ -43,13 +43,13 @@ below the four kind modules:
 ```python
 @dataclass(frozen=True)
 class Candidate:
-    kind: str                     # "road", "climb", "place" or "landmark"
-    name: str                     # "" for a climb: naming one is the caller's judgement
-    rank: int                     # 1-based, within its kind and its call
-    at_m: float | None            # metres along the track where it starts or is passed
-    where: Pt | None              # card metres; None for a road
+    kind: str  # "road", "climb", "place" or "landmark"
+    name: str  # "" for a climb: naming one is the caller's judgement
+    rank: int  # 1-based, within its kind and its call
+    at_m: float | None  # metres along the track where it starts or is passed
+    where: Pt | None  # card metres; None for a road
     span: tuple[int, int] | None  # first and last track sample it covers
-    detail: Mapping[str, Any]     # the kind's row, exactly as the export writes it
+    detail: Mapping[str, Any]  # the kind's row, exactly as the export writes it
 ```
 
 This refines the starting point's `Candidate(kind, name, score, at_m, where, detail)`.
