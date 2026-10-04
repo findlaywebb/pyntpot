@@ -23,6 +23,9 @@ from typing import NamedTuple, Self
 
 import pydantic
 
+MIN_TRACK_POINTS = 2
+MAX_LATITUDE_DEGREES = 90.0
+
 
 class BoundingBox(NamedTuple):
     """South, west, north, east degrees."""
@@ -58,9 +61,9 @@ class Track(pydantic.BaseModel, frozen=True):
             series = getattr(self, name)
             if series is not None and len(series) != count:
                 raise ValueError(f"{name} must have one value per point")
-        if count < 2:
+        if count < MIN_TRACK_POINTS:
             raise ValueError("a track needs at least two points")
-        if any(not -90.0 <= value <= 90.0 for value in self.lat):
+        if any(not -MAX_LATITUDE_DEGREES <= value <= MAX_LATITUDE_DEGREES for value in self.lat):
             raise ValueError("latitudes must lie in [-90, 90]")
         return self
 
