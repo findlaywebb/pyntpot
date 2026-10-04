@@ -47,15 +47,12 @@ from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.lettering import Lettering
-from pyntpot.maps.plates import Manifest, Plates
+from pyntpot.maps.plates import Plates
 from pyntpot.maps.providers.base import Elevation, Features
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 
 log = logging.getLogger(__name__)
-
-#: The manifest's file name inside a plates directory.
-MANIFEST_NAME = "plates.json"
 
 
 class FetchError(RuntimeError):
@@ -125,10 +122,9 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
         The plates, freshly painted or already current, with the track placed
         on the card as `route_px` and pulled apart into `strands`.
     """
-    digest = style.base_digest()
-    plates = _current(out_dir, painter.paint_hash(basemap, digest))
+    plates = _current(out_dir, Cache.base_key(basemap, style))
     if plates is None:
-        plates = painter.paint(basemap, style, out_dir, key=out_dir.name, style_digest=digest)
+        plates = painter.paint(basemap, style, out_dir)
     else:
         log.info("plates in %s are current, nothing repainted", out_dir)
     card = basemap.card
@@ -179,14 +175,5 @@ def compose(
 
 def _current(out_dir: Path, want: str) -> Plates | None:
     """Return the plates in `out_dir` when they carry hash `want` and are all on disk."""
-    path = out_dir / MANIFEST_NAME
-    if not path.exists():
-        return None
-    try:
-        manifest = Manifest.from_json(path.read_text())
-    except (OSError, ValueError, KeyError, TypeError):
-        return None
-    plates = Plates(out_dir, manifest)
-    if plates.hash != want or not all(plate.exists() for plate in plates.paths.values()):
-        return None
-    return plates
+    plates = Cache.load_plates(out_dir)
+    return plates if plates is not None and plates.hash == want else None

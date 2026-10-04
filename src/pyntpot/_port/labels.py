@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from pyntpot.ink.brush_style import BrushStyle
     from pyntpot.maps.basemap import Basemap, Line
     from pyntpot.maps.plates import Plates
+    from pyntpot.maps.style import Style
 
 log = logging.getLogger(__name__)
 
@@ -3986,47 +3987,6 @@ def home_labels(
 # --------------------------------------------------------------------------- the plate
 
 
-def plate_key(placed: list[Label], spans: list[Span], pstyle: Any, base: str = "") -> str:
-    """A hash over what is lettered and how, so a stale plate is never drawn.
-
-    The base plates' own hash goes in as well: a repaint moves the paper the
-    ink is gated on and the darkness the wash is judged against, so a label
-    plate drawn against the old sheet is stale even when every name is the same.
-    """
-    from pyntpot._port import paint
-
-    # The window, the lift, the intent and the wrap are drawn and are not in
-    # `as_dict`,
-    # which is the shape the page's tooltips have always read. A plate keyed
-    # without them would survive a change to the very thing it drew.
-    rows = [{"base": base}]
-    for lb in placed:
-        rows.append(
-            {
-                **lb.as_dict(),
-                "intent": lb.intent,
-                "lift": lb.lift,
-                "flat": lb.flat,
-                "lines": list(lb.lines),
-                "window": [(round(x, 1), round(y, 1)) for x, y in lb.window],
-            }
-        )
-    rows += [
-        {
-            "span": s.name,
-            "kind": s.kind,
-            "i0": s.i0,
-            "i1": s.i1,
-            "side": s.side,
-            "rank": s.rank,
-            "intent": s.intent,
-            "line": [(round(x, 1), round(y, 1)) for x, y in s.line],
-        }
-        for s in spans
-    ]
-    return paint.labels_hash(rows, pstyle)
-
-
 def _nib_groups(pstyle: Any, brush: BrushStyle) -> NibGroups:
     """The groups the nib reads, filled from the flat painter style."""
 
@@ -4042,8 +4002,7 @@ def draw_plate(
     placed: list[Label],
     spans: list[Span],
     route_px: list[Pt],
-    pstyle: Any,
-    brush: BrushStyle,
+    style: Style,
     route: str | None = None,
 ) -> Any:
     """Stroke the placed names into an RGBA plate beside the other plates.
@@ -4053,18 +4012,19 @@ def draw_plate(
     that to vector. So the label layer is a fourth plate, and the page and the
     card both draw the same pixels instead of each approximating them.
 
-    It is cached on a hash of the names, their places and the label half of the
-    paint style, because the picks live in the analysis payload and the plate
-    hash cannot see them. A plate whose key does not match is not drawn at all
-    rather than lettering yesterday's names over today's map.
+    It is cached on `Cache.lettering_key`: the marks to be stroked, the base
+    plates' hash and the style's lettering digest, so a moved name, pin, leader
+    or span line, a repaint of the base plates or another hand all change it. A
+    plate whose key does not match is not drawn at all rather than lettering
+    yesterday's names over today's map.
 
     Args:
         plates: The painted plates, beside which the label plate is written.
         placed: The placed labels.
         spans: The placed spans.
         route_px: The track in card pixels.
-        pstyle: The paint style.
-        brush: The brush style the lettering's brushes and ink pads are made with.
+        style: The style the card is lettered in; its brush style makes the
+            lettering's brushes and ink pads.
         route: `centreline` or `outline`; the style's when not given.
 
     Returns:
@@ -4077,8 +4037,10 @@ def draw_plate(
         return None
     from pyntpot.letters.hand import Hand
     from pyntpot.maps import lettering_marks
+    from pyntpot.maps.cache import Cache
     from pyntpot.maps.plates import dark_array
 
+    pstyle = style.paint_style()
     try:
         hand = Hand(
             FaceStyle(label_route=pstyle.label_route, label_face=pstyle.label_face),
@@ -4091,16 +4053,16 @@ def draw_plate(
     root = plates.directory
     stem = f"labels-{hand.route}"
     path, side = root / f"{stem}.webp", root / f"{stem}.json"
-    key = plate_key(placed, spans, pstyle, plates.hash)
+    marks = lettering_marks.marks(hand, placed, spans)
+    if not marks:
+        return None
+    key = Cache.lettering_key(marks, plates.hash, style)
     if path.exists() and side.exists():
         try:
             if json.loads(side.read_text()).get("key") == key:
                 return path
         except (OSError, ValueError):  # a half-written key is not a crash
             pass
-    marks = lettering_marks.marks(hand, placed, spans)
-    if not marks:
-        return None
     card = plates.card
     rw, rh = card.render
     surface = nib.NibSurface(
@@ -4109,7 +4071,7 @@ def draw_plate(
         dark_array(plates.manifest.dark, rh, rw),
         plates.manifest.gran_px,
     )
-    written = nib.plate(marks, surface, _nib_groups(pstyle, brush), path)
+    written = nib.plate(marks, surface, _nib_groups(pstyle, style.brush), path)
     if written is not None:
         side.write_text(json.dumps({"key": key, "face": hand.font.name, "route": hand.route}))
     return written

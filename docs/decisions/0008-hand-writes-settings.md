@@ -176,5 +176,9 @@ translation, not a new requirement on the interface.
   `Hand.generator` and `Hand.stroke` (returning points; the caller makes the `Mark`),
   and `maps/lettering_marks.py` as described above. It keeps the draw order exactly.
 - P4.7's lettering key takes `Sequence[Mark]`, not `Sequence[Setting]`; no record type
-  is needed for Shape 2 because Shape 2 was not chosen.
+  is needed for Shape 2 because Shape 2 was not chosen. P4.7 built `Cache.lettering_key`
+  that way: the plan's `Sequence[Setting]` wording stands for Shape 1's settings tuple,
+  which misses the furniture (fact 4), so the marks win; `Cache.base_key` is the
+  manifest hash moved verbatim, and the label sidecar's `key` changed form (a cache
+  record, not a golden).
 - Changing `Setting`'s fields, the generator contract or the key's input is a new ADR.

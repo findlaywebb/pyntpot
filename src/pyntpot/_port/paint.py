@@ -45,9 +45,6 @@ if TYPE_CHECKING:
     from pyntpot.maps.style import Style
 
 Pt = tuple[float, float]
-#: Painted plates live inside the geo cache, one directory per activity, so a
-#: caller that redirects the cache redirects the plates with it.
-PLATES_SUBDIR = "plates"
 
 #: How dark a wash of each class goes, and how hard its edge pools.
 COVER_CFG = {
@@ -860,101 +857,6 @@ def paper_plate(sheet: Sheet, plate: Canvas, style: PaintStyle) -> np.ndarray:
 # --------------------------------------------------------------------------- painting
 
 
-def plates_dir(key: str, cache_dir: Path) -> Path:
-    """Where one activity's painted plates are cached, under the geo cache."""
-    return Path(cache_dir) / PLATES_SUBDIR / key
-
-
-def paint_hash(basemap: Basemap, style_digest: str) -> str:
-    """A hash over the basemap and the style, so a repaint is only ever needed once.
-
-    Args:
-        basemap: The basemap `geo.journal_layers` assembled; its canonical text,
-            the card frame and the layers, is hashed.
-        style_digest: The digest of the style groups the base plates read.
-
-    Returns:
-        A short hex digest of the canonical text, a hyphen, and the style digest.
-    """
-    return hashlib.sha256(basemap.canonical().encode()).hexdigest()[:16] + "-" + style_digest
-
-
-def labels_hash(labels: list[dict[str, Any]] | None, style: PaintStyle) -> str:
-    """A hash over what is lettered and how, so a stale label plate is caught.
-
-    The picks live in the analysis payload, not the geo payload, so `paint_hash`
-    cannot see them and a plate keyed on it alone would letter yesterday's names
-    over today's map. The label plate is keyed on this, so a plate lettered
-    from other names or another hand is never drawn.
-
-    Args:
-        labels: The resolved labels, or None when nothing is lettered.
-        style: The paint style, for the fields a label is drawn with.
-
-    Returns:
-        A short hex digest.
-    """
-    keys = (
-        "label_font",
-        "label_size_px",
-        "label_max",
-        "label_pin_colour",
-        "label_ink",
-        "label_glow_colour",
-        "labels",
-        "label_seed",
-        "label_geom_tol_px",
-        "home_glyph",
-        "label_route",
-        "label_face",
-        "label_brush",
-        "label_pen_width_px",
-        "label_leader_brush",
-        "label_leader_width_px",
-        "label_pen_angle_deg",
-        "label_pen_thin",
-        "label_outline_width_frac",
-        "label_wash",
-        "label_wash_alpha",
-        "label_wash_dark_floor",
-        "label_wash_spread",
-        "label_route_ink",
-        "label_water_ink",
-        "label_in_water_ink",
-        "label_ground",
-    )
-    blob = json.dumps(
-        {"labels": labels or [], "style": {k: getattr(style, k) for k in keys}},
-        sort_keys=True,
-        separators=(",", ":"),
-        default=str,
-    )
-    return hashlib.sha256(blob.encode()).hexdigest()[:16]
-
-
-def load_plates(key: str, cache_dir: Path) -> Plates | None:
-    """An activity's painted plates, or None when there are none.
-
-    The renderer never paints: a page with no plates draws the vector map and
-    says so, which is the honest answer offline and the same answer whether the
-    painter has not been run or the activity is new. A manifest that cannot be
-    read, or that names a plate no longer on disk, reads as no plates.
-    """
-    from pyntpot.maps.plates import Manifest, Plates
-
-    path = plates_dir(key, cache_dir) / "plates.json"
-    if not path.exists():
-        return None
-    try:
-        manifest = Manifest.from_json(path.read_text())
-    except (OSError, ValueError, KeyError, TypeError):
-        return None
-    plates = Plates(path.parent, manifest)
-    if not all(plate.exists() for plate in plates.paths.values()):
-        return None
-    return plates
-
-
 def coast_run(d_sea: np.ndarray, wet: np.ndarray, band: float) -> float:
     """Which way the shore runs, in radians, from the sea's own distance field.
 
@@ -1045,10 +947,7 @@ def _lines(lines: tuple[Line, ...]) -> list[list[Pt]]:
 def paint(
     basemap: Basemap,
     style: Style,
-    out_dir: Path | None = None,
-    *,
-    key: str,
-    style_digest: str,
+    out_dir: Path,
 ) -> Plates:
     """Paint one activity's plates and write them, with a manifest beside them.
 
@@ -1060,21 +959,18 @@ def paint(
 
     Args:
         basemap: The basemap from `geo.journal_layers`.
-        pstyle: The paint pstyle; the defaults when it is not given.
-        out_dir: Where to write; `data/geo/plates/<id>/` by default.
-        key: The activity, naming the default plates directory.
-        style_digest: The digest of the pstyle groups the base plates read,
-            hashed into the manifest with the basemap.
+        style: The style the plates are painted in; its base digest is hashed into
+            the manifest with the basemap.
+        out_dir: Where to write; created when missing.
 
     Returns:
         The plates, with their manifest: files, byte counts, measurements and
         the darkness grid.
     """
+    from pyntpot.maps.cache import Cache
     from pyntpot.maps.plates import DarkGrid, Manifest, Plates
 
     pstyle = style.paint_style()
-    aid = key
-    out_dir = out_dir if out_dir is not None else plates_dir(aid)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     card, layers = basemap.card, basemap.layers
@@ -1465,7 +1361,7 @@ def paint(
     ]
 
     manifest = Manifest(
-        hash=paint_hash(basemap, style_digest),
+        hash=Cache.base_key(basemap, style),
         files=files,
         sizes=sizes,
         bytes=sum(sizes.values()),

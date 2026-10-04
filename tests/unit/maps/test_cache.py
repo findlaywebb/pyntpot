@@ -1,12 +1,15 @@
 """`Cache`: the key over box, margin and providers, the file names, and `ensure`'s order."""
 
+import dataclasses
 from pathlib import Path
 
 import pytest
 
 from pyntpot._port import geo
+from pyntpot.letters.setting import Mark
 from pyntpot.maps.cache import (
     ELEVATION_SAMPLES,
+    KEY_LENGTH,
     LANDCOVER_MARGIN_M,
     MARGIN_M,
     Cache,
@@ -15,6 +18,7 @@ from pyntpot.maps.credit import Credit
 from pyntpot.maps.providers.base import Elevation, ElevationGrid, Features
 from pyntpot.maps.providers.opentopodata import OpenTopoData
 from pyntpot.maps.providers.overpass import OverpassFeatures
+from pyntpot.maps.style import Style
 from pyntpot.maps.track import BoundingBox, Track
 
 from support.paths import FIXTURE_DIR, KEY
@@ -148,6 +152,59 @@ class TestKey:
         """Changing the margin or either provider id gives a different key."""
         changed = Cache(tmp_path).key(track, features(), elevation(), margin_m)
         assert changed != LYNMOUTH_KEY
+
+
+class TestLetteringKey:
+    """The label plate's key follows the marks, the base hash and the lettering digest."""
+
+    MARKS = (
+        Mark(pts=[(1.0, 2.0), (3.0, 4.0)], role="glyph", ink="map", size=14.0),
+        Mark(pts=[(5.0, 6.0), (7.0, 8.0)], role="pin", ink="route", size=14.0),
+    )
+
+    def test_the_same_inputs_give_the_same_key(self) -> None:
+        """Equal marks, base hash and style key alike, in the 16 hex characters kept."""
+        style = Style.default()
+        key = Cache.lettering_key(self.MARKS, "base", style)
+        assert key == Cache.lettering_key(list(self.MARKS), "base", Style.default())
+        assert len(key) == KEY_LENGTH
+
+    def test_a_mark_moved_below_the_rounding_keeps_the_key(self) -> None:
+        """A coordinate shifted by less than a thousandth of a pixel does not change the key."""
+        style = Style.default()
+        nudged = (Mark(pts=[(1.0001, 2.0), (3.0, 4.0)], size=14.0), self.MARKS[1])
+        assert Cache.lettering_key(nudged, "base", style) == Cache.lettering_key(
+            self.MARKS, "base", style
+        )
+
+    @pytest.mark.parametrize("field", ["pts", "ink", "pen"], ids=["point", "ink", "pen"])
+    def test_any_drawn_field_of_a_mark_changes_the_key(self, field: str) -> None:
+        """Moving a point, or changing a mark's ink or pen tilt, changes the key."""
+        style = Style.default()
+        first = self.MARKS[0]
+        changed = {
+            "pts": Mark(pts=[(1.0, 2.5), (3.0, 4.0)], size=14.0),
+            "ink": Mark(pts=list(first.pts), ink="water", size=14.0),
+            "pen": Mark(pts=list(first.pts), size=14.0, pen=0.2),
+        }[field]
+        assert Cache.lettering_key((changed, self.MARKS[1]), "base", style) != Cache.lettering_key(
+            self.MARKS, "base", style
+        )
+
+    def test_the_base_hash_changes_the_key(self) -> None:
+        """A repaint of the base plates changes the key of a plate drawn against them."""
+        style = Style.default()
+        assert Cache.lettering_key(self.MARKS, "one", style) != Cache.lettering_key(
+            self.MARKS, "two", style
+        )
+
+    def test_the_lettering_digest_changes_the_key(self) -> None:
+        """A lettering-only style change changes the key."""
+        style = Style.default()
+        other = style.model_copy(update={"hand": dataclasses.replace(style.hand, label_seed=9)})
+        assert Cache.lettering_key(self.MARKS, "base", other) != Cache.lettering_key(
+            self.MARKS, "base", style
+        )
 
 
 class TestPaths:

@@ -102,7 +102,7 @@ def letter(
         measure,
         placer.road_lines(lines, card),
     )
-    plate = placer.draw_plate(plates, placed, spans, strands, pstyle, style.brush)
+    plate = placer.draw_plate(plates, placed, spans, strands, style)
     return Lettering(tuple(placed), tuple(spans), plate)
 
 

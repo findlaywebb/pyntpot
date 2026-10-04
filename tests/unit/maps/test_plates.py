@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pyntpot._port import paint
+from pyntpot.maps.cache import Cache
 from pyntpot.maps.card import Card
 from pyntpot.maps.plates import DarkGrid, Manifest, Plates, dark_array
 
@@ -47,7 +47,7 @@ PINNED_JSON = (
 
 def _write_plates(cache_dir: Path, names: tuple[str, ...]) -> None:
     """Write the manifest and one placeholder file for each named plate."""
-    root = paint.plates_dir(KEY, cache_dir)
+    root = Cache(cache_dir).plates_dir(KEY)
     root.mkdir(parents=True)
     (root / "plates.json").write_text(MANIFEST.to_json())
     for name in names:
@@ -86,14 +86,16 @@ def test_paths_name_every_plate_under_the_directory(tmp_path: Path) -> None:
 def test_load_plates_reads_back_a_complete_set(tmp_path: Path) -> None:
     """A manifest whose plates are all on disk loads as those plates."""
     _write_plates(tmp_path, ("paper", "wash", "pen"))
-    loaded = paint.load_plates(KEY, tmp_path)
-    assert loaded == Plates(paint.plates_dir(KEY, tmp_path), MANIFEST)
+    cache = Cache(tmp_path)
+    loaded = cache.load_plates(cache.plates_dir(KEY))
+    assert loaded == Plates(cache.plates_dir(KEY), MANIFEST)
 
 
 def test_load_plates_missing_a_plate_is_none(tmp_path: Path) -> None:
     """A manifest naming a plate no longer on disk reads as no plates."""
     _write_plates(tmp_path, ("paper", "wash"))
-    assert paint.load_plates(KEY, tmp_path) is None
+    cache = Cache(tmp_path)
+    assert cache.load_plates(cache.plates_dir(KEY)) is None
 
 
 class TestDarkArray:
