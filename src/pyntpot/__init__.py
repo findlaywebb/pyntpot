@@ -11,14 +11,10 @@ command-line name: those are reached through `pyntpot.maps`. `Sheet`,
 `Hand` from `letters`. `__version__` is the installed distribution's version.
 """
 
-from importlib.metadata import version
+import importlib.metadata
 
-from pyntpot.ink.brush import Brush
-from pyntpot.ink.pigment import composite
-from pyntpot.ink.sheet import Canvas, Sheet
-from pyntpot.ink.stamp import stamp
-from pyntpot.ink.wash import wash
-from pyntpot.letters.hand import Hand
+from pyntpot.ink import Brush, Canvas, Sheet, composite, stamp, wash
+from pyntpot.letters import Hand
 from pyntpot.maps import (
     Annotations,
     Basemap,
@@ -32,7 +28,7 @@ from pyntpot.maps import (
     paint,
 )
 
-__version__ = version("pyntpot")
+__version__ = importlib.metadata.version("pyntpot")
 
 __all__: list[str] = [
     "Annotations",

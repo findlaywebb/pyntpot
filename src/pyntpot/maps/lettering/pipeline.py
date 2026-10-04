@@ -35,7 +35,6 @@ from pathlib import Path
 from pyntpot.ink.polyline import Pt, cumulative_length
 from pyntpot.ink.sheet import Canvas
 from pyntpot.letters import nib
-from pyntpot.letters.hand import Hand
 from pyntpot.letters.style import NibGroups
 from pyntpot.maps import lettering_marks
 from pyntpot.maps.annotations import Annotations
@@ -208,10 +207,8 @@ def draw_plate(
     """
     if not placed and not spans:
         return None
-    try:
-        hand = Hand(style.face, style.hand, route)
-    except (ImportError, OSError) as exc:  # no fonttools, or no face on disk
-        log.info("no face to letter with: %s", exc)
+    hand = lettering_marks.open_hand(style, route)
+    if hand is None:
         return None
     root = plates.directory
     stem = f"labels-{hand.route}"

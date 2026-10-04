@@ -2,14 +2,14 @@
 
 Key names: `journal_picks` and `journal_heuristic`, the landmarks to letter; `ground_labels`,
 the settlements and rivers a card is entitled to; `home_places` and `home_labels`, the
-user's own places; `route_markers`, where the session set off and finished.
+user's own places; `route_markers`, where the track set off and finished.
 
 The settlement, river and road picks live in `picks_settlements`, `picks_rivers` and
 `picks_roads`, and the named lines they read in `picks_lines`. It does not place or draw a
 name.
 
 Invariants: the ground is picked by rule and the payload only adds to it; the markers are
-the session and carry the route's ink.
+the track and carry the route's ink.
 """
 
 import math
@@ -127,26 +127,24 @@ def ground_labels(
     lines: NamedLines,
     card: Card,
     route_px: list[Pt],
-    picks: Annotations | None | None = None,
+    picks: Annotations | None = None,
 ) -> list[Label]:
-    """The names the ground is entitled to, whatever the payload asked for.
+    """The names the ground is entitled to, whatever the annotations asked for.
 
-    Settlements and watercourses are already in the data and have simply never
-    been lettered: the settlements sit in the basemap's candidates and the
-    watercourses in its named lines. Choosing them is a rule, not a judgement,
-    so it runs by default and the payload only ever adds to it.
+    Settlements come from the basemap's candidates and watercourses from its
+    named lines. Choosing them is a rule, not a judgement, so it runs by
+    default and the annotations only ever add to it.
 
-    Three tiers own the answer, in this order: the rule, the user's own file
-    for a standing exception, and `map.places` in the payload for this session.
+    Three tiers own the answer, in this order: the rule, the user's own places
+    for a standing exception, and the annotations' places for this track.
 
     Args:
         basemap: The basemap, for its places and candidates.
         lines: The named lines, for the watercourses.
         card: The card, for the projection and its size.
         route_px: The track in card pixels.
-        picks: The payload's `map` block, whose `places` name this session's
-            exceptions. That hook has existed and done nothing since it was
-            written; this is what reads it.
+        picks: The annotations, whose `places` name this track's exceptions;
+            none adds nothing.
 
     Returns:
         The user's places, then the settlements, then the rivers, in the
@@ -154,7 +152,7 @@ def ground_labels(
     """
     mine = home_places(basemap, card)
     always = [p.get("n", "") for p in basemap.places if p.get("always")] + [lb.name for lb in mine]
-    wanted = list(getattr(picks, "places", None) or [])
+    wanted = list(picks.places) if picks else []
     # The user writes "Swell" and OSM has Upper and Lower; the entry
     # carries its own position and it is authoritative, so a group within about
     # a merge's distance of it is the same place and is not lettered twice.
@@ -172,10 +170,10 @@ def ground_labels(
 
 
 def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> list[Label]:
-    """Where the session set off and where it finished, in the route's own ink.
+    """Where the track set off and where it finished, in the route's own ink.
 
-    The ground is drawn in the map's ink and the session in the route's, and
-    these two are the session: they are facts about the ride, not about the
+    The ground is drawn in the map's ink and the track in the route's, and
+    these two are the track: they are facts about the ride, not about the
     place. A loop puts them on top of each other, so it gets one mark.
     """
     if len(route_px) < MIN_ROUTE_POINTS:

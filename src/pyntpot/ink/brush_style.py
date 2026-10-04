@@ -54,7 +54,7 @@ class BrushStyle:
     #: The importance curve slider, as a multiplier on every painted width.
     river_mult: float = 1.0
     #: Class to brush id. Water is classed by importance, roads by what the
-    #: session used: a lane is a pen, a track is the dry broken brush.
+    #: track used: a lane is a pen, a track is the dry broken brush.
     brushes: dict[str, str] = field(
         default_factory=lambda: {
             "major": "RIV1-a",

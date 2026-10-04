@@ -7,7 +7,7 @@ from itertools import pairwise
 
 from pyntpot.ink.polyline import ease_along, tangent_at
 
-#: How far apart the two strands of one route are drawn where the session came
+#: How far apart the two strands of one route are drawn where the track came
 #: back along its own path, as a multiple of the route's own stroke width. A
 #: doubled-back stretch drawn on its own true line is two sets of dots landing
 #: in each other's gaps: the reader cannot tell an out-and-back from a single
@@ -34,7 +34,7 @@ def separate_strands(
 ) -> list[tuple[float, float]]:
     """Draw the two limbs of a doubled-back stretch beside each other.
 
-    Where the session came back along a path it had already run, the two passes
+    Where the track came back along a path it had already run, the two passes
     are the same line on the sheet and the reader has nothing to read: at the
     route's own weight the second pass lands in the first one's gaps and the
     out-and-back reads as a single street. This pushes each pass off that shared

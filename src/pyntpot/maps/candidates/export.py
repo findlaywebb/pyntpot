@@ -5,7 +5,7 @@ each climb grounded in that route, and every landmark candidate beside it;
 `CANDIDATE_BASEMAP`, the basemap style the export draws the landmarks with;
 `CANDIDATE_CLIP_MARGIN_M`, the ground kept round the track for them.
 
-Nothing here chooses a landmark. It states what the box holds, where the session
+Nothing here chooses a landmark. It states what the box holds, where the track
 climbed, how hard each climb was and what the route passed on the way up it; which of
 them is worth a label, and what to call it, is the caller's judgement.
 
@@ -54,12 +54,12 @@ KM = 1000
 
 
 def landmark_export(inputs: BasemapInputs, route: list[Pt] | None = None) -> dict[str, Any]:
-    """What the label agent reads: where the session went, and what is beside it.
+    """What the caller reads: where the track went, and what is beside it.
 
     Nothing here chooses a landmark. It states what the box holds, where the
-    session climbed, how hard each climb was and what the route passed on the
+    track climbed, how hard each climb was and what the route passed on the
     way up it; which of them is worth a label, and what to call it, is the
-    agent's judgement and is written back into the payload.
+    caller's judgement.
 
     Args:
         inputs: The activity, its track (with elevations, when the GPX carries
@@ -67,7 +67,7 @@ def landmark_export(inputs: BasemapInputs, route: list[Pt] | None = None) -> dic
         route: The already-projected track, when the caller has one.
 
     Returns:
-        `route` (the session's totals and the settlements it passed, in order),
+        `route` (the track's totals and the settlements it passed, in order),
         `climbs` (each grounded in that route) and `candidates`.
     """
     track = inputs.track
@@ -97,7 +97,7 @@ def landmark_export(inputs: BasemapInputs, route: list[Pt] | None = None) -> dic
         "points": len(lat),
         "route": {
             "total_km": round(dist[-1] / KM, 2) if dist else 0.0,
-            # Not the session's ascent: raw GPX sample-to-sample gain runs well
+            # Not the track's ascent: raw GPX sample-to-sample gain runs well
             # above the recorded figure, so the only climbing figure stated here
             # is the one this module actually defines.
             "sustained_ascent_m": round(sum(c.detail["gain_m"] for c in found)),

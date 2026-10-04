@@ -41,7 +41,7 @@ from pyntpot.maps.style import Style
 log = logging.getLogger(__name__)
 
 #: Which ink a kind is written in. The ground is the map's own dark, the water
-#: is the water, and the session is the route's colour. Everything else in the
+#: is the water, and the track is the route's colour. Everything else in the
 #: hierarchy follows from that one rule.
 KIND_INK = {"river": "water", "marker": "route"}
 
@@ -75,15 +75,19 @@ SPAN_INTENT_INK = {
 HOME_GLYPH = [(-7.0, 1.5), (0.0, -6.5), (7.0, 1.5), (7.0, 8.0), (-7.0, 8.0), (-7.0, 1.5)]
 
 
-def open_hand(style: Style) -> Hand | None:
+def open_hand(style: Style, route: str | None = None) -> Hand | None:
     """The style's hand, or None when this machine cannot open its face.
 
-    A machine without `fonttools`, or without the vendored file, letters
-    nothing rather than failing to draw a map.
+    A machine without the vendored file letters nothing rather than failing
+    to draw a map.
+
+    Args:
+        style: The style whose face and hand are opened.
+        route: `centreline` or `outline`; the style's when not given.
     """
     try:
-        return Hand(style.face, style.hand)
-    except (ImportError, OSError) as exc:
+        return Hand(style.face, style.hand, route)
+    except OSError as exc:
         log.info("no face to letter with: %s", exc)
         return None
 
