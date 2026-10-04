@@ -35,6 +35,7 @@ MODULES: tuple[str, ...] = (
     "pyntpot.ink.style",
     "pyntpot.ink.brush_style",
     "pyntpot.letters.style",
+    "pyntpot.letters.setting",
     "pyntpot.maps.style_groups",
     "pyntpot.maps.track",
     "pyntpot.maps.style",

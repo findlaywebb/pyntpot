@@ -47,6 +47,7 @@ from pyntpot.ink.polyline import (
     seg_gap,
     simplify,
 )
+from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark
 
 if TYPE_CHECKING:
     from pyntpot._port.paint import PaintStyle
@@ -78,9 +79,9 @@ TIER_MARKER = 70
 #: The kinds whose name sits on its own mark, so a leader would only decorate.
 NO_LEADER = ("settlement", "river", "road", "marker")
 
-#: The type size a label takes when nothing sets one, in display pixels, and
-#: the yardstick the other kinds' sizes are set as shares of.
-DEFAULT_LINE_PX = 20.0
+#: The type size a label takes when nothing sets one is `DEFAULT_LINE_PX`, in
+#: display pixels, which the hand's setting module owns; it is the yardstick the
+#: other kinds' sizes are set as shares of.
 
 #: `measure(text, size) -> (width, height)`, both in display pixels.
 Measure = Callable[[str, float], tuple[float, float]]
@@ -3855,28 +3856,6 @@ KIND_TRACKING = {"river": 0.24, "road": 0.10, "settlement": 0.05}
 
 #: How far a kind leans. Water is italic by convention.
 KIND_SLANT = {"river": 0.22}
-
-
-@dataclass
-class Mark:
-    """One stroke for the ink to be run along, in card pixels.
-
-    `role` sets the weight and whether the pen's angle modulates it, `ink`
-    which of the three colours it is, `size` the type size it belongs to, and
-    `pen` the per-instance wobble on the nib's angle, so no two words are
-    written with the hand held at exactly the same tilt.
-    """
-
-    pts: list[Pt]
-    role: str = "glyph"
-    ink: str = "map"
-    size: float = DEFAULT_LINE_PX
-    pen: float = 0.0
-    #: Whether the backing wash is lifted under this mark. A name written on
-    #: its own water does not want one: the wash is there to make a name
-    #: readable on ground it was not meant to be on, and a pale blob on a river
-    #: reads as a hole in the water rather than as paint lifted off the paper.
-    wash: bool = True
 
 
 def _seed(base: int, *parts: Any) -> int:

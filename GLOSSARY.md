@@ -30,3 +30,5 @@ add the term here when you coin one. The ported code keeps its old names until t
 | layers | The typed geometry and measurements of a basemap that the painter reads; the base hash covers exactly these and the card. `maps.basemap.Layers`. |
 | elevation patch | The elevation samples a basemap carries, placed in card metres. `maps.basemap.ElevationPatch`. |
 | dark grid | The painter's coarse grid of how dark the painted sheet is, cell by cell, which label placement reads to keep names on light ground. `maps.plates.DarkGrid`. |
+| setting | One request to the hand: a text at a size, set along a line or flat beside an anchor, with its slant, tracking, ink and backing-wash flag. The outcome of placement, not an input to it. `letters.setting.Setting`. |
+| mark | One stroke the hand or the map's furniture produces for the nib to run along, in card pixels, with its role, ink, size and pen tilt. `letters.setting.Mark`. |
