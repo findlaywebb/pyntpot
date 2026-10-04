@@ -61,7 +61,7 @@ recorded in ADR 0006, not a re-baseline.
 - [x] P3.1 Golden harness (`make_golden.py` with provenance, `--golden-dir`), package skeletons, `Credit`, the import-rule test
 - [x] P3.2 One card frame; ADR 0003 (A4)
 - [x] P3.3 One polyline module, moves only; `Pt` in `ink.polyline` (A5)
-- [ ] P3.4 Typed `Basemap` with `Layers`, `Projection` (A4)
+- [x] P3.4 Typed `Basemap` with `Layers`, `Projection` (A4)
 - [ ] P3.5 Typed `Plates` and `Manifest` (A4)
 - [x] P3.6 `Track` with a GPX reader and `BoundingBox` (parallel line 2)
 - [x] P3.7 `Features`, `Elevation`, `ProviderBudgetExceededError`, fixture providers with the shipped ids, the local test server; ADR 0004 (parallel line 2)
