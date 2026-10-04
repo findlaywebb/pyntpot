@@ -37,7 +37,6 @@ from pyntpot.ink.chains import chain_lines
 if TYPE_CHECKING:
     from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
     from pyntpot.maps.plates import Plates
-    from pyntpot.maps.style import Style
 
 F32 = np.float32
 Pt = tuple[float, float]
@@ -3879,57 +3878,6 @@ def _crossfade(value: float, n: int) -> list[float]:
     pos = max(0.0, min(1.0, value)) * (n - 1)
     gate = min(1.0, max(0.0, value) * 4.0)
     return [max(0.0, 1.0 - abs(pos - i)) * gate for i in range(n)]
-
-
-def paint_activity(
-    key: str,
-    lat: list[float],
-    lng: list[float],
-    style: Style,
-    *,
-    cache_dir: Path,
-    places: list[dict[str, Any]],
-    force: bool = False,
-) -> tuple[Basemap, Plates] | None:
-    """Assemble the layers for one activity and paint them, unless they are current.
-
-    Args:
-        key: The activity, naming both the geo cache and the plates.
-        lat: Track latitudes.
-        lng: Track longitudes.
-        style: The style: its flat painter style paints, its basemap group says
-            what the basemap draws, and its base digest goes into the hash.
-        cache_dir: Where the OSM, SRTM and land cover payloads live, and where
-            the plates are written under `plates/`.
-        places: The places to mark on the sheet.
-        force: Repaint even when the cached plates match.
-
-    Returns:
-        The basemap the plates were painted from, and the plates, freshly
-        painted or already current; None when there is nothing cached for
-        this box.
-    """
-    from pyntpot._port import geo
-
-    pstyle = style.paint_style()
-    basemap = geo.journal_layers(
-        key,
-        lat,
-        lng,
-        pstyle,
-        cache_dir=cache_dir,
-        places=places,
-        basemap_style=style.basemap,
-    )
-    if basemap is None:
-        return None
-    out_dir = plates_dir(key, cache_dir)
-    digest = style.base_digest()
-    want = paint_hash(basemap, digest)
-    existing = load_plates(key, cache_dir)
-    if existing is not None and existing.hash == want and not force:
-        return basemap, existing
-    return basemap, paint(basemap, pstyle, out_dir, key=key, style_digest=digest)
 
 
 def with_display(style: PaintStyle, display_px: int) -> PaintStyle:

@@ -8,11 +8,12 @@ from pathlib import Path
 
 _TESTS = Path(__file__).resolve().parents[1]
 
-#: The cache key the Lynmouth fixture is painted under.
-KEY: str = "lynmouth"
+#: The cache key of the Lynmouth track with the shipped providers' ids, which names the
+#: fixture's payload files.
+KEY: str = "f173b2f7a20bb9d4"
 
 #: The Lynmouth fixture: track and cached provider payloads.
-FIXTURE_DIR: Path = _TESTS / "fixtures" / KEY
+FIXTURE_DIR: Path = _TESTS / "fixtures" / "lynmouth"
 
 #: The committed golden outputs for the Lynmouth fixture.
-GOLDEN_DIR: Path = _TESTS / "golden" / KEY
+GOLDEN_DIR: Path = _TESTS / "golden" / "lynmouth"

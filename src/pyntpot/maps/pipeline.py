@@ -1,0 +1,144 @@
+"""The map's first two stages: fetch a track's basemap, then paint its plates.
+
+Key names: `fetch`, which fills a `Cache` for a `Track` through the providers it
+is handed and builds the track's `Basemap` from the cached payloads; `paint`,
+which paints a basemap's plates into a directory, or hands back the plates
+already there when their manifest carries the current hash; `FetchError`, raised
+when the cached features are gone once the fetch has run.
+
+`fetch` takes the style, because the card, the ribbon and the watercourse widths
+are fitted to it. `paint` uses the basemap's card and layers as given: a basemap
+fetched with one style and painted with another paints the first style's card,
+in the second style's pigments. `paint` places the basemap's track on the card
+for the plates it returns, both as recorded and pulled apart into strands where
+the route runs back over itself, the line the route is drawn along.
+
+It does not letter or compose a card, and it reaches no network except through
+the providers it is handed. It reads no configuration from the environment and
+resolves no path against the working directory: the cache and the plates
+directory are always arguments.
+
+Invariants: `fetch` calls a provider only for a payload missing from the cache;
+`paint` writes nothing when the plates in its directory carry the hash of the
+basemap and the style's base groups, and every plate they name is on disk; the
+returned `Plates.route_px` and `Plates.strands` each have one point per point
+of `Basemap.track`.
+"""
+
+import dataclasses
+import logging
+from collections.abc import Mapping, Sequence
+from pathlib import Path
+from typing import Any
+
+from pyntpot._port import card as strand_card
+from pyntpot._port import geo
+from pyntpot._port import paint as painter
+from pyntpot.maps.basemap import Basemap
+from pyntpot.maps.cache import Cache
+from pyntpot.maps.plates import Manifest, Plates
+from pyntpot.maps.providers.base import Elevation, Features
+from pyntpot.maps.style import Style
+from pyntpot.maps.track import Track
+
+log = logging.getLogger(__name__)
+
+#: The manifest's file name inside a plates directory.
+MANIFEST_NAME = "plates.json"
+
+
+class FetchError(RuntimeError):
+    """The cached features for a track were missing once the fetch had run."""
+
+
+def fetch(
+    track: Track,
+    cache: Cache,
+    features: Features,
+    elevation: Elevation,
+    style: Style,
+    places: Sequence[Mapping[str, Any]] = (),
+) -> Basemap:
+    """Fetch whatever the cache lacks for a track and build its basemap.
+
+    Args:
+        track: The route to map.
+        cache: Where the provider payloads are cached.
+        features: The feature and land cover provider.
+        elevation: The elevation provider.
+        style: The style; its painter fields fit the card, the ribbon and the
+            watercourse widths, and its basemap group says what is drawn.
+        places: Places of interest to mark, each with a `name`, `lat` and
+            `lng`; one without both coordinates, or off the card, is dropped.
+
+    Returns:
+        The basemap, carrying the track's times and both providers' credits.
+
+    Raises:
+        FetchError: When the features payload is missing after the fetch, as
+            when the cache directory was changed underneath it.
+    """
+    key = cache.ensure(track, features, elevation)
+    basemap = geo.journal_layers(
+        key,
+        list(track.lat),
+        list(track.lng),
+        style.paint_style(),
+        cache_dir=cache.directory,
+        places=[dict(place) for place in places],
+        basemap_style=style.basemap,
+    )
+    if basemap is None:
+        raise FetchError(f"no cached features for key {key}: {cache.features_path(key)} is missing")
+    return dataclasses.replace(
+        basemap,
+        track_time=track.time,
+        credits=(features.credit, elevation.credit),
+    )
+
+
+def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
+    """Paint a basemap's plates into a directory, unless the plates there are current.
+
+    The basemap's card and layers are painted as given; only the style's
+    pigments, brushes and paper come from `style`.
+
+    Args:
+        basemap: The basemap to paint.
+        style: The style: its painter fields paint, its base digest goes into
+            the hash, and its route ink sets the gap between strands.
+        out_dir: Where the plates and their manifest are written; created when
+            missing.
+
+    Returns:
+        The plates, freshly painted or already current, with the track placed
+        on the card as `route_px` and pulled apart into `strands`.
+    """
+    digest = style.base_digest()
+    plates = _current(out_dir, painter.paint_hash(basemap, digest))
+    if plates is None:
+        plates = painter.paint(
+            basemap, style.paint_style(), out_dir, key=out_dir.name, style_digest=digest
+        )
+    else:
+        log.info("plates in %s are current, nothing repainted", out_dir)
+    card = basemap.card
+    route_px = tuple(card.xy(x, y) for x, y in basemap.track)
+    gap_px = style.route_ink().px * strand_card.STRAND_GAP_WIDTHS
+    strands = tuple(strand_card.separate_strands(list(route_px), gap_px))
+    return dataclasses.replace(plates, route_px=route_px, strands=strands)
+
+
+def _current(out_dir: Path, want: str) -> Plates | None:
+    """Return the plates in `out_dir` when they carry hash `want` and are all on disk."""
+    path = out_dir / MANIFEST_NAME
+    if not path.exists():
+        return None
+    try:
+        manifest = Manifest.from_json(path.read_text())
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    plates = Plates(out_dir, manifest)
+    if plates.hash != want or not all(plate.exists() for plate in plates.paths.values()):
+        return None
+    return plates

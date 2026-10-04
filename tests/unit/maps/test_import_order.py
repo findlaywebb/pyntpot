@@ -48,10 +48,15 @@ MODULES: tuple[str, ...] = (
     "pyntpot.maps.projection",
     "pyntpot.maps.basemap",
     "pyntpot.maps.plates",
+    "pyntpot.maps.pipeline",
 )
 
 #: The `maps` modules allowed to import `_port`, binding its modules.
-ADAPTERS: tuple[str, ...] = ("pyntpot.maps.style_groups", "pyntpot.maps.style")
+ADAPTERS: tuple[str, ...] = (
+    "pyntpot.maps.style_groups",
+    "pyntpot.maps.style",
+    "pyntpot.maps.pipeline",
+)
 
 #: The one `_port` module an adapter may import names from.
 NAME_IMPORTABLE = "pyntpot._port.style"

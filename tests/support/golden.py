@@ -12,10 +12,14 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from pyntpot._port import geo, mapcard, paint
+from pyntpot._port import mapcard
+from pyntpot.maps import pipeline
+from pyntpot.maps.cache import Cache
 from pyntpot.maps.style import Style
+from pyntpot.maps.track import Track
 
-from support.paths import FIXTURE_DIR, KEY
+from support.paths import FIXTURE_DIR
+from support.providers import FixtureElevation, FixtureFeatures
 
 #: The painted plates, in painting order; the last is lettered by the compose step.
 PLATES: tuple[str, ...] = ("paper.webp", "wash.webp", "pen.webp", "labels-centreline.webp")
@@ -25,15 +29,17 @@ OUTPUTS: tuple[str, ...] = (*PLATES, "map.png")
 
 
 def paint_fixture(work: Path) -> tuple[dict[str, Path], list[str]]:
-    """Copy the fixture into `work`, paint and compose it in the default style, and save `map.png`.
+    """Copy the fixture into `work`, fetch, paint and compose it in the default style, and save `map.png`.
+
+    The fetch runs over the copied payloads with the fixture providers, so no
+    provider is called.
 
     Returns:
         Each name in `OUTPUTS`, plus `plates.json` (the manifest), mapped to its path;
         and the names of the labels placed on the card, in placement order.
 
     Raises:
-        RuntimeError: When painting yields nothing, or a plate was not freshly
-            written in `work`.
+        RuntimeError: When a plate was not freshly written in `work`.
     """
     shutil.copytree(FIXTURE_DIR, work, dirs_exist_ok=True)
     sentinel = work / "copied.marker"
@@ -41,15 +47,16 @@ def paint_fixture(work: Path) -> tuple[dict[str, Path], list[str]]:
     copied_ns = sentinel.stat().st_mtime_ns
 
     style = Style.default()
-    lat, lng = geo.read_gpx(work / "track.gpx")
+    track = Track.from_gpx(work / "track.gpx")
+    cache = Cache(work)
+    features, elevation = FixtureFeatures(), FixtureElevation()
 
-    painted = paint.paint_activity(KEY, lat, lng, style, cache_dir=work, places=[], force=True)
-    if painted is None:
-        raise RuntimeError("painting the fixture wrote no manifest")
-    basemap, plates = painted
+    basemap = pipeline.fetch(track, cache, features, elevation, style)
+    out_dir = cache.plates_dir(cache.key(track, features, elevation))
+    plates = pipeline.paint(basemap, style, out_dir)
     _require_fresh([plates.directory / name for name in PLATES[:3]], copied_ns)
 
-    card, placed = mapcard.compose(basemap, plates, style, None, True)
+    card, placed = mapcard.compose(basemap, plates, style, None, labels=True)
     _require_fresh([plates.directory / PLATES[3]], copied_ns)
     card.save(work / "map.png")
 

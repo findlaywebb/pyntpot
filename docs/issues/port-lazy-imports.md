@@ -16,7 +16,6 @@ the split has to break by moving the borrowed name, not by hoisting the import.
 | `labels.draw_plate` | `_port.paint` | `label_plate` (inside `try ... except ImportError`) |
 | `outlinefont._centrelines` | `_port.paint` | `edt` |
 | `paint.label_geom` | `_port.geo` | `journal_layers`, `parse_path` |
-| `paint.paint_activity` | `_port.geo` | `journal_layers` |
 
 One function-level import reaches outside `_port`: `mapcard.compose` imports
 `pyntpot.maps.card.Card`, which the import rule requires to stay inside the

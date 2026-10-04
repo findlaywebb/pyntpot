@@ -1,7 +1,8 @@
 """The painted plates of one map and the manifest written beside them.
 
 Key types: `Plates`, the directory a map's plates were written to together
-with their `Manifest`; `Manifest`, the plates' sidecar record (`plates.json`):
+with their `Manifest` and the route in display pixels, both as recorded and
+with its doubled-back stretches pulled apart into strands; `Manifest`,the plates' sidecar record (`plates.json`):
 the base hash, the files written, the card they were painted on and the
 measurements later stages read; `DarkGrid`, the painter's coarse grid of how
 dark the painted sheet is.
@@ -17,7 +18,9 @@ the card as its five frame keys (`card`, `display`, `render`, `mpp`,
 Invariants: every value here is immutable and compares by value;
 `Manifest.from_json(m.to_json()) == m`, and `to_json` of a manifest read with
 `from_json` gives back the same bytes; every path in `Plates.paths` is under
-`Plates.directory`.
+`Plates.directory`. The two route fields are not in the manifest: plates
+built from a manifest alone carry them empty, and when set, `strands` has one
+point for each point of `route_px`.
 """
 
 from __future__ import annotations
@@ -31,6 +34,8 @@ from pyntpot.maps.card import Card
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from pathlib import Path
+
+    from pyntpot.ink.polyline import Pt
 
 
 @dataclass(frozen=True)
@@ -151,15 +156,23 @@ class Manifest:
 
 @dataclass(frozen=True)
 class Plates:
-    """One map's painted plates: where they were written and their manifest.
+    """One map's painted plates: where they were written, their manifest and the route.
 
     Attributes:
         directory: The directory holding the plates and `plates.json`.
         manifest: The plates' manifest.
+        route_px: The basemap's track placed on the card, in display pixels,
+            point for point as recorded; empty when the plates were not handed
+            a track.
+        strands: The drawn route: `route_px` with each doubled-back stretch
+            pulled apart into two strands a channel of paper apart, one
+            polyline of the same length; empty with `route_px`.
     """
 
     directory: Path
     manifest: Manifest
+    route_px: tuple[Pt, ...] = ()
+    strands: tuple[Pt, ...] = ()
 
     @property
     def paths(self) -> Mapping[str, Path]:

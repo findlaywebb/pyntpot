@@ -13,6 +13,8 @@ from pyntpot.maps.cache import (
 )
 from pyntpot.maps.credit import Credit
 from pyntpot.maps.providers.base import Elevation, ElevationGrid, Features
+from pyntpot.maps.providers.opentopodata import OpenTopoData
+from pyntpot.maps.providers.overpass import OverpassFeatures
 from pyntpot.maps.track import BoundingBox, Track
 
 from support.paths import FIXTURE_DIR, KEY
@@ -119,6 +121,12 @@ class TestKey:
         """The Lynmouth track with the fixture providers keys to the pinned literal."""
         cache = Cache(tmp_path)
         assert cache.key(track, FixtureFeatures(), FixtureElevation()) == LYNMOUTH_KEY
+
+    def test_shipped_providers_key_to_the_fixture_files(self, track: Track, tmp_path: Path) -> None:
+        """The shipped Overpass and OpenTopoData providers give the key the fixture files carry."""
+        features = OverpassFeatures("walker@example.org")
+        elevation = OpenTopoData("walker@example.org")
+        assert Cache(tmp_path).key(track, features, elevation) == LYNMOUTH_KEY == KEY
 
     @pytest.mark.parametrize(
         ("features", "elevation", "margin_m"),

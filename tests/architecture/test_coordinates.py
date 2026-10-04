@@ -11,9 +11,9 @@ LON_RANGE = (-3.88, -3.80)
 # Provider payloads span degrees because they carry full geometry of every way touching the box.
 _EXEMPT = frozenset(
     {
-        "tests/fixtures/lynmouth/overpass-lynmouth.json",
-        "tests/fixtures/lynmouth/landcover-lynmouth.json",
-        "tests/fixtures/lynmouth/elevation-lynmouth.json",
+        "tests/fixtures/lynmouth/overpass-f173b2f7a20bb9d4.json",
+        "tests/fixtures/lynmouth/landcover-f173b2f7a20bb9d4.json",
+        "tests/fixtures/lynmouth/elevation-f173b2f7a20bb9d4.json",
         "tests/golden/lynmouth/plates.json",
         # Documents the box and its margins, which lie outside the box by design.
         "tests/fixtures/lynmouth/README.md",
