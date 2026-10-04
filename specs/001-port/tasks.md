@@ -95,8 +95,8 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 - [x] P4.8 Plate painter in maps part 1: job, brushes, water, cover, wood (A1)
 - [x] P4.9 Plate painter in maps part 2: relief, fluid, pen, ribbon, paper (A1)
 - [x] P4.10 Style groups part 1: basemap readers; `GeoOptions` deleted (A6)
-- [ ] P4.11 Style groups part 2: lettering readers; `PaintStyle` and `_port/paint.py` deleted (A6)
-- [ ] P4.12 Design the candidates facility; ADR 0009 (A8)
+- [x] P4.11 Style groups part 2: lettering readers; `PaintStyle` and `_port/paint.py` deleted (A6)
+- [x] P4.12 Design the candidates facility; ADR 0009 (A8)
 - [ ] P4.13 Candidates facility in `maps/candidates/` (A8); `candidates/__init__.py` docstring and empty `__all__` only
 - [ ] P4.14 Split geo part 1: rings, SVG paths, track index, relief, generalisation, rivers
 - [ ] P4.15 Split geo part 2: OSM layers, cover, assembly; `landmark_export` into `maps/candidates/export.py`; delete `geo.py`
