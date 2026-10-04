@@ -92,7 +92,7 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 - [x] P4.5 The hand writes settings; map furniture moves to maps (A2)
 - [x] P4.6 The nib plate moves into letters (A2); `NibSurface` carries the render `scale`, `plate` builds its own Sheet, `maps.plates.dark_array` builds the dark field for both callers
 - [x] P4.7 One cache for fetches and plates (A7)
-- [ ] P4.8 Plate painter in maps part 1: job, brushes, water, cover, wood (A1)
+- [x] P4.8 Plate painter in maps part 1: job, brushes, water, cover, wood (A1)
 - [ ] P4.9 Plate painter in maps part 2: relief, fluid, pen, ribbon, paper (A1)
 - [ ] P4.10 Style groups part 1: basemap readers; `GeoOptions` deleted (A6)
 - [ ] P4.11 Style groups part 2: lettering readers; `PaintStyle` and `_port/paint.py` deleted (A6)
