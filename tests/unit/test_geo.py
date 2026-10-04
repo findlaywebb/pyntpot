@@ -9,14 +9,17 @@ from __future__ import annotations
 import dataclasses
 import json
 import math
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from pyntpot._port import geo
 
-FIXTURE_KEY = "lynmouth"
-FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "lynmouth"
+from support.paths import FIXTURE_DIR, KEY
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 # A short east-west track inside the Lynmouth box.
 LATS = [51.2250 + 2e-5 * i for i in range(60)]
@@ -798,8 +801,8 @@ def test_the_generalised_wood_is_smaller_and_simpler():
     """On the Lynmouth box the generalised layer loses rings and bytes."""
     lat, lng = geo.read_gpx(FIXTURE_DIR / "track.gpx")
     options = {"cache_dir": FIXTURE_DIR, "places": []}
-    raw = geo.basemap(FIXTURE_KEY, lat, lng, geo.GeoOptions(generalise=False), **options)
-    fine = geo.basemap(FIXTURE_KEY, lat, lng, geo.GeoOptions(generalise=True), **options)
+    raw = geo.basemap(KEY, lat, lng, geo.GeoOptions(generalise=False), **options)
+    fine = geo.basemap(KEY, lat, lng, geo.GeoOptions(generalise=True), **options)
     assert fine["wood"]["n"] < raw["wood"]["n"]
     assert len(fine["wood"]["d"]) < len(raw["wood"]["d"])
 

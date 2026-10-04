@@ -8,15 +8,14 @@ from __future__ import annotations
 import dataclasses
 import json
 import math
-from pathlib import Path
 
 import numpy as np
 import pytest
 
 from pyntpot._port import geo, paint
 
-FIXTURE_KEY = "lynmouth"
-FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "lynmouth"
+from support.paths import FIXTURE_DIR, KEY
+
 FIXTURE_GPX = FIXTURE_DIR / "track.gpx"
 
 #: A short synthetic track inside the Lynmouth box.
@@ -967,7 +966,7 @@ def test_the_real_box_assembles_the_layers_the_painter_needs():
     """The Lynmouth box: land cover, roads by brush, and the fitted ribbon."""
     lat, lng = geo.read_gpx(FIXTURE_GPX)
     payload = geo.journal_layers(
-        FIXTURE_KEY, lat, lng, paint.PaintStyle(), cache_dir=FIXTURE_DIR, places=[]
+        KEY, lat, lng, paint.PaintStyle(), cache_dir=FIXTURE_DIR, places=[]
     )
     assert payload is not None
     assert payload["ribbon_m"] == 553
@@ -982,7 +981,7 @@ def test_the_real_box_offers_candidates_and_no_climb_without_elevation():
     """What the label step reads: named things and how far off; no climbs without elevation."""
     lat, lng = geo.read_gpx(FIXTURE_GPX)
     export = geo.landmark_export(
-        FIXTURE_KEY,
+        KEY,
         lat,
         lng,
         geo.read_gpx_elevation(FIXTURE_GPX),

@@ -1,8 +1,11 @@
-"""Pytest configuration: the golden tolerance option and the gates-off exemption hook."""
+"""Pytest configuration: the golden options and the gates-off exemption hook."""
+
+from pathlib import Path
 
 import pytest
 
 from support.exemptions import read_exemption_lines
+from support.paths import GOLDEN_DIR
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -12,6 +15,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         action="store_true",
         default=False,
         help="compare golden plates within a tolerance instead of exactly",
+    )
+    parser.addoption(
+        "--golden-dir",
+        type=Path,
+        default=GOLDEN_DIR,
+        help="directory of golden outputs to compare against (default: the committed goldens)",
     )
     parser.addini(
         "personal_terms_file",
@@ -24,6 +33,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 def golden_tolerance(request: pytest.FixtureRequest) -> bool:
     """Return whether golden comparisons run in tolerance mode."""
     return bool(request.config.getoption("--golden-tolerance"))
+
+
+@pytest.fixture
+def golden_dir(request: pytest.FixtureRequest) -> Path:
+    """Return the directory of golden outputs the parity tests compare against."""
+    return Path(request.config.getoption("--golden-dir")).resolve()
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
