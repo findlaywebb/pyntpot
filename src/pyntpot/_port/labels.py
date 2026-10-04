@@ -47,6 +47,7 @@ from pyntpot.ink.polyline import (
     seg_gap,
     simplify,
 )
+from pyntpot.letters.font import load as load_font
 from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark
 
 if TYPE_CHECKING:
@@ -3887,12 +3888,10 @@ class Hand:
 
     def __init__(self, pstyle: PaintStyle, route: str | None = None) -> None:
         """Open the face the style names."""
-        from pyntpot._port import outlinefont
-
         self.pstyle = pstyle
         self.route = route or pstyle.label_route
         face = pstyle.label_face or None
-        self.font = outlinefont.load(face, self.route)
+        self.font = load_font(face, self.route)
         self.seed = int(pstyle.label_seed)
 
     def measure(self, text: str, size: float) -> tuple[float, float]:
