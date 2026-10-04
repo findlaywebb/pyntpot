@@ -1,6 +1,8 @@
 """Tests for the polyline helpers: simplify, clip and the length measures."""
 
-from pyntpot.ink.polyline import clip_line, cumulative_length, length, simplify
+import numpy as np
+
+from pyntpot.ink.polyline import clip_line, cumulative_length, deform_line, length, simplify
 
 #: A five-point line with two small wobbles and one real turn.
 WOBBLY = [(0.0, 0.0), (1.0, 0.1), (2.0, -0.1), (3.0, 5.0), (4.0, 6.0)]
@@ -56,3 +58,18 @@ def test_clip_line_splits_a_road_that_leaves_and_returns() -> None:
     pieces = clip_line(line, (0.0, 0.0, 100.0, 100.0))
     assert len(pieces) == 2
     assert pieces[0][0] == (0.0, 0.0)
+
+
+def test_an_open_line_deforms_without_moving_its_ends():
+    """A leader that misses its pin is not hand-drawn, it is wrong."""
+    rng = np.random.default_rng(3)
+    line = [(0.0, 0.0), (40.0, 0.0), (80.0, 0.0)]
+    out = deform_line(line, (rng, 0.06, 4, 0.62, 6.0, 1.0))
+    assert len(out) > len(line)
+    assert tuple(out[0]) == (0.0, 0.0)
+    assert tuple(out[-1]) == (80.0, 0.0)
+    assert abs(out[:, 1]).max() > 0.0, "the line did not move at all"
+    assert abs(out[:, 1]).max() <= 6.0
+    # Seeded, so the same leader is the same curve on every render.
+    again = deform_line(line, (np.random.default_rng(3), 0.06, 4, 0.62, 6.0, 1.0))
+    assert np.allclose(out, again)

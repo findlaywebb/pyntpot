@@ -4,9 +4,9 @@ Key types: `CardStyle` (the card's size and the darkness grid),
 `RibbonStyle` (the trimmed extent of the painted ground and the card's
 frame), `CoverStyle` (land cover and the wood), `RouteStyle` (the route's
 own painted plate), `BasemapStyle` (what the basemap draws and how much of
-it), `LetteringPolicy` (which names a map letters) and `RouteInks` (one
-`RouteInk` per sport). `CONSUMER_ONLY` names the painter fields that no
-module reads and so belong to no group.
+it), `LetteringPolicy` (which names a map letters), `RouteInk` (one sport's route
+treatment) and `RouteInks` (one `RouteInk` per sport). `CONSUMER_ONLY` names the
+painter fields that no module reads and so belong to no group.
 
 Base groups feed the base plates; `LetteringPolicy` feeds only the lettering;
 `RouteInks` is read only when the card is composed, so changing an ink
@@ -20,12 +20,11 @@ upstream consumer. The basemap's clip margin is derived from the card per
 render and is not a style field.
 
 Invariants: every field belongs to exactly one style group across the
-package; the only `_port` name imported is `RouteInk`.
+package.
 """
 
 from dataclasses import dataclass, field
-
-from pyntpot._port.style import RouteInk
+from typing import Any
 
 #: The painter fields no module reads except through a digest's key list,
 #: kept by the upstream consumer and left out of every group.
@@ -245,6 +244,53 @@ class LetteringPolicy:
     label_geom_tol_px: float = 8.0
     #: Letter the user's marked places, each under its own name.
     home_glyph: bool = True
+
+
+#: The route ink, for every sport: a burnt maroon
+#: on the pinker side, blended from the original rose (#e01c64) toward maroon,
+#: and lifted back toward it.
+#:
+#: The maroon read as one more dark mark on a sheet already carrying dark
+#: washes: against cream it had the contrast (6.5:1) and against a wood or a
+#: built-up wash it had almost none, and the route is the one line on the card
+#: the reader is looking for. This is about 40% more luminous and carries more
+#: chroma with it, which is what actually separates it from a green or a grey
+#: wash, and it still holds 5:1 on the paper. It is not the rose: that was
+#: too hot, and this sits between the two.
+ROUTE_INK = "#c22050"
+#: Everything `basemap_route_effect` understands, all of it off. A theme names
+#: only the keys it wants and the rest are filled in from here, so a block that
+#: asks for a glow is not also silently asking for a shadow.
+ROUTE_EFFECT_OFF: dict[str, Any] = {
+    "glow_px": 0.0,
+    "glow_opacity": 0.0,
+    "casing_colour": "cream",
+    "casing_px": 0.0,
+    "adaptive_pct": 0.0,
+    "shadow_px": 0.0,
+    "shadow_blur_px": 0.0,
+    "blend": "normal",
+}
+#: The three casings the lab offered. Anything else is taken as a colour.
+CASING_COLOURS = {"cream": "#f2e9d4", "dark": "#241c14", "white": "#ffffff"}
+#: The drop shadow's pigment, from the lab: a brown black, not a grey.
+ROUTE_SHADOW = "#120d07"
+
+
+@dataclass(frozen=True)
+class RouteInk:
+    """One sport's route treatment, with every effect key already filled in."""
+
+    style: str
+    px: float
+    colour: str
+    effect: dict[str, Any]
+
+    @property
+    def casing(self) -> str:
+        """The casing's colour: one of the three names, or a colour as given."""
+        named = str(self.effect["casing_colour"])
+        return CASING_COLOURS.get(named, named)
 
 
 @dataclass(frozen=True)

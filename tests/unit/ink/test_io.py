@@ -86,3 +86,31 @@ def test_a_plate_can_carry_its_own_colour_and_its_own_alpha(tmp_path):
     back = Image.open(path).convert("RGBA")
     assert back.size == (6, 4)
     assert back.getchannel("A").getextrema()[0] == 0
+
+
+def test_the_label_plate_is_written_losslessly_like_the_others(tmp_path):
+    """Thin glyphs are the encoder's worst case, not a marginal one.
+
+    A thinned stroke is one to three pixels wide against a 4 by 4 transform
+    block on a half resolution chroma plane, and a name is what a reader looks
+    at closest on the card.
+    """
+    rng = np.random.default_rng(5)
+    rgb = np.clip(rng.random((40, 40, 3)).astype(np.float32), 0.0, 1.0)
+    alpha = np.zeros((40, 40), np.float32)
+    alpha[18:21, 4:36] = 0.85  # one thin stroke, which is what a glyph is
+
+    clean = tmp_path / "clean.webp"
+    lossy = tmp_path / "lossy.webp"
+    save_rgba(rgb, alpha, clean)
+    save_rgba(rgb, alpha, lossy, lossless=False)
+    ref = np.clip(rgb * 255.0 + 0.5, 0, 255).astype(np.uint8)
+    want_a = np.clip(alpha * 255.0 + 0.5, 0, 255).astype(np.uint8)
+    back = np.asarray(Image.open(clean).convert("RGBA"), np.uint8)
+    got = np.asarray(Image.open(lossy).convert("RGBA"), np.uint8)
+    # WebP zeroes the colour under a fully transparent pixel either way, so the
+    # comparison is over the stroke, which is the only part anybody sees.
+    ink = alpha > 0
+    assert np.array_equal(back[..., :3][ink], ref[ink]), "the plate was not exact"
+    assert np.array_equal(back[..., 3], want_a)
+    assert not np.array_equal(got[..., :3][ink], ref[ink])

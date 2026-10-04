@@ -1,5 +1,0 @@
-src/pyntpot/_port/labels.py
-src/pyntpot/_port/mapcard.py
-src/pyntpot/_port/card.py
-src/pyntpot/_port/style.py
-tests/unit/test_paint.py

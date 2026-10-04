@@ -3,10 +3,11 @@
 import dataclasses
 import math
 
-from pyntpot._port.labels import pick_rivers
 from pyntpot.maps.basemap import Basemap, Layers
 from pyntpot.maps.card import Card
 from pyntpot.maps.card_geometry import journal_geometry
+from pyntpot.maps.lettering.label import Label
+from pyntpot.maps.lettering.picks_rivers import pick_rivers
 from pyntpot.maps.projection import track_projection
 from pyntpot.maps.style import Style
 
@@ -103,19 +104,6 @@ def label_basemap(**over: object) -> Basemap:
     return with_fields(tiny_basemap(), **{"wet_px": {}, **over})
 
 
-class WideCard:
-    """A card 900 pixels wide at one pixel a metre, which is as much of a card as a river reads."""
-
-    w = 900
-    h = 671
-    scale = 1.0
-
-    @staticmethod
-    def xy(x, y):
-        """The card pixel a point falls on: the point itself."""
-        return (float(x), float(y))
-
-
 def wide_card() -> Card:
     """A real card 900 by 671 display pixels at one pixel a metre, for placing a river's name."""
     return Card(
@@ -127,8 +115,23 @@ def wide_card() -> Card:
     )
 
 
-def river_label(width_px):
-    """One river of a given painted width, placed."""
+def hung_card(w: int, h: int, mpp: float, top: float = 0.0) -> Card:
+    """A real card `w` by `h` display pixels at `mpp` metres a pixel, its top edge at northing `top`.
+
+    A card's pixel rows run down while northing runs up, so a point `d` metres below the top
+    edge is written with a northing of `top - d`, and lands `d / mpp` pixels down the card.
+    """
+    return Card(
+        box=(0.0, top - h * mpp, w * mpp, top),
+        display=(w, h),
+        render=(w, h),
+        mpp=mpp,
+        mpp_display=mpp,
+    )
+
+
+def river_label(width_px: float) -> Label:
+    """One river of a given painted width, placed, 400 pixels down a card that is 671 high."""
     lines = {
         "rivers": [
             {
@@ -136,9 +139,9 @@ def river_label(width_px):
                 "c": "major",
                 "w": width_px,
                 "wn": width_px,
-                "d": [[100, 400], [800, 400]],
+                "d": [[100, 271], [800, 271]],
             }
         ]
     }
     basemap = label_basemap(wet_px={"major": 11.0})
-    return pick_rivers(basemap, lines, WideCard(), [(100.0, 100.0), (800.0, 100.0)])[0]
+    return pick_rivers(basemap, lines, wide_card(), [(100.0, 100.0), (800.0, 100.0)])[0]

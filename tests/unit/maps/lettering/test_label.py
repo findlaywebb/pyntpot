@@ -10,16 +10,20 @@ from pyntpot.maps.lettering.label import (
     SPAN_GROUND,
     TIER_ROAD,
     TIER_SPAN,
+    WET_PX_DEFAULT,
+    WET_SPREAD,
     WRAP_LEADING,
     WRAP_MIN_CHARS,
     WRAP_MIN_SHARE,
     Label,
     block_size,
+    feature_px,
     wrap_forms,
 )
 from pyntpot.maps.lettering_marks import label_marks
 from pyntpot.maps.lettering_window import baseline
 
+from support.basemaps import label_basemap
 from support.lettering import open_hand
 from support.measure import flat_measure
 
@@ -129,3 +133,17 @@ def test_the_hand_writes_both_lines_of_a_wrapped_name():
         y for m in marks_two for _x, y in m.pts
     )
     assert tall_two > WRAP_LEADING * two.size, "only one line was written"
+
+
+def test_the_painted_width_of_a_watercourse_reaches_the_label_layer():
+    """The label layer sees a centreline; the layers tell it the brush."""
+    fresh = label_basemap(wet_px={"major": 9.5, "medium": 6.0, "minor": 2.4})
+    # The layers carry the brush's nominal width and the brush lays down
+    # more than that, so what reaches the label layer is the footprint.
+    assert feature_px(fresh, "river", "major") == pytest.approx(9.5 * WET_SPREAD)
+    # Layers with no width for the class fall back to the painter's defaults
+    # rather than to nothing, so such a map letters its rivers where any
+    # other does.
+    assert feature_px(label_basemap(), "river", "major") == pytest.approx(
+        WET_PX_DEFAULT["major"] * WET_SPREAD
+    )

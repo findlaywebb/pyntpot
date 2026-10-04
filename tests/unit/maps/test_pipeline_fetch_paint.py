@@ -16,6 +16,7 @@ from pyntpot.maps.providers.base import ElevationGrid
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import BoundingBox, Track
 
+from support.basemaps import tiny_basemap, tiny_style
 from support.paths import FIXTURE_DIR, KEY
 from support.providers import OSM_CREDIT, SRTM_CREDIT, FixtureElevation, FixtureFeatures
 
@@ -159,3 +160,17 @@ class TestPaint:
         assert sorted(painted.directory.iterdir()) == files
         assert [path.stat().st_mtime_ns for path in files] == before
         assert again == painted
+
+
+def test_a_lettering_only_style_change_leaves_the_base_key_and_the_plates_alone(tmp_path):
+    """Changing the hand's seed keeps `base_key`, and `paint` repaints nothing."""
+    style = tiny_style()
+    basemap = tiny_basemap()
+    first = pipeline.paint(basemap, style, tmp_path)
+    stamps = {name: path.stat().st_mtime_ns for name, path in first.paths.items()}
+    reseeded = tiny_style(label_seed=2)
+    assert reseeded.lettering_digest() != style.lettering_digest()
+    assert Cache.base_key(basemap, reseeded) == Cache.base_key(basemap, style)
+    again = pipeline.paint(basemap, reseeded, tmp_path)
+    assert {name: path.stat().st_mtime_ns for name, path in again.paths.items()} == stamps
+    assert again.hash == first.hash

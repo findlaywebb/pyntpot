@@ -16,7 +16,7 @@ stroked.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PIL import Image, ImageChops, ImageDraw
 
@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from pyntpot.maps.plates import Plates
+    from pyntpot.maps.style_groups import RouteInk
 
 #: What the route is drawn at, in card pixels per card pixel, before it is
 #: reduced back. 4 is where a diagonal stops showing its steps at the
@@ -44,7 +45,7 @@ def _plates(plates: Plates) -> Image.Image:
     paper = Image.open(paths["paper"]).convert("RGB")
     wash = Image.open(paths["wash"]).convert("RGB")
     if wash.size != paper.size:
-        wash = wash.resize(paper.size, Image.LANCZOS)
+        wash = wash.resize(paper.size, Image.Resampling.LANCZOS)
     return ImageChops.multiply(paper, wash)
 
 
@@ -52,7 +53,7 @@ def _route(
     card_img: Image.Image,
     plates: Plates,
     route_px: list[tuple[float, float]],
-    ink: Any,
+    ink: RouteInk,
     k: float,
 ) -> None:
     """The route, in the sport's own ink, drawn onto the card in place.
@@ -65,7 +66,7 @@ def _route(
     if name and ink.style == "pen":
         pen = Image.open(plates.directory / name).convert("RGBA")
         if pen.size != card_img.size:
-            pen = pen.resize(card_img.size, Image.LANCZOS)
+            pen = pen.resize(card_img.size, Image.Resampling.LANCZOS)
         card_img.paste(Image.new("RGB", card_img.size, colour), (0, 0), pen.getchannel("A"))
         return
     # Drawn on a grid `ROUTE_SS` times finer and reduced back, because Pillow's
@@ -77,10 +78,10 @@ def _route(
     ImageDraw.Draw(big).line(
         [(x * k * ss, y * k * ss) for x, y in route_px],
         fill=255,
-        width=max(int(round(ink.px * k * ss)), 1),
+        width=max(round(ink.px * k * ss), 1),
         joint="curve",
     )
-    mask = big.resize(card_img.size, Image.LANCZOS)
+    mask = big.resize(card_img.size, Image.Resampling.LANCZOS)
     card_img.paste(Image.new("RGB", card_img.size, colour), (0, 0), mask)
 
 
@@ -94,5 +95,5 @@ def _paste_labels(card_img: Image.Image, plate: Path) -> None:
     """
     ink = Image.open(plate).convert("RGBA")
     if ink.size != card_img.size:
-        ink = ink.resize(card_img.size, Image.LANCZOS)
+        ink = ink.resize(card_img.size, Image.Resampling.LANCZOS)
     card_img.paste(ink, (0, 0), ink.getchannel("A"))

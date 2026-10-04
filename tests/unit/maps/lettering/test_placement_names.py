@@ -2,7 +2,6 @@
 
 import math
 
-from pyntpot._port import labels as lb
 from pyntpot.ink.polyline import length
 from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.lettering.label import (
@@ -12,6 +11,7 @@ from pyntpot.maps.lettering.label import (
     TIER_SPAN,
     Label,
 )
+from pyntpot.maps.lettering.picks_rivers import pick_rivers
 from pyntpot.maps.lettering.placement_along import RIVER_REPEAT_FRAC
 from pyntpot.maps.lettering.placement_names import (
     MAJOR_RIVER_LABELS,
@@ -21,7 +21,7 @@ from pyntpot.maps.lettering.placement_names import (
     dedupe_names,
 )
 
-from support.basemaps import label_basemap
+from support.basemaps import hung_card, label_basemap
 from support.lettering import sheet_card
 
 
@@ -38,7 +38,7 @@ def test_the_major_river_carries_its_name_twice_and_the_others_once():
     # repetition rather than help. And the two have to be far apart, or they read
     # as one name written twice.
     big = [[round(float(x), 1), 0.0] for x in range(0, 4000, 25)]
-    small = [[500.0, round(float(y), 1)] for y in range(0, 900, 25)]
+    small = [[500.0, -round(float(y), 1)] for y in range(0, 900, 25)]
     lines = {
         "rivers": [
             {"n": "River Lyn", "c": "major", "d": big},
@@ -46,16 +46,11 @@ def test_the_major_river_carries_its_name_twice_and_the_others_once():
         ]
     }
 
-    class FlatCard:
-        w, h, scale = 400.0, 300.0, 0.1
-
-        @staticmethod
-        def xy(x, y):
-            """Metres to card pixels, at a tenth of a pixel a metre."""
-            return (x * 0.1, y * 0.1 + 40.0)
+    # A tenth of a pixel a metre, the card's top edge 400 m north of the origin.
+    card = hung_card(400, 300, 10.0, top=400.0)
 
     route = [(float(x), 60.0) for x in range(0, 400, 10)]
-    got = lb.pick_rivers(label_basemap(), lines, FlatCard(), route)
+    got = pick_rivers(label_basemap(), lines, card, route)
     names = [label.name for label in got]
     assert names.count("Lyn") == MAJOR_RIVER_LABELS == 2
     assert names.count("Heddon") == 1

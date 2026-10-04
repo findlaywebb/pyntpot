@@ -2,9 +2,9 @@
 
 `ink` never imports `letters`, `maps` or `_port`; `letters` imports only `ink`
 from the package. A `maps` module imports `_port` only when it is a pinned
-adapter, and an adapter binds `_port` modules, never names from them (except
-from `_port.style`). `_port` reaches `maps` only inside a function or under
-`if TYPE_CHECKING:`. The checks read the AST of `src/pyntpot`, counting direct
+adapter, and an adapter binds `_port` modules, never names from them; no adapter
+is left, so `ADAPTERS` is empty. `_port` reaches `maps` only inside a function or
+under `if TYPE_CHECKING:`. The checks read the AST of `src/pyntpot`, counting direct
 imports only; the cold-import test proves the chains.
 """
 
@@ -27,8 +27,6 @@ MODULES: tuple[str, ...] = (
     "pyntpot.letters",
     "pyntpot.maps",
     "pyntpot.maps.credit",
-    "pyntpot._port.labels",
-    "pyntpot._port.mapcard",
     "pyntpot.maps.card",
     "pyntpot.ink.style",
     "pyntpot.ink.brush_style",
@@ -106,8 +104,15 @@ MODULES: tuple[str, ...] = (
     "pyntpot.maps.lettering.span_line",
     "pyntpot.maps.lettering.span_sides",
     "pyntpot.maps.lettering.spans",
+    "pyntpot.maps.lettering.picks_lines",
+    "pyntpot.maps.lettering.picks_settlements",
+    "pyntpot.maps.lettering.picks_rivers",
+    "pyntpot.maps.lettering.picks_roads",
+    "pyntpot.maps.lettering.picks",
     "pyntpot.maps.lettering.pipeline",
     "pyntpot.maps.attribution",
+    "pyntpot.maps.compose",
+    "pyntpot.maps.strands",
     "pyntpot.maps.lettering_marks",
     "pyntpot.maps.lettering_furniture",
     "pyntpot.maps.lettering_window",
@@ -127,15 +132,7 @@ MODULES: tuple[str, ...] = (
 )
 
 #: The `maps` modules allowed to import `_port`, binding its modules.
-ADAPTERS: tuple[str, ...] = (
-    "pyntpot.maps.style_groups",
-    "pyntpot.maps.style",
-    "pyntpot.maps.pipeline",
-    "pyntpot.maps.lettering.pipeline",
-)
-
-#: The one `_port` module an adapter may import names from.
-NAME_IMPORTABLE = "pyntpot._port.style"
+ADAPTERS: tuple[str, ...] = ()
 
 
 def _module_name(path: Path) -> str:
@@ -250,7 +247,7 @@ def test_only_adapters_in_maps_import_port() -> None:
 
 
 def test_adapters_bind_port_modules_not_names() -> None:
-    """An adapter imports `_port` modules, never names from them, except from `_port.style`."""
+    """An adapter imports `_port` modules, never names from them."""
     found: list[str] = []
     for module, path in _modules("maps"):
         if module not in ADAPTERS:
@@ -259,7 +256,7 @@ def test_adapters_bind_port_modules_not_names() -> None:
             if not isinstance(node, ast.ImportFrom):
                 continue
             base = _base(node, module, path)
-            if not _under(base, "pyntpot._port") or base == NAME_IMPORTABLE:
+            if not _under(base, "pyntpot._port"):
                 continue
             for alias in node.names:
                 bound = PACKAGE / "_port" / alias.name

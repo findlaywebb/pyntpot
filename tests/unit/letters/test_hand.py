@@ -5,9 +5,12 @@ import dataclasses
 import pytest
 
 from pyntpot.ink.polyline import Pt
+from pyntpot.letters.font import OutlineFont
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.setting import Align, Mark, Setting
 from pyntpot.letters.style import FaceStyle, HandStyle
+
+from support.lettering import open_hand
 
 #: A straight synthetic line a name could be written along, in card pixels.
 LINE = tuple((10.0 + 8.0 * i, 60.0) for i in range(30))
@@ -124,3 +127,17 @@ class TestMeasureAndStroke:
         rng = hand.generator(6)
         assert hand.stroke(line, rng, 0.0) == line
         assert rng.normal() == hand.generator(6).normal()
+
+
+def test_the_face_measures_a_name_instead_of_counting_its_characters():
+    """The flat eight pixels a character is what every placement fault came from.
+
+    A real face knows that `Abergavenny` and `Wllllllllll` are not the same
+    width, and the default cannot: it counts characters. This is the change
+    that moves every label on the sheet.
+    """
+    hand = open_hand()
+    assert isinstance(hand.font, OutlineFont)
+    narrow = hand.measure("iiiiiiiiiii", 20.0)[0]
+    wide = hand.measure("WWWWWWWWWWW", 20.0)[0]
+    assert wide > narrow * 1.8, "the face is not measuring, it is counting"

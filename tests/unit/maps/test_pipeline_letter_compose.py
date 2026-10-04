@@ -1,6 +1,7 @@
 """`letter` places the fixture's names on the strands; `compose` lays the card the goldens hold."""
 
 import dataclasses
+import importlib.util
 import shutil
 from pathlib import Path
 from typing import NamedTuple
@@ -8,7 +9,6 @@ from typing import NamedTuple
 import pytest
 from golden.test_parity import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION
 
-from pyntpot._port import labels, mapcard
 from pyntpot.maps import pipeline
 from pyntpot.maps.annotations import Annotations, SpanRequest
 from pyntpot.maps.basemap import Basemap
@@ -39,24 +39,13 @@ PINNED_LABELS = (
 #: Ten seconds a point over the fixture track's 400 points.
 SYNTHETIC_TIME = tuple(10.0 * i for i in range(400))
 
-#: Names deleted with the flat measure, the shims and the composed-card helpers.
-DELETED: tuple[tuple[object, str], ...] = (
-    (labels, "measure"),
-    (labels, "_text_width"),
-    (labels, "CHAR_W"),
-    (labels, "DEFAULT_ADVANCE_PX"),
-    (labels, "DEFAULT_SIDE_PX"),
-    (labels, "_journal_picks"),
-    (labels, "_journal_heuristic"),
-    (labels, "_place_journal_labels"),
-    (mapcard, "compose"),
-    (mapcard, "letter_card"),
-    (mapcard, "route_pixels"),
-    (mapcard, "alphabet_sheet"),
-    (mapcard, "ALPHABET_LINES"),
-    (mapcard, "sport_from_gpx"),
+#: The interim port modules this stage and the compose stage replaced.
+DELETED: tuple[str, ...] = (
+    "pyntpot._port.labels",
+    "pyntpot._port.mapcard",
+    "pyntpot._port.card",
+    "pyntpot._port.style",
 )
-DELETED_IDS: tuple[str, ...] = tuple(f"{module.__name__}.{name}" for module, name in DELETED)
 
 
 class Painted(NamedTuple):
@@ -87,12 +76,12 @@ def lettered(painted: Painted) -> Lettering:
 
 
 class TestDeleted:
-    """The flat measure, the shims and the composed-card helpers are gone."""
+    """The port modules the lettering and compose stages replaced are gone."""
 
-    @pytest.mark.parametrize(("module", "name"), DELETED, ids=DELETED_IDS)
-    def test_the_name_is_gone(self, module: object, name: str) -> None:
-        """The deleted name is no longer an attribute of its old module."""
-        assert not hasattr(module, name)
+    @pytest.mark.parametrize("module", DELETED, ids=DELETED)
+    def test_the_module_is_gone(self, module: str) -> None:
+        """The deleted port module can no longer be found."""
+        assert importlib.util.find_spec(module) is None
 
 
 @pytest.mark.golden

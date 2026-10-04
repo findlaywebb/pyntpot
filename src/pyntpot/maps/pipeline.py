@@ -40,16 +40,16 @@ from typing import Any
 
 from PIL import Image
 
-from pyntpot._port import card as strand_card
-from pyntpot._port import mapcard
 from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
+from pyntpot.maps.compose import _paste_labels, _plates, _route
 from pyntpot.maps.layers import BasemapInputs, build_basemap
 from pyntpot.maps.lettering.pipeline import Lettering
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.providers.base import Elevation, Features
+from pyntpot.maps.strands import STRAND_GAP_WIDTHS, separate_strands
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 
@@ -123,8 +123,8 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
         log.info("plates in %s are current, nothing repainted", out_dir)
     card = basemap.card
     route_px = tuple(card.xy(x, y) for x, y in basemap.track)
-    gap_px = style.route_ink().px * strand_card.STRAND_GAP_WIDTHS
-    strands = tuple(strand_card.separate_strands(list(route_px), gap_px))
+    gap_px = style.route_ink().px * STRAND_GAP_WIDTHS
+    strands = tuple(separate_strands(list(route_px), gap_px))
     return dataclasses.replace(plates, route_px=route_px, strands=strands)
 
 
@@ -155,13 +155,13 @@ def compose(
     Returns:
         The card, at the size of the paper plate.
     """
-    card = mapcard._plates(plates)
+    card = _plates(plates)
     k = card.width / max(plates.card.display[0], 1)
-    mapcard._route(card, plates, list(plates.strands), style.route_ink(), k)
+    _route(card, plates, list(plates.strands), style.route_ink(), k)
     if lettering.plate_path is None:
         log.info("no label plate for %s, the card has no lettering", plates.directory)
     else:
-        mapcard._paste_labels(card, lettering.plate_path)
+        _paste_labels(card, lettering.plate_path)
     if attribution:
         draw_attribution(card, attribution_text(basemap.credits), style)
     return card

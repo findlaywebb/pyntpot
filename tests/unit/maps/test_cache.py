@@ -20,6 +20,7 @@ from pyntpot.maps.providers.overpass import OverpassFeatures
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import BoundingBox, Track
 
+from support.basemaps import tiny_basemap, tiny_style
 from support.paths import FIXTURE_DIR, KEY
 from support.providers import FixtureElevation, FixtureFeatures
 
@@ -280,3 +281,14 @@ class TestEnsure:
             "landcover": ("features",),
             "elevation": ("features", "landcover"),
         }
+
+
+def test_a_base_plate_style_change_changes_the_base_key_and_the_lettering_key():
+    """A paper change moves `base_key`, and with it the key of a plate drawn against it."""
+    style = tiny_style()
+    other = tiny_style(paper_fibre=not tiny_style().paper.paper_fibre)
+    basemap = tiny_basemap()
+    marks = [Mark(pts=[(1.0, 2.0), (3.0, 4.0)])]
+    one, two = Cache.base_key(basemap, style), Cache.base_key(basemap, other)
+    assert one != two
+    assert Cache.lettering_key(marks, one, style) != Cache.lettering_key(marks, two, style)

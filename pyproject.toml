@@ -144,10 +144,6 @@ known-local-folder = ["support"]
     "FBT",      # fixtures pass flags positionally
 ]
 
-# Interim: the ported engine tests are exempt until the P4 split empties it.
-"tests/unit/test_paint.py" = [
-    "PLC0415", "RUF059", "D210", "RUF007", "RUF046", "SIM300", "RUF012", "PLR0913", "PLR0917",
-]
 # Interim: the ported engine is exempt until the P4 split empties it.
 "src/pyntpot/_port/*" = [
     "PLR2004", "ANN401", "PLR0913", "PLR0917", "PLC0415", "C901", "PLR0912", "PLR0915",
@@ -178,7 +174,6 @@ include = ["src", "tests"]
 # make_golden_old.py imports the pre-port package from the originating project; it is excluded here because that package is not installable.
 exclude = [
     "src/pyntpot/_port",
-    "tests/unit/test_paint.py",
     "tests/golden/make_golden_old.py",
 ]
 

@@ -6,11 +6,15 @@ from typing import Any
 
 import pytest
 
+from pyntpot.ink.brush import BRUSH_COLOURS
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.style import FaceStyle, HandStyle
 from pyntpot.maps import lettering_marks
 from pyntpot.maps.lettering.label import Label, Span
 from pyntpot.maps.lettering_window import baseline
+
+from support.basemaps import class_style, river_label
+from support.lettering import open_hand
 
 #: A gentle, nearly straight river course, in card pixels.
 COURSE = [(float(x), 100.0 + 4.0 * math.sin(x / 90.0)) for x in range(0, 400, 8)]
@@ -119,3 +123,45 @@ class TestWindow:
         run = baseline(label, 60.0)
         assert run is not None
         assert run[-1][0] > run[0][0]
+
+
+def _contrast(a: str, b: str) -> float:
+    """WCAG contrast between two hex colours."""
+
+    def lum(hexed: str) -> float:
+        v = hexed.lstrip("#")
+        out: list[float] = []
+        for i in (0, 2, 4):
+            c = int(v[i : i + 2], 16) / 255
+            out.append(c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4)
+        return 0.2126 * out[0] + 0.7152 * out[1] + 0.0722 * out[2]
+
+    hi, lo = sorted((lum(a), lum(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def test_a_name_on_the_water_takes_its_own_ink():
+    """The water ink is the colour of the thing the name is now written on."""
+    assert lettering_marks._ink(river_label(40.0)) == "in_water"
+    assert lettering_marks._ink(river_label(11.0)) == "water"
+
+
+def test_the_in_water_ink_beats_a_dark_one_on_the_river():
+    """The water is a mid-tone: a dark ink fights it from the wrong side.
+
+    Measured against the major watercourse's own pigment, which is what the
+    letters are written over.
+    """
+    style = class_style()
+    river = BRUSH_COLOURS["RIV"]["a"]
+    assert _contrast(style.nib.label_in_water_ink, river) > _contrast("#0f1216", river)
+    assert _contrast(style.nib.label_in_water_ink, river) > 4.5
+
+
+def test_a_name_on_the_water_asks_for_no_backing_wash():
+    """A pale blob on a river reads as a hole in the water."""
+    hand = open_hand()
+    wet = lettering_marks.label_marks(hand, river_label(40.0))
+    dry = lettering_marks.label_marks(hand, river_label(11.0))
+    assert wet and not any(m.wash for m in wet)
+    assert dry and all(m.wash for m in dry)

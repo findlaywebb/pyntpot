@@ -34,3 +34,5 @@ add the term here when you coin one. The ported code keeps its old names until t
 | setting | One request to the hand: a text at a size, set along a line or flat beside an anchor, with its slant, tracking, ink and backing-wash flag. The outcome of placement, not an input to it. `letters.setting.Setting`. |
 | mark | One stroke the hand or the map's furniture produces for the nib to run along, in card pixels, with its role, ink, size and pen tilt. `letters.setting.Mark`. |
 | candidate | One ranked annotation option for a track: a named road, a climb, a settlement or a landmark, with its rank within its kind, where it is, and the row the export writes. `maps.candidates.candidate.Candidate`. |
+| backdrop | What every name on the card is priced against: the card, the route in card pixels, the darkness grid and the named road centrelines. `maps.lettering.placement_costs.Backdrop`. |
+| terms | What one name is priced against where it is tried: the card, the darkness grid, the boxes already on the sheet, the roads it is charged for crossing and the weighted route. `maps.lettering.placement_costs.Terms`. |

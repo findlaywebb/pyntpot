@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from itertools import pairwise
 
 from pyntpot.ink.polyline import ease_along, tangent_at
 
@@ -24,6 +25,8 @@ STRAND_MIN_ARC = 10.0
 #: the gap. The strands have to part and rejoin somewhere, and a step there is a
 #: kink in the line; over three gaps of running it is a curve.
 STRAND_EASE_WIDTHS = 3.0
+#: The fewest points a route needs before it can double back on itself.
+MIN_STRAND_POINTS = 4
 
 
 def separate_strands(
@@ -56,11 +59,25 @@ def separate_strands(
         was.
     """
     n = len(route_px)
-    if n < 4 or gap_px <= 0:
+    if n < MIN_STRAND_POINTS or gap_px <= 0:
         return route_px
     cum = [0.0]
-    for a, b in zip(route_px, route_px[1:], strict=False):
+    for a, b in pairwise(route_px):
         cum.append(cum[-1] + math.dist(a, b))
+    push = _pushes(route_px, cum, gap_px)
+    push = ease_along(push, cum, gap_px * STRAND_EASE_WIDTHS)
+    if not any(push):
+        return route_px
+    out: list[tuple[float, float]] = []
+    for i, (x, y) in enumerate(route_px):
+        tx, ty = tangent_at(route_px, i)
+        out.append((x - ty * push[i], y + tx * push[i]))
+    return out
+
+
+def _pushes(route_px: list[tuple[float, float]], cum: list[float], gap_px: float) -> list[float]:
+    """How far each point is pushed off the line it shares with another pass, signed by side."""
+    n = len(route_px)
     min_arc = gap_px * STRAND_MIN_ARC
     # The route's own points in cells the size of the gap, so each point is
     # measured against the handful that could be near it rather than all of them.
@@ -90,11 +107,4 @@ def separate_strands(
         # same way: the earlier pass takes the left and the later one the right.
         side = -1.0 if tx * ox + ty * oy >= 0 and cum[i] > cum[j] else 1.0
         push[i] = side * (gap_px - d) / 2
-    push = ease_along(push, cum, gap_px * STRAND_EASE_WIDTHS)
-    if not any(push):
-        return route_px
-    out: list[tuple[float, float]] = []
-    for i, (x, y) in enumerate(route_px):
-        tx, ty = tangent_at(route_px, i)
-        out.append((x - ty * push[i], y + tx * push[i]))
-    return out
+    return push

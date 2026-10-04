@@ -12,9 +12,8 @@ from typing import Any
 import pydantic
 import pytest
 
-from pyntpot._port.style import RouteInk
 from pyntpot.maps.style import Style
-from pyntpot.maps.style_groups import BasemapStyle
+from pyntpot.maps.style_groups import BasemapStyle, RouteInk
 
 from support import REPO_ROOT
 

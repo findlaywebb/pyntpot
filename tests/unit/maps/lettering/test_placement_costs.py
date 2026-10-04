@@ -1,10 +1,10 @@
 """What a name costs where it sits: the roads, its own feature and the route."""
 
-from pyntpot._port import labels as lb
 from pyntpot.maps.lettering.label import TIER_ROAD, Label
+from pyntpot.maps.lettering.picks_lines import road_lines
 from pyntpot.maps.lettering.placement_costs import _off_own, _off_own_feature, _on_road
 
-from support.basemaps import river_label
+from support.basemaps import hung_card, river_label
 
 
 def test_a_road_name_stays_near_the_road_it_names():
@@ -41,24 +41,16 @@ def test_a_name_is_not_charged_for_crossing_the_thing_it_names():
 
 def test_an_unnamed_lane_and_a_watercourse_both_cost_a_name_that_crosses_them():
     """A mark on the paper is a mark on the paper, named or not."""
-
     # Only the named roads were charged, so a label could be laid across an
     # unnamed lane for nothing and a settlement could sit on its own river.
-    class FlatCard:
-        w = 400
-        h = 300
-        scale = 1.0
-
-        @staticmethod
-        def xy(x, y):
-            return (float(x), float(y))
+    card = hung_card(400, 300, 1.0)
 
     named = {
-        "roads": [{"n": "A361", "c": "major", "d": [[0, 10], [400, 10]]}],
-        "rivers": [{"n": "Lyn", "c": "major", "d": [[0, 60], [400, 60]]}],
-        "crossings": [[[0, 120], [400, 120]]],
+        "roads": [{"n": "A361", "c": "major", "d": [[0, -10], [400, -10]]}],
+        "rivers": [{"n": "Lyn", "c": "major", "d": [[0, -60], [400, -60]]}],
+        "crossings": [[[0, -120], [400, -120]]],
     }
-    lines = lb.road_lines(named, FlatCard())
+    lines = road_lines(named, card)
     assert len(lines) == 3, "the lanes and the water are not in the crossing cost"
     for y in (10.0, 60.0, 120.0):
         assert _on_road((100.0, y - 4, 200.0, y + 4), lines) == 1.0

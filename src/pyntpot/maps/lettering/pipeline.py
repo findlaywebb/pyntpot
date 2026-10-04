@@ -26,21 +26,35 @@ places first; `plate_path` is `None` exactly when nothing was stroked, and
 otherwise names a file inside `Plates.directory`.
 """
 
+import json
 import logging
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 
-from pyntpot._port import labels as placer
 from pyntpot.ink.polyline import Pt, cumulative_length
+from pyntpot.ink.sheet import Canvas
+from pyntpot.letters import nib
+from pyntpot.letters.hand import Hand
+from pyntpot.letters.style import NibGroups
 from pyntpot.maps import lettering_marks
 from pyntpot.maps.annotations import Annotations
 from pyntpot.maps.basemap import Basemap
+from pyntpot.maps.cache import Cache
 from pyntpot.maps.lettering.label import Label, Span
+from pyntpot.maps.lettering.picks import (
+    ground_labels,
+    home_labels,
+    journal_heuristic,
+    journal_picks,
+    route_markers,
+)
+from pyntpot.maps.lettering.picks_lines import NamedLines, named_lines, road_lines
+from pyntpot.maps.lettering.picks_roads import pick_roads
 from pyntpot.maps.lettering.placement import place
 from pyntpot.maps.lettering.placement_costs import Backdrop
 from pyntpot.maps.lettering.spans import resolve_spans
-from pyntpot.maps.plates import Plates
+from pyntpot.maps.plates import Plates, dark_array
 from pyntpot.maps.style import Style
 
 log = logging.getLogger(__name__)
@@ -88,8 +102,8 @@ def letter(
     measure = partial(lettering_marks.box_size, hand)
     card = basemap.card
     strands = list(plates.strands)
-    lines = placer.named_lines(basemap, style.lettering.label_geom_tol_px)
-    home, taken = placer.home_labels(basemap, card, style, measure)
+    lines = named_lines(basemap, style.lettering.label_geom_tol_px)
+    home, taken = home_labels(basemap, card, style, measure)
     ground = _ground(basemap, lines, strands, annotations, style)
     anchored = _anchored(basemap, annotations, style)
     spans = _spans(plates, basemap, annotations, strands)
@@ -98,16 +112,16 @@ def letter(
         card,
         strands,
         {"w": dark.w, "h": dark.h, "v": dark.values},
-        placer.road_lines(lines, card),
+        road_lines(lines, card),
     )
     placed = home + place(ground + anchored, spans, backdrop, taken, measure)
-    plate = placer.draw_plate(plates, placed, spans, strands, style)
+    plate = draw_plate(plates, placed, spans, strands, style)
     return Lettering(tuple(placed), tuple(spans), plate)
 
 
 def _ground(
     basemap: Basemap,
-    lines: placer.NamedLines,
+    lines: NamedLines,
     strands: list[Pt],
     annotations: Annotations | None,
     style: Style,
@@ -117,18 +131,18 @@ def _ground(
         return []
     card = basemap.card
     return (
-        placer.ground_labels(basemap, lines, card, strands, annotations)
-        + placer.pick_roads(basemap, lines, card, strands)
-        + placer.route_markers(strands)
+        ground_labels(basemap, lines, card, strands, annotations)
+        + pick_roads(basemap, lines, card, strands)
+        + route_markers(strands)
     )
 
 
 def _anchored(basemap: Basemap, annotations: Annotations | None, style: Style) -> list[Label]:
     """The landmarks to letter, the caller's or the nearest named, anchored on the card."""
     cap = style.lettering.label_max
-    wanted = placer.journal_picks(annotations, basemap, cap) if annotations is not None else []
+    wanted = journal_picks(annotations, basemap, cap) if annotations is not None else []
     if not wanted:
-        wanted = placer.journal_heuristic(basemap, cap)
+        wanted = journal_heuristic(basemap, cap)
     card = basemap.card
     anchored: list[Label] = []
     for entry in wanted:
@@ -156,3 +170,73 @@ def _spans(
     """The caller's span requests resolved onto the strands' arc length and the track's times."""
     times = list(basemap.track_time) if basemap.track_time is not None else []
     return resolve_spans(annotations, times, cumulative_length(strands, plates.card.scale))
+
+
+def draw_plate(
+    plates: Plates,
+    placed: list[Label],
+    spans: list[Span],
+    route_px: list[Pt],
+    style: Style,
+    route: str | None = None,
+) -> Path | None:
+    """Stroke the placed names into an RGBA plate beside the other plates.
+
+    The lettering is raster because the ink is: `stamp` deposits into a numpy
+    accumulator gated on the paper's own height, and there is no path out of
+    that to vector. So the label layer is a fourth plate, and the page and the
+    card both draw the same pixels instead of each approximating them.
+
+    It is cached on `Cache.lettering_key`: the marks to be stroked, the base
+    plates' hash and the style's lettering digest, so a moved name, pin, leader
+    or span line, a repaint of the base plates or another hand all change it. A
+    plate whose key does not match is not drawn at all rather than lettering
+    yesterday's names over today's map.
+
+    Args:
+        plates: The painted plates, beside which the label plate is written.
+        placed: The placed labels.
+        spans: The placed spans.
+        route_px: The track in card pixels.
+        style: The style the card is lettered in; its brush style makes the
+            lettering's brushes and ink pads.
+        route: `centreline` or `outline`; the style's when not given.
+
+    Returns:
+        The path to the plate, or None when there is nothing to draw or no
+        engine to draw it with.
+    """
+    if not placed and not spans:
+        return None
+    try:
+        hand = Hand(style.face, style.hand, route)
+    except (ImportError, OSError) as exc:  # no fonttools, or no face on disk
+        log.info("no face to letter with: %s", exc)
+        return None
+    root = plates.directory
+    stem = f"labels-{hand.route}"
+    path, side = root / f"{stem}.webp", root / f"{stem}.json"
+    marks = lettering_marks.marks(hand, placed, spans)
+    if not marks:
+        return None
+    key = Cache.lettering_key(marks, plates.hash, style)
+    if path.exists() and side.exists():
+        try:
+            if json.loads(side.read_text()).get("key") == key:
+                return path
+        except (OSError, ValueError):  # a half-written key is not a crash
+            pass
+    card = plates.card
+    rw, rh = card.render
+    surface = nib.NibSurface(
+        Canvas(*card.box, rw, rh),
+        card.render_scale,
+        dark_array(plates.manifest.dark, rh, rw),
+        plates.manifest.gran_px,
+    )
+    written = nib.plate(
+        marks, surface, NibGroups(style.nib, style.face, style.hand, style.brush, style.paper), path
+    )
+    if written is not None:
+        side.write_text(json.dumps({"key": key, "face": hand.font.name, "route": hand.route}))
+    return written

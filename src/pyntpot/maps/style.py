@@ -33,7 +33,6 @@ from typing import Self
 
 import pydantic
 
-from pyntpot._port.style import RouteInk
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.style import PaperStyle, WashStyle
 from pyntpot.letters.style import FaceStyle, HandStyle, NibStyle
@@ -43,6 +42,7 @@ from pyntpot.maps.style_groups import (
     CoverStyle,
     LetteringPolicy,
     RibbonStyle,
+    RouteInk,
     RouteInks,
     RouteStyle,
 )
