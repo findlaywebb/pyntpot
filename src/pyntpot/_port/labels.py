@@ -32,7 +32,7 @@ import logging
 import math
 import re
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from typing import TYPE_CHECKING, Any, Literal
 
 from pyntpot.ink.chains import joined
@@ -45,7 +45,11 @@ from pyntpot.ink.polyline import (
     seg_gap,
     simplify,
 )
+from pyntpot.ink.sheet import Canvas
+from pyntpot.ink.style import PaperStyle
+from pyntpot.letters import nib
 from pyntpot.letters.setting import DEFAULT_LINE_PX
+from pyntpot.letters.style import FaceStyle, HandStyle, NibGroups, NibStyle
 
 if TYPE_CHECKING:
     from pyntpot._port.paint import PaintStyle
@@ -4023,6 +4027,16 @@ def plate_key(placed: list[Label], spans: list[Span], pstyle: Any, base: str = "
     return paint.labels_hash(rows, pstyle)
 
 
+def _nib_groups(pstyle: Any, brush: BrushStyle) -> NibGroups:
+    """The groups the nib reads, filled from the flat painter style."""
+
+    def read(group: type) -> Any:
+        """One group built from the flat style's fields of the same names."""
+        return group(**{f.name: getattr(pstyle, f.name) for f in fields(group)})
+
+    return NibGroups(read(NibStyle), read(FaceStyle), read(HandStyle), brush, read(PaperStyle))
+
+
 def draw_plate(
     plates: Plates,
     placed: list[Label],
@@ -4061,13 +4075,9 @@ def draw_plate(
 
     if not placed and not spans:
         return None
-    try:
-        from pyntpot._port import paint
-    except ImportError:  # no numpy or no Pillow: the caller letters in vector
-        return None
     from pyntpot.letters.hand import Hand
-    from pyntpot.letters.style import FaceStyle, HandStyle
     from pyntpot.maps import lettering_marks
+    from pyntpot.maps.plates import dark_array
 
     try:
         hand = Hand(
@@ -4091,7 +4101,15 @@ def draw_plate(
     marks = lettering_marks.marks(hand, placed, spans)
     if not marks:
         return None
-    written = paint.label_plate(plates.manifest.to_dict(), marks, pstyle, brush, path)
+    card = plates.card
+    rw, rh = card.render
+    surface = nib.NibSurface(
+        Canvas(*card.box, rw, rh),
+        card.render_scale,
+        dark_array(plates.manifest.dark, rh, rw),
+        plates.manifest.gran_px,
+    )
+    written = nib.plate(marks, surface, _nib_groups(pstyle, brush), path)
     if written is not None:
         side.write_text(json.dumps({"key": key, "face": hand.font.name, "route": hand.route}))
     return written

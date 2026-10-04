@@ -2,9 +2,11 @@
 
 from pathlib import Path
 
+import numpy as np
+
 from pyntpot._port import paint
 from pyntpot.maps.card import Card
-from pyntpot.maps.plates import DarkGrid, Manifest, Plates
+from pyntpot.maps.plates import DarkGrid, Manifest, Plates, dark_array
 
 #: The cache key the test plates are written under.
 KEY = "iMALHAM"
@@ -92,3 +94,26 @@ def test_load_plates_missing_a_plate_is_none(tmp_path: Path) -> None:
     """A manifest naming a plate no longer on disk reads as no plates."""
     _write_plates(tmp_path, ("paper", "wash"))
     assert paint.load_plates(KEY, tmp_path) is None
+
+
+class TestDarkArray:
+    """`dark_array` is the one conversion of a darkness grid to a plate-sized array."""
+
+    def test_no_grid_is_a_flat_middling_field(self) -> None:
+        """No grid gives 0.35 everywhere at the requested shape."""
+        out = dark_array(None, 4, 6)
+        assert out.shape == (4, 6)
+        assert np.all(out == np.float32(0.35))
+
+    def test_a_grid_without_values_is_a_flat_middling_field(self) -> None:
+        """A grid with empty values gives 0.35 everywhere at the requested shape."""
+        out = dark_array(DarkGrid(w=0, h=0, values=()), 4, 6)
+        assert out.shape == (4, 6)
+        assert np.all(out == np.float32(0.35))
+
+    def test_a_uniform_grid_resizes_to_the_same_value(self) -> None:
+        """A uniform 2 by 2 grid of 0.5 resizes to 0.5 everywhere."""
+        grid = DarkGrid(w=2, h=2, values=((0.5, 0.5), (0.5, 0.5)))
+        out = dark_array(grid, 4, 6)
+        assert out.shape == (4, 6)
+        assert np.allclose(out, 0.5)

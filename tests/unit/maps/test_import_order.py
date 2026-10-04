@@ -37,6 +37,7 @@ MODULES: tuple[str, ...] = (
     "pyntpot.letters.style",
     "pyntpot.letters.setting",
     "pyntpot.letters.hand",
+    "pyntpot.letters.nib",
     "pyntpot.letters.font",
     "pyntpot.letters.skeleton",
     "pyntpot.letters.trace",

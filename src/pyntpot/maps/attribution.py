@@ -24,9 +24,11 @@ from pathlib import Path
 from PIL import Image
 
 from pyntpot._port import labels as placer
-from pyntpot._port import paint as painter
+from pyntpot.ink.sheet import Canvas
+from pyntpot.letters import nib
 from pyntpot.maps import lettering_marks
 from pyntpot.maps.credit import Credit
+from pyntpot.maps.plates import dark_array
 from pyntpot.maps.style import Style
 
 log = logging.getLogger(__name__)
@@ -39,6 +41,9 @@ ATTRIBUTION_MARGIN_PX = 8.0
 
 #: Room inside the block around the text, so no stroke is clipped by the plate.
 _PAD_PX = 4.0
+
+#: The paper's granulation cell on the attribution plate, in pixels.
+_GRAN_PX = 6.0
 
 
 def attribution_text(owed: Sequence[Credit]) -> str:
@@ -56,7 +61,6 @@ def draw_attribution(image: Image.Image, text: str, style: Style) -> None:
     """
     if not text:
         return
-    pstyle = style.paint_style()
     hand = lettering_marks.open_hand(style) if style.lettering.labels else None
     if hand is None:
         log.info("no hand to write the attribution with, none is drawn")
@@ -75,15 +79,14 @@ def draw_attribution(image: Image.Image, text: str, style: Style) -> None:
         ),
     )
     with tempfile.TemporaryDirectory() as work:
-        manifest = {
-            "render": [block[0], block[1]],
-            "display": [block[0], block[1]],
-            "gran_px": 6.0,
-            "dir": work,
-        }
-        path = painter.label_plate(
-            manifest, marks, pstyle, style.brush, Path(work) / "attribution.webp"
+        surface = nib.NibSurface(
+            Canvas(0.0, 0.0, float(block[0]), float(block[1]), block[0], block[1]),
+            1.0,
+            dark_array(None, block[1], block[0]),
+            _GRAN_PX,
         )
+        groups = nib.NibGroups(style.nib, style.face, style.hand, style.brush, style.paper)
+        path = nib.plate(marks, surface, groups, Path(work) / "attribution.webp")
         if path is None:
             log.info("the attribution drew nothing")
             return

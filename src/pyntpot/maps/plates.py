@@ -5,7 +5,9 @@ with their `Manifest` and the route in display pixels, both as recorded and
 with its doubled-back stretches pulled apart into strands; `Manifest`,the plates' sidecar record (`plates.json`):
 the base hash, the files written, the card they were painted on and the
 measurements later stages read; `DarkGrid`, the painter's coarse grid of how
-dark the painted sheet is.
+dark the painted sheet is; `dark_array`, which turns a `DarkGrid` into the
+full-size darkness array a plate is written over, and is the only place one is
+converted.
 
 It does not paint, hash or letter anything, and it does not decide whether a
 manifest is current: the painter writes one, the lettering and the compose
@@ -29,6 +31,9 @@ import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+from PIL import Image
+
 from pyntpot.maps.card import Card
 
 if TYPE_CHECKING:
@@ -36,6 +41,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from pyntpot.ink.polyline import Pt
+
+#: What the dark field is where there is no grid to read.
+_NO_GRID_DARKNESS = 0.35
 
 
 @dataclass(frozen=True)
@@ -52,6 +60,26 @@ class DarkGrid:
     w: int
     h: int
     values: tuple[tuple[float, ...], ...]
+
+
+def dark_array(grid: DarkGrid | None, h: int, w: int) -> np.ndarray:
+    """The darkness grid back up at a plate's own size, the one place a grid is converted.
+
+    Args:
+        grid: The painter's coarse grid, or None when there is none.
+        h: Rows of the plate.
+        w: Columns of the plate.
+
+    Returns:
+        An `h` by `w` float32 array in [0, 1]: the grid resized bilinearly, or
+        0.35 everywhere when the grid is None or has no values.
+    """
+    if grid is None or not grid.values:
+        return np.full((h, w), _NO_GRID_DARKNESS, np.float32)
+    small = np.asarray(grid.values, np.float32)
+    return np.asarray(
+        Image.fromarray(small, "F").resize((w, h), Image.Resampling.BILINEAR), np.float32
+    )
 
 
 @dataclass(frozen=True)

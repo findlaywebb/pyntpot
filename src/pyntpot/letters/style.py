@@ -2,7 +2,8 @@
 
 Key types: `FaceStyle`, which face the hand opens and how a glyph becomes a
 pen path; `HandStyle`, the seed every random draw of a label starts from;
-`NibStyle`, the nib, its inks, its angle and the backing wash under a name.
+`NibStyle`, the nib, its inks, its angle and the backing wash under a name;
+`NibGroups`, the groups the nib reads together.
 Frozen dataclasses of plain values, each field documented by its `#:` comment.
 
 It letters nothing and reads no theme. The defaults are the painter's own
@@ -10,11 +11,14 @@ class defaults, not a resolved theme. Which names a map letters, and how many,
 is map policy and lives with the maps.
 
 Invariants: every field belongs to exactly one style group across the
-package; the module imports nothing from `pyntpot` but `ink`, and today not
-even that.
+package; the module imports nothing from `pyntpot` but `ink`, for the brush and
+paper groups `NibGroups` carries.
 """
 
 from dataclasses import dataclass
+
+from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.ink.style import PaperStyle
 
 
 @dataclass(frozen=True)
@@ -83,3 +87,14 @@ class NibStyle:
     #: and the difference on the sheet is larger than the ratio suggests because
     #: the letters no longer share a value with the bridges crossing them.
     label_in_water_ink: str = "#f8f4e9"
+
+
+@dataclass(frozen=True)
+class NibGroups:
+    """The style groups the nib reads, passed as one value."""
+
+    nib: NibStyle
+    face: FaceStyle
+    hand: HandStyle
+    brush: BrushStyle
+    paper: PaperStyle
