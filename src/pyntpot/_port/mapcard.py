@@ -22,8 +22,8 @@ from typing import Any
 
 from PIL import Image, ImageChops, ImageDraw
 
-from pyntpot._port import geo, paint
 from pyntpot._port import labels as lb_mod
+from pyntpot._port import paint
 from pyntpot._port.card import STRAND_GAP_WIDTHS, separate_strands
 from pyntpot._port.labels import (
     Label,
@@ -150,6 +150,7 @@ def compose(
         The card, or None when nothing is painted for this activity.
     """
     from pyntpot.maps.card import Card
+    from pyntpot.maps.projection import track_projection
 
     manifest = paint.load_plates(key, cache_dir)
     if manifest is None:
@@ -157,7 +158,7 @@ def compose(
     card_img = _plates(manifest)
     k = card_img.width / max(manifest["display"][0], 1)
 
-    _proj, pts = geo.track_projection(lat, lng)
+    _proj, pts = track_projection(lat, lng)
     first = manifest.get("route0") or pts[0]
     card = Card.from_manifest(manifest, offset=(first[0] - pts[0][0], first[1] - pts[0][1]))
     ink = route_ink

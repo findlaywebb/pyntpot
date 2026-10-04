@@ -14,7 +14,7 @@ of metres. And every number is a `PaintStyle` field, so a theme's `style.json`
 can move any of them without a change here.
 
 Nothing in this module reaches the network or any activity service. It paints
-what `geo.journal_layers` has already assembled from the cache.
+the `Basemap` that `geo.journal_layers` has already assembled from the cache.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field, fields, replace
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from PIL import Image
@@ -35,6 +35,9 @@ from PIL import Image
 from pyntpot._port.style import coerce_like
 from pyntpot.ink.chains import chain_lines
 from pyntpot.ink.polyline import simplify
+
+if TYPE_CHECKING:
+    from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
 
 F32 = np.float32
 Pt = tuple[float, float]
@@ -1846,18 +1849,18 @@ def composite(layers: list[Layer], base: np.ndarray, style: PaintStyle) -> np.nd
     return np.clip(base * multiply_plate(layers, h, w), 0.0, 1.0)
 
 
-def relief_density(grid: dict[str, Any], plate: Plate, sheet: Sheet) -> np.ndarray:
+def relief_density(grid: ElevationPatch, plate: Plate, sheet: Sheet) -> np.ndarray:
     """A quiet shaded relief from the SRTM grid, in pigment density."""
-    n = grid["n"]
-    v = np.asarray(grid["v"], F32).reshape(n, n)
+    n = grid.n
+    v = np.asarray(grid.values, F32).reshape(n, n)
     gx = (
-        (np.arange(plate.w, dtype=F32) / plate.scale + plate.x0 - grid["x0"])
-        / (grid["x1"] - grid["x0"])
+        (np.arange(plate.w, dtype=F32) / plate.scale + plate.x0 - grid.x0)
+        / (grid.x1 - grid.x0)
         * (n - 1)
     )
     gy = (
-        (plate.y1 - np.arange(plate.h, dtype=F32) / plate.scale - grid["y0"])
-        / (grid["y1"] - grid["y0"])
+        (plate.y1 - np.arange(plate.h, dtype=F32) / plate.scale - grid.y0)
+        / (grid.y1 - grid.y0)
         * (n - 1)
     )
     gx = np.clip(gx, 0, n - 1.001)
@@ -3269,44 +3272,93 @@ def plates_dir(key: str, cache_dir: Path) -> Path:
     return Path(cache_dir) / PLATES_SUBDIR / key
 
 
-def paint_hash(payload: dict[str, Any], style: PaintStyle) -> str:
+def _hashed_layers(basemap: Basemap) -> dict[str, Any]:
+    """The card and the layers in the form the base hash has always read them.
+
+    Every line is written back as its one-decimal path data and every entry
+    under its short key, so the hash of a basemap equals the hash of the
+    payload dict it replaced.
+    """
+    from pyntpot._port import geo
+
+    card, layers = basemap.card, basemap.layers
+
+    def closed(lines: tuple[Line, ...]) -> list[str]:
+        return [geo.path_d(list(line), close=True) for line in lines]
+
+    rivers = []
+    for river in layers.rivers:
+        entry: dict[str, Any] = {
+            "c": river.cls,
+            "n": river.name,
+            "w": river.width_px,
+            "wn": river.name_width_px,
+        }
+        if river.profile:
+            entry["wp"] = list(river.profile)
+        entry["d"] = geo.path_d(list(river.line))
+        rivers.append(entry)
+    patch = layers.elevation
+    return {
+        "card": list(card.box),
+        "render": list(card.render),
+        "display": list(card.display),
+        "mpp": card.mpp,
+        "route": [list(p) for p in layers.route],
+        "cover": {k: closed(v) for k, v in layers.cover.items()},
+        "cover_order": list(layers.cover_order),
+        "sea": closed(layers.sea),
+        "lakes": closed(layers.lakes),
+        "coastline": [geo.path_d(list(line)) for line in layers.coastline],
+        "roads": [
+            {
+                "c": road.cls,
+                "b": road.band,
+                "k": road.highway,
+                "n": road.name,
+                "r": road.ref,
+                "d": geo.path_d(list(road.line)),
+            }
+            for road in layers.roads
+        ],
+        "rivers": rivers,
+        "ribbon_m": layers.ribbon_m,
+        "wet_px": dict(layers.wet_px),
+        "minor_roads": layers.minor_roads,
+        "blotch_m": layers.blotch_m,
+        "dab_spacing_m": layers.dab_spacing_m,
+        "gran_m": layers.gran_m,
+        "elev_grid": None
+        if patch is None
+        else {
+            "n": patch.n,
+            "x0": patch.x0,
+            "y0": patch.y0,
+            "x1": patch.x1,
+            "y1": patch.y1,
+            "v": list(patch.values),
+            "min": patch.low,
+            "max": patch.high,
+        },
+    }
+
+
+def paint_hash(basemap: Basemap, style: PaintStyle) -> str:
     """A hash over the layers and the style, so a repaint is only ever needed once.
 
     Args:
-        payload: The layers `geo.journal_layers` assembled.
+        basemap: The basemap `geo.journal_layers` assembled; its card and its
+            layers are hashed.
         style: The paint style.
 
     Returns:
         A short hex digest.
     """
-    keys = (
-        "card",
-        "render",
-        "display",
-        "mpp",
-        "route",
-        "cover",
-        "cover_order",
-        "sea",
-        "lakes",
-        "coastline",
-        "roads",
-        "rivers",
-        "ribbon_m",
-        "wet_px",
-        "minor_roads",
-        "blotch_m",
-        "dab_spacing_m",
-        "gran_m",
-        "elev_grid",
-    )
-    blob = json.dumps(
-        {k: payload.get(k) for k in keys}, sort_keys=True, separators=(",", ":"), default=str
-    )
+    blob = json.dumps(_hashed_layers(basemap), sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(blob.encode()).hexdigest()[:16] + "-" + style.digest()
 
 
-def label_geom(payload: dict[str, Any], tol_px: float) -> dict[str, Any]:
+def label_geom(basemap: Basemap, tol_px: float) -> dict[str, Any]:
     """The lines a name can be set along, clipped to the card and simplified.
 
     The roads and the watercourses are in the geo payload and nowhere else, and
@@ -3316,7 +3368,7 @@ def label_geom(payload: dict[str, Any], tol_px: float) -> dict[str, Any]:
     is generous because a baseline is read at a glance and never measured.
 
     Args:
-        payload: The layers from `geo.journal_layers`.
+        basemap: The basemap from `geo.journal_layers`.
         tol_px: Simplification tolerance in display pixels.
 
     Returns:
@@ -3324,23 +3376,39 @@ def label_geom(payload: dict[str, Any], tol_px: float) -> dict[str, Any]:
         a class, a road number where OSM has one, and a polyline in card
         metres.
     """
-    from pyntpot._port import geo
+    layers = basemap.layers
+    tol = max(tol_px * float(basemap.card.mpp_display), 1.0)
 
-    tol = max(tol_px * float(payload.get("mpp_display", 1.0)), 1.0)
-
-    def lines(d: str) -> list[list[list[float]]]:
+    def lines(line: Line) -> list[list[list[float]]]:
         out = []
-        for piece in geo.parse_path(d):
+        for piece in [list(line)] if len(line) > 1 else []:
             kept = simplify(piece, tol)
             if len(kept) > 1:
                 out.append([[round(x, 1), round(y, 1)] for x, y in kept])
         return out
 
+    named: dict[str, list[dict[str, Any]]] = {
+        "roads": [
+            {"n": r.name, "c": r.cls, "r": r.ref, "w": 0.0, "wn": 0.0, "line": r.line}
+            for r in layers.roads
+        ],
+        "rivers": [
+            {
+                "n": r.name,
+                "c": r.cls,
+                "r": "",
+                "w": r.width_px,
+                "wn": r.name_width_px,
+                "line": r.line,
+            }
+            for r in layers.rivers
+        ],
+    }
     geom: dict[str, Any] = {"roads": [], "rivers": [], "coast": [], "crossings": []}
     for key in ("roads", "rivers"):
-        for entry in payload.get(key, []):
-            for line in lines(entry["d"]):
-                if entry.get("n"):
+        for entry in named[key]:
+            for line in lines(entry["line"]):
+                if entry["n"]:
                     # `w` is the width this watercourse was actually painted at,
                     # which is its own where one could be measured and the class
                     # floor where it could not. A name clears the ink it is set
@@ -3349,10 +3417,10 @@ def label_geom(payload: dict[str, Any], tol_px: float) -> dict[str, Any]:
                     geom[key].append(
                         {
                             "n": entry["n"],
-                            "c": entry.get("c", ""),
-                            "r": entry.get("r", ""),
-                            "w": entry.get("w", 0.0),
-                            "wn": entry.get("wn", 0.0),
+                            "c": entry["c"],
+                            "r": entry["r"],
+                            "w": entry["w"],
+                            "wn": entry["wn"],
                             "d": line,
                         }
                     )
@@ -3362,8 +3430,8 @@ def label_geom(payload: dict[str, Any], tol_px: float) -> dict[str, Any]:
                     # laid across one for nothing. It is kept here, without a
                     # name, purely so the crossing cost can see it.
                     geom["crossings"].append(line)
-    for d in payload.get("coastline", []):
-        geom["coast"].extend(lines(d))
+    for coast in layers.coastline:
+        geom["coast"].extend(lines(coast))
     return geom
 
 
@@ -3523,11 +3591,18 @@ def sea_patches(dens: np.ndarray, sea_cov: np.ndarray, mpp: float, style: PaintS
     return np.clip(dens * (1.0 + amount * swing), 0.0, 1.0)
 
 
+def _lines(lines: tuple[Line, ...]) -> list[list[Pt]]:
+    """The lines long enough to draw, as the point lists the painter fills and strokes."""
+    return [list(line) for line in lines if len(line) > 1]
+
+
 def paint(
-    payload: dict[str, Any],
+    basemap: Basemap,
     style: PaintStyle | None = None,
     out_dir: Path | None = None,
     labels: list[dict[str, Any]] | None = None,
+    *,
+    key: str,
 ) -> dict[str, Any]:
     """Paint one activity's plates and write them, with a manifest beside them.
 
@@ -3538,38 +3613,40 @@ def paint(
     whole sheet.
 
     Args:
-        payload: The layers from `geo.journal_layers`.
+        basemap: The basemap from `geo.journal_layers`.
         style: The paint style; the defaults when it is not given.
         out_dir: Where to write; `data/geo/plates/<id>/` by default.
         labels: The resolved labels, when the caller has them. They are hashed
             into the manifest so a label plate painted from them can be told
             from a stale one. This module never resolves or places a label
             itself: `labels.py` imports from here and never the other way.
+        key: The activity, written into the manifest as its `id`.
 
     Returns:
         The manifest: files, byte counts, timings and the darkness grid.
     """
     style = style or PaintStyle()
-    aid = payload["id"]
+    aid = key
     out_dir = out_dir if out_dir is not None else plates_dir(aid)
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.perf_counter()
 
-    cx0, cy0, cx1, cy1 = payload["card"]
-    rw, rh = payload["render"]
+    card, layers = basemap.card, basemap.layers
+    cx0, cy0, cx1, cy1 = card.box
+    rw, rh = card.render
     plate = Plate(cx0, cy0, cx1, cy1, rw, rh)
-    mpp = payload["mpp"]
+    mpp = card.mpp
     sheet = Sheet(
         rh,
         rw,
-        gran_px=max(payload["gran_m"] / mpp, 3.0),
+        gran_px=max(layers.gran_m / mpp, 3.0),
         seed=style.sheet_seed,
         fibre=style.paper_fibre_mix if style.paper_fibre else 0.0,
         fibre_stretch=style.paper_fibre_stretch,
         fibre_angle=style.paper_fibre_angle,
         fibre_cell=max(style.paper_fibre_cell_px * rw / 1800.0, 1.6),
     )
-    scale = rw / max(payload["display"][0], 1)
+    scale = rw / max(card.display[0], 1)
     # The phase 1 options, gathered once so every wash on this plate is laid the
     # same way: the granulation, the rim and the blooms, and the shared wet map.
     gran_gamma = style.gran_gamma if style.paper_fibre else 0.0
@@ -3603,8 +3680,8 @@ def paint(
         return (bloom_rng, n, style.bloom_radius_frac, lift, style.bloom_warp) if n else None
 
     # ---- water first: it is cut out of every land pigment
-    sea_rings = [r for d in payload.get("sea", []) for r in parse_d(d)]
-    lake_rings = [r for d in payload.get("lakes", []) for r in parse_d(d)]
+    sea_rings = _lines(layers.sea)
+    lake_rings = _lines(layers.lakes)
     sea_cov = fill_cov(sea_rings, plate) if sea_rings else np.zeros((rh, rw), F32)
     lake_cov = fill_cov(lake_rings, plate) if lake_rings else np.zeros((rh, rw), F32)
     water = np.maximum(sea_cov, lake_cov) > 0.5
@@ -3625,11 +3702,11 @@ def paint(
             max(floor_m, mult * mpp),
             style.silhouette_deform_min_px * mpp,
         )
-    order = [c for c in payload.get("cover_order", ()) if c in payload.get("cover", {})]
+    order = [c for c in layers.cover_order if c in layers.cover]
     label = np.zeros((rh, rw), np.uint8)
     if style.land_cover:
         for i, cls in enumerate(order, 1):
-            rings = [r for d in payload["cover"][cls] for r in parse_d(d)]
+            rings = _lines(layers.cover[cls])
             if rings:
                 label[fill_cov(deform_rings(rings, cover_deform), plate) > 0.5] = i
         label[water] = 0
@@ -3713,7 +3790,7 @@ def paint(
     # three printed scales, because a texture's scale cannot be changed after it
     # is printed; the two sliders walk between them.
     rng = np.random.default_rng(style.dither_seed)
-    blotch_px = max(payload["blotch_m"] / mpp, 6.0)
+    blotch_px = max(layers.blotch_m / mpp, 6.0)
     for weight, (sc, strength) in zip(
         _crossfade(style.wood_texture, len(style.wood_tex_scales)),
         zip(style.wood_tex_scales, style.wood_tex_strengths, strict=True),
@@ -3725,7 +3802,7 @@ def paint(
         dens = np.clip((field_n - 0.40) * 1.7, 0, 1) * wood_mask * strength * weight
         trimmed.append((blur(dens, 2.0), rgb(style.pigments["wood"]), transp("wood")))
 
-    dab_px = max(payload["dab_spacing_m"] / mpp, 26.0)
+    dab_px = max(layers.dab_spacing_m / mpp, 26.0)
     for weight, (spacing, strength) in zip(
         _crossfade(style.wood_dabs, len(style.dab_spacings)),
         zip(style.dab_spacings, style.dab_strengths, strict=True),
@@ -3771,10 +3848,10 @@ def paint(
                 transp("water"),
             )
         )
-    if style.relief and payload.get("elev_grid"):
+    if style.relief and layers.elevation is not None:
         trimmed.append(
             (
-                relief_density(payload["elev_grid"], plate, sheet),
+                relief_density(layers.elevation, plate, sheet),
                 rgb(style.pigments["relief"]),
                 transp("relief"),
             )
@@ -3798,12 +3875,12 @@ def paint(
 
     # ---- the ink. Roads and watercourses are painted with the same machinery
     # as the wash: no vector stroke is drawn over the top.
-    br = plate_brushes(style, scale, payload.get("wet_px", {}))
+    br = plate_brushes(style, scale, dict(layers.wet_px))
     ink_rng = np.random.default_rng(style.ink_seed)
     untrimmed: list[Layer] = []
 
-    def lines_of(d: str) -> list[np.ndarray]:
-        return [plate.px(r) for r in parse_d(d) if len(r) > 1]
+    def lines_of(line: Line) -> list[np.ndarray]:
+        return [plate.px(r) for r in _lines((line,))]
 
     # Every watercourse lands in the one pad and is read back with the major
     # river's brush, so the reservoir and the break texture are collected
@@ -3818,10 +3895,10 @@ def paint(
     # and the break texture of the water layer are what they always were.
     wide: dict[tuple[str, float], Brush] = {}
     profiles: list[np.ndarray | None] = []
-    for r in payload.get("rivers", []):
-        cls = r.get("c", "minor")
+    for r in layers.rivers:
+        cls = r.cls
         brush, _hex = br.get(cls, br["minor"])
-        px = float(r.get("w") or 0.0) * style.river_mult
+        px = float(r.width_px or 0.0) * style.river_mult
         if px > brush.width / scale:
             key = (cls, round(px, 2))
             if key not in wide:
@@ -3831,31 +3908,29 @@ def paint(
         # an estuary narrows to a channel over its own length instead of being
         # drawn at one width throughout. The brush is built at the widest and
         # the profile only ever takes ink away.
-        prof = r.get("wp")
-        for line in lines_of(r["d"]):
+        prof = r.profile
+        for line in lines_of(r.line):
             water_lines.append((brush, line))
             profiles.append(np.asarray(prof, F32) if prof else None)
     water_pad.lay(water_lines, ink_rng, profiles=profiles)
     # The coast is chained rather than profiled: it is one line round the land,
     # cut into ways, and it has no width of its own to vary.
-    coast_lines = [
-        (br["coast"][0], line) for d in payload.get("coastline", []) for line in lines_of(d)
-    ]
+    coast_lines = [(br["coast"][0], line) for coast in layers.coastline for line in lines_of(coast)]
     if coast_lines:
         water_pad.lay(coast_lines, ink_rng)
     if water_pad.any():
         untrimmed.append((water_pad.read(br["major"][0], sheet), rgb(br["major"][1])))
     for key in ("road_major", "lane", "track"):
-        if key != "road_major" and not payload.get("minor_roads", True):
+        if key != "road_major" and not layers.minor_roads:
             continue
         band = {"road_major": "major", "lane": "minor", "track": "path"}[key]
         pad = InkPad((rh, rw), br[key][0], style)
         pad.lay(
             [
                 (br[key][0], line)
-                for r in payload.get("roads", [])
-                if r.get("b") == band
-                for line in lines_of(r["d"])
+                for r in layers.roads
+                if r.band == band
+                for line in lines_of(r.line)
             ],
             ink_rng,
         )
@@ -3864,14 +3939,14 @@ def paint(
     t_ink = time.perf_counter()
 
     # ---- the ribbon, and the card
-    route_mask = stroke_mask([payload["route"]], plate, 2.0)
+    route_mask = stroke_mask([list(layers.route)], plate, 2.0)
     d_route = edt(route_mask)
     tear_px = max(rw * style.ribbon_tear_frac, style.ribbon_tear_floor_px)
     land = None
     if style.coast_hard_mask and sea_cov.any():
         # The land side of the surveyed coast, antialiased by one pixel, no more.
         land = np.clip(1.0 - blur(sea_cov, 0.8) * 1.6, 0.0, 1.0)
-    r_px = payload["ribbon_m"] / mpp
+    r_px = layers.ribbon_m / mpp
     alpha, rim = ribbon_alpha(d_route, r_px, sheet, style.ribbon_fill, tear_px, land)
 
     # The stack is laid over white, because the page multiplies the wash plate
@@ -3921,7 +3996,7 @@ def paint(
         )
         pen_pad = InkPad((rh, rw), pen_brush, style)
         pen_pad.lay(
-            [(pen_brush, plate.px(payload["route"]))], np.random.default_rng(style.ink_seed + 1)
+            [(pen_brush, plate.px(list(layers.route)))], np.random.default_rng(style.ink_seed + 1)
         )
         path = out_dir / "pen.webp"
         sizes["pen"] = save_alpha(
@@ -3942,35 +4017,35 @@ def paint(
 
     manifest = {
         "id": aid,
-        "hash": paint_hash(payload, style),
+        "hash": paint_hash(basemap, style),
         # The first track point in the painter's own metre space, so a caller
         # whose projection took a different origin can pin the two together.
-        "route0": payload["route"][0],
+        "route0": list(layers.route[0]),
         "files": files,
         "sizes": sizes,
         "bytes": sum(sizes.values()),
-        "card": payload["card"],
-        "display": payload["display"],
-        "render": payload["render"],
-        "mpp": payload["mpp"],
-        "mpp_display": payload["mpp_display"],
-        "ribbon_m": payload["ribbon_m"],
-        "span_m": payload["span_m"],
-        "places": payload.get("places", []),
-        "candidates": payload.get("candidates", []),
+        "card": list(card.box),
+        "display": list(card.display),
+        "render": list(card.render),
+        "mpp": card.mpp,
+        "mpp_display": card.mpp_display,
+        "ribbon_m": layers.ribbon_m,
+        "span_m": basemap.span_m,
+        "places": list(basemap.places),
+        "candidates": list(basemap.candidates),
         # The named lines a label can be set along, which are in the geo payload
         # and nowhere else once this returns.
-        "label_geom": label_geom(payload, style.label_geom_tol_px),
+        "label_geom": label_geom(basemap, style.label_geom_tol_px),
         # How wide each class of watercourse was actually painted, in display
         # pixels, so a river's name can be set clear of its own water rather
         # than in it. The label layer has no other way to know: it sees the
         # centreline and not the brush that was run along it.
-        "wet_px": payload.get("wet_px", {}),
+        "wet_px": dict(layers.wet_px),
         # The paper the ink was gated on, so a plate painted later gates on the
         # same sheet rather than on a second one that only looks similar.
-        "gran_px": round(max(payload["gran_m"] / mpp, 3.0), 3),
+        "gran_px": round(max(layers.gran_m / mpp, 3.0), 3),
         "labels_hash": labels_hash(labels, style),
-        "sources": payload.get("sources", []),
+        "sources": list(basemap.sources),
         "dark": {"w": gw, "h": gh, "v": dark},
         "wood_px": int(wood_mask.sum()),
         "water_px": int(water.sum()),
@@ -4033,18 +4108,18 @@ def paint_activity(
     from pyntpot._port import geo
 
     style = style or PaintStyle()
-    payload = geo.journal_layers(
+    basemap = geo.journal_layers(
         key, lat, lng, style, route=route, cache_dir=cache_dir, places=places
     )
-    if payload is None:
+    if basemap is None:
         return None
     out_dir = plates_dir(key, cache_dir)
-    want = paint_hash(payload, style)
+    want = paint_hash(basemap, style)
     existing = load_plates(key, cache_dir)
     if existing and existing.get("hash") == want and not force:
         existing["repainted"] = False
         return existing
-    manifest = paint(payload, style, out_dir)
+    manifest = paint(basemap, style, out_dir, key=key)
     manifest["repainted"] = True
     return manifest
 

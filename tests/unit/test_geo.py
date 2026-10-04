@@ -16,6 +16,7 @@ import pytest
 from pyntpot._port import geo
 from pyntpot.ink.chains import join_strokes, join_ways
 from pyntpot.ink.polyline import clip_line
+from pyntpot.maps.projection import track_projection
 
 from support.paths import FIXTURE_DIR, KEY
 
@@ -61,7 +62,7 @@ def _cache(tmp_path: Path, elements: list[dict]) -> Path:
 
 def test_projection_round_trips_through_its_inverse():
     """Inverting the projection gets the coordinate back."""
-    proj, _ = geo.track_projection(LATS, LNGS)
+    proj, _ = track_projection(LATS, LNGS)
     x, y = proj(51.2270, -3.8200)
     lat, lng = proj.inverse(x, y)
     assert abs(lat - 51.2270) < 1e-9
@@ -570,7 +571,7 @@ def test_the_sea_is_traced_where_the_grid_is_below_the_waterline():
     grid = [[-5.0 if col < 4 else 40.0 for col in range(10)] for _ in range(10)]
     lats = [51.20 + 2e-3 * i for i in range(10)]
     lons = [-3.87 + 2e-3 * i for i in range(10)]
-    proj, _ = geo.track_projection([51.21, 51.22], [-3.86, -3.85])
+    proj, _ = track_projection([51.21, 51.22], [-3.86, -3.85])
     water, islands = geo.sea_rings(grid, lats, lons, proj)
     assert water and not islands
     assert geo.rings_path(water).startswith("M")
@@ -581,7 +582,7 @@ def test_dry_ground_has_no_sea():
     grid = [[100.0] * 6 for _ in range(6)]
     lats = [51.225 + 2e-3 * i for i in range(6)]
     lons = [-3.840 + 2e-3 * i for i in range(6)]
-    proj, _ = geo.track_projection(
+    proj, _ = track_projection(
         [
             51.225,
             51.235,
@@ -611,7 +612,7 @@ def test_hachures_leave_the_track_alone():
     grid = [[float(col * 30) for col in range(20)] for _ in range(20)]
     lats = [51.225 + 4e-4 * i for i in range(20)]
     lons = [-3.840 + 0.0006 * i for i in range(20)]
-    proj, pts = geo.track_projection(LATS, LNGS)
+    proj, pts = track_projection(LATS, LNGS)
     field = geo.Field(grid, lats, lons, proj)
     index = geo.TrackIndex(pts)
     clip = (
@@ -647,7 +648,7 @@ def test_shade_bands_come_back_darkest_and_lightest_apart():
     ]
     lats = [51.225 + 4e-4 * i for i in range(12)]
     lons = [-3.840 + 0.0006 * i for i in range(12)]
-    proj, _ = geo.track_projection(LATS, LNGS)
+    proj, _ = track_projection(LATS, LNGS)
     bands = geo.shade_bands(grid, lats, lons, proj, 40.0, 40.0, levels=4)
     assert bands
     assert {band["s"] for band in bands} <= {-1, 1}
@@ -670,7 +671,7 @@ def test_marching_squares_finds_the_level_it_was_asked_for():
 
 def test_the_track_index_measures_what_it_should():
     """A point on the track is at zero; one a field away is not."""
-    proj, pts = geo.track_projection(LATS, LNGS)
+    proj, pts = track_projection(LATS, LNGS)
     index = geo.TrackIndex(pts)
     assert index.distance(*pts[10]) == pytest.approx(0.0, abs=0.5)
     assert index.distance(pts[10][0], pts[10][1] + 500.0, cap_m=900.0) > 400.0
@@ -678,7 +679,7 @@ def test_the_track_index_measures_what_it_should():
 
 def test_interaction_needs_a_run_not_a_moment():
     """Passing within 60 m for one step is not an interaction; running alongside is."""
-    proj, pts = geo.track_projection(LATS, LNGS)
+    proj, pts = track_projection(LATS, LNGS)
     index = geo.TrackIndex(pts)
     alongside = [(x, y + 30.0) for x, y in pts[5:40]]
     glancing = [(pts[10][0], pts[10][1] + 40.0), (pts[10][0] + 10.0, pts[10][1] + 900.0)]
@@ -688,7 +689,7 @@ def test_interaction_needs_a_run_not_a_moment():
 
 def test_a_crossing_counts_even_though_it_is_brief():
     """A lane the track crossed is part of the session however short the contact."""
-    proj, pts = geo.track_projection(LATS, LNGS)
+    proj, pts = track_projection(LATS, LNGS)
     index = geo.TrackIndex(pts)
     x, y = pts[20]
     crossing = [(x, y - 400.0), (x, y + 400.0)]
@@ -697,7 +698,7 @@ def test_a_crossing_counts_even_though_it_is_brief():
 
 def test_wave_strokes_only_appear_over_water():
     """The hand-drawn sea is drawn where the grid says there is sea, and nowhere else."""
-    proj, _ = geo.track_projection(LATS, LNGS)
+    proj, _ = track_projection(LATS, LNGS)
     dry = [[50.0] * 8 for _ in range(8)]
     lats = [51.225 + 1e-3 * i for i in range(8)]
     lons = [-3.840 + 1e-3 * i for i in range(8)]
@@ -717,7 +718,7 @@ def test_the_sun_never_lights_a_flat_plain():
 
 def test_distance_is_capped_so_a_far_feature_costs_nothing():
     """The index stops looking once a feature is clearly not near the track."""
-    proj, pts = geo.track_projection(LATS, LNGS)
+    proj, pts = track_projection(LATS, LNGS)
     index = geo.TrackIndex(pts)
     assert index.distance(pts[0][0], pts[0][1] + 100000.0, cap_m=250.0) == 250.0
 

@@ -26,7 +26,7 @@ import time
 import zlib
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyntpot._port.style import coerce_like
 from pyntpot.ink.chains import join_chains, join_strokes, join_ways
@@ -39,6 +39,10 @@ from pyntpot.ink.polyline import (
     simplify,
     smooth,
 )
+
+if TYPE_CHECKING:
+    from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
+    from pyntpot.maps.projection import Projection
 
 log = logging.getLogger(__name__)
 
@@ -175,63 +179,7 @@ class GeoOptions:
         return out
 
 
-# --------------------------------------------------------------------------- projection
-
-
-@dataclass
-class Projection:
-    """The route chart's local equirectangular projection.
-
-    Mirrors `normalise.project_route`: x scales by the cosine of the mean
-    latitude of the track, the origin is the south-west corner of the projected
-    track, and y grows north.
-    """
-
-    lat0: float
-    lat_ref: float
-    lng_ref: float
-    x0: float = 0.0
-    y0: float = 0.0
-    ky: float = 110540.0
-
-    @property
-    def kx(self) -> float:
-        """Metres per degree of longitude at the track's mean latitude."""
-        return 111320.0 * math.cos(math.radians(self.lat0))
-
-    def __call__(self, lat: float, lng: float) -> Pt:
-        """Project one coordinate into route metre space."""
-        return ((lng - self.lng_ref) * self.kx - self.x0, (lat - self.lat_ref) * self.ky - self.y0)
-
-    def inverse(self, x: float, y: float) -> tuple[float, float]:
-        """Latitude and longitude for a point in route metre space."""
-        return ((y + self.y0) / self.ky + self.lat_ref, (x + self.x0) / self.kx + self.lng_ref)
-
-
-def track_projection(
-    lat: list[float], lng: list[float], route: list[Pt] | None = None
-) -> tuple[Projection, list[Pt]]:
-    """The projection for one track, and the track projected through it.
-
-    Args:
-        lat: Latitudes in degrees, in recorded order.
-        lng: Longitudes in degrees, same length.
-        route: The caller's already-projected track. When it is given the origin
-            is taken from its first point rather than from the bounding box, so
-            both agree even if the caller simplified before taking its own.
-
-    Returns:
-        The projection, and the track in metres.
-    """
-    proj = Projection(lat0=sum(lat) / len(lat), lat_ref=lat[0], lng_ref=lng[0])
-    raw = [proj(a, b) for a, b in zip(lat, lng, strict=True)]
-    if route:
-        proj.x0 = raw[0][0] - route[0][0]
-        proj.y0 = raw[0][1] - route[0][1]
-    else:
-        proj.x0 = min(x for x, _ in raw)
-        proj.y0 = min(y for _, y in raw)
-    return proj, [(x - proj.x0, y - proj.y0) for x, y in raw]
+# --------------------------------------------------------------------------- bounding box
 
 
 def bounding_box(
@@ -1772,6 +1720,8 @@ def basemap(
         Layers in route metre space, or None when nothing is cached for this
         box, which is the renderer's signal to draw the bare track and say so.
     """
+    from pyntpot.maps.projection import track_projection
+
     options = options or GeoOptions()
     osm_file = overpass_path(key, cache_dir)
     elev_file = elevation_path(key, cache_dir)
@@ -3135,9 +3085,40 @@ def journal_geometry(route: list[Pt], style: Any) -> dict[str, Any]:
     }
 
 
-def _drawn(piece: list[Pt], tol: float) -> str:
+def _quantised(points: list[Pt]) -> Line:
+    """A polyline at the one decimal its path data has always carried.
+
+    The same rounding `path_d` writes and a parse of it reads back, so a line
+    taken from here paints exactly as one read back from its path data.
+    """
+    return tuple((float(f"{x:.1f}"), float(f"{y:.1f}")) for x, y in points)
+
+
+def _drawn(piece: list[Pt], tol: float) -> Line:
     """Simplify, then Chaikin: a line someone drew, not a line surveyed."""
-    return path_d(smooth(simplify(piece, tol), passes=2))
+    return _quantised(smooth(simplify(piece, tol), passes=2))
+
+
+def _elevation_patch(key: str, proj: Projection, cache_dir: Path) -> ElevationPatch | None:
+    """The cached elevation grid placed in card metres, or None when none is cached."""
+    from pyntpot.maps.basemap import ElevationPatch
+
+    elev = elevation_path(key, cache_dir)
+    if not elev.exists():
+        return None
+    grid = json.loads(elev.read_text())
+    gx0, gy0 = proj(grid["lats"][0], grid["lons"][0])
+    gx1, gy1 = proj(grid["lats"][-1], grid["lons"][-1])
+    return ElevationPatch(
+        n=grid["n"],
+        x0=round(gx0, 1),
+        y0=round(gy0, 1),
+        x1=round(gx1, 1),
+        y1=round(gy1, 1),
+        values=tuple(round(float(v), 1) for v in grid["elev"]),
+        low=round(min(grid["elev"])),
+        high=round(max(grid["elev"])),
+    )
 
 
 def journal_layers(
@@ -3149,7 +3130,7 @@ def journal_layers(
     *,
     cache_dir: Path,
     places: list[dict[str, Any]],
-) -> dict[str, Any] | None:
+) -> Basemap | None:
     """Everything the painter needs for one activity, from the cache.
 
     The land cover, the coast and the sea come from the two cached Overpass
@@ -3166,8 +3147,12 @@ def journal_layers(
         places: User-supplied places of interest.
 
     Returns:
-        The layers in metres, or None when nothing is cached for this box.
+        The basemap in card metres, or None when nothing is cached for this box.
     """
+    from pyntpot.maps.basemap import Basemap, Layers, River, Road
+    from pyntpot.maps.card import Card
+    from pyntpot.maps.projection import track_projection
+
     if not overpass_path(key, cache_dir).exists():
         return None
     proj, pts = track_projection(lat, lng, route)
@@ -3233,10 +3218,20 @@ def journal_layers(
     for road_key, lines in pieces.items():
         band = road_key[0]
         floor = style.brush_width_px.get(band_width[band], 2.0) * geometry["mpp_display"]
+        info = meta[road_key]
         for chain in join_strokes(lines, tol=max(eps, 1.0)):
             if length(chain) < floor:
                 continue
-            roads.append({**meta[road_key], "d": _drawn(chain, eps)})
+            roads.append(
+                Road(
+                    line=_drawn(chain, eps),
+                    cls=info["c"],
+                    band=info["b"],
+                    highway=info["k"],
+                    name=info["n"],
+                    ref=info["r"],
+                )
+            )
 
     lakes = [
         simplify(clip_ring(r, clip), eps)
@@ -3267,7 +3262,7 @@ def journal_layers(
             if name in widths:
                 # Re-centred in its own channel, and drawn at the width it
                 # measures at each point rather than at one width throughout.
-                pts, along = channel(chain, lakes)
+                centred, along = channel(chain, lakes)
                 profile = [
                     painted_width_px(floor, w or 0.0, geometry["mpp_display"]) for w in along
                 ]
@@ -3280,41 +3275,48 @@ def journal_layers(
                 # name set on the water could be set anywhere along it.
                 entry["wn"] = round(sorted(profile)[len(profile) // 2], 2)
                 entry["wp"] = [round(v / widest, 3) for v in profile]
-                chain = pts
-            entry["d"] = _drawn(chain, eps * 0.6)
-            rivers.append(entry)
+                chain = centred
+            rivers.append(
+                River(
+                    line=_drawn(chain, eps * 0.6),
+                    cls=entry["c"],
+                    name=entry["n"],
+                    width_px=entry["w"],
+                    name_width_px=entry["wn"],
+                    profile=tuple(entry.get("wp", ())),
+                )
+            )
 
-    payload: dict[str, Any] = {
-        "id": key,
-        **geometry,
-        "route": [[round(x, 1), round(y, 1)] for x, y in track],
-        "cover": {k: [path_d(r, close=True) for r in v] for k, v in cover.items()},
-        "cover_order": [c for c in COVER_ORDER if c in cover],
-        "lakes": [path_d(r, close=True) for r in lakes if len(r) > 3],
-        "sea": [path_d(r, close=True) for r in sea],
-        "coastline": [path_d(c) for c in coast],
-        "roads": roads,
-        "rivers": rivers,
-        "places": base.get("places", []),
-        "candidates": journal_candidates(base, proj),
-        "sources": base.get("sources", []),
-    }
-    elev = elevation_path(key, cache_dir)
-    if elev.exists():
-        grid = json.loads(elev.read_text())
-        gx0, gy0 = proj(grid["lats"][0], grid["lons"][0])
-        gx1, gy1 = proj(grid["lats"][-1], grid["lons"][-1])
-        payload["elev_grid"] = {
-            "n": grid["n"],
-            "x0": round(gx0, 1),
-            "y0": round(gy0, 1),
-            "x1": round(gx1, 1),
-            "y1": round(gy1, 1),
-            "v": [round(float(v), 1) for v in grid["elev"]],
-            "min": round(min(grid["elev"])),
-            "max": round(max(grid["elev"])),
-        }
-    return payload
+    layers = Layers(
+        route=tuple((round(x, 1), round(y, 1)) for x, y in track),
+        cover={k: tuple(_quantised(r) for r in v) for k, v in cover.items()},
+        cover_order=tuple(c for c in COVER_ORDER if c in cover),
+        lakes=tuple(_quantised(r) for r in lakes if len(r) > 3),
+        sea=tuple(_quantised(r) for r in sea),
+        coastline=tuple(_quantised(c) for c in coast),
+        roads=tuple(roads),
+        rivers=tuple(rivers),
+        elevation=_elevation_patch(key, proj, cache_dir),
+        ribbon_m=geometry["ribbon_m"],
+        wet_px=geometry["wet_px"],
+        minor_roads=geometry["minor_roads"],
+        blotch_m=geometry["blotch_m"],
+        dab_spacing_m=geometry["dab_spacing_m"],
+        gran_m=geometry["gran_m"],
+    )
+    bx0, by0, bx1, by1 = geometry["bounds"]
+    return Basemap(
+        projection=proj,
+        card=Card.from_manifest(geometry),
+        layers=layers,
+        bounds=(bx0, by0, bx1, by1),
+        span_m=geometry["span_m"],
+        ribbon_fitted_m=geometry["ribbon_fitted_m"],
+        track=tuple(pts),
+        places=tuple(base.get("places", [])),
+        candidates=tuple(journal_candidates(base, proj)),
+        sources=tuple(base.get("sources", [])),
+    )
 
 
 def parse_path(d: str) -> list[list[Pt]]:
@@ -3892,6 +3894,8 @@ def landmark_export(
         `route` (the session's totals and the settlements it passed, in order),
         `climbs` (each grounded in that route) and `candidates`.
     """
+    from pyntpot.maps.projection import track_projection
+
     proj, pts = track_projection(lat, lng, route)
     dist = cumulative(lat, lng)
     found = climbs(lat, lng, ele or [])

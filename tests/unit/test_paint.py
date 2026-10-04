@@ -15,6 +15,9 @@ import pytest
 from pyntpot._port import geo, paint
 from pyntpot.ink.chains import chain_lines
 from pyntpot.ink.polyline import deform_line, foot_on, length_indexed, meet, simplify
+from pyntpot.maps.basemap import Basemap, Layers, Line, River, Road
+from pyntpot.maps.card import Card
+from pyntpot.maps.projection import Projection, track_projection
 
 from support.paths import FIXTURE_DIR, KEY
 
@@ -32,33 +35,53 @@ def tiny_style(**over: object) -> paint.PaintStyle:
     return paint.PaintStyle(display_px=80, supersample=2, **over)
 
 
-def square(cx: float, cy: float, r: float) -> str:
-    """One closed square ring as path data, in metres."""
+def square(cx: float, cy: float, r: float) -> Line:
+    """One closed square ring at a tenth of a metre, in metres."""
     pts = [(cx - r, cy - r), (cx + r, cy - r), (cx + r, cy + r), (cx - r, cy + r)]
-    return geo.path_d(pts, close=True)
+    return tuple((round(x, 1), round(y, 1)) for x, y in pts)
 
 
-def tiny_payload(**over: object) -> dict:
-    """A whole payload for a small box, with nothing in it but the route."""
-    style = over.pop("style", None) or tiny_style()
+def with_fields(basemap: Basemap, **over: object) -> Basemap:
+    """The basemap with any of its own or its layers' fields replaced."""
+    names = {f.name for f in dataclasses.fields(Layers)}
+    layers = dataclasses.replace(basemap.layers, **{k: v for k, v in over.items() if k in names})
+    rest = {k: v for k, v in over.items() if k not in names}
+    return dataclasses.replace(basemap, layers=layers, **rest)
+
+
+def tiny_basemap(style: paint.PaintStyle | None = None, **over: object) -> Basemap:
+    """A whole basemap for a small box, with nothing in it but the route."""
+    style = style or tiny_style()
     route = [(float(x), 40.0 + 30.0 * math.sin(x / 260.0)) for x in range(0, 1400, 40)]
-    payload = {
-        "id": "iTINY",
-        **geo.journal_geometry(route, style),
-        "route": [[round(x, 1), round(y, 1)] for x, y in route],
-        "cover": {},
-        "cover_order": [],
-        "lakes": [],
-        "sea": [],
-        "coastline": [],
-        "roads": [],
-        "rivers": [],
-        "places": [],
-        "candidates": [],
-        "sources": [],
-    }
-    payload.update(over)
-    return payload
+    geometry = geo.journal_geometry(route, style)
+    layers = Layers(
+        route=tuple((round(x, 1), round(y, 1)) for x, y in route),
+        cover={},
+        cover_order=(),
+        lakes=(),
+        sea=(),
+        coastline=(),
+        roads=(),
+        rivers=(),
+        elevation=None,
+        ribbon_m=geometry["ribbon_m"],
+        wet_px=geometry["wet_px"],
+        minor_roads=geometry["minor_roads"],
+        blotch_m=geometry["blotch_m"],
+        dab_spacing_m=geometry["dab_spacing_m"],
+        gran_m=geometry["gran_m"],
+    )
+    bx0, by0, bx1, by1 = geometry["bounds"]
+    basemap = Basemap(
+        projection=track_projection(LATS, LNGS)[0],
+        card=Card.from_manifest(geometry),
+        layers=layers,
+        bounds=(bx0, by0, bx1, by1),
+        span_m=geometry["span_m"],
+        ribbon_fitted_m=geometry["ribbon_fitted_m"],
+        track=tuple(route),
+    )
+    return with_fields(basemap, **over)
 
 
 # --------------------------------------------------------------------------- painter
@@ -67,7 +90,7 @@ def tiny_payload(**over: object) -> dict:
 def test_a_tiny_box_paints_a_card_a_wash_and_a_manifest(tmp_path):
     """The painter writes two plates plus the pen, and says what it did."""
     style = tiny_style()
-    manifest = paint.paint(tiny_payload(style=style), style, tmp_path)
+    manifest = paint.paint(tiny_basemap(style=style), style, tmp_path, key="iTINY")
     assert set(manifest["files"]) == {"paper", "wash", "pen"}
     for name in manifest["files"].values():
         assert (tmp_path / name).stat().st_size > 0
@@ -83,7 +106,7 @@ def test_the_plates_are_webp_the_size_they_were_painted(tmp_path):
     from PIL import Image
 
     style = tiny_style()
-    manifest = paint.paint(tiny_payload(style=style), style, tmp_path)
+    manifest = paint.paint(tiny_basemap(style=style), style, tmp_path, key="iTINY")
     with Image.open(tmp_path / manifest["files"]["wash"]) as img:
         assert img.format == "WEBP"
         assert img.size == tuple(manifest["render"])
@@ -94,14 +117,16 @@ def test_the_plates_are_webp_the_size_they_were_painted(tmp_path):
 def test_a_repaint_is_only_needed_when_the_style_or_the_data_changes(tmp_path):
     """The hash is what stops a render ever having to paint."""
     style = tiny_style()
-    payload = tiny_payload(style=style)
-    first = paint.paint_hash(payload, style)
-    assert paint.paint_hash(tiny_payload(style=style), style) == first
-    assert paint.paint_hash(payload, tiny_style(ribbon_mult=1.25)) != first
-    moved = tiny_payload(style=style)
-    moved["rivers"] = [{"c": "minor", "n": "", "d": "M0,0 L100,100"}]
+    basemap = tiny_basemap(style=style)
+    first = paint.paint_hash(basemap, style)
+    assert paint.paint_hash(tiny_basemap(style=style), style) == first
+    assert paint.paint_hash(basemap, tiny_style(ribbon_mult=1.25)) != first
+    moved = with_fields(
+        tiny_basemap(style=style),
+        rivers=(River(((0.0, 0.0), (100.0, 100.0)), "minor", "", 0.0, 0.0),),
+    )
     assert paint.paint_hash(moved, style) != first
-    manifest = paint.paint(payload, style, paint.plates_dir("iTINY", tmp_path))
+    manifest = paint.paint(basemap, style, paint.plates_dir("iTINY", tmp_path), key="iTINY")
     assert paint.load_plates("iTINY", tmp_path)["hash"] == manifest["hash"]
 
 
@@ -210,17 +235,17 @@ def test_two_strokes_crossing_never_double():
 
 #: The smoke box: a route, three roads and two watercourses, so every brush the
 #: plate carries is stamped. Small enough to paint in a fraction of a second.
-SMOKE_ROADS = [
-    {"b": "major", "d": "M0,200 L400,180 L900,240 L1390,200"},
-    {"b": "minor", "d": "M40,60 L600,140 L1340,90"},
-    {"b": "path", "d": "M30,340 L700,300 L1360,360"},
-]
+SMOKE_ROADS = (
+    Road(((0.0, 200.0), (400.0, 180.0), (900.0, 240.0), (1390.0, 200.0)), "", "major", "", "", ""),
+    Road(((40.0, 60.0), (600.0, 140.0), (1340.0, 90.0)), "", "minor", "", "", ""),
+    Road(((30.0, 340.0), (700.0, 300.0), (1360.0, 360.0)), "", "path", "", "", ""),
+)
 
 
-SMOKE_RIVERS = [
-    {"c": "major", "n": "Lyn", "d": "M20,10 L400,120 L900,60 L1380,150"},
-    {"c": "minor", "n": "", "d": "M60,300 L500,250 L1100,320"},
-]
+SMOKE_RIVERS = (
+    River(((20.0, 10.0), (400.0, 120.0), (900.0, 60.0), (1380.0, 150.0)), "major", "Lyn", 0.0, 0.0),
+    River(((60.0, 300.0), (500.0, 250.0), (1100.0, 320.0)), "minor", "", 0.0, 0.0),
+)
 
 
 #: What HEAD's painter writes for that box at 120 display pixels. Every phase 1
@@ -244,12 +269,10 @@ SMOKE_SHA = {
 }
 
 
-def smoke_box(**over: object) -> tuple[paint.PaintStyle, dict]:
-    """The smoke box's style and payload, with any style fields moved."""
+def smoke_box(**over: object) -> tuple[paint.PaintStyle, Basemap]:
+    """The smoke box's style and basemap, with any style fields moved."""
     style = paint.PaintStyle(display_px=120, supersample=2, **over)
-    payload = tiny_payload(style=style, roads=SMOKE_ROADS, rivers=SMOKE_RIVERS)
-    payload["id"] = "iSMOKE"
-    return style, payload
+    return style, tiny_basemap(style=style, roads=SMOKE_ROADS, rivers=SMOKE_RIVERS)
 
 
 def long_stroke(
@@ -287,8 +310,8 @@ def test_the_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
     """The whole point of the flags: the same seed still writes the same bytes."""
     import hashlib
 
-    style, payload = smoke_box()
-    manifest = paint.paint(payload, style, tmp_path)
+    style, basemap = smoke_box()
+    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE")
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest["files"].items()
@@ -300,8 +323,8 @@ def test_every_flag_on_together_still_paints_the_box(tmp_path):
     """And with all three on it is a different plate, not a broken one."""
     import hashlib
 
-    style, payload = smoke_box(ink_starve=True, dry_directional=True, pen_starve=True)
-    manifest = paint.paint(payload, style, tmp_path)
+    style, basemap = smoke_box(ink_starve=True, dry_directional=True, pen_starve=True)
+    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE")
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest["files"].items()
@@ -647,8 +670,8 @@ def test_the_phase_2_brush_flags_on_together_still_paint_the_box(tmp_path):
     """All four on is a different plate, not a broken one, and not the card."""
     import hashlib
 
-    style, payload = smoke_box(brush_organic=True, ink_joins=True, stroke_smooth=True, ink_ss=2)
-    manifest = paint.paint(payload, style, tmp_path)
+    style, basemap = smoke_box(brush_organic=True, ink_joins=True, stroke_smooth=True, ink_ss=2)
+    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE")
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest["files"].items()
@@ -858,15 +881,18 @@ def test_the_coast_is_a_hard_edge_the_ribbon_never_crosses():
 def test_land_cover_is_one_class_per_pixel_with_the_wood_on_top(tmp_path):
     """Two pigments never stack: the later class in the order replaces the earlier."""
     style = tiny_style()
-    payload = tiny_payload(style=style)
-    cx0, cy0, cx1, cy1 = payload["card"]
+    basemap = tiny_basemap(style=style)
+    cx0, cy0, cx1, cy1 = basemap.card.box
     mid = ((cx0 + cx1) / 2, (cy0 + cy1) / 2)
-    payload["cover"] = {
-        "farmland": [square(mid[0], mid[1], 400)],
-        "wood": [square(mid[0], mid[1], 300)],
-    }
-    payload["cover_order"] = ["farmland", "wood"]
-    manifest = paint.paint(payload, style, tmp_path)
+    basemap = with_fields(
+        basemap,
+        cover={
+            "farmland": (square(mid[0], mid[1], 400),),
+            "wood": (square(mid[0], mid[1], 300),),
+        },
+        cover_order=("farmland", "wood"),
+    )
+    manifest = paint.paint(basemap, style, tmp_path, key="iTINY")
     from PIL import Image
 
     with Image.open(tmp_path / manifest["files"]["wash"]) as img:
@@ -894,14 +920,14 @@ def test_the_tag_lookup_takes_the_last_class_that_matches(tmp_path):
         ],
     }
     (tmp_path / "landcover-iTAGS.json").write_text(json.dumps({"elements": [way]}))
-    proj, _ = geo.track_projection(LATS, LNGS)
+    proj, _ = track_projection(LATS, LNGS)
     rings = geo.cover_rings("iTAGS", proj, (-9000.0, -9000.0, 9000.0, 9000.0), 2.0, tmp_path)
     assert list(rings) == ["wood"]
 
 
 def test_a_box_with_no_land_cover_cached_is_bare_paper(tmp_path):
     """Where nobody has drawn a field the ground stays paper, and that is honest."""
-    proj, _ = geo.track_projection(LATS, LNGS)
+    proj, _ = track_projection(LATS, LNGS)
     assert geo.cover_rings("iNONE", proj, (-100.0, -100.0, 100.0, 100.0), 2.0, tmp_path) == {}
 
 
@@ -967,16 +993,17 @@ def test_a_plaque_is_not_a_monument():
 def test_the_real_box_assembles_the_layers_the_painter_needs():
     """The Lynmouth box: land cover, roads by brush, and the fitted ribbon."""
     lat, lng = geo.read_gpx(FIXTURE_GPX)
-    payload = geo.journal_layers(
+    basemap = geo.journal_layers(
         KEY, lat, lng, paint.PaintStyle(), cache_dir=FIXTURE_DIR, places=[]
     )
-    assert payload is not None
-    assert payload["ribbon_m"] == 553
-    assert payload["display"] == [900, 728]
-    assert "wood" in payload["cover"]
-    assert payload["cover_order"][-1] == "wood"
-    assert {r["b"] for r in payload["roads"]} <= {"major", "minor", "path"}
-    assert payload["minor_roads"] is True
+    assert basemap is not None
+    layers = basemap.layers
+    assert layers.ribbon_m == 553
+    assert basemap.card.display == (900, 728)
+    assert "wood" in layers.cover
+    assert layers.cover_order[-1] == "wood"
+    assert {r.band for r in layers.roads} <= {"major", "minor", "path"}
+    assert layers.minor_roads is True
 
 
 def test_the_real_box_offers_candidates_and_no_climb_without_elevation():
@@ -1227,26 +1254,24 @@ def test_a_bloom_lifts_the_centre_and_deposits_it_at_the_front():
 #: a class to work on. Two blocks either side of the route, one of them the
 #: wood, in the box's own metres.
 COVER_BOX = {
-    "wood": ["M200,-140 L640,-140 L640,220 L200,220 Z"],
-    "farmland": ["M720,-140 L1320,-140 L1320,220 L720,220 Z"],
+    "wood": (((200.0, -140.0), (640.0, -140.0), (640.0, 220.0), (200.0, 220.0)),),
+    "farmland": (((720.0, -140.0), (1320.0, -140.0), (1320.0, 220.0), (720.0, 220.0)),),
 }
 
 
-def cover_box(**over: object) -> tuple[paint.PaintStyle, dict]:
+def cover_box(**over: object) -> tuple[paint.PaintStyle, Basemap]:
     """The smoke box with two land classes in it, and any style fields moved."""
-    style, payload = smoke_box(**over)
-    payload["cover"] = {k: list(v) for k, v in COVER_BOX.items()}
-    payload["cover_order"] = ["farmland", "wood"]
-    return style, payload
+    style, basemap = smoke_box(**over)
+    return style, with_fields(basemap, cover=dict(COVER_BOX), cover_order=("farmland", "wood"))
 
 
 def painted(tmp_path, **over: object) -> dict[str, str]:
     """The cover box's plates, as a digest a name."""
     import hashlib
 
-    style, payload = cover_box(**over)
+    style, basemap = cover_box(**over)
     out = tmp_path / ("on" if over else "off")
-    manifest = paint.paint(payload, style, out)
+    manifest = paint.paint(basemap, style, out, key="iSMOKE")
     return {
         name: hashlib.sha256((out / fn).read_bytes()).hexdigest()
         for name, fn in manifest["files"].items()
@@ -1265,8 +1290,8 @@ def test_the_wash_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
     """Three more fields on the style, and the same seed writes the same bytes."""
     import hashlib
 
-    style, payload = smoke_box()
-    manifest = paint.paint(payload, style, tmp_path)
+    style, basemap = smoke_box()
+    manifest = paint.paint(basemap, style, tmp_path, key="iSMOKE")
     got = {
         name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
         for name, fn in manifest["files"].items()
@@ -1340,11 +1365,14 @@ def test_the_surveyed_coast_is_not_deformed(tmp_path):
     import hashlib
 
     def sea_only(**over: object) -> str:
-        style, payload = smoke_box(**over)
-        payload["sea"] = ["M-400,-400 L600,-400 L600,-160 L-400,-160 Z"]
-        payload["lakes"] = ["M800,20 L1000,20 L1000,120 L800,120 Z"]
+        style, basemap = smoke_box(**over)
+        basemap = with_fields(
+            basemap,
+            sea=(((-400.0, -400.0), (600.0, -400.0), (600.0, -160.0), (-400.0, -160.0)),),
+            lakes=(((800.0, 20.0), (1000.0, 20.0), (1000.0, 120.0), (800.0, 120.0)),),
+        )
         out = tmp_path / ("on" if over else "off")
-        manifest = paint.paint(payload, style, out)
+        manifest = paint.paint(basemap, style, out, key="iSMOKE")
         return hashlib.sha256((out / manifest["files"]["wash"]).read_bytes()).hexdigest()
 
     assert sea_only(silhouette_deform=True) == sea_only()
@@ -1541,33 +1569,17 @@ def test_the_manifest_keeps_the_lines_a_name_can_be_set_along(tmp_path):
     seconds and a network the renderer must not need, so the centrelines a
     curved baseline is taken from are kept beside the plates.
     """
-    payload = tiny_payload(
-        roads=[
-            {
-                "c": "major",
-                "b": "major",
-                "k": "primary",
-                "n": "A39",
-                "d": geo.path_d([(0.0, 0.0), (300.0, 4.0), (600.0, 0.0)]),
-            },
-            {
-                "c": "minor",
-                "b": "minor",
-                "k": "unclassified",
-                "n": "",
-                "d": geo.path_d([(0.0, 90.0), (600.0, 90.0)]),
-            },
-        ],
-        rivers=[
-            {
-                "c": "major",
-                "n": "River Lyn",
-                "d": geo.path_d([(0.0, 40.0), (400.0, 44.0), (800.0, 40.0)]),
-            }
-        ],
-        coastline=[geo.path_d([(0.0, 10.0), (900.0, 12.0)])],
+    basemap = tiny_basemap(
+        roads=(
+            Road(((0.0, 0.0), (300.0, 4.0), (600.0, 0.0)), "major", "major", "primary", "A39", ""),
+            Road(((0.0, 90.0), (600.0, 90.0)), "minor", "minor", "unclassified", "", ""),
+        ),
+        rivers=(
+            River(((0.0, 40.0), (400.0, 44.0), (800.0, 40.0)), "major", "River Lyn", 0.0, 0.0),
+        ),
+        coastline=(((0.0, 10.0), (900.0, 12.0)),),
     )
-    manifest = paint.paint(payload, tiny_style(), tmp_path)
+    manifest = paint.paint(basemap, tiny_style(), tmp_path, key="iTINY")
     geom = manifest["label_geom"]
     assert [r["n"] for r in geom["roads"]] == ["A39"]
     assert [r["n"] for r in geom["rivers"]] == ["River Lyn"]
@@ -1587,15 +1599,15 @@ def test_the_labels_hash_moves_when_the_picks_do(tmp_path):
     assert paint.labels_hash(one, style) == paint.labels_hash(list(one), style)
     assert paint.labels_hash(one, style) != paint.labels_hash(two, style)
     assert paint.labels_hash(one, style) != paint.labels_hash(one, tiny_style(label_seed=2))
-    manifest = paint.paint(tiny_payload(), style, tmp_path, labels=one)
+    manifest = paint.paint(tiny_basemap(), style, tmp_path, labels=one, key="iTINY")
     assert manifest["labels_hash"] == paint.labels_hash(one, style)
 
 
-def _labelled_card(tmp_path, **payload_over):
+def _labelled_card(tmp_path, **basemap_over):
     """A painted tiny box and the card that projects into it, for the label rules."""
     from pyntpot.maps.card import Card
 
-    manifest = paint.paint(tiny_payload(**payload_over), tiny_style(), tmp_path)
+    manifest = paint.paint(tiny_basemap(**basemap_over), tiny_style(), tmp_path, key="iTINY")
     card = Card.from_manifest(manifest)
     route = [(float(x), 40.0 + 30.0 * math.sin(x / 260.0)) for x in range(0, 1400, 40)]
     return manifest, card, [card.xy(x, y) for x, y in route]
@@ -1692,7 +1704,7 @@ def test_home_is_untouched_by_the_new_keys():
     assert entries[0]["name"] == "Home"
     marks = geo._place_marks(
         entries,
-        geo.Projection(
+        Projection(
             lat0=51.225,
             lat_ref=51.225,
             lng_ref=-3.840,
@@ -1808,7 +1820,7 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
     from pyntpot._port import labels as lb
     from pyntpot._port import paint
 
-    manifest = paint.paint(tiny_payload(), tiny_style(), tmp_path)
+    manifest = paint.paint(tiny_basemap(), tiny_style(), tmp_path, key="iTINY")
     manifest["dir"] = str(tmp_path)
     placed = [
         lb.Label(
@@ -1916,10 +1928,10 @@ def test_the_style_decides_how_the_plates_are_written(tmp_path):
 
     assert paint.PaintStyle().plate_lossless
 
-    style, payload = smoke_box(plate_lossless=False)
-    lossy = paint.paint(payload, style, tmp_path / "lossy")
-    style, payload = smoke_box()
-    clean = paint.paint(payload, style, tmp_path / "clean")
+    style, basemap = smoke_box(plate_lossless=False)
+    lossy = paint.paint(basemap, style, tmp_path / "lossy", key="iSMOKE")
+    style, basemap = smoke_box()
+    clean = paint.paint(basemap, style, tmp_path / "clean", key="iSMOKE")
     assert clean["bytes"] > lossy["bytes"]
 
     # The pen plate is alpha, which WebP already stored losslessly, so the flag
@@ -1929,7 +1941,7 @@ def test_the_style_decides_how_the_plates_are_written(tmp_path):
         assert clean["sizes"][name] > lossy["sizes"][name] * 4
 
     with Image.open(tmp_path / "clean" / clean["files"]["wash"]) as got:
-        assert got.size == tuple(payload["render"])
+        assert got.size == basemap.card.render
 
 
 # ------------------------------------------------------------------- the V5 rules
