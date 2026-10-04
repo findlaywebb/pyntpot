@@ -36,6 +36,8 @@ from pyntpot.ink.polyline import Pt, cumulative_length
 from pyntpot.maps import lettering_marks
 from pyntpot.maps.annotations import Annotations
 from pyntpot.maps.basemap import Basemap
+from pyntpot.maps.lettering.label import Label, Span
+from pyntpot.maps.lettering.spans import resolve_spans
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.style import Style
 
@@ -53,8 +55,8 @@ class Lettering:
         plate_path: The label plate, or `None` when nothing was stroked.
     """
 
-    labels: tuple[placer.Label, ...]
-    spans: tuple[placer.Span, ...]
+    labels: tuple[Label, ...]
+    spans: tuple[Span, ...]
     plate_path: Path | None
 
 
@@ -110,7 +112,7 @@ def _ground(
     strands: list[Pt],
     annotations: Annotations | None,
     style: Style,
-) -> list[placer.Label]:
+) -> list[Label]:
     """The settlements, rivers, road numbers and route markers, when the style letters the ground."""
     if not style.lettering.label_ground:
         return []
@@ -122,16 +124,14 @@ def _ground(
     )
 
 
-def _anchored(
-    basemap: Basemap, annotations: Annotations | None, style: Style
-) -> list[placer.Label]:
+def _anchored(basemap: Basemap, annotations: Annotations | None, style: Style) -> list[Label]:
     """The landmarks to letter, the caller's or the nearest named, anchored on the card."""
     cap = style.lettering.label_max
     wanted = placer.journal_picks(annotations, basemap, cap) if annotations is not None else []
     if not wanted:
         wanted = placer.journal_heuristic(basemap, cap)
     card = basemap.card
-    anchored: list[placer.Label] = []
+    anchored: list[Label] = []
     for entry in wanted:
         if "x" in entry:
             x, y = card.xy(entry["x"], entry["y"])
@@ -139,7 +139,7 @@ def _anchored(
             x, y = card.xy(*basemap.projection(entry["lat"], entry["lng"]))
         if 0 < x < card.w and 0 < y < card.h:
             anchored.append(
-                placer.Label(
+                Label(
                     name=entry["name"],
                     kind=entry.get("kind", ""),
                     why=entry.get("why", ""),
@@ -153,7 +153,7 @@ def _anchored(
 
 def _spans(
     plates: Plates, basemap: Basemap, annotations: Annotations | None, strands: list[Pt]
-) -> list[placer.Span]:
+) -> list[Span]:
     """The caller's span requests resolved onto the strands' arc length and the track's times."""
     times = list(basemap.track_time) if basemap.track_time is not None else []
-    return placer.resolve_spans(annotations, times, cumulative_length(strands, plates.card.scale))
+    return resolve_spans(annotations, times, cumulative_length(strands, plates.card.scale))

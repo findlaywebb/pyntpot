@@ -15,17 +15,31 @@ from pyntpot.ink.brush import BRUSH_COLOURS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.io import save_rgba
 from pyntpot.ink.noise import edt
-from pyntpot.ink.polyline import deform_line, foot_on, length, meet, simplify
+from pyntpot.ink.polyline import deform_line, length, meet
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.maps.basemap import Basemap, Layers, Line, River, Road
 from pyntpot.maps.card import Card
 from pyntpot.maps.card_geometry import journal_geometry
+from pyntpot.maps.lettering.label import (
+    TIER_LANDMARK,
+    TIER_RIVER,
+    TIER_ROAD,
+    TIER_SETTLEMENT,
+    TIER_SPAN,
+    WET_PX_DEFAULT,
+    WET_SPREAD,
+    WRAP_LEADING,
+    Label,
+    block_size,
+    feature_px,
+)
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.painter.ribbon import ribbon_alpha
 from pyntpot.maps.projection import track_projection
 from pyntpot.maps.style import Style
 from pyntpot.maps.style_groups import CardStyle, RibbonStyle
 
+from support.lettering import flat_dark, open_hand, sheet_card
 from support.measure import flat_measure
 
 #: The `Style` groups the painter and the lettering read, which `class_style` builds.
@@ -585,14 +599,6 @@ def test_an_open_line_deforms_without_moving_its_ends(tmp_path):
 # ----------------------------------------------------------------- letterforms
 
 
-def _open_hand():
-    """The default hand, as the style's face and seed open it."""
-    from pyntpot.letters.hand import Hand
-    from pyntpot.letters.style import FaceStyle, HandStyle
-
-    return Hand(FaceStyle(), HandStyle())
-
-
 def test_the_face_measures_a_name_instead_of_counting_its_characters():
     """The flat eight pixels a character is what every placement fault came from.
 
@@ -602,34 +608,11 @@ def test_the_face_measures_a_name_instead_of_counting_its_characters():
     """
     from pyntpot.letters.font import OutlineFont
 
-    hand = _open_hand()
+    hand = open_hand()
     assert isinstance(hand.font, OutlineFont)
     narrow = hand.measure("iiiiiiiiiii", 20.0)[0]
     wide = hand.measure("WWWWWWWWWWW", 20.0)[0]
     assert wide > narrow * 1.8, "the face is not measuring, it is counting"
-
-
-def test_a_name_is_never_set_along_a_line_that_turns_too_far():
-    """Curved baselines for linear things, and only where they stay readable.
-
-    Total turning across the run is the test that matters, not curvature at a
-    point: a river bend reads, a switchback does not, and the difference
-    between elegant and unreadable is this one rule.
-    """
-    import math
-
-    from pyntpot._port import labels as lb
-    from pyntpot.maps.lettering_window import baseline
-
-    hand = _open_hand()
-    straight = [(float(x), 100.0 + 4.0 * math.sin(x / 90.0)) for x in range(0, 400, 8)]
-    hairpin = [
-        (100.0 + 40.0 * math.cos(a / 9.0), 100.0 + 40.0 * math.sin(a / 9.0)) for a in range(0, 80)
-    ]
-    gentle = lb.Label(name="Heddon", kind="river", px=200.0, py=100.0, size=14.0, baseline=straight)
-    tight = lb.Label(name="Heddon", kind="river", px=100.0, py=100.0, size=14.0, baseline=hairpin)
-    assert baseline(gentle, hand.font.measure("Heddon", 14.0)[0])
-    assert baseline(tight, hand.font.measure("Heddon", 14.0)[0]) is None
 
 
 def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
@@ -645,7 +628,7 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
 
     plates = paint_plates(tiny_basemap(), tiny_style(), tmp_path)
     placed = [
-        lb.Label(
+        Label(
             name="Aviemore",
             kind="settlement",
             px=30.0,
@@ -697,81 +680,6 @@ def test_the_style_decides_how_the_plates_are_written(tmp_path):
 # ------------------------------------------------------------------- the V5 rules
 
 
-class _Sheet:
-    """The smallest thing the placer will accept as a card."""
-
-    w = 400.0
-    h = 300.0
-    scale = 1.0
-
-
-def _flat_dark(w: int = 8, h: int = 8, v: float = 0.2) -> dict:
-    """A darkness grid with nothing dark in it, so it decides nothing."""
-    return {"w": w, "h": h, "v": [[v] * w for _ in range(h)]}
-
-
-def test_a_span_takes_its_name_along_it_only_when_it_runs_across_the_sheet():
-    """The bearing rule, on three cases.
-
-    The A39 drag and the climb out of Aviemore run across the card and read
-    well with the name along them; the A361 climb runs down it and does not,
-    because the letters stack and the reader has to tilt their head. The
-    threshold is `SPAN_ALONG_MAX_BEARING_DEG` and it is a tunable, so the test
-    is written against the tunable rather than against the number.
-    """
-    from pyntpot._port import labels as lb
-
-    across = [(float(x), 100.0 + x * 0.15) for x in range(0, 300, 10)]  # ~9 deg
-    slanted = [(float(x), 100.0 + x * 0.9) for x in range(0, 300, 10)]  # ~42 deg
-    down = [(100.0 + y * 0.06, float(y)) for y in range(0, 300, 10)]  # ~87 deg
-    assert lb.span_bearing(across) < lb.SPAN_ALONG_MAX_BEARING_DEG
-    assert lb.span_bearing(slanted) > lb.SPAN_ALONG_MAX_BEARING_DEG
-    assert lb.span_bearing(down) > lb.SPAN_ALONG_MAX_BEARING_DEG
-    # And the label follows the rule rather than restating it.
-    for line, along in ((across, True), (down, False)):
-        span = lb.Span(name="the long drag up the valley", kind="drag", i0=0, i1=2)
-        span.line = list(line)
-        label = lb._span_label(span, [(0.0, 0.0), (1.0, 1.0), (2.0, 2.0)], 14.0, flat_measure)
-        assert bool(label.baseline) is along
-        # Never a leader, either way: a name beside its own bracket needs none.
-        assert label.tier == lb.TIER_SPAN
-
-
-def test_the_card_carries_no_more_spans_than_the_cap():
-    """Four brackets made the sheet cluttered, so three is the cap.
-
-    Dropped in the payload's own order, because the agent is asked for its best
-    first and that ordering is the only judgement available here.
-    """
-    from pyntpot._port import labels as lb
-
-    class _Picks:
-        spans = [
-            type(
-                "S",
-                (),
-                {
-                    "name": f"span {i}",
-                    "kind": "climb",
-                    "intent": "note",
-                    "why": "",
-                    "from_km": float(i),
-                    "to_km": float(i) + 0.5,
-                    "from_s": None,
-                    "to_s": None,
-                    "from_i": None,
-                    "to_i": None,
-                },
-            )()
-            for i in range(6)
-        ]
-
-    dist = [float(m) for m in range(0, 6000, 10)]
-    got = lb.resolve_spans(_Picks(), [], dist)
-    assert len(got) == lb.SPAN_MAX == 3
-    assert {s.name for s in got} == {"span 0", "span 1", "span 2"}
-
-
 def test_a_curved_label_reserves_the_room_it_actually_takes():
     """The fault every variant shared: a curved name defended the wrong box.
 
@@ -783,27 +691,27 @@ def test_a_curved_label_reserves_the_room_it_actually_takes():
     """
     from pyntpot._port import labels as lb
 
-    card = _Sheet()
+    card = sheet_card()
     water = [(float(x), 150.0 + 18.0 * math.sin(x / 70.0)) for x in range(20, 380, 6)]
-    river = lb.Label(
+    river = Label(
         name="Heddon",
         kind="river",
         px=200.0,
         py=150.0,
-        tier=lb.TIER_RIVER,
+        tier=TIER_RIVER,
         size=14.0,
         baseline=water,
     )
-    later = lb.Label(
+    later = Label(
         name="Monmouth Castle",
         kind="monument",
         px=200.0,
         py=150.0,
-        tier=lb.TIER_LANDMARK,
+        tier=TIER_LANDMARK,
         size=14.0,
     )
     got = lb.place(
-        [river, later], [], card, [(0.0, 290.0), (400.0, 290.0)], _flat_dark(), [], flat_measure
+        [river, later], [], card, [(0.0, 290.0), (400.0, 290.0)], flat_dark(), [], flat_measure
     )
     assert river.window, "the river was not set along its own water"
     assert not river.flat
@@ -832,17 +740,17 @@ def test_a_road_crossing_costs_and_a_longer_leader_is_the_cheaper_answer():
 
     assert lb.ROAD_CROSS_COST > max(lb.LEADER_RUNGS) * lb.LEADER_COST_PX
 
-    card = _Sheet()
+    card = sheet_card()
     route = [(0.0, 290.0), (400.0, 290.0)]
-    free = lb.Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
-    lb.place([free], [], card, route, _flat_dark(), [], flat_measure, [])
+    free = Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
+    lb.place([free], [], card, route, flat_dark(), [], flat_measure, [])
     # A road laid straight down the middle of the box the placer just chose.
     x0, y0, x1, y1 = free.box
     road = [[((x0 + x1) / 2, 0.0), ((x0 + x1) / 2, 300.0)]]
     assert lb._crossings(free.box, road) > 0
 
-    moved = lb.Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
-    lb.place([moved], [], card, route, _flat_dark(), [], flat_measure, road)
+    moved = Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
+    lb.place([moved], [], card, route, flat_dark(), [], flat_measure, road)
     assert lb._crossings(moved.box, road) == 0, "the road was not avoided"
     assert moved.box != free.box
 
@@ -881,423 +789,6 @@ def test_the_major_river_carries_its_name_twice_and_the_others_once():
     a, b = [label for label in got if label.name == "Lyn"]
     apart = math.dist((a.px, a.py), (b.px, b.py))
     assert apart > length(a.baseline) * lb.RIVER_REPEAT_FRAC * 0.9
-
-
-def test_a_span_that_doubles_back_is_still_one_open_gesture():
-    """The iso-contour cannot self-intersect, but it can enclose.
-
-    An out-and-back on the same lane comes back as one closed ring round both
-    strands, and read by side alone every point of it qualifies: that is how
-    the Aviemore bracket came to be drawn as a ring round its own climb. The
-    contour is read along the route now, from the span's start to its end, with
-    the caps trimmed and the run broken wherever it jumps to the other strand,
-    so what comes back is one open flank whatever the route did.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    out = [(100.0 + i * 4.0, 150.0) for i in range(30)]
-    back = [(x, y + 1.0) for x, y in reversed(out)]
-    doubled = out + back
-    line = lb.span_line(doubled, 0, len(doubled) - 1, 1, 14.0, card)
-    assert line, "a doubled-back span drew nothing at all"
-    # Not a ring: it does not come back to where it started.
-    assert math.dist(line[0], line[-1]) > 0.33 * length(line)
-    # And it stands off the stretch it belongs to rather than wrapping it.
-    assert min(min(math.dist(p, q) for q in doubled) for p in line) > 8.0
-
-
-def _arc(
-    turn_deg: float, n: int = 60, r: float = 100.0, start: float = 180.0
-) -> list[tuple[float, float]]:
-    """One circular arc turning `turn_deg`, centred so it sits on the sheet.
-
-    Positive `turn_deg` turns towards side +1, which in card pixels is the
-    normal `(-dy, dx)`, so the centre of the arc is on side +1 and side -1 is
-    the outside of the bend.
-    """
-    out = []
-    for i in range(n):
-        a = math.radians(start + turn_deg * i / (n - 1))
-        out.append((200.0 + r * math.cos(a), 150.0 + r * math.sin(a)))
-    return out
-
-
-def test_the_outside_of_a_bend_is_the_side_the_mark_stands_off_the_chord():
-    """ "The outside" is defined on the drawn mark, and this pins which one it is.
-
-    The module signs a side two ways that disagree: `_bracket` pushes off the
-    chord's own normal, the contour filters a ring with `_side_at`, and on the
-    same arc the two land on opposite flanks. So nothing about the outside is
-    read off a normal. It is read off the two brackets, by how far each stands
-    out of the bend, and the one that does is the convex one.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    centre = (200.0, 150.0)
-    for radius in (80.0, 110.0, 150.0):
-        for turn in (45.0, -45.0):
-            route = _arc(turn, r=radius)
-            span = lb.Span(name="the bend", kind="climb", i0=0, i1=len(route) - 1)
-            side, marks = lb._convex_side(span, route, 14.0, card)
-            assert side in (1, -1)
-            assert set(marks) == {1, -1}
-            line = lb.span_line(route, 0, len(route) - 1, side, 14.0 * lb.SPAN_OFFSET_CAPS, card)
-            far = sum(math.dist(p, centre) for p in line) / len(line)
-            assert far > radius, (
-                f"the {turn:+.0f} degree bend of radius {radius:.0f} put its "
-                f"bracket inside, at {far:.0f}"
-            )
-
-
-def test_a_straight_or_an_s_bend_has_no_outside_and_the_bend_does_not_vote():
-    """The two ways "the outside" names nothing, and both fall through.
-
-    The rule is "the outside of the curve **where there is one**". A
-    straight stretch has no outside because it has no curve, and an S-bend has
-    no one outside because it has two: whichever side were chosen, half the
-    stretch would be written on the inside of it. Both withhold the vote and
-    leave the free-paper rule to decide, which is the fall-through.
-    """
-    from pyntpot._port import labels as lb
-
-    straight = [(60.0 + i * 4.0, 150.0) for i in range(60)]
-    assert lb.bend_strength(straight, 21.0) == 0.0
-    # Turning, but not enough of it to be a bend.
-    assert lb.bend_strength(_arc(lb.SPAN_CURVE_MIN_TURN_DEG * 0.7), 21.0) == 0.0
-    # And a bend is a strength, not a flag: gentle votes softly, hard votes 1.
-    assert 0.0 < lb.bend_strength(_arc(55.0), 21.0) < 1.0
-    assert lb.bend_strength(_arc(120.0), 21.0) == 1.0
-    # An S: one arc one way, the same arc back. It turns plenty and nets zero.
-    first = _arc(100.0, r=140.0)
-    dx, dy = first[-1][0] - first[-2][0], first[-1][1] - first[-2][1]
-    back = _arc(-100.0, r=140.0)
-    ox, oy = back[0]
-    ess = first + [(x - ox + first[-1][0] + dx, y - oy + first[-1][1] + dy) for x, y in back]
-    net, gross = lb.route_turn(lb._resample(ess, 21.0))
-    assert gross > lb.SPAN_CURVE_MIN_TURN_DEG * 2, "the S does turn"
-    assert abs(net) / gross < lb.SPAN_CURVE_MIN_COHERENCE
-    assert lb.bend_strength(ess, 21.0) == 0.0
-
-
-def test_the_bend_is_a_weighted_term_and_a_clearer_side_still_wins():
-    """ "Where there is one", not "always": the vote can be outvoted.
-
-    A bracket goes on the outside when the free-paper rule was close to a tie,
-    and stays where the paper put it when the other side is properly clearer.
-    The switch turns the whole term off and the free-paper answer comes back
-    unchanged, which is what makes the A/B honest.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    route = _arc(-80.0, r=110.0)
-    span = lb.Span(name="the bend", kind="climb", i0=0, i1=len(route) - 1)
-    outside = lb._convex_side(span, route, 14.0, card)[0]
-    inside = -outside
-    # A near tie: the bend turns the side round.
-    assert lb._curved_side(span, route, inside, 0.01, 14.0, card) == outside
-    # A margin past what the vote is worth: the free paper keeps it.
-    assert lb._curved_side(span, route, inside, lb.SPAN_CURVE_WEIGHT * 2, 14.0, card) == inside
-    # Already on the outside: nothing to do either way.
-    assert lb._curved_side(span, route, outside, 0.01, 14.0, card) == outside
-    # And with the term off, the free-paper answer stands whatever the bend.
-    lb.SPAN_CURVE_SIDE = False
-    try:
-        assert lb._curved_side(span, route, inside, 0.01, 14.0, card) == inside
-    finally:
-        lb.SPAN_CURVE_SIDE = True
-
-
-def test_a_span_on_a_bend_is_drawn_on_the_convex_side_of_the_route():
-    """The whole term, through `place_spans`, on a sheet with nothing dark on it.
-
-    With the darkness grid flat the free-paper rule is a coin toss decided by a
-    tie-break, so this is exactly the near-tie the bend is meant to settle. The
-    bracket lands outboard of the arc, further from its centre than the route
-    is, which is the intended geometry. With the term off it is a
-    coin toss again and the assertion below is not guaranteed, which is the
-    point of the switch.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    centre = (200.0, 150.0)
-    for turn, radius in ((45.0, 110.0), (-45.0, 110.0), (-80.0, 110.0)):
-        route = _arc(turn, r=radius)
-        span = lb.Span(name="the bend", kind="climb", i0=0, i1=len(route) - 1)
-        assert lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
-        assert sum(math.dist(p, centre) for p in span.line) / len(span.line) > radius, (
-            f"the {turn:+.0f} degree bend drew its bracket on the inside"
-        )
-
-
-def test_a_span_mark_never_crosses_any_piece_of_the_route():
-    """Rule seven, mechanically, on every shape the sheet has a case for.
-
-    Span marks are never drawn over any other piece of route. Any piece, so the whole track is
-    tested and not the stretch alone, and the ticks are tested with the line
-    because a tick is part of the mark. Each of these routes carries the strand
-    that used to be crossed: the returning leg of an out-and-back, the far side
-    of a loop, the second limb of an S, and a lane that cuts across the corner
-    the span ends in.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    for name, route in _shapes().items():
-        span = lb.Span(name=name, kind="climb", i0=0, i1=len(route) - 1)
-        placed = lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
-        if not placed:  # a shape with no room for a mark says so, and stops
-            continue
-        for part in (span.line, *span.ticks):
-            assert not _crosses(part, route), f"{name}: the mark crosses the route"
-            assert lb.clear_of_route(part, route, 14.0 * lb.SPAN_CLEAR_CAPS), (
-                f"{name}: the mark comes nearer the route than the clearance"
-            )
-
-
-def test_a_doubled_back_stretch_is_enclosed_rather_than_cut_across():
-    """Rule four, which withdrew the rule before it.
-
-    A mark round a stretch that comes back on itself encloses both strands.
-    That used to be forbidden and the straight fallback was what enforced it,
-    by drawing a rule across the middle of the loop, and that line crossed the
-    route on both sides of the span. The mark goes round the outside of both
-    strands now.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    out = [(80.0 + i * 4.0, 150.0) for i in range(40)]
-    back = [(x, y + 26.0) for x, y in reversed(out)]
-    route = out + back
-    line = lb.span_line(route, 0, len(route) - 1, 1, 20.0, card)
-    assert length(line) > 2.0 * 20.0, "the doubled-back stretch drew no mark"
-    assert not _crosses(line, route), "the mark cuts across the loop"
-    # Corners, because the loop's own turns are corners: a route that turns
-    # right round in a few pixels is not drawn as an arc. So the mark is a few
-    # long strokes rather than a hundred short ones.
-    assert _corners(line) <= 4
-    # Round the outside of both strands: the mark reaches past the turn at the
-    # east end, and past both strands north and south.
-    assert max(x for x, _ in line) > max(x for x, _ in route)
-    assert min(y for _, y in line) < 150.0
-    assert max(y for _, y in line) > 176.0
-
-
-def test_a_hairpin_takes_the_short_way_over_its_own_mouth():
-    """Rule three's limit: the short mark over the open end wins.
-
-    Both strands of an out-and-back are the same piece of ground, so the two
-    ways round the envelope are a short mark over the open end and a long one
-    all the way out to the turn and back. The short one is taken.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    out = [(60.0 + i * 4.0, 150.0) for i in range(50)]
-    back = [(x, y + 6.0) for x, y in reversed(out)]
-    route = out + back
-    line = lb.span_line(route, 0, len(route) - 1, 1, 20.0, card)
-    assert line, "the hairpin drew no mark"
-    assert not _crosses(line, route)
-    # Over the mouth, which is the west end where the two ends of the span are,
-    # and nothing like the length of the stretch itself.
-    assert length(line) < 0.4 * length(route)
-    assert sum(x for x, _ in line) / len(line) < 100.0
-
-
-def test_the_mark_follows_the_shape_in_a_few_strokes_and_does_not_hold_its_gap():
-    """Rules one, two and three together, which replace the held offset.
-
-    The mark does not keep a constant distance from the path. It approximates
-    the angle of the path and, at a bend, goes out and around the bendiest
-    part of the route. A mark that smooths all of that away is too straight
-    and mechanical: it should be a smooth curve that follows the shape and
-    could be drawn by hand in a few strokes.
-
-    So there are two failures to keep away from, not one. The mark has to have
-    the road's turns in it, and it has to have only a few of them.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    route = [(60.0 + i * 3.0, 120.0) for i in range(30)]
-    route += [(150.0 + i * 2.1, 120.0 + i * 2.1) for i in range(1, 25)]
-    route += [(202.0 + i * 3.0, 172.0) for i in range(1, 30)]
-    span = lb.Span(name="the corner", kind="climb", i0=0, i1=len(route) - 1)
-    assert lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
-    gaps = [foot_on(p, route)[0] for p in span.line]
-    # It stands off the route the whole way, and it does not hold one distance.
-    assert min(gaps) >= 14.0 * lb.SPAN_CLEAR_CAPS
-    assert max(gaps) - min(gaps) > 0.25 * span.offset_px, (
-        f"the mark holds its distance: {min(gaps):.1f} to {max(gaps):.1f}"
-    )
-    # It has the corner in it, and it has only a few turns in all.
-    assert 1 <= _corners(span.line) <= 6, f"{_corners(span.line)} turns is not a few strokes"
-    assert _corners(span.line) >= _corners(simplify(route, 3.0)) - 2
-
-
-def test_the_mark_stops_short_of_a_tangle_rather_than_pushing_through_it():
-    """Where the ends run into other road, the mark is cut back, not forced.
-
-    On a tight bend the mark ends well before the end of the stretch when the
-    end of the stretch is a junction. Cutting back is allowed; crossing is not.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    route = [(60.0 + i * 4.0, 150.0) for i in range(60)]
-    # A lane across the far end of the stretch, on both sides of it.
-    route += [(300.0, 150.0 + i * 4.0) for i in range(1, 12)]
-    span = lb.Span(name="the lane", kind="climb", i0=0, i1=59)
-    assert lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
-    assert not _crosses(span.line, route)
-    assert max(x for x, _ in span.line) < 300.0, (
-        "the mark ran through the lane at the end of the stretch"
-    )
-
-
-def test_a_span_with_nowhere_to_go_is_dropped_and_says_so(caplog):
-    """The answer when rule seven cannot be met is no mark, not a bad one."""
-    import logging
-
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    # Ground the route hatches from end to end, ten pixels between strands.
-    # There is nowhere on it a mark can stand a cap height clear of a road,
-    # and no direction to push one that reaches open paper.
-    route: list[tuple[float, float]] = []
-    for row in range(30):
-        y = 10.0 + row * 10.0
-        legs = [(20.0 + i * 4.0, y) for i in range(90)]
-        route += legs if row % 2 == 0 else list(reversed(legs))
-    span = lb.Span(name="the tangle", kind="climb", i0=900, i1=989)
-    with caplog.at_level(logging.INFO, logger="pyntpot._port.labels"):
-        placed = lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
-    assert placed == [], "a mark was drawn where none can clear the route"
-    assert any("clears the route" in r.message for r in caplog.records)
-
-
-def test_a_mark_prefers_clear_paper_to_lying_along_a_river():
-    """Clear paper is preferred, and given up rather than cross the route.
-
-    A mark would rather not sit tight against a river or a road, and it
-    gives that up rather than cross the route. It is a cost weighed against
-    how much mark each side yields, not a rule: with the water on one side of
-    a straight lane and clear paper on the other, the mark takes the paper.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    route = [(60.0 + i * 4.0, 150.0) for i in range(60)]
-    river = [[(60.0 + i * 4.0, 150.0 - 20.0) for i in range(60)]]
-    north, south = [], []
-    for lines, out in ((None, north), (river, south)):
-        span = lb.Span(name="the lane", kind="climb", i0=0, i1=59)
-        assert lb.place_spans(
-            [span], card, route, _flat_dark(), flat_measure, cap_px=14.0, lines=lines
-        )
-        out.append(sum(y for _, y in span.line) / len(span.line))
-    assert south[0] > 150.0, "the mark stayed on the water"
-    # And the river only tips a choice: it is not allowed to lose the mark.
-    span = lb.Span(name="the lane", kind="climb", i0=0, i1=59)
-    both = [[(60.0 + i * 4.0, 150.0 + s) for i in range(60)] for s in (-20.0, 20.0)]
-    assert lb.place_spans(
-        [span], card, route, _flat_dark(), flat_measure, cap_px=14.0, lines=both
-    ), "water on both sides lost the mark"
-
-
-def test_the_module_signs_a_side_one_way_and_the_mark_lands_on_it():
-    """The sign bug: `_bracket` and `_side_at` disagreed, and one of them went.
-
-    `_bracket` pushed off the chord's own normal and `_side_at` filtered the
-    contour by a cross product with the opposite sense, so the two paths landed
-    on opposite flanks of the same arc and anything reasoning about `side` from
-    a normal was wrong on whichever half of the card took the fallback. There
-    is one convention now, `_side_at`'s, and the drawn mark obeys it.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    route = [(60.0 + i * 4.0, 150.0) for i in range(60)]
-    for side in (1, -1):
-        line = lb.span_line(route, 0, len(route) - 1, side, 20.0, card)
-        assert line, f"side {side} drew nothing"
-        votes = [lb._side_at(route, lb._nearest_on(route, p), p) for p in line]
-        assert sum(votes) / len(votes) == side, (
-            f"the mark asked for side {side} landed on the other one"
-        )
-    # And the two sides are the two sides: one above the lane, one below.
-    left = lb.span_line(route, 0, len(route) - 1, 1, 20.0, card)
-    right = lb.span_line(route, 0, len(route) - 1, -1, 20.0, card)
-    assert (sum(y for _, y in left) < 150.0 * len(left)) != (
-        sum(y for _, y in right) < 150.0 * len(right)
-    )
-
-
-def test_an_end_tick_stops_short_of_the_route_rather_than_touching_it():
-    """A tick is part of the mark, so rule seven binds it too.
-
-    The tick points at the road, because what it says is where on the road the
-    span starts. On ground where the mark sits close, the leg that points at
-    the road is shortened until its tip clears it.
-    """
-    from pyntpot._port import labels as lb
-
-    card = _Sheet()
-    route = [(60.0 + i * 4.0, 150.0) for i in range(60)]
-    span = lb.Span(name="the lane", kind="climb", i0=0, i1=59)
-    assert lb.place_spans([span], card, route, _flat_dark(), flat_measure, cap_px=14.0)
-    assert len(span.ticks) == 2
-    clear = 14.0 * lb.SPAN_CLEAR_CAPS
-    for tick in span.ticks:
-        assert lb.clear_of_route(tick, route, clear)
-        assert length(tick) > 0.0
-
-
-def _shapes() -> dict[str, list[tuple[float, float]]]:
-    """One route a case: the shapes a hand-drawn set of marks is made of."""
-    straight = [(60.0 + i * 4.0, 150.0) for i in range(60)]
-    bend = [(60.0 + i * 3.0, 120.0) for i in range(30)]
-    bend += [(150.0 + i * 2.1, 120.0 + i * 2.1) for i in range(1, 25)]
-    ess = [(80.0 + i * 3.0, 150.0 + 30.0 * math.sin(i / 9.0)) for i in range(60)]
-    out = [(80.0 + i * 4.0, 150.0) for i in range(40)]
-    return {
-        "straight": straight,
-        "bend": bend,
-        "s-bend": ess,
-        "hairpin": out + [(x, y + 6.0) for x, y in reversed(out)],
-        "loop": out + [(x, y + 26.0) for x, y in reversed(out)],
-        "crossed": straight + [(200.0, 90.0 + i * 4.0) for i in range(1, 30)],
-    }
-
-
-def _crosses(line: list[tuple[float, float]], route: list[tuple[float, float]]) -> bool:
-    """Whether a drawn line properly crosses a route polyline anywhere."""
-
-    def side(p, q, r):
-        return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
-
-    for a, b in zip(line, line[1:], strict=False):
-        for c, d in zip(route, route[1:], strict=False):
-            d1, d2 = side(c, d, a), side(c, d, b)
-            d3, d4 = side(a, b, c), side(a, b, d)
-            if ((d1 > 0) != (d2 > 0)) and ((d3 > 0) != (d4 > 0)):
-                return True
-    return False
-
-
-def _corners(pts: list[tuple[float, float]], tol: float = 3.0) -> int:
-    """How many turns a drawn line has, at the tolerance a reader sees.
-
-    A spline is a hundred points that each turn a degree; what a person counts
-    is the corners left when the line is simplified to what it looks like.
-    """
-    return max(len(simplify(pts, tol)) - 2, 0)
 
 
 def test_the_label_plate_is_written_losslessly_like_the_others(tmp_path):
@@ -1386,18 +877,18 @@ def test_a_river_follows_its_bend_even_when_the_bend_runs_down_the_sheet():
     """
     from pyntpot._port import labels as lb
 
-    card = _Sheet()
+    card = sheet_card()
     water = [(200.0 + 12.0 * math.sin(y / 60.0), float(y)) for y in range(20, 280, 5)]
-    river = lb.Label(
+    river = Label(
         name="Heddon",
         kind="river",
         px=200.0,
         py=150.0,
-        tier=lb.TIER_RIVER,
+        tier=TIER_RIVER,
         size=14.0,
         baseline=water,
     )
-    lb.place([river], [], card, [(0.0, 295.0), (400.0, 295.0)], _flat_dark(), [], flat_measure)
+    lb.place([river], [], card, [(0.0, 295.0), (400.0, 295.0)], flat_dark(), [], flat_measure)
     assert river.window, "a vertical river was not set along its own water"
     assert not river.flat
     assert lb._tilt(river.window) > lb.MAX_TILT_DEG, "this window is a steep one"
@@ -1408,12 +899,12 @@ def test_the_tilt_test_still_holds_for_everything_that_is_not_a_river():
     """A road is not exempt: the rule that was overruled was about water."""
     from pyntpot._port import labels as lb
 
-    card = _Sheet()
+    card = sheet_card()
     tarmac = [(200.0 + 12.0 * math.sin(y / 60.0), float(y)) for y in range(20, 280, 5)]
-    road = lb.Label(
-        name="A361", kind="road", px=200.0, py=150.0, tier=lb.TIER_ROAD, size=14.0, baseline=tarmac
+    road = Label(
+        name="A361", kind="road", px=200.0, py=150.0, tier=TIER_ROAD, size=14.0, baseline=tarmac
     )
-    lb.place([road], [], card, [(0.0, 295.0), (400.0, 295.0)], _flat_dark(), [], flat_measure)
+    lb.place([road], [], card, [(0.0, 295.0), (400.0, 295.0)], flat_dark(), [], flat_measure)
     assert road.flat, "a steep road window was accepted"
 
 
@@ -1438,45 +929,15 @@ def test_a_road_name_stays_near_the_road_it_names():
     from pyntpot._port import labels as lb
 
     tarmac = [(float(x), 150.0) for x in range(20, 380, 5)]
-    near = lb.Label(
-        name="A361", kind="road", px=200.0, py=150.0, tier=lb.TIER_ROAD, size=14.0, baseline=tarmac
+    near = Label(
+        name="A361", kind="road", px=200.0, py=150.0, tier=TIER_ROAD, size=14.0, baseline=tarmac
     )
-    far = lb.Label(
-        name="A361", kind="road", px=200.0, py=150.0, tier=lb.TIER_ROAD, size=14.0, baseline=tarmac
+    far = Label(
+        name="A361", kind="road", px=200.0, py=150.0, tier=TIER_ROAD, size=14.0, baseline=tarmac
     )
     close = (0.0, 0.0, 40.0, 40.0)
     assert lb._off_own_feature(close, far) > 0.0
     assert lb._off_own_feature((190.0, 140.0, 230.0, 160.0), near) == 0.0
-
-
-def test_a_long_span_name_breaks_over_two_lines_and_reserves_the_block():
-    """The root cause of every awkward span placement: one line and only one.
-
-    A break is offered, never forced: it costs `WRAP_COST` and is taken only
-    where it buys a materially better position. What it must never do is claim
-    a one-line box and then write two lines in it.
-    """
-    from pyntpot._port import labels as lb
-
-    forms = lb.wrap_forms("the long climb out of Aviemore", "span")
-    assert forms[0] == ["the long climb out of Aviemore"]
-    assert all(len(form) <= lb.MAX_LINES for form in forms)
-    assert any(len(form) == 2 for form in forms)
-    assert all(" ".join(form) == "the long climb out of Aviemore" for form in forms)
-    # Balanced first, and never a one-word orphan. Three characters of a
-    # thirty-character phrase is an orphan whatever the character floor says,
-    # and the card drew "the" over "long climb out of Aviemore" until the share
-    # was added: a stub first line makes the widest possible second line.
-    assert forms[1][0] == "the long climb"
-    floor = max(lb.WRAP_MIN_CHARS, lb.WRAP_MIN_SHARE * len("the long climb out of Aviemore"))
-    for form in forms[1:]:
-        assert min(len(part) for part in form) >= floor
-    assert ["the", "long climb out of Aviemore"] not in forms
-
-    wide, tall = lb.block_size(["the long climb", "out of Aviemore"], 14.0, flat_measure)
-    one_wide, one_tall = lb.block_size(["the long climb out of Aviemore"], 14.0, flat_measure)
-    assert wide < one_wide, "the block is not narrower than the single line"
-    assert tall > one_tall, "the block did not reserve the second line"
 
 
 def test_a_span_name_is_charged_for_every_corner_of_its_block():
@@ -1492,10 +953,10 @@ def test_a_span_name_is_charged_for_every_corner_of_its_block():
     from pyntpot._port import labels as lb
 
     bracket = [(100.0 + i * 8.0, 100.0) for i in range(11)]
-    span = lb.Label(
+    span = Label(
         name="the long climb out of Aviemore",
         kind="climb",
-        tier=lb.TIER_SPAN,
+        tier=TIER_SPAN,
         size=14.0,
         px=140.0,
         py=80.0,
@@ -1506,7 +967,7 @@ def test_a_span_name_is_charged_for_every_corner_of_its_block():
     assert lb._mark_gap(off_end, span, 7.0) > lb._mark_gap(beside, span, 7.0)
     # And the rung the old measure would have reported is the same for both,
     # which is exactly why it could not tell them apart.
-    assert lb._mark_gap(off_end, lb.Label(name="x"), 7.0) == 7.0
+    assert lb._mark_gap(off_end, Label(name="x"), 7.0) == 7.0
 
 
 def test_a_span_name_sits_outboard_of_its_bracket_and_never_across_it():
@@ -1522,10 +983,10 @@ def test_a_span_name_sits_outboard_of_its_bracket_and_never_across_it():
 
     bracket = [(100.0 + i * 8.0, 100.0) for i in range(11)]
     # The anchor is outboard, which is what says which side outboard is.
-    span = lb.Label(
+    span = Label(
         name="the long climb",
         kind="climb",
-        tier=lb.TIER_SPAN,
+        tier=TIER_SPAN,
         size=14.0,
         px=140.0,
         py=80.0,
@@ -1538,7 +999,7 @@ def test_a_span_name_sits_outboard_of_its_bracket_and_never_across_it():
     assert lb._mark_through(across, span) >= lb.SPAN_MARK_THROUGH_COST
     assert lb._mark_through(inboard, span) == pytest.approx(lb.SPAN_INBOARD_COST)
     # Nothing that is not a span pays either: a river has its own rules.
-    river = lb.Label(name="Lyn", kind="river")
+    river = Label(name="Lyn", kind="river")
     assert lb._mark_through(across, river) == 0.0
 
 
@@ -1552,13 +1013,13 @@ def test_a_span_name_lands_beside_the_bracket_it_belongs_to():
     """
     from pyntpot._port import labels as lb
 
-    card = _Sheet()
+    card = sheet_card()
     route = [(100.0 + i * 6.0, 200.0) for i in range(16)]
     bracket = [(100.0 + i * 6.0, 170.0) for i in range(16)]
-    span = lb.Label(
+    span = Label(
         name="the long climb out of Aviemore",
         kind="climb",
-        tier=lb.TIER_SPAN,
+        tier=TIER_SPAN,
         size=14.0,
         px=145.0,
         py=150.0,
@@ -1576,43 +1037,27 @@ def test_a_span_name_lands_beside_the_bracket_it_belongs_to():
     assert lb._mark_through(span.box, span) == 0.0
 
 
-def test_a_settlement_name_is_never_broken():
-    """A place name is one thing a reader looks up; two lines read as two places."""
-    from pyntpot._port import labels as lb
-
-    assert lb.wrap_forms("Monmouth Castle", "settlement") == [["Monmouth Castle"]]
-    assert lb.wrap_forms("Lyn Valley Road", "road") == [["Lyn Valley Road"]]
-    assert lb.wrap_forms("Heddon", "span") == [["Heddon"]], "nothing to break at"
-    # A span carries its own vocabulary as its kind, so every one of them has
-    # to be wrappable without being named here.
-    for kind in lb.SPAN_GROUND + lb.SPAN_EFFORT:
-        got = lb.wrap_forms("the long climb out of Aviemore", kind, lb.TIER_SPAN)
-        assert len(got) > 1, kind
-    # And the same word as a ground kind still does not wrap.
-    assert len(lb.wrap_forms("Lyn Valley Road", "road", lb.TIER_ROAD)) == 1
-
-
 def test_a_wrapped_name_is_written_on_the_lines_it_reserved():
     """The box is the block's, and the hand writes the block, not the name."""
     from pyntpot._port import labels as lb
 
-    card = _Sheet()
+    card = sheet_card()
     route = [(0.0, 295.0), (400.0, 295.0)]
-    name = lb.Label(
+    name = Label(
         name="the long climb out of Aviemore",
         kind="span",
-        tier=lb.TIER_SPAN,
+        tier=TIER_SPAN,
         px=200.0,
         py=150.0,
         size=14.0,
     )
     name.lines = ["the long climb", "out of Aviemore"]
-    wide, tall = lb.block_size(name.lines, name.size, flat_measure)
-    lb._place_flat(name, wide, tall, card, [(route, 1.0)], _flat_dark(), [], [], len(name.lines))
+    wide, tall = block_size(name.lines, name.size, flat_measure)
+    lb._place_flat(name, wide, tall, card, [(route, 1.0)], flat_dark(), [], [], len(name.lines))
     assert name.text_lines == name.lines
     assert name.box[3] - name.box[1] == pytest.approx(tall)
     # The two baselines both sit inside the box the placer reserved.
-    second = name.ty + name.size * lb.WRAP_LEADING
+    second = name.ty + name.size * WRAP_LEADING
     assert name.box[1] < name.ty < name.box[3]
     assert name.box[1] < second < name.box[3] + name.size
 
@@ -1626,130 +1071,23 @@ def test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_sheet(
     """
     from pyntpot._port import labels as lb
 
-    card = _Sheet()
+    card = sheet_card()
     # A hairpin: two long reaches whose ends are near each other on the sheet.
     down = [(60.0 + x * 0.6, 60.0 + x * 0.02) for x in range(0, 300, 4)]
     back = [(240.0 - x * 0.6, 74.0 + x * 0.02) for x in range(0, 300, 4)]
     water = down + back
-    river = lb.Label(
-        name="Lyn", kind="river", px=150.0, py=70.0, tier=lb.TIER_RIVER, size=13.0, baseline=water
+    river = Label(
+        name="Lyn", kind="river", px=150.0, py=70.0, tier=TIER_RIVER, size=13.0, baseline=water
     )
-    second = lb.Label(
-        name="Lyn", kind="river", px=150.0, py=90.0, tier=lb.TIER_RIVER, size=13.0, baseline=water
+    second = Label(
+        name="Lyn", kind="river", px=150.0, py=90.0, tier=TIER_RIVER, size=13.0, baseline=water
     )
     lb.place(
-        [river, second], [], card, [(0.0, 295.0), (400.0, 295.0)], _flat_dark(), [], flat_measure
+        [river, second], [], card, [(0.0, 295.0), (400.0, 295.0)], flat_dark(), [], flat_measure
     )
     assert river.window and second.window, "the second name lost its water"
     # Far apart along the water, and that is what the guard measures.
     assert math.dist((river.tx, river.ty), (second.tx, second.ty)) > 20.0
-
-
-def test_the_hand_writes_both_lines_of_a_wrapped_name():
-    """The placer reserving two lines is only half of it; the hand has to write them."""
-    from pyntpot._port import labels as lb
-    from pyntpot.maps.lettering_marks import label_marks
-
-    try:
-        hand = _open_hand()
-    except (ImportError, OSError):  # no fonttools or no face on disk
-        pytest.skip("no face to letter with")
-    one = lb.Label(
-        name="the long climb out of Aviemore",
-        kind="climb",
-        tier=lb.TIER_SPAN,
-        px=200.0,
-        py=150.0,
-        size=14.0,
-        tx=200.0,
-        ty=150.0,
-        anchor="middle",
-        flat=True,
-    )
-    two = lb.Label(
-        name="the long climb out of Aviemore",
-        kind="climb",
-        tier=lb.TIER_SPAN,
-        px=200.0,
-        py=150.0,
-        size=14.0,
-        tx=200.0,
-        ty=150.0,
-        anchor="middle",
-        flat=True,
-        lines=["the long climb", "out of Aviemore"],
-    )
-    marks_one = [m for m in label_marks(hand, one) if m.role == "glyph"]
-    marks_two = [m for m in label_marks(hand, two) if m.role == "glyph"]
-    assert marks_one and marks_two
-    wide_one = max(x for m in marks_one for x, _y in m.pts) - min(
-        x for m in marks_one for x, _y in m.pts
-    )
-    wide_two = max(x for m in marks_two for x, _y in m.pts) - min(
-        x for m in marks_two for x, _y in m.pts
-    )
-    assert wide_two < wide_one * 0.7, "the wrapped name is not narrower"
-    tall_two = max(y for m in marks_two for _x, y in m.pts) - min(
-        y for m in marks_two for _x, y in m.pts
-    )
-    assert tall_two > lb.WRAP_LEADING * two.size, "only one line was written"
-
-
-def test_a_spans_end_tick_points_from_the_line_at_the_end_of_the_stretch():
-    """The end tick replaces "square to the route".
-
-    The end marks take their direction from the end of the line to the end of
-    the segment, not perpendicular to the route's local bearing. So the direction is the vector from where the mark stops to where
-    the span stops on the road. The route's own bearing at that index is a
-    property of two GPS samples and is not what the reader is being shown.
-
-    The lane here kinks in its last few samples, so the two rules point
-    different ways and the test can tell them apart.
-    """
-    import math
-
-    from pyntpot._port import labels as lb
-
-    route = [(100.0 + i * 6.0, 200.0) for i in range(40)]
-    route += [(334.0 + i * 2.0, 200.0 - i * 6.0) for i in range(1, 6)]
-    span = lb.Span(name="the long climb", i0=0, i1=len(route) - 1)
-    span.line = [(100.0, 160.0), (300.0, 130.0)]
-    ticks = lb._span_ticks(span, route, 14.0)
-    assert len(ticks) == 2
-    for tick, at in zip(ticks, (span.i0, span.i1), strict=True):
-        (x0, y0), (x1, y1) = tick[0], tick[-1]
-        assert (x0, y0) == pytest.approx(span.line[0] if at == span.i0 else span.line[-1]), (
-            "the tick does not start at the end of the line"
-        )
-        want = math.atan2(route[at][1] - y0, route[at][0] - x0)
-        got = math.atan2(y1 - y0, x1 - x0)
-        assert abs(math.degrees(want - got)) < 1.0, (
-            "the tick does not point at the end of the stretch"
-        )
-        assert math.hypot(x1 - x0, y1 - y0) > 0.0
-    # The far tick is not square to the route's own kink, which is the whole
-    # point: square to it would send the tick off to the north-east.
-    (fx0, fy0), (fx1, fy1) = ticks[1][0], ticks[1][-1]
-    assert fx1 > fx0 and fy1 > fy0, "the tick took the route's micro-bearing"
-    # And a tick stops short of the road rather than touching it.
-    for tick in ticks:
-        assert lb.clear_of_route(tick, route, 14.0 * lb.SPAN_CLEAR_CAPS)
-
-
-def test_a_span_mark_sits_at_the_hand_drawn_offset():
-    """The offset is measured off hand-drawn marks, not chosen between extremes.
-
-    2.6 cap heights reads as detached and 0.9 reads as drawn on the road.
-    Hand-drawn marks run 10.7 to 14.5 card pixels from the route at a 14 px
-    cap height, which is 0.8 to 1.0 cap heights, and the offset is 1.2.
-    """
-    from pyntpot._port import labels as lb
-
-    assert lb.SPAN_OFFSET_CAPS == 1.2
-    assert 1.9 < lb.SPAN_RUNG_CAPS < 2.4
-    # And the clearance is not scaled off it: a mark drawn nearer the road
-    # still keeps half a cap height from every strand of it.
-    assert lb.SPAN_CLEAR_CAPS == 0.5
 
 
 def test_a_river_name_is_lifted_clear_of_the_water_it_names():
@@ -1762,8 +1100,8 @@ def test_a_river_name_is_lifted_clear_of_the_water_it_names():
     """
     from pyntpot._port import labels as lb
 
-    thin = lb.Label(name="Heddon", kind="river", size=18.0, feature_px=2.2)
-    wide = lb.Label(name="Lyn", kind="river", size=18.0, feature_px=8.4)
+    thin = Label(name="Heddon", kind="river", size=18.0, feature_px=2.2)
+    wide = Label(name="Lyn", kind="river", size=18.0, feature_px=8.4)
     assert lb.lift_px(wide) > lb.lift_px(thin), "a wide river lifts no further"
     # And both clear their own water: the baseline is off the centreline by
     # more than half the mark is wide.
@@ -1773,17 +1111,15 @@ def test_a_river_name_is_lifted_clear_of_the_water_it_names():
 
 def test_the_painted_width_of_a_watercourse_reaches_the_label_layer():
     """The label layer sees a centreline; the layers tell it the brush."""
-    from pyntpot._port import labels as lb
-
     fresh = label_basemap(wet_px={"major": 9.5, "medium": 6.0, "minor": 2.4})
     # The layers carry the brush's nominal width and the brush lays down
     # more than that, so what reaches the label layer is the footprint.
-    assert lb.feature_px(fresh, "river", "major") == pytest.approx(9.5 * lb.WET_SPREAD)
+    assert feature_px(fresh, "river", "major") == pytest.approx(9.5 * WET_SPREAD)
     # Layers with no width for the class fall back to the painter's defaults
     # rather than to nothing, so such a map letters its rivers where any
     # other does.
-    assert lb.feature_px(label_basemap(), "river", "major") == pytest.approx(
-        lb.WET_PX_DEFAULT["major"] * lb.WET_SPREAD
+    assert feature_px(label_basemap(), "river", "major") == pytest.approx(
+        WET_PX_DEFAULT["major"] * WET_SPREAD
     )
 
 
@@ -1879,7 +1215,7 @@ def test_a_name_on_the_water_asks_for_no_backing_wash():
     """A pale blob on a river reads as a hole in the water."""
     from pyntpot.maps.lettering_marks import label_marks
 
-    hand = _open_hand()
+    hand = open_hand()
     wet = label_marks(hand, _river_label(40.0))
     dry = label_marks(hand, _river_label(11.0))
     assert wet and not any(m.wash for m in wet)
@@ -1914,7 +1250,7 @@ def test_a_name_on_the_water_is_moved_off_a_bridge():
 
     from pyntpot.maps.lettering_marks import box_size
 
-    hand = _open_hand()
+    hand = open_hand()
     name = _river_label(40.0)
     bridge = [(450.0, 300.0), (450.0, 500.0)]
     dark = {"w": 2, "h": 2, "v": [[0.6, 0.6], [0.6, 0.6]]}
@@ -2006,7 +1342,7 @@ def _named(name, kind, tier, x, y):
     """One label at a point, for the repeat and near-duplicate guards."""
     from pyntpot._port import labels as lb
 
-    return lb.Label(
+    return Label(
         name=name, kind=kind, why="", px=float(x), py=float(y), tier=tier, size=lb.DEFAULT_LINE_PX
     )
 
@@ -2021,9 +1357,9 @@ def test_a_settlement_is_lettered_once_however_many_pools_found_it():
     """
     from pyntpot._port import labels as lb
 
-    elm_settlement = _named("Elm", "settlement", lb.TIER_SETTLEMENT, 495, 168)
-    elm_landmark = _named("Elm", "place", lb.TIER_LANDMARK, 495, 168)
-    kept = lb.dedupe_names([elm_settlement, elm_landmark], _Sheet())
+    elm_settlement = _named("Elm", "settlement", TIER_SETTLEMENT, 495, 168)
+    elm_landmark = _named("Elm", "place", TIER_LANDMARK, 495, 168)
+    kept = lb.dedupe_names([elm_settlement, elm_landmark], sheet_card())
     assert [label.name for label in kept] == ["Elm"]
     assert kept[0] is elm_settlement, "the lower tier is the one that survives"
 
@@ -2037,14 +1373,14 @@ def test_the_repeat_guard_is_per_kind_so_the_major_river_keeps_both_names():
     from pyntpot._port import labels as lb
 
     wye = [
-        _named("Lyn", "river", lb.TIER_RIVER, 100, 100),
-        _named("Lyn", "river", lb.TIER_RIVER, 300, 260),
+        _named("Lyn", "river", TIER_RIVER, 100, 100),
+        _named("Lyn", "river", TIER_RIVER, 300, 260),
     ]
     towns = [
-        _named("Grasmere", "settlement", lb.TIER_SETTLEMENT, 40, 40),
-        _named("Grasmere", "settlement", lb.TIER_SETTLEMENT, 340, 240),
+        _named("Grasmere", "settlement", TIER_SETTLEMENT, 40, 40),
+        _named("Grasmere", "settlement", TIER_SETTLEMENT, 340, 240),
     ]
-    kept = lb.dedupe_names(wye + towns, _Sheet())
+    kept = lb.dedupe_names(wye + towns, sheet_card())
     names = [label.name for label in kept]
     assert names.count("Lyn") == lb.MAJOR_RIVER_LABELS == 2
     assert names.count("Grasmere") == 1
@@ -2061,9 +1397,9 @@ def test_two_names_for_one_place_keep_the_shorter_more_general_one():
     """
     from pyntpot._port import labels as lb
 
-    headland = _named("High Cup Nick", "viewpoint", lb.TIER_LANDMARK, 248, 554)
-    chimney = _named("High Cup Nick Cairn", "ruin", lb.TIER_LANDMARK, 249, 553)
-    kept = lb.dedupe_names([chimney, headland], _Sheet())
+    headland = _named("High Cup Nick", "viewpoint", TIER_LANDMARK, 248, 554)
+    chimney = _named("High Cup Nick Cairn", "ruin", TIER_LANDMARK, 249, 553)
+    kept = lb.dedupe_names([chimney, headland], sheet_card())
     assert [label.name for label in kept] == ["High Cup Nick"]
 
 
@@ -2075,17 +1411,17 @@ def test_a_town_and_a_monument_in_it_are_two_places_and_both_letter():
     """
     from pyntpot._port import labels as lb
 
-    town = _named("Monmouth", "settlement", lb.TIER_SETTLEMENT, 294, 592)
+    town = _named("Monmouth", "settlement", TIER_SETTLEMENT, 294, 592)
     memorial = _named(
-        "Monmouth War Memorial", "monument", lb.TIER_LANDMARK, 294 + lb.NEAR_DUPLICATE_M * 2.0, 592
+        "Monmouth War Memorial", "monument", TIER_LANDMARK, 294 + lb.NEAR_DUPLICATE_M * 2.0, 592
     )
-    kept = lb.dedupe_names([town, memorial], _Sheet())
+    kept = lb.dedupe_names([town, memorial], sheet_card())
     assert len(kept) == 2, "far enough apart to be a town and a thing in it"
     # And near enough, they are one place again.
     close = _named(
-        "Monmouth War Memorial", "monument", lb.TIER_LANDMARK, 294 + lb.NEAR_DUPLICATE_M * 0.1, 592
+        "Monmouth War Memorial", "monument", TIER_LANDMARK, 294 + lb.NEAR_DUPLICATE_M * 0.1, 592
     )
-    assert [label.name for label in lb.dedupe_names([town, close], _Sheet())] == ["Monmouth"]
+    assert [label.name for label in lb.dedupe_names([town, close], sheet_card())] == ["Monmouth"]
 
 
 def test_a_shared_word_is_not_a_shared_place():
@@ -2104,10 +1440,10 @@ def test_a_span_name_is_never_deduped():
     from pyntpot._port import labels as lb
 
     twice = [
-        _named("the steady middle hour", "climb", lb.TIER_SPAN, 100, 100),
-        _named("the steady middle hour", "fast", lb.TIER_SPAN, 110, 100),
+        _named("the steady middle hour", "climb", TIER_SPAN, 100, 100),
+        _named("the steady middle hour", "fast", TIER_SPAN, 110, 100),
     ]
-    assert len(lb.dedupe_names(twice, _Sheet())) == 2
+    assert len(lb.dedupe_names(twice, sheet_card())) == 2
 
 
 # ------------------------------------------------- the clearance a name keeps
@@ -2123,13 +1459,13 @@ def test_a_name_clears_its_own_feature_on_whichever_side_it_takes():
     """
     from pyntpot._port import labels as lb
 
-    river = lb.Label(
+    river = Label(
         name="Lyn",
         kind="river",
         why="",
         px=0.0,
         py=0.0,
-        tier=lb.TIER_RIVER,
+        tier=TIER_RIVER,
         size=18.0,
         feature_px=11.4,
     )
@@ -2149,13 +1485,13 @@ def test_the_box_a_curved_name_reserves_is_centred_on_its_own_ink():
     """The placer defends boxes and the pen writes glyphs, and they are one thing."""
     from pyntpot._port import labels as lb
 
-    road = lb.Label(
+    road = Label(
         name="A361",
         kind="road",
         why="",
         px=0.0,
         py=0.0,
-        tier=lb.TIER_ROAD,
+        tier=TIER_ROAD,
         size=14.0,
         feature_px=6.75,
     )
@@ -2176,28 +1512,28 @@ def test_the_clearance_scales_with_the_water_the_painter_actually_laid_down():
     """
     from pyntpot._port import labels as lb
 
-    assert lb.WET_SPREAD > 1.0
+    assert WET_SPREAD > 1.0
     wide = label_basemap(wet_px={"major": 12.0, "medium": 3.0, "minor": 1.0})
     narrow = label_basemap(wet_px={"major": 4.0, "medium": 3.0, "minor": 1.0})
-    big = lb.Label(
+    big = Label(
         name="Lyn",
         kind="river",
         why="",
         px=0.0,
         py=0.0,
-        tier=lb.TIER_RIVER,
+        tier=TIER_RIVER,
         size=18.0,
-        feature_px=lb.feature_px(wide, "river", "major"),
+        feature_px=feature_px(wide, "river", "major"),
     )
-    small = lb.Label(
+    small = Label(
         name="Lyn",
         kind="river",
         why="",
         px=0.0,
         py=0.0,
-        tier=lb.TIER_RIVER,
+        tier=TIER_RIVER,
         size=18.0,
-        feature_px=lb.feature_px(narrow, "river", "major"),
+        feature_px=feature_px(narrow, "river", "major"),
     )
     assert lb.lift_px(big) > lb.lift_px(small)
     # The clearance starts where the painted ink stops: the whole painted
@@ -2316,13 +1652,13 @@ def _leadered(name, x, y):
     """One landmark waiting to be placed."""
     from pyntpot._port import labels as lb
 
-    return lb.Label(
+    return Label(
         name=name,
         kind="monument",
         why="",
         px=float(x),
         py=float(y),
-        tier=lb.TIER_LANDMARK,
+        tier=TIER_LANDMARK,
         size=lb.DEFAULT_LINE_PX,
     )
 
@@ -2397,12 +1733,12 @@ def test_a_name_on_its_own_mark_is_never_swapped():
 
     a = _leadered("Alpha", 150.0, 150.0)
     a.box, a.flat, a.leader = (270.0, 140.0, 330.0, 160.0), True, ((150.0, 150.0), (300.0, 150.0))
-    town = lb.Label(
+    town = Label(
         name="Elm",
         kind="settlement",
         px=250.0,
         py=150.0,
-        tier=lb.TIER_SETTLEMENT,
+        tier=TIER_SETTLEMENT,
         size=lb.DEFAULT_LINE_PX,
     )
     town.box, town.flat, town.leader = (70.0, 140.0, 130.0, 160.0), True, None

@@ -23,11 +23,11 @@ from pathlib import Path
 
 from PIL import Image
 
-from pyntpot._port import labels as placer
 from pyntpot.ink.sheet import Canvas
 from pyntpot.letters import nib
 from pyntpot.maps import lettering_marks
 from pyntpot.maps.credit import Credit
+from pyntpot.maps.lettering.label import Label
 from pyntpot.maps.plates import dark_array
 from pyntpot.maps.style import Style
 
@@ -74,9 +74,7 @@ def draw_attribution(image: Image.Image, text: str, style: Style) -> None:
     )
     marks = lettering_marks.label_marks(
         hand,
-        placer.Label(
-            name=text, kind="landmark", px=_PAD_PX, py=base, tx=_PAD_PX, ty=base, size=size
-        ),
+        Label(name=text, kind="landmark", px=_PAD_PX, py=base, tx=_PAD_PX, ty=base, size=size),
     )
     with tempfile.TemporaryDirectory() as work:
         surface = nib.NibSurface(

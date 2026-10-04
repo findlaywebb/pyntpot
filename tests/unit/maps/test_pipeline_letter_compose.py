@@ -13,7 +13,7 @@ from pyntpot.maps import pipeline
 from pyntpot.maps.annotations import Annotations, SpanRequest
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
-from pyntpot.maps.lettering import Lettering, letter
+from pyntpot.maps.lettering.pipeline import Lettering, letter
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track

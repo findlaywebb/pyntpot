@@ -31,18 +31,14 @@ from __future__ import annotations
 import logging
 import math
 import re
-from collections.abc import Callable
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 from pyntpot.ink.chains import joined
-from pyntpot.ink.curves import offset_curve, spline
 from pyntpot.ink.polyline import (
     cumulative_length,
     foot_on,
     length,
     meet,
-    seg_gap,
     simplify,
 )
 from pyntpot.ink.sheet import Canvas
@@ -52,40 +48,18 @@ from pyntpot.letters.style import NibGroups
 
 if TYPE_CHECKING:
     from pyntpot.maps.basemap import Basemap, Line
+    from pyntpot.maps.lettering.label import Box, Label, Measure, Span
     from pyntpot.maps.plates import Plates
     from pyntpot.maps.style import Style
 
 log = logging.getLogger(__name__)
 
-Anchor = Literal["start", "middle", "end"]
 Pt = tuple[float, float]
-Box = tuple[float, float, float, float]
 #: The named lines a label may be set along, by kind: `roads` and `rivers`
 #: (one entry a named line), `coast` and `crossings` (bare point lists), in
 #: card metres. `named_lines` builds it from a basemap.
 NamedLines = dict[str, list[Any]]
 
-#: The order names claim their boxes in. A settlement cannot move, because it is
-#: its place; a river can slide along its own water but not off it; a climb's
-#: span line and a landmark's leader can both accommodate. So the ones that
-#: cannot move go first. Lower places first.
-TIER_PLACE = 10
-TIER_SETTLEMENT = 20
-TIER_RIVER = 30
-TIER_ROAD = 40
-TIER_SPAN = 50
-TIER_LANDMARK = 60
-TIER_MARKER = 70
-
-#: The kinds whose name sits on its own mark, so a leader would only decorate.
-NO_LEADER = ("settlement", "river", "road", "marker")
-
-#: The type size a label takes when nothing sets one is `DEFAULT_LINE_PX`, in
-#: display pixels, which the hand's setting module owns; it is the yardstick the
-#: other kinds' sizes are set as shares of.
-
-#: `measure(text, size) -> (width, height)`, both in display pixels.
-Measure = Callable[[str, float], tuple[float, float]]
 
 #: What a name laid across a road costs. Not a constraint: sometimes there is
 #: nowhere else, and a name that vanished would be worse than one that crosses
@@ -270,19 +244,6 @@ SPAN_MARK_THROUGH_COST = 110.0
 #: already; without this the rungs walk the block straight back over them.
 SPAN_INBOARD_COST = 150.0
 
-#: The kinds whose name is never broken over two lines, which is the shorter
-#: list. A settlement never wraps: a place name is one thing a reader looks up
-#: and breaking it reads as two places. A river, a road and a route marker are
-#: set along their own line or are one word, where a second line has nowhere to
-#: go. Everything else may: a span's name is a phrase the review agent wrote,
-#: and "the long climb out of Keswick" is 161 px of writing beside a 217 px
-#: bracket, which is why every awkward placement on the card traced back to
-#: there being no line breaking at all. A landmark may be a phrase too.
-NO_WRAP_KINDS = ("settlement", "river", "road", "marker", "home")
-
-#: The most lines a name is ever broken into. Two. A third line on a map is a
-#: paragraph, and a paragraph is not a label.
-MAX_LINES = 2
 
 #: What a second line costs, so it is taken only when it buys a materially
 #: better position rather than whenever it is marginally cheaper. Priced above
@@ -297,179 +258,6 @@ MAX_LINES = 2
 #: that window: the first wraps, the second does not, and neither is close to
 #: the edge.
 WRAP_COST = 26.0
-
-#: The gap between two lines of one name, as a multiple of the type size.
-WRAP_LEADING = 1.06
-
-#: The shortest a wrapped line may be, in characters, and as a share of the
-#: whole name. Breaking "the steady middle hour" after "the" is worse than not
-#: breaking it, and three characters of a thirty-character phrase is that break
-#: exactly: the card drew "the" over "long climb out of Keswick" until the
-#: share was added, because a stub first line makes the widest possible second
-#: line and the placer wanted the block one line tall wherever it could get it.
-WRAP_MIN_CHARS = 3
-WRAP_MIN_SHARE = 0.25
-
-
-@dataclass
-class Label:
-    """One name on the sheet: what it is, where it points, and where it sits.
-
-    `px`/`py` are the anchor, the thing the name is about, in card pixels.
-    Everything else is filled in by `place`: the box the name occupies, the
-    point its baseline starts from with the anchor that goes with it, and the
-    two ends of its leader when it has one.
-    """
-
-    name: str
-    kind: str = ""
-    why: str = ""
-    px: float = 0.0
-    py: float = 0.0
-    tier: int = TIER_LANDMARK
-    #: The type size in display pixels, so a hierarchy can set one kind smaller
-    #: than another without the placer having to know the hierarchy.
-    size: float = DEFAULT_LINE_PX
-    box: Box | None = None
-    tx: float = 0.0
-    ty: float = 0.0
-    anchor: Anchor = "start"
-    #: `((x0, y0), (x1, y1))` from the anchor to the text, or None for a label
-    #: that sits on its own mark and needs no leader.
-    leader: tuple[Pt, Pt] | None = None
-    #: The name broken into the lines it is actually written on. Empty means
-    #: one line, which is `name`. The placer fills this in when a second line
-    #: bought a better position, and the boxes it claimed are the block's, so
-    #: what is reserved and what is drawn are the same pixels.
-    lines: list[str] = field(default_factory=list)
-    #: The line a curved label is set along, in card pixels. Empty is horizontal.
-    baseline: list[Pt] = field(default_factory=list)
-    #: The run of that line the placer actually chose, once it has chosen it.
-    #: Empty means it has not, and the hand picks its own window as it used to.
-    window: list[Pt] = field(default_factory=list)
-    #: True once the placer has decided this name is set flat. The distinction
-    #: from "no window yet" matters: without it the hand went looking for its
-    #: own window for every name the placer had already rejected one for, and
-    #: the reader saw a curve the placer had never defended a box for. That was
-    #: the whole of the curved-label fault, surviving one layer further down.
-    flat: bool = False
-    #: Which side of its own baseline a curved name sits on: +1 above the line
-    #: in card pixels, -1 below it. A span sets this outboard of the route.
-    lift: float = 1.0
-    #: True when this name is written *on* its own feature rather than beside
-    #: it. A river drawn at the quarter kilometre it occupies has room for its
-    #: own name in the water, which is where a map puts it; a river drawn at the
-    #: legibility floor has not, and its name stays in the paper beside it.
-    in_water: bool = False
-    #: How wide the thing this name is about was painted, in display pixels. A
-    #: river's name has to clear its own water and a road number its own tarmac,
-    #: and the width of the mark is not the width of the centreline the name is
-    #: set along. Zero on anything that is not drawn as a ribbon.
-    feature_px: float = 0.0
-    #: A span's meaning, which is what its colour comes from. Empty on anything
-    #: that is not a span.
-    intent: str = ""
-    #: The mark this name belongs to, in card pixels: a span's own bracket.
-    #: With no leader drawn, the only thing joining a name to its mark is that
-    #: the two are near each other, and "near" has to be measured against the
-    #: whole mark and the whole block. Measured from the block's middle to the
-    #: nearest point of the bracket, a name set off the end of a short bracket
-    #: is charged for its own width and a compact two-line block beside the
-    #: middle of it is not, which is what pulls a wrapped name in close.
-    mark: list[Pt] = field(default_factory=list)
-    #: The points the placer may hang this name off, in card pixels. Empty
-    #: means the one anchor at `px`/`py`. A span offers several, spread along
-    #: its own bracket, so a name blocked beside the middle of it slides along
-    #: the line rather than away from it.
-    anchors: list[Pt] = field(default_factory=list)
-    #: The stretch of route a span's name belongs to, as indices. The route
-    #: costs a name that sits on it, and a span's name is beside the route by
-    #: construction, so its own stretch is exempt: what a span must not do is
-    #: cross some *other* part of the track.
-    span_range: tuple[int, int] | None = None
-
-    @property
-    def text_lines(self) -> list[str]:
-        """The lines this name is written on: the wrap, or the whole name."""
-        return self.lines or [self.name]
-
-    @property
-    def lx(self) -> float:
-        """The leader's text end, x. The anchor itself when there is no leader."""
-        return self.leader[1][0] if self.leader else self.px
-
-    @property
-    def ly(self) -> float:
-        """The leader's text end, y."""
-        return self.leader[1][1] if self.leader else self.py
-
-    def as_dict(self) -> dict[str, Any]:
-        """The placed label in the shape the drawing code has always read."""
-        return {
-            "name": self.name,
-            "kind": self.kind,
-            "why": self.why,
-            "px": self.px,
-            "py": self.py,
-            "tx": self.tx,
-            "ty": self.ty,
-            "anchor": self.anchor,
-            "lx": self.lx,
-            "ly": self.ly,
-            "tier": self.tier,
-            "size": self.size,
-        }
-
-
-#: Every extent a span can be drawn for. The first group is the ground, the
-#: second the session, and which group a kind is in decides which side of the
-#: route it sits on. A span is not only a climb: any stretch of the activity
-#: worth remarking on is one, which is what `steady`, `fade` and `best_effort`
-#: are for.
-SPAN_GROUND = ("climb", "drag", "descent", "road", "water")
-SPAN_EFFORT = ("fast", "hard_set", "best_effort", "fade", "walk", "headwind", "steady", "other")
-
-#: How many spans one card carries. Four made the sheet cluttered: with the
-#: settlements, the rivers, the roads and the landmarks already on it, three
-#: brackets is where the card still reads as a map rather than as a diagram.
-#: Spans past the cap are dropped in the order the payload wrote them, so the
-#: agent's own "best first" decides which survive.
-SPAN_MAX = 3
-
-
-@dataclass
-class Span:
-    """One stretch of the session the map annotates, with extent, not a pin.
-
-    The payload states an extent in one of three vocabularies (`schema.Span`);
-    by the time it is here it has been resolved to a pair of indices into the
-    route, because that is the only vocabulary the drawing needs. `side`,
-    `rank`, `line` and `label` are filled in by `place_spans`.
-    """
-
-    name: str
-    kind: str = "climb"
-    why: str = ""
-    #: One of the intents `maps.lettering_marks.SPAN_INTENT_INK` names, which is what decides
-    #: the colour it is drawn in.
-    intent: str = "note"
-    i0: int = 0
-    i1: int = 0
-    #: +1 is left of the direction of travel, -1 is right, 0 is not yet chosen.
-    side: int = 0
-    #: The rung of the offset ladder, so overlapping spans nest rather than
-    #: stack on each other.
-    rank: int = 0
-    offset_px: float = 0.0
-    #: The offset line in card pixels, and the two end ticks, likewise.
-    line: list[Pt] = field(default_factory=list)
-    ticks: list[list[Pt]] = field(default_factory=list)
-    label: Label | None = None
-
-    @property
-    def ground(self) -> bool:
-        """True when this span is a fact about the ground, not about the session."""
-        return self.kind in SPAN_GROUND
 
 
 # --------------------------------------------------------------------------- picks
@@ -586,18 +374,13 @@ def place(
         The same labels, in tier order, each carrying its box, its text anchor
         and, when it is set along a line, the run of line it is set along.
     """
+    from pyntpot.maps.lettering.spans import SpanSurroundings, place_spans
+
     boxes = list(taken)
     todo = list(labels)
     if spans:
-        place_spans(
-            spans,
-            card,
-            route_px,
-            dark,
-            measure_fn=measure_fn,
-            avoid=_places_to_avoid(labels),
-            lines=roads or [],
-        )
+        around = SpanSurroundings(card, route_px, dark, _places_to_avoid(labels), roads or [])
+        place_spans(spans, around, measure_fn)
         todo += [span.label for span in spans if span.label is not None]
     ordered = sorted(dedupe_names(todo, card), key=lambda lb: lb.tier)
     return _place(ordered, card, route_px, dark, boxes, measure_fn, roads or [])
@@ -724,6 +507,8 @@ def road_lines(lines: NamedLines, card: Any) -> list[list[Pt]]:
 
 def _crossings(box: Box, roads: list[list[Pt]]) -> int:
     """How many roads a box sits on. One count a road, not one a segment."""
+    from pyntpot.maps.lettering.span_clear import _seg_in_box
+
     if not roads:
         return 0
     x0, y0, x1, y1 = box
@@ -744,31 +529,6 @@ def _on_road(box: Box, roads: list[list[Pt]]) -> float:
     expensive thing on the sheet by an order of magnitude.
     """
     return 1.0 if _crossings(box, roads) else 0.0
-
-
-def _seg_in_box(a: Pt, b: Pt, x0: float, y0: float, x1: float, y1: float) -> bool:
-    """Whether a segment touches an axis-aligned box, by the slab test."""
-    if max(a[0], b[0]) < x0 or min(a[0], b[0]) > x1:
-        return False
-    if max(a[1], b[1]) < y0 or min(a[1], b[1]) > y1:
-        return False
-    if x0 <= a[0] <= x1 and y0 <= a[1] <= y1:
-        return True
-    dx, dy = b[0] - a[0], b[1] - a[1]
-    lo, hi = 0.0, 1.0
-    for p, q in ((-dx, a[0] - x0), (dx, x1 - a[0]), (-dy, a[1] - y0), (dy, y1 - a[1])):
-        if abs(p) < 1e-12:
-            if q < 0:
-                return False
-            continue
-        t = q / p
-        if p < 0:
-            lo = max(lo, t)
-        else:
-            hi = min(hi, t)
-        if lo > hi:
-            return False
-    return True
 
 
 def _overlap(box: Box, boxes: list[Box]) -> float:
@@ -912,6 +672,8 @@ def _reseat(lb: Label, cx: float, cy: float) -> None:
     the first baseline, the leader's text end) is rebuilt from the new middle
     exactly as `_place_flat` derived it from the old one.
     """
+    from pyntpot.maps.lettering.label import WRAP_LEADING
+
     x0, y0, x1, y1 = lb.box
     tw, th = x1 - x0, y1 - y0
     ax, ay = lb.leader[0]
@@ -1095,64 +857,6 @@ def _route_for(lb: Label, route_px: list[Pt], thin: list[Pt]) -> list[tuple[list
     return out or [(thin, 1.0)]
 
 
-def wrap_forms(name: str, kind: str, tier: int = TIER_LANDMARK) -> list[list[str]]:
-    """Every way this name may be written, one line first, then two.
-
-    A break is only ever taken at a space, and only where both halves are worth
-    writing, so "the long climb out of Keswick" may become "the long climb" /
-    "out of Keswick" but never "the" / "long climb out of Keswick". Each split
-    is offered to the placer and the placer decides; this only says which are
-    allowed.
-
-    The kind is a deny list rather than an allow list, because a span carries
-    its own vocabulary as its kind ("climb", "steady", "fade") and an allow
-    list would have had to name all of them, which is how the first version of
-    this missed every span on the card. The tier settles the collision in that
-    vocabulary: `road` and `water` are span kinds as well as ground kinds, and
-    a span named "the road along the Eden" may wrap where a road number never
-    does.
-
-    Args:
-        name: The whole name.
-        kind: The label's kind, which decides whether it may wrap at all.
-        tier: Its tier. A span always may, whatever its kind says.
-
-    Returns:
-        The forms, cheapest-intent first: the single line, then each two-line
-        split, most balanced first.
-    """
-    whole = [name]
-    if (kind in NO_WRAP_KINDS and tier != TIER_SPAN) or MAX_LINES < 2:
-        return [whole]
-    words = name.split()
-    if len(words) < 2:
-        return [whole]
-    splits: list[tuple[float, list[str]]] = []
-    for i in range(1, len(words)):
-        head, tail = " ".join(words[:i]), " ".join(words[i:])
-        floor = max(WRAP_MIN_CHARS, WRAP_MIN_SHARE * len(name))
-        if len(head) < floor or len(tail) < floor:
-            continue
-        splits.append((abs(len(head) - len(tail)), [head, tail]))
-    splits.sort(key=lambda kv: kv[0])
-    return [whole] + [form for _bal, form in splits]
-
-
-def block_size(form: list[str], size: float, measure_fn: Measure) -> tuple[float, float]:
-    """How wide and how tall a wrapped name is, as one block.
-
-    The width is the widest line and the height is the lines plus their
-    leading, so the box the placer reserves is the block the hand writes.
-    """
-    widths, heights = [], []
-    for line in form:
-        w, h = measure_fn(line, size)
-        widths.append(w)
-        heights.append(h)
-    tall = max(heights) + (len(form) - 1) * size * WRAP_LEADING
-    return max(widths), tall
-
-
 def _best_flat(
     lb: Label,
     card: Any,
@@ -1168,6 +872,8 @@ def _best_flat(
     materially better position and not when it merely ties. The label is left
     holding whichever form won, with the block's own box.
     """
+    from pyntpot.maps.lettering.label import block_size, wrap_forms
+
     best: tuple[float, list[str], Any] | None = None
     for form in wrap_forms(lb.name, lb.kind, lb.tier):
         tw, th = block_size(form, lb.size, measure_fn)
@@ -1201,6 +907,8 @@ def _mark_gap(box: Box, lb: Label, fallback: float) -> float:
     compact two-line block beside the line the cheap answer and a banner across
     it the dear one.
     """
+    from pyntpot.maps.lettering.label import TIER_SPAN
+
     if lb.tier != TIER_SPAN or not lb.mark:
         return fallback
     x0, y0, x1, y1 = box
@@ -1221,6 +929,8 @@ def _mark_through(box: Box, lb: Label) -> float:
     through the words, and the block sitting in the gap between the bracket and
     the road it brackets.
     """
+    from pyntpot.maps.lettering.label import TIER_SPAN
+
     if lb.tier != TIER_SPAN or not lb.mark:
         return 0.0
     cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
@@ -1258,6 +968,8 @@ def _place_flat(
     Fills the label in and returns what that answer cost, so the caller can
     hold it against setting the same name along its own line.
     """
+    from pyntpot.maps.lettering.label import NO_LEADER, TIER_SPAN, WRAP_LEADING
+
     offs = [(1, 0), (-1, 0), (1, -1), (-1, -1), (1, 1), (-1, 1), (0, -1), (0, 1)]
     near_mark = lb.tier == TIER_SPAN or lb.kind in NO_LEADER
     rungs = NEAR_RUNGS if near_mark else LEADER_RUNGS
@@ -1313,6 +1025,8 @@ def _off_own_feature(box: Box, lb: Label) -> float:
     guess which road it meant. The anchor is one point on a long feature, so
     the distance is measured to the whole centreline rather than to the anchor.
     """
+    from pyntpot.maps.lettering.label import NO_LEADER
+
     if not lb.baseline or lb.kind not in NO_LEADER:
         return 0.0
     cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
@@ -1419,6 +1133,9 @@ def _place_along(
         starts, and which side of it the name lifts to. None when no window on
         this line is usable.
     """
+    from pyntpot.maps.lettering.label import TIER_SPAN
+    from pyntpot.maps.lettering.span_line import _resample
+
     want = tw * 1.02
     span = lb.tier == TIER_SPAN
     turn_max = SPAN_MAX_TURN_DEG if span else MAX_TURN_DEG
@@ -1712,1388 +1429,12 @@ def _tilt_max(line: list[Pt]) -> float:
 # --------------------------------------------------------------------------- spans
 
 
-def resolve_spans(
-    picks: Any, times: list[float], dist_m: list[float], cap: int = SPAN_MAX
-) -> list[Span]:
-    """The payload's spans, each resolved to a pair of indices into the route.
-
-    A caller states an extent in one of three vocabularies, because it has one
-    of them to hand and converting between them is the renderer's job. Indices
-    go straight through; kilometres are read against the route's own cumulative
-    distance; seconds are read against its clock, which only a caller holding a
-    snapshot has, so a card composed from a bare track resolves the first two
-    and says so about the third.
-
-    Args:
-        picks: The payload's `map` block, or None.
-        times: Seconds at each route point, or empty when there is no clock.
-        dist_m: Cumulative metres at each route point.
-        cap: How many spans the card carries. The payload's own order decides
-            which survive, because the agent is asked for its best first.
-
-    Returns:
-        One `Span` per payload entry that lands inside the route, longest first.
-    """
-    wanted = list(getattr(picks, "spans", None) or [])
-    if not wanted or len(dist_m) < 2:
-        return []
-    out: list[Span] = []
-    for entry in wanted:
-        i0 = _span_index(entry, "from", times, dist_m)
-        i1 = _span_index(entry, "to", times, dist_m)
-        if i0 is None or i1 is None or i1 <= i0:
-            log.info("span %r does not land on the route", getattr(entry, "name", ""))
-            continue
-        out.append(
-            Span(
-                name=getattr(entry, "name", ""),
-                kind=getattr(entry, "kind", "climb") or "climb",
-                why=getattr(entry, "why", "") or "",
-                intent=getattr(entry, "intent", "note") or "note",
-                i0=i0,
-                i1=i1,
-            )
-        )
-    if len(out) > cap:
-        log.info("card carries %d spans; %d were asked for", cap, len(out))
-        out = out[:cap]
-    out.sort(key=lambda s: s.i0 - s.i1)
-    return out
-
-
-def _span_index(entry: Any, end: str, times: list[float], dist_m: list[float]) -> int | None:
-    """One end of a span as an index into the route, from whichever pair it has."""
-    last = len(dist_m) - 1
-    idx = getattr(entry, f"{end}_i", None)
-    if idx is not None:
-        return max(0, min(int(idx), last))
-    km = getattr(entry, f"{end}_km", None)
-    if km is not None:
-        return _nearest(dist_m, float(km) * 1000.0)
-    secs = getattr(entry, f"{end}_s", None)
-    if secs is None:
-        return None
-    if len(times) != len(dist_m):
-        log.info("a span given in seconds needs a clock this caller has not got")
-        return None
-    return _nearest(times, float(secs))
-
-
-def _nearest(values: list[float], target: float) -> int:
-    """The index of the route point nearest a value on a monotone stream."""
-    return min(range(len(values)), key=lambda i: abs(values[i] - target))
-
-
-#: How far off the route a span's line sits, in cap heights, and how far apart
-#: two rungs of the ladder are.
-#:
-#: Too far out, at 2.6 cap heights for the first rung, reads as detached; too
-#: close, at 0.9, reads as drawn on the road. Hand-drawn marks measure about
-#: 0.8 to 1.0 cap heights off the route, and the offset is set at 1.2. The rung
-#: spacing follows the same split: 2.4 at the wide end against 1.9 at the near.
-SPAN_OFFSET_CAPS = 1.2
-SPAN_RUNG_CAPS = 2.1
-
-#: How long a span's end tick is, in cap heights. It runs from the end of the
-#: mark towards the end of the stretch on the road, taking the direction of
-#: the segment rather than standing exactly perpendicular to the local route.
-#: A tick square to the route reads as wrong.
-SPAN_TICK_CAPS = 0.85
-
-#: How far from the horizontal a span may run and still have its name set along
-#: it, in degrees of screen-space bearing.
-#:
-#: Three cases set the figure. The A66 drag and the long climb out of
-#: Keswick both run across the sheet and read well with the name along them;
-#: the A591 climb runs down the sheet from the viewer's point of view and does
-#: not, because the letters end up stacked and the reader has to tilt their
-#: head. Thirty-five degrees is where those three fall either side: it keeps
-#: anything within about a sixth of a turn of horizontal and rejects the rest.
-#: Set deliberately tighter than `MAX_TILT_DEG`, which is what a river may take,
-#: because a river's own line is the reason the reader forgives its tilt and a
-#: span's line is a bracket the renderer drew.
-SPAN_ALONG_MAX_BEARING_DEG = 35.0
-
-
-def place_spans(
-    spans: list[Span],
-    card: Any,
-    route_px: list[Pt],
-    dark: dict[str, Any],
-    measure_fn: Measure,
-    cap_px: float = 14.0,
-    rails: int = 3,
-    along_max_deg: float = SPAN_ALONG_MAX_BEARING_DEG,
-    avoid: list[tuple[float, float, float, float]] | None = None,
-    lines: list[list[Pt]] | None = None,
-) -> list[Span]:
-    """Choose a side and a rung for every span, and draw its mark.
-
-    The ground takes the side of the route with more free paper over its own
-    extent; the session takes the other, so the two never interleave. Where the
-    stretch bends, the outside of the bend takes that choice off the free side
-    unless the free side is clearly freer: see `_curved_side`. Within a side
-    the longest span is the outer rail and shorter ones nest inside it, and
-    only an overlapping span moves out a rung.
-
-    The name is set along the span's own line when the span runs across the
-    sheet, on the far side of the line from the route so the order the eye
-    crosses is route, line, name. When the span runs down the sheet it is not:
-    the name goes horizontally into whatever clear paper the placer can find
-    beside it, and with no leader either way, because a name a few pixels from
-    its own bracket does not need a line drawn to it.
-
-    Args:
-        spans: The resolved spans, longest first. Placed in place.
-        card: The card, for its size in display pixels.
-        route_px: The track in card pixels.
-        dark: The painter's darkness grid.
-        measure_fn: How wide a name is, so a span too short to carry its own
-            name along it is known before the window search is tried.
-        cap_px: The lettering's cap height, which sets the ladder's spacing.
-        rails: How many rungs a side carries before a span is dropped.
-        along_max_deg: The bearing threshold, in degrees off horizontal.
-        avoid: Places the mark would rather not be drawn through, each an
-            `(x, y, weight, radius)` in card pixels. A cost and never a rule:
-            see `_drawn_side`.
-        lines: The watercourses, roads and lanes, in card pixels, which a mark
-            would rather not be drawn along. A cost as well.
-
-    Returns:
-        The spans that were placed. A span past the last rung is left out, and
-        so is one no arc of whose envelope clears the route.
-    """
-    placed: list[Span] = []
-    used: dict[int, list[tuple[int, int, int]]] = {1: [], -1: []}
-    for span in spans:
-        free, margin = _freer_side(span, route_px, dark, card, cap_px)
-        base = free if span.ground else -free
-        span.side = _curved_side(span, route_px, base, margin, cap_px, card)
-        # The side is settled before the rung, because the rung is what nests
-        # one span inside another on a side and a span that moves afterwards
-        # would nest against a side it is no longer on. The mark that settles
-        # it is drawn at the first rung's offset; a span that ends up further
-        # out is drawn again there.
-        first = cap_px * SPAN_OFFSET_CAPS
-        span.side, drawn = _drawn_side(span, route_px, card, cap_px, first, avoid, lines)
-        rank = _rung(used, span, span.side, rails)
-        if rank is None and span.side != base:
-            # Curvature is a preference, not a licence to lose the span. If the
-            # outside of the bend is already full and the inside is not, the
-            # span goes back inside rather than off the sheet.
-            log.info(
-                "span %r takes the inside of the bend: the outside is past the last rail", span.name
-            )
-            span.side, rank = base, _rung(used, span, base, rails)
-        if rank is None:
-            log.info("span %r is past the third rail and is not drawn", span.name)
-            continue
-        span.rank = rank
-        span.offset_px = first + rank * cap_px * SPAN_RUNG_CAPS
-        span.line = (
-            drawn
-            if rank == 0
-            else span_line(
-                route_px,
-                span.i0,
-                span.i1,
-                span.side,
-                span.offset_px,
-                card,
-                clear_px=cap_px * SPAN_CLEAR_CAPS,
-            )
-        )
-        if not span.line:
-            # No arc of the envelope could be drawn clear of the route. A span
-            # dropped with a reason on the record beats one drawn across the
-            # road the reader is looking at, which is rule seven.
-            log.info("span %r is not drawn: no mark clears the route", span.name)
-            continue
-        span.ticks = _span_ticks(span, route_px, cap_px)
-        span.label = _span_label(span, route_px, cap_px, measure_fn, along_max_deg)
-        used[span.side].append((span.i0, span.i1, rank))
-        placed.append(span)
-    return placed
-
-
-def span_bearing(line: list[Pt]) -> float:
-    """A span line's screen-space bearing off the horizontal, 0 to 90 degrees.
-
-    The chord, not the local tangent: what decides whether a name reads along a
-    bracket is which way the bracket goes across the sheet, and a climb that
-    wiggles about a westward chord still reads westward.
-    """
-    if len(line) < 2:
-        return 90.0
-    a, b = line[0], line[-1]
-    ang = abs(math.degrees(math.atan2(b[1] - a[1], b[0] - a[0])))
-    return min(ang, 180.0 - ang)
-
-
-#: How much better the other side's mark has to be before a span is moved off
-#: the side the paper and the bend chose for it, as a ratio of what each mark
-#: is worth. A quarter better: the two earlier rules are about where a mark
-#: reads best and this one is about whether there is a mark to read at all, so
-#: it wins a rout and loses a close thing.
-SPAN_SIDE_SWAP_MARGIN = 1.25
-
-#: What a mark drawn through something the sheet has already given to a place
-#: costs, as a share of its own length per unit of weight. A mark is drawn
-#: round a town rather than through it where it can be. That is leeway, so a
-#: cost: a mark with a
-#: town's worth of weight over a third of its length pays about its own length
-#: again, which loses to any decent mark on the other side and beats a stub.
-SPAN_FEATURE_COST = 1.5
-
-
-def _drawn_side(
-    span: Span,
-    route_px: list[Pt],
-    card: Any,
-    cap_px: float,
-    offset_px: float,
-    avoid: list[tuple[float, float, float, float]] | None,
-    lines: list[list[Pt]] | None = None,
-) -> tuple[int, list[Pt]]:
-    """The side the mark is actually drawn on, and the mark.
-
-    The side arrives already chosen, by free paper and then by the bend. Both
-    of those are about where a mark reads best, and neither has yet looked at
-    what the mark on that side turns out to be. Two things can only be known
-    once it is drawn: whether the route left room for it at all, since a mark
-    that meets a junction stops short of it, and whether it runs through a
-    place the sheet has already named or lies tight along a river. So both
-    sides are drawn and scored on how much of a mark came back, less what it
-    cost to cross a settlement and what it cost to lie on another strong line,
-    and the chosen side keeps the span unless the other is clearly better.
-
-    Args:
-        span: The span, for its extent, side and offset.
-        route_px: The whole track in card pixels.
-        card: The card, for its size.
-        cap_px: The lettering's cap height.
-        offset_px: The level the two marks are drawn at, which is the first
-            rung's: the side is settled before the rung is.
-        avoid: `(x, y, weight, radius)` places, in card pixels, or None.
-        lines: The other strong line on the sheet - the watercourses, the
-            roads and the lanes - in card pixels, which a mark would rather
-            not be drawn along. A preference and nothing more: where the
-            route runs down the far bank of a river there is nowhere else
-            for the mark, and it may sit tight against the water.
-
-    Returns:
-        `(side, line)`, the line empty when neither side drew a mark.
-    """
-    clear = cap_px * SPAN_CLEAR_CAPS
-    drawn = {
-        side: span_line(route_px, span.i0, span.i1, side, offset_px, card, clear_px=clear)
-        for side in (span.side, -span.side)
-    }
-    worth = {
-        side: (length(line) - _feature_cost(line, avoid) - _on_line_cost(line, lines, cap_px))
-        for side, line in drawn.items()
-    }
-    other = -span.side
-    if drawn[other] and worth[other] > max(worth[span.side], 0.0) * SPAN_SIDE_SWAP_MARGIN:
-        log.info(
-            "span %r is drawn on the other side: %.0f px of mark there against %.0f px here",
-            span.name,
-            worth[other],
-            worth[span.side],
-        )
-        return other, drawn[other]
-    return span.side, drawn[span.side]
-
-
-#: How near another strong line on the sheet counts as lying along it, in cap
-#: heights, and what that costs as a share of the mark's own length.
-#:
-#: A mark prefers clear paper and would
-#: rather not sit tight against a river or a road. It is a softer preference
-#: than the leeway round a settlement and much softer than the route rule: a
-#: mark lying on water for its whole length pays half its length, which loses
-#: to a side that yields a full mark and beats a side that yields a stub.
-SPAN_LINE_REACH_CAPS = 0.7
-SPAN_LINE_COST = 0.5
-
-
-def _on_line_cost(line: list[Pt], lines: list[list[Pt]] | None, cap_px: float) -> float:
-    """What a mark pays for lying along a river, a road or a lane, in pixels.
-
-    Charged on how much of the mark sits within `SPAN_LINE_REACH_CAPS` of one
-    of them, so a mark that crosses a river pays almost nothing and a mark
-    drawn down the middle of one pays a share of its whole length.
-    """
-    if not lines or len(line) < 2:
-        return 0.0
-    run = length(line)
-    if run <= 0.0:
-        return 0.0
-    reach = cap_px * SPAN_LINE_REACH_CAPS
-    pts = _resample(line, max(run / 60.0, 1.0))
-    near = [_route_near(line, other, reach) for other in lines]
-    near = [other for other in near if len(other) > 1]
-    if not near:
-        return 0.0
-    on = sum(1 for q in pts if min(foot_on(q, other)[0] for other in near) < reach)
-    return (on / len(pts)) * run * SPAN_LINE_COST
-
-
-def _feature_cost(line: list[Pt], avoid: list[tuple[float, float, float, float]] | None) -> float:
-    """What a mark pays for the map content it is drawn over, in pixels.
-
-    Charged on how much of the line lies inside a place's own radius, times
-    what the place is worth, times its own length. Nothing is forbidden here:
-    rule seven, which is a constraint, is enforced in `span_line`, and this is
-    the preference that sits beside it.
-    """
-    if not avoid or len(line) < 2:
-        return 0.0
-    run = length(line)
-    if run <= 0.0:
-        return 0.0
-    pts = _resample(line, max(run / 60.0, 1.0))
-    cost = 0.0
-    for x, y, weight, radius in avoid:
-        if radius <= 0.0:
-            continue
-        inside = sum(1 for p in pts if math.dist(p, (x, y)) < radius)
-        cost += weight * (inside / len(pts)) * run * SPAN_FEATURE_COST
-    return cost
-
-
-def _rung(
-    used: dict[int, list[tuple[int, int, int]]], span: Span, side: int, rails: int
-) -> int | None:
-    """Which rung of one side this span nests on, or None when the side is full."""
-    rank = 0
-    for i0, i1, taken in used[side]:
-        if span.i0 < i1 and span.i1 > i0:
-            rank = max(rank, taken + 1)
-    return None if rank >= rails else rank
-
-
-#: Whether the outside of a bend gets a say in which side of the route a span's
-#: bracket is drawn on. There is a geometric
-#: argument for it: **a bracket is an offset line, and an offset line
-#: contracts on the inside of a bend and expands on the outside.** The inside
-#: is where the contour crowds, kinks and closes on itself, which is the
-#: failure that has produced a ring round the Keswick climb and a doubled-back
-#: stub; the outside gives more arc length for the same stretch, so a name
-#: fits along it more often and the mark stays an open gesture.
-#:
-#: On by default and named here so it can be turned off or reweighted without
-#: a code change. Off, `place_spans` chooses exactly as it did before.
-SPAN_CURVE_SIDE = True
-
-#: How much net turning a stretch has to do before it has an outside at all,
-#: and where the vote reaches full strength, both in degrees over the whole
-#: extent. Below the first, the stretch is straight enough that "the outside"
-#: names nothing and the free-paper choice stands unopposed; between the two
-#: the vote ramps, so a gentle bend is a gentle preference.
-#:
-#: Thirty-five degrees is a little over a third of a right angle over the whole
-#: stretch, which is about where a road stops reading as a road that goes
-#: somewhere and starts reading as a bend. It is also where the sweep settles:
-#: over the four cached rides, 25 degrees moves 33 stretches for 24 better and
-#: 8 worse, 35 moves 32 for 24 and 7, and 45 and 60 both drop a win to save
-#: nothing. The A591 climb on the Dovedale card turns 11 degrees over its
-#: whole extent and gets no vote: a span on a straight stretch staying where
-#: the free paper put it is the threshold working, not the term failing.
-SPAN_CURVE_MIN_TURN_DEG = 35.0
-SPAN_CURVE_FULL_TURN_DEG = 75.0
-
-#: How single-minded the bend has to be. `net / gross`: one long curve is near
-#: 1, an S-bend that turns as far back as it turned out is near 0. A stretch
-#: below this has no outside either, because half of it would be written on the
-#: inside whichever side were chosen, so the vote is withheld and the free-paper
-#: choice stands. Not a small number: the ambiguous case is the one where
-#: forcing a side does harm, and a stretch that is two thirds one way is where
-#: the eye starts calling it a bend.
-SPAN_CURVE_MIN_COHERENCE = 0.62
-
-#: What the vote is worth, in the units the free-paper choice is scored in,
-#: which is mean darkness from 0 (clear paper) to 1 (solid ink). The vote can
-#: only turn the side round when the darkness margin between the two sides is
-#: under `SPAN_CURVE_WEIGHT` times the vote's strength. So this number is
-#: exactly the answer to "how near a tie does the free-paper choice have to be
-#: before the bend gets to decide it".
-#:
-#: Picked by measuring the margins, not by taste. Over the same 187 stretches,
-#: the margin the free-paper rule wins by has a median of 0.042 and a ninetieth
-#: percentile of 0.122. At 0.08 a fully committed bend overrules about four
-#: margins in five and loses to the darkest fifth, which is the side that is
-#: off the paper, under a wash or already carrying names; a half-strength bend,
-#: which is a stretch turning about 50 degrees, overrules only about half.
-#: That is the shape wanted: the outside of the curve **where there is one**,
-#: and not otherwise.
-SPAN_CURVE_WEIGHT = 0.08
-
-#: At what scale the bend is read, as a multiple of the cap height. The single
-#: most important number here, and the one the outside-of-the-bend rule
-#: lives or dies on.
-#:
-#: The route in card pixels is sampled about a pixel apart, and per-vertex turn
-#: at that spacing is mostly the sampling, so the stretch is resampled before
-#: it is measured. **The right spacing is the offset the bracket will be drawn
-#: at**, 1.7 cap heights, because contraction is what an offset line does at
-#: its own offset: a bend the offset can see is a bend that squeezes it. Read
-#: coarser, the measure answers a different question and stops predicting
-#: anything. Over 187 stretches from the four cached rides, the share of the
-#: decisive cases the outside gets right is 89% read at 1.5 caps, 79% at 2,
-#: 60% at 3 and 46% at 4, which is a coin toss. 1.5 is under the offset and is
-#: where the sweep peaks; the trend either side of it is the argument.
-SPAN_CURVE_SCALE_CAPS = 1.5
-
-
-def route_turn(line: list[Pt]) -> tuple[float, float]:
-    """How far a polyline turns, net and gross, in degrees.
-
-    Signed the way a turn is signed in card pixels, where y runs down:
-    positive turning is towards the normal `(-dy, dx)`. Only the ratio of the
-    two numbers is used to decide anything, because which drawn side the bend's
-    outside corresponds to is settled by measuring the marks, in `_convex_side`.
-
-    Args:
-        line: The polyline, in card pixels, already sampled at the scale the
-            bend is to be read at.
-
-    Returns:
-        `(net, gross)`: the signed sum of the turn at every interior vertex,
-        and the sum of its absolute value. Their ratio says how single-minded
-        the turning is; `(0.0, 0.0)` for a line with no interior vertex.
-    """
-    net = gross = 0.0
-    for a, b, c in zip(line, line[1:], line[2:], strict=False):
-        ux, uy = b[0] - a[0], b[1] - a[1]
-        vx, vy = c[0] - b[0], c[1] - b[1]
-        if math.hypot(ux, uy) < 1e-9 or math.hypot(vx, vy) < 1e-9:
-            continue
-        turn = math.degrees(math.atan2(ux * vy - uy * vx, ux * vx + uy * vy))
-        net += turn
-        gross += abs(turn)
-    return net, gross
-
-
-def bend_strength(sub: list[Pt], scale_px: float) -> float:
-    """How much of an outside a stretch has, from 0 to 1.
-
-    Zero when the stretch is too straight for "the outside" to name anything,
-    and zero when it turns both ways about equally, which is the same statement
-    made twice: there is no one outside, so nothing is voted for and the
-    free-paper rule keeps the choice. Otherwise the strength ramps from 0 to 1
-    between `SPAN_CURVE_MIN_TURN_DEG` and `SPAN_CURVE_FULL_TURN_DEG` of net
-    turning, so a gentle bend is a gentle preference.
-
-    Unsigned on purpose. Which side the outside actually is, is settled by
-    `_convex_side` on the drawn marks rather than from a normal, because this
-    module signs a side two different ways: `_bracket` pushes off the chord's
-    own normal and takes its chord from the widest pair of points rather than
-    from the direction of travel, while the contour filters a ring with
-    `_side_at`. The two do not agree, so nothing here relies on either.
-
-    Args:
-        sub: The stretch of route the span covers, in card pixels.
-        scale_px: The spacing the stretch is read at, which should be about the
-            offset the bracket will be drawn at.
-
-    Returns:
-        `0.0` to `1.0`.
-    """
-    if len(sub) < 3 or scale_px <= 0.0:
-        return 0.0
-    net, gross = route_turn(_resample(sub, scale_px))
-    if gross <= 1e-9 or abs(net) < SPAN_CURVE_MIN_TURN_DEG:
-        return 0.0
-    if abs(net) / gross < SPAN_CURVE_MIN_COHERENCE:
-        return 0.0
-    span_deg = SPAN_CURVE_FULL_TURN_DEG - SPAN_CURVE_MIN_TURN_DEG
-    ramp = (abs(net) - SPAN_CURVE_MIN_TURN_DEG) / span_deg if span_deg > 0 else 1.0
-    return min(max(ramp, 0.0), 1.0)
-
-
-def _outward(sub: list[Pt]) -> tuple[Pt, Pt]:
-    """The middle of a stretch's chord, and the unit vector out of its bend.
-
-    The chord is the widest pair of points and not the two ends, for the reason
-    `_bracket` uses the same pair: an out-and-back finishes where it started,
-    and the middle of *that* chord says nothing about anything. The stretch's
-    own middle of mass sits on the convex side of that chord, because that is
-    what bending is, so the direction from the one to the other points out of
-    the bend.
-
-    Args:
-        sub: The stretch of route, in card pixels.
-
-    Returns:
-        `(middle, outward)`: the chord's middle, and a unit vector, or a zero
-        vector when the stretch is straight enough to have no bulge at all.
-    """
-    far = max(sub, key=lambda q: math.dist(sub[0], q))
-    near = max(sub, key=lambda q: math.dist(far, q))
-    middle = ((far[0] + near[0]) / 2.0, (far[1] + near[1]) / 2.0)
-    cx = sum(p[0] for p in sub) / len(sub) - middle[0]
-    cy = sum(p[1] for p in sub) / len(sub) - middle[1]
-    run = math.hypot(cx, cy)
-    return middle, ((cx / run, cy / run) if run > 1e-9 else (0.0, 0.0))
-
-
 #: When a mark fails as a mark. Two things only: nothing was drawn, or what was
 #: drawn comes nearer the route than the clearance it was given. Neither is a
 #: matter of taste. What used to be here as well - that a mark must not close
 #: on itself, and that it must hold the offset the ladder reserved to within a
 #: quarter - is withdrawn: a mark may be drawn round a doubled-back stretch,
 #: which encloses it, and its distance from the route is allowed to vary.
-
-
-def _mark_broken(line: list[Pt], route_px: list[Pt], clear_px: float) -> bool:
-    """Whether a drawn mark failed as a mark rather than merely read worse."""
-    if len(line) < 2:
-        return True
-    return not clear_of_route(line, route_px, clear_px)
-
-
-def _convex_side(
-    span: Span, route_px: list[Pt], cap_px: float, card: Any
-) -> tuple[int, dict[int, list[Pt]]]:
-    """Which side draws the bracket on the outside of the bend, by measurement.
-
-    The mark is drawn both ways and the two are compared, rather than a side
-    being worked out from a normal. Two reasons. The convention is not settled
-    in this module, as `bend_strength` says; and the answer wanted is about the
-    mark, not about the route, so measuring the mark is the direct question.
-
-    Each drawn line is measured by how far it stands *out of the bend*: the
-    mean of its displacement from the chord's middle, projected onto the
-    outward direction. Distance alone would not do, because the straight
-    fallback is pushed out past the widest point of the stretch and stands a
-    long way from the chord's middle on either flank; the projection is signed,
-    so a mark pushed the wrong way scores negative rather than large.
-
-    Args:
-        span: The span, for its extent.
-        route_px: The track in card pixels.
-        cap_px: The lettering's cap height, which sets the probe offset.
-        card: The card, for its size.
-
-    Returns:
-        `(side, marks)`: `+1` or `-1`, or `0` when there is nothing to compare,
-        and the line each side drew, so the caller can look at them without
-        drawing them again.
-    """
-    sub = route_px[span.i0 : span.i1 + 1]
-    marks = {
-        side: span_line(route_px, span.i0, span.i1, side, cap_px * SPAN_OFFSET_CAPS, card)
-        for side in (1, -1)
-    }
-    if len(sub) < 3:
-        return 0, marks
-    (mx, my), (ox, oy) = _outward(sub)
-    if ox == 0.0 and oy == 0.0:
-        return 0, marks
-    reach = {
-        side: sum((p[0] - mx) * ox + (p[1] - my) * oy for p in line) / len(line)
-        for side, line in marks.items()
-        if line
-    }
-    if len(reach) < 2:
-        return next(iter(reach), 0), marks
-    return (1 if reach[1] > reach[-1] else -1), marks
-
-
-def _curved_side(
-    span: Span, route_px: list[Pt], base: int, margin: float, cap_px: float, card: Any
-) -> int:
-    """The side the bracket goes on once the bend has had its say.
-
-    A weighted term and never an override. The free-paper choice arrives with
-    the margin it won by, in mean darkness; the bend arrives with a strength
-    from 0 to 1; and the bend only turns the answer round when the outside is
-    not already where the paper put it **and** `SPAN_CURVE_WEIGHT` times its
-    strength beats that margin. So the outside wins a near-tie, and a side that
-    is off the paper, under a wash or already carrying names keeps the span.
-
-    One thing outranks the bend outright, and it is not a preference: **the
-    bend may not break the mark.** Both marks are drawn to find the outside, so
-    what the outside would actually look like is already in hand, and where the
-    outside comes back as a ring or as the straight fallback standing well off
-    the offset while the free-paper side came back as a proper contour, the
-    move is refused. Measured over the four cached rides this refusal is what
-    turns the term from roughly even into clearly worth having.
-
-    Args:
-        span: The span, for its extent.
-        route_px: The track in card pixels.
-        base: The side the free-paper rule chose, +1 or -1.
-        margin: How far apart the two sides' mean darkness was.
-        cap_px: The lettering's cap height, which sets the reading scale.
-        card: The card, for its size.
-
-    Returns:
-        `base`, or `-base` when the bend overrules it.
-    """
-    if not SPAN_CURVE_SIDE:
-        return base
-    strength = bend_strength(route_px[span.i0 : span.i1 + 1], cap_px * SPAN_CURVE_SCALE_CAPS)
-    if strength <= 0.0:
-        return base
-    outside, marks = _convex_side(span, route_px, cap_px, card)
-    if outside == 0 or outside == base:
-        return base
-    if SPAN_CURVE_WEIGHT * strength <= margin:
-        log.info(
-            "span %r keeps the inside of its bend: darkness margin %.3f beats the bend's %.3f",
-            span.name,
-            margin,
-            SPAN_CURVE_WEIGHT * strength,
-        )
-        return base
-    clear = cap_px * SPAN_CLEAR_CAPS
-    if _mark_broken(marks[outside], route_px, clear) and not _mark_broken(
-        marks[base], route_px, clear
-    ):
-        log.info(
-            "span %r keeps the inside of its bend: the outside draws no usable mark", span.name
-        )
-        return base
-    log.info(
-        "span %r moves to the outside of its bend (strength %.2f, darkness margin %.3f)",
-        span.name,
-        strength,
-        margin,
-    )
-    return outside
-
-
-def _freer_side(
-    span: Span, route_px: list[Pt], dark: dict[str, Any], card: Any, cap_px: float
-) -> tuple[int, float]:
-    """Which side of its own extent has the more free paper, and by how much.
-
-    Returns:
-        `(side, margin)`: +1 for left and -1 for right, and the difference in
-        mean darkness between the two sides, from 0 to 1. The margin is what
-        the bend's vote is weighed against.
-    """
-    gw, gh, grid = dark["w"], dark["h"], dark["v"]
-    score = {1: [], -1: []}
-    step = max((span.i1 - span.i0) // 12, 1)
-    for i in range(span.i0, span.i1, step):
-        (ax, ay), (bx, by) = route_px[i], route_px[min(i + step, len(route_px) - 1)]
-        run = math.hypot(bx - ax, by - ay)
-        if run < 1e-6:
-            continue
-        nx, ny = -(by - ay) / run, (bx - ax) / run
-        for side in (1, -1):
-            x = ax + nx * side * cap_px * 3.0
-            y = ay + ny * side * cap_px * 3.0
-            if not (0 <= x < card.w and 0 <= y < card.h):
-                score[side].append(1.0)
-                continue
-            c = min(int(x / card.w * gw), gw - 1)
-            r = min(int(y / card.h * gh), gh - 1)
-            score[side].append(grid[r][c])
-    left = sum(score[1]) / len(score[1]) if score[1] else 0.5
-    right = sum(score[-1]) / len(score[-1]) if score[-1] else 0.5
-    return (1 if left <= right else -1), abs(left - right)
-
-
-#: How near any strand of the route a mark may come, in cap heights.
-#:
-#: A hard constraint and not a cost: a span mark is never drawn over any other
-#: piece of route. Any piece: the stretch the span covers, the strand it doubled back along, and
-#: the part of the route that happens to pass through the same corner half an
-#: hour later. Half a cap height is the width of the route stroke plus enough
-#: white either side that the reader sees two lines rather than one join.
-SPAN_CLEAR_CAPS = 0.5
-
-#: How hard the stretch is simplified before the mark is drawn from it, as a
-#: share of the offset, and how far apart the drawn line's own points sit.
-#:
-#: This one number is the whole argument about what a span mark is. Too fine
-#: and the mark traces the road, which is what the iso-distance contour did: a
-#: span mark needs no constant distance from the path. Too coarse and the
-#: mark throws the shape away with the wiggles, which is what the envelope arc
-#: did: it follows the route too little and looks too straight and mechanical.
-#: What is wanted is between them: smoothed curves that follow the shape and
-#: could be drawn by hand in a few strokes.
-#:
-#: A third of the offset keeps the significant turns of every panel of the
-#: worksheet and drops the rest: two to five corners a stretch, which is what
-#: a few pen strokes is. Swept over 0.15, 0.25, 0.33, 0.5 and 0.8 of the
-#: offset and read against nine hand-drawn reference marks.
-SHAPE_SIMPLIFY_FRAC = 0.25
-SHAPE_STEP_FRAC = 0.25
-
-#: How near the stretch has to come back to itself, in offsets, before it is
-#: an out-and-back rather than a loop.
-#:
-#: Measured as the median distance from a point of the stretch to the nearest
-#: part of it a quarter of its length away or more. Over the nine panels the
-#: hairpin, which is one path walked twice, reads 0.1 offsets; the
-#: loop on a wider run, whose strands are a hundred metres apart, reads 2.3; and
-#: every ordinary stretch reads between 1.2 and 1.8. Half an offset is well
-#: clear of everything but the hairpin, which is the one case drawn as a
-#: bridge over rather than a line round.
-DOUBLED_BACK_OFFSETS = 0.5
-
-#: How many rounds of measure-and-push the clearance repair runs, and how hard
-#: the push is blurred along the line. What is blurred is the push and never
-#: the line, for the reason `_blur` gives: a line pushed clear point by point
-#: off a track sampled at pixel spacing is clear and drawn like a saw.
-CLEAR_PASSES = 12
-CLEAR_BLUR = 4
-
-#: How far the repair may move one point of a mark in all, in clearances. Four,
-#: which is about two offsets. Past that the mark is not being nudged off a
-#: road, it is being thrown across the sheet, and the junction by the river
-#: drew exactly that: a spike where the mark should have stopped short. A point
-#: that cannot be freed inside the cap is left where it is, and what is left of
-#: the mark is cut back to the run of it that is clear.
-CLEAR_PUSH_CAP = 4.0
-
-
-def span_line(
-    route_px: list[Pt],
-    i0: int,
-    i1: int,
-    side: int,
-    offset_px: float,
-    card: Any,
-    cells: float | None = None,
-    clear_px: float | None = None,
-) -> list[Pt]:
-    """The span's own mark: the stretch's shape, smoothed, offset and inked.
-
-    What a person does with a pen. They look at the stretch, see the three or
-    four turns in it that matter, and draw one flowing line beside it that has
-    those same turns in it. Not every wiggle, and not a bridge over the lot.
-
-    1. **The shape.** The stretch is resampled, simplified at
-       `SHAPE_SIMPLIFY_FRAC` of the offset so that only its significant turns
-       are left, and a spline is run through those corners. What comes out is
-       the road's shape drawn in a few strokes.
-    2. **Offset, not held.** The shape is pushed off to the span's own side by
-       about the offset. The distance to the real track then varies, opening
-       over a bend the smoothing cut and closing on a straight, which is the
-       intent: the mark need not keep a consistent distance from the path, and
-       should approximate its angle.
-    3. **Out and around the bend.** On the outside of a bend the offset stands
-       further out than the road does, and on the inside any loop the offset
-       ties in a tight corner is cut out, so the mark bridges the corner
-       rather than doubling back through itself.
-    4. **A hairpin is bridged, a loop is gone round.** A stretch that walks one
-       path out and back has no room for a line between its strands, so the
-       mark is a short curve standing off the mouth, which is how it is
-       drawn by hand. A stretch that comes back a field away is gone round the outside,
-       and going round it encloses it.
-    5. **Clear of every strand of route.** Whatever comes out is pushed off any
-       piece of route it came near, cut back where pushing cannot do it, and
-       dropped when neither side can be drawn clear.
-
-    Args:
-        route_px: The whole track in card pixels. The whole of it: the mark has
-            to clear the parts of the route the span does not cover as well.
-        i0: First route index of the span.
-        i1: Last route index of the span.
-        side: +1 for the left of travel, -1 for the right, signed the way
-            `_side_at` signs it.
-        offset_px: About how far off the route the mark sits, in card pixels.
-            About: the offset is taken off the smoothed shape, so the gap to
-            the real track is whatever the smoothing left.
-        card: The card. Unused by the construction and kept because every
-            caller has one and the signature is stable.
-        cells: Unused. Kept for the same reason.
-        clear_px: How near the route the mark may come. `SPAN_CLEAR_CAPS` of a
-            cap height by default, worked back from the offset.
-
-    Returns:
-        The mark in card pixels, or an empty list when it cannot be drawn clear
-        of the route. An empty list is an answer: the span is dropped, and said
-        to be dropped, rather than drawn across the road.
-    """
-    raw = route_px[i0 : i1 + 1]
-    if len(raw) < 2 or offset_px <= 0:
-        return []
-    if clear_px is None:
-        clear_px = offset_px / SPAN_OFFSET_CAPS * SPAN_CLEAR_CAPS
-    if doubling_px(raw) < offset_px * DOUBLED_BACK_OFFSETS:
-        raw = _mouth_path(raw, offset_px)
-    shape = shape_curve(raw, offset_px)
-    if len(shape) < 2:
-        return []
-    line = _uncross(
-        _forward_only(_drop_folds(offset_curve(shape, side, offset_px), shape, offset_px), shape)
-    )
-    return _clear_of(line, route_px, clear_px)
-
-
-def shape_curve(raw: list[Pt], offset_px: float) -> list[Pt]:
-    """The stretch as a few strokes: its significant turns, splined together.
-
-    Douglas-Peucker first, which is what picks the turns: it keeps the points a
-    reader would say the road actually turns at and drops everything the
-    smoothing is meant to lose. A spline is then run through those, so what
-    comes back is a curve with those turns in it rather than a polygon, and the
-    spline is broken at any turn sharp enough to be a corner, so a corner stays
-    a corner. See `_corners_of`.
-    """
-    step = max(offset_px * SHAPE_STEP_FRAC, 1.0)
-    even = _resample(raw, step)
-    corners = simplify(even, offset_px * SHAPE_SIMPLIFY_FRAC)
-    if len(corners) < 2:
-        return list(raw)
-    return spline(corners, step, _corners_of(even, corners, offset_px))
-
-
-#: How much a stretch has to turn inside one offset's worth of path before the
-#: mark draws that turn as a corner rather than as a curve, in degrees.
-#:
-#: A loop with corners in it and a tight bend that reads as one smooth arc can
-#: both turn about ninety degrees in all, so the total turn is not what tells
-#: them apart. What does is how far the road takes to do it. Measured over the
-#: nine panels at one offset either side: the loop's two corners read 98 and 80
-#: degrees, and the sharpest turn on any panel drawn as a curve is the
-#: S-bend's 66. Seventy-five sits between them.
-SHAPE_CORNER_DEG = 75.0
-
-
-def _corners_of(path: list[Pt], corners: list[Pt], offset_px: float) -> set[int]:
-    """Which of the simplified points are corners rather than bends.
-
-    Read on the path itself and not on the simplified line, because what makes
-    a corner is that the road turns inside a short distance, and the simplified
-    line has already thrown that distance away.
-    """
-    out: set[int] = set()
-    for at, q in enumerate(corners):
-        if at == 0 or at == len(corners) - 1:
-            continue
-        i = min(range(len(path)), key=lambda k: math.dist(path[k], q))
-        if _turn_over(path, i, offset_px) >= SHAPE_CORNER_DEG:
-            out.add(at)
-    return out
-
-
-def _turn_over(path: list[Pt], at: int, reach: float) -> float:
-    """How far a path turns at one point, measured over `reach` either side."""
-    back, run = at, 0.0
-    while back > 0 and run < reach:
-        run += math.dist(path[back], path[back - 1])
-        back -= 1
-    fwd, run = at, 0.0
-    while fwd < len(path) - 1 and run < reach:
-        run += math.dist(path[fwd], path[fwd + 1])
-        fwd += 1
-    a, b, c = path[back], path[at], path[fwd]
-    if math.dist(a, b) < 1e-9 or math.dist(b, c) < 1e-9:
-        return 0.0
-    t1 = math.atan2(b[1] - a[1], b[0] - a[0])
-    t2 = math.atan2(c[1] - b[1], c[0] - b[0])
-    return abs(math.degrees((t2 - t1 + math.pi) % (2 * math.pi) - math.pi))
-
-
-#: How near the shape a point of the offset line may fall before it is thrown
-#: away, as a share of the offset. Seven tenths: a mitre cut back to the limit
-#: still stands off by more than that, and a fold does not.
-FOLD_KEEP_FRAC = 0.7
-
-
-def _drop_folds(line: list[Pt], shape: list[Pt], offset_px: float) -> list[Pt]:
-    """Throw away the part of an offset line that folded back inside itself.
-
-    Where the shape turns tighter than the offset, the inner offset runs
-    backwards along itself: the points are still there, in order, but they
-    describe a bow tie rather than a line, and a mark drawn from them zig-zags.
-    Those points are the ones that end up nearer the shape than the offset they
-    were pushed by, so they can be told apart from the good ones by measuring,
-    and what is left is joined across the gap, which is the corner a person
-    cuts anyway.
-    """
-    if len(line) < 3 or len(shape) < 2:
-        return list(line)
-    keep = [p for p in line if foot_on(p, shape)[0] >= offset_px * FOLD_KEEP_FRAC]
-    return keep if len(keep) >= 2 else list(line)
-
-
-def _forward_only(line: list[Pt], shape: list[Pt]) -> list[Pt]:
-    """Keep only the part of an offset line that goes forwards along the shape.
-
-    A fold does not merely come too near the shape, it runs backwards along it,
-    and what is left of one after the near points are dropped is a V or a
-    staircase. Every point is asked which point of the shape it stands beside,
-    and any that stands beside an earlier one than the point before it is
-    dropped. What survives runs from one end of the stretch to the other and
-    never doubles back on itself.
-    """
-    if len(line) < 3 or len(shape) < 2:
-        return list(line)
-    out: list[Pt] = []
-    seen = -1
-    for p in line:
-        at = _nearest_on(shape, p)
-        if at < seen:
-            continue
-        out.append(p)
-        seen = at
-    return out if len(out) >= 2 else list(line)
-
-
-def _uncross(line: list[Pt]) -> list[Pt]:
-    """Cut the loop out of a line that crosses itself.
-
-    The inside of a bend tighter than the offset ties the offset curve in a
-    little knot. A person drawing the same stroke does not tie it; they cut
-    the corner. Splicing the loop out at the crossing is that cut.
-    """
-    out = list(line)
-    for _ in range(8):
-        hit = _first_loop(out)
-        if hit is None:
-            return out
-        i, j, at = hit
-        out = out[: i + 1] + [at] + out[j + 1 :]
-    return out
-
-
-def _first_loop(line: list[Pt]) -> tuple[int, int, Pt] | None:
-    """The first place a line crosses itself, and where the crossing is."""
-    for i in range(len(line) - 1):
-        for j in range(i + 2, len(line) - 1):
-            at = meet(line[i], line[i + 1], line[j], line[j + 1])
-            if at is not None:
-                return i, j, at
-    return None
-
-
-def doubling_px(sub: list[Pt], apart: float = 0.25) -> float:
-    """How near a stretch comes back to itself, in card pixels.
-
-    For every point, the distance to the nearest part of the stretch at least
-    `apart` of its length away in index; the median of those. An out-and-back
-    on one path reads a pixel or two, a loop reads the width of the loop, and
-    an ordinary stretch reads whatever its own wiggle is worth.
-    """
-    n = len(sub)
-    if n < 8:
-        return float("inf")
-    step = max(n // 120, 1)
-    gap = max(int(n * apart), 1)
-    seen = []
-    for i in range(0, n, step):
-        far = [sub[j] for j in range(0, n, step) if abs(j - i) > gap]
-        if far:
-            seen.append(min(math.dist(sub[i], q) for q in far))
-    if not seen:
-        return float("inf")
-    seen.sort()
-    return seen[len(seen) // 2]
-
-
-#: How near an end of an out-and-back another part of it has to come to count
-#: as having reached that end, as a share of how wide the mouth is. Under a
-#: third: the two ends are a mouth's width apart to begin with, so a generous
-#: radius is satisfied by a path that has barely left the other end.
-MOUTH_NEAR_FRAC = 0.3
-
-
-def _mouth_path(raw: list[Pt], offset_px: float) -> list[Pt]:
-    """The piece of an out-and-back that joins its two ends, and nothing else.
-
-    A stretch that walks one path out and back has no room for a mark between
-    its strands and no sense in one that goes all the way out to the turn and
-    back: a short mark across the mouth is what is wanted. But a bow drawn over
-    that mouth is a template and reads as too rounded without reason. The mark
-    follows the ground instead: it runs beside the path that joins the two
-    ends, with the corner that path has in it.
-
-    So the mark is drawn from that piece, and by exactly the same rules as
-    every other mark. What this returns is the shortest run of the stretch that
-    reaches from one end to the other: the tail from the last time it came back
-    alongside its start, or the head up to the first time it reached its
-    finish, whichever is shorter. When there is no such run, the two ends
-    themselves, which draws a straight mark across the mouth.
-    """
-    a, b = raw[0], raw[-1]
-    near = math.dist(a, b) * MOUTH_NEAR_FRAC
-    if near < 1e-6:
-        return [a, b]
-    back = [i for i in range(1, len(raw)) if math.dist(raw[i], a) <= near]
-    fwd = [i for i in range(len(raw) - 1) if math.dist(raw[i], b) <= near]
-    runs = []
-    if back and max(back) < len(raw) - 2:
-        runs.append(raw[max(back) :])
-    if fwd and min(fwd) > 1:
-        runs.append(raw[: min(fwd) + 1])
-    # Judged on how much of the mouth each run actually spans, not on how long
-    # it is: the path here is walked slowly and sampled densely, and the piece
-    # that crosses the mouth is seventy samples of twenty pixels.
-    runs = [run for run in runs if math.dist(run[0], run[-1]) > math.dist(a, b) * 0.5]
-    piece = min(runs, key=length) if runs else [a, b]
-    if math.dist(piece[0], piece[-1]) >= offset_px * MOUTH_MIN_SPAN:
-        return piece
-    # An out-and-back that finishes where it started has no mouth to cross, so
-    # there is no piece of it that crosses one. The mark then runs beside the
-    # first of the stretch instead, which is still the ground and still where
-    # the reader is being sent.
-    out = [raw[0]]
-    for q in raw[1:]:
-        out.append(q)
-        if math.dist(out[0], q) >= offset_px * MOUTH_MIN_SPAN:
-            break
-    return out if len(out) > 1 else [a, b]
-
-
-#: How far across a mark over the mouth of an out-and-back has to reach before
-#: it is a mark at all, in offsets. Two and a half: about two cap heights of
-#: drawn line at the offset.
-MOUTH_MIN_SPAN = 2.5
-
-
-def clear_of_route(line: list[Pt], route_px: list[Pt], clear_px: float) -> bool:
-    """Whether a drawn mark keeps `clear_px` from every strand of the route.
-
-    Segment against segment, and exactly. Measured on the line and not on its
-    points, because a mark drawn as four long strokes can step over a lane
-    between two of its own vertices, which is exactly the fault the rule exists
-    to stop; and exactly rather than by sampling, because a line sampled every
-    pixel or two dips between its samples, and a mark that reads as clear by a
-    tenth of a pixel and is not is worse than one that is honestly refused.
-
-    Args:
-        line: The mark, in card pixels.
-        route_px: The whole track in card pixels.
-        clear_px: How near the route the mark may come.
-
-    Returns:
-        True when the mark is clear of everything.
-    """
-    if len(line) < 2 or len(route_px) < 2:
-        return True
-    near = _route_near(line, route_px, clear_px)
-    if len(near) < 2:
-        return True
-    for a, b in zip(line, line[1:], strict=False):
-        for c, d in zip(near, near[1:], strict=False):
-            if seg_gap(a, b, c, d) < clear_px:
-                return False
-    return True
-
-
-def _route_near(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
-    """The run of route that could come near a mark, as one polyline.
-
-    Every segment of route that touches the mark's own box grown by the
-    clearance, with a break inserted between two pieces that were not
-    neighbours on the route, so the gap between them is never measured as a
-    piece of road.
-
-    Segments and not points. A track sampled every few pixels has segments long
-    enough to cross the box with both ends outside it, and a route kept by its
-    points alone drops exactly those: the mark then measures itself against a
-    road that is not there and reads as clear of one it lies on.
-    """
-    if len(line) < 1 or len(route_px) < 2:
-        return []
-    pad = clear_px + 8.0
-    x0 = min(x for x, _ in line) - pad
-    x1 = max(x for x, _ in line) + pad
-    y0 = min(y for _, y in line) - pad
-    y1 = max(y for _, y in line) + pad
-    out: list[Pt] = []
-    last = -2
-    for i, (a, b) in enumerate(zip(route_px, route_px[1:], strict=False)):
-        if not _seg_in_box(a, b, x0, y0, x1, y1):
-            continue
-        if i > last and out:
-            out.append(out[-1])  # a break: a zero-length step, not a road
-        if i > last:
-            out.append(a)
-        out.append(b)
-        last = i + 1
-    return out
-
-
-def _clear_of(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
-    """Push a mark off any strand of route it came near, or give it up.
-
-    Rule seven is a constraint and not a cost, so this may move a line a long
-    way and may not stop short of the answer. Each point inside the clearance
-    is pushed straight out from the piece of route it is nearest, the push is
-    blurred along the line so its neighbours come with it rather than a kink
-    forming, and the whole thing is measured again.
-
-    Args:
-        line: The mark as it came off the envelope.
-        route_px: The whole track in card pixels.
-        clear_px: How near the route the mark may come.
-
-    Returns:
-        The mark, clear of the route, or an empty list when no amount of
-        pushing got it clear.
-    """
-    if len(line) < 2:
-        return []
-    out = list(line)
-    walked = [0.0] * len(out)
-    for _ in range(CLEAR_PASSES):
-        if clear_of_route(out, route_px, clear_px):
-            return out
-        near = _route_near(out, route_px, clear_px * 6.0)
-        if len(near) < 2:
-            return out
-        feet = [foot_on(p, near) for p in out]
-        want = _blur([max(0.0, clear_px * 1.3 - d) for d, _ in feet], CLEAR_BLUR)
-        moved: list[Pt] = []
-        for i, (p, (d, foot), push) in enumerate(zip(out, feet, want, strict=True)):
-            if push <= 0.0:
-                moved.append(p)
-                continue
-            ux, uy = (
-                ((p[0] - foot[0]) / d, (p[1] - foot[1]) / d) if d > 1e-6 else _away_from(near, p)
-            )
-            step = min(push, CLEAR_PUSH_CAP * clear_px - walked[i])
-            if step <= 0.0:
-                moved.append(p)
-                continue
-            walked[i] += step
-            moved.append((p[0] + step * ux, p[1] + step * uy))
-        out = moved
-    if clear_of_route(out, route_px, clear_px):
-        return out
-    return _longest_clear(out, route_px, clear_px)
-
-
-#: How much of a mark has to survive being cut back for what is left to be the
-#: mark, as a share of what was drawn. A mark that runs into a junction stops
-#: short of it rather than pushing through it, which is how a hand-drawn mark
-#: on a tight bend behaves: it ends well before the end of the stretch. Under a
-#: third left, there is no mark and the span is dropped instead.
-CLEAR_KEEP_FRAC = 0.34
-
-
-def _longest_clear(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
-    """The longest run of a mark that is clear of the route, or nothing.
-
-    The end of a mark is where a tangle is usually met: the stretch finishes at
-    a junction, and the envelope's cap wraps round it into whatever else passes
-    through. Pushing cannot help there, because every direction out of a
-    junction is into a road. Stopping short can, and it is how a hand-drawn
-    mark on a tight bend ends.
-    """
-    if len(line) < 3:
-        return []
-    near = _route_near(line, route_px, clear_px)
-    ok = [foot_on(p, near)[0] >= clear_px * 1.05 for p in line] if near else [True] * len(line)
-    best: tuple[int, int] = (0, 0)
-    at = None
-    for i, good in enumerate([*ok, False]):
-        if good and at is None:
-            at = i
-        elif not good and at is not None:
-            if i - at > best[1] - best[0]:
-                best = (at, i)
-            at = None
-    lo, hi = best
-    want = length(line) * CLEAR_KEEP_FRAC
-    while hi - lo >= 3:
-        cut = line[lo:hi]
-        if length(cut) < want:
-            break
-        if clear_of_route(cut, route_px, clear_px):
-            return cut
-        lo, hi = lo + 1, hi - 1
-    return []
-
-
-def _away_from(poly: list[Pt], p: Pt) -> Pt:
-    """A unit vector square to a polyline, for a point sitting exactly on it."""
-    at = _nearest_on(poly, p)
-    a = poly[max(at - 1, 0)]
-    b = poly[min(at + 1, len(poly) - 1)]
-    run = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
-    return (-(b[1] - a[1]) / run, (b[0] - a[0]) / run)
-
-
-def _blur(series: list[float], passes: int) -> list[float]:
-    """A 1-2-1 blur along a series, with its ends held.
-
-    What is blurred is the correction, never the line. A per-point correction
-    read straight off a track sampled at pixel spacing is noisy, and a noisy
-    correction trades a smooth bow for a rough line: the bracket has to stay
-    one gesture. Blurring the correction keeps the low-frequency part, which
-    is the bow, and drops the high-frequency part, which is the sampling.
-    """
-    out = list(series)
-    for _ in range(max(passes, 0)):
-        if len(out) < 3:
-            break
-        nxt = [out[0]]
-        nxt += [(out[i - 1] + 2.0 * out[i] + out[i + 1]) / 4.0 for i in range(1, len(out) - 1)]
-        nxt.append(out[-1])
-        out = nxt
-    return out
-
-
-def _nearest_on(sub: list[Pt], p: Pt) -> int:
-    """The index of the route point a mark's own point stands beside."""
-    return min(range(len(sub)), key=lambda i: (sub[i][0] - p[0]) ** 2 + (sub[i][1] - p[1]) ** 2)
-
-
-def _side_at(sub: list[Pt], at: int, p: Pt) -> int:
-    """Which side of the route a point falls on, at a known index.
-
-    +1 is the left of travel in card pixels, where y runs down the sheet. This
-    is now the module's only convention: everything that signs a side signs it
-    this way. `_bracket` signed it the other way round, so anything reasoning
-    about a side from a normal was wrong on half the marks on the card.
-    """
-    a = sub[max(at - 1, 0)]
-    b = sub[min(at + 1, len(sub) - 1)]
-    cross = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])
-    return 1 if cross < 0 else -1
-
-
-def _side_of(sub: list[Pt], p: Pt) -> int:
-    """Which side of the sub-route a point falls on: +1 left of travel, -1 right."""
-    best, at = math.inf, 0
-    for i, (x, y) in enumerate(sub):
-        gap = (x - p[0]) ** 2 + (y - p[1]) ** 2
-        if gap < best:
-            best, at = gap, i
-    a = sub[max(at - 1, 0)]
-    b = sub[min(at + 1, len(sub) - 1)]
-    cross = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])
-    return 1 if cross < 0 else -1
-
-
-def _span_ticks(span: Span, route_px: list[Pt], cap_px: float) -> list[list[Pt]]:
-    """A tick from each end of the mark, pointing at the end of the stretch.
-
-    The end marks run from the end of the line towards the end of the segment,
-    not perpendicular to the local route. So the direction is the
-    vector from where the mark stops to where the span stops on the road, and
-    nothing else: not the route's own bearing at that index, which is a
-    property of two GPS samples rather than of anything the reader can see, and
-    not the mark's own bearing, which the smoothing chose.
-
-    It is one stroke off the end of the line rather than a cross-mark on it,
-    which is what "from the end of the line" says. A tick is part of the mark,
-    so rule seven binds it too: it is shortened until its tip clears the road
-    it points at, and left off when even a short one would touch it.
-    """
-    if len(span.line) < 2:
-        return []
-    out = []
-    length = cap_px * SPAN_TICK_CAPS
-    clear = cap_px * SPAN_CLEAR_CAPS
-    for end, at in ((span.line[0], span.i0), (span.line[-1], span.i1)):
-        target = route_px[at]
-        run = math.dist(end, target)
-        if run < 1e-6:
-            continue
-        ux, uy = (target[0] - end[0]) / run, (target[1] - end[1]) / run
-        reach = min(length, max(run - clear, 0.0))
-        while reach > length * 0.25:
-            tick = [end, (end[0] + ux * reach, end[1] + uy * reach)]
-            if clear_of_route(tick, route_px, clear):
-                out.append(tick)
-                break
-            reach -= length * 0.1
-    return out
-
-
-def _span_label(
-    span: Span,
-    route_px: list[Pt],
-    cap_px: float,
-    measure_fn: Measure,
-    along_max_deg: float = SPAN_ALONG_MAX_BEARING_DEG,
-) -> Label:
-    """The span's own name: along the line where that reads, beside it where not.
-
-    A span whose line is too short to carry its own name falls back to the same
-    horizontal treatment as a steep one, because the alternative is a name that
-    runs off both ends of the bracket it belongs to.
-    """
-    mid = span.line[len(span.line) // 2] if span.line else (0.0, 0.0)
-    size = cap_px * (1.0 if span.ground else 0.85)
-    lift = _outboard(span, route_px)
-    width, _h = measure_fn(span.name, size)
-    along = (
-        bool(span.line)
-        and span_bearing(span.line) <= along_max_deg
-        and length(span.line) >= width * 1.02
-    )
-    anchors: list[Pt] = []
-    if not along and span.line:
-        # Anchored on the outboard side of the line, so the placer looks for
-        # its clear paper on the far side from the route rather than in the gap
-        # between the route and the bracket. Offered at points along the whole
-        # bracket rather than at its middle alone: the middle of a short
-        # bracket in a busy corner may have another name sitting over it, and a
-        # name pushed out of the way from there ends up further from the line
-        # than one that simply slid along it.
-        nx, ny = _span_normal(span.line)
-        push = lift * cap_px * 0.9
-        anchors = [_beside(span.line, f, (nx * push, ny * push)) for f in SPAN_ANCHOR_FRACS]
-        mid = anchors[len(anchors) // 2]
-    return Label(
-        name=span.name,
-        kind=span.kind,
-        why=span.why,
-        px=mid[0],
-        py=mid[1],
-        tier=TIER_SPAN,
-        size=size,
-        box=None,
-        tx=mid[0],
-        ty=mid[1],
-        anchor="middle",
-        intent=span.intent,
-        lift=lift,
-        span_range=(span.i0, span.i1),
-        mark=list(span.line),
-        anchors=anchors,
-        baseline=list(span.line) if along else [],
-    )
-
-
-#: Where along its own bracket a span's name may be anchored, as fractions of
-#: the bracket's run. The middle is one of them and is still what the label
-#: carries as its anchor; the others let a name slide along the line it belongs
-#: to instead of being pushed off it.
-SPAN_ANCHOR_FRACS = (0.15, 0.325, 0.5, 0.675, 0.85)
-
-
-def _beside(line: list[Pt], frac: float, push: Pt) -> Pt:
-    """A point a fraction along a line, shifted by one offset.
-
-    The shift is the same vector at every fraction, taken from the line's
-    middle, and not a local normal. A bracket beside a stretch that doubles
-    back turns right round inside its own length, so a local normal at one end
-    of it points where a local normal at the other end came from: anchors built
-    that way put a name on the far side of the road from its own mark.
-    """
-    run = length(line)
-    want, walked = run * frac, 0.0
-    at = len(line) - 1
-    for i in range(len(line) - 1):
-        step = math.dist(line[i], line[i + 1])
-        if walked + step >= want:
-            at = i
-            break
-        walked += step
-    p = line[at]
-    return (p[0] + push[0], p[1] + push[1])
-
-
-def _span_normal(line: list[Pt]) -> Pt:
-    """The unit normal to a span line at its middle, pointing to +1 lift."""
-    i = len(line) // 2
-    a, b = line[max(i - 1, 0)], line[min(i + 1, len(line) - 1)]
-    run = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
-    return ((b[1] - a[1]) / run, -(b[0] - a[0]) / run)
 
 
 # --------------------------------------------------------------------------- settlements
@@ -3217,6 +1558,8 @@ def pick_settlements(
     Returns:
         One `Label` a settlement, highest score first, anchored in card pixels.
     """
+    from pyntpot.maps.lettering.label import TIER_SETTLEMENT, Label
+
     always_set = {str(n).casefold() for n in (always or [])}
     wanted_set = {str(n).casefold() for n in (wanted or [])}
     budget = budget if budget is not None else settlement_budget(card.w)
@@ -3401,6 +1744,8 @@ def dedupe_names(labels: list[Label], card: Any) -> list[Label]:
     Returns:
         The labels that survive, in the order they were given.
     """
+    from pyntpot.maps.lettering.label import TIER_SPAN
+
     scale = max(float(getattr(card, "scale", 0.0)), 1e-9)
     order = sorted(labels, key=lambda lb: (lb.tier, len(str(lb.name))))
     kept: list[Label] = []
@@ -3457,6 +1802,8 @@ def pick_rivers(
         One `Label` a river, best first, anchored on its own water and carrying
         the water as its baseline.
     """
+    from pyntpot.maps.lettering.label import TIER_RIVER, Label, feature_px
+
     geom = lines.get("rivers") or []
     thin = route_px[::3] or route_px
     typical: dict[str, float] = {}
@@ -3546,6 +1893,8 @@ def home_places(basemap: Basemap, card: Any) -> list[Label]:
     which is what "Swell, a village" wants and what a house
     marker would say wrongly.
     """
+    from pyntpot.maps.lettering.label import TIER_PLACE, Label
+
     out: list[Label] = []
     for place in basemap.places:
         if place.get("kind") != "settlement":
@@ -3641,46 +1990,6 @@ def road_min_px(size: float) -> float:
 ROAD_MAX = 2
 
 
-#: What each class of watercourse is painted at when the layers carry no width
-#: for the class, in display pixels. The painter's own defaults, so such a map
-#: letters its rivers where any other does.
-WET_PX_DEFAULT = {"major": 8.4, "medium": 5.5, "minor": 2.2}
-
-#: What a named road is painted at, in display pixels. The number sits over the
-#: tarmac it names, so it clears the mark the same way a river name does.
-ROAD_PX_DEFAULT = {"major": 5.0, "medium": 3.4}
-
-
-#: What the painter's brush really lays down, as a multiple of the nominal
-#: width the layers carry. A brush is not a rule: it bleeds, smooths and
-#: drifts past its own nominal edge, and a clearance taken against the nominal
-#: width stands a name off less water than it has to clear. Measured on the
-#: painted plates, the major watercourse's ink reaches 1.30 times its nominal
-#: half-width on one card and 1.42 on another. The
-#: durable answer is for the painter to record the width it actually painted;
-#: until it does, this is that measurement.
-WET_SPREAD = 1.35
-
-
-def feature_px(basemap: Basemap, kind: str, cls: str, own: float = 0.0) -> float:
-    """How wide the painter's ink really is for one watercourse or road.
-
-    The layers' `wet_px` is the brush's nominal width, not its footprint, so
-    the spread the brush adds is put back on here.
-
-    `own` is the width this particular watercourse was painted at, which is its
-    own where one could be measured and the class floor where it could not. The
-    class alone was enough while every river of a class was drawn at one width;
-    the Calder is drawn at a quarter of a kilometre now, and a name lifted by
-    the major class floor would be set in the water.
-    """
-    if kind == "river":
-        wet = basemap.layers.wet_px
-        floor = float(wet.get(cls, WET_PX_DEFAULT.get(cls, 2.2)))
-        return max(floor, float(own or 0.0)) * WET_SPREAD
-    return float(ROAD_PX_DEFAULT.get(cls, 3.4)) * WET_SPREAD
-
-
 def pick_roads(
     basemap: Basemap,
     lines: NamedLines,
@@ -3716,6 +2025,8 @@ def pick_roads(
     Returns:
         One `Label` a road, best first, carrying the tarmac as its baseline.
     """
+    from pyntpot.maps.lettering.label import TIER_ROAD, Label, feature_px
+
     geom = lines.get("roads") or []
     thin = route_px[::4] or route_px
     pieces: dict[str, list[list[Pt]]] = {}
@@ -3791,6 +2102,8 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
     these two are the session: they are facts about the ride, not about the
     place. A loop puts them on top of each other, so it gets one mark.
     """
+    from pyntpot.maps.lettering.label import TIER_MARKER, Label
+
     if len(route_px) < 2:
         return []
     start, end = route_px[0], route_px[-1]
@@ -3829,46 +2142,6 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
 
 
 # --------------------------------------------------------------------------- geometry
-
-
-def _outboard(span: Span, route_px: list[Pt]) -> float:
-    """Which side of a span's own line is away from the route: +1 or -1.
-
-    The line is an iso-distance contour, so it can sit either side of the run
-    in card pixels and the answer cannot be taken from the offset's sign. It is
-    read off the drawing instead: the way the text lifts is the way that puts
-    it further from the track.
-    """
-    if not span.line or not route_px:
-        return 1.0
-    mid = span.line[len(span.line) // 2]
-    here = route_px[min(max((span.i0 + span.i1) // 2, 0), len(route_px) - 1)]
-    i = min(max(len(span.line) // 2, 1), len(span.line) - 1)
-    (ax, ay), (bx, by) = span.line[i - 1], span.line[i]
-    run = math.hypot(bx - ax, by - ay) or 1.0
-    up = ((by - ay) / run, -(bx - ax) / run)
-    away = (mid[0] - here[0], mid[1] - here[1])
-    return 1.0 if up[0] * away[0] + up[1] * away[1] >= 0 else -1.0
-
-
-def _resample(line: list[Pt], step: float) -> list[Pt]:
-    """A polyline at an even spacing, so an arc length is a straight lookup."""
-    if len(line) < 2 or step <= 0:
-        return list(line)
-    out = [line[0]]
-    carry = 0.0
-    for a, b in zip(line, line[1:], strict=False):
-        run = math.dist(a, b)
-        if run < 1e-9:
-            continue
-        at = step - carry
-        while at < run:
-            t = at / run
-            out.append((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t))
-            at += step
-        carry = (carry + run) % step
-    out.append(line[-1])
-    return out
 
 
 def _window(line: list[Pt], start: int, want: float) -> list[Pt] | None:
@@ -3951,6 +2224,8 @@ def home_labels(
     Returns:
         The labels, and the boxes they have already claimed.
     """
+    from pyntpot.maps.lettering.label import TIER_PLACE, Label
+
     if not style.lettering.home_glyph:
         return [], []
     size = style.nib.label_size_px * 0.85

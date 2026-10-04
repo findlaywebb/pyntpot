@@ -19,7 +19,7 @@ add the term here when you coin one. The ported code keeps its old names until t
 | basemap | The fetched and projected layers for a bounding box. |
 | lettering | Placed labels and spans plus their painted plate. |
 | annotations | Caller-supplied landmarks, roads, places and span requests. `maps.annotations.Annotations`. |
-| span | The placed stretch of the route with a name and an intent: resolved to a pair of track indices and drawn beside the route. Today `labels.Span`. |
+| span | The placed stretch of the route with a name and an intent: resolved to a pair of track indices and drawn beside the route. `maps.lettering.label.Span`. |
 | span request | A caller's ask to mark a stretch of the route, each end stated once by point index, kilometre or seconds from the start; lettering resolves it into a span. `maps.annotations.SpanRequest`. |
 | card | The coordinate frame of one map: a box in card metres and the display and render pixel grids it maps to; converts between them. A canvas (`ink.sheet.Canvas`) is the raster a plate is painted on; a card is the frame that says where things go on it. |
 | manifest | The plates' sidecar record (`plates.json`): the base hash, the files written and the measurements later stages read. |

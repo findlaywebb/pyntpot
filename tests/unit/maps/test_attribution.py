@@ -11,7 +11,7 @@ from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.credit import Credit
-from pyntpot.maps.lettering import letter
+from pyntpot.maps.lettering.pipeline import letter
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 

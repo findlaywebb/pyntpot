@@ -26,7 +26,7 @@ from pathlib import Path
 
 from pyntpot.maps import pipeline
 from pyntpot.maps.cache import Cache
-from pyntpot.maps.lettering import letter
+from pyntpot.maps.lettering.pipeline import letter
 from pyntpot.maps.providers.opentopodata import OpenTopoData
 from pyntpot.maps.providers.overpass import OverpassFeatures
 from pyntpot.maps.style import Style

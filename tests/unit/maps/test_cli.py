@@ -1,6 +1,6 @@
 """`pyntpot map` runs offline over the fixture cache and composes the golden map.
 
-These tests import `pyntpot.maps.cli`, which needs `letter` from `pyntpot.maps.lettering`
+These tests import `pyntpot.maps.cli`, which needs `letter` from `pyntpot.maps.lettering.pipeline`
 and `compose` from `pyntpot.maps.pipeline`; every test here waits on the slice that adds them.
 """
 

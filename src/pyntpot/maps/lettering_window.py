@@ -22,13 +22,15 @@ import math
 
 from pyntpot._port import labels as placer
 from pyntpot.ink.polyline import Pt, length
+from pyntpot.maps.lettering.label import Label
+from pyntpot.maps.lettering.span_line import _resample
 
 #: How much longer than the name a window is cut, so the last letter is not
 #: clipped at the window's end.
 _WINDOW_SLACK = 1.02
 
 
-def baseline(lb: placer.Label, width: float) -> list[Pt] | None:
+def baseline(lb: Label, width: float) -> list[Pt] | None:
     """The run of line this name is set along, or None to set it flat.
 
     Args:
@@ -44,7 +46,7 @@ def baseline(lb: placer.Label, width: float) -> list[Pt] | None:
     if lb.flat or not lb.baseline or len(lb.name) < placer.MIN_CURVED_CHARS:
         return None
     want = width * _WINDOW_SLACK
-    line = placer._resample(lb.baseline, max(want / 24.0, 2.0))
+    line = _resample(lb.baseline, max(want / 24.0, 2.0))
     if length(line) < want:
         return None
     at = _best_window(line, want, (lb.px, lb.py))

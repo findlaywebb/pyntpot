@@ -6,10 +6,10 @@ from typing import Any
 
 import pytest
 
-from pyntpot._port import labels as placer
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.style import FaceStyle, HandStyle
 from pyntpot.maps import lettering_marks
+from pyntpot.maps.lettering.label import Label, Span
 from pyntpot.maps.lettering_window import baseline
 
 #: A gentle, nearly straight river course, in card pixels.
@@ -22,9 +22,9 @@ def hand() -> Hand:
     return Hand(FaceStyle(), HandStyle())
 
 
-def _flat(**fields: Any) -> placer.Label:
+def _flat(**fields: Any) -> Label:
     """A placed flat label with an anchor of its own, overridden by the fields given."""
-    base = placer.Label(
+    base = Label(
         name="Aviemore", kind="landmark", px=120.0, py=90.0, tx=150.0, ty=80.0, size=14.0, flat=True
     )
     return dataclasses.replace(base, **fields)
@@ -80,7 +80,7 @@ class TestTranslation:
 
     def test_a_span_writes_its_line_and_ticks(self, hand: Hand) -> None:
         """A span draws one line mark and one tick mark a tick, in its intent's ink."""
-        span = placer.Span(
+        span = Span(
             name="Porlock Hill",
             kind="climb",
             intent="warning",

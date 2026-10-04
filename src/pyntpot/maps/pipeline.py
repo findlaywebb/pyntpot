@@ -6,7 +6,7 @@ which paints a basemap's plates into a directory, or hands back the plates
 already there when their manifest carries the current hash; `compose`, which
 lays the painted plates, the route and the label plate into one raster card;
 `FetchError`, raised when the cached features are gone once the fetch has run.
-The stage between `paint` and `compose` is `maps.lettering.letter`.
+The stage between `paint` and `compose` is `maps.lettering.pipeline.letter`.
 
 `fetch` takes the style, because the card, the ribbon and the watercourse widths
 are fitted to it. `paint` uses the basemap's card and layers as given: a basemap
@@ -46,7 +46,7 @@ from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.layers import BasemapInputs, build_basemap
-from pyntpot.maps.lettering import Lettering
+from pyntpot.maps.lettering.pipeline import Lettering
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.providers.base import Elevation, Features

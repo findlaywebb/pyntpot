@@ -2,7 +2,7 @@
 
 from pyntpot.maps.annotations import Annotations
 from pyntpot.maps.basemap import Basemap
-from pyntpot.maps.lettering import Lettering, letter
+from pyntpot.maps.lettering.pipeline import Lettering, letter
 from pyntpot.maps.pipeline import FetchError, compose, fetch, paint
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.style import Style

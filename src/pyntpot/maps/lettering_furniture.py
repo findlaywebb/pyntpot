@@ -18,15 +18,16 @@ import math
 
 import numpy as np
 
-from pyntpot._port import labels as placer
 from pyntpot.ink.polyline import Pt
 from pyntpot.letters.hand import Hand
+from pyntpot.maps.lettering.label import Label
+from pyntpot.maps.lettering.span_line import _resample
 
 #: How many segments the quadratic of a leader is cut into.
 _LEADER_STEPS = 12
 
 
-def pin(hand: Hand, lb: placer.Label, rng: np.random.Generator) -> list[Pt]:
+def pin(hand: Hand, lb: Label, rng: np.random.Generator) -> list[Pt]:
     """The dot the leader points at, drawn round rather than filled."""
     r = max(lb.size * 0.14, 2.2)
     ring = [
@@ -54,7 +55,7 @@ def leader(hand: Hand, ends: tuple[Pt, Pt], rng: np.random.Generator) -> list[Pt
     return hand.stroke([_quad_at(quad, t / _LEADER_STEPS) for t in range(13)], rng, 0.5)
 
 
-def underline(hand: Hand, lb: placer.Label, width: float, rng: np.random.Generator) -> list[Pt]:
+def underline(hand: Hand, lb: Label, width: float, rng: np.random.Generator) -> list[Pt]:
     """A hand-drawn rule under a town's name, never quite level.
 
     One stroke, not one a word, and it lifts very slightly to the right, which
@@ -64,7 +65,7 @@ def underline(hand: Hand, lb: placer.Label, width: float, rng: np.random.Generat
     y0 = lb.ty + lb.size * 0.22
     rise = lb.size * (0.05 + abs(float(rng.normal(0.0, 0.04))))
     line = [(x0 - lb.size * 0.06, y0), (x0 + width + lb.size * 0.1, y0 - rise)]
-    return hand.stroke(placer._resample(line, max(width / 10.0, 3.0)), rng, 0.45)
+    return hand.stroke(_resample(line, max(width / 10.0, 3.0)), rng, 0.45)
 
 
 def _quad_at(quad: list[Pt], t: float) -> Pt:

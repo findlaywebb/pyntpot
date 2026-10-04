@@ -228,7 +228,7 @@ class LetteringPolicy:
     #: with no settlements, watercourses or road numbers on the sheet, five
     #: landmarks were what filled it. Now that the ground carries its own names
     #: the landmarks compete with them, and three leaves room for both. Spans have
-    #: their own cap in `labels.SPAN_MAX`.
+    #: their own cap in `lettering.spans.SPAN_MAX`.
     label_max: int = 3
     #: Draw the label layer at all. Nothing reads this yet: it is the switch the
     #: label plate is turned off with once there is one, so a theme that wants

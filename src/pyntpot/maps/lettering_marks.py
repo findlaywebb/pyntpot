@@ -33,6 +33,7 @@ from pyntpot._port import labels as placer
 from pyntpot.ink.polyline import Pt
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark, Setting
+from pyntpot.maps.lettering.label import NO_LEADER, SPAN_EFFORT, TIER_SPAN, Label, Span
 from pyntpot.maps.lettering_furniture import leader, pin, underline
 from pyntpot.maps.lettering_window import baseline
 from pyntpot.maps.style import Style
@@ -93,7 +94,7 @@ def box_size(hand: Hand, text: str, size: float) -> tuple[float, float]:
     return width + size * 0.5, height
 
 
-def marks(hand: Hand, placed: Sequence[placer.Label], spans: Sequence[placer.Span]) -> list[Mark]:
+def marks(hand: Hand, placed: Sequence[Label], spans: Sequence[Span]) -> list[Mark]:
     """Everything on the label layer, as strokes in card pixels.
 
     Args:
@@ -112,7 +113,7 @@ def marks(hand: Hand, placed: Sequence[placer.Label], spans: Sequence[placer.Spa
     return out
 
 
-def span_marks(hand: Hand, span: placer.Span) -> list[Mark]:
+def span_marks(hand: Hand, span: Span) -> list[Mark]:
     """A span's own line and its two end ticks: one gesture with its name.
 
     The name is not drawn here. It went through the placer with every other
@@ -138,7 +139,7 @@ def span_marks(hand: Hand, span: placer.Span) -> list[Mark]:
     return out
 
 
-def label_marks(hand: Hand, lb: placer.Label) -> list[Mark]:
+def label_marks(hand: Hand, lb: Label) -> list[Mark]:
     """One name, and whatever furniture its kind is entitled to.
 
     `lb.lift` is which side of its own baseline a curved name sits on: above it
@@ -166,7 +167,7 @@ def _crc(*parts: object) -> int:
     return zlib.crc32("|".join(str(p) for p in parts).encode())
 
 
-def _ink(lb: placer.Label) -> str:
+def _ink(lb: Label) -> str:
     """Which ink a label is written in: one of the three tokens, or a colour.
 
     A span is the one thing on the sheet whose colour is a judgement rather
@@ -174,17 +175,17 @@ def _ink(lb: placer.Label) -> str:
     from `SPAN_INTENT_INK`. A name on the water is written in the water's own
     ink, the colour of the thing it is now written on.
     """
-    if lb.tier == placer.TIER_SPAN:
+    if lb.tier == TIER_SPAN:
         return SPAN_INTENT_INK.get(lb.intent or "note", SPAN_INTENT_INK["note"])
     if lb.in_water:
         return "in_water"
     return KIND_INK.get(lb.kind, "map")
 
 
-def _setting(lb: placer.Label, base: list[Pt] | None, track: float) -> Setting:
+def _setting(lb: Label, base: list[Pt] | None, track: float) -> Setting:
     """The label as the hand is asked to write it: along its lifted line, or flat."""
     slant = KIND_SLANT.get(lb.kind, 0.0)
-    if lb.tier == placer.TIER_SPAN and lb.kind in placer.SPAN_EFFORT:
+    if lb.tier == TIER_SPAN and lb.kind in SPAN_EFFORT:
         slant = SPAN_EFFORT_SLANT
     ink = _ink(lb)
     wash = not lb.in_water
@@ -204,7 +205,7 @@ def _setting(lb: placer.Label, base: list[Pt] | None, track: float) -> Setting:
     )
 
 
-def _furniture(hand: Hand, lb: placer.Label, rng: np.random.Generator, ink: str) -> list[Mark]:
+def _furniture(hand: Hand, lb: Label, rng: np.random.Generator, ink: str) -> list[Mark]:
     """The pin and the leader a pinned name takes; a span and a kind that is its place take none.
 
     A span never takes a leader. Its name sits in clear paper beside its own
@@ -212,7 +213,7 @@ def _furniture(hand: Hand, lb: placer.Label, rng: np.random.Generator, ink: str)
     together is one more line on a card that has enough.
     """
     ends = lb.leader
-    if not ends or lb.kind in placer.NO_LEADER or lb.tier == placer.TIER_SPAN:
+    if not ends or lb.kind in NO_LEADER or lb.tier == TIER_SPAN:
         return []
     ring = Mark(pts=pin(hand, lb, rng), role="pin", ink=ink, size=lb.size)
     line = Mark(pts=leader(hand, ends, rng), role="leader", ink=ink, size=lb.size)
