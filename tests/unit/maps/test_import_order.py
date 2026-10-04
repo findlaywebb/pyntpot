@@ -53,6 +53,7 @@ MODULES: tuple[str, ...] = (
     "pyntpot.maps.lettering",
     "pyntpot.maps.attribution",
     "pyntpot.maps.cli",
+    "pyntpot",
 )
 
 #: The `maps` modules allowed to import `_port`, binding its modules.
