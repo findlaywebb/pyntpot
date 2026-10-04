@@ -14,7 +14,7 @@ import pytest
 
 from pyntpot._port import geo, paint
 from pyntpot.ink.chains import chain_lines
-from pyntpot.ink.polyline import deform_line, foot_on, length_indexed, meet, simplify
+from pyntpot.ink.polyline import deform_line, foot_on, length, meet, simplify
 from pyntpot.maps.basemap import Basemap, Layers, Line, River, Road
 from pyntpot.maps.card import Card
 from pyntpot.maps.projection import Projection, track_projection
@@ -2146,7 +2146,7 @@ def test_the_major_river_carries_its_name_twice_and_the_others_once():
     assert names.count("Heddon") == 1
     a, b = [label for label in got if label.name == "Lyn"]
     apart = math.dist((a.px, a.py), (b.px, b.py))
-    assert apart > length_indexed(a.baseline) * lb.RIVER_REPEAT_FRAC * 0.9
+    assert apart > length(a.baseline) * lb.RIVER_REPEAT_FRAC * 0.9
 
 
 def test_a_span_that_doubles_back_is_still_one_open_gesture():
@@ -2168,7 +2168,7 @@ def test_a_span_that_doubles_back_is_still_one_open_gesture():
     line = lb.span_line(doubled, 0, len(doubled) - 1, 1, 14.0, card)
     assert line, "a doubled-back span drew nothing at all"
     # Not a ring: it does not come back to where it started.
-    assert math.dist(line[0], line[-1]) > 0.33 * length_indexed(line)
+    assert math.dist(line[0], line[-1]) > 0.33 * length(line)
     # And it stands off the stretch it belongs to rather than wrapping it.
     assert min(min(math.dist(p, q) for q in doubled) for p in line) > 8.0
 
@@ -2340,7 +2340,7 @@ def test_a_doubled_back_stretch_is_enclosed_rather_than_cut_across():
     back = [(x, y + 26.0) for x, y in reversed(out)]
     route = out + back
     line = lb.span_line(route, 0, len(route) - 1, 1, 20.0, card)
-    assert length_indexed(line) > 2.0 * 20.0, "the doubled-back stretch drew no mark"
+    assert length(line) > 2.0 * 20.0, "the doubled-back stretch drew no mark"
     assert not _crosses(line, route), "the mark cuts across the loop"
     # Corners, because the loop's own turns are corners: a route that turns
     # right round in a few pixels is not drawn as an arc. So the mark is a few
@@ -2371,7 +2371,7 @@ def test_a_hairpin_takes_the_short_way_over_its_own_mouth():
     assert not _crosses(line, route)
     # Over the mouth, which is the west end where the two ends of the span are,
     # and nothing like the length of the stretch itself.
-    assert length_indexed(line) < 0.4 * length_indexed(route)
+    assert length(line) < 0.4 * length(route)
     assert sum(x for x, _ in line) / len(line) < 100.0
 
 
@@ -2520,7 +2520,7 @@ def test_an_end_tick_stops_short_of_the_route_rather_than_touching_it():
     clear = 14.0 * lb.SPAN_CLEAR_CAPS
     for tick in span.ticks:
         assert lb.clear_of_route(tick, route, clear)
-        assert length_indexed(tick) > 0.0
+        assert length(tick) > 0.0
 
 
 def _shapes() -> dict[str, list[tuple[float, float]]]:
@@ -3767,7 +3767,7 @@ def test_a_numbered_road_is_gathered_by_its_number_not_by_its_street_name():
     got = lb.pick_roads(label_basemap(), lines, FlatCard(), route, budget=2)
     assert [label.name for label in got] == ["A3052"]
     # No one leg is long enough on its own; the number is what gathers them.
-    assert length_indexed(got[0].baseline) > lb.road_min_px(got[0].size)
+    assert length(got[0].baseline) > lb.road_min_px(got[0].size)
 
 
 # ------------------------------------------------- two strands of one route

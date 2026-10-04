@@ -1,8 +1,8 @@
 """Polyline geometry: simplify, smooth, clip, measure, cross and wobble a line.
 
 Key types: `Pt`, one point as an `(x, y)` pair of floats, and a polyline as a
-list of them. The functions measure a line (`length`, `length_indexed`,
-`running_length`, `cumulative_m`), reshape it (`simplify`, `smooth`,
+list of them. The functions measure a line (`length`,
+`cumulative_length`), reshape it (`simplify`, `smooth`,
 `clip_line`, `eased`, `ease_along`, `deform_line`), and answer local questions
 about it (`normal_at`, `normals`, `tangent_at`, `side`, `segments_cross`,
 `meet`, `seg_gap`, `foot_on`, `point_to_segment`).
@@ -18,6 +18,7 @@ and `letters` import it from here.
 
 import itertools
 import math
+from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -140,7 +141,13 @@ def point_to_segment(p: Pt, a: Pt, b: Pt) -> float:
 
 
 def normal_at(pts: list[Pt], i: int) -> Pt:
-    """The unit left normal of a polyline at one of its points."""
+    """The unit left normal of a polyline at one of its points.
+
+    Unlike `normals` it differences the points one either side and falls back
+    to (0, 1) on a degenerate run; unlike `tangent_at` it is the normal, not the
+    direction of travel; unlike `curves.unit_normal` it points left and is
+    taken across a point's neighbours rather than along one segment.
+    """
     a = pts[max(i - 1, 0)]
     b = pts[min(i + 1, len(pts) - 1)]
     dx, dy = b[0] - a[0], b[1] - a[1]
@@ -176,24 +183,16 @@ def length(line: list[Pt]) -> float:
     return sum(math.dist(a, b) for a, b in itertools.pairwise(line))
 
 
-def length_indexed(pts: list[Pt]) -> float:
-    """The length of a polyline."""
-    return sum(math.dist(pts[i], pts[i + 1]) for i in range(len(pts) - 1))
+def cumulative_length(line: Sequence[Pt], scale: float = 1.0) -> list[float]:
+    """The length covered at each point of a polyline, from zero at its first.
 
-
-def running_length(line: list[Pt]) -> list[float]:
-    """Cumulative length at each point of a polyline."""
+    Each step is divided by `scale` (floored at 1e-9), so a track drawn in card
+    pixels with `scale` pixels per metre gives metres; at the default of 1.0 it
+    is the length in the line's own units, since dividing by one is exact.
+    """
     out: list[float] = [0.0]
     for i in range(1, len(line)):
-        out.append(out[-1] + math.dist(line[i - 1], line[i]))
-    return out
-
-
-def cumulative_m(route_px: list[Pt], scale: float) -> list[float]:
-    """Metres covered at each route point, from the track drawn in card pixels."""
-    out: list[float] = [0.0]
-    for i in range(1, len(route_px)):
-        out.append(out[-1] + math.dist(route_px[i - 1], route_px[i]) / max(scale, 1e-9))
+        out.append(out[-1] + math.dist(line[i - 1], line[i]) / max(scale, 1e-9))
     return out
 
 
@@ -249,7 +248,11 @@ def foot_on(p: Pt, poly: list[Pt]) -> tuple[float, Pt]:
 
 
 def tangent_at(pts: list[tuple[float, float]], i: int) -> tuple[float, float]:
-    """The unit direction of travel at one point, by central difference."""
+    """The unit direction of travel at one point, by central difference.
+
+    Unlike `normal_at` it is the direction itself, not the normal turned from
+    it, and it falls back to (1, 0) on a degenerate run.
+    """
     a = pts[max(i - 1, 0)]
     b = pts[min(i + 1, len(pts) - 1)]
     dx, dy = b[0] - a[0], b[1] - a[1]
@@ -281,7 +284,12 @@ def ease_along(push: list[float], cum: list[float], reach: float) -> list[float]
 
 
 def normals(pts: list[Pt]) -> list[Pt]:
-    """A unit normal at every point of a run, from a smoothed tangent."""
+    """A unit normal at every point of a run, from a smoothed tangent.
+
+    Unlike `normal_at` it differences the points three either side, which
+    smooths the normal along the run, and a zero run gives a zero normal rather
+    than a fallback.
+    """
     n = len(pts)
     out = []
     for i in range(n):

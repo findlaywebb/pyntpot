@@ -40,6 +40,8 @@ first 16 hex digits of its SHA-256, a hyphen, and the style's base digest.
 | 2 | `Read lettering geometry from the basemap and settle the manifest` | all five outputs byte-identical to step 1; the hash equal; `labels.txt` written for the first time | `--require-identical all --require-hash equal` |
 | 3 | `Keep basemap geometry as full-precision point lists` | each output within the bound of step 2; the hash differs; `labels.txt` equal | `--max-fraction 0.005 --require-hash differ --require-labels-equal` |
 | 4 | `Merge the ring and chain joiners` | all five outputs byte-identical to step 3; the hash equal; `labels.txt` equal | `--require-identical all --require-hash equal --require-labels-equal` |
+| 5 | `Merge the arc-length helpers` | all five outputs byte-identical to step 4; the hash equal; `labels.txt` equal | `--require-identical all --require-hash equal --require-labels-equal` |
+| 6 | none: no two normal helpers compute the same quantity, so nothing was merged | no commit and no compare | none |
 
 Step 1 wires the grouped style into the painter: the flat painter style, the effective
 basemap options and the route ink all come from the packaged default theme, and the base
@@ -260,6 +262,55 @@ Kept apart, as different algorithms:
 - `joined` is `chain_lines` over point lists, at the lettering's tolerance of 8 px, and
   differs from `join_chains` and `join_strokes` as `chain_lines` does.
 
+### Step 5
+
+Step 5 merges the arc-length helpers. The lettering's running length and the route's
+metres covered were the same running sum, the second dividing each step by the scale;
+they are now one function, `cumulative_length(line, scale=1.0)`, with the second's body,
+and dividing by the default scale of 1.0 is exact. The two total-length helpers were the
+same sum of the same distances in the same order, one walking pairs and one walking
+indices; they are now one, `length`.
+
+Step 5 compare, against step 4 (the gate):
+
+```
+paper.webp: identical yes, differing fraction 0.000000
+wash.webp: identical yes, differing fraction 0.000000
+pen.webp: identical yes, differing fraction 0.000000
+labels-centreline.webp: identical yes, differing fraction 0.000000
+map.png: identical yes, differing fraction 0.000000
+manifest hash: 340a7f6e260ee1e2-e5a5f1b4b3ca2177 here, 340a7f6e260ee1e2-e5a5f1b4b3ca2177 in step 4
+```
+
+`labels.txt` is equal to step 4's.
+
+Step 5 compare, against the committed goldens (cumulative record):
+
+```
+paper.webp: identical no, differing fraction 0.000000
+wash.webp: identical no, differing fraction 0.207337
+pen.webp: identical no, differing fraction 0.000225
+labels-centreline.webp: identical no, differing fraction 0.042485
+map.png: identical no, differing fraction 0.193396
+manifest hash: 340a7f6e260ee1e2-e5a5f1b4b3ca2177 here, c034e1a4d60bad70-77dce82bec370944 in the goldens
+```
+
+### Step 6
+
+Step 6 would have merged the polyline normal helpers that compute the same quantity. No
+two of them do, so nothing was merged and the step has no commit and no compare. Each
+keeps a docstring line saying how it differs from the others:
+
+- `normal_at` is the unit left normal at a point, differenced across the points one
+  either side, falling back to (0, 1) on a degenerate run.
+- `normals` is the unit left normal at every point, differenced across the points three
+  either side, so it is smoothed along the run, and a zero run gives a zero normal
+  rather than a fallback: a different quantity from `normal_at` at any bend.
+- `tangent_at` is the unit direction of travel, not a normal, falling back to (1, 0).
+- `unit_normal` is the unit right normal of one given segment, and None rather than a
+  fallback when the segment is degenerate: opposite in sign to `normal_at`, and taken
+  along a segment rather than across a point's neighbours.
+
 ### Hashes
 
 - Old manifest hash (the committed goldens): `c034e1a4d60bad70-77dce82bec370944`.
@@ -268,6 +319,7 @@ Kept apart, as different algorithms:
 - Manifest hash after step 2: `87624a4cd49063df-e5a5f1b4b3ca2177`, unchanged.
 - Manifest hash after step 3: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`.
 - Manifest hash after step 4: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, unchanged.
+- Manifest hash after step 5: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, unchanged.
 
 ## Consequences
 

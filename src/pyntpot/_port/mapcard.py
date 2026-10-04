@@ -39,7 +39,7 @@ from pyntpot._port.labels import (
     road_lines,
     route_markers,
 )
-from pyntpot.ink.polyline import cumulative_m
+from pyntpot.ink.polyline import cumulative_length
 
 if TYPE_CHECKING:
     from pyntpot.maps.basemap import Basemap
@@ -192,7 +192,7 @@ def letter_card(
             )
     # A bare track carries no clock, so a span stated in seconds cannot be
     # resolved here and says so; one stated in kilometres or in indices can.
-    spans = resolve_spans(picks, [], cumulative_m(route_px, card.scale))
+    spans = resolve_spans(picks, [], cumulative_length(route_px, card.scale))
     placed = home + place(
         ground + anchored,
         spans,

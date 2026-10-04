@@ -38,11 +38,11 @@ from typing import TYPE_CHECKING, Any, Literal
 from pyntpot.ink.chains import joined
 from pyntpot.ink.curves import offset_curve, spline
 from pyntpot.ink.polyline import (
+    cumulative_length,
     deform_line,
     foot_on,
-    length_indexed,
+    length,
     meet,
-    running_length,
     seg_gap,
     simplify,
 )
@@ -1463,10 +1463,10 @@ def _place_along(
     turn_max = SPAN_MAX_TURN_DEG if span else MAX_TURN_DEG
     bow_max = SPAN_MAX_BOW_FRAC if span else MAX_BOW_FRAC
     line = _resample(lb.baseline, max(want / 24.0, 2.0))
-    if length_indexed(line) < want:
+    if length(line) < want:
         return None
-    apart = max(length_indexed(line) * RIVER_REPEAT_FRAC, want)
-    cum = running_length(line)
+    apart = max(length(line) * RIVER_REPEAT_FRAC, want)
+    cum = cumulative_length(line)
     # A span's bracket is a contour and a contour can loop, so which side of it
     # is "away from the route" is not one answer for the whole line: it was
     # read once at the bracket's middle and applied everywhere, which is how
@@ -1712,7 +1712,7 @@ def _curved_boxes(window: list[Pt], lb: Label, th: float, side: float | None = N
         The boxes, in order along the window.
     """
     walk = _offset_line(window, lift_middle(lb, lb.lift if side is None else side))
-    cum = running_length(walk)
+    cum = cumulative_length(walk)
     total = cum[-1] or 1.0
     step = max(th * 0.9, 6.0)
     out: list[Box] = []
@@ -2068,9 +2068,7 @@ def _drawn_side(
         for side in (span.side, -span.side)
     }
     worth = {
-        side: (
-            length_indexed(line) - _feature_cost(line, avoid) - _on_line_cost(line, lines, cap_px)
-        )
+        side: (length(line) - _feature_cost(line, avoid) - _on_line_cost(line, lines, cap_px))
         for side, line in drawn.items()
     }
     other = -span.side
@@ -2106,7 +2104,7 @@ def _on_line_cost(line: list[Pt], lines: list[list[Pt]] | None, cap_px: float) -
     """
     if not lines or len(line) < 2:
         return 0.0
-    run = length_indexed(line)
+    run = length(line)
     if run <= 0.0:
         return 0.0
     reach = cap_px * SPAN_LINE_REACH_CAPS
@@ -2129,7 +2127,7 @@ def _feature_cost(line: list[Pt], avoid: list[tuple[float, float, float, float]]
     """
     if not avoid or len(line) < 2:
         return 0.0
-    run = length_indexed(line)
+    run = length(line)
     if run <= 0.0:
         return 0.0
     pts = _resample(line, max(run / 60.0, 1.0))
@@ -2809,7 +2807,7 @@ def _mouth_path(raw: list[Pt], offset_px: float) -> list[Pt]:
     # it is: the path here is walked slowly and sampled densely, and the piece
     # that crosses the mouth is seventy samples of twenty pixels.
     runs = [run for run in runs if math.dist(run[0], run[-1]) > math.dist(a, b) * 0.5]
-    piece = min(runs, key=length_indexed) if runs else [a, b]
+    piece = min(runs, key=length) if runs else [a, b]
     if math.dist(piece[0], piece[-1]) >= offset_px * MOUTH_MIN_SPAN:
         return piece
     # An out-and-back that finishes where it started has no mouth to cross, so
@@ -2975,10 +2973,10 @@ def _longest_clear(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[
                 best = (at, i)
             at = None
     lo, hi = best
-    want = length_indexed(line) * CLEAR_KEEP_FRAC
+    want = length(line) * CLEAR_KEEP_FRAC
     while hi - lo >= 3:
         cut = line[lo:hi]
-        if length_indexed(cut) < want:
+        if length(cut) < want:
             break
         if clear_of_route(cut, route_px, clear_px):
             return cut
@@ -3103,7 +3101,7 @@ def _span_label(
     along = (
         bool(span.line)
         and span_bearing(span.line) <= along_max_deg
-        and length_indexed(span.line) >= width * 1.02
+        and length(span.line) >= width * 1.02
     )
     anchors: list[Pt] = []
     if not along and span.line:
@@ -3155,7 +3153,7 @@ def _beside(line: list[Pt], frac: float, push: Pt) -> Pt:
     of it points where a local normal at the other end came from: anchors built
     that way put a name on the far side of the road from its own mark.
     """
-    run = length_indexed(line)
+    run = length(line)
     want, walked = run * frac, 0.0
     at = len(line) - 1
     for i in range(len(line) - 1):
@@ -3301,7 +3299,7 @@ def pick_settlements(
     wanted_set = {str(n).casefold() for n in (wanted or [])}
     budget = budget if budget is not None else settlement_budget(card.w)
     ends = [route_px[0], route_px[-1]] if route_px else []
-    reach = length_indexed(route_px) * SETTLEMENT_ENDPOINT_FRAC
+    reach = length(route_px) * SETTLEMENT_ENDPOINT_FRAC
     found = settlements(basemap)
     scored: list[tuple[float, bool, dict[str, Any], Pt]] = []
     for entry in found:
@@ -3549,7 +3547,7 @@ def pick_rivers(
         line = [card.xy(x, y) for x, y in entry.get("d") or []]
         if len(line) < 2:
             continue
-        run_m = length_indexed(line) / max(card.scale, 1e-9)
+        run_m = length(line) / max(card.scale, 1e-9)
         near_m = min(min(math.dist(p, q) for q in thin) for p in line[::2]) / max(card.scale, 1e-9)
         score = run_m / 1000.0 * min(max(1.0 - near_m / 500.0, 0.2), 1.0)
         widths[name] = max(
@@ -3573,8 +3571,7 @@ def pick_rivers(
         pieces.setdefault(name, []).append(line)
         totals[name] = totals.get(name, 0.0) + score
     merged: dict[str, tuple[float, list[Pt]]] = {
-        name: (totals[name], max(joined(parts), key=length_indexed))
-        for name, parts in pieces.items()
+        name: (totals[name], max(joined(parts), key=length)) for name, parts in pieces.items()
     }
     order = sorted(merged.items(), key=lambda kv: -kv[1][0])
     out: list[Label] = []
@@ -3586,12 +3583,12 @@ def pick_rivers(
         # water so the placer starts them in different halves; each is then free
         # to move anywhere along the whole line from there, and the repeat guard
         # in `place` keeps them from converging on the same window.
-        run = length_indexed(line)
+        run = length(line)
         twice = run >= MAJOR_RIVER_TWICE_FRAC * max(card.w, card.h)
         times = MAJOR_RIVER_LABELS if rank == 0 and twice else 1
         for n in range(times):
             at = (n + 1) / (times + 1)
-            anchor = _on_line(line, running_length(line), run * at)[0]
+            anchor = _on_line(line, cumulative_length(line), run * at)[0]
             size = DEFAULT_LINE_PX * 0.9
             out.append(
                 Label(
@@ -3821,13 +3818,13 @@ def pick_roads(
     shortest = road_min_px(size)
     best: dict[str, tuple[float, list[Pt]]] = {}
     for key, parts in pieces.items():
-        line = max(joined(parts), key=length_indexed)
-        if length_indexed(line) < shortest:
+        line = max(joined(parts), key=length)
+        if length(line) < shortest:
             continue
         near = min(min(math.dist(p, q) for q in thin) for p in line[::2])
         if near > 40.0:  # a road the session was never on is not this map's
             continue
-        best[key] = (length_indexed(line) - near, line)
+        best[key] = (length(line) - near, line)
     out: list[Label] = []
     for key, (_score, line) in sorted(best.items(), key=lambda kv: -kv[1][0])[:budget]:
         mid = line[len(line) // 2]
@@ -4134,7 +4131,7 @@ class Hand:
             return None
         want = width * 1.02
         line = _resample(lb.baseline, max(want / 24.0, 2.0))
-        if length_indexed(line) < want:
+        if length(line) < want:
             return None
         near = (lb.px, lb.py)
         best: float | None = None
@@ -4172,7 +4169,7 @@ class Hand:
         as bad kerning rather than as a curve.
         """
         walk = _offset_line(base, lift_baseline(lb, side))
-        cum = running_length(walk)
+        cum = cumulative_length(walk)
         out = []
         for _ch, pen_x, adv, paths in self.font.run(lb.name, lb.size, track):
             if not paths:
