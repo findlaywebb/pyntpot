@@ -11,7 +11,7 @@ uv sync && uv run prek run --all-files && uv run pytest
 A red gate means fix the code. Never loosen a contract or a budget to get green. Changing
 a contract is an ADR in `docs/decisions/`.
 
-`numpy`, `pillow` and `fonttools` are pinned exactly for the golden parity test, and Dependabot ignores them.
+`numpy`, `pillow` and `fonttools` carry floors, not pins, and Dependabot updates them. The golden parity test stays exact, so a bump that moves golden pixels is a regeneration decision, not a loosened tolerance.
 
 ## Spec flow
 
