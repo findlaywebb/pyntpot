@@ -54,54 +54,58 @@ parity is exact only on the maintainer's machine; CI runs tolerance mode.
 
 - [x] P3.0a Architecture review pass: candidates recorded in `architecture.md`
 - [ ] P3.0 Fatten P3 and P4 into slices from `architecture.md`; plan-reviewer pass
-- [ ] P3.1 Golden harness (`make_golden.py`, `--golden-dir`) and the maps package skeleton
+- [ ] P3.1 Golden harness (`make_golden.py` with provenance, `--golden-dir`), package skeletons, `Credit`, the import-rule test
 - [ ] P3.2 One card frame; ADR 0003 (A4)
-- [ ] P3.3 One polyline module, moves only (A5)
-- [ ] P3.4 Typed `Basemap` and `Projection` (A4)
+- [ ] P3.3 One polyline module, moves only; `Pt` in `ink.polyline` (A5)
+- [ ] P3.4 Typed `Basemap` with `Layers`, `Projection` (A4)
 - [ ] P3.5 Typed `Plates` and `Manifest` (A4)
 - [ ] P3.6 `Track` with a GPX reader and `BoundingBox` (parallel line 2)
-- [ ] P3.7 `Features`, `Elevation`, `Credit`; ADR 0004 (parallel line 2)
-- [ ] P3.8 `OverpassFeatures` (parallel with P3.9, P3.10)
+- [ ] P3.7 `Features`, `Elevation`, `ProviderBudgetExceeded`, fixture providers with the shipped ids, the local test server; ADR 0004 (parallel line 2)
+- [ ] P3.8 `OverpassFeatures` with a query budget and copied query templates (parallel with P3.9, P3.10)
 - [ ] P3.9 `OpenTopoData` with a call budget (parallel with P3.8, P3.10)
 - [ ] P3.10 Fetch `Cache` keyed by box, margin and providers (parallel with P3.8, P3.9)
-- [ ] P3.11 Style groups by layer and the TOML theme, unwired; ADR 0005 (parallel line 3, A6)
-- [ ] P3.12 Wire the style, hash the typed inputs; opens the regeneration window (A6, A7)
-- [ ] P3.13 Drop the one-decimal round trip, the second parser and `route0` (A4, window)
-- [ ] P3.14 Merge the polyline duplicates (A5, window)
-- [ ] P3.15 Regenerate the goldens once; ADR 0006 (closes the window)
-- [ ] P3.16 Façade `fetch` and `paint`; fixture payloads renamed to cache keys
-- [ ] P3.17 Façade `letter` and `compose`; lettering shims deleted (A3 shape)
-- [ ] P3.18 Attribution drawn by `compose`
+- [ ] P3.11 Style groups by layer, effective basemap options, fixed route ink, the TOML theme, unwired; ADR 0005 (parallel line 3, A6)
+- [ ] P3.12 Wire the style, final hash form; opens the regeneration window, step 1 byte-identical (A6, A7)
+- [ ] P3.13 Lettering reads the basemap, final manifest keys (step 2, byte-identical); drop the one-decimal round trip, the second parser and `route0` (step 3, bounded) (A4, window)
+- [ ] P3.14 Merge the polyline duplicates, one bounded step each (A5, window)
+- [ ] P3.15 Regenerate the goldens once; ADR 0006; push the window to `main` (closes the window)
+- [ ] P3.16 Façade `fetch` (takes the style) and `paint`; fixture payloads renamed to cache keys
+- [ ] P3.17 Façade `letter` and `compose`; `Annotations`; lettering shims, `alphabet_sheet` and `sport_from_gpx` deleted (A3 shape)
+- [ ] P3.18 Attribution drawn by `compose` from `Basemap.credits`
 - [ ] P3.19 `pyntpot map` CLI
 - [ ] P3.20 Top-level exports and `__version__`; ADR 0007
 - [ ] P3.21 Golden parity driven through the façade
 
 ## P4. Split and layer
 
+Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
+
 - [ ] P4.1 Design the hand's setting; ADR 0008 (A2)
-- [ ] P4.2 The hand writes settings; map furniture moves to maps (A2)
-- [ ] P4.3 The nib plate moves into letters (A2)
+- [ ] P4.2 Ink engine part 1: noise, sheet, raster, io, wash, pigment (A1)
+- [ ] P4.3 Ink engine part 2: brush, tip, stamp, pad (A1)
 - [ ] P4.4 Split the outline font into `letters/{font,skeleton,trace}`
-- [ ] P4.5 Ink engine part 1: noise, sheet, raster, io, wash, pigment (A1)
-- [ ] P4.6 Ink engine part 2: brush, tip, stamp, pad (A1)
-- [ ] P4.7 Plate painter in maps; the nine clock reads and manifest timings go (A1)
-- [ ] P4.8 Style groups replace `PaintStyle`; `from_style` deleted (A6)
-- [ ] P4.9 Design the candidates facility; ADR 0009; delete dead code (A8)
-- [ ] P4.10 Candidates facility in `maps/candidates/` (A8)
-- [ ] P4.11 Split geo part 1: relief, generalisation, rivers
-- [ ] P4.12 Split geo part 2: OSM layers, cover, assembly; delete `geo.py`
-- [ ] P4.13 One cache for fetches and plates (A7)
-- [ ] P4.14 Split labels part 1: placement
-- [ ] P4.15 Split labels part 2: spans
-- [ ] P4.16 Split labels part 3: picks, compose, strands; delete the port modules (A3)
-- [ ] P4.17 Layers and forbidden contracts; empty exemptions; delete `_port`; ADR 0010
-- [ ] P4.18 Relax the D22 pins to floors
+- [ ] P4.5 The hand writes settings; map furniture moves to maps (A2)
+- [ ] P4.6 The nib plate moves into letters (A2)
+- [ ] P4.7 One cache for fetches and plates (A7)
+- [ ] P4.8 Plate painter in maps part 1: job, brushes, water, cover, wood (A1)
+- [ ] P4.9 Plate painter in maps part 2: relief, fluid, pen, ribbon, paper (A1)
+- [ ] P4.10 Style groups part 1: basemap readers; `GeoOptions` deleted (A6)
+- [ ] P4.11 Style groups part 2: lettering readers; `PaintStyle` and `_port/paint.py` deleted (A6)
+- [ ] P4.12 Design the candidates facility; ADR 0009 (A8)
+- [ ] P4.13 Candidates facility in `maps/candidates/` (A8)
+- [ ] P4.14 Split geo part 1: relief, generalisation, rivers
+- [ ] P4.15 Split geo part 2: OSM layers, cover, assembly; delete `geo.py`
+- [ ] P4.16 Split labels part 1: placement
+- [ ] P4.17 Split labels part 2: spans
+- [ ] P4.18 Split labels part 3: picks, compose, strands; delete the port modules (A3)
+- [ ] P4.19 Layers and forbidden contracts; empty exemptions; delete `_port`; ADR 0010
+- [ ] P4.20 Relax the D22 pins to floors
 
 ## P5. Property tests, coverage, mutation, benchmarks
 
 - [ ] P5.1 Property tests
-- [ ] P5.2 Coverage baseline and ADR
-- [ ] P5.3 mutmut PR and nightly jobs, threshold ADR
+- [ ] P5.2 Coverage baseline and ADR 0011
+- [ ] P5.3 mutmut PR and nightly jobs, threshold ADR 0012
 - [ ] P5.4 Benchmarks and CodSpeed workflow
 
 ## P6. Docstrings, prose and references
@@ -116,7 +120,7 @@ parity is exact only on the maintainer's machine; CI runs tolerance mode.
 
 - [ ] P7.1 README with gallery images
 - [ ] P7.2 Tutorial, how-to guides, reference and explanation pages
-- [ ] P7.3 ADRs for the settled decisions
+- [ ] P7.3 ADRs 0013 to 0021 for the settled decisions
 - [ ] P7.4 Changelog 0.1.0, trusted publisher, confirm, tag and publish
 
 ## P8. Upstream migration
@@ -125,7 +129,7 @@ parity is exact only on the maintainer's machine; CI runs tolerance mode.
 
 ## P9. Post-port cleanup
 
-- [ ] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR
-- [ ] P9.2 Retire the exemptions mechanism; ADR
+- [ ] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR 0022
+- [ ] P9.2 Retire the exemptions mechanism; ADR 0023
 - [ ] P9.3 Delete `make_golden_old.py` and the last `ty` exclude
 - [ ] P9.4 Delete `design-sources.md` once `references.md` covers it
