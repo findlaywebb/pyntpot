@@ -17,8 +17,8 @@ the route runs back over itself, the line the route is drawn along.
 
 `compose` draws the route along `Plates.strands` in the style's route ink and
 pastes the label plate over it when the lettering has one; with no label plate
-the card is handed over bare. It does not draw an attribution: its
-`attribution` flag is accepted and has no effect.
+the card is handed over bare. Unless its `attribution` flag is off it then
+writes the basemap's credits at the bottom right (`maps.attribution`).
 
 It does not letter a card, and it reaches no network except through
 the providers it is handed. It reads no configuration from the environment and
@@ -43,6 +43,7 @@ from PIL import Image
 from pyntpot._port import card as strand_card
 from pyntpot._port import geo, mapcard
 from pyntpot._port import paint as painter
+from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.lettering import Lettering
@@ -151,7 +152,8 @@ def compose(
 
     The wash is multiplied over the paper, the route is drawn along
     `plates.strands` in the style's route ink (tinting the pen plate when the
-    ink is a pen), and the label plate is pasted over both when there is one.
+    ink is a pen), the label plate is pasted over both when there is one, and
+    the attribution is written last.
 
     Args:
         plates: The painted plates, with their strands set.
@@ -159,8 +161,8 @@ def compose(
         basemap: The basemap the plates were painted from, whose credits are
             owed on the card.
         style: The style whose route ink draws the route.
-        attribution: Accepted and not read: no attribution is drawn on the
-            card.
+        attribution: Whether to write the basemap's credits at the bottom
+            right; `False` leaves the card as the plates and lettering made it.
 
     Returns:
         The card, at the size of the paper plate.
@@ -169,9 +171,11 @@ def compose(
     k = card.width / max(plates.card.display[0], 1)
     mapcard._route(card, plates, list(plates.strands), style.route_ink(), k)
     if lettering.plate_path is None:
-        log.info("no label plate for %s, the card is handed over bare", plates.directory)
-        return card
-    mapcard._paste_labels(card, lettering.plate_path)
+        log.info("no label plate for %s, the card has no lettering", plates.directory)
+    else:
+        mapcard._paste_labels(card, lettering.plate_path)
+    if attribution:
+        draw_attribution(card, attribution_text(basemap.credits), style)
     return card
 
 
