@@ -1,8 +1,8 @@
 """The style groups partition the painter's and the basemap's fields by reader.
 
 Every `PaintStyle` field is in exactly one group or in `CONSUMER_ONLY`, every
-`GeoOptions` field but `clip_margin_m` is in `BasemapStyle`, each group's
-defaults are its source class's defaults, and each group's field names, in
+basemap option is in `BasemapStyle`, each group's
+defaults are its source class's defaults (`BasemapStyle`'s are pinned literals), and each group's field names, in
 order, are pinned here as literals, which pins the whole field-to-group table.
 """
 
@@ -11,7 +11,6 @@ from typing import Any
 
 import pytest
 
-from pyntpot._port.geo import GeoOptions
 from pyntpot._port.paint import PaintStyle
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.style import PaperStyle, WashStyle
@@ -241,9 +240,38 @@ PINNED: dict[type, tuple[str, ...]] = {
 
 #: The groups whose defaults copy a source class, with that class.
 SOURCED: dict[type, type] = {
-    group: GeoOptions if group is BasemapStyle else PaintStyle
-    for group in PINNED
-    if group is not RouteInks
+    group: PaintStyle for group in PINNED if group not in (RouteInks, BasemapStyle)
+}
+
+#: `BasemapStyle`'s defaults, the basemap options' class defaults, as pinned literals.
+BASEMAP_DEFAULTS: dict[str, Any] = {
+    "hillshade_mode": "off",
+    "hillshade_levels": 5,
+    "hillshade_opacity": 0.5,
+    "hachure_spacing_m": 75.0,
+    "hachure_min_slope": 0.035,
+    "hachure_max_length_m": 90.0,
+    "sea_style": "fill",
+    "contour_interval": 50.0,
+    "roads": "key",
+    "rivers": "key",
+    "interaction_m": 60.0,
+    "interaction_run_m": 100.0,
+    "landmarks": "heuristic",
+    "landmark_max": 8,
+    "landmark_radius_m": 300.0,
+    "pick_landmarks": (),
+    "pick_roads": (),
+    "pick_places": (),
+    "generalise": True,
+    "cell_m": 60.0,
+    "morph_cells": 2,
+    "min_area_ha": 4.0,
+    "smooth_passes": 3,
+    "blob_jitter_m": 22.0,
+    "inset_cells": 2,
+    "tree_spacing_m": 450.0,
+    "all_variants": False,
 }
 
 GROUP_IDS = [group.__name__ for group in PINNED]
@@ -274,8 +302,7 @@ def _grouped() -> list[str]:
 
 def test_groups_cover_every_source_field() -> None:
     """The groups and `CONSUMER_ONLY` hold every source field and nothing else."""
-    geo = set(_names(GeoOptions)) - {"clip_margin_m"}
-    expected = set(_names(PaintStyle)) | geo | set(_names(RouteInks))
+    expected = set(_names(PaintStyle)) | set(BASEMAP_DEFAULTS) | set(_names(RouteInks))
     assert set(_grouped()) == expected
 
 
@@ -325,7 +352,16 @@ def test_multi_layer_field_lands_in_its_table_group(name: str, group: type) -> N
     assert name in _names(group)
 
 
-@pytest.mark.parametrize("group", list(SOURCED), ids=SOURCED_IDS)
+def test_basemap_defaults_are_the_pinned_literals() -> None:
+    """`BasemapStyle`'s defaults equal the pinned literals, value and type, field by field."""
+    built = BasemapStyle()
+    assert _names(BasemapStyle) == list(BASEMAP_DEFAULTS)
+    for name, value in BASEMAP_DEFAULTS.items():
+        assert getattr(built, name) == value, name
+        assert type(getattr(built, name)) is type(value), name
+
+
+@pytest.mark.parametrize("group", [*SOURCED, BasemapStyle], ids=[*SOURCED_IDS, "BasemapStyle"])
 def test_groups_are_frozen(group: type) -> None:
     """A group refuses assignment, so a style value cannot change under a reader."""
     built: Any = group()

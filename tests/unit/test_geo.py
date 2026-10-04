@@ -17,6 +17,7 @@ from pyntpot._port import geo
 from pyntpot.ink.chains import join_chains, join_strokes
 from pyntpot.ink.polyline import clip_line
 from pyntpot.maps.projection import track_projection
+from pyntpot.maps.style_groups import BasemapStyle
 
 from support.paths import FIXTURE_DIR, KEY
 
@@ -95,7 +96,7 @@ def _road_names(tmp_path: Path, roads: str) -> set[str]:
         "iTEST",
         LATS,
         LNGS,
-        geo.GeoOptions(roads=roads),
+        BasemapStyle(roads=roads),
         cache_dir=_cache(tmp_path, elements),
         places=[],
     )
@@ -142,7 +143,7 @@ def test_a_road_is_kept_whole_where_any_of_it_met_the_track(tmp_path):
         "iTEST",
         LATS,
         LNGS,
-        geo.GeoOptions(roads="key"),
+        BasemapStyle(roads="key"),
         cache_dir=_cache(tmp_path, elements),
         places=[],
     )
@@ -161,7 +162,7 @@ def test_an_unnamed_way_is_still_decided_on_its_own(tmp_path):
         "iTEST",
         LATS,
         LNGS,
-        geo.GeoOptions(roads="key"),
+        BasemapStyle(roads="key"),
         cache_dir=_cache(tmp_path, elements),
         places=[],
     )
@@ -327,7 +328,7 @@ def _river_names(tmp_path: Path, elements: list[dict]) -> set[str]:
         "iTEST",
         LATS,
         LNGS,
-        geo.GeoOptions(rivers="all"),
+        BasemapStyle(rivers="all"),
         cache_dir=_cache(tmp_path, elements),
         places=[],
     )
@@ -361,7 +362,7 @@ def test_a_river_that_passes_under_one_culvert_stays_whole(tmp_path):
         "iTEST",
         LATS,
         LNGS,
-        geo.GeoOptions(rivers="all"),
+        BasemapStyle(rivers="all"),
         cache_dir=_cache(tmp_path, elements),
         places=[],
     )
@@ -381,16 +382,14 @@ def test_rivers_are_always_drawn_and_a_stream_has_to_earn_it(tmp_path):
         _way(3, {"waterway": "stream", "name": "Brook a mile off"}, AWAY),
     ]
     cache = _cache(tmp_path, elements)
-    data = geo.basemap(
-        "iTEST", LATS, LNGS, geo.GeoOptions(rivers="key"), cache_dir=cache, places=[]
-    )
+    data = geo.basemap("iTEST", LATS, LNGS, BasemapStyle(rivers="key"), cache_dir=cache, places=[])
     kept = {river["n"]: river["c"] for river in data["rivers"]}
     assert kept["The river"] == "river"
     assert "Brook beside the track" in kept
     assert "Brook a mile off" not in kept
 
     only = geo.basemap(
-        "iTEST", LATS, LNGS, geo.GeoOptions(rivers="rivers"), cache_dir=cache, places=[]
+        "iTEST", LATS, LNGS, BasemapStyle(rivers="rivers"), cache_dir=cache, places=[]
     )
     assert {river["n"] for river in only["rivers"]} == {"The river"}
 
@@ -602,8 +601,8 @@ def test_generalisation_scales_with_the_box():
     assert geo.scale_for(3000.0) == 1.0
     assert geo.scale_for(12000.0) == pytest.approx(3.0)
     assert geo.scale_for(100000.0) == geo.MAX_SCALE
-    run = geo._derived(geo.GeoOptions(), geo.scale_for(3200.0))
-    ride = geo._derived(geo.GeoOptions(), geo.scale_for(13000.0))
+    run = geo._derived(BasemapStyle(), geo.scale_for(3200.0))
+    ride = geo._derived(BasemapStyle(), geo.scale_for(13000.0))
     assert ride["road_eps_m"] > run["road_eps_m"]
     assert ride["landmark_radius_m"] > run["landmark_radius_m"]
     assert ride["landmark_cap"] >= run["landmark_cap"]
@@ -806,33 +805,49 @@ def test_the_generalised_wood_is_smaller_and_simpler():
     """On the Lynmouth box the generalised layer loses rings and bytes."""
     lat, lng = geo.read_gpx(FIXTURE_DIR / "track.gpx")
     options = {"cache_dir": FIXTURE_DIR, "places": []}
-    raw = geo.basemap(KEY, lat, lng, geo.GeoOptions(generalise=False), **options)
-    fine = geo.basemap(KEY, lat, lng, geo.GeoOptions(generalise=True), **options)
+    raw = geo.basemap(KEY, lat, lng, BasemapStyle(generalise=False), **options)
+    fine = geo.basemap(KEY, lat, lng, BasemapStyle(generalise=True), **options)
     assert fine["wood"]["n"] < raw["wood"]["n"]
     assert len(fine["wood"]["d"]) < len(raw["wood"]["d"])
 
 
 def test_the_generalisation_scales_with_the_box():
     """A ride's grid is coarser and its minimum blob larger than a run's."""
-    run = geo._derived(geo.GeoOptions(), geo.scale_for(3200.0))
-    ride = geo._derived(geo.GeoOptions(), geo.scale_for(13000.0))
+    run = geo._derived(BasemapStyle(), geo.scale_for(3200.0))
+    ride = geo._derived(BasemapStyle(), geo.scale_for(13000.0))
     assert ride["cell_m"] > run["cell_m"]
     assert ride["min_area_ha"] > run["min_area_ha"]
 
 
-def test_resolved_geo_options_have_the_type_of_the_default_in_every_field():
-    """A JSON round trip keeps tuples as tuples in every option."""
-    resolved = json.loads(json.dumps(dataclasses.asdict(geo.GeoOptions())))
-    rebuilt = geo.GeoOptions.from_resolved(resolved)
-    default = geo.GeoOptions()
-    for field in dataclasses.fields(geo.GeoOptions):
-        got = getattr(rebuilt, field.name)
-        want = getattr(default, field.name)
-        assert type(got) is type(want), field.name
-    assert rebuilt == default
-
-
-def test_resolved_geo_options_refuse_an_unknown_field():
-    """An option the dataclass does not have is named, not silently dropped."""
-    with pytest.raises(ValueError, match="nonsense"):
-        geo.GeoOptions.from_resolved({"nonsense": 1})
+def test_the_candidate_basemap_is_the_old_candidate_options():
+    """The candidate export's basemap equals the options it drew with before the style groups."""
+    assert dataclasses.asdict(geo.candidate_basemap()) == {
+        "hillshade_mode": "off",
+        "hillshade_levels": 5,
+        "hillshade_opacity": 0.5,
+        "hachure_spacing_m": 75.0,
+        "hachure_min_slope": 0.035,
+        "hachure_max_length_m": 90.0,
+        "sea_style": "fill",
+        "contour_interval": 50.0,
+        "roads": "key",
+        "rivers": "key",
+        "interaction_m": 60.0,
+        "interaction_run_m": 100.0,
+        "landmarks": "all",
+        "landmark_max": 80,
+        "landmark_radius_m": 300.0,
+        "pick_landmarks": (),
+        "pick_roads": (),
+        "pick_places": (),
+        "generalise": False,
+        "cell_m": 60.0,
+        "morph_cells": 2,
+        "min_area_ha": 4.0,
+        "smooth_passes": 3,
+        "blob_jitter_m": 22.0,
+        "inset_cells": 2,
+        "tree_spacing_m": 450.0,
+        "all_variants": False,
+    }
+    assert geo.CANDIDATE_CLIP_MARGIN_M == 2600.0

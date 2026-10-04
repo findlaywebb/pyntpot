@@ -6,12 +6,14 @@ import shutil
 
 import pytest
 
-from pyntpot._port import geo, paint
+from pyntpot._port import geo
+from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.maps.basemap import Basemap, ElevationPatch, Layers, River, Road
 from pyntpot.maps.card import Card
 from pyntpot.maps.credit import Credit
 from pyntpot.maps.projection import Projection
 from pyntpot.maps.style import Style
+from pyntpot.maps.style_groups import CardStyle, RibbonStyle
 
 from support.paths import FIXTURE_DIR, KEY
 
@@ -40,7 +42,9 @@ def basemap(tmp_path_factory: pytest.TempPathFactory) -> Basemap:
         KEY,
         lat,
         lng,
-        paint.PaintStyle(),
+        CardStyle(),
+        RibbonStyle(),
+        BrushStyle(),
         cache_dir=work,
         places=[],
         basemap_style=Style.default().basemap,

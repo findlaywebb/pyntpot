@@ -13,10 +13,9 @@ import pydantic
 import pytest
 
 from pyntpot._port import paint
-from pyntpot._port.geo import GeoOptions
 from pyntpot._port.style import RouteInk
 from pyntpot.maps.style import Style
-from pyntpot.maps.style_groups import CONSUMER_ONLY
+from pyntpot.maps.style_groups import CONSUMER_ONLY, BasemapStyle
 
 from support import REPO_ROOT
 
@@ -137,16 +136,17 @@ class TestDefaultIsResolved:
 
     def test_basemap_is_the_effective_options(self) -> None:
         """The basemap group equals the options the basemap is drawn with, field by field."""
-        effective = GeoOptions(
-            hillshade_mode="off",
-            roads="key",
-            rivers="key",
-            generalise=False,
-            landmarks="all",
-            landmark_max=40,
+        expected = dataclasses.asdict(
+            dataclasses.replace(
+                BasemapStyle(),
+                hillshade_mode="off",
+                roads="key",
+                rivers="key",
+                generalise=False,
+                landmarks="all",
+                landmark_max=40,
+            )
         )
-        expected = dataclasses.asdict(effective)
-        del expected["clip_margin_m"]
         got = dataclasses.asdict(Style.default().basemap)
         assert got.keys() == expected.keys()
         for name, value in got.items():

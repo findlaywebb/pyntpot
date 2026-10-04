@@ -24,11 +24,10 @@ import re
 import struct
 import time
 import zlib
-from dataclasses import asdict, dataclass, fields
+from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from pyntpot._port.style import coerce_like
 from pyntpot.ink.chains import join_chains, join_strokes
 from pyntpot.ink.polyline import (
     clip_line,
@@ -41,9 +40,10 @@ from pyntpot.ink.polyline import (
 )
 
 if TYPE_CHECKING:
+    from pyntpot.ink.brush_style import BrushStyle
     from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
     from pyntpot.maps.projection import Projection
-    from pyntpot.maps.style_groups import BasemapStyle
+    from pyntpot.maps.style_groups import BasemapStyle, CardStyle, RibbonStyle
 
 log = logging.getLogger(__name__)
 
@@ -70,114 +70,6 @@ MAJOR_ROADS = ("motorway", "trunk", "primary", "secondary")
 MINOR_ROADS = ("tertiary", "unclassified", "residential", "track", "service")
 
 Pt = tuple[float, float]
-
-
-# --------------------------------------------------------------------------- options
-
-
-@dataclass
-class GeoOptions:
-    """What the basemap draws, and how much of it.
-
-    Every field has a `ChartStyle` counterpart so a theme's `style.json` can set
-    it, and an exploration-page control so a user can find the value they want
-    before it is written into a theme.
-    """
-
-    #: `bands` (posterised vector relief), `raster` (the greyscale PNG),
-    #: `contours`, or `off`. Bands are the default: they carry the shape at a
-    #: tenth of the raster's bytes and stay crisp at any size the page draws.
-    hillshade_mode: str = "off"
-    hillshade_levels: int = 5
-    hillshade_opacity: float = 0.5
-    #: Hachures: seed spacing, the gradient below which nothing is drawn, and
-    #: the longest stroke. All three are stated for a run's box and scaled up.
-    hachure_spacing_m: float = 75.0
-    hachure_min_slope: float = 0.035
-    hachure_max_length_m: float = 90.0
-    #: `fill` or `waves`.
-    sea_style: str = "fill"
-    #: Contour interval in metres, used when the mode is `contours`. The 20 m
-    #: interval the first draft drew was a hatch, not a map.
-    contour_interval: float = 50.0
-    #: `all`, `key` (major plus interacted), or `major`.
-    roads: str = "key"
-    #: `all`, `key` (rivers plus interacted streams), or `rivers`.
-    rivers: str = "key"
-    #: Metres within which a minor road or a stream counts as touched.
-    interaction_m: float = 60.0
-    #: Metres of that contact needed before it counts, unless the track crosses.
-    interaction_run_m: float = 100.0
-    #: `heuristic`, `all` or `payload`.
-    landmarks: str = "heuristic"
-    landmark_max: int = 8
-    landmark_radius_m: float = 300.0
-    #: Names the payload picked, which replace the heuristic when they are given.
-    pick_landmarks: tuple[str, ...] = ()
-    pick_roads: tuple[str, ...] = ()
-    pick_places: tuple[str, ...] = ()
-    #: Metres of ground kept around the track's bounding box when drawing.
-    clip_margin_m: float = 900.0
-    #: The generalisation stage, which runs before anything is drawn: the wood,
-    #: the parkland and the sea are rasterised, closed, opened, decluttered and
-    #: traced back as a few smooth shapes. Off draws the raw OSM outlines.
-    generalise: bool = True
-    #: Metres per cell of the working grid, stated for a 4 km box and scaled up.
-    cell_m: float = 60.0
-    #: Radius of the morphological close and open, in cells.
-    morph_cells: int = 2
-    #: Hectares below which a blob, or a hole in one, is dropped.
-    min_area_ha: float = 4.0
-    #: Chaikin passes on a traced outline, and on a road or a river.
-    smooth_passes: int = 3
-    #: Metres of loose-edge wobble on a wash. Zero draws the measured edge.
-    blob_jitter_m: float = 22.0
-    #: Cells pulled in for the second, darker pass of pigment inside a wash.
-    inset_cells: int = 2
-    #: Metres between tree glyphs inside a wood. Zero scatters none.
-    tree_spacing_m: float = 450.0
-    #: Build every relief variant rather than the one the mode asks for. The
-    #: exploration page sets this so its radio group can switch without a
-    #: rebuild; the renderer leaves it off and pays for one.
-    all_variants: bool = False
-
-    @classmethod
-    def from_style(cls, style: Any) -> GeoOptions:
-        """Build options from the `basemap_*` fields of a `ChartStyle`.
-
-        A field the style does not carry keeps the default here, so adding an
-        option does not oblige every theme to restate it.
-        """
-        out = cls()
-        for spec in fields(cls):
-            attr = f"basemap_{spec.name}"
-            if hasattr(style, attr):
-                setattr(out, spec.name, getattr(style, attr))
-        return out
-
-    @classmethod
-    def from_resolved(cls, resolved: dict[str, Any]) -> GeoOptions:
-        """Build options from a resolved, JSON-loaded field mapping.
-
-        Each value takes the type of the same field on a default instance, so a
-        JSON list becomes a tuple wherever the field is one.
-
-        Args:
-            resolved: Field name to value, as `dataclasses.asdict` writes it.
-
-        Returns:
-            The options the mapping describes.
-
-        Raises:
-            ValueError: When the mapping names a field that does not exist.
-        """
-        out = cls()
-        known = {spec.name for spec in fields(cls)}
-        for name, value in resolved.items():
-            if name not in known:
-                raise ValueError(f"resolved geo options have unknown key {name!r}")
-            setattr(out, name, coerce_like(getattr(out, name), value))
-        return out
 
 
 # --------------------------------------------------------------------------- bounding box
@@ -1675,7 +1567,7 @@ def scale_for(span_m: float) -> float:
     return min(max(span_m / REFERENCE_SPAN_M, 1.0), MAX_SCALE)
 
 
-def _derived(options: GeoOptions, factor: float) -> dict[str, Any]:
+def _derived(options: BasemapStyle, factor: float) -> dict[str, Any]:
     """The generalisation thresholds actually used, for the notes column."""
     return {
         "scale": round(factor, 2),
@@ -1700,11 +1592,12 @@ def basemap(
     key: str,
     lat: list[float],
     lng: list[float],
-    options: GeoOptions | None = None,
+    options: BasemapStyle | None = None,
     route: list[Pt] | None = None,
     *,
     cache_dir: Path,
     places: list[dict[str, Any]],
+    clip_margin_m: float = 900.0,
 ) -> dict[str, Any] | None:
     """Assemble every basemap layer for one activity from the cache.
 
@@ -1712,21 +1605,24 @@ def basemap(
         key: The activity, naming the two cache files.
         lat: Track latitudes in recorded order.
         lng: Track longitudes, same length.
-        options: What to draw. The defaults are the ones the renderer uses.
+        options: What to draw. The defaults are the basemap group's own.
         route: The already-projected track, when the caller has one. The
             snapshot's route is simplified before its origin is taken, so a road
             projected from scratch could sit a metre or two off the track it
             runs beside; passing the route pins the two to the same origin.
         cache_dir: Where the cached payloads live.
         places: User-supplied places of interest.
+        clip_margin_m: Metres of ground kept around the track's bounding box
+            when drawing, before the box's scale is applied.
 
     Returns:
         Layers in route metre space, or None when nothing is cached for this
         box, which is the renderer's signal to draw the bare track and say so.
     """
     from pyntpot.maps.projection import track_projection
+    from pyntpot.maps.style_groups import BasemapStyle
 
-    options = options or GeoOptions()
+    options = options or BasemapStyle()
     osm_file = overpass_path(key, cache_dir)
     elev_file = elevation_path(key, cache_dir)
     if not osm_file.exists() and not elev_file.exists():
@@ -1737,7 +1633,7 @@ def basemap(
     span = max(max(xs) - min(xs), max(ys) - min(ys), 1.0)
     factor = scale_for(span)
     derived = _derived(options, factor)
-    margin = options.clip_margin_m * factor
+    margin = clip_margin_m * factor
     clip = (min(xs) - margin, min(ys) - margin, max(xs) + margin, max(ys) + margin)
     out: dict[str, Any] = {
         "id": key,
@@ -1804,7 +1700,7 @@ def _relief_layers(
     path: Path,
     proj: Projection,
     clip: tuple[float, float, float, float],
-    options: GeoOptions,
+    options: BasemapStyle,
     derived: dict[str, Any],
     index: TrackIndex | None = None,
 ) -> dict[str, Any]:
@@ -1878,7 +1774,7 @@ def _relief_layers(
     return out
 
 
-def _soften(line: list[Pt], eps: float, options: GeoOptions) -> list[Pt]:
+def _soften(line: list[Pt], eps: float, options: BasemapStyle) -> list[Pt]:
     """Simplify a line, then round its corners off.
 
     A road drawn from OSM nodes is a survey; two Chaikin passes make it a line
@@ -1896,7 +1792,7 @@ def _sea_path(
     water: list[list[Pt]],
     islands: list[list[Pt]],
     clip: tuple[float, float, float, float],
-    options: GeoOptions,
+    options: BasemapStyle,
     derived: dict[str, Any],
 ) -> dict[str, str]:
     """The sea as one wash, with a lighter dry-brush edge pulled in from it."""
@@ -1927,7 +1823,7 @@ def _osm_layers(
     proj: Projection,
     clip: tuple[float, float, float, float],
     index: TrackIndex,
-    options: GeoOptions,
+    options: BasemapStyle,
     derived: dict[str, Any],
 ) -> dict[str, Any]:
     """Group the cached Overpass payload into the map's layers.
@@ -3024,7 +2920,9 @@ def sea_from_coast(
 # --------------------------------------------------------------------------- the card
 
 
-def journal_geometry(route: list[Pt], style: Any) -> dict[str, Any]:
+def journal_geometry(
+    route: list[Pt], card: CardStyle, ribbon: RibbonStyle, brush: BrushStyle
+) -> dict[str, Any]:
     """The card, its ribbon radius, and every size the plate is painted at.
 
     Every size on the sheet is derived from this, so a 13 km box and a 3 km box
@@ -3035,7 +2933,9 @@ def journal_geometry(route: list[Pt], style: Any) -> dict[str, Any]:
 
     Args:
         route: The track in metres.
-        style: A `paint.PaintStyle`, or anything carrying its fields.
+        card: The card's display size and supersampling.
+        ribbon: The ribbon's fit and the card's framing.
+        brush: The widths and thresholds the sizes on the sheet are stated in.
 
     Returns:
         The card box, the render and display sizes, the ribbon radius, and the
@@ -3046,46 +2946,48 @@ def journal_geometry(route: list[Pt], style: Any) -> dict[str, Any]:
     bx0, by0, bx1, by1 = min(xs), min(ys), max(xs), max(ys)
     span = max(bx1 - bx0, by1 - by0, 1.0)
     fitted = min(
-        max(style.ribbon_k * math.sqrt(span) + style.ribbon_c, style.ribbon_min_m),
-        style.ribbon_max_m,
+        max(ribbon.ribbon_k * math.sqrt(span) + ribbon.ribbon_c, ribbon.ribbon_min_m),
+        ribbon.ribbon_max_m,
     )
-    ribbon = fitted * style.ribbon_mult
-    grow = fitted * style.card_grow_mult
+    ribbon_radius = fitted * ribbon.ribbon_mult
+    grow = fitted * ribbon.card_grow_mult
     cx0, cy0, cx1, cy1 = bx0 - grow, by0 - grow, bx1 + grow, by1 + grow
-    pad = max(style.card_pad_frac * max(cx1 - cx0, cy1 - cy0), style.card_pad_ribbon_frac * fitted)
+    pad = max(
+        ribbon.card_pad_frac * max(cx1 - cx0, cy1 - cy0), ribbon.card_pad_ribbon_frac * fitted
+    )
     cx0, cy0, cx1, cy1 = cx0 - pad, cy0 - pad, cx1 + pad, cy1 + pad
     w, h = cx1 - cx0, cy1 - cy0
     aspect = w / h
-    if aspect < style.card_aspect_min:
-        extra = (h * style.card_aspect_min - w) / 2
+    if aspect < ribbon.card_aspect_min:
+        extra = (h * ribbon.card_aspect_min - w) / 2
         cx0, cx1 = cx0 - extra, cx1 + extra
-    elif aspect > style.card_aspect_max:
-        extra = (w / style.card_aspect_max - h) / 2
+    elif aspect > ribbon.card_aspect_max:
+        extra = (w / ribbon.card_aspect_max - h) / 2
         cy0, cy1 = cy0 - extra, cy1 + extra
     w, h = cx1 - cx0, cy1 - cy0
-    display_w = int(style.display_px)
-    render_w = display_w * int(style.supersample)
+    display_w = int(card.display_px)
+    render_w = display_w * int(card.supersample)
     render_h = int(round(render_w * h / w))
     mpp = w / render_w
-    disp = mpp * style.supersample
+    disp = mpp * card.supersample
     return {
         "card": [round(cx0, 1), round(cy0, 1), round(cx1, 1), round(cy1, 1)],
         "bounds": [round(bx0, 1), round(by0, 1), round(bx1, 1), round(by1, 1)],
         "span_m": round(span),
-        "ribbon_m": round(ribbon),
+        "ribbon_m": round(ribbon_radius),
         "ribbon_fitted_m": round(fitted),
         "render": [render_w, render_h],
-        "display": [display_w, int(round(render_h / style.supersample))],
+        "display": [display_w, int(round(render_h / card.supersample))],
         "mpp": round(mpp, 3),
         "mpp_display": round(disp, 3),
         "wet_px": {
             cls: round(min(max(k * (span / 1000.0) ** e, lo), hi), 2)
-            for cls, (k, e, lo, hi) in style.river_curve.items()
+            for cls, (k, e, lo, hi) in brush.river_curve.items()
         },
-        "minor_roads": disp < style.minor_roads_mppd,
-        "blotch_m": round(max(style.blotch_m[0], disp * style.blotch_m[1]), 1),
-        "dab_spacing_m": round(max(style.dab_spacing_m[0], disp * style.dab_spacing_m[1]), 1),
-        "gran_m": round(max(style.gran_m[0], disp * style.gran_m[1]), 1),
+        "minor_roads": disp < brush.minor_roads_mppd,
+        "blotch_m": round(max(brush.blotch_m[0], disp * brush.blotch_m[1]), 1),
+        "dab_spacing_m": round(max(brush.dab_spacing_m[0], disp * brush.dab_spacing_m[1]), 1),
+        "gran_m": round(max(brush.gran_m[0], disp * brush.gran_m[1]), 1),
     }
 
 
@@ -3125,7 +3027,9 @@ def journal_layers(
     key: str,
     lat: list[float],
     lng: list[float],
-    style: Any,
+    card_style: CardStyle,
+    ribbon_style: RibbonStyle,
+    brush: BrushStyle,
     route: list[Pt] | None = None,
     *,
     cache_dir: Path,
@@ -3142,7 +3046,9 @@ def journal_layers(
         key: The activity, naming the cache files.
         lat: Track latitudes in recorded order.
         lng: Track longitudes, same length.
-        style: A `paint.PaintStyle`.
+        card_style: The card's display size and supersampling.
+        ribbon_style: The ribbon's fit and the card's framing.
+        brush: The brushes and widths the card's sizes are stated in.
         route: The already-projected track, when the caller has one.
         cache_dir: Where the cached payloads live.
         places: User-supplied places of interest.
@@ -3160,14 +3066,20 @@ def journal_layers(
         return None
     proj, pts = track_projection(lat, lng, route)
     track = simplify(pts, 3.0)
-    geometry = journal_geometry(track, style)
+    geometry = journal_geometry(track, card_style, ribbon_style, brush)
     clip = tuple(geometry["card"])
     eps = max(geometry["mpp"] * 1.1, 2.0)
 
-    options = GeoOptions(
-        **asdict(basemap_style), clip_margin_m=max(clip[2] - clip[0], clip[3] - clip[1])
+    base = basemap(
+        key,
+        lat,
+        lng,
+        options=basemap_style,
+        cache_dir=cache_dir,
+        places=places,
+        route=track,
+        clip_margin_m=max(clip[2] - clip[0], clip[3] - clip[1]),
     )
-    base = basemap(key, lat, lng, options=options, cache_dir=cache_dir, places=places, route=track)
     if base is None:
         return None
 
@@ -3214,7 +3126,7 @@ def journal_layers(
     roads = []
     for road_key, lines in pieces.items():
         band = road_key[0]
-        floor = style.brush_width_px.get(band_width[band], 2.0) * geometry["mpp_display"]
+        floor = brush.brush_width_px.get(band_width[band], 2.0) * geometry["mpp_display"]
         info = meta[road_key]
         for chain in join_strokes(lines, tol=max(eps, 1.0)):
             if length(chain) < floor:
@@ -3242,7 +3154,7 @@ def journal_layers(
         for seg in parse_path(r["d"]):
             pieces_by.setdefault(r["n"], []).extend(c for c in clip_line(seg, clip) if len(c) > 1)
 
-    major, widths = major_rivers(pieces_by, lakes, style.major_river_rel_frac)
+    major, widths = major_rivers(pieces_by, lakes, brush.major_river_rel_frac)
     classed = {
         r["n"]: (("major" if r["n"] in major else "medium") if r["c"] == "river" else "minor")
         for r in base.get("rivers", [])
@@ -3859,6 +3771,23 @@ def ground_climbs(
         climb["features"] = features[:4]
 
 
+#: Metres of ground kept around the track's bounding box for the candidates.
+CANDIDATE_CLIP_MARGIN_M = 2600.0
+
+
+def candidate_basemap() -> BasemapStyle:
+    """What `landmark_export` draws: every landmark, no relief, no generalisation."""
+    from pyntpot.maps.style_groups import BasemapStyle
+
+    return replace(
+        BasemapStyle(),
+        hillshade_mode="off",
+        landmarks="all",
+        landmark_max=LANDMARK_CAP,
+        generalise=False,
+    )
+
+
 def landmark_export(
     key: str,
     lat: list[float],
@@ -3910,15 +3839,15 @@ def landmark_export(
         "climbs": found,
         "candidates": [],
     }
-    options = GeoOptions(
-        hillshade_mode="off",
-        landmarks="all",
-        landmark_max=LANDMARK_CAP,
-        generalise=False,
-        clip_margin_m=2600.0,
-    )
     base = basemap(
-        key, lat, lng, options=options, cache_dir=cache_dir, places=places, route=simplify(pts, 3.0)
+        key,
+        lat,
+        lng,
+        options=candidate_basemap(),
+        cache_dir=cache_dir,
+        places=places,
+        route=simplify(pts, 3.0),
+        clip_margin_m=CANDIDATE_CLIP_MARGIN_M,
     )
     if base is not None:
         out["candidates"] = journal_candidates(base, proj)

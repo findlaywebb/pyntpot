@@ -14,6 +14,7 @@ import pytest
 
 from pyntpot._port import geo, paint
 from pyntpot.ink.brush import BRUSH_COLOURS
+from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.io import save_rgba
 from pyntpot.ink.noise import edt
 from pyntpot.ink.polyline import deform_line, foot_on, length, meet, simplify
@@ -24,6 +25,7 @@ from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.painter.ribbon import ribbon_alpha
 from pyntpot.maps.projection import Projection, track_projection
 from pyntpot.maps.style import PAINT_GROUPS, Style
+from pyntpot.maps.style_groups import CardStyle, RibbonStyle
 
 from support.measure import flat_measure
 from support.paths import FIXTURE_DIR, KEY
@@ -72,7 +74,8 @@ def tiny_basemap(style: paint.PaintStyle | None = None, **over: object) -> Basem
     """A whole basemap for a small box, with nothing in it but the route."""
     style = style or tiny_style()
     route = [(float(x), 40.0 + 30.0 * math.sin(x / 260.0)) for x in range(0, 1400, 40)]
-    geometry = geo.journal_geometry(route, style)
+    full = as_style(style)
+    geometry = geo.journal_geometry(route, full.card, full.ribbon, full.brush)
     layers = Layers(
         route=tuple((round(x, 1), round(y, 1)) for x, y in route),
         cover={},
@@ -250,12 +253,12 @@ def test_the_ribbon_fills_the_inside_of_a_loop():
 
 def test_the_ribbon_radius_is_the_fitted_curve_times_the_slider():
     """7.15 times the root of the box plus 158 m, then the slider."""
-    style = paint.PaintStyle()
+    card, brush = CardStyle(), BrushStyle()
     route = [(0.0, 0.0), (3200.0, 0.0), (3200.0, 900.0)]
-    fitted = geo.journal_geometry(route, style)
+    fitted = geo.journal_geometry(route, card, RibbonStyle(), brush)
     want = 7.15 * math.sqrt(3200.0) + 158.0
     assert fitted["ribbon_m"] == round(want)
-    wider = geo.journal_geometry(route, paint.PaintStyle(ribbon_mult=1.25))
+    wider = geo.journal_geometry(route, card, RibbonStyle(ribbon_mult=1.25), brush)
     assert wider["ribbon_m"] == round(want * 1.25)
     assert wider["card"] == fitted["card"]  # the card is framed the same either way
 
@@ -396,7 +399,9 @@ def test_the_real_box_assembles_the_layers_the_painter_needs():
         KEY,
         lat,
         lng,
-        paint.PaintStyle(),
+        CardStyle(),
+        RibbonStyle(),
+        BrushStyle(),
         cache_dir=FIXTURE_DIR,
         places=[],
         basemap_style=Style.default().basemap,
