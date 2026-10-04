@@ -2,7 +2,8 @@
 
 Hand-drawn watercolour and pen-and-ink painting for Python, with route maps.
 
-Status: pre-release scaffold. The painting engine has not landed yet.
+Status: pre-release. The painting engine (`pyntpot.ink`), hand lettering
+(`pyntpot.letters`) and the route-map application (`pyntpot.maps`) are in place.
 
 ## Develop
 

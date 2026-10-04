@@ -12,7 +12,7 @@ pixels, and every tolerance is in that same space. It paints nothing, reads no
 style and holds no state; `deform_line` draws only from the generator it is
 handed.
 
-Invariants: no function changes its input; `Pt` is the one point alias outside the interim port code, and `maps`
+Invariants: no function changes its input; `Pt` is the one point alias, and `maps`
 and `letters` import it from here.
 """
 

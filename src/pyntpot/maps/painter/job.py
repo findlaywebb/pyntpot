@@ -16,7 +16,7 @@ the style's seeds; a generator a style switches off is `None` or never drawn fro
 granulation, the flow rim, the rim width and the bloom of one wash), because they
 are derived from the card and the style once and must be the same for each wash.
 
-It paints nothing itself and never imports `_port`. A `PlateStack` has no meaning
+It paints nothing itself. A `PlateStack` has no meaning
 until `paint_water` has filled its coverage.
 
 Invariants: a job never changes once built; the stack's arrays all have the

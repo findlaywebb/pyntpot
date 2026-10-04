@@ -39,7 +39,7 @@ PINNED_LABELS = (
 #: Ten seconds a point over the fixture track's 400 points.
 SYNTHETIC_TIME = tuple(10.0 * i for i in range(400))
 
-#: The interim port package the split emptied and deleted.
+#: The interim `pyntpot._port` package, emptied by the split and deleted.
 DELETED: tuple[str, ...] = ("pyntpot._port",)
 
 

@@ -1,4 +1,4 @@
-"""Placeholder keeping the test gate non-empty until the port lands."""
+"""Smoke test that the package imports under its own name."""
 
 import pyntpot
 

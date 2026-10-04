@@ -12,6 +12,6 @@ own plate, `ribbon` trims the ground to the ribbon, and `paper` paints the card.
 entry point, `paint_plates`.
 
 Every phase is `paint_<phase>(job, stack)`: it reads its settings from the style
-groups of `job.style` and writes into `stack`. This package does not import
-`_port`, draw labels or fetch anything.
+groups of `job.style` and writes into `stack`. This package does not draw
+labels, fetch anything or import `maps.lettering`.
 """

@@ -17,7 +17,7 @@ Id minting:
   - Any import of ``uuid``.
 Exemptions:
   - The clock and random bans skip the files listed in
-    ``exemptions/line_budget.txt`` (the ported code, until it is split).
+    ``exemptions/line_budget.txt`` (empty: nothing is exempt).
 Scanning:
   Only production code under ``src/pyntpot`` is scanned (not tests).
 """

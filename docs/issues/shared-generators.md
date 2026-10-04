@@ -10,7 +10,7 @@ consumes, so everything drawn after it changes. Bloom placement is non-local as 
 candidate centres are addressed by rank in raster order, so a coast that moves by under a
 pixel relocates blooms in open sea.
 
-Evidence: dropping the seam's 0.1 m rounding (port step 3, ADR 0006) moved each point by
+Evidence: dropping the seam's 0.1 m rounding (ADR 0006) moved each point by
 at most 0.05 m, yet moved 0.207 of the wash plate, 0.042 of the labels-centreline plate and
 0.193 of the composed map. With the deform round counts, the bloom placements and the
 lettering seeds held at their previous values, every output moved by under 0.005; the
@@ -20,5 +20,5 @@ Possible fix: per-item generators seeded from stable ids (a ring's, a wash's or 
 identity rather than its place in a sequence), and bloom seeding by local position rather
 than raster rank, so a change to one item moves only that item's pixels.
 
-Out of scope for the port, which keeps the painter's output as it is; any fix here moves
+Any fix here moves
 the goldens and needs its own regeneration.

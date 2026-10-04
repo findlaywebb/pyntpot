@@ -1,4 +1,4 @@
-"""Produce the Lynmouth golden plates with the pre-port code.
+"""Produce the Lynmouth golden plates with the original project's code.
 
 Historical: this imports `analysis.report` and runs only inside the
 original project's checkout. Run it from a working directory with no
