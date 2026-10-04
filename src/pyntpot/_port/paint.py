@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 from dataclasses import asdict, dataclass, field, fields, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -30,36 +29,25 @@ import numpy as np
 
 from pyntpot._port.style import coerce_like
 from pyntpot.ink.brush import Brush, brush_from_id
-from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.io import save_alpha, save_webp, to_img
-from pyntpot.ink.noise import F32, blur, edt, fbm, fbm_aniso, fill_holes, smoothstep
+from pyntpot.ink.noise import F32, blur, edt, fill_holes, smoothstep
 from pyntpot.ink.pad import InkPad
 from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, Layer, composite
-from pyntpot.ink.raster import Deform, deform_rings, fill_cov, stroke_mask
+from pyntpot.ink.raster import stroke_mask
 from pyntpot.ink.sheet import PAPER, Canvas, Sheet, rgb
-from pyntpot.ink.wash import WashOptions, fluid_modulate, separated, wash
+from pyntpot.ink.wash import fluid_modulate
 
 if TYPE_CHECKING:
     from pyntpot.maps.basemap import Basemap, ElevationPatch, Line
     from pyntpot.maps.plates import Plates
     from pyntpot.maps.style import Style
 
-Pt = tuple[float, float]
 
-#: How dark a wash of each class goes, and how hard its edge pools.
-COVER_CFG = {
-    "farmland": (0.52, 0.20),
-    "meadow": (0.55, 0.22),
-    "orchard": (0.55, 0.24),
-    "scrub": (0.58, 0.26),
-    "heath": (0.60, 0.26),
-    "sand": (0.50, 0.22),
-    "rock": (0.52, 0.26),
-    "wetland": (0.60, 0.28),
-    "built": (0.55, 0.20),
-    "works": (0.58, 0.22),
-    "wood": (0.72, 0.30),
-}
+def _default_cover_cfg() -> dict[str, tuple[float, float]]:
+    """A copy of the painter's default cover classes, read from `maps` when a style is built."""
+    from pyntpot.maps.painter.brushes import COVER_CFG
+
+    return dict(COVER_CFG)
 
 
 @dataclass
@@ -160,7 +148,7 @@ class PaintStyle:
         "works",
         "wood",
     )
-    cover_cfg: dict[str, tuple[float, float]] = field(default_factory=lambda: dict(COVER_CFG))
+    cover_cfg: dict[str, tuple[float, float]] = field(default_factory=_default_cover_cfg)
     pigments: dict[str, str] = field(default_factory=lambda: dict(PIGMENTS))
     #: The pale single wash drawn instead of the classes when cover is off.
     pale_base: float = 0.50
@@ -749,38 +737,6 @@ def relief_density(grid: ElevationPatch, plate: Canvas, sheet: Sheet) -> np.ndar
     return np.clip(blur(dens, 2.0), 0.0, 1.0)
 
 
-# --------------------------------------------------------------------------- brushes
-
-
-def plate_brushes(
-    style: BrushStyle, scale: float, wet_px: dict[str, float]
-) -> dict[str, tuple[Brush, str]]:
-    """Every class's brush for one plate, sized against its own display pixel.
-
-    Args:
-        style: The brush style.
-        scale: Render pixels per display pixel.
-        wet_px: Painted width in display pixels per watercourse class, from the
-            river importance curve.
-
-    Returns:
-        Brush and ink colour by class key.
-    """
-    mult = style.river_mult
-    widths = {
-        "major": wet_px.get("major", 8.4) * mult,
-        "medium": wet_px.get("medium", 5.5) * mult,
-        "minor": wet_px.get("minor", 2.2) * mult,
-        "coast": wet_px.get("medium", 5.5) * mult * style.coast_width_frac,
-        "road_major": style.brush_width_px["road_major"],
-        "lane": style.brush_width_px["lane"],
-        "track": style.brush_width_px["track"],
-    }
-    return {
-        key: brush_from_id(style.brushes[key], widths[key], scale, style, key) for key in widths
-    }
-
-
 # --------------------------------------------------------------------------- ribbon
 
 
@@ -851,99 +807,6 @@ def paper_plate(sheet: Sheet, plate: Canvas, style: PaintStyle) -> np.ndarray:
     return np.clip(img, 0, 1)
 
 
-# --------------------------------------------------------------------------- lettering
-
-
-# --------------------------------------------------------------------------- painting
-
-
-def coast_run(d_sea: np.ndarray, wet: np.ndarray, band: float) -> float:
-    """Which way the shore runs, in radians, from the sea's own distance field.
-
-    The gradient of the distance into the sea points across the coast, so the
-    coast itself runs at right angles to it. Orientation has no sign, so the
-    angles are doubled before they are averaged and halved after: a shore that
-    turns a corner gives the run of the longer side rather than the mean of the
-    two, which is what a painter's wrist would follow.
-
-    Args:
-        d_sea: Distance in render pixels from the land into the sea.
-        wet: Where the sea is.
-        band: How far out from the shore to read the direction, in pixels.
-
-    Returns:
-        The angle, in image coordinates with the row axis downward. 0 when
-        there is no shore in the card.
-    """
-    gy, gx = np.gradient(blur(d_sea, 3.0))
-    near = wet & (d_sea > 1.0) & (d_sea < band)
-    mag = np.hypot(gx, gy)
-    sel = near & (mag > 1e-3)
-    if not sel.any():
-        return 0.0
-    ang = np.arctan2(gx[sel], -gy[sel])
-    return 0.5 * float(math.atan2(float(np.sin(2 * ang).mean()), float(np.cos(2 * ang).mean())))
-
-
-def sea_patches(dens: np.ndarray, sea_cov: np.ndarray, mpp: float, style: PaintStyle) -> np.ndarray:
-    """Broad paler and deeper patches in the sea, worked along the shore.
-
-    The sea is the largest single wash on the card and the one that has to
-    stay flat everywhere it is not: a wash that big does not dry evenly, it
-    dries in patches the width of the brush's own travel, and the pigment gets
-    worked along the shore rather than across it. One low frequency field
-    gives the patches, a second stretched along the coast's own run gives the
-    streaking, and the streaking fades out to sea because that is where the
-    brush stopped being dragged along an edge.
-
-    Args:
-        dens: The sea wash's density, in 0 to 1.
-        sea_cov: The sea's coverage, for the shore the streaks follow.
-        mpp: Metres per render pixel, so a patch is the same size on the
-            ground whatever box the card holds.
-        style: The paint style, for the cell, the swing and the streaking.
-
-    Returns:
-        The modulated density, in 0 to 1.
-    """
-    amount = float(np.clip(style.sea_variation_amount, 0.0, 1.0))
-    if amount <= 0.0:
-        return dens
-    h, w = dens.shape
-    rng = np.random.default_rng(style.sea_variation_seed)
-    cell = max(style.sea_variation_cell_m / mpp, 8.0)
-    wet = sea_cov > 0.5
-    if not wet.any():
-        wet = np.ones_like(wet)
-
-    def centred(f: np.ndarray) -> np.ndarray:
-        """The field about its own mean over the sea, in about -1 to 1.
-
-        Over the sea, because the patches move pigment about rather than add
-        it: a field centred on the whole card would lighten or darken a sea
-        that sits in one corner of it.
-        """
-        return (f - float(f[wet].mean())) * 2.0
-
-    swing = centred(fbm(h, w, cell, 3, rng))
-    streak_w = float(np.clip(style.sea_variation_streak, 0.0, 1.0))
-    if streak_w > 0.0:
-        d_sea = edt(~wet)
-        band = max(style.sea_variation_band_m / mpp, 4.0)
-        angle = coast_run(d_sea, wet, band)
-        streak = fbm_aniso(
-            (h, w), max(cell * 0.22, 3.0), 2, rng, max(style.sea_variation_elong, 1.0), angle
-        )
-        swing = swing + streak_w * centred(streak) * np.exp(-d_sea / F32(band))
-        swing /= 1.0 + streak_w
-    return np.clip(dens * (1.0 + amount * swing), 0.0, 1.0)
-
-
-def _lines(lines: tuple[Line, ...]) -> list[list[Pt]]:
-    """The lines long enough to draw, as the point lists the painter fills and strokes."""
-    return [list(line) for line in lines if len(line) > 1]
-
-
 def paint(
     basemap: Basemap,
     style: Style,
@@ -968,233 +831,31 @@ def paint(
         the darkness grid.
     """
     from pyntpot.maps.cache import Cache
+    from pyntpot.maps.painter.brushes import plate_brushes
+    from pyntpot.maps.painter.cover import paint_cover
+    from pyntpot.maps.painter.job import PaintJob, PlateStack, drawable
+    from pyntpot.maps.painter.water import paint_lakes, paint_water, sea_layer
+    from pyntpot.maps.painter.wood import paint_wood
     from pyntpot.maps.plates import DarkGrid, Manifest, Plates
 
     pstyle = style.paint_style()
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    job = PaintJob.begin(basemap, style, out_dir)
+    stack = PlateStack.blank(job.shape)
     card, layers = basemap.card, basemap.layers
-    cx0, cy0, cx1, cy1 = card.box
-    rw, rh = card.render
-    plate = Canvas(cx0, cy0, cx1, cy1, rw, rh)
-    mpp = card.mpp
-    sheet = Sheet(
-        rh,
-        rw,
-        gran_px=max(layers.gran_m / mpp, 3.0),
-        seed=pstyle.sheet_seed,
-        fibre=pstyle.paper_fibre_mix if pstyle.paper_fibre else 0.0,
-        fibre_stretch=pstyle.paper_fibre_stretch,
-        fibre_angle=pstyle.paper_fibre_angle,
-        fibre_cell=max(pstyle.paper_fibre_cell_px * rw / 1800.0, 1.6),
-    )
-    scale = rw / max(card.display[0], 1)
-    # The phase 1 options, gathered once so every wash on this plate is laid the
-    # same way: the granulation, the rim and the blooms, and the shared wet map.
-    gran_gamma = pstyle.gran_gamma if pstyle.paper_fibre else 0.0
-    rim_cov = max(5.0, 90.0 / mpp)
-    flow = (
-        (pstyle.flow_rim_exp, pstyle.flow_rim_ref_frac, pstyle.flow_rim_frac)
-        if pstyle.flow_rim
-        else None
-    )
-    bloom_rng = np.random.default_rng(pstyle.bloom_seed) if pstyle.blooms else None
+    plate, sheet, mpp, scale = job.canvas, job.sheet, job.mpp, job.scale
+    rh, rw = job.shape
+    transp = job.transp
 
-    def bloom_arg(cov: np.ndarray) -> tuple | None:
-        """The bloom argument for one wash, sized against its own area.
-
-        `bloom_strength` scales the lift, which is the one number the whole
-        bloom is built from: the centre gives up that share of its pigment and
-        the ridge is laid from what the centre gave up. So one multiplier
-        turns a demonstration of a backrun into a mark on the paper.
-        """
-        if bloom_rng is None or pstyle.bloom_density <= 0:
-            return None
-        area = float((cov > 0.5).sum())
-        n = int(
-            np.clip(
-                round(pstyle.bloom_density * math.sqrt(area) / 260.0),
-                1 if area > 400 else 0,
-                pstyle.bloom_max,
-            )
-        )
-        lift = pstyle.bloom_lift * max(pstyle.bloom_strength, 0.0)
-        return (bloom_rng, n, pstyle.bloom_radius_frac, lift, pstyle.bloom_warp) if n else None
-
-    # ---- water first: it is cut out of every land pigment
-    sea_rings = _lines(layers.sea)
-    lake_rings = _lines(layers.lakes)
-    sea_cov = fill_cov(sea_rings, plate) if sea_rings else np.zeros((rh, rw), F32)
-    lake_cov = fill_cov(lake_rings, plate) if lake_rings else np.zeros((rh, rw), F32)
-    water = np.maximum(sea_cov, lake_cov) > 0.5
-
-    # ---- land cover: one label per pixel, so two land pigments cannot stack.
-    # The outlines are deformed here, in metres, before anything is rasterised:
-    # it is polygon work rather than pixel work, and the surveyed coast and the
-    # lakes above are already filled, so neither of them is touched by it.
-    cover_deform: Deform | None = None
-    if pstyle.silhouette_deform:
-        floor_m, mult = pstyle.silhouette_deform_max_m
-        cover_deform = (
-            np.random.default_rng(pstyle.silhouette_deform_seed),
-            pstyle.silhouette_deform_amount,
-            int(pstyle.silhouette_deform_depth),
-            pstyle.silhouette_deform_decay,
-            max(floor_m, mult * mpp),
-            pstyle.silhouette_deform_min_px * mpp,
-        )
-    order = [c for c in layers.cover_order if c in layers.cover]
-    label = np.zeros((rh, rw), np.uint8)
-    if pstyle.land_cover:
-        for i, cls in enumerate(order, 1):
-            rings = _lines(layers.cover[cls])
-            if rings:
-                label[fill_cov(deform_rings(rings, cover_deform), plate) > 0.5] = i
-        label[water] = 0
-    wood_i = order.index("wood") + 1 if "wood" in order else -1
-    wood_mask = (
-        (label == wood_i) if (wood_i > 0 and pstyle.land_cover) else np.zeros((rh, rw), bool)
-    )
-
-    # One wet field over the union of the cover, not one per class. Inside it
-    # the classes are wet at the same time, so they bleed into each other and
-    # no boundary between two of them carries its own rim; the outer silhouette
-    # of the land sits outside it and keeps the edge it should have.
-    wet_map = None
-    if pstyle.wet_bleed and pstyle.land_cover and label.any():
-        back = max(rim_cov * pstyle.wet_bleed_edge_mult, 4.0)
-        dry = label == 0
-        if pstyle.wet_close_px > 0:
-            # The classes do not abut: they meet along hairlines of unmapped
-            # ground a pixel or two wide, so the union of the cover taken as it
-            # stands is cut through by dry lines exactly where two washes meet,
-            # and no bleed width can reach a seam. Closing the union over gaps
-            # this wide first is what puts the seams under water; it is a
-            # dilate and an erode by the same distance, so the land's outer
-            # silhouette comes back where it was.
-            gap = F32(pstyle.wet_close_px)
-            dry = ~(edt(~(edt(label > 0) <= gap)) > gap)
-        wet_map = smoothstep(edt(dry) - F32(back), back)
-
-    def transp(key: str) -> float:
-        """What this pigment shows over black, as a share of over white."""
-        return float(pstyle.pigment_transparency.get(key, pstyle.km_transparency))
-
-    trimmed: list[Layer] = []
-    if pstyle.land_cover:
-        for i, cls in enumerate(order, 1):
-            base, pool = pstyle.cover_cfg.get(cls, (0.5, 0.2))
-            cov = (label == i).astype(F32)
-            if cov.any():
-                trimmed.extend(
-                    separated(
-                        wash(
-                            cov,
-                            sheet,
-                            base,
-                            pool,
-                            WashOptions(
-                                rim_px=rim_cov,
-                                wet=wet_map,
-                                bleed_px=pstyle.wet_bleed_px,
-                                bleed_mix=pstyle.wet_bleed_mix,
-                                rim_drop=pstyle.wet_rim_drop,
-                                gran_gamma=gran_gamma,
-                                flow=flow,
-                                blooms=bloom_arg(cov),
-                            ),
-                        ),
-                        cls,
-                        rgb(pstyle.pigments[cls]),
-                        transp(cls),
-                        sheet,
-                        style.wash,
-                    )
-                )
-    else:
-        pale = 1.0 - np.maximum(sea_cov, 0.0)
-        trimmed.append(
-            (
-                wash(
-                    pale,
-                    sheet,
-                    pstyle.pale_base,
-                    pstyle.pale_pool,
-                    WashOptions(
-                        rim_px=max(6.0, 120.0 / mpp),
-                        gran_gamma=gran_gamma,
-                        flow=flow,
-                        blooms=bloom_arg(pale),
-                    ),
-                ),
-                rgb(pstyle.pigments["pale"]),
-                transp("pale"),
-            )
-        )
-
-    # ---- the wood, as a texture and a scatter of dabs. Both cross fade over
-    # three printed scales, because a texture's scale cannot be changed after it
-    # is printed; the two sliders walk between them.
-    rng = np.random.default_rng(pstyle.dither_seed)
-    blotch_px = max(layers.blotch_m / mpp, 6.0)
-    for weight, (sc, strength) in zip(
-        _crossfade(pstyle.wood_texture, len(pstyle.wood_tex_scales)),
-        zip(pstyle.wood_tex_scales, pstyle.wood_tex_strengths, strict=True),
-        strict=True,
-    ):
-        if weight <= 0.002 or not wood_mask.any():
-            continue
-        field_n = fbm(rh, rw, blotch_px * sc, 3, rng)
-        dens = np.clip((field_n - 0.40) * 1.7, 0, 1) * wood_mask * strength * weight
-        trimmed.append((blur(dens, 2.0), rgb(pstyle.pigments["wood"]), transp("wood")))
-
-    dab_px = max(layers.dab_spacing_m / mpp, 26.0)
-    for weight, (spacing, strength) in zip(
-        _crossfade(pstyle.wood_dabs, len(pstyle.dab_spacings)),
-        zip(pstyle.dab_spacings, pstyle.dab_strengths, strict=True),
-        strict=True,
-    ):
-        if weight <= 0.002 or not wood_mask.any():
-            continue
-        step = max(int(dab_px * spacing), 8)
-        dabs = np.zeros((rh, rw), F32)
-        gy, gx = np.meshgrid(
-            np.arange(step // 2, rh, step), np.arange(step // 2, rw, step), indexing="ij"
-        )
-        jy = np.clip((gy + (rng.random(gy.shape) - 0.5) * step * 0.7).astype(np.int32), 0, rh - 1)
-        jx = np.clip((gx + (rng.random(gx.shape) - 0.5) * step * 0.7).astype(np.int32), 0, rw - 1)
-        keep = wood_mask[jy, jx]
-        if not keep.any():
-            continue
-        dabs[jy[keep], jx[keep]] = 1.0
-        dab_r = max(step * 0.17, 4.0)
-        dens = np.clip(blur(dabs, dab_r) * (dab_r**2) * 1.5, 0, 1) * wood_mask
-        trimmed.append((dens * strength * weight, rgb(pstyle.pigments["wood"]), transp("wood")))
-
-    # ---- lakes are trimmed with the rest of the land cover, so a reservoir two
-    # valleys away does not float on the paper. The sea is not.
-    if lake_cov.any():
-        trimmed.append(
-            (
-                wash(
-                    lake_cov,
-                    sheet,
-                    0.62,
-                    0.32,
-                    WashOptions(
-                        wobble=2.4,
-                        dry=1.2,
-                        rim_px=max(5.0, 70.0 / mpp),
-                        gran=0.22,
-                        gran_gamma=gran_gamma,
-                        flow=flow,
-                        blooms=bloom_arg(lake_cov),
-                    ),
-                ),
-                rgb(pstyle.pigments["water"]),
-                transp("water"),
-            )
-        )
+    # ---- water first: it is cut out of every land pigment, then the land cover,
+    # the wood and the lakes, which are trimmed with it.
+    paint_water(job, stack)
+    paint_cover(job, stack)
+    paint_wood(job, stack)
+    paint_lakes(job, stack)
+    trimmed = stack.trimmed
+    sea_cov, lake_cov, label = stack.sea_cov, stack.lake_cov, stack.label
     if pstyle.relief and layers.elevation is not None:
         trimmed.append(
             (
@@ -1203,7 +864,6 @@ def paint(
                 transp("relief"),
             )
         )
-
     # ---- one bounded shallow-water pass over everything the ribbon carries,
     # on a quarter-resolution grid. It is run once for the whole sheet rather
     # than once a class, which is the point of it: the water does not know
@@ -1221,11 +881,10 @@ def paint(
     # ---- the ink. Roads and watercourses are painted with the same machinery
     # as the wash: no vector stroke is drawn over the top.
     br = plate_brushes(style.brush, scale, dict(layers.wet_px))
-    ink_rng = np.random.default_rng(pstyle.ink_seed)
     untrimmed: list[Layer] = []
 
     def lines_of(line: Line) -> list[np.ndarray]:
-        return [plate.px(r) for r in _lines((line,))]
+        return [plate.px(r) for r in drawable((line,))]
 
     # Every watercourse lands in the one pad and is read back with the major
     # river's brush, so the reservoir and the break texture are collected
@@ -1257,12 +916,12 @@ def paint(
         for line in lines_of(r.line):
             water_lines.append((brush, line))
             profiles.append(np.asarray(prof, F32) if prof else None)
-    water_pad.lay(water_lines, ink_rng, profiles=profiles)
+    water_pad.lay(water_lines, job.ink_rng, profiles=profiles)
     # The coast is chained rather than profiled: it is one line round the land,
     # cut into ways, and it has no width of its own to vary.
     coast_lines = [(br["coast"][0], line) for coast in layers.coastline for line in lines_of(coast)]
     if coast_lines:
-        water_pad.lay(coast_lines, ink_rng)
+        water_pad.lay(coast_lines, job.ink_rng)
     if water_pad.any():
         untrimmed.append((water_pad.read(br["major"][0], sheet), rgb(br["major"][1])))
     for key in ("road_major", "lane", "track"):
@@ -1277,7 +936,7 @@ def paint(
                 if r.band == band
                 for line in lines_of(r.line)
             ],
-            ink_rng,
+            job.ink_rng,
         )
         if pad.any():
             untrimmed.append((pad.read(br[key][0], sheet), rgb(br[key][1])))
@@ -1299,25 +958,9 @@ def paint(
     ground = composite(trimmed, np.ones((rh, rw, 3), F32), style.paper)
     ground = 1.0 - alpha[..., None] * (1.0 - ground)
     over: list[Layer] = []
-    if sea_cov.any() and pstyle.sea_to_edge:
-        sea_dens = wash(
-            sea_cov,
-            sheet,
-            0.60,
-            0.34,
-            WashOptions(
-                wobble=2.0,
-                dry=1.0,
-                rim_px=max(6.0, 110.0 / mpp),
-                gran=0.22,
-                gran_gamma=gran_gamma,
-                flow=flow,
-                blooms=bloom_arg(sea_cov),
-            ),
-        )
-        if pstyle.sea_variation:
-            sea_dens = sea_patches(sea_dens, sea_cov, mpp, pstyle)
-        over.append((sea_dens, rgb(pstyle.pigments["water"]), transp("water")))
+    sea = sea_layer(job, stack)
+    if sea is not None:
+        over.append(sea)
     over.append(
         (np.clip(rim * pstyle.rim_strength, 0, 1), rgb(pstyle.pigments["rim"]), transp("rim"))
     )
@@ -1325,14 +968,15 @@ def paint(
     wash_plate = composite(over, ground, style.paper)
     paper = paper_plate(sheet, plate, pstyle)
 
-    files, sizes = {}, {}
     for name, arr, quality in (
         ("paper", paper, pstyle.paper_quality),
         ("wash", wash_plate, pstyle.webp_quality),
     ):
         path = out_dir / f"{name}.webp"
-        sizes[name] = save_webp(to_img(arr, rng), path, quality, lossless=pstyle.plate_lossless)
-        files[name] = path.name
+        stack.sizes[name] = save_webp(
+            to_img(arr, job.dither_rng), path, quality, lossless=pstyle.plate_lossless
+        )
+        stack.files[name] = path.name
     if pstyle.route_pen:
         # The one route pstyle that is not vector: the route drawn with the same
         # brush engine, as alpha the page tints with whatever ink it is set to.
@@ -1340,14 +984,12 @@ def paint(
             pstyle.route_pen_brush, pstyle.route_pen_width_px, scale, style.brush, "route"
         )
         pen_pad = InkPad((rh, rw), pen_brush, style.brush)
-        pen_pad.lay(
-            [(pen_brush, plate.px(list(layers.route)))], np.random.default_rng(pstyle.ink_seed + 1)
-        )
+        pen_pad.lay([(pen_brush, plate.px(list(layers.route)))], job.pen_rng)
         path = out_dir / "pen.webp"
-        sizes["pen"] = save_alpha(
+        stack.sizes["pen"] = save_alpha(
             pen_pad.read(pen_brush, sheet), path, lossless=pstyle.plate_lossless
         )
-        files["pen"] = path.name
+        stack.files["pen"] = path.name
 
     # ---- a coarse map of how dark the sheet is, so a label can be placed on
     # light ground rather than across a wood.
@@ -1362,9 +1004,9 @@ def paint(
 
     manifest = Manifest(
         hash=Cache.base_key(basemap, style),
-        files=files,
-        sizes=sizes,
-        bytes=sum(sizes.values()),
+        files=stack.files,
+        sizes=stack.sizes,
+        bytes=sum(stack.sizes.values()),
         card=card,
         ribbon_m=layers.ribbon_m,
         span_m=basemap.span_m,
@@ -1377,24 +1019,11 @@ def paint(
         # same sheet rather than on a second one that only looks similar.
         gran_px=round(max(layers.gran_m / mpp, 3.0), 3),
         dark=DarkGrid(w=gw, h=gh, values=tuple(tuple(row) for row in dark)),
-        wood_px=int(wood_mask.sum()),
-        water_px=int(water.sum()),
+        wood_px=int(stack.wood_mask.sum()),
+        water_px=int(stack.water.sum()),
     )
     (out_dir / "plates.json").write_text(manifest.to_json())
     return Plates(out_dir, manifest)
-
-
-def _crossfade(value: float, n: int) -> list[float]:
-    """Weights across `n` printed scales for a slider at `value` in 0 to 1.
-
-    The same walk the exploration page's sliders make, so a value chosen
-    there paints the blend that was previewed.
-    """
-    if n <= 1:
-        return [max(0.0, min(1.0, value))]
-    pos = max(0.0, min(1.0, value)) * (n - 1)
-    gate = min(1.0, max(0.0, value) * 4.0)
-    return [max(0.0, 1.0 - abs(pos - i)) * gate for i in range(n)]
 
 
 def with_display(style: PaintStyle, display_px: int) -> PaintStyle:

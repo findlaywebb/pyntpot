@@ -75,6 +75,11 @@ MODULES: tuple[str, ...] = (
     "pyntpot.maps.lettering_furniture",
     "pyntpot.maps.lettering_window",
     "pyntpot.maps.cli",
+    "pyntpot.maps.painter.job",
+    "pyntpot.maps.painter.brushes",
+    "pyntpot.maps.painter.water",
+    "pyntpot.maps.painter.cover",
+    "pyntpot.maps.painter.wood",
     "pyntpot",
 )
 

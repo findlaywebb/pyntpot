@@ -14,12 +14,10 @@ import pytest
 
 from pyntpot._port import geo, paint
 from pyntpot.ink.brush import BRUSH_COLOURS
-from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.io import save_rgba
-from pyntpot.ink.noise import blur, edt, smoothstep
+from pyntpot.ink.noise import edt
 from pyntpot.ink.polyline import deform_line, foot_on, length, meet, simplify
 from pyntpot.ink.sheet import Sheet, rgb
-from pyntpot.ink.wash import WashOptions, wash
 from pyntpot.maps.basemap import Basemap, Layers, Line, River, Road
 from pyntpot.maps.card import Card
 from pyntpot.maps.projection import Projection, track_projection
@@ -132,16 +130,6 @@ def test_the_plates_are_webp_the_size_they_were_painted(tmp_path):
         assert img.size == plates.card.render
     with Image.open(plates.paths["pen"]) as img:
         assert img.mode in ("RGBA", "P")
-
-
-# --------------------------------------------------------------------------- brushes
-
-
-def test_every_class_the_plate_paints_has_a_brush():
-    """The plate's brush table covers every class the layers can carry."""
-    brushes = paint.plate_brushes(BrushStyle(), 2.0, {"major": 8.0, "medium": 5.0, "minor": 2.0})
-    assert set(brushes) == {"major", "medium", "minor", "coast", "road_major", "lane", "track"}
-    assert brushes["coast"][0].width < brushes["medium"][0].width
 
 
 # ------------------------------------------------------- phase 1: the brush flags
@@ -547,70 +535,6 @@ def test_every_phase_two_tuning_field_is_inert_by_default():
     assert style.bloom_strength == 1.0
     assert style.wet_close_px == 0.0
     assert not style.sea_variation
-
-
-def _sea_cover(h: int = 160, w: int = 220) -> np.ndarray:
-    """A coast running down the card, sea to the left of it."""
-    cov = np.zeros((h, w), np.float32)
-    for r in range(h):
-        cov[r, : 90 + int(12 * math.sin(r / 22.0))] = 1.0
-    return cov
-
-
-def test_the_sea_dries_in_broad_patches_rather_than_flat():
-    """The largest wash on the card stops reading as a fill."""
-    cov = _sea_cover()
-    sheet = Sheet(*cov.shape, gran_px=8.0, seed=5)
-    style = paint.PaintStyle(sea_variation=True)
-    flat = wash(cov, sheet, 0.60, 0.34, WashOptions(rim_px=7.0))
-    varied = paint.sea_patches(flat, cov, 3.0, style)
-    body = cov > 0.5
-    assert varied.min() >= 0.0 and varied.max() <= 1.0
-    # Broader variation than the wash had, and still the same sea.
-    coarse = blur(varied, 24.0)[body].std() / blur(flat, 24.0)[body].std()
-    assert coarse > 1.5
-    assert abs(float(varied[body].mean() - flat[body].mean())) < 0.06
-    # Deterministic: the same card paints the same sea every time.
-    assert np.array_equal(varied, paint.sea_patches(flat, cov, 3.0, style))
-    # And the amount is the dial: at 0 the wash comes back untouched.
-    off = paint.PaintStyle(sea_variation=True, sea_variation_amount=0.0)
-    assert paint.sea_patches(flat, cov, 3.0, off) is flat
-
-
-def test_the_streaking_runs_along_the_coast_not_across_it():
-    """The direction is read off the shore, not chosen in advance."""
-    cov = _sea_cover()
-    angle = paint.coast_run(edt(cov <= 0.5), cov > 0.5, 40.0)
-    # The shore runs down the card, so the run of it is about a quarter turn.
-    assert abs(abs(angle) - math.pi / 2) < 0.35
-    turned = paint.coast_run(edt(cov.T <= 0.5), cov.T > 0.5, 40.0)
-    assert abs(turned) < 0.35  # the same coast laid the other way
-
-
-def test_closing_the_cover_puts_the_class_seams_under_water():
-    """The wet map's whole point: two washes that meet, meet wet.
-
-    The classes do not abut, they meet along hairlines of unmapped ground, so
-    the union taken as it stands leaves every seam dry however wide the bleed
-    is set. Closing over the gap is what reaches them, and the land's outer
-    silhouette is the one edge that has to survive it.
-    """
-    h, w = 120, 200
-    label = np.zeros((h, w), np.uint8)
-    label[20:100, 20:108] = 1
-    label[20:100, 110:180] = 2  # a two pixel hairline between the two classes
-    seam = np.zeros((h, w), bool)
-    seam[20:100, 106:112] = True
-    raw = smoothstep(edt(label == 0) - np.float32(12.0), 12.0)
-    gap = np.float32(5.0)
-    closed_dry = ~(edt(~(edt(label > 0) <= gap)) > gap)
-    closed = smoothstep(edt(closed_dry) - np.float32(12.0), 12.0)
-    assert float(raw[seam].mean()) < 0.05
-    assert float(closed[seam].mean()) > 0.5
-    # The outer silhouette keeps its dry margin: the close only fills gaps.
-    outside = edt(label > 0) > 2.0
-    assert not closed_dry[label > 0].any()
-    assert closed_dry[outside].all()
 
 
 # --------------------------------------------------------------------------- labels
