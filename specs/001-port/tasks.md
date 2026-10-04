@@ -101,7 +101,7 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 - [x] P4.14 Split geo part 1: rings, SVG paths, track index, relief, generalisation, rivers
 - [x] P4.15 Split geo part 2: OSM layers, cover, assembly; `landmark_export` into `maps/candidates/export.py`; delete `geo.py`
 - [x] P4.16 Split labels part 1: label types and spans
-- [ ] P4.17 Split labels part 2: placement
+- [x] P4.17 Split labels part 2: placement
 - [ ] P4.18 Split labels part 3: picks, compose, strands; delete the port modules (A3)
 - [ ] P4.19 Layers and forbidden contracts; empty exemptions; delete `_port`; ADR 0010
 - [ ] P4.20 Relax the D22 pins to floors
