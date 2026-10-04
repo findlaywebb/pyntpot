@@ -77,7 +77,7 @@ recorded in ADR 0006, not a re-baseline.
 - [x] P3.16 Façade `fetch` (takes the style, raises `FetchError`, tested through a hand-written `_VanishingElevation`) and `paint`; `Plates.route_px` and `strands` (the separated route, default `()`); `paint_fixture` on `fetch` and `paint`; `paint_activity` deleted; fixture payloads renamed to cache keys
 - [x] P3.17 Façade `letter` and raster `compose` on `Plates.strands`; `mapcard.compose` deleted; `paint_fixture` on the four stages; `Annotations`; lettering shims, `alphabet_sheet` and `sport_from_gpx` deleted; tests use `flat_measure` (A3 shape)
 - [x] P3.18 Attribution drawn by `compose` from `Basemap.credits`
-- [ ] P3.19 `pyntpot map` CLI
+- [x] P3.19 `pyntpot map` CLI
 - [ ] P3.20 Top-level exports and `__version__`; ADR 0007
 - [ ] P3.21 Golden harness imports only the public names; no `_port` import under `tests/golden`
 
