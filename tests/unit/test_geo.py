@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from pyntpot._port import geo
-from pyntpot.ink.chains import join_strokes, join_ways
+from pyntpot.ink.chains import join_chains, join_strokes
 from pyntpot.ink.polyline import clip_line
 from pyntpot.maps.projection import track_projection
 
@@ -548,13 +548,15 @@ def test_rings_are_wound_so_overlapping_fills_never_stack():
 
 def test_a_relation_split_across_ways_is_joined_into_one_ring():
     """The Ilkley Moor is one boundary cut into pieces; the pieces are chained."""
-    rings = join_ways(
+    chains = join_chains(
         [
             [(0.0, 0.0), (10.0, 0.0)],
             [(10.0, 0.0), (10.0, 10.0)],
             [(10.0, 10.0), (0.0, 10.0), (0.0, 0.0)],
-        ]
+        ],
+        tol=1.0,
     )
+    rings = [c for c in chains if len(c) > 3]
     assert len(rings) == 1
     assert abs(geo.signed_area(rings[0])) == pytest.approx(200.0)
 

@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pyntpot._port.style import coerce_like
-from pyntpot.ink.chains import join_chains, join_strokes, join_ways
+from pyntpot.ink.chains import join_chains, join_strokes
 from pyntpot.ink.polyline import (
     clip_line,
     eased,
@@ -652,7 +652,10 @@ def _polygon_rings(entry: dict[str, Any], proj: Projection) -> Rings:
         if len(pts) < 2:
             continue
         (inner if member.get("role") == "inner" else outer).append(pts)
-    return join_ways(outer), join_ways(inner)
+    return (
+        [c for c in join_chains(outer, tol=1.0) if len(c) > 3],
+        [c for c in join_chains(inner, tol=1.0) if len(c) > 3],
+    )
 
 
 # --------------------------------------------------------------------------- relief
@@ -878,7 +881,7 @@ def _stitch(segs: list[tuple[Pt, Pt]]) -> list[list[Pt]]:
             used[prev] = True
             line.insert(0, segs[prev][0])
         out.append(line)
-    return join_chains(out)
+    return join_chains(out, tol=1e-6)
 
 
 def _grid_line_to_metres(
@@ -2918,7 +2921,7 @@ def coastline_chains(
             continue
         pts = [proj(g["lat"], g["lon"]) for g in entry.get("geometry", []) if g]
         ways += [p for p in clip_line(pts, clip) if len(p) > 1]
-    joined = join_ways(ways, tol=2.0)
+    joined = [c for c in join_chains(ways, tol=2.0) if len(c) > 3]
     return [
         c
         for c in joined

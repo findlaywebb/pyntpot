@@ -39,6 +39,7 @@ first 16 hex digits of its SHA-256, a hyphen, and the style's base digest.
 | 1 | `Hash plates from the typed basemap and the style groups` | all five outputs byte-identical to step 0; the hash differs | `--require-identical all --require-hash differ` |
 | 2 | `Read lettering geometry from the basemap and settle the manifest` | all five outputs byte-identical to step 1; the hash equal; `labels.txt` written for the first time | `--require-identical all --require-hash equal` |
 | 3 | `Keep basemap geometry as full-precision point lists` | each output within the bound of step 2; the hash differs; `labels.txt` equal | `--max-fraction 0.005 --require-hash differ --require-labels-equal` |
+| 4 | `Merge the ring and chain joiners` | all five outputs byte-identical to step 3; the hash equal; `labels.txt` equal | `--require-identical all --require-hash equal --require-labels-equal` |
 
 Step 1 wires the grouped style into the painter: the flat painter style, the effective
 basemap options and the route ink all come from the packaged default theme, and the base
@@ -211,6 +212,54 @@ generators is recorded in `docs/issues/shared-generators.md`.
 Accepted by the maintainer as the one exception in the window; the per-step bound and the
 parity tolerance are unchanged.
 
+### Step 4
+
+Step 4 merges the two greedy pool joiners. The multipolygon ring joiner and the traced
+contour joiner were the same loop: take the last piece from the pool, grow it at either
+end by the first piece in pool order whose end meets it, and stop when nothing meets it
+or it has closed. They are now one function, `join_chains(lines, tol)`, which copies its
+pieces and drops nothing. The ring joiner's callers (a relation's outer and inner rings,
+at a tolerance of 1 m, and the coastline, at 2 m) keep only chains of more than three
+points themselves, as the ring joiner did; the contour caller passes its tolerance of
+1e-6 explicitly.
+
+Step 4 compare, against step 3 (the gate):
+
+```
+paper.webp: identical yes, differing fraction 0.000000
+wash.webp: identical yes, differing fraction 0.000000
+pen.webp: identical yes, differing fraction 0.000000
+labels-centreline.webp: identical yes, differing fraction 0.000000
+map.png: identical yes, differing fraction 0.000000
+manifest hash: 340a7f6e260ee1e2-e5a5f1b4b3ca2177 here, 340a7f6e260ee1e2-e5a5f1b4b3ca2177 in step 3
+```
+
+`labels.txt` is equal to step 3's.
+
+Step 4 compare, against the committed goldens (cumulative record):
+
+```
+paper.webp: identical no, differing fraction 0.000000
+wash.webp: identical no, differing fraction 0.207337
+pen.webp: identical no, differing fraction 0.000225
+labels-centreline.webp: identical no, differing fraction 0.042485
+map.png: identical no, differing fraction 0.193396
+manifest hash: 340a7f6e260ee1e2-e5a5f1b4b3ca2177 here, c034e1a4d60bad70-77dce82bec370944 in the goldens
+```
+
+Kept apart, as different algorithms:
+
+- `join_strokes` finds a meeting end through a grid of cells rather than in pool order,
+  and grows the whole tail and then the whole head without stopping when the chain
+  closes. At a junction where two pieces both meet a chain's end it can take a different
+  one: a pinned test in `tests/unit/ink/test_chains.py` gives the two joiners different
+  chains on the same three pieces, so no merge was tried.
+- `chain_lines` takes two ends to meet when they are within the tolerance on each axis
+  rather than by distance, and concatenates the arrays whole, so a shared end appears
+  twice; the pinned tolerance tests show both differences.
+- `joined` is `chain_lines` over point lists, at the lettering's tolerance of 8 px, and
+  differs from `join_chains` and `join_strokes` as `chain_lines` does.
+
 ### Hashes
 
 - Old manifest hash (the committed goldens): `c034e1a4d60bad70-77dce82bec370944`.
@@ -218,6 +267,7 @@ parity tolerance are unchanged.
   the default style's pinned base digest.
 - Manifest hash after step 2: `87624a4cd49063df-e5a5f1b4b3ca2177`, unchanged.
 - Manifest hash after step 3: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`.
+- Manifest hash after step 4: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, unchanged.
 
 ## Consequences
 

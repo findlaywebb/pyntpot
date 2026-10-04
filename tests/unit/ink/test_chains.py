@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from pyntpot.ink.chains import chain_lines, join_chains, join_strokes, join_ways, joined
+from pyntpot.ink.chains import chain_lines, join_chains, join_strokes, joined
 
 #: Two segments that touch end to start.
 LEFT = [(0.0, 0.0), (10.0, 0.0)]
@@ -13,6 +13,11 @@ RIGHT = [(10.0, 0.0), (20.0, 0.0)]
 DIAGONAL = [(10.9, 0.9), (20.0, 5.0)]
 #: A segment far beyond any tolerance used here.
 APART = [(30.0, 0.0), (40.0, 0.0)]
+#: Two candidates for `LEFT`'s end at (10, 0), both within a tolerance of 1:
+#: `AHEAD` starts 0.6 to its right, in the grid cell `LEFT` ends in, and `ASIDE`
+#: starts 0.5 to its left, in the cell before it.
+AHEAD = [(10.6, 0.0), (20.0, 0.0)]
+ASIDE = [(9.5, 0.0), (9.5, 10.0)]
 
 
 def _chain_arrays(lines: list[list[tuple[float, float]]], tol: float) -> list[list[list[float]]]:
@@ -37,12 +42,41 @@ class TestPointListJoiners:
         assert len(join([LEFT, APART], 1.0)) == 2
 
 
-def test_join_ways_closes_two_halves_into_one_ring() -> None:
-    """Two member ways that meet at both ends chain into one closed ring."""
-    lower = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]
-    upper = [(10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
-    assert join_ways([lower, upper], 1.0) == [
-        [(10.0, 10.0), (0.0, 10.0), (0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]
+class TestJoinChains:
+    """The greedy pool joiner that rings and traced contours both go through."""
+
+    def test_two_halves_close_into_one_ring(self) -> None:
+        """Two member ways that meet at both ends chain into one closed ring."""
+        lower = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]
+        upper = [(10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
+        assert join_chains([lower, upper], 1.0) == [
+            [(10.0, 10.0), (0.0, 10.0), (0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]
+        ]
+
+    def test_the_input_lines_are_left_unchanged(self) -> None:
+        """Joining copies its pieces, so the caller's lines keep their points."""
+        lower = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]
+        upper = [(10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
+        join_chains([lower, upper], 1.0)
+        assert (lower, upper) == (
+            [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)],
+            [(10.0, 10.0), (0.0, 10.0), (0.0, 0.0)],
+        )
+
+    def test_a_short_chain_is_kept(self) -> None:
+        """A chain of three points or fewer comes back; dropping it is the caller's choice."""
+        assert join_chains([LEFT], 1.0) == [LEFT]
+
+
+def test_join_chains_and_join_strokes_take_different_pieces_at_a_junction() -> None:
+    """At a junction `join_chains` takes the first piece in pool order, `join_strokes` the first by grid cell."""
+    assert join_chains([AHEAD, ASIDE, LEFT], 1.0) == [
+        [(0.0, 0.0), (10.0, 0.0), (20.0, 0.0)],
+        ASIDE,
+    ]
+    assert join_strokes([AHEAD, ASIDE, LEFT], 1.0) == [
+        [(0.0, 0.0), (10.0, 0.0), (9.5, 10.0)],
+        AHEAD,
     ]
 
 

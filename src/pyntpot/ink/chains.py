@@ -1,18 +1,18 @@
 """Chaining polylines: join pieces whose ends meet into as few lines as possible.
 
-Key functions: `join_ways`, member ways chained into closed rings;
-`join_strokes`, open pieces chained head to tail through a grid of their ends;
-`join_chains`, pieces sharing an endpoint chained greedily; `chain_lines`, the
-same for arrays of points; `joined`, `chain_lines` over point lists.
+Key functions: `join_chains`, pieces sharing an endpoint chained greedily in
+pool order until each closes or nothing meets it; `join_strokes`, open pieces
+chained head to tail through a grid of their ends; `chain_lines`, ends matched
+per axis on arrays of points; `joined`, `chain_lines` over point lists.
 
-The four joiners are different algorithms with different tolerance handling,
-not one algorithm four times: each keeps the order and tie-breaking its callers
-were measured with. None of them simplifies, smooths or reorders the points
-within a piece.
+The three joiners are different algorithms with different tolerance handling,
+not one algorithm three times: each keeps the order and tie-breaking its
+callers were measured with. None of them simplifies, smooths or reorders the
+points within a piece, and none of them drops a chain for being short: a
+caller that wants only rings filters the chains itself.
 
 Invariants: a piece is used at most once; every input piece with two or more
-points ends up in exactly one output chain, except `join_ways`, which drops a
-chain of three points or fewer.
+points ends up in exactly one output chain.
 """
 
 import math
@@ -22,50 +22,8 @@ import numpy as np
 
 from pyntpot.ink.polyline import Pt
 
-#: A chain of this many points or fewer is not kept as a ring.
-_TOO_FEW_FOR_A_RING = 3
 #: The fewest lines there must be for any two of them to chain.
 _FEWEST_TO_CHAIN = 2
-
-
-def join_ways(ways: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
-    """Chain member ways of a multipolygon into closed rings.
-
-    Overpass hands a relation back as loose ways. Treating each one as its own
-    ring is what left a large wood unshaded: the outer boundary is split across
-    dozens of ways and not one of them closes.
-
-    Args:
-        ways: Member geometries in metres.
-        tol: Metres within which two endpoints are the same node.
-
-    Returns:
-        Closed rings. An open chain is closed across its ends.
-    """
-    pool = [list(w) for w in ways if len(w) > 1]
-    rings: list[list[Pt]] = []
-    while pool:
-        chain = pool.pop()
-        joined = True
-        while joined and math.dist(chain[0], chain[-1]) > tol:
-            joined = False
-            for i, cand in enumerate(pool):
-                if math.dist(chain[-1], cand[0]) <= tol:
-                    chain += cand[1:]
-                elif math.dist(chain[-1], cand[-1]) <= tol:
-                    chain += list(reversed(cand))[1:]
-                elif math.dist(chain[0], cand[-1]) <= tol:
-                    chain = cand[:-1] + chain
-                elif math.dist(chain[0], cand[0]) <= tol:
-                    chain = list(reversed(cand))[:-1] + chain
-                else:
-                    continue
-                pool.pop(i)
-                joined = True
-                break
-        if len(chain) > _TOO_FEW_FOR_A_RING:
-            rings.append(chain)
-    return rings
 
 
 def join_strokes(lines: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
@@ -80,8 +38,9 @@ def join_strokes(lines: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
     display pixels against a 30 px lift is all taper and blot and never a line,
     and thousands of such pieces can stand in for a few hundred roads.
 
-    Unlike `join_ways` this leaves a chain open: a road is a line, not a ring,
-    and closing one across its ends would draw a street that is not there.
+    Unlike `join_chains` it looks for meeting ends through a grid of cells
+    rather than in pool order, and grows the whole tail and then the whole head
+    without stopping when the chain closes on itself.
 
     Args:
         lines: Polylines in metres. Only ones that belong together should be
@@ -161,22 +120,32 @@ def _attach(chain: list[Pt], tip: Pt, cand: list[Pt], tol: float, *, head: bool)
     return None
 
 
-def join_chains(lines: list[list[Pt]], tol: float = 1e-6) -> list[list[Pt]]:
+def join_chains(lines: list[list[Pt]], tol: float) -> list[list[Pt]]:
     """Chain polylines that share an endpoint into as few pieces as possible.
 
-    A saddle cell hands marching squares two segments through one vertex, so a
-    ring that crosses one comes back as two open chains. Closing each of those
-    with a straight line draws a chord across the map: it can leave a wedge of
-    land lying over the sea. Joining them first is the fix.
+    Greedy: the last piece is taken from the pool and grown, at either end, by
+    the first piece in pool order whose end meets it, until nothing meets it or
+    it has closed on itself. A chain that closes is a ring; one that does not
+    stays open. Unlike `join_strokes` it stops growing a chain once it closes
+    and searches the pool in order rather than through a grid of ends.
+
+    Two callers depend on it. Overpass hands a multipolygon relation back as
+    loose member ways, and treating each one as its own ring is what left a
+    large wood unshaded: the outer boundary is split across dozens of ways and
+    not one of them closes. And a saddle cell hands marching squares two
+    segments through one vertex, so a ring that crosses one comes back as two
+    open chains; closing each of those with a straight line draws a chord
+    across the map that can leave a wedge of land lying over the sea.
 
     Args:
-        lines: Polylines, in whatever space they were traced.
+        lines: Polylines, in whatever space they were traced. They are copied,
+            never changed.
         tol: Distance within which two endpoints are the same point.
 
     Returns:
-        The joined polylines.
+        The joined polylines, closed rings and open chains alike.
     """
-    pool = [line for line in lines if len(line) > 1]
+    pool = [list(line) for line in lines if len(line) > 1]
     out: list[list[Pt]] = []
     while pool:
         chain = pool.pop()
@@ -208,6 +177,9 @@ def joined(parts: list[list[Pt]], tol: float = 8.0) -> list[list[Pt]]:
     arrives as fifteen fragments none of which is longer than the name written
     on it. The painter already chains ways for the brush; the same thing has to
     happen before a road is judged too short to letter.
+
+    Unlike `join_chains` and `join_strokes` it is `chain_lines` underneath: ends
+    meet within the tolerance on each axis, and a shared end is kept twice.
     """
     chained = chain_lines([np.asarray(part, float) for part in parts], tol)
     return [[(float(x), float(y)) for x, y in c] for c in chained] or parts
@@ -227,6 +199,10 @@ def chain_lines(lines: list[np.ndarray], tol: float) -> list[np.ndarray]:
     each is extended from its tail and then from its head, and a way is used
     once. A junction where three ways meet takes whichever arrived first, which
     is the honest answer with no more information than an endpoint.
+
+    Unlike `join_chains` and `join_strokes` it takes two ends to meet when they
+    are within the tolerance on each axis rather than by distance, and it
+    concatenates the arrays whole, so a shared end appears twice.
 
     Args:
         lines: The polylines, in render pixels.
