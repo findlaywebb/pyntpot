@@ -73,7 +73,7 @@ recorded in ADR 0006, not a re-baseline.
 - [x] P3.12 Wire the style, final hash form; opens the regeneration window, step 1 byte-identical (A6, A7)
 - [x] P3.13 Lettering reads the basemap, final manifest keys (step 2, byte-identical); drop the seam's one-decimal round trip, `paint.parse_d` and `route0`, keeping `geo.parse_path` for `basemap()`'s output (step 3, bounded) (A4, window)
 - [x] P3.14 Merge the polyline duplicates that compute the same thing, one gated step each; keep the rest apart, recorded (A5, window)
-- [ ] P3.15 Regenerate the goldens once; ADR 0006; push the window to `main` (closes the window)
+- [x] P3.15 Regenerate the goldens once; ADR 0006; push the window to `main` (closes the window)
 - [ ] P3.16 Façade `fetch` (takes the style, raises `FetchError`, tested through a hand-written `_VanishingElevation`) and `paint`; `Plates.route_px` and `strands` (the separated route, default `()`); `paint_fixture` on `fetch` and `paint`; `paint_activity` deleted; fixture payloads renamed to cache keys
 - [ ] P3.17 Façade `letter` and raster `compose` on `Plates.strands`; `mapcard.compose` deleted; `paint_fixture` on the four stages; `Annotations`; lettering shims, `alphabet_sheet` and `sport_from_gpx` deleted; tests use `flat_measure` (A3 shape)
 - [ ] P3.18 Attribution drawn by `compose` from `Basemap.credits`

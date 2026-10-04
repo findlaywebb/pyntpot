@@ -1,6 +1,6 @@
 # 0006 — Golden regeneration
 
-Status: proposed
+Status: accepted
 
 ## Context
 
@@ -36,12 +36,26 @@ first 16 hex digits of its SHA-256, a hyphen, and the style's base digest.
 | Step | Commit | Expected | Gate options |
 |---|---|---|---|
 | 0 | `020c3ff` | baseline, made on the window's starting commit | none |
-| 1 | `Hash plates from the typed basemap and the style groups` | all five outputs byte-identical to step 0; the hash differs | `--require-identical all --require-hash differ` |
-| 2 | `Read lettering geometry from the basemap and settle the manifest` | all five outputs byte-identical to step 1; the hash equal; `labels.txt` written for the first time | `--require-identical all --require-hash equal` |
-| 3 | `Keep basemap geometry as full-precision point lists` | each output within the bound of step 2; the hash differs; `labels.txt` equal | `--max-fraction 0.005 --require-hash differ --require-labels-equal` |
-| 4 | `Merge the ring and chain joiners` | all five outputs byte-identical to step 3; the hash equal; `labels.txt` equal | `--require-identical all --require-hash equal --require-labels-equal` |
-| 5 | `Merge the arc-length helpers` | all five outputs byte-identical to step 4; the hash equal; `labels.txt` equal | `--require-identical all --require-hash equal --require-labels-equal` |
+| 1 | `1b61eee` `Hash plates from the typed basemap and the style groups` | all five outputs byte-identical to step 0; the hash differs | `--require-identical all --require-hash differ` |
+| 2 | `3e49f61` `Read lettering geometry from the basemap and settle the manifest` | all five outputs byte-identical to step 1; the hash equal; `labels.txt` written for the first time | `--require-identical all --require-hash equal` |
+| 3 | `637573c` `Keep basemap geometry as full-precision point lists` | each output within the bound of step 2; the hash differs; `labels.txt` equal | `--max-fraction 0.005 --require-hash differ --require-labels-equal` |
+| 4 | `26bd361` `Merge the ring and chain joiners` | all five outputs byte-identical to step 3; the hash equal; `labels.txt` equal | `--require-identical all --require-hash equal --require-labels-equal` |
+| 5 | `1b2eb73` `Merge the arc-length helpers` | all five outputs byte-identical to step 4; the hash equal; `labels.txt` equal | `--require-identical all --require-hash equal --require-labels-equal` |
 | 6 | none: no two normal helpers compute the same quantity, so nothing was merged | no commit and no compare | none |
+
+Outcome of each step's gate compare, against the previous step (differing fraction per
+output, past the channel bound):
+
+| Step | paper | wash | pen | labels-centreline | map | Hash | `labels.txt` |
+|---|---|---|---|---|---|---|---|
+| 1 | 0 (identical) | 0 (identical) | 0 (identical) | 0 (identical) | 0 (identical) | `87624a4cd49063df-e5a5f1b4b3ca2177`, differs | not yet written |
+| 2 | 0 (identical) | 0 (identical) | 0 (identical) | 0 (identical) | 0 (identical) | `87624a4cd49063df-e5a5f1b4b3ca2177`, equal | written |
+| 3 | 0 (identical) | 0.207338 | 0.000225 | 0.042485 | 0.193396 | `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, differs | equal |
+| 4 | 0 (identical) | 0 (identical) | 0 (identical) | 0 (identical) | 0 (identical) | `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, equal | equal |
+| 5 | 0 (identical) | 0 (identical) | 0 (identical) | 0 (identical) | 0 (identical) | `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, equal | equal |
+
+Step 3 exceeded the per-step bound; it was committed as the one maintainer-accepted
+exception once its drift was explained (see Step 3 below).
 
 Step 1 wires the grouped style into the painter: the flat painter style, the effective
 basemap options and the route ink all come from the packaged default theme, and the base
@@ -320,12 +334,85 @@ keeps a docstring line saying how it differs from the others:
 - Manifest hash after step 3: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`.
 - Manifest hash after step 4: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, unchanged.
 - Manifest hash after step 5: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, unchanged.
+- New manifest hash of the regenerated goldens: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`.
+
+### Regeneration
+
+The window closed with one regeneration: `tests/golden/make_golden.py` painted the
+Lynmouth fixture into `tests/golden/lynmouth/` in place, on the step-5 commit `1b2eb73`,
+and the label-plate sidecar `labels-centreline.json` was deleted (a cache record whose key
+form changes later; no test compares it). The golden directory now holds exactly
+`paper.webp`, `wash.webp`, `pen.webp`, `labels-centreline.webp`, `map.png` and
+`plates.json`. Every image is byte-identical to the step-5 output, and `plates.json` is
+too but for the final newline the end-of-file hook adds, as it did to the old one; the
+manifest is compared by its hash.
+
+Final compare, a fresh paint against the regenerated goldens (the gate,
+`--require-identical all --require-hash equal`, exit 0):
+
+```
+paper.webp: identical yes, differing fraction 0.000000
+wash.webp: identical yes, differing fraction 0.000000
+pen.webp: identical yes, differing fraction 0.000000
+labels-centreline.webp: identical yes, differing fraction 0.000000
+map.png: identical yes, differing fraction 0.000000
+manifest hash: 340a7f6e260ee1e2-e5a5f1b4b3ca2177 here, 340a7f6e260ee1e2-e5a5f1b4b3ca2177 in the goldens
+```
+
+and against the step-5 output (every line byte-identical, so the regenerated files are the
+last step's):
+
+```
+paper.webp: identical yes, differing fraction 0.000000
+wash.webp: identical yes, differing fraction 0.000000
+pen.webp: identical yes, differing fraction 0.000000
+labels-centreline.webp: identical yes, differing fraction 0.000000
+map.png: identical yes, differing fraction 0.000000
+manifest hash: 340a7f6e260ee1e2-e5a5f1b4b3ca2177 here, 340a7f6e260ee1e2-e5a5f1b4b3ca2177 in step 5
+```
+
+Cumulative drift, regenerated goldens against the old ones (the step-5 cumulative record):
+paper 0, wash 0.207337, pen 0.000225, labels-centreline 0.042485, map 0.193396; hash
+`340a7f6e260ee1e2-e5a5f1b4b3ca2177`, was `c034e1a4d60bad70-77dce82bec370944`.
+
+What moved and why:
+
+- **The hash form** (step 1): the hash input became the typed basemap's canonical text at
+  three decimals plus the base style digest, so the hash changed with no pixel moving.
+- **The rounding removal** (step 3): the seam stopped rounding geometry to 0.1 m, and the
+  card offset that pinned lettering onto the rounded route went. Every pixel that moved,
+  in the old goldens' terms, moved here, through the three discrete-decision families
+  recorded under Step 3, and the hash changed because the geometry it covers did.
+- **The route patch** (step 2): lettering reads its route, places, candidates and named
+  lines from the basemap; no pixel and no hash moved.
+- **The chainer and normal merges** (steps 4 to 6): the ring and contour joiners and the
+  arc-length helpers were merged with every output byte-identical; no normal helper was
+  merged.
+
+Final manifest keys, sixteen: `hash`, `files`, `sizes`, `bytes`, `card`, `display`,
+`render`, `mpp`, `mpp_display`, `ribbon_m`, `span_m`, `wet_px`, `gran_px`, `dark`,
+`wood_px`, `water_px`.
+
+The machine that made them: the agent's Linux container,
+`Linux vm 6.18.44-fc-v64 #1 SMP PREEMPT_DYNAMIC @0 x86_64 x86_64 x86_64 GNU/Linux`,
+Python 3.13.14, with the parity stack at its pins: numpy 2.5.2, Pillow 12.3.0,
+fonttools 4.63.0.
+
+The goldens were made in the agent container, which is from now on "the machine that made
+the goldens" in spec Verification 1, and G-here runs them byte-exact there. The
+maintainer's exact run (`uv run pytest -m golden` on their machine) is a **follow-up
+check**, recorded by appending its result to this ADR. If bytes differ there, that is a
+defect to root-cause (most likely platform float behaviour in a maths library or a numpy
+build) and is filed in `docs/issues/golden-exactness.md`; it is **not** a re-baseline, and
+tolerance mode remains the cross-machine gate. The manifest hash must match on every
+machine; if it does not, the canonical form has a defect.
 
 ## Consequences
 
-- Inside the window the golden-marked tests are known stale: the manifest-hash parity test
-  fails until the goldens are regenerated. The paper and pen cases still pass in
-  tolerance; from step 3 the wash, labels-centreline and map cases fail too.
+- Inside the window the golden-marked tests were known stale: the manifest-hash parity
+  test failed until the goldens were regenerated, and from step 3 the wash,
+  labels-centreline and map cases failed in tolerance too. Since the regeneration every
+  golden case passes byte-exact in the container and in tolerance mode.
 - The hash no longer depends on any hand-kept key list, and a last-bit difference in a
   machine's maths library cannot move it.
 - A lettering-only or route-ink style change no longer moves the base hash.
