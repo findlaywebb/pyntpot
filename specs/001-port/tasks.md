@@ -98,7 +98,7 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 - [x] P4.11 Style groups part 2: lettering readers; `PaintStyle` and `_port/paint.py` deleted (A6)
 - [x] P4.12 Design the candidates facility; ADR 0009 (A8)
 - [x] P4.13 Candidates facility in `maps/candidates/` (A8); `candidates/__init__.py` docstring and empty `__all__` only
-- [ ] P4.14 Split geo part 1: rings, SVG paths, track index, relief, generalisation, rivers
+- [x] P4.14 Split geo part 1: rings, SVG paths, track index, relief, generalisation, rivers
 - [ ] P4.15 Split geo part 2: OSM layers, cover, assembly; `landmark_export` into `maps/candidates/export.py`; delete `geo.py`
 - [ ] P4.16 Split labels part 1: label types and spans
 - [ ] P4.17 Split labels part 2: placement
