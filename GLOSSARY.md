@@ -21,3 +21,6 @@ add the term here when you coin one. The ported code keeps its old names until t
 | span | A stretch of the route with a name and an intent. |
 | card | The coordinate frame of one map: a box in card metres and the display and render pixel grids it maps to; converts between them. A canvas (today `paint.Plate`) is the raster a plate is painted on; a card is the frame that says where things go on it. |
 | manifest | The plates' sidecar record (`plates.json`): the base hash, the files written and the measurements later stages read. |
+| style | Every style group a map is painted, lettered and composed with, as one value (`maps.style.Style`). |
+| style group | One layer's share of the style, a frozen dataclass of the fields its readers read: `PaperStyle`, `NibStyle`, `BasemapStyle` and the rest. |
+| theme | A TOML file holding one style, a table per style group. The packaged default theme is the resolved default style. |

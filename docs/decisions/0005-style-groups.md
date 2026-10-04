@@ -350,6 +350,29 @@ digest's key list is not a reader.
 `labels` is read today only by `labels.hand()`, which is deleted; `letter` takes over the
 check, so its final reader is maps lettering.
 
+### Digests
+
+`pyntpot.maps.style.Style`, a frozen pydantic model, composes the groups as the fields
+`paper, wash, brush, face, nib, hand, card, ribbon, cover, route, route_inks, lettering,
+basemap`. It is read from a TOML theme; the packaged `maps/themes/default.toml` is the
+resolved default style (the resolved `paint` and `route_ink` values and the effective
+basemap options), not the dataclass defaults. A theme naming an unknown key is rejected
+at every level: at the top by pydantic, inside a group by checking the table's keys
+against the group's dataclass fields.
+
+Each group digest is the first 16 hex digits of
+`sha256(json.dumps(asdict(group), sort_keys=True, default=str))`. A combined digest is
+the first 16 hex digits of the SHA-256 of its group digests joined, in field order:
+
+| Digest | Groups | Default style |
+|---|---|---|
+| `digest()` | all thirteen | `25ae6fee082ebff5` |
+| `base_digest()` | paper, wash, brush, card, ribbon, cover, route, basemap | `e5a5f1b4b3ca2177` |
+| `lettering_digest()` | face, nib, hand, lettering | `d15ae2f30e9ca5ce` |
+
+The three default digests are pinned literals in the unit tests. `route_inks` is in
+`digest()` only, so changing an ink moves neither of the other two.
+
 ## Consequences
 
 - The table is final. Changing a field's group would move a pinned digest and, for a base
