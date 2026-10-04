@@ -410,75 +410,6 @@ def test_no_layer_carries_an_administrative_border(tmp_path):
 # --------------------------------------------------------------------------- landmarks
 
 
-def _candidates() -> list[dict]:
-    """A candidate list covering every class the heuristic sorts on."""
-    return [
-        {"n": "Dovedale", "cls": "sculpture", "d": 44.0, "x": 1.0, "y": 1.0},
-        {"n": "Buxton Crescent", "cls": "sculpture", "d": 249.0, "x": 2.0, "y": 2.0},
-        {"n": "Far sculpture", "cls": "sculpture", "d": 900.0, "x": 3.0, "y": 3.0},
-        {"n": "Ben Macdui", "cls": "summit", "d": 120.0, "x": 4.0, "y": 4.0},
-        {"n": "Ruined colliery", "cls": "ruin", "d": 20.0, "x": 5.0, "y": 5.0},
-        {"n": "Bakewell", "cls": "place", "d": 5.0, "x": 6.0, "y": 6.0},
-    ]
-
-
-def test_the_heuristic_keeps_what_a_runner_navigates_by_first():
-    """Class decides the order, not distance: a hill outranks a nearer statue."""
-    kept = geo.pick_landmarks(_candidates(), radius_m=300.0, cap=8)
-    assert [entry["n"] for entry in kept] == ["Ben Macdui", "Dovedale"]
-
-
-def test_a_sculpture_has_to_be_one_you_go_right_by():
-    """A statue 249 m off the route is not a landmark, whatever the card's radius."""
-    kept = geo.pick_landmarks(_candidates(), radius_m=300.0, cap=8)
-    assert "Buxton Crescent" not in {entry["n"] for entry in kept}
-
-
-def test_a_hill_is_kept_from_kilometres_away():
-    """The reach is the thing's own: a summit is seen across the whole card."""
-    kept = geo.pick_landmarks(
-        [{"n": "Ben Macdui", "cls": "summit", "d": 2400.0, "x": 1.0, "y": 1.0}],
-        radius_m=300.0,
-        cap=8,
-    )
-    assert [entry["n"] for entry in kept] == ["Ben Macdui"]
-
-
-def test_height_buys_reach():
-    """An unusually tall building is notable from further off than a low one."""
-    low = {"n": "Low block", "cls": "building", "d": 900.0, "x": 1.0, "y": 1.0}
-    tall = {
-        "n": "The tower",
-        "cls": "building",
-        "d": 900.0,
-        "x": 2.0,
-        "y": 2.0,
-        "tags": {"height": "310 m"},
-    }
-    kept = geo.pick_landmarks([low, tall], radius_m=300.0, cap=8)
-    assert [entry["n"] for entry in kept] == ["The tower"]
-
-
-def test_height_is_read_from_levels_and_from_feet():
-    """`building:levels` and an imperial height are both a statement of height."""
-    assert geo.height_m({"height": "310 m"}) == 310.0
-    assert geo.height_m({"building:levels": "10"}) == 32.0
-    assert round(geo.height_m({"height": "100 ft"})) == 30
-    assert geo.height_m({}) == 0.0
-    assert geo.height_m({"height": "about"}) == 0.0
-
-
-def test_a_zoo_a_church_and_a_bridge_are_landmarks():
-    """The classes the old query could not even ask OSM for."""
-    assert geo.classify({"tourism": "zoo"}) == "attraction"
-    assert geo.classify({"amenity": "place_of_worship"}) == "worship"
-    assert geo.classify({"building": "cathedral"}) == "worship"
-    assert geo.classify({"bridge": "yes", "highway": "footway"}) == "bridge"
-    assert geo.classify({"building": "stadium"}) == "building"
-    assert geo.classify({"man_made": "tower", "height": "50"}) == "tower"
-    assert geo.classify({"amenity": "cafe"}) == "other"
-
-
 def test_the_query_asks_for_the_things_a_runner_would_pick():
     """Buildings, bridges and zoos are in the box's own question to OSM."""
     query = geo.OVERPASS_QUERY.format(
@@ -494,33 +425,6 @@ def test_the_query_asks_for_the_things_a_runner_would_pick():
     assert '"bridge"' in query
     assert "cathedral" in query
     assert "place_of_worship" in query
-
-
-def test_a_village_is_never_a_landmark():
-    """A place name is a label, not a landmark, however near the track it sat."""
-    kept = geo.pick_landmarks(_candidates(), radius_m=3000.0, cap=8)
-    assert "Bakewell" not in {entry["n"] for entry in kept}
-    assert "Ruined colliery" not in {entry["n"] for entry in kept}
-
-
-def test_the_cap_is_a_cap():
-    """The heuristic keeps at most what it was asked for, most notable first."""
-    kept = geo.pick_landmarks(_candidates(), radius_m=3000.0, cap=2)
-    assert [entry["n"] for entry in kept] == ["Ben Macdui", "Dovedale"]
-
-
-def test_the_payload_replaces_the_heuristic():
-    """A payload pick is drawn whether or not the rule would have chosen it."""
-    kept = geo.pick_landmarks(_candidates(), picks=("Bakewell", "Far sculpture"))
-    assert {entry["n"] for entry in kept} == {"Bakewell", "Far sculpture"}
-    assert all(entry.get("picked") for entry in kept)
-
-
-def test_a_pick_the_box_does_not_hold_is_reported_not_dropped():
-    """A name that is not there comes back marked, so the coach can see the miss."""
-    kept = geo.pick_landmarks(_candidates(), picks=("Dovedale", "Nowhere at all"))
-    missing = [entry for entry in kept if entry.get("missing")]
-    assert [entry["n"] for entry in missing] == ["Nowhere at all"]
 
 
 # --------------------------------------------------------------------------- places

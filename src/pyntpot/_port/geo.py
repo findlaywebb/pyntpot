@@ -1196,28 +1196,6 @@ def fetch_activity(
 
 # --------------------------------------------------------------------------- landmarks
 
-#: `historic` values that are a monument someone put there on purpose. The rest
-#: of the tag's range is a site rather than a marker: a colliery, a station and
-#: an earthwork are all history, but none of them is a thing to run past and see.
-MONUMENT_HISTORIC = (
-    "monument",
-    "memorial",
-    "castle",
-    "wayside_cross",
-    "cross",
-    "tower",
-    "cannon",
-    "milestone",
-    "boundary_stone",
-)
-
-#: `memorial` values that mark a wall, not a thing in the landscape. OSM tags a
-#: blue plaque `historic=memorial` with the name of the building it is screwed
-#: to, so a theatre, a hotel and a war name all arrive as monuments near the
-#: route and one of them can end up naming a climb. A
-#: plaque is a real record and a bad landmark; it is classed apart, not dropped.
-PLAQUE_MEMORIAL = ("plaque", "blue_plaque")
-
 #: The `tourism` values worth a place on a map, and the `man_made`, `building`,
 #: `amenity` and `leisure` ones. These are what the box actually asks OSM for,
 #: so widening the map's vocabulary is one edit here and not two.
@@ -1277,88 +1255,6 @@ AMENITY_LANDMARKS = (
 )
 LEISURE_LANDMARKS = ("stadium", "sports_centre", "marina")
 
-#: What a landmark tag means, and whether the heuristic keeps it. A village is
-#: classed and offered but never kept: a place name is not a landmark, it is a
-#: label, and a map crowded with them reads worse.
-LANDMARK_CLASSES: dict[str, bool] = {
-    "sculpture": True,
-    "monument": True,
-    "viewpoint": True,
-    "summit": True,
-    "building": True,
-    "bridge": True,
-    "tower": True,
-    "worship": True,
-    "attraction": True,
-    "block": True,
-    "sight": False,
-    "ruin": False,
-    "place": False,
-    "plaque": False,
-    "other": False,
-}
-
-#: How far off the route a class of thing is still worth naming, in metres, and
-#: how notable it is against the other classes. A mountain or an unusually tall
-#: building is notable from further off, and the corollary is that a fountain
-#: eight metres away is not notable at all. One radius for everything made the
-#: first half impossible and the second half inevitable.
-#:
-#: The tier is what a runner would pick out first, not what OSM thinks is
-#: important: a hill, a tower, a spire, a named building and a bridge are the
-#: things you navigate by, a monument or a statue is something you pass, and a
-#: ruin or a plaque is something you would have to stop and read.
-LANDMARK_REACH_M: dict[str, tuple[int, float]] = {
-    "summit": (1, 6000.0),
-    "tower": (1, 1200.0),
-    "worship": (1, 700.0),
-    "building": (1, 450.0),
-    "viewpoint": (1, 450.0),
-    "attraction": (1, 450.0),
-    "bridge": (1, 250.0),
-    "block": (2, 250.0),
-    "monument": (2, 250.0),
-    "sculpture": (2, 150.0),
-    "sight": (2, 150.0),
-    "ruin": (3, 200.0),
-    "place": (3, 300.0),
-    "plaque": (3, 30.0),
-    "other": (3, 150.0),
-}
-
-#: The classes a named area is offered as a candidate for at all. A place name,
-#: a plaque and anything unrecognised are drawn or dropped by other rules and
-#: were never landmarks; everything else is offered and ranked.
-OFFERED_CLASSES = frozenset(LANDMARK_REACH_M) - {"place", "plaque", "other"}
-
-#: A building tag OSM puts on the fabric rather than on the institution: every
-#: block of a campus and every wing of a hospital carries one, so "Ilam Hall"
-#: and "Hartington Hall" arrive looking exactly like the cathedral next to them.
-#: They are still worth offering, because one of them is sometimes the thing on
-#: the corner; they are not worth ranking above a spire, a tower or a zoo.
-FABRIC_BUILDINGS = ("university", "hospital", "museum")
-#: What a landmark building is: something that has a name because of what it is.
-NAMED_BUILDINGS = ("castle", "palace", "stadium", "train_station")
-#: The `tourism` values that are a destination, and the ones that are a sign on
-#: a railing. OSM tags every enclosure in a zoo `tourism=attraction`, which is
-#: how an enclosure sign can outrank the zoo itself.
-TOURISM_DESTINATIONS = ("zoo", "museum", "aquarium", "theme_park")
-
-#: The reach a class with no entry gets, and the radius every reach above is
-#: stated against. A card drawn at a coarser scale scales them all together.
-LANDMARK_RADIUS_M = 300.0
-
-#: How far something is notable from, per metre of its own height. A thing that
-#: stands above what is around it is seen from further away than its footprint
-#: says, which is the whole point of a cathedral or a radio mast. Sixty metres
-#: of reach a metre of height puts a thirty-metre spire at 1.8 km and a 108 m
-#: dome at about 6.5 km, and the card's own box
-#: cuts anything the reader could not see on the sheet anyway.
-VISIBLE_PER_M = 60.0
-#: Past this, height stops buying reach. Nothing on a session's card is further
-#: off than this and still the thing a person would name.
-REACH_CAP_M = 8000.0
-
 #: The tags a candidate carries forward, so the label agent can see what a thing
 #: is and `landmark_reach` can see how tall it stands.
 LANDMARK_TAG_KEYS = (
@@ -1379,179 +1275,6 @@ LANDMARK_TAG_KEYS = (
     "start_date",
     "memorial",
 )
-
-#: How many named things the box offers the label agent. Forty was a distance
-#: sort that stopped inside one town's plaques, so the settlements a climb had
-#: to be named from were cut before the agent ever saw them.
-LANDMARK_CAP = 80
-
-
-def classify(tags: dict[str, str]) -> str:
-    """The landmark class one OSM tag set belongs to."""
-    historic = tags.get("historic", "")
-    if historic == "memorial" and tags.get("memorial") in PLAQUE_MEMORIAL:
-        return "plaque"
-    if tags.get("tourism") == "artwork" or tags.get("artwork_type"):
-        return "sculpture"
-    if tags.get("natural") == "peak":
-        return "summit"
-    if tags.get("tourism") == "viewpoint":
-        return "viewpoint"
-    if (
-        tags.get("man_made") in ("tower", "water_tower", "chimney", "mast")
-        or tags.get("building") == "tower"
-    ):
-        return "tower"
-    if historic in MONUMENT_HISTORIC or tags.get("man_made") in (
-        "obelisk",
-        "monument",
-        "lighthouse",
-    ):
-        return "monument"
-    if tags.get("amenity") == "place_of_worship" or tags.get("building") in (
-        "cathedral",
-        "church",
-        "chapel",
-        "mosque",
-        "synagogue",
-        "temple",
-    ):
-        return "worship"
-    if tags.get("man_made") == "bridge" or tags.get("bridge"):
-        return "bridge"
-    if tags.get("tourism") in TOURISM_DESTINATIONS:
-        return "attraction"
-    if (
-        tags.get("building") in NAMED_BUILDINGS
-        or tags.get("amenity") in AMENITY_LANDMARKS
-        or tags.get("leisure") in LEISURE_LANDMARKS
-        or tags.get("man_made") in MANMADE_LANDMARKS
-    ):
-        return "building"
-    if tags.get("tourism") in TOURISM_LANDMARKS:
-        return "sight"
-    if tags.get("building") in FABRIC_BUILDINGS:
-        return "block"
-    if historic:
-        return "ruin"
-    if tags.get("place"):
-        return "place"
-    return "other"
-
-
-def height_m(tags: dict[str, str]) -> float:
-    """How tall OSM says this thing is, in metres, or zero when it does not say.
-
-    `height` is metres unless it names another unit, and `building:levels` is
-    the only other statement of height that is common enough to be worth
-    reading. Anything unparseable is no statement rather than a guess.
-    """
-    raw = str(tags.get("height", "")).strip().lower()
-    if raw:
-        number = re.match(r"([\d.]+)", raw)
-        if number:
-            try:
-                value = float(number.group(1))
-            except ValueError:
-                value = 0.0
-            if "'" in raw or "ft" in raw:
-                value *= 0.3048
-            if value > 0:
-                return value
-    levels = str(tags.get("building:levels", "")).strip()
-    try:
-        return float(levels) * 3.2 if levels else 0.0
-    except ValueError:
-        return 0.0
-
-
-def landmark_reach(entry: dict[str, Any], scale: float = 1.0) -> float:
-    """How far off the route this one thing is still worth naming, in metres.
-
-    Its class says what it is; its own height says whether it stands above what
-    is around it. The taller of the two answers wins, because a church tagged
-    only as a church takes the class reach and one that states a 60 m spire
-    takes the spire's.
-    """
-    cls = entry.get("cls") or entry.get("class") or "other"
-    _tier, base = LANDMARK_REACH_M.get(cls, LANDMARK_REACH_M["other"])
-    tall = height_m(entry.get("tags") or {}) * VISIBLE_PER_M
-    return min(max(base, tall), REACH_CAP_M) * scale
-
-
-def landmark_rank(entry: dict[str, Any], scale: float = 1.0) -> tuple[int, float]:
-    """What order the candidates are offered in: notability, then comfort.
-
-    Nearest-first was the old order and it is the wrong one in a city: eighty
-    nearest things in one district are eighty blue plaques, and the label agent
-    never saw the zoo it was standing next to. The first term is the tier, so
-    the things a runner navigates by come before the things they pass; the
-    second is how comfortably the thing sits inside its own reach, so within a
-    tier the nearer and the taller both rise.
-    """
-    cls = entry.get("cls") or entry.get("class") or "other"
-    tier, _base = LANDMARK_REACH_M.get(cls, LANDMARK_REACH_M["other"])
-    d = entry.get("d")
-    d = entry.get("distance_m") if d is None else d
-    return (tier, (d if d is not None else 9e9) / max(landmark_reach(entry, scale), 1.0))
-
-
-def pick_landmarks(
-    candidates: list[dict[str, Any]],
-    mode: str = "heuristic",
-    radius_m: float = 300.0,
-    cap: int = 8,
-    picks: tuple[str, ...] = (),
-) -> list[dict[str, Any]]:
-    """Choose which candidates the map labels.
-
-    The default is a heuristic, not a decision: everything whose class earns a
-    place on a map and that sits inside its own reach of the track, most
-    notable first, at most `cap` of them. A payload that names landmarks
-    replaces it outright, which is how the coach agent overrides a rule it can
-    see.
-
-    **The reach is the thing's own, not one radius for the lot.** A statue is
-    worth naming from a hundred metres and a hill from six kilometres, and the
-    old flat radius could only be set for one of them; `landmark_reach` reads it
-    off the class and off whatever height OSM states. `radius_m` is now the
-    scale those reaches are stated at rather than the limit itself, so a card
-    drawn over four times the ground still stretches them all together.
-
-    Args:
-        candidates: Everything the box offered, each with `n`, `cls` and `d`.
-        mode: `heuristic`, `all`, or `payload`.
-        radius_m: The scale the class reaches are read at, against
-            `LANDMARK_RADIUS_M`.
-        cap: How many the heuristic keeps.
-        picks: Names the payload chose.
-
-    Returns:
-        The chosen candidates, most notable first.
-    """
-    scale = radius_m / LANDMARK_RADIUS_M
-    named = {c["n"] for c in candidates if c["n"]}
-    if picks:
-        wanted = {p for p in picks}
-        chosen = [c for c in candidates if c["n"] in wanted]
-        missing = sorted(wanted - named)
-        for entry in chosen:
-            entry["picked"] = True
-        if mode == "payload" or picks:
-            return sorted(chosen, key=lambda c: landmark_rank(c, scale)) + [
-                {"n": name, "cls": "missing", "d": 0.0, "x": None, "y": None, "missing": True}
-                for name in missing
-            ]
-    if mode == "all":
-        return sorted((c for c in candidates if c["n"]), key=lambda c: landmark_rank(c, scale))
-    keep = [
-        c
-        for c in candidates
-        if c["n"] and LANDMARK_CLASSES.get(c["cls"], False) and c["d"] <= landmark_reach(c, scale)
-    ]
-    keep.sort(key=lambda c: landmark_rank(c, scale))
-    return keep[:cap]
-
 
 # --------------------------------------------------------------------------- assembly
 
@@ -1654,6 +1377,8 @@ def basemap(
         out.update(_relief_layers(elev_file, proj, clip, options, derived, index))
         out["sources"].append("SRTM 30 m via OpenTopoData")
     out["places"] = _place_marks(places, proj, clip)
+    from pyntpot.maps.candidates.landmarks import pick_landmarks
+
     out["landmarks"] = pick_landmarks(
         out.get("landmark_candidates", []),
         mode=options.landmarks,
@@ -1843,6 +1568,8 @@ def _osm_layers(
     Returns:
         The vector layers, in metres.
     """
+    from pyntpot.maps.candidates.landmark_classes import OFFERED_CLASSES, classify
+
     payload = json.loads(path.read_text())
     within = derived["interaction_m"]
     run_m = derived["interaction_run_m"]
@@ -3059,6 +2786,7 @@ def journal_layers(
         The basemap in card metres, or None when nothing is cached for this box.
     """
     from pyntpot.maps.basemap import Basemap, Layers, River, Road
+    from pyntpot.maps.candidates.landmarks import rank_landmarks
     from pyntpot.maps.card import Card
     from pyntpot.maps.projection import track_projection
 
@@ -3223,7 +2951,9 @@ def journal_layers(
         ribbon_fitted_m=geometry["ribbon_fitted_m"],
         track=tuple(pts),
         places=tuple(base.get("places", [])),
-        candidates=tuple(journal_candidates(base, proj)),
+        candidates=tuple(
+            c.detail for c in rank_landmarks(base.get("landmark_candidates", []), proj)
+        ),
         sources=tuple(base.get("sources", [])),
     )
 
@@ -3245,538 +2975,13 @@ def parse_path(d: str) -> list[list[Pt]]:
     return out
 
 
-# --------------------------------------------------------------------------- candidates
-
-
-def journal_candidates(
-    base: dict[str, Any], proj: Projection, cap: int = LANDMARK_CAP
-) -> list[dict[str, Any]]:
-    """Every named thing near the track, with its position both ways.
-
-    This is the list the label agent picks from, so it carries latitude and
-    longitude as well as metres, how far off the route each one sits, and how
-    far off it could sit and still be worth naming.
-
-    **The order is notability, not distance.** Nearest-first was what the list
-    had always been, and in a city it is a list of plaques: eighty nearest
-    things can fail to reach out of one district, so a zoo is not offered and a
-    drinking fountain is. `landmark_rank` puts the things
-    a runner navigates by first and, inside a tier, the ones sitting most
-    comfortably inside their own reach.
-    """
-    out = []
-    for c in base.get("landmark_candidates", []):
-        if not c.get("n") or c.get("x") is None:
-            continue
-        clat, clng = proj.inverse(c["x"], c["y"])
-        reach = landmark_reach(c)
-        d = c.get("d")
-        out.append(
-            {
-                "name": c["n"],
-                "class": c.get("cls", ""),
-                "lat": round(clat, 6),
-                "lng": round(clng, 6),
-                "x": c["x"],
-                "y": c["y"],
-                "distance_m": d,
-                # How far off the route this thing is still worth naming,
-                # and whether it is inside that. A tall thing well off the
-                # route reads `notable: true` and a fountain at ten metres
-                # reads it too; a plaque at forty does not.
-                "reach_m": round(reach),
-                "notable": d is not None and d <= reach,
-                "tags": c.get("tags", {}),
-            }
-        )
-    out.sort(key=landmark_rank)
-    return out[:cap]
-
-
-GPX_ELEVATION = re.compile(r'lat="([-\d.]+)"\s+lon="([-\d.]+)"[^>]*>\s*<ele>([-\d.]+)</ele>')
-
-
-def read_gpx_elevation(path: Path) -> list[float]:
-    """Elevations from a GPX track, or an empty list when it carries none."""
-    return [float(e) for _, _, e in GPX_ELEVATION.findall(path.read_text())]
-
-
-def haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-    """Great-circle distance in metres between two coordinates."""
-    r = 6371000.0
-    p1, p2 = math.radians(lat1), math.radians(lat2)
-    dp = math.radians(lat2 - lat1)
-    dl = math.radians(lng2 - lng1)
-    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
-    return 2 * r * math.asin(math.sqrt(a))
-
-
-def bearing(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-    """Initial compass bearing in degrees from one coordinate to another."""
-    p1, p2 = math.radians(lat1), math.radians(lat2)
-    dl = math.radians(lng2 - lng1)
-    y = math.sin(dl) * math.cos(p2)
-    x = math.cos(p1) * math.sin(p2) - math.sin(p1) * math.cos(p2) * math.cos(dl)
-    return (math.degrees(math.atan2(y, x)) + 360.0) % 360.0
-
-
-#: The eight points a rider actually says out loud. Sixteen is a chart bearing,
-#: not a description of which way a road went.
-COMPASS = ("north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west")
-
-
-def compass(bearing_deg: float) -> str:
-    """The eight-point compass word for a bearing."""
-    return COMPASS[int((bearing_deg + 22.5) // 45) % 8]
-
-
-def cumulative(lat: list[float], lng: list[float]) -> list[float]:
-    """Metres travelled at each track point, starting at zero."""
-    out = [0.0]
-    for i in range(1, min(len(lat), len(lng))):
-        out.append(out[-1] + haversine(lat[i - 1], lng[i - 1], lat[i], lng[i]))
-    return out
-
-
-def _felt_span(
-    dist: list[float], ele: list[float], a: int, b: int, flat_grade: float
-) -> tuple[int, int]:
-    """Trim ground flatter than `flat_grade` off both ends of a rise.
-
-    The detector finds a rise by walking forward from the first sample that goes
-    up at all, so a kilometre of valley floor that drifts up two metres is
-    inside the climb and its start point is a kilometre before the pitch. This
-    keeps the sub-span that maximises `gain - flat_grade * length`, which is the
-    same as saying: ground flatter than `flat_grade` at either end is approach
-    or run-out, not climb.
-
-    Args:
-        dist: Cumulative metres at each sample.
-        ele: Elevation at each sample.
-        a: First sample of the detected rise.
-        b: Its summit sample.
-        flat_grade: The gradient below which ground stops counting, as a fraction.
-
-    Returns:
-        The first and last sample of the felt climb.
-    """
-    best_start, best_value = a, flat_grade * dist[a] - ele[a]
-    span, score = (a, b), -math.inf
-    for e in range(a + 1, b + 1):
-        gain = (ele[e] - ele[best_start]) - flat_grade * (dist[e] - dist[best_start])
-        if gain > score:
-            span, score = (best_start, e), gain
-        value = flat_grade * dist[e] - ele[e]
-        if value > best_value:
-            best_value, best_start = value, e
-    return span
-
-
-def _steepest(
-    dist: list[float], ele: list[float], a: int, b: int, window_m: float
-) -> tuple[float, float]:
-    """The steepest continuous `window_m` inside a span: its gradient and where.
-
-    Returns:
-        Percent gradient and the kilometre it starts at, or (0.0, 0.0) when the
-        span is shorter than the window.
-    """
-    best, at, e = 0.0, 0.0, a
-    for s in range(a, b):
-        while e < b and dist[e] - dist[s] < window_m:
-            e += 1
-        run = dist[e] - dist[s]
-        if run < window_m * 0.9:
-            break
-        grade = (ele[e] - ele[s]) / run
-        if grade > best:
-            best, at = grade, dist[s]
-    return round(best * 100, 1), round(at / 1000, 2)
-
-
-def climbs(
-    lat: list[float],
-    lng: list[float],
-    ele: list[float],
-    min_gain_m: float = 60.0,
-    max_drop_m: float = 15.0,
-    flat_grade: float = 0.01,
-) -> list[dict[str, Any]]:
-    """Sustained rises in a track: where it climbed, how far, and how steeply.
-
-    Detection is an envelope: a rise of at least `min_gain_m` that never gives
-    back `max_drop_m` on the way up. What is reported is the **felt** climb
-    inside that envelope, with any approach or run-out flatter than `flat_grade`
-    trimmed off, because the envelope's own start is wherever the ground first
-    ticked upwards and that can be a kilometre of valley floor before the pitch.
-    An envelope can begin 0.98 km and 0.6 m below a climb's real foot, which
-    puts its label a kilometre up the road from the climb on the painted map.
-
-    Naming a climb is the label agent's judgement; this says where it is, how
-    hard it was, and how it ranks in the session.
-
-    Args:
-        lat: Track latitudes.
-        lng: Track longitudes.
-        ele: Track elevations in metres, the same length.
-        min_gain_m: Metres of gain a rise needs before it counts.
-        max_drop_m: Metres of give-back that ends one.
-        flat_grade: Gradient, as a fraction, below which ground at either end of
-            a rise is approach or run-out rather than climb.
-
-    Returns:
-        One entry per climb, in the order they were ridden or run, each carrying
-        its felt span, its gradient shape, and its rank in the session.
-    """
-    n = min(len(lat), len(lng), len(ele))
-    if n < 3:
-        return []
-    dist = cumulative(lat[:n], lng[:n])
-    spans: list[tuple[int, int, int, int]] = []
-    i = 0
-    while i < n - 1:
-        if ele[i + 1] <= ele[i]:
-            i += 1
-            continue
-        start, peak_ele, peak = i, ele[i], i
-        j = i + 1
-        while j < n:
-            if ele[j] > peak_ele:
-                peak_ele, peak = ele[j], j
-            elif peak_ele - ele[j] >= max_drop_m:
-                break
-            j += 1
-        if peak_ele - ele[start] >= min_gain_m:
-            a, b = _felt_span(dist, ele, start, peak, flat_grade)
-            # A trim that eats the climb is a wrong trim: keep the envelope.
-            if ele[b] - ele[a] < min_gain_m:
-                a, b = start, peak
-            spans.append((a, b, start, peak))
-            i = peak + 1
-        else:
-            i += 1
-    total_gain = sum(ele[b] - ele[a] for a, b, _s, _p in spans) or 1.0
-    out: list[dict[str, Any]] = []
-    for a, b, start, peak in spans:
-        gain = ele[b] - ele[a]
-        length = max(dist[b] - dist[a], 1.0)
-        steep_pct, steep_km = _steepest(dist, ele, a, b, 500.0)
-        out.append(
-            {
-                "start_km": round(dist[a] / 1000, 2),
-                "end_km": round(dist[b] / 1000, 2),
-                "gain_m": round(gain),
-                "length_km": round(length / 1000, 2),
-                "avg_grade_pct": round(gain / length * 100, 1),
-                "steepest_500m_pct": steep_pct,
-                "steepest_500m_km": steep_km,
-                "bottom_ele_m": round(ele[a]),
-                "top_ele_m": round(ele[b]),
-                "approach_trimmed_km": round((dist[a] - dist[start]) / 1000, 2),
-                "runout_trimmed_km": round((dist[peak] - dist[b]) / 1000, 2),
-                "share_of_climbing_pct": round(gain / total_gain * 100),
-                "position_pct": round(dist[a] / max(dist[-1], 1.0) * 100),
-                "heading": compass(bearing(lat[a], lng[a], lat[b], lng[b])),
-                "bearing_deg": round(bearing(lat[a], lng[a], lat[b], lng[b])),
-                "start_lat": round(lat[a], 6),
-                "start_lng": round(lng[a], 6),
-                "end_lat": round(lat[b], 6),
-                "end_lng": round(lng[b], 6),
-                "_a": a,
-                "_b": b,
-            }
-        )
-    by_gain = sorted(out, key=lambda c: -c["gain_m"])
-    by_grade = sorted(out, key=lambda c: -c["avg_grade_pct"])
-    for climb in out:
-        climb["rank_by_gain"] = by_gain.index(climb) + 1
-        climb["rank_by_steepness"] = by_grade.index(climb) + 1
-        climb["of_climbs"] = len(out)
-    return out
-
-
-# ------------------------------------------------------------------ climb grounding
-
-
-def _cell_index(ways: list[dict[str, Any]], cell_m: float) -> dict[tuple[int, int], list[int]]:
-    """Which ways touch which grid cell, so a point only tests its neighbours."""
-    grid: dict[tuple[int, int], list[int]] = {}
-    for wi, way in enumerate(ways):
-        pts = way["pts"]
-        for (ax, ay), (bx, by) in zip(pts, pts[1:], strict=False):
-            steps = int(math.hypot(bx - ax, by - ay) // cell_m) + 1
-            for s in range(steps + 1):
-                t = s / steps
-                key = (int((ax + (bx - ax) * t) // cell_m), int((ay + (by - ay) * t) // cell_m))
-                bucket = grid.setdefault(key, [])
-                if not bucket or bucket[-1] != wi:
-                    bucket.append(wi)
-    return grid
-
-
-def _point_to_line(px: float, py: float, pts: list[Pt]) -> float:
-    """Metres from a point to a polyline."""
-    best = math.inf
-    for (ax, ay), (bx, by) in zip(pts, pts[1:], strict=False):
-        vx, vy = bx - ax, by - ay
-        square = vx * vx + vy * vy
-        t = 0.0 if square == 0 else max(0.0, min(1.0, ((px - ax) * vx + (py - ay) * vy) / square))
-        best = min(best, math.hypot(px - (ax + t * vx), py - (ay + t * vy)))
-    return best
-
-
-def named_roads(payload: dict[str, Any], proj: Projection) -> list[dict[str, Any]]:
-    """Every named or numbered road in the cached OSM payload, projected.
-
-    Overpass already returns these: the map draws them, and the label agent was
-    never shown them, which is why a climb could only ever be named after a
-    monument that happened to sit near it. A road number is often the most
-    honest name a climb has.
-    """
-    out = []
-    for entry in payload.get("elements", []):
-        tags = entry.get("tags") or {}
-        if not tags.get("highway"):
-            continue
-        name = tags.get("name") or tags.get("ref")
-        geom = entry.get("geometry") or []
-        if not name or len(geom) < 2:
-            continue
-        out.append(
-            {
-                "name": name,
-                "ref": tags.get("ref", ""),
-                "kind": tags["highway"],
-                "pts": [proj(p["lat"], p["lon"]) for p in geom],
-            }
-        )
-    return out
-
-
-def road_run(
-    ways: list[dict[str, Any]],
-    grid: dict[tuple[int, int], list[int]],
-    track: list[Pt],
-    dist: list[float],
-    a: int,
-    b: int,
-    cell_m: float = 200.0,
-    snap_m: float = 25.0,
-    step_m: float = 50.0,
-) -> list[dict[str, Any]]:
-    """The named roads one stretch of track actually runs along, in order.
-
-    Args:
-        ways: `named_roads` output.
-        grid: Its `_cell_index`.
-        track: The whole track in metres.
-        dist: Cumulative metres per track point.
-        a: First sample of the stretch.
-        b: Last sample of the stretch.
-        cell_m: The index's cell size.
-        snap_m: How near a way has to be to count as the road being ridden.
-        step_m: How often along the stretch to ask.
-
-    Returns:
-        One entry per named road, longest first, with the metres run on it.
-    """
-    metres: dict[str, float] = {}
-    order: list[str] = []
-    i, last = a, a
-    while i <= b:
-        px, py = track[i]
-        cx, cy = int(px // cell_m), int(py // cell_m)
-        near: set[int] = set()
-        for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                near.update(grid.get((cx + dx, cy + dy), ()))
-        best, hit = snap_m, None
-        for wi in near:
-            gap = _point_to_line(px, py, ways[wi]["pts"])
-            if gap < best:
-                best, hit = gap, ways[wi]["name"]
-        if hit:
-            metres[hit] = metres.get(hit, 0.0) + (dist[i] - dist[last])
-            if not order or order[-1] != hit:
-                order.append(hit)
-        last = i
-        if i == b:
-            break
-        while i < b and dist[i] - dist[last] < step_m:
-            i += 1
-    ranked = sorted(metres.items(), key=lambda kv: -kv[1])
-    return [
-        {"name": name, "metres": round(run), "order": order.index(name) + 1}
-        for name, run in ranked
-        if run >= 100
-    ]
-
-
-def route_places(
-    payload: dict[str, Any],
-    proj: Projection,
-    track: list[Pt],
-    dist: list[float],
-    near_route_m: float = 700.0,
-) -> list[dict[str, Any]]:
-    """Every settlement the route ran past, in the order it passed them.
-
-    This is the vocabulary a rider uses for a climb: out of one village, up to
-    the next. A straight-line nearest place is not that, and picking one is how
-    a climb gets named after somewhere the route never went.
-
-    Args:
-        payload: The cached Overpass payload.
-        proj: The activity's projection.
-        track: The track in metres.
-        dist: Cumulative metres per track point.
-        near_route_m: How near the route a settlement has to come to count.
-
-    Returns:
-        One entry per settlement, ordered by where the route came closest to it.
-    """
-    out = []
-    for entry in payload.get("elements", []):
-        tags = entry.get("tags") or {}
-        kind = tags.get("place", "")
-        if kind not in ("city", "town", "village", "hamlet", "suburb") or not tags.get("name"):
-            continue
-        gx, gy = proj(entry["lat"], entry["lon"])
-        best, at = math.inf, 0
-        for i, (px, py) in enumerate(track):
-            gap = math.hypot(px - gx, py - gy)
-            if gap < best:
-                best, at = gap, i
-        if best > near_route_m:
-            continue
-        out.append(
-            {
-                "name": tags["name"],
-                "kind": kind,
-                "km": round(dist[at] / 1000, 2),
-                "off_route_m": round(best),
-                "lat": entry["lat"],
-                "lng": entry["lon"],
-                "_at": at,
-            }
-        )
-    out.sort(key=lambda p: p["_at"])
-    return out
-
-
-def _place_view(
-    place: dict[str, Any], keys: tuple[str, ...] = ("name", "kind", "km", "off_route_m")
-) -> dict[str, Any]:
-    """One settlement as the label agent sees it, without the track index."""
-    return {k: place[k] for k in keys}
-
-
-def _near_places(
-    places: list[dict[str, Any]], plat: float, plng: float, keep: int = 3
-) -> list[dict[str, Any]]:
-    """The nearest settlements to one point, with how far and which way."""
-    ranked = sorted(
-        ((haversine(plat, plng, p["lat"], p["lng"]), p) for p in places), key=lambda row: row[0]
-    )[:keep]
-    return [
-        {
-            "name": p["name"],
-            "kind": p["kind"],
-            "distance_m": round(gap),
-            "direction": compass(bearing(plat, plng, p["lat"], p["lng"])),
-        }
-        for gap, p in ranked
-    ]
-
-
-def ground_climbs(
-    climbs_: list[dict[str, Any]],
-    places: list[dict[str, Any]],
-    candidates: list[dict[str, Any]],
-    ways: list[dict[str, Any]],
-    track: list[Pt],
-    dist: list[float],
-    feature_m: float = 600.0,
-    foot_m: float = 300.0,
-) -> None:
-    """Give every climb the language a rider would use for it, in place.
-
-    Four grounds, in the order they are worth having: where the route was before
-    the climb and where it got to after it (`from`, `through`, `to`), the roads
-    the climb runs on, the settlements nearest each end whichever way the route
-    went, and any named feature beside the climb itself. None of them is a
-    template to fill in. A climb with nothing but `from` and `to` is still
-    nameable; a climb with none of them is honestly nameless and says so.
-
-    Every one of these carries its own distance, and that is the point:
-    `from.km_before_climb` says how far back the route was when it passed that
-    settlement, so a settlement kilometres behind the foot cannot be read as
-    where the climb starts. Naming a climb after the last town the route went
-    through, whatever the distance, is the error this block exists to stop.
-
-    Args:
-        climbs_: `climbs()` output, mutated.
-        places: `route_places()` output.
-        candidates: `journal_candidates()` output.
-        ways: `named_roads()` output.
-        track: The track in metres.
-        dist: Cumulative metres per track point.
-        feature_m: How near a climb a named feature has to be to be offered.
-        foot_m: A settlement this near the foot or the top, measured along the
-            route, belongs to that end rather than to the middle of the climb.
-            A village at the bottom of a hill is what the climb is out of, and a
-            few metres either side of the first pedal stroke should not decide
-            that. `km_before_climb` and `km_after_top` go slightly negative when
-            it does, which is the honest reading: the route reached it just
-            inside the climb.
-    """
-    grid = _cell_index(ways, 200.0) if ways else {}
-    for climb in climbs_:
-        a, b = climb.pop("_a"), climb.pop("_b")
-        foot, top = dist[a] + foot_m, dist[b] - foot_m
-        before = [p for p in places if dist[p["_at"]] <= foot]
-        inside = [p for p in places if foot < dist[p["_at"]] < top]
-        after = [p for p in places if dist[p["_at"]] >= top]
-        climb["from"] = (
-            {
-                **_place_view(before[-1]),
-                "km_before_climb": round((dist[a] - dist[before[-1]["_at"]]) / 1000, 2),
-            }
-            if before
-            else None
-        )
-        climb["through"] = [_place_view(p) for p in inside]
-        climb["to"] = (
-            {
-                **_place_view(after[0]),
-                "km_after_top": round((dist[after[0]["_at"]] - dist[b]) / 1000, 2),
-            }
-            if after
-            else None
-        )
-        climb["near_start"] = _near_places(places, climb["start_lat"], climb["start_lng"])
-        climb["near_top"] = _near_places(places, climb["end_lat"], climb["end_lng"])
-        climb["roads"] = road_run(ways, grid, track, dist, a, b) if ways else []
-        stretch = track[a : b + 1] or track[a : a + 1]
-        features = []
-        for cand in candidates:
-            if cand["class"] == "place" or cand["x"] is None:
-                continue
-            gap = min(math.hypot(cand["x"] - px, cand["y"] - py) for px, py in stretch)
-            if gap <= feature_m:
-                features.append(
-                    {"name": cand["name"], "class": cand["class"], "distance_m": round(gap)}
-                )
-        features.sort(key=lambda f: f["distance_m"])
-        climb["features"] = features[:4]
-
-
 #: Metres of ground kept around the track's bounding box for the candidates.
 CANDIDATE_CLIP_MARGIN_M = 2600.0
 
 
 def candidate_basemap() -> BasemapStyle:
     """What `landmark_export` draws: every landmark, no relief, no generalisation."""
+    from pyntpot.maps.candidates.landmark_classes import LANDMARK_CAP
     from pyntpot.maps.style_groups import BasemapStyle
 
     return replace(
@@ -3820,25 +3025,19 @@ def landmark_export(
         `route` (the session's totals and the settlements it passed, in order),
         `climbs` (each grounded in that route) and `candidates`.
     """
+    from pyntpot.maps.candidates.climbs import cumulative, rank_climbs
+    from pyntpot.maps.candidates.landmarks import rank_landmarks
+    from pyntpot.maps.candidates.places import ground_climbs, place_view, rank_places
+    from pyntpot.maps.candidates.roads import named_roads
     from pyntpot.maps.projection import track_projection
+    from pyntpot.maps.track import Track
 
     proj, pts = track_projection(lat, lng, route)
+    line = tuple(pts)
+    track = Track(lat=tuple(lat), lng=tuple(lng), ele=tuple(ele) if ele else None)
     dist = cumulative(lat, lng)
-    found = climbs(lat, lng, ele or [])
-    out: dict[str, Any] = {
-        "id": key,
-        "points": len(lat),
-        "route": {
-            "total_km": round(dist[-1] / 1000, 2) if dist else 0.0,
-            # Not the session's ascent: raw GPX sample-to-sample gain runs well
-            # above the recorded figure, so the only climbing figure stated here
-            # is the one this module actually defines.
-            "sustained_ascent_m": round(sum(c["gain_m"] for c in found)),
-            "settlements": [],
-        },
-        "climbs": found,
-        "candidates": [],
-    }
+    found = rank_climbs(track, line)
+    landmarks = []
     base = basemap(
         key,
         lat,
@@ -3850,17 +3049,25 @@ def landmark_export(
         clip_margin_m=CANDIDATE_CLIP_MARGIN_M,
     )
     if base is not None:
-        out["candidates"] = journal_candidates(base, proj)
+        landmarks = rank_landmarks(base.get("landmark_candidates", []), proj)
+    settlements = []
     payload_path = overpass_path(key, cache_dir)
     if payload_path.exists():
         payload = json.loads(payload_path.read_text())
-        places = route_places(payload, proj, pts, dist)
-        out["route"]["settlements"] = [
-            _place_view(p, ("name", "kind", "km", "off_route_m")) for p in places
-        ]
-        ground_climbs(found, places, out["candidates"], named_roads(payload, proj), pts, dist)
-    else:
-        for climb in found:
-            climb.pop("_a", None)
-            climb.pop("_b", None)
-    return out
+        passed = rank_places(payload, proj, track, line)
+        settlements = [place_view(p.detail) for p in passed]
+        found = ground_climbs(found, passed, landmarks, named_roads(payload, proj), track, line)
+    return {
+        "id": key,
+        "points": len(lat),
+        "route": {
+            "total_km": round(dist[-1] / 1000, 2) if dist else 0.0,
+            # Not the session's ascent: raw GPX sample-to-sample gain runs well
+            # above the recorded figure, so the only climbing figure stated here
+            # is the one this module actually defines.
+            "sustained_ascent_m": round(sum(c.detail["gain_m"] for c in found)),
+            "settlements": settlements,
+        },
+        "climbs": [dict(c.detail) for c in found],
+        "candidates": [dict(c.detail) for c in landmarks],
+    }

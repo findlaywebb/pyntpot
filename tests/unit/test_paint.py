@@ -361,62 +361,6 @@ def test_a_box_with_no_land_cover_cached_is_bare_paper(tmp_path):
     assert geo.cover_rings("iNONE", proj, (-100.0, -100.0, 100.0, 100.0), 2.0, tmp_path) == {}
 
 
-# --------------------------------------------------------------------------- climbs
-
-
-def test_a_climb_is_a_rise_that_never_gives_back():
-    """Sixty metres up, with no fifteen-metre drop on the way, is a climb."""
-    lat = [51.225 + 4e-4 * i for i in range(40)]
-    lng = [-3.840] * 40
-    ele = [100.0 + 4.0 * i for i in range(20)] + [180.0 - 4.0 * i for i in range(20)]
-    found = geo.climbs(lat, lng, ele)
-    assert len(found) == 1
-    assert found[0]["gain_m"] == 80
-    assert found[0]["start_km"] < found[0]["end_km"]
-
-
-def test_a_bumpy_flat_is_not_a_climb():
-    """Noise is not terrain: nothing under the threshold is offered as a climb."""
-    lat = [51.225 + 4e-4 * i for i in range(40)]
-    lng = [-3.840] * 40
-    ele = [100.0 + (i % 4) for i in range(40)]
-    assert geo.climbs(lat, lng, ele) == []
-
-
-def test_a_flat_run_in_is_not_part_of_the_climb():
-    """A climb starts where the pitch does, not where the valley last ticked up.
-
-    Twenty samples of valley floor drifting up a metre, then a real pitch. The
-    detector's own span begins on the floor; what is reported must not, because
-    the start point is where the label is pinned on the map.
-    """
-    lat = [51.225 + 4e-4 * i for i in range(50)]
-    lng = [-3.840] * 50
-    ele = [100.0 + 0.05 * i for i in range(20)] + [101.0 + 5.0 * i for i in range(30)]
-    found = geo.climbs(lat, lng, ele)
-    assert len(found) == 1
-    climb = found[0]
-    assert climb["approach_trimmed_km"] > 0.8, "the flat run-in was kept"
-    assert climb["start_km"] > 0.8
-    assert climb["bottom_ele_m"] == 101
-    assert climb["avg_grade_pct"] > 10  # the pitch's own gradient, not the span's
-    assert climb["start_lat"] > lat[10], "the pin is still down on the valley floor"
-
-
-def test_a_plaque_is_not_a_monument():
-    """A blue plaque carries the name of the wall it is on, so it names nothing.
-
-    OpenStreetMap tags one `historic=memorial` with the building's own name, and
-    that is how a Forest of Bowland climb came to be named after a war memorial 112 m
-    from its foot. Classed apart, it stays readable and stops being a landmark.
-    """
-    assert geo.classify({"historic": "memorial", "memorial": "plaque"}) == "plaque"
-    assert geo.classify({"historic": "memorial", "memorial": "blue_plaque"}) == "plaque"
-    assert geo.classify({"historic": "memorial", "memorial": "war_memorial"}) == "monument"
-    assert geo.classify({"historic": "memorial"}) == "monument"
-    assert geo.LANDMARK_CLASSES["plaque"] is False
-
-
 # --------------------------------------------------------------------------- real data
 
 
@@ -451,7 +395,7 @@ def test_the_real_box_offers_candidates_and_no_climb_without_elevation():
         KEY,
         lat,
         lng,
-        geo.read_gpx_elevation(FIXTURE_GPX),
+        None,
         cache_dir=FIXTURE_DIR,
         places=[],
     )
