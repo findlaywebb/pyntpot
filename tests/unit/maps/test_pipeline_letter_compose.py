@@ -75,8 +75,18 @@ class TestDeleted:
 
     @pytest.mark.parametrize("module", DELETED, ids=DELETED)
     def test_the_module_is_gone(self, module: str) -> None:
-        """The deleted port package can no longer be found."""
-        assert importlib.util.find_spec(module) is None
+        """The deleted port package has no source left to import."""
+        spec = importlib.util.find_spec(module)
+        if spec is None:
+            return
+        # A stray __pycache__ leaves an empty namespace package: no origin, no sources.
+        assert spec.origin is None
+        sources = [
+            path
+            for location in spec.submodule_search_locations or []
+            for path in Path(location).rglob("*.py")
+        ]
+        assert sources == []
 
 
 @pytest.mark.golden
