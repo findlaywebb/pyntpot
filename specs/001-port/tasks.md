@@ -68,22 +68,22 @@ recorded in ADR 0006, not a re-baseline.
 - [ ] P3.8 `OverpassFeatures` with a query budget and copied query templates (parallel with P3.9, P3.10)
 - [ ] P3.9 `OpenTopoData` with a call budget (parallel with P3.8, P3.10)
 - [ ] P3.10 Fetch `Cache` keyed by box, margin and providers (parallel with P3.8, P3.9)
-- [ ] P3.11a Style groups by the lowest reading layer, the field-to-group table, effective basemap options, fixed route ink; ADR 0005 (parallel line 3, A6)
+- [ ] P3.11a Style groups from the field-to-group table pinned in the plan (base or lettering by reader, layer, section; `CONSUMER_ONLY` for `PaintStyle` only), effective basemap options (all 27), fixed route ink; ADR 0005 (parallel line 3, A6)
 - [ ] P3.11b `Style` model, the TOML theme, pinned digests, unwired (parallel line 3, A6)
 - [ ] P3.12 Wire the style, final hash form; opens the regeneration window, step 1 byte-identical (A6, A7)
 - [ ] P3.13 Lettering reads the basemap, final manifest keys (step 2, byte-identical); drop the seam's one-decimal round trip, `paint.parse_d` and `route0`, keeping `geo.parse_path` for `basemap()`'s output (step 3, bounded) (A4, window)
 - [ ] P3.14 Merge the polyline duplicates that compute the same thing, one gated step each; keep the rest apart, recorded (A5, window)
 - [ ] P3.15 Regenerate the goldens once; ADR 0006; push the window to `main` (closes the window)
-- [ ] P3.16 Façade `fetch` (takes the style) and `paint`; `Plates.route_px` and `strands` (the separated route); fixture payloads renamed to cache keys
-- [ ] P3.17 Façade `letter` and `compose` on `Plates.strands`; `Annotations`; lettering shims, `alphabet_sheet` and `sport_from_gpx` deleted; tests use `flat_measure` (A3 shape)
+- [ ] P3.16 Façade `fetch` (takes the style, raises `FetchError`) and `paint`; `Plates.route_px` and `strands` (the separated route, default `()`); `paint_fixture` on `fetch` and `paint`; `paint_activity` deleted; fixture payloads renamed to cache keys
+- [ ] P3.17 Façade `letter` and raster `compose` on `Plates.strands`; `mapcard.compose` deleted; `paint_fixture` on the four stages; `Annotations`; lettering shims, `alphabet_sheet` and `sport_from_gpx` deleted; tests use `flat_measure` (A3 shape)
 - [ ] P3.18 Attribution drawn by `compose` from `Basemap.credits`
 - [ ] P3.19 `pyntpot map` CLI
 - [ ] P3.20 Top-level exports and `__version__`; ADR 0007
-- [ ] P3.21 Golden parity driven through the façade; `paint_activity` deleted
+- [ ] P3.21 Golden harness imports only the public names; no `_port` import under `tests/golden`
 
 ## P4. Split and layer
 
-Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table. After the second review (`33f12be`) P4.16 and P4.17 swapped content (spans before placement, bottom-up) and P3.11 split into P3.11a and P3.11b.
+Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table. After the second review (`33f12be`) P4.16 and P4.17 swapped content (spans before placement, bottom-up) and P3.11 split into P3.11a and P3.11b. After the third review (`f63bb61`) slice IDs are unchanged; `paint_activity`'s deletion moved from P3.21 to P3.16.
 
 - [ ] P4.1 Design the hand's setting; ADR 0008 (A2)
 - [ ] P4.2 Ink engine part 1: noise, sheet, raster, io, wash, pigment (A1)
@@ -99,7 +99,7 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 - [ ] P4.12 Design the candidates facility; ADR 0009 (A8)
 - [ ] P4.13 Candidates facility in `maps/candidates/` (A8)
 - [ ] P4.14 Split geo part 1: rings, SVG paths, track index, relief, generalisation, rivers
-- [ ] P4.15 Split geo part 2: OSM layers, cover, assembly, `landmark_export`; delete `geo.py`
+- [ ] P4.15 Split geo part 2: OSM layers, cover, assembly; `landmark_export` into `maps/candidates/export.py`; delete `geo.py`
 - [ ] P4.16 Split labels part 1: label types and spans
 - [ ] P4.17 Split labels part 2: placement
 - [ ] P4.18 Split labels part 3: picks, compose, strands; delete the port modules (A3)

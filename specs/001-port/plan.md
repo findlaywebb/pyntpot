@@ -20,7 +20,7 @@ src/pyntpot/_port/__init__.py                                    (deleted at P4.
 src/pyntpot/_port/paint.py        [-> ink/{polyline,chains}.py (P3.3) + ink/{noise,sheet,raster,io,wash,pigment}.py (P4.2) + ink/{brush,tip,stamp,pad}.py incl. the brush-sheet tables (P4.3) + letters/nib.py (P4.6) + maps/cache.py plate cache (P4.7) + maps/painter/{job,brushes,water,cover,wood}.py (P4.8) + maps/painter/{relief,fluid,pen,ribbon,paper,plates}.py (P4.9); PaintStyle deleted at P4.11 with the file]
 src/pyntpot/_port/outlinefont.py  [-> letters/{font,skeleton,trace}.py (P4.4)]
 src/pyntpot/_port/labels.py       [-> ink/polyline.py (P3.3) + tests/support/measure.py flat_measure (P3.17) + letters/setting.py Mark, DEFAULT_LINE_PX (P4.1) + letters/hand.py + maps/lettering_marks.py (P4.5) + maps/lettering/{label,span_clear,span_line,span_sides,spans}.py (P4.16) + maps/lettering/{placement_costs,placement_along,placement}.py (P4.17) + maps/lettering/picks.py (P4.18)]
-src/pyntpot/_port/geo.py          [-> ink/{polyline,chains}.py (P3.3) + maps/projection.py (P3.4) + query templates copied to maps/providers/overpass.py (P3.8) + maps/candidates/* except landmark_export (P4.13) + maps/{rings,svg_path,track_index,relief,relief_strokes,generalise,rivers}.py (P4.14) + maps/{osm,cover,layers}.py and maps/candidates/landmarks.py landmark_export (P4.15)]
+src/pyntpot/_port/geo.py          [-> ink/{polyline,chains}.py (P3.3) + maps/projection.py (P3.4) + query templates copied to maps/providers/overpass.py (P3.8) + maps/candidates/* except landmark_export (P4.13) + maps/{rings,svg_path,track_index,relief,relief_strokes,generalise,rivers}.py (P4.14) + maps/{osm,cover,layers}.py and maps/candidates/export.py landmark_export (P4.15)]
 src/pyntpot/_port/mapcard.py      [-> maps/lettering.py (P3.17, -> maps/lettering/pipeline.py at P4.16) + maps/compose.py (P4.18)]
 src/pyntpot/_port/card.py         [-> maps/card.py Card frame (P3.2) + ink/polyline.py helpers (P3.3) + maps/strands.py (P4.18)]
 src/pyntpot/_port/style.py        [-> maps/style_groups.py (P4.18)]  (RouteInk + constants only)
@@ -33,7 +33,7 @@ New in P3 (final homes): ink/{__init__,polyline,chains,style}.py (+ ink/curves.p
 New in P4: letters/{setting,hand,nib,font,skeleton,trace}.py  letters/fonts/
   maps/{lettering_marks,compose,strands,osm,cover,layers,rings,svg_path,track_index,relief,relief_strokes,generalise,rivers}.py
   maps/painter/*  maps/candidates/*  maps/lettering/*
-tests/support/{paths,golden,providers,http_server,measure}.py  tests/golden/make_golden.py (run as PYTHONPATH=tests uv run python tests/golden/make_golden.py)
+tests/support/{paths,golden,manifests,providers,http_server,measure}.py  tests/golden/make_golden.py (run as PYTHONPATH=tests uv run python tests/golden/make_golden.py)
 tests/unit/{ink,letters,maps,maps/providers}/  tests/unit/maps/test_import_order.py (import rule, ADAPTERS)
 tests/unit/test_geo.py  tests/unit/test_paint.py   (shrink through P4; deleted at P4.15 and P4.18)
 tests/golden/test_parity.py  tests/golden/make_golden_old.py (historical; deleted at P9.3)
@@ -359,7 +359,11 @@ at commit `69d485f`; this section was revised after the plan review of
 `294cc69` (8 blockers, 11 majors, 12 minors) and again after the second
 review of `33f12be` (4 blockers, 6 majors, 18 minors; the P9.1 finding was
 rejected by the maintainer). Measurements quoted for the second revision
-were taken at `33f12be`.
+were taken at `33f12be`; the third review of `f63bb61` (2 blockers, 2
+majors, 13 minors) pinned the style table in P3.11a, moved
+`landmark_export` to its own module, and moved the golden harness onto
+the façade at P3.16 and P3.17, and its measurements were taken at
+`f63bb61`.
 
 **Rules every slice follows.**
 
@@ -371,6 +375,16 @@ were taken at `33f12be`.
   `tests/fixtures/lynmouth/` and synthetic coordinates inside 51.19 to 51.26 N,
   3.80 to 3.88 W (D10). Any place name in a test or example comes from the
   `CONTRIBUTING.md` list (D26).
+- A unit test that paints or letters the whole Lynmouth fixture (30 to
+  75 s; P3.16 to P3.19 add such tests) carries `@pytest.mark.golden`, the
+  registered marker for slow parity tests, so `pytest -m "not golden"` and
+  the mutation runs stay fast; G-here's golden stage still runs it. Inside
+  one test module the painted result (`Basemap`, `Plates`, `Lettering`,
+  all immutable) is one module-scoped fixture, the CLAUDE.md exception,
+  and is never repainted per test. Its assertions are exact only on
+  machine-independent values (the manifest hash, label names, point
+  counts); a pixel comparison uses `differing_fraction` and the
+  `golden_tolerance` fixture, as `test_parity.py` does.
 - New test files mirror the package: `tests/unit/maps/`, `tests/unit/ink/`,
   `tests/unit/letters/`, each a package with `__init__.py`. New test files stay
   under 400 lines even though `test_no_oversized_files` scans `src/` only.
@@ -405,8 +419,8 @@ were taken at `33f12be`.
      removes it from `ADAPTERS`. No slice adds an adapter not named here.
      Every other `maps` module is a leaf with no `_port` import: `credit`,
      `card`, `projection`, `basemap`, `plates`, `track`, `cache`,
-     `annotations`, `cli`, `providers/*`, `painter/*`, `candidates/*`,
-     `lettering/*` (except `lettering/pipeline.py`), `rings`, `svg_path`,
+     `annotations`, `cli`, `providers/*`, `painter/*`, `candidates/*`
+     (including `candidates/export.py`, P4.15), `lettering/*` (except `lettering/pipeline.py`), `rings`, `svg_path`,
      `track_index`, `relief`, `relief_strokes`, `generalise`, `rivers`,
      `osm`, `cover`, `layers`, `compose`, `strands`. The P4 move order is
      bottom-up so that this holds: a slice moves a name out of `_port` only
@@ -442,7 +456,10 @@ were taken at `33f12be`.
   every name that moved down from its listed home. A name with no caller in
   `src/` but a test caller goes beside its nearest neighbour in source order;
   a name with no caller anywhere is deleted and listed in the hand-off. The
-  tables in P4.15 and P4.18 are this rule applied at commit `33f12be`.
+  tables in P4.15 and P4.18 are this rule applied at commit `33f12be`,
+  rechecked at `f63bb61` (which moved `_soften` to `osm`, `_crossfade` to
+  `painter/wood`, `_quad_at` to `lettering_marks`, `draw_plate` to
+  `lettering/pipeline` and `landmark_export` to `candidates/export`).
 - **Owner files** implicitly include every module and test that imports,
   calls or reads a name the slice moves, renames or deletes, and every
   document that names a file the slice deletes or renames. The lists below
@@ -590,8 +607,8 @@ style digests (P3.11b's pinned literals), the field-to-group table (ADR 0005), t
 pixel inputs are frozen in form though outside the hash: the drawn route is
 `separate_strands(route_px, route_ink().px * STRAND_GAP_WIDTHS)` of the raw
 `Card.xy` image of `Basemap.track`, exactly as `mapcard.compose` computes it
-today (from P3.16 this is `Plates.strands`, and `compose`, label placement
-and the span arc length all read it); and `basemap()`'s vector output keeps
+today (from P3.16 this is `Plates.strands`, which `compose`, label
+placement and the span arc length read from P3.17); and `basemap()`'s vector output keeps
 its 0.1 m `path_d` strings, which `journal_layers` parses with
 `geo.parse_path`. That quantisation is a permanent property of the vector
 map's output, not part of the seam: P4.14 and P4.15 move `path_d` and
@@ -613,7 +630,14 @@ P3.21 ─ P4.1 ─ P4.2 ─ … ─ P4.20   (P4 is sequential)
 
 Parallel-safe groups (disjoint owner files): {P3.2 to P3.5 in sequence},
 {P3.6, then P3.7, then P3.8, P3.9 and P3.10 together}, {P3.11a, then P3.11b}. These three
-lines may run at the same time after P3.1. Every slice of all three lines
+lines may run at the same time after P3.1. Each parallel line runs in its
+own detached `git worktree` (`git worktree add --detach "$SCRATCH/line-N" main`;
+no branch is created or pushed), never in a
+shared checkout: a shared one would make the line's G-self baseline dirty
+and let its G-here see another line's half-made edits. The orchestrating
+session lands each slice by rebasing it onto `main` and re-running G-here
+there before the fast-forward push, and removes the worktree when the line
+is done. Every slice of all three lines
 lands before P3.12 opens the window; everything from P3.12 on is sequential.
 P3.1 creates every package `__init__.py` and P3.7 creates
 `tests/support/http_server.py`, so no two parallel slices create the same
@@ -712,9 +736,13 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   byte-exact; `--compare` logs six lines; a second run with
   `--compare "$SCRATCH/before" --require-identical all --require-hash equal`
   exits 0, and the same run with `--require-hash differ` exits 1 (the gate
-  options work); `baseline.json` names this commit as clean; no test under
+  options work); the `"$SCRATCH/before"` `baseline.json` names the
+  starting commit with `"dirty": false`; no test under
   `tests/golden/` imports `_port` except through `tests/support/golden.py`;
-  `grep -rn "FIXTURE_KEY" tests` is empty.
+  `grep -rn "FIXTURE_KEY" tests` is empty. After committing, the
+  orchestrating session (not the implementer, which never commits) runs
+  the script once more into `"$SCRATCH/after"` and checks that its
+  `baseline.json` names the new P3.1 commit with `"dirty": false`.
 
 #### P3.2 One card frame (A4, part 1)
 
@@ -890,21 +918,33 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
 - Owner files: create `src/pyntpot/maps/plates.py`,
   `tests/unit/maps/test_plates.py`; edit `_port/paint.py` (`paint` returns
   `Plates`, `load_plates`, `paint_activity`), `_port/mapcard.py`,
-  `_port/labels.py` (readers of `manifest[...]`: `journal_picks`,
-  `journal_heuristic`, `settlements`, `home_labels`, `road_lines`,
-  `feature_px`, `draw_plate`), `tests/support/golden.py`, unit tests,
-  `test_import_order.py`. Not converted here: `paint.label_plate` and
+  `_port/labels.py` (readers of `manifest[...]` or `manifest.get(`,
+  measured at `f63bb61`: `journal_picks`, `journal_heuristic`,
+  `settlements`, `pick_rivers`, `pick_roads`, `home_places`, `home_labels`,
+  `ground_labels`, `road_lines`, `feature_px`, `draw_plate`; in
+  `_port/mapcard.py`: `_plates`, `_route`, `compose`),
+  `tests/support/golden.py`, create `tests/support/manifests.py`
+  (`manifest_for_test(**over: Any) -> Manifest`: a small valid `Manifest`
+  with every field set, overridden by keyword, so the hand-built manifest
+  mappings in `tests/unit/test_paint.py`, about 14, at lines near 2096,
+  2579, 3293, 3446, 3486 and 3731 among them, become one builder call each
+  with the keys they set today), unit tests, `test_import_order.py`. Not converted here: `paint.label_plate` and
   `paint._dark_field` read a manifest mapping (`render`, `display`,
   `gran_px`, `dark`), and `mapcard.alphabet_sheet` hands `label_plate` a
   hand-built mapping; both keep taking a `Mapping[str, Any]` until P4.6
   gives `letters.nib.plate` typed parameters, and `draw_plate` passes
   `manifest.to_dict()`.
 - Names: `maps/plates.py`: `DarkGrid(w: int, h: int, values: tuple[tuple[float, ...], ...])`;
-  `Manifest` frozen dataclass mirroring today's `plates.json` keys one to one
+  `Manifest` frozen dataclass mirroring today's 24 `plates.json` keys
   (`key` for `id`, `hash`, `route0`, `files`, `sizes`, `bytes`, `card: Card`,
   `span_m`, `ribbon_m`, `places`, `candidates`, `label_geom`, `wet_px`,
   `gran_px`, `labels_hash`, `sources`, `dark: DarkGrid`, `wood_px`,
-  `water_px`, `timing`), with `to_json() -> str` producing the same bytes
+  `water_px`, `timing`: 20 fields, because `card: Card` stands for five
+  keys). `to_json` writes the `Card` as today's five top-level keys in
+  today's positions: `card` (the box list), `display`, `render`, `mpp`,
+  `mpp_display`, between `bytes` and `ribbon_m`; `Card.offset` is not
+  written (it is not in `plates.json` today), and `from_json` rebuilds the
+  `Card` from those five. `to_json() -> str` produces the same bytes
   the painter writes today, `to_dict() -> dict[str, Any]`
   (`json.loads(to_json())`, the mapping the label plate reads until P4.6)
   and `from_json(text: str) -> Manifest`;
@@ -1133,7 +1173,8 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   groups: `FaceStyle`, `NibStyle`, `HandStyle`, `LetteringPolicy`.
   `RouteInks` is neither (compose time only).
 - **Basemap options are the effective ones.** `BasemapStyle` holds the 27
-  `GeoOptions` fields other than `clip_margin_m`. The values the painter
+  `GeoOptions` fields other than `clip_margin_m`, read or not (rule 5
+  below). The values the painter
   actually used are the `GeoOptions` class defaults plus the inline
   overrides in `journal_layers` (`hillshade_mode="off"`, `roads="key"`,
   `rivers="key"`, `generalise=False`, `landmarks="all"`,
@@ -1145,7 +1186,7 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   `hillshade_levels` (2 against 5), and those values belong to the upstream
   consumer's vector map; ADR 0005 lists them as such for P8.
   `landmark_export`'s own option set stays with the candidates code (P4.10
-  `CANDIDATE_BASEMAP`), not in `Style`.
+  `candidate_basemap()`, `CANDIDATE_BASEMAP` from P4.15), not in `Style`.
 - **Route ink (the smaller option, chosen).** D23 fixes the resolved default
   style including `RouteInk` per sport, so `RouteInks` carries all four
   resolved inks, and `Style.route_ink()` (P3.11b) always returns
@@ -1157,50 +1198,101 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   painter does read, are `RouteStyle`, a base group. ADR 0005 records this;
   choosing an ink by sport is a later feature with its own ADR.
 - **Assignment rule** (deterministic; every P4 slice reads the result and
-  none regroups):
-  1. A field's readers are the functions that read it, each placed at its
-     **final home** in "Files and boundaries" (for example `label_brushes`
-     and `label_plate` are `letters/nib.py`, `Hand` is `letters/hand.py`,
-     `brush_from_id` is `ink/brush.py`, `journal_geometry` is
-     `maps/layers.py`). Readers through `getattr(pstyle, "...")` count.
-  2. Let L be the lowest layer among the readers (ink < letters < maps).
-     The field goes to a group of layer L or below, so every reader can
-     import it.
-  3. If any reader paints base plates (the ink engine, `maps/painter/*`,
-     `maps/layers.py` and the rest of the basemap code) the field goes to a
-     base group; lettering keys include the base hash (P4.7), so lettering
-     still sees the change. A field read by base painting and by a
-     `letters` module therefore goes to an ink group (`letters` has no base
-     group): `paper_hex` to `PaperStyle`, brush and pen fields to
-     `BrushStyle`.
-  4. Among the groups rules 2 and 3 allow, the class's section comment
-     picks one when it names one (card to `CardStyle`, ribbon to
-     `RibbonStyle`, land cover and wood to `CoverStyle`, route plate to
-     `RouteStyle`, phase 1 brush and phase 2 brush quality to `BrushStyle`,
-     phase 1 compositing and paper to `PaperStyle`, phase 2 sea and wash to
-     `WashStyle`); otherwise the first allowed group in this order:
-     `PaperStyle`, `WashStyle`, `BrushStyle`, `FaceStyle`, `NibStyle`,
-     `HandStyle`, `CardStyle`, `RibbonStyle`, `CoverStyle`, `RouteStyle`,
-     `BasemapStyle`, `LetteringPolicy`. The comment "the crisp layer, read
-     by `charts.route_track` rather than here" is not a group: those 28
-     fields follow rules 1 to 3 like any other.
-  5. A field no module under `src/` reads except through `digest`,
-     `paint_hash` or `labels_hash` key lists is consumer-only: it is left
-     out of `Style` and named in a pinned `CONSUMER_ONLY` tuple in
-     `maps/style_groups.py` and in ADR 0005. `label_font` (a CSS font
-     stack) is expected to be one of them.
-  Compute the readers with a scratch AST script over `_port` (attribute
-  reads on `style`, `pstyle`, `self.style` and `getattr` strings). Measured
-  multi-layer readers the table must get right: `label_size_px`
-  (`mapcard`, `labels`, `paint.label_brushes`: lowest letters, no base
-  reader, so `NibStyle`), `label_seed`, `label_route` (the label plate:
-  letters), `paper_hex` (painter and label plate: `PaperStyle`),
-  `display_px`, `brush_width_px` (layer code and painter: maps base
-  groups, `CardStyle` and `BrushStyle` by section).
+  none regroups). The **pinned table below is authoritative**; the rule
+  says how it was derived and is what ADR 0005 records as its reason. The
+  implementer does not recompute it: a scratch AST script over `_port`
+  (attribute reads on `style`, `pstyle`, `self.style`, and `getattr`
+  strings) only confirms that the reader list matches, and any mismatch is
+  a stop-and-report, not a regrouping. Measured at `f63bb61`.
+  1. **Readers at their final homes.** A field's readers are the functions
+     that read it, at the home the P4 slices give them (P4.2 to P4.9 name
+     every `paint.py` function's module; P4.5, P4.6, P4.15 and P4.18 the
+     rest). The readers that decide the table, and their homes:
+
+     | Reader today | Final home | Kind |
+     |---|---|---|
+     | `paint.brush_from_id`, `InkPad.__init__` | `ink/brush.py`, `ink/pad.py` | ink |
+     | `paint.composite`; `separated`, `fluid_modulate` | `ink/pigment.py`; `ink/wash.py` | ink |
+     | `paint.label_brushes`, `label_plate`, `_backing_wash`, `_pen_profile`, `_dark_field` | `letters/nib.py` | letters |
+     | `labels.Hand.__init__` | `letters/hand.py` | letters |
+     | `paint.paint` (and its nested `transp`, `bloom_arg`), `paper_plate`, `plate_brushes`, `sea_patches` | `maps/painter/*` | maps base |
+     | `geo.journal_geometry`, `journal_layers`, and every `GeoOptions` reader | `maps/layers.py`, `maps/osm.py` | maps base |
+     | `mapcard.compose`, `labels.home_labels`, `labels.named_lines` (P3.13) | `maps/lettering/*`, `maps/compose.py` | maps lettering |
+     | `labels.hand()` (`labels`), `mapcard.alphabet_sheet` | deleted (P4.5, P3.17); `letter` takes over the `labels` check in P4.5 | maps lettering |
+
+     `label_geom_tol_px` is read today by `paint.paint` (for `label_geom`),
+     but P3.13 moves that read into `labels.named_lines`, so its final
+     reader is maps lettering.
+  2. **Base or lettering.** A field with any ink or maps-base reader goes
+     to a base group. A field whose readers are all `letters` or maps
+     lettering goes to a lettering group, so no lettering-only field is in
+     `base_digest()` (A6, A7).
+  3. **Layer.** A base field with an ink or `letters` reader goes to an
+     ink group (`letters` has no base group, and `letters` may import
+     `ink`). A lettering field with a `letters` reader goes to a `letters`
+     group: `FaceStyle` if `Hand` opens the face with it (`label_face`,
+     `label_route`), `HandStyle` if `Hand` reads it otherwise
+     (`label_seed`), else `NibStyle`. A lettering field read only in maps
+     goes to `LetteringPolicy`.
+  4. **Section.** Within what rules 2 and 3 allow, the `PaintStyle`
+     section comment picks the group: the ribbon to `RibbonStyle`; land
+     cover and the wood to `CoverStyle`; the ink, phase 1 brush and phase 2
+     brush quality to `BrushStyle`; the route's own plate to `RouteStyle`;
+     phase 2 tuning and sea and phase 2 wash to `WashStyle`. Three sections
+     mix concerns and are assigned field by field in the table: the card
+     (frame, paper, encoder, seeds), phase 1 compositing and paper (paper
+     and compositing to `PaperStyle`, wet bleed, flow rim and blooms to
+     `WashStyle`, beside `bloom_strength`), and the crisp layer (rules 2
+     and 3; `dark_grid`, read only by the painter, to `CardStyle`).
+  5. **Consumer-only** (`PaintStyle` fields only). A `PaintStyle` field no
+     module under `src/` reads, except through `digest`, `paint_hash` or
+     `labels_hash` key lists, is left out of `Style` and named in a pinned
+     `CONSUMER_ONLY` tuple in `maps/style_groups.py` and in ADR 0005. Rule 5
+     does not apply to `GeoOptions`: `BasemapStyle` carries all 27 fields
+     other than `clip_margin_m`, read or not, because the effective basemap
+     options are one value of D23's resolved default style and P3.11b's
+     equality test pins all 27. Two of them have no reader in `src/`
+     (`hillshade_opacity`, `geo.py` around 77; `pick_places`, around 103);
+     they stay in `BasemapStyle` and so in `base_digest()`, and ADR 0005
+     names them as unread, kept for the upstream consumer (P8).
+
+  **The table** (173 `PaintStyle` fields plus 27 `GeoOptions` fields; each
+  group's fields in source order):
+
+  | Group | Layer | Fields |
+  |---|---|---|
+  | `PaperStyle` | ink, base | `plate_lossless`, `webp_quality`, `paper_quality`, `grid`, `grid_spacing_px`, `grid_opacity`, `paper_hex`, `paper_tooth`, `paper_worn`, `paper_vignette`, `paper_foxing`, `sheet_seed`, `km_glazing`, `pigment_transparency`, `km_transparency`, `paper_fibre`, `paper_fibre_mix`, `paper_fibre_stretch`, `paper_fibre_angle`, `paper_fibre_cell_px`, `gran_gamma` (21) |
+  | `WashStyle` | ink, base | `wet_bleed`, `wet_bleed_px`, `wet_bleed_mix`, `wet_rim_drop`, `wet_bleed_edge_mult`, `flow_rim`, `flow_rim_exp`, `flow_rim_ref_frac`, `flow_rim_frac`, `blooms`, `bloom_density`, `bloom_max`, `bloom_radius_frac`, `bloom_lift`, `bloom_warp`, `bloom_seed`, `bloom_strength`, the seven `sea_variation*` fields, `wet_close_px`, the seven `silhouette_deform*` fields, `pigment_separation`, `separation_pigments`, `separation_share`, `separation_gamma`, `separation_transparency`, `fluid_pass`, `fluid_grid`, `fluid_steps`, `fluid_relax`, `fluid_amount`, `fluid_gran`, `fluid_seed` (44) |
+  | `BrushStyle` | ink, base | `ink_seed`; every field of the ink section (`river_curve` to `brush_overrides`: `river_curve`, `major_river_rel_frac`, `minor_roads_mppd`, `blotch_m`, `dab_spacing_m`, `gran_m`, `river_mult`, `brushes`, `brush_width_px`, `coast_width_frac`, `brush_jitter_px`, `brush_press_cell_px`, `brush_wobble_px`, `brush_step`, `brush_profile_px`, `pen_load_px_frac`, `pen_pool_radius_frac`, `pen_pool_gain`, `brush_overrides`); every field of phase 1 brush (`ink_starve` to `pen_thin`, 13) and phase 2 brush quality (`ink_ss` to `bristle_drift_coherence`, 12) (45) |
+  | `FaceStyle` | letters, lettering | `label_route`, `label_face` (2) |
+  | `HandStyle` | letters, lettering | `label_seed` (1) |
+  | `NibStyle` | letters, lettering | `label_size_px`, `label_ink`, `label_brush`, `label_pen_width_px`, `label_outline_width_frac`, `label_leader_brush`, `label_leader_width_px`, `label_pen_angle_deg`, `label_pen_thin`, `label_wash`, `label_wash_alpha`, `label_wash_dark_floor`, `label_wash_spread`, `label_route_ink`, `label_water_ink`, `label_in_water_ink` (16) |
+  | `CardStyle` | maps, base | `display_px`, `supersample`, `dark_grid` (3) |
+  | `RibbonStyle` | maps, base | the ribbon section: `ribbon_k`, `ribbon_c`, `ribbon_mult`, `ribbon_min_m`, `ribbon_max_m`, `card_grow_mult`, `card_pad_frac`, `card_pad_ribbon_frac`, `card_aspect_min`, `card_aspect_max`, `ribbon_fill`, `ribbon_tear_frac`, `ribbon_tear_floor_px`, `rim_strength`, `coast_hard_mask`, `sea_to_edge` (16) |
+  | `CoverStyle` | maps, base | `dither_seed` (it seeds the wood dabs); land cover and the wood: `land_cover`, `relief`, `cover_cfg`, `pigments`, `pale_base`, `pale_pool`, `wood_texture`, `wood_dabs`, `wood_tex_scales`, `wood_tex_strengths`, `dab_spacings`, `dab_strengths` (13) |
+  | `RouteStyle` | maps, base | `route_pen`, `route_pen_brush`, `route_pen_width_px` (3) |
+  | `BasemapStyle` | maps, base | the 27 `GeoOptions` fields other than `clip_margin_m` (27) |
+  | `LetteringPolicy` | maps, lettering | `label_max`, `labels`, `label_ground`, `label_geom_tol_px`, `home_glyph` (5) |
+  | `CONSUMER_ONLY` | not in `Style` | `cover_order`, `label_font`, `label_pin_colour`, `label_glow_colour` (4) |
+
+  21 + 44 + 45 + 2 + 1 + 16 + 3 + 16 + 13 + 3 + 5 + 4 = 173. Readers that
+  cross groups, by design (each reader takes every group it reads as a
+  parameter, P4.3, P4.6): `letters/nib.py` reads `NibStyle`, `FaceStyle`
+  (`label_route`), `HandStyle` (`label_seed`), `BrushStyle` and
+  `PaperStyle`; `Hand` reads `FaceStyle` and `HandStyle`; the maps
+  lettering code reads `LetteringPolicy` and `NibStyle.label_size_px`
+  (`home_labels`, `compose`); the painter reads every base group.
+  Defaults that name a `_port.paint` constant (`PAPER`, `PIGMENTS`,
+  `TRANSPARENCY`, `COVER_CFG`) are written as literal copies: `ink` and
+  `letters` never import `_port`, and `style_groups` imports only
+  `_port.style`. The default-equality test proves the copies; P4.2 and
+  P4.8 replace them with imports of the moved constants.
 - ADR 0005 (accepted) carries the full field-to-group table (all 173
   `PaintStyle` fields and 27 `GeoOptions` fields, one row each, with the
-  reader modules that decided it), the rule above, `CONSUMER_ONLY`, the four
-  `geo` values left to the consumer, and the route-ink decision. The table
+  reader modules that decided it, copied from the pinned table above), the
+  rule above, `CONSUMER_ONLY`, the two unread `GeoOptions` fields kept in
+  `BasemapStyle`, the four `geo` values left to the consumer, and the
+  route-ink decision. The table
   is final: changing a field's group after P3.11b would move a pinned
   digest (and, for base groups, the frozen hash), so a later slice that
   finds a field it cannot reach adds a group *parameter* to its function,
@@ -1209,12 +1301,19 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   equals the `PaintStyle` field names plus the `GeoOptions` field names
   minus `clip_margin_m`, plus the four `RouteInks` fields; no field is in
   two groups; each group's dataclass defaults equal the source class
-  defaults field by field; a pinned literal mapping of the six measured
-  multi-layer fields above to their groups.
+  defaults field by field; for each group, the tuple of its field names
+  (`dataclasses.fields`, in order) equals a pinned literal copied from the
+  table above, which pins the whole table; `CONSUMER_ONLY` equals its
+  pinned four names; and, named for the reader, the multi-layer fields map
+  as the table says: `label_size_px` to `NibStyle`, `label_seed` to
+  `HandStyle`, `label_route` to `FaceStyle`, `paper_hex` and `sheet_seed`
+  to `PaperStyle`, `display_px` to `CardStyle`, `brush_width_px` to
+  `BrushStyle`, `label_geom_tol_px` to `LetteringPolicy`.
 - Parity: exact, current goldens (nothing is wired). G-here.
 - Commit: `Group the style fields by the layer that reads them`
 - Done when: each new file is under 400 lines (split `maps/style_groups.py`
-  further if needed); ADR 0005 has one row per field.
+  or `ink/style.py`, which holds 110 fields with their `#:` comments, by
+  group into sibling modules if needed); ADR 0005 has one row per field.
 
 #### P3.11b Style model, TOML theme and digests, unwired (A6, part 1b)
 
@@ -1332,7 +1431,8 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
 - Owner files: `_port/geo.py`, `_port/paint.py`, `_port/mapcard.py`,
   `_port/labels.py`, `src/pyntpot/maps/basemap.py`,
   `src/pyntpot/maps/plates.py`, `src/pyntpot/maps/card.py`,
-  `tests/support/golden.py`, `tests/golden/make_golden.py`,
+  `tests/support/golden.py`, `tests/support/manifests.py` (the builder
+  loses the removed fields), `tests/golden/make_golden.py`,
   `tests/golden/test_parity.py`, `tests/unit/maps/test_plates.py`,
   `tests/unit/maps/test_card.py`, `tests/unit/test_paint.py`,
   `tests/unit/test_geo.py`, `docs/decisions/0006-golden-regeneration.md`.
@@ -1508,6 +1608,10 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   `tests/unit/maps/test_pipeline_fetch_paint.py`; edit
   `src/pyntpot/maps/__init__.py` (import leaves first, then the pipeline),
   `src/pyntpot/maps/plates.py` (`route_px`, `strands`),
+  `tests/support/golden.py` (`paint_fixture` runs the new stages, below),
+  `_port/paint.py` (delete `paint_activity`), `tests/unit/test_paint.py`
+  (its `paint_activity` callers near lines 969 to 990 call `fetch` and
+  `pipeline.paint`),
   `tests/support/paths.py` (`KEY` becomes the cache key; since P3.1 it is
   the only fixture-key constant, read by `tests/support/golden.py`,
   `tests/unit/test_geo.py` and `tests/unit/test_paint.py`, whose uses near
@@ -1528,7 +1632,7 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   providers with `dataclasses.replace`; places enter here, today
   `geo._place_marks` called from `geo.basemap`);
   `paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates` (reuses
-  current plates when the manifest hash matches, as `paint_activity` does).
+  current plates when the manifest hash matches, as `paint_activity` did).
   `paint` uses `basemap.card` and `basemap.layers` as given: a basemap
   fetched with one style and painted with another paints the first style's
   card. The docstring states this and ADR 0007 records it.
@@ -1540,8 +1644,26 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   (`separate_strands` returns a single polyline, `card.py:77-148`). Today
   `compose` draws, places and measures on that separated polyline, so
   `strands` is a pixel input (see "What the window freezes"); `route_px`
-  is for consumers that want the unseparated route. `paint_activity`
-  stays: `paint_fixture` calls it until P3.21, which deletes it.
+  is for consumers that want the unseparated route. Both fields default to
+  `()`, so every other `Plates` construction (`load_plates`, and P4.7's
+  `Cache.load_plates`) stays valid without a track; `pipeline.paint` fills
+  them with `dataclasses.replace` on the `Plates` it painted or loaded.
+  `pipeline.paint` replaces `paint_activity`, which is deleted here with
+  its callers moved: from this slice `paint_fixture` is
+  `Cache(work)`, `fetch` with the fixture providers
+  (`tests/support/providers.py`, P3.7) and `Style.default()`, then
+  `pipeline.paint`, then P3.13's
+  `mapcard.compose(basemap, plates, style, None, labels=True)` (no picks,
+  as today), which still separates the route itself from `basemap.track`. G-self proves
+  the switch is byte-identical before P3.17 makes `compose` read
+  `plates.strands`.
+- `fetch` raises `FetchError(RuntimeError)` (defined in
+  `maps/pipeline.py`, message naming the key and the missing features
+  path) when `journal_layers` returns `None`, which it does only when the
+  features payload is absent after `cache.ensure`, for example a cache
+  directory changed underneath. Not unit-tested: no real provider and
+  cache can reach it without deleting a file between two calls inside
+  `fetch`; the docstring states it.
 - Tests: `fetch` with the fixture providers over a copy of the fixture dir
   calls no provider and returns a `Basemap` with the pinned road count and
   `credits` equal to the two fixture credits; `paint` writes three plates
@@ -1559,9 +1681,16 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
 - Owner files: `src/pyntpot/maps/pipeline.py`, create
   `src/pyntpot/maps/annotations.py`, `src/pyntpot/maps/lettering.py`,
   `tests/unit/maps/test_annotations.py`,
-  `tests/unit/maps/test_pipeline_letter_compose.py`; edit `_port/mapcard.py`
-  (`letter_card` moves into `maps/lettering.py`; `compose` becomes raster
-  only; delete `alphabet_sheet`, `ALPHABET_LINES`, `ALPHABET_W`,
+  `tests/unit/maps/test_pipeline_letter_compose.py`; edit
+  `tests/support/golden.py` (`paint_fixture` is now `fetch`, `paint`,
+  `letter` with `annotations=None` (the parity run passes no picks today),
+  `compose(..., attribution=False)`), `_port/mapcard.py`
+  (`letter_card` moves into `maps/lettering.py`; `mapcard.compose` is
+  deleted, because `pipeline.compose` now draws the raster by calling
+  `mapcard._plates`, `mapcard._route` and `mapcard._paste_labels` through
+  its `from pyntpot._port import mapcard` binding, with the arguments
+  `mapcard.compose` passed them; P4.18 moves the three to
+  `maps/compose.py`; delete `alphabet_sheet`, `ALPHABET_LINES`, `ALPHABET_W`,
   `ALPHABET_LEAD`, `ALPHABET_MARGIN` and `sport_from_gpx`, which have no
   caller), `_port/labels.py` (delete `_journal_picks`, `_journal_heuristic`,
   `_place_journal_labels`, `measure` with `DEFAULT_ADVANCE_PX` and
@@ -1605,8 +1734,12 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
     returns `Lettering((), (), None)`; `compose` then hands over the bare
     card, which is what the output is today in that case (today labels are
     placed and never drawn).
-  - `pipeline.compose(plates: Plates, lettering: Lettering, basemap: Basemap, style: Style, attribution: bool = True) -> PIL.Image.Image`
-    (the route drawn from `plates.strands`, credits from `basemap.credits`;
+  - `pipeline.compose(plates: Plates, lettering: Lettering, basemap: Basemap, style: Style, *, attribution: bool = True) -> PIL.Image.Image`
+    (keyword-only flag, ruff `FBT`): `card = mapcard._plates(...)`, the
+    route through `mapcard._route(card, ..., list(plates.strands), style.route_ink(), k)`
+    with `k` the render-to-display ratio as today, then
+    `mapcard._paste_labels(card, lettering.plate_path)` when the path is
+    set (the route drawn from `plates.strands`, credits from `basemap.credits`;
     attribution is drawn in P3.18; until then the flag is accepted and
     `False` is the only tested value). `compose` takes no `Track`: nothing
     in it would read one.
@@ -1708,13 +1841,17 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
 
 - Implements D5, D21; predecessor P3.20.
 - Owner files: `tests/support/golden.py`, `tests/golden/test_parity.py`,
-  `tests/golden/make_golden.py`, `src/pyntpot/_port/paint.py` (delete
-  `paint_activity`), `tests/unit/test_paint.py` (its `paint_activity`
-  callers, near lines 969 to 990, call `pipeline.paint`).
-- Change: `paint_fixture` calls `fetch`, `paint`, `letter`, `compose(...,
-  attribution=False)` only; no test under `tests/golden/` imports `_port`
-  (except the historical `make_golden_old.py`); `paint_activity` has no
-  caller left and is deleted.
+  `tests/golden/make_golden.py`.
+- Change: `paint_fixture` has run `fetch`, `paint`, `letter`,
+  `compose(..., attribution=False)` since P3.17, and `paint_activity` went
+  in P3.16. This slice moves the golden harness onto the public names:
+  `tests/support/golden.py` imports `fetch`, `paint`, `letter`, `compose`,
+  `Style` and `Track` from `pyntpot` (P3.20) and `Cache` from
+  `pyntpot.maps.cache`, never `pyntpot.maps.pipeline` or `_port`; no test
+  under `tests/golden/` imports `_port` (except the historical
+  `make_golden_old.py`).
+- Done when: `grep -rn "_port" tests/golden tests/support/golden.py` lists
+  only `make_golden_old.py`.
 - Parity: exact, regenerated goldens. G-here plus G-self.
 - Commit: `Drive golden parity through the public façade`
 
@@ -1729,6 +1866,17 @@ commit, so `tests/unit/test_paint.py` (3943 lines, 161 tests) and
 `tests/unit/test_geo.py` (830 lines, 68 tests) shrink as the work goes and are
 deleted by the last slice that empties them (P4.18 at the latest), together
 with their per-file-ignores, `ty` excludes and `line_budget.txt` lines.
+A moved test leaves those interim exemptions behind: in its new file it
+meets the `tests/**` rule set (only `PLR2004`, `ANN` and `FBT` ignored)
+and `ty`, and the slice fixes what that raises, behaviour-neutral, as it
+does for moved source. Measured at `f63bb61` over both files: 134 ruff
+findings (111 `PLC0415`, 8 `RUF059`, 4 `D210`, 4 `RUF007`, the rest
+single digits) and about 1269 `ty` diagnostics, 1221 of them
+`invalid-argument-type` from the `PaintStyle(**kw)` helper pattern on 17
+lines (`tiny_style(**over: object)` and its kin). The fix is to type those
+helpers' keyword parameters `**over: Any` (or, once the code reads style
+groups, to build groups with `dataclasses.replace`), never an ignore. The
+fixes count toward the slice's line budget.
 Architecture correction carried from `architecture.md`: `Hand` takes a
 **setting**, not `Mark`s; `Mark` is what it produces.
 
@@ -1856,10 +2004,9 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   `brush_press_cell_px`, `brush_wobble_px`, `brush_step`,
   `brush_profile_px`, `pen_pool_radius_frac`, `pen_pool_gain`,
   `pen_load_px_frac`, `ink_starve` and the rest it reads today; P3.11a's
-  assignment rules 1 and 2 put each in an ink group, because its reader's
-  final home is `ink/brush.py`). If ADR
-  0005's table puts one of them in another group, add that group as a
-  parameter; never regroup. `_port` callers that hold only a `PaintStyle`
+  pinned table puts every one of them in `BrushStyle`, because its
+  reader's final home is `ink/brush.py`). If the code shows a read field
+  the table puts elsewhere, add that group as a parameter; never regroup. `_port` callers that hold only a `PaintStyle`
   receive the `BrushStyle` from the façade (`style.brush`), passed down as
   a parameter, never rebuilt from `PaintStyle` fields.
 - Parity: G-here plus G-self, byte-exact (the tables move verbatim).
@@ -1894,7 +2041,12 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   `src/pyntpot/__init__.py` (`Hand` from `letters`), `test_import_order.py`.
 - Moves: `Hand.measure`, `_along`, `_flat`, `_vary`, `_wobble`, `_rng`,
   `_seed`, the per-instance variation, into `letters/hand.py`, reading
-  `FaceStyle` and `HandStyle` and `letters.font`. To maps: `KIND_INK`,
+  `FaceStyle` (`label_face`, `label_route`, which open the face) and
+  `HandStyle` (`label_seed`) per ADR 0005's table, and `letters.font`.
+  `hand()` is deleted, and its one style read, the `labels` switch
+  (`LetteringPolicy.labels`), moves to `letter` in `maps/lettering.py`,
+  which returns `Lettering((), (), None)` when it is off, as P3.17's
+  `letter` already does when `hand()` returns `None`. To maps: `KIND_INK`,
   `KIND_SLANT`, `KIND_TRACKING`, `SPAN_INTENT_INK`, `HOME_GLYPH`, `_ink`,
   `_span_marks`, `_label_marks`, `_baseline` (window choice), `_leader`,
   `_pin`, `_underline`; the furniture is drawn with `Hand.stroke` (or
@@ -1902,7 +2054,8 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   `_port.labels` (the placer and the span code read them too) and
   `lettering_marks` reads them through its module binding until P4.16
   moves them to `maps/lettering/label.py`. `_quad_at` goes to
-  `letters/hand.py` with `Hand`, its only caller.
+  `maps/lettering_marks.py` with `_leader`, its only caller
+  (`Hand._leader`, `labels.py` around 4375).
 - Tests: `Hand` writes "Grasmere" along a straight synthetic line and gives
   the same marks twice for the same seed and different marks for another
   seed; a setting with slant 0.22 leans (mean x drift of strokes is positive);
@@ -1916,24 +2069,32 @@ no new `maps` module ever needs a `_port` import (import rule 2).
 
 - Implements A2; predecessor P4.5.
 - Owner files: create `src/pyntpot/letters/nib.py`,
-  `tests/unit/letters/test_nib.py`; edit `_port/paint.py` (delete
+  `tests/unit/letters/test_nib.py`; edit `src/pyntpot/letters/style.py`
+  (`NibGroups`), `_port/paint.py` (delete
   `label_brushes`, `_pen_profile`, `_dark_field`, `label_plate`,
   `_backing_wash`, `MARK_WEIGHT`, `_HEX`), `_port/labels.py`
   (`draw_plate`), `maps/lettering.py`, `maps/attribution.py` (uses
   `letters.nib.plate`; leaves `ADAPTERS`), `_port/mapcard.py` if it still
   calls the label plate, `test_import_order.py`.
-- Names: `nib_brushes(nib: NibStyle, brush: BrushStyle, scale: float) -> Callable[[str, float], Brush]`,
-  `plate(marks: Sequence[Mark], canvas: Canvas, sheet: Sheet, dark: np.ndarray, gran_px: float, nib: NibStyle, brush: BrushStyle, paper: PaperStyle, path: Path) -> Path | None`.
-  The group parameters are derived from ADR 0005's table: they are exactly
-  the groups that hold a field `label_brushes`, `_pen_profile`,
-  `_dark_field`, `label_plate` or `_backing_wash` reads (expected:
-  `label_size_px`, `label_seed`, `label_route` and the label pen fields in
-  `NibStyle`; brush fields in `BrushStyle`; `paper_hex` in `PaperStyle`).
-  If the table places a read field in another group of `ink` or `letters`,
-  add that group as a parameter; if it is in a `maps` group, stop and
-  report (the table would be wrong, and fixing it moves a frozen digest).
+- Names: `nib_brushes(nib: NibStyle, face: FaceStyle, brush: BrushStyle, scale: float) -> Callable[[str, float], Brush]`;
+  `NibSurface(canvas: Canvas, sheet: Sheet, dark: np.ndarray, gran_px: float)`
+  (frozen dataclass, `eq=False`: what the nib writes on) and
+  `NibGroups(nib: NibStyle, face: FaceStyle, hand: HandStyle, brush: BrushStyle, paper: PaperStyle)`
+  (frozen dataclass in `letters/style.py`: the groups the nib reads), so
+  `plate(marks: Sequence[Mark], surface: NibSurface, groups: NibGroups, path: Path) -> Path | None`
+  stays inside ruff's `max-args = 6` with no `noqa`.
+  The group parameters are ADR 0005's table applied to what
+  `label_brushes`, `_pen_profile`, `_dark_field`, `label_plate` and
+  `_backing_wash` read (P3.11a, measured): `label_size_px`, the label pen,
+  leader, wash and ink fields in `NibStyle`; `label_route` in `FaceStyle`;
+  `label_seed` in `HandStyle`; the fields `brush_from_id` reads in
+  `BrushStyle`; `paper_hex`, `sheet_seed`, `plate_lossless`,
+  `paper_quality`, the five `paper_fibre*` fields and `gran_gamma` in
+  `PaperStyle`. No field the nib reads is in a `maps` group; if the code
+  shows one, stop and report (the table would be wrong, and fixing it moves
+  a frozen digest).
   `render`, `display` and `gran_px`, read from the manifest mapping until
-  now (P3.5), become `canvas` and a `gran_px: float` parameter.
+  now (P3.5), become `surface.canvas` and `surface.gran_px`.
   `dark` is the darkness grid as an `h` by `w` float array in [0, 1]; the
   maps caller converts `Plates.manifest.dark` (`DarkGrid`) to it, because
   `letters` cannot import `maps.plates` (import rule 1).
@@ -1960,7 +2121,7 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   as ADR 0008 does). `labels_hash`, `plate_key` and the 27-name key list are
   deleted. The label sidecar's `key` value changes form; it is a cache
   record, not a golden (P3.15).
-- Tests: a lettering-only style change (one `HandStyle` field) leaves
+- Tests: a lettering-only style change (`HandStyle.label_seed`, ADR 0005's one `HandStyle` field) leaves
   `base_key` unchanged and `paint` reports no repaint; a base-plate style
   change changes the lettering key (its base hash input moved).
 - Commit: `Key plate caches by what was painted`
@@ -1972,7 +2133,8 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   `maps/painter/brushes.py` (`plate_brushes`, `COVER_CFG`; the brush-sheet
   tables went to `ink/brush.py` in P4.3), `maps/painter/water.py` (the
   water phase, `sea_patches`, `coast_run`), `maps/painter/cover.py`,
-  `maps/painter/wood.py`, `tests/unit/maps/painter/__init__.py` and a test
+  `maps/painter/wood.py` (with `_crossfade`, whose only caller is the wood
+  phase, `paint.py` around 3836 and 3848), `tests/unit/maps/painter/__init__.py` and a test
   file per module; edit `_port/paint.py` (`paint` calls the three phases;
   `PaintStyle.cover_cfg`'s `default_factory=lambda: dict(COVER_CFG)`
   becomes the named module function `_default_cover_cfg()`, which imports
@@ -2002,7 +2164,7 @@ no new `maps` module ever needs a `_port` import (import rule 2).
 - Owner files: create `maps/painter/relief.py`, `maps/painter/fluid.py`,
   `maps/painter/pen.py` (today's ink phase; named for the pen plate so it
   does not read as the `ink` package), `maps/painter/ribbon.py`
-  (`ribbon_alpha`, `_crossfade`), `maps/painter/paper.py` (`paper_plate`,
+  (`ribbon_alpha`; `_crossfade` went to `wood.py` in P4.8), `maps/painter/paper.py` (`paper_plate`,
   `relief_density`), `maps/painter/plates.py`
   (`paint_plates(basemap: Basemap, style: Style, out_dir: Path) -> Plates`:
   builds the job, runs the seven phases in today's order, writes the
@@ -2017,7 +2179,7 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   P4.3; `label_*`, `_pen_profile`, `_dark_field`, `_backing_wash`,
   `MARK_WEIGHT`, `_HEX` in P4.6; `plates_dir`, `load_plates`,
   `PLATES_SUBDIR`, `paint_hash`, `labels_hash` in P4.7; `paint_activity` in
-  P3.21; `chain_lines`, `deform_line` in P3.3; `parse_d`, `label_geom` in
+  P3.16; `chain_lines`, `deform_line` in P3.3; `parse_d`, `label_geom` in
   P3.13; `BRUSH_TREATMENTS`, `BRUSH_COLOURS`, `PEN_ROWS` with
   `brush_from_id` in P4.3; `COVER_CFG` and `plate_brushes` in P4.8.
 - Commit: `Move the rest of plate assembly to maps`
@@ -2033,15 +2195,22 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   `GeoOptions` is deleted and `basemap(...)` takes `BasemapStyle` plus a
   `clip_margin_m: float` argument), `maps/pipeline.py`, `maps/style.py`,
   `tests/unit/test_geo.py`, `tests/unit/maps/test_style.py`.
-- `landmark_export` keeps its own option set as module constants beside it
-  (in `geo` until P4.15 moves both to `maps/candidates/landmarks.py`):
-  `CANDIDATE_BASEMAP = dataclasses.replace(BasemapStyle(), hillshade_mode="off", landmarks="all", landmark_max=LANDMARK_CAP, generalise=False)`
-  and `CANDIDATE_CLIP_MARGIN_M = 2600.0`, passed as `basemap`'s separate
-  `clip_margin_m` argument (`BasemapStyle` has no margin field).
+- `landmark_export` keeps its own option set beside it. In `_port/geo.py`
+  it cannot be a module constant: building a `BasemapStyle` at module level
+  needs a module-level `maps` import, which import rule 3 and P3.1's AST
+  check forbid. So until P4.15 it is the function
+  `candidate_basemap() -> BasemapStyle`, which imports `BasemapStyle` inside
+  its body and returns
+  `dataclasses.replace(BasemapStyle(), hillshade_mode="off", landmarks="all", landmark_max=LANDMARK_CAP, generalise=False)`,
+  plus the plain constant `CANDIDATE_CLIP_MARGIN_M = 2600.0`, passed as
+  `basemap`'s separate `clip_margin_m` argument (`BasemapStyle` has no
+  margin field). P4.15 moves both to `maps/candidates/export.py`, where the
+  function becomes the module constant `CANDIDATE_BASEMAP` (a leaf may
+  build it at import) and the test follows.
   `BasemapStyle()`'s dataclass defaults are the `GeoOptions` class defaults
   (P3.11a), so `roads` and `rivers` keep the class defaults
   `landmark_export` uses today (`geo.py` around 4180), not the painter's
-  `"key"`. Test: `asdict(CANDIDATE_BASEMAP)` equals the old
+  `"key"`. Test: `asdict(geo.candidate_basemap())` equals the old
   `GeoOptions(hillshade_mode="off", landmarks="all", landmark_max=LANDMARK_CAP, generalise=False, clip_margin_m=2600.0)`
   field by field, without `clip_margin_m`, and the margin constant is
   2600.0 (literals copied before `GeoOptions` is deleted).
@@ -2051,8 +2220,12 @@ no new `maps` module ever needs a `_port` import (import rule 2).
 #### P4.11 Style groups, part 2: lettering readers; delete `PaintStyle` (A6)
 
 - Implements A6; predecessor P4.10.
-- Owner files: `_port/labels.py` (the 6 `getattr(pstyle, ...)` sites with
-  silent defaults read `LetteringPolicy` or `CardStyle`), `_port/mapcard.py`,
+- Owner files: `_port/labels.py` (`home_labels`, `labels.py` around 4535
+  and 4537, holds the last two of today's six `getattr(pstyle, ...)` sites
+  with silent defaults, since P4.5 removed `Hand`'s three and `hand()`'s
+  one: `home_glyph` reads `style.lettering` (`LetteringPolicy`) and
+  `label_size_px` reads `style.nib` (`NibStyle`), with no defaults),
+  `_port/mapcard.py`,
   `maps/lettering.py`, `maps/pipeline.py`, `maps/style.py` (delete
   `paint_style()`; `ADAPTERS` loses `maps.style` if it no longer imports
   `_port`), `_port/style.py` (delete `coerce_like`); delete
@@ -2113,8 +2286,8 @@ no new `maps` module ever needs a `_port` import (import rule 2).
   **not** moved: the candidates modules import them from
   `maps.providers.overpass` (P3.8's copies, equal by its test), and `geo`
   keeps its own copies for `fetch_overpass` until P4.15, so
-  `test_overpass.py` is untouched. `landmark_export` and
-  `CANDIDATE_BASEMAP` stay in `geo` (they call `basemap` and
+  `test_overpass.py` is untouched. `landmark_export`,
+  `candidate_basemap` and `CANDIDATE_CLIP_MARGIN_M` stay in `geo` (they call `basemap` and
   `overpass_path`, which move in P4.15) and import the moved names inside
   the function. `geo`'s remaining callers (`journal_layers` ->
   `journal_candidates`, `basemap` -> `pick_landmarks`, `_osm_layers` ->
@@ -2161,16 +2334,29 @@ no new `maps` module ever needs a `_port` import (import rule 2).
 - Predecessor P4.14.
 - Destination modules, lowest first: `maps/osm.py` (`_osm_layers`, 241
   lines today, decomposed per layer; `_geom`, `_polygon_rings`, `_dedupe`,
+  `_soften` (its only reader is `_osm_layers`, `geo.py` around 2328),
   `BURIED_FRAC`, `LANDMARK_TAG_KEYS`), `maps/cover.py` (`COVER_TAGS`,
   `COVER_ORDER`, `cover_rings`, `wood_rings`, `coastline_chains`,
   `sea_from_coast`), `maps/layers.py` (`journal_geometry`, `_drawn`,
   `journal_layers` renamed `build_basemap`, `basemap`, `_derived`,
   `scale_for`, `REFERENCE_SPAN_M`, `MAX_SCALE`, `_place_marks`,
-  `_relief_layers`, `_soften`, `_sea_path`), then
-  `maps/candidates/landmarks.py` gains `landmark_export`,
-  `CANDIDATE_BASEMAP` and `CANDIDATE_CLIP_MARGIN_M` (now that `basemap` is
-  in `maps`). Every module is a leaf; `_port/geo.py` is deleted at the end
-  of this slice, so no edge to it remains.
+  `_relief_layers`, `_sea_path`), then a new top module
+  `maps/candidates/export.py` with `landmark_export`, `CANDIDATE_BASEMAP`
+  (P4.10's `candidate_basemap()` as a module constant) and
+  `CANDIDATE_CLIP_MARGIN_M`. Not `maps/candidates/landmarks.py`: that
+  would close a cycle, because `landmark_export` reads `basemap`
+  (`layers`), `basemap` reads `_osm_layers` (`osm`), and `_osm_layers`
+  reads `classify` and `OFFERED_CLASSES` (`candidates/landmarks`, P4.13).
+  Measured at `f63bb61`: `landmark_export` reads `basemap`,
+  `journal_candidates`, `climbs`, `ground_climbs`, `route_places`,
+  `_place_view`, `named_roads`, `cumulative`, `LANDMARK_CAP`, `simplify`,
+  `track_projection` and the cache paths; nothing under `src/` reads
+  `landmark_export` (only `test_paint.py` near line 984, which moves to
+  `tests/unit/maps/candidates/test_export.py`); no P4.13 candidates name
+  reads an `osm`, `cover`, `layers` or `export` name. So the edges run
+  `export -> layers -> cover/osm -> candidates/* -> ink/projection`, and
+  nothing points back. Every module is a leaf; `_port/geo.py` is deleted
+  at the end of this slice, so no edge to it remains.
 - Where every remaining `geo` name goes (the **Placement rule** applied at
   `33f12be`; names moved by earlier slices are not repeated):
 
@@ -2297,8 +2483,11 @@ helper).
   `SETTLEMENT_FLOOR`, `SETTLEMENT_SEPARATION_PX`,
   `SETTLEMENT_ENDPOINT_FRAC`, `RIVER_MAX`, `RIVER_REL_FLOOR`,
   `MAJOR_RIVER_TWICE_FRAC`, `ROAD_MIN_CAPS`, `ROAD_MAX`,
-  `HOME_NAME_DROP`), `maps/compose.py` (`_plates`, `_route`,
-  `_paste_labels`, raster compose), `maps/strands.py` (`separate_strands`,
+  `HOME_NAME_DROP`), `maps/lettering/pipeline.py` gains `draw_plate`
+  (its only caller is `letter` there, `letter_card` before P3.17),
+  `maps/compose.py` (`_plates`, `_route`, `_paste_labels`, which
+  `pipeline.compose` has called through its `mapcard` binding since
+  P3.17), `maps/strands.py` (`separate_strands`,
   `STRAND_GAP_WIDTHS` and the rest of `_port/card.py`), `RouteInk` and the
   route constants into `maps/style_groups.py` (which then leaves
   `ADAPTERS`); delete `_port/labels.py`, `_port/mapcard.py`,
@@ -2509,7 +2698,8 @@ free; if it is taken, stop and report.
   `--strict-config` with the option gone, `uv run pytest
   tests/architecture` passes with no skips, and
   `grep -rnE "personal_terms|test_no_personal_content|banned_terms\.txt" --exclude-dir=.git --exclude-dir=.venv --exclude-dir=.ruff_cache --exclude-dir=.pytest_cache --exclude-dir=__pycache__ .`
-  matches only `spec.md` (D16 and Verification), `plan.md`, `tasks.md` and
+  matches only `spec.md` (the D16 row; Verification step 3 says
+  "banned-term" and does not match), `plan.md`, `tasks.md` and
   ADR 0022 (ADR 0002 says "banned-term scan" and does not match).
 - Gate: G-here.
 - Commit: `Retire the banned-term test and its pytest option`
