@@ -63,7 +63,7 @@ recorded in ADR 0006, not a re-baseline.
 - [ ] P3.3 One polyline module, moves only; `Pt` in `ink.polyline` (A5)
 - [ ] P3.4 Typed `Basemap` with `Layers`, `Projection` (A4)
 - [ ] P3.5 Typed `Plates` and `Manifest` (A4)
-- [ ] P3.6 `Track` with a GPX reader and `BoundingBox` (parallel line 2)
+- [x] P3.6 `Track` with a GPX reader and `BoundingBox` (parallel line 2)
 - [ ] P3.7 `Features`, `Elevation`, `ProviderBudgetExceeded`, fixture providers with the shipped ids, the local test server; ADR 0004 (parallel line 2)
 - [ ] P3.8 `OverpassFeatures` with a query budget and copied query templates (parallel with P3.9, P3.10)
 - [ ] P3.9 `OpenTopoData` with a call budget (parallel with P3.8, P3.10)
