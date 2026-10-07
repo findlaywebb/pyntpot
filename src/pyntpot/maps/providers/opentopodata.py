@@ -1,8 +1,8 @@
 """An elevation provider that asks an OpenTopoData server for a lattice of heights.
 
 Key types: `OpenTopoData`, an `Elevation` provider; `PUBLIC`, the public server's
-endpoint. `grid` samples the same `n` by `n` lattice over the box as the painter's own
-elevation fetch, asks for 100 points a call, pauses 1.1 seconds after each call and
+endpoint. `grid` samples an `n` by `n` lattice evenly spaced from the box's south-west
+corner to its north-east corner, asks for 100 points a call, pauses 1.1 seconds after each call and
 reads a missing elevation as `0.0`.
 
 The public server's published limits are enforced by default: 100 locations a call, one

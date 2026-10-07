@@ -29,9 +29,9 @@ if TYPE_CHECKING:
 class Projection:
     """The route chart's local equirectangular projection.
 
-    Mirrors `normalise.project_route`: x scales by the cosine of the mean
-    latitude of the track, the origin is the south-west corner of the projected
-    track, and y grows north.
+    x scales by the cosine of the mean latitude of the track and y grows north.
+    The origin is the south-west corner of the projected track, unless
+    `track_projection` was handed a route to take it from.
 
     Attributes:
         lat0: The latitude whose cosine scales x, in degrees.
@@ -55,11 +55,11 @@ class Projection:
         return 111320.0 * math.cos(math.radians(self.lat0))
 
     def __call__(self, lat: float, lng: float) -> Pt:
-        """Project one coordinate into route metre space."""
+        """Project one coordinate into card metres."""
         return ((lng - self.lng_ref) * self.kx - self.x0, (lat - self.lat_ref) * self.ky - self.y0)
 
     def inverse(self, x: float, y: float) -> tuple[float, float]:
-        """Latitude and longitude for a point in route metre space."""
+        """Latitude and longitude for a point in card metres."""
         return ((y + self.y0) / self.ky + self.lat_ref, (x + self.x0) / self.kx + self.lng_ref)
 
 

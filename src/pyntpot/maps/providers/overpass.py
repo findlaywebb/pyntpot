@@ -15,9 +15,8 @@ the caller.
 It does not parse, validate or cache the payloads, retry an endpoint it has already
 tried, or share a budget between instances: two instances have two budgets.
 
-Invariants: the query templates are byte-equal to the painter's own; the size bound is
-spliced in at request time by replacing the leading `[out:json]`, so the templates
-themselves never change. The budget is checked before any request, so a refused
+Invariants: the size bound is spliced in at request time by replacing the leading
+`[out:json]`, so the query templates themselves never change. The budget is checked before any request, so a refused
 query makes none.
 """
 

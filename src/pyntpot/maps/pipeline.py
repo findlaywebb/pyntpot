@@ -145,7 +145,8 @@ def compose(
 
     Args:
         plates: The painted plates, with their strands set.
-        lettering: The lettering; its label plate, when set, is pasted last.
+        lettering: The lettering; its label plate, when set, is pasted over the
+            route.
         basemap: The basemap the plates were painted from, whose credits are
             owed on the card.
         style: The style whose route ink draws the route.

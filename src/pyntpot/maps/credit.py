@@ -3,8 +3,8 @@
 Key type: `Credit`, one source's attribution: the full text, a link to the
 licence or source, and the short line drawn on the map itself.
 
-It does not fetch, format or place anything: providers build credits and the
-map's lettering draws the short line. A credit is immutable, compares by
+It does not fetch, format or place anything: providers build credits and
+`maps.attribution` draws the short line. A credit is immutable, compares by
 value and hashes, so a set of credits holds each distinct credit once.
 """
 

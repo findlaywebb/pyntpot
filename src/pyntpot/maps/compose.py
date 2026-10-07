@@ -1,11 +1,9 @@
 """The raster card's drawing steps: the painted sheet, the route and the label plate.
 
-The session page draws the map as an SVG with the plates inlined and the
-route, the pins and the names set in vector on top. That page is the right
-answer when the map sits beside the numbers; it is the wrong answer when all
-that is wanted is the picture. These are the steps that lay the same plates
-into a single raster card instead, so the map can be handed straight over:
-`_plates` multiplies the wash over the paper, `_route` draws the route on it in
+The page draws the map as an SVG with the plates inlined and the route, the
+pins and the names set in vector on top. These are the steps that lay the same
+plates into a single raster card instead, so the picture can be handed over
+alone: `_plates` multiplies the wash over the paper, `_route` draws the route on it in
 the route ink, and `_paste_labels` pastes the label plate over both. The
 compose stage calls them in that order.
 
@@ -26,7 +24,7 @@ if TYPE_CHECKING:
     from pyntpot.maps.plates import Plates
     from pyntpot.maps.style_groups import RouteInk
 
-#: What the route is drawn at, in card pixels per card pixel, before it is
+#: How many times finer than the card the route is drawn, before it is
 #: reduced back. 4 is where a diagonal stops showing its steps at the
 #: magnification the card is read at; higher costs the square of it
 #: in memory for a mark that is already smooth.
@@ -94,10 +92,9 @@ def _route(
 def _paste_labels(card_img: Image.Image, plate: Path) -> None:
     """The label plate, over the painting, at the card's own size.
 
-    The card and the page now draw the same pixels, because they are the same
+    The card and the page draw the same pixels, because they are the same
     pixels: one RGBA plate, stroked through the ink engine, embedded by the
-    page and pasted here. What this replaces is a serif face with a hard cream
-    halo, shrunk until it fitted boxes that had been sized for a cursive.
+    page and pasted here.
 
     Source: `lanczos` in docs/explanation/references.md.
     """

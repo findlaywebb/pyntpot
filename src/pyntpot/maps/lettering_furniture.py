@@ -11,7 +11,7 @@ the hand's.
 
 Invariants: the draws a stroke takes from the generator before it is wandered
 (a leader's bend, an underline's rise) come first, in the order the pin, the
-leader and the underline are called, so the card's pixels do not move.
+leader and the underline are called, so the same label draws the same strokes.
 """
 
 import math

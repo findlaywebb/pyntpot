@@ -617,3 +617,14 @@ User instructions (2026-10-07 12:14 BST):
   kept: precise term | src/pyntpot/letters/nib.py:284 | surface | Args entry naming the `surface` parameter
   Glossary changes proposed: none. Issues filed: letters-nib-outline-width-reads-face-route, letters-nib-pen-angle-ignores-writing-line, letters-trace-radii-unused, letters-card-pixels-and-display-pixels, letters-font-missing-glyph-advance, letters-style-label-route-ink-not-filled.
 - 17:17 P6.5b landed by the orchestrator (measured alone): partition clean; patch applied on `55fdf43`; ast-neutral 0 s; uv sync 0 s; uvx prek 5 s; not-golden 155 s (................................... [100%]); tolerance 302 s; exact 287 s; doc_lines 8/8 headers, 5 findings, 5 kept lines; glossary changes applied 0, deferred 0.
+- 16:44 P6.5c maps facade, data and furniture. Start 16:15, end 16:44 BST. Start 5ff3c03; files 32 (plan 32); SHA256SUMS OK. Public API done 16:22.
+  Docstrings and comments: diff +110/-113 over 23 files; sections added 2 (`Track.from_gpx` Raises ValueError: time not ISO 8601 with a zone, fewer than two points, or a latitude outside [-90, 90]; `Style.from_toml` Raises tomllib.TOMLDecodeError).
+  - choice: prek as `uvx prek run --all-files` | rule: as P6.1 to P6.4, docs/issues/prek-not-in-the-environment.md | inputs: `uv run prek` failed to spawn.
+  - choice: Raises on Track.from_gpx and Style.from_toml only | rule: Args rule (a condition for a raise) | inputs: the 21 public methods.
+  - choice: summary mood left mixed | rule: Args rule (accuracy and layout only) | inputs: style.py, plates.py.
+  - choice: landmark_export non-goal paragraph deleted | rule: house rules beat the skills (not public; the module keeps it) | inputs: export.py.
+  - choice: hillshade_mode text fixed, not filed | rule: behaviour wins (the theme is also "off") | inputs: default.toml.
+  - Fixed: 1 detector finding (`landmark_classes.py:143`, "first class") plus the accuracy fixes; filed 2 (maps-style-groups-labels-switch-is-read-by-the-attribution-only, maps-style-groups-route-constants-have-no-reader). kept: none.
+  - Gates (measured under parallel load (5 slices running)): ast-neutral 23 files 1 s; uv sync 0 s; uvx prek 5 s; not-golden 171 s; tolerance 304 s; exact 313 s; G-self baseline 67 s, compare 280 s; doc_lines 32/32/32, 0 findings.
+  - Glossary changes proposed: none. Noted for P6.6: the `backdrop` and `terms` cells say "darkness grid" where the term is "dark grid".
+- 17:29 P6.5c landed by the orchestrator (measured alone): partition clean; patch applied on `bd4e55d`; ast-neutral 0 s; uv sync 0 s; uvx prek 4 s; not-golden 157 s (................................... [100%]); tolerance 298 s; exact 282 s; doc_lines 32/32 headers, 0 findings, 1 kept lines; glossary changes applied 0, deferred 0.

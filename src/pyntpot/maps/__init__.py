@@ -1,4 +1,10 @@
-"""Route maps: fetching, painting, lettering and composing."""
+"""Route maps: fetching, painting, lettering and composing.
+
+Exports the map types `Track`, `Basemap`, `Style`, `Plates`, `Lettering` and
+`Annotations`, the stages `fetch`, `paint`, `letter` and `compose`, and
+`FetchError`. The providers, the cache, the candidates and the command line are
+reached through their own modules, not exported here.
+"""
 
 from pyntpot.maps.annotations import Annotations
 from pyntpot.maps.basemap import Basemap

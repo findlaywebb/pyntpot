@@ -137,7 +137,7 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 - [x] P6.4 Citation line in each implementing docstring; `tests/architecture/test_reference_keys.py`
 - [x] P6.5a Docstring audit, then prose: `ink`
 - [x] P6.5b Docstring audit, then prose: `letters`
-- [ ] P6.5c Docstring audit, then prose: `maps` façade, data and furniture
+- [x] P6.5c Docstring audit, then prose: `maps` façade, data and furniture
 - [ ] P6.5d Docstring audit, then prose: `maps` geometry and painter
 - [ ] P6.5e Docstring audit, then prose: `maps` lettering
 - [ ] P6.6 Prose audit of the docs; the phase gate

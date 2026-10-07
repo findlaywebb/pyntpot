@@ -2,10 +2,10 @@
 
 Key types: `Cache`, a directory the caller names, holding the feature, land cover and
 elevation payloads for a track's bounding box under one key, and the plates painted from
-them. Three more keys say when a painted thing is still current: `Cache.base_key`, the
+them. Two more keys say when a painted thing is still current: `Cache.base_key`, the
 hash the base plates' manifest carries (the basemap's canonical text and the style's base
-digest); `Cache.lettering_key`, the key of the label plate (the marks the nib strokes,
-the base hash and the style's lettering digest); and `Cache.load_plates`, which reads a
+digest), and `Cache.lettering_key`, the key of the label plate (the marks the nib
+strokes, the base hash and the style's lettering digest). `Cache.load_plates` reads a
 plates directory back.
 
 The key is the first 16 hex characters of the `sha256` of the canonical JSON of the
@@ -14,9 +14,9 @@ never comes from a caller's own id, so two tracks over the same ground with the 
 providers share their payloads, and changing a provider or the margin fetches afresh.
 The directory is always an explicit argument; nothing is resolved against the working
 directory. Payload file names are `overpass-<key>.json`, `landcover-<key>.json` and
-`elevation-<key>.json`, the names the painter reads.
+`elevation-<key>.json`, the names the basemap is built from.
 
-The label plate's key is derived from the marks themselves, every coordinate rounded to
+The label plate's key is derived from the marks themselves, every float rounded to
 three decimals, with no list of fields: a field added to a mark, or a pin, leader or span
 line moved, changes the key without this module being told. It is not a golden; only
 `base_key` is frozen, because the manifest carries it.

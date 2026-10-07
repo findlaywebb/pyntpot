@@ -13,7 +13,7 @@ base plates read, `lettering_digest` over the groups only the lettering reads, a
 16 hex digits of the SHA-256 of its fields as sorted-key JSON; a combined digest is
 the first 16 hex digits of the SHA-256 of its group digests joined in field order.
 
-`route_ink` hands the compose step the route's ink, and the basemap group says what
+`route_ink` hands `paint` and the compose step the route's ink, and the basemap group says what
 the basemap draws. The style paints, letters and fetches nothing itself. The route ink
 is always the ride ink; there is no sport selection.
 
@@ -73,11 +73,12 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         face: The face the hand opens and how a glyph becomes a pen path.
         nib: The nib, its inks, its angle and the backing wash under a name.
         hand: The seed every label's randomness starts from.
-        card: The card's display size, supersampling and darkness grid.
+        card: The card's display size, supersampling and dark grid.
         ribbon: The trimmed extent of the painted ground and the card around it.
         cover: Land cover and the wood.
         route: The route's own painted plate.
-        route_inks: One resolved route ink per sport, read only at compose time.
+        route_inks: One resolved route ink per sport, read only when the route
+            is placed and drawn.
         lettering: Which names a map letters, and how many.
         basemap: What the basemap draws, and how much of it.
     """
@@ -118,6 +119,7 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
             The style the theme describes.
 
         Raises:
+            tomllib.TOMLDecodeError: When the file is not TOML.
             pydantic.ValidationError: When a group is missing, a key is unknown at
                 any level, or a value has the wrong type.
         """

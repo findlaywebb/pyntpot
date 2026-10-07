@@ -1,6 +1,6 @@
 """The map's own style groups, the route inks and the fields no painter reads.
 
-Key types: `CardStyle` (the card's size and the darkness grid),
+Key types: `CardStyle` (the card's size and the dark grid),
 `RibbonStyle` (the trimmed extent of the painted ground and the card's
 frame), `CoverStyle` (land cover and the wood), `RouteStyle` (the route's
 own painted plate), `BasemapStyle` (what the basemap draws and how much of
@@ -9,8 +9,8 @@ treatment) and `RouteInks` (one `RouteInk` per sport). `CONSUMER_ONLY` names the
 painter fields that no module reads and so belong to no group.
 
 Base groups feed the base plates; `LetteringPolicy` feeds only the lettering;
-`RouteInks` is read only when the card is composed, so changing an ink
-repaints no plate. The defaults are the source classes' own defaults, not a
+`RouteInks` is read only when the route is placed and drawn (`paint` takes the
+strand gap from its width), so changing an ink repaints no plate. The defaults are the source classes' own defaults, not a
 resolved theme: the effective basemap options and the resolved inks are
 theme values. `RouteInks` has no defaults, because no class carries one.
 
@@ -26,8 +26,8 @@ package.
 from dataclasses import dataclass, field
 from typing import Any
 
-#: The painter fields no module reads except through a digest's key list,
-#: kept by the upstream consumer and left out of every group.
+#: The painter fields no module reads, kept by the upstream consumer and left
+#: out of every group.
 CONSUMER_ONLY: tuple[str, ...] = (
     "cover_order",
     "label_font",
@@ -38,7 +38,7 @@ CONSUMER_ONLY: tuple[str, ...] = (
 
 @dataclass(frozen=True)
 class CardStyle:
-    """The card's display size, its supersampling, and the coarse darkness grid."""
+    """The card's display size, its supersampling, and the dark grid's size."""
 
     #: Display width of the card in CSS pixels; the height follows its aspect.
     #: 900 is the width the plates were set at, and it is what decides
@@ -48,7 +48,7 @@ class CardStyle:
     #: Painted at this multiple of the display size, so the grain survives a
     #: retina screen. 2 is what the plates were set at.
     supersample: int = 2
-    #: The coarse darkness grid the label placer scores against.
+    #: Cells across and down of the dark grid the label placer scores against.
     dark_grid: tuple[int, int] = (80, 60)
 
 
@@ -164,20 +164,20 @@ class BasemapStyle:
     """What the basemap draws, and how much of it: relief, roads, rivers, landmarks, shapes."""
 
     #: `bands` (posterised vector relief), `raster` (the greyscale PNG),
-    #: `contours`, or `off`. Bands are the default: they carry the shape at a
-    #: tenth of the raster's bytes and stay crisp at any size the page draws.
+    #: `contours`, `hachures`, or `off`. Bands carry the shape at a tenth of
+    #: the raster's bytes and stay crisp at any size the page draws.
     hillshade_mode: str = "off"
     hillshade_levels: int = 5
     hillshade_opacity: float = 0.5
     #: Hachures: seed spacing, the gradient below which nothing is drawn, and
-    #: the longest stroke. All three are stated for a run's box and scaled up.
+    #: the longest stroke. All three are stated for a 4 km box and scaled up.
     hachure_spacing_m: float = 75.0
     hachure_min_slope: float = 0.035
     hachure_max_length_m: float = 90.0
     #: `fill` or `waves`.
     sea_style: str = "fill"
-    #: Contour interval in metres, used when the mode is `contours`. The 20 m
-    #: interval the first draft drew was a hatch, not a map.
+    #: Contour interval in metres, used when the mode is `contours`. A 20 m
+    #: interval draws a hatch, not a map.
     contour_interval: float = 50.0
     #: `all`, `key` (major plus interacted), or `major`.
     roads: str = "key"
@@ -191,7 +191,8 @@ class BasemapStyle:
     landmarks: str = "heuristic"
     landmark_max: int = 8
     landmark_radius_m: float = 300.0
-    #: Names the payload picked, which replace the heuristic when they are given.
+    #: Names the payload picked: `pick_landmarks` replaces the landmark
+    #: heuristic when given, and `pick_roads` keeps a minor road it names.
     pick_landmarks: tuple[str, ...] = ()
     pick_roads: tuple[str, ...] = ()
     pick_places: tuple[str, ...] = ()
@@ -213,9 +214,8 @@ class BasemapStyle:
     inset_cells: int = 2
     #: Metres between tree glyphs inside a wood. Zero scatters none.
     tree_spacing_m: float = 450.0
-    #: Build every relief variant rather than the one the mode asks for. The
-    #: exploration page sets this so its radio group can switch without a
-    #: rebuild; the renderer leaves it off and pays for one.
+    #: Build every relief variant rather than the one the mode asks for, so a
+    #: page can switch between them without a rebuild.
     all_variants: bool = False
 
 
@@ -223,24 +223,19 @@ class BasemapStyle:
 class LetteringPolicy:
     """Which names a map letters, and how many: the landmark cap and the switches."""
 
-    #: The landmark cap. Five was the count before the ground was lettered:
-    #: with no settlements, watercourses or road numbers on the sheet, five
-    #: landmarks were what filled it. Now that the ground carries its own names
-    #: the landmarks compete with them, and three leaves room for both. Spans have
-    #: their own cap in `lettering.spans.SPAN_MAX`.
+    #: The landmark cap. The ground carries its own names and the landmarks
+    #: compete with them; three leaves room for both. Spans have their own cap
+    #: in `lettering.spans.SPAN_MAX`.
     label_max: int = 3
-    #: Draw the label layer at all. Nothing reads this yet: it is the switch the
-    #: label plate is turned off with once there is one, so a theme that wants
-    #: the painting bare has somewhere to say so.
+    #: Only the attribution reads this: off, no hand is opened for it and the
+    #: attribution line is not written. The label plate is drawn either way.
     labels: bool = True
-    #: Letter the settlements, the watercourses and the roads the box holds,
-    #: which are in the data and were never drawn. This was off until a label
-    #: engine could set them as the hierarchy asks: a settlement beside its dot
-    #: with no leader, a river along its own water in spaced italic, a road
-    #: number along its own tarmac. There is one now.
+    #: Letter the settlements, the watercourses and the roads the box holds, as
+    #: the hierarchy asks: a settlement beside its dot with no leader, a river
+    #: along its own water in spaced italic, a road number along its own tarmac.
     label_ground: bool = True
-    #: How far a named road or watercourse is simplified before it is kept in
-    #: the manifest for a label to be set along, in display pixels.
+    #: How far a named road or watercourse is simplified before a label is set
+    #: along it, in display pixels.
     label_geom_tol_px: float = 8.0
     #: Letter the user's marked places, each under its own name.
     home_glyph: bool = True
@@ -258,9 +253,8 @@ class LetteringPolicy:
 #: wash, and it still holds 5:1 on the paper. It is not the rose: that was
 #: too hot, and this sits between the two.
 ROUTE_INK = "#c22050"
-#: Everything `basemap_route_effect` understands, all of it off. A theme names
-#: only the keys it wants and the rest are filled in from here, so a block that
-#: asks for a glow is not also silently asking for a shadow.
+#: Every route effect key, each at its off value. No module reads it, so nothing
+#: fills in a key a theme's effect table leaves out.
 ROUTE_EFFECT_OFF: dict[str, Any] = {
     "glow_px": 0.0,
     "glow_opacity": 0.0,
@@ -279,7 +273,7 @@ ROUTE_SHADOW = "#120d07"
 
 @dataclass(frozen=True)
 class RouteInk:
-    """One sport's route treatment, with every effect key already filled in."""
+    """One sport's route treatment: its style, width, colour and effect keys."""
 
     style: str
     px: float
@@ -295,7 +289,7 @@ class RouteInk:
 
 @dataclass(frozen=True)
 class RouteInks:
-    """One resolved route ink per sport. Read only when the card is composed."""
+    """One resolved route ink per sport; only `paint` and `compose` read it."""
 
     #: The ink a run is drawn in.
     run: RouteInk

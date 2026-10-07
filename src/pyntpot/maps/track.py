@@ -4,8 +4,8 @@ Key types: `Track`, an immutable run of latitudes and longitudes with optional
 elevations and times, and `BoundingBox`, the south, west, north, east degrees
 around it.
 
-`Track.from_gpx` reads only `trkpt` elements, in the GPX 1.0 and 1.1
-namespaces. Elevation and time are kept only when every point has them; time is
+`Track.from_gpx` reads only `trkpt` elements, matched by local name whatever
+their namespace. Elevation and time are kept only when every point has them; time is
 seconds from the first point and never reads the clock. A track has no sport
 field. It does not fetch, simplify or draw anything, and it imports nothing
 from the package: the margin arithmetic is its own copy.
@@ -76,6 +76,11 @@ class Track(pydantic.BaseModel, frozen=True):
 
         Returns:
             The track; `ele` and `time` are set only when every point has them.
+
+        Raises:
+            ValueError: When a point's time is not an ISO 8601 time with a zone,
+                or the points do not make a track: fewer than two, or a
+                latitude outside [-90, 90].
         """
         root = ET.parse(path).getroot()
         points = [el for el in root.iter() if _local(el.tag) == "trkpt"]
