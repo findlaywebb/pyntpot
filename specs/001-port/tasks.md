@@ -123,8 +123,8 @@ Order: P5.0, P5.1, P5.2, P5.3a, P5.4, P5.3c on branch `p5-quality` (one PR). P5.
 P5 is complete and merged through PR #7. Every timing and choice is in
 `p5-run-log.md`. Follow-ups outside P5: start the manual Mutation workflow
 once on `main` to confirm it runs; trim the three duplicate benchmark pairs
-(sheet build, edt, wash); consider keeping slow end-to-end tests out of
-mutation runs. The next step is **P6.1**.
+(`docs/issues/duplicate-benchmarks.md`); keep slow end-to-end tests out of
+mutation runs (`docs/issues/slow-tests-in-mutation-runs.md`). The next step is **P6.1**.
 
 ## P6. Docstrings, prose and references
 
