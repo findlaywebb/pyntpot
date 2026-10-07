@@ -118,6 +118,14 @@ Order: P5.0, P5.1, P5.2, P5.3a, P5.4, P5.3c on branch `p5-quality` (one PR). P5.
 - [x] ~~P5.3b Mutation threshold from the first full sharded nightly (re-shard by rule if a shard runs over 255 min); ADR 0012 accepted~~ superseded by P5.3c
 - [x] P5.3c Mutation testing manual and advisory: `mutation.yml` (`workflow_dispatch`, modes changed/pattern/all) replaces the PR job and the nightly; no `min_score`; ADR 0012 accepted
 
+### Handoff (2026-10-07)
+
+P5 is complete and merged through PR #7. Every timing and choice is in
+`p5-run-log.md`. Follow-ups outside P5: start the manual Mutation workflow
+once on `main` to confirm it runs; trim the three duplicate benchmark pairs
+(sheet build, edt, wash); consider keeping slow end-to-end tests out of
+mutation runs. The next step is **P6.1**.
+
 ## P6. Docstrings, prose and references
 
 - [ ] P6.1 References inventory
