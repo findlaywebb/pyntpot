@@ -144,6 +144,8 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 
 ## P7. Docs and first release
 
+Depends on P11: P7.2, and ideally P7.1's quick start, run after it (plan.md, P11, "Order").
+
 - [ ] P7.1 README with gallery images
 - [ ] P7.2 Tutorial, how-to guides, reference and explanation pages
 - [ ] P7.3 ADRs 0013 to 0021 for the settled decisions
@@ -168,3 +170,14 @@ Order: P10.0 to P10.2 run after P6 merges and before P7.1; a release-blocking fi
 - [ ] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue
 - [ ] P10.2 Maintainer decisions: the `decide` rows put once, answers recorded and re-triaged
 - [ ] P10.3 onwards: fix slices by area and golden impact, filled in at P10.0
+
+## P11. Widen the public API for primitive-first tutorials
+
+Order: after P10.1 and before P7.1; must land before P7.2; P8 starts after it (plan.md, P11, "Order").
+
+- [ ] P11.0 Fatten P11 into slices; plan-reviewer pass
+- [ ] P11.1 ADR amending 0007 (number per the ADR numbers rule); widened `__all__` pinned in `test_public_api.py`
+- [ ] P11.2 Promote the `ink` primitives: brush building, density, paper style, pigments, image writing
+- [ ] P11.3 Promote the `letters` primitives: setting, face and hand styles, the nib plate
+- [ ] P11.4 Promote the fetch cache and providers through `pyntpot.maps`
+- [ ] P11.5 Tutorial scripts import only public names: architecture test, offline run against the fixture
