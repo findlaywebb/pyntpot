@@ -173,3 +173,8 @@ User instructions (2026-10-07 12:14 BST):
   their commit times (BST). The 13:24 entry's own text and the plan reviewers' briefs
   quoted the old stamps (14:05, 15:10, 15:45); they mean 13:24, 13:38 and 13:59. From here
   every entry's time is read from `date` when it is written.
+- 15:03 P6.1 verified and ticked (`b2f56c5`). The red `ruff-format` hook was P6.0's: the
+  plan's two script blocks were unformatted, so `ruff format --check .` (a CI step) failed.
+  Fixed in `14286ba` (formatting only: `ast.dump` identical for `ast_neutral.py` and
+  `doc_lines.py`; the plan's "14:05" references now 13:24); the issue file is removed.
+  Orchestrator check: format and lint clean. P6.2 dispatched.

@@ -131,7 +131,7 @@ mutation runs (`docs/issues/slow-tests-in-mutation-runs.md`). The next step is *
 Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, then P6.5a to P6.5e in parallel worktrees, landed one commit each in order a to e, then P6.6, on branch `p6-docs` (one PR). P6 edits docstrings, comments and prose only (AST-neutral check, G-here plus G-self). Every slice records its timings and choices in `p6-run-log.md`.
 
 - [x] P6.0 Fatten P6 into slices; plan-reviewer pass
-- [ ] P6.1 References inventory (`p6-inventory.md`), sites by dotted path
+- [x] P6.1 References inventory (`p6-inventory.md`), sites by dotted path
 - [ ] P6.2 Match `design-sources.md` to the inventory; spec open question resolved
 - [ ] P6.3 Fetch and check every source; write `docs/explanation/references.md`
 - [ ] P6.4 Citation line in each implementing docstring; `tests/architecture/test_reference_keys.py`
