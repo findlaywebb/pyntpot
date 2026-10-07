@@ -22,3 +22,8 @@ User instructions (2026-10-07 01:25 BST):
   (N = ceil(hours / 3.5), at least 2; maps joins scope if N stays at most 8);
   benchmarks kept, smoke budget 60 s with display ladder 450, 300, 200;
   coverage measured on 3.13 and 3.14, lower figure gates.
+- 01:38 Container restart lost the first plan-fix agent; re-dispatched from
+  the committed plan.
+- 01:47 Plan fixes for review 1 landed (`f4df084`). Two fix-agent additions
+  kept: per-module patterns `x_*` and `xǁ*` (a package `__init__` name prefixes
+  its submodules), and `shard.py` refusing an empty shard. Plan review 2 running.
