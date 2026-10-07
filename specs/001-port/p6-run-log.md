@@ -41,3 +41,13 @@ User instructions (2026-10-07 12:14 BST):
   `shallow-water` site corrected to `pyntpot.ink.shallow_water.shallow_water`.
   Args/Returns under the agreed rule: at most 73 lines, under 30 expected, no file within
   150 lines of 400. Plan review 2 running.
+- 13:48 Plan review 2: BLOCK (2 blocking, 4 should-fix, 8 nits; `reviews/p6-plan-review-2.md`);
+  all 21 round-1 findings confirmed resolved. Blocking: `not-verified` can never clear for
+  two design inputs (Postman's Knock behind a Cloudflare 403; the p5-watercolor README names
+  no title or author); the jargon gate's "0 to rewrite" is unreachable because the detector
+  flags code identifiers P6 may not rename. Orchestrator decisions for the fix agent: an
+  archived snapshot (web.archive.org) is a check route; a repository is checked by
+  `git ls-remote` plus its README describing the technique; a final logged status
+  `unreachable` is allowed on design-input lines only (never on a canonical-source line)
+  after every route fails, and the report lists each one; the jargon gate covers docstring
+  and comment lines only, each finding rewritten or logged as kept with its reason.
