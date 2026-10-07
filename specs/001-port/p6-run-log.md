@@ -99,3 +99,11 @@ User instructions (2026-10-07 12:14 BST):
   Borgefors each 200 stub, then Crossref 200 and a match: `verified-via-index`. P6.3 split
   into fetch and write sub-agents; P6.5a-e parallel in worktrees. `maintainer-checked`
   bound to marker lines; the two 14:05 checks carry them. Plan review 4 running.
+- 16:15 Plan review 4: not PASS (2 blocking, 5 should-fix, 4 nits;
+  `reviews/p6-plan-review-4.md`); all round-3 findings resolved, both fix-agent rejections
+  upheld. Blocking: the widened blocked-page rule also catches live non-DOI pages whose
+  recorded title is a paraphrase (Stadia, ICA, Adventures in Mapping), sending ICA to
+  `unreachable`; the P6.3-write brief lacks the canonical-source rule and candidate table.
+  Orchestrator decision: the author-name clause applies to DOI publisher pages only, and
+  P6.2's table pins match words per non-DOI page; all should-fix and nits go into the plan
+  now; review 5 confirms only this round's changes.
