@@ -45,7 +45,13 @@ jobs:
         run: uv run lint-imports
 
       - name: Tests
-        run: uv run pytest -m "not golden" --cov
+        run: uv run pytest -m "not golden and not benchmark" --cov
+
+      - name: Coverage gate (ink, letters)
+        run: uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fail-under=95
+
+      - name: Coverage gate (maps)
+        run: uv run coverage report --include="src/pyntpot/maps/*" --fail-under=92
 
   prerelease:
     runs-on: ubuntu-latest

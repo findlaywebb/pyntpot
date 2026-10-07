@@ -42,3 +42,11 @@ User instructions (2026-10-07 01:25 BST):
   Passed also under `--hypothesis-seed` 11, 12, 13 and `CI=true` with
   `--randomly-seed` 1 and 2. No findings filed: every property held.
 - 02:18 P5.1 verified by the orchestrator (977 passed, lint and types clean) and ticked. CodSpeed onboarding PR is #6 (branch `codspeed/setup-benchmarks`, opened 02:15); P5.4 reconciles it.
+- 02:31 P5.2 coverage baseline (ADR 0011), `CI=true`, `-m "not golden and not benchmark"`,
+  branch, two runs per interpreter, identical within each. 3.13: ink+letters 95.49,
+  maps 92.87, whole package 93.69. 3.14: ink+letters 95.38, maps 92.77, whole
+  package 93.59. Rule: T = 95 (3.14 figure rounded down), T_maps = 92 (3.14, same).
+  Bite check: `--fail-under=96` on ink+letters exited 2 ("total of 95 is less than
+  fail-under=96"); maps `--fail-under=94` exited 2. Note: `maps --fail-under=93`
+  exits 0 at default precision (92.87 displays as 93); with `--precision=2` it exits 2.
+  Gates at T and T_maps exit 0.

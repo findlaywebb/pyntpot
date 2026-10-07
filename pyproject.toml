@@ -199,8 +199,9 @@ markers = ["golden: slow parity tests"]
 personal_terms_file = "~/personal/pyntpot-private/banned_terms.txt"
 
 # ---------------------------------------------------------------------------
-# Coverage — the gate is the CI-only `uv run pytest --cov` invocation; plain
-# `uv run pytest` stays coverage-free for fast local loops. No threshold yet.
+# Coverage — the gate is the CI step in `checks`, see ADR 0011; never set
+# `fail_under` here (pytest-cov would apply it to the whole package). Plain
+# `uv run pytest` stays coverage-free for fast local loops.
 # ---------------------------------------------------------------------------
 
 [tool.coverage.run]

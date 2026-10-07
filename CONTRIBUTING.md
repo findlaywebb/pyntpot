@@ -15,6 +15,14 @@ a contract is an ADR in `docs/decisions/`.
 
 Property tests live in `tests/property`. To reproduce a failure, use the `@reproduce_failure` blob Hypothesis prints, or pass `--hypothesis-seed=N`. `--randomly-seed` alone does not reproduce one, because pytest-randomly does not seed Hypothesis. CI runs derandomised through Hypothesis's built-in `ci` profile, so a CI failure repeats on every run of that commit.
 
+Coverage is gated in CI only (ADR 0011); plain `uv run pytest` stays coverage-free. To check it locally, run a fresh coverage run, then the two gates:
+
+```bash
+CI=true uv run pytest -m "not golden and not benchmark" --cov
+uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fail-under=95
+uv run coverage report --include="src/pyntpot/maps/*" --fail-under=92
+```
+
 ## Spec flow
 
 One feature is one spec dir under `specs/NNN-name/`, one branch and one pull request.
