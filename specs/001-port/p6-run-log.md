@@ -77,3 +77,15 @@ User instructions (2026-10-07 12:14 BST):
 - 14:40 Maintainer: about 1,300 lines of P6 plan is fine for the orchestrator to follow
   and hand out as sub-steps to parallel sub-agents. Reviewer 3 told to judge single
   slices only, and whether P6.5a-e can run in parallel worktrees.
+- 15:10 Plan review 3: BLOCK (2 blocking, 5 should-fix, 1 consider, 3 nits;
+  `reviews/p6-plan-review-3.md`); all 14 round-2 findings confirmed resolved. Blocking:
+  the match table wrongly says no code implements a wet-area bleed (`pyntpot.ink.wash.wash`
+  does, lines 218-230) and that `blob` occurs only in `letters/`; Elsevier answers 200
+  with a "Redirecting" stub for Chaikin, Catmull-Rom and Borgefors, so route 2 never
+  falls through and those lines stay `not-verified`. Orchestrator decisions: add the
+  wet-area-bleed seed row (Luft and Deussen as design input); a publisher page whose body
+  does not contain the title counts as blocked and falls through to the index routes;
+  P6.5a-e run in parallel worktrees (no hard-coded paths, own scratch dir each, glossary
+  changes and run-log entries handed back to the orchestrator, who applies them);
+  `maintainer-checked` is bound to log lines carrying an explicit marker, not to any
+  URL in the log. S4 and S5 go into the plan too.
