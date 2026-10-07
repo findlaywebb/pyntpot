@@ -33,3 +33,11 @@ User instructions (2026-10-07 12:14 BST):
   signature and summary do not; everything else fixes accuracy and shape only.
 - 13:05 Maintainer agreed the Args/Returns rule: type hints carry most of what those
   sections would say, and more documentation is not better documentation.
+- 13:20 Plan fixes for review 1 landed (`278982d`), all 21 findings resolved. AST-neutral
+  check proven on a scratch clone: added docstring exits 0, `- a` to `- (a + 0)` exits 1.
+  Fix-agent additions kept: a fourth status `named-only` for a closed list of design
+  inputs with no title or identifier; `value-noise` canonical source is Lewis 1989;
+  `wcag-contrast` dropped from the inventory (no code computes contrast); the
+  `shallow-water` site corrected to `pyntpot.ink.shallow_water.shallow_water`.
+  Args/Returns under the agreed rule: at most 73 lines, under 30 expected, no file within
+  150 lines of 400. Plan review 2 running.
