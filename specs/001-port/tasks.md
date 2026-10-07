@@ -144,7 +144,7 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 
 ## P7. Docs and first release
 
-Order: after P10 part 2 (maintainer, 2026-10-07). P7.1 to P7.3, then P7.4 tags 0.1.0, a release candidate; later issues are fixed in 0.1.x patch releases.
+Order: after P10 part 2 (maintainer, 2026-10-07). P7.1 to P7.3, then P7.4 tags 0.1.0, a release candidate; later issues are fixed in 0.1.x patch releases. Depends on P11: P7.2, and ideally P7.1's quick start, run after it (plan.md, P11, "Order").
 
 - [ ] P7.1 README with gallery images
 - [ ] P7.2 Tutorial, how-to guides, reference and explanation pages
@@ -201,3 +201,14 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 - [ ] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))
 - [ ] P10.10d Public names for what other modules import: `maps.lettering` (if Q9 (a))
 - [ ] P10.11 Golden group, one regeneration window; ADR 0025 (if a row is `fix-golden` and Q12 yes)
+
+## P11. Widen the public API for primitive-first tutorials
+
+Order: after P10.1 and before P7.1; must land before P7.2; P8 starts after it (plan.md, P11, "Order").
+
+- [ ] P11.0 Fatten P11 into slices; plan-reviewer pass
+- [ ] P11.1 ADR amending 0007 (number per the ADR numbers rule); widened `__all__` pinned in `test_public_api.py`
+- [ ] P11.2 Promote the `ink` primitives: brush building, density, paper style, pigments, image writing
+- [ ] P11.3 Promote the `letters` primitives: setting, face and hand styles, the nib plate
+- [ ] P11.4 Promote the fetch cache and providers through `pyntpot.maps`
+- [ ] P11.5 Tutorial scripts import only public names: architecture test, offline run against the fixture

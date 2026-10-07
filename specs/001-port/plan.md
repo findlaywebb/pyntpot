@@ -5822,6 +5822,8 @@ a 0.1.x patch release, never by holding 0.1.0.
   set back from P10.R's 0.0.1 to 0.1.0. Configure the PyPI trusted publisher
   (manual, documented in CONTRIBUTING; already done if Q14 chose PyPI for
   0.0.1). Confirm with the maintainer before the tag and the publish.
+- P7.2's tutorials, and ideally P7.1's quick start, depend on P11 (the
+  widened public API); see P11, "Order".
 
 ### P8. The upstream consumer migrates to the public API
 
@@ -7451,6 +7453,82 @@ last bit).
   regeneration with the per-step table, as ADR 0006 was.
 - Commit messages: one per fix, as its row states; the last
   `Regenerate the goldens once more for the look fixes`.
+
+### P11. Widen the public API for primitive-first tutorials
+
+Asked for by the maintainer on 2026-10-07: P7's tutorials start from the
+painting primitives (paper, wash, brush stroke, nib line, pigment compositing,
+lettering, composition) and show what the engine does beyond maps; a route map
+is one application among many. Today no minimal primitive sequence can be
+written with public names alone. **This is a sketch.** P11.0 fattens it into
+slices in the shape of P5.0 and P6.0, and a plan-reviewer agent reviews it
+before P11.1 starts.
+
+- **The gap**, measured at `91ff457`; each name below is private under ADR
+  0007 and is needed by the minimal sequence in the test named:
+  `ink.brush.brush_from_id` and `ink.brush_style.BrushStyle` to build a usable
+  `Brush` (`tests/unit/ink/test_stamp.py`); `ink.pad.ink_density` to turn
+  `stamp`'s accumulator into density; `ink.style.PaperStyle`, which
+  `composite` requires, `ink.pigment.Layer` (its layer type),
+  `ink.pigment.PIGMENTS` and `TRANSPARENCY`, and `ink.sheet.rgb`
+  (`test_wash.py`, `test_pigment.py`); `letters.setting.Setting` (and `Mark`),
+  `letters.style.FaceStyle`, `HandStyle` and `NibGroups`, and
+  `letters.nib.plate` with `NibSurface` to render lettering
+  (`tests/unit/letters/test_hand.py`, `test_nib.py`); `ink.io.to_img` and
+  `save_webp` to write a file; and `maps.cache.Cache` with the providers
+  `maps.providers.overpass.OverpassFeatures` and
+  `maps.providers.opentopodata.OpenTopoData` to call `fetch`
+  (`tests/support/golden.py` uses `Cache` and the fixture providers). P11.0
+  re-measures the list at its own starting commit.
+- **The decision is widening** (maintainer, 2026-10-07): the existing
+  functions and types become public; no parallel convenience layer. A thin
+  helper is added only where the raw sequence is unreasonable for a tutorial,
+  for example writing a painted array to an image file (`to_img` needs a
+  generator, `save_webp` an image). A name that becomes public says what it
+  is: a terse private name (`rgb`, `plate`, `to_img`) may be renamed as it is
+  promoted, every importer repointed in the same commit, no shims. No name in
+  ADR 0007's list is renamed or removed: the widening is additive.
+- **Where the names live.** The public modules stay `pyntpot` and the layer
+  packages `pyntpot.ink`, `pyntpot.letters` and `pyntpot.maps`, each with an
+  `__all__`; P11.0 decides which promoted names are also top-level. The
+  boundary is unchanged: `maps -> letters -> ink`, `ink` and `letters` import
+  neither `httpx` nor `pydantic`, and import-linter and `tests/architecture/`
+  stay as they are.
+- **ADR.** A new ADR amends ADR 0007 (0007 stays, append-only, as the record
+  of the first surface; its Consequences already require a new ADR for a new
+  public name). Its number follows the rule of "P3 and P4: how to run a
+  slice": P11.0 takes the lowest number above 0023 (0013 to 0021 are reserved
+  for P7.3, 0022 and 0023 for P9) that `ls docs/decisions` does not show and
+  P10.0 has not fixed for its own ADR, and adds its row to the ADR numbers
+  table. If it is taken when the slice writes it, stop and report.
+- **Contract.** `tests/unit/test_public_api.py` pins the widened top-level
+  `__all__`, and pins each layer package's `__all__` as well. Every promoted
+  name carries the docstring contract (purpose, key types, what it does not
+  do, invariants), and the package docstrings of `pyntpot`, `ink`, `letters`
+  and `maps` list the new names. Each new concept gets its one canonical term
+  in `GLOSSARY.md` (for example paper style, pigment, setting, nib plate),
+  checked against existing entries first. Painting is unchanged, so parity
+  stays byte-exact under G-here and G-self.
+- **Acceptance.** Each P7 tutorial rung can be written with public names
+  only: paper, wash, brush stroke, nib line, pigment compositing, lettering,
+  composition (writing the finished image to a file), then a route map with
+  `fetch`, `paint`, `letter` and `compose`. A test proves it: the tutorial
+  sequences live as scripts (under `examples/`, which P7.1's `word.py` joins),
+  an architecture test parses each and fails on any import that is not a name
+  in a public module's `__all__`, and a test runs each offline against the
+  fixture. P11.0 decides whether the scripts are written in P11 or are
+  stubs P7.2 fills.
+- **Order.** P11 runs after P10.1, so its triage table shows which private
+  names P10 renames or deletes before any is promoted, and before P7.1, so
+  the README's quick start and `examples/word.py` use the widened names; it
+  must land before P7.2. A P10 fix slice that renames a name P11 has made
+  public needs its own ADR, so P10.0 orders such fixes before P11 where it
+  can. P11 moves no pixel and may land before or after P10's golden group.
+  The widening is additive, so it is compatible with P8 on either side;
+  P8 should still start after P11, so the upstream migration is written
+  against the surface the release documents. P9 runs after P7.4 and P8, so
+  it follows P11; P9.1 and P9.2 own files under `tests/architecture/`, which
+  P11's import test also touches.
 
 ## Known facts
 
