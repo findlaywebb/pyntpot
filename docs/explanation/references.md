@@ -110,7 +110,7 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 - Design input: the canonical source above.
 - Design input: Bousseau, A.; Kaplan, M.; Thollot, J.; Sillion, F. X. (2006). Interactive watercolor rendering with temporal coherence and abstraction. *Proceedings of the 4th international symposium on Non-photorealistic animation and rendering*, 141-149. https://doi.org/10.1145/1124728.1124751 [verified-via-index: Crossref record by bibliographic search, publisher page 403 challenge; 2026-10-07]
 - Design input: Watson, Z. (Stamen Design) (2012). Watercolor Process. https://stamen.com/watercolor-process-3dd5135861fe/ [verified: page 200 with its pinned words, published 2012-03-26; 2026-10-07]
-- Implemented in: `pyntpot.ink.wash.flow_edge`
+- Implemented in: `pyntpot.ink.wash.flow_edge`, `pyntpot.ink.wash.wash`
 
 ## `backruns` backruns (blooms)
 

@@ -196,6 +196,7 @@ def wash(
 
     Source: `granulation` in docs/explanation/references.md.
     Source: `wet-area-bleed` in docs/explanation/references.md.
+    Source: `edge-darkening` in docs/explanation/references.md.
 
     Args:
         cover: Coverage in 0 to 1.
