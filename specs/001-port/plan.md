@@ -2916,13 +2916,15 @@ version moves):
   Hypothesis examples are derandomised and no benchmark counts:
   - On 3.13: `CI=true uv run pytest -m "not golden and not benchmark" --cov`,
     then
-    `uv run coverage report --include='src/pyntpot/ink/*,src/pyntpot/letters/*' --format=total`
-    and `uv run coverage report --include='src/pyntpot/maps/*' --format=total`.
+    `uv run coverage report --include='src/pyntpot/ink/*,src/pyntpot/letters/*' --format=total --precision=2`
+    and `uv run coverage report --include='src/pyntpot/maps/*' --format=total --precision=2`.
+    `--format=total` alone prints a figure already rounded to the nearest
+    whole percent, which the round-down below cannot undo.
   - On 3.14, the same three commands with
     `UV_PROJECT_ENVIRONMENT="$SCRATCH/venv-3.14"` and `--python 3.14` on
     each `uv run` (see the tool facts), so `.venv` stays on 3.13.
-  - Do each interpreter twice; the two figures per interpreter must be
-    equal.
+  - Do each interpreter twice. If the two figures for one package on one
+    interpreter differ, use the lower and log both in the run log.
   - Rule: `T` is the lower of the two interpreters' `ink`+`letters`
     figures, rounded down to a whole percent (95 at P5.0, on 3.13, before
     the property tests). `T_maps` is the lower `maps` figure, rounded down
@@ -3014,9 +3016,18 @@ version moves):
       It takes a `git diff --unified=0` text, the new source of each
       changed file (keyed by repo path), and the `only_mutate` globs, and
       returns sorted, de-duplicated mutmut patterns.
-    - A path counts only if `fnmatch.fnmatch(path, glob)` holds for some
-      glob in `only_mutate`, mutmut's own matching, where `*` spans `/`.
-    - It parses the `+c,d` hunk ranges and the file's `ast`. For each
+    - A path counts only if it ends `.py` and `fnmatch.fnmatch(path, glob)`
+      holds for some glob in `only_mutate`, mutmut's own matching, where
+      `*` spans `/` (so `src/pyntpot/letters/*` also matches
+      `letters/fonts/`, which the `.py` test drops).
+    - A deleted file, whose `+++` side is `/dev/null`, is skipped: it has
+      no new source and no mutants.
+    - It parses the `+c,d` hunk ranges. `+c,d` with `d > 0` changes lines
+      `c` to `c + d - 1`, and `+c` alone means `d = 1`. A pure deletion,
+      `+c,0`, touches lines `c` and `c + 1`, the new lines either side of
+      the removed ones, so deleting a line inside a function still emits
+      that function's pattern.
+    - It parses the file's `ast`. For each
       top-level function, and each method of a top-level class, whose
       `[lineno incl. decorators, end_lineno]` intersects a changed range, it
       emits:
@@ -3032,11 +3043,15 @@ version moves):
       function. A change outside any function emits nothing; that is the
       documented gap, and the nightly covers it.
     - A `main()` takes `--base REF` and `--out PATH`. It runs
-      `git diff --unified=0 REF...HEAD -- src/pyntpot`
-      via `subprocess.run([...], check=True, capture_output=True, text=True)`,
-      reads each file, reads `only_mutate` from `pyproject.toml` with
-      `tomllib`, and writes one pattern per line to `--out`.
-    - It logs through `logging`; no `print`.
+      `git diff --unified=0 --diff-filter=d REF...HEAD -- src/pyntpot`
+      via `subprocess.run([...], check=True, capture_output=True, text=True)`
+      (`--diff-filter=d` leaves deleted files out, so no read of a missing
+      file), reads each remaining `.py` file, reads `only_mutate` from
+      `pyproject.toml` with `tomllib`, and writes one pattern per line to
+      `--out`.
+    - It logs through `logging`; no `print`. `main()` first calls
+      `logging.basicConfig(level=logging.INFO)`, or its log lines do not
+      show in CI.
   - `tests/mutation/shard.py`:
     - `shard_patterns(modules: Mapping[str, int], count: int) -> list[list[str]]`.
       `modules` maps each in-scope mutmut module name to its source line
@@ -3051,8 +3066,9 @@ version moves):
       empty shard would run `mutmut run` with no pattern, which tests every
       mutant.
     - `main()` takes `--index I`, `--count N` and `--out PATH`. It reads
-      `only_mutate` from `pyproject.toml` with `tomllib`, lists the files
-      under `src/` that match it (the same `fnmatch` rule), keeps the
+      `only_mutate` from `pyproject.toml` with `tomllib`, lists the `*.py`
+      files under `src/` that match it (the same `fnmatch` rule; the `.py`
+      test drops data files such as `letters/fonts/`), keeps the
       modules that define at least one function or method mutmut mutates
       (the same decorator rule as `scope.py`), and writes shard `I`'s
       patterns one per line to `--out`. `--count` defaults to `shards`.
@@ -3064,7 +3080,8 @@ version moves):
       pytest's `pythonpath` would make a shared import resolve. Both test
       files pin the same `__init__` and decorator cases, so the two cannot
       drift silently.
-    - It logs through `logging`; no `print`.
+    - It logs through `logging`; no `print`. `main()` first calls
+      `logging.basicConfig(level=logging.INFO)`.
   - `tests/mutation/score.py`:
     - `total_counts(stats: Iterable[Mapping[str, int]]) -> dict[str, int]`
       sums `killed`, `timeout`, `survived`, `suspicious`, `no_tests` and
@@ -3076,7 +3093,9 @@ version moves):
     - `main()` takes one or more stats paths and reads `min_score` from
       `pyproject.toml` with `tomllib`. It logs the summed counts and the
       score, and exits 1 below `min_score`. `None` logs "no mutants tested"
-      and exits 0.
+      and exits 0. `main()` first calls
+      `logging.basicConfig(level=logging.INFO)`, so the score and "no
+      mutants tested" show in CI.
   - `tests/mutation/test_scope.py`, `tests/mutation/test_shard.py` and
     `tests/mutation/test_score.py`. These are pure-function tests on
     literal diff, source, module-cost and stats values: no git, no mocks,
@@ -3086,7 +3105,10 @@ version moves):
       `@functools.cache` function and inside a `@property` (no pattern);
       a method edit; a nested-function edit; a module-constant edit, which
       gives no pattern; a file outside the `only_mutate` globs; a file in
-      a package `__init__.py` (no `.__init__` in the name).
+      a package `__init__.py` (no `.__init__` in the name); a deleted file
+      (`+++ /dev/null`, absent from `sources`: no pattern and no error); a
+      deletion-only hunk `+c,0` inside a function body (that function's
+      pattern); a non-`.py` file under an `only_mutate` glob (no pattern).
     - `shard`: a deterministic assignment for a literal module table,
       including a cost tie broken by name; two shards balanced
       largest-first; `count` 1 returns every module; an `__init__` module
@@ -3102,15 +3124,26 @@ version moves):
     - When the file is empty, the job logs "no changed functions in the
       mutation scope" and ends green.
     - Otherwise it runs, in order:
-      1. A step `run` (shell `bash`, `set -o pipefail`):
-         `xargs -a "$RUNNER_TEMP/patterns" uv run mutmut run 2>&1 | tee "$RUNNER_TEMP/mutmut.log"`.
-         On a non-zero exit whose log contains
-         `Filtered for specific mutants, but nothing matches`, it logs
-         "changed functions have no mutants", writes `tested=false` to
-         `$GITHUB_OUTPUT` and exits 0. Any other non-zero exit fails the
-         job. Success writes `tested=true`.
+      1. A step with `id: run` and `shell: bash`, whose script is exactly:
+         ```bash
+         if xargs -r -a "$RUNNER_TEMP/patterns" uv run mutmut run 2>&1 | tee "$RUNNER_TEMP/mutmut.log"; then
+           echo tested=true >> "$GITHUB_OUTPUT"
+         elif grep -q 'Filtered for specific mutants, but nothing matches' "$RUNNER_TEMP/mutmut.log"; then
+           echo "changed functions have no mutants"; echo tested=false >> "$GITHUB_OUTPUT"
+         else exit 1; fi
+         ```
+         GitHub runs `shell: bash` as `bash -eo pipefail`, so a bare
+         failing pipeline would end the script before any `rc=$?` or
+         `grep`; inside an `if` condition `-e` does not fire, and
+         `pipefail` carries `mutmut run`'s failure through `tee`. `-r`
+         stops `xargs` running `mutmut run` with no pattern, which would
+         test every mutant, if the file is empty.
       2. `uv run mutmut export-cicd-stats`
-      3. `uv run mutmut results` (to the log)
+      3. `uv run mutmut results | { grep -v ': not checked$' || true; }`
+         (to the log). After a restricted run, `mutmut results` lists
+         every untested mutant as `not checked`; the filter keeps only the
+         tested ones, and `|| true` keeps an empty result from failing the
+         step.
       4. `uv run python tests/mutation/score.py mutants/mutmut-cicd-stats.json`
 
       Steps 2 to 4 carry `if: steps.run.outputs.tested == 'true'`.
@@ -3119,7 +3152,11 @@ version moves):
     - Every job uses ubuntu-latest, the same checkout and setup-uv pins as
       `ci.yml`, and `uv sync --locked`. Pin `actions/upload-artifact` and
       `actions/download-artifact` to the latest release tag of their
-      current major, in the same tag style as `ci.yml`.
+      current major, in the same tag style as `ci.yml`. Look the tags up
+      with `git ls-remote --tags https://github.com/actions/upload-artifact`
+      (and the same for `download-artifact`); `gh api` on third-party
+      repos returns 403 here. At plan review 2 they were `v7.0.1` and
+      `v8.0.1`.
     - Job `plan` (`timeout-minutes: 10`):
       `uv run python tests/mutation/shard.py --matrix-out "$GITHUB_OUTPUT"`,
       exposing `indices` as a job output.
@@ -3127,16 +3164,24 @@ version moves):
       `strategy.fail-fast: false`,
       `matrix.index: ${{ fromJSON(needs.plan.outputs.indices) }}`):
       1. `uv run python tests/mutation/shard.py --index ${{ matrix.index }} --out "$RUNNER_TEMP/patterns"`
-      2. The same `run` step as the PR job, with the same "nothing
-         matches" handling.
+      2. The same `run` step as the PR job (`id: run`, the same script and
+         "nothing matches" handling), plus `timeout-minutes: 270`, so a
+         slow shard is stopped with 30 minutes of the job left for steps 3
+         to 5.
       3. `uv run mutmut export-cicd-stats`
-      4. `uv run mutmut results > mutants/survivors.txt`
+      4. `uv run mutmut results | { grep -v ': not checked$' || true; } > mutants/survivors.txt`
+         (the filter as in the PR job: without it the file lists every
+         mutant outside this shard, and P5.3b reads it).
       5. `actions/upload-artifact` (`if: always()`) uploads
          `mutants/mutmut-cicd-stats.json` and `mutants/survivors.txt` as
          `mutation-shard-${{ matrix.index }}`.
 
+      Steps 3 and 4 carry
+      `if: always() && (steps.run.outputs.tested == 'true' || steps.run.outcome == 'failure')`:
+      they run after a tested run, and after a timed-out or failed one so
+      its partial counts still upload, but not after "nothing matches".
       Every shard still generates all mutants and runs the stats
-      collection; step 3 measures that overhead.
+      collection; verify step 3 below measures that overhead.
     - Job `score` (`needs: shards`, `if: always()`, `timeout-minutes: 15`):
       1. `actions/download-artifact` with `pattern: mutation-shard-*` into
          `shards/`.
@@ -3183,9 +3228,19 @@ version moves):
      patterns and the score. Then drop the scratch commit.
   3. Measure, per subpackage (`ink`, `letters`, `maps`), and record as a
      table in the run log and the ADR:
-     - The mutant count `M`. Generate with `only_mutate` temporarily set to
-       all three; mutmut generates every mutant in `only_mutate` even under
-       a pattern.
+     - Counting. `export-cicd-stats` reads every `.meta` file and results
+       persist across runs, so its counts after a second run include the
+       first run's mutants, and it gives only a grand `total`. Step 3
+       therefore counts from the `.meta` files directly, with a throwaway
+       script in `$SCRATCH` (not committed): each
+       `mutants/src/pyntpot/<pkg>/**/*.meta` file is JSON whose
+       `exit_code_by_key` maps mutant name to exit code, `null` until
+       tested.
+     - The mutant count `M` per subpackage: the number of
+       `exit_code_by_key` keys across that subpackage's `.meta` files.
+       Generate first, with `only_mutate` temporarily set to all three;
+       mutmut generates every mutant in `only_mutate` even under a
+       pattern, so the cold run below does it.
      - The per-shard overhead `O`: wall time of a cold run (no `mutants/`)
        of one mutant, `uv run mutmut run "pyntpot.ink.polyline.x_simplify__mutmut_1"`,
        which is generation plus stats plus one mutant.
@@ -3193,15 +3248,30 @@ version moves):
        cold run) on sample modules: `pyntpot.ink.polyline*`,
        `pyntpot.letters.hand*`, and for `maps` both `pyntpot.maps.rings*`
        (pure geometry, fast tests) and `pyntpot.maps.painter.cover*`
-       (covered by slow paint tests). `s` is the run's wall time divided
-       by the mutants it tested (the summed counts from
-       `export-cicd-stats`). For `maps`, `s` is the mutant-weighted mean
-       of the two samples: their summed wall time over their summed
-       mutants. If a sample would pass 20 minutes, narrow it to one
-       function of the same module (`<module>.x_<name>*`) and record the
-       narrowing. This machine has 4 cores, as ubuntu-latest has.
-     - The estimate `H = M * s / 3600` hours per subpackage, and the score
-       on each sampled module.
+       (covered by slow paint tests).
+       - Run each sample as `timeout 1200 uv run mutmut run "<pattern>"`,
+         timing it with `date +%s` before and after. Each sample's wall
+         time includes that run's stats collection, so `s` errs high.
+       - The mutants a sample tested: the `exit_code_by_key` keys that
+         match its pattern (`fnmatch`) and are no longer `null`. The
+         sample patterns are disjoint, so earlier samples never count.
+       - `s` is the sample's wall time over its tested mutants. For
+         `maps`, `s` is the mutant-weighted mean of the two samples: their
+         summed wall time over their summed tested mutants.
+       - If `timeout` stops a sample (exit 124), narrow it to the module's
+         function with the most mutants (counted from the `.meta` keys,
+         pattern `<module>.x_<name>*`, or `<module>.xǁ<Class>ǁ<name>*` for
+         a method) and re-run it under the same `timeout 1200`; if that
+         also times out, take the next function down. Record each
+         narrowing in the run log.
+       - The score on each sample: run `uv run mutmut export-cicd-stats`
+         and copy `mutants/mutmut-cicd-stats.json` before and after the
+         sample, subtract the counts, and apply `score.py`'s formula to the
+         difference. The difference's summed counts must equal the tested
+         count from the `.meta` keys; if they differ, the `.meta` count is
+         used and the run log records both.
+       - This machine has 4 cores, as ubuntu-latest has.
+     - The estimate `H = M * s / 3600` hours per subpackage.
 
      Then apply the rule:
      - `N_core = max(2, ceil((H_ink + H_letters) / 3.5))`.
@@ -3212,15 +3282,18 @@ version moves):
        0012 and the run log record why `maps` is out (`H_maps` and
        `N_all`).
      - The 3.5 h target leaves 1.5 h of the 300-minute shard timeout for
-       `O` and for imbalance from the line-count proxy.
+       `O` and for imbalance from the line-count proxy. `s` is measured on
+       this machine, not a runner; P5.3b corrects `N` from the first
+       nightly's real shard times by its own rule.
 
      Write the scope into `only_mutate` and `N` into `shards`, restore
      anything else step 3 changed, and run
      `uv run python tests/mutation/shard.py --index 0 --out "$SCRATCH/p0"`
      to check shard 0's patterns are non-empty.
 - Hand-off: append to the run log the step 3 table (`M`, `s`, `H` per
-  subpackage, `O`, sample scores), `N_core`, `N_all`, the chosen scope and
-  `N`, and the step 2 patterns and score.
+  subpackage, `O`, each sample's wall time, tested count and score), any
+  sample narrowing, `N_core`, `N_all`, the chosen scope and `N`, and the
+  step 2 patterns and score.
 - Gate: G-here (the new script tests run in it) and `uv run ty check`
   covering `tests/mutation`.
 - Commit: `Run mutation testing on changed functions and a sharded nightly`
@@ -3394,19 +3467,37 @@ version moves):
 #### P5.3b Set the mutation threshold; ADR 0012 accepted
 
 - Predecessor: the merge of P5.1 to P5.4, then the first scheduled (or
-  `workflow_dispatch`) run of `mutation-nightly.yml` on `main` in which
-  every shard succeeded.
-- Read the `score` job's log and the shard artifacts. Then `min_score` is
-  the summed score rounded down to a whole percent, as a fraction (for
-  example 0.71).
-- If any shard timed out or errored, root-cause it. Do not set a threshold
-  from a partial run.
-- Owner files: `pyproject.toml` (`[tool.pyntpot.mutation] min_score`),
+  `workflow_dispatch`) run of `mutation-nightly.yml` on `main`.
+- A run is **full** when every shard succeeded and each shard job took at
+  most 255 min. Only a full run sets the threshold; never set one from a
+  partial run. Rules for a run that is not full, applied in order:
+  - **Slow shard.** If any shard timed out or took more than 255 min, set
+    `shards = ceil(N × max_shard_min / 210)`, where `N` is the current
+    `shards` and `max_shard_min` is the longest shard job's duration in
+    minutes (a timed-out shard counts as its duration at the stop). This
+    absorbs a runner slower than this machine and the line-count
+    imbalance (up to 1.28x at review 2). Commit it on the P5.3b branch as
+    `Re-shard the mutation nightly to <shards> shards`, re-dispatch with
+    `gh workflow run mutation-nightly.yml --ref <P5.3b branch>`, and
+    record `N`, `max_shard_min`, the new `shards` and both run ids in the
+    run log and ADR 0012. Repeat on that run until one is full.
+  - **Other shard failure.** A shard that failed for any other reason is
+    re-dispatched once, unchanged. If the same shard fails again the same
+    way, that is a finding, like a failing property in P5.1: file
+    `docs/issues/mutation-nightly-failure.md` with the run ids, the shard
+    and the log excerpt, record it in the run log, and fix it in its own
+    slice. P5.3b then resumes from the first full run after that fix.
+- From the full run, read the `score` job's log and the shard artifacts.
+  Then `min_score` is the summed score rounded down to a whole percent, as
+  a fraction (for example 0.71).
+- Owner files: `pyproject.toml` (`[tool.pyntpot.mutation] min_score`, and
+  `shards` if the slow-shard rule changed it),
   `specs/001-port/p5-run-log.md` (the run id, each shard's duration and
-  counts, the score and the threshold), and
+  counts, any re-shard, the score and the threshold), and
   `docs/decisions/0012-mutation-threshold.md`:
   - status becomes **Accepted**;
-  - it records the run id, the counts, the score and the threshold;
+  - it records the run id, the counts, the score and the threshold, and
+    any re-shard with its numbers;
   - the ratchet rule is the same as ADR 0011's.
 - Gate: G-here, plus the next nightly on `main` after this lands green
   against the new `min_score` (trigger it with `workflow_dispatch`).
