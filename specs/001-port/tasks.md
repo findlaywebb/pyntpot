@@ -128,7 +128,7 @@ mutation runs (`docs/issues/slow-tests-in-mutation-runs.md`). The next step is *
 
 ## P6. Docstrings, prose and references
 
-Order: P6.0, P6.1, P6.2, P6.3, P6.4, P6.5a to P6.5e, P6.6, sequential on branch `p6-docs` (one PR). P6 edits docstrings, comments and prose only (AST-neutral check, G-here plus G-self). Every slice records its timings and choices in `p6-run-log.md`.
+Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, then P6.5a to P6.5e in parallel worktrees, landed one commit each in order a to e, then P6.6, on branch `p6-docs` (one PR). P6 edits docstrings, comments and prose only (AST-neutral check, G-here plus G-self). Every slice records its timings and choices in `p6-run-log.md`.
 
 - [ ] P6.0 Fatten P6 into slices; plan-reviewer pass
 - [ ] P6.1 References inventory (`p6-inventory.md`), sites by dotted path
