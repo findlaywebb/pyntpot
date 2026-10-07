@@ -61,7 +61,7 @@ def draw_attribution(image: Image.Image, text: str, style: Style) -> None:
     """
     if not text:
         return
-    hand = lettering_marks.open_hand(style) if style.lettering.labels else None
+    hand = lettering_marks.open_hand(style)
     if hand is None:
         log.info("no hand to write the attribution with, none is drawn")
         return

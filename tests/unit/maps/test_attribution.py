@@ -1,5 +1,6 @@
 """The attribution text is the credits' short lines, and `compose` writes it at the bottom right."""
 
+import dataclasses
 import shutil
 from typing import NamedTuple
 
@@ -76,6 +77,22 @@ class TestEmpty:
         image = Image.new("RGB", (64, 64), "white")
         draw_attribution(image, "", Style.default())
         assert ImageChops.difference(image, Image.new("RGB", (64, 64), "white")).getbbox() is None
+
+
+class TestLabelsOff:
+    """The labels switch letters the map; it does not gate the attribution."""
+
+    def test_written_when_the_map_is_not_lettered(self) -> None:
+        """A style that letters no names still writes the attribution it is asked for."""
+        style = Style.default()
+        style = style.model_copy(
+            update={"lettering": dataclasses.replace(style.lettering, labels=False)}
+        )
+        image = Image.new("RGB", (600, 80), "white")
+        draw_attribution(image, PINNED_TEXT, style)
+        assert (
+            ImageChops.difference(image, Image.new("RGB", (600, 80), "white")).getbbox() is not None
+        )
 
 
 @pytest.mark.golden
