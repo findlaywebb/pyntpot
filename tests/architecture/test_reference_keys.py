@@ -4,6 +4,8 @@ import ast
 import re
 from pathlib import Path
 
+import pytest
+
 from ._ast_checks import PACKAGES, REPO_ROOT, _source_files
 
 REFERENCES = REPO_ROOT / "docs" / "explanation" / "references.md"
@@ -17,7 +19,11 @@ _CITATION = re.compile(
 
 
 def entries(text: str) -> dict[str, list[str]]:
-    """Map each entry key in ``references.md`` text to its ``Implemented in:`` dotted paths."""
+    """Map each entry key in ``references.md`` text to its ``Implemented in:`` dotted paths.
+
+    Raises:
+        ValueError: A key heading appears more than once.
+    """
     parsed: dict[str, list[str]] = {}
     key: str | None = None
     for line in text.splitlines():
@@ -25,6 +31,9 @@ def entries(text: str) -> dict[str, list[str]]:
             heading = _ENTRY_HEADING.match(line)
             key = str(heading.group(1)) if heading else None
             if key is not None:
+                if key in parsed:
+                    msg = f"references.md has two entries keyed {key!r}"
+                    raise ValueError(msg)
                 parsed[key] = []
         elif key is not None and line.startswith(_IMPLEMENTED_IN):
             parsed[key].extend(_DOTTED_PATH.findall(line[len(_IMPLEMENTED_IN) :]))
@@ -189,6 +198,23 @@ def test_entries_parses_a_two_entry_file() -> None:
         "zhang-suen": ["pyntpot.letters.skeleton.thin"],
         "kubelka-munk": ["pyntpot.ink.pigment.km_rt", "pyntpot.ink.pigment.km_plate"],
     }
+
+
+_DUPLICATED_ENTRY_FILE = """\
+## `chaikin` Chaikin corner cutting
+
+- Implemented in: `pyntpot.ink.polyline.smooth`
+
+## `chaikin` Chaikin corner cutting, again
+
+- Implemented in: `pyntpot.letters.skeleton.thin`
+"""
+
+
+def test_entries_rejects_a_duplicated_key_heading() -> None:
+    """A key heading that appears twice is an error, not a silent overwrite of the first's paths."""
+    with pytest.raises(ValueError, match="chaikin"):
+        entries(_DUPLICATED_ENTRY_FILE)
 
 
 def test_entries_without_sites_names_an_entry_with_no_site() -> None:

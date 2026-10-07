@@ -168,7 +168,7 @@ def place_spans(
 
     Args:
         spans: The resolved spans, longest first. Placed in place.
-        around: The card, the route, the darkness grid and the places and lines
+        around: The card, the route, the dark grid and the places and lines
             a mark would rather keep off.
         measure_fn: How wide a name is, so a span too short to carry its own
             name along it is known before the window search is tried.

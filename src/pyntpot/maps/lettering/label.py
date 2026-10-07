@@ -340,10 +340,12 @@ def feature_px(basemap: Basemap, kind: str, cls: str, own: float = 0.0) -> float
 def _outboard(span: Span, route_px: list[Pt]) -> float:
     """Which side of a span's own line is away from the route: +1 or -1.
 
-    The line is an iso-distance contour, so it can sit either side of the run
-    in card pixels and the answer cannot be taken from the offset's sign. It is
-    read off the drawing instead: the way the text lifts is the way that puts
-    it further from the track.
+    The line is the stretch's smoothed shape pushed off the route, bridged at a
+    hairpin and pushed clear where it came near (`span_line`), not a contour
+    held at one distance, so the answer cannot be taken from the offset's sign.
+    It is read off the drawing instead: the line's normal at its middle point
+    is compared with the way from the route's middle point to the line's, and
+    the way the text lifts is the way that puts it further from the track.
     """
     if not span.line or not route_px:
         return 1.0

@@ -9,7 +9,7 @@ three of the old names:
 | --- | --- | --- |
 | activity | track (`maps.track.Track`) | `pyntpot.maps.candidates.export` module docstring (line 3); `pyntpot.maps.candidates.export.landmark_export`, the `inputs` entry (line 60); the `#:` comment on `pyntpot.maps.lettering.label.SPAN_GROUND` (line 199) |
 | label agent | no glossary term; the code hands the candidates to the caller | the `#:` comment on `pyntpot.maps.osm_elements.LANDMARK_TAG_KEYS` (line 36) |
-| darkness grid | dark grid (`maps.plates.DarkGrid`) | `pyntpot.maps.lettering.placement_costs.Backdrop` and `.Terms`, the `dark` attribute (lines 69 and 91); `pyntpot.maps.lettering.spans.SpanSurroundings`, the `dark` attribute (line 129); `pyntpot.maps.lettering.spans.place_spans`, the `around` entry (line 171); `pyntpot.maps.lettering.placement_along._place_along`, the `terms` entry (line 212) |
+| darkness grid | dark grid (`maps.plates.DarkGrid`) | `pyntpot.maps.lettering.placement_costs.Backdrop` and `.Terms`, the `dark` attribute (lines 69 and 91); `pyntpot.maps.lettering.spans.SpanSurroundings`, the `dark` attribute (line 129); `pyntpot.maps.lettering.placement_along._place_along`, the `terms` entry (line 212) |
 
 The `dark` field these name is the painter's dark grid carried as a dict:
 `pyntpot.maps.lettering.pipeline` builds it as `{"w": dark.w, "h": dark.h,

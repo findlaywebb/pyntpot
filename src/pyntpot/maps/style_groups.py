@@ -227,8 +227,9 @@ class LetteringPolicy:
     #: compete with them; three leaves room for both. Spans have their own cap
     #: in `lettering.spans.SPAN_MAX`.
     label_max: int = 3
-    #: Only the attribution reads this: off, no hand is opened for it and the
-    #: attribution line is not written. The label plate is drawn either way.
+    #: Letter the map at all. Off, no hand is opened: the lettering stage
+    #: places no labels or spans and draws no label plate, and the attribution
+    #: line is not written either.
     labels: bool = True
     #: Letter the settlements, the watercourses and the roads the box holds, as
     #: the hierarchy asks: a settlement beside its dot with no leader, a river
