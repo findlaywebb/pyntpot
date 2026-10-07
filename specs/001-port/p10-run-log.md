@@ -155,3 +155,9 @@ User instructions (2026-10-07):
   `maps-tests-sheet-identifiers-name-the-map` (`sheet_card` and four test names), slice
   to be cut under "Later issues". P10.5b not run (both members closed); P10.6 drops rung
   order; P10.11 empty unless a fix slice's G-self moves a row. P10.8 row done, ticked.
+- P10.3c second commit landed (`3951cba`), Q7 (C): `pyntpot.ink.wash.wash` added to
+  `edge-darkening`'s `Implemented in:` line, `Source:` line in `wash`. Red:
+  `test_every_site_cites_its_key` named `edge-darkening: pyntpot.ink.wash.wash`; green
+  after. Baseline `{"commit": "489f3a6...", "dirty": false}`; AST-neutral 1 file; prek
+  exit 0; not-golden 172 s; tolerance 312 s; G-self 300 s (17 passed, byte-identical).
+  P10.3c ticked. All four release blockers (D8, Verification 1, D24 twice over) cleared.
