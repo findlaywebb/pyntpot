@@ -153,7 +153,7 @@ Order: after P10 part 2 (maintainer, 2026-10-07). P7.1 to P7.3, then P7.4 tags 0
 
 ## P8. Upstream migration
 
-Order: after P10 part 1 and P10.R; the upstream consumes the `v0.0.1` tag. At the hand-off the orchestrating session records "what upstream reads" in `p10-triage.md`; P10 part 2 follows.
+Order: after P10 part 1, P11 and P10.R; the upstream consumes the `v0.0.1` tag, made after P11 merges. At the hand-off the orchestrating session records "what upstream reads" in `p10-triage.md`; P10 part 2 follows.
 
 - [ ] P8.1 The upstream consumer migrates to the public API, with the recorded render hash reproduced first
 
@@ -168,7 +168,7 @@ Order: after P7.4, P8 and P10 (both parts).
 
 ## P10. Triage and address the port's issues
 
-Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach) on `p10-triage`, one PR; then P10.R tags 0.0.1; then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the private-name renames, the golden group) on `p10-fixes` (and `p10-golden`); then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
+Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach) on `p10-triage`, one PR; then P11, which starts only after part 1 has landed on `main`; then P10.R tags 0.0.1 (own `release-0.0.1` branch and PR, after P11 merges); then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the private-name renames, the golden group) on `p10-fixes`, branched from `main` at the tag or later (and `p10-golden`); then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
 
 - [ ] P10.0 Fatten P10 into slices; plan-reviewer pass
 - [ ] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue; dispatch the Mutation workflow once on `main`
@@ -188,7 +188,7 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 
 ### Release
 
-- [ ] P10.R Tag 0.0.1: version, changelog, `v0.0.1` pushed after the maintainer confirms (PyPI only if Q14 (2))
+- [ ] P10.R Tag 0.0.1 after P11 merges: version and changelog on `release-0.0.1`, `v0.0.1` pushed after the maintainer confirms (PyPI only if Q14 (2)); ticked by the tag record on `p10-fixes`
 
 ### Part 2 (after P8 and its "what upstream reads" record)
 
@@ -204,10 +204,10 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 
 ## P11. Widen the public API for primitive-first tutorials
 
-Order: after P10.1 and before P7.1; must land before P7.2; P8 starts after it (plan.md, P11, "Order").
+Order: after P10 part 1 has landed on `main` (not merely after P10.1), and before P10.R, P8 and P7.1 (plan.md, P11, "Order").
 
 - [ ] P11.0 Fatten P11 into slices; plan-reviewer pass
-- [ ] P11.1 ADR amending 0007 (number per the ADR numbers rule); widened `__all__` pinned in `test_public_api.py`
+- [ ] P11.1 ADR 0026 amending 0007; widened `__all__` pinned in `test_public_api.py`
 - [ ] P11.2 Promote the `ink` primitives: brush building, density, paper style, pigments, image writing
 - [ ] P11.3 Promote the `letters` primitives: setting, face and hand styles, the nib plate
 - [ ] P11.4 Promote the fetch cache and providers through `pyntpot.maps`

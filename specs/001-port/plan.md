@@ -43,7 +43,7 @@ tests/fixtures/lynmouth/{track.gpx, overpass-lynmouth.json, landcover-lynmouth.j
 tests/architecture/  (template tests, edited per P0.6)
 tests/architecture/exemptions/{line_budget.txt, gates_off.txt, NOTES.md}   (only shrink; emptied at P4.19, deleted at P9.2)
 docs/{tutorials,how-to,reference,explanation}/  docs/explanation/references.md
-docs/decisions/  0001, 0002 exist; 0003 to 0023 are assigned in "ADR numbers" under P3 and P4
+docs/decisions/  0001, 0002 exist; 0003 to 0026 are assigned in "ADR numbers" under P3 and P4
 specs/001-port/{spec.md,plan.md,tasks.md,architecture.md,design-sources.md}   (design-sources.md deleted at P9.4)
 ```
 
@@ -527,8 +527,9 @@ the façade at P3.16 and P3.17, and its measurements were taken at
 | 0023 | `retire-exemptions` | P9.2 |
 | 0024 | `route-ink-names-follow-the-route` | P10.5b, only if Q5 is answered (2) |
 | 0025 | `second-golden-regeneration` | P10.11, only if the golden group exists |
+| 0026 | `widen-the-public-api` (amends 0007) | P11.1 |
 
-P10 runs before P9 (maintainer, 2026-10-07), so 0024 and 0025 may be
+P10 and P11 run before P9 (maintainer, 2026-10-07), so 0024 to 0026 may be
 written before 0022 and 0023; the numbers stay fixed, and a number whose
 conditional slice never runs stays unused.
 
@@ -5827,8 +5828,9 @@ a 0.1.x patch release, never by holding 0.1.0.
 
 ### P8. The upstream consumer migrates to the public API
 
-Order (maintainer, 2026-10-07): P8 runs after P10 part 1 and consumes the
-`v0.0.1` tag that P10.R makes; P10 part 2 follows it. At P8's hand-off the
+Order (maintainer, 2026-10-07): P8 runs after P10 part 1, P11 and P10.R,
+and consumes the `v0.0.1` tag that P10.R makes once P11 has merged, so the
+upstream migrates against the widened surface; P10 part 2 follows it. At P8's hand-off the
 orchestrating session records "what upstream reads" in
 `specs/001-port/p10-triage.md` (P10 "Order and parallelism", "P8's
 hand-off").
@@ -5853,7 +5855,7 @@ that `CLAUDE.md` requires, touches the tolerance bound
 (`MAX_DIFFERING_FRACTION`, `MAX_CHANNEL_DELTA`) or the D22 pin handling, or
 edits a Key decisions row beyond the one appended note named in P9.1.
 
-**Precondition for the whole phase.** P4.20, P7.4, P8 and P10 (both parts,
+**Precondition for the whole phase.** P4.20, P7.4, P8, P11 and P10 (both parts,
 the golden group included) are done and ticked, and the maintainer has
 confirmed the release (P7.4 already requires that confirmation). P10.9 edits
 `spec.md` and `GLOSSARY.md`, which P9.1 and P9.2 also edit; P10 lands first,
@@ -5864,8 +5866,8 @@ in parallel with each other after P9.2.
 
 **ADR numbers.** Fixed by the table under "P3 and P4: how to run a slice":
 P9.1 writes 0022 and P9.2 writes 0023 (0003 to 0021 belong to P3, P4, P5.2,
-P5.3 and P7.3, and 0024 and 0025 to P10, which may have written them
-already). Before writing, `ls docs/decisions` must show the number
+P5.3 and P7.3, 0024 and 0025 to P10 and 0026 to P11, which may have
+written them already). Before writing, `ls docs/decisions` must show the number
 free; if it is taken, stop and report.
 
 #### P9.1 Retire the banned-term test
@@ -6124,7 +6126,9 @@ constants, `RouteInk.casing` and `pyntpot.ink.polyline.point_to_segment`
   (with the commit's test or check) and ticks `tasks.md`. Three slices may
   make one commit per member (P10.3c, P10.5b, P10.7, as their bodies say):
   each commit deletes and marks done its own member's rows, and the
-  slice's last commit ticks `tasks.md`.
+  slice's last commit ticks `tasks.md`. P10.R ticks its line in the
+  bookkeeping commit that records the tag, not in its version commit
+  (P10.R).
 - **A behaviour fix starts with a failing test.** The slice runs the new
   test before the fix and records the failure line in the hand-off. A
   deletion, rename or prose fix has no behaviour to fail; its row names the
@@ -6161,14 +6165,23 @@ constants, `RouteInk.casing` and `pyntpot.ink.polyline.point_to_segment`
   the session's system reminder gives), as P10.0's own commit does. P10.3d
   then makes `CONTRIBUTING.md` and this plan state one rule, which every
   later commit follows; commits already made are not rewritten.
-- **Branch and PR.** P10.0 to P10.2, every part-1 slice and P10.R's
-  version commit land on `p10-triage` and go to `main` through one PR; the
-  `v0.0.1` tag is made on `main` after that PR merges (P10.R). The part-2
-  slices land on `p10-fixes` through one PR, and the golden group, if it
-  exists, on `p10-golden` through its own; both merge before P7.1 starts.
-  Bookkeeping commits that touch only `p10-run-log.md`, `p10-triage.md`
-  (the P8 hand-off record) or `specs/001-port/reviews/**` are not slices
-  and tick nothing.
+- **Branch and PR.** Four P10 PRs, in this order:
+  1. P10.0 to P10.2 and every part-1 slice land on `p10-triage` and go to
+     `main` through one PR. P11 then lands through its own branches and
+     PRs (P11's plan), starting from `main` after that merge.
+  2. P10.R's version commit, after P11 has merged, goes on a short
+     `release-0.0.1` branch from `main` through its own PR; the `v0.0.1`
+     tag is made on the `main` commit that holds it (P10.R).
+  3. The part-2 slices land on `p10-fixes`, which branches from `main` at
+     the tagged commit or later; its first commit is the bookkeeping commit
+     that records the tag (P10.R), and the P8 hand-off record follows it.
+  4. The golden group, if it exists, lands on `p10-golden`, which branches
+     from `main` after the `p10-fixes` PR merges.
+
+  Both part-2 PRs merge before P7.1 starts. Bookkeeping commits that touch
+  only `p10-run-log.md`, `p10-triage.md` (the P8 hand-off record),
+  `specs/001-port/reviews/**` and, for the tag record alone, `tasks.md`'s
+  P10.R line are not slices; only the tag record ticks anything.
 - **Shared files are sequenced, never edited in parallel**: see "Order and
   parallelism" below. Parallel slices run in detached worktrees as P3 and P4
   ran them; the orchestrating session lands them one at a time, each rebased
@@ -6249,27 +6262,36 @@ the maintainer answers it stands as `defer` with the reason "awaiting a
 maintainer decision". A new `fix-golden` row after the golden group has
 closed is `defer` with that reason, never a second regeneration in P10. A
 new slice goes into part 1 or part 2 by the rule that splits them ("Order
-and parallelism"); one cut after P10.R that no upstream render can reach
-joins part 2. An issue found after P7.4 tags 0.1.0 is fixed in a 0.1.x
+and parallelism"); one cut after the `p10-triage` PR has merged joins
+part 2 whatever it reaches (part 2 still lands before P7.4). An issue found after P7.4 tags 0.1.0 is fixed in a 0.1.x
 patch release (maintainer, 2026-10-07: "0.1.0 can be candidate release and
 then 0.1.x can be fixes"); it never holds 0.1.0 back.
 
 **Order and parallelism.** The maintainer set the phase order on
 2026-10-07 ("most of p10 now, 0.0.1+ as the release, then p8, then the rest
-of p10, then the p7 docs, then the 0.1.0, then p9"):
+of p10, then the p7 docs, then the 0.1.0, then p9"), and P11 joins it after
+part 1 (orchestrating session, 2026-10-07, told to the maintainer; P11,
+"Order"):
 
 1. P10.0, P10.1, P10.2 (the stop point).
 2. **Part 1**: the release blockers (P10.3a to P10.3d) and every fix slice
    whose change no upstream render can reach: a change outside `src/`, a
    docstring or comment, a rename, the deletion of uncalled code, or a
    branch `letter` never takes (P10.4a, P10.4b, P10.5a, P10.8, P10.9).
-3. **P10.R**: tag 0.0.1 for P8.
-4. **P8** migrates the upstream consumer against `v0.0.1`, so its recorded
-   render hash is proved against an engine that part 2 has not touched.
-5. **Part 2**: every fix an upstream render may reach (P10.4c, P10.5b, P10.6,
+   Part 1 lands on `main` through the `p10-triage` PR.
+3. **P11** widens the public API. It starts only after part 1 has landed
+   on `main`, so no part-1 slice and no P11 slice ever hold the same file
+   (`GLOSSARY.md`, `letters/nib.py` and this plan are among the files both
+   edit), and it lands through its own PRs.
+4. **P10.R**: tag 0.0.1 for P8, on its own branch and PR after P11 merges.
+5. **P8** migrates the upstream consumer against `v0.0.1`, so its recorded
+   render hash is proved against an engine that part 2 has not touched,
+   through the surface P11 widened.
+6. **Part 2**: every fix an upstream render may reach (P10.4c, P10.5b, P10.6,
    P10.7), the private-name renames (P10.10a to P10.10d, after every slice
-   that touches their files), and the golden group (P10.11), if any.
-6. P7 (docs, then 0.1.0 at P7.4), then P9.
+   that touches their files), and the golden group (P10.11), if any. Part 2
+   branches from `main` after the tag, so it rebases over P11.
+7. P7 (docs, then 0.1.0 at P7.4), then P9.
 
 The rule that splits the parts: a slice is in part 2 if it changes a branch
 that an upstream call of the public API can take and that can change a
@@ -6281,7 +6303,12 @@ public API may read (`Label.as_dict` on `Lettering`'s labels,
 "what upstream reads", below). Names outside the package's exports
 (`ink.noise.edt`, `ink.polyline.point_to_segment`, `letters.trace._radii`)
 are part 1. The private-name renames are part 2 because they follow every
-slice that touches their files. Everything else is part 1.
+slice that touches their files. Everything else is part 1. A release
+blocker is part 1 if it cannot change P8's verification render
+(`compose(..., attribution=False)` on the upstream's activity). P10.3a
+qualifies because `compose` calls `draw_attribution` only when
+`attribution` is true. A release blocker that could change that render
+goes to part 2 and still lands before P7.4.
 
 ```
 P10.0 ─ P10.1 ─┬─ P10.2 (stop) ─ P10.3d ──────────────┐
@@ -6289,17 +6316,19 @@ P10.0 ─ P10.1 ─┬─ P10.2 (stop) ─ P10.3d ──────────
                ├─ P10.3c ─┐                           │
                ├─ P10.4a ─┴─ P10.4b ─ P10.5a ─────────┴─ P10.9 ──┐
                ├─ P10.3b ────────────────────────────────────────┤
-               └─ P10.8 ─────────────────────────────────────────┴─ P10.R ─ P8 ─ (part 2)
+               └─ P10.8 ─────────────────────────────────────────┴─ (part 1 merged) ─ P11 ─ P10.R ─ P8 ─ (part 2)
 
 (part 2) ─┬─ P10.4c ───────────┐
           ├─ P10.6 ────────────┼─ P10.10a ─ P10.10b ─ P10.10c ─ P10.10d ─ P10.11 ─ P7.1 … P7.4 ─ P9
           └─ P10.5b ─ P10.7 ───┘
 ```
 
-`;` marks slices with disjoint owner files that may run in parallel
-worktrees; `─` is a sequence, and a slice waits for every line that joins
-before it (P10.9 waits for P10.3d, P10.3a and P10.5a; P10.R waits for P10.3b,
-P10.9 and P10.8, so for all of part 1). In part 1: P10.3a, P10.3b, P10.3c, P10.4a and P10.8 may start as
+The lines leaving one `├`/`┬` fork are branches that may run in parallel
+worktrees (their owner files are disjoint); `─` is a sequence, and a slice
+waits for every line that joins before it (P10.9 waits for P10.3d, P10.3a
+and P10.5a; the `p10-triage` PR merges once P10.3b, P10.9 and P10.8 have
+landed, so after all of part 1; P11 starts after that merge, and P10.R
+after P11 has merged). In part 1: P10.3a, P10.3b, P10.3c, P10.4a and P10.8 may start as
 soon as P10.1 has made their rows `fix`, while the P10.2 list is open (their
 rows depend on no question; P10.3c's Q7 member joins it only if the answer
 comes before it lands, otherwise it lands as P10.3c's second commit).
@@ -6308,8 +6337,8 @@ P10.3d starts once Q1 is answered. P10.4b waits for P10.3c (`ink/wash.py`,
 for P10.4b (`letters/trace.py`); P10.9 waits for the P10.2 answers (Q2, Q9,
 Q10), P10.3d (`CONTRIBUTING.md`), P10.3a (`maps/attribution.py`) and P10.5a
 (`maps/lettering/pipeline.py`, `letters/nib.py` through P10.4b). P10.8 owns
-files no other slice touches. P10.R waits for every part-1 slice, and for
-P10.3b in particular (`pyproject.toml`, `uv.lock`). In part 2: P10.4c and
+files no other slice touches. P10.R waits for every part-1 slice (P10.3b
+in particular: `pyproject.toml`, `uv.lock`) and for every P11 slice. In part 2: P10.4c and
 P10.6 own disjoint files; P10.5b and P10.7 share
 `maps/style_groups.py` and run in that order; P10.10a to P10.10d follow all
 four; P10.11 is last. A conditional slice whose answers remove every member
@@ -6330,21 +6359,26 @@ decides it:
   `Label.as_dict`) if the list does not name `as_dict`; `close` with the
   consumer named in `as_dict`'s docstring if it does.
 - `maps-style-groups-route-constants-have-no-reader` (under Q8's answer):
-  per name, delete if the list does not name it; keep with one sentence in
-  the module docstring if it does. A private constant the list names is a
-  D21 breach upstream and is filed as a later issue.
+  `ROUTE_INK`, `ROUTE_EFFECT_OFF`, `ROUTE_SHADOW` and `RouteInk.casing` are
+  decided per name: delete if the list does not name it; keep with one
+  sentence in the module docstring if it does. `CASING_COLOURS` follows
+  `RouteInk.casing` (kept, deferred or deleted with it), since `casing`
+  reads it; the brief carries no separate yes or no for it. A private
+  constant the list names is a D21 breach upstream and is filed as a later
+  issue.
 
 If P8 records no list, the `as_dict` row becomes `defer` ("no record of
-what upstream reads"), and the Q8 row applies D6 and D21 alone: the four
-constants in the private `maps.style_groups` (`ROUTE_INK`,
-`ROUTE_EFFECT_OFF`, `ROUTE_SHADOW`, `CASING_COLOURS`) are deleted, and
-`RouteInk.casing`, reachable through the public `Style`, becomes `defer`
-with the same reason.
+what upstream reads"), and the Q8 row applies D6 and D21 alone:
+`ROUTE_INK`, `ROUTE_EFFECT_OFF` and `ROUTE_SHADOW` in the private
+`maps.style_groups` are deleted, and `RouteInk.casing`, reachable through
+the public `Style`, becomes `defer` with the same reason, and
+`CASING_COLOURS` with it.
 
 **ADR numbers.** Fixed in the table under "P3 and P4: how to run a slice":
 P10.5b writes 0024 (`route-ink-names-follow-the-route`, only under Q5 (2))
 and P10.11 writes 0025 (`second-golden-regeneration`, only if the golden
-group exists). P10 runs before P9, so 0022 and 0023 do not exist yet;
+group exists). P11.1 writes 0026, the lowest number above 0023 that P10
+has not fixed. P10 runs before P9, so 0022 and 0023 do not exist yet;
 before writing, `ls docs/decisions` must show the number free, otherwise
 stop and report.
 
@@ -6353,6 +6387,39 @@ P10.9 edits `specs/001-port/spec.md` and `GLOSSARY.md`, which P9.1 and P9.2
 also edit, and P10.3c, P10.4b and P10.10c edit `references.md`, which P9.4
 folds `design-sources.md` into; P9 starts after P10, so none of them runs
 in parallel.
+
+**P10 against P11.** P11 runs strictly between part 1 and P10.R, so no
+P10 slice runs beside a P11 slice and no row of the table below names P11;
+part 2 branches from a `main` that holds P11. No P10 slice renames or
+deletes a name P11's gap list promotes (evidence below). Two rules keep it
+so:
+
+- P11.0 re-measures its list at its own starting commit, after part 1. If
+  that list adds an underscore name that P10.10 would rename, P11 promotes
+  it under the name P10.10 would give it (the underscore dropped, or the
+  clash name chosen by the P10.10 rule), and that P10.10 slice drops it
+  from its list. If it adds a name a part-2 slice deletes (`Label.as_dict`,
+  the route constants, `RouteInk.casing`), the orchestrating session stops
+  and puts it to the maintainer as a later `decide` row.
+- P10.10's fresh names for clashing underscore names are checked against
+  the public names P11 added as well as against `GLOSSARY.md`.
+
+*(Evidence.)* The names P10 renames or deletes: `ink.noise.edt` (renamed
+`chamfer_distance`), `ink.polyline.point_to_segment`, `letters.trace._radii`,
+`Label.as_dict`, `ROUTE_INK`, `ROUTE_EFFECT_OFF`, `ROUTE_SHADOW`,
+`CASING_COLOURS`, `RouteInk.casing`, and the 58 underscore names of P10.10
+(listed at `4e316a3` by the private-import AST scan of the P10.1 seed: 6 in
+`ink.tip`, 6 in `letters.skeleton` and `letters.trace`, 12 in other `maps`,
+34 in `maps.lettering`; every one starts with `_`). The names P11's "The
+gap" bullet promotes: `brush_from_id`, `BrushStyle`, `ink_density`,
+`PaperStyle`, `Layer`, `PIGMENTS`, `TRANSPARENCY`, `rgb`, `Setting`, `Mark`,
+`FaceStyle`, `HandStyle`, `NibGroups`, `plate`, `NibSurface`, `to_img`,
+`save_webp`, `Cache`, `OverpassFeatures` and `OpenTopoData` (none starts
+with `_`), plus `fetch`, `paint`, `letter` and `compose`, already public.
+Compared by defining module and name, the two sets share no entry, and no
+P10 slice renames a module. P10 touches some of P11's modules
+(`letters/nib.py` in P10.4b and P10.9, `draw_plate`'s `NibGroups` call in
+P10.5a), but changes none of those names.
 
 The shared files that force a sequence (every row in landing order):
 
@@ -6366,10 +6433,13 @@ The shared files that force a sequence (every row in landing order):
 | `tests/unit/maps/lettering/test_spans.py` | P10.9 (the three "rule seven" docstrings, line 64's "the sheet" if Q10), P10.6 (new side test), P10.10d (repointed imports, if any) |
 | `src/pyntpot/letters/trace.py` | P10.4b (`edt` import), P10.5a (`_radii`), P10.10b (renames) |
 | `src/pyntpot/letters/nib.py` | P10.4b (`edt` import), P10.9 (the "dark field" docstring line), P10.10b (repointed imports, if any) |
+| `tests/unit/maps/lettering/test_draw_plate.py` | P10.5a (outline-route test), P10.5b (route-ink tests, if Q5 (2)) |
+| `src/pyntpot/maps/osm.py` | P10.7 (`_open_rivers` docstring), P10.10c (`_osm_layers`) |
+| `tests/support/lettering.py` | P10.9 (line 39's "card pixels", if Q2), P10.6 (`arc`'s docstring, only if it names the drawn side) |
 | `tests/benchmarks/test_ink.py` | P10.4a (deletions), P10.4b (the rename in `test_the_distance_transform`) |
 | `src/pyntpot/ink/wash.py` | P10.3c (`separated` docstring, and `wash`'s under Q7 (A) or (C)), P10.4b (import and calls of `edt`) |
 | `src/pyntpot/ink/deposit.py` | P10.3c (`spend` docstring), P10.4c (`deposit` body) |
-| `docs/explanation/references.md` | P10.3c (new entries), P10.4b (`chamfer-distance` lines), P10.10c (renamed `compose` sites); P9.4 after P10 |
+| `docs/explanation/references.md` | P10.3c (new entries), P10.4b (`chamfer-distance` lines), P10.10a (the `value-noise` and `fbm` lines, for `ink.tip._fbm1`), P10.10c (renamed `compose` sites); P9.4 after P10 |
 | `CONTRIBUTING.md` | P10.3d (`## Commits`), P10.9 (one sentence, if Q9 (c)) |
 | `pyproject.toml`, `uv.lock` | P10.3b (prek), P10.R (version) |
 | `specs/001-port/spec.md`, `GLOSSARY.md` | P10.9, then P9.1 and P9.2 (after P10) |
@@ -6437,7 +6507,7 @@ The shared files that force a sequence (every row in landing order):
   | `letters-nib-pen-angle-ignores-writing-line` | letters | defect | decide (3), Q4 | no | P10.11 or close |
   | `letters-style-label-route-ink-not-filled`, with the cache-key trap recorded (`route_inks` is in neither `BASE_GROUPS` nor `LETTERING_GROUPS`, so a fill without a key change reuses a stale label plate) | letters | defect | decide (3), Q5 | no | P10.5b or close |
   | `letters-trace-radii-unused` | letters | dead code | fix (5) | no | P10.5a |
-  | `maps-lettering-label-as-dict-unused` | maps lettering | dead code | fix (5) if P8's "Upstream reads" record does not name `as_dict`; close if it does; defer if P8 records no list (re-triaged at P8's hand-off) | no | P10.6 |
+  | `maps-lettering-label-as-dict-unused` | maps lettering | dead code | defer (2), "awaiting what upstream reads", until P8's hand-off re-triages it ("P8's hand-off") | no | P10.6 |
   | `maps-lettering-picks-journal-picks-cap` | maps lettering | defect | fix (5) | no | P10.6 |
   | `maps-lettering-sheet-homonym` | maps lettering | naming or prose | decide (3), Q10 | no | P10.9 |
   | `maps-lettering-span-sides-curve-scale-offset` | maps lettering | defect | defer (2): the sweep needs the four upstream rides the repository does not hold (D16 keeps them out) and a scoring rule it does not record | no | none |
@@ -6484,7 +6554,7 @@ The shared files that force a sequence (every row in landing order):
   `tests/unit/maps/test_layers.py`'s helpers (dropped); the 11-site
   non-canonical grep plus the multiline search
   `(label|darkness|dark)\s*\n\s*(#:?\s*)?(agent|grid|field)`;
-  `grep -rni "rule seven" tests src` (3 lines); the private-name AST scan
+  `grep -rnIi "rule seven" tests src` (3 lines); the private-name AST scan
   (58 names; the P10.10 pin is the same scan as a test);
   `grep -B2 "def test_a_full_cache_makes_no_request" tests/unit/maps/test_cli.py`
   (no marker).
@@ -6543,15 +6613,16 @@ The shared files that force a sequence (every row in landing order):
     only, about 70 lines).
   - **Q3 `letters-font-missing-glyph-advance`.** A missing glyph advances
     0.28 em; the face's space is 0.23 em; P6's docstring states 0.28.
-    Readings: (1) 0.28 is the ported literal (D5, parity first; an upstream
-    label with an uncovered character would move the P8 hash); (2) the
+    Readings: (1) 0.28 is the ported literal (D5); under (2) an upstream
+    label with an uncovered character renders differently from 0.1.0 on
+    (part 2 runs after P8, so P8's hash is unaffected); (2) the
     face's own space (the original docstring; a fixed literal ignores another
     face's metrics). Recommended: (1), `close` (rule 1). Under (2): `fix` in
     P10.5b (no Lynmouth text reaches the branch).
   - **Q4 `letters-nib-pen-angle-ignores-writing-line`.** The nib angle is
     fixed to the page; a name set along a path turns its glyphs but not the
-    nib. Readings: (1) page-fixed is the ported behaviour (the goldens and
-    the upstream hash were made with it); (2) the nib turns with the writing
+    nib. Readings: (1) page-fixed is the ported behaviour (the goldens were
+    made with it); (2) the nib turns with the writing
     line (the upstream comment said "anticlockwise from the writing line").
     Recommended: (1), `close` (rule 1), recorded as a candidate feature after
     0.1.0. Under (2): `fix-golden` (rule 4: `East Lyn` is set along its
@@ -6570,7 +6641,8 @@ The shared files that force a sequence (every row in landing order):
     superseding that paragraph; adding `route_inks` to `LETTERING_GROUPS` is
     rejected, because it would change the pinned `lettering_digest` literal
     `d15ae2f30e9ca5ce` that "What the window freezes" fixes.
-  - **Q6 `ink-tip-smooth-path-ends`.** `_smooth_path` draws a stroke's ends
+  - **Q6 `ink-tip-smooth-path-ends`.** `_smooth_path` (`smooth_path` once
+    P10.10a has run under Q9 (a)) draws a stroke's ends
     in by about 0.4 of the radius; P6's docstrings now say so. Readings: (A)
     a defect, hold the ends (the original docstring); (B) the shipped look,
     which the goldens pin. Recommended: (B), `close` (rule 1). Under (A):
@@ -6603,14 +6675,18 @@ The shared files that force a sequence (every row in landing order):
     `RouteInk.casing`, reached through the public `Style`, could be read.
     Readings: (a) delete; (b) keep for the upstream SVG page, which draws
     glow, casing and shadow (D21); (c) fill each route ink's `effect` from
-    `ROUTE_EFFECT_OFF`. Recommended: (a) for the four constants on the D6
-    and D21 evidence, and for `casing` only if P8's "Upstream reads" record
-    (P10 "Order and parallelism", "P8's hand-off") does not name it; keep
-    the `effect` field (part of the theme schema and the full digest).
+    `ROUTE_EFFECT_OFF`. Recommended: (a) for `ROUTE_INK`,
+    `ROUTE_EFFECT_OFF` and `ROUTE_SHADOW` on the D6 and D21 evidence, and
+    for `casing` only if P8's "Upstream reads" record (P10 "Order and
+    parallelism", "P8's hand-off") does not name it; `CASING_COLOURS`
+    follows `RouteInk.casing` (kept, deferred or deleted with it), since
+    `casing` reads it; keep the `effect` field (part of the theme schema
+    and the full digest).
     Reject (c): it adds behaviour whose only reader is dead. Under (a) the
-    row is `fix` in P10.7 (part 2), re-triaged per name at P8's hand-off:
-    a name the record shows read is kept with one sentence in the module
-    docstring. Under (b): `close` (rule 1), with the consumer named. Until
+    row is `fix` in P10.7 (part 2), re-triaged per name at P8's hand-off
+    (the three other constants and `casing`; `CASING_COLOURS` with
+    `casing`): a name the record shows read is kept with one sentence in
+    the module docstring. Under (b): `close` (rule 1), with the consumer named. Until
     P8's hand-off the row stands as `defer` ("awaiting what upstream
     reads").
   - **Q9 `maps-track-index-private-names-imported`.** 58 underscore names
@@ -6672,13 +6748,18 @@ The shared files that force a sequence (every row in landing order):
     (`environment: pypi`, `id-token: write`, `uv build`, then
     `pypa/gh-action-pypi-publish`, trusted publishing). `pyntpot` is not on
     PyPI (`https://pypi.org/pypi/pyntpot/json` returned 404 on 2026-10-07),
-    so no trusted publisher exists yet; whether the `pypi` environment has
-    a required reviewer could not be read from this session (the proxy
-    refuses the environments API). Readings: (1) tag only: P8 installs
-    from the git tag (P8's text: "git tag until PyPI"); the Publish run on
-    the tag fails at the upload step, uploading nothing, and the session
-    records that run as expected (or the maintainer rejects the
-    deployment, if the environment asks for a reviewer); (2) PyPI: before
+    but a pending trusted publisher can be registered for a name not yet
+    on PyPI, and whether one is registered could not be checked from this
+    session; nor could whether the `pypi` environment has a required
+    reviewer (the proxy refuses the environments API). Readings: (1) tag
+    only: P8 installs from the git tag (spec D11, `spec.md:43`: "a git tag
+    until the first PyPI release"); before the tag push the maintainer
+    confirms that no pending trusted publisher for `pyntpot` is registered
+    on PyPI, or that the `pypi` environment requires their approval; the
+    Publish run on the tag then fails at the upload step, uploading
+    nothing, and the session records that run as expected (or the
+    maintainer rejects the deployment, if the environment asks for a
+    reviewer); (2) PyPI: before
     the tag, the maintainer registers a pending trusted publisher on PyPI
     (project `pyntpot`, owner `findlaywebb`, repository `pyntpot`,
     workflow `publish.yml`, environment `pypi`); the tag push then
@@ -6686,7 +6767,10 @@ The shared files that force a sequence (every row in landing order):
     uploaded again. Recommended: (1): 0.0.1 is a candidate for one
     consumer, and 0.1.0 at P7.4 is the first public release. Either answer
     leaves P10.R's commit and tag unchanged; it decides only the
-    maintainer action below.
+    maintainer action below and what the tag confirmation asks. (A tag
+    `publish.yml` ignores, such as `0.0.1` without the `v`, was weighed and
+    not taken: D11 asks only for "a git tag", but D14 fixes tags as `v*`,
+    and the confirmation above closes the risk.)
 - **Maintainer actions** (not decisions):
   - the Mutation workflow run, if the orchestrating session's dispatch was
     refused ("Actions, Mutation, Run workflow, branch `main`, mode
@@ -6697,7 +6781,12 @@ The shared files that force a sequence (every row in landing order):
   - under Q14 (2): the pending trusted publisher on PyPI, before P10.R's
     tag is pushed;
   - at P10.R: confirm the `v0.0.1` tag before the orchestrating session
-    pushes it (as P7.4 asks for 0.1.0).
+    pushes it (as P7.4 asks for 0.1.0); under Q14 (1) the same confirmation
+    states that no pending trusted publisher for `pyntpot` is registered on
+    PyPI (or that the `pypi` environment requires the maintainer's
+    approval);
+  - at P10.R, if the proxy refuses `git push origin v0.0.1`: push
+    `v0.0.1` at `<sha>` (the session gives the sha).
 - **Fill-in table** (in `p10-triage.md` and the run log):
 
   | Q | Row | Recommended | Answer (maintainer's words) | Row becomes |
@@ -6709,7 +6798,7 @@ The shared files that force a sequence (every row in landing order):
   | Q5 | `letters-style-label-route-ink-not-filled` | (1) close | | |
   | Q6 | `ink-tip-smooth-path-ends` | (B) close | | |
   | Q7 | `unlisted-technique-blurred-mask-rim` | (C) part of `edge-darkening` | | |
-  | Q8 | `maps-style-groups-route-constants-have-no-reader` | (a) delete the four constants; `casing` by P8's "Upstream reads"; defer until P8's hand-off | | |
+  | Q8 | `maps-style-groups-route-constants-have-no-reader` | (a) delete `ROUTE_INK`, `ROUTE_EFFECT_OFF`, `ROUTE_SHADOW`; `casing` by P8's "Upstream reads", `CASING_COLOURS` with it; defer until P8's hand-off | | |
   | Q9 | `maps-track-index-private-names-imported` | (a) rename all, four slices, pin | | |
   | Q10 | `maps-lettering-sheet-homonym` | (1) "map", in the issue's scope | | |
   | Q11 | `maps-lettering-spans-place-spans-rung-order` | (2) close | | |
@@ -6769,8 +6858,9 @@ The shared files that force a sequence (every row in landing order):
   question). Part 1, release blocker: lands before P10.R, which shares
   `pyproject.toml` and `uv.lock`.
 - Owner files: `pyproject.toml`, `uv.lock`, `.github/workflows/ci.yml`, and
-  any tracked file a hook rewrites when first run here (listed in the
-  hand-off).
+  any tracked file outside `src/` a hook rewrites when first run here
+  (listed in the hand-off). A hook that rewrites a file under `src/` stops
+  the slice (P6 ran the hooks green, so none is expected).
 - Leave alone: `CLAUDE.md` (agent-facing; the maintainer's to edit, and a
   bare `prek run` works in an activated venv), `README.md` (P7.1's),
   `CONTRIBUTING.md` (already says `uv run prek`; its line 5 becomes true),
@@ -7093,13 +7183,14 @@ last bit).
   `src/pyntpot/maps/lettering/label.py`, `src/pyntpot/maps/lettering/spans.py`
   (Q11 (1) only), `tests/unit/maps/lettering/test_picks.py`,
   `tests/unit/maps/lettering/test_span_sides.py`,
-  `tests/unit/maps/lettering/test_spans.py`.
+  `tests/unit/maps/lettering/test_spans.py`,
+  `tests/support/lettering.py` (`arc`'s docstring only: reword it only if
+  it names the drawn side; it describes `route_turn`'s sign, side +1
+  towards `(-dy, dx)`, which the side fix leaves true).
 - Leave alone: `lettering/pipeline.py`, `style_groups.py`,
   `annotations.py`, `journal_heuristic`, `span_line.py`, `span_clear.py`,
   `ink/curves.py`, `SPAN_CURVE_SCALE_CAPS` (deferred row), the existing
-  docstrings of `test_spans.py` (P10.9 has reworded them);
-  `tests/support/lettering.py::arc` (its docstring names `route_turn`'s
-  convention; confirm it still reads true).
+  docstrings of `test_spans.py` (P10.9 has reworded them).
 - **The landmark cap.** Tests first in `test_picks.py`:
   `test_a_name_only_landmark_counts_against_the_landmark_cap` (a
   `label_basemap(candidates=...)` with Watersmeet, Malham Cove and
@@ -7192,12 +7283,16 @@ last bit).
   module docstring still reads true.
 - **If Q8 (a)**: check before and after:
   `grep -rn "ROUTE_INK\b\|ROUTE_EFFECT_OFF\|ROUTE_SHADOW\|CASING_COLOURS\|\.casing\b" src tests`
-  and `uv run vulture --min-confidence 60 src | grep style_groups`. Change:
+  and `uv run vulture --min-confidence 60 src | grep style_groups` (the
+  grep does not match `def casing`, so the vulture line is the check for
+  `casing`). Change:
   delete, with their comments, each of `ROUTE_INK`, `ROUTE_EFFECT_OFF`,
-  `ROUTE_SHADOW`, `CASING_COLOURS` and `RouteInk.casing` that the brief
-  marks yes. A name marked no stays, and the module docstring gains one
-  sentence naming what stays and that the upstream consumer reads it
-  (`CASING_COLOURS` stays whenever `casing` does, since `casing` reads it).
+  `ROUTE_SHADOW` and `RouteInk.casing` that the brief marks yes, and
+  `CASING_COLOURS` exactly when `casing` goes (the brief carries no
+  separate yes or no for it). A name marked no stays, and the module
+  docstring gains one sentence naming what stays and that the upstream
+  consumer reads it (`CASING_COLOURS` stays whenever `casing` does, since
+  `casing` reads it).
   `typing.Any` stays (`RouteInk.effect` uses it).
 - About 25 changed lines, 60 with Q8.
 - Gate: G-here plus G-self (no fixture way has `tunnel=no`, and the 11
@@ -7272,8 +7367,8 @@ last bit).
   between instances or processes, and no per-cache-dir counter is kept."
   "Open questions" then reads "None." Check: `grep -n "per process"
   specs/001-port/spec.md` prints nothing.
-- **Rule seven.** Check before and after: `grep -rniE "rule (seven|7)\b"
-  src tests` (3 lines before, none after). Change: the three test
+- **Rule seven.** Check before and after: `grep -rnIiE "rule (seven|7)\b"
+  src tests` (3 lines before, none after; `-I` skips the `.pyc` files). Change: the three test
   docstrings in `test_spans.py` say "the route rule" ("The route rule,
   mechanically, ...", "when the route rule cannot be met", "so the route
   rule binds it too"). Line 64 takes both this change and, under Q10, the
@@ -7321,11 +7416,14 @@ last bit).
 
 #### P10.R Tag 0.0.1
 
-- The release step between part 1 and P8 (maintainer, 2026-10-07: "0.0.1+
-  as the release, then p8"). Run by the orchestrating session, not an
-  implementer. Predecessor: every part-1 slice landed on `p10-triage`
-  (P10.3b in particular: same `pyproject.toml` and `uv.lock`), and Q14
-  answered.
+- The release step between P11 and P8 (maintainer, 2026-10-07: "0.0.1+
+  as the release, then p8"; P11 before it, "Order and parallelism"). Run
+  by the orchestrating session, not an implementer. Predecessors: the
+  `p10-triage` PR merged to `main` (every part-1 slice, P10.3b in
+  particular: same `pyproject.toml` and `uv.lock`), every P11 slice merged
+  to `main`, and Q14 answered.
+- Branch: `release-0.0.1`, from `main` after P11's last PR merges; one
+  commit, one PR.
 - How the repository versions itself: `pyproject.toml` `[project]
   version` (today `"0.1.0"`, never released: no tag exists, and `pyntpot`
   is not on PyPI), mirrored in `uv.lock`'s `pyntpot` entry (CI runs
@@ -7344,19 +7442,29 @@ last bit).
   `uv run python -c "import pyntpot; print(pyntpot.__version__)"` prints
   `0.0.1`; `uv lock --check` passes.
 - Gate: G-here (no `src` change).
-- Commit: `Set the version to 0.0.1 for the upstream migration`, the last
-  commit on `p10-triage`; it ticks `tasks.md`'s P10.R line, as every slice
-  commit does. The tag push is recorded in the run log, and P8 does not
-  start until the run log records it.
-- The tag, after the PR merges: an annotated tag on the `main` commit that
-  holds the version change (the merge commit, or the rebased commit),
+- Commit: `Set the version to 0.0.1 for the upstream migration`, the one
+  commit on `release-0.0.1`. It does not tick `tasks.md`: P10.R is not done
+  until the tag exists.
+- The tag, after the `release-0.0.1` PR merges: an annotated tag on the
+  `main` commit that holds the version change (the merge commit, or the
+  rebased commit),
   `git tag -a v0.0.1 -m "pyntpot 0.0.1, a candidate for the upstream migration"`.
   The orchestrating session pushes it (`git push origin v0.0.1`) only after
-  the maintainer confirms in the conversation, as P7.4 requires for 0.1.0.
+  the maintainer confirms in the conversation, as P7.4 requires for 0.1.0
+  (under Q14 (1) the confirmation also covers the pending trusted
+  publisher, Maintainer actions). If the proxy refuses the push, it becomes
+  a Maintainer action ("push `v0.0.1` at `<sha>`"), and P8 waits for it.
+- The record: `p10-fixes` branches from `main` at the tagged commit or
+  later, and its first commit is a bookkeeping commit that appends the tag
+  to `p10-run-log.md` (name, commit, Publish run URL and result) and ticks
+  `tasks.md`'s P10.R line, with the message `Record the v0.0.1 tag`. P8
+  does not start until that commit is pushed.
 - What the push triggers: `publish.yml` (`on: push: tags: ["v*"]`) builds
   with `uv build` and runs `pypa/gh-action-pypi-publish` in the `pypi`
-  environment by trusted publishing. Under Q14 (1), tag only, no trusted
-  publisher exists, so the upload step fails and nothing reaches PyPI; the
+  environment by trusted publishing. Under Q14 (1), tag only, the
+  maintainer has confirmed that no pending trusted publisher is registered
+  (or that the environment needs their approval), so the upload step fails
+  and nothing reaches PyPI; the
   session records the run's URL and its failure as expected in the run log
   (if the `pypi` environment asks for a reviewer, the maintainer rejects
   the deployment instead). Under Q14 (2), the maintainer has registered the
@@ -7386,9 +7494,15 @@ last bit).
   after P10.
 - Owner files: the defining and importing modules of the slice's names,
   their tests (which repoint their imports), the module docstrings that
-  list them as key names, `docs/explanation/references.md` (P10.10c only,
-  for the three `compose` sites its `Implemented in:` lines cite),
-  `tests/unit/maps/test_import_order.py` (the pin).
+  list them as key names, `docs/explanation/references.md` (P10.10a for
+  the `value-noise` and `fbm` lines, which cite `ink.tip._fbm1`; P10.10c
+  for the three `compose` sites its `Implemented in:` lines cite; no other
+  renamed name is cited there), `tests/unit/maps/test_import_order.py`
+  (the pin).
+- Every `Implemented in:` path naming a renamed name moves in the same
+  commit; `tests/architecture/test_reference_keys.py` is the check (its
+  `test_every_site_cites_its_key` fails on a path that resolves to no
+  site).
 - Leave alone: behaviour, `tests/golden/`, the 32 underscore names tests
   import that no other `src` module imports (tests may import privates),
   `docs/decisions/**` (accepted ADRs are records: ADR 0005's
@@ -7409,7 +7523,9 @@ last bit).
 - **Names**: drop the underscore. Where that clashes (P10.10b `_chains`;
   P10.10c `_plates`, `_pad`; P10.10d `_on_paper`, `_tilt`, `_bow`,
   `_window`, `_stem`) choose a name that says what the thing is, check it
-  against `GLOSSARY.md`, and list each choice in the hand-off.
+  against `GLOSSARY.md` and against the public names P11 added (P10
+  against P11), and list each choice in the hand-off. A name P11 has
+  already promoted under its P10.10 name is not renamed again.
 - Sizes (lines naming each name in its definer, importers and tests): about
   32, 30, 60 and 231, plus docs.
 - Gate: G-here plus G-self (renames: byte-identical by construction), per
@@ -7445,7 +7561,9 @@ last bit).
   `tests/unit/letters/test_hand.py::test_a_name_along_a_turned_line_carries_the_turn_on_its_pen`;
   Q6 (A): `tests/property/test_tip.py::test_smoothing_keeps_a_paths_two_ends`
   and a unit pin of the issue's case, ends `0.0` and `19.6`), written red
-  first.
+  first. P10.11 runs after P10.10a, so its brief names the smoothing
+  function by the name P10.10a left: `pyntpot.ink.tip.smooth_path` under
+  Q9 (a), `pyntpot.ink.tip._smooth_path` otherwise.
 - The ADR: `docs/decisions/0025-second-golden-regeneration.md` (the number
   is fixed by the ADR table; P9 has not run, so 0022 and 0023 do not exist
   yet; before writing, `ls docs/decisions` must show 0025 free, otherwise
@@ -7497,10 +7615,12 @@ before P11.1 starts.
 - **ADR.** A new ADR amends ADR 0007 (0007 stays, append-only, as the record
   of the first surface; its Consequences already require a new ADR for a new
   public name). Its number follows the rule of "P3 and P4: how to run a
-  slice": P11.0 takes the lowest number above 0023 (0013 to 0021 are reserved
-  for P7.3, 0022 and 0023 for P9) that `ls docs/decisions` does not show and
-  P10.0 has not fixed for its own ADR, and adds its row to the ADR numbers
-  table. If it is taken when the slice writes it, stop and report.
+  slice": P11 takes **0026**, the lowest number above 0023 (0013 to 0021 are
+  reserved for P7.3, 0022 and 0023 for P9) that `ls docs/decisions` does not
+  show and P10 has not fixed (P10 fixes 0024 for P10.5b and 0025 for
+  P10.11). The ADR numbers table already holds its row (0026,
+  `widen-the-public-api`, P11.1). If 0026 is taken when the slice writes
+  it, stop and report.
 - **Contract.** `tests/unit/test_public_api.py` pins the widened top-level
   `__all__`, and pins each layer package's `__all__` as well. Every promoted
   name carries the docstring contract (purpose, key types, what it does not
@@ -7518,15 +7638,20 @@ before P11.1 starts.
   in a public module's `__all__`, and a test runs each offline against the
   fixture. P11.0 decides whether the scripts are written in P11 or are
   stubs P7.2 fills.
-- **Order.** P11 runs after P10.1, so its triage table shows which private
-  names P10 renames or deletes before any is promoted, and before P7.1, so
-  the README's quick start and `examples/word.py` use the widened names; it
-  must land before P7.2. A P10 fix slice that renames a name P11 has made
-  public needs its own ADR, so P10.0 orders such fixes before P11 where it
-  can. P11 moves no pixel and may land before or after P10's golden group.
-  The widening is additive, so it is compatible with P8 on either side;
-  P8 should still start after P11, so the upstream migration is written
-  against the surface the release documents. P9 runs after P7.4 and P8, so
+- **Order.** The port's order is P10.0 to P10.2, P10 part 1, P11, P10.R
+  (tag 0.0.1), P8, P10 part 2, P7, P9 (P10, "Order and parallelism"). P11
+  starts only after P10 part 1 has landed on `main` (the `p10-triage` PR
+  merged), not merely after P10.1: its triage table then shows which
+  private names P10 renames or deletes, and no P11 slice holds a file a
+  part-1 slice holds (`GLOSSARY.md`, `letters/nib.py`, this plan). It lands
+  before P7.1, so the README's quick start and `examples/word.py` use the
+  widened names, and so before P7.2. P10.R tags 0.0.1 on its own branch
+  after P11 merges, and P8 consumes that tag, so the upstream migration is
+  written against the surface the release documents. P10 renames or
+  deletes no name this list promotes (P10, "P10 against P11"); a part-2
+  slice that would rename or delete a name P11 has made public needs its
+  own ADR and stops for the maintainer. P11 moves no pixel, so neither P8's
+  hash nor P10's golden group depends on it. P9 runs after P7.4 and P8, so
   it follows P11; P9.1 and P9.2 own files under `tests/architecture/`, which
   P11's import test also touches.
 
