@@ -50,3 +50,9 @@ User instructions (2026-10-07):
   upstream render can reach), tag 0.0.1, P8 against 0.0.1, P10 part 2 (fixes an upstream
   render may reach, private-name renames, golden group), P7 docs and 0.1.0, then P9.
   Plan-fix round 1 dispatched with this order and the review-1 findings.
+- Plan fixes for review 1 landed (`6506569`), all 24 findings resolved and the phase
+  order applied. Fix-agent choices kept: rule-seven test text moves to P10.9 (part 1, so
+  `test_spans.py` line 64 is edited once); P10.R sets `version = "0.0.1"` plus `uv lock`
+  and a CHANGELOG entry, and P7.4 sets 0.1.0; a `v*` tag runs `publish.yml`, and
+  `pyntpot` is not on PyPI, so Q14 asks tag-only (recommended) or PyPI; ADRs 0024 and
+  0025 fixed for P10.5b and P10.11. Plan review 2 running.
