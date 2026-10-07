@@ -117,3 +117,7 @@ User instructions (2026-10-07):
   (exit 143), not the 270-minute step timeout; `score` failed with no stats. Runner loss
   counts as death outside a test body, so the failed jobs were re-run once (attempt 2).
   A second failure is real and is filed under "Later issues".
+- P10.4a landed (`a16c6bc`): `test_sheet_construction`, `test_edt`, `test_wash` and `_disc`
+  deleted from `tests/benchmarks/test_ink.py`; their three rows dropped from
+  `performance.md` with a sentence that their CodSpeed history ends. Check grep 4 then 0;
+  prek exit 0; not-golden 172 s (1041 passed, 1 skipped); tolerance 320 s.
