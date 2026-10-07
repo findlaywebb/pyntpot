@@ -181,6 +181,8 @@ def hachures(
     fills with dark strokes. Seeds near the track are skipped, because a hachure
     crossing the line is the one mark on the sheet that reads as an error.
 
+    Source: `hachures` in docs/explanation/references.md.
+
     Args:
         field: The terrain.
         clip: (xmin, ymin, xmax, ymax) in metres.

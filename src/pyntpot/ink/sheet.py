@@ -103,6 +103,8 @@ class Sheet:
         brush skips over. Taking it from `paper` rather than from an unrelated
         field is what ties the two together.
 
+        Source: `granulation` in docs/explanation/references.md.
+
         Args:
             gamma: How sharply it follows. Above 1 a pigment has to reach a
                 real hollow before it settles.

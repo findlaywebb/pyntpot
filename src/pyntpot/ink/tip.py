@@ -137,6 +137,9 @@ def _fbm1(
     The output is normalised to a sine's own spread, so swapping one for the
     other changes what repeats and not how hard the brush is worked.
 
+    Source: `value-noise` in docs/explanation/references.md.
+    Source: `fbm` in docs/explanation/references.md.
+
     Args:
         t: Arc length along the stroke, in render pixels.
         cell: The coarsest lattice spacing, in the same units.

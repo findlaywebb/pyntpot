@@ -547,3 +547,40 @@ User instructions (2026-10-07 12:14 BST):
   - Re-run: key diff empty, exit 0, 23 keys; `refcheck.sh` exit 0, only the two
     `MAINTAINER-CHECKED` lines (104, 170). Issues filed: 0.
 - 15:50 P6.3 verified and ticked (`7130b60`, `19eb6db`): 23 entries, 22 canonical sources `verified-via-index` and 1 `verified`; no `unreachable` or `not-verified`. P6.4 dispatched.
+- 16:12 P6.4 cite each key in its docstring, and gate it. Start 15:51, end 16:12 BST
+  (wall 21 min). Starting commit `5124b5e`; `$SLICE` is `$SCRATCH/p6.4/`; shared scripts
+  `sha256sum -c SHA256SUMS`: all three OK.
+  - G-self baseline: `$MG "$SLICE/before"` 59 s, `{"commit": "5124b5eb8feec00fcb8e4114599739b28e837ca8", "dirty": false}`.
+    A first baseline was taken with the new test file already untracked in the tree and
+    read `"dirty": true`; it was discarded and remade with the file moved out (invalid
+    baseline rule).
+  - Red, before any citation line: `tests/architecture/test_reference_keys.py` 1 failed,
+    5 passed; `FAILED test_every_site_cites_its_key`, `AssertionError: sites that do not
+    cite their entry's key: ['kubelka-munk: pyntpot.ink.pigment.km_rt', ...]`, all 36
+    site-key pairs of the 23 entries, and no `Implemented in:` path unresolved (none was
+    wrong, so `references.md` is unchanged).
+  - Green, after: 6 passed.
+  - Citation lines: 36 in 19 files, 83 lines added and 7 replaced (each one-line docstring
+    made multi-line). Lines added per file: `ink/noise.py` +16, `ink/pigment.py` +9,
+    `maps/compose.py` +8, `ink/wash.py` +7, `ink/polyline.py` +6, `ink/tip.py` +3,
+    `maps/relief.py` +3, and +2 each in `ink/curves.py`, `ink/pad.py`, `ink/raster.py`,
+    `ink/shallow_water.py`, `ink/sheet.py`, `ink/stamp.py`, `letters/nib.py`,
+    `letters/skeleton.py`, `maps/contours.py`, `maps/lettering/placement.py`,
+    `maps/painter/cover.py`, `maps/relief_strokes.py`. Nearest 400: `ink/polyline.py` 361,
+    `ink/wash.py` 361 (the plan's 360 plus the second key on `wash.wash`),
+    `maps/lettering/placement.py` 350. New test file 240 lines.
+  - choice: a site with two keys (`maps.compose._plates`, `ink.tip._fbm1`,
+    `ink.wash.wash`) carries the two lines adjacent, as one last paragraph, in
+    `references.md` entry order | rule: Citation line in a docstring ("a site that
+    implements two techniques carries two lines"); line budget item 1 | inputs:
+    `references.md`, the three docstrings.
+  - choice: prek run as `uvx prek run --all-files` | rule: as P6.1 to P6.3, filed in
+    `docs/issues/prek-not-in-the-environment.md` | inputs: `uv run prek` failing to spawn.
+  - AST-neutral: `python3 -I "$SCRIPTS/ast_neutral.py" 5124b5e` printed
+    `AST-neutral: 19 files`, exit 0.
+  - G-here, per stage: `uv sync` 0 s; `uvx prek run --all-files` 5 s, green (a first run
+    caught two ty `unsound` diagnostics in the new test, fixed in the test); `pytest -m
+    "not golden"` 162 s (1042 passed, 1 skipped, 17 deselected), re-run after the ty fix
+    161 s, exit 0; `--golden-tolerance` 294 s (17 passed); byte-exact `pytest -m golden`
+    284 s (17 passed). G-self `--golden-dir="$SLICE/before"` 288 s (17 passed).
+  - Issues filed: 0. Fixed: 0. No case outside a rule.

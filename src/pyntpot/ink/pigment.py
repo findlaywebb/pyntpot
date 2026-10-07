@@ -72,7 +72,10 @@ _WITH_TRANSPARENCY = 3
 
 
 def multiply_plate(layers: list[Layer], h: int, w: int) -> np.ndarray:
-    """Stack densities into one white-backed multiply plate."""
+    """Stack densities into one white-backed multiply plate.
+
+    Source: `multiply-compositing` in docs/explanation/references.md.
+    """
     out = np.ones((h, w, 3), F32)
     for layer in layers:
         dens, pig = layer[0], layer[1]
@@ -94,6 +97,8 @@ def km_rt(dens: np.ndarray, pig: np.ndarray, transparency: float) -> tuple[np.nd
     The step that is easy to miss is deriving S from Rw and Rb rather than
     picking it: without it the round trip does not return Rw and every wash
     goes black.
+
+    Source: `kubelka-munk` in docs/explanation/references.md.
 
     Args:
         dens: Layer thickness, the wash's density in 0 to 1.
@@ -128,6 +133,8 @@ def km_plate(layers: list[Layer], base: np.ndarray, transparency: float = 0.06) 
     their chroma and go grey. Kubelka-Munk keeps the scattering, so a green
     over a blue is still green over blue where they meet.
 
+    Source: `kubelka-munk` in docs/explanation/references.md.
+
     Args:
         layers: Density, pigment, and optionally the pigment's transparency.
         base: What the stack is laid over, `(h, w, 3)`.
@@ -149,6 +156,8 @@ def km_plate(layers: list[Layer], base: np.ndarray, transparency: float = 0.06) 
 
 def composite(layers: list[Layer], base: np.ndarray, style: PaperStyle) -> np.ndarray:
     """Stack one set of layers over a backing, the way the style asks.
+
+    Source: `multiply-compositing` in docs/explanation/references.md.
 
     Args:
         layers: Density, pigment, and optionally a transparency.

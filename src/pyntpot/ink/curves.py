@@ -34,6 +34,8 @@ def spline(pts: list[Pt], step: float, corners: set[int] | None = None) -> list[
     and a corner drawn as an arc is too rounded where the route gives clear
     bends to follow. Splining each run between corners on its own leaves
     the corner as a corner and the rest as curve.
+
+    Source: `catmull-rom` in docs/explanation/references.md.
     """
     if len(pts) < _FEWEST_TO_SPLINE:
         return list(pts)

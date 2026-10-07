@@ -273,6 +273,8 @@ def _ink_colour(key: str, nib: NibStyle) -> str:
 def plate(marks: Sequence[Mark], surface: NibSurface, groups: NibGroups, path: Path) -> Path | None:
     """Write the marks as one RGBA plate.
 
+    Source: `nib` in docs/explanation/references.md.
+
     Args:
         marks: What to draw. Each carries `pts` in display pixels, a `role`
             naming its weight, an `ink` naming its colour, the type `size` it

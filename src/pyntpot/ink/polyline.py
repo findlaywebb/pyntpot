@@ -44,6 +44,8 @@ _DEFORM_MAX_POINTS = 24000
 def simplify(points: list[Pt], eps: float) -> list[Pt]:
     """Douglas-Peucker simplification, iterative so a long ring cannot recurse away.
 
+    Source: `douglas-peucker` in docs/explanation/references.md.
+
     Args:
         points: Polyline in metres.
         eps: Tolerance in metres. Larger is more stylised.
@@ -82,6 +84,8 @@ def simplify(points: list[Pt], eps: float) -> list[Pt]:
 
 def smooth(points: list[Pt], passes: int = 2, *, closed: bool = False) -> list[Pt]:
     """Chaikin corner cutting, which rounds a marching-squares staircase off.
+
+    Source: `chaikin` in docs/explanation/references.md.
 
     Args:
         points: Polyline in metres.
@@ -313,6 +317,8 @@ def deform_line(
 
     The ends are left where they were, because a leader that misses its pin is
     not a hand-drawn leader, it is a wrong one.
+
+    Source: `midpoint-displacement` in docs/explanation/references.md.
 
     Args:
         line: The polyline, `(n, 2)` in whatever units the caller works in.

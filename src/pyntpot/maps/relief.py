@@ -128,7 +128,10 @@ def _resample(grid: list[list[float]], factor: int) -> list[list[float]]:
 def _shade(
     fine: list[list[float]], sx: float, sy: float, azimuth: float, altitude: float, z_factor: float
 ) -> list[list[float]]:
-    """Signed illumination per cell: positive is lit, negative is in shadow."""
+    """Signed illumination per cell: positive is lit, negative is in shadow.
+
+    Source: `hillshade` in docs/explanation/references.md.
+    """
     zen = math.radians(90.0 - altitude)
     az = math.radians(360.0 - azimuth + 90.0)
     flat = math.cos(zen)

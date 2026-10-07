@@ -33,6 +33,8 @@ SHORE_MIN_POINTS = 4
 def marching_squares(grid: list[list[float]], level: float) -> list[list[Pt]]:
     """Contour polylines for one level, in fractional (column, row) grid space.
 
+    Source: `marching-squares` in docs/explanation/references.md.
+
     Args:
         grid: Rows of samples, row 0 southernmost.
         level: The value to trace.

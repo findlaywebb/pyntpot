@@ -65,6 +65,8 @@ def flow_edge(
     large wash than on a small one. Coarse noise then breaks it up, because a
     contact line does not pin evenly.
 
+    Source: `edge-darkening` in docs/explanation/references.md.
+
     Args:
         a: The wash's own alpha, in 0 to 1.
         sheet: The paper's noise fields.
@@ -96,6 +98,8 @@ def bloom(dens: np.ndarray, a: np.ndarray, sheet: Sheet, blooms: Blooms) -> None
     outward, and warped off a circle by fractal noise, which is what makes the
     ridge read as a cauliflower rather than a halo. Cropped to the bloom's own
     box, so the cost does not scale with the plate.
+
+    Source: `backruns` in docs/explanation/references.md.
 
     Args:
         dens: The wash's density, changed in place.
@@ -190,6 +194,9 @@ def wash(
 
     Everything from `WashOptions.wet` on is inert when it is not given, so a
     caller that passes none of it paints the wash it always did.
+
+    Source: `granulation` in docs/explanation/references.md.
+    Source: `wet-area-bleed` in docs/explanation/references.md.
 
     Args:
         cover: Coverage in 0 to 1.

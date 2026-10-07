@@ -90,6 +90,8 @@ def place(
 
     Returns fewer labels than it was given where two of them named one place.
 
+    Source: `label-placement` in docs/explanation/references.md.
+
     Args:
         labels: The names to place, each with its anchor already in card pixels.
         spans: Spans to place first, so a span line is on the sheet before

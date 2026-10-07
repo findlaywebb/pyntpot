@@ -40,7 +40,11 @@ def _rgb(colour: str) -> tuple[int, int, int]:
 
 
 def _plates(plates: Plates) -> Image.Image:
-    """The card itself: the wash multiplied over the paper, as the painter composed it."""
+    """The card itself: the wash multiplied over the paper, as the painter composed it.
+
+    Source: `multiply-compositing` in docs/explanation/references.md.
+    Source: `lanczos` in docs/explanation/references.md.
+    """
     paths = plates.paths
     paper = Image.open(paths["paper"]).convert("RGB")
     wash = Image.open(paths["wash"]).convert("RGB")
@@ -60,6 +64,8 @@ def _route(
 
     The painter's pen plate is white carrying alpha so the page can tint it, so
     the same plate is tinted here. A style with no pen plate draws the line.
+
+    Source: `lanczos` in docs/explanation/references.md.
     """
     colour = _rgb(ink.colour)
     name = plates.manifest.files.get("pen")
@@ -92,6 +98,8 @@ def _paste_labels(card_img: Image.Image, plate: Path) -> None:
     pixels: one RGBA plate, stroked through the ink engine, embedded by the
     page and pasted here. What this replaces is a serif face with a hard cream
     halo, shrunk until it fitted boxes that had been sized for a cursive.
+
+    Source: `lanczos` in docs/explanation/references.md.
     """
     ink = Image.open(plate).convert("RGBA")
     if ink.size != card_img.size:

@@ -255,6 +255,8 @@ def stamp(
 ) -> None:
     """Stamp one stroke's bristles into an ink accumulator.
 
+    Source: `bristle-brush` in docs/explanation/references.md.
+
     Args:
         acc: The accumulator, added to in place.
         pts: The path in render pixels.

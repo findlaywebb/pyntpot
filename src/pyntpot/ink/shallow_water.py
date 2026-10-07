@@ -40,6 +40,8 @@ def shallow_water(
     make the number of iterations depend on the arithmetic, and the plate would
     stop being reproducible from its seed.
 
+    Source: `shallow-water` in docs/explanation/references.md.
+
     Args:
         wet: The wet area on this grid, in 0 to 1.
         pig: Pigment in suspension at the start, in 0 to 1.

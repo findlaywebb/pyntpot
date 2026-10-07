@@ -122,6 +122,8 @@ def _reduce(a: np.ndarray, h: int, w: int) -> np.ndarray:
     saved: an area mean is a box filter and leaves the stair it was asked to
     remove. It overshoots a hard edge slightly, which is why the result is
     clipped back into range.
+
+    Source: `lanczos` in docs/explanation/references.md.
     """
     if a.shape == (h, w):
         return np.asarray(a, F32)

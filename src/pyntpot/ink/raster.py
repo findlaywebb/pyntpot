@@ -69,6 +69,8 @@ def deform_ring(ring: npt.ArrayLike, deform: Deform) -> np.ndarray:
     which is what the blurred-mask edge already does; per-segment variance is
     what makes one stretch of a wood loose and the next stretch tight.
 
+    Source: `midpoint-displacement` in docs/explanation/references.md.
+
     Args:
         ring: The outline, in the rings' own metre coordinates.
         deform: The settings, in `Deform`'s order: the generator the displacements

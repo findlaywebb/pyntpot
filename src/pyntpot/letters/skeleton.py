@@ -88,6 +88,8 @@ def _fill(contours: list[list[Pt]], upem: int, pad: int = 3) -> tuple[np.ndarray
 def thin(img: np.ndarray) -> np.ndarray:
     """Zhang-Suen thinning: a filled shape down to a one pixel skeleton.
 
+    Source: `zhang-suen` in docs/explanation/references.md.
+
     Args:
         img: The filled bitmap, 1 where there is ink.
 
