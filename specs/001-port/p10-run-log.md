@@ -135,3 +135,13 @@ User instructions (2026-10-07):
   drawn card on the maps side), Q11 (2), Q12 yes for a row a fix slice's G-self moves,
   Q13 (1), Q14 (1). Candidate features go in a new `docs/features/`, mirroring
   `docs/issues/`; GitHub issues are optional ("and or") and not created.
+- P10.8 landed (`743b3bf`): `@pytest.mark.golden` on
+  `TestMap::test_a_full_cache_makes_no_request`; the marker alone dropped `maps` coverage
+  to 90.87 (gate 92, exit 2), so per the slice a fast non-golden CLI test
+  (`test_a_small_display_style_paints_a_map_quickly`, `display_px = 120`, about 3.5 s) was
+  added: ink+letters 95.49 to 95.59, maps 93.18 to 93.30; no gate touched. Not-golden
+  111 s (1044 passed, 1 skipped; was about 170 s); tolerance 364 s (18 passed). The issue
+  file is narrowed to part (b). Bookkeeping slip: the commit also carries the five
+  issue-file deletions the P10.2 agent had staged (Q3, Q4, Q5, Q6, Q11 rows, all `close`);
+  their rows and the triage update land in the P10.2 commit. P10.8's row and tick follow
+  with it.
