@@ -113,3 +113,8 @@ User instructions (2026-10-07 12:14 BST):
   osmanyy all 200; Postman's Knock 403, words from the record and the maintainer check).
   Briefs carry the candidate table, canonical-source rule and gate definitions; an entry
   without exactly one `Implemented in:` fails. Plan review 5 (this round only) running.
+- 16:50 Plan review 5: PASS (`reviews/p6-plan-review-5.md`). Two should-fix carried into
+  slice briefs rather than another round: P6.4's `entries` matches only `` ## `<key>` ``
+  headings and the test literal names the closing section; P6.3-write adds a `grep -c`
+  check for `nib`'s "Nearest published work:" prefix. P6.0 ticked. Plan review took
+  5 rounds, 12:29 to 16:50.
