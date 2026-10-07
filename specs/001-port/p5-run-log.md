@@ -120,3 +120,4 @@ User instructions (2026-10-07 01:25 BST):
     `letters/style`) have 0 mutants by mutmut's own generator. `mutants/` removed.
   - Action pins from `git ls-remote --tags`: `upload-artifact@v7.0.1`,
     `download-artifact@v8.0.1`.
+- 06:03 P5.3a landed (`bfb7af9`) and verified by the orchestrator (lint, types, mutation-script tests, workflow YAML parse). Scope ink+letters, 4 shards; maps out at about 34 h. Deviation accepted: `process_isolation = "forkserver"` (Hypothesis health check under mutmut's in-process reruns). P5.3a ticked.
