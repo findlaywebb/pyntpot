@@ -29,10 +29,13 @@ class TestSimplify:
     @UNTIMED
     @given(points=POINTS, eps=EPS)
     def test_the_ends_are_kept(self, points: list[Pt], eps: float) -> None:
-        """The first and last points survive; a line under three points comes back equal."""
+        """The first and last points survive; a line under three points comes back equal, its two ends by identity."""
         out = simplify(points, eps)
         if len(points) < 3:
             assert out == points
+            if len(points) == 2:
+                assert out[0] is points[0]
+                assert out[1] is points[1]
         else:
             assert out[0] is points[0]
             assert out[-1] is points[-1]

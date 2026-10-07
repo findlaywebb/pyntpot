@@ -1,5 +1,7 @@
 """Properties of `stamp`: seeded determinism, an untouched path, and no mark from a speck of a path."""
 
+import math
+
 import numpy as np
 from hypothesis import given
 from hypothesis import strategies as st
@@ -15,15 +17,21 @@ SEEDS = st.integers(0, 2**32 - 1)
 X = st.floats(2, 218, allow_nan=False, allow_infinity=False)
 Y = st.floats(2, 58, allow_nan=False, allow_infinity=False)
 PATHS = st.lists(st.tuples(X, Y), min_size=2, max_size=30).map(np.array)
-STEP = st.floats(-0.2, 0.2, allow_nan=False, allow_infinity=False)
+STEP = st.floats(-1, 1, allow_nan=False, allow_infinity=False)
+LENGTH = st.floats(0, 2.0, exclude_min=True, allow_nan=False, allow_infinity=False)
 
 
 @st.composite
 def specks(draw: st.DrawFn) -> np.ndarray:
-    """A path of 2 to 6 points whose total length is under 1.5 px."""
+    """A path of 2 to 6 points whose total length is a drawn value in (0, 2.0] px."""
+    steps = [(draw(STEP), draw(STEP)) for _ in range(draw(st.integers(1, 5)))]
+    raw = sum(math.hypot(dx, dy) for dx, dy in steps)
+    if raw < 1e-3:
+        steps[0], raw = (1.0, 0.0), 1.0
+    scale = draw(LENGTH) / raw
     pts = [(draw(X), draw(Y))]
-    for _ in range(draw(st.integers(1, 5))):
-        pts.append((pts[-1][0] + draw(STEP), pts[-1][1] + draw(STEP)))
+    for dx, dy in steps:
+        pts.append((pts[-1][0] + dx * scale, pts[-1][1] + dy * scale))
     return np.array(pts)
 
 
