@@ -154,3 +154,4 @@ User instructions (2026-10-07 01:25 BST):
   - `--benchmark-enable` run of all 21: 72.1 s. `--codspeed` run locally: 105.9 s wall, 21 benchmarked.
   - First CodSpeed job time on the PR: not yet known (needs the PR); no follow-up commit yet.
   - Action pins from `git ls-remote --tags`: `CodSpeedHQ/action@v5.4.0` (checkout `v7.0.1` and setup-uv `v10.2.0` equal ci.yml's).
+- 06:19 P5.4 landed (`668311b`) and verified (lint, types, YAML, smoke 18.1 s). 21 benchmarks (4 plan, 17 from PR #6), maps at display_px 450. P5.4 ticked. Opening the PR; diff review against the plan runs alongside CI.
