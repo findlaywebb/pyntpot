@@ -50,3 +50,4 @@ User instructions (2026-10-07 01:25 BST):
   fail-under=96"); maps `--fail-under=94` exited 2. Note: `maps --fail-under=93`
   exits 0 at default precision (92.87 displays as 93); with `--precision=2` it exits 2.
   Gates at T and T_maps exit 0.
+- 02:55 P5.2 landed (`33b3950`); T = 95, T_maps = 92 from 3.14. Orchestrator found the gate rounded to whole percent; fix `f506f44` gates at two decimals (maps at 93 now exits 2). P5.2 ticked.
