@@ -41,3 +41,4 @@ User instructions (2026-10-07 01:25 BST):
   pigment no-layers 0.47 s, blur constant-field 0.46 s; the rest under 0.45 s.
   Passed also under `--hypothesis-seed` 11, 12, 13 and `CI=true` with
   `--randomly-seed` 1 and 2. No findings filed: every property held.
+- 02:18 P5.1 verified by the orchestrator (977 passed, lint and types clean) and ticked. CodSpeed onboarding PR is #6 (branch `codspeed/setup-benchmarks`, opened 02:15); P5.4 reconciles it.
