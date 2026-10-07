@@ -1,5 +1,7 @@
 # pyntpot
 
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/findlaywebb/pyntpot?utm_source=badge)
+
 Hand-drawn watercolour and pen-and-ink painting for Python, with route maps.
 
 Status: pre-release. The painting engine (`pyntpot.ink`), hand lettering

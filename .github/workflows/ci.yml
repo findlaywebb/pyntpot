@@ -44,8 +44,9 @@ jobs:
       - name: Boundaries (import-linter)
         run: uv run lint-imports
 
+      # Benchmarks run once each here as plain tests; the CodSpeed workflow times them.
       - name: Tests
-        run: uv run pytest -m "not golden" --cov
+        run: uv run pytest -m "not golden" --cov --benchmark-disable
 
   prerelease:
     runs-on: ubuntu-latest
