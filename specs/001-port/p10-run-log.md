@@ -88,3 +88,9 @@ User instructions (2026-10-07):
   plan: the "sheet" sense of Q10 is also on 9 test docstring lines in 4 lettering test
   files, not only `test_spans.py` line 64; put to the maintainer inside Q10.
   Gate: `git diff --stat -- src tests` empty; prek on the new file passed.
+- Mutation workflow dispatched on `main` (`mode: pattern`,
+  `pattern: pyntpot.ink.polyline.x_simplify*`), GitHub returned 204 (queued); run URL,
+  wall time and score to be recorded when it finishes.
+- P10.2 list put to the maintainer. Meanwhile, as the plan allows, P10.3a, P10.3b and
+  P10.3c (first commit: reservoir and pigment separation only) dispatched to implementers
+  in detached worktrees from `d30ff4b`, under the interim trailer rule.
