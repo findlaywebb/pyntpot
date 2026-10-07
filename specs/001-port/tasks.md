@@ -128,11 +128,19 @@ mutation runs (`docs/issues/slow-tests-in-mutation-runs.md`). The next step is *
 
 ## P6. Docstrings, prose and references
 
-- [ ] P6.1 References inventory
-- [ ] P6.2 Recover design-input sources
-- [ ] P6.3 Verify sources and write `references.md`
-- [ ] P6.4 Docstring audit, one session per subpackage
-- [ ] P6.5 Prose audit
+Order: P6.0, P6.1, P6.2, P6.3, P6.4, P6.5a to P6.5e, P6.6, sequential on branch `p6-docs` (one PR). P6 edits docstrings, comments and prose only (AST-neutral check, G-here plus G-self). Every slice records its timings and choices in `p6-run-log.md`.
+
+- [ ] P6.0 Fatten P6 into slices; plan-reviewer pass
+- [ ] P6.1 References inventory (`p6-inventory.md`), sites by dotted path
+- [ ] P6.2 Match `design-sources.md` to the inventory; spec open question resolved
+- [ ] P6.3 Fetch and check every source; write `docs/explanation/references.md`
+- [ ] P6.4 Citation line in each implementing docstring; `tests/architecture/test_reference_keys.py`
+- [ ] P6.5a Docstring audit, then prose: `ink`
+- [ ] P6.5b Docstring audit, then prose: `letters`
+- [ ] P6.5c Docstring audit, then prose: `maps` façade, data and furniture
+- [ ] P6.5d Docstring audit, then prose: `maps` geometry and painter
+- [ ] P6.5e Docstring audit, then prose: `maps` lettering
+- [ ] P6.6 Prose audit of the docs; the phase gate
 
 ## P7. Docs and first release
 
