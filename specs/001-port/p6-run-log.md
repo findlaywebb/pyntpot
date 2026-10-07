@@ -269,3 +269,4 @@ User instructions (2026-10-07 12:14 BST):
     file touched; `pytest -m "not golden"` 161 s (1036 passed, 1 skipped, 17
     deselected); `--golden-tolerance` 294 s (17 passed); byte-exact `pytest -m golden`
     304 s (17 passed). `git diff --stat -- src tests` empty.
+- 15:19 P6.2 verified and ticked (`bef4d29`). P6.3-fetch dispatched.
