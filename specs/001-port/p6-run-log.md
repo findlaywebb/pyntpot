@@ -648,3 +648,13 @@ User instructions (2026-10-07 12:14 BST):
   - Fixed ~45, filed 7: label-as-dict-unused, picks-journal-picks-cap, sheet-homonym, span-sides-curve-scale-offset, span-sides-freer-side-sign (reproduced with a script), spans-place-spans-rung-order, spans-rule-seven-in-tests.
   - Glossary changes proposed: none.
 - 17:54 P6.5e landed by the orchestrator (measured alone): partition clean; patch applied on `f52eb8b`; ast-neutral 0 s; uv sync 0 s; uvx prek 5 s; not-golden 156 s (................................... [100%]); tolerance 292 s; exact 288 s; doc_lines 21/21 headers, 0 findings, 1 kept lines; glossary changes applied 0, deferred 0.
+- 17:54 P6.5a-e all landed (`55fdf43`, `bd4e55d`, `2a78886`, `f52eb8b`, `66296b7`); five
+  worktrees removed. Parallel phase 16:15 to 16:50 (35 min wall for five slices); landing
+  16:52 to about 17:57, about 13 min per slice. Caveat on "measured alone": P6.5a's agent
+  left a pytest run going in its worktree after its hand-off, which ended about 17:09, so
+  it overlapped the P6.5a and P6.5b landing gates; their times (156/299/288 s and
+  155/302/287 s) are within 5 s of the later three. The landing lines count `kept: `
+  text, so "kept lines 1" for c, d and e is the "kept: none" line; all three had 0
+  findings. Carried to P6.6: GLOSSARY `backdrop` and `terms` cells say "darkness grid"
+  (term "dark grid"; P6.5c); "activity" and "label agent" reported left in
+  `candidates/export`, `lettering/label`, `lettering/picks` (P6.5d). P6.6 dispatched.
