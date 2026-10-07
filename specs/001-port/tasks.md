@@ -111,7 +111,7 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 Order: P5.0, P5.1, P5.2, P5.3a, P5.4 on branch `p5-quality` (one PR), then P5.3b after the first nightly on `main`. Every slice records its numbers and choices in `p5-run-log.md`.
 
 - [x] P5.0 Fatten P5 into slices; plan-reviewer pass; spec coverage question resolved
-- [ ] P5.1 Property tests; times and any `max_examples` cut in the run log
+- [x] P5.1 Property tests; times and any `max_examples` cut in the run log
 - [ ] P5.2 Coverage baseline on 3.13 and 3.14 (lower gates), `Tests` deselects benchmarks; ADR 0011
 - [ ] P5.3a mutmut config, scope, shard and score scripts, PR job, sharded nightly; scope and shard count by rule; ADR 0012 proposed
 - [ ] P5.4 Benchmarks, `checks` smoke step and CodSpeed workflow; display ladder by rule
