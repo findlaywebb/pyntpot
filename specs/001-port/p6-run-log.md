@@ -64,3 +64,13 @@ User instructions (2026-10-07 12:14 BST):
     13 March 2014. Title, author and year match. The process section is behind a paywall
     (TPK Premium), so the extent idiom (trim to a blob, bleed the edge) is not visible on
     the page: metadata matched, technique not confirmed from the text.
+- 14:30 Plan fixes for review 2 landed (`3cb46e6`), all 14 findings resolved. Archive and
+  repository routes added; statuses `unreachable` and `maintainer-checked` barred from
+  canonical-source lines; `maintainer-checked` passes only when the URL is in this log.
+  Repository year rule: last-commit year, written "(2018, last commit, approximate)".
+  Jargon gate fed docstring and comment text only by a `doc_lines.py` (ast + tokenize):
+  findings across `src/` drop from 36 to 18. MoXi DOI kept as `10.1145/1186822.1073221`
+  (SIGGRAPH 2005 Papers; `10.1145/1073204.1073221` is the TOG 24(3) record of the same
+  paper). Probes: Postman's Knock 403, Wayback API 429 through full backoff, direct
+  snapshot resets; p5-watercolor `ls-remote` exit 0, raw README 200. P6 section now
+  about 1,300 lines. Plan review 3 running.
