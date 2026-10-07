@@ -24,16 +24,16 @@ User instructions (2026-10-07 12:14 BST):
   (Cloudflare), Crossref API 200 with matching metadata (429 on bursts: pause and retry),
   github.com 403 but `git ls-remote` works, OpenLibrary works on retry. Plan review 1
   running.
-- 12:52 Plan review 1: BLOCK (4 blocking, 8 should-fix, 9 nits; `reviews/p6-plan-review-1.md`).
+- 12:43 Plan review 1: BLOCK (4 blocking, 8 should-fix, 9 nits; `reviews/p6-plan-review-1.md`).
   Blocking: AST-neutral check rejects an added docstring; the Args/Returns rule would add
   about 2,300 boilerplate lines and push five files over 400; the reference format has no
   line for a design input and its "not verified" check can never fail; design inputs with
   no DOI or URL have no lookup route. Orchestrator decision for the fix agent: Args/Returns
   sections only on the top-level public API and only where they say something the
   signature and summary do not; everything else fixes accuracy and shape only.
-- 13:05 Maintainer agreed the Args/Returns rule: type hints carry most of what those
+- 12:50 Maintainer agreed the Args/Returns rule: type hints carry most of what those
   sections would say, and more documentation is not better documentation.
-- 13:20 Plan fixes for review 1 landed (`278982d`), all 21 findings resolved. AST-neutral
+- 12:56 Plan fixes for review 1 landed (`278982d`), all 21 findings resolved. AST-neutral
   check proven on a scratch clone: added docstring exits 0, `- a` to `- (a + 0)` exits 1.
   Fix-agent additions kept: a fourth status `named-only` for a closed list of design
   inputs with no title or identifier; `value-noise` canonical source is Lewis 1989;
@@ -41,7 +41,7 @@ User instructions (2026-10-07 12:14 BST):
   `shallow-water` site corrected to `pyntpot.ink.shallow_water.shallow_water`.
   Args/Returns under the agreed rule: at most 73 lines, under 30 expected, no file within
   150 lines of 400. Plan review 2 running.
-- 13:48 Plan review 2: BLOCK (2 blocking, 4 should-fix, 8 nits; `reviews/p6-plan-review-2.md`);
+- 13:11 Plan review 2: BLOCK (2 blocking, 4 should-fix, 8 nits; `reviews/p6-plan-review-2.md`);
   all 21 round-1 findings confirmed resolved. Blocking: `not-verified` can never clear for
   two design inputs (Postman's Knock behind a Cloudflare 403; the p5-watercolor README names
   no title or author); the jargon gate's "0 to rewrite" is unreachable because the detector
@@ -51,7 +51,7 @@ User instructions (2026-10-07 12:14 BST):
   `unreachable` is allowed on design-input lines only (never on a canonical-source line)
   after every route fails, and the report lists each one; the jargon gate covers docstring
   and comment lines only, each finding rewritten or logged as kept with its reason.
-- 14:05 Maintainer checked the two design inputs that the proxy cannot fetch (screenshots,
+- 13:24 Maintainer checked the two design inputs that the proxy cannot fetch (screenshots,
   2026-10-07). Plan fix agent told to add a `maintainer-checked` route (design-input lines
   only, never canonical-source lines).
   - axelinternet, p5-watercolor (https://github.com/axelinternet/p5-watercolor): owner
@@ -66,7 +66,7 @@ User instructions (2026-10-07 12:14 BST):
     (TPK Premium), so the extent idiom (trim to a blob, bleed the edge) is not visible on
     the page: metadata matched, technique not confirmed from the text.
   - maintainer-checked: https://thepostmansknock.com/illustrated-wedding-maps/ | 2026-10-07 | Illustrated Wedding Maps, Lindsey Bugbee, 13 March 2014; process section paywalled, technique not confirmed
-- 14:30 Plan fixes for review 2 landed (`3cb46e6`), all 14 findings resolved. Archive and
+- 13:28 Plan fixes for review 2 landed (`3cb46e6`), all 14 findings resolved. Archive and
   repository routes added; statuses `unreachable` and `maintainer-checked` barred from
   canonical-source lines; `maintainer-checked` passes only when the URL is in this log.
   Repository year rule: last-commit year, written "(2018, last commit, approximate)".
@@ -76,10 +76,10 @@ User instructions (2026-10-07 12:14 BST):
   paper). Probes: Postman's Knock 403, Wayback API 429 through full backoff, direct
   snapshot resets; p5-watercolor `ls-remote` exit 0, raw README 200. P6 section now
   about 1,300 lines. Plan review 3 running.
-- 14:40 Maintainer: about 1,300 lines of P6 plan is fine for the orchestrator to follow
+- 13:29 Maintainer: about 1,300 lines of P6 plan is fine for the orchestrator to follow
   and hand out as sub-steps to parallel sub-agents. Reviewer 3 told to judge single
   slices only, and whether P6.5a-e can run in parallel worktrees.
-- 15:10 Plan review 3: BLOCK (2 blocking, 5 should-fix, 1 consider, 3 nits;
+- 13:38 Plan review 3: BLOCK (2 blocking, 5 should-fix, 1 consider, 3 nits;
   `reviews/p6-plan-review-3.md`); all 14 round-2 findings confirmed resolved. Blocking:
   the match table wrongly says no code implements a wet-area bleed (`pyntpot.ink.wash.wash`
   does, lines 218-230) and that `blob` occurs only in `letters/`; Elsevier answers 200
@@ -91,15 +91,15 @@ User instructions (2026-10-07 12:14 BST):
   changes and run-log entries handed back to the orchestrator, who applies them);
   `maintainer-checked` is bound to log lines carrying an explicit marker, not to any
   URL in the log. S4 and S5 go into the plan too.
-- 15:45 Plan fixes for review 3 landed (`b6e5dd5`), all 11 findings resolved. New row
+- 13:59 Plan fixes for review 3 landed (`b6e5dd5`), all 11 findings resolved. New row
   `wet-area-bleed` (canonical: Luft and Deussen 2006, `10.1145/1124728.1124732`; sites
   `ink.wash.wash` and `maps.painter.cover.wet_field`; Curtis as design input). Blocked-page
   rule widened: a 200 page also counts as blocked when its body lacks every author's family
   name (Elsevier's stub carries the title inside a script). Probes: Chaikin, Catmull-Rom,
   Borgefors each 200 stub, then Crossref 200 and a match: `verified-via-index`. P6.3 split
   into fetch and write sub-agents; P6.5a-e parallel in worktrees. `maintainer-checked`
-  bound to marker lines; the two 14:05 checks carry them. Plan review 4 running.
-- 16:15 Plan review 4: not PASS (2 blocking, 5 should-fix, 4 nits;
+  bound to marker lines; the two 13:24 checks carry them. Plan review 4 running.
+- 14:17 Plan review 4: not PASS (2 blocking, 5 should-fix, 4 nits;
   `reviews/p6-plan-review-4.md`); all round-3 findings resolved, both fix-agent rejections
   upheld. Blocking: the widened blocked-page rule also catches live non-DOI pages whose
   recorded title is a paraphrase (Stadia, ICA, Adventures in Mapping), sending ICA to
@@ -107,17 +107,17 @@ User instructions (2026-10-07 12:14 BST):
   Orchestrator decision: the author-name clause applies to DOI publisher pages only, and
   P6.2's table pins match words per non-DOI page; all should-fix and nits go into the plan
   now; review 5 confirms only this round's changes.
-- 16:35 Plan fixes for review 4 landed (`da8c7ce`), all 11 findings resolved. Author-name
+- 14:28 Plan fixes for review 4 landed (`da8c7ce`), all 11 findings resolved. Author-name
   clause on DOI publisher pages only; non-DOI pages match on words pinned from live
   fetches (Curtis PDF, Hobbs, Stamen, Stadia, ICA, Adventures in Mapping, Urban Sketching,
   osmanyy all 200; Postman's Knock 403, words from the record and the maintainer check).
   Briefs carry the candidate table, canonical-source rule and gate definitions; an entry
   without exactly one `Implemented in:` fails. Plan review 5 (this round only) running.
-- 16:50 Plan review 5: PASS (`reviews/p6-plan-review-5.md`). Two should-fix carried into
+- 14:33 Plan review 5: PASS (`reviews/p6-plan-review-5.md`). Two should-fix carried into
   slice briefs rather than another round: P6.4's `entries` matches only `` ## `<key>` ``
   headings and the test literal names the closing section; P6.3-write adds a `grep -c`
   check for `nib`'s "Nearest published work:" prefix. P6.0 ticked. Plan review took
-  5 rounds, 12:29 to 16:50.
+  5 rounds, 12:29 to 14:33 (2 h 4 min).
 - 15:02 P6.1 references inventory (`specs/001-port/p6-inventory.md`), from `5299ab1`;
   started 14:34. No `src/` or `tests/` change.
   - G-here baseline on the clean `5299ab1`, per stage: `uv sync` 0 s; prek 8 s, **red**:
@@ -168,3 +168,8 @@ User instructions (2026-10-07 12:14 BST):
     `pytest -m "not golden"` 165 s (1036 passed, 1 skipped); `--golden-tolerance` 297 s
     (17 passed); byte-exact `pytest -m golden` 299 s (17 passed).
     `git diff --stat -- src tests` empty.
+- 15:05 Orchestrator correction: the entries from 12:43 to 14:33 were first stamped with
+  estimated times (12:52 to 16:50), not read from a clock. They are now restamped from
+  their commit times (BST). The 13:24 entry's own text and the plan reviewers' briefs
+  quoted the old stamps (14:05, 15:10, 15:45); they mean 13:24, 13:38 and 13:59. From here
+  every entry's time is read from `date` when it is written.
