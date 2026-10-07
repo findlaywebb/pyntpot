@@ -688,3 +688,8 @@ User instructions (2026-10-07 12:14 BST):
   4. `uv run pytest tests/architecture/test_reference_keys.py -v`: 6 passed in 0.60 s, exit 0, 2 s.
   5. `! grep -rnI -e '—' -e '–' README.md GLOSSARY.md CHANGELOG.md CONTRIBUTING.md docs/README.md docs/architecture.md docs/explanation docs/runbooks src/pyntpot`: no output, exit 0, 0 s.
   Total P6 wall time from the log: 12:14 to 18:17, 6 h 03 min.
+- 18:19 P6.6 verified (`8004076`). PR #8 opened from `p6-docs`; subscribed to its events.
+  Orchestrator checks: `ty check` clean, `lint-imports` 3 contracts kept. Not merging
+  until the maintainer says. Diff review against the plan dispatched alongside CI.
+  Pushes to `p6-docs` were rejected with a GitHub Internal Server Error 15:13 to 15:30
+  BST and 17:54 to 18:01 BST (UTC 16:54 to 17:01); each cleared on a retry.
