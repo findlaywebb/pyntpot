@@ -191,11 +191,14 @@ min_confidence = 80
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers --strict-config -q"
+addopts = "--strict-markers --strict-config --benchmark-disable -q"
 pythonpath = ["tests"]
 filterwarnings = ["error"]
 xfail_strict = true
-markers = ["golden: slow parity tests"]
+markers = [
+    "golden: slow parity tests",
+    "benchmark: performance benchmarks (timed by CodSpeed in CI, --benchmark-enable locally)",
+]
 personal_terms_file = "~/personal/pyntpot-private/banned_terms.txt"
 
 # ---------------------------------------------------------------------------

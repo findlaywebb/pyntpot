@@ -121,3 +121,36 @@ User instructions (2026-10-07 01:25 BST):
   - Action pins from `git ls-remote --tags`: `upload-artifact@v7.0.1`,
     `download-artifact@v8.0.1`.
 - 06:03 P5.3a landed (`bfb7af9`) and verified by the orchestrator (lint, types, mutation-script tests, workflow YAML parse). Scope ink+letters, 4 shards; maps out at about 34 h. Deviation accepted: `process_isolation = "forkserver"` (Hypothesis health check under mutmut's in-process reruns). P5.3a ticked.
+- P5.4 benchmarks and the CodSpeed workflow. Machine idle, 4 cores, Xeon @ 2.80GHz, Python 3.13.16, numpy 2.5.2.
+  - Reconcile: onboarding PR #6 (`codspeed/setup-benchmarks`, 17 benchmarks over ink, letters and maps, a workflow, a README badge, and a `--benchmark-disable` on ci.yml's `Tests` step). Read, never pushed to. Adopted: the workflow's `workflow_dispatch` trigger and its comment, and `id-token: write` (already in the plan's spec); no token input or runner choice (OIDC, `ubuntu-latest`). Superseded here, so PR #6 can be closed: `--benchmark-disable` is in `addopts` and ci.yml's `Tests` step already deselects benchmarks. Not adopted (outside this slice's owner files): the README badge. All 17 PR benchmarks kept, rewritten to the repo's rules (module `pytestmark`, no asserts, no mocks, seeded inputs, `brush, _ = ...`, one `benchmark` call each); none left out. Nothing breaks a repo rule.
+  - The PR's 4 maps benchmarks became `test_fetch`, `test_paint`, `test_letter`, `test_compose` (the plan's `test_paint` and `test_compose` are the PR's painting and composing under the plan's inputs: `class_style(display_px=DISPLAY_PX)`, fresh directory per round, attribution on). The PR's 4 letters benchmarks went to a third file, `test_letters.py`, since the plan names only `test_ink.py` and `test_maps.py` and the letters layer is its own. The PR's ink benchmarks sit beside the plan's 4 in `test_ink.py`; where they overlap (sheet, edt, stamp, wash) both are kept, with different inputs, and the PR's wash shares the plan's seed-3 sheet.
+  - Smoke budget (60 s): `uv run pytest -m benchmark` at `DISPLAY_PX = 450` took 17.8 s wall (21 passed). Under 60 s at the first rung, so no 300 or 200 step and no benchmark dropped. Final `DISPLAY_PX` = 450.
+  - Timings (median under `--benchmark-enable`, smoke = untimed call; fixtures about 6.4 s once, charged to `test_letter`'s setup):
+
+    | Benchmark | Source | Median (ms) | Rounds | Smoke (s) |
+    | --- | --- | --- | --- | --- |
+    | `test_ink.py::test_sheet_construction` | plan | 95.18 | 10 | 0.08 |
+    | `test_ink.py::test_edt` | plan | 14.79 | 65 | 0.02 |
+    | `test_ink.py::test_stamp_a_2000_point_path` | plan | 16.44 | 60 | 0.02 |
+    | `test_ink.py::test_wash` | plan | 44.49 | 24 | 0.04 |
+    | `test_ink.py::test_building_a_sheet` | PR #6 | 78.27 | 13 | 0.08 |
+    | `test_ink.py::test_the_distance_transform` | PR #6 | 15.32 | 51 | 0.02 |
+    | `test_ink.py::test_stamping_a_long_stroke[dry-track]` | PR #6 | 11.97 | 81 | 0.01 |
+    | `test_ink.py::test_stamping_a_long_stroke[wet-river]` | PR #6 | 15.08 | 65 | 0.02 |
+    | `test_ink.py::test_stamping_a_starved_directional_brush` | PR #6 | 33.07 | 29 | 0.04 |
+    | `test_ink.py::test_laying_a_wash` | PR #6 | 41.32 | 23 | 0.05 |
+    | `test_ink.py::test_laying_a_wet_wash` | PR #6 | 61.98 | 19 | 0.06 |
+    | `test_ink.py::test_compositing_a_stack[multiply]` | PR #6 | 13.48 | 45 | 0.19 |
+    | `test_ink.py::test_compositing_a_stack[kubelka-munk]` | PR #6 | 69.48 | 15 | 0.30 |
+    | `test_letters.py::test_writing_a_name_with_a_fresh_hand[centreline]` | PR #6 | 11.22 | 93 | 0.01 |
+    | `test_letters.py::test_writing_a_name_with_a_fresh_hand[outline]` | PR #6 | 5.74 | 84 | 0.01 |
+    | `test_letters.py::test_writing_a_name_along_a_line` | PR #6 | 11.76 | 89 | 0.01 |
+    | `test_letters.py::test_writing_a_flat_block` | PR #6 | 7.76 | 136 | 0.01 |
+    | `test_maps.py::test_fetch` (stage fetch) | PR #6 | 381.00 | 5 | 0.37 |
+    | `test_maps.py::test_paint` (stage paint) | plan, PR #6 | 5251.30 | 5 | 5.00 |
+    | `test_maps.py::test_letter` (stage letter) | PR #6 | 174.89 | 5 | 2.55 |
+    | `test_maps.py::test_compose` (stage compose) | plan, PR #6 | 580.06 | 5 | 0.72 |
+
+  - `--benchmark-enable` run of all 21: 72.1 s. `--codspeed` run locally: 105.9 s wall, 21 benchmarked.
+  - First CodSpeed job time on the PR: not yet known (needs the PR); no follow-up commit yet.
+  - Action pins from `git ls-remote --tags`: `CodSpeedHQ/action@v5.4.0` (checkout `v7.0.1` and setup-uv `v10.2.0` equal ci.yml's).

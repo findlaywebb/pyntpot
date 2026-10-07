@@ -29,6 +29,12 @@ CI runs mutation testing (ADR 0012): on a pull request over the functions it cha
 uv run mutmut run "pyntpot.ink.polyline*"
 ```
 
+Benchmarks live in `tests/benchmarks`; a plain `uv run pytest` calls each once, untimed, as a smoke test. To time them locally, and see `docs/explanation/performance.md` for what they measure:
+
+```bash
+uv run pytest -m benchmark --benchmark-enable
+```
+
 ## Spec flow
 
 One feature is one spec dir under `specs/NNN-name/`, one branch and one pull request.

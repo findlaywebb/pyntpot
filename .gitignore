@@ -33,3 +33,7 @@ htmlcov/
 
 # mutmut
 mutants/
+
+# benchmarks
+.benchmarks/
+.codspeed/

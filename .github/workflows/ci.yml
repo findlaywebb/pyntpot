@@ -53,6 +53,9 @@ jobs:
       - name: Coverage gate (maps)
         run: uv run coverage report --include="src/pyntpot/maps/*" --fail-under=92 --precision=2
 
+      - name: Benchmarks (smoke)
+        run: uv run pytest -m benchmark
+
   # Mutation testing on the functions this pull request changed (ADR 0012). The nightly
   # in mutation-nightly.yml covers the whole scope.
   mutation:
