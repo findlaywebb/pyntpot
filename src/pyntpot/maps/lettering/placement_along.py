@@ -65,8 +65,8 @@ TWO_SIDED_KINDS = ("river", "road")
 
 
 #: What the ground terms a river's window is scored on are discounted by. A
-#: river must follow its bend now, so the only thing these terms still decide
-#: is *which* bend, and at full price they were deciding it wrongly: a river
+#: river follows its bend, so the only thing these terms decide is *which*
+#: bend, and at full price they would decide it wrongly: a river
 #: crossing a pale wash or a thin lane is ordinary cartography and should not
 #: be priced like a name laid across a road. Overlap with another label is not
 #: discounted, because two names on top of each other is still two names on top
@@ -128,7 +128,7 @@ def _ground_cost(lb: Label, window: list[Pt], cells: list[Box], terms: Terms) ->
     has. That is what decides whether the name is set along the line at all.
     """
     n = len(cells)
-    # A river's window is no longer choosing whether to follow the
+    # A river's window is not choosing whether to follow the
     # water, only which reach of it, so the terms that describe the
     # ground under the name are discounted: crossing a pale wash or a
     # thin lane is ordinary cartography. Overlap with another label is
@@ -141,9 +141,8 @@ def _ground_cost(lb: Label, window: list[Pt], cells: list[Box], terms: Terms) ->
     dark_frac = 0.0 if lb.in_water else soft
     ground += sum(_darkness(box, terms.card, terms.dark) for box in cells) / n * 150 * dark_frac
     # A curved name has to keep off the route as much as a flat one
-    # does. It did not, because the route cost only ever existed on the
-    # flat path, and the result was a span name written straight across
-    # the track it belongs to.
+    # does, or a span name is written straight across the track it
+    # belongs to.
     reach = max(ROUTE_REACH_PX, lb.size)
     ground += sum(_near_route(box, terms.route, reach) for box in cells) / n
     # The share of the name that lies on tarmac, so a long name
@@ -165,13 +164,14 @@ def _ground_cost(lb: Label, window: list[Pt], cells: list[Box], terms: Terms) ->
 def _sides(lb: Label) -> tuple[float, ...]:
     """The sides of its line a curved name is tried on."""
     # A span's bracket is a contour and a contour can loop, so which side of it
-    # is "away from the route" is not one answer for the whole line: it was
-    # read once at the bracket's middle and applied everywhere, which is how
-    # "the long climb out of Keswick" came to be written on the inside of its
-    # own bracket with the track running through the word. Both sides are
-    # candidates now and the route cost decides, which is what it is for.
+    # is "away from the route" is not one answer for the whole line: read once
+    # at the bracket's middle and applied everywhere, it can write "the long
+    # climb out of Keswick" on the inside of its own bracket with the track
+    # running through the word. Both sides are candidates and the route cost
+    # decides, which is what it is for.
     # The same for a river and a road. A name set along its own water has two
-    # sides to sit on and the better one is chosen rather than assumed; the cost already knows what is under each, so both
+    # sides to sit on and the better one is chosen rather than assumed; the
+    # cost already knows what is under each, so both
     # are offered and it decides. Nothing here can reject a window for its
     # side: if the preferred side is blocked the other one is taken, and the
     # name still follows the bend.
@@ -276,8 +276,8 @@ def _place_along(
     return cost, cells, read, at, side
 
 
-#: And how far apart two names of the same river have to be before the second
-#: is worth setting, as a share of the run of water inside the card. Under this
-#: the two would read as one repeated name rather than as the same river met
-#: twice.
+#: How far apart two names of the same river have to be before the second
+#: is worth setting, as a share of the river's whole baseline and never less
+#: than the name's own width. Under this the two would read as one repeated
+#: name rather than as the same river met twice.
 RIVER_REPEAT_FRAC = 0.35

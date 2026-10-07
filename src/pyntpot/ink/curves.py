@@ -34,6 +34,8 @@ def spline(pts: list[Pt], step: float, corners: set[int] | None = None) -> list[
     and a corner drawn as an arc is too rounded where the route gives clear
     bends to follow. Splining each run between corners on its own leaves
     the corner as a corner and the rest as curve.
+
+    Source: `catmull-rom` in docs/explanation/references.md.
     """
     if len(pts) < _FEWEST_TO_SPLINE:
         return list(pts)
@@ -123,9 +125,10 @@ def offset_curve(shape: list[Pt], side: int, offset_px: float) -> list[Pt]:
 def unit_normal(pts: list[Pt], i: int, j: int) -> Pt | None:
     """The unit normal of one segment, or None when there is no segment.
 
-    Unlike `polyline.normal_at` it points right of the direction of travel, is
-    taken along the one segment from `i` to `j`, and is None rather than a
-    fallback when that segment is degenerate.
+    Unlike `polyline.normal_at` it points right of the direction of travel
+    with y up (left of it in card pixels, whose y runs down), is taken along
+    the one segment from `i` to `j`, and is None rather than a fallback when
+    that segment is degenerate.
     """
     if i < 0 or j > len(pts) - 1:
         return None

@@ -1,11 +1,11 @@
-"""The ribbon phase: the ground laid over white and faded out toward the torn edge.
+"""The ribbon phase: the ground laid over white and faded out towards the torn edge.
 
 Key names: `ribbon_alpha`, the trimmed extent of the painted ground and its pooled rim;
 and `paint_ribbon`, which turns the stack's trimmed layers into the ground the page
 multiplies over the card, and returns it with the rim's density.
 
 The stack is laid over white, because the page multiplies the wash plate over the card;
-the ribbon then fades the ground out toward the tear. Where the style asks for a hard
+the ribbon then fades the ground out towards the tear. Where the style asks for a hard
 coast, the surveyed shore stops the ribbon and the sea, which is painted separately and
 never trimmed, takes over there.
 
@@ -63,7 +63,7 @@ def ribbon_alpha(
 
 
 def paint_ribbon(job: PaintJob, stack: PlateStack) -> tuple[np.ndarray, np.ndarray]:
-    """The ground over white, faded out toward the tear, and the density of the pooled rim."""
+    """The ground over white, faded out towards the tear, and the density of the pooled rim."""
     style = job.style
     ribbon = style.ribbon
     layers = job.layers

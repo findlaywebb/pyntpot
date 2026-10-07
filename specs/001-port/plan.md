@@ -3951,44 +3951,1849 @@ slice.** It is kept as the record of the threshold plan that was dropped.
 
 ### P6. Docstrings, prose and references (D24, D25)
 
-1. **References inventory.** A read-only agent lists every technique the
-   code implements by name or by recognisable algorithm, with
-   `file:line` (against the upstream source commit): Kubelka-Munk glazing
-   (`paint.py:39, 71`), Zhang-Suen thinning (`outlinefont.py:262`),
-   marching squares (`geo.py:1113`), Lanczos reduction (`paint.py:2606`),
-   fractional Brownian motion and value noise (`paint.py:755-868`),
-   Euclidean distance transform (`paint.py:892`), hillshade and hachures
-   (`geo.py` 2314 onward), Douglas-Peucker style simplification, label
-   placement rules (clearance, set-along-a-line, one name a place),
-   watercolour wash effects (edge darkening, granulation, bloom,
-   backruns), brush and nib stroke models, Chaikin corner cutting
-   (`geo.py`, the drawn road and river lines), Catmull-Rom splines (span
-   marks), WCAG relative-luminance contrast (route and river-name inks,
-   applied from memory). Today none of these carries a citation; the
-   five modules contain no paper, blog or DOI reference.
-2. **Recover the design inputs.** The papers and blogs read while
-   designing the map rules are not recorded in the source tree. Recover
-   them from whatever record exists (see the open question in `spec.md`)
-   and match them to the inventory. Done 2026-10-04: the recovered list
-   is `design-sources.md` in this directory. Two of the three design
-   conversations read nothing external; the third read the papers and
-   pages listed there. Every entry is unverified until step 3.
-3. **Verify and write `docs/explanation/references.md`**: one entry per
-   technique with the canonical source (author, year, title, DOI or URL),
-   verified live, plus the design-input source where one was recovered.
-   Each implementing docstring gains one line naming the entry's key.
-   Where a design input cannot be recovered, the entry says "canonical
-   source; original design reading not recorded".
-4. **Docstring pass.** Run a docstring audit across `src/pyntpot` with the
-   repo's Google convention, one session per subpackage. Public API
-   first. The pass fixes accuracy and shape; it does not add caller
-   obligations or narration. Parity exact after each session.
-5. **Prose pass.** Run a prose audit over docstrings, comments,
-   `README.md`, `docs/`, `GLOSSARY.md` and `CHANGELOG.md`.
-   Behaviour-neutral by construction; parity exact after.
+Implements D24 (every technique cites its source), D25 (a docstring audit,
+then a prose audit) and acceptance criterion 4, and answers the spec's
+design-sources open question. Fattened at P6.0 from the five-step sketch and
+revised after plan reviews 1, 2, 3 and 4 (`reviews/p6-plan-review-1.md`
+to `reviews/p6-plan-review-4.md`; the review-2 probes were re-run at
+`31c1d26`, the review-3 probes at `f6698e4` and the review-4 probes at
+`9474c49`, none of which changes a `src/` or `tests/` file). Paragraphs that open with
+*(Evidence.)* record how a fact was proved; they are for the reviewer, and
+no slice brief carries them (see "What each brief carries" below). Measurements
+below were taken at commit `1154129` on branch `p6-docs` (no `src/` or
+`tests/` file changed between it and `93aee17`, where the review-1
+measurements were re-taken); line numbers drift, so every site is named by
+its dotted path (`pyntpot.ink.polyline.simplify`), and the line is only a
+hint.
 
-Gate: full gate green, parity exact, `references.md` has an entry for
-every inventory item.
+**Measured at P6.0** (`wc -l` and an AST count over `src/pyntpot`):
+
+| Subpackage | Modules | Lines | Classes and functions | Public of those | Docstring lines | `#` comment lines |
+|---|---|---|---|---|---|---|
+| `ink` | 19 | 3,905 | 117 | 87 | 1,178 | 433 |
+| `letters` | 8 | 1,722 | 74 | 32 | 507 | 107 |
+| `maps` (all) | 80 | 13,748 | 460 | 258 | 4,099 | 1,057 |
+| `maps` top level | 35 | 5,964 | 222 | 139 | 1,869 | |
+| `maps/lettering` | 21 | 4,765 | 129 | 48 | 1,369 | |
+| `maps/candidates` | 8 | 1,241 | 36 | 18 | 346 | |
+| `maps/painter` | 12 | 1,202 | 47 | 34 | 353 | |
+| `maps/providers` | 4 | 576 | 26 | 19 | 162 | |
+| `pyntpot/__init__.py` | 1 | 52 | 0 | 0 | 12 | |
+
+Nine functions have no docstring, all of them nested helpers: `inside`
+(`ink/polyline.py`), `dx` and `dy` (`ink/shallow_water.py`), `down`
+(`ink/wash.py`), `interp` and `key` (`maps/contours.py`), `traced`
+(`maps/generalise.py`), `chunk` (`maps/relief.py`) and `kept_lines`
+(`maps/lettering/picks_lines.py`): 4 in `ink`, 4 in `maps` top level, 1 in
+`maps/lettering` (re-counted at `93aee17`; each P6.5 slice takes its list
+from a fresh AST run). The two files nearest
+the 400-line budget are `ink/brush.py` (391) and `maps/lettering/span_line.py`
+(385). No `src/` file has an em-dash or en-dash; `docs/decisions/` has 15 and
+`docs/runbooks/update-dependencies.md` 1. No `src/` or `tests/` code reads
+`__doc__` or `inspect.getdoc`, so a docstring edit cannot reach a pixel. No
+`src/` docstring cites a source today.
+
+**The public API** (measured at `93aee17` by resolving every name in
+`pyntpot.__all__` and each subpackage `__all__` to its definition; the
+`__all__` of `maps.providers`, `maps.candidates` and `maps.lettering` is
+empty). It is the set the Args rule of P6.5 and the non-goals rule below
+reach:
+
+| Kind | Names (defining module) |
+|---|---|
+| Functions (7) | `composite` (`ink/pigment.py`), `stamp` (`ink/stamp.py`), `wash` (`ink/wash.py`), `letter` (`maps/lettering/pipeline.py`), `fetch`, `paint`, `compose` (`maps/pipeline.py`) |
+| Classes (11) | `Brush` (`ink/brush.py`), `Canvas`, `Sheet` (`ink/sheet.py`), `Hand` (`letters/hand.py`), `Annotations` (`maps/annotations.py`), `Basemap` (`maps/basemap.py`), `Lettering` (`maps/lettering/pipeline.py`), `FetchError` (`maps/pipeline.py`), `Plates` (`maps/plates.py`), `Style` (`maps/style.py`), `Track` (`maps/track.py`) |
+| Methods of those classes (21: 20 public methods plus `Hand.__init__`) | every method in the class body whose name has no leading underscore, and `Hand.__init__` |
+
+All seven functions already carry `Args:` and `Returns:` (and `fetch` its
+`Raises:`). Of the 21 methods, 15 lack a section that a mechanical reading
+would ask for (`Canvas.scale`, `Canvas.px`, `Sheet.noise`, `Hand.__init__`,
+`Hand.generator`, `Basemap.canonical`, `Plates.paths`, `Plates.hash`,
+`Plates.card`, `Style.default`, `Style.digest`, `Style.base_digest`,
+`Style.lettering_digest`, `Style.route_ink`, `Track.bounding_box`). If every
+one of them gained every section, the tree would grow by at most 73 lines
+(`ink/sheet.py` +19, `letters/hand.py` +12, `maps/basemap.py` +3,
+`maps/plates.py` +12, `maps/style.py` +20, `maps/track.py` +7); under the
+"adds information" rule most are zero-argument properties whose summary
+already says what they return, so the expected addition is under 30 lines.
+No file this reaches comes within 150 lines of 400 (the largest is
+`letters/hand.py`, 229 + 12). `Brush`, `Canvas` and `Sheet` document their
+fields with trailing and `#:` comments, so an `Attributes:` section there
+would restate them and is not added: `ink/brush.py` (391) gets no shape
+lines.
+
+**Rules for the whole phase.**
+
+- **P6 edits docstrings, `#` comments and prose only.** It adds one
+  architecture test (P6.4) and three documents (`p6-inventory.md`,
+  `references.md`, issue files). It never changes an executable statement,
+  an identifier, a default, a file's location, the theme TOML or the
+  vendored font. Every slice that touches `src/` proves it with the
+  **AST-neutral check** below and with G-here plus G-self (see "P3 and P4:
+  how to run a slice"; from P3.15 on G-here includes the byte-exact
+  `uv run pytest -m golden`). Slices that touch no `src/` file run G-here.
+- **AST-neutral check.** This script lives at `$SCRIPTS/ast_neutral.py`
+  (shared scripts rule below; never committed) and runs from the root of the
+  checkout the slice works in (the main checkout, or for P6.5a to P6.5e the
+  slice's worktree; never a path written out in full) as
+  `python3 -I "$SCRIPTS/ast_neutral.py" BASE`, where
+  `BASE` is the slice's starting commit. It must print `AST-neutral: N files`
+  and exit 0. A non-zero exit means the slice changed code: revert that
+  hunk, never commit it, and never edit the script to get green. **Rule:**
+  the comparison removes the leading docstring statement from the body of
+  every module, class and function on both sides before comparing, so
+  adding, removing or editing a docstring passes and any other change
+  fails. A file that is added, deleted, renamed or untracked under `src/`
+  fails, and so does any non-Python file under `src/` that changed. A lost
+  docstring is still caught elsewhere: ruff `D` fails on a missing public
+  docstring and `test_reference_keys.py` (P6.4) fails on a lost citation.
+  ```python
+  """Exit 1 unless every src/ file changed since BASE differs from it in docstrings and comments only."""
+
+  import ast
+  import subprocess
+  import sys
+  from pathlib import Path
+
+  DOC_OWNERS = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+
+
+  def _is_doc(stmt: ast.stmt) -> bool:
+      return (
+          isinstance(stmt, ast.Expr)
+          and isinstance(stmt.value, ast.Constant)
+          and isinstance(stmt.value.value, str)
+      )
+
+
+  def code_only(source: str) -> str:
+      tree = ast.parse(source)
+      for node in ast.walk(tree):
+          if isinstance(node, DOC_OWNERS) and node.body and _is_doc(node.body[0]):
+              node.body = node.body[1:]
+      return ast.dump(tree, include_attributes=False)
+
+
+  def git(*args: str) -> str:
+      return subprocess.run(["git", *args], capture_output=True, text=True, check=True).stdout
+
+
+  base = sys.argv[1]
+  bad = []
+  changed = []
+  for line in git("diff", "--name-status", base, "--", "src").splitlines():
+      status, name = line.split("\t", 1)
+      if status != "M":
+          bad.append(f"{name}: status {status}, only modified files are allowed")
+      elif not name.endswith(".py"):
+          bad.append(f"{name}: not a Python file")
+      else:
+          changed.append(name)
+  for name in git("ls-files", "--others", "--exclude-standard", "src").split():
+      bad.append(f"{name}: untracked new file")
+  for name in changed:
+      if code_only(git("show", f"{base}:{name}")) != code_only(Path(name).read_text()):
+          bad.append(f"{name}: code changed")
+  sys.stdout.write("\n".join(bad) + "\n" if bad else f"AST-neutral: {len(changed)} files\n")
+  sys.exit(1 if bad else 0)
+  ```
+  Comments are not in the AST, so comment edits pass; a renamed name, a
+  changed literal, a moved line of code or a touched TOML fails.
+  *(Evidence.)* Proved on
+  2026-10-07 on a scratch clone at `93aee17`, editing
+  `src/pyntpot/ink/shallow_water.py` and restoring it between cases: (a) a
+  docstring added to the undocumented nested `dx`: `AST-neutral: 1 files`,
+  exit 0; (b) `- a` changed to `- (a + 0)` in `dx`:
+  `src/pyntpot/ink/shallow_water.py: code changed`, exit 1. Also: the module
+  docstring edited, exit 0; a function's docstring deleted, exit 0; a
+  comment added, exit 0; an untracked `ink/new_mod.py`, exit 1.
+- **Shared scripts, read-only for every slice.** `$SCRATCH` is the
+  orchestrating session's scratchpad and does not survive a session. At the
+  start of every orchestrating session, and before it dispatches any slice,
+  the orchestrating session writes `ast_neutral.py` (above), `refcheck.sh`
+  (P6.3) and `doc_lines.py` (P6.5) to `$SCRIPTS`, which is
+  `$SCRATCH/p6-scripts/`, verbatim from this plan's blocks with the blocks'
+  two-space list indentation stripped, and writes
+  `sha256sum ast_neutral.py refcheck.sh doc_lines.py > SHA256SUMS` there.
+  Every slice brief gives the absolute `$SCRIPTS` path (a scratch path, not
+  a repo path), and a slice runs `(cd "$SCRIPTS" && sha256sum -c SHA256SUMS)`
+  before it first uses a script. Slices read and run these scripts and never
+  write, edit or copy them; a session never writes its own variant. The
+  other shared scripts are read-only too: the skill scripts
+  `detect_ai_jargon.py` and `strip_emdashes.py` (tool facts: under
+  `/root/.claude/skills/synced/`) and `tests/golden/make_golden.py` (`$MG`,
+  in each checkout's own tree).
+- **Each slice has its own scratch directory**, `$SLICE`, which is
+  `$SCRATCH/<slice-id>/` (`$SCRATCH/p6.3/`, `$SCRATCH/p6.5c/`), created
+  empty by the orchestrating session and named in the brief. Everything a
+  slice writes outside its owner files goes there: in P6, G-self's
+  baseline `$SCRATCH/before` (P3 and P4 gate commands) is
+  `$SLICE/before`, and the fetched bodies, key lists and `doc_lines.py`
+  output below are under `$SLICE`. Two slices never share a `$SLICE`.
+- **No stop points; a stated rule makes every choice, and the run log
+  records it.** Each slice measures first, applies the rules below, and
+  records for `specs/001-port/p6-run-log.md`
+  its start and end time (BST, `TZ=Europe/London date +%H:%M`), the wall
+  time of each gate stage, the counts it names, and every choice as
+  `choice: <what> | rule: <rule name> | inputs: <what it read>`. A
+  sequential slice appends that entry to the run log itself (it is in its
+  owner files); P6.5a to P6.5e return it in the hand-off and the
+  orchestrating session appends it at landing (P6.5 parallel rule). The
+  final HTML report after P6 is built from that log.
+- **Rule: behaviour wins.** When a docstring or comment disagrees with the
+  code, the code is the truth (the goldens pin it). Rewrite the text to
+  describe what the code does. If the gap looks like a code defect (the text
+  describes the more plausible intent), also file
+  `docs/issues/<kebab-slug>.md` with the site, what the text said, what the
+  code does, and how to show it; never edit the code in P6.
+- **Rule: fix now or file.** A finding is fixed in the slice when all hold:
+  the edit is to a docstring, a `#` comment or a prose file in the slice's
+  owner files; it renames, moves or deletes no identifier, file or test; it
+  changes no executable statement; and the file stays within 400 lines.
+  Otherwise it goes to `docs/issues/<kebab-slug>.md`, one file per finding,
+  in the shape of the existing files (`docs/issues/duplicate-benchmarks.md`
+  is the model): a `# ` title that states the problem as a sentence, prose
+  paragraphs naming the site by dotted path, what is wrong and why P6 does
+  not fix it, then a paragraph beginning `Possible fix:`. Out-of-scope
+  discoveries of any kind go there too. The run log counts fixed and filed
+  per slice. **Slugs in P6.5:** every issue a P6.5 slice files has a slug
+  that begins with the module's dotted path under `pyntpot`, dots and
+  underscores written as hyphens (`ink-wash-`, `maps-lettering-span-line-`),
+  or with `line-budget-` followed by that path (line-budget rule 4:
+  `line-budget-ink-brush.md`), so two parallel slices never write the same
+  path. The landing check accepts both forms and no other. Two such issues about one
+  term from different groups both stay; the orchestrating session lists
+  each pair in the run log at landing.
+- **Rule: line budget.** A split is out of P6 scope: it moves names and
+  repoints importers and tests, which the AST-neutral check forbids and
+  which is a G-self refactor slice of its own, not a docs pass. So:
+  1. P6.4's citation always lands. It costs 2 lines in a multi-line
+     docstring (a blank line and the citation line) and 3 when a one-line
+     docstring becomes multi-line (the closing quotes move too). The fullest
+     site file is `ink/polyline.py` at 355 with three sites (`simplify`,
+     `smooth`, `deform_line`), so at most 364 after P6.4; next is
+     `ink/wash.py` at 354 with three multi-line site docstrings
+     (`flow_edge`, `bloom`, `wash`), so 360.
+  2. A docstring or comment fix that keeps a file's line count or lowers it
+     always lands.
+  3. **Two passes per file, accuracy first.** Within each file a P6.5
+     session first lands every accuracy fix (text that is wrong, stale or
+     missing a fact a reader needs, and the missing docstrings), then the
+     shape fixes (sections, layout). A line-adding fix lands while the file
+     stays at or under 400, taken in that order: a shape fix never takes the
+     headroom an accuracy fix in the same file needs.
+  4. The rest go to one `docs/issues/line-budget-<module>.md` per file,
+     holding the exact text that could not be added and the responsibility
+     line the file would split along. Never shorten, merge or delete other
+     text to make room (CLAUDE.md: never trim to fit). Nothing is added to
+     `exemptions/line_budget.txt`.
+
+  Under the P6.5 shape rule the projected shape lines reach no file near
+  400 (see "The public API" above); only accuracy fixes in `ink/brush.py`
+  (391) and `maps/lettering/span_line.py` (385) can meet the budget, and
+  (3) and (4) decide them.
+- **Rule: house rules beat the skills.** Where a skill and `CLAUDE.md`
+  disagree, `CLAUDE.md` wins. CLAUDE.md makes **module and public-API**
+  docstrings the agent contract (purpose, key types, what it does not do,
+  invariants). So "what it does not do" and invariants stay in every module
+  docstring and in the docstring of every name in "The public API" table,
+  though the `docstrings` skill says not to narrate non-goals (for example
+  `pyntpot.maps.annotations.Annotations` keeps "roads: Accepted and not
+  read: road names are never taken from a ..."). The skill's rule applies to
+  every other function and class docstring. Where CLAUDE.md says nothing
+  (it mandates no `Args:` sections), the skill governs, bounded by the P6.5
+  shape rule. Docstrings state capability facts, never spec, phase or slice
+  numbers (`tests/architecture/test_docstring_conventions.py` catches
+  `spec NNN`; the house rule bans `P6.3`-style numbers too).
+- **Rule: British English.** Prose uses British spelling: `-ise`, `-our`,
+  `-re`, `centreline`, `grey`. Never changed for British spelling:
+  identifiers, string literals, quoted titles of cited works (Curtis's
+  *Computer-Generated Watercolor* keeps its spelling), proper names and
+  third-party API names.
+- **Rule: dashes in copied fields.** Every field copied from a record
+  (title, subtitle, author, venue, container title, event name, page range)
+  keeps its words and spelling, but every character from U+2010 to U+2015
+  in it (the Crossref title of Van Laerhoven, Van Reeth 2005 has U+2010 in
+  "Real‐time"; Crossref page ranges and container titles can carry U+2013)
+  is written as an ASCII hyphen-minus, and the run log records it as a
+  correction. HTML entities in a copied field are decoded first
+  (`html.unescape`). *Match* folds punctuation, so this never changes a
+  match, and the dash gates stay meaningful.
+- **Rule: which files the dash audit covers.** The `emdash-audit` skill
+  skips agent-facing files. Here: `src/` docstrings and comments are covered
+  (they are the published API reference P7 builds on); `README.md`,
+  `GLOSSARY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `docs/README.md`,
+  `docs/architecture.md`, `docs/explanation/**` and `docs/runbooks/**` are
+  covered. Not covered, and not edited by the prose pass at all:
+  `CLAUDE.md`, `BOUNDARIES.md`, `specs/**`, `.claude/**` (agent-facing),
+  `docs/decisions/**` (records: their heading form `# NNNN — Title` is
+  fixed by this plan, and an accepted ADR changes only by a superseding
+  one), `docs/issues/**` (working notes) and `tests/**`.
+- **Branch and PR.** Every slice lands as one commit on `p6-docs`, in
+  order, and the branch goes to `main` through one PR after P6.6. The
+  implementer agent never commits; the orchestrating session commits with
+  the slice's message (an imperative one-line subject, then the attribution
+  trailers the session's system reminder gives, as every commit on this
+  branch already carries) and ticks `tasks.md` in the same commit. P6.5a to
+  P6.5e are built in parallel but still land as one commit each, in the
+  order a to e (P6.5 parallel rule). Besides
+  the slice commits, the orchestrating session makes bookkeeping commits
+  that touch only `specs/001-port/p6-run-log.md` and
+  `specs/001-port/reviews/**` (`Log P6.0`, `Record P6 plan review 1`); they
+  are not slices and tick nothing.
+- **Order:** P6.0 → P6.1 → P6.2 → P6.3 → P6.4 → (P6.5a, P6.5b, P6.5c,
+  P6.5d and P6.5e in parallel, landed in that order) → P6.6. Why the
+  sequence: P6.2 matches against P6.1's inventory; P6.3 cites what P6.1 and
+  P6.2 list, and is one thread because Crossref allows one request at a time
+  (`x-concurrency-limit: 1`); P6.4's test needs `references.md`, and it
+  lands before the docstring audit so the audit cannot delete a citation
+  line without going red; the prose pass comes last because it reads the
+  audited docstrings' vocabulary and `references.md`. Why P6.5a to P6.5e
+  are parallel: their groups partition the 108 `src/` files with no file in
+  two groups (checked at `f6698e4`: 19 + 8 + 32 + 28 + 21 files from the
+  file-list commands in P6.5), and under the behaviour-wins rule a
+  docstring is checked against the code, which P6 does not change, never
+  against another group's docstring, so no group reads another's output.
+  The files they would share (`GLOSSARY.md`, the run log) are handed to
+  the orchestrating session (P6.5 parallel rule).
+- **Public API first**, within each docstring session: the module docstring
+  of each `__init__.py` first, then the session's names from "The public
+  API" table (`ink`: `Brush`, `Canvas`, `Sheet`, `composite`, `stamp`,
+  `wash`; `letters`: `Hand`; `maps`: the rest) with their public methods,
+  then every other name without a leading underscore, module by module in
+  path order, then the private names in the same order. The run log records
+  the time at which the public names were done.
+
+**What each brief carries.** The orchestrating session composes each brief
+from the blocks below, named by their bold labels in this section, plus the
+slice's own body; no brief carries a paragraph marked *(Evidence.)*. Every
+brief also carries the slice's `$SLICE` path, the `$SCRIPTS` path when it
+runs a shared script, and its starting commit. **Gate commands** in a row
+below means: copied verbatim from the bold **Gate commands.** paragraph of
+"P3 and P4: how to run a slice" (outside P6), its first paragraph (what
+`$SCRATCH` and `$MG` stand for, with `$MG` written out in full), its
+**G-here** bullet and, where the row says so, its **G-self** bullet, with
+`$SCRATCH/before` read as `$SLICE/before` (scratch-directory rule). G-exact
+and G-window are not P6 gates and are never copied.
+
+| Slice | Preamble blocks in its brief |
+|---|---|
+| P6.1 | Rules: "P6 edits docstrings, `#` comments and prose only"; "Each slice has its own scratch directory"; "No stop points"; "Rule: fix now or file"; "Branch and PR". Gate commands (G-here). Reference format: "Key". P6.3's candidate table (the inventory's fourth column). |
+| P6.2 | Rules: "Each slice has its own scratch directory"; "No stop points"; "Branch and PR". Gate commands (G-here). Reference format: the labels in "Source line", the `named-only` and `maintainer-checked` items of "The status token", "Fixed design-input lines", "Closing section". |
+| P6.3-fetch | Rules: "Shared scripts"; "Each slice has its own scratch directory"; "No stop points"; "Rule: fix now or file"; "Rule: dashes in copied fields"; "Branch and PR". Every tool fact except "The skills" (instructions only). Reference format: "Source line" (with the URL rule) and "The status token". "Routes" and *Match*. P6.2's match table (which lines exist; route 5's README words; each web page's pinned words, citation title and author). P6.3's candidate table, the canonical-source rule, the two-sub-agent bullet and steps 1 to 3. |
+| P6.3-write | Rules: "Shared scripts"; "Each slice has its own scratch directory"; "No stop points"; "Rule: British English"; "Rule: dashes in copied fields"; "Branch and PR". Gate commands (G-here). The whole reference format. Tool facts: "The skills" (`write-docs`). P6.3's candidate table and the canonical-source rule (rule 5's "Nearest published work:" prefix and its `Note:`), the two-sub-agent bullet, step 4, "Mechanical checks" and hand-off, and the run log's `evidence` rows. |
+| P6.4 | Rules: "P6 edits docstrings, `#` comments and prose only"; "AST-neutral check" (instructions); "Shared scripts"; "Each slice has its own scratch directory"; "No stop points"; "Rule: line budget" (item 1); "Branch and PR". Gate commands (G-here and G-self). Reference format: "Key", "Implemented in", "Citation line in a docstring". Tool facts: "The skills" (`test-driven-development`). |
+| P6.5a to P6.5e | "Measured at P6.0" (the group's row and its nested helpers); "The public API". Rules: every rule except "Rule: dashes in copied fields" and "Order". Gate commands (G-here and G-self). Tool facts: "The skills". Reference format: "Citation line in a docstring" (so the slice leaves them alone). P6.5's group row and file-list row for that slice, the parallel rule's steps 2 and 3, and the body from "Every one of these slices" on. |
+| P6.6 | Rules: "Shared scripts"; "Each slice has its own scratch directory"; "No stop points"; "Rule: behaviour wins"; "Rule: fix now or file"; "Rule: British English"; "Rule: which files the dash audit covers"; "Branch and PR". Gate commands (G-here and G-self). Tool facts: "The skills". Reference format: "Source line", "The status token" and "Fixed design-input lines" (what P6.6 must not change). P6.3's "Mechanical checks" (for gate step 3). |
+
+**Tool facts the slices rely on** (verified at P6.0 on 2026-10-07 from this
+container, and the review-1 additions on the same day; recheck only if a
+fetch behaves differently):
+
+- **Fetch with `curl` through Bash.** `HTTPS_PROXY` is set and the proxy CA
+  bundle covers every host. The `plan-slice-implementer` agent has Read,
+  Glob, Grep, Bash, Edit and Write only: no WebFetch, no WebSearch, no Skill
+  tool. WebFetch is not used for verification even where available: it
+  returns a model's summary, not the bytes and the status the log needs,
+  and it hits the same publisher block (tried: `dl.acm.org` 403).
+- `curl -sS -o /dev/null -w '%{http_code} %{redirect_url}' https://doi.org/10.1145/357994.358023`
+  gives `302 -> https://dl.acm.org/doi/10.1145/357994.358023`. Following it
+  (`-L`) gives **403**: a Cloudflare challenge page (`cf-mitigated:
+  challenge`, title "Just a moment..."). ACM landing pages are blocked from
+  here; expect the same of other Cloudflare-fronted publishers.
+- `curl -sS https://api.crossref.org/works/10.1145/357994.358023` gives
+  **200** JSON: `.message.title[0]` "A fast parallel algorithm for thinning
+  digital patterns", authors Zhang, T. Y. and Suen, C. Y., issued 1984-03,
+  *Communications of the ACM* 27(3), 236-239. DOI content negotiation
+  (`curl -sSL -H 'Accept: application/vnd.citationstyles.csl+json' https://doi.org/<DOI>`)
+  also returns 200 CSL JSON, served by Crossref. Extract with
+  `jq '.message | {title, subtitle, author: [.author[]? | .family], year: .issued["date-parts"][0][0], container: ."container-title"[0], event: .event.name, volume, issue, page}'`.
+- **Pacing and retries (every host, every fetch).** Crossref answers with
+  `x-rate-limit-limit: 5`, `x-rate-limit-interval: 1s`,
+  `x-concurrency-limit: 1`, yet gave 429 on the fifth call at 1.2 s
+  spacing (review 1) and on the 15th of an unpaused loop (P6.0). **Rule:**
+  one request every 2 s, never two at once. On 429, 5xx or a connection
+  reset, wait 5, 10, 20 and 40 s, retrying after each. The log records
+  every retry. If the fifth try fails too, the fetch is **exhausted**, and
+  what follows depends on the line:
+  - On a `Canonical source` line, the status is `not-verified` with the
+    reason (`not-verified: 429 after backoff 5, 10, 20, 40 s; 2026-10-07`)
+    and the slice carries on with the next source. An exhausted fetch never
+    moves to the next candidate and never counts as a mismatch: it yields
+    only that `not-verified`, which the gates reject. The route to clear it
+    is a later re-run of only the `not-verified` entries (same rules, same
+    pacing), in P6.3 or as a re-try before the phase gate.
+  - On a `Design input` or `Read during design` line, the route that made
+    the fetch has failed, and the next applicable route is tried. When
+    every applicable route has failed, the status is `unreachable` (see the
+    status token).
+  Do not add a `mailto=` parameter: it would send the maintainer's address
+  to a third party.
+- Crossref resolves these candidate DOIs to the listed metadata (200, read
+  at P6.0; P6.3 re-fetches them all): `10.3138/FM57-6770-U75U-7727`
+  (Douglas, Peucker 1973), `10.1016/0146-664X(74)90028-8` (Chaikin 1974),
+  `10.1016/B978-0-12-079050-0.50020-5` (Catmull, Rom 1974),
+  `10.1145/37402.37422` (Lorensen, Cline 1987),
+  `10.1175/1520-0450(1979)018<1016:LFIOAT>2.0.CO;2` (Duchon 1979),
+  `10.1145/325165.325247` (Perlin 1985), `10.1145/74334.74360` (Lewis
+  1989, "Algorithms for solid noise synthesis", *ACM SIGGRAPH Computer
+  Graphics*), `10.1137/1010093` (Mandelbrot, Van Ness 1968),
+  `10.1016/S0734-189X(86)80047-0` (Borgefors 1986),
+  `10.1109/TPAMI.1986.4767776` (Wells 1986), `10.1109/PROC.1981.11918`
+  (Horn 1981), `10.1559/152304075784313304` (Imhof 1975),
+  `10.1145/258734.258896` (Curtis et al. 1997), `10.1145/1186822.1073221`
+  (Chu, Tai 2005, a design input; see "MoXi's DOI" below),
+  `10.1145/15886.15911` (Strassmann 1986),
+  `10.1145/358523.358553` (Fournier, Fussell, Carpenter 1982). A DOI must
+  be percent-encoded in the API path (`python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$DOI"`),
+  or the `<`, `>` and `;` of the Duchon DOI break the URL.
+- **Bibliographic search** (for a source with no DOI or URL):
+  `curl -sS -G --data-urlencode "query.bibliographic=<authors> <title>" --data-urlencode rows=5 --data-urlencode 'select=DOI,title,subtitle,issued,author,container-title,event' https://api.crossref.org/works`
+  answered 200 on 2026-10-07, with these top hits: Van Laerhoven, Van Reeth
+  "Real-time simulation of watery paint" → `10.1002/cav.95`, 2005 (second
+  hit a near miss by the same authors, "Real-time simulation of thin paint
+  media", 2005); Bousseau et al. "Interactive watercolor rendering with
+  temporal coherence and abstraction" → `10.1145/1124728.1124751`, 2006;
+  Luft, Deussen "Real-time watercolor illustrations of plants" →
+  `10.1145/1124728.1124732`, 2006, record title "... of plants using a
+  blurred depth test"; Baxter, Lin "A versatile interactive 3D brush model"
+  → `10.1109/pccga.2004.1348363`, whose `issued` is `[[null]]` but whose
+  container title is "12th Pacific Conference on Computer Graphics and
+  Applications, 2004. PG 2004. Proceedings.". Van Laerhoven, Van Reeth;
+  Bousseau et al.; and Baxter, Lin take route 3, and these are the hits it
+  is expected to select.
+- **Luft, Deussen's DOI is fixed here, so route 3 does not apply to it.**
+  It is the canonical source of `wet-area-bleed` (candidate table), and the
+  design record gives it no year, so route 3's year test could not run.
+  `10.1145/1124728.1124732` is the bibliographic search's top hit above.
+  *(Evidence.)* Fetched on 2026-10-07 at 12:41 UTC, 2 s apart: `doi.org`
+  followed gives 403 at `dl.acm.org`, `<title>Just a moment...`
+  (Cloudflare challenge); the Crossref API gives 200, `title` "Real-time
+  watercolor illustrations of plants using a blurred depth test", authors
+  Luft, Deussen, issued 2006, *Proceedings of the 4th international
+  symposium on Non-photorealistic animation and rendering*, event "NPAR06",
+  pages 11-20. The design record's title is a prefix of the record's, so
+  *match* passes.
+- **Elsevier answers 200 with a stub.** `doi.org` for an Elsevier DOI
+  redirects to `linkinghub.elsevier.com/retrieve/pii/<PII>`, which answers
+  **200** with `<title>Redirecting</title>`, a 2-second meta refresh to
+  ScienceDirect, and the work's title only inside a script
+  (`articleName : '<title>'`): no author name and no publication year. By
+  route 2's rule for a DOI's publisher page that page is **blocked** (its
+  body lacks the authors), so route 2 decides. *(Evidence.)* Probed on 2026-10-07 from 12:40:24 to
+  12:40:38 UTC, each request 2 s after the last, `curl -sSL` on `doi.org`
+  then the Crossref API:
+  - Chaikin, `10.1016/0146-664X(74)90028-8`: route 1 200 stub, 2,656
+    bytes, title in the body after folding, `chaikin` absent → blocked;
+    route 2 200, "An algorithm for high-speed curve generation", Chaikin,
+    1974, *Computer Graphics and Image Processing* 3(4), 346-349: title,
+    author and year match → `verified-via-index`.
+  - Catmull, Rom, `10.1016/B978-0-12-079050-0.50020-5`: route 1 200 stub,
+    2,665 bytes, title present, `catmull` and `rom` absent → blocked;
+    route 2 200, "A CLASS OF LOCAL INTERPOLATING SPLINES" (folds to the
+    entry title), Catmull, Rom, 1974, container "Computer Aided Geometric
+    Design", pages 317-326 → `verified-via-index`.
+  - Borgefors, `10.1016/S0734-189X(86)80047-0`: route 1 200 stub, 2,658
+    bytes, title present, `borgefors` absent → blocked; route 2 200,
+    "Distance transformations in digital images", Borgefors, 1986,
+    *Computer Vision, Graphics, and Image Processing* 34(3), 344-371 →
+    `verified-via-index`.
+  Routes 3 to 7 are not reached for any of the three. A rule that tested
+  the title alone would not mark these pages blocked, because the script
+  carries the title; the author test is what sends them to route 2. That
+  test is for a DOI's publisher page only: a design-record web page is
+  checked by the words P6.2's table pins for it (route 1).
+- **MoXi's DOI is fixed here, so route 3 does not apply to it:**
+  `10.1145/1186822.1073221` (routes 1 and 2), because the design record
+  names the venue as "SIGGRAPH 2005", which only that record carries.
+  *(Evidence.)* The search
+  for Chu, Tai "MoXi" returns three 2005 records. Both candidate DOIs were
+  fetched from Crossref on 2026-10-07 (12:16 UTC, 2 s apart, both 200):
+  - `10.1145/1073204.1073221`: `title` "MoXi", `subtitle` "real-time ink
+    dispersion in absorbent paper", authors Chu, Tai, 2005, *ACM
+    Transactions on Graphics* 24(3), 504-511, `journal-article`, no event.
+  - `10.1145/1186822.1073221`: the same title, subtitle, authors, year and
+    pages, *ACM SIGGRAPH 2005 Papers*, event "SIGGRAPH05: Special Interest
+    Group on Computer Graphics and Interactive Techniques Conference",
+    `proceedings-article`.
+  The design record names the venue as "SIGGRAPH 2005", which only the
+  second record carries, so the MoXi design input's DOI is
+  `10.1145/1186822.1073221` (routes 1 and 2). It is also the first hit
+  that route 3's selection rule picks, so both readings agree.
+- **A title-less reference.** The Crossref record of Curtis 1997
+  (`10.1145/258734.258896`) has 0 references, and its PDF cites Kubelka
+  1954, Haase-Meyer and Kortum, not Kubelka, Munk 1931. Kubelka 1948,
+  "New Contributions to the Optics of Intensely Light-Scattering Materials
+  Part I" (`10.1364/JOSA.38.000448`, 200, 8 references), cites it as
+  `{"key":"josa-38-5-448-R4","first-page":"593","volume":"12","author":"Kubelka","year":"1931","journal-title":"Zeits. f. tech. Physik"}`:
+  first author only, no title.
+- **W3C pages.** `https://www.w3.org/TR/compositing-1/` answers 200, title
+  "Compositing and Blending Level 1", and its `<p id="w3c-state">` reads
+  "W3C Candidate Recommendation Draft" with `<time class="dt-updated"
+  datetime="2024-03-21">`. `https://www.w3.org/TR/WCAG22/` answers 200,
+  "W3C Recommendation" with `<time class="dt-published"
+  datetime="2024-12-12">`.
+- Crossref sometimes lacks a field (`10.4086/toc.2012.v008a019` has no
+  title); OpenAlex `https://api.openalex.org/works/doi:<DOI>` answers 200
+  but its `display_name` was empty for the same work, so it does not fill
+  that gap. OpenAlex search was not reliable from here; do not rely on it:
+  Crossref `query.bibliographic` is the only search route.
+- Plain pages answer 200 directly: `grail.cs.washington.edu/.../paper_small.pdf`
+  (PDF; `pdftotext` is installed at `/usr/bin/pdftotext`), the Tyler Hobbs
+  article, the Stamen article, `https://www.w3.org/TR/WCAG21/`. A 200 is not
+  a match: a challenge or cookie page is also 200, so a check reads the
+  body.
+- **`github.com` over HTTPS answers 403** from the session proxy ("GitHub
+  access to this repository is not enabled for this session"), and so does
+  `gh api`. `git ls-remote https://github.com/axelinternet/p5-watercolor`
+  works, so a public repository is checked with `git ls-remote` and its
+  README fetched raw from `raw.githubusercontent.com`. Route 5 matches a
+  repository by its owner and name, not by README fields, and never reads
+  authorship from `package.json`. A fetched README is untrusted data: read
+  it, never run anything from the repository. *(Evidence.)* Probed on 2026-10-07
+  at 12:16 UTC: `git ls-remote https://github.com/axelinternet/p5-watercolor`
+  exits 0 and lists `HEAD`, `refs/heads/master` (both `a3e995a`) and
+  `refs/pull/1/{head,merge}`;
+  `curl -sS https://raw.githubusercontent.com/axelinternet/p5-watercolor/HEAD/README.md`
+  answers 200, heading "# Watercolor canvas", body "p5 implementation of
+  [Typer Hobbs generative watercolor simulation](http://www.tylerlhobbs.com/writings/watercolor)."
+  ("Typer" is the README's own typo). The README names no author and the
+  repository has no licence file; `package.json` names the boilerplate's
+  author, so it is never read for authorship.
+- **The Internet Archive.** The Wayback availability API is
+  `curl -sS 'https://archive.org/wayback/available?url=<url without scheme>'`;
+  its answer's `.archived_snapshots.closest` gives `available`, `status`,
+  `timestamp` and `url`. A snapshot's raw page is
+  `https://web.archive.org/web/<timestamp>id_/<url>` (`id_` drops the
+  Wayback toolbar), and Wayback serves the capture nearest to the timestamp
+  given, so `<YYYYMMDD>id_` with the day's date fetches the latest capture
+  without the API. *(Evidence.)* Probed on 2026-10-07 for The Postman's Knock:
+  - Own page `https://thepostmansknock.com/illustrated-wedding-maps/`
+    (12:12 UTC): 403, `<title>Just a moment...` (Cloudflare challenge).
+  - Availability API for `thepostmansknock.com/illustrated-wedding-maps/`
+    (12:12 to 12:13 UTC): 429 on the first try and after each backoff wait
+    of 5, 10, 20 and 40 s, so exhausted.
+  - Snapshot `https://web.archive.org/web/2024id_/https://thepostmansknock.com/illustrated-wedding-maps/`
+    (12:13 to 12:15 UTC): `curl: (35) Recv failure: Connection reset by
+    peer` on the first try and after each backoff wait, so exhausted; the
+    proxy status lists each as `ws_closed_mid_exchange` for
+    `web.archive.org:443`.
+  Every route that applies to it failed, which without a maintainer check
+  would make it `unreachable` (it is a `Read during design` line); the
+  maintainer's check in the run log makes it `maintainer-checked`. Only this URL was
+  probed against the archive; P6.3 tries the archive route again, live,
+  for every source whose own page fails, this one included.
+- OpenLibrary `https://openlibrary.org/isbn/<ISBN>.json` (`curl -sSL`)
+  answered 200 on the second try after a connection reset on the first;
+  `9781589480261` gives "Cartographic Relief Presentation", published
+  "June 1, 2007", `"authors":[{"key":"/authors/OL1273097A"}]` and
+  `by_statement: null`. The author's name needs a second fetch,
+  `https://openlibrary.org/authors/OL1273097A.json`, whose `.name` is
+  "Eduard Imhof". Google Books returned no item for the same ISBN.
+- The skills: the user skills `docstrings`, `ai-jargon-audit`,
+  `emdash-audit` and `write-docs` are on disk at
+  `ls -d /root/.claude/skills/synced/*/<name>` (the hash directory is
+  per-session, so always resolve it with the glob). The implementer reads
+  `SKILL.md` and its `reference/` files with Read. The scripts run as
+  `python3 -I <dir>/ai-jargon-audit/detect_ai_jargon.py FILE...` (works on
+  `.py`, `.md` and plain text; it reads every line of a `.py` file,
+  identifiers included: over every `src/**/*.py` at `31c1d26` it reports 36
+  findings, among them the `surface` parameter on 17 lines of
+  `letters/nib.py`; over the same files reduced to their docstring and
+  comment lines by P6.5's `doc_lines.py` it reports 18, of which
+  `letters/nib.py` has 5) and
+  `python3 -I <dir>/emdash-audit/strip_emdashes.py FILE...`. If the glob
+  finds nothing, the orchestrating session loads the skill with its Skill
+  tool and pastes the rubric into the brief. Repo skills under
+  `.claude/skills/`: `external-integration` (P6.3: read the API's actual
+  answer, never assume a 200 means success) and `test-driven-development`
+  (P6.4).
+
+**The reference format** (fixed here; P6.3 writes it, P6.4 parses it, the
+completeness check greps it):
+
+- `docs/explanation/references.md` opens with `# References`, then three
+  lines: what the file is, that each source was fetched and checked on the
+  date its status shows, and that a docstring names an entry by its key.
+  Then one entry per technique, in inventory order. An entry has exactly one
+  `Canonical source:` line, one or more `Design input:` lines (one per
+  matched work, in `design-sources.md` order; a bullet there that names two
+  works, such as Deegan et al. with the 2019 arXiv study or Lee with
+  WetBrush, gives two lines), one `Implemented in:` line and at most one
+  `Note:` line. Every source sits on its own line and carries its own
+  status. Two examples, one with two recovered design inputs, the
+  design-sources entry that is the canonical source itself, and a
+  title-less canonical match; one where the design input is the canonical
+  source:
+  ```markdown
+  ## `kubelka-munk` Kubelka-Munk glazing
+
+  - Canonical source: Kubelka; Munk (1931). *Zeitschrift für technische Physik* 12, 593. [verified-via-index: cited in the reference list of Kubelka 1948, https://doi.org/10.1364/JOSA.38.000448, by first author, year, journal, volume and first page; second author from the design record; title, initials and last page in no fetched record, so not cited; 2026-10-07]
+  - Design input: Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997). Computer-Generated Watercolor. *SIGGRAPH 97*, 421-430. https://grail.cs.washington.edu/projects/watercolor/paper_small.pdf [verified: PDF 200, title and every author in the text; 2026-10-07]
+  - Design input: Van Laerhoven, T.; Van Reeth, F. (2005). Real-time simulation of watery paint. *Computer Animation and Virtual Worlds*. https://doi.org/10.1002/cav.95 [verified-via-index: Crossref record by bibliographic search, publisher page 403; 2026-10-07]
+  - Design input: the canonical source above.
+  - Implemented in: `pyntpot.ink.pigment.km_rt`, `pyntpot.ink.pigment.km_plate`
+  - Note: one line, only where the code departs from the source.
+
+  ## `zhang-suen` Zhang-Suen thinning
+
+  - Canonical source: Zhang, T. Y.; Suen, C. Y. (1984). A fast parallel algorithm for thinning digital patterns. *Communications of the ACM* 27(3), 236-239. https://doi.org/10.1145/357994.358023 [verified-via-index: Crossref record, publisher page 403; 2026-10-07]
+  - Design input: original design reading not recorded; the canonical source stands in.
+  - Implemented in: `pyntpot.letters.skeleton.thin`
+  ```
+  (The metadata in these examples is illustrative of the shape; P6.3 writes
+  what the fetched records say.)
+- **Source line**: `- <Label>: <citation>. <url> [<status>: <how checked>; <YYYY-MM-DD>]`.
+  The citation is `Family, I.; Family, I. (year). Title. *Venue* volume(issue), pages.`
+  with the fields the record gives, never a field from memory; for a
+  design-record web page, the citation title and author P6.2's table pins
+  for it. The how-checked text never contains `]` (`refcheck.sh` reads the
+  status up to the first `]`, so it would fail the line): write Baxter,
+  Lin's empty `issued` as "issued null", never `[[null]]`. A code
+  repository has no publication date, so its year is the year of its last
+  commit; when the source of that fact gives only an age ("about 8 years
+  ago"), it is written `(<year>, last commit, approximate)`, as in
+  `Hultman, A. (axelinternet) (2018, last commit, approximate).
+  p5-watercolor.` **The URL
+  rule:** a `Design input` or `Read during design` line's URL is the one
+  `design-sources.md` gives for that work; where it gives none, it is
+  `https://doi.org/<DOI>` for the DOI this plan fixes or route 3 selects,
+  else omitted. A `Canonical source` line's URL is `https://doi.org/<DOI>`
+  when a DOI exists, else the page fetched (the candidate table's URL),
+  else omitted. So Curtis 1997 carries the grail PDF URL as the design
+  input of `kubelka-munk` and `doi.org/10.1145/258734.258896` as the
+  canonical source of its four rows, and the URL-completeness check finds
+  the grail URL. Route 1 always tries the line's own URL first. Labels:
+  `Canonical source`, `Design input`, and `Read during design` (closing
+  section only).
+- **The status token**, a closed set (P6.3 assigns one per source by the
+  routes below):
+  - `verified`: the source's own page, PDF or repository was fetched and its
+    body matches.
+  - `verified-via-index`: the source's own page is blocked (route 2's
+    definition), absent, or (a non-DOI web page) a 200 body without its
+    pinned words, and an index or archive record matches: the Crossref record, the OpenLibrary
+    record, the reference list of an already-checked work, or the Internet
+    Archive's snapshot of the page (route 7).
+  - `named-only`: the design record names the work with neither a title nor
+    an identifier, so there is nothing to look up. Allowed only on
+    `Design input` and `Read during design` lines, and only as one of the
+    16 exact lines the closed list in `refcheck.sh` (P6.3) gives, each with
+    its own key: the line is `- <label>: <citation> [named-only: <key>;
+    <YYYY-MM-DD>]`, the label and citation fixed per key, and each key
+    appears exactly once in the file. A `named-only` line with any other
+    key, label or citation fails the check, so the status cannot be used
+    to skip a fetch. Anything else without an identifier is looked up by
+    bibliographic search.
+  - `unreachable`: final, and allowed only on `Design input` and `Read
+    during design` lines, never on a `Canonical source` line. Set only
+    after every route that applies to the source has failed, each attempt
+    logged with its URL and HTTP status (or curl error). A route fails on a
+    status other than 200 after the retry rule, a challenge page, or a body
+    that fails *match*. The how-checked text lists the attempts in order
+    (`unreachable: own page 403 challenge; Wayback API 429 after backoff;
+    snapshot connection reset after backoff; 2026-10-07`). The completeness
+    check passes it on those lines and prints each one; the run log and
+    the final HTML report list every `unreachable` entry. This is the
+    "cited in design, not verified" end state that `design-sources.md`
+    expects; the row's canonical line, always verified, carries the
+    technique.
+  - `maintainer-checked`: final, and allowed only on `Design input` and
+    `Read during design` lines, never on a `Canonical source` line. Used
+    when the maintainer checked the page and `p6-run-log.md` holds that
+    check as a **marker line**: a line that begins, after any indentation,
+    with exactly
+    `- maintainer-checked: <URL> | <YYYY-MM-DD> | <what was seen>`, where
+    `<URL>` is the URL the reference line carries (URL rule) and the rest
+    of the entry may continue on indented lines below it. A marker line
+    records a check the maintainer made; no slice ever writes a run-log
+    line that begins with `- maintainer-checked:` (P6.3's fetch lines begin
+    with the key, `closing` or `attempt`). The citation's fields come from that
+    entry, and the how-checked text names it (`maintainer-checked: run log
+    2026-10-07, <what matched>; <what the routes gave>`). `refcheck.sh`
+    passes it only on those labels and only when the line's URL equals,
+    character for character, the URL of a marker line; it requires exactly
+    two marker lines in the run log and each marked URL on exactly one line
+    of the file, so a URL that a fetch wrote into the log, or a prefix of a
+    marked URL, never passes. It prints each one; the run log and the final
+    HTML report list every `maintainer-checked` entry, as they do
+    `unreachable` ones. **Precedence:** a source whose URL has a marker line
+    takes `maintainer-checked`, whatever the routes give; P6.3 still runs
+    every route for it and logs each attempt, and quotes a route match in
+    the how-checked text. Two entries have it, checked by the maintainer at
+    13:24 on 2026-10-07: axelinternet, p5-watercolor
+    (`https://github.com/axelinternet/p5-watercolor`) and The Postman's
+    Knock (`https://thepostmansknock.com/illustrated-wedding-maps/`). Their
+    two marker lines are already in the run log: the orchestrating session
+    wrote them under the 13:24 entry, from the maintainer's check, in
+    `6c1e380`. No one waits for the maintainer; P6.3 is still not
+    dispatched while
+    `grep -cE '^ *- maintainer-checked: https?://' specs/001-port/p6-run-log.md`
+    prints anything but `2` (it prints `2` at `9474c49`).
+  - `not-verified`: not yet final. On a `Canonical source` line: every
+    route and every replacement the canonical-source rule yields was tried
+    and none matched, or a fetch exhausted its retries. On a `Design input`
+    or `Read during design` line: a route is still untried. The reason
+    follows the colon. The completeness check and the phase gate fail while
+    one exists.
+- **Fixed design-input lines** (no status token, because they cite no new
+  source): `- Design input: the canonical source above.` when the source
+  read during design is the canonical source (Curtis 1997 for
+  `edge-darkening`, `backruns`, `granulation`, `shallow-water`; Kubelka,
+  Munk 1931; Douglas, Peucker; Chaikin; Horn; Luft, Deussen for
+  `wet-area-bleed`), and
+  `- Design input: original design reading not recorded; the canonical source stands in.`
+  when the row has no recovered reading (P6.2 match rule). Both are exact
+  strings.
+- **Closing section** `## Read during design, no technique here`: one
+  `- Read during design: <citation>. <url> [<status>: ...]` line per
+  work in a `design-sources.md` entry that informs no inventory row (P6.2's
+  table), in that file's order. An entry with a URL is fetched and matched
+  like any other source (status only: it is listed, not cited by any
+  docstring), and ends `verified`, `verified-via-index`,
+  `maintainer-checked` or `unreachable`;
+  one without a URL is its exact `named-only` line. Every
+  URL in `design-sources.md` appears somewhere in the file (P9.4 checks this
+  before it deletes that list).
+- **Key**: lowercase ASCII kebab-case naming the technique, not the paper,
+  so a later change of source keeps the key: `zhang-suen`,
+  `douglas-peucker`, `kubelka-munk`, `edge-darkening`. Matches
+  `[a-z][a-z0-9-]*`, unique, no digits that read as a phase number.
+- **Implemented in**: one or more backticked dotted paths to a module,
+  class, function or method under `pyntpot`, comma-separated. Every entry
+  has at least one site (the inclusion rule admits no technique without
+  one).
+- **Citation line in a docstring**: exactly
+  `` Source: `<key>` in docs/explanation/references.md. ``, on its own line
+  as the last paragraph before the first Google section (`Args:`,
+  `Returns:` ...), or as the last line when there is none. Not
+  `References:` or `See Also:`, which pydocstyle's Google convention parses
+  as sections. A site that implements two techniques carries two lines.
+
+**Routes** (P6.3 tries them in this order for each source; the log records
+every route tried):
+
+1. Own page: the line's own URL (URL rule), followed with `curl -sSL`,
+   answers 200 and the body matches (see *match*) → `verified`. For a W3C standard the body's
+   `<title>` and `<p id="w3c-state">` give title, status and date. For a
+   design-record web page (a URL in P6.2's table) the body matches when it
+   contains every word P6.2's table pins for it (*match*).
+2. Crossref record: the source has a DOI, its publisher page (route 1's
+   fetch of `https://doi.org/<DOI>`) is **blocked**, and the Crossref API
+   record for the DOI matches → `verified-via-index`, with the publisher
+   status in the how-checked text (`Crossref record, publisher page 403`;
+   `Crossref record, publisher page 200 stub without authors`). **A page is
+   blocked** when, after the retry rule, its status is not 200, or it is a
+   challenge page (`cf-mitigated: challenge` or `<title>Just a
+   moment...`). **A DOI's publisher page** (route 1's fetch of
+   `https://doi.org/<DOI>`, and only that page) is also blocked when its
+   body, entity-decoded and folded as in *match*, does not contain the
+   work's folded title, or does not contain the folded family name of every
+   author the entry names (the Elsevier stub, tool facts). That clause
+   never applies to a page reached by any other URL: a design-record web
+   page answering 200 is checked by its pinned words (route 1), and a body
+   without them fails route 1 and goes to route 7. A blocked page is never a mismatch: it moves the source to the
+   next route and never to the next candidate. This is the rule for a
+   paywalled, proxy-blocked or stub landing page: the DOI registry's own
+   record is the metadata of record.
+3. Bibliographic search: no DOI and no URL, but a title. Query Crossref
+   `query.bibliographic` with the authors' family names and the title,
+   `rows=5`. **Selection rule:** take the first of the five results whose
+   title matches after folding and whose year matches; then route 2 applies
+   to its DOI (own page, else record). No result passes → the route
+   fails (`no bibliographic match`), logged with the five titles and
+   years, and route 8 decides the status. Never take a result that fails the title or the year test, however
+   high it ranks.
+4. Index record (books): an OpenLibrary ISBN record matches, its author
+   names read from the second fetch `https://openlibrary.org<key>.json`
+   (`.name`) for each `authors[].key` → `verified-via-index`.
+5. Repository: a code repository's "author" is its owner and its "title"
+   is its name, and that is the author-and-title match: the entry's author
+   and title equal the owner and name in its URL (folded). The route
+   matches when, in addition, `git ls-remote <url>` exits 0 and the README,
+   fetched raw (`https://raw.githubusercontent.com/<owner>/<name>/HEAD/README.md`,
+   else the same file through route 7's archive), describes the technique:
+   its folded text contains every word P6.2's table pins for that entry
+   (p5-watercolor: `hobbs` and `watercolor`) → `verified`, the how-checked
+   text naming the `ls-remote` result and the README sentence. Never read
+   authorship from `package.json` or other files.
+6. Cited by a checked work: a work with no DOI, ISBN or live page is
+   checked against the reference list (fetched PDF or Crossref
+   `.message.reference`) of a citing work whose own record routes 1 to 5
+   matched (the citing work need not be an entry; Kubelka 1948 is not). A
+   titled reference matches by *match*; a title-less one (Crossref often
+   holds only first author, year, venue, volume and first page) matches when
+   the first author's family name, the year, the volume and the first page
+   are equal and the venue matches by abbreviation (each word of the cited
+   venue, folded, is a prefix of the next word of the full venue, in
+   order: "zeits f tech physik" → "zeitschrift fur technische physik") →
+   `verified-via-index`, the how-checked text naming the citing work by
+   citation and DOI and the fields that matched and that were absent.
+7. Archived snapshot: a source with a URL whose own page is blocked
+   (not 200, a 404 included, or a challenge page; the DOI-only clause of
+   route 2 does not apply) or, for a design-record web page, answered 200
+   without its pinned words, and that routes 2 to 6 did not verify. Query the
+   Wayback availability API for the URL (tool facts); when
+   `.archived_snapshots.closest.available` is true and its `status` is
+   "200", fetch `https://web.archive.org/web/<timestamp>id_/<url>` with its
+   `timestamp`. When the API itself is exhausted or answers non-200, fetch
+   `https://web.archive.org/web/<YYYYMMDD>id_/<url>` with the day's date
+   instead. A 200 body is checked by the same *match* as route 1 (for a
+   design-record web page, its pinned words) → `verified-via-index`, the
+   how-checked text naming the snapshot timestamp and the own page's status (`Wayback snapshot 20240511, own
+   page 403 challenge`).
+8. None matched → on a `Canonical source` line, `not-verified: <routes
+   tried>` and the canonical-source rule; on a `Design input` or `Read
+   during design` line, `unreachable: <each attempt, URL and status>`.
+
+*Match*: decode HTML entities in a fetched body or field first
+(`html.unescape`: fetched bodies carry `Osman&#39;s` and `&#8211;`), then
+fold a title by Unicode NFKC, lowercasing, replacing every
+non-alphanumeric character (including U+2010 to U+2015) with a space and
+collapsing whitespace. A record's title is its `title` followed by its
+`subtitle` when Crossref splits them. The titles match when the folded
+record title equals the folded entry title or begins with it followed by a
+space (a record's subtitle may be extra: Luft, Deussen). The year is the
+record's `issued` year; when that is null, the four-digit year in its
+container title or event name (Baxter, Lin: "PG 2004"); never the
+`created` date, which is the registration date. Authors match when every
+author family name in the entry appears in the record. **For a
+design-record web page** (P6.2's table) the match is exactly this: the
+folded body contains every word P6.2's table pins for that page, as a
+substring of the folded body (so `fleischer` is found in the Curtis PDF's
+`fleischery`, a footnote mark), and nothing else is compared field by
+field. A page with its pinned words is the work, whatever the design
+record's wording: its citation title and author are the ones P6.2's table
+pins (taken from the live page's `<title>` and owner on 2026-10-07), and
+each that differs from `design-sources.md` is logged as a correction to
+the design record, never counted as a mismatch. A page without every
+pinned word fails the route that fetched it. The year must appear in the
+body or its `<meta>` date, otherwise the entry gives the year with
+"(year from the design record, not shown on the page)"; where the design
+record gives no year, the year is that of the page's
+`article:published_time` `<meta>`, else the citation reads `(n.d.)`. For a standard the
+author is the body (`W3C`), and the match is the title plus the status and
+date of `w3c-state`. A mismatch in one field is corrected to the record and
+logged; a mismatch in two or more means the source is not the one meant:
+try the next candidate or result (a record; a design-record web page has
+no fields to mismatch, only its pinned words). Only a record or a body that shows the
+work is compared field by field; a blocked page (route 2) is not a
+mismatch.
+
+#### P6.0 Fatten P6; plan-reviewer pass
+
+- This section. A plan-reviewer agent reviews it, and P6.1 does not start
+  until the review passes. `tasks.md` gains P6.0 and the new slice ids.
+- Tool facts above were fetched from this container at `1154129` and, for
+  the review-1 additions, at `93aee17`; the review-2 probes (MoXi's two
+  DOIs, p5-watercolor, The Postman's Knock and the archive, the jargon
+  counts) at `31c1d26`; the review-3 probes (the three Elsevier DOIs, Luft,
+  Deussen, the match-table greps, `refcheck.sh`, `doc_lines.py` and the
+  P6.5 file lists) at `f6698e4`; the review-4 probes (the ten design-record
+  pages and their pinned words, the `-I` greps, `refcheck.sh`'s
+  `Implemented in:` count) at `9474c49`.
+- Owner files: `specs/001-port/plan.md` (this section), `specs/001-port/tasks.md`
+  (the P6 list). The orchestrating session adds the review outcome to the
+  run log.
+- Commit: `Fatten P6 into slices`
+
+#### P6.1 References inventory
+
+- Implements D24, inventory step; predecessor P6.0. Touches no `src/` file.
+- Owner files: `specs/001-port/p6-inventory.md` (new),
+  `specs/001-port/p6-run-log.md`, `docs/issues/*.md` (new files only).
+- Leave alone: `src/**`, `tests/**`, `design-sources.md`, `references.md`
+  (not yet written).
+- First, on the clean starting commit, run G-here and log each stage's wall
+  time: it is P6's baseline, and every later slice compares to it.
+- **Inclusion rule.** A technique enters the inventory when (a) the code
+  names it in an identifier, docstring or comment by an eponym or a term of
+  art with a published originating description (Zhang-Suen, Douglas-Peucker,
+  Kubelka-Munk, marching squares, Lanczos, Catmull-Rom, Chaikin, fBm,
+  chamfer distance, hillshade, hachures), or (b) `design-sources.md` names
+  it and a code site implements it (backruns, granulation, edge darkening,
+  midpoint deformation, the shallow-water pass, the bleed inside a shared
+  wet-area map, multiply compositing, the bristle brush). Every technique
+  needs a code site; one that shows only as
+  a chosen value (the WCAG contrast ratios behind the default inks) does not
+  enter, and its `design-sources.md` entry goes to the closing section. A
+  single elementary formula or operation does not enter.
+- **The decided terms** (the complete list beyond the seed; P6.1 applies
+  it, never re-decides it, and logs each as `considered, excluded:
+  elementary` with its files):
+
+  | Term in `src/` | Decision | Why |
+  |---|---|---|
+  | haversine (`maps/candidates/climbs.py`, `places.py`) | out | one closed-form spherical formula |
+  | bilinear (`ink/pad.py`, `deposit.py`, `wash.py`, `brush_style.py`, `stamp.py`, `maps/relief*.py`, `plates.py`) | out | elementary interpolation, mostly Pillow's filter |
+  | even-odd (`letters/skeleton.py`, `maps/rings.py`) | out | the crossing-parity rule |
+  | scanline fill (`letters/skeleton.py`, `ink/raster.py`, `maps/masks.py`) | out | elementary rasterisation |
+  | flood fill (no hit at P6.0) | out | not in the code |
+  | dither (`ink/io.py`, `maps/painter/*.py`, `maps/style_groups.py`) | out | noise added before quantising |
+  | supersampling (`ink/pad.py`, `raster.py`, `brush_style.py`, `maps/style*.py`, `card_geometry.py`) | out | render finer, average down |
+  | dilation and erosion (`ink/noise.py`, `maps/masks.py`, `maps/painter/*.py`) | out | elementary morphology by a square |
+  | `smoothstep`, linear interpolation, a clamp, a mitre limit | out | elementary formula |
+
+- **The search** is this tally, which lists which terms occur and where; it
+  is not a reading list:
+  `grep -rnoiE 'kubelka|munk|zhang|suen|marching|lanczos|brownian|fbm|value.noise|chamfer|hillshad|hachur|douglas|peucker|chaikin|catmull|midpoint|bloom|backrun|granulat|shallow.water|bristle|multiply|edge.darken|wet.?area|haversine|bilinear|even.odd|scanline|flood.fill|dither|supersampl|dilat|erosion|erode' src/pyntpot --include=*.py | awk -F: '{print tolower($NF), $1}' | sort | uniq -c`.
+  Every term in it is a seed key's term or a decided term. P6.1 reads the
+  body of each seed site, and of any function whose own body the tally
+  places a seed term in that is not a seed site (the site rule then decides
+  whether it is a second site). A technique name P6.1 meets that is in
+  neither the seed nor the decided table is not added: it is filed as
+  `docs/issues/unlisted-technique-<slug>.md` and logged. At `f6698e4` the
+  tally counts 479 matches; the `wet.?area` term counts 12 (`ink/wash.py`
+  7, `ink/style.py` 3, `ink/shallow_water.py` 2) on 11 lines: `ink/wash.py`
+  4, 142, 159, 164 and 199 are the module docstring and `WashOptions` and
+  `wash` text (the `wet-area-bleed` row's site `wash`), and 309 is the
+  `wet:` argument of `pyntpot.ink.wash.fluid_modulate`, which is decided
+  as not a site (seed table, `shallow-water` row); `ink/style.py` holds the
+  `WashStyle` switches (no body); and `ink/shallow_water.py`'s wet mask
+  confines the shallow-water flow, which is the `shallow-water` row's. So
+  no `wet.?area` hit is expected to add a site.
+- **Site rule.** A site is the function, method or class whose body carries
+  out the technique (read the body; a caller that only passes arguments is
+  not a site). Where the code's name and its body disagree, the body
+  decides, the inventory names what the body does, and the name mismatch is
+  filed (known at P6.0: `pyntpot.ink.noise.edt` is a two-pass chamfer
+  distance with weights 1 and 1.41421356, not a Euclidean transform; its
+  docstring already says chamfer; the rename is
+  `docs/issues/edt-is-a-chamfer-distance.md`). A technique applied through a
+  library call (Lanczos through Pillow's `Image.Resampling.LANCZOS`) has as
+  its site the function that chooses and applies it.
+- **Split rule.** One inventory row per technique. A family the old sketch
+  listed as one line ("watercolour wash effects", "brush and nib stroke
+  models", "fBm and value noise") is split into one row per technique that
+  has its own site; two techniques that share one site and one source stay
+  one row.
+- The seed, from the P6.0 grep (P6.1 confirms each by reading the body, adds
+  only what the inclusion rule and the decided table admit, and drops a seed
+  row only with a logged reason):
+
+  | Key | Technique | Sites at `1154129` |
+  |---|---|---|
+  | `kubelka-munk` | Kubelka-Munk glazing | `pyntpot.ink.pigment.km_rt` (85), `km_plate` (124) |
+  | `multiply-compositing` | multiply compositing | `pyntpot.ink.pigment.multiply_plate` (74) |
+  | `zhang-suen` | Zhang-Suen thinning | `pyntpot.letters.skeleton.thin` (88) |
+  | `douglas-peucker` | Douglas-Peucker simplification | `pyntpot.ink.polyline.simplify` (44) |
+  | `chaikin` | Chaikin corner cutting | `pyntpot.ink.polyline.smooth` (83) |
+  | `catmull-rom` | Catmull-Rom spline | `pyntpot.ink.curves.spline` (26) |
+  | `marching-squares` | marching squares contours | `pyntpot.maps.contours.marching_squares` (33) |
+  | `lanczos` | Lanczos reduction | `pyntpot.ink.pad._reduce` (118) |
+  | `value-noise` | value noise | `pyntpot.ink.noise.value_noise` (26) |
+  | `fbm` | fractional Brownian motion | `pyntpot.ink.noise.fbm` (48), `fbm_aniso` (101), `pyntpot.ink.tip._fbm1` (125) |
+  | `chamfer-distance` | chamfer distance transform | `pyntpot.ink.noise.edt` (168) |
+  | `box-blur` | Gaussian by three box passes | `pyntpot.ink.noise.blur` (156) |
+  | `hillshade` | hillshade from slope and aspect | `pyntpot.maps.relief._shade` (128) |
+  | `hachures` | hachures down the slope | `pyntpot.maps.relief_strokes.hachures` (171) |
+  | `midpoint-displacement` | recursive midpoint displacement | `pyntpot.ink.raster.deform_ring` (61), `pyntpot.ink.polyline.deform_line` (302) |
+  | `edge-darkening` | edge darkening as outward flow | `pyntpot.ink.wash.flow_edge` (57) |
+  | `backruns` | backruns (blooms) | `pyntpot.ink.wash.bloom` (90) |
+  | `granulation` | granulation following the paper | `pyntpot.ink.sheet.Sheet.pits` (98) |
+  | `shallow-water` | the shallow-water pass | `pyntpot.ink.shallow_water.shallow_water` (24). Not a site: `maps.painter.fluid.paint_fluid`, which only calls `ink.wash.fluid_modulate`; and `pyntpot.ink.wash.fluid_modulate` (293; its `wet:` argument at 309), which calls `shallow_water` on a quarter-size grid and multiplies the layer densities by a gain read from the deposit's percentiles: that coupling is this library's own, and the pass it calls is the site |
+  | `wet-area-bleed` | bleed inside a shared wet-area map | `pyntpot.ink.wash.wash` (177; the rim drop at 218-219, the bleed at 228-230), `pyntpot.maps.painter.cover.wet_field` (32; one wet map over the union of the cover classes, which `_class_washes` passes to each class's wash as `WashOptions.wet`) |
+  | `bristle-brush` | bristle brush tip and stamp | `pyntpot.ink.stamp.stamp` (248) |
+  | `nib` | pen nib stroke | `pyntpot.letters.nib.plate` (273) |
+  | `label-placement` | label placement (clearance, set along a line, one name a place) | `pyntpot.maps.lettering.placement.place` (70) |
+
+  WCAG contrast is not a row: no code computes a luminance or a contrast
+  ratio (the two `luminance` hits, `ink/io.py` and
+  `maps/painter/plates.py`, are an SVG mask note and a mean darkness), so
+  the WCAG entry of `design-sources.md` goes to the closing section as
+  `named-only`.
+- Write `p6-inventory.md` as that table with a fourth column, the
+  candidate canonical source from P6.3's table, a fifth, empty, for P6.2's
+  design inputs, and a sixth, empty, for P6.3's statuses. Header: commit,
+  date, the tally command and its output. The file holds **one table
+  only** (P6.3's key grep reads every backticked first cell in it); lists
+  such as the decided terms and the `no technique here` entries go in
+  prose or bullets, never in a second table.
+- Hand-off: row count, each added or dropped row with its rule, the decided
+  terms with their files, issues filed, G-here stage times.
+- Gate: G-here (no `src/` change; `git diff --stat -- src tests` is empty).
+- Commit: `Inventory the techniques the code implements`
+
+#### P6.2 Match the design sources to the inventory
+
+- Implements the spec's design-sources open question; predecessor P6.1.
+  The recovery itself is done (2026-10-04, `design-sources.md`); this slice
+  matches the entries to rows. It does not look for other works: the only
+  lookup in P6 is P6.3's route 3 for an entry the design record already
+  names by author and title.
+- Owner files: `specs/001-port/p6-inventory.md` (the design-input column),
+  `specs/001-port/p6-run-log.md`, `specs/001-port/spec.md` (the open
+  question moves to "Resolved questions": "Design-input sources
+  (2026-10-07): recovered in `design-sources.md`; where none was recorded,
+  the entry cites the canonical source and says so (D24).").
+- Leave alone: `design-sources.md` (P9.4 deletes it; its text is the
+  record), `src/**`, `tests/**`.
+- **The match table is authoritative.** P6.2 applies it and logs each
+  line as `choice: <entry> -> <rows or closing> | rule: match table |
+  inputs: design-sources.md`; it never re-decides a match. The rules behind
+  it, for the record: an entry is a row's design input when its right-hand
+  note names that row's technique or effect as the code implements it;
+  where the entry is the row's canonical source (same work), the row's line
+  is the fixed `the canonical source above.`; an entry that names a
+  technique with no document read ("named", "named in the code") is not a
+  recovered reading; a work named with no title is its exact `named-only`
+  line; an entry that informs no row goes to the closing section. One line
+  per work: a bullet naming two works gives two lines. **Pinned page
+  words.** Each entry with a web page (its `design-sources.md` URL) carries
+  in its cell the words routes 1 and 7 look for in the folded body
+  (*match*), and the citation title and author P6.3 writes, both read from
+  a live fetch on 2026-10-07 (evidence below the table); a page that could
+  not be fetched has words from the design record and the maintainer's
+  check, and says so. A pinned citation field that differs from
+  `design-sources.md` is logged as a correction.
+
+  | `design-sources.md` entry (file order) | Rows, and the line each gets | Why |
+  |---|---|---|
+  | Curtis et al. 1997 | `edge-darkening`, `backruns`, `granulation`, `shallow-water`: the canonical source above; `kubelka-munk` and `wet-area-bleed`: each its own `Design input` line (grail URL). PDF words `computer generated watercolor`, `curtis`, `anderson`, `seims`, `fleischer`, `salesin`; cites "Computer-Generated Watercolor", Curtis, Anderson, Seims, Fleischer, Salesin; the PDF text shows no year, so 1997 is from the design record | the note names all six (its "wet-area mask" for `wet-area-bleed`); it is the canonical source of the first four |
+  | Van Laerhoven, Van Reeth 2005 | `kubelka-munk` | "Kubelka-Munk compositing in place of multiply": the multiply it replaced is not what it informs, so not `multiply-compositing` |
+  | Bousseau et al. 2006 | `edge-darkening` | "Edge darkening as a distance term": the note's technique is edge darkening; the distance term is how, so not `chamfer-distance` |
+  | Luft, Deussen | `wet-area-bleed`: the canonical source above | "the shared wet-area map so adjacent washes bleed": `pyntpot.maps.painter.cover.wet_field` builds one map over the union of the cover, and `pyntpot.ink.wash.wash` drops the rim and blurs the density inside it (`ink/wash.py` 218-219, 228-230); same work as the row's canonical source |
+  | Chu, Tai 2005 (MoXi) | `bristle-brush` | "ink starvation; the brush reservoir": the per-bristle load spent along a stroke (`Brush.starve`, `run_px`) is the brush's; the nib's `pen_starve` is this library's own; the lattice-Boltzmann reference informs no row |
+  | Baxter, Lin 2004 | `bristle-brush` | "per-bristle ink reservoir with reload" (`Brush.dip_px`) |
+  | Kubelka, Munk 1931 | `kubelka-munk`: the canonical source above | same work |
+  | Deegan et al. | `backruns`: exact `named-only` line `deegan-coffee-ring` | "blooms as a second liquid front" |
+  | 2019 arXiv drying study | `backruns`: exact `named-only` line `arxiv-watercolour-drying` | the same bullet, a second work |
+  | Lee, wet-on-wet | `shallow-water`: exact `named-only` line `lee-wet-on-wet` | "fluid pass scope" |
+  | WetBrush | `shallow-water`: exact `named-only` line `wetbrush` | the same bullet, a second work |
+  | Tyler Hobbs 2017 | `midpoint-displacement`. Page words `a guide to simulating watercolor paint with generative art`, `tyler hobbs`; cites "A Guide to Simulating Watercolor Paint with Generative Art", Hobbs, T. | "recursive midpoint polygon deformation" |
+  | axelinternet, p5-watercolor | `midpoint-displacement`, status `maintainer-checked`; route 5 README words `hobbs` and `watercolor` | "implementation reference for the Hobbs method": the Hobbs row |
+  | Horn 1981 | `hillshade`: the canonical source above | same work |
+  | Douglas, Peucker 1973; Chaikin 1974 | `douglas-peucker`: the canonical source above; `chaikin`: the canonical source above | one bullet, two works, each its own row's canonical source |
+  | Lanczos resampling (named) | `lanczos`: not recorded | named, no document read |
+  | Zhang, Suen 1984 (named in the code) | `zhang-suen`: not recorded | named, no document read |
+  | Marching squares (named in the code) | `marching-squares`: not recorded | named, no document read |
+  | Euclidean distance transform; fBm and value noise (named in the code) | `chamfer-distance`, `fbm`, `value-noise`: not recorded | named, no document read |
+  | Stamen, *Watercolor process* | `multiply-compositing`, `box-blur`, `edge-darkening`. Page words `watercolor process`, `zach watson`, `stamen`; cites "Watercolor Process", Watson, Z. (Stamen Design), 2012 (the page's `article:published_time`; the design record gives no year) | "multiply recipe", "blur", "rim darkening via blurred mask"; its "noise" names no kind of noise, so not `fbm` or `value-noise`; "paper grain" is the paper's texture, not pigment settling into its pits, so not `granulation` |
+  | Stadia Maps, Stamen Watercolor docs | closing. Page words `stamen watercolor`, `stadia maps`; cites "Stamen Watercolor", Stadia Maps (n.d.) | why the method is raster only: no technique |
+  | ICA MapCarte 95/365, Wainwright | closing. Page words `mapcarte 95 365`, `pictorial guide to the lakeland fells`, `wainwright`, `commission on map design`; cites "MapCarte 95/365: Pictorial Guide to the Lakeland Fells by Alfred Wainwright, 1955-1966", ICA Commission on Map Design (the site owner; the post is signed `@kennethfield`), 2014 | restraint, route weight and a warning about hatching moiré: a warning, not the hachures the `hachures` row draws down the slope |
+  | Adventures in Mapping 2024 | closing. Page words `adventures in mapping`, `tolkien style maps in a gis part 3 water`, `john nelson`; cites "Tolkien Style Maps in a GIS: part 3, Water", Nelson, J. (Adventures in Mapping), 2024 | the style was rejected |
+  | Urban Sketching World, *Line and wash* | closing. Page words `line and wash`, `urban sketching world`; cites "Urban Sketching Examples: Line and Wash", Urban Sketching World (the site owner; the post is by "Taria") (n.d.) | an idiom (ink first, wash after), no technique |
+  | The Postman's Knock | closing, status `maintainer-checked` (metadata only: the process section is behind a paywall). Not fetchable from here (403 challenge, 2026-10-07), so its words come from the design record and the 13:24 maintainer check: `illustrated wedding maps`, `bugbee` (route 7's snapshot, if one is reached); cites "Illustrated Wedding Maps", Bugbee, L., 2014 | the extent idiom: no code site trims the map's extent to a blob (`blob` is on 48 lines in 16 files: in `maps/` the generalised wood, park and sea shapes and their jitter, and JSON or digest variables; in `ink/` a stroke's set-down deposit; in `letters/` ink components, glyph dots and the soft halo under a word), and its edge bleed is the extent's, not a wash's `edge-darkening` |
+  | osmanyy.com, *Risograph CSS* | `multiply-compositing`. Page words `risograph css`, `osman`; cites "Risograph.css", Osman (osmanyy.com), 2025 (the page's `article:published_time`; the design record gives no year) | "Multiply as the medium" |
+  | OpenStreetMap via Overpass; OSM tagging | closing: `named-only` lines `osm-overpass`, `osm-tagging` | data sources, no technique |
+  | OpenTopoData SRTM 30 m; Open-Elevation | closing: `named-only` lines `opentopodata-srtm`, `open-elevation` | data sources |
+  | Google Fonts: Patrick Hand; Caveat | closing: `named-only` lines `patrick-hand`, `caveat` | fonts |
+  | SVG filter effects; CSS mix-blend-mode | closing: `named-only` lines `svg-filter-effects`, `css-mix-blend-mode` | used in the upstream consumer's SVG page, not here |
+  | WCAG AA contrast ratios | closing: `named-only` line `wcag-aa-contrast` | chosen values only (P6.1: no code computes a contrast) |
+  | Named only: walk-guide maps and leaflets | closing: `named-only` line `walk-guide-maps` | genres, not works: one line |
+  | Named only: researcher search terms | closing: `named-only` line `researcher-search-terms` | search terms, not works: one line |
+  | Named only: MapTiler and Stadia notes | closing: `named-only` line `maptiler-stadia-notes` | not read |
+
+  Every inventory row the table gives no line gets the fixed `original
+  design reading not recorded; the canonical source stands in.` At
+  `1154129` those are `catmull-rom`, `hachures`, `nib` and
+  `label-placement`, besides the six rows marked "not recorded" above (the
+  `wet-area-bleed` row has two lines, so the count is unchanged). A row P6.1 adds
+  gets that line too, and when a `design-sources.md` note names its
+  technique, P6.2 files `docs/issues/design-input-for-<key>.md` instead of
+  re-deciding the table.
+  **The greps behind the table**, re-run at `f6698e4`; P6.2 re-runs each
+  and pastes its output into the run log, and a count that differs is
+  filed as `docs/issues/match-table-evidence.md` (the table is still
+  applied):
+  - `grep -rniIE 'wet.?area' src`: 11 lines, `ink/wash.py` 6 (4, 142, 159,
+    164, 199, 309), `ink/style.py` 3 (109, 115, 119),
+    `ink/shallow_water.py` 2 (44, 66). With
+    `sed -n '218,219p;228,230p' src/pyntpot/ink/wash.py` the rim drop
+    `rim = rim * (1.0 - o.wet * o.rim_drop)` and the bleed
+    `dens = dens * (1.0 - m_wet) + blur(dens, o.bleed_px) * m_wet`.
+    `grep -n 'wet_map\|def wet_field' src/pyntpot/maps/painter/cover.py`:
+    32, 95, 104.
+  - `grep -rliIE 'blob' src | wc -l`: 16 (15 `.py` files and
+    `maps/themes/default.toml`); `grep -rniIE 'blob' src | wc -l`: 48.
+    `-I` is required: G-here leaves `__pycache__` under `src/`, and
+    without it `-l` also lists the matching `.pyc` files (29 at
+    `9474c49`).
+  - `grep -rnE '\bstarve\b|run_px|dip_px|pen_starve' src/pyntpot/ink/brush.py`:
+    the `Brush` fields `starve` 191, `run_px` 192, `dip_px` 194 and
+    `pen_starve` 202 are its first four lines (the MoXi and Baxter, Lin
+    rows).
+  - `grep -rniIE 'luminance' src`: 2 lines, `ink/io.py:54` and
+    `maps/painter/plates.py:42` (the WCAG row, P6.1).
+  *(Evidence.)* The pinned page words were read on 2026-10-07 from 13:18:46
+  to 13:19:10 UTC, `curl -sSL`, 2 s apart, each body entity-decoded and
+  folded as in *match*; the count is of the folded word in the folded body:
+  - Curtis, grail PDF: 200, 1,838,002 bytes, `pdftotext`; first line
+    "Computer-Generated Watercolor"; `computer generated watercolor` 4,
+    `curtis` 1, `anderson` 1, `seims` 1, `salesin` 4, `fleischer` only as
+    `fleischery` (line 47, "Kurt W. Fleischery", a footnote mark); `1997`
+    0.
+  - Hobbs: 200, `<title>` "A Guide to Simulating Watercolor Paint with
+    Generative Art | Tyler Hobbs"; the title 7, `tyler hobbs` 26.
+  - Stamen: 200, `<title>` "Watercolor Process | Stamen";
+    `watercolor process` 26, `zach watson` 2, `stamen` 261;
+    `article:published_time` 2012-03-26.
+  - Stadia: 200, `<title>` "Stamen Watercolor - Stadia Maps
+    Documentation", `<meta name="author">` "Stadia Maps, Inc.";
+    `stamen watercolor` 42, `stadia maps` 22; the design record's "stamen
+    watercolor style docs" 0; no published date (only "last update"
+    dates).
+  - ICA: 200, `<title>` "MapCarte 95/365: Pictorial Guide to the Lakeland
+    Fells by Alfred Wainwright, 1955-1966 | Commission on Map Design";
+    `mapcarte 95 365` 4, `pictorial guide to the lakeland fells` 17,
+    `wainwright` 26, `commission on map design` 6, `2014` 47; the design
+    record's "mapcarte 95 365 a pictorial guide ..." 0 and "ica map design
+    commission" 0; post author `@kennethfield`.
+  - Adventures in Mapping: 200, `<title>` "Tolkien Style Maps in a GIS:
+    part 3, Water – Adventures In Mapping | John Nelson Maps";
+    `adventures in mapping` 7, the title 5, `john nelson` 7, `2024` 26,
+    `article:published_time` 2024-02-14.
+  - Urban Sketching World: 200, `<title>` "Urban Sketching Examples: Line
+    and Wash"; `line and wash` 33, `urban sketching world` 3; post by
+    "Taria"; no `article:published_time`.
+  - The Postman's Knock: 403, `<title>Just a moment...` (challenge).
+  - osmanyy.com: 200, `<title>` "Risograph.css — Osman's Workshop", schema
+    author `{"@type":"Person","name":"Osman"}`; `risograph css` 22,
+    `osman` 16, `article:published_time` 2025-07-03.
+  - (Not in this table: W3C `compositing-1` 200, "Compositing and Blending
+    Level 1", checked by the standard rule; p5-watercolor `git ls-remote`
+    exit 0 at `a3e995a`, raw README 200 with `hobbs` 1 and `watercolor` 3.)
+- Hand-off: per row, its design inputs or the fixed line; the closing
+  list; any `design-sources.md` entry not in the match table (expect none:
+  the table covers every entry); the grep outputs.
+- Gate: G-here.
+- Commit: `Match the design sources to the inventory`
+
+#### P6.3 Fetch and check every source; write `references.md`
+
+- Implements D24; predecessor P6.2. Touches no `src/` file. Load the
+  `write-docs` skill (the file is reference-mode content under the
+  `explanation/` path D24 and P7 fix; keep the path, write it as
+  reference) and the repo skill `external-integration`.
+- Owner files: `docs/explanation/references.md` (new), `docs/README.md`
+  (add `explanation/: background and the references bibliography` to the
+  subfolder list), `GLOSSARY.md` (new row: `reference | One entry of
+  docs/explanation/references.md: a technique, its key, its canonical
+  source and design input, and where the code implements it.`),
+  `specs/001-port/p6-inventory.md` (status column),
+  `specs/001-port/p6-run-log.md`, `docs/issues/*.md` (new files only).
+- Leave alone: `src/**`, `tests/**`, `design-sources.md`, `README.md`
+  (P7 adds its pointer).
+- **The candidate table below is authoritative.** P6.3 fetches each
+  candidate and checks it by the routes; it does not re-choose a row whose
+  candidate verifies. The **canonical-source rule** applies only to a row
+  P6.1 added and to a candidate that ends `not-verified` for a reason other
+  than an exhausted fetch (a 429, a 5xx or a reset after the backoff is
+  cleared by re-trying, not by replacing; pacing rule):
+  1. The work that introduced the technique under the name the code uses
+     (an eponym's paper: Zhang-Suen, Douglas-Peucker, Chaikin, Catmull-Rom,
+     Kubelka-Munk).
+  2. A technique with no eponym: a peer-reviewed description of the
+     algorithm the code's body carries out, not of the general idea.
+  3. A 2-D or special case of a named family with no paper of its own:
+     the family's introducing paper, with the note "the 2-D case".
+  4. A formula fixed by a standard: the standards body's current published
+     version of the document that defines it, whatever its maturity level
+     (W3C Compositing and Blending Level 1 is a Candidate Recommendation
+     Draft; that is its current published version).
+  5. A composite of rules or a model of the code's own: the foundational
+     paper the rules follow, and a `Note:` line saying which parts are this
+     library's own. Where no published work describes the technique as
+     built, the citation begins "Nearest published work:".
+  A replacement is fetched and checked like any candidate. This rule and
+  `not-verified` concern `Canonical source` lines only: a design input or a
+  closing-section line never takes a replacement and ends, after every
+  route, `verified`, `verified-via-index`, its exact `named-only` line,
+  `maintainer-checked` (precedence rule) or `unreachable` (route 8). When no source the rule yields verifies, the
+  canonical line stays `not-verified` with
+  the reason, P6.3 files `docs/issues/unverified-<key>.md`, and the
+  completeness check stays red. P6.3 re-tries the `not-verified` entries
+  once after the rest (step 3); if any remain, it hands off with its gate
+  red and the failures stated, the orchestrating session does not commit
+  it, and the stated route is a fresh re-try of only those entries under
+  the pacing rule. P6.4 does not start while P6.3's gate is red.
+- The candidates, from the P6.0, review-1 and review-3 Crossref checks:
+
+  | Key | Candidate canonical source |
+  |---|---|
+  | `kubelka-munk` | Kubelka, Munk (1931), *Zeitschrift für technische Physik* 12, first page 593 (the title and last page are in no record P6.3 fetches, so the citation carries neither; no DOI: route 6, cited by Kubelka 1948 `10.1364/JOSA.38.000448` with a title-less reference; expected status `verified-via-index`, as in the format example) |
+  | `multiply-compositing` | W3C, *Compositing and Blending Level 1*, https://www.w3.org/TR/compositing-1/ (route 1; Candidate Recommendation Draft, 21 March 2024) |
+  | `zhang-suen` | `10.1145/357994.358023` |
+  | `douglas-peucker` | `10.3138/FM57-6770-U75U-7727` |
+  | `chaikin` | `10.1016/0146-664X(74)90028-8` |
+  | `catmull-rom` | `10.1016/B978-0-12-079050-0.50020-5` |
+  | `marching-squares` | `10.1145/37402.37422`, the 2-D case |
+  | `lanczos` | `10.1175/1520-0450(1979)018<1016:LFIOAT>2.0.CO;2` (Duchon 1979 defines the Lanczos-windowed filter by that name; Lanczos's own σ-factor work is a 1956 book with no DOI; `Note:` the filter is applied through Pillow) |
+  | `value-noise` | `10.1145/74334.74360` (Lewis 1989, which describes lattice value noise; Perlin 1985 `10.1145/325165.325247` is gradient noise, which the body of `value_noise`, a smoothstep-interpolated lattice of random values, is not) |
+  | `fbm` | `10.1137/1010093` |
+  | `chamfer-distance` | `10.1016/S0734-189X(86)80047-0` (`Note:` the code's two-pass mask uses weights 1 and 1.41421356, `pyntpot.ink.noise.edt`; the paper was checked from its Crossref record only, so the note states the code's weights and makes no claim about the paper's) |
+  | `box-blur` | `10.1109/TPAMI.1986.4767776` |
+  | `hillshade` | `10.1109/PROC.1981.11918` |
+  | `hachures` | Imhof, *Cartographic Relief Presentation*, ESRI Press 2007, ISBN 9781589480261 (route 4) |
+  | `midpoint-displacement` | `10.1145/358523.358553` |
+  | `edge-darkening`, `backruns`, `granulation`, `shallow-water` | `10.1145/258734.258896` |
+  | `wet-area-bleed` | `10.1145/1124728.1124732` (Luft, Deussen 2006; rule 2, no eponym: the design record reads it for "the shared wet-area map so adjacent washes bleed", which is what `wet_field` and `wash` carry out; the design record names Curtis 1997's "wet-area mask" among the parts of a fluid simulation, not as a bleed between washes, so Curtis is this row's design input, not its canonical source) |
+  | `bristle-brush` | `10.1145/15886.15911` |
+  | `nib` | nearest published work, rule 5: `10.1145/15886.15911` |
+  | `label-placement` | `10.1559/152304075784313304` |
+
+- **Two sub-agents in sequence, one slice, one commit.** The
+  orchestrating session dispatches **P6.3-fetch** (steps 1 to 3), waits for
+  its hand-off, then dispatches **P6.3-write** (step 4 and the mechanical
+  checks), both with `$SLICE` = `$SCRATCH/p6.3/`. The seam is the run log:
+  P6.3-fetch writes one evidence row per source, and P6.3-write writes
+  `references.md` from those rows and the saved bodies only, never from a
+  fetch of its own and never from memory. A row P6.3-write cannot write
+  from its evidence row goes back to P6.3-fetch (a fresh dispatch for only
+  those sources), not into the file. The slice's gate and commit are one,
+  after P6.3-write.
+- Steps:
+  1. (P6.3-fetch) For every canonical source, every design input and every
+     closing-section entry, apply the routes in order (pacing rule) and log
+     one line per source: `<key or "closing"> | <source> | URL fetched |
+     HTTP status (after redirects) | route that matched | fields matched |
+     corrections | retries`, and one sub-line per attempt (`attempt | URL |
+     HTTP status or curl error`). Then the **evidence row**, which carries
+     everything step 4 writes: `evidence | <key or "closing"> | <label> |
+     <citation fields as the record gives them, corrections applied> |
+     <URL the line carries (URL rule)> | <status> | <how-checked text> |
+     <YYYY-MM-DD>`. For a design-record web page the citation fields are
+     the title and author P6.2's table pins. For `nib` (canonical-source
+     rule 5) the citation fields begin `Nearest published work:`. The
+     how-checked text never contains `]` (source-line rule). A source whose DOI this plan fixes (MoXi,
+     `10.1145/1186822.1073221`; Luft, Deussen, `10.1145/1124728.1124732`;
+     tool facts) takes routes 1 and 2 with that DOI; route 3 applies only to
+     the design inputs with no DOI or URL in `design-sources.md` and none
+     fixed here (expected: Van Laerhoven, Van Reeth; Bousseau et al.;
+     Baxter, Lin; see the tool facts). The Elsevier canonical sources
+     (Chaikin, Catmull, Rom, Borgefors) are expected to end route 1 blocked
+     (200 stub without authors) and route 2 `verified-via-index` (tool
+     facts). p5-watercolor and The Postman's Knock are
+     `maintainer-checked` (precedence rule); their routes still run, and
+     the review-2 probes predict a route-5 match for p5-watercolor and
+     route 1 and 7 failures for The Postman's Knock, each quoted in the
+     how-checked text. Every URL in `design-sources.md` is fetched,
+     including those of entries that inform no technique (Stadia,
+     Wainwright, Adventures in Mapping, Urban Sketching, The Postman's
+     Knock, and any other P6.2 put in the closing section); those get a
+     status only and no docstring cites them. The 16 works on the
+     `named-only` closed list (`refcheck.sh`) are not fetched; each is
+     written as its exact line.
+  2. (P6.3-fetch) Save each response under
+     `$SLICE/refs/<key>-<n>.{json,html,pdf}` and grep the saved body, never
+     the terminal summary.
+  3. (P6.3-fetch) Re-try the `not-verified` and `unreachable` entries once,
+     same rules and pacing, and log a new evidence row for each. An
+     `unreachable` line that fails again is final and is listed in the
+     hand-off.
+  4. (P6.3-write) Write `references.md` in the fixed format from the last
+     evidence row of each source. **`Note:` lines** are written only:
+     (a) on the rows this plan pins one for: `lanczos` (the filter is
+     applied through Pillow), `chamfer-distance` (the code's weights 1 and
+     1.41421356, candidate table), `hillshade` (slope and aspect from
+     `numpy.gradient` central differences, `pyntpot.maps.relief._shade`;
+     the note states only that code fact, since Horn 1981 was checked from
+     its Crossref record only), `marching-squares` (the 2-D case,
+     canonical-source rule 3) and `nib` (which parts are this library's
+     own, rule 5); (b) on a row P6.1 added whose canonical source comes from
+     rule 3 or 5; or (c) where the departure is visible in a body saved
+     under `$SLICE/refs/`, and the run log quotes the saved file's name and
+     the passage. A row that meets none of these has no `Note:` line, since
+     most canonical sources were checked from index metadata only and a note
+     about a paper nobody here read would be written from memory. Each
+     `Note:` is one line, and its departure is read from the site's body;
+     a pinned note states the code fact only, never a claim about the
+     paper, unless a body saved under `$SLICE/refs/` shows that claim (c).
+     **`nib`'s canonical line** begins `- Canonical source: Nearest
+     published work: Strassmann, S. (1986). ...` (canonical-source rule 5),
+     whatever its evidence row's citation fields say; a `nib` line without
+     that prefix is a defect, not a choice.
+- **Mechanical checks** (P6.3-write, before hand-off; `refcheck.sh` is
+  the shared script `$SCRIPTS/refcheck.sh`, written by the orchestrating
+  session from this block; paste every output into the log):
+  ```bash
+  # $SCRIPTS/refcheck.sh FILE RUNLOG: check every line under a `## ` heading of FILE; print FAIL for each bad
+  # line or count (each entry: one Implemented in, at most one Note), UNREACHABLE and MAINTAINER-CHECKED
+  # for those lines; exit 1 if any FAIL
+  f="$1"
+  log="${2:-specs/001-port/p6-run-log.md}"
+  named=$(cat <<'EOF'
+  deegan-coffee-ring|Design input|Deegan et al. Coffee-ring drying, named in the design record without a title.
+  arxiv-watercolour-drying|Design input|A 2019 arXiv study of watercolour drying patterns, named in the design record without a title.
+  lee-wet-on-wet|Design input|Lee. Wet-on-wet painting, named in the design record without a title.
+  wetbrush|Design input|WetBrush, a lattice-Boltzmann painting work, named in a survey list in the design record without a title.
+  osm-overpass|Read during design|OpenStreetMap via the Overpass API, named in the design record.
+  osm-tagging|Read during design|OSM tagging (landuse, natural, waterway, highway, boundary, historic, tourism, natural=coastline), named in the design record.
+  opentopodata-srtm|Read during design|OpenTopoData SRTM 30 m, named in the design record.
+  open-elevation|Read during design|Open-Elevation, named in the design record as a fallback.
+  patrick-hand|Read during design|Google Fonts: Patrick Hand (vendored, SIL OFL 1.1), named in the design record.
+  caveat|Read during design|Google Fonts: Caveat, considered and no longer used, named in the design record.
+  svg-filter-effects|Read during design|SVG filter effects (feTurbulence, feDisplacementMap, feGaussianBlur, feDropShadow), named in the design record.
+  css-mix-blend-mode|Read during design|CSS mix-blend-mode, named in the design record.
+  wcag-aa-contrast|Read during design|WCAG AA contrast ratios, 3:1 for marks and 4.5:1 for text, named in the design record.
+  walk-guide-maps|Read during design|Walk-guide and notebook route maps, National Trust and Ramblers trail leaflets, travel-journal watercolour maps and the Ordnance Survey double-line road style, named only.
+  researcher-search-terms|Read during design|The search terms given to a researcher, named only.
+  maptiler-stadia-notes|Read during design|MapTiler and Stadia notes on Stamen Watercolor, named only; only the Stadia page was read.
+  EOF
+  )
+  inputs=$(cat <<'EOF'
+  kubelka-munk 3
+  multiply-compositing 2
+  zhang-suen 1
+  douglas-peucker 1
+  chaikin 1
+  catmull-rom 1
+  marching-squares 1
+  lanczos 1
+  value-noise 1
+  fbm 1
+  chamfer-distance 1
+  box-blur 1
+  hillshade 1
+  hachures 1
+  midpoint-displacement 2
+  edge-darkening 3
+  backruns 3
+  granulation 1
+  shallow-water 3
+  wet-area-bleed 2
+  bristle-brush 2
+  nib 1
+  label-placement 1
+  EOF
+  )
+  awk -v named="$named" -v inputs="$inputs" -v logpath="$log" '
+  BEGIN {
+    n = split(named, rows, "\n")
+    for (i = 1; i <= n; i++) { split(rows[i], c, "|"); want[c[1]] = "- " c[2] ": " c[3]; seen[c[1]] = 0 }
+    n = split(inputs, rows, "\n")
+    for (i = 1; i <= n; i++) { split(rows[i], c, " "); di_want[c[1]] = c[2] }
+    closing_want = 17; marker_want = 2
+    day = "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"
+    date = "; " day "\\]$"
+    while ((getline row < logpath) > 0)
+      if (row ~ ("^ *- maintainer-checked: https?://[^ ]+ \\| " day " \\| .")) {
+        u = row; sub(/^ *- maintainer-checked: /, "", u); sub(/ .*/, "", u); marked[u] = 0; markers++
+      }
+    sect = ""
+  }
+  /^## Read during design, no technique here$/ { sect = "closing"; next }
+  /^## `[a-z][a-z0-9-]*` [^ ]/ { sect = $2; gsub(/`/, "", sect); present[sect] = 1; di[sect] = 0; impl[sect] = 0; note[sect] = 0; next }
+  /^## / { print "FAIL " NR ": unknown heading: " $0; bad++; sect = "?"; next }
+  sect == "" || $0 == "" { next }
+  {
+    line = $0; no = NR
+    if (sect == "closing" && line !~ /^- Read during design: /) { print "FAIL " no ": not a Read during design line: " line; bad++; next }
+    if (sect != "closing" && line !~ /^- (Canonical source|Design input|Implemented in|Note): /) { print "FAIL " no ": not an entry line: " line; bad++; next }
+    if (line ~ /^- Implemented in: /) { impl[sect]++; next }
+    if (line ~ /^- Note: /) { note[sect]++; next }
+    if (line ~ /^- Design input: /) di[sect]++
+    if (sect == "closing") closing++
+    if (line ~ /^- Design input: (the canonical source above|original design reading not recorded; the canonical source stands in)\.$/) next
+    if (line ~ ("^- (Canonical source|Design input|Read during design): .* \\[(verified|verified-via-index): [^]]+" date)) next
+    if (line ~ ("^- (Design input|Read during design): .* \\[unreachable: [^]]+" date)) { print "UNREACHABLE " no ": " line; next }
+    if (line ~ ("^- (Design input|Read during design): .* https?://[^ ]+ \\[maintainer-checked: [^]]+" date)) {
+      url = line; sub(/ \[maintainer-checked: .*/, "", url); sub(/.* /, "", url)
+      if (url in marked) { marked[url]++; print "MAINTAINER-CHECKED " no ": " line; next }
+    }
+    if (line ~ ("\\[named-only: [a-z][a-z-]*" date)) {
+      key = line; sub(/.*\[named-only: /, "", key); sub(/;.*/, "", key)
+      head = line; sub(/ \[named-only: .*/, "", head)
+      if ((key in want) && head == want[key]) { seen[key]++; next }
+    }
+    print "FAIL " no ": " line; bad++
+  }
+  END {
+    for (k in seen) if (seen[k] != 1) { print "FAIL named-only " k ": " seen[k] " lines, want 1"; bad++ }
+    for (k in present) {
+      w = (k in di_want) ? di_want[k] : 1
+      if (di[k] != w) { print "FAIL design inputs " k ": " di[k] " lines, want " w; bad++ }
+      if (impl[k] != 1) { print "FAIL Implemented in " k ": " impl[k] " lines, want 1"; bad++ }
+      if (note[k] > 1) { print "FAIL Note " k ": " note[k] " lines, want at most 1"; bad++ }
+    }
+    if (closing != closing_want) { print "FAIL closing section: " closing + 0 " lines, want " closing_want; bad++ }
+    if (markers != marker_want) { print "FAIL run log: " markers + 0 " maintainer-checked marker lines, want " marker_want; bad++ }
+    for (u in marked) if (marked[u] != 1) { print "FAIL maintainer-checked " u ": " marked[u] " lines, want 1"; bad++ }
+    exit bad > 0
+  }' "$f"
+  ```
+  ```bash
+  cd "$(git rev-parse --show-toplevel)"
+  # every inventory key has an entry, once
+  grep -oE '^\| `[a-z][a-z0-9-]*`' specs/001-port/p6-inventory.md | grep -oE '[a-z][a-z0-9-]*' | sort -u > "$SLICE/keys-inventory"
+  grep -oE '^## `[a-z][a-z0-9-]*`' docs/explanation/references.md | grep -oE '[a-z][a-z0-9-]*' | sort > "$SLICE/keys-refs"
+  diff "$SLICE/keys-inventory" <(sort -u "$SLICE/keys-refs") && test "$(wc -l < "$SLICE/keys-refs")" = "$(sort -u "$SLICE/keys-refs" | wc -l)"
+  # every design-sources URL appears (the P9.4 check, early)
+  grep -oE 'https?://[^ )]+' specs/001-port/design-sources.md | while read -r u; do grep -qF "$u" docs/explanation/references.md || echo "missing $u"; done
+  # every line under a heading passes refcheck.sh, and every pinned count holds
+  bash "$SCRIPTS/refcheck.sh" docs/explanation/references.md specs/001-port/p6-run-log.md
+  # every entry has exactly one canonical line
+  awk '/^## `/{if(k!="" && n!=1) print k, n; k=$2; n=0} /^- Canonical source:/{n++} END{if(k!="" && n!=1) print k, n}' docs/explanation/references.md
+  ```
+  The first exits 0; the second and fourth print nothing; the third exits
+  0 and prints only `UNREACHABLE <line>: ...` and `MAINTAINER-CHECKED
+  <line>: ...` lines, one per such source, which the run log copies.
+  **What `refcheck.sh` accepts.** It reads every line under a `## `
+  heading. Under an entry heading (`` ## `<key>` <technique> ``) each
+  non-blank line must begin with exactly `- Canonical source: `,
+  `- Design input: `, `- Implemented in: ` or `- Note: `; under
+  `## Read during design, no technique here`, with exactly
+  `- Read during design: `; any other heading fails. So a miscased label
+  (`- Design Input:`), an indented bullet or a stray paragraph fails
+  instead of going unchecked. A source line passes only when it is a fixed
+  line, carries `verified` or `verified-via-index` with a date, carries
+  `unreachable` with a date on a `Design input` or `Read during design`
+  line, carries `maintainer-checked` with a date on such a line whose URL
+  equals a marker line's URL in the run log, or equals the exact
+  `named-only` line of a key on its closed list. **Pinned counts:** each
+  closed-list key appears exactly once; each entry has the number of
+  `Design input:` lines (fixed lines included) that P6.2's match table
+  gives it (the `inputs` list; 35 in all), and an entry for a row P6.1 added
+  has exactly 1, the fixed `not recorded` line; the closing section has
+  exactly 17 lines (5 fetched, 12 `named-only`); the run log has exactly 2
+  marker lines; each marked URL is on exactly one line; each entry has
+  exactly one `Implemented in:` line and at most one `Note:` line, so an
+  entry with no site fails here as well as in P6.4's test. A row P6.1 drops
+  has no entry, and the key check above catches a missing entry, so the
+  `inputs` list counts only entries that are present.
+  *(Evidence.)* Proved on 2026-10-07 at `f6698e4` (mawk 1.3.4, the
+  container's `awk`) on a scratch sample with all 23 entries at their pinned
+  counts, the 16 `named-only` lines, the p5-watercolor and The Postman's
+  Knock `maintainer-checked` lines and 17 closing lines, against a copy of
+  the run log whose two 13:24 entries were rewritten as marker lines: exit
+  0, printing the two `MAINTAINER-CHECKED` lines. Against the real run log
+  (no marker lines yet) it exits 1 with `FAIL run log: 0 maintainer-checked
+  marker lines, want 2`. Changing one thing at a time, it exits 1 naming the
+  line or count for: a Stamen design input marked `maintainer-checked`
+  whose URL a P6.3-style fetch line (`- 16:02 multiply-compositing | Stamen
+  ... | https://stamen.com/watercolor-process-3dd5135861fe/ | 200 | ...`)
+  and its `attempt` sub-line put in the log; the same with a fetch line
+  that carries `maintainer-checked: <URL> | <date> |` mid-line; a third,
+  agent-written marker line (`3 maintainer-checked marker lines, want 2`);
+  `https://github.com/` (a prefix of a marked URL) on a
+  `maintainer-checked` line; `maintainer-checked` on a `Canonical source`
+  line; a marked URL on two lines; one `bristle-brush` design input dropped
+  (`1 lines, want 2`); one closing line dropped (`16 lines, want 17`);
+  `- Design Input:`; an indented `  - Design input: ... [not-verified: ...]`;
+  a P6.1-style added row with two design-input lines; the round-2 fake
+  `[named-only: lazy; ...]`; a `verified-via-index` status without its
+  date. The round-2 cases (`wetbrush` with a wrong citation, `named-only`
+  or `unreachable` on a canonical line, a removed `caveat` line, a closing
+  line with no status) are unchanged by this revision. Re-proved at
+  `9474c49` with the block above against the real run log (its two marker
+  lines in place): a generated sample with all 23 entries at their pinned
+  counts exits 0 and prints the two `MAINTAINER-CHECKED` lines; each of
+  these exits 1: `nib`'s `Implemented in:` line removed (`FAIL Implemented
+  in nib: 0 lines, want 1`); a fake entry `` ## `fake-entry` Fake
+  technique `` with a canonical line and the fixed `not recorded` line and
+  no `Implemented in:` (`FAIL Implemented in fake-entry: 0 lines, want
+  1`); `nib`'s `Implemented in:` line doubled (`2 lines, want 1`);
+  `lanczos`'s `Note:` doubled (`FAIL Note lanczos: 2 lines, want at most
+  1`); `issued [[null]]` in how-checked text (every such line fails).
+  `uv run pytest tests/architecture/test_coordinates.py` passes (it scans
+  `docs/`; a DOI such as `10.1145` is not a coordinate).
+- Hand-off: entries by status, every `unreachable` and
+  `maintainer-checked` entry with its attempts, every correction made to a design-sources entry, every
+  candidate replaced and why, every retry, fetch counts and wall time
+  (P6.3-fetch); every `Note:` line with its basis, (a), (b) or (c) of step
+  4, and the check outputs (P6.3-write).
+- Gate: G-here, plus the mechanical checks above green.
+- Commit: `Add the references, every source fetched and checked`
+
+#### P6.4 Cite each key in its docstring, and gate it
+
+- Implements D24's docstring half and acceptance criterion 4; predecessor
+  P6.3. Load the repo skill `test-driven-development`.
+- Owner files:
+  - `tests/architecture/test_reference_keys.py` (new, under 400 lines),
+    module docstring
+    `"""Reference gate: every reference entry's sites cite its key, and every cited key has an entry."""`.
+  - Each `src/` file holding an `Implemented in:` site: one citation line
+    per technique in that site's docstring, nothing else.
+  - `specs/001-port/p6-run-log.md`.
+- Leave alone: every other line of `src/**`; `references.md` except an
+  `Implemented in:` path P6.4 finds wrong (fix it there and log it); the
+  other architecture tests; `exemptions/`.
+- The test, written first and seen red for the right reason (no citation
+  lines yet), then green:
+  - Paths and files come from `._ast_checks`, as the sibling architecture
+    tests do: `from ._ast_checks import PACKAGES, REPO_ROOT, _source_files`.
+  - Pure helpers:
+    - `entries(text: str) -> dict[str, list[str]]` parses `references.md`:
+      heading key to its `Implemented in:` dotted paths; a heading with
+      no `Implemented in:` line maps to `[]`, never drops out.
+    - `cited_keys(module: str, tree: ast.Module) -> dict[str, list[str]]`
+      maps qualified names (`<module>.<name>`, `<module>.<Class>.<method>`)
+      to the keys their docstrings cite. It walks the module docstring, the
+      module's top-level functions and classes, and the methods defined
+      directly in those classes; nested functions are excluded (they are
+      never sites). It reads each docstring with `ast.get_docstring` and
+      the regex
+      ``^Source: `([a-z][a-z0-9-]*)` in docs/explanation/references\.md\.$``
+      (multiline). `module` is the dotted name derived from the file's path
+      under `PACKAGES`.
+  - Resolution is by file, never by import: a dotted path resolves to the
+    longest module prefix that is a file under `src/` (`pyntpot/a/b.py` or
+    `pyntpot/a/b/__init__.py`), then to class and function names in that
+    file's AST. `pyntpot.ink.stamp` and `pyntpot.ink.wash` are both modules
+    and, through `ink/__init__.py`, functions; resolving by file makes
+    `pyntpot.ink.stamp.stamp` the function in `ink/stamp.py`, which is what
+    an entry means.
+  - `test_every_site_cites_its_key`: every path in every entry resolves,
+    and its docstring cites that key.
+  - `test_every_cited_key_has_an_entry_listing_the_site`: every citation in
+    `src/` names an entry, and that entry lists the citing site. Together
+    the two make the mapping exact both ways.
+  - `test_every_entry_lists_a_site`: `entries_without_sites(entries(text))`
+    is empty for `references.md`. The pure helper
+    `entries_without_sites(parsed: dict[str, list[str]]) -> list[str]`
+    returns, sorted, every key whose list of paths is empty, so an entry
+    with no `Implemented in:` line fails here instead of passing the two
+    tests above vacuously.
+  - `test_entries_parses_a_two_entry_file`,
+    `test_entries_without_sites_names_an_entry_with_no_site` and
+    `test_cited_keys_reads_a_citation_line`: the helpers on literal text, so
+    the gate cannot pass by parsing nothing. The literal for the second
+    holds a real-shaped entry and a fake one, `` ## `fake-entry` Fake
+    technique `` with a canonical line and no `Implemented in:` line;
+    `entries` returns `fake-entry` with an empty list, and
+    `entries_without_sites` returns `["fake-entry"]`.
+  - One-line docstrings saying what each proves; no mocks; no fixtures
+    beyond `tmp_path` if needed.
+- Citation lines go where the reference format says, and always land
+  (line-budget rule 1).
+- This test is a new gate: ADR 0021 (D24, written at P7.3 by the ADR
+  table) records it; P6.4 writes no ADR.
+- Hand-off: citation lines added per file, the red run's failure message,
+  the green run.
+- Gate: `python3 -I "$SCRIPTS/ast_neutral.py" <P6.3 commit>`, then G-here
+  plus G-self.
+- Commit: `Cite each technique's reference key in its docstring`
+
+#### P6.5a to P6.5e Docstring audit, then prose, one session per group
+
+Implements D25, both passes over `src/`; one slice per group below, each a
+fresh session. **Group rule:** one subpackage is one session when it is at
+most 5,000 lines (`ink` 3,905, `letters` 1,722). `maps` is 13,748 lines, so
+it splits by responsibility into groups of at most 5,000 lines, fixed here
+by path so no session re-decides them (paths under `src/pyntpot/`, counts at
+`1154129`):
+
+| Slice | Group | Files | Lines |
+|---|---|---|---|
+| P6.5a | `ink` | `ink/**` | 3,905 |
+| P6.5b | `letters` | `letters/**/*.py` | 1,722 |
+| P6.5c | `maps` façade, data and furniture | `__init__.py`; `maps/{__init__,pipeline,compose,cli,track,annotations,attribution,credit,card,card_geometry,projection,cache,plates,basemap,style,style_groups,lettering_furniture,lettering_marks,lettering_window}.py`; `maps/providers/**`; `maps/candidates/**` | 4,461 |
+| P6.5d | `maps` geometry and painter | `maps/{basemap_strokes,contours,cover,generalise,layers,masks,osm,osm_elements,relief,relief_layers,relief_strokes,rings,rivers,strands,svg_path,track_index}.py`; `maps/painter/**` | 4,574 |
+| P6.5e | `maps` lettering | `maps/lettering/**` | 4,765 |
+
+A `maps` module created after `1154129` joins the group of the module it
+was split from. P6.5c holds the façade, so the public API of `maps` and of
+`pyntpot` is audited there (`Lettering` and `letter`,
+defined in `maps/lettering/pipeline.py`, are audited in P6.5e with the
+public-API priority).
+
+**File lists.** Each slice writes its group's file list, repo-relative,
+with this command run from its worktree root, to `$SLICE/files`, and every
+command below that takes the group's files reads them from there. Counts
+at `f6698e4`; together they are the 108 files of
+`git ls-files 'src/*.py'`, none twice (in a `git ls-files` pathspec, `*`
+also matches `/`):
+
+| Slice | `… > "$SLICE/files"` | Files |
+|---|---|---|
+| P6.5a | `git ls-files 'src/pyntpot/ink/*.py'` | 19 |
+| P6.5b | `git ls-files 'src/pyntpot/letters/*.py'` | 8 |
+| P6.5c | `git ls-files src/pyntpot/__init__.py src/pyntpot/maps/{__init__,pipeline,compose,cli,track,annotations,attribution,credit,card,card_geometry,projection,cache,plates,basemap,style,style_groups,lettering_furniture,lettering_marks,lettering_window}.py 'src/pyntpot/maps/providers/*.py' 'src/pyntpot/maps/candidates/*.py'` | 32 |
+| P6.5d | `git ls-files src/pyntpot/maps/{basemap_strokes,contours,cover,generalise,layers,masks,osm,osm_elements,relief,relief_layers,relief_strokes,rings,rivers,strands,svg_path,track_index}.py 'src/pyntpot/maps/painter/*.py'` | 28 |
+| P6.5e | `git ls-files 'src/pyntpot/maps/lettering/*.py'` | 21 |
+
+(The brace lists are bash brace expansion; the Bash tool runs bash.) The
+slice checks `wc -l < "$SLICE/files"` against the count before it starts
+and logs both.
+
+**P6.5 parallel rule.** P6.5a to P6.5e run at the same time, as five
+sub-agents, each in its own detached worktree, as P3's parallel lines do:
+
+1. **Dispatch.** After P6.4 lands, the orchestrating session writes the
+   shared scripts (shared scripts rule), makes each
+   `$SLICE` = `$SCRATCH/p6.5<x>/`, and runs
+   `git worktree add --detach "$SCRATCH/wt/p6.5<x>" <P6.4 commit>` for each
+   of the five. It may first make a bookkeeping commit
+   `Log P6.5 dispatch` (run log only). Each brief names the worktree, the
+   `$SLICE` and the `$SCRIPTS` paths, the P6.4 commit as the starting
+   commit, and the preamble blocks listed in "What each brief carries".
+2. **What a brief says.** Paths in the brief are relative to the
+   worktree root, and the slice runs every command from it; the brief
+   holds no path of the main checkout. The slice owns only its group's
+   files under `src/`, plus new `docs/issues/` files with its module slugs
+   (fix-now rule). It does not edit `GLOSSARY.md`,
+   `specs/001-port/p6-run-log.md`, `tasks.md` or any other shared file,
+   and it never commits. Its hand-off carries, besides the P6.5 hand-off
+   list: its run-log entry as ready-to-append text, and its proposed
+   `GLOSSARY.md` changes as `term | cell | old text | new text | dotted
+   path or fact that shows the old text wrong`.
+3. **Wall times.** Every gate time measured in a worktree is logged as
+   "measured under parallel load (<n> slices running)"; the landing
+   G-here below is measured alone and logged as such. The HTML report keeps
+   the two apart.
+4. **Landing, in order a to e**, each on the commit the previous one made
+   (P6.5a on the P6.4 commit, or on `Log P6.5 dispatch` when that
+   bookkeeping commit was made; it touches only the run log, so the patch,
+   cut against the P6.4 commit, applies either way). Landing starts only
+   after all five hand-offs are in, so no worktree gate runs while a
+   landing G-here does, and the landing G-here is measured alone. For each
+   slice the orchestrating session:
+   - checks `git -C "$SCRATCH/wt/p6.5<x>" status --porcelain` lists only
+     the group's files and new `docs/issues/` files with the slice's module
+     slugs, in either form of the slug rule (anything else is a rejected hunk: the slice is re-dispatched
+     for it, never fixed by hand);
+   - moves the change onto the branch with
+     `git -C "$SCRATCH/wt/p6.5<x>" add -A && git -C "$SCRATCH/wt/p6.5<x>" diff --cached --binary <P6.4 commit> > "$SLICE/patch"`
+     and `git apply --index "$SLICE/patch"` in the main checkout (the
+     groups are disjoint and the issue slugs are distinct, so it applies
+     cleanly; if it does not, that is a breach of the partition and the
+     slice is re-dispatched);
+   - runs `python3 -I "$SCRIPTS/ast_neutral.py" <previous landed commit>`
+     and G-here in the main checkout, and the slice's `doc_lines.py` gate
+     on the landed files;
+   - applies the slice's proposed `GLOSSARY.md` changes (a change to a
+     cell an earlier slice already changed is not applied: it goes to
+     `docs/issues/glossary-<term>.md` for P6.6, which owns `GLOSSARY.md`),
+     appends the slice's run-log entry and its own landing line (times,
+     the ast-neutral and G-here outputs, glossary changes applied and
+     deferred, same-term issue pairs), and ticks `tasks.md`;
+   - commits all of it as the slice's one commit.
+   After P6.5e lands it removes the five worktrees
+   (`git worktree remove "$SCRATCH/wt/p6.5<x>"`).
+5. **Commits on `p6-docs` after P6.4**, in this order: `Log P6.5 dispatch`
+   (bookkeeping, optional); `Audit the ink docstrings and comments`
+   (P6.5a); `Audit the letters docstrings and comments` (P6.5b); `Audit the
+   maps facade and data docstrings and comments` (P6.5c); `Audit the maps
+   geometry and painter docstrings and comments` (P6.5d); `Audit the maps
+   lettering docstrings and comments` (P6.5e); then P6.6's `Audit the prose
+   of the docs`. Each of the five carries its group's `src/` and
+   `docs/issues/` files, its glossary changes, its run-log entry and its
+   `tasks.md` tick.
+
+Every one of these slices:
+
+- Predecessor: P6.4; all five start from the P6.4 commit. Skills: read
+  `docstrings/SKILL.md` and its `reference/rubric.md` and
+  `reference/conventions.md`, then `ai-jargon-audit/SKILL.md` and
+  `emdash-audit/SKILL.md` (paths per the tool facts). The repo convention
+  is Google (`[tool.ruff.lint.pydocstyle] convention = "google"`).
+- Owner files: the group's files (docstrings and `#` comments only) and
+  `docs/issues/*.md` (new files only, module slugs). Proposed, in the
+  hand-off, for the orchestrating session to apply: `GLOSSARY.md` changes
+  (only a row whose Meaning cell names a dotted path or a fact the audit
+  finds wrong) and the slice's run-log entry (parallel rule).
+- Leave alone: every executable line; every citation line (P6.4's test
+  fails if one goes); the theme TOML and the font; `tests/**`;
+  `GLOSSARY.md`, `specs/**` and every other file outside the group.
+- Pass 1, docstrings, in the public-API-first order and, within each file,
+  accuracy before shape (line-budget rule 3): read each implementation,
+  then fix the docstring for
+  - **accuracy**: it says what the code does now, per the behaviour-wins
+    rule; add the missing docstrings (all nested helpers at P6.0) as a
+    one-line summary;
+  - **shape (the Args rule)**: `Args:`, `Returns:` and `Raises:` sections
+    are added only to a name in "The public API" table (an exported
+    function, an exported class, or a public method of one), and only when
+    the section says something the signature, the type hints and the
+    summary line do not (a unit, a range, what a `None` means, a side
+    effect on an argument, a condition for a raise). Everywhere else, and
+    for nested functions always, the pass fixes accuracy and shape only: it
+    corrects an existing section that is wrong, removes one that names a
+    parameter the function no longer has, fixes the Google layout, and
+    never manufactures a section. An existing correct section stays.
+    `Raises:` names only what the body raises. `Attributes:` follows the
+    same rule as `Args:`.
+  - **the house contract**: module docstring and the docstrings of the
+    public-API names keep purpose, key types, non-goals and invariants, as
+    capability facts (house-rules rule).
+  It adds no caller obligations and no narration of how the code came to
+  be.
+- Pass 2, prose, over the same files' docstrings and comments only. The
+  detector reads every line of a `.py` file, identifiers included (36
+  findings over `src/` at `31c1d26`, most of them the `surface` parameter
+  in `letters/nib.py`), and P6 never renames a code identifier, whatever a
+  skill or the detector says. So the detector runs on the docstring and
+  comment text alone, extracted by the shared script
+  `$SCRIPTS/doc_lines.py` (shared scripts rule): `ast` finds each module,
+  class and function docstring by its line span, `tokenize` finds each `#`
+  comment, and every other character is blanked, so the line numbers are
+  the source's and a code identifier is never seen. It refuses (exit 1,
+  nothing written) an empty file list, an `OUT` inside the checkout, and a
+  FILE that is absolute, outside `src/` or not `.py`, so it can never write
+  into the tree; it ends by printing `doc_lines: N files`.
+  ```python
+  """Write each FILE's docstring and comment text to OUT/<FILE>.txt, every other character blanked, line numbers kept."""
+
+  import ast
+  import io
+  import sys
+  import tokenize
+  from pathlib import Path
+
+  DOC_OWNERS = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+
+
+  def doc_text(source: str) -> list[str]:
+      lines = source.splitlines()
+      kept = [""] * len(lines)
+      for node in ast.walk(ast.parse(source)):
+          if isinstance(node, DOC_OWNERS) and node.body:
+              first = node.body[0]
+              if (
+                  isinstance(first, ast.Expr)
+                  and isinstance(first.value, ast.Constant)
+                  and isinstance(first.value.value, str)
+              ):
+                  for n in range(first.lineno, first.end_lineno + 1):
+                      kept[n - 1] = lines[n - 1]
+      for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+          if tok.type == tokenize.COMMENT:
+              row, col = tok.start
+              kept[row - 1] = " " * col + tok.string
+      return kept
+
+
+  root = Path.cwd().resolve()
+  out = Path(sys.argv[1]).resolve()
+  names = sys.argv[2:]
+  if not names:
+      sys.exit("doc_lines.py: no FILE given")
+  if out == root or root in out.parents:
+      sys.exit(f"doc_lines.py: OUT {out} is inside the checkout; give a scratch directory")
+  for name in names:
+      path = Path(name)
+      if (
+          path.is_absolute()
+          or path.suffix != ".py"
+          or not path.resolve().is_relative_to(root / "src")
+      ):
+          sys.exit(
+              f"doc_lines.py: {name}: give a path relative to the worktree root, to a .py file under src/"
+          )
+  for name in names:
+      target = out / f"{name}.txt"
+      target.parent.mkdir(parents=True, exist_ok=True)
+      target.write_text("\n".join(doc_text(Path(name).read_text())) + "\n")
+  sys.stdout.write(f"doc_lines: {len(names)} files\n")
+  ```
+  Run it from the worktree root as
+  `rm -rf "$SLICE/doclines" && python3 -I "$SCRIPTS/doc_lines.py" "$SLICE/doclines" $(cat "$SLICE/files")`,
+  then
+  `python3 -I <dir>/ai-jargon-audit/detect_ai_jargon.py $(find "$SLICE/doclines" -name '*.txt' | sort) > "$SLICE/jargon.txt"`.
+  The detector exits 1 whenever it reports a finding, so its exit status is
+  never read; the run is checked by counts instead (gate below). Its output
+  has one header line per file, `<OUT>/<FILE>.txt: <n> swappable (run
+  --fix), <m> to rewrite`, then one indented `<line>: [<kind>] '<word>'
+  ...` line per finding; `<FILE>` (the header path without the `<OUT>/`
+  prefix and the `.txt` suffix) and `<line>` are the source file's path
+  and line. *(Evidence.)* Proved on 2026-10-07 at `31c1d26`: over all 108
+  `src/` files, 18 findings (36 on the raw files); `letters/nib.py` 19 raw
+  to 5, and `maps/attribution.py` and `maps/lettering/pipeline.py` 2 each
+  to 0, the `surface` identifier lines gone. Re-proved at `f6698e4` with the
+  block above: 108 files in, `doc_lines: 108 files`, 108 `.txt` files, 108
+  header lines and the summary `18 finding(s) need a contextual rewrite.`;
+  `$PWD/src/pyntpot/ink/sheet.py` as FILE, no FILE, `OUT` under `specs/`
+  and `../pyntpot/README.md` as FILE each exit 1, and `git status --short`
+  stays empty. **Every finding has an outcome**, a
+  rewrite or a swappable one alike: either the docstring or comment is
+  reworded, or the slice's run-log entry carries `kept: precise term |
+  <file>:<line> | <word> | <reason>`, where `<file>` is the source path
+  (`src/pyntpot/ink/sheet.py`, never the `$SLICE/doclines/...py.txt`
+  path) and `<line>` is the line the final rerun (gate) reports, since an
+  earlier fix in the file can move it (for example `surface` where it is
+  the paper surface, the term `ink/sheet.py` and `ink/pigment.py` use). Then the semantic read
+  the skill describes; British English; then `strip_emdashes.py` (expect
+  nothing: the tree has no dashes). Terms come from `GLOSSARY.md`, one name
+  a concept: a synonym in prose is replaced by the glossary term, and a
+  synonym that is an identifier is filed, never renamed.
+- Triage and file by the fix-now rule; line-adding fixes by the line-budget
+  rule.
+- Hand-off: docstrings changed and added (public, private), sections added
+  (with the name and what each says beyond the signature), comments
+  changed, findings fixed and filed, the time at which the public API was
+  done, each gate stage's wall time (under parallel load), and, as the
+  parallel rule's step 2 says, the run-log entry ready to append and the
+  proposed `GLOSSARY.md` changes.
+- Gate, from the worktree root: `python3 -I "$SCRIPTS/ast_neutral.py" <P6.4 commit>`,
+  then G-here plus G-self (baseline `$SLICE/before`), then the rerun on the
+  group's final files: `rm -rf "$SLICE/doclines"`, `doc_lines.py` and the
+  detector as above. The rerun passes when `doc_lines.py` exits 0 and
+  prints `doc_lines: N files`, `find "$SLICE/doclines" -name '*.txt' | wc -l`
+  prints N, and `grep -cE ': [0-9]+ swappable \(run --fix\), [0-9]+ to rewrite$' "$SLICE/jargon.txt"`
+  prints N, where N is the group's count in the file-list table; and every
+  finding in `$SLICE/jargon.txt` has a `kept:` line in the slice's run-log
+  entry naming its `<file>:<line>` (the gate is that no finding lacks an
+  outcome, not that there are zero findings). Then
+  `! grep -nI -e '—' -e '–' $(cat "$SLICE/files")` exits 0 (literal
+  characters: `grep -P '\x{2014}'` fails here because `LANG` is unset).
+  `ast_neutral.py` runs first, so a stray file under `src/` stops the slice
+  before anything else.
+- Commits: made by the orchestrating session at landing, one per slice, in
+  the order and with the messages of the parallel rule (step 5).
+
+#### P6.6 Prose audit of the docs; the phase gate
+
+- Implements D25's prose pass over the human-facing docs; predecessor
+  P6.5e's landing commit. Load `write-docs`, `ai-jargon-audit` and `emdash-audit`.
+- Owner files: `README.md`, `GLOSSARY.md`, `CHANGELOG.md`,
+  `CONTRIBUTING.md`, `docs/README.md`, `docs/architecture.md`,
+  `docs/explanation/**` (including `references.md`: wording of the intro and
+  `Note:` lines only, never a source line, a status or a key),
+  `docs/runbooks/**`, `specs/001-port/p6-run-log.md`, `docs/issues/*.md`
+  (new files only).
+- Leave alone: the files the dash-audit rule excludes (`CLAUDE.md`,
+  `BOUNDARIES.md`, `specs/**`, `.claude/**`, `docs/decisions/**`,
+  `docs/issues/**` existing files, `tests/**`) and all of `src/`.
+- Steps: per file, `detect_ai_jargon.py` (Markdown is all prose, so it
+  runs on the file itself; code spans are masked by the tool), each
+  finding reworded or logged `kept: precise term | <file>:<line> | <word>
+  | <reason>` as in P6.5, then the semantic read, then
+  British English, then `strip_emdashes.py` (the one known dash is in
+  `docs/runbooks/update-dependencies.md`). Content changes beyond wording
+  (a wrong command, a stale fact) follow the behaviour-wins rule: correct
+  the text to what the repo does, and file anything that needs code. The
+  `CHANGELOG.md` gains no entry (P7 writes 0.1.0). Each
+  `docs/issues/glossary-<term>.md` that a P6.5 landing deferred is decided
+  here by the behaviour-wins rule (read the dotted path it names), the
+  `GLOSSARY.md` row corrected or kept, and the outcome logged.
+- **The phase gate**, run in order, every output pasted into the run log:
+  1. `python3 -I "$SCRIPTS/ast_neutral.py" 92b011c`: the whole branch
+     changed no code. `92b011c` is where `p6-docs` left `origin/main`
+     (`git merge-base HEAD origin/main`); local `main` is stale at
+     `1c9aaa5`, so never use `main` as the base.
+  2. G-here plus G-self (baseline on this slice's starting commit, as
+     every slice; the chain of per-slice G-self runs and step 1 together
+     cover the branch).
+  3. The P6.3 mechanical checks (inventory keys equal entry keys; every
+     design-sources URL present; every source line `verified`,
+     `verified-via-index`, an allowed `named-only` or a fixed line, or,
+     on a design-input or closing line only, `unreachable` or
+     `maintainer-checked`; every line under a heading well formed; the
+     pinned counts; one canonical line, one `Implemented in:` line and at
+     most one `Note:` line per entry), with the shared
+     `$SCRIPTS/refcheck.sh` (checked by `sha256sum -c`). The run log lists
+     every `unreachable` and `maintainer-checked` entry it prints. Any
+     `not-verified` fails the gate; the
+     route to clear it is a re-try of only those entries under the pacing
+     rule, committed as a fix to `references.md` before the gate is run
+     again.
+  4. `uv run pytest tests/architecture/test_reference_keys.py -v`: every
+     implementing docstring names its key and every key cited has an entry.
+  5. `! grep -rnI -e '—' -e '–' README.md GLOSSARY.md CHANGELOG.md CONTRIBUTING.md docs/README.md docs/architecture.md docs/explanation docs/runbooks src/pyntpot`
+     exits 0 (`-I` skips binary files such as the vendored font).
+- Hand-off: findings fixed and filed, the gate outputs, total P6 wall time
+  from the log. The orchestrating session then opens the PR from
+  `p6-docs`.
+- Commit: `Audit the prose of the docs`
+
+Gate for P6: full gate green, parity exact (G-here's byte-exact golden run
+plus G-self), the whole branch AST-neutral against `92b011c`,
+`references.md` has an entry for every inventory item and no
+`not-verified` source, every `unreachable` or `maintainer-checked` source
+on a design-input or closing line and listed in the run log and the final
+report (P6.3 checks), and every implementing docstring names
+its key (`test_reference_keys.py`).
 
 ### P7. Docs and first release
 
@@ -4189,6 +5994,142 @@ free; if it is taken, stop and report.
   still pass.
 - Gate: G-here.
 - Commit: `Delete the design sources list now folded into the references`
+
+### P10. Triage and address the port's issues
+
+Asked for by the maintainer on 2026-10-07: "add a step 10 to the port plan to
+triage and then address all the issues we have and will find in the port
+process". P10 first sorts every recorded issue into one outcome, then fixes
+the ones that are fixed, in slices grouped by area and by golden impact. It
+adds no feature: a fix makes the code do what its docstring, the spec or a
+Key decision already says, or deletes what nothing uses. Out of scope as in
+`spec.md`: no new painting features, no performance work, no upstream change.
+
+**This is a sketch.** P10.0 fattens it into slices a sub-agent can execute,
+in the shape of P5.0 and P6.0: per-slice owner files, files to leave alone,
+the test for each fix, gate commands and commit messages. A plan-reviewer
+agent reviews the fattened section, and P10.1 does not start until the
+review passes. P10.0's owner files are this section and the P10 list in
+`tasks.md`; it measures every count it quotes at its own starting commit.
+
+**Scope.** Every file in `docs/issues/`, both those filed by P0 to P6 and any
+filed later, by P7, P8 and P9, up to the moment P10.1 starts; anything filed
+after that is handled under "Later issues" below. Also the issues the port
+recorded outside `docs/issues/`, which P10.1 turns into rows with the source
+named:
+
+- `specs/001-port/p5-run-log.md`, the P5.4 reconcile entry: the onboarding
+  PR's README badge, not adopted because the README was outside the slice's
+  owner files.
+- `specs/001-port/tasks.md`, the P5 hand-off: start the manual Mutation
+  workflow once on `main` to confirm it runs.
+- `specs/001-port/spec.md`, Open questions: the OpenTopoData daily budget is
+  enforced per process only.
+- `specs/001-port/p6-run-log.md` names no finding beyond the files it filed;
+  every P6 finding it records is a file in `docs/issues/`. P10.0 rereads both
+  run logs, and any run log P7 to P9 add, and adds a source line for each
+  finding that has no file.
+
+At `d82f732` `docs/issues/` holds 29 files:
+
+| Area prefix | Files | Filed by |
+| --- | --- | --- |
+| `ink-` | 2 | P6.5a |
+| `letters-` | 6 | P6.5b |
+| `maps-lettering-` | 7 | P6.5e |
+| `maps-` other (`osm-elements`, `style-groups`, `track-index`) | 4 | P6.5c, P6.5d, the P6 diff review |
+| `unlisted-technique-` | 3 | P6.1 |
+| no area prefix | 7 | P3.20 (`shared-generators`), P5 (`duplicate-benchmarks`, `slow-tests-in-mutation-runs`), P6.1 (`edt-is-a-chamfer-distance`, `prek-not-in-the-environment`), P6.6 (`contributing-commit-trailers`, `src-docstrings-use-non-canonical-terms`) |
+
+**Triage (P10.1).** Each issue gets exactly one outcome from this closed set:
+
+- `fix`: fixed in P10, and the fix moves no golden pixel and no manifest hash;
+- `fix-golden`: fixed in P10, and the fix moves golden pixels or the hash, so
+  it lands only in the golden group below, under the golden regeneration rule;
+- `decide`: needs a maintainer decision before it can be fixed or closed;
+- `close`: not a defect; the file is deleted with the reason in its row;
+- `defer`: kept past the port, with the reason in its row.
+
+The rule takes the first that applies, in this order:
+
+1. `close` when, at the triage commit, the claim does not reproduce, or the
+   code, its docstring, the spec and the Key decisions already agree and the
+   file records a fact with no action.
+2. `defer` when the fix is outside the spec's scope (a new feature, a
+   performance change, an upstream change) or needs data or tools the
+   repository does not hold; the reason names which.
+3. `decide` when the intended behaviour is not settled by the spec, a Key
+   decision, an ADR, `GLOSSARY.md` or the issue's own evidence: two readings
+   are both plausible, or the choice is policy rather than fact.
+4. `fix-golden` when the fix reaches code the Lynmouth fixture paints, so a
+   G-self compare can differ.
+5. `fix` otherwise.
+
+Triage writes one table, `specs/001-port/p10-triage.md`, one row per issue:
+slug (or source and line for an issue without a file), area, kind (defect,
+dead code, naming or prose, references, test text, tooling or process),
+outcome, the rule number that assigned it, whether it blocks the first
+release (yes when it breaks a Key decision, a spec Verification step or a
+provider obligation under D8), whether a reproduction exists, and for a fix
+its size (changed lines, estimated) and the goldens it may move (by file
+name in `tests/golden/lynmouth/`, or none). A possible code defect (for
+example the span side sign, the stroke end smoothing, the deposit edge
+clamp, the `labels` switch and the attribution, `tunnel=no`, the landmark
+cap) needs a failing test before its fix, by the repo's TDD rule, so its row
+records whether the issue file already gives a reproduction and, if not,
+what the test will assert. Triage itself changes no code.
+
+**Decisions (P10.2).** Every `decide` row goes into one list, put to the
+maintainer once, each item with the readings, the evidence and a
+recommended answer. This is P10's one sanctioned stop point: no fix slice
+that depends on an open item starts until the maintainer answers, and
+nothing else in P10 waits on the maintainer. Each answer is written into the
+row, and the row is triaged again by rules 1, 2, 4 and 5. If any row is
+`fix-golden`, the list also asks whether to open a second regeneration
+window, since P3.15 was written as the port's only one.
+
+**Address (P10.3 onwards).** P10.0 cuts the `fix` rows into slices by area
+(`ink`, `letters`, `maps` lettering, other `maps`, tests and tooling, docs
+and references), each within the P3 and P4 slice size and under the slice
+rules of "P3 and P4: how to run a slice" (test first, no shims, G-here and
+G-self byte-identical, commit message imperative on one line with no
+trailers). The `fix-golden` rows form one golden group that regenerates the
+goldens once: one commit per fix inside a regeneration window run as ADR
+0006 and P3.12 to P3.15 ran theirs (G-window per step, gate options per
+step, the tolerance bound unchanged, one regeneration at the end), recorded
+in a new ADR whose number P10.0 takes from `ls docs/decisions` (0024 if
+P9.2 has written 0023). A `fix` slice whose G-self compare is not
+byte-identical does not land; its row moves to `fix-golden`. Each fix slice
+deletes the issue files it fixes and marks their rows done in
+`p10-triage.md` in the same commit; a `close` row's file is deleted by the
+P10.1 commit.
+
+**Order.** P10 keeps its number, after P9, but its triage should run
+earlier. Recommended: P10.0, P10.1 and P10.2 run after P6 merges and before
+P7.1, because a release-blocking defect (the `labels` switch dropping the
+attribution that D8 requires is one candidate) must be known before the
+README states the attribution requirement and before P7.4 tags 0.1.0. A
+release-blocking `fix` slice lands before P7.4. The golden group lands after
+P8, because P8 proves the upstream render's recorded hash through
+`pyntpot`, and moved pixels would break that proof. The other fix slices run
+after P8; a slice that edits a file P9.1 or P9.2 owns (`tests/conftest.py`,
+`tests/architecture/`) does not run in parallel with them.
+
+**Gate.** `docs/issues/` holds only `defer` items, each with its reason in
+`p10-triage.md`. Every issue closed by a fix has a test: for a behaviour fix,
+the reproduction test that failed before it; for a deletion, rename or prose
+fix, the check named in its row (`uv run vulture`, a grep, or an
+architecture test) that fails if it comes back. Parity holds byte-exact under
+G-here and G-self, or the goldens were regenerated once in the golden group
+under the rule and its ADR. G-here green.
+
+**Later issues.** An issue found after P10.1 starts, in P10's own slices or
+in P7 to P9, is filed in `docs/issues/` as before, appended as a row to
+`p10-triage.md` and triaged by the same rule. A new `decide` row after P10.2
+does not open a second stop: it goes into the phase's hand-off, and until the
+maintainer answers it stands as `defer` with the reason "awaiting a
+maintainer decision". A new `fix-golden` row after the golden group has closed is `defer`
+with that reason, never a second regeneration in P10.
 
 ## Known facts
 

@@ -24,9 +24,10 @@ _FEWEST_FOR_A_SEGMENT = 2
 #: Below this a length is zero.
 _ZERO_LENGTH = 1e-9
 
-#: And past this far from the horizontal. A name set down the sheet is read by
-#: tilting the head, which is a worse fault than a name that does not follow
-#: its own river, so a steep window is not used at all.
+#: How far from the horizontal a window may run, in degrees, before a name is
+#: not set along it. A name set down the sheet is read by tilting the head,
+#: which is a worse fault than a name that does not follow its own feature, so
+#: a steep window is not used for any kind outside `TILT_EXEMPT_KINDS`.
 #:
 #: Measured twice: once on the window's chord, and once on the steepest piece
 #: of it, because a glyph is set on its own local tangent and not on the chord.
@@ -83,8 +84,8 @@ LIFT_SPAN_CAPS = 0.85
 
 #: How much of the feature's own painted half-width the clearance stands off
 #: before that gap is added. One: the name starts where the ink of the thing it
-#: names stops, and `LIFT_CAPS` is the paper between them. It was 0.62, which
-#: put the start of the clearance a third of the way inside the water.
+#: names stops, and `LIFT_CAPS` is the paper between them. Under one, the
+#: clearance would start inside the water.
 LIFT_FEATURE_FRAC = 1.0
 
 
@@ -92,14 +93,13 @@ LIFT_FEATURE_FRAC = 1.0
 #: sizes, above it and below it. From the face's own cap height (0.661 em) and
 #: descender (0.312 em), rounded out to cover the tallest lowercase ascender.
 #:
-#: A clearance is a fact about the ink, and a baseline is not the ink. The lift
-#: used to be applied to the baseline, and the letters of a line of type do not
-#: straddle their baseline: they sit above it. Lifting to the side the letters
-#: grow away from the feature therefore cleared it, and lifting to the other
-#: side wrote the whole ascent back across the thing the name was there to
-#: clear. A label that takes that second side has most of its glyph pixels in
-#: the river, while one that takes the first looks tuned. The side is chosen by
-#: cost and neither side is wrong, so the geometry has to hold on both.
+#: A clearance is a fact about the ink, and a baseline is not the ink: the
+#: letters of a line of type do not straddle their baseline, they sit above it.
+#: A lift applied to the baseline alone clears the feature on the side the
+#: letters grow away from it and writes the whole ascent back across it on the
+#: other side, putting most of the glyph pixels in the river. The side is
+#: chosen by cost and neither side is wrong, so `lift_baseline` adds the
+#: descent on one side and the ascent on the other.
 INK_ASCENT_CAPS = 0.70
 
 
@@ -110,11 +110,12 @@ def lift_px(lb: Label) -> float:
     """How far the ink of a curved name keeps off its own feature, in display px.
 
     A river's centreline is not its water: the Eden is painted eight or nine
-    display pixels wide and the name was lifted by half a type size off the
-    middle of it, which put the letters in the river. The clearance is the
-    painted half-width of the feature itself plus `LIFT_CAPS` of the type size
-    as paper, so a wide river pushes its name further out than a thin one does
-    and the whole thing scales with the card.
+    display pixels wide, and half a type size off its middle is in the river.
+    For a river or a road the clearance is the painted half-width of the
+    feature itself plus `LIFT_CAPS` of the type size as paper, so a wide river
+    pushes its name further out than a thin one does and the whole thing
+    scales with the card. Any other kind keeps `LIFT_SPAN_CAPS` of its type
+    size.
 
     This is the clearance the *letters* keep. `lift_baseline` is what the pen
     and the placer's boxes are offset by, which is this plus whatever part of
@@ -185,9 +186,7 @@ def _curved_boxes(window: list[Pt], lb: Label, th: float, side: float | None = N
     """One small box every few characters of a name set along a line.
 
     A curved name's real extent is a ribbon, and the placer works in rectangles,
-    so the ribbon is cut into a handful of them. This is the whole of the fix
-    for the collision the three variants shared: a curved label used to reserve
-    nothing at all after itself.
+    so the ribbon is cut into a handful of them, and the placer reserves those.
 
     Args:
         window: The run of line the name is set on.
@@ -216,8 +215,8 @@ def _tilt(line: list[Pt]) -> float:
     """How far a run leaves the horizontal, in degrees, ignoring its direction.
 
     A name set down the sheet is read by tilting the head, which is a worse
-    fault than a name that does not follow its own river, so a steep window is
-    not used at all.
+    fault than a name that does not follow its own feature, so a steep window
+    is not used for any kind outside `TILT_EXEMPT_KINDS`.
     """
     a, b = line[0], line[-1]
     ang = abs(math.degrees(math.atan2(b[1] - a[1], b[0] - a[0])))

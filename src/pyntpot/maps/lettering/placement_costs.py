@@ -7,8 +7,8 @@ out of the roads it keeps off; `_is_own_feature`.
 
 It does not choose a position and does not move a box; a caller adds these prices up.
 
-Invariants: a price is never negative, and a box off the paper costs nothing here
-because `_on_paper` is asked first.
+Invariants: a price is never negative; no price here asks whether the box is on the
+paper, which `_on_paper` answers for the caller.
 """
 
 import itertools
@@ -32,20 +32,20 @@ _ROUTE_THINNING = 3
 SEPARATION_CAP_PX = 90.0
 
 
-#: How near the track still costs a name something, in display pixels, and what
-#: sitting on it costs. The reach was a flat nine pixels, which is under half a
-#: line height: a twenty-pixel name could sit ten pixels off the track for
-#: nothing, and "the long climb out of Keswick" did exactly that and read as
-#: written through the route. A caller that knows the type size passes it in.
+#: How near the track still costs a name something, at the least, in display
+#: pixels, and what sitting on it costs. Nine pixels is under half a line
+#: height: alone it would let a twenty-pixel name sit ten pixels off the track
+#: for nothing and read as written through the route, so the placer passes the
+#: larger of this and the name's type size.
 ROUTE_REACH_PX = 9.0
 
 
 ROUTE_ON_COST = 260.0
 
 
-#: How far past the card's edge a mark may not go, in display pixels. The edge
-#: is a constraint and never a penalty: a name in the torn margin is not a
-#: cheaper answer than an awkward one on the paper, it is not an answer.
+#: How far inside the card's edge a name's box has to stay, in display pixels.
+#: The edge is a constraint and never a penalty: a name in the torn margin is
+#: not a cheaper answer than an awkward one on the paper, it is not an answer.
 EDGE_PX = 14.0
 
 
@@ -200,9 +200,10 @@ def _off_own(roads: list[list[Pt]], lb: Label) -> list[list[Pt]]:
 
     `road_lines` is everything a name should not be laid across, and it holds
     the watercourses as well as the tarmac. For a name set along its own
-    feature that includes the feature itself, so every candidate window scored
-    as "on a road" and the term cancelled out: a river's name could not be
-    moved off a bridge because it was already on a road wherever it went.
+    feature that includes the feature itself, so without this every candidate
+    window would score as "on a road" and the term would cancel out: a river's
+    name could not be moved off a bridge because it would be on a road
+    wherever it went.
 
     **A name is not charged for crossing the thing it names.** Everything else
     still counts, which is what leaves a bridge as the one road under a river's
@@ -244,11 +245,10 @@ def _near_route(
     Takes the route in weighted parts, because a span's own stretch counts for
     less than the rest of the track does.
 
-    `reach` is how near counts as near, and it is the label's own type size
-    rather than a flat nine pixels, which was under half a line height and let
-    a twenty-pixel name sit ten pixels off the track for nothing. The cost
-    falls off linearly to zero at `reach`, so widening it does not put a step
-    in the middle of the placer's cost surface.
+    `reach` is how near counts as near; the placer passes the larger of the
+    label's own type size and `ROUTE_REACH_PX`. The cost falls off linearly to
+    zero at `reach`, so widening it puts no step in the middle of the costs the
+    placer compares.
 
     Args:
         box: The box being scored.

@@ -6,8 +6,8 @@ must fall.
 
 ## What is benchmarked
 
-Benchmarks live in `tests/benchmarks`. Each time one callable on inputs built outside
-the timer from seeded generators, and assert nothing. A plain `pytest` run calls each
+Benchmarks live in `tests/benchmarks`. Each times one callable on inputs built outside
+the timer from seeded generators, and asserts nothing. A plain `pytest` run calls each
 once, untimed, as a smoke test (`--benchmark-disable` is in `addopts`).
 
 - `test_ink.py`: the engine at 512 by 512. The sheet's noise fields, the chamfer

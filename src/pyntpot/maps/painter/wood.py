@@ -27,8 +27,8 @@ _NEGLIGIBLE = 0.002
 def _crossfade(value: float, n: int) -> list[float]:
     """Weights across `n` printed scales for a slider at `value` in 0 to 1.
 
-    The same walk the exploration page's sliders make, so a value chosen
-    there paints the blend that was previewed.
+    Each scale's weight falls off with its distance from the slider's position,
+    and every weight fades towards zero as `value` falls below 0.25.
     """
     if n <= 1:
         return [max(0.0, min(1.0, value))]

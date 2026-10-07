@@ -6,8 +6,8 @@ Key names: `dedupe_names`, the labels that survive when two name one place; `_st
 
 It does not place a name or choose its tier.
 
-Invariants: a place is named at most the allowance of its family, and a name that
-carries a qualifier the other lacks is not the same place.
+Invariants: a place is named at most the allowance of its family, and a leading
+qualifier (`QUALIFIERS`) is ignored, so Upper and Lower Swell are one place.
 """
 
 import logging
@@ -86,8 +86,8 @@ NAME_ALLOWANCE_DEFAULT = 1
 NEAR_DUPLICATE_M = 150.0
 
 
-#: And how many words the longer name may add to the shorter one before they
-#: stop being two names for one thing. Two. The string relationship alone is
+#: How many words the longer name may add to the shorter one, at most, and
+#: still be two names for one thing. The string relationship alone is
 #: not enough and neither is the distance: Braemar and Braemar War Memorial
 #: stand in the same word relationship as High Cup Nick and its chimney and are
 #: a town and a monument in it, and they are told apart by being 485 m apart
@@ -135,7 +135,7 @@ def dedupe_names(labels: list[Label], card: Card) -> list[Label]:
     gives the village over the nearest-feature repeat of it, and the headland
     over the chimney standing on it.
 
-    A span is never deduped. Its name is prose an agent wrote about a stretch
+    A span is never deduped. Its name is the caller's prose about a stretch
     of the session rather than a name for somewhere, and two stretches may
     fairly be called the same thing.
 

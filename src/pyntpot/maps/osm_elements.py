@@ -137,8 +137,8 @@ def _polygon_rings(entry: dict[str, Any], proj: Projection) -> Rings:
 def _soften(line: list[Pt], eps: float, options: BasemapStyle) -> list[Pt]:
     """Simplify a line, then round its corners off.
 
-    A road drawn from OSM nodes is a survey; two Chaikin passes make it a line
-    someone drew, which is what the rest of the sheet now looks like.
+    A road drawn from OSM nodes is a survey; up to two Chaikin passes, when the
+    options generalise, make it a line someone drew, like the rest of the sheet.
     """
     out = simplify(line, eps)
     if options.generalise and options.smooth_passes:
@@ -188,13 +188,13 @@ def _road(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
     major = highway in MAJOR_ROADS
     ref = str(tags.get("ref") or "")
     # Kept or dropped per *road*, not per way. OSM cuts a street at
-    # every junction, and the interaction test was answered separately
-    # for each cut: the block that crosses the route was kept and the
-    # next block along was not, so every side street came off the route
-    # as a stub and the sheet read as a comb. A road the session ran
+    # every junction, and answering the interaction test for each cut
+    # alone would keep the block that crosses the route and drop the
+    # next block along, so every side street would come off the route
+    # as a stub and the sheet would read as a comb. A road the track ran
     # along or across is on the card for as long as the card holds it.
     # A way with neither a number nor a name has no road to belong to,
-    # so it is still decided on its own.
+    # so it is decided on its own.
     road = (ref or name or f"~{entry.get('id')}", highway)
     for piece in clip_line(_geom(entry, scope.proj), scope.clip):
         line = _soften(piece, scope.derived["road_eps_m"], options)
@@ -219,7 +219,7 @@ def _road(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
 
 
 def _waterway(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harvest) -> None:
-    """Collect the pieces of a river or stream the options keep."""
+    """Collect the pieces of a river, always kept, or of a stream the options keep."""
     options = scope.options
     within = scope.derived["interaction_m"]
     run_m = scope.derived["interaction_run_m"]
@@ -281,13 +281,11 @@ def _area(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
 def _area_landmark(
     entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harvest
 ) -> None:
-    """Offer a named area whose tags make it a landmark, at its own centre.
+    """Offer a named way or relation as a landmark, at the mean of its points.
 
-    History was the only kind of way that could become one, so every named
-    building, bridge and church in the box was drawn and never offered;
-    and a relation could not become one at all, so a card could name a
-    statue and not the zoo the statue stands in. OSM holds a zoo as a
-    multipolygon, and a multipolygon is a relation.
+    Any way whose tags put it in an offered class counts, and so does a relation: OSM holds a
+    zoo as a multipolygon, and a multipolygon is a relation, so a card can
+    offer the zoo as well as the statue that stands in it.
     """
     rings, _holes = _polygon_rings(entry, scope.proj)
     pts = [p for ring in rings for p in ring] if rings else _geom(entry, scope.proj)

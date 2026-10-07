@@ -23,9 +23,10 @@ if TYPE_CHECKING:
     from pyntpot.ink.polyline import Pt
 
 
-#: Em units the glyph is rasterised at before it is thinned. Big enough that a
-#: thin stroke is several pixels across, small enough that the walk stays
-#: milliseconds a glyph, and every glyph is cached anyway.
+#: Raster pixels an em, the scale a glyph is rasterised at before it is
+#: thinned. Big enough that a thin stroke is several pixels across, small
+#: enough that the walk stays milliseconds a glyph, and every glyph is cached
+#: anyway.
 RASTER_EM = 128
 
 #: Zhang-Suen deletes a pixel only while it has between this many and
@@ -87,6 +88,8 @@ def _fill(contours: list[list[Pt]], upem: int, pad: int = 3) -> tuple[np.ndarray
 
 def thin(img: np.ndarray) -> np.ndarray:
     """Zhang-Suen thinning: a filled shape down to a one pixel skeleton.
+
+    Source: `zhang-suen` in docs/explanation/references.md.
 
     Args:
         img: The filled bitmap, 1 where there is ink.
@@ -213,7 +216,8 @@ def _chains(skel: np.ndarray) -> list[list[tuple[int, int]]]:
         skel: The one pixel skeleton.
 
     Returns:
-        Chains of `(row, col)`, each running endpoint or junction to the next.
+        Chains of `(row, col)`, each running endpoint or junction to the next,
+        then every closed loop that has no junction.
     """
     on = {(int(r), int(c)) for r, c in zip(*np.nonzero(skel), strict=True)}
     nbrs = {p: [q for q in _ring(p) if q in on] for p in on}

@@ -9,7 +9,7 @@ has laid out. It does not saturate or gate the accumulator (`pyntpot.ink.pad`).
 
 Invariants: the reservoir and break channels exist only when the caller's `aux` carries the
 matching accumulator; a brush off the reservoir sharing an accumulator with one on it reads
-as full.
+as full, and one off the directional break lays half its weight into the break channel.
 """
 
 import numpy as np
@@ -40,8 +40,8 @@ def weights(lay: Lay, lane: np.ndarray, b: Brush) -> np.ndarray:
         # equal share of it. Once the bristles drift the samples are no longer
         # evenly spaced, and an equal share per sample turns every bunch into a
         # dark filament and every spread into a light one, which is the rest of
-        # the streaking after the fold is gone. The strips sum to the tip's own
-        # width, so the mark carries exactly the ink it did.
+        # the streaking after the fold is gone. The strips sum to about the
+        # tip's own width, so the mark carries about the ink equal shares would.
         span = np.empty_like(off)
         span[:, 1:-1] = (off[:, 2:] - off[:, :-2]) * F32(0.5)
         span[:, 0] = off[:, 1] - off[:, 0]
@@ -57,9 +57,10 @@ def weights(lay: Lay, lane: np.ndarray, b: Brush) -> np.ndarray:
 def spend(lay: Lay, wgt: np.ndarray, b: Brush) -> tuple[np.ndarray, np.ndarray]:
     """The weights after the reservoir, and what the reservoir held under them.
 
-    Ink is spent in proportion to what is laid down, so a heavy bristle empties
-    first and pressure spends it faster. `dip_px` is the reload: the seam it
-    leaves is what makes a long line look drawn.
+    Ink is spent with the distance travelled, weighted by pressure, so pressing
+    harder spends it faster; each bristle falls at the same rate from its own
+    starting load. `dip_px` is the reload: the seam it leaves is what makes a
+    long line look drawn.
     """
     phase = np.mod(np.cumsum(lay.ink.press) * b.step, b.dip_px)[:, None]
     res0 = lay.smp.res0
@@ -126,8 +127,8 @@ def deposit(
 ) -> None:
     """Deposit the weights bilinearly.
 
-    Rounding to the nearest pixel is what put the steps and the stair-edges in
-    the earlier marks.
+    Rounding to the nearest pixel instead would put steps and stair-edges in
+    the mark. A sample off the accumulator lands on its nearest edge pixel.
     """
     h, w = acc.shape
     px, py = pos

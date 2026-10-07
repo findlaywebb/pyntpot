@@ -27,11 +27,6 @@ from pyntpot.maps.lettering.picks_lines import NamedLines
 #: type sizes wide, so this is a run about two and a half times the name, which
 #: is enough for the number to read as a name along the tarmac rather than as a
 #: tag on the end of it.
-#:
-#: It was a flat 110 display pixels, which is over three times the widest road
-#: number and was that only because the card it was tuned on happened to carry
-#: a 235 px run of one road, while a card whose longest run of that same
-#: road is 92 px carried no number at all.
 ROAD_MIN_CAPS = 6.4
 
 
@@ -61,14 +56,13 @@ def pick_roads(
     26 m a pixel. Only the roads the ride was on, and only where there is
     enough of one inside the card to write on.
 
-    **A numbered road is one road, whatever OSM calls each mile of it.** The
-    pieces used to be chained by their street name, and a street name changes
-    at every parish: the A82 crosses a card as Glencoe, then
-    Ballachulish, then New Road, then Kinlochleven Road, none of them a third of
-    the shortest run a name can be set on, so that card carried no number at
-    all while the same code numbered another card twice. Where a
-    road has a number the number is what its pieces are gathered by, and the
-    name is only the fallback for a lane that has none.
+    **A numbered road is one road, whatever OSM calls each mile of it.** A
+    street name changes at every parish: the A82 crosses a card as Glencoe,
+    then Ballachulish, then New Road, then Kinlochleven Road, none of them a
+    third of the shortest run a name can be set on. So where a road has a
+    number the number is what its pieces are gathered by, and the name is only
+    the fallback for a road that has none. Only major and medium roads are
+    numbered.
 
     Args:
         basemap: The basemap, for the width each class was painted at.

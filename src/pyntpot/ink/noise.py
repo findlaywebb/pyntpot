@@ -24,7 +24,10 @@ _BLUR_FLOOR = 0.4
 
 
 def value_noise(h: int, w: int, cell: float, rng: np.random.Generator) -> np.ndarray:
-    """Smooth value noise on a grid of `cell` pixels."""
+    """Smooth value noise on a grid of `cell` pixels.
+
+    Source: `value-noise` in docs/explanation/references.md.
+    """
     cell = max(cell, 1.0)
     gh, gw = int(h / cell) + 3, int(w / cell) + 3
     g = rng.random((gh, gw)).astype(F32)
@@ -46,7 +49,10 @@ def value_noise(h: int, w: int, cell: float, rng: np.random.Generator) -> np.nda
 
 
 def fbm(h: int, w: int, cell: float, octaves: int, rng: np.random.Generator) -> np.ndarray:
-    """Fractal noise, normalised to 0 to 1."""
+    """Fractal noise, normalised to 0 to 1.
+
+    Source: `fbm` in docs/explanation/references.md.
+    """
     out = np.zeros((h, w), F32)
     amp, total = 1.0, 0.0
     for i in range(octaves):
@@ -66,6 +72,8 @@ def _value_noise_at(
     `value_noise` walks the pixel grid, so it can only make an isotropic field.
     This takes the coordinates it is given, which is what lets a caller squash
     or rotate them first.
+
+    Source: `value-noise` in docs/explanation/references.md.
 
     Args:
         u: Column coordinate per pixel, in the same units as `cell`.
@@ -113,6 +121,8 @@ def fbm_aniso(
     features are that many times longer than they are wide, all lying at the
     same sheet-wide angle.
 
+    Source: `fbm` in docs/explanation/references.md.
+
     Args:
         shape: Rows and columns.
         cell: The coarsest lattice spacing, across the fibre.
@@ -154,7 +164,10 @@ def _box1(a: np.ndarray, r: int, axis: int) -> np.ndarray:
 
 
 def blur(a: np.ndarray, sigma: float) -> np.ndarray:
-    """Three box passes, which is a Gaussian to the eye and much cheaper."""
+    """Three box passes, which is a Gaussian to the eye and much cheaper.
+
+    Source: `box-blur` in docs/explanation/references.md.
+    """
     if sigma <= _BLUR_FLOOR:
         return a.astype(F32, copy=False)
     r = max(1, round(sigma * 0.95))
@@ -166,7 +179,10 @@ def blur(a: np.ndarray, sigma: float) -> np.ndarray:
 
 
 def edt(mask: np.ndarray) -> np.ndarray:
-    """Chamfer distance in pixels to the nearest True cell."""
+    """Chamfer distance in pixels to the nearest True cell.
+
+    Source: `chamfer-distance` in docs/explanation/references.md.
+    """
     inf = F32(1e6)
     d = np.where(mask, F32(0), inf).astype(F32)
     if not mask.any():

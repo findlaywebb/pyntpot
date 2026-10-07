@@ -28,7 +28,7 @@ from pyntpot.maps.svg_path import parse_path
 if TYPE_CHECKING:
     from pyntpot.ink.brush_style import BrushStyle
 
-#: The median sample of a width profile is the one at this share of its length.
+#: The median sample of a width profile is at index `len(widths) // MIDDLE`.
 MIDDLE = 2
 
 #: The least a chain is joined across, in metres.
@@ -89,11 +89,11 @@ def _band(row: dict[str, Any]) -> str:
 def roads_from_paths(rows: list[dict[str, Any]], frame: Frame) -> list[Road]:
     """The road strokes of the vector map's road rows.
 
-    Three brushes' worth of road: the A and B roads, the lanes, and the tracks
-    the session actually used, which get the scratchy dry brush.
+    Three bands of road, each with its own brush: the major roads, the lanes,
+    and the paths (tracks, paths, footways and bridleways).
 
     A street is one stroke. OSM hands it over cut at every junction, and
-    painting each cut as its own stroke gave every one of them a set-down blot
+    painting each cut as its own stroke would give each one a set-down blot
     and a taper at both ends: `join_strokes` chains the pieces of one road
     back together first, so the brush is set down where the street starts and
     lifted where it ends.
@@ -124,8 +124,8 @@ def roads_from_paths(rows: list[dict[str, Any]], frame: Frame) -> list[Road]:
     # And a stroke shorter than the brush that would draw it is a dab, not a
     # road. What is left after the chaining is mostly a slip lane or a link at a
     # junction that the chain could not take because it took the carriageway
-    # instead: a hundred of them can be under one display pixel long, and each
-    # still pays for a set-down blot the size of the brush.
+    # instead: many are under one display pixel long, and each would still pay
+    # for a set-down blot the size of the brush.
     roads = []
     for road_key, lines in pieces.items():
         band = road_key[0]
@@ -166,7 +166,7 @@ def _river(
         widest = max(widths)
         width = round(widest, 2)
         # And the width it is *typically* drawn at, which is the one a
-        # name has to fit inside: `w` is the widest point and says how
+        # name has to fit inside: `width` is the widest point and says how
         # far a name lifted clear of the water has to be lifted, but a
         # name set on the water could be set anywhere along it.
         name_width = round(sorted(widths)[len(widths) // MIDDLE], 2)

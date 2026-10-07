@@ -225,8 +225,8 @@ def rank_climbs(track: Track, line: Line) -> list[Candidate]:
         ranked by metres gained. `name` is empty, since naming a climb is the
         caller's judgement; `at_m` is where the felt climb starts and `where`
         the point on `line` it starts at. `detail` carries the felt span, its
-        gradient shape and the three ranks `rank_by_gain`, `rank_by_steepness`
-        and `of_climbs`.
+        gradient shape, the ranks `rank_by_gain` and `rank_by_steepness` (by
+        average grade), and `of_climbs`, how many climbs there are.
     """
     ele = track.ele
     if ele is None or len(ele) < MIN_SAMPLES:

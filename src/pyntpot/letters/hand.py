@@ -20,9 +20,10 @@ it is lifted off a feature or which ink a class of feature takes: those arrive
 in the setting. It draws no furniture and it never reverses or lifts a path.
 
 Invariants: the draw order of one `write` is fixed (the pen's tilt, then for a
-flat block the block's tilt, then each glyph's drift, lean, scale, rotation,
-nudge and wobble), so the same setting and a generator in the same state write
-the same marks; `measure` is the face's own width, with no padding.
+flat block the block's tilt, then each glyph's drift, and for each of its
+strokes the lean, scale, rotation, nudge and wobble), so the same setting and a
+generator in the same state write the same marks; `measure` is the face's own
+width, with no padding.
 """
 
 import math
@@ -90,7 +91,8 @@ class Hand:
             amount: How far it wanders; nothing is drawn when it is not positive.
 
         Returns:
-            The wandered line, or a copy of it when it has fewer than two points.
+            The wandered line, or a copy of it when `amount` is not positive or
+            the line has fewer than two points.
         """
         if amount <= 0 or len(points) < _LINE_ENDS:
             return list(points)
@@ -178,7 +180,7 @@ class Hand:
         return out
 
     def _vary(self, path: list[Pt], setting: Setting, rng: np.random.Generator) -> list[Pt]:
-        """One glyph's own shape, this time: leaned, squared and nudged a little."""
+        """One stroke of a glyph, this time: leaned, scaled, turned and nudged a little."""
         lean = setting.slant + float(rng.normal(0.0, 0.03))
         sx = 1.0 + float(rng.normal(0.0, 0.022))
         sy = 1.0 + float(rng.normal(0.0, 0.028))

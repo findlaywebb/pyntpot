@@ -50,7 +50,7 @@ DEFAULT_HATCHING = Hatching()
 
 
 class Field:
-    """The elevation grid sampled in route metre space.
+    """The elevation grid sampled in card metres.
 
     Hachures and waves are drawn in metres, not in grid cells, so both need to
     ask the terrain a question at an arbitrary point rather than at a post.
@@ -65,7 +65,7 @@ class Field:
             grid: Elevation rows, row 0 southernmost.
             lats: Grid latitudes, ascending.
             lons: Grid longitudes, ascending.
-            proj: The activity's projection.
+            proj: The track's projection.
         """
         self.grid = grid
         self.n = len(grid)
@@ -123,7 +123,7 @@ def _descent(
     index: TrackIndex | None,
     hatching: Hatching,
 ) -> list[Pt]:
-    """The line a stroke walks downhill from a seed, stopping at the track buffer."""
+    """The line a stroke walks downhill from a seed, stopping on flat ground or at the buffer."""
     line = [(x, y)]
     px, py = x, y
     steps = hatching.steps
@@ -180,6 +180,8 @@ def hachures(
     weight follow the slope, so flat ground stays empty paper and a steep face
     fills with dark strokes. Seeds near the track are skipped, because a hachure
     crossing the line is the one mark on the sheet that reads as an error.
+
+    Source: `hachures` in docs/explanation/references.md.
 
     Args:
         field: The terrain.

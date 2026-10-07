@@ -98,8 +98,7 @@ def pick_landmarks(
     The default is a heuristic, not a decision: everything whose class earns a
     place on a map and that sits inside its own reach of the track, most
     notable first, at most `cap` of them. A payload that names landmarks
-    replaces it outright, which is how the coach agent overrides a rule it can
-    see. `radius_m` is the scale the class reaches are stated at rather than the
+    replaces it outright. `radius_m` is the scale the class reaches are stated at rather than the
     limit itself, so a card drawn over four times the ground still stretches
     them all together.
 

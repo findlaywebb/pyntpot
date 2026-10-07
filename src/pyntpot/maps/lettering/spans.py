@@ -36,32 +36,33 @@ _FEWEST_FOR_A_SEGMENT = 2
 #: How many spans one card carries. Four made the sheet cluttered: with the
 #: settlements, the rivers, the roads and the landmarks already on it, three
 #: brackets is where the card still reads as a map rather than as a diagram.
-#: Spans past the cap are dropped in the order the payload wrote them, so the
-#: agent's own "best first" decides which survive.
+#: Spans past the cap are dropped in the order the annotations list them, so
+#: the caller's own order decides which survive.
 SPAN_MAX = 3
 
 
 def resolve_spans(
     picks: Annotations | None, times: list[float], dist_m: list[float], cap: int = SPAN_MAX
 ) -> list[Span]:
-    """The payload's spans, each resolved to a pair of indices into the route.
+    """The annotations' span requests, each resolved to a pair of route indices.
 
     A caller states an extent in one of three vocabularies, because it has one
     of them to hand and converting between them is the renderer's job. Indices
     go straight through; kilometres are read against the route's own cumulative
-    distance; seconds are read against its clock, which only a caller holding a
-    snapshot has, so a card composed from a bare track resolves the first two
-    and says so about the third.
+    distance; seconds are read against its clock, which only a track with times
+    has, so a card composed from a bare track resolves the first two and logs
+    that it cannot resolve the third. A request that does not land, or ends no
+    later than it starts, is dropped and the drop is logged.
 
     Args:
-        picks: The payload's `map` block, or None.
+        picks: The caller's annotations, whose `spans` are read, or None.
         times: Seconds at each route point, or empty when there is no clock.
         dist_m: Cumulative metres at each route point.
-        cap: How many spans the card carries. The payload's own order decides
-            which survive, because the agent is asked for its best first.
+        cap: How many spans the card carries. The annotations' own order
+            decides which survive.
 
     Returns:
-        One `Span` per payload entry that lands inside the route, longest first.
+        One `Span` per span request that lands inside the route, longest first.
     """
     wanted = list(getattr(picks, "spans", None) or [])
     if not wanted or len(dist_m) < _FEWEST_FOR_A_SEGMENT:
@@ -154,8 +155,9 @@ def place_spans(
     extent; the session takes the other, so the two never interleave. Where the
     stretch bends, the outside of the bend takes that choice off the free side
     unless the free side is clearly freer: see `_curved_side`. Within a side
-    the longest span is the outer rail and shorter ones nest inside it, and
-    only an overlapping span moves out a rung.
+    the spans are taken longest first: the first takes the rung nearest the
+    route, and a later span moves out one rung past every span on that side it
+    overlaps.
 
     The name is set along the span's own line when the span runs across the
     sheet, on the far side of the line from the route so the order the eye
@@ -166,7 +168,7 @@ def place_spans(
 
     Args:
         spans: The resolved spans, longest first. Placed in place.
-        around: The card, the route, the darkness grid and the places and lines
+        around: The card, the route, the dark grid and the places and lines
             a mark would rather keep off.
         measure_fn: How wide a name is, so a span too short to carry its own
             name along it is known before the window search is tried.
@@ -221,7 +223,7 @@ def place_spans(
         if not span.line:
             # No arc of the envelope could be drawn clear of the route. A span
             # dropped with a reason on the record beats one drawn across the
-            # road the reader is looking at, which is rule seven.
+            # road the reader is looking at, which is the route rule.
             log.info("span %r is not drawn: no mark clears the route", span.name)
             continue
         span.ticks = _span_ticks(span, route_px, cap_px)
@@ -344,8 +346,8 @@ def _feature_cost(line: list[Pt], avoid: list[tuple[float, float, float, float]]
 
     Charged on how much of the line lies inside a place's own radius, times
     what the place is worth, times its own length. Nothing is forbidden here:
-    rule seven, which is a constraint, is enforced in `span_line`, and this is
-    the preference that sits beside it.
+    the route rule, which is a constraint, is enforced in `span_line`, and this
+    is the preference that sits beside it.
     """
     if not avoid or len(line) < _FEWEST_FOR_A_SEGMENT:
         return 0.0

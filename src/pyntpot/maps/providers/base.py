@@ -11,8 +11,8 @@ which the fetch cache keys on, and the `Credit` its data is owed. This module fe
 nothing, holds no state and imports nothing from the painter: the shipped providers
 and any caller's own implement the protocols elsewhere.
 
-Invariants: `ElevationGrid.to_json` writes the same bytes as the painter's elevation
-cache file (keys `n`, `bbox`, `lats`, `lons`, `elev`, default separators, no trailing
+Invariants: `ElevationGrid.to_json` writes the same bytes as the fetch cache's elevation
+file (keys `n`, `bbox`, `lats`, `lons`, `elev`, default separators, no trailing
 newline), and `from_json` then `to_json` reproduces such a file byte for byte.
 """
 
@@ -52,7 +52,7 @@ class ElevationGrid:
     elev: tuple[float, ...]
 
     def to_json(self) -> str:
-        """Return the grid in the painter's elevation cache file format."""
+        """Return the grid in the fetch cache's elevation file format."""
         return json.dumps(
             {
                 "n": self.n,
@@ -65,7 +65,7 @@ class ElevationGrid:
 
     @classmethod
     def from_json(cls, text: str) -> Self:
-        """Read a grid from the painter's elevation cache file format.
+        """Read a grid from the fetch cache's elevation file format.
 
         Raises:
             KeyError: When a key is missing.

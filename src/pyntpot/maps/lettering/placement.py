@@ -8,9 +8,10 @@ the pairs of leaders swapped over.
 It does not pick what is named (a caller hands in the labels), does not measure a name
 (the caller's `measure` does) and draws nothing.
 
-Invariants: labels come back in tier order each carrying its box, anchor and window;
-a name that repeats another's place is dropped; no seat is left the leader of a pair
-that crosses when swapping them over makes both cheaper.
+Invariants: labels come back in tier order each carrying its box and anchor, and its
+window when it is set along a line; a name that repeats another's place is dropped; two
+flat names whose leaders cross are swapped over when the swap uncrosses them and makes
+the pair cheaper.
 """
 
 import math
@@ -42,8 +43,9 @@ from pyntpot.maps.lettering.spans import SpanSurroundings, place_spans
 #: cheapest paper it can see and neither of two names knows the other's leader
 #: exists; two of them reaching past each other is the result, and it joins
 #: the wrong name to the wrong pin. Swapping
-#: two crossing leaders always shortens them both, so the pass converges, and
-#: three sweeps settle every arrangement a card of this size produces.
+#: two crossing leaders always shortens them taken together, so the pass
+#: converges, and three sweeps settle every arrangement a card of this size
+#: produces.
 LEADER_UNCROSS_PASSES = 3
 
 
@@ -74,21 +76,21 @@ def place(
     taken: list[Box],
     measure_fn: Measure,
 ) -> list[Label]:
-    """Put every name somewhere, cheapest cost first, in tier order.
+    """Put every name in its cheapest seat, one at a time in tier order.
 
-    Curved names are placed here too, which they were not: a river or a road or
-    a span used to claim the box its anchor happened to fall in and then be set
-    along a window chosen afterwards, at drawing time, by the hand. That is why
-    "Derwent" sat over "Braemar Castle": the box the placer defended and the
-    pixels the reader saw were in different places. The window is chosen here
-    now, against everything already on the sheet, and the run of small boxes it
-    really occupies goes back into the pile for the next name to avoid.
+    Curved names are placed here too: a river, a road or a span has its window
+    chosen here, against everything already on the sheet, and the run of small
+    boxes it really occupies goes back into the pile for the next name to
+    avoid, so the box the placer defends and the pixels the reader sees are in
+    the same place.
 
     It is also the one funnel every name on the sheet goes through, whichever
     pool found it, so it is where `dedupe_names` can see that the settlement
-    "Elm" and the nearest-named-feature "Elm" are one village.
+    "Elm" and the landmark "Elm" are one village.
 
-    Returns fewer labels than it was given where two of them named one place.
+    A label that names a place another already names is dropped.
+
+    Source: `label-placement` in docs/explanation/references.md.
 
     Args:
         labels: The names to place, each with its anchor already in card pixels.
@@ -102,8 +104,9 @@ def place(
         measure_fn: How wide and tall a name is.
 
     Returns:
-        The same labels, in tier order, each carrying its box, its text anchor
-        and, when it is set along a line, the run of line it is set along.
+        The labels that survive `dedupe_names`, the spans' names among them, in
+        tier order, each carrying its box, its text anchor and, when it is set
+        along a line, the run of line it is set along.
     """
     boxes = list(taken)
     todo = list(labels)
@@ -306,7 +309,7 @@ def _uncross_leaders(placed: list[Label], ground: Backdrop) -> None:
     meeting a crossing follows the wrong line to the wrong pin. Swapping the
     two names over is the fix rather than moving either of them away, because
     the paper each is sitting on was already the cheapest either could find and
-    exchanging them strictly shortens both leaders.
+    exchanging them strictly shortens the two leaders taken together.
 
     A swap is offered, not imposed. It is kept only when the pair no longer
     crosses *and* the two names together cost less than they did, on the same

@@ -21,9 +21,9 @@ import numpy as np
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.noise import F32
 
-#: class, a row and a colour: `MAJ2-a` is the A and B road width, treatment 2,
-#: colour a. Widths live in `BrushStyle`, because the same treatment is drawn at
-#: a river's width on one plate and a lane's on another.
+#: The stroke treatment of each sheet row. A brush id is a prefix, a row and a
+#: colour column: `MAJ2-a` is treatment 2, colour a. Widths live in `BrushStyle`,
+#: because one treatment is drawn at a river's width on one plate, a lane's on another.
 BRUSH_TREATMENTS: dict[str, dict[str, float]] = {
     "1": {
         "name_wet": 1.0,
@@ -136,7 +136,7 @@ BRUSH_TREATMENTS: dict[str, dict[str, float]] = {
 #: touch-down blot, and a line that thins rather than breaking when it runs low.
 PEN_ROWS = frozenset({"5", "6", "8"})
 
-#: The colour column of a brush id, per class.
+#: The colour column of a brush id, per three-letter prefix.
 BRUSH_COLOURS: dict[str, dict[str, str]] = {
     "RIV": {"a": "#255d80"},
     "STR": {"a": "#255d80"},
@@ -186,8 +186,8 @@ class Brush:
     load_px: float = 0.0  # how fast the set-down ink runs out; 0 derives it
     pool_radius_frac: float = 0.5
     pool_gain: float = 1.9
-    # --- phase 1: the reservoir and the directional break. All inert at these
-    # defaults, so a brush built without the flags is the brush that was there.
+    # --- the reservoir and the directional break. All inert at these defaults,
+    # so a brush built without the flags is the plain stamped brush.
     starve: bool = False  # spend a per-bristle load along the stroke
     run_px: float = 0.0  # how far one load carries, in render pixels
     res_floor: float = 0.38  # what is left in a nominally empty bristle
@@ -201,8 +201,8 @@ class Brush:
     pen: bool = False  # this treatment is a nib, not a brush
     pen_starve: bool = False  # the nib thins and lightens as it runs down
     pen_thin: float = 0.26
-    # --- phase 2: brush quality. Inert at these defaults, so a brush built
-    # without the flags is the brush that was there.
+    # --- brush quality. Inert at these defaults, so a brush built without the
+    # flags is the plain stamped brush.
     organic: bool = False  # drift and pressure from a lattice, not a sine
     org_oct: int = 4
     org_lac: float = 2.17
@@ -210,7 +210,7 @@ class Brush:
     smooth: float = 0.0  # corner radius in render pixels; 0 leaves the path
     #: Pixels of the brush's own grid per render pixel. 1 is the plate itself;
     #: `scaled_brush` sets it when the ink is painted on a finer grid, so the
-    #: wavelengths written into the code below stay the lengths they were.
+    #: wavelengths written into `stamp` stay the same lengths on the plate.
     unit: float = 1.0
     #: How far the tip's own weights are smoothed across the mark, in render
     #: pixels. 0 leaves the tip as it was.
@@ -236,7 +236,7 @@ def brush_from_id(
         width_display_px: The width this class is painted at on screen.
         scale: Render pixels per display pixel.
         style: The brush style, for the shared geometry and the overrides.
-        override: Key into `style.brush_overrides`, when the class has one.
+        override: Key into `style.brush_overrides`; None reads the id's prefix, lower case.
 
     Returns:
         The brush in render pixels, and its ink colour as hex.
@@ -331,11 +331,11 @@ def _load_quality(brush: Brush, style: BrushStyle, scale: float) -> None:
 
 
 def ink_aux(shape: tuple[int, int], b: Brush) -> dict[str, np.ndarray] | None:
-    """The extra accumulators a brush's phase 1 flags need, or None.
+    """The extra accumulators a brush's reservoir and break flags need, or None.
 
     Both are weighted sums over the same deposits as the ink itself, so
     dividing one by the ink gives a per-pixel weighted mean of whatever it
-    carries. That is the whole trick: the reservoir and the break texture have
+    carries. That is why they exist: the reservoir and the break texture have
     to be read off the final density, because the splat and the `1 - exp(-acc)`
     saturation dilute a per-sample gate to nothing.
 
@@ -360,15 +360,15 @@ def scaled_brush(b: Brush, k: int) -> Brush:
     Everything the brush measures in pixels moves with the grid. `unit` carries
     the factor, so the wavelengths written into `stamp` stay the lengths they
     were rather than shrinking with the grid they are sampled on. The stamp
-    spacing and the tip's own sampling are capped rather than scaled: a finer
-    grid is asked for precisely so those two land under a pixel.
+    spacing and the tip's own sampling are scaled but capped (0.9 and 0.7): a
+    finer grid is asked for precisely so those two land under a pixel.
 
     Args:
         b: The brush on the plate's grid.
         k: Pixels of the finer grid per plate pixel.
 
     Returns:
-        The brush on that grid, or `b` itself at `k` of 1.
+        The brush on that grid, or `b` itself at `k` of 1 or less.
     """
     if k <= 1:
         return b

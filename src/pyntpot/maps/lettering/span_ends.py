@@ -43,7 +43,7 @@ def _span_ticks(span: Span, route_px: list[Pt], cap_px: float) -> list[list[Pt]]
 
     It is one stroke off the end of the line rather than a cross-mark on it,
     which is what "from the end of the line" says. A tick is part of the mark,
-    so rule seven binds it too: it is shortened until its tip clears the road
+    so the route rule binds it too: it is shortened until its tip clears the road
     it points at, and left off when even a short one would touch it.
     """
     if len(span.line) < _FEWEST_FOR_A_SEGMENT:
@@ -131,7 +131,7 @@ SPAN_ANCHOR_FRACS = (0.15, 0.325, 0.5, 0.675, 0.85)
 
 
 def _beside(line: list[Pt], frac: float, push: Pt) -> Pt:
-    """A point a fraction along a line, shifted by one offset.
+    """The vertex just short of a fraction along a line, shifted by an offset.
 
     The shift is the same vector at every fraction, taken from the line's
     middle, and not a local normal. A bracket beside a stretch that doubles

@@ -1,4 +1,4 @@
-"""Raster generalisation: many intricate rings in, a few big soft shapes out.
+"""Raster generalisation: many detailed rings in, a few big soft shapes out.
 
 Key names: `Generalisation`, the working grid and morphology of one pass;
 `Finish`, the loose edge, second pass and tree seeds a wash wants on top;
@@ -125,10 +125,9 @@ def generalise(
 ) -> list[list[Pt]]:
     """Raster generalisation: union, close, open, declutter, trace, smooth.
 
-    This is the whole answer to "too intricate, too many greens". Everything
-    that reaches the sheet has been through one grid, so what comes out is a
-    few big shapes with soft edges rather than a hundred outlines stacked on
-    each other.
+    Everything that reaches the sheet has been through one grid, so what comes
+    out is a few big shapes with soft edges rather than a hundred outlines
+    stacked on each other.
 
     Args:
         rings: Filled rings in metres.
@@ -148,9 +147,10 @@ def generalise(
 def jitter_ring(ring: list[Pt], amplitude: float, seed: int = 0) -> list[Pt]:
     """Push a ring's outline in and out along its own normals.
 
-    A generalised mask traces as a smooth but obviously computed curve. The
-    hand-drawn maps do not have accurate edges, they have loose ones, so every vertex is moved along its outward normal by a low-frequency
-    wave: the shape stays the shape and the edge stops looking measured.
+    A generalised mask traces as a smooth but obviously computed curve. A
+    hand-drawn map does not have accurate edges, it has loose ones, so every
+    vertex is moved along its outward normal by a low-frequency wave: the shape
+    stays the shape and the edge stops looking measured.
 
     Args:
         ring: A closed ring in metres.
@@ -158,7 +158,8 @@ def jitter_ring(ring: list[Pt], amplitude: float, seed: int = 0) -> list[Pt]:
         seed: Shifts the wave, so two layers do not wobble in step.
 
     Returns:
-        The moved ring, the same length.
+        The moved ring, with as many points; the ring itself when it has fewer
+        than `LOOP_MIN_POINTS` points or `amplitude` is not positive.
     """
     n = len(ring)
     if n < LOOP_MIN_POINTS or amplitude <= 0:
@@ -235,7 +236,8 @@ def generalise_layer(
         finish: The loose edge, the second pass and the tree seeds.
 
     Returns:
-        `outer` rings, the `inner` second-pass rings, and the tree `seeds`.
+        `outer` rings, the `inner` second-pass rings (none when
+        `finish.inset_cells` is 0), and the tree `seeds`.
     """
     empty: dict[str, Any] = {"outer": [], "inner": [], "seeds": []}
     if not rings:
@@ -245,6 +247,7 @@ def generalise_layer(
     eps = cell * 0.55
 
     def traced(source: list[bytearray], salt: int) -> list[list[Pt]]:
+        """Trace a mask into rings, each given a loose edge when the finish asks for one."""
         out = []
         for ring in trace_mask(source, clip, cell, eps=eps, passes=grid.passes):
             out.append(jitter_ring(ring, finish.jitter_m, salt) if finish.jitter_m else ring)

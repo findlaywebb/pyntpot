@@ -1,7 +1,7 @@
 """The relief and water layers one elevation grid can carry.
 
 Key names: `_relief_layers`, which reads a cached elevation grid and returns the
-hillshade bands or raster, the contours, the hachures, the sea and its waves, in route
+hillshade bands or raster, the contours, the hachures, the sea and its waves, in card
 metres; `_sea_path`, the sea as one wash with a lighter dry-brush edge pulled in from it.
 
 Which of the relief layers is built is the basemap style's `hillshade_mode`, and the
@@ -92,7 +92,7 @@ def _shading(
         terrain: The elevation grid with its geography.
         options: What to draw.
         derived: The scale-aware thresholds from `_derived`.
-        corners: Where the grid's first and last posts fall, in route metres.
+        corners: Where the grid's first and last posts fall, in card metres.
 
     Returns:
         `hillshade_bands`, `hillshade_raster` and `contours`.
@@ -163,7 +163,7 @@ def _relief_layers(
     derived: dict[str, Any],
     index: TrackIndex | None = None,
 ) -> dict[str, Any]:
-    """Every relief and water layer the SRTM grid can carry."""
+    """Every relief and water layer the cached elevation grid can carry."""
     data = json.loads(path.read_text())
     n = data["n"]
     values = data["elev"]

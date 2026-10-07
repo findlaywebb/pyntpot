@@ -21,8 +21,9 @@ class BrushStyle:
     """The brushes: which brush each line class takes, how wide, and how it behaves.
 
     The reservoir, directional dry brush and stroke-quality switches are off
-    or inert by default, so the default plates paint byte for byte the same
-    until a theme turns one on; `ink_ss` is the exception and is on.
+    or inert by default, until a theme turns one on; `ink_ss`,
+    `bristle_bandlimit_px` and `bristle_drift_coherence` are the exceptions
+    and are on.
     """
 
     #: Seeds, so the same box paints the same sheet every time.
@@ -101,9 +102,10 @@ class BrushStyle:
         }
     )
     #: Ink starvation with reload. Each bristle sets off with its own load,
-    #: spends it in proportion to what it lays down, and the paper gate tightens
-    #: as the load falls, so a long lane starts loaded and breaks into skips
-    #: that run along the mark rather than everywhere at once.
+    #: spends it with distance along the stroke, faster under more pressure,
+    #: and the paper gate tightens as the load falls, so a long lane starts
+    #: loaded and breaks into skips that run along the mark rather than
+    #: everywhere at once.
     ink_starve: bool = False
     #: How far a full load carries, as a multiple of the brush's own width. A
     #: track at 4.8 render pixels wide runs about 700 px on one load.
@@ -152,8 +154,8 @@ class BrushStyle:
     #: 3 is where it stops paying: 4 and above buy a hundredth of a level each
     #: and cost the square of the grid in memory.
     ink_ss: int = 3
-    #: Non-repeating drift. Every wander in a stroke was a sine, so a long mark
-    #: repeated itself: the bristle drift at 390 render pixels and shared by
+    #: Non-repeating drift. Off the flag every wander in a stroke is a sine, so
+    #: a long mark repeats itself: the bristle drift at 390 render pixels and shared by
     #: every bristle, the line's wobble at 210 and 69, the pressure at 2 pi times
     #: its own cell, and each bristle's break at 116 to 215 with a beat near 500
     #: where two of them differ a little. On the flag each of the four becomes a
@@ -164,7 +166,7 @@ class BrushStyle:
     #: deliberately not 2: octaves an octave apart line up with each other.
     organic_octaves: int = 4
     organic_lacunarity: float = 2.17
-    #: The coarsest feature, as a share of the wavelength the sine had. At 0.5 a
+    #: The coarsest feature, as a share of the sine's own wavelength. At 0.5 a
     #: lattice cell is half a wavelength, which is the same feature size, so the
     #: flag changes what repeats rather than how the mark looks.
     organic_cell_mult: float = 0.5
@@ -198,9 +200,9 @@ class BrushStyle:
     #: already shared: 0.191 at 0 and 0.042 at 0.9, where a tip with no drift
     #: at all sits at 0.037. It is the second half of the fix and it only
     #: shows once the first is in: with the tip still folding it moves that
-    #: same number from 0.447 to 0.414, which is nothing. 0 is the tip as it
-    #: was. The lanes a mark is genuinely wide enough to show survive it: the
-    #: major river at 16.8 px keeps its own.
+    #: same number from 0.447 to 0.414, which is nothing. 0 leaves the tip
+    #: unsmoothed. The lanes a mark is genuinely wide enough to show survive
+    #: it: the major river at 16.8 px keeps its own.
     bristle_bandlimit_px: float = 0.9
     #: How hard the tip's lanes are, as a multiplier on the variation about the
     #: tip's own mean. It scales what the bristles weigh and where the brush is
@@ -214,8 +216,8 @@ class BrushStyle:
     #: How much of its sideways drift a bristle shares with its neighbours, as
     #: a share of the tip's own width. This is the fault the shared drift fixes.
     #: The regular parallel rails along a road, with a hard step from one to
-    #: the next, are the tip folded over itself: every bristle's drift phase
-    #: was drawn independently of the one beside it, so two neighbours could be
+    #: the next, are the tip folded over itself: at 0 every bristle's drift phase
+    #: is drawn independently of the one beside it, so two neighbours can be
     #: driven a full amplitude apart. On `road_major` the drift is 1.1 render
     #: pixels either way against a bristle spacing of 0.34, so the tip does not
     #: lay a band, it collapses into four or five coincident filaments with
@@ -233,7 +235,5 @@ class BrushStyle:
     #: sampling widens to cover the room the drift asks for, and each sample
     #: carries the strip of tip it actually stands on rather than an equal
     #: share, so a bunch is no longer a dark filament. 0 draws the phases
-    #: independently again, which is the old behaviour but not the old bytes:
-    #: they now come off a normal draw rather than a uniform one, so the tip is
-    #: a different pattern of the same kind.
+    #: independently, from a normal draw, and turns neither of those on.
     bristle_drift_coherence: float = 0.25

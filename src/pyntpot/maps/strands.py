@@ -1,4 +1,13 @@
-"""Strand separation: the two limbs of a doubled-back route drawn beside each other."""
+"""Strand separation: the two limbs of a doubled-back route drawn beside each other.
+
+Key names: `separate_strands`, the route in card pixels with each doubled-back
+stretch pushed apart; `STRAND_GAP_WIDTHS`, the gap as a multiple of the route's
+stroke width.
+
+It does not draw the route or choose its weight. Invariants: a route with no
+stretch that comes back within the gap of itself is returned unchanged, and the
+route keeps its points, in order, however far they are pushed.
+"""
 
 from __future__ import annotations
 
@@ -13,8 +22,8 @@ from pyntpot.ink.polyline import ease_along, tangent_at
 #: in each other's gaps: the reader cannot tell an out-and-back from a single
 #: pass, and the whole doubled-back stretch reads as one line.
 #: A person drawing the same route by hand draws the two limbs beside each
-#: other, and this is that gap. Two and a half stroke widths is a clear channel
-#: of paper between them at every route weight.
+#: other, and this is that gap. Two and a half stroke widths centre to centre
+#: leaves a stroke and a half of clear paper between them at every route weight.
 STRAND_GAP_WIDTHS = 2.5
 #: How much path has to run between two points before they count as two strands
 #: rather than one bend, as a multiple of the gap. Ten: a bend comes back to
@@ -51,12 +60,12 @@ def separate_strands(
 
     Args:
         route_px: The track in card pixels.
-        gap_px: The channel of paper wanted between two strands.
+        gap_px: How far apart, centre to centre, two strands are drawn.
 
     Returns:
         The track, displaced. The same list back when nothing was doubled, so a
-        route that never crosses itself is drawn on its own line exactly as it
-        was.
+        route that never comes back within `gap_px` of itself is drawn on its
+        own line exactly as it was.
     """
     n = len(route_px)
     if n < MIN_STRAND_POINTS or gap_px <= 0:

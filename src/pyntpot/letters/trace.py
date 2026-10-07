@@ -37,7 +37,7 @@ CENTRELINE = "centreline"
 OUTLINE = "outline"
 
 #: A branch shorter than this share of an em, hanging off a junction, is a
-#: thinning artefact rather than a stroke. Pruned.
+#: thinning artefact rather than a stroke, and is pruned.
 SPUR_EM = 0.075
 
 #: Two branches leaving a junction whose directions are at least this opposed
@@ -116,14 +116,13 @@ def _edge(img: np.ndarray, at: Pt, along: Pt, cap: float) -> float:
 def _flank(pts: list[Pt], img: np.ndarray, half: float, side: float) -> list[Pt] | None:
     """The second stroke hiding on one side of a run, or None if there is none.
 
-    This is the fault that drew an M as an H. Where two strokes of a
-    letter run together along their length rather than crossing, the ink is one
-    mass and its medial axis is one line up the middle, so the thinner hands
-    back one stroke where the designer drew two. In Patrick Hand's capital M
-    the bowl's arms merge into the stems from the cap line down to about half
-    the height; what survived was two full stems joined by a shallow curve
-    sitting exactly where an H's crossbar sits, which is why a word starting
-    with M read as starting with H.
+    Where two strokes of a letter run together along their length rather
+    than crossing, the ink is one mass and its medial axis is one line up the
+    middle, so the thinner hands back one stroke where the designer drew two.
+    In Patrick Hand's capital M the bowl's arms merge into the stems from the
+    cap line down to about half the height, and the skeleton alone is two full
+    stems joined by a shallow curve sitting exactly where an H's crossbar
+    sits, so the M reads as an H.
 
     The mass gives the arm back. Along the stem, the ink on the arm's side
     stands further out than the stem's own half-width, by exactly the sliver
@@ -242,8 +241,8 @@ def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> li
     """A ring for every blob of ink the thinning ate whole.
 
     Zhang-Suen deletes a small round component from both sides at once and
-    leaves nothing behind, which is why the tittle of an `i` and a `j` and the
-    whole of a full stop were missing from the sheet. A blob is drawn as a
+    leaves nothing behind, so without this the tittle of an `i` and a `j` and
+    the whole of a full stop are missing from the sheet. A blob is drawn as a
     small ring rather than a point, because a nib asked to draw one point
     leaves no mark at all.
     """
@@ -268,12 +267,12 @@ def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> li
 def _centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     """One glyph's skeleton, in em units with y up.
 
-    The ends are pushed back out along their own direction by the distance the
-    thinning ate: a medial axis stops half a stroke width short of the ink, so
-    an unextended skeleton draws an `l` shorter than the letter is. Runs that
-    stand in more ink than one stroke is wide are split back into the two
-    strokes that made them, and a blob the thinning ate whole comes back as a
-    dot.
+    The free ends are pushed back out along their own direction by the
+    distance the thinning ate: a medial axis stops half a stroke width short of
+    the ink, so an unextended skeleton draws an `l` shorter than the letter is.
+    Runs that stand in more ink than one stroke is wide are split back into the
+    two strokes that made them, and a blob the thinning ate whole comes back as
+    a dot.
     """
     img, ox, oy = _fill(contours, upem)
     skel = thin(img)
@@ -307,9 +306,9 @@ def _extend(
 
     Only a free end. A chain that stops at a junction stops there because
     another stroke starts, and the inscribed disc at a junction is as wide as
-    every stroke meeting in it, so pushing that end out by the disc threw a
-    long spike clean out of the letter. That is where the star at the top of
-    every M and W came from.
+    every stroke meeting in it, so pushing that end out by the disc would
+    throw a long spike clean out of the letter, a star at the top of every M
+    and W.
     """
     if chain[0] == chain[-1] or len(pts) < MIN_EXTENDABLE:
         return pts

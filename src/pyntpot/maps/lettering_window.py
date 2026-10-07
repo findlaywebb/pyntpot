@@ -4,8 +4,8 @@ Key names: `baseline`, which returns the line a label is set along, or None to
 set it flat.
 
 The placer chooses a window against everything already on the sheet and leaves
-it on the label; this is the fallback for a label that never went through it,
-and it is what the old placer did. A label anchored to a line is set along that
+it on the label; this is the fallback for a label that never went through it.
+A label anchored to a line is set along that
 line and a label anchored to a point is set horizontally beside it. Rivers,
 roads and spans curve; settlements, landmarks and route markers do not, and a
 name the reader would have to work at is never curved whatever it is anchored

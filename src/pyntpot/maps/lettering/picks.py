@@ -8,7 +8,7 @@ The settlement, river and road picks live in `picks_settlements`, `picks_rivers`
 `picks_roads`, and the named lines they read in `picks_lines`. It does not place or draw a
 name.
 
-Invariants: the ground is picked by rule and the payload only adds to it; the markers are
+Invariants: the ground is picked by rule and the annotations only add to it; the markers are
 the track and carry the route's ink.
 """
 
@@ -28,11 +28,13 @@ from pyntpot.maps.style import Style
 
 
 def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list[dict[str, Any]]:
-    """The payload's landmarks, each with a position, in the payload's order.
+    """The annotations' landmarks, each with a position, in their order.
 
-    A pick states its own latitude and longitude, which is what the label agent
-    is asked for. A pick that is only a name is looked up in the candidates the
-    box offered, so an older payload still labels its map.
+    A landmark with its own latitude and longitude is placed there. One that is
+    only a name, or has no position, is looked up by name in the basemap's
+    candidates and dropped when none matches. The list stops once a landmark
+    with its own fields brings it to `cap`; a name-only landmark is never
+    counted against `cap`.
     """
     wanted = list(getattr(picks, "landmarks", None) or [])
     if not wanted:
@@ -75,7 +77,10 @@ def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list
 
 
 def journal_heuristic(basemap: Basemap, cap: int) -> list[dict[str, Any]]:
-    """The fallback when the payload named none: the nearest named things."""
+    """The fallback when no landmark lands: the leading `cap` candidates.
+
+    The candidates come in the basemap's order, most notable first.
+    """
     out = []
     for c in basemap.candidates:
         out.append(
@@ -93,13 +98,11 @@ def journal_heuristic(basemap: Basemap, cap: int) -> list[dict[str, Any]]:
 
 
 def home_places(basemap: Basemap, card: Card) -> list[Label]:
-    """The user's own places, as labels, for the ones with no glyph of their own.
+    """The user's own places marked `kind: settlement`, as settlement labels.
 
-    An entry with a symbol is drawn by the caller as it always was, glyph and
-    name together, and is not returned here. An entry marked
-    `kind: settlement` has no glyph and is lettered like any other settlement,
-    which is what "Swell, a village" wants and what a house
-    marker would say wrongly.
+    Such an entry is lettered like any other settlement, which is what
+    "Swell, a village" wants and what a house marker would say wrongly. Every
+    other entry, and one whose position falls outside the card, is left out.
     """
     out: list[Label] = []
     for place in basemap.places:
@@ -224,11 +227,12 @@ HOME_NAME_DROP = 25.0
 def home_labels(
     basemap: Basemap, card: Card, style: Style, measure_fn: Measure
 ) -> tuple[list[Label], list[Box]]:
-    """The user's marked places, already placed, and the room they need.
+    """The user's houses, already placed, and the room they need.
 
-    A house is not placed by the placer: it is where it is, and its name goes
-    under it. So it comes back placed, with the box it occupies, and the box
-    goes into the placer's `taken` list so nothing else is written across it.
+    A house (a place with `sym: house`) is not placed by the placer: it is
+    where it is, and its name goes under it. So it comes back placed, with the
+    box it occupies, and the box goes into the placer's `taken` list so nothing
+    else is written across it.
 
     Args:
         basemap: The basemap, for its places.

@@ -6,8 +6,8 @@ land-cover class goes and how hard its edge pools, the painter's default for
 `CoverStyle.cover_cfg`.
 
 It builds brushes and lays no ink; the brush-sheet tables and `brush_from_id` live in
-`pyntpot.ink.brush`. A class with no measured width takes the river importance
-curve's own default.
+`pyntpot.ink.brush`. A watercourse class missing from `wet_px` falls back to a
+pinned width in display pixels.
 """
 
 from pyntpot.ink.brush import Brush, brush_from_id

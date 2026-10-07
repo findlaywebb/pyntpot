@@ -12,8 +12,8 @@ somewhere the route never went.
 
 Settlements are read from the raw payload, which carries every place node, not
 from the basemap. This module does not fetch the payload, rank climbs or
-landmarks (it is handed them) or choose a name; a climb with nothing grounded is
-honestly nameless. Invariants: `ground_climbs` returns new climbs and leaves its
+landmarks (it is handed them) or choose a name; a climb with nothing grounded stays
+nameless. Invariants: `ground_climbs` returns new climbs and leaves its
 input untouched; every grounding carries its own distance, so a settlement
 kilometres behind the foot cannot be read as where the climb starts.
 """
@@ -43,7 +43,7 @@ FEATURE_M = 600.0
 #: to that end rather than to the middle of the climb. A village at the bottom of
 #: a hill is what the climb is out of, and a few metres either side of the first
 #: pedal stroke should not decide that. `km_before_climb` and `km_after_top` go
-#: slightly negative when it does, which is the honest reading: the route
+#: slightly negative when it does, which is the correct reading: the route
 #: reached it just inside the climb.
 FOOT_M = 300.0
 
@@ -186,7 +186,7 @@ def ground_climbs(
     the climb runs on, the settlements nearest each end whichever way the route
     went, and any named feature beside the climb itself. None of them is a
     template to fill in. A climb with nothing but `from` and `to` is still
-    nameable; a climb with none of them is honestly nameless and says so.
+    nameable; a climb with none of them stays nameless.
 
     Args:
         climbs: `rank_climbs` output.

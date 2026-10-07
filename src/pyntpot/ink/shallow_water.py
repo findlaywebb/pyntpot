@@ -31,7 +31,7 @@ def shallow_water(
 
     Velocities come from the pressure gradient, `RelaxDivergence` hands each
     cell's divergence to its two neighbours a fixed number of times, the
-    outward flow lifts the pressure at the wet boundary, and what settles
+    outward flow lowers the water at the wet boundary, and what settles
     follows the paper's own height. Pigment moves as a flux between cells
     rather than by sampling, which is what lets it pile up against a contact
     line the water cannot cross: that pile is the edge darkening.
@@ -39,6 +39,8 @@ def shallow_water(
     Every count here is a count and not a tolerance. A convergence test would
     make the number of iterations depend on the arithmetic, and the plate would
     stop being reproducible from its seed.
+
+    Source: `shallow-water` in docs/explanation/references.md.
 
     Args:
         wet: The wet area on this grid, in 0 to 1.
@@ -68,9 +70,11 @@ def shallow_water(
     wall_y = (mask * np.roll(mask, -1, 0)).astype(F32)
 
     def dx(a: np.ndarray) -> np.ndarray:
+        """Forward difference along a row, wrapping at the grid's edge."""
         return np.roll(a, -1, 1) - a
 
     def dy(a: np.ndarray) -> np.ndarray:
+        """Forward difference down a column, wrapping at the grid's edge."""
         return np.roll(a, -1, 0) - a
 
     for _ in range(max(int(style.fluid_steps), 0)):

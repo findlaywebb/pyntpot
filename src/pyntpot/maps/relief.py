@@ -60,7 +60,7 @@ class Terrain:
         grid: Elevation rows, row 0 southernmost.
         lats: Grid latitudes, ascending.
         lons: Grid longitudes, ascending.
-        proj: The activity's projection.
+        proj: The track's projection.
         dx: Metres between columns.
         dy: Metres between rows.
     """
@@ -88,6 +88,7 @@ def _png(width: int, height: int, rows: list[bytes], colour_type: int = 4) -> by
     raw = b"".join(b"\x00" + row for row in rows)
 
     def chunk(tag: bytes, body: bytes) -> bytes:
+        """One PNG chunk: the body's length, the tag, the body and their CRC."""
         return (
             struct.pack(">I", len(body))
             + tag
@@ -128,7 +129,10 @@ def _resample(grid: list[list[float]], factor: int) -> list[list[float]]:
 def _shade(
     fine: list[list[float]], sx: float, sy: float, azimuth: float, altitude: float, z_factor: float
 ) -> list[list[float]]:
-    """Signed illumination per cell: positive is lit, negative is in shadow."""
+    """Signed illumination per cell: positive is lit, negative is in shadow.
+
+    Source: `hillshade` in docs/explanation/references.md.
+    """
     zen = math.radians(90.0 - altitude)
     az = math.radians(360.0 - azimuth + 90.0)
     flat = math.cos(zen)
@@ -192,13 +196,15 @@ def shade_bands(
 
     Args:
         terrain: The elevation grid and its geography.
-        levels: Bands across the whole range, split between shadow and light.
+        levels: Bands across the whole range, half for shadow and half for
+            light; an odd count rounds down.
         sun: The light and the vertical exaggeration.
         eps: Simplification tolerance in metres.
 
     Returns:
-        Bands from the widest to the tightest, each `{"s": -1 or 1, "t": level,
-        "d": path}`; `s` says whether the band is shadow or light.
+        The shadow bands, then the light bands, each from the widest to the
+        tightest, as `{"s": -1 or 1, "t": level, "d": path}`; `s` says whether
+        the band is shadow or light.
     """
     lats, lons = terrain.lats, terrain.lons
     fine = _resample(terrain.grid, sun.upsample)

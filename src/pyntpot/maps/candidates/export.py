@@ -56,19 +56,15 @@ KM = 1000
 def landmark_export(inputs: BasemapInputs, route: list[Pt] | None = None) -> dict[str, Any]:
     """What the caller reads: where the track went, and what is beside it.
 
-    Nothing here chooses a landmark. It states what the box holds, where the
-    track climbed, how hard each climb was and what the route passed on the
-    way up it; which of them is worth a label, and what to call it, is the
-    caller's judgement.
-
     Args:
         inputs: The activity, its track (with elevations, when the GPX carries
             them), its cache and its places.
         route: The already-projected track, when the caller has one.
 
     Returns:
-        `route` (the track's totals and the settlements it passed, in order),
-        `climbs` (each grounded in that route) and `candidates`.
+        `id` (the cache key), `points` (the track's point count), `route` (the
+        track's totals and the settlements it passed, in order), `climbs` (each
+        grounded in that route) and `candidates`.
     """
     track = inputs.track
     lat, lng = list(track.lat), list(track.lng)

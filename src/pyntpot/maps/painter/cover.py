@@ -39,6 +39,8 @@ def wet_field(label: np.ndarray, style: WashStyle, rim_cov: float) -> np.ndarray
     width can reach a seam. Closing is a dilate and an erode by the same distance, so
     the land's outer silhouette comes back where it was.
 
+    Source: `wet-area-bleed` in docs/explanation/references.md.
+
     Args:
         label: One class index per pixel, 0 where there is no cover.
         style: The wash style, for the bleed and the closing distance.

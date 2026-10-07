@@ -11,7 +11,7 @@ and tracking from its kind, the line it sits on from its window or its feature's
 line) and written by `Hand.write`; then the furniture a label is entitled to, a
 pin and a leader, a house, an underline, and a span's own line and ticks, is
 drawn here as marks and wandered with `Hand.stroke` from the same generator, in
-the order the face's glyphs left it, so the card's pixels do not move.
+the state the face's glyphs left it, so the same label always draws the same marks.
 
 It places nothing: the window a placer chose stays on the label, and a name the
 placer never saw is set along the best window of its feature's line only as a
@@ -68,10 +68,9 @@ SPAN_INTENT_INK = {
     "celebration": "#9a7212",
 }
 
-#: The user's own place, as a small house in card pixels with y down. The page
-#: drew this in vector and the card drew nothing, which is the one place the two
-#: outputs disagreed; it is drawn here now, once, in the map's own ink, so both
-#: of them get the same pixels and both reserve the same room for it.
+#: The user's own place, as a small house in card pixels with y down, drawn in
+#: the map's own ink on the label plate, so the card and the page get the same
+#: pixels and reserve the same room for it.
 HOME_GLYPH = [(-7.0, 1.5), (0.0, -6.5), (7.0, 1.5), (7.0, 8.0), (-7.0, 8.0), (-7.0, 1.5)]
 
 
@@ -172,7 +171,7 @@ def _crc(*parts: object) -> int:
 
 
 def _ink(lb: Label) -> str:
-    """Which ink a label is written in: one of the three tokens, or a colour.
+    """Which ink a label is written in: an ink token, or a colour.
 
     A span is the one thing on the sheet whose colour is a judgement rather
     than a category, and the judgement is the payload's `intent`, resolved here

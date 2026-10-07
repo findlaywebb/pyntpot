@@ -113,8 +113,8 @@ NAMED_BUILDINGS = ("castle", "palace", "stadium", "train_station")
 #: how an enclosure sign can outrank the zoo itself.
 TOURISM_DESTINATIONS = ("zoo", "museum", "aquarium", "theme_park")
 
-#: The reach a class with no entry gets, and the radius every reach above is
-#: stated against. A card drawn at a coarser scale scales them all together.
+#: The radius every reach above is stated against. A larger radius handed to
+#: `pick_landmarks`, as a card over more ground has, scales them all together.
 LANDMARK_RADIUS_M = 300.0
 
 #: How far something is notable from, per metre of its own height. A thing that
@@ -128,9 +128,7 @@ VISIBLE_PER_M = 60.0
 #: off than this and still the thing a person would name.
 REACH_CAP_M = 8000.0
 
-#: How many named things the box offers the label agent. Forty was a distance
-#: sort that stopped inside one town's plaques, so the settlements a climb had
-#: to be named from were cut before the agent ever saw them.
+#: How many named things the box offers as landmark candidates.
 LANDMARK_CAP = 80
 
 #: Metres in a foot, and the storey height `building:levels` is read at.
@@ -140,8 +138,8 @@ LEVEL_M = 3.2
 #: A rule's values: the tag values it accepts, or `ANY` for any non-empty value.
 ANY = None
 
-#: The classes in the order they are tried: a tag set takes the first class one
-#: of whose tests it passes. Each test is a tag key and the values it accepts.
+#: The classes in the order they are tried: a tag set takes the earliest class
+#: for which it passes one of the tests. Each test is a tag key and the values it accepts.
 _RULES: tuple[tuple[str, tuple[tuple[str, tuple[str, ...] | None], ...]], ...] = (
     ("sculpture", (("tourism", ("artwork",)), ("artwork_type", ANY))),
     ("summit", (("natural", ("peak",)),)),

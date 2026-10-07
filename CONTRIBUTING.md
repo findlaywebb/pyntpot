@@ -29,7 +29,7 @@ Mutation testing (ADR 0012) is manual and advisory: no pull-request or scheduled
 uv run mutmut run "pyntpot.ink.polyline*"
 ```
 
-Benchmarks live in `tests/benchmarks`; a plain `uv run pytest` calls each once, untimed, as a smoke test. To time them locally, and see `docs/explanation/performance.md` for what they measure:
+Benchmarks live in `tests/benchmarks`; a plain `uv run pytest` calls each once, untimed, as a smoke test. `docs/explanation/performance.md` says what they measure. To time them locally:
 
 ```bash
 uv run pytest -m benchmark --benchmark-enable

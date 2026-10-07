@@ -2,9 +2,9 @@
 
 Key types: `Plates`, the directory a map's plates were written to together
 with their `Manifest` and the route in display pixels, both as recorded and
-with its doubled-back stretches pulled apart into strands; `Manifest`,the plates' sidecar record (`plates.json`):
-the base hash, the files written, the card they were painted on and the
-measurements later stages read; `DarkGrid`, the painter's coarse grid of how
+with its doubled-back stretches pulled apart into strands; `Manifest`, the
+plates' sidecar record (`plates.json`): the base hash, the files written, the
+card they were painted on and the measurements later stages read; `DarkGrid`, the painter's coarse grid of how
 dark the painted sheet is; `dark_array`, which turns a `DarkGrid` into the
 full-size darkness array a plate is written over, and is the only place one is
 converted.
@@ -63,7 +63,7 @@ class DarkGrid:
 
 
 def dark_array(grid: DarkGrid | None, h: int, w: int) -> np.ndarray:
-    """The darkness grid back up at a plate's own size, the one place a grid is converted.
+    """The dark grid back up at a plate's own size, the one place a grid is converted.
 
     Args:
         grid: The painter's coarse grid, or None when there is none.

@@ -4,8 +4,9 @@ Key names: `path_d`, one polyline; `stroke_d`, a short stroke as relative steps;
 `rings_path`, every ring of a layer as one path wound for `fill-rule="nonzero"`;
 `parse_path`, the inverse of `path_d`.
 
-Coordinates are written to a tenth of a metre, and that rounding is the format of
-the vector map's output: a reader recovers points only to that precision. It does
+`path_d` writes coordinates to a tenth of a metre by default and `stroke_d` to a whole
+metre, and that rounding is the format of the vector map's output: a reader recovers
+points only to that precision. It does
 not project, simplify or clip; the caller hands it finished points.
 """
 
@@ -30,9 +31,9 @@ def path_d(points: list[Pt], *, close: bool = False, places: int = 1) -> str:
 def stroke_d(points: list[Pt]) -> str:
     """Compact path data for a short stroke: absolute start, relative steps.
 
-    A hachure field is thousands of six-point lines. Written as absolute
-    coordinates it is most of a megabyte; written as deltas of a dozen metres
-    it is a fifth of that and draws identically.
+    A hachure field is thousands of short lines, and short deltas take far
+    fewer characters than absolute coordinates. Each step is rounded to a whole
+    metre on its own, so the rounding can add up along the stroke.
     """
     if len(points) < MIN_LINE_POINTS:
         return ""

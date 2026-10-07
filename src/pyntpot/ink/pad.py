@@ -9,8 +9,8 @@ back down.
 It builds no brush and draws no bristle: strokes go through `pyntpot.ink.stamp`. It reads the
 `BrushStyle` for the grid and the joining only.
 
-Invariants: at a supersample of 1 the pad is the plate's own accumulator and every call is
-the call it was; the density is clipped to 0 to 1.
+Invariants: at a supersample of 1 the pad is the plate's own accumulator and every brush
+is stamped unscaled; the density is clipped to 0 to 1.
 """
 
 import numpy as np
@@ -77,7 +77,7 @@ def ink_density(
             # flag swaps the direction of the break and nothing else: a texture
             # with more contrast than the paper would gate less often and come
             # out darker, which is not what the flag is for. `dir_gain` above 1
-            # is then an honest ask for a harsher tooth than the paper's.
+            # is then a deliberate ask for a harsher tooth than the paper's.
             here = acc > 0
             r = aux["tooth"] / safe
             src, dst = r[here], pap[here]
@@ -122,6 +122,8 @@ def _reduce(a: np.ndarray, h: int, w: int) -> np.ndarray:
     saved: an area mean is a box filter and leaves the stair it was asked to
     remove. It overshoots a hard edge slightly, which is why the result is
     clipped back into range.
+
+    Source: `lanczos` in docs/explanation/references.md.
     """
     if a.shape == (h, w):
         return np.asarray(a, F32)
@@ -141,8 +143,8 @@ class InkPad:
     before is the point: the reduce then averages ink, which is what the eye
     does, instead of averaging deposits and gating the average.
 
-    At `ink_ss` of 1 the pad is the plate's own accumulator and every call is
-    the call it was.
+    At `ink_ss` of 1 the pad is the plate's own accumulator and every brush is
+    stamped unscaled.
     """
 
     def __init__(self, shape: tuple[int, int], b: Brush, style: BrushStyle) -> None:
@@ -177,7 +179,7 @@ class InkPad:
         """Stamp a class's strokes.
 
         With joining off the strokes are stamped in the order they arrive, one
-        polyline at a time, which is what the painter always did. With it on
+        polyline at a time. With it on
         they are grouped by brush, in first-seen order, and the ways in each
         group are chained end to end first.
 
@@ -242,6 +244,3 @@ class InkPad:
         paper = _grow(sheet.paper, *self.acc.shape)
         dens = ink_density(self.acc, self._at(b), sheet, self.aux, paper, bleed=False)
         return _bleed(_reduce(dens, self.h, self.w), b)
-
-
-# --------------------------------------------------------------------------- ribbon

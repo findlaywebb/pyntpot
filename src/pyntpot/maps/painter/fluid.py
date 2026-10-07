@@ -1,10 +1,10 @@
 """The fluid phase: one bounded shallow-water pass over everything the ribbon carries.
 
-Key names: `paint_fluid`, which runs the pass once for the whole sheet, on a
-quarter-resolution grid, rather than once a class. The water does not know where one
-wash stops and the next begins, so the drying runs across a class boundary the way it
-does on paper. What comes back multiplies the densities that are already there and
-replaces the stack's trimmed layers.
+Key names: `paint_fluid`, which runs the pass once for the whole sheet, on a grid
+`WashStyle.fluid_grid` times coarser than the plate, rather than once a class. The
+water does not know where one wash stops and the next begins, so the drying runs
+across a class boundary the way it does on paper. What comes back multiplies the
+densities that are already there and replaces the stack's trimmed layers.
 
 It draws from no shared generator. It does nothing when the style switches the pass off
 or when nothing has been laid, and it does not touch the sea, which is never trimmed.

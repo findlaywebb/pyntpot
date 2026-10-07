@@ -8,9 +8,9 @@ stack of washes modulated by one coarse shallow-water pass (`ink.shallow_water`)
 
 It reads the style group it is handed (`WashStyle`) and nothing else, and it writes no file.
 
-Invariants: every option past `base` and `pool` is inert when not given, so a caller that
-passes none of it paints the wash it always did; `fluid_modulate` changes the densities in
-place and returns the same layers.
+Invariants: every `WashOptions` field from `wet` on is inert when it is not given, so a
+caller that sets none of them gets no bleed, flow rim, pit granulation or blooms;
+`fluid_modulate` changes the densities in place and returns the same layers.
 """
 
 import math
@@ -48,7 +48,7 @@ _WET_FLOOR = 0.05
 #: centre and how far the fbm warps the front off a circle.
 Blooms = tuple[np.random.Generator, int, float, float, float]
 
-#: What takes the rim from `flow_edge`: how fast the width grows with area, the
+#: The settings that take the rim from `flow_edge`: how fast the width grows with area, the
 #: reference area as a share of the sheet and the decay length as a share of the
 #: rim's width.
 Flow = tuple[float, float, float]
@@ -64,6 +64,8 @@ def flow_edge(
     pinned contact line, so it sits inside the wet boundary and is wider on a
     large wash than on a small one. Coarse noise then breaks it up, because a
     contact line does not pin evenly.
+
+    Source: `edge-darkening` in docs/explanation/references.md.
 
     Args:
         a: The wash's own alpha, in 0 to 1.
@@ -97,6 +99,8 @@ def bloom(dens: np.ndarray, a: np.ndarray, sheet: Sheet, blooms: Blooms) -> None
     ridge read as a cauliflower rather than a halo. Cropped to the bloom's own
     box, so the cost does not scale with the plate.
 
+    Source: `backruns` in docs/explanation/references.md.
+
     Args:
         dens: The wash's density, changed in place.
         a: The wash's alpha, so a bloom stops at the wash's edge.
@@ -114,7 +118,7 @@ def bloom(dens: np.ndarray, a: np.ndarray, sheet: Sheet, blooms: Blooms) -> None
     radius = float(np.clip(radius_frac * math.sqrt(inside.size), 5.0, 0.22 * min(h, w)))
     flat = dens.ravel()
     for _ in range(int(count)):
-        # Seeded toward the thick: a handful of candidates, the wettest wins.
+        # Seeded toward the thick: a handful of candidates, the densest wins.
         cand = rng.choice(inside, size=min(24, inside.size), replace=False)
         cy, cx = divmod(int(cand[int(np.argmax(flat[cand]))]), w)
         r = radius * float(rng.uniform(0.7, 1.3))
@@ -141,8 +145,7 @@ def bloom(dens: np.ndarray, a: np.ndarray, sheet: Sheet, blooms: Blooms) -> None
 class WashOptions:
     """How one wash looks: its edge, its body, the wet area it shares and its extras.
 
-    The defaults are the wash every caller got before any option existed, and
-    every field from `wet` on is inert when it is not given.
+    Every field from `wet` on is inert when it is not given.
     """
 
     #: Coarse and fine noise on the edge, in mask units.
@@ -185,11 +188,14 @@ def wash(
 
     The edge is the blurred mask thresholded against two noise scales, which is
     cheaper than a signed distance field and, at this resolution, the same
-    picture. Pooling is the mask minus its own blur, so pigment sits just inside
-    the edge instead of fading out of it.
+    picture. Pooling is the mask minus its own blur, or `flow_edge` when
+    `WashOptions.flow` is given, so pigment sits just inside the edge instead
+    of fading out of it.
 
-    Everything from `WashOptions.wet` on is inert when it is not given, so a
-    caller that passes none of it paints the wash it always did.
+    Everything from `WashOptions.wet` on is inert when it is not given.
+
+    Source: `granulation` in docs/explanation/references.md.
+    Source: `wet-area-bleed` in docs/explanation/references.md.
 
     Args:
         cover: Coverage in 0 to 1.
@@ -252,13 +258,13 @@ def separated(
     two come apart as the wash dries: the heavy one drops into the paper's
     hollows and the light one floats over the tooth. Curtis' pigment
     separation, taken as one extra layer rather than a second solver. The total
-    density is what it was, because the heavy field is normalised to a mean of
-    one before its share is taken out of the light one: the flag redistributes
-    a wash, it does not add to it.
+    density stays the wash's own, because the heavy field is scaled to sum to
+    its share of the wash and that share is taken out of the light one: the flag
+    redistributes a wash, it does not add to it.
 
     The pair only reads as two pigments through `km_glazing`. Under multiply
     the layers still stack, but the two hues average where they overlap, which
-    is exactly what glazing was brought in to stop.
+    is what glazing keeps apart.
 
     Args:
         dens: The wash's density.
@@ -296,13 +302,13 @@ def fluid_modulate(
     """Modulate a stack of washes by one coarse shallow-water pass.
 
     The rule this holds to is that the pass modulates the painter and never
-    becomes it: the water is run on a grid a quarter of the plate's size,
-    against the densities the painter has already laid, and what comes back
-    multiplies them. A pass that produced nothing leaves the plate it was given.
+    becomes it: the water is run on a grid `fluid_grid` times coarser than the
+    plate each way, against the densities the painter has already laid, and
+    what comes back multiplies them. A pass that produced nothing leaves the
+    plate it was given.
 
-    The densities are modulated in place, because they were built for this
-    stack a few lines earlier and nothing else holds them: a plate carrying
-    fourteen layers cannot afford a second copy of every one.
+    The densities are modulated in place, so a plate carrying fourteen layers
+    needs no second copy of every one.
 
     Args:
         layers: The washes to modulate. Their densities are changed in place.
@@ -318,6 +324,7 @@ def fluid_modulate(
     qh, qw = max(h // q, 8), max(w // q, 8)
 
     def down(a: np.ndarray) -> np.ndarray:
+        """Average `a` over `q` by `q` cells onto the coarse grid."""
         return a[: qh * q, : qw * q].reshape(qh, q, qw, q).mean(axis=(1, 3), dtype=F32)
 
     wet_q = down(wet)
