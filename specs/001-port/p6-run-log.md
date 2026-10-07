@@ -107,3 +107,9 @@ User instructions (2026-10-07 12:14 BST):
   Orchestrator decision: the author-name clause applies to DOI publisher pages only, and
   P6.2's table pins match words per non-DOI page; all should-fix and nits go into the plan
   now; review 5 confirms only this round's changes.
+- 16:35 Plan fixes for review 4 landed (`da8c7ce`), all 11 findings resolved. Author-name
+  clause on DOI publisher pages only; non-DOI pages match on words pinned from live
+  fetches (Curtis PDF, Hobbs, Stamen, Stadia, ICA, Adventures in Mapping, Urban Sketching,
+  osmanyy all 200; Postman's Knock 403, words from the record and the maintainer check).
+  Briefs carry the candidate table, canonical-source rule and gate definitions; an entry
+  without exactly one `Implemented in:` fails. Plan review 5 (this round only) running.
