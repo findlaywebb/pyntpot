@@ -145,3 +145,13 @@ User instructions (2026-10-07):
   issue-file deletions the P10.2 agent had staged (Q3, Q4, Q5, Q6, Q11 rows, all `close`);
   their rows and the triage update land in the P10.2 commit. P10.8's row and tick follow
   with it.
+- P10.2 applied (`5c83da1`): 39 rows, fix 26, decide 0, defer 5, close 8, fix-golden 0. Closed
+  Q3, Q4, Q5, Q6, Q11 (files deleted, inside `743b3bf`); candidate features
+  `docs/features/letters-nib-follows-writing-line.md` and
+  `docs/features/ink-tip-hold-stroke-ends.md`, `docs/README.md` lists `features/`.
+  Q10 widened: 125 non-`Sheet` uses of "sheet" (maps 88 in 34 files, ink and letters
+  14 in 7, tests 20 in 14, glossary 3); P10.9 estimated about 410 lines, not split, with
+  a stop-and-split rule past 600. New later row
+  `maps-tests-sheet-identifiers-name-the-map` (`sheet_card` and four test names), slice
+  to be cut under "Later issues". P10.5b not run (both members closed); P10.6 drops rung
+  order; P10.11 empty unless a fix slice's G-self moves a row. P10.8 row done, ticked.
