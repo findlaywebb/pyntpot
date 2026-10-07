@@ -59,11 +59,13 @@ User instructions (2026-10-07 12:14 BST):
     watercolor simulation", README heading "Watercolor canvas" linking Hobbs's guide;
     last commit about 8 years ago (about 2018); contributors axelinternet, mkontogiannis.
     Matches the entry: implementation of the Hobbs method.
+  - maintainer-checked: https://github.com/axelinternet/p5-watercolor | 2026-10-07 | owner axelinternet (Axel Hultman); About and README: p5 implementation of Tyler Hobbs generative watercolor simulation; last commit about 2018
   - The Postman's Knock, *Illustrated Wedding Maps*
     (https://thepostmansknock.com/illustrated-wedding-maps/): author Lindsey Bugbee,
     13 March 2014. Title, author and year match. The process section is behind a paywall
     (TPK Premium), so the extent idiom (trim to a blob, bleed the edge) is not visible on
     the page: metadata matched, technique not confirmed from the text.
+  - maintainer-checked: https://thepostmansknock.com/illustrated-wedding-maps/ | 2026-10-07 | Illustrated Wedding Maps, Lindsey Bugbee, 13 March 2014; process section paywalled, technique not confirmed
 - 14:30 Plan fixes for review 2 landed (`3cb46e6`), all 14 findings resolved. Archive and
   repository routes added; statuses `unreachable` and `maintainer-checked` barred from
   canonical-source lines; `maintainer-checked` passes only when the URL is in this log.
@@ -89,3 +91,11 @@ User instructions (2026-10-07 12:14 BST):
   changes and run-log entries handed back to the orchestrator, who applies them);
   `maintainer-checked` is bound to log lines carrying an explicit marker, not to any
   URL in the log. S4 and S5 go into the plan too.
+- 15:45 Plan fixes for review 3 landed (`b6e5dd5`), all 11 findings resolved. New row
+  `wet-area-bleed` (canonical: Luft and Deussen 2006, `10.1145/1124728.1124732`; sites
+  `ink.wash.wash` and `maps.painter.cover.wet_field`; Curtis as design input). Blocked-page
+  rule widened: a 200 page also counts as blocked when its body lacks every author's family
+  name (Elsevier's stub carries the title inside a script). Probes: Chaikin, Catmull-Rom,
+  Borgefors each 200 stub, then Crossref 200 and a match: `verified-via-index`. P6.3 split
+  into fetch and write sub-agents; P6.5a-e parallel in worktrees. `maintainer-checked`
+  bound to marker lines; the two 14:05 checks carry them. Plan review 4 running.
