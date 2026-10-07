@@ -56,3 +56,10 @@ User instructions (2026-10-07):
   and a CHANGELOG entry, and P7.4 sets 0.1.0; a `v*` tag runs `publish.yml`, and
   `pyntpot` is not on PyPI, so Q14 asks tag-only (recommended) or PyPI; ADRs 0024 and
   0025 fixed for P10.5b and P10.11. Plan review 2 running.
+- Merged `main` (`1bae755`, the P11 sketch: widen the public API) into `p10-triage`;
+  conflicts in the P7 order lines and the P10/P11 task lists kept both sides. Notes from
+  the P7/P11 session, for the next plan-fix round: (1) P10 must claim its ADR numbers
+  explicitly (it does: 0024 for P10.5b, 0025 for P10.11), so P11 takes the next free
+  above those; (2) a P10 rename of a name P11 makes public is simpler before P11. P11's
+  "Order": after P10.1, before P7.1, and P8 starts after it, so 0.0.1 (P10.R) comes
+  after P11 and the order becomes P10.0 to P10.2, part 1, P11, P10.R, P8, part 2, P7, P9.
