@@ -13,6 +13,8 @@ a contract is an ADR in `docs/decisions/`.
 
 `numpy`, `pillow` and `fonttools` carry floors, not pins, and Dependabot updates them. The golden parity test stays exact, so a bump that moves golden pixels is a regeneration decision, not a loosened tolerance.
 
+Property tests live in `tests/property`. To reproduce a failure, use the `@reproduce_failure` blob Hypothesis prints, or pass `--hypothesis-seed=N`. `--randomly-seed` alone does not reproduce one, because pytest-randomly does not seed Hypothesis. CI runs derandomised through Hypothesis's built-in `ci` profile, so a CI failure repeats on every run of that commit.
+
 ## Spec flow
 
 One feature is one spec dir under `specs/NNN-name/`, one branch and one pull request.

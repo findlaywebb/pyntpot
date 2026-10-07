@@ -35,3 +35,9 @@ User instructions (2026-10-07 01:25 BST):
   rather than another plan round: guard an empty patterns file at the top of
   the PR run script; compute sample counts and scores from `.meta` exit codes
   (`mutmut.stats.status_by_exit_code`), not before/after stats. P5.0 ticked.
+- 02:15 P5.1 property tests: 28 tests in 7 files, default profile (100 examples
+  each, no `max_examples` cut). Suite time 10.4 s (budget 30 s). Slowest:
+  hand same-seed 1.53 s, stamp same-seed 1.04 s, stamp path-unchanged 0.75 s,
+  pigment no-layers 0.47 s, blur constant-field 0.46 s; the rest under 0.45 s.
+  Passed also under `--hypothesis-seed` 11, 12, 13 and `CI=true` with
+  `--randomly-seed` 1 and 2. No findings filed: every property held.
