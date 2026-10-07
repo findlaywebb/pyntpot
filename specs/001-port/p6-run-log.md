@@ -638,3 +638,13 @@ User instructions (2026-10-07 12:14 BST):
   - Gates (measured under parallel load (5 slices running)): ast-neutral 26 files; uv sync 0 s; uvx prek 6 s; not-golden 167 s; tolerance 309 s; exact 309 s; G-self baseline 72 s, compare 266 s; doc_lines 28/28/28, 0 findings.
   - Glossary changes proposed: none. Noticed outside the group: "activity" and "label agent" remain in `candidates/export`, `lettering/label`, `lettering/picks`.
 - 17:41 P6.5d landed by the orchestrator (measured alone): partition clean; patch applied on `2a78886`; ast-neutral 0 s; uv sync 0 s; uvx prek 5 s; not-golden 153 s (................................... [100%]); tolerance 291 s; exact 288 s; doc_lines 28/28 headers, 0 findings, 1 kept lines; glossary changes applied 0, deferred 0.
+- 16:50 P6.5e maps lettering docstrings and comments. Start 16:15, end 16:50 BST; files 21 (table 21); public API done 16:23. Times measured under parallel load (5 slices running).
+  Docstrings changed: 2 public (`letter`, `pipeline` module), about 60 other in 19 files; added 1 (nested `picks_lines.named_lines.kept_lines`); sections added 0; comments changed about 30 (stale names `schema.Span`, `_bracket`, `journal_layers`; "rule seven" -> "the route rule"; payload/agent wording -> annotations; wrong facts: "a third" where the value is 0.25, offset 1.7 where it is 1.2, EDGE_PX direction, `_freer_side` and the side convention, rung order, "nearest" where the order is by notability, `journal_picks` cap).
+  - Baseline 72 s, clean. AST-neutral: 19 files. G-here: sync 0 s; uvx prek 12 s; not-golden 214 s (1042 passed, 1 skipped); tolerance 283 s; exact 272 s; G-self 284 s (17 passed each).
+  - Detector: 5 findings before, 0 after; no kept: lines.
+  - choice: prek via uvx | rule: P6.4 precedent, docs/issues/prek-not-in-the-environment.md | inputs: spawn failure.
+  - choice: text about earlier code versions rewritten as present facts; why-measurements kept | rule: house rules beat the skills (docstrings rubric, Process) | inputs: each docstring and its code.
+  - choice: "sheet" homonym filed, not reworded | rule: fix now or file | inputs: GLOSSARY.md sheet row, 48 uses.
+  - Fixed ~45, filed 7: label-as-dict-unused, picks-journal-picks-cap, sheet-homonym, span-sides-curve-scale-offset, span-sides-freer-side-sign (reproduced with a script), spans-place-spans-rung-order, spans-rule-seven-in-tests.
+  - Glossary changes proposed: none.
+- 17:54 P6.5e landed by the orchestrator (measured alone): partition clean; patch applied on `f52eb8b`; ast-neutral 0 s; uv sync 0 s; uvx prek 5 s; not-golden 156 s (................................... [100%]); tolerance 292 s; exact 288 s; doc_lines 21/21 headers, 0 findings, 1 kept lines; glossary changes applied 0, deferred 0.

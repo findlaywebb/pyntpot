@@ -60,13 +60,13 @@ Measure = Callable[[str, float], tuple[float, float]]
 #: list. A settlement never wraps: a place name is one thing a reader looks up
 #: and breaking it reads as two places. A river, a road and a route marker are
 #: set along their own line or are one word, where a second line has nowhere to
-#: go. Everything else may: a span's name is a phrase the review agent wrote,
-#: and "the long climb out of Keswick" is 161 px of writing beside a 217 px
-#: bracket, which is why every awkward placement on the card traced back to
-#: there being no line breaking at all. A landmark may be a phrase too.
+#: go. Everything else may: a span's name is a phrase the caller wrote, and
+#: "the long climb out of Keswick" is 161 px of writing beside a 217 px
+#: bracket, which a single line cannot sit beside without running off it. A
+#: landmark may be a phrase too.
 NO_WRAP_KINDS = ("settlement", "river", "road", "marker", "home")
 
-#: The most lines a name is ever broken into. Two. A third line on a map is a
+#: The most lines a name is ever broken into: a third line on a map is a
 #: paragraph, and a paragraph is not a label.
 MAX_LINES: int = 2
 
@@ -74,11 +74,12 @@ MAX_LINES: int = 2
 WRAP_LEADING = 1.06
 
 #: The shortest a wrapped line may be, in characters, and as a share of the
-#: whole name. Breaking "the steady middle hour" after "the" is worse than not
-#: breaking it, and three characters of a thirty-character phrase is that break
-#: exactly: the card drew "the" over "long climb out of Keswick" until the
-#: share was added, because a stub first line makes the widest possible second
-#: line and the placer wanted the block one line tall wherever it could get it.
+#: whole name; the longer of the two holds. Breaking "the steady middle hour"
+#: after "the" is worse than not breaking it, and three characters of a
+#: thirty-character phrase is that break exactly: without the share the card
+#: draws "the" over "long climb out of Keswick", because a stub first line
+#: makes the widest possible second line and the placer wants the block one
+#: line tall wherever it can get it.
 WRAP_MIN_CHARS = 3
 
 WRAP_MIN_SHARE = 0.25
@@ -89,9 +90,9 @@ class Label:
     """One name on the sheet: what it is, where it points, and where it sits.
 
     `px`/`py` are the anchor, the thing the name is about, in card pixels.
-    Everything else is filled in by `place`: the box the name occupies, the
-    point its baseline starts from with the anchor that goes with it, and the
-    two ends of its leader when it has one.
+    `place` fills in the rest (`home_labels` does for a house): the box the
+    name occupies, the point its baseline starts from with the anchor that goes
+    with it, and the two ends of its leader when it has one.
     """
 
     name: str
@@ -118,13 +119,12 @@ class Label:
     #: The line a curved label is set along, in card pixels. Empty is horizontal.
     baseline: list[Pt] = field(default_factory=list)
     #: The run of that line the placer actually chose, once it has chosen it.
-    #: Empty means it has not, and the hand picks its own window as it used to.
+    #: Empty means it has not, and the hand picks its own window unless `flat`.
     window: list[Pt] = field(default_factory=list)
     #: True once the placer has decided this name is set flat. The distinction
-    #: from "no window yet" matters: without it the hand went looking for its
-    #: own window for every name the placer had already rejected one for, and
-    #: the reader saw a curve the placer had never defended a box for. That was
-    #: the whole of the curved-label fault, surviving one layer further down.
+    #: from "no window yet" matters: without it the hand would look for its own
+    #: window for every name the placer had already rejected one for, and the
+    #: reader would see a curve the placer had never defended a box for.
     flat: bool = False
     #: Which side of its own baseline a curved name sits on: +1 above the line
     #: in card pixels, -1 below it. A span sets this outboard of the route.
@@ -177,7 +177,7 @@ class Label:
         return self.leader[1][1] if self.leader else self.py
 
     def as_dict(self) -> dict[str, Any]:
-        """The placed label in the shape the drawing code has always read."""
+        """The placed label as a dict, the leader's text end as `lx`/`ly`."""
         return {
             "name": self.name,
             "kind": self.kind,
@@ -208,10 +208,11 @@ SPAN_EFFORT = ("fast", "hard_set", "best_effort", "fade", "walk", "headwind", "s
 class Span:
     """One stretch of the session the map annotates, with extent, not a pin.
 
-    The payload states an extent in one of three vocabularies (`schema.Span`);
-    by the time it is here it has been resolved to a pair of indices into the
-    route, because that is the only vocabulary the drawing needs. `side`,
-    `rank`, `line` and `label` are filled in by `place_spans`.
+    A span request states an extent in one of three vocabularies
+    (`maps.annotations.SpanRequest`); by the time it is here it has been
+    resolved to a pair of indices into the route, because that is the only
+    vocabulary the drawing needs. `side`, `rank`, `offset_px`, `line`, `ticks`
+    and `label` are filled in by `place_spans`.
     """
 
     name: str
@@ -250,8 +251,7 @@ def wrap_forms(name: str, kind: str, tier: int = TIER_LANDMARK) -> list[list[str
 
     The kind is a deny list rather than an allow list, because a span carries
     its own vocabulary as its kind ("climb", "steady", "fade") and an allow
-    list would have had to name all of them, which is how the first version of
-    this missed every span on the card. The tier settles the collision in that
+    list would have to name all of them. The tier settles the collision in that
     vocabulary: `road` and `water` are span kinds as well as ground kinds, and
     a span named "the road along the Eden" may wrap where a road number never
     does.
@@ -262,8 +262,8 @@ def wrap_forms(name: str, kind: str, tier: int = TIER_LANDMARK) -> list[list[str
         tier: Its tier. A span always may, whatever its kind says.
 
     Returns:
-        The forms, cheapest-intent first: the single line, then each two-line
-        split, most balanced first.
+        The forms: the single line, then each two-line split, most balanced
+        first.
     """
     whole = [name]
     if (kind in NO_WRAP_KINDS and tier != TIER_SPAN) or MAX_LINES < _FEWEST_LINES_TO_WRAP:
@@ -312,9 +312,8 @@ ROAD_PX_DEFAULT = {"major": 5.0, "medium": 3.4}
 #: drifts past its own nominal edge, and a clearance taken against the nominal
 #: width stands a name off less water than it has to clear. Measured on the
 #: painted plates, the major watercourse's ink reaches 1.30 times its nominal
-#: half-width on one card and 1.42 on another. The
-#: durable answer is for the painter to record the width it actually painted;
-#: until it does, this is that measurement.
+#: half-width on one card and 1.42 on another. The painter records only the
+#: nominal width, so this measured factor stands in for the width painted.
 WET_SPREAD = 1.35
 
 
@@ -325,10 +324,11 @@ def feature_px(basemap: Basemap, kind: str, cls: str, own: float = 0.0) -> float
     the spread the brush adds is put back on here.
 
     `own` is the width this particular watercourse was painted at, which is its
-    own where one could be measured and the class floor where it could not. The
-    class alone was enough while every river of a class was drawn at one width;
-    the Calder is drawn at a quarter of a kilometre now, and a name lifted by
-    the major class floor would be set in the water.
+    own where one could be measured and the class floor where it could not; a
+    river takes the wider of `own` and its class floor, because a river can be
+    painted far wider than its class (the Calder at a quarter of a kilometre)
+    and a name lifted by the class floor alone would be set in the water. A
+    road takes its class width and ignores `own`.
     """
     if kind == "river":
         wet = basemap.layers.wet_px

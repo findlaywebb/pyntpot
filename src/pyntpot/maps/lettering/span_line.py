@@ -32,27 +32,27 @@ _ZERO_PX = 1e-6
 #: Below this a length is zero.
 _ZERO_LENGTH = 1e-9
 
-#: How far off the route a span's line sits, in cap heights, and how far apart
-#: two rungs of the ladder are.
+#: How far off the route a span's first rung sits, in cap heights.
 #:
 #: Too far out, at 2.6 cap heights for the first rung, reads as detached; too
 #: close, at 0.9, reads as drawn on the road. Hand-drawn marks measure about
 #: 0.8 to 1.0 cap heights off the route, and the offset is set at 1.2. The rung
-#: spacing follows the same split: 2.4 at the wide end against 1.9 at the near.
+#: spacing, `SPAN_RUNG_CAPS` in `spans`, follows the same split: 2.4 at the
+#: wide end against 1.9 at the near.
 SPAN_OFFSET_CAPS = 1.2
 
 #: How hard the stretch is simplified before the mark is drawn from it, as a
 #: share of the offset, and how far apart the drawn line's own points sit.
 #:
 #: This one number is the whole argument about what a span mark is. Too fine
-#: and the mark traces the road, which is what the iso-distance contour did: a
-#: span mark needs no constant distance from the path. Too coarse and the
-#: mark throws the shape away with the wiggles, which is what the envelope arc
-#: did: it follows the route too little and looks too straight and mechanical.
+#: and the mark traces the road, as an iso-distance contour does: a span mark
+#: needs no constant distance from the path. Too coarse and the mark throws the
+#: shape away with the wiggles, as an envelope arc does: it follows the route
+#: too little and looks too straight and mechanical.
 #: What is wanted is between them: smoothed curves that follow the shape and
 #: could be drawn by hand in a few strokes.
 #:
-#: A third of the offset keeps the significant turns of every panel of the
+#: A quarter of the offset keeps the significant turns of every panel of the
 #: worksheet and drops the rest: two to five corners a stretch, which is what
 #: a few pen strokes is. Swept over 0.15, 0.25, 0.33, 0.5 and 0.8 of the
 #: offset and read against nine hand-drawn reference marks.
@@ -92,7 +92,7 @@ def span_line(
        are left, and a spline is run through those corners. What comes out is
        the road's shape drawn in a few strokes.
     2. **Offset, not held.** The shape is pushed off to the span's own side by
-       about the offset. The distance to the real track then varies, opening
+       about the offset. The distance to the track then varies, opening
        over a bend the smoothing cut and closing on a straight, which is the
        intent: the mark need not keep a consistent distance from the path, and
        should approximate its angle.
@@ -107,7 +107,7 @@ def span_line(
        and going round it encloses it.
     5. **Clear of every strand of route.** Whatever comes out is pushed off any
        piece of route it came near, cut back where pushing cannot do it, and
-       dropped when neither side can be drawn clear.
+       given up when it cannot be drawn clear on this side.
 
     Args:
         route_px: The whole track in card pixels. The whole of it: the mark has
@@ -118,7 +118,7 @@ def span_line(
             `_side_at` signs it.
         offset_px: About how far off the route the mark sits, in card pixels.
             About: the offset is taken off the smoothed shape, so the gap to
-            the real track is whatever the smoothing left.
+            the track is whatever the smoothing left.
         clear_px: How near the route the mark may come. `SPAN_CLEAR_CAPS` of a
             cap height by default, worked back from the offset.
 

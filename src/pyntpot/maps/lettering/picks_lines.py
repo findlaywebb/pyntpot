@@ -16,9 +16,9 @@ from pyntpot.ink.polyline import Pt, simplify
 from pyntpot.maps.basemap import Basemap, Line
 from pyntpot.maps.card import Card
 
-#: The named lines a label may be set along, by kind: `roads` and `rivers`
-#: (one entry a named line), `coast` and `crossings` (bare point lists), in
-#: card metres. `named_lines` builds it from a basemap.
+#: The lines a label may be set along or is charged for crossing, by kind:
+#: `roads` and `rivers` (one entry a named line), `coast` and `crossings` (bare
+#: point lists), in card metres. `named_lines` builds it from a basemap.
 NamedLines = dict[str, list[Any]]
 
 
@@ -42,6 +42,7 @@ def named_lines(basemap: Basemap, tol_px: float) -> NamedLines:
     tol = max(tol_px * float(basemap.card.mpp_display), 1.0)
 
     def kept_lines(line: Line) -> list[list[list[float]]]:
+        """The line simplified at the tolerance, or none when too short."""
         out = []
         for piece in [list(line)] if len(line) > 1 else []:
             kept = simplify(piece, tol)
@@ -100,11 +101,10 @@ def road_lines(lines: NamedLines, card: Card) -> list[list[Pt]]:
     """Everything on the card a name should not be laid across, in card pixels.
 
     The named roads, the unnamed lanes, and the watercourses. All three are
-    marks on the paper and a name written over any of them is harder to read;
-    the named roads were the only ones charged, so a label could sit on an
-    unnamed lane for nothing and "Swell" could sit on its own river. The
-    lanes have no name and cannot carry one, so they are kept in `crossings`
-    purely for this.
+    marks on the paper and a name written over any of them is harder to read,
+    so a label pays as much for an unnamed lane or a river as for a named road.
+    The lanes have no name and cannot carry one, so they are kept in
+    `crossings` purely for this.
     """
     out: list[list[Pt]] = []
     geom = lines

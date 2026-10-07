@@ -14,12 +14,13 @@ import math
 
 from pyntpot.ink.polyline import Pt
 
-#: Past this much turning across the run, text is not set along a line. The one
-#: rule that separates elegant from unreadable.
+#: Past this much turning across the run, text is not set along a line; a
+#: span's name has its own limit, `SPAN_MAX_TURN_DEG`.
 MAX_TURN_DEG = 62.0
 
 
-#: And past this much wander off the straight line between its ends.
+#: Past this much wander off the straight line between its ends, as a share of
+#: that line's length, likewise; a span's name has `SPAN_MAX_BOW_FRAC`.
 MAX_BOW_FRAC = 0.09
 
 

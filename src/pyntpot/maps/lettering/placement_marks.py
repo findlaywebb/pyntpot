@@ -3,10 +3,10 @@
 Key names: `_mark_gap`, how far a name sits from the mark beside the route;
 `_mark_through`, what the mark running through the name costs.
 
-It does not choose a position, move a mark or price anything but a span's name against
-its own bracket.
+It does not choose a position or move a mark.
 
-Invariants: a name that is not a span's costs nothing here.
+Invariants: a name that is not a span's is charged its rung's distance by `_mark_gap`
+and nothing by `_mark_through`.
 """
 
 import math

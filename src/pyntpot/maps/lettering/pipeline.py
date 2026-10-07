@@ -12,8 +12,9 @@ picked against it, the names are placed clear of it, the plate is stroked
 beside it, and a span is resolved on its arc length. A span request resolves
 by point index, by kilometre along the strands, and by seconds from the start
 when the basemap carries the track's times; one stated in seconds over a
-basemap without times does not land and is left out. Without annotations the
-nearest named features are lettered instead of the caller's landmarks.
+basemap without times does not land and is left out. When there are no
+annotations, or none of their landmarks lands, the basemap's leading
+candidates are lettered instead.
 
 It does not paint the base plates and it does not compose the card. It reads
 no configuration from the environment. When there is no hand to letter with
@@ -87,7 +88,7 @@ def letter(
         basemap: The basemap the plates were painted from, for the places, the
             candidates, the named lines, the projection and the track's times.
         annotations: The caller's landmarks, places and span requests, or
-            `None` to letter the nearest named features.
+            `None` to letter the basemap's leading candidates.
         style: The style the card is lettered in.
 
     Returns:
@@ -137,7 +138,7 @@ def _ground(
 
 
 def _anchored(basemap: Basemap, annotations: Annotations | None, style: Style) -> list[Label]:
-    """The landmarks to letter, the caller's or the nearest named, anchored on the card."""
+    """The landmarks to letter, the caller's or the leading candidates, anchored on the card."""
     cap = style.lettering.label_max
     wanted = journal_picks(annotations, basemap, cap) if annotations is not None else []
     if not wanted:
@@ -179,18 +180,19 @@ def draw_plate(
     style: Style,
     route: str | None = None,
 ) -> Path | None:
-    """Stroke the placed names into an RGBA plate beside the other plates.
+    """Stroke the placed names and spans into an RGBA plate beside the plates.
 
     The lettering is raster because the ink is: `stamp` deposits into a numpy
     accumulator gated on the paper's own height, and there is no path out of
     that to vector. So the label layer is a fourth plate, and the page and the
     card both draw the same pixels instead of each approximating them.
 
-    It is cached on `Cache.lettering_key`: the marks to be stroked, the base
-    plates' hash and the style's lettering digest, so a moved name, pin, leader
-    or span line, a repaint of the base plates or another hand all change it. A
-    plate whose key does not match is not drawn at all rather than lettering
-    yesterday's names over today's map.
+    It is cached on `Cache.lettering_key`, kept in a JSON sidecar beside the
+    plate: the marks to be stroked, the base plates' hash and the style's
+    lettering digest, so a moved name, pin, leader or span line, a repaint of
+    the base plates or another hand all change it. A plate on disk whose key
+    does not match is stroked again, never reused, so yesterday's names are
+    never lettered over today's map.
 
     Args:
         plates: The painted plates, beside which the label plate is written.
@@ -203,7 +205,7 @@ def draw_plate(
 
     Returns:
         The path to the plate, or None when there is nothing to draw or no
-        engine to draw it with.
+        hand to draw it with.
     """
     if not placed and not spans:
         return None

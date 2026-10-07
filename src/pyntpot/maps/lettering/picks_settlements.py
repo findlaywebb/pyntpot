@@ -40,11 +40,11 @@ SETTLEMENT_ENDPOINT_FRAC = 0.05
 
 
 def settlements(basemap: Basemap) -> list[dict[str, Any]]:
-    """Every settlement the painted box holds, merged into places.
+    """Every settlement among the basemap's candidates, merged into places.
 
-    The candidates already carry them: `journal_layers` asks for every named
-    thing, so a place node is in the basemap whether or not it is a landmark.
-    Nothing here is fetched and nothing is repainted.
+    The candidates already carry them: the feature layers collect every named
+    thing, so a place node is among the candidates whether or not it is a
+    landmark. Nothing here is fetched and nothing is repainted.
     """
     found: list[dict[str, Any]] = []
     for c in basemap.candidates:
@@ -99,8 +99,7 @@ def pick_settlements(
     """Which settlements the sheet names, by rank and by route relationship.
 
     Never by raw distance order: a distance sort exhausts itself inside one
-    town's wall plaques, which is the fault the "a place name is not a landmark"
-    rule was written to stop. Settlements draw from their own pool and their own
+    town's wall plaques. Settlements draw from their own pool and their own
     budget and never compete with the landmarks for a slot.
 
     Args:
@@ -109,7 +108,7 @@ def pick_settlements(
         route_px: The track in card pixels.
         always: Names the user's own file says to letter whenever the box
             holds them, which do not spend a slot.
-        wanted: Names this session's payload asked for, likewise.
+        wanted: Names the annotations' `places` ask for, likewise.
         budget: How many to letter; from the card's width when not given.
 
     Returns:

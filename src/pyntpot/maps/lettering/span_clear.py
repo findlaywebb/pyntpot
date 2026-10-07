@@ -174,11 +174,12 @@ def _route_near(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]
 def _clear_of(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
     """Push a mark off any strand of route it came near, or give it up.
 
-    Rule seven is a constraint and not a cost, so this may move a line a long
-    way and may not stop short of the answer. Each point inside the clearance
-    is pushed straight out from the piece of route it is nearest, the push is
-    blurred along the line so its neighbours come with it rather than a kink
-    forming, and the whole thing is measured again.
+    The route rule (a mark never comes within the clearance of the route) is a
+    constraint and not a cost, so this pushes for up to `CLEAR_PASSES` rounds,
+    each point no further than `CLEAR_PUSH_CAP` clearances in all. Each point
+    inside the clearance is pushed straight out from the piece of route it is
+    nearest, the push is blurred along the line so its neighbours come with it
+    rather than a kink forming, and the whole thing is measured again.
 
     Args:
         line: The mark as it came off the envelope.
@@ -186,8 +187,9 @@ def _clear_of(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
         clear_px: How near the route the mark may come.
 
     Returns:
-        The mark, clear of the route, or an empty list when no amount of
-        pushing got it clear.
+        The mark, clear of the route; failing that, the longest clear run of it
+        that keeps `CLEAR_KEEP_FRAC` of its length; an empty list when there is
+        none.
     """
     if len(line) < _FEWEST_FOR_A_SEGMENT:
         return []
@@ -302,10 +304,8 @@ def _nearest_on(sub: list[Pt], p: Pt) -> int:
 def _side_at(sub: list[Pt], at: int, p: Pt) -> int:
     """Which side of the route a point falls on, at a known index.
 
-    +1 is the left of travel in card pixels, where y runs down the sheet. This
-    is now the module's only convention: everything that signs a side signs it
-    this way. `_bracket` signed it the other way round, so anything reasoning
-    about a side from a normal was wrong on half the marks on the card.
+    +1 is the left of travel in card pixels, where y runs down the sheet: the
+    side `span_line` draws a mark on for `side=+1`.
     """
     a = sub[max(at - 1, 0)]
     b = sub[min(at + 1, len(sub) - 1)]

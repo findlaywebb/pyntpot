@@ -100,10 +100,10 @@ def pick_rivers(
             feature_px(basemap, "river", str(entry.get("c")), float(entry.get("wn") or 0.0)),
         )
         scored.append((score, name, line))
-    # One river arrives as a dozen ways, and taking the longest of them threw
-    # most of the water away: a name may go anywhere along its own watercourse,
-    # and that freedom is only real if the whole watercourse is one line. The
-    # pieces are chained end to end first, exactly as a road's are.
+    # One river arrives as a dozen ways. A name may go anywhere along its own
+    # watercourse, and that freedom is only real if the watercourse is one
+    # line, so the pieces are chained end to end first, exactly as a road's
+    # are, and the longest chain is the river's baseline.
     pieces: dict[str, list[list[Pt]]] = {}
     totals: dict[str, float] = {}
     for score, name, line in scored:
