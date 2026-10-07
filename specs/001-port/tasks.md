@@ -144,6 +144,8 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 
 ## P7. Docs and first release
 
+Order: after P10 part 2 (maintainer, 2026-10-07). P7.1 to P7.3, then P7.4 tags 0.1.0, a release candidate; later issues are fixed in 0.1.x patch releases.
+
 - [ ] P7.1 README with gallery images
 - [ ] P7.2 Tutorial, how-to guides, reference and explanation pages
 - [ ] P7.3 ADRs 0013 to 0021 for the settled decisions
@@ -151,9 +153,13 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 
 ## P8. Upstream migration
 
+Order: after P10 part 1 and P10.R; the upstream consumes the `v0.0.1` tag. At the hand-off the orchestrating session records "what upstream reads" in `p10-triage.md`; P10 part 2 follows.
+
 - [ ] P8.1 The upstream consumer migrates to the public API, with the recorded render hash reproduced first
 
 ## P9. Post-port cleanup
+
+Order: after P7.4, P8 and P10 (both parts).
 
 - [ ] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR 0022 supersedes D16's enforcement clause for the post-port tree (the rule stands)
 - [ ] P9.2 Retire the exemptions mechanism; ADR 0023
@@ -162,26 +168,36 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 
 ## P10. Triage and address the port's issues
 
-Order: P10.0, P10.1, P10.2 (the one stop point), then P10.3d, P10.3a, P10.3b and P10.3c, which land before P7.4 (P10.0 to P10.2 and the four P10.3 slices go to `main` through one PR on `p10-triage`). If the maintainer answers Q13 yes, P10.4a, P10.4b, P10.5a, P10.8 and P10.9 may run any time after P10.2; otherwise after P8. P10.4c, P10.5b, P10.6 and P10.7 run after P8; P10.10a to P10.10d follow every other slice touching their files; the golden group P10.11 runs last, after P8. Conditional slices run only under the answers `plan.md` names (P10, "Order and parallelism").
+Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach) on `p10-triage`, one PR; then P10.R tags 0.0.1; then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the private-name renames, the golden group) on `p10-fixes` (and `p10-golden`); then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
 
 - [ ] P10.0 Fatten P10 into slices; plan-reviewer pass
 - [ ] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue; dispatch the Mutation workflow once on `main`
-- [ ] P10.2 Maintainer decisions Q1 to Q13: answers recorded and re-triaged
-- [ ] P10.3d One commit trailer rule (Q1)
+- [ ] P10.2 Maintainer decisions Q1 to Q14: answers recorded and re-triaged
+
+### Part 1 (before P8)
+
 - [ ] P10.3a The labels switch no longer gates the attribution (release blocker, D8)
 - [ ] P10.3b prek in the dev group, and the hooks in CI (release blocker, Verification 1)
-- [ ] P10.3c Cite the ink reservoir and pigment separation, and the blurred-mask rim if Q7 (A) (release blocker, D24)
+- [ ] P10.3c Cite the ink reservoir and pigment separation, and the blurred-mask rim if Q7 (C) or (A) (release blocker, D24)
+- [ ] P10.3d One commit trailer rule (Q1)
 - [ ] P10.4a Delete the duplicate benchmarks
 - [ ] P10.4b Rename `edt` to `chamfer_distance`; delete `point_to_segment`
-- [ ] P10.4c The deposit drops corners off the accumulator (after P8)
 - [ ] P10.5a The outline route narrows the nib; delete `_radii`
-- [ ] P10.5b Route-ink names follow the route ink (if Q5 (2)); a missing glyph advances as the face's space (if Q3 (2)) (after P8)
-- [ ] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict`, rule seven; rung order if Q11 (1) (after P8)
-- [ ] P10.7 Other maps: `tunnel=no`; route constants if Q8 deletes (after P8)
 - [ ] P10.8 Mark the slow CLI test golden
-- [ ] P10.9 Docs and terms: non-canonical terms, the OpenTopoData question; display pixels (Q2), "map" (Q10)
+- [ ] P10.9 Docs and terms: non-canonical terms, the OpenTopoData question, rule seven in tests; display pixels (Q2), "map" (Q10)
+
+### Release
+
+- [ ] P10.R Tag 0.0.1: version, changelog, `v0.0.1` pushed after the maintainer confirms (PyPI only if Q14 (2))
+
+### Part 2 (after P8 and its "what upstream reads" record)
+
+- [ ] P10.4c The deposit drops corners off the accumulator
+- [ ] P10.5b Route-ink names follow the route ink (if Q5 (2); ADR 0024); a missing glyph advances as the face's space (if Q3 (2))
+- [ ] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict` (by the upstream-read record); rung order if Q11 (1)
+- [ ] P10.7 Other maps: `tunnel=no`; route constants if Q8 (a), by the upstream-read record
 - [ ] P10.10a Public names for what other modules import: `ink` (if Q9 (a))
 - [ ] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
 - [ ] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))
 - [ ] P10.10d Public names for what other modules import: `maps.lettering` (if Q9 (a))
-- [ ] P10.11 Golden group, one regeneration window (if a row is `fix-golden` and Q12 yes)
+- [ ] P10.11 Golden group, one regeneration window; ADR 0025 (if a row is `fix-golden` and Q12 yes)
