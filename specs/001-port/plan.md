@@ -5995,6 +5995,142 @@ free; if it is taken, stop and report.
 - Gate: G-here.
 - Commit: `Delete the design sources list now folded into the references`
 
+### P10. Triage and address the port's issues
+
+Asked for by the maintainer on 2026-10-07: "add a step 10 to the port plan to
+triage and then address all the issues we have and will find in the port
+process". P10 first sorts every recorded issue into one outcome, then fixes
+the ones that are fixed, in slices grouped by area and by golden impact. It
+adds no feature: a fix makes the code do what its docstring, the spec or a
+Key decision already says, or deletes what nothing uses. Out of scope as in
+`spec.md`: no new painting features, no performance work, no upstream change.
+
+**This is a sketch.** P10.0 fattens it into slices a sub-agent can execute,
+in the shape of P5.0 and P6.0: per-slice owner files, files to leave alone,
+the test for each fix, gate commands and commit messages. A plan-reviewer
+agent reviews the fattened section, and P10.1 does not start until the
+review passes. P10.0's owner files are this section and the P10 list in
+`tasks.md`; it measures every count it quotes at its own starting commit.
+
+**Scope.** Every file in `docs/issues/`, both those filed by P0 to P6 and any
+filed later, by P7, P8 and P9, up to the moment P10.1 starts; anything filed
+after that is handled under "Later issues" below. Also the issues the port
+recorded outside `docs/issues/`, which P10.1 turns into rows with the source
+named:
+
+- `specs/001-port/p5-run-log.md`, the P5.4 reconcile entry: the onboarding
+  PR's README badge, not adopted because the README was outside the slice's
+  owner files.
+- `specs/001-port/tasks.md`, the P5 hand-off: start the manual Mutation
+  workflow once on `main` to confirm it runs.
+- `specs/001-port/spec.md`, Open questions: the OpenTopoData daily budget is
+  enforced per process only.
+- `specs/001-port/p6-run-log.md` names no finding beyond the files it filed;
+  every P6 finding it records is a file in `docs/issues/`. P10.0 rereads both
+  run logs, and any run log P7 to P9 add, and adds a source line for each
+  finding that has no file.
+
+At `d82f732` `docs/issues/` holds 29 files:
+
+| Area prefix | Files | Filed by |
+| --- | --- | --- |
+| `ink-` | 2 | P6.5a |
+| `letters-` | 6 | P6.5b |
+| `maps-lettering-` | 7 | P6.5e |
+| `maps-` other (`osm-elements`, `style-groups`, `track-index`) | 4 | P6.5c, P6.5d, the P6 diff review |
+| `unlisted-technique-` | 3 | P6.1 |
+| no area prefix | 7 | P3.20 (`shared-generators`), P5 (`duplicate-benchmarks`, `slow-tests-in-mutation-runs`), P6.1 (`edt-is-a-chamfer-distance`, `prek-not-in-the-environment`), P6.6 (`contributing-commit-trailers`, `src-docstrings-use-non-canonical-terms`) |
+
+**Triage (P10.1).** Each issue gets exactly one outcome from this closed set:
+
+- `fix`: fixed in P10, and the fix moves no golden pixel and no manifest hash;
+- `fix-golden`: fixed in P10, and the fix moves golden pixels or the hash, so
+  it lands only in the golden group below, under the golden regeneration rule;
+- `decide`: needs a maintainer decision before it can be fixed or closed;
+- `close`: not a defect; the file is deleted with the reason in its row;
+- `defer`: kept past the port, with the reason in its row.
+
+The rule takes the first that applies, in this order:
+
+1. `close` when, at the triage commit, the claim does not reproduce, or the
+   code, its docstring, the spec and the Key decisions already agree and the
+   file records a fact with no action.
+2. `defer` when the fix is outside the spec's scope (a new feature, a
+   performance change, an upstream change) or needs data or tools the
+   repository does not hold; the reason names which.
+3. `decide` when the intended behaviour is not settled by the spec, a Key
+   decision, an ADR, `GLOSSARY.md` or the issue's own evidence: two readings
+   are both plausible, or the choice is policy rather than fact.
+4. `fix-golden` when the fix reaches code the Lynmouth fixture paints, so a
+   G-self compare can differ.
+5. `fix` otherwise.
+
+Triage writes one table, `specs/001-port/p10-triage.md`, one row per issue:
+slug (or source and line for an issue without a file), area, kind (defect,
+dead code, naming or prose, references, test text, tooling or process),
+outcome, the rule number that assigned it, whether it blocks the first
+release (yes when it breaks a Key decision, a spec Verification step or a
+provider obligation under D8), whether a reproduction exists, and for a fix
+its size (changed lines, estimated) and the goldens it may move (by file
+name in `tests/golden/lynmouth/`, or none). A possible code defect (for
+example the span side sign, the stroke end smoothing, the deposit edge
+clamp, the `labels` switch and the attribution, `tunnel=no`, the landmark
+cap) needs a failing test before its fix, by the repo's TDD rule, so its row
+records whether the issue file already gives a reproduction and, if not,
+what the test will assert. Triage itself changes no code.
+
+**Decisions (P10.2).** Every `decide` row goes into one list, put to the
+maintainer once, each item with the readings, the evidence and a
+recommended answer. This is P10's one sanctioned stop point: no fix slice
+that depends on an open item starts until the maintainer answers, and
+nothing else in P10 waits on the maintainer. Each answer is written into the
+row, and the row is triaged again by rules 1, 2, 4 and 5. If any row is
+`fix-golden`, the list also asks whether to open a second regeneration
+window, since P3.15 was written as the port's only one.
+
+**Address (P10.3 onwards).** P10.0 cuts the `fix` rows into slices by area
+(`ink`, `letters`, `maps` lettering, other `maps`, tests and tooling, docs
+and references), each within the P3 and P4 slice size and under the slice
+rules of "P3 and P4: how to run a slice" (test first, no shims, G-here and
+G-self byte-identical, commit message imperative on one line with no
+trailers). The `fix-golden` rows form one golden group that regenerates the
+goldens once: one commit per fix inside a regeneration window run as ADR
+0006 and P3.12 to P3.15 ran theirs (G-window per step, gate options per
+step, the tolerance bound unchanged, one regeneration at the end), recorded
+in a new ADR whose number P10.0 takes from `ls docs/decisions` (0024 if
+P9.2 has written 0023). A `fix` slice whose G-self compare is not
+byte-identical does not land; its row moves to `fix-golden`. Each fix slice
+deletes the issue files it fixes and marks their rows done in
+`p10-triage.md` in the same commit; a `close` row's file is deleted by the
+P10.1 commit.
+
+**Order.** P10 keeps its number, after P9, but its triage should run
+earlier. Recommended: P10.0, P10.1 and P10.2 run after P6 merges and before
+P7.1, because a release-blocking defect (the `labels` switch dropping the
+attribution that D8 requires is one candidate) must be known before the
+README states the attribution requirement and before P7.4 tags 0.1.0. A
+release-blocking `fix` slice lands before P7.4. The golden group lands after
+P8, because P8 proves the upstream render's recorded hash through
+`pyntpot`, and moved pixels would break that proof. The other fix slices run
+after P8; a slice that edits a file P9.1 or P9.2 owns (`tests/conftest.py`,
+`tests/architecture/`) does not run in parallel with them.
+
+**Gate.** `docs/issues/` holds only `defer` items, each with its reason in
+`p10-triage.md`. Every issue closed by a fix has a test: for a behaviour fix,
+the reproduction test that failed before it; for a deletion, rename or prose
+fix, the check named in its row (`uv run vulture`, a grep, or an
+architecture test) that fails if it comes back. Parity holds byte-exact under
+G-here and G-self, or the goldens were regenerated once in the golden group
+under the rule and its ADR. G-here green.
+
+**Later issues.** An issue found after P10.1 starts, in P10's own slices or
+in P7 to P9, is filed in `docs/issues/` as before, appended as a row to
+`p10-triage.md` and triaged by the same rule. A new `decide` row after P10.2
+does not open a second stop: it goes into the phase's hand-off, and until the
+maintainer answers it stands as `defer` with the reason "awaiting a
+maintainer decision". A new `fix-golden` row after the golden group has closed is `defer`
+with that reason, never a second regeneration in P10.
+
 ## Known facts
 
 - Overpass mirror `overpass.openstreetmap.ru` is retired (502);

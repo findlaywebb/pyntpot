@@ -159,3 +159,12 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 - [ ] P9.2 Retire the exemptions mechanism; ADR 0023
 - [ ] P9.3 Delete `make_golden_old.py` and the last `ty` exclude
 - [ ] P9.4 Delete `design-sources.md` once `references.md` covers it
+
+## P10. Triage and address the port's issues
+
+Order: P10.0 to P10.2 run after P6 merges and before P7.1; a release-blocking fix lands before P7.4; the golden group lands after P8; the other fix slices after P8 (plan.md, P10, "Order").
+
+- [ ] P10.0 Fatten P10 into slices; plan-reviewer pass
+- [ ] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue
+- [ ] P10.2 Maintainer decisions: the `decide` rows put once, answers recorded and re-triaged
+- [ ] P10.3 onwards: fix slices by area and golden impact, filled in at P10.0
