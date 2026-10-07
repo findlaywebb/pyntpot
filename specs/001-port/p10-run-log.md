@@ -167,3 +167,8 @@ User instructions (2026-10-07):
   hypothesis: one `simplify` mutant exhausts the runner's memory; mutmut caps time per
   mutant, not memory. A capped local reproduction is running; the finding is filed under
   "Later issues" once the mutant is named.
+- P10.3d landed (`57d9548`), Q1 (2): `CONTRIBUTING.md` "Commits" now says an agent session's
+  commit ends with its session's attribution trailers; the plan's "P3 and P4" slice rule,
+  P9 preamble and P10 "Commit messages" rule say the same. Check: the `rg` printed seven
+  lines before, three after (P0's record line and the two Q1 lines), as the plan states.
+  prek exit 0; not-golden 117 s; tolerance 364 s.
