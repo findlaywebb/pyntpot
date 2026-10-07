@@ -546,3 +546,4 @@ User instructions (2026-10-07 12:14 BST):
     for P6.3's statuses) | inputs: evidence rows, orchestrator brief.
   - Re-run: key diff empty, exit 0, 23 keys; `refcheck.sh` exit 0, only the two
     `MAINTAINER-CHECKED` lines (104, 170). Issues filed: 0.
+- 15:50 P6.3 verified and ticked (`7130b60`, `19eb6db`): 23 entries, 22 canonical sources `verified-via-index` and 1 `verified`; no `unreachable` or `not-verified`. P6.4 dispatched.
