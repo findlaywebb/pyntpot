@@ -46,7 +46,7 @@ and a bibliography.
 | D14 | Process carried from the template: `specs/NNN-name/`, plan review before code, ADRs in `docs/decisions/`, keep-a-changelog, trusted publishing on tag `v*`. |
 | D15 | No remote exists until P2.9. P0 to P2 are local commits only. At P2.9, after the scrub gate and the tree scan pass, the scrubbed tree is published as one orphan commit to a new public GitHub repo. The local working history is never pushed. |
 | D16 | No personal content crosses over: no home coordinates, no personal place names, no activity identifiers, no training anecdotes, no attributions to a user request. Enforced by a banned-term test, the D10 coordinate allowlist test, a manual capitalised-string pass in P2, and a history scan before the repo goes public. The banned-term list is itself personal content and is never committed: it lives outside the repository at `~/personal/pyntpot-private/banned_terms.txt`, the test reads it from the path set by the `personal_terms_file` pytest ini option, and skips when the file is absent (public CI). |
-| D17 | Quality tooling: `hypothesis` property tests, `mutmut` (changed functions on PR, full nightly, golden tests excluded), `pytest-benchmark` locally and `pytest-codspeed` in CI. |
+| D17 | Quality tooling: `hypothesis` property tests, `mutmut` (changed functions on PR, full nightly, golden tests excluded), `pytest-benchmark` locally and `pytest-codspeed` in CI. Superseded in part by ADR 0012 (2026-10-07): mutation testing runs manually, advisory, no nightly or PR job. |
 | D18 | After the port and the scrub (end of P2), run the repo's architecture review pass over the ported code, before the mechanical split. Its output shapes P3 and P4. |
 | D19 | CLI is argparse, stdlib only. One entry point `pyntpot`. |
 | D20 | Build backend `uv_build`, static version, bumped with `uv version --bump`. |
@@ -118,12 +118,15 @@ ported code keeps its old names until P4.
 
 ## Open questions
 
-- Coverage target: the template demands 100 percent branch on core. P5
-  sets a measured baseline and ratchets. Confirm that is acceptable rather
-  than blocking the first release on 100 percent.
 - The OpenTopoData daily budget is enforced per process only. A
   per-cache-dir counter adds state. Default is per process.
 - Design-input sources (P6.2): the papers and blogs read while designing
   the wash, brush, lettering and label rules are not recorded in the
   source tree. Recover them where possible; otherwise each entry cites the
   canonical source only.
+
+## Resolved questions
+
+- Coverage target (2026-10-07): a measured baseline that ratchets, not 100
+  percent branch coverage before the first release. P5.2 sets it; ADR 0011
+  records it.

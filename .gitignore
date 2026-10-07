@@ -30,3 +30,10 @@ htmlcov/
 *.swp
 .idea/
 .vscode/
+
+# mutmut
+mutants/
+
+# benchmarks
+.benchmarks/
+.codspeed/

@@ -108,10 +108,23 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 
 ## P5. Property tests, coverage, mutation, benchmarks
 
-- [ ] P5.1 Property tests
-- [ ] P5.2 Coverage baseline and ADR 0011
-- [ ] P5.3 mutmut PR and nightly jobs, threshold ADR 0012
-- [ ] P5.4 Benchmarks and CodSpeed workflow
+Order: P5.0, P5.1, P5.2, P5.3a, P5.4, P5.3c on branch `p5-quality` (one PR). P5.3b (threshold from the first nightly) is superseded by P5.3c: mutation testing is manual and advisory (maintainer, 2026-10-07). Every slice records its numbers and choices in `p5-run-log.md`.
+
+- [x] P5.0 Fatten P5 into slices; plan-reviewer pass; spec coverage question resolved
+- [x] P5.1 Property tests; times and any `max_examples` cut in the run log
+- [x] P5.2 Coverage baseline on 3.13 and 3.14 (lower gates), `Tests` deselects benchmarks; ADR 0011
+- [x] P5.3a mutmut config, scope, shard and score scripts, PR job, sharded nightly; scope and shard count by rule; ADR 0012 proposed
+- [x] P5.4 Benchmarks, `checks` smoke step and CodSpeed workflow; display ladder by rule
+- [x] ~~P5.3b Mutation threshold from the first full sharded nightly (re-shard by rule if a shard runs over 255 min); ADR 0012 accepted~~ superseded by P5.3c
+- [x] P5.3c Mutation testing manual and advisory: `mutation.yml` (`workflow_dispatch`, modes changed/pattern/all) replaces the PR job and the nightly; no `min_score`; ADR 0012 accepted
+
+### Handoff (2026-10-07)
+
+P5 is complete and merged through PR #7. Every timing and choice is in
+`p5-run-log.md`. Follow-ups outside P5: start the manual Mutation workflow
+once on `main` to confirm it runs; trim the three duplicate benchmark pairs
+(sheet build, edt, wash); consider keeping slow end-to-end tests out of
+mutation runs. The next step is **P6.1**.
 
 ## P6. Docstrings, prose and references
 

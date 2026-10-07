@@ -191,16 +191,20 @@ min_confidence = 80
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers --strict-config -q"
+addopts = "--strict-markers --strict-config --benchmark-disable -q"
 pythonpath = ["tests"]
 filterwarnings = ["error"]
 xfail_strict = true
-markers = ["golden: slow parity tests"]
+markers = [
+    "golden: slow parity tests",
+    "benchmark: performance benchmarks (timed by CodSpeed in CI, --benchmark-enable locally)",
+]
 personal_terms_file = "~/personal/pyntpot-private/banned_terms.txt"
 
 # ---------------------------------------------------------------------------
-# Coverage — the gate is the CI-only `uv run pytest --cov` invocation; plain
-# `uv run pytest` stays coverage-free for fast local loops. No threshold yet.
+# Coverage — the gate is the CI step in `checks`, see ADR 0011; never set
+# `fail_under` here (pytest-cov would apply it to the whole package). Plain
+# `uv run pytest` stays coverage-free for fast local loops.
 # ---------------------------------------------------------------------------
 
 [tool.coverage.run]
@@ -211,9 +215,30 @@ source = ["pyntpot"]
 show_missing = true
 
 # ---------------------------------------------------------------------------
-# Mutation testing — golden tests are excluded (too slow per mutant)
+# Mutation testing — see ADR 0012. `only_mutate` is the one statement of the
+# scope; tests/mutation/scope.py and shard.py read it. mutmut runs pytest inside
+# `mutants/`, where `support.REPO_ROOT` is the mutated tree, so the selection
+# is the unit and property tests only:
+# - tests/architecture would scan the trampolined source: the line budget fails
+#   on every mutated file, and the injected `mutmut` import and `# type: ignore`
+#   lines break other checks.
+# - tests/golden is too slow per mutant.
+# - tests/mutation tests the helper scripts, not `src`.
+# - tests/benchmarks times code and asserts nothing.
+# `forkserver` runs each pytest call in a fresh process. Under the default `fork`,
+# mutmut runs pytest more than once in one process and forks mutants from it, so
+# Hypothesis sees a second instance of each property-test class and fails its
+# `differing_executors` health check: the clean run fails, and a mutant would be
+# "killed" by the health check rather than by a test.
 # ---------------------------------------------------------------------------
 
 [tool.mutmut]
 source_paths = ["src/"]
-pytest_add_cli_args_test_selection = ["tests/", "-m", "not golden"]
+only_mutate = ["src/pyntpot/ink/*", "src/pyntpot/letters/*"]
+pytest_add_cli_args = ["--hypothesis-profile=ci"]
+pytest_add_cli_args_test_selection = ["tests/unit", "tests/property", "-m", "not golden"]
+process_isolation = "forkserver"
+
+# The shard count of the mutation workflow's "all" mode (set from measured timings; ADR 0012).
+[tool.pyntpot.mutation]
+shards = 4
