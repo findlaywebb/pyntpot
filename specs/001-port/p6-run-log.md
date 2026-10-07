@@ -118,3 +118,53 @@ User instructions (2026-10-07 12:14 BST):
   headings and the test literal names the closing section; P6.3-write adds a `grep -c`
   check for `nib`'s "Nearest published work:" prefix. P6.0 ticked. Plan review took
   5 rounds, 12:29 to 16:50.
+- 15:02 P6.1 references inventory (`specs/001-port/p6-inventory.md`), from `5299ab1`;
+  started 14:34. No `src/` or `tests/` change.
+  - G-here baseline on the clean `5299ab1`, per stage: `uv sync` 0 s; prek 8 s, **red**:
+    `ruff-format` reformats the two Python blocks in `plan.md` (`ast_neutral.py`,
+    `doc_lines.py`), every other hook passes, reformat reverted; `pytest -m "not golden"`
+    158 s (1036 passed, 1 skipped, 17 deselected); `pytest -m golden --golden-tolerance`
+    294 s (17 passed); `pytest -m golden` byte-exact 291 s (17 passed). `uv run prek` cannot
+    spawn here (prek not in the venv), so the hooks ran as `uvx prek run --all-files`
+    (prek 0.5.5). choice: log the red hook, file it, carry on | rule: no stop points; fix
+    now or file (`plan.md` is not an owner file) | inputs: prek output, `git diff`.
+  - Tally at `5299ab1`: 132 lines, 479 matches (as at `f6698e4`); `wet.?area` 12 matches in
+    `ink/wash.py`, `ink/style.py`, `ink/shallow_water.py`, none adds a site.
+  - Rows: 23, the seed's 23. Dropped: none (every seed site's body read and confirmed).
+    Added rows: none. Sites added to seed rows, each choice: add site | rule: site rule |
+    inputs: the body:
+    - `multiply-compositing` + `pyntpot.ink.pigment.composite` (its multiply branch
+      multiplies the plate over the backing) and `pyntpot.maps.compose._plates`
+      (`ImageChops.multiply`, a library call it chooses and applies).
+    - `lanczos` + `pyntpot.maps.compose._plates`, `_route`, `_paste_labels` (each resizes
+      with `Image.Resampling.LANCZOS`; library-call clause).
+    - `value-noise` + `pyntpot.ink.noise._value_noise_at` (the lattice at given
+      coordinates) and `pyntpot.ink.tip._fbm1` (the same lattice built inline per octave).
+    - `granulation` + `pyntpot.ink.wash.wash` (scales the density by `Sheet.pits`).
+  - Not sites (callers, prose, settings, and the private parts `stamp.stamp` and
+    `relief_strokes.hachures` compose): listed in the inventory's prose. choice: not a site
+    | rule: site rule (a caller that only passes arguments is not a site) | inputs: bodies.
+  - Decided terms, each `considered, excluded: elementary`: haversine
+    (`maps/candidates/climbs.py`, `places.py`); bilinear (`ink/brush_style.py`,
+    `deposit.py`, `pad.py`, `stamp.py`, `wash.py`, `maps/plates.py`, `relief.py`,
+    `relief_strokes.py`); even-odd (`letters/skeleton.py`, `maps/rings.py`); scanline fill
+    (`ink/raster.py`, `letters/skeleton.py`, `maps/masks.py`); flood fill (no hit); dither
+    (`ink/io.py`, `maps/painter/job.py`, `painter/plates.py`, `painter/wood.py`,
+    `maps/style_groups.py`); supersampling (`ink/brush_style.py`, `pad.py`, `raster.py`,
+    `maps/card_geometry.py`, `style.py`, `style_groups.py`); dilation and erosion
+    (`ink/noise.py`, `maps/masks.py`, `painter/cover.py`, `painter/ribbon.py`);
+    `smoothstep`, linear interpolation, a clamp, a mitre limit. WCAG contrast: not a row
+    (no luminance or ratio computed), closing section as `named-only`.
+  - Unlisted techniques met, filed and not added (choice: file | rule: tally, technique
+    in neither the seed nor the decided table | inputs: bodies, `design-sources.md`):
+    pigment separation (`ink.wash.separated`), the per-bristle ink reservoir
+    (`ink.deposit.spend`), the blurred-mask rim (`ink.wash.wash`'s no-flow branch).
+  - Issues filed (6): `edt-is-a-chamfer-distance.md`,
+    `unlisted-technique-pigment-separation.md`, `unlisted-technique-ink-reservoir.md`,
+    `unlisted-technique-blurred-mask-rim.md`, `plan-code-blocks-fail-ruff-format.md`,
+    `prek-not-in-the-environment.md`. Fixed: 0.
+  - G-here after the change, per stage: `uv sync` 0 s; `uvx prek` 4 s, red only on the same
+    `plan.md` reformat (reverted; none of this slice's files touched by any hook);
+    `pytest -m "not golden"` 165 s (1036 passed, 1 skipped); `--golden-tolerance` 297 s
+    (17 passed); byte-exact `pytest -m golden` 299 s (17 passed).
+    `git diff --stat -- src tests` empty.
