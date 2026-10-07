@@ -31,9 +31,9 @@ def join_strokes(lines: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
 
     OSM cuts a road at every junction, every bridge and every change of tag, so
     what a person calls one street arrives as dozens of ways. The lettering
-    already gathers them (`labels.pick_roads`, "a numbered road is one road");
-    the painting did not, and painting them apart is what made the map look
-    broken. Each piece was a stroke of its own: a nib set down with a blot,
+    gathers them too (`maps.lettering.picks_roads.pick_roads`, "a numbered
+    road is one road"), and painting them apart makes the map look broken.
+    Unjoined, each piece is a stroke of its own: a nib set down with a blot,
     tapered to a point at both ends, and lifted again. A median piece of 2.5
     display pixels against a 30 px lift is all taper and blot and never a line,
     and thousands of such pieces can stand in for a few hundred roads.
@@ -197,16 +197,16 @@ def chain_lines(lines: list[np.ndarray], tol: float) -> list[np.ndarray]:
 
     Greedy and deterministic: the ways are walked in the order they arrive,
     each is extended from its tail and then from its head, and a way is used
-    once. A junction where three ways meet takes whichever arrived first, which
-    is the honest answer with no more information than an endpoint.
+    once. A junction where three ways meet takes the first free end found in
+    a fixed search of the nearby cells, with no more information than an endpoint.
 
     Unlike `join_chains` and `join_strokes` it takes two ends to meet when they
     are within the tolerance on each axis rather than by distance, and it
     concatenates the arrays whole, so a shared end appears twice.
 
     Args:
-        lines: The polylines, in render pixels.
-        tol: How close two ends have to be to be the same mark, in pixels.
+        lines: The polylines, in any one unit (render pixels for the painter).
+        tol: How close two ends have to be to be the same mark, in that unit.
 
     Returns:
         The chains, each a single polyline.

@@ -11,8 +11,8 @@ It does not turn an accumulator into density (`pyntpot.ink.pad`) and builds no b
 (`pyntpot.ink.brush`).
 
 Invariants: the generator is drawn from in a fixed order (phase, pressure lattice, wander
-lattice, the tip), so one seed gives one stroke; a path shorter than 2.5 pixels stamps
-nothing.
+lattice, the tip; the lattices only for an organic brush), so one seed gives one stroke; a
+path shorter than 2.5 pixels stamps nothing.
 """
 
 import numpy as np
@@ -63,7 +63,7 @@ def _pressure(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> np.nd
     """Pressure along the stroke: slow variation, set down loaded, lifted to a point."""
     t = tr.t
     if b.organic:
-        # The pressure was two sines, so it came back every 2 pi press cells.
+        # The sine pressure comes back every 2 pi press cells; the lattice does not.
         press = 1.0 + b.press * _fbm1(t, _TAU * b.press_cell * b.org_mult, b, rng)[:, 0]
     else:
         press = 1.0 + b.press * (
@@ -102,8 +102,8 @@ def _wobble(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> Trace:
     """The path moved sideways by the line's own slow wander."""
     t = tr.t
     if b.organic:
-        # And the line's own wander came back every 210 render pixels, which on
-        # a road drawn end to end is the thing the eye picks out first.
+        # The sine wander comes back every 210 render pixels at the default step,
+        # which on a road drawn end to end is the thing the eye picks out first.
         wob = b.wobble * _fbm1(t, _TAU * 33.45 * b.unit * b.org_mult, b, rng)[:, 0]
     else:
         wob = b.wobble * (
@@ -132,7 +132,7 @@ def _draw_tip(t: np.ndarray, b: Brush, rng: np.random.Generator) -> Tip:
     fp_log = rng.random(m) * _TAU
     fq_log = rng.random(m) * 0.6 + 0.7
     # Each bristle sets off with its own load, and the fat ones carry more, so
-    # a mark thins from its edges in as the brush runs down.
+    # the light bristles give out first as the brush runs down.
     res_log = (0.55 + 0.9 * rng.random(m)) * (0.5 + 0.5 * bw_log) if b.starve else None
     dir_ph = rng.random(3) * _TAU if b.dir_dry else None
     jit_log = along_log = None
@@ -144,17 +144,17 @@ def _draw_tip(t: np.ndarray, b: Brush, rng: np.random.Generator) -> Tip:
 def _organic_fields(
     t: np.ndarray, m: int, b: Brush, rng: np.random.Generator
 ) -> tuple[np.ndarray, np.ndarray]:
-    """The two fields that were a sine per bristle: the drift and the break.
+    """The lattice drift and break per bristle, in place of the two sines.
 
-    The drift sideways was one wavelength shared by the whole tip so the
-    streaks breathed together, and the break's per-bristle frequencies beat
-    against each other into a long section. Drawn per logical bristle and
+    The sine drift sideways is one wavelength shared by the whole tip, so the
+    streaks breathe together, and the sine break's per-bristle frequencies beat
+    against each other into a long repeat. Drawn per logical bristle and
     spread across the tip by the caller.
     """
     jit_log = _fbm1(t, _TAU * 62.0 * b.unit * b.org_mult, b, rng, m)
     if b.coherence > 0:
         # The same sharing as the sine's phases, and for the same reason:
-        # each bristle's drift was its own field and neighbours were driven
+        # each bristle's drift is its own field, and neighbours can be driven
         # apart far enough to cross. Rescaled to the spread it had, because
         # smoothing independent fields together flattens them and the point
         # is who drifts with whom, not how far.
@@ -174,7 +174,7 @@ def _sample_tip(tip: Tip, b: Brush, width: np.ndarray) -> Sampled:
     twice that apart, and a sampling that only covers the nominal width leaves
     the stretched places with gaps between deposits, which is a light lane by a
     different route. The drift is only counted when it is coherent, so a tip
-    left on the old draw is sampled exactly as it was.
+    with no coherence is sampled across its nominal width alone.
     """
     mean_w = float(np.mean(width))
     reach = mean_w + 4.0 * b.jitter if b.coherence > 0 else mean_w
@@ -199,10 +199,10 @@ def _offsets(tr: Trace, ink: Mark, tip: Tip, smp: Sampled, b: Brush) -> np.ndarr
     if tip.jit_log is not None:
         jitter = b.jitter * _spread(tip.jit_log, tip.u_log, smp.u)
     else:
-        # The same drift the sine always laid, written as a quadrature pair so
-        # the phase can be shared across the tip: `dc` and `ds` are the cosine
-        # and sine of one bristle's phase and square to 1, so the amplitude is
-        # the brush's own and only who drifts with whom has changed.
+        # The sine drift, written as a quadrature pair so the phase can be
+        # shared across the tip: `dc` and `ds` are the cosine and sine of one
+        # bristle's phase and square to 1, so the amplitude is the brush's own
+        # and the sharing decides only who drifts with whom.
         phase = (tr.t / (62.0 * b.unit)).astype(F32)
         jitter = b.jitter * (
             smp.dc[None, :] * np.sin(phase)[:, None] + smp.ds[None, :] * np.cos(phase)[:, None]

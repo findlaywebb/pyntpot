@@ -39,7 +39,7 @@ PIGMENTS = {
 
 #: What each pigment shows over black, as a share of what it shows over white.
 #: This is the one number Kubelka-Munk glazing needs beyond the hex, and it is
-#: the honest place to record which pigments stain: near 0 is a transparent
+#: where a pigment is recorded as staining or covering: near 0 is a transparent
 #: glaze that lets the layer under it through, near 1 is a covering body colour.
 #: The wood green and the water blue stain; the relief grey and the built greys
 #: sit on the surface. Anything not named here takes `km_transparency`.
@@ -165,7 +165,7 @@ def composite(layers: list[Layer], base: np.ndarray, style: PaperStyle) -> np.nd
         style: The paper group, for `km_glazing` and `km_transparency`.
 
     Returns:
-        The composited plate.
+        The composited plate, the shape of `base`, clipped to 0 to 1.
     """
     if style.km_glazing:
         return km_plate(layers, base, style.km_transparency)

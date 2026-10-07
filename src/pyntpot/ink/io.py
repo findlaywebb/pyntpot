@@ -2,8 +2,8 @@
 
 Key functions: `to_img`, an RGB image with a little dither; `save_webp`, one RGB plate;
 `save_alpha`, a white plate carrying alpha for one the page tints itself; `save_rgba`, a
-plate carrying its own colour and alpha. Each writes the file, creating its directory, and
-returns its size in bytes.
+plate carrying its own colour and alpha. Each `save_` function writes the file, creating its
+directory, and returns its size in bytes.
 
 It does not decide what is painted or whether to write lossless: the caller passes the
 setting it read from its style.

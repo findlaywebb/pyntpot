@@ -77,8 +77,8 @@ def deform_ring(ring: npt.ArrayLike, deform: Deform) -> np.ndarray:
             are drawn from; the first round's variance, as a share of a segment's
             length; how many rounds, each doubling the point count; what each round
             hands its children, before the randomisation; the largest one
-            displacement may be, in metres; and the segment length below which to
-            stop.
+            displacement may be, in metres; and the median segment length below
+            which to stop.
 
     Returns:
         The deformed ring, `(n, 2)`.
@@ -126,7 +126,11 @@ def deform_rings(rings: list[list[Pt]], deform: Deform | None) -> list[Any]:
 
 
 def fill_cov(rings: list[list[Pt]], canvas: Canvas, ss: int = 2) -> np.ndarray:
-    """Coverage of a set of rings, supersampled and averaged down."""
+    """Coverage of a set of rings, supersampled and averaged down.
+
+    Filled by the nonzero winding rule, so a ring wound against the one around
+    it cuts a hole and two rings wound the same way fill as one.
+    """
     hs, ws = canvas.h * ss, canvas.w * ss
     acc = np.zeros((hs, ws + 2), np.int16)
     for ring in rings:

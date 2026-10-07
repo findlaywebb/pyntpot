@@ -589,3 +589,14 @@ User instructions (2026-10-07 12:14 BST):
   predicted 360 (two keys on `wash`); under 400, no action. P6.5 dispatch: shared scripts
   at `/tmp/claude-0/-home-user-pyntpot/81b07070-1ea4-5527-9ae2-48b727070240/scratchpad/p6-scripts` (SHA256SUMS OK); five detached worktrees at `5ff3c03` under
   `/tmp/claude-0/-home-user-pyntpot/81b07070-1ea4-5527-9ae2-48b727070240/scratchpad/wt/p6.5{a..e}`; `$SLICE` = `/tmp/claude-0/-home-user-pyntpot/81b07070-1ea4-5527-9ae2-48b727070240/scratchpad/p6.5<x>/`. P6.5a-e dispatched in parallel.
+- 16:50 P6.5a ink docstrings and comments. Start 16:15, end 16:50 BST. Starting commit `5ff3c03`; `sha256sum -c` all OK; files 19 (expected 19). Public API done 16:23.
+  Docstrings changed, public: `Sheet` module (invariant names the fibre settings), `Canvas.px`, `Sheet.pits` (Returns: in 0 to 1), `Sheet.noise`, `composite` (Returns), `wash`; private and other names in all 16 modified files; added 4 nested-helper docstrings (`polyline.clip_line.inside`, `wash.fluid_modulate.down`, `shallow_water.dx`, `shallow_water.dy`). Sections added: `Canvas.px` Args/Returns ((n, 2) shape, x from the west edge, y down from the north edge); `Sheet.noise` Args (`cell` in pixels, `octaves` as halvings; each call advances the shared generator). Comments changed 17 (phase numbers removed, tense fixed where a live sine path read as past, `PAPER` comment, a dangling `# --- ribbon` marker removed).
+  - choice: prek as `uvx prek run --all-files` | rule: as P6.1-P6.4, prek-not-in-the-environment | inputs: spawn failure.
+  - choice: measurement prose in `#:` field comments kept; only tense that contradicts live code fixed | rule: behaviour wins; house rules beat the skills | inputs: brush_style.py, style.py.
+  - kept: precise term | src/pyntpot/ink/chains.py:176 | surface | OSM's road surface tag
+  - kept: precise term | src/pyntpot/ink/pigment.py:45 | surface | the paper surface, as ink/sheet.py uses it
+  - kept: precise term | src/pyntpot/ink/sheet.py:8 | surface | the paper surface painting is done on
+  - Reworded: style.py:209 "surface". Fixed 41, filed 2: ink-tip-smooth-path-ends, ink-deposit-edge-clamp. brush.py stays 391; no line-budget issue.
+  - Gates (measured under parallel load (5 slices running)): ast-neutral 16 files; uv sync 0 s; uvx prek 8 s; not-golden 171 s; tolerance 314 s; exact 258 s (re-run after the agent's own 10-minute background limit cut the first); G-self baseline 78 s, compare 272 s; doc_lines 19/19/19, 3 findings, all kept.
+  - Glossary changes proposed: none.
+- 17:04 P6.5a landed by the orchestrator (measured alone): partition clean; patch applied on `9eed861`; ast-neutral 0 s; uv sync 0 s; uvx prek 4 s; not-golden 156 s (................................... [100%]); tolerance 299 s; exact 288 s; doc_lines 19/19 headers, 3 findings, 3 kept lines; glossary changes applied 0, deferred 0.

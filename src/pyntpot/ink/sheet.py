@@ -7,9 +7,9 @@ is the card's own cream.
 
 It paints nothing: it is the surface painting is done on.
 
-Invariants: a sheet is a pure function of its size, grain and seed; a sheet with no
-fibre is the sheet it always was, because the fibre field is drawn last; a canvas
-projects with north up.
+Invariants: a sheet's five fields are a pure function of its size, grain, seed and fibre
+settings; fibre changes the paper field alone, because the fibre field is drawn last; a
+canvas projects with north up.
 """
 
 from dataclasses import dataclass, field
@@ -46,7 +46,15 @@ class Canvas:
         return self.w / (self.x1 - self.x0)
 
     def px(self, pts: npt.ArrayLike) -> np.ndarray:
-        """Project metre points into render pixels, north up."""
+        """Project metre points into render pixels, north up.
+
+        Args:
+            pts: Points in the card's metres, `(n, 2)`.
+
+        Returns:
+            Render pixels, `(n, 2)`, with x from the box's west edge and y down
+            from its north edge.
+        """
         a = np.asarray(pts, dtype=np.float64)
         s = self.scale
         out = np.empty_like(a)
@@ -87,8 +95,8 @@ class Sheet:
         self.wet = fbm(self.h, self.w, 130.0, 2, rng)
         self.gran = fbm(self.h, self.w, self.gran_px, 2, rng)
         if self.fibre > 0:
-            # Drawn last, so a sheet with no fibre is the sheet it always was:
-            # the five fields above have already taken their draws.
+            # Drawn last, so fibre changes the paper field and none of the
+            # others: the five fields above have already taken their draws.
             grain = fbm_aniso(
                 (self.h, self.w), self.fibre_cell, 3, rng, self.fibre_stretch, self.fibre_angle
             )
@@ -110,10 +118,18 @@ class Sheet:
                 real hollow before it settles.
 
         Returns:
-            A field about 0 to 1, high in the pits.
+            A field in 0 to 1, high in the pits.
         """
         return np.clip(1.0 - self.paper, 0.0, 1.0) ** F32(max(gamma, 0.05))
 
     def noise(self, cell: float, octaves: int = 2) -> np.ndarray:
-        """One more noise field at this scale."""
+        """One more noise field at this scale, from the sheet's own generator.
+
+        Each call draws from the generator the five fields were drawn from, so
+        a field depends on how many calls came before it.
+
+        Args:
+            cell: The coarsest feature size, in pixels.
+            octaves: How many halvings of `cell` are summed.
+        """
         return fbm(self.h, self.w, cell, octaves, self._rng)

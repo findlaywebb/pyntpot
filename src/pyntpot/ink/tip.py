@@ -8,7 +8,8 @@ sampled tip; `_smooth_path`, rounding a path's corners to the brush's width.
 It stamps nothing and builds no brush. Every random draw takes the generator it is handed,
 so the order the caller draws in is the pattern.
 
-Invariants: no field here has a period; the smoothed path keeps its two ends.
+Invariants: no field here has a period; the smoothed path's ends are drawn in along the
+path by about four tenths of the corner radius.
 """
 
 import numpy as np
@@ -30,8 +31,8 @@ def _tip_band(w: np.ndarray, sigma: float) -> np.ndarray:
     narrow mark that puts most of the tip's structure past what the plate can
     carry, and what lands is an alias of it: hard-edged rails at about the
     plate's Nyquist, running the whole length of the stroke because the tip's
-    weights do not change along it. Smoothing across the tip is the honest fix
-    and not a blur of the mark: the deposit positions are untouched, so the
+    weights do not change along it. Smoothing across the tip is the fix and
+    not a blur of the mark: the deposit positions are untouched, so the
     mark keeps its width and its edge, and only the detail no pixel could have
     shown is graded away.
 
@@ -43,8 +44,8 @@ def _tip_band(w: np.ndarray, sigma: float) -> np.ndarray:
         sigma: The smoothing, in samples across the tip.
 
     Returns:
-        The smoothed weights, or `w` itself when the tip is already narrower
-        than the smoothing would be.
+        The smoothed weights, or `w` itself when the smoothing rounds to under
+        one sample or the tip is too narrow to smooth.
     """
     r = round(sigma * 0.95)
     if r < 1 or w.shape[1] < _MIN_TIP:
@@ -64,12 +65,13 @@ def _tip_band(w: np.ndarray, sigma: float) -> np.ndarray:
 def _tip_drift(m: int, b: Brush, rng: np.random.Generator) -> np.ndarray:
     """Each bristle's sideways drift, as a quadrature pair per bristle.
 
-    A bristle wanders sideways as the stroke goes on, and every bristle used to
-    be given its own phase, drawn independently of the one beside it. On a
-    narrow mark that is not a brush: the drift is wider than the gap between
-    two bristles, so neighbours cross each other, the tip collapses into a few
-    coincident filaments with bare paper between them, and the gaps run the
-    whole length of the stroke because the phases do not change along it.
+    A bristle wanders sideways as the stroke goes on, and with no sharing
+    every bristle is given its own phase, drawn independently of the one
+    beside it. On a narrow mark that is not a brush: the drift is wider than
+    the gap between two bristles, so neighbours cross each other, the tip
+    collapses into a few coincident filaments with bare paper between them,
+    and the gaps run the whole length of the stroke because the phases do not
+    change along it.
 
     Smoothing the drift across the tip is what makes it a tip again. The pair
     is renormalised afterwards, so each bristle still drifts by exactly the
@@ -127,10 +129,10 @@ def _fbm1(
 ) -> np.ndarray:
     """Fractal noise along a stroke, with no period in it, in about -1 to 1.
 
-    The wanders in a stroke were sines, so a long mark repeated itself at 2 pi
-    times whatever cell each one was given. This is the same feature size drawn
-    from a lattice instead: the values are random, the interpolation is smooth,
-    and there is nothing for the eye to lock onto. `rows` independent copies
+    A sine wander repeats along a long mark every 2 pi times the cell it is
+    given. This is the same feature size drawn from a lattice instead: the
+    values are random, the interpolation is smooth, and there is nothing for
+    the eye to lock onto. `rows` independent copies
     come out of one call, which is how each bristle gets its own drift without
     a Python loop over the tip.
 
@@ -206,9 +208,10 @@ def _smooth_path(
     corner tighter than it is wide, so the path is smoothed to that radius
     before anything is stamped along it.
 
-    Two box passes, which is a quadratic kernel: enough to take the cusp off
-    without pulling a long straight off its line. The ends are held by edge
-    padding, so a mark still starts and finishes where the way does.
+    Two box passes, which is a triangular kernel: enough to take the cusp off
+    without pulling a long straight off its line. Edge padding keeps the ends
+    near the way's own, but draws each in along the path by about four tenths
+    of the radius, so a mark starts and finishes a little short of the way.
 
     Args:
         x: Column coordinate per sample, in render pixels.
@@ -217,7 +220,7 @@ def _smooth_path(
         step: The spacing of the samples, in render pixels.
 
     Returns:
-        The smoothed coordinates.
+        `x` and `y`, smoothed in place.
     """
     r = int(min(max(round(radius / max(step, 1e-3)), 1), max(len(x) // 3, 1)))
     for _ in range(2):

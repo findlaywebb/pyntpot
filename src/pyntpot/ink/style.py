@@ -23,8 +23,7 @@ class PaperStyle:
 
     Read by the painter for every plate and by the lettering, which lays its
     backing wash on the same paper. The compositing and fibre fields are off
-    or inert by default, so the default plates paint byte for byte the same
-    until a theme turns one on.
+    or inert by default, until a theme turns one on.
     """
 
     #: Write the plates as lossless WebP. On, because lossy WebP is what put
@@ -37,7 +36,7 @@ class PaperStyle:
     #: 0.008 at quality 100, blocking ratio 1.15 against 1.01, and on the paper
     #: plate a blocking ratio of 2.56 and 63% of the grain gone. No quality
     #: setting fixes it, because the chroma subsampling is not a quality
-    #: setting. Off is the old encoder, and the two quality numbers below are
+    #: setting. Off is the lossy encoder, and the two quality numbers below are
     #: what it uses; the plates are then about eighteen times smaller.
     plate_lossless: bool = True
     webp_quality: int = 74
@@ -102,8 +101,7 @@ class PaperStyle:
 class WashStyle:
     """How a laid wash behaves: wet bleed, flow rim, blooms, sea, silhouette, fluid.
 
-    Every switch here is off or inert by default, so the default plates paint
-    byte for byte the same until a theme turns one on.
+    Every switch here is off or inert by default, until a theme turns one on.
     """
 
     #: One wet-area map shared across the land classes, so a wash knows another
@@ -206,7 +204,7 @@ class WashStyle:
     #: Two-pigment washes. A real wood green is not one pigment: it is a
     #: staining green with a heavier blue-black in it, and the two separate as
     #: the wash dries, the heavy one settling into the paper's tooth while the
-    #: light one floats on the surface. Curtis' pigment separation, as one
+    #: light one floats over it. Curtis' pigment separation, as one
     #: extra layer per class rather than a second solver. It is meant to be
     #: read through `km_glazing`, which is what keeps the two hues apart where
     #: they lie over each other.

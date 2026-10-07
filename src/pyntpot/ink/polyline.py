@@ -47,8 +47,8 @@ def simplify(points: list[Pt], eps: float) -> list[Pt]:
     Source: `douglas-peucker` in docs/explanation/references.md.
 
     Args:
-        points: Polyline in metres.
-        eps: Tolerance in metres. Larger is more stylised.
+        points: The polyline, in any one unit.
+        eps: Tolerance, in the same unit. Larger is more stylised.
 
     Returns:
         The kept subset; the first and last point are always kept.
@@ -88,7 +88,7 @@ def smooth(points: list[Pt], passes: int = 2, *, closed: bool = False) -> list[P
     Source: `chaikin` in docs/explanation/references.md.
 
     Args:
-        points: Polyline in metres.
+        points: The polyline, in any one unit.
         passes: How many rounds of cutting.
         closed: Treat the polyline as a ring.
 
@@ -112,10 +112,15 @@ def smooth(points: list[Pt], passes: int = 2, *, closed: bool = False) -> list[P
 
 
 def clip_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[list[Pt]]:
-    """Split a polyline into the pieces that lie inside a rectangle."""
+    """Split a polyline into its runs of points inside a rectangle.
+
+    Points are kept or dropped whole: the line is not cut where it crosses the
+    box's edge, and a run of one point is dropped.
+    """
     xmin, ymin, xmax, ymax = box
 
     def inside(p: Pt) -> bool:
+        """Whether a point lies in the box, its edges included."""
         return xmin <= p[0] <= xmax and ymin <= p[1] <= ymax
 
     out: list[list[Pt]] = []

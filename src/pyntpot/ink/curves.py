@@ -125,9 +125,10 @@ def offset_curve(shape: list[Pt], side: int, offset_px: float) -> list[Pt]:
 def unit_normal(pts: list[Pt], i: int, j: int) -> Pt | None:
     """The unit normal of one segment, or None when there is no segment.
 
-    Unlike `polyline.normal_at` it points right of the direction of travel, is
-    taken along the one segment from `i` to `j`, and is None rather than a
-    fallback when that segment is degenerate.
+    Unlike `polyline.normal_at` it points right of the direction of travel
+    with y up (left of it in card pixels, whose y runs down), is taken along
+    the one segment from `i` to `j`, and is None rather than a fallback when
+    that segment is degenerate.
     """
     if i < 0 or j > len(pts) - 1:
         return None
