@@ -37,3 +37,9 @@ User instructions (2026-10-07):
   recommends close; the deposit mask multiplies last to stay byte-identical; Q13 keeps
   every fix reachable by an upstream render after P8; new row `point_to_segment` (no
   caller). Plan review 1 running.
+- Plan review 1: BLOCK (3 blocking, 10 should-fix, 11 nits; `reviews/p10-plan-review-1.md`).
+  Blocking: parallel marks put slices sharing `letters/trace.py` and `letters/nib.py` side
+  by side; P10 is never ordered against P9 and its ADR numbers collide with 0022/0023;
+  "P8's list of what upstream reads" has no author or location. Fix round held for the
+  maintainer's answer on phase order (asked: P8 before P7? P9 before P7?), since B2 and
+  B3 depend on it.
