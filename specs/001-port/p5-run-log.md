@@ -31,3 +31,7 @@ User instructions (2026-10-07 01:25 BST):
   counts across runs), plus should-fixes on the CI run script, scope.py edge
   cases, survivor filtering and a P5.3b re-shard rule. All 14 round-1 findings
   confirmed resolved. Fix agent dispatched.
+- 02:20 Plan review 3: PASS. Two P5.3a items carried into the P5.3a brief
+  rather than another plan round: guard an empty patterns file at the top of
+  the PR run script; compute sample counts and scores from `.meta` exit codes
+  (`mutmut.stats.status_by_exit_code`), not before/after stats. P5.0 ticked.
