@@ -172,7 +172,7 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 
 - [x] P10.0 Fatten P10 into slices; plan-reviewer pass
 - [x] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue; dispatch the Mutation workflow once on `main`
-- [ ] P10.2 Maintainer decisions Q1 to Q14: answers recorded and re-triaged
+- [x] P10.2 Maintainer decisions Q1 to Q14: answers recorded and re-triaged
 
 ### Part 1 (before P8)
 
@@ -183,8 +183,8 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 - [x] P10.4a Delete the duplicate benchmarks
 - [ ] P10.4b Rename `edt` to `chamfer_distance`; delete `point_to_segment`
 - [ ] P10.5a The outline route narrows the nib; delete `_radii`
-- [ ] P10.8 Mark the slow CLI test golden
-- [ ] P10.9 Docs and terms: non-canonical terms, the OpenTopoData question, rule seven in tests; display pixels (Q2), "map" (Q10)
+- [x] P10.8 Mark the slow CLI test golden
+- [ ] P10.9 Docs and terms: non-canonical terms, the OpenTopoData question, rule seven in tests; display pixels (Q2), "sheet" and "map" kept apart everywhere (Q10, widened)
 
 ### Release
 
@@ -193,14 +193,14 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 ### Part 2 (after P8 and its "what upstream reads" record)
 
 - [ ] P10.4c The deposit drops corners off the accumulator
-- [ ] P10.5b Route-ink names follow the route ink (if Q5 (2); ADR 0024); a missing glyph advances as the face's space (if Q3 (2))
-- [ ] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict` (by the upstream-read record); rung order if Q11 (1)
+- [ ] ~~P10.5b Route-ink names follow the route ink (if Q5 (2); ADR 0024); a missing glyph advances as the face's space (if Q3 (2))~~ Not run: Q5 and Q3 were answered (1), so both members are closed (P10.2)
+- [ ] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict` (by the upstream-read record); ~~rung order if Q11 (1)~~ (removed: Q11 answered (2), row closed)
 - [ ] P10.7 Other maps: `tunnel=no`; route constants if Q8 (a), by the upstream-read record
 - [ ] P10.10a Public names for what other modules import: `ink` (if Q9 (a))
 - [ ] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
 - [ ] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))
 - [ ] P10.10d Public names for what other modules import: `maps.lettering` (if Q9 (a))
-- [ ] P10.11 Golden group, one regeneration window; ADR 0025 (if a row is `fix-golden` and Q12 yes)
+- [ ] P10.11 Golden group, one regeneration window; ADR 0025 (if a row is `fix-golden` and Q12 yes). Empty after P10.2 (Q4 and Q6 closed): runs only if a fix slice's G-self moves a row
 
 ## P11. Widen the public API for primitive-first tutorials
 

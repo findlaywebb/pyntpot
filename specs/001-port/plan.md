@@ -6278,6 +6278,11 @@ the `p10-fixes` PR has merged lands on its own branch `p10-late-<id>` from
 patch release (maintainer, 2026-10-07: "0.1.0 can be candidate release and
 then 0.1.x can be fixes"); it never holds 0.1.0 back.
 
+A candidate feature (behaviour the library does not have and could add, such
+as the two recorded at P10.2 for Q4 and Q6) goes in `docs/features/`, one file
+per feature in the register of `docs/issues/`, not in `docs/issues/`. P10 does
+not triage it: it gets no row in `p10-triage.md`, and no P10 slice builds it.
+
 **Order and parallelism.** The maintainer set the phase order on
 2026-10-07 ("most of p10 now, 0.0.1+ as the release, then p8, then the rest
 of p10, then the p7 docs, then the 0.1.0, then p9"), and P11 joins it after
@@ -6437,7 +6442,7 @@ The shared files that force a sequence (every row in landing order):
 
 | File or site | Slices, in landing order |
 | --- | --- |
-| `src/pyntpot/maps/style_groups.py` | P10.3a (`LetteringPolicy.labels` comment), P10.5b (`RouteInks` docstring, if Q5 (2)), P10.7 (route constants, under Q8 and the upstream-read list) |
+| `src/pyntpot/maps/style_groups.py` | P10.3a (`LetteringPolicy.labels` comment), P10.9 (two "sheet" comments, widened Q10), ~~P10.5b (`RouteInks` docstring, if Q5 (2))~~ (removed: Q5 answered (1)), P10.7 (route constants, under Q8 and the upstream-read list) |
 | `src/pyntpot/maps/attribution.py` | P10.3a (the gate), P10.9 (pixel term, if Q2) |
 | `src/pyntpot/maps/osm_elements.py` | P10.9 (`LANDMARK_TAG_KEYS` comment), P10.7 (`_waterway`), P10.10c (`_polygon_rings`) |
 | `src/pyntpot/maps/lettering/pipeline.py` | P10.5a (`draw_plate`'s face), P10.9 (pixel term, if Q2), P10.5b (`draw_plate`'s nib, if Q5 (2)), P10.10d (renamed imports) |
@@ -6452,7 +6457,7 @@ The shared files that force a sequence (every row in landing order):
 | `src/pyntpot/ink/wash.py` | P10.3c (`separated` docstring, and `wash`'s under Q7 (A) or (C)), P10.4b (import and calls of `edt`) |
 | `src/pyntpot/ink/deposit.py` | P10.3c (`spend` docstring), P10.4c (`deposit` body) |
 | `docs/explanation/references.md` | P10.3c (new entries), P10.4b (`chamfer-distance` lines), P10.10a (the `value-noise` and `fbm` lines, for `ink.tip._fbm1`), P10.10c (renamed `compose` sites); P9.4 after P10 |
-| `CONTRIBUTING.md` | P10.3d (`## Commits`), P10.9 (one sentence, if Q9 (c)) |
+| `CONTRIBUTING.md` | P10.3d (`## Commits`); ~~P10.9 (one sentence, if Q9 (c))~~ (removed: Q9 answered (a)) |
 | `pyproject.toml`, `uv.lock` | P10.3b (prek), P10.R (version) |
 | `specs/001-port/spec.md`, `GLOSSARY.md` | P10.9, then P9.1 and P9.2 (after P10) |
 | `tests/architecture/**`, `tests/conftest.py` | owned by P9.1 and P9.2; no P10 slice edits them (the private-name pin goes in `tests/unit/maps/test_import_order.py`) |
@@ -7136,10 +7141,15 @@ last bit).
 
 #### P10.5b Letters fixes that wait on answers (conditional)
 
+- **Not run (P10.2).** Q5 was answered (1) and Q3 (1), so both rows are
+  `close` and both members below are removed; the slice is struck through in
+  `tasks.md` and skipped in the sequence, and ADR 0024 is not written. The
+  body stays as the record of what the other answers would have made it.
 - Exists only if Q5 is answered (2) or Q3 (2); each member lands only under
   its answer. Predecessors P10.5a and P10.9 (`maps/lettering/pipeline.py`)
   and P8. Part 2 (an upstream label may take either branch).
-- **Member, if Q5 (2): route-ink names follow the route ink.**
+- ~~**Member, if Q5 (2): route-ink names follow the route ink.**~~ Removed:
+  Q5 answered (1), row `close`.
   - Owner files: `src/pyntpot/maps/lettering/pipeline.py`,
     `src/pyntpot/letters/style.py` (the `label_route_ink` comment),
     `src/pyntpot/maps/style_groups.py` (the `RouteInks` docstring, "only
@@ -7165,7 +7175,8 @@ last bit).
     `style.model_copy(update={"nib": nib})` and the `NibGroups` get `nib`.
     For the default theme the filled nib equals the default, so the key and
     the pixels do not change.
-- **Member, if Q3 (2): a missing glyph advances as the face's space.**
+- ~~**Member, if Q3 (2): a missing glyph advances as the face's space.**~~
+  Removed: Q3 answered (1), row `close`.
   - Owner files: `src/pyntpot/letters/font.py`
     (`OutlineFont.glyph`), `tests/unit/letters/test_font.py`.
   - Test first: `test_a_missing_glyph_advances_as_the_faces_space`: the
@@ -7186,15 +7197,16 @@ last bit).
 - Implements `maps-lettering-picks-journal-picks-cap`,
   `maps-lettering-span-sides-freer-side-sign`,
   `maps-lettering-label-as-dict-unused` (only if the row is `fix` after
-  P8's hand-off, "what upstream reads"; the brief says yes or no), and, if
-  Q11 (1), `maps-lettering-spans-place-spans-rung-order`. Part 2 (the
+  P8's hand-off, "what upstream reads"; the brief says yes or no).
+  ~~If Q11 (1), `maps-lettering-spans-place-spans-rung-order`~~ (removed:
+  Q11 answered (2), row `close`). Part 2 (the
   upstream render may pass landmarks and spans). Predecessors P10.9 (the
   same lettering files and `test_spans.py`) and P8's hand-off. The
   rule-seven test text moved to P10.9 (part 1: no render reaches it).
 - Owner files: `src/pyntpot/maps/lettering/picks.py`,
   `src/pyntpot/maps/lettering/span_sides.py`,
-  `src/pyntpot/maps/lettering/label.py`, `src/pyntpot/maps/lettering/spans.py`
-  (Q11 (1) only), `tests/unit/maps/lettering/test_picks.py`,
+  `src/pyntpot/maps/lettering/label.py`, ~~`src/pyntpot/maps/lettering/spans.py`
+  (Q11 (1) only)~~ (removed with the rung order), `tests/unit/maps/lettering/test_picks.py`,
   `tests/unit/maps/lettering/test_span_sides.py`,
   `tests/unit/maps/lettering/test_spans.py`,
   `tests/support/lettering.py` (`arc`'s docstring only: reword it only if
@@ -7250,13 +7262,14 @@ last bit).
   no, the slice keeps `as_dict` and adds one sentence to its docstring
   naming the upstream consumer (from the "Upstream reads" record), and the
   slice's commit closes the row.
-- **If Q11 (1), the rung order**, after the side fix: test first
+- ~~**If Q11 (1), the rung order**~~ (removed: Q11 answered (2), row
+  `close`; the member is not done), after the side fix: test first
   `test_spans.py::test_the_longest_overlapping_span_is_the_outer_rail` (two
   overlapping spans forced onto one side by a dark other side; the longer
   has the larger `rank` and `offset_px`; docstring "Where spans overlap on a
   side, the longest is drawn furthest out."); change: `place_spans`
   iterates shortest first and its docstring's rung sentence says so.
-- About 115 changed lines (145 with the rung order).
+- About 115 changed lines (the rung order is removed).
 - Gate: G-here plus G-self (no spans or landmarks on the golden card), and
   the coverage gates.
 - Commit: `Fix the landmark cap and the span side, and delete Label.as_dict`
@@ -7344,7 +7357,8 @@ last bit).
 - Implements `src-docstrings-use-non-canonical-terms`, the `spec.md:121`
   row, `maps-lettering-spans-rule-seven-in-tests`, and, by their answers,
   `letters-card-pixels-and-display-pixels` (Q2),
-  `maps-lettering-sheet-homonym` (Q10 (1) or (2)) and the Q9 (c) sentence.
+  `maps-lettering-sheet-homonym` (Q10 (1), widened at P10.2). The Q9 (c)
+  sentence is removed: Q9 was answered (a).
   Predecessors P10.2 (the answers), P10.3d (`CONTRIBUTING.md`), P10.3a
   (`maps/attribution.py`) and P10.5a (`maps/lettering/pipeline.py`, and
   `letters/nib.py` through P10.4b). Part 1: docstrings, comments and test
@@ -7353,9 +7367,14 @@ last bit).
 - Owner files: the `src` files named below (docstrings and comments only),
   `GLOSSARY.md`, `specs/001-port/spec.md`, the test files the pixel grep
   names (docstrings and comments only),
-  `tests/unit/maps/lettering/test_spans.py` (three docstrings),
-  `CONTRIBUTING.md` (Q9 (c) only).
-- Leave alone: every identifier (`sheet_card` stays), `docs/issues/**`,
+  `tests/unit/maps/lettering/test_spans.py` (three docstrings), and the
+  `src` and test files the widened sheet list names (docstrings and comments
+  only). ~~`CONTRIBUTING.md` (Q9 (c) only)~~ (removed: Q9 answered (a)).
+- Leave alone: every identifier (`sheet_card` and the four test names that
+  say "the sheet" for the map are the later row
+  `maps-tests-sheet-identifiers-name-the-map`, a tests-only rename after
+  this slice), `tests/architecture/**` (no line there needs a change),
+  `tests/unit/maps/test_cli.py` (no line there), `docs/issues/**`,
   `docs/decisions/**` (records), `specs/**` except `spec.md`'s question,
   the "session" sites (no glossary row; out of scope), `default.toml`.
 - **Non-canonical terms.** Check before and after:
@@ -7397,32 +7416,80 @@ last bit).
   reflow docstrings, so nothing else catches it).
   Check: `grep -rnI -i "card pixel" src tests GLOSSARY.md docs --exclude-dir=issues --exclude-dir=decisions`
   prints nothing. Under Q2 (2), the same with the names swapped.
-- **If Q10 (1): "map" for the drawn card**, in the issue's scope only:
-  `src/pyntpot/maps/lettering/**` and the `maps/lettering_*.py` modules
-  (`lettering_furniture`, `lettering_marks`, `lettering_window`; 52 lines in
-  15 files at `dd19592`), the three `GLOSSARY.md` rows and the one test
-  line. Add a `map` row to `GLOSSARY.md` ("the card as drawn so far, with
-  everything painted and lettered on it"); reword the `wash`, `dark grid`
-  and `terms` rows; then every docstring and comment in scope that uses
-  "sheet" in that sense, each checked against its code, and "the sheet" of
-  `test_spans.py` line 64. "page" changes to "map" only inside the scope
-  and only where it means the drawn card (`placement_costs`, `span_ends`,
-  `span_clear`, each checked against its code); the `lettering/pipeline.py`
-  sentence "the page and the card both draw the same pixels" and the
-  `lettering_marks` comment "the card and the page" mean the upstream SVG
-  page and stay. Outside the scope (`compose`, `painter/*`, the rest of
-  `maps`) nothing changes. Check:
-  `grep -rnIiw sheet src/pyntpot/maps/lettering src/pyntpot/maps/lettering_*.py`
-  prints exactly the allowed list the brief carries: the `log.info` string
-  in `placement_names` ("the sheet already names that place", a runtime
-  string the AST-neutral check forbids changing) and the
-  `from pyntpot.ink.sheet import Canvas` line in `lettering/pipeline.py`,
-  plus any line naming the class `Sheet`. Under Q10 (2), the glossary row
-  only.
-- **If Q9 (c)**: one sentence in `CONTRIBUTING.md`: an underscore name is
-  internal to the package, and another module of the package may import
-  it.
-- About 35 changed lines alone; about 235 with Q2 and Q10.
+- **Q10 (1), widened at P10.2: "sheet" and "map" kept apart everywhere.**
+  The maintainer: "Ensure map and sheet are distinct everywhere. Sheet is a
+  primative concept and map is only for the map implementation side". So
+  "sheet" is kept only for `ink.sheet.Sheet` and its noise fields (the
+  paper), in `src`, `tests` (docstrings, comments and test text),
+  `GLOSSARY.md` and docs; "map" names the card as drawn so far on the maps
+  side; "page" for the upstream SVG page stays (the `lettering/pipeline.py`
+  sentence "the page and the card both draw the same pixels", the
+  `lettering_marks` comment "the card and the page", and `compose` and
+  `painter/*` where "page" means the SVG page). Inside
+  `src/pyntpot/maps/lettering/**` and the `maps/lettering_*.py` modules,
+  "page" changes to "map" only where it means the drawn card
+  (`placement_costs`, `span_ends`, `span_clear`, each checked against its
+  code).
+  - Measured at P10.2 (`489f3a6`): `grep -rnIw -i sheet src tests docs
+    GLOSSARY.md` prints 399 lines. 125 use "sheet" in a sense other than the
+    `Sheet` and its noise fields: `maps` `src` 88 lines in 34 files (the
+    issue's lettering scope, 52 lines in 15 files, among them), `ink` and
+    `letters` `src` 14 lines in 7 files (`ink/wash.py`, `ink/style.py`,
+    `ink/brush_style.py`, `ink/curves.py`, `letters/nib.py`,
+    `letters/style.py`, `letters/trace.py`), test docstrings and comments 20
+    lines in 14 files, and three `GLOSSARY.md` rows (`wash`, `dark grid`,
+    `terms`). The slice re-runs the grep at its starting commit and writes
+    the lines it will change to `$SLICE/sheet-before.txt`; a count that
+    differs from 125 by more than the lines a predecessor slice changed
+    stops the slice.
+  - The words. On the maps side the drawn card is "the map" ("a river
+    crossing the whole sheet" becomes "the whole map"). `ink` and `letters`
+    know no map, so there the word is the glossary term the code means,
+    `canvas` or `plate` (for example "a share of the sheet" in
+    `ink.wash.flow_edge`), each checked against its code. A `PaperStyle`
+    docstring that says "The sheet, its encoder ..." (`ink.style`,
+    `maps.style`) says "The paper, ...". The "alphabet sheet" of
+    `tests/unit/letters/test_font.py` and the "swatch sheet" of
+    `tests/unit/ink/test_stamp.py` name a specimen image and are named as
+    what they are.
+  - `GLOSSARY.md`: add a `map` row ("the card as drawn so far, with
+    everything painted and lettered on it; the maps side's word, which `ink`
+    and `letters` never use"); reword the `wash`, `dark grid` and `terms`
+    rows; the `sheet` row adds "never the map".
+  - Check: `grep -rnIw -i sheet src tests docs GLOSSARY.md
+    --exclude-dir=issues --exclude-dir=decisions` prints exactly the
+    allowed list the brief carries, line by line:
+    (1) the class and its module: `Sheet`, `ink.sheet`, `ink/sheet.py`,
+    `tests/unit/ink/test_sheet.py`'s docstring, and the `"""A sheet."""`
+    of the fake modules in `tests/mutation/test_scope.py` and
+    `tests/architecture/test_reference_keys.py`;
+    (2) a name bound to a `Sheet` and prose about its fields: the parameter
+    or attribute `sheet` (`job.sheet`, `sheet.paper` and the other fields),
+    Args entries "The paper's noise fields", the fibre's "sheet-wide" axis
+    (`ink.sheet`, `ink.style`, `ink.noise`), "the sheet's mean tooth" in
+    `ink.wash.separated`, "the same sheet" in `maps.painter.plates` (the
+    paper a later plate gates on), the "paper sheet" and "the sheet's noise"
+    of `maps.painter.job` and `maps.painter.paper`, `docs/architecture.md`
+    line 11 and `docs/explanation/performance.md` line 13;
+    (3) the glossary's "brush sheet" and its cells, 17 lines outside
+    `docs/decisions/`: `ink/brush.py` (10), the `brush` Args of
+    `letters/nib.py`, `maps/painter/brushes.py`, `tests/unit/ink/test_brush.py`
+    (2), the `brush_id` Args of `test_stamp.py` and `test_pad.py`, and the
+    `brush sheet` row of `GLOSSARY.md`;
+    (4) the `log.info` string in `placement_names` ("the sheet already
+    names that place", a runtime string the AST-neutral check forbids
+    changing).
+    `grep -w` does not match `sheet_card` or the test names, so no
+    identifier is on the list.
+  - Size: about 300 changed lines for this member (125 lines reworded, the
+    rewraps, the `map` row), so P10.9 is about 410 in all, under the 600
+    line budget, and is not split. If the slice's diff passes 600 changed
+    lines it stops, and the orchestrating session splits it as P10.9a (the
+    terms, the spec bullet, rule seven, display pixels) and P10.9b (the
+    sheet and map pass), each with this body's checks.
+- ~~**If Q9 (c)**: one sentence in `CONTRIBUTING.md`.~~ Removed: Q9 was
+  answered (a).
+- About 35 changed lines alone; about 410 with Q2 and the widened Q10.
 - Gate: G-here plus G-self, and the AST-neutral check.
 - Commit: `Use the glossary's terms in docstrings and resolve the budget question`
   (`... and name the display pixels and the map` with Q2 and Q10)
@@ -7559,6 +7626,12 @@ last bit).
 - Empty at P10.0: no proposed fix moves a golden. It exists only if, after
   P10.2, a row is `fix-golden` (Q4 (2), Q6 (A), or a fix slice whose G-self
   was not byte-identical) and Q12 is yes; otherwise those rows are `defer`.
+- **After P10.2 it is empty unless a fix slice's G-self moves a row.** Q4
+  was answered (1) and Q6 (B): both look rows are `close`, and the two looks
+  are candidate features in `docs/features/`
+  (`letters-nib-follows-writing-line.md`, `ink-tip-hold-stroke-ends.md`).
+  Q12 is yes for a row a fix slice's G-self moves, so such a row is the only
+  way into this slice; the Q4 (2) and Q6 (A) steps below are removed.
 - The last slice of part 2: after P8 and after every other P10 slice, and
   before P7.1, on `p10-golden`, as one
   regeneration window run as ADR 0006 and P3.12 to P3.15 ran theirs: one
@@ -7570,18 +7643,18 @@ last bit).
   G-here green; a session that must end mid-window pushes to the backup ref
   `wip/p10-golden-window` and resumes from it, as P3's "Pushing" rule says,
   and the ref is deleted after the push.
-- Gate options per step: Q4 (2), the pen turns with the line:
+- Gate options per step: ~~Q4 (2), the pen turns with the line:
   `--require-identical paper.webp wash.webp pen.webp --max-fraction 0.005 --require-hash equal --require-labels-equal`;
   Q6 (A), held stroke ends:
-  `--require-identical paper.webp wash.webp --max-fraction 0.005 --require-hash equal --require-labels-equal`;
-  a moved `fix` row: the options its slice states, with every output its
+  `--require-identical paper.webp wash.webp --max-fraction 0.005 --require-hash equal --require-labels-equal`~~
+  (removed: Q4 answered (1), Q6 (B)); a moved `fix` row: the options its slice states, with every output its
   probe did not expect to move required identical.
-- Each step's test is the one its row names (Q4 (2):
+- Each step's test is the one its row names (removed with their steps: Q4 (2):
   `tests/unit/letters/test_hand.py::test_a_name_along_a_turned_line_carries_the_turn_on_its_pen`;
   Q6 (A): `tests/property/test_tip.py::test_smoothing_keeps_a_paths_two_ends`
   and a unit pin of the issue's case, ends `0.0` and `19.6`), written red
-  first. P10.11 runs after P10.10a, so its brief names the smoothing
-  function by the name P10.10a left: `pyntpot.ink.tip.smooth_path` under
+  first. P10.11 runs after P10.10a, so a brief for the removed Q6 (A) step
+  would have named the smoothing function by the name P10.10a left: `pyntpot.ink.tip.smooth_path` under
   Q9 (a), `pyntpot.ink.tip._smooth_path` otherwise.
 - The ADR: `docs/decisions/0025-second-golden-regeneration.md` (the number
   is fixed by the ADR table; P9 has not run, so 0022 and 0023 do not exist
