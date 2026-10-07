@@ -81,3 +81,10 @@ User instructions (2026-10-07):
   (S2); route issues found in P11 and fixes cut after `p10-fixes` merges (`p10-late-<id>`)
   (S3); N1 to N4. P10.0 ticked. P10.1 started: a drafting agent re-runs every
   reproduction and writes `p10-triage.md`; the orchestrating session checks and commits.
+- P10.1 triage written at `656f4a4` (drafting agent, every reproduction re-run; probes in
+  the scratchpad `p10/p101_repro.py`). 38 rows: fix 19, decide 12 (Q1 to Q11, Q13),
+  defer 4, close 3 (the run-log rows), fix-golden 0. No row differs from the seed; every
+  filed claim reproduces, so no issue file is deleted. One reproduction wider than the
+  plan: the "sheet" sense of Q10 is also on 9 test docstring lines in 4 lettering test
+  files, not only `test_spans.py` line 64; put to the maintainer inside Q10.
+  Gate: `git diff --stat -- src tests` empty; prek on the new file passed.

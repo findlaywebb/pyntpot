@@ -1,0 +1,89 @@
+# P10 triage
+
+- Starting commit: `656f4a4` (branch `p10-triage`).
+- Date: 2026-10-07.
+- Rules: the outcome set (`fix`, `fix-golden`, `decide`, `close`, `defer`) and the
+  ordered triage rule 1 to 5 of `specs/001-port/plan.md`, P10 "Triage (P10.1)", with its
+  note on docstrings P6 rewrote. Slice ids, Q numbers and checks are those of P10.1 to
+  P10.11 in the same section.
+- Every claim was re-run at the starting commit: the issue file's own reproduction where
+  it gives one, else the check the P10.1 seed names. Python probes ran under
+  `uv run python` from one scratch script; a cell gives the call and its result. No
+  golden run. No row differs from the seed in outcome, rule, blocking or slice; where a
+  count or a scope differs from the issue file or the plan, the row says so.
+
+Columns: rule is the triage rule number; blocks is "blocks the first release" (the Key
+decision or Verification step it breaks); size is changed lines, estimated; goldens are
+the files in `tests/golden/lynmouth/` the fix may move.
+
+| Slug or source | Area | Kind | Outcome | Rule | Blocks | Reproduction (at `656f4a4`) | Test or check | Size | Goldens | Slice | Done |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `contributing-commit-trailers`, with the plan's own contradiction (P6 "Branch and PR" against "P3 and P4", P9 and P10) | process | tooling or process | decide | 3 | no | `rg -n -U -i "no\s+(co-authorship\s+)?trailers" CONTRIBUTING.md specs/001-port/plan.md`: 7 lines (`CONTRIBUTING.md:50`; plan 139, 490, 5852, 5853, 6603, 6604); 48 of 96 commits carry `Co-Authored-By:` and `Claude-Session:` | P10.3d's `rg` before and after | about 8 | none | Q1, then P10.3d | |
+| `duplicate-benchmarks` | tests | test text | fix | 5 | no | `grep -cE "def test_(sheet_construction\|edt\|wash)\(\|def _disc\(" tests/benchmarks/test_ink.py`: 4; the three onboarding twins present (lines 87, 92, 126) | the same grep prints 0 | about 30 | none | P10.4a | |
+| `edt-is-a-chamfer-distance` | ink | naming or prose | fix | 5 | no | `grep -rlnw edt --include=*.py src tests`: 14 files (8 `src`: the definition and 7 importers, not the nine the file says; 6 tests) | `grep -rnw edt src tests docs/explanation --include=*.py --include=*.md` prints nothing; `test_reference_keys.py` | about 55 | none | P10.4b | |
+| `ink-deposit-edge-clamp` | ink | defect | fix | 5 | no | `deposit(zeros 8x8, None, ([[-5.0]], [[3.0]]), ones, None, None)`: `acc[3, 0]` 1.0, sum 1.0 | `tests/unit/ink/test_deposit.py::test_a_sample_off_the_accumulator_lays_nothing` and `test_a_sample_half_off_the_edge_keeps_only_its_share_on_the_plate`, red first | about 50 | none (no off-grid corner in the golden render, P10.0 probe) | P10.4c | |
+| `ink-tip-smooth-path-ends` | ink | defect | decide | 3 | no | `_smooth_path(arange(50) * 0.4, zeros, 3.36, 0.4)`: ends 1.41 and 18.19 (raw 0.0 and 19.6) | under Q6 (A): `tests/property/test_tip.py::test_smoothing_keeps_a_paths_two_ends` and a unit pin, red first | about 20 plus regeneration | under Q6 (A): `pen.webp`, `labels-centreline.webp`, `map.png` | Q6, then P10.11 or close | |
+| `letters-card-pixels-and-display-pixels`, with "card pixels" in `ink/curves.py` folded in | letters | naming or prose | decide | 3 | no | "card pixel" on 60 `src` lines in 22 files (`ink/curves.py:98`, `:129` among them), 7 test lines, 2 `GLOSSARY.md` rows; "display pixel" on 66 `src` lines (the file says 57 and 67) | `grep -rnI -i "card pixel" src tests GLOSSARY.md docs --exclude-dir=issues --exclude-dir=decisions` prints nothing (names swapped under Q2 (2)) | about 70 | none | Q2, then P10.9 | |
+| `letters-font-missing-glyph-advance` | letters | defect | decide | 3 | no | `OutlineFont().glyph("\u4e00").advance` 0.28; `glyph(" ").advance` 0.23 | under Q3 (2): `tests/unit/letters/test_font.py::test_a_missing_glyph_advances_as_the_faces_space`, red first | about 20 | none (no Lynmouth text uses a missing character) | Q3, then P10.5b or close | |
+| `letters-nib-outline-width-reads-face-route` | letters | defect | fix | 5 | no | the file's probe: `Hand(FaceStyle(), HandStyle(), "outline")` marks through `nib.plate` with `face=FaceStyle()` and with `label_route="outline"`: plates differ (alpha sums 161345 and 148959) | `tests/unit/maps/lettering/test_draw_plate.py::test_an_outline_route_is_written_with_the_finer_nib`, red first | about 20 | none (the golden path never passes `route`) | P10.5a | |
+| `letters-nib-pen-angle-ignores-writing-line` | letters | defect | decide | 3 | no | "Lyn" written along a horizontal and a vertical path: `Mark.pen` -0.0389 on both, so the nib does not turn; `_pen_profile` of a horizontal and a vertical segment 0.800 and 0.890 | under Q4 (2): `tests/unit/letters/test_hand.py::test_a_name_along_a_turned_line_carries_the_turn_on_its_pen`, red first | about 40 plus regeneration | under Q4 (2): `labels-centreline.webp`, `map.png` | Q4, then P10.11 or close | |
+| `letters-style-label-route-ink-not-filled`, with the cache-key trap (`route_inks` in neither `BASE_GROUPS` nor `LETTERING_GROUPS`) | letters | defect | decide | 3 | no | `grep -rn label_route_ink src`: read only at `letters/nib.py:268`, set only by `letters/style.py:83` and `default.toml:181`; nothing copies `Style.route_ink()` into it; both `#c22050` in the default theme | under Q5 (2): `test_draw_plate.py::test_a_route_ink_name_follows_the_route_ink` and `test_a_new_route_ink_restrokes_the_label_plate`, red first | about 40 | none (the default inks are equal) | Q5, then P10.5b or close | |
+| `letters-trace-radii-unused` | letters | dead code | fix | 5 | no | `uv run vulture --min-confidence 60 src`: `letters/trace.py:90: unused function '_radii'`; `grep -rn _radii src tests`: the definition only | the vulture run and `grep -rn "def _radii" src` print nothing | about 10 | none | P10.5a | |
+| `maps-lettering-label-as-dict-unused` | maps lettering | dead code | defer (awaiting what upstream reads, until P8's hand-off re-triages it) | 2 | no | vulture at 60: `maps/lettering/label.py:179: unused method 'as_dict'`; `grep -rn as_dict src tests`: the definition only | `grep -rn "def as_dict" src` and the vulture run print nothing | about 10 | none | P10.6 (after P8's hand-off) | |
+| `maps-lettering-picks-journal-picks-cap` | maps lettering | defect | fix | 5 | no | `journal_picks(Annotations(landmarks=("A", "B", "C")), label_basemap(...), 1)`: `['A', 'B', 'C']` | `tests/unit/maps/lettering/test_picks.py::test_a_name_only_landmark_counts_against_the_landmark_cap` and `test_a_cap_of_nought_picks_no_landmark`, red first | about 40 | none (no landmarks on the golden card) | P10.6 | |
+| `maps-lettering-sheet-homonym` | maps lettering | naming or prose | decide | 3 | no | `grep -rnIiw sheet` over `maps/lettering` and `maps/lettering_*.py`, less class lines: 52 lines in 15 files; `GLOSSARY.md` `wash`, `dark grid`, `terms` rows; in tests the sense is on 8 lines in 4 lettering test files (`test_spans.py` 24, 41, 64; `test_picks.py` 126, 139; `test_placement.py` 186, 267; `test_placement_names.py` 66, 77), not only line 64 | under Q10 (1): P10.9's `grep -rnIiw sheet` prints only the allowed list | about 130 | none | Q10, then P10.9 | |
+| `maps-lettering-span-sides-curve-scale-offset` | maps lettering | defect | defer: the sweep needs the four upstream rides the repository does not hold (D16) and a scoring rule it does not record | 2 | no | `SPAN_CURVE_SCALE_CAPS` 1.5, `SPAN_OFFSET_CAPS` 1.2 | none (deferred) | n/a | none (no spans on the golden card) | none | |
+| `maps-lettering-span-sides-freer-side-sign` | maps lettering | defect | fix | 5 | no | the file's probe: `_freer_side` returns `(1, 1.0)`; `span_line(route, 10, 80, 1, 16.8)` middle `(500.0, 283.2)`, on the solid side | `test_span_sides.py::test_the_freer_side_is_signed_as_the_mark_is_drawn` and `test_spans.py::test_a_ground_span_takes_the_clearer_side_and_a_session_span_the_other`, red first | about 65 | none (no spans on the golden card) | P10.6 | |
+| `maps-lettering-spans-place-spans-rung-order` | maps lettering | defect | decide | 3 | no | `_rung` on an empty side gives `Span(i0=10, i1=90)` rung 0, then the overlapping `Span(i0=30, i1=50)` rung 1 | under Q11 (1): `test_spans.py::test_the_longest_overlapping_span_is_the_outer_rail`, red first | about 30 | none | Q11, then P10.6 or close | |
+| `maps-lettering-spans-rule-seven-in-tests` | maps lettering | test text | fix | 5 | no | `grep -rnIi "rule seven" tests src`: 3 lines (`test_spans.py` 64, 140, 190) | `grep -rnIiE "rule (seven\|7)\b" src tests` prints nothing | about 3 | none | P10.9 | |
+| `maps-osm-elements-tunnel-no` | maps | defect | fix | 5 | no | an `Exe` river way with `tunnel=no` on `BESIDE` through `test_layers.py`'s `_river_names`: kept `[]` (dropped); with `tunnel=culvert`: `[]` | `tests/unit/maps/test_layers.py::test_a_river_tagged_not_in_a_tunnel_is_drawn`, red first (and `test_a_river_culverted_end_to_end_is_not_drawn`, green both sides) | about 25 | none (no fixture way has `tunnel=no`) | P10.7 | |
+| `maps-style-groups-labels-switch-also-drops-the-attribution` | maps | defect | fix | 5 | yes, D8 | attribution probe (`draw_attribution` on white 600 by 80, `Style.default()`): box `(453, 45, 592, 72)`; with `lettering.labels=False`: `None`. Readers: `attribution.py:64`, `lettering/pipeline.py:98` | `tests/unit/maps/test_attribution.py::TestLabelsOff::test_written_when_the_map_is_not_lettered`, red first | about 15 | none (golden compose passes `attribution=False`) | P10.3a | |
+| `maps-style-groups-route-constants-have-no-reader`, with `RouteInk.casing`, `CASING_COLOURS` and `RouteInk.effect` folded in | maps | dead code | decide | 3 | no | vulture at 60: `ROUTE_INK` (256), `ROUTE_EFFECT_OFF` (259), `ROUTE_SHADOW` (272), property `casing` (284); grep: each constant only at its definition, `CASING_COLOURS` read only in `casing`, `.effect` read only in `casing` | under Q8 (a): P10.7's grep and `uv run vulture --min-confidence 60 src` print nothing for the deleted names | about 35 | none | Q8, then P10.7 or defer | |
+| `maps-track-index-private-names-imported` (58 names, not the 9 filed) | all | naming or prose | decide | 3 | no | private-name AST scan: 58 names, 23 defining and 23 importing modules (ink 6, letters 6, other maps 12, maps lettering 34); 8 clash on dropping the underscore | under Q9 (a): `tests/unit/maps/test_import_order.py::test_no_module_imports_another_modules_private_name`, red per area first | about 350 plus docs | none | Q9, then P10.10a to P10.10d | |
+| `prek-not-in-the-environment` | tooling | tooling or process | fix | 5 | yes, Verification 1 | `uv run prek --version`: `error: Failed to spawn: prek` | `uv run prek --version` prints the version | about 10 plus the lock | none | P10.3b | |
+| `shared-generators` | maps painter | defect | defer: per-item seeding is a new property of the painter that moves every golden, not a fix against any docstring, spec line or Key decision | 2 | no | `maps/painter/job.py:110`: one `bloom_rng` per job places every wash's blooms in turn; `ink/raster.py:61` `deform_ring` over a shared generator; no golden run (the file's evidence is ADR 0006's) | none (deferred) | n/a | `wash.webp`, `labels-centreline.webp`, `map.png`, if ever done | none | |
+| `slow-tests-in-mutation-runs` (a): `test_cli.py::TestMap::test_a_full_cache_makes_no_request` paints the whole fixture unmarked | tests | test text | fix | 5 | no | `grep -B2 "def test_a_full_cache_makes_no_request" tests/unit/maps/test_cli.py`: no `@pytest.mark.golden` | the same grep shows the marker; the two coverage gates | about 5 (40 with an extra test) | none | P10.8 | |
+| `slow-tests-in-mutation-runs` (b): the wider mutation test selection | tooling | tooling or process | defer: a performance change to tooling that ADR 0012's Consequences leave for later | 2 | no | `[tool.mutmut] pytest_add_cli_args_test_selection` is still `["tests/unit", "tests/property", "-m", "not golden"]` | none (deferred) | n/a | none | none (P10.8 narrows the file to this part) | |
+| `src-docstrings-use-non-canonical-terms` (11 sites, not the 8 filed) | maps, letters | naming or prose | fix | 5 | no | `grep -rnI -i -e activit -e "label agent" -e "darkness grid" -e "dark field" src/pyntpot --include=*.py`: 10 lines; the multiline `rg -nU` search adds `placement.py:100` | both searches print nothing; the AST-neutral check | about 15 | none | P10.9 | |
+| `unlisted-technique-blurred-mask-rim` | references | references | decide | 3 | yes under Q7 (A) or (C), D24 | `grep -c blurred-mask-rim docs/explanation/references.md`: 0; `edge-darkening` implemented in `flow_edge` only; `wash`'s docstring cites `granulation` and `wet-area-bleed` only | under Q7 (A) or (C): `tests/architecture/test_reference_keys.py::test_every_site_cites_its_key`, red first | about 5 | none | Q7, then P10.3c or close | |
+| `unlisted-technique-ink-reservoir` | references | references | fix | 5 | yes, D24 | `grep -c ink-reservoir docs/explanation/references.md`: 0; `spend`'s docstring has no `Source:` line; `design-sources.md:26`, `:28` name it | `test_reference_keys.py::test_every_site_cites_its_key`, red first (after the entry is added) | about 10 | none | P10.3c | |
+| `unlisted-technique-pigment-separation` | references | references | fix | 5 | yes, D24 | `grep -c pigment-separation docs/explanation/references.md`: 0; `separated`'s docstring has no `Source:` line | `test_reference_keys.py::test_every_site_cites_its_key`, red first (after the entry is added) | about 10 | none | P10.3c | |
+| `CONTRIBUTING.md:5` "It is what CI runs": CI never runs prek | tooling | tooling or process | fix | 5 | no | `grep -c prek .github/workflows/ci.yml`: 0 | `grep -c "prek run" .github/workflows/ci.yml` prints 1 | about 3 | none | P10.3b | |
+| `p5-run-log.md:125` the README badge | docs | naming or prose | decide (badge or no badge is a presentation choice nothing settles) | 3 | no | `grep -c -i codspeed README.md`: 0; `docs/explanation/performance.md:71` links the dashboard | under Q13 (1): the badge line in `README.md` (P7.1) | about 1 | none | Q13, then P7.1's brief or close | |
+| `tasks.md:124` start the manual Mutation workflow once on `main` | tooling | tooling or process | fix (an action with no diff) | 5 | no | `gh run list -R findlaywebb/pyntpot --workflow mutation.yml`: no runs | the run's URL and score line in `p10-run-log.md` | 0 | none | the orchestrating session, after P10.1 | |
+| `spec.md:121` the OpenTopoData budget "per process" (ADR 0004: per instance) | docs | naming or prose | fix | 5 | no | `spec.md:121` still under "Open questions": "enforced per process only"; ADR 0004 line 34: "Per instance, not per process" | `grep -n "per process" specs/001-port/spec.md` prints nothing | about 6 | none | P10.9 | |
+| `p5-run-log.md:73` mutmut records 0.0 durations under forkserver | tooling | tooling or process | close: a fact about mutmut 3.8; no repo text claims otherwise | 1 | no | line 73 to 74 records it; ADR 0012 states no duration | none | 0 | none | none | |
+| `p5-run-log.md:82` mutmut classes SIGKILL as segfault | tooling | tooling or process | close: ADR 0012 "Score" records it | 1 | no | ADR 0012 lines 90 to 91 state it | none | 0 | none | none | |
+| `p6-run-log.md:54` two design inputs maintainer-checked | references | references | close: `references.md` records `maintainer-checked`; every canonical line is verified | 1 | no | `references.md:104` and `:170` carry `maintainer-checked`; no `Canonical source` line lacks a status | none | 0 | none | none | |
+| `pyntpot.ink.polyline.point_to_segment` has no caller (P10.0 finding) | ink | dead code | fix | 5 | no | vulture at 60: `ink/polyline.py:140: unused function 'point_to_segment'`; `grep -rnw point_to_segment src tests`: the definition and the module docstring (line 8) | `grep -rnw point_to_segment src tests` prints nothing | about 5 | none | P10.4b | |
+
+Counts: 38 rows (30 for the 29 files, `slow-tests-in-mutation-runs` split in two, and 8
+without a file): `fix` 19, `decide` 12, `defer` 4, `close` 3, `fix-golden` 0.
+
+## Read and resolved in the logs, no row
+
+Each was checked at `656f4a4`. P6 landed squashed as `91ff457` (#8), so a P6 branch commit
+the log names is not in this history; its fix is in `91ff457`.
+
+- `p5-run-log.md:50-53`: the coverage gate rounded to whole percent. Resolved by
+  `f506f44` ("Gate coverage at two decimals", log line 53); `ci.yml` lines 51 and 54 carry
+  `--precision=2`.
+- `p5-run-log.md:155`: "First CodSpeed job time on the PR: not yet known". Answered at
+  line 160: "CodSpeed job about 11 min".
+- `p5-run-log.md:158-159`: the prerelease (3.15) segfault on `main`. Resolved by
+  `cadd4a5` ("Bump the prerelease job's uv so 3.15 resolves past beta 2", log line 175);
+  `ci.yml:67` pins uv `0.11.32`.
+- `p5-run-log.md:125`, second half: "PR #6 can be closed". PR #6 is closed, not merged
+  (`gh api repos/findlaywebb/pyntpot/pulls/6`: closed at 2026-10-07T12:32:47Z).
+- `p5-run-log.md:160`: "P5.3b follows the first nightly on main". Superseded by P5.3c
+  (log line 173; `tasks.md:118` strikes P5.3b through).
+- `p6-run-log.md:123-124`: `ruff-format` red on the plan's two Python blocks. Fixed in the
+  P6 branch's `14286ba` (log line 178), now in `91ff457`;
+  `uv run ruff format --check specs/001-port/plan.md` passes, and
+  `plan-code-blocks-fail-ruff-format.md` is gone from `docs/issues/`.
+- `p6-run-log.md:534-535`: the inventory's status column stays empty. Filled at log
+  lines 541-542 (P6 branch's `19eb6db`, log line 549), now in `91ff457`; all 23
+  `p6-inventory.md` rows carry a status.
+- `p6-run-log.md:629`: `GLOSSARY.md`'s "darkness grid". Fixed in P6.6 (log line 664); no
+  `GLOSSARY.md` line says "darkness grid". The `src` sites the same log lines left are
+  the `src-docstrings-use-non-canonical-terms` row.
