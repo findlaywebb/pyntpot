@@ -15,8 +15,8 @@ they come from the generator the writer is handed alongside it.
 
 Invariants: a setting is frozen and hashable, and exactly one of `anchor` and
 `path` is given; a setting along a path writes one line, starting at the path's
-first point, so it carries no `lines` and no `align`. The module imports
-nothing from `pyntpot` but `ink`.
+first point, so it carries no `lines` and no `align` but `start`. The module
+imports nothing from `pyntpot` but `ink`.
 """
 
 from dataclasses import dataclass
@@ -93,10 +93,10 @@ class Setting:
 
 @dataclass
 class Mark:
-    """One stroke for the ink to be run along, in card pixels.
+    """One stroke for the nib to run along, in card pixels.
 
     `role` sets the weight and whether the pen's angle modulates it, `ink`
-    which of the three colours it is, `size` the type size it belongs to, and
+    its ink token or a `#rrggbb` colour, `size` the type size it belongs to, and
     `pen` the per-instance wobble on the nib's angle, so no two words are
     written with the hand held at exactly the same tilt.
     """

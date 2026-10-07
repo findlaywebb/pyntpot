@@ -6,11 +6,11 @@ the advance. It measures a line and lays one out in the caller's own pixels.
 How a glyph becomes strokes is `letters.trace`; this module chooses the route
 and caches the result a glyph.
 
-The face is vendored under `fonts/` with its licence beside it. It is Patrick
-Hand, SIL Open Font License 1.1: an upright, unjoined print hand with even
-proportions and a large x-height. A looping connected script is too scripty
-and ornate for a map, however well it is drawn. Patrick Hand is the opposite
-end of the same shelf.
+The face is vendored under `fonts/`; its licence is `LICENSE-FONT` at the
+repository root. It is Patrick Hand, SIL Open Font License 1.1: an upright,
+unjoined print hand with even proportions and a large x-height. A looping
+connected script is too scripty and ornate for a map, however well it is
+drawn. Patrick Hand is the opposite end of the same shelf.
 
 It does not rasterise, thin or trace (`letters.skeleton`, `letters.trace`), and
 it knows nothing of nibs, marks or placement.
@@ -33,7 +33,7 @@ from pyntpot.letters.trace import CENTRELINE, _centrelines
 if TYPE_CHECKING:
     from pyntpot.ink.polyline import Pt
 
-#: The vendored face and its licence.
+#: The vendored face.
 DEFAULT_FONT = Path(str(resources.files("pyntpot.letters") / "fonts" / "PatrickHand-Regular.ttf"))
 
 #: A curve is flattened to this many straight pieces. A letter is read at about
@@ -232,9 +232,9 @@ class OutlineFont:
             ch: The character.
 
         Returns:
-            The glyph. A character the face has not got comes back with the
-            advance of a space and nothing to draw, which is what a missing
-            glyph should look like on a map and not a box.
+            The glyph. A character the face has not got comes back with a
+            fixed advance of 0.28 em and nothing to draw, which is what a
+            missing glyph should look like on a map and not a box.
         """
         got = self._cache.get(ch)
         if got is not None:
@@ -266,18 +266,14 @@ class OutlineFont:
     def measure(self, text: str, size: float, tracking: float = 0.0) -> tuple[float, float]:
         """How wide and how tall one line is, in the caller's own pixels.
 
-        This is the whole point of taking a real face: every box on the sheet
-        was sized at a flat eight pixels a character, which is why the placer
-        put names off the paper and why the standalone card had to shrink its
-        type to fit boxes drawn for a different hand.
-
         Args:
             text: The line.
             size: The type size in display pixels.
             tracking: Extra letter spacing, in em units.
 
         Returns:
-            `(width, height)` in display pixels.
+            `(width, height)` in display pixels; an empty line is no width and
+            `size` tall.
         """
         s = str(text)
         if not s:
@@ -312,7 +308,7 @@ class OutlineFont:
 
 @functools.lru_cache(maxsize=8)
 def load(path: str | None = None, route: str = CENTRELINE) -> OutlineFont:
-    """The vendored face, opened once a route and kept.
+    """A face, the vendored one by default, opened once a path and route and kept.
 
     Args:
         path: The font file, or None for the vendored one.

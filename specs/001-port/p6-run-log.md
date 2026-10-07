@@ -600,3 +600,20 @@ User instructions (2026-10-07 12:14 BST):
   - Gates (measured under parallel load (5 slices running)): ast-neutral 16 files; uv sync 0 s; uvx prek 8 s; not-golden 171 s; tolerance 314 s; exact 258 s (re-run after the agent's own 10-minute background limit cut the first); G-self baseline 78 s, compare 272 s; doc_lines 19/19/19, 3 findings, all kept.
   - Glossary changes proposed: none.
 - 17:04 P6.5a landed by the orchestrator (measured alone): partition clean; patch applied on `9eed861`; ast-neutral 0 s; uv sync 0 s; uvx prek 4 s; not-golden 156 s (................................... [100%]); tolerance 299 s; exact 288 s; doc_lines 19/19 headers, 3 findings, 3 kept lines; glossary changes applied 0, deferred 0.
+- P6.5b letters: start 16:15, end 16:42 BST. File list 8 (table 8). Lines 1726 -> 1730. Public API done 16:20.
+  Docstrings changed 19 (public 1, other 18), added 0, sections added 0, comments changed 8. Fixed 27, filed 6.
+  Gates (measured under parallel load (5 slices running)): ast-neutral 8 files; uv sync 0 s; uvx prek 5 s; not-golden 163 s; tolerance 308 s; exact 320 s; G-self baseline 72 s, compare 282 s; doc_lines 8/8/8, 5 findings, all kept.
+  choice: Hand Args stay on class docstring | rule: Args rule (existing correct section stays) | inputs: hand.py
+  choice: no summary-length rewrites | rule: house rules beat the skills (line-length 100) | inputs: pyproject.toml
+  choice: docstrings skill not applied to # comments; comments got accuracy and prose passes only | rule: house rules beat the skills (skill excludes # comments) | inputs: docstrings SKILL.md
+  choice: history narration in private docstrings (_flank, _dots, _extend, OutlineFont.measure) rewritten as present-tense fact or removed | rule: house rules beat the skills (skill Process) | inputs: trace.py, font.py
+  choice: card pixels vs display pixels left as is, filed | rule: fix now or file (no glossary term picks one) | inputs: GLOSSARY.md card and mark rows
+  choice: pen angle, outline width, route ink, glyph advance texts rewritten to the code and filed | rule: behaviour wins | inputs: nib.py, style.py, font.py, lettering/pipeline.py, the face's hmtx
+  choice: uvx prek in place of uv run prek | rule: no stop points (as at P6.1) | inputs: prek-not-in-the-environment.md
+  kept: precise term | src/pyntpot/letters/nib.py:16 | surface | the `surface` parameter (NibSurface)
+  kept: precise term | src/pyntpot/letters/nib.py:21 | surface | the `surface` argument of plate
+  kept: precise term | src/pyntpot/letters/nib.py:176 | surface | the `surface` parameter of _sheet
+  kept: precise term | src/pyntpot/letters/nib.py:206 | surface | Args entry naming the `surface` parameter
+  kept: precise term | src/pyntpot/letters/nib.py:284 | surface | Args entry naming the `surface` parameter
+  Glossary changes proposed: none. Issues filed: letters-nib-outline-width-reads-face-route, letters-nib-pen-angle-ignores-writing-line, letters-trace-radii-unused, letters-card-pixels-and-display-pixels, letters-font-missing-glyph-advance, letters-style-label-route-ink-not-filled.
+- 17:17 P6.5b landed by the orchestrator (measured alone): partition clean; patch applied on `55fdf43`; ast-neutral 0 s; uv sync 0 s; uvx prek 5 s; not-golden 155 s (................................... [100%]); tolerance 302 s; exact 287 s; doc_lines 8/8 headers, 5 findings, 5 kept lines; glossary changes applied 0, deferred 0.

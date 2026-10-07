@@ -3,8 +3,8 @@
 Key types: `FaceStyle`, which face the hand opens and how a glyph becomes a
 pen path; `HandStyle`, the seed every random draw of a label starts from;
 `NibStyle`, the nib, its inks, its angle and the backing wash under a name;
-`NibGroups`, the groups the nib reads together.
-Frozen dataclasses of plain values, each field documented by its `#:` comment.
+`NibGroups`, the groups the nib reads together. The first three are frozen
+dataclasses of plain values, their fields documented by `#:` comments.
 
 It letters nothing and reads no theme. The defaults are the painter's own
 class defaults, not a resolved theme. Which names a map letters, and how many,
@@ -28,9 +28,9 @@ class FaceStyle:
     #: How a glyph is turned into something the pen follows. `centreline` thins
     #: the face's own outline to a written skeleton; `outline` draws round the
     #: contour itself. They are two different letters, not a choice and a
-    #: fallback, and the second is what the first falls back to.
+    #: fallback: nothing falls back from one to the other.
     label_route: str = "centreline"
-    #: The face, under `analysis/report/fonts/`. Empty is the vendored one.
+    #: The path of the `.ttf` to open. Empty is the vendored one.
     label_face: str = ""
 
 
@@ -61,13 +61,15 @@ class NibStyle:
     #: stroke's width apart, so the same nib fills the counters and the letter
     #: comes out a bolder thing than the face is. It writes with a finer one.
     label_outline_width_frac: float = 0.62
-    #: The leader and the span line, one step lighter, so the line recedes
-    #: behind the name it points at.
+    #: Every mark that is not a glyph (a leader, a span line, a tick, an
+    #: underline, a pin), one step lighter, so the line recedes behind the name.
     label_leader_brush: str = "MAJ6-e"
     label_leader_width_px: float = 0.85
-    #: The pen's angle, anticlockwise from the writing line, and how much of the
-    #: width it takes off a stroke drawn along it. Without this the letters come
-    #: out one thickness the whole way round, which is a plotter and not a pen.
+    #: The pen's angle in degrees from the page's horizontal, in card pixels
+    #: with y down, so a negative angle turns anticlockwise on the page; and how
+    #: much of the width it takes off a stroke drawn along it. Without this the
+    #: letters come out one thickness the whole way round, which is a plotter
+    #: and not a pen.
     label_pen_angle_deg: float = -38.0
     label_pen_thin: float = 0.52
     #: The backing wash: paper-coloured, laid through the wash machinery, and
@@ -76,8 +78,8 @@ class NibStyle:
     label_wash_alpha: float = 0.5
     label_wash_dark_floor: float = 0.22
     label_wash_spread: float = 0.75
-    #: The ink a name in the route's own colour is written in. The caller fills
-    #: it from the sport's route ink; the default is what the route was.
+    #: The ink a name in the route's own colour is written in, read from the
+    #: theme like every other field; the default is the default route ink.
     label_route_ink: str = "#c22050"
     label_water_ink: str = "#4a7691"
     #: The ink a name written *on* the water is set in. Reversed out of the

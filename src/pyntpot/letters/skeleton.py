@@ -23,9 +23,10 @@ if TYPE_CHECKING:
     from pyntpot.ink.polyline import Pt
 
 
-#: Em units the glyph is rasterised at before it is thinned. Big enough that a
-#: thin stroke is several pixels across, small enough that the walk stays
-#: milliseconds a glyph, and every glyph is cached anyway.
+#: Raster pixels an em, the scale a glyph is rasterised at before it is
+#: thinned. Big enough that a thin stroke is several pixels across, small
+#: enough that the walk stays milliseconds a glyph, and every glyph is cached
+#: anyway.
 RASTER_EM = 128
 
 #: Zhang-Suen deletes a pixel only while it has between this many and
@@ -215,7 +216,8 @@ def _chains(skel: np.ndarray) -> list[list[tuple[int, int]]]:
         skel: The one pixel skeleton.
 
     Returns:
-        Chains of `(row, col)`, each running endpoint or junction to the next.
+        Chains of `(row, col)`, each running endpoint or junction to the next,
+        then every closed loop that has no junction.
     """
     on = {(int(r), int(c)) for r, c in zip(*np.nonzero(skel), strict=True)}
     nbrs = {p: [q for q in _ring(p) if q in on] for p in on}

@@ -98,7 +98,8 @@ def nib_brushes(
 
     Args:
         nib: The nib style, for the brushes and their widths.
-        face: The face style, whose route halves the width on the outline route.
+        face: The face style; when its `label_route` is `outline` the glyph
+            nib is narrowed by `label_outline_width_frac`.
         brush: The brush style the sheet cells are read with.
         scale: Render pixels per display pixel.
 
@@ -149,7 +150,8 @@ def _pen_profile(
 
     Args:
         pts: The stroke in render pixels.
-        angle: The nib's angle in radians, anticlockwise from the writing line.
+        angle: The nib's angle in radians from the page's horizontal, in
+            render pixels with y down.
         thin: How much of the width a stroke drawn straight along the nib loses.
         samples: How many points the profile is sampled at.
 
@@ -200,7 +202,7 @@ def _backing_wash(
     this was written" rather than sitting under every name on the sheet.
 
     Args:
-        cover: The nib ink's own density.
+        cover: The ink density of the marks that asked for the wash.
         surface: What the nib writes on; its darkness gates the wash.
         sheet: The paper.
         groups: The style groups the nib reads.
