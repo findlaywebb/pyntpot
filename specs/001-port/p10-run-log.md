@@ -63,3 +63,9 @@ User instructions (2026-10-07):
   above those; (2) a P10 rename of a name P11 makes public is simpler before P11. P11's
   "Order": after P10.1, before P7.1, and P8 starts after it, so 0.0.1 (P10.R) comes
   after P11 and the order becomes P10.0 to P10.2, part 1, P11, P10.R, P8, part 2, P7, P9.
+- Plan review 2: BLOCK (2 blocking, 5 should-fix, 9 nits; `reviews/p10-plan-review-2.md`);
+  23 of 24 round-1 findings confirmed resolved, S9 partly. Blocking: P10.10a renames
+  `ink.tip._fbm1`, which `references.md` cites, without owning `references.md`; P11 is
+  not yet in P10's order. Plan-fix round 2 dispatched with the review-2 findings and the
+  P11 integration (order part 1, P11, P10.R, P8, part 2; ADR claim; renames P11 touches
+  move before P11).
