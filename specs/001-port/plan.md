@@ -3954,7 +3954,9 @@ slice.** It is kept as the record of the threshold plan that was dropped.
 Implements D24 (every technique cites its source), D25 (a docstring audit,
 then a prose audit) and acceptance criterion 4, and answers the spec's
 design-sources open question. Fattened at P6.0 from the five-step sketch and
-revised after plan review 1 (`reviews/p6-plan-review-1.md`). Measurements
+revised after plan reviews 1 and 2 (`reviews/p6-plan-review-1.md`,
+`reviews/p6-plan-review-2.md`; the review-2 probes were re-run at `31c1d26`,
+which changes no `src/` or `tests/` file). Measurements
 below were taken at commit `1154129` on branch `p6-docs` (no `src/` or
 `tests/` file changed between it and `93aee17`, where the review-1
 measurements were re-taken); line numbers drift, so every site is named by
@@ -3998,10 +4000,10 @@ reach:
 |---|---|
 | Functions (7) | `composite` (`ink/pigment.py`), `stamp` (`ink/stamp.py`), `wash` (`ink/wash.py`), `letter` (`maps/lettering/pipeline.py`), `fetch`, `paint`, `compose` (`maps/pipeline.py`) |
 | Classes (11) | `Brush` (`ink/brush.py`), `Canvas`, `Sheet` (`ink/sheet.py`), `Hand` (`letters/hand.py`), `Annotations` (`maps/annotations.py`), `Basemap` (`maps/basemap.py`), `Lettering` (`maps/lettering/pipeline.py`), `FetchError` (`maps/pipeline.py`), `Plates` (`maps/plates.py`), `Style` (`maps/style.py`), `Track` (`maps/track.py`) |
-| Public methods of those classes (21, plus `Hand.__init__`) | every method in the class body whose name has no leading underscore |
+| Methods of those classes (21: 20 public methods plus `Hand.__init__`) | every method in the class body whose name has no leading underscore, and `Hand.__init__` |
 
 All seven functions already carry `Args:` and `Returns:` (and `fetch` its
-`Raises:`). Of the 22 methods, 15 lack a section that a mechanical reading
+`Raises:`). Of the 21 methods, 15 lack a section that a mechanical reading
 would ask for (`Canvas.scale`, `Canvas.px`, `Sheet.noise`, `Hand.__init__`,
 `Hand.generator`, `Basemap.canonical`, `Plates.paths`, `Plates.hash`,
 `Plates.card`, `Style.default`, `Style.digest`, `Style.base_digest`,
@@ -4094,6 +4096,12 @@ lines.
   `src/pyntpot/ink/shallow_water.py: code changed`, exit 1. Also: the module
   docstring edited, exit 0; a function's docstring deleted, exit 0; a
   comment added, exit 0; an untracked `ink/new_mod.py`, exit 1.
+- **Scratch scripts are rewritten in every session.** `$SCRATCH` does not
+  survive a session. Every session that runs `ast_neutral.py` (above),
+  `refcheck.sh` (P6.3) or `doc_lines.py` (P6.5) first writes it to
+  `$SCRATCH` verbatim from this plan's block, with the block's two-space
+  list indentation stripped (P6.4 to P6.6 included: P6.6 step 3 reruns
+  `refcheck.sh`). A session never writes its own variant.
 - **No stop points; a stated rule makes every choice, and the run log
   records it.** Each slice measures first, applies the rules below, and
   appends to `specs/001-port/p6-run-log.md` (in every slice's owner files):
@@ -4162,11 +4170,14 @@ lines.
   identifiers, string literals, quoted titles of cited works (Curtis's
   *Computer-Generated Watercolor* keeps its spelling), proper names and
   third-party API names.
-- **Rule: dashes in copied titles.** A title copied from a record keeps its
-  words and spelling, but every character from U+2010 to U+2015 in it (the
-  Crossref title of Van Laerhoven, Van Reeth 2005 has U+2010 in
-  "Real‐time") is written as an ASCII hyphen-minus, and the run log records
-  it as a correction. *Match* folds punctuation, so this never changes a
+- **Rule: dashes in copied fields.** Every field copied from a record
+  (title, subtitle, author, venue, container title, event name, page range)
+  keeps its words and spelling, but every character from U+2010 to U+2015
+  in it (the Crossref title of Van Laerhoven, Van Reeth 2005 has U+2010 in
+  "Real‐time"; Crossref page ranges and container titles can carry U+2013)
+  is written as an ASCII hyphen-minus, and the run log records it as a
+  correction. HTML entities in a copied field are decoded first
+  (`html.unescape`). *Match* folds punctuation, so this never changes a
   match, and the dash gates stay meaningful.
 - **Rule: which files the dash audit covers.** The `emdash-audit` skill
   skips agent-facing files. Here: `src/` docstrings and comments are covered
@@ -4233,16 +4244,22 @@ fetch behaves differently):
   `x-concurrency-limit: 1`, yet gave 429 on the fifth call at 1.2 s
   spacing (review 1) and on the 15th of an unpaused loop (P6.0). **Rule:**
   one request every 2 s, never two at once. On 429, 5xx or a connection
-  reset, wait 5, 10, 20 and 40 s, retrying after each; if the fifth try
-  fails too, that source's status is `not-verified` with the reason
-  (`not-verified: 429 after backoff 5, 10, 20, 40 s; 2026-10-07`) and the
-  slice carries on with the next source. A 429, 5xx or reset never selects
-  a route, never moves to the next candidate and never counts as a
-  mismatch: it yields only that `not-verified`, which the gates reject. The
-  log records every retry. The route to clear it is a later re-run of only
-  the `not-verified` entries (same rules, same pacing), in P6.3 or as a
-  re-try before the phase gate. Do not add a `mailto=` parameter: it would
-  send the maintainer's address to a third party.
+  reset, wait 5, 10, 20 and 40 s, retrying after each. The log records
+  every retry. If the fifth try fails too, the fetch is **exhausted**, and
+  what follows depends on the line:
+  - On a `Canonical source` line, the status is `not-verified` with the
+    reason (`not-verified: 429 after backoff 5, 10, 20, 40 s; 2026-10-07`)
+    and the slice carries on with the next source. An exhausted fetch never
+    moves to the next candidate and never counts as a mismatch: it yields
+    only that `not-verified`, which the gates reject. The route to clear it
+    is a later re-run of only the `not-verified` entries (same rules, same
+    pacing), in P6.3 or as a re-try before the phase gate.
+  - On a `Design input` or `Read during design` line, the route that made
+    the fetch has failed, and the next applicable route is tried. When
+    every applicable route has failed, the status is `unreachable` (see the
+    status token).
+  Do not add a `mailto=` parameter: it would send the maintainer's address
+  to a third party.
 - Crossref resolves these candidate DOIs to the listed metadata (200, read
   at P6.0; P6.3 re-fetches them all): `10.3138/FM57-6770-U75U-7727`
   (Douglas, Peucker 1973), `10.1016/0146-664X(74)90028-8` (Chaikin 1974),
@@ -4255,8 +4272,9 @@ fetch behaves differently):
   `10.1016/S0734-189X(86)80047-0` (Borgefors 1986),
   `10.1109/TPAMI.1986.4767776` (Wells 1986), `10.1109/PROC.1981.11918`
   (Horn 1981), `10.1559/152304075784313304` (Imhof 1975),
-  `10.1145/258734.258896` (Curtis et al. 1997), `10.1145/1073204.1073221`
-  (Chu, Tai 2005), `10.1145/15886.15911` (Strassmann 1986),
+  `10.1145/258734.258896` (Curtis et al. 1997), `10.1145/1186822.1073221`
+  (Chu, Tai 2005, a design input; see "MoXi's DOI" below),
+  `10.1145/15886.15911` (Strassmann 1986),
   `10.1145/358523.358553` (Fournier, Fussell, Carpenter 1982). A DOI must
   be percent-encoded in the API path (`python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$DOI"`),
   or the `<`, `>` and `;` of the Duchon DOI break the URL.
@@ -4272,10 +4290,22 @@ fetch behaves differently):
   blurred depth test"; Baxter, Lin "A versatile interactive 3D brush model"
   → `10.1109/pccga.2004.1348363`, whose `issued` is `[[null]]` but whose
   container title is "12th Pacific Conference on Computer Graphics and
-  Applications, 2004. PG 2004. Proceedings."; Chu, Tai "MoXi" →
-  `10.1145/1073204.1073221` is one of three "MoXi" records of 2005, its
-  record title being `title` "MoXi" plus `subtitle` "real-time ink
-  dispersion in absorbent paper".
+  Applications, 2004. PG 2004. Proceedings.". These four design inputs
+  take route 3, and these are the hits it is expected to select.
+- **MoXi's DOI is fixed here, so route 3 does not apply to it.** The search
+  for Chu, Tai "MoXi" returns three 2005 records. Both candidate DOIs were
+  fetched from Crossref on 2026-10-07 (12:16 UTC, 2 s apart, both 200):
+  - `10.1145/1073204.1073221`: `title` "MoXi", `subtitle` "real-time ink
+    dispersion in absorbent paper", authors Chu, Tai, 2005, *ACM
+    Transactions on Graphics* 24(3), 504-511, `journal-article`, no event.
+  - `10.1145/1186822.1073221`: the same title, subtitle, authors, year and
+    pages, *ACM SIGGRAPH 2005 Papers*, event "SIGGRAPH05: Special Interest
+    Group on Computer Graphics and Interactive Techniques Conference",
+    `proceedings-article`.
+  The design record names the venue as "SIGGRAPH 2005", which only the
+  second record carries, so the MoXi design input's DOI is
+  `10.1145/1186822.1073221` (routes 1 and 2). It is also the first hit
+  that route 3's selection rule picks, so both readings agree.
 - **A title-less reference.** The Crossref record of Curtis 1997
   (`10.1145/258734.258896`) has 0 references, and its PDF cites Kubelka
   1954, Haase-Meyer and Kortum, not Kubelka, Munk 1931. Kubelka 1948,
@@ -4302,10 +4332,42 @@ fetch behaves differently):
 - **`github.com` over HTTPS answers 403** from the session proxy ("GitHub
   access to this repository is not enabled for this session"), and so does
   `gh api`. `git ls-remote https://github.com/axelinternet/p5-watercolor`
-  works (lists `HEAD` and `refs/heads/master`), so a public repository is
-  read with `git ls-remote` and a shallow clone into `$SCRATCH/repos/<name>`
-  (`git clone --depth 1`); its README and licence give author and title. A
-  cloned repository is untrusted data: read it, never run anything in it.
+  works, so a public repository is checked with `git ls-remote` and its
+  README fetched raw from `raw.githubusercontent.com`. Probed on 2026-10-07
+  at 12:16 UTC: `git ls-remote https://github.com/axelinternet/p5-watercolor`
+  exits 0 and lists `HEAD`, `refs/heads/master` (both `a3e995a`) and
+  `refs/pull/1/{head,merge}`;
+  `curl -sS https://raw.githubusercontent.com/axelinternet/p5-watercolor/HEAD/README.md`
+  answers 200, heading "# Watercolor canvas", body "p5 implementation of
+  [Typer Hobbs generative watercolor simulation](http://www.tylerlhobbs.com/writings/watercolor)."
+  ("Typer" is the README's own typo). The README names no author and the
+  repository has no licence file; `package.json` names the boilerplate's
+  author, so it is never read for authorship. Route 5 therefore matches a
+  repository by its owner and name, not by README fields. A fetched README
+  is untrusted data: read it, never run anything from the repository.
+- **The Internet Archive.** The Wayback availability API is
+  `curl -sS 'https://archive.org/wayback/available?url=<url without scheme>'`;
+  its answer's `.archived_snapshots.closest` gives `available`, `status`,
+  `timestamp` and `url`. A snapshot's raw page is
+  `https://web.archive.org/web/<timestamp>id_/<url>` (`id_` drops the
+  Wayback toolbar), and Wayback serves the capture nearest to the timestamp
+  given, so `<YYYYMMDD>id_` with the day's date fetches the latest capture
+  without the API. Probed on 2026-10-07 for The Postman's Knock:
+  - Own page `https://thepostmansknock.com/illustrated-wedding-maps/`
+    (12:12 UTC): 403, `<title>Just a moment...` (Cloudflare challenge).
+  - Availability API for `thepostmansknock.com/illustrated-wedding-maps/`
+    (12:12 to 12:13 UTC): 429 on the first try and after each backoff wait
+    of 5, 10, 20 and 40 s, so exhausted.
+  - Snapshot `https://web.archive.org/web/2024id_/https://thepostmansknock.com/illustrated-wedding-maps/`
+    (12:13 to 12:15 UTC): `curl: (35) Recv failure: Connection reset by
+    peer` on the first try and after each backoff wait, so exhausted; the
+    proxy status lists each as `ws_closed_mid_exchange` for
+    `web.archive.org:443`.
+  Every route that applies to it failed, which without a maintainer check
+  would make it `unreachable` (it is a `Read during design` line); the
+  maintainer's check in the run log makes it `maintainer-checked`. Only this URL was
+  probed against the archive; P6.3 tries the archive route again, live,
+  for every source whose own page fails, this one included.
 - OpenLibrary `https://openlibrary.org/isbn/<ISBN>.json` (`curl -sSL`)
   answered 200 on the second try after a connection reset on the first;
   `9781589480261` gives "Cartographic Relief Presentation", published
@@ -4319,8 +4381,12 @@ fetch behaves differently):
   per-session, so always resolve it with the glob). The implementer reads
   `SKILL.md` and its `reference/` files with Read. The scripts run as
   `python3 -I <dir>/ai-jargon-audit/detect_ai_jargon.py FILE...` (works on
-  `.py` and `.md`; 0 findings at P6.0 on `ink/wash.py`, `README.md` and
-  `docs/explanation/performance.md`) and
+  `.py`, `.md` and plain text; it reads every line of a `.py` file,
+  identifiers included: over every `src/**/*.py` at `31c1d26` it reports 36
+  findings, among them the `surface` parameter on 17 lines of
+  `letters/nib.py`; over the same files reduced to their docstring and
+  comment lines by P6.5's `doc_lines.py` it reports 18, of which
+  `letters/nib.py` has 5) and
   `python3 -I <dir>/emdash-audit/strip_emdashes.py FILE...`. If the glob
   finds nothing, the orchestrating session loads the skill with its Skill
   tool and pastes the rubric into the brief. Repo skills under
@@ -4336,7 +4402,9 @@ completeness check greps it):
   date its status shows, and that a docstring names an entry by its key.
   Then one entry per technique, in inventory order. An entry has exactly one
   `Canonical source:` line, one or more `Design input:` lines (one per
-  matched `design-sources.md` entry, in that file's order), one `Implemented in:` line and at most one
+  matched work, in `design-sources.md` order; a bullet there that names two
+  works, such as Deegan et al. with the 2019 arXiv study or Lee with
+  WetBrush, gives two lines), one `Implemented in:` line and at most one
   `Note:` line. Every source sits on its own line and carries its own
   status. Two examples, one with two recovered design inputs, the
   design-sources entry that is the canonical source itself, and a
@@ -4345,7 +4413,7 @@ completeness check greps it):
   ```markdown
   ## `kubelka-munk` Kubelka-Munk glazing
 
-  - Canonical source: Kubelka, P.; Munk, F. (1931). Ein Beitrag zur Optik der Farbanstriche. *Zeitschrift für technische Physik* 12, 593-601. [verified-via-index: cited in the reference list of Kubelka 1948, https://doi.org/10.1364/JOSA.38.000448, by first author, year, journal, volume and first page; title and second author not in that record; 2026-10-07]
+  - Canonical source: Kubelka; Munk (1931). *Zeitschrift für technische Physik* 12, 593. [verified-via-index: cited in the reference list of Kubelka 1948, https://doi.org/10.1364/JOSA.38.000448, by first author, year, journal, volume and first page; second author from the design record; title, initials and last page in no fetched record, so not cited; 2026-10-07]
   - Design input: Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997). Computer-Generated Watercolor. *SIGGRAPH 97*, 421-430. https://grail.cs.washington.edu/projects/watercolor/paper_small.pdf [verified: PDF 200, title and every author in the text; 2026-10-07]
   - Design input: Van Laerhoven, T.; Van Reeth, F. (2005). Real-time simulation of watery paint. *Computer Animation and Virtual Worlds*. https://doi.org/10.1002/cav.95 [verified-via-index: Crossref record by bibliographic search, publisher page 403; 2026-10-07]
   - Design input: the canonical source above.
@@ -4362,8 +4430,21 @@ completeness check greps it):
   what the fetched records say.)
 - **Source line**: `- <Label>: <citation>. <url> [<status>: <how checked>; <YYYY-MM-DD>]`.
   The citation is `Family, I.; Family, I. (year). Title. *Venue* volume(issue), pages.`
-  with the fields the record gives; the URL is `https://doi.org/<DOI>`
-  where a DOI exists, else the page fetched, else omitted. Labels:
+  with the fields the record gives, never a field from memory. A code
+  repository has no publication date, so its year is the year of its last
+  commit; when the source of that fact gives only an age ("about 8 years
+  ago"), it is written `(<year>, last commit, approximate)`, as in
+  `Hultman, A. (axelinternet) (2018, last commit, approximate).
+  p5-watercolor.` **The URL
+  rule:** a `Design input` or `Read during design` line's URL is the one
+  `design-sources.md` gives for that work; where it gives none, it is
+  `https://doi.org/<DOI>` for the DOI this plan fixes or route 3 selects,
+  else omitted. A `Canonical source` line's URL is `https://doi.org/<DOI>`
+  when a DOI exists, else the page fetched (the candidate table's URL),
+  else omitted. So Curtis 1997 carries the grail PDF URL as the design
+  input of `kubelka-munk` and `doi.org/10.1145/258734.258896` as the
+  canonical source of its four rows, and the URL-completeness check finds
+  the grail URL. Route 1 always tries the line's own URL first. Labels:
   `Canonical source`, `Design input`, and `Read during design` (closing
   section only).
 - **The status token**, a closed set (P6.3 assigns one per source by the
@@ -4371,22 +4452,53 @@ completeness check greps it):
   - `verified`: the source's own page, PDF or repository was fetched and its
     body matches.
   - `verified-via-index`: the source's own page is blocked or absent, and an
-    index record matches: the Crossref record, the OpenLibrary record, or
-    the reference list of an already-checked work.
+    index or archive record matches: the Crossref record, the OpenLibrary
+    record, the reference list of an already-checked work, or the Internet
+    Archive's snapshot of the page (route 7).
   - `named-only`: the design record names the work with neither a title nor
     an identifier, so there is nothing to look up. Allowed only on
-    `Design input` and `Read during design` lines, and only for this closed
-    list from `design-sources.md`: Deegan et al. (coffee-ring drying); the
-    2019 arXiv study of watercolour drying patterns; Lee (wet-on-wet
-    painting); the WetBrush work; OpenStreetMap via the Overpass API and OSM
-    tagging; OpenTopoData SRTM 30 m and Open-Elevation; Google Fonts Patrick
-    Hand and Caveat; the SVG filter effects and CSS `mix-blend-mode`; WCAG
-    AA contrast ratios; the three bullets of "Named only, no source read".
-    Anything else without an identifier is looked up by bibliographic
-    search.
-  - `not-verified`: every route was tried and none matched, or a fetch
-    exhausted its retries. The reason follows the colon. Never final: the
-    completeness check and the phase gate fail while one exists.
+    `Design input` and `Read during design` lines, and only as one of the
+    16 exact lines the closed list in `refcheck.sh` (P6.3) gives, each with
+    its own key: the line is `- <label>: <citation> [named-only: <key>;
+    <YYYY-MM-DD>]`, the label and citation fixed per key, and each key
+    appears exactly once in the file. A `named-only` line with any other
+    key, label or citation fails the check, so the status cannot be used
+    to skip a fetch. Anything else without an identifier is looked up by
+    bibliographic search.
+  - `unreachable`: final, and allowed only on `Design input` and `Read
+    during design` lines, never on a `Canonical source` line. Set only
+    after every route that applies to the source has failed, each attempt
+    logged with its URL and HTTP status (or curl error). A route fails on a
+    status other than 200 after the retry rule, a challenge page, or a body
+    that fails *match*. The how-checked text lists the attempts in order
+    (`unreachable: own page 403 challenge; Wayback API 429 after backoff;
+    snapshot connection reset after backoff; 2026-10-07`). The completeness
+    check passes it on those lines and prints each one; the run log and
+    the final HTML report list every `unreachable` entry. This is the
+    "cited in design, not verified" end state that `design-sources.md`
+    expects; the row's canonical line, always verified, carries the
+    technique.
+  - `maintainer-checked`: final, and allowed only on `Design input` and
+    `Read during design` lines, never on a `Canonical source` line. Used
+    when the maintainer checked the page and `p6-run-log.md` holds that
+    check, dated, with the source's URL and what was seen. The citation's
+    fields come from that log entry, and the how-checked text names it
+    (`maintainer-checked: run log 2026-10-07, <what matched>; <what the
+    routes gave>`). `refcheck.sh` passes it only on those labels and only
+    when the line's URL appears in the run log, and prints each one; the
+    run log and the final HTML report list every `maintainer-checked`
+    entry, as they do `unreachable` ones. **Precedence:** a source whose
+    maintainer check is in the run log takes `maintainer-checked`, whatever
+    the routes give; P6.3 still runs every route for it and logs each
+    attempt, and quotes a route match in the how-checked text. Two entries
+    have it, logged at 14:05 on 2026-10-07: axelinternet, p5-watercolor and
+    The Postman's Knock.
+  - `not-verified`: not yet final. On a `Canonical source` line: every
+    route and every replacement the canonical-source rule yields was tried
+    and none matched, or a fetch exhausted its retries. On a `Design input`
+    or `Read during design` line: a route is still untried. The reason
+    follows the colon. The completeness check and the phase gate fail while
+    one exists.
 - **Fixed design-input lines** (no status token, because they cite no new
   source): `- Design input: the canonical source above.` when the source
   read during design is the canonical source (Curtis 1997 for
@@ -4397,9 +4509,12 @@ completeness check greps it):
   strings.
 - **Closing section** `## Read during design, no technique here`: one
   `- Read during design: <citation>. <url> [<status>: ...]` line per
-  `design-sources.md` entry that informs no inventory row. An entry with a
-  URL is fetched and matched like any other source (status only: it is
-  listed, not cited by any docstring); one without is `named-only`. Every
+  work in a `design-sources.md` entry that informs no inventory row (P6.2's
+  table), in that file's order. An entry with a URL is fetched and matched
+  like any other source (status only: it is listed, not cited by any
+  docstring), and ends `verified`, `verified-via-index`,
+  `maintainer-checked` or `unreachable`;
+  one without a URL is its exact `named-only` line. Every
   URL in `design-sources.md` appears somewhere in the file (P9.4 checks this
   before it deletes that list).
 - **Key**: lowercase ASCII kebab-case naming the technique, not the paper,
@@ -4420,8 +4535,8 @@ completeness check greps it):
 **Routes** (P6.3 tries them in this order for each source; the log records
 every route tried):
 
-1. Own page: the DOI or URL, followed with `curl -sSL`, answers 200 and the
-   body matches (see *match*) → `verified`. For a W3C standard the body's
+1. Own page: the line's own URL (URL rule), followed with `curl -sSL`,
+   answers 200 and the body matches (see *match*) → `verified`. For a W3C standard the body's
    `<title>` and `<p id="w3c-state">` give title, status and date.
 2. Crossref record: the publisher page is not 200 or is a challenge page,
    and the Crossref API record for the DOI matches → `verified-via-index`,
@@ -4432,15 +4547,23 @@ every route tried):
    `query.bibliographic` with the authors' family names and the title,
    `rows=5`. **Selection rule:** take the first of the five results whose
    title matches after folding and whose year matches; then route 2 applies
-   to its DOI (own page, else record). No result passes →
-   `not-verified: no bibliographic match`, logged with the five titles and
-   years. Never take a result that fails the title or the year test, however
+   to its DOI (own page, else record). No result passes → the route
+   fails (`no bibliographic match`), logged with the five titles and
+   years, and route 8 decides the status. Never take a result that fails the title or the year test, however
    high it ranks.
 4. Index record (books): an OpenLibrary ISBN record matches, its author
    names read from the second fetch `https://openlibrary.org<key>.json`
    (`.name`) for each `authors[].key` → `verified-via-index`.
-5. Repository: a public Git repository, read by `git ls-remote` and a
-   shallow clone; its README names the title and author → `verified`.
+5. Repository: a code repository's "author" is its owner and its "title"
+   is its name, and that is the author-and-title match: the entry's author
+   and title equal the owner and name in its URL (folded). The route
+   matches when, in addition, `git ls-remote <url>` exits 0 and the README,
+   fetched raw (`https://raw.githubusercontent.com/<owner>/<name>/HEAD/README.md`,
+   else the same file through route 7's archive), describes the technique:
+   its folded text contains every word P6.2's table pins for that entry
+   (p5-watercolor: `hobbs` and `watercolor`) → `verified`, the how-checked
+   text naming the `ls-remote` result and the README sentence. Never read
+   authorship from `package.json` or other files.
 6. Cited by a checked work: a work with no DOI, ISBN or live page is
    checked against the reference list (fetched PDF or Crossref
    `.message.reference`) of a citing work whose own record routes 1 to 5
@@ -4453,9 +4576,24 @@ every route tried):
    order: "zeits f tech physik" → "zeitschrift fur technische physik") →
    `verified-via-index`, the how-checked text naming the citing work by
    citation and DOI and the fields that matched and that were absent.
-7. None matched → `not-verified: <routes tried>`.
+7. Archived snapshot: a source with a URL whose own page failed route 1
+   (not 200 after the retry rule, a challenge page, or a 404). Query the
+   Wayback availability API for the URL (tool facts); when
+   `.archived_snapshots.closest.available` is true and its `status` is
+   "200", fetch `https://web.archive.org/web/<timestamp>id_/<url>` with its
+   `timestamp`. When the API itself is exhausted or answers non-200, fetch
+   `https://web.archive.org/web/<YYYYMMDD>id_/<url>` with the day's date
+   instead. A 200 body is checked by the same *match* as route 1 →
+   `verified-via-index`, the how-checked text naming the snapshot
+   timestamp and the own page's status (`Wayback snapshot 20240511, own
+   page 403 challenge`).
+8. None matched → on a `Canonical source` line, `not-verified: <routes
+   tried>` and the canonical-source rule; on a `Design input` or `Read
+   during design` line, `unreachable: <each attempt, URL and status>`.
 
-*Match*: fold a title by Unicode NFKC, lowercasing, replacing every
+*Match*: decode HTML entities in a fetched body or field first
+(`html.unescape`: fetched bodies carry `Osman&#39;s` and `&#8211;`), then
+fold a title by Unicode NFKC, lowercasing, replacing every
 non-alphanumeric character (including U+2010 to U+2015) with a space and
 collapsing whitespace. A record's title is its `title` followed by its
 `subtitle` when Crossref splits them. The titles match when the folded
@@ -4478,7 +4616,9 @@ try the next candidate or result.
 - This section. A plan-reviewer agent reviews it, and P6.1 does not start
   until the review passes. `tasks.md` gains P6.0 and the new slice ids.
 - Tool facts above were fetched from this container at `1154129` and, for
-  the review-1 additions, at `93aee17`.
+  the review-1 additions, at `93aee17`; the review-2 probes (MoXi's two
+  DOIs, p5-watercolor, The Postman's Knock and the archive, the jargon
+  counts) at `31c1d26`.
 - Owner files: `specs/001-port/plan.md` (this section), `specs/001-port/tasks.md`
   (the P6 list). The orchestrating session adds the review outcome to the
   run log.
@@ -4579,8 +4719,12 @@ try the next candidate or result.
   the WCAG entry of `design-sources.md` goes to the closing section as
   `named-only`.
 - Write `p6-inventory.md` as that table with a fourth column, the
-  candidate canonical source from P6.3's table, and a fifth, empty, for
-  P6.2. Header: commit, date, the tally command and its output.
+  candidate canonical source from P6.3's table, a fifth, empty, for P6.2's
+  design inputs, and a sixth, empty, for P6.3's statuses. Header: commit,
+  date, the tally command and its output. The file holds **one table
+  only** (P6.3's key grep reads every backticked first cell in it); lists
+  such as the decided terms and the `no technique here` entries go in
+  prose or bullets, never in a second table.
 - Hand-off: row count, each added or dropped row with its rule, the decided
   terms with their files, issues filed, G-here stage times.
 - Gate: G-here (no `src/` change; `git diff --stat -- src tests` is empty).
@@ -4600,30 +4744,65 @@ try the next candidate or result.
   the entry cites the canonical source and says so (D24).").
 - Leave alone: `design-sources.md` (P9.4 deletes it; its text is the
   record), `src/**`, `tests/**`.
-- **Match rule.** For each `design-sources.md` entry, in file order: it is
-  the design input of an inventory row when its right-hand note names that
-  row's technique or effect. One entry may serve several rows (Curtis 1997
-  serves `edge-darkening`, `backruns`, `granulation`, `kubelka-munk` and
-  `shallow-water`); a row may have several design inputs, listed in
-  `design-sources.md` order, one `Design input:` line each. Where the entry
-  is the row's canonical source (same work), the row's line is the fixed
-  `the canonical source above.` An entry that names a technique without a
-  document read ("Lanczos resampling (named)", "Zhang, Suen ... named in
-  the code", "Marching squares (named in the code)", "Euclidean distance
-  transform; fractional Brownian motion and value noise (named in the
-  code)") is **not** a recovered reading: when it is the row's only entry,
-  the row's line is the fixed `original design reading not recorded; the
-  canonical source stands in.` A named entry with no title (Deegan et al.;
-  the 2019 arXiv study; Lee; WetBrush) is a `Design input` with status
-  `named-only`. An entry that informs no row (the SVG filter effects, WCAG
-  AA contrast ratios, Adventures in Mapping, Stadia's raster-only note, the
-  Wainwright, line-and-wash and Postman's Knock idioms where no row's
-  technique is named, the data providers, the font, the "Named only, no
-  source read" bullets) is marked `no technique here` and goes to the
-  closing section of `references.md` in P6.3.
-- Hand-off: per row, its design inputs or the fixed line; the
-  `no technique here` list; any `design-sources.md` entry that matched
-  nothing and was not on the no-technique list (expect none).
+- **The match table is authoritative.** P6.2 applies it and logs each
+  line as `choice: <entry> -> <rows or closing> | rule: match table |
+  inputs: design-sources.md`; it never re-decides a match. The rules behind
+  it, for the record: an entry is a row's design input when its right-hand
+  note names that row's technique or effect as the code implements it;
+  where the entry is the row's canonical source (same work), the row's line
+  is the fixed `the canonical source above.`; an entry that names a
+  technique with no document read ("named", "named in the code") is not a
+  recovered reading; a work named with no title is its exact `named-only`
+  line; an entry that informs no row goes to the closing section. One line
+  per work: a bullet naming two works gives two lines.
+
+  | `design-sources.md` entry (file order) | Rows, and the line each gets | Why |
+  |---|---|---|
+  | Curtis et al. 1997 | `edge-darkening`, `backruns`, `granulation`, `shallow-water`: the canonical source above; `kubelka-munk`: its own `Design input` line (grail URL) | the note names all five; it is the canonical source of the first four |
+  | Van Laerhoven, Van Reeth 2005 | `kubelka-munk` | "Kubelka-Munk compositing in place of multiply": the multiply it replaced is not what it informs, so not `multiply-compositing` |
+  | Bousseau et al. 2006 | `edge-darkening` | "Edge darkening as a distance term": the note's technique is edge darkening; the distance term is how, so not `chamfer-distance` |
+  | Luft, Deussen | closing | "the shared wet-area map": no code site holds a wet-area map shared between washes (`grep -rniE 'wet.?area' src` finds none at `31c1d26`) |
+  | Chu, Tai 2005 (MoXi) | `bristle-brush` | "ink starvation; the brush reservoir": the per-bristle load spent along a stroke (`Brush.starve`, `run_px`) is the brush's; the nib's `pen_starve` is this library's own; the lattice-Boltzmann reference informs no row |
+  | Baxter, Lin 2004 | `bristle-brush` | "per-bristle ink reservoir with reload" (`Brush.dip_px`) |
+  | Kubelka, Munk 1931 | `kubelka-munk`: the canonical source above | same work |
+  | Deegan et al. | `backruns`: exact `named-only` line `deegan-coffee-ring` | "blooms as a second liquid front" |
+  | 2019 arXiv drying study | `backruns`: exact `named-only` line `arxiv-watercolour-drying` | the same bullet, a second work |
+  | Lee, wet-on-wet | `shallow-water`: exact `named-only` line `lee-wet-on-wet` | "fluid pass scope" |
+  | WetBrush | `shallow-water`: exact `named-only` line `wetbrush` | the same bullet, a second work |
+  | Tyler Hobbs 2017 | `midpoint-displacement` | "recursive midpoint polygon deformation" |
+  | axelinternet, p5-watercolor | `midpoint-displacement`, status `maintainer-checked`; route 5 README words `hobbs` and `watercolor` | "implementation reference for the Hobbs method": the Hobbs row |
+  | Horn 1981 | `hillshade`: the canonical source above | same work |
+  | Douglas, Peucker 1973; Chaikin 1974 | `douglas-peucker`: the canonical source above; `chaikin`: the canonical source above | one bullet, two works, each its own row's canonical source |
+  | Lanczos resampling (named) | `lanczos`: not recorded | named, no document read |
+  | Zhang, Suen 1984 (named in the code) | `zhang-suen`: not recorded | named, no document read |
+  | Marching squares (named in the code) | `marching-squares`: not recorded | named, no document read |
+  | Euclidean distance transform; fBm and value noise (named in the code) | `chamfer-distance`, `fbm`, `value-noise`: not recorded | named, no document read |
+  | Stamen, *Watercolor process* | `multiply-compositing`, `box-blur`, `edge-darkening` | "multiply recipe", "blur", "rim darkening via blurred mask"; its "noise" names no kind of noise, so not `fbm` or `value-noise`; "paper grain" is the paper's texture, not pigment settling into its pits, so not `granulation` |
+  | Stadia Maps, Stamen Watercolor docs | closing | why the method is raster only: no technique |
+  | ICA MapCarte 95/365, Wainwright | closing | restraint, route weight and a warning about hatching moiré: a warning, not the hachures the `hachures` row draws down the slope |
+  | Adventures in Mapping 2024 | closing | the style was rejected |
+  | Urban Sketching World, *Line and wash* | closing | an idiom (ink first, wash after), no technique |
+  | The Postman's Knock | closing, status `maintainer-checked` (metadata only: the process section is behind a paywall) | the extent idiom: no code site trims the map's extent to a blob (`blob` occurs only in `letters/` at `31c1d26`), and its edge bleed is the extent's, not a wash's `edge-darkening` |
+  | osmanyy.com, *Risograph CSS* | `multiply-compositing` | "Multiply as the medium" |
+  | OpenStreetMap via Overpass; OSM tagging | closing: `named-only` lines `osm-overpass`, `osm-tagging` | data sources, no technique |
+  | OpenTopoData SRTM 30 m; Open-Elevation | closing: `named-only` lines `opentopodata-srtm`, `open-elevation` | data sources |
+  | Google Fonts: Patrick Hand; Caveat | closing: `named-only` lines `patrick-hand`, `caveat` | fonts |
+  | SVG filter effects; CSS mix-blend-mode | closing: `named-only` lines `svg-filter-effects`, `css-mix-blend-mode` | used in the upstream consumer's SVG page, not here |
+  | WCAG AA contrast ratios | closing: `named-only` line `wcag-aa-contrast` | chosen values only (P6.1: no code computes a contrast) |
+  | Named only: walk-guide maps and leaflets | closing: `named-only` line `walk-guide-maps` | genres, not works: one line |
+  | Named only: researcher search terms | closing: `named-only` line `researcher-search-terms` | search terms, not works: one line |
+  | Named only: MapTiler and Stadia notes | closing: `named-only` line `maptiler-stadia-notes` | not read |
+
+  Every inventory row the table gives no line gets the fixed `original
+  design reading not recorded; the canonical source stands in.` At
+  `1154129` those are `catmull-rom`, `hachures`, `nib` and
+  `label-placement`, besides the six rows marked "not recorded" above. A row P6.1 adds
+  gets that line too, and when a `design-sources.md` note names its
+  technique, P6.2 files `docs/issues/design-input-for-<key>.md` instead of
+  re-deciding the table.
+- Hand-off: per row, its design inputs or the fixed line; the closing
+  list; any `design-sources.md` entry not in the match table (expect none:
+  the table covers every entry).
 - Gate: G-here.
 - Commit: `Match the design sources to the inventory`
 
@@ -4662,8 +4841,12 @@ try the next candidate or result.
      paper the rules follow, and a `Note:` line saying which parts are this
      library's own. Where no published work describes the technique as
      built, the citation begins "Nearest published work:".
-  A replacement is fetched and checked like any candidate. When no source
-  the rule yields verifies, the canonical line stays `not-verified` with
+  A replacement is fetched and checked like any candidate. This rule and
+  `not-verified` concern `Canonical source` lines only: a design input or a
+  closing-section line never takes a replacement and ends, after every
+  route, `verified`, `verified-via-index`, its exact `named-only` line,
+  `maintainer-checked` (precedence rule) or `unreachable` (route 8). When no source the rule yields verifies, the
+  canonical line stays `not-verified` with
   the reason, P6.3 files `docs/issues/unverified-<key>.md`, and the
   completeness check stays red. P6.3 re-tries the `not-verified` entries
   once after the rest (step 4); if any remain, it hands off with its gate
@@ -4674,7 +4857,7 @@ try the next candidate or result.
 
   | Key | Candidate canonical source |
   |---|---|
-  | `kubelka-munk` | Kubelka, Munk (1931), "Ein Beitrag zur Optik der Farbanstriche", *Zeitschrift für technische Physik* 12, 593-601 (no DOI: route 6, cited by Kubelka 1948 `10.1364/JOSA.38.000448` with a title-less reference; expected status `verified-via-index`, as in the format example) |
+  | `kubelka-munk` | Kubelka, Munk (1931), *Zeitschrift für technische Physik* 12, first page 593 (the title and last page are in no record P6.3 fetches, so the citation carries neither; no DOI: route 6, cited by Kubelka 1948 `10.1364/JOSA.38.000448` with a title-less reference; expected status `verified-via-index`, as in the format example) |
   | `multiply-compositing` | W3C, *Compositing and Blending Level 1*, https://www.w3.org/TR/compositing-1/ (route 1; Candidate Recommendation Draft, 21 March 2024) |
   | `zhang-suen` | `10.1145/357994.358023` |
   | `douglas-peucker` | `10.3138/FM57-6770-U75U-7727` |
@@ -4699,33 +4882,85 @@ try the next candidate or result.
      section entry, apply the routes in order (pacing rule) and log one line
      per source: `<key or "closing"> | <source> | URL fetched | HTTP status
      (after redirects) | route that matched | fields matched | corrections
-     | retries`. Design inputs with no DOI or URL take route 3 (expected:
-     Van Laerhoven, Van Reeth; Bousseau et al.; Luft, Deussen; Baxter, Lin;
-     see the tool facts). Every URL in `design-sources.md` is fetched,
+     | retries`, and one sub-line per attempt (`attempt | URL | HTTP status
+     or curl error`). A design input whose DOI this plan fixes (MoXi,
+     `10.1145/1186822.1073221`, tool facts) takes routes 1 and 2 with that
+     DOI; route 3 applies only to the design inputs with no DOI or URL in
+     `design-sources.md` and none fixed here (expected: Van Laerhoven, Van
+     Reeth; Bousseau et al.; Luft, Deussen; Baxter, Lin; see the tool
+     facts). p5-watercolor and The Postman's Knock are
+     `maintainer-checked` (precedence rule); their routes still run, and
+     the review-2 probes predict a route-5 match for p5-watercolor and
+     route 1 and 7 failures for The Postman's Knock, each quoted in the
+     how-checked text. Every URL in `design-sources.md` is fetched,
      including those of entries that inform no technique (Stadia,
      Wainwright, Adventures in Mapping, Urban Sketching, The Postman's
      Knock, and any other P6.2 put in the closing section); those get a
-     status only and no docstring cites them. Entries on the `named-only`
-     list are not fetched.
+     status only and no docstring cites them. The 16 works on the
+     `named-only` closed list (`refcheck.sh`) are not fetched; each is
+     written as its exact line.
   2. Save each response under `$SCRATCH/refs/<key>-<n>.{json,html,pdf}` and
      grep the saved body, never the terminal summary.
   3. Write `references.md` in the fixed format. A `Note:` line states where
      the code departs from the source, from reading the site's body (for
      example `hillshade`: slope by `numpy.gradient` central differences,
      not Horn's eight-neighbour weights), in one line.
-  4. Re-try the `not-verified` entries once, same rules.
+  4. Re-try the `not-verified` and `unreachable` entries once, same rules
+     and pacing. An `unreachable` line that fails again is final and is
+     listed in the hand-off.
 - **Mechanical checks** before hand-off (write the source-line check to
   `$SCRATCH/refcheck.sh`; paste every output into the log):
   ```bash
-  # $SCRATCH/refcheck.sh FILE: print every source line without a passing status; exit 1 if any
+  # $SCRATCH/refcheck.sh FILE RUNLOG: print FAIL for every source line without a passing status,
+  # UNREACHABLE and MAINTAINER-CHECKED for those lines; exit 1 if any FAIL
   f="$1"
-  bad=$(grep -nE '^- (Canonical source|Design input|Read during design):' "$f" \
-    | grep -vE '^[0-9]+:- (Canonical source|Design input|Read during design): .* \[(verified|verified-via-index): [^]]+\]$' \
-    | grep -vE '^[0-9]+:- Design input: (the canonical source above|original design reading not recorded; the canonical source stands in)\.$' \
-    | grep -vE '^[0-9]+:- (Design input|Read during design): .* \[named-only: [^]]+\]$')
-  printf '%s' "$bad${bad:+
-  }"
-  test -z "$bad"
+  log="${2:-specs/001-port/p6-run-log.md}"
+  named=$(cat <<'EOF'
+  deegan-coffee-ring|Design input|Deegan et al. Coffee-ring drying, named in the design record without a title.
+  arxiv-watercolour-drying|Design input|A 2019 arXiv study of watercolour drying patterns, named in the design record without a title.
+  lee-wet-on-wet|Design input|Lee. Wet-on-wet painting, named in the design record without a title.
+  wetbrush|Design input|WetBrush, a lattice-Boltzmann painting work, named in a survey list in the design record without a title.
+  osm-overpass|Read during design|OpenStreetMap via the Overpass API, named in the design record.
+  osm-tagging|Read during design|OSM tagging (landuse, natural, waterway, highway, boundary, historic, tourism, natural=coastline), named in the design record.
+  opentopodata-srtm|Read during design|OpenTopoData SRTM 30 m, named in the design record.
+  open-elevation|Read during design|Open-Elevation, named in the design record as a fallback.
+  patrick-hand|Read during design|Google Fonts: Patrick Hand (vendored, SIL OFL 1.1), named in the design record.
+  caveat|Read during design|Google Fonts: Caveat, considered and no longer used, named in the design record.
+  svg-filter-effects|Read during design|SVG filter effects (feTurbulence, feDisplacementMap, feGaussianBlur, feDropShadow), named in the design record.
+  css-mix-blend-mode|Read during design|CSS mix-blend-mode, named in the design record.
+  wcag-aa-contrast|Read during design|WCAG AA contrast ratios, 3:1 for marks and 4.5:1 for text, named in the design record.
+  walk-guide-maps|Read during design|Walk-guide and notebook route maps, National Trust and Ramblers trail leaflets, travel-journal watercolour maps and the Ordnance Survey double-line road style, named only.
+  researcher-search-terms|Read during design|The search terms given to a researcher, named only.
+  maptiler-stadia-notes|Read during design|MapTiler and Stadia notes on Stamen Watercolor, named only; only the Stadia page was read.
+  EOF
+  )
+  grep -nE '^- (Canonical source|Design input|Read during design):' "$f" | awk -v named="$named" -v logpath="$log" '
+  BEGIN {
+    n = split(named, rows, "\n")
+    for (i = 1; i <= n; i++) { split(rows[i], c, "|"); want[c[1]] = "- " c[2] ": " c[3]; seen[c[1]] = 0 }
+    date = "; [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\\]$"
+    while ((getline row < logpath) > 0) runlog = runlog "\n" row
+  }
+  {
+    line = $0; sub(/^[0-9]+:/, "", line); no = $0; sub(/:.*/, "", no)
+    if (line ~ /^- Design input: (the canonical source above|original design reading not recorded; the canonical source stands in)\.$/) next
+    if (line ~ ("^- (Canonical source|Design input|Read during design): .* \\[(verified|verified-via-index): [^]]+" date)) next
+    if (line ~ ("^- (Design input|Read during design): .* \\[unreachable: [^]]+" date)) { print "UNREACHABLE " no ": " line; next }
+    if (line ~ ("^- (Design input|Read during design): .* https?://[^ ]+ \\[maintainer-checked: [^]]+" date)) {
+      url = line; sub(/ \[maintainer-checked: .*/, "", url); sub(/.* /, "", url)
+      if (index(runlog, url)) { print "MAINTAINER-CHECKED " no ": " line; next }
+    }
+    if (line ~ ("\\[named-only: [a-z][a-z-]*" date)) {
+      key = line; sub(/.*\[named-only: /, "", key); sub(/;.*/, "", key)
+      head = line; sub(/ \[named-only: .*/, "", head)
+      if ((key in want) && head == want[key]) { seen[key]++; next }
+    }
+    print "FAIL " no ": " line; bad++
+  }
+  END {
+    for (k in seen) if (seen[k] != 1) { print "FAIL named-only " k ": " seen[k] " lines, want 1"; bad++ }
+    exit bad > 0
+  }'
   ```
   ```bash
   cd /home/user/pyntpot
@@ -4735,23 +4970,40 @@ try the next candidate or result.
   diff "$SCRATCH/keys-inventory" <(sort -u "$SCRATCH/keys-refs") && test "$(wc -l < "$SCRATCH/keys-refs")" = "$(sort -u "$SCRATCH/keys-refs" | wc -l)"
   # every design-sources URL appears (the P9.4 check, early)
   grep -oE 'https?://[^ )]+' specs/001-port/design-sources.md | while read -r u; do grep -qF "$u" docs/explanation/references.md || echo "missing $u"; done
-  # every source line carries verified, verified-via-index, an allowed named-only or a fixed line; none is not-verified
-  bash "$SCRATCH/refcheck.sh" docs/explanation/references.md
+  # every source line passes refcheck.sh: verified, verified-via-index, an exact named-only line or a fixed line; on design-input and closing lines also unreachable or maintainer-checked (printed); none not-verified
+  bash "$SCRATCH/refcheck.sh" docs/explanation/references.md specs/001-port/p6-run-log.md
   # every entry has exactly one canonical line
   awk '/^## `/{if(k!="" && n!=1) print k, n; k=$2; n=0} /^- Canonical source:/{n++} END{if(k!="" && n!=1) print k, n}' docs/explanation/references.md
   ```
-  The first exits 0; the second, third and fourth print nothing, and the
-  third exits 0. The check was proved on a scratch sample on 2026-10-07:
-  it exits 0 on lines of each passing form and exits 1, naming the line,
-  on a `[not-verified: ...]` design input, on a `named-only` canonical line
-  and on a closing-section line with no status. The log pairs each
-  `named-only` line with its item on the closed list; a `named-only` line
-  with no item there is a failure of the check.
+  The first exits 0; the second and fourth print nothing; the third exits
+  0 and prints only `UNREACHABLE <line>: ...` and `MAINTAINER-CHECKED
+  <line>: ...` lines, one per such source, which the run log copies. `refcheck.sh` accepts a source line
+  only when it is a fixed line, carries `verified` or
+  `verified-via-index` with a date, carries `unreachable` with a date on a
+  `Design input` or `Read during design` line, carries
+  `maintainer-checked` with a date on such a line whose URL appears in the
+  run log, or equals the exact
+  `named-only` line of a key on its closed list; and each closed-list key
+  appears exactly once. It was proved on 2026-10-07 on a scratch sample
+  holding a canonical line, both fixed lines, a repository design input,
+  an `unreachable` closing line and the 16 `named-only` lines: exit 0, one
+  `UNREACHABLE` line. Appending one line at a time, it exits 1 naming the
+  line for: the review's fake `- Design input: Van Laerhoven (2005).
+  Real-time. [named-only: lazy; 2026-10-07]` (unknown key); the same with
+  the real key `wetbrush` (wrong citation; also `wetbrush: 2 lines, want
+  1`); `named-only` on a `Canonical source` line; `unreachable` on a
+  `Canonical source` line; a `verified` status without its date; a
+  `not-verified` design input; a closing line with no status. Removing
+  the `caveat` line gives `FAIL named-only caveat: 0 lines, want 1`. With
+  the two `maintainer-checked` lines in the sample and the real run log
+  it exits 0 and prints both; it exits 1 on `maintainer-checked` on a
+  `Canonical source` line, on a design input whose URL is not in the run
+  log, and on one with no URL.
   `uv run pytest tests/architecture/test_coordinates.py` passes (it scans
   `docs/`; a DOI such as `10.1145` is not a coordinate).
-- Hand-off: entries by status, every correction made to a design-sources
-  entry, every candidate replaced and why, every retry, fetch counts and
-  wall time.
+- Hand-off: entries by status, every `unreachable` and
+  `maintainer-checked` entry with its attempts, every correction made to a design-sources entry, every
+  candidate replaced and why, every retry, fetch counts and wall time.
 - Gate: G-here, plus the mechanical checks above green.
 - Commit: `Add the references, every source fetched and checked`
 
@@ -4873,12 +5125,66 @@ Every one of these slices:
     capability facts (house-rules rule).
   It adds no caller obligations and no narration of how the code came to
   be.
-- Pass 2, prose, over the same files' docstrings and comments: run
-  `detect_ai_jargon.py` and fix each finding by rewording, then the
-  semantic read the skill describes; British English; then
-  `strip_emdashes.py` (expect nothing: the tree has no dashes). Terms come
-  from `GLOSSARY.md`, one name a concept: a synonym is replaced by the
-  glossary term.
+- Pass 2, prose, over the same files' docstrings and comments only. The
+  detector reads every line of a `.py` file, identifiers included (36
+  findings over `src/` at `31c1d26`, most of them the `surface` parameter
+  in `letters/nib.py`), and P6 never renames a code identifier, whatever a
+  skill or the detector says. So the detector runs on the docstring and
+  comment text alone, extracted by `$SCRATCH/doc_lines.py` (scratch only,
+  written verbatim from this block): `ast` finds each module, class and
+  function docstring by its line span, `tokenize` finds each `#` comment,
+  and every other character is blanked, so the line numbers are the
+  source's and a code identifier is never seen.
+  ```python
+  """Write each FILE's docstring and comment text to OUT/<FILE>.txt, every other character blanked, line numbers kept."""
+  import ast
+  import io
+  import sys
+  import tokenize
+  from pathlib import Path
+
+  DOC_OWNERS = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+
+
+  def doc_text(source: str) -> list[str]:
+      lines = source.splitlines()
+      kept = [""] * len(lines)
+      for node in ast.walk(ast.parse(source)):
+          if isinstance(node, DOC_OWNERS) and node.body:
+              first = node.body[0]
+              if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+                  for n in range(first.lineno, first.end_lineno + 1):
+                      kept[n - 1] = lines[n - 1]
+      for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+          if tok.type == tokenize.COMMENT:
+              row, col = tok.start
+              kept[row - 1] = " " * col + tok.string
+      return kept
+
+
+  out = Path(sys.argv[1])
+  for name in sys.argv[2:]:
+      target = out / f"{name}.txt"
+      target.parent.mkdir(parents=True, exist_ok=True)
+      target.write_text("\n".join(doc_text(Path(name).read_text())) + "\n")
+      sys.stdout.write(f"{target}\n")
+  ```
+  Run it as
+  `cd /home/user/pyntpot && python3 -I "$SCRATCH/doc_lines.py" "$SCRATCH/doclines" <group files>`,
+  then
+  `python3 -I <dir>/ai-jargon-audit/detect_ai_jargon.py $(find "$SCRATCH/doclines" -name '*.txt' | sort)`.
+  Proved on 2026-10-07 at `31c1d26`: over all 108 `src/` files, 18
+  findings (36 on the raw files); `letters/nib.py` 19 raw to 5, and
+  `maps/attribution.py` and `maps/lettering/pipeline.py` 2 each to 0, the
+  `surface` identifier lines gone. **Every finding has an outcome**, a
+  rewrite or a swappable one alike: either the docstring or comment is
+  reworded, or the run log carries `kept: precise term | <file>:<line> |
+  <word> | <reason>` (for example `surface` where it is the paper surface,
+  the term `ink/sheet.py` and `ink/pigment.py` use). Then the semantic read
+  the skill describes; British English; then `strip_emdashes.py` (expect
+  nothing: the tree has no dashes). Terms come from `GLOSSARY.md`, one name
+  a concept: a synonym in prose is replaced by the glossary term, and a
+  synonym that is an identifier is filed, never renamed.
 - Triage and file by the fix-now rule; line-adding fixes by the line-budget
   rule.
 - Hand-off: docstrings changed and added (public, private), sections added
@@ -4887,8 +5193,10 @@ Every one of these slices:
   done, each gate stage's wall time.
 - Gate: `python3 -I "$SCRATCH/ast_neutral.py" <starting commit>`, then
   G-here plus G-self, then
-  `python3 -I <dir>/ai-jargon-audit/detect_ai_jargon.py <group files>`
-  reports 0 to rewrite, and `! grep -rnI -e '—' -e '–' <group files>` exits 0 (literal
+  `doc_lines.py` and the detector rerun on the group's final files, and
+  every finding they report has a `kept:` line in this slice's run-log
+  entry naming its `<file>:<line>` (the gate is that no finding lacks an
+  outcome, not that there are zero findings), and `! grep -rnI -e '—' -e '–' <group files>` exits 0 (literal
   characters: `grep -P '\x{2014}'` fails here because `LANG` is unset).
 - Commits: P6.5a `Audit the ink docstrings and comments`; P6.5b `Audit the
   letters docstrings and comments`; P6.5c `Audit the maps facade and data
@@ -4909,7 +5217,10 @@ Every one of these slices:
 - Leave alone: the files the dash-audit rule excludes (`CLAUDE.md`,
   `BOUNDARIES.md`, `specs/**`, `.claude/**`, `docs/decisions/**`,
   `docs/issues/**` existing files, `tests/**`) and all of `src/`.
-- Steps: per file, `detect_ai_jargon.py`, then the semantic read, then
+- Steps: per file, `detect_ai_jargon.py` (Markdown is all prose, so it
+  runs on the file itself; code spans are masked by the tool), each
+  finding reworded or logged `kept: precise term | <file>:<line> | <word>
+  | <reason>` as in P6.5, then the semantic read, then
   British English, then `strip_emdashes.py` (the one known dash is in
   `docs/runbooks/update-dependencies.md`). Content changes beyond wording
   (a wrong command, a stale fact) follow the behaviour-wins rule: correct
@@ -4925,8 +5236,12 @@ Every one of these slices:
      cover the branch).
   3. The P6.3 mechanical checks (inventory keys equal entry keys; every
      design-sources URL present; every source line `verified`,
-     `verified-via-index`, an allowed `named-only` or a fixed line; one
-     canonical line per entry). Any `not-verified` fails the gate; the
+     `verified-via-index`, an allowed `named-only` or a fixed line, or,
+     on a design-input or closing line only, `unreachable` or
+     `maintainer-checked`; one canonical line per entry), with
+     `refcheck.sh` written afresh from the P6.3 block. The run log lists
+     every `unreachable` and `maintainer-checked` entry it prints. Any
+     `not-verified` fails the gate; the
      route to clear it is a re-try of only those entries under the pacing
      rule, committed as a fix to `references.md` before the gate is run
      again.
@@ -4942,7 +5257,9 @@ Every one of these slices:
 Gate for P6: full gate green, parity exact (G-here's byte-exact golden run
 plus G-self), the whole branch AST-neutral against `92b011c`,
 `references.md` has an entry for every inventory item and no
-`not-verified` source (P6.3 checks), and every implementing docstring names
+`not-verified` source, every `unreachable` or `maintainer-checked` source
+on a design-input or closing line and listed in the run log and the final
+report (P6.3 checks), and every implementing docstring names
 its key (`test_reference_keys.py`).
 
 ### P7. Docs and first release
