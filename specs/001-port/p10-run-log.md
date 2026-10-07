@@ -172,3 +172,26 @@ User instructions (2026-10-07):
   P9 preamble and P10 "Commit messages" rule say the same. Check: the `rg` printed seven
   lines before, three after (P0's record line and the two Q1 lines), as the plan states.
   prek exit 0; not-golden 117 s; tolerance 364 s.
+- Paused at the maintainer's request (`952ab03`). Two in-flight agents stopped before
+  hand-off, nothing from them kept: the P10.4b implementer (worktree discarded, no edits
+  landed) and the capped mutant reproduction (no findings file written). No worktrees,
+  no uncommitted changes.
+
+## Resume point
+
+- Done: P10.0, P10.1, P10.2, P10.3a, P10.3b, P10.3c, P10.3d, P10.4a, P10.8. Every
+  release blocker is cleared (D8, Verification 1, D24).
+- Part 1 left, in order: P10.4b (rename `edt` to `chamfer_distance`, delete
+  `point_to_segment`; restart from scratch), then P10.5a (outline route, delete `_radii`),
+  then P10.9 (docs and terms, with the widened sheet/map pass; stop and split into
+  P10.9a/b past 600 lines). Then open the `p10-triage` PR (not opened yet; the maintainer
+  was asked whether to open it now or when part 1 is complete).
+- Open finding to file under "Later issues": the Mutation workflow on `main` dies
+  deterministically during the 43rd mutant of `pyntpot.ink.polyline.x_simplify*`
+  (run 37689849941, both attempts, exit 143, runner shutdown). Next step: name that
+  mutant and reproduce it locally under a hard memory cap (`prlimit --as=4G`, `timeout`),
+  then propose a memory limit around `mutmut run` in `mutation.yml`. The `tasks.md:124`
+  row stays not done until a run completes.
+- Untriaged later row: `maps-tests-sheet-identifiers-name-the-map` (slice not cut).
+- After part 1: P11, then P10.R (tag 0.0.1, tag only, after the maintainer confirms no
+  pending PyPI trusted publisher), then P8, then part 2, P7, P9.
