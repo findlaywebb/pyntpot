@@ -162,9 +162,26 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 
 ## P10. Triage and address the port's issues
 
-Order: P10.0 to P10.2 run after P6 merges and before P7.1; a release-blocking fix lands before P7.4; the golden group lands after P8; the other fix slices after P8 (plan.md, P10, "Order").
+Order: P10.0, P10.1, P10.2 (the one stop point), then P10.3d, P10.3a, P10.3b and P10.3c, which land before P7.4 (P10.0 to P10.2 and the four P10.3 slices go to `main` through one PR on `p10-triage`). If the maintainer answers Q13 yes, P10.4a, P10.4b, P10.5a, P10.8 and P10.9 may run any time after P10.2; otherwise after P8. P10.4c, P10.5b, P10.6 and P10.7 run after P8; P10.10a to P10.10d follow every other slice touching their files; the golden group P10.11 runs last, after P8. Conditional slices run only under the answers `plan.md` names (P10, "Order and parallelism").
 
 - [ ] P10.0 Fatten P10 into slices; plan-reviewer pass
-- [ ] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue
-- [ ] P10.2 Maintainer decisions: the `decide` rows put once, answers recorded and re-triaged
-- [ ] P10.3 onwards: fix slices by area and golden impact, filled in at P10.0
+- [ ] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue; dispatch the Mutation workflow once on `main`
+- [ ] P10.2 Maintainer decisions Q1 to Q13: answers recorded and re-triaged
+- [ ] P10.3d One commit trailer rule (Q1)
+- [ ] P10.3a The labels switch no longer gates the attribution (release blocker, D8)
+- [ ] P10.3b prek in the dev group, and the hooks in CI (release blocker, Verification 1)
+- [ ] P10.3c Cite the ink reservoir and pigment separation, and the blurred-mask rim if Q7 (A) (release blocker, D24)
+- [ ] P10.4a Delete the duplicate benchmarks
+- [ ] P10.4b Rename `edt` to `chamfer_distance`; delete `point_to_segment`
+- [ ] P10.4c The deposit drops corners off the accumulator (after P8)
+- [ ] P10.5a The outline route narrows the nib; delete `_radii`
+- [ ] P10.5b Route-ink names follow the route ink (if Q5 (2)); a missing glyph advances as the face's space (if Q3 (2)) (after P8)
+- [ ] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict`, rule seven; rung order if Q11 (1) (after P8)
+- [ ] P10.7 Other maps: `tunnel=no`; route constants if Q8 deletes (after P8)
+- [ ] P10.8 Mark the slow CLI test golden
+- [ ] P10.9 Docs and terms: non-canonical terms, the OpenTopoData question; display pixels (Q2), "map" (Q10)
+- [ ] P10.10a Public names for what other modules import: `ink` (if Q9 (a))
+- [ ] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
+- [ ] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))
+- [ ] P10.10d Public names for what other modules import: `maps.lettering` (if Q9 (a))
+- [ ] P10.11 Golden group, one regeneration window (if a row is `fix-golden` and Q12 yes)
