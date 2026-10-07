@@ -28,3 +28,12 @@ User instructions (2026-10-07):
   for the pen angle and held stroke ends would be `fix-golden`.
   - choice: P10.0 cuts slices from the dossiers; P10.1 re-verifies and writes the table
     | rule: plan P10 "P10.0 fattens it into slices" and "Triage (P10.1)" | inputs: dossiers.
+- P10.0 plan committed (`177a9f5`), 14 min planner, about 1,140 lines. Slices P10.3a to
+  P10.3d (release blockers and the trailer rule), P10.4a to c (ink), P10.5a and b
+  (letters), P10.6 (maps lettering), P10.7 (other maps), P10.8 (slow test), P10.9 (docs
+  and terms), P10.10a to d (private names, if Q9), P10.11 (golden group, empty unless
+  answers move rows). Planner departures kept: the route-ink cache key cannot come from
+  `LETTERING_GROUPS` (it would change the frozen `lettering_digest`), so Q5 now
+  recommends close; the deposit mask multiplies last to stay byte-identical; Q13 keeps
+  every fix reachable by an upstream render after P8; new row `point_to_segment` (no
+  caller). Plan review 1 running.
