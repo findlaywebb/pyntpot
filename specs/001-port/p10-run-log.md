@@ -94,3 +94,8 @@ User instructions (2026-10-07):
 - P10.2 list put to the maintainer. Meanwhile, as the plan allows, P10.3a, P10.3b and
   P10.3c (first commit: reservoir and pigment separation only) dispatched to implementers
   in detached worktrees from `d30ff4b`, under the interim trailer rule.
+- P10.3b landed (`cbaeff3`): `prek>=0.5` in the dev group (prek 0.5.5 locked), a `Hooks` step
+  in `ci.yml`. Gates in the worktree: `uv run prek run --all-files` exit 0, 9 s (all 9
+  hooks); not-golden 172 s (1043 passed, 1 skipped); golden tolerance 294 s and exact
+  288 s (17 passed each); no `src/` change, so no G-self. Issue file deleted; rows done.
+  Re-checked on the branch: `uv run prek run --all-files` green.
