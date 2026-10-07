@@ -2614,27 +2614,32 @@ coverage 7.16.2, pytest-cov 7.1.0) and the CodSpeed action's current docs.
 
 **Rules for the whole phase.**
 
-- P5 adds tests, CI jobs, two helper scripts, two ADRs and one docs page.
+- P5 adds tests, CI jobs, three helper scripts, two ADRs and one docs page.
   **It does not edit `src/`.** No slice needs G-self, because no pixel can
   move; every slice runs G-here.
 - **A failing property is a finding, not a test to fix.** If a property in
-  P5.1 fails against the current code, stop: do not weaken the property,
-  widen a bound, add `assume` to dodge the counterexample, or mark it
+  P5.1 fails against the current code, stop that property: do not weaken
+  it, widen a bound, add `assume` to dodge the counterexample, or mark it
   `xfail`. Record the shrunk counterexample in `docs/issues/<name>.md` and
-  report. The fix is its own slice: it touches `src/`, runs G-here plus
-  G-self, and may need a golden decision. P5.1 lands without the failing
-  property, and the issue file names it.
+  in `specs/001-port/p5-run-log.md`. The fix is its own slice: it touches
+  `src/`, runs G-here plus G-self, and may need a golden decision. P5.1
+  lands without the failing property, and the issue file names it. This is
+  a correctness stop, not a scope choice; the rest of P5 carries on.
 - P5 measures and does not optimise (spec, out of scope).
-- **Timings come before scope.** The maintainer decides the mutation scope
-  and which benchmarks stay only after seeing measured timings (2026-10-07).
-  P5.3a and P5.4 each stop at a stated point and report numbers; they do
-  not pick scope themselves.
+- **Timings come before scope, and a stated rule makes every choice.** No
+  slice stops to ask. Each slice measures first, then applies the rule
+  written in it: mutation scope and shard count (P5.3a), which benchmarks
+  stay and at what `display_px` (P5.4), the coverage thresholds (P5.2) and
+  any `max_examples` cut (P5.1). Each slice's hand-off appends its measured
+  numbers and the choice the rule made to `specs/001-port/p5-run-log.md`,
+  so that file is in every slice's owner files. The final HTML report after
+  P5 is built from that log and states every timing and every choice.
 - **`maps` is not assumed covered by the goldens.** A golden test guards a
   change that should not move pixels. A visual-refinement change moves
   them on purpose and regenerates the goldens, which then accept whatever
   the code does. So `maps` needs its own behavioural checks. P5 measures
-  `maps` alongside `ink` and `letters`. How deep `maps` testing goes is
-  decided after P5's numbers.
+  `maps` alongside `ink` and `letters`. How deep `maps` testing goes is a
+  later phase's decision, made from the numbers P5 records.
 - Branch and PR: P5.1, P5.2, P5.3a and P5.4 land as one commit each on a
   branch `p5-quality` and go to `main` through one PR. That way the two
   PR-only jobs (mutation on changed functions, CodSpeed) each run once
@@ -2642,8 +2647,8 @@ coverage 7.16.2, pytest-cov 7.1.0) and the CodSpeed action's current docs.
   own short PR.
 - Order: P5.1 → P5.2 → P5.3a → P5.4 → (merge) → P5.3b. The order is
   sequential because P5.1's Hypothesis settings feed the mutation config,
-  P5.2 measures coverage after the property tests exist, and P5.3a and P5.4
-  both edit `pyproject.toml` and `.gitignore`.
+  P5.2 measures coverage after the property tests exist, and P5.2, P5.3a
+  and P5.4 all edit `pyproject.toml`, `.gitignore` or `ci.yml`.
 - `.gitignore` is append-only across P5: each slice adds its own lines.
 
 **Tool facts the slices rely on** (verified at P5.0; recheck only if a
@@ -2664,7 +2669,9 @@ version moves):
   Under `--codspeed`, or under the CodSpeed action (`CODSPEED_ENV`),
   pytest-codspeed blocks pytest-benchmark, takes over the `benchmark` name
   and deselects every test without the fixture or the `benchmark` marker.
-  Both plugins register the `benchmark` marker.
+  Both plugins register the `benchmark` marker, so `-m benchmark` and
+  `-m "not benchmark"` are valid under `--strict-markers` before P5.4
+  registers it in `pyproject.toml`.
 - `--benchmark-disable` in `addopts` works with `--codspeed` (tried at
   P5.0): a plain run calls each benchmarked function once without timing,
   `--benchmark-enable` restores timing, and `--codspeed` benchmarks
@@ -2676,20 +2683,43 @@ version moves):
   the **whole** measured package. A per-package threshold therefore goes in
   a separate `coverage report --include=... --fail-under=N` step (exit 2
   below N), never in that table.
+- `uv run --python 3.14` against the project re-creates `.venv` on that
+  interpreter. A second interpreter is measured in its own environment,
+  `UV_PROJECT_ENVIRONMENT="$SCRATCH/venv-3.14"`, so `.venv` stays on 3.13.
+  CPython 3.14.6 is downloadable here.
 - mutmut has **no** "mutate only the diff" mode. `use_git_change_detection`
   only invalidates its cache. What it does support:
   - It restricts which mutants are tested by fnmatch patterns over mutant
     names. A function `f` in `src/pyntpot/ink/polyline.py` is
     `pyntpot.ink.polyline.x_f`, and a method `m` of class `C` is
-    `pyntpot.ink.sheet.xǁCǁm`. Each mutant appends `__mutmut_<n>`.
+    `pyntpot.ink.sheet.xǁCǁm`. Each mutant appends `__mutmut_<n>`. The
+    module part is built as `get_mutant_name` builds it: the path without
+    `src/` and `.py`, `/` mapped to `.`, and a trailing `.__init__`
+    dropped (`src/pyntpot/ink/__init__.py` gives `pyntpot.ink.x_f`).
+  - It generates every mutant in `only_mutate` even under a pattern, and
+    runs the stats collection, on every run; only the pattern's mutants
+    are tested.
+  - A pattern list that matches no mutant fails an `assert` in
+    `collect_source_file_mutation_data` with the message
+    `Filtered for specific mutants, but nothing matches`, and `mutmut run`
+    exits non-zero. An empty pattern list means every mutant.
+  - It does not mutate a function or method carrying any decorator except
+    a single `staticmethod` or `classmethod` (`file_mutation.py:330`), so
+    `@property`, `@functools.cache` and the like have no mutants.
+  - It runs pytest with cwd `mutants/` on copied `tests/`, so
+    `support.REPO_ROOT` resolves to `mutants/`. `copy_src_dir` copies
+    every file under `source_paths`, data files included.
   - `mutmut run` exits 0 when mutants survive.
   - `mutmut export-cicd-stats` writes `mutants/mutmut-cicd-stats.json` with
     the keys `killed`, `survived`, `total`, `no_tests`, `skipped`,
     `suspicious`, `timeout`, `check_was_interrupted_by_user` and `segfault`.
-    In a restricted run, the untested mutants count in `total` only.
+    In a restricted run, the untested mutants count in `total` only, so the
+    other counts of several restricted runs add up correctly.
   - It always passes `-p no:randomly`.
   - It needs `fork` (Linux and macOS).
-  - `only_mutate` takes globs ending in `.py` or `*`.
+  - `only_mutate` takes globs ending in `.py` or `*`, matched with
+    `fnmatch.fnmatch(path, glob)` (`_should_include_for_mutation`), where
+    `*` spans `/`.
 
 #### P5.0 Fatten P5; plan-reviewer pass
 
@@ -2717,6 +2747,7 @@ version moves):
   - `CONTRIBUTING.md`: one paragraph on reproducing a property failure. Use
     the printed blob or `--hypothesis-seed`; `--randomly-seed` alone does
     not reproduce one. CI runs derandomised.
+  - `specs/001-port/p5-run-log.md`: the hand-off entry.
 - Leave alone:
   - `src/**`.
   - `tests/unit/**`. The pinned unit tests stay, including
@@ -2783,7 +2814,11 @@ version moves):
     Both sides use `signed_area`, so its scale (twice the area) cancels.
   - A ring scaled and shifted to lie strictly inside the box comes back
     equal to the input.
-  - A ring entirely outside the box returns `[]`.
+  - A ring translated so that its bounding box is disjoint from the box
+    returns `[]`. Build it by shifting the ring along x or y until its
+    bounding box clears the box's edge by at least 1; a ring separated
+    only diagonally, near a corner, is a rounding edge case and is not
+    generated.
   - Not tested: clipping twice. A second pass can add near-duplicate points
     at the boundary, so `clip_ring` is not idempotent by construction.
 
@@ -2802,7 +2837,10 @@ version moves):
   - An all-False mask returns `1e6` everywhere.
   - `edt` does not mutate its input (compare to a copy).
   - `blur` arrays are float32, shape 8 to 40 by 8 to 40, elements in
-    [0, 1] (`st.floats(0, 1, width=32)`), and `sigma` in [0, 6].
+    [0, 1] (`st.floats(0, 1, width=32, allow_subnormal=False)`), and
+    `sigma` in [0, 6]. Subnormals are excluded because a padded field
+    holding a single `1e-45` blurs to sum 0 (the division by `2r+1`
+    underflows), which is float arithmetic, not a `blur` defect.
   - Same shape; dtype float32.
   - The output stays within `[a.min() - 1e-5, a.max() + 1e-5]`.
   - A constant field comes back equal within `rel=1e-5`.
@@ -2821,7 +2859,8 @@ version moves):
   - Paths are `(N, 2)` float arrays with 2 to 30 points, x in [2, 218] and
     y in [2, 58], built as `tests/unit/ink/test_stamp.py:19` builds `line`.
   - The brush id is drawn from `("RIV1-a", "TRK4-d", "MAJ2-a")`;
-    `brush_from_id(id, 3.0, 2.0, BrushStyle())`.
+    `brush, _ = brush_from_id(id, 3.0, 2.0, BrushStyle())` (it returns a
+    `(Brush, str)` pair).
   - The seed is in [0, 2**32 - 1].
   - The same seed gives the same deposit. Two fresh canvases stamped with
     `np.random.default_rng(seed)` are `np.array_equal`.
@@ -2831,7 +2870,11 @@ version moves):
     clear of the threshold.
 
   `test_pigment.py` (`composite`, `PaperStyle`):
-  - `h` and `w` are in 1 to 16. `base` is `(h, w, 3)` in [0, 1].
+  - `h` and `w` are in 1 to 16. `base` is `(h, w, 3)` **float32** in
+    [0, 1], drawn as
+    `hnp.arrays(np.float32, (h, w, 3), elements=st.floats(0, 1, width=32))`.
+    The dtype matters: `km_plate` does `base.astype(F32, copy=True)`, so a
+    float64 `base` comes back float32-rounded in glazing mode.
   - Draw 0 to 4 layers. Each layer is `(density, pigment)` or
     `(density, pigment, transparency)`:
     - `density` is `None` or `(h, w)` float32 in [0, 1].
@@ -2839,7 +2882,8 @@ version moves):
     - `transparency` is in [0, 1].
   - Glazing is `st.booleans()`, giving `dataclasses.replace(PaperStyle(), km_glazing=g)`.
   - The output is in [0, 1] in both modes.
-  - No layers returns `np.clip(base, 0, 1)` exactly.
+  - No layers returns `np.clip(base, 0, 1)` exactly (`np.array_equal`),
+    in both modes, for the float32 `base` above.
   - Multiply mode (`km_glazing=False`) never lightens: `out <= base + 1e-6`.
 
   `test_hand.py` (`Hand.write`):
@@ -2851,33 +2895,53 @@ version moves):
   - The same seed writes the same marks:
     `hand.write(s, hand.generator(seed)) == hand.write(s, hand.generator(seed))`.
 - Budget: `uv run pytest tests/property` under the default profile (100
-  examples per test) takes at most 30 s in this environment. The hand-off
-  quotes the time. Over budget, lower `max_examples` on the slowest test in
-  its own `@settings`, never globally.
-- Gate: G-here, plus `CI=true uv run pytest tests/property` (the `ci`
-  profile) green twice with different `-p randomly` seeds.
+  examples per test) takes at most 30 s in this environment. Rule when
+  over budget: take the slowest test (from `--durations=0`), halve its
+  `max_examples` in its own `@settings`, never globally, and re-measure;
+  repeat until under 30 s or that test is at 25, then move to the next
+  slowest.
+- Hand-off: append to the run log the suite time, each test's duration,
+  any `max_examples` cut (test, from, to) and any finding filed.
+- Gate: G-here, plus `CI=true uv run pytest tests/property --randomly-seed=1`
+  and `CI=true uv run pytest tests/property --randomly-seed=2`, both green.
+  Under the `ci` profile the examples are derandomised, so only the test
+  order changes between the two runs, which is the point: it proves no
+  property depends on another's state.
 - Commit: `Add property tests for the ink, letters and projection invariants`
 
 #### P5.2 Coverage baseline; ADR 0011
 
 - Implements the spec's coverage decision; predecessor P5.1.
-- Measure first, before any edit. Measure the way CI does, so the Hypothesis
-  examples are derandomised:
-  - `CI=true uv run pytest -m "not golden" --cov`, then
-    `uv run coverage report --include='src/pyntpot/ink/*,src/pyntpot/letters/*' --format=total`.
-  - Do it twice; the two figures must be equal.
-  - The threshold `T` is that figure rounded down to a whole percent (95
-    at P5.0, before the property tests).
-  - Measure `maps` the same way (`--include='src/pyntpot/maps/*'`) to get
-    `T_maps`, rounded down the same way.
+- Measure first, before any edit. Measure the way CI will, so the
+  Hypothesis examples are derandomised and no benchmark counts:
+  - On 3.13: `CI=true uv run pytest -m "not golden and not benchmark" --cov`,
+    then
+    `uv run coverage report --include='src/pyntpot/ink/*,src/pyntpot/letters/*' --format=total`
+    and `uv run coverage report --include='src/pyntpot/maps/*' --format=total`.
+  - On 3.14, the same three commands with
+    `UV_PROJECT_ENVIRONMENT="$SCRATCH/venv-3.14"` and `--python 3.14` on
+    each `uv run` (see the tool facts), so `.venv` stays on 3.13.
+  - Do each interpreter twice; the two figures per interpreter must be
+    equal.
+  - Rule: `T` is the lower of the two interpreters' `ink`+`letters`
+    figures, rounded down to a whole percent (95 at P5.0, on 3.13, before
+    the property tests). `T_maps` is the lower `maps` figure, rounded down
+    the same way. Branch arcs can differ between interpreter versions, and
+    both matrix legs enforce the gate.
+  - If 3.14 cannot be installed here, `T` and `T_maps` are the 3.13
+    figures rounded down, minus 1, and the run log says so.
 - Owner files:
-  - `.github/workflows/ci.yml`. In job `checks`, directly after the pytest
-    step, add a step `Coverage gate (ink, letters)` that runs
-    `uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fail-under=T`.
-    A second step, `Coverage gate (maps)`, runs
-    `uv run coverage report --include="src/pyntpot/maps/*" --fail-under=T_maps`.
-    Both matrix legs run both steps. Leave job `prerelease` alone: it has no
-    pytest-cov.
+  - `.github/workflows/ci.yml`, job `checks`:
+    - The `Tests` step becomes
+      `uv run pytest -m "not golden and not benchmark" --cov`. The
+      `benchmark` term deselects nothing until P5.4 adds benchmarks; it is
+      here so P5.4 does not touch the coverage run.
+    - Directly after it, a step `Coverage gate (ink, letters)` runs
+      `uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fail-under=T`.
+    - A second step, `Coverage gate (maps)`, runs
+      `uv run coverage report --include="src/pyntpot/maps/*" --fail-under=T_maps`.
+    - Both matrix legs run both steps. Leave job `prerelease` alone: it has
+      no pytest-cov.
   - `pyproject.toml`: only the comment above `[tool.coverage.run]`, which
     becomes "the gate is the CI step in `checks`, see ADR 0011; never set
     `fail_under` here (pytest-cov would apply it to the whole package)".
@@ -2886,150 +2950,280 @@ version moves):
     - Context: the template's 100 percent demand and the spec's answered
       open question.
     - Decision: branch coverage of `ink` and `letters` at least `T`, and of
-      `maps` at least `T_maps`, gated in CI only. The coverage run excludes
-      the golden tests, so these figures count only behavioural tests.
-      That matters most for `maps`: a visual-refinement change regenerates
-      the goldens, so they do not guard it. The ADR also records the
-      whole-package figure.
-    - Ratchet: a commit that measures `T + 1` or more raises `T` in the
-      same commit. Lowering `T` needs a superseding ADR.
+      `maps` at least `T_maps`, gated in CI only on both matrix legs. The
+      coverage run excludes the golden tests and the benchmarks, so these
+      figures count only behavioural tests. That matters most for `maps`:
+      a visual-refinement change regenerates the goldens, so they do not
+      guard it, and a benchmark runs `maps` code without asserting
+      anything. The ADR also records the whole-package figure and the
+      per-interpreter figures.
+    - Ratchet, for `T` and `T_maps` alike: a commit whose measurement (the
+      lower of the two interpreters) is `T + 1` or more raises that
+      threshold to the new rounded-down figure in the same commit.
+      Lowering either needs a superseding ADR.
     - Consequences: plain `uv run pytest` stays coverage-free.
+  - `specs/001-port/p5-run-log.md`: the hand-off entry.
 - Verify the gate bites: `--fail-under=T+1` exits 2 locally whenever the
   figure is below `T + 1`. Quote it in the hand-off.
+- Hand-off: append to the run log the four figures (two packages, two
+  interpreters), the whole-package figure, `T`, `T_maps`, and which
+  interpreter set each.
 - Gate: G-here.
 - Commit: `Gate branch coverage at the measured baselines`
 
-#### P5.3a Mutation testing: config, scripts, PR job, nightly; ADR 0012 proposed
+#### P5.3a Mutation testing: config, scripts, PR job, sharded nightly; ADR 0012 proposed
 
 - Implements D17 (mutmut); predecessor P5.2.
-- **Scope is the maintainer's, from measured timings.** This slice lands
-  with `ink` and `letters` as the starting scope, because they are cheap
-  and pure. Step 3 below measures all three subpackages, and the
-  maintainer sets the nightly scope from those numbers. Whether `maps` is
-  in scope is that decision, not this slice's. The scope lives in one
-  place: `only_mutate`, which `scope.py` reads with `tomllib`.
+- **Scope and shard count come from measured timings, by rule.** This
+  slice starts with `ink` and `letters` in scope, because they are cheap
+  and pure. Step 3 below measures all three subpackages, and the rule
+  there sets the nightly scope and the shard count `N` in this same slice,
+  before it commits. The scope lives in one place, `only_mutate`, which
+  `scope.py` and `shard.py` read with `tomllib`; `N` lives in
+  `[tool.pyntpot.mutation] shards`.
 - Owner files:
-  - `pyproject.toml` `[tool.mutmut]`:
+  - `pyproject.toml`: **replace** the existing `[tool.mutmut]` table and
+    the comment block above it (at P5.0, `source_paths` and a
+    `pytest_add_cli_args_test_selection` of `["tests/", "-m", "not golden"]`;
+    appending a second table is a `TOMLDecodeError`) with:
     ```toml
     source_paths = ["src/"]
     only_mutate = ["src/pyntpot/ink/*", "src/pyntpot/letters/*"]
     pytest_add_cli_args = ["--hypothesis-profile=ci"]
-    pytest_add_cli_args_test_selection = ["tests/", "-m", "not golden and not benchmark"]
+    pytest_add_cli_args_test_selection = ["tests/unit", "tests/property", "-m", "not golden"]
     ```
-    Add a new table `[tool.pyntpot.mutation]` with `min_score = 0.0`, the
-    one place both jobs read the threshold from; P5.3b sets it. The
-    `benchmark` term in `-m` deselects nothing until P5.4, and that is
-    harmless.
+    The new comment says why the other test directories are left out.
+    mutmut runs pytest inside `mutants/`, where `support.REPO_ROOT` is the
+    mutated tree:
+    - `tests/architecture` would scan trampolined source: the line budget
+      fails on every mutated file, and the injected `mutmut` import and
+      `# type: ignore` lines break other checks.
+    - `tests/golden` is too slow per mutant; that is the exclusion the old
+      comment gave.
+    - `tests/mutation` tests the helper scripts, not `src`.
+    - `tests/benchmarks` (from P5.4) times code and asserts nothing.
+
+    `only_mutate` is rewritten at step 3 if the rule adds `maps`. Add a new
+    table `[tool.pyntpot.mutation]` with `min_score = 0.0` (P5.3b sets it)
+    and `shards = N` (step 3 sets it), the one place the jobs read both
+    from.
   - `.gitignore`: `mutants/`.
   - `tests/mutation/__init__.py` (docstring only).
   - `tests/mutation/scope.py`:
-    - `changed_functions(diff: str, sources: Mapping[str, str]) -> list[str]`.
-      It takes a `git diff --unified=0` text and the new source of each
-      changed file (keyed by repo path), and returns sorted, de-duplicated
-      mutmut patterns.
+    - `changed_functions(diff: str, sources: Mapping[str, str], only_mutate: Sequence[str]) -> list[str]`.
+      It takes a `git diff --unified=0` text, the new source of each
+      changed file (keyed by repo path), and the `only_mutate` globs, and
+      returns sorted, de-duplicated mutmut patterns.
+    - A path counts only if `fnmatch.fnmatch(path, glob)` holds for some
+      glob in `only_mutate`, mutmut's own matching, where `*` spans `/`.
     - It parses the `+c,d` hunk ranges and the file's `ast`. For each
       top-level function, and each method of a top-level class, whose
       `[lineno incl. decorators, end_lineno]` intersects a changed range, it
       emits:
       - `pyntpot.<module>.x_<name>*` for a function;
       - `pyntpot.<module>.xǁ<Class>ǁ<name>*` for a method.
+    - The module name follows mutmut's rule (see the tool facts): drop
+      `src/` and `.py`, map `/` to `.`, drop a trailing `.__init__`.
+    - It skips any function or method whose decorators are anything other
+      than none or a single `staticmethod` or `classmethod`, mirroring
+      mutmut 3.8 (`file_mutation.py:330`), which generates no mutants for
+      them. Emitting a pattern for one would make `mutmut run` fail.
     - A change inside a nested function maps to its top-level enclosing
       function. A change outside any function emits nothing; that is the
       documented gap, and the nightly covers it.
-    - Only paths matching `[tool.mutmut] only_mutate` count, read from
-      `pyproject.toml`.
     - A `main()` takes `--base REF` and `--out PATH`. It runs
       `git diff --unified=0 REF...HEAD -- src/pyntpot`
       via `subprocess.run([...], check=True, capture_output=True, text=True)`,
-      reads each file, and writes one pattern per line to `--out`.
+      reads each file, reads `only_mutate` from `pyproject.toml` with
+      `tomllib`, and writes one pattern per line to `--out`.
+    - It logs through `logging`; no `print`.
+  - `tests/mutation/shard.py`:
+    - `shard_patterns(modules: Mapping[str, int], count: int) -> list[list[str]]`.
+      `modules` maps each in-scope mutmut module name to its source line
+      count, the cost proxy. It sorts modules by cost descending, ties by
+      name ascending, and puts each on the shard with the lowest running
+      cost, ties to the lowest shard index. It returns, per shard, sorted
+      patterns: `<module>.x_*` and `<module>.xǁ*` for each module. Two
+      patterns rather than `<module>.*`, because a package's `__init__`
+      module name is a prefix of its submodules' names
+      (`pyntpot.ink.*` would also match `pyntpot.ink.polyline.x_f`).
+    - It raises `ValueError` when `count < 1` or `count > len(modules)`: an
+      empty shard would run `mutmut run` with no pattern, which tests every
+      mutant.
+    - `main()` takes `--index I`, `--count N` and `--out PATH`. It reads
+      `only_mutate` from `pyproject.toml` with `tomllib`, lists the files
+      under `src/` that match it (the same `fnmatch` rule), keeps the
+      modules that define at least one function or method mutmut mutates
+      (the same decorator rule as `scope.py`), and writes shard `I`'s
+      patterns one per line to `--out`. `--count` defaults to `shards`.
+      With `--matrix-out PATH` and no `--index`, it instead appends
+      `indices=[0, …, N-1]` (JSON) to PATH, which the nightly's `plan` job
+      passes as `$GITHUB_OUTPUT`.
+    - It repeats `scope.py`'s path-to-module and decorator rules rather
+      than importing them: each script runs standalone from CI, and only
+      pytest's `pythonpath` would make a shared import resolve. Both test
+      files pin the same `__init__` and decorator cases, so the two cannot
+      drift silently.
     - It logs through `logging`; no `print`.
   - `tests/mutation/score.py`:
-    - `score(stats: Mapping[str, int]) -> float | None` returns
+    - `total_counts(stats: Iterable[Mapping[str, int]]) -> dict[str, int]`
+      sums `killed`, `timeout`, `survived`, `suspicious`, `no_tests` and
+      `segfault` across stats files. It does not sum `total`: a
+      pattern-restricted shard counts every generated mutant there.
+    - `score(counts: Mapping[str, int]) -> float | None` returns
       `(killed + timeout) / (killed + timeout + survived + suspicious + no_tests + segfault)`,
       or `None` when that denominator is 0.
-    - `main()` takes the stats path and reads `min_score` from
-      `pyproject.toml` with `tomllib`. It logs the counts and the score, and
-      exits 1 below `min_score`. `None` logs "no mutants tested" and exits 0.
-  - `tests/mutation/test_scope.py` and `tests/mutation/test_score.py`.
-    These are pure-function tests on literal diff, source and stats strings:
-    no git, no mocks, `ids=` on every parametrize. Cases:
-    - a function body edit;
-    - a decorator-only edit;
-    - a method edit;
-    - a nested-function edit;
-    - a module-constant edit, which gives no pattern;
-    - a file outside scope;
-    - a zero-denominator stats file;
-    - below, at and above the threshold.
+    - `main()` takes one or more stats paths and reads `min_score` from
+      `pyproject.toml` with `tomllib`. It logs the summed counts and the
+      score, and exits 1 below `min_score`. `None` logs "no mutants tested"
+      and exits 0.
+  - `tests/mutation/test_scope.py`, `tests/mutation/test_shard.py` and
+    `tests/mutation/test_score.py`. These are pure-function tests on
+    literal diff, source, module-cost and stats values: no git, no mocks,
+    no pyproject read, `ids=` on every parametrize. Cases:
+    - `scope`: a function body edit; a decorator-only edit on a
+      `@staticmethod` method (one pattern); an edit inside a
+      `@functools.cache` function and inside a `@property` (no pattern);
+      a method edit; a nested-function edit; a module-constant edit, which
+      gives no pattern; a file outside the `only_mutate` globs; a file in
+      a package `__init__.py` (no `.__init__` in the name).
+    - `shard`: a deterministic assignment for a literal module table,
+      including a cost tie broken by name; two shards balanced
+      largest-first; `count` 1 returns every module; an `__init__` module
+      gets the two-pattern form; `count` 0 and `count > len(modules)` raise.
+    - `score`: a zero-denominator stats file; below, at and above the
+      threshold; two shard files whose counts sum, with `total` ignored.
   - `.github/workflows/ci.yml`: a new job `mutation`.
     - It runs only on `if: github.event_name == 'pull_request'`, on
       ubuntu-latest, with `timeout-minutes: 60`.
     - Checkout uses `fetch-depth: 0`. Then the same setup-uv pins as
       `checks`, and `uv sync --locked`.
     - Next, `uv run python tests/mutation/scope.py --base origin/${{ github.base_ref }} --out "$RUNNER_TEMP/patterns"`.
-    - When the file is empty, the job logs "no changed functions in ink or
-      letters" and ends green.
+    - When the file is empty, the job logs "no changed functions in the
+      mutation scope" and ends green.
     - Otherwise it runs, in order:
-      1. `xargs -a "$RUNNER_TEMP/patterns" uv run mutmut run`
+      1. A step `run` (shell `bash`, `set -o pipefail`):
+         `xargs -a "$RUNNER_TEMP/patterns" uv run mutmut run 2>&1 | tee "$RUNNER_TEMP/mutmut.log"`.
+         On a non-zero exit whose log contains
+         `Filtered for specific mutants, but nothing matches`, it logs
+         "changed functions have no mutants", writes `tested=false` to
+         `$GITHUB_OUTPUT` and exits 0. Any other non-zero exit fails the
+         job. Success writes `tested=true`.
       2. `uv run mutmut export-cicd-stats`
       3. `uv run mutmut results` (to the log)
       4. `uv run python tests/mutation/score.py mutants/mutmut-cicd-stats.json`
-  - `.github/workflows/mutation-nightly.yml`.
+
+      Steps 2 to 4 carry `if: steps.run.outputs.tested == 'true'`.
+  - `.github/workflows/mutation-nightly.yml`, sharded from the start.
     - Triggers: `schedule: - cron: "23 2 * * *"` and `workflow_dispatch`.
-    - ubuntu-latest, `timeout-minutes: 330`, the same setup-uv pins, and
-      `uv sync --locked`.
-    - Steps:
-      1. `uv run mutmut run`
-      2. `uv run mutmut export-cicd-stats`
-      3. `uv run mutmut results > mutants/survivors.txt`
-    - `actions/upload-artifact` (if: always()) uploads
-      `mutants/mutmut-cicd-stats.json` and `mutants/survivors.txt` as
-      `mutation-<run_id>`. Pin the action to the latest release tag of its
+    - Every job uses ubuntu-latest, the same checkout and setup-uv pins as
+      `ci.yml`, and `uv sync --locked`. Pin `actions/upload-artifact` and
+      `actions/download-artifact` to the latest release tag of their
       current major, in the same tag style as `ci.yml`.
-    - Last, the score step.
+    - Job `plan` (`timeout-minutes: 10`):
+      `uv run python tests/mutation/shard.py --matrix-out "$GITHUB_OUTPUT"`,
+      exposing `indices` as a job output.
+    - Job `shards` (`needs: plan`, `timeout-minutes: 300`,
+      `strategy.fail-fast: false`,
+      `matrix.index: ${{ fromJSON(needs.plan.outputs.indices) }}`):
+      1. `uv run python tests/mutation/shard.py --index ${{ matrix.index }} --out "$RUNNER_TEMP/patterns"`
+      2. The same `run` step as the PR job, with the same "nothing
+         matches" handling.
+      3. `uv run mutmut export-cicd-stats`
+      4. `uv run mutmut results > mutants/survivors.txt`
+      5. `actions/upload-artifact` (`if: always()`) uploads
+         `mutants/mutmut-cicd-stats.json` and `mutants/survivors.txt` as
+         `mutation-shard-${{ matrix.index }}`.
+
+      Every shard still generates all mutants and runs the stats
+      collection; step 3 measures that overhead.
+    - Job `score` (`needs: shards`, `if: always()`, `timeout-minutes: 15`):
+      1. `actions/download-artifact` with `pattern: mutation-shard-*` into
+         `shards/`.
+      2. `uv run python tests/mutation/score.py shards/*/mutmut-cicd-stats.json`.
+      3. A last step, `if: needs.shards.result != 'success'`, logs
+         "partial run: a shard failed or timed out" and exits 1, so a
+         partial score is never mistaken for a full one.
   - `docs/decisions/0012-mutation-threshold.md`, status **Proposed**. It
     records:
-    - the measured table and the maintainer's scope decision;
-    - the PR mechanism and its gap (module-level changes);
+    - the measured table, the scope and shard-count rule, and the scope
+      and `N` it chose, with the reason if `maps` is left out;
+    - the sharding mechanics (largest-first by line count, one artifact
+      per shard, counts summed before dividing);
+    - the PR mechanism and its gaps (module-level changes; functions with
+      other decorators have no mutants);
     - the score formula, with why `no_tests` counts against it (an
       untested mutant is an untested line);
-    - the Hypothesis `ci` profile under mutmut;
+    - the Hypothesis `ci` profile under mutmut, and why `tests/architecture`
+      is outside the test selection;
     - that the threshold is set by P5.3b from the first full run.
   - `CONTRIBUTING.md`: how to run mutmut locally on one module
     (`uv run mutmut run "pyntpot.ink.polyline*"`), and that it needs
     Linux or macOS.
+  - `specs/001-port/p5-run-log.md`: the hand-off entry.
 - Verify before committing, in this environment:
-  1. Check the mutmut name format and data files:
-     - Run `uv run mutmut run "pyntpot.ink.polyline*"`.
+  1. Check the mutmut name format, data files and test selection:
+     - Run `uv run mutmut run "pyntpot.ink.polyline*"`. The stats run
+       must pass; with the old `tests/` selection it failed on
+       `test_no_oversized_files` against `mutants/src`.
      - Confirm `mutants/src/pyntpot/ink/polyline.py` defines
        `x_simplify__mutmut_1`.
      - Confirm a `Hand` unit test passes inside `mutants/`; the font file
-       must have been copied.
-     - If any data file is missing, add `also_copy` entries for
+       must have been copied. `copy_src_dir` copies every file under
+       `source_paths`, so no `also_copy` is expected; if a data file is
+       missing all the same, add `also_copy` entries for
        `src/pyntpot/letters/fonts/` and `src/pyntpot/maps/themes/`, and
-       record that in the ADR.
+       record that in the ADR and the run log.
      - If the name format differs from the tool facts above, fix
-       `scope.py` and its tests to match the installed tool, and report.
+       `scope.py`, `shard.py` and their tests to match the installed tool,
+       and record it in the run log.
   2. Run the PR path end to end against a synthetic base. On a scratch
      commit that edits one line inside `simplify`, run
      `scope.py --base HEAD~1`, then the four commands above. Quote the
      patterns and the score. Then drop the scratch commit.
-  3. Measure, per subpackage (`ink`, `letters`, `maps`), and report as a
-     table:
-     - The mutant count. Generate with `only_mutate` temporarily set to all
-       three; mutmut generates every mutant in `only_mutate` even under a
-       pattern.
-     - The per-mutant time, from a run on one representative module of
-       that subpackage: `pyntpot.ink.polyline*`, `pyntpot.letters.hand*`,
-       and `pyntpot.maps.rings*`.
-     - The extrapolated full-run time and the score on the sampled module.
-     Then restore the committed `only_mutate`. **Stop and hand the table
-     to the maintainer.** They choose the nightly scope, and sharding by
-     subpackage if a full run would pass 4 h. The scope they pick goes into
-     `only_mutate` and ADR 0012 in this same slice before it commits.
+  3. Measure, per subpackage (`ink`, `letters`, `maps`), and record as a
+     table in the run log and the ADR:
+     - The mutant count `M`. Generate with `only_mutate` temporarily set to
+       all three; mutmut generates every mutant in `only_mutate` even under
+       a pattern.
+     - The per-shard overhead `O`: wall time of a cold run (no `mutants/`)
+       of one mutant, `uv run mutmut run "pyntpot.ink.polyline.x_simplify__mutmut_1"`,
+       which is generation plus stats plus one mutant.
+     - The wall-clock seconds per mutant `s`, from warm runs (after the
+       cold run) on sample modules: `pyntpot.ink.polyline*`,
+       `pyntpot.letters.hand*`, and for `maps` both `pyntpot.maps.rings*`
+       (pure geometry, fast tests) and `pyntpot.maps.painter.cover*`
+       (covered by slow paint tests). `s` is the run's wall time divided
+       by the mutants it tested (the summed counts from
+       `export-cicd-stats`). For `maps`, `s` is the mutant-weighted mean
+       of the two samples: their summed wall time over their summed
+       mutants. If a sample would pass 20 minutes, narrow it to one
+       function of the same module (`<module>.x_<name>*`) and record the
+       narrowing. This machine has 4 cores, as ubuntu-latest has.
+     - The estimate `H = M * s / 3600` hours per subpackage, and the score
+       on each sampled module.
+
+     Then apply the rule:
+     - `N_core = max(2, ceil((H_ink + H_letters) / 3.5))`.
+     - `N_all = max(2, ceil((H_ink + H_letters + H_maps) / 3.5))`.
+     - If `N_all <= 8`, the scope is `ink`, `letters` and `maps`
+       (`only_mutate` gains `"src/pyntpot/maps/*"`) and `N = N_all`.
+     - Otherwise the scope stays `ink` and `letters`, `N = N_core`, and ADR
+       0012 and the run log record why `maps` is out (`H_maps` and
+       `N_all`).
+     - The 3.5 h target leaves 1.5 h of the 300-minute shard timeout for
+       `O` and for imbalance from the line-count proxy.
+
+     Write the scope into `only_mutate` and `N` into `shards`, restore
+     anything else step 3 changed, and run
+     `uv run python tests/mutation/shard.py --index 0 --out "$SCRATCH/p0"`
+     to check shard 0's patterns are non-empty.
+- Hand-off: append to the run log the step 3 table (`M`, `s`, `H` per
+  subpackage, `O`, sample scores), `N_core`, `N_all`, the chosen scope and
+  `N`, and the step 2 patterns and score.
 - Gate: G-here (the new script tests run in it) and `uv run ty check`
   covering `tests/mutation`.
-- Commit: `Run mutation testing on changed functions and nightly`
+- Commit: `Run mutation testing on changed functions and a sharded nightly`
 
 #### P5.4 Benchmarks and the CodSpeed workflow
 
@@ -3040,9 +3234,16 @@ version moves):
   - List open PRs and `ls .github/workflows`.
   - If an onboarding PR is open, read its diff. Adopt any
     repository-specific setting it carries (a token input, a runner
-    choice) into this slice and note it in the hand-off. Do not push to,
-    merge or close that PR; the hand-off asks the maintainer to close it in
-    favour of this slice.
+    choice) into this slice.
+  - Rule for its benchmarks: every benchmark the PR proposes is kept,
+    rewritten into `tests/benchmarks/test_ink.py` or `test_maps.py` to the
+    benchmark rules below and the repo's rules (docstring, no mocks,
+    seeded inputs, Lynmouth fixture data, `brush, _ = ...`). One is left
+    out only if it breaks a repo rule that no rewrite can fix (for
+    example, it needs the network or a mock); the run log names it and
+    the rule.
+  - Do not push to, merge or close that PR. The run log and the PR
+    description record that this slice supersedes it, so it can be closed.
   - If a CodSpeed workflow is already on `main`, this slice rewrites that
     file to the spec below rather than adding a second one.
 - Owner files:
@@ -3054,10 +3255,21 @@ version moves):
     - `markers` gains `"benchmark: performance benchmarks (timed by CodSpeed in CI, --benchmark-enable locally)"`.
   - `.gitignore`: `.benchmarks/` and `.codspeed/`.
   - `.github/workflows/codspeed.yml`.
+  - `.github/workflows/ci.yml` job `checks`: one new step,
+    `Benchmarks (smoke)`, running `uv run pytest -m benchmark`, after the
+    coverage gates. The `Tests` step already deselects benchmarks (P5.2),
+    so the coverage figures do not move. No other edit to `checks`.
   - `docs/explanation/performance.md`.
   - `CONTRIBUTING.md`: the local timing command.
-  - `.github/workflows/ci.yml` job `prerelease`: no edit. It already
-    installs pytest-benchmark, which owns `--benchmark-disable`.
+  - `specs/001-port/p5-run-log.md`: the hand-off entry.
+- Leave alone:
+  - `ci.yml`'s `Tests` step and coverage gates (P5.2's).
+  - `ci.yml` job `prerelease`. It already installs pytest-benchmark, which
+    owns `--benchmark-disable`; its `-m "not golden"` run now smoke-runs
+    the benchmarks too, which is harmless.
+  - G-here's definition. Its `uv run pytest -m "not golden"` stage now
+    smoke-runs the benchmarks as well; that is accepted, and the smoke
+    budget below keeps it cheap.
 - Benchmark rules:
   - Every module sets `pytestmark = pytest.mark.benchmark`.
   - Every test takes `benchmark` and calls it **exactly once**: an unused
@@ -3074,7 +3286,7 @@ version moves):
   - `test_stamp_a_2000_point_path`:
     - The path is 2000 points of `x = linspace(20, 1180, 2000)` and
       `y = 200 + 120 * sin(x / 90)` on a `(400, 1200)` canvas.
-    - The brush is `brush_from_id("RIV1-a", 3.0, 2.0, BrushStyle())`.
+    - The brush is `brush, _ = brush_from_id("RIV1-a", 3.0, 2.0, BrushStyle())`.
     - Benchmark
       `lambda: stamp(np.zeros((400, 1200), np.float32), path, brush, np.random.default_rng(7))`.
   - `test_wash`:
@@ -3083,23 +3295,27 @@ version moves):
     - `base` and `pool` take the values `tests/support/washes.py` uses.
     - Benchmark `wash(cover, sheet, base, pool)`.
 - `test_maps.py`. The inputs are Lynmouth offline, as `paint_fixture`
-  builds them (`tests/support/golden.py`).
-  - Module fixture `basemap_450`:
+  builds them (`tests/support/golden.py`). A module constant
+  `DISPLAY_PX = 450` sets the size of every maps benchmark, so the ladder
+  below edits one line; names carry no size.
+  - Module fixture `basemap`:
     - Copy `FIXTURE_DIR` into a `tmp_path_factory` directory.
-    - The style is `class_style(display_px=450)`.
+    - The style is `class_style(display_px=DISPLAY_PX)`.
     - Then `fetch(Track.from_gpx(...), Cache(dir), FixtureFeatures(), FixtureElevation(), style)`.
     - It returns `(basemap, style)`.
-  - `test_paint_at_450`:
+  - `test_paint`:
     - `rounds = itertools.count()`.
     - Benchmark
       `lambda: paint(basemap, style, out / f"round-{next(rounds)}")`.
     - Each round needs a fresh directory: `paint` skips work when the
       directory already holds plates with the current hash.
-  - Module fixture `lettered_450`: paint once, then
+  - Module fixture `lettered`: paint once, then
     `letter(plates, basemap, None, style)`.
   - `test_compose`: benchmark
     `compose(plates, lettering, basemap, style)` (attribution on, the
     default).
+  - Each maps benchmark belongs to one stage: `fetch`, `paint`, `letter`
+    or `compose`. The ladder below uses that.
 - `codspeed.yml`:
   ```yaml
   name: CodSpeed
@@ -3134,43 +3350,60 @@ version moves):
   dependabot has moved them, match `ci.yml`.
 - `docs/explanation/performance.md`. This creates `docs/explanation/`,
   ahead of P7, which owns the rest of that tree.
-  - What each benchmark measures and why it was chosen.
+  - What each benchmark measures and why it was chosen, and the final
+    `DISPLAY_PX`.
   - The local baselines from
-    `uv run pytest tests/benchmarks --benchmark-enable`: median and rounds
+    `uv run pytest -m benchmark --benchmark-enable`: median and rounds
     per benchmark, with the commit, date, Python and numpy versions, and
     CPU model.
   - That CodSpeed's simulation mode counts instructions, so its numbers
     are not wall time, with the dashboard link
     `https://codspeed.io/findlaywebb/pyntpot`.
   - That these are measurements, not targets.
-- **Timings stop point.** Before committing, report a table to the
-  maintainer: each benchmark's local median with `--benchmark-enable`, and
-  its smoke-run time with timing off. Include every benchmark CodSpeed's
-  onboarding PR proposes, not only the six above. The maintainer decides
-  which stay. Do not cut any on your own.
-- Budgets, all measured and quoted in the hand-off:
-  - The smoke run (`uv run pytest tests/benchmarks`, timing disabled) takes
-    at most 60 s here, because it runs inside every `checks` job and every
-    G-here. Over 60 s, stop and report; do not drop a benchmark or shrink
-    `display_px` on your own.
-  - After the PR's first CodSpeed run, if the job exceeds 30 min, report
-    the options: walltime on a CodSpeed macro runner, or a smaller
-    `display_px` for the maps benchmarks.
+- **Smoke budget and the display ladder.** Before committing, measure the
+  smoke run, `uv run pytest -m benchmark` (timing disabled, module
+  fixtures included), here. It runs in every `checks` leg and every
+  G-here, so its budget is 60 s total. Rule when over:
+  1. Lower `DISPLAY_PX` for all maps benchmarks along 450 → 300 → 200,
+     re-measuring at each step, and stop at the first size under 60 s.
+  2. If still over at 200, drop maps benchmarks one at a time, slowest
+     smoke time first, re-measuring after each. Never drop one that is the
+     only benchmark of its stage (`fetch`, `paint`, `letter`, `compose`);
+     skip it and take the next slowest.
+  3. If only stage-unique maps benchmarks remain and the run is still
+     over 60 s, keep them, file `docs/issues/benchmark-smoke-budget.md`
+     with the measured time, and land the slice. The `ink` benchmarks are
+     never dropped by this rule.
+- **CodSpeed job budget.** After the PR's first CodSpeed run, if the job
+  takes more than 30 min, apply the same `DISPLAY_PX` ladder (one step
+  lower than the current value, then the next) in a follow-up commit on
+  `p5-quality`, `Shrink the maps benchmarks to display_px=<N>`, until a
+  run takes 30 min or less, or the ladder reaches 200.
+- Hand-off: append to the run log a table of every benchmark (ours and
+  any adopted from the onboarding PR) with its local median under
+  `--benchmark-enable` and its smoke time with timing off; the smoke total
+  at each `DISPLAY_PX` tried; the final `DISPLAY_PX`; any benchmark
+  dropped or left out and why; the onboarding PR's number and what was
+  adopted; and the first CodSpeed job time, with any follow-up commit.
 - Gate: G-here (which now smoke-runs the benchmarks), plus
-  `uv run pytest tests/benchmarks --benchmark-enable` and
+  `uv run pytest -m benchmark --benchmark-enable` and
   `uv run pytest tests/benchmarks --codspeed` locally green, plus the PR's
-  `CodSpeed` job green.
+  `CodSpeed` job and `checks` `Benchmarks (smoke)` step green.
 - Commit: `Add benchmarks and the CodSpeed workflow`
 
 #### P5.3b Set the mutation threshold; ADR 0012 accepted
 
 - Predecessor: the merge of P5.1 to P5.4, then the first scheduled (or
-  `workflow_dispatch`) run of `mutation-nightly.yml` on `main`.
-- Read the run's artifact. Then `min_score` is the score rounded down to a
-  whole percent, as a fraction (for example 0.71).
-- If the run timed out or errored, root-cause it. Do not set a threshold
+  `workflow_dispatch`) run of `mutation-nightly.yml` on `main` in which
+  every shard succeeded.
+- Read the `score` job's log and the shard artifacts. Then `min_score` is
+  the summed score rounded down to a whole percent, as a fraction (for
+  example 0.71).
+- If any shard timed out or errored, root-cause it. Do not set a threshold
   from a partial run.
-- Owner files: `pyproject.toml` (`[tool.pyntpot.mutation] min_score`), and
+- Owner files: `pyproject.toml` (`[tool.pyntpot.mutation] min_score`),
+  `specs/001-port/p5-run-log.md` (the run id, each shard's duration and
+  counts, the score and the threshold), and
   `docs/decisions/0012-mutation-threshold.md`:
   - status becomes **Accepted**;
   - it records the run id, the counts, the score and the threshold;
