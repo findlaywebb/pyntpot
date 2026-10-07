@@ -74,3 +74,6 @@ User instructions (2026-10-07 12:14 BST):
   paper). Probes: Postman's Knock 403, Wayback API 429 through full backoff, direct
   snapshot resets; p5-watercolor `ls-remote` exit 0, raw README 200. P6 section now
   about 1,300 lines. Plan review 3 running.
+- 14:40 Maintainer: about 1,300 lines of P6 plan is fine for the orchestrator to follow
+  and hand out as sub-steps to parallel sub-agents. Reviewer 3 told to judge single
+  slices only, and whether P6.5a-e can run in parallel worktrees.
