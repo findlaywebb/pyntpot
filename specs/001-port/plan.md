@@ -2625,6 +2625,16 @@ coverage 7.16.2, pytest-cov 7.1.0) and the CodSpeed action's current docs.
   G-self, and may need a golden decision. P5.1 lands without the failing
   property, and the issue file names it.
 - P5 measures and does not optimise (spec, out of scope).
+- **Timings come before scope.** The maintainer decides the mutation scope
+  and which benchmarks stay only after seeing measured timings (2026-10-07).
+  P5.3a and P5.4 each stop at a stated point and report numbers; they do
+  not pick scope themselves.
+- **`maps` is not assumed covered by the goldens.** A golden test guards a
+  change that should not move pixels. A visual-refinement change moves
+  them on purpose and regenerates the goldens, which then accept whatever
+  the code does. So `maps` needs its own behavioural checks. P5 measures
+  `maps` alongside `ink` and `letters`. How deep `maps` testing goes is
+  decided after P5's numbers.
 - Branch and PR: P5.1, P5.2, P5.3a and P5.4 land as one commit each on a
   branch `p5-quality` and go to `main` through one PR. That way the two
   PR-only jobs (mutation on changed functions, CodSpeed) each run once
@@ -2858,11 +2868,15 @@ version moves):
   - Do it twice; the two figures must be equal.
   - The threshold `T` is that figure rounded down to a whole percent (95
     at P5.0, before the property tests).
+  - Measure `maps` the same way (`--include='src/pyntpot/maps/*'`) to get
+    `T_maps`, rounded down the same way.
 - Owner files:
   - `.github/workflows/ci.yml`. In job `checks`, directly after the pytest
     step, add a step `Coverage gate (ink, letters)` that runs
     `uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fail-under=T`.
-    Both matrix legs run it. Leave job `prerelease` alone: it has no
+    A second step, `Coverage gate (maps)`, runs
+    `uv run coverage report --include="src/pyntpot/maps/*" --fail-under=T_maps`.
+    Both matrix legs run both steps. Leave job `prerelease` alone: it has no
     pytest-cov.
   - `pyproject.toml`: only the comment above `[tool.coverage.run]`, which
     becomes "the gate is the CI step in `checks`, see ADR 0011; never set
@@ -2871,26 +2885,29 @@ version moves):
   - `docs/decisions/0011-coverage-baseline.md`. It records:
     - Context: the template's 100 percent demand and the spec's answered
       open question.
-    - Decision: branch coverage of `ink` and `letters` at least `T`, gated
-      in CI only. `maps` is not gated: its behaviour is pinned by the
-      golden tests, which the coverage run excludes. The ADR records the
-      measured `maps` and whole-package figures for reference.
+    - Decision: branch coverage of `ink` and `letters` at least `T`, and of
+      `maps` at least `T_maps`, gated in CI only. The coverage run excludes
+      the golden tests, so these figures count only behavioural tests.
+      That matters most for `maps`: a visual-refinement change regenerates
+      the goldens, so they do not guard it. The ADR also records the
+      whole-package figure.
     - Ratchet: a commit that measures `T + 1` or more raises `T` in the
       same commit. Lowering `T` needs a superseding ADR.
     - Consequences: plain `uv run pytest` stays coverage-free.
 - Verify the gate bites: `--fail-under=T+1` exits 2 locally whenever the
   figure is below `T + 1`. Quote it in the hand-off.
 - Gate: G-here.
-- Commit: `Gate ink and letters branch coverage at the measured baseline`
+- Commit: `Gate branch coverage at the measured baselines`
 
 #### P5.3a Mutation testing: config, scripts, PR job, nightly; ADR 0012 proposed
 
 - Implements D17 (mutmut); predecessor P5.2.
-- **Scope decision: `ink` and `letters` only.**
-  - `maps` is application code whose behaviour the excluded golden tests
-    pin, so mutating it would mostly report survivors that the unit suite
-    was never meant to kill, at hours of runner time.
-  - The ADR records this and leaves `maps` as a later ratchet.
+- **Scope is the maintainer's, from measured timings.** This slice lands
+  with `ink` and `letters` as the starting scope, because they are cheap
+  and pure. Step 3 below measures all three subpackages, and the
+  maintainer sets the nightly scope from those numbers. Whether `maps` is
+  in scope is that decision, not this slice's. The scope lives in one
+  place: `only_mutate`, which `scope.py` reads with `tomllib`.
 - Owner files:
   - `pyproject.toml` `[tool.mutmut]`:
     ```toml
@@ -2919,9 +2936,10 @@ version moves):
     - A change inside a nested function maps to its top-level enclosing
       function. A change outside any function emits nothing; that is the
       documented gap, and the nightly covers it.
-    - Only paths under `src/pyntpot/ink/` and `src/pyntpot/letters/` count.
+    - Only paths matching `[tool.mutmut] only_mutate` count, read from
+      `pyproject.toml`.
     - A `main()` takes `--base REF` and `--out PATH`. It runs
-      `git diff --unified=0 REF...HEAD -- src/pyntpot/ink src/pyntpot/letters`
+      `git diff --unified=0 REF...HEAD -- src/pyntpot`
       via `subprocess.run([...], check=True, capture_output=True, text=True)`,
       reads each file, and writes one pattern per line to `--out`.
     - It logs through `logging`; no `print`.
@@ -2971,7 +2989,7 @@ version moves):
     - Last, the score step.
   - `docs/decisions/0012-mutation-threshold.md`, status **Proposed**. It
     records:
-    - the scope decision;
+    - the measured table and the maintainer's scope decision;
     - the PR mechanism and its gap (module-level changes);
     - the score formula, with why `no_tests` counts against it (an
       untested mutant is an untested line);
@@ -2996,13 +3014,19 @@ version moves):
      commit that edits one line inside `simplify`, run
      `scope.py --base HEAD~1`, then the four commands above. Quote the
      patterns and the score. Then drop the scratch commit.
-  3. Estimate the nightly runtime:
-     - Take the mutant count from a generation-only pass (mutmut
-       generates every mutant in `only_mutate` even under a pattern, so
-       the count is in `mutants/` after step 1).
-     - Take the per-mutant time from step 2's run.
-     - If the estimate exceeds 4 h, stop and report: the options are
-       sharding by subpackage, or narrowing scope. Do not choose silently.
+  3. Measure, per subpackage (`ink`, `letters`, `maps`), and report as a
+     table:
+     - The mutant count. Generate with `only_mutate` temporarily set to all
+       three; mutmut generates every mutant in `only_mutate` even under a
+       pattern.
+     - The per-mutant time, from a run on one representative module of
+       that subpackage: `pyntpot.ink.polyline*`, `pyntpot.letters.hand*`,
+       and `pyntpot.maps.rings*`.
+     - The extrapolated full-run time and the score on the sampled module.
+     Then restore the committed `only_mutate`. **Stop and hand the table
+     to the maintainer.** They choose the nightly scope, and sharding by
+     subpackage if a full run would pass 4 h. The scope they pick goes into
+     `only_mutate` and ADR 0012 in this same slice before it commits.
 - Gate: G-here (the new script tests run in it) and `uv run ty check`
   covering `tests/mutation`.
 - Commit: `Run mutation testing on changed functions and nightly`
@@ -3119,6 +3143,11 @@ version moves):
     are not wall time, with the dashboard link
     `https://codspeed.io/findlaywebb/pyntpot`.
   - That these are measurements, not targets.
+- **Timings stop point.** Before committing, report a table to the
+  maintainer: each benchmark's local median with `--benchmark-enable`, and
+  its smoke-run time with timing off. Include every benchmark CodSpeed's
+  onboarding PR proposes, not only the six above. The maintainer decides
+  which stay. Do not cut any on your own.
 - Budgets, all measured and quoted in the hand-off:
   - The smoke run (`uv run pytest tests/benchmarks`, timing disabled) takes
     at most 60 s here, because it runs inside every `checks` job and every
