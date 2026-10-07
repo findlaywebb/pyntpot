@@ -19,8 +19,8 @@ Coverage is gated in CI only (ADR 0011); plain `uv run pytest` stays coverage-fr
 
 ```bash
 CI=true uv run pytest -m "not golden and not benchmark" --cov
-uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fail-under=95
-uv run coverage report --include="src/pyntpot/maps/*" --fail-under=92
+uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fail-under=95 --precision=2
+uv run coverage report --include="src/pyntpot/maps/*" --fail-under=92 --precision=2
 ```
 
 ## Spec flow

@@ -33,9 +33,9 @@ interpreter (branch coverage, two decimals):
 | whole package | 93.69 | 93.59 |
 
 Each threshold is the lower interpreter's figure rounded down: 95 (3.14) and 92 (3.14).
-`coverage report` compares the figure at its default precision of 0 decimals, so it
-rounds to the nearest whole percent before comparing and can pass up to half a point
-above the true figure. The thresholds are still the rounded-down figures.
+Both gate commands pass `--precision=2`, so `coverage report` compares the figure at
+two decimals and never passes a figure below the threshold. The thresholds are the
+rounded-down figures.
 
 ## Ratchet
 
