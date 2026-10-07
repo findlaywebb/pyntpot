@@ -172,3 +172,4 @@ User instructions (2026-10-07 01:25 BST):
   - Gate: uv sync, ruff format and check, ty, lint-imports and `pytest -m "not golden"` green; YAML shape checks true; `min_score` and `mutation-nightly` appear only under `specs/001-port/` and in ADR 0012's decision text.
   - P5.3b is superseded; `min_score` is gone.
 - 11:19 P5.3c (maintainer decision: mutation manual and advisory) planned (`23e2da7`, plan review PASS), implemented (`3910526`), diff review found one blocking bug (single-shard artifacts download flat, so the score glob missed them) fixed in `2b5a2c4` with a recursive glob; score job now skips after a cancel.
+- 11:24 CI prerelease job: setup-uv bumped 0.11.21 -> 0.11.32 so python 3.15 resolves to 3.15.0b4 (was b2, numpy segfault); numpy.random imports ok on b4.
