@@ -23,6 +23,12 @@ uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fai
 uv run coverage report --include="src/pyntpot/maps/*" --fail-under=92 --precision=2
 ```
 
+CI runs mutation testing (ADR 0012): on a pull request over the functions it changed, and nightly over the whole scope. To run it locally on one module, pass mutmut a pattern; it needs Linux or macOS, because it forks. Results land in `mutants/`, which git ignores, and `uv run mutmut results` lists them.
+
+```bash
+uv run mutmut run "pyntpot.ink.polyline*"
+```
+
 ## Spec flow
 
 One feature is one spec dir under `specs/NNN-name/`, one branch and one pull request.

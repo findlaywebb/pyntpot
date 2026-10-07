@@ -1,0 +1,114 @@
+name: Mutation nightly
+
+on:
+  schedule:
+    - cron: "23 2 * * *"
+  workflow_dispatch:
+
+# The whole mutation scope (`[tool.mutmut] only_mutate`), split into
+# `[tool.pyntpot.mutation] shards` shards by tests/mutation/shard.py; see ADR 0012.
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      indices: ${{ steps.matrix.outputs.indices }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+          version: "0.11.21"
+
+      - name: Sync
+        run: uv sync --locked
+
+      - name: Shard matrix
+        id: matrix
+        run: uv run python tests/mutation/shard.py --matrix-out "$GITHUB_OUTPUT"
+
+  shards:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        index: ${{ fromJSON(needs.plan.outputs.indices) }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+          version: "0.11.21"
+
+      - name: Sync
+        run: uv sync --locked
+
+      - name: Shard patterns
+        run: uv run python tests/mutation/shard.py --index ${{ matrix.index }} --out "$RUNNER_TEMP/patterns"
+
+      # The PR job's run step; stopped at 270 minutes so steps 3 to 5 keep 30.
+      - name: Mutation run
+        id: run
+        shell: bash
+        timeout-minutes: 270
+        run: |
+          if [ ! -s "$RUNNER_TEMP/patterns" ]; then echo "no changed functions in the mutation scope"; echo tested=false >> "$GITHUB_OUTPUT"; exit 0; fi
+          if xargs -r -a "$RUNNER_TEMP/patterns" uv run mutmut run 2>&1 | tee "$RUNNER_TEMP/mutmut.log"; then
+            echo tested=true >> "$GITHUB_OUTPUT"
+          elif grep -q 'Filtered for specific mutants, but nothing matches' "$RUNNER_TEMP/mutmut.log"; then
+            echo "changed functions have no mutants"; echo tested=false >> "$GITHUB_OUTPUT"
+          else exit 1; fi
+
+      # After a tested run, and after a failed or timed-out one so its partial counts
+      # still upload; not after "nothing matches".
+      - name: Export stats
+        if: always() && (steps.run.outputs.tested == 'true' || steps.run.outcome == 'failure')
+        run: uv run mutmut export-cicd-stats
+
+      # Without the filter the file lists every mutant outside this shard as `not checked`.
+      - name: Survivors
+        if: always() && (steps.run.outputs.tested == 'true' || steps.run.outcome == 'failure')
+        run: |
+          uv run mutmut results | { grep -v ': not checked$' || true; } > mutants/survivors.txt
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: mutation-shard-${{ matrix.index }}
+          path: |
+            mutants/mutmut-cicd-stats.json
+            mutants/survivors.txt
+
+  score:
+    needs: shards
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+          version: "0.11.21"
+
+      - name: Sync
+        run: uv sync --locked
+
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          pattern: mutation-shard-*
+          path: shards
+
+      - name: Score
+        run: uv run python tests/mutation/score.py shards/*/mutmut-cicd-stats.json
+
+      - name: Partial run
+        if: needs.shards.result != 'success'
+        run: |
+          echo "partial run: a shard failed or timed out"
+          exit 1

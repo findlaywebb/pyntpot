@@ -30,3 +30,6 @@ htmlcov/
 *.swp
 .idea/
 .vscode/
+
+# mutmut
+mutants/

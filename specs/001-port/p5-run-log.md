@@ -51,3 +51,72 @@ User instructions (2026-10-07 01:25 BST):
   exits 0 at default precision (92.87 displays as 93); with `--precision=2` it exits 2.
   Gates at T and T_maps exit 0.
 - 02:55 P5.2 landed (`33b3950`); T = 95, T_maps = 92 from 3.14. Orchestrator found the gate rounded to whole percent; fix `f506f44` gates at two decimals (maps at 93 now exits 2). P5.2 ticked.
+- 05:45 P5.3a mutation testing (ADR 0012 proposed). Machine idle, 4 cores; times BST.
+  - Step 1 (02:58 to 03:21): the plan's `[tool.mutmut]` table as written fails here.
+    With mutmut's default `process_isolation = "fork"`, `uv run mutmut run
+    "pyntpot.ink.polyline*"` passed stats, then "Failed to run clean test":
+    Hypothesis `FailedHealthCheck` (`differing_executors`) on
+    `tests/property/test_polyline.py::TestSimplify::test_simplifying_twice_changes_nothing`.
+    mutmut runs pytest twice in its own process and forks mutants from it, so each
+    property-test class gets a second instance; every mutant forked after that would be
+    "killed" by the health check. Fix, in the owned `[tool.mutmut]` table:
+    `process_isolation = "forkserver"` (each pytest call in a fresh process). Re-run from
+    a clean `mutants/`: stats, clean run and forced-fail check pass, mutants test
+    (interrupted after 182 of 715 polyline mutants). `mutants/src/pyntpot/ink/polyline.py`
+    defines `x_simplify__mutmut_1`; method keys read `pyntpot.ink.sheet.xǁCanvasǁpx__mutmut_1`;
+    name format as the tool facts, no script change. The 14 `Hand` unit tests pass inside
+    `mutants/` against the trampolined `letters/hand.py`; the font was copied, so no
+    `also_copy`.
+  - Finding: `tests/unit/maps/test_cli.py::TestMap::test_a_full_cache_makes_no_request`
+    takes 72 s and reaches most `ink.polyline` functions, so every surviving mutant there
+    pays it. A looping mutant runs to mutmut's wall bound, `(estimated + 1) * 15` s,
+    about 20 minutes for such a function. Under `forkserver`, mutmut 3.8 records every
+    mutant's duration as 0.0.
+  - Step 2 (03:24 to 03:53), PR path on a scratch commit editing `simplify` line 67
+    (`best, bi = -1.0, lo` to `bi, best = lo, -1.0`), from a clean `mutants/`, steps run
+    as CI does (`bash -eo pipefail`). `scope.py --base HEAD~1` wrote one pattern,
+    `pyntpot.ink.polyline.x_simplify*`. Run step: exit 0, 1570 s, `tested=true`.
+    `export-cicd-stats`: killed 57, survived 12, timeout 1, segfault 2, no_tests 0,
+    total 8310. `results` filtered to the 72 tested (12 survived, 2 segfault, 1 timeout
+    listed). `score.py`: "mutation score 0.8056, min_score 0.0000", exit 0. The two
+    segfaults are exit -9: mutant 31 (`best = +1.0`) loops while its stack grows and is
+    killed; mutmut 3.8 classes SIGKILL as segfault, which counts against the score.
+    Scratch commit dropped; `src` clean. Correction 1 checked: `scope.py --base HEAD`
+    wrote an empty file, the run step logged "no changed functions in the mutation
+    scope", wrote `tested=false` and exited 0.
+  - Step 3 (03:55 to 05:40), `only_mutate` temporarily all three, counts from `.meta`
+    exit codes via `mutmut.stats.status_by_exit_code` (correction 2). `O` = 379 s (cold,
+    one mutant; generation 26 s). `M`: ink 6151, letters 2159, maps 17099.
+
+    | Sample | Wall (s) | Tested | Score |
+    | --- | --- | --- | --- |
+    | `pyntpot.ink.polyline*` | 1200, exit 124 | 179 (46 no tests, 99 killed, 33 survived, 1 timeout) | 0.5587 |
+    | `pyntpot.ink.polyline.x_deform_line*` (narrowing 1, 130 mutants) | 651 | 130 (98 killed, 32 survived) | 0.7538 |
+    | `pyntpot.letters.hand*` | 1200, exit 124 | 76 (57 killed, 19 survived) | 0.7500 |
+    | `pyntpot.letters.hand.xǁHandǁ_flat*` (narrowing 1, 95 mutants) | 516 | 95 (72 killed, 23 survived) | 0.7579 |
+    | `pyntpot.maps.rings*` | 574 | 98 (79 killed, 19 survived) | 0.8061 |
+    | `pyntpot.maps.painter.cover*` | 1200, exit 124 | 173 (119 killed, 54 survived) | 0.6879 |
+    | `pyntpot.maps.painter.cover.x__class_washes*` (narrowing 1, 69 mutants) | 612 | 69 (45 killed, 24 survived) | 0.6522 |
+
+    Each narrowing took the module's function with the most mutants, and each narrowed
+    run finished, so no second narrowing. The `x__class_washes` mutants had all been
+    tested by the timed-out `cover` run; the narrowed run re-tested all 69 (mutmut
+    re-runs every mutant a pattern names, and its printed results agree: 45 killed,
+    24 survived), so the after-run `.meta` codes are that run's.
+
+    | Subpackage | M | s (s/mutant) | H (h) |
+    | --- | --- | --- | --- |
+    | ink | 6151 | 5.01 (651 / 130) | 8.56 |
+    | letters | 2159 | 5.43 (516 / 95) | 3.26 |
+    | maps | 17099 | 7.10 (1186 / 167) | 33.73 |
+
+    `N_core` = max(2, ceil(11.81 / 3.5)) = 4. `N_all` = max(2, ceil(45.55 / 3.5)) = 14.
+    `N_all` > 8, so the scope stays `ink` and `letters` and `N` = 4; `maps` is out on
+    `H_maps` 33.73 h and `N_all` 14. `only_mutate` restored to ink and letters,
+    `shards = 4`. `shard.py --index 0` wrote 12 patterns (6 modules); `--matrix-out`
+    appended `indices=[0, 1, 2, 3]`. The 21 in-scope modules with mutants (4942 lines)
+    split 1296, 1240, 1198 and 1208 lines; the 6 modules left out
+    (`ink/__init__`, `brush_style`, `stroke`, `ink/style`, `letters/__init__`,
+    `letters/style`) have 0 mutants by mutmut's own generator. `mutants/` removed.
+  - Action pins from `git ls-remote --tags`: `upload-artifact@v7.0.1`,
+    `download-artifact@v8.0.1`.

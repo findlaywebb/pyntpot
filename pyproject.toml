@@ -212,9 +212,32 @@ source = ["pyntpot"]
 show_missing = true
 
 # ---------------------------------------------------------------------------
-# Mutation testing — golden tests are excluded (too slow per mutant)
+# Mutation testing — see ADR 0012. `only_mutate` is the one statement of the
+# scope; tests/mutation/scope.py and shard.py read it. mutmut runs pytest inside
+# `mutants/`, where `support.REPO_ROOT` is the mutated tree, so the selection
+# is the unit and property tests only:
+# - tests/architecture would scan the trampolined source: the line budget fails
+#   on every mutated file, and the injected `mutmut` import and `# type: ignore`
+#   lines break other checks.
+# - tests/golden is too slow per mutant.
+# - tests/mutation tests the helper scripts, not `src`.
+# - tests/benchmarks times code and asserts nothing.
+# `forkserver` runs each pytest call in a fresh process. Under the default `fork`,
+# mutmut runs pytest more than once in one process and forks mutants from it, so
+# Hypothesis sees a second instance of each property-test class and fails its
+# `differing_executors` health check: the clean run fails, and a mutant would be
+# "killed" by the health check rather than by a test.
 # ---------------------------------------------------------------------------
 
 [tool.mutmut]
 source_paths = ["src/"]
-pytest_add_cli_args_test_selection = ["tests/", "-m", "not golden"]
+only_mutate = ["src/pyntpot/ink/*", "src/pyntpot/letters/*"]
+pytest_add_cli_args = ["--hypothesis-profile=ci"]
+pytest_add_cli_args_test_selection = ["tests/unit", "tests/property", "-m", "not golden"]
+process_isolation = "forkserver"
+
+# The two numbers the mutation jobs read: the score floor (set from the first
+# full nightly) and the nightly's shard count (set from measured timings).
+[tool.pyntpot.mutation]
+min_score = 0.0
+shards = 4
