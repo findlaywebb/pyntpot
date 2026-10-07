@@ -39,10 +39,7 @@ setup. The module fixtures (the basemap, the painted plates, the lettering) cost
 
 | Benchmark | Source | Median (ms) | Rounds | Smoke (s) |
 | --- | --- | --- | --- | --- |
-| `test_ink.py::test_sheet_construction` | plan | 95.18 | 10 | 0.08 |
-| `test_ink.py::test_edt` | plan | 14.79 | 65 | 0.02 |
 | `test_ink.py::test_stamp_a_2000_point_path` | plan | 16.44 | 60 | 0.02 |
-| `test_ink.py::test_wash` | plan | 44.49 | 24 | 0.04 |
 | `test_ink.py::test_building_a_sheet` | PR #6 | 78.27 | 13 | 0.08 |
 | `test_ink.py::test_the_distance_transform` | PR #6 | 15.32 | 51 | 0.02 |
 | `test_ink.py::test_stamping_a_long_stroke[dry-track]` | PR #6 | 11.97 | 81 | 0.01 |
@@ -60,6 +57,9 @@ setup. The module fixtures (the basemap, the painted plates, the lettering) cost
 | `test_maps.py::test_paint` (stage paint) | plan, PR #6 | 5251.30 | 5 | 5.00 |
 | `test_maps.py::test_letter` (stage letter) | PR #6 | 174.89 | 5 | 2.55 |
 | `test_maps.py::test_compose` (stage compose) | plan, PR #6 | 580.06 | 5 | 0.72 |
+
+The three plan benchmarks `test_sheet_construction`, `test_edt` and `test_wash` were removed
+on 2026-10-07 as duplicates of the PR #6 ones, which ends their CodSpeed history.
 
 The smoke run, `uv run pytest -m benchmark`, takes 17.8 s wall in total at
 `DISPLAY_PX = 450`.
