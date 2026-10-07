@@ -43,3 +43,10 @@ User instructions (2026-10-07):
   "P8's list of what upstream reads" has no author or location. Fix round held for the
   maintainer's answer on phase order (asked: P8 before P7? P9 before P7?), since B2 and
   B3 depend on it.
+- Maintainer on phase order (2026-10-07): "maybe we split these into multiparty so we do
+  most of p10 now, 0.0.1+ as the release, then p8, then the rest of p10, then the p7
+  docs, then the 0.1.0, then p9". Also: "0.1.0 can be candidate release and then 0.1.x
+  can be fixes". Adopted the split: P10 part 1 (release blockers and every fix no
+  upstream render can reach), tag 0.0.1, P8 against 0.0.1, P10 part 2 (fixes an upstream
+  render may reach, private-name renames, golden group), P7 docs and 0.1.0, then P9.
+  Plan-fix round 1 dispatched with this order and the review-1 findings.
