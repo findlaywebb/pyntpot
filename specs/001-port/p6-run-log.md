@@ -538,3 +538,11 @@ User instructions (2026-10-07 12:14 BST):
     so `uvx prek run --all-files` 4 s, green, no file touched; `pytest -m "not golden"`
     156 s (1036 passed, 1 skipped, 17 deselected); `--golden-tolerance` 281 s (17
     passed); byte-exact `pytest -m golden` 283 s (17 passed).
+- 15:51 P6.3-write, follow-up at the orchestrator's request (the inventory was left out of
+  the first brief): the inventory's status column filled.
+  - choice: each row's status cell is its canonical source's status from that key's
+    `Canonical source` evidence row, backticked; 22 `verified-via-index`, 1 `verified`
+    (`multiply-compositing`) | rule: P6.3 owner files (status column); P6.1 (sixth column
+    for P6.3's statuses) | inputs: evidence rows, orchestrator brief.
+  - Re-run: key diff empty, exit 0, 23 keys; `refcheck.sh` exit 0, only the two
+    `MAINTAINER-CHECKED` lines (104, 170). Issues filed: 0.
