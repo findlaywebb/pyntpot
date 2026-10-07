@@ -142,7 +142,7 @@ jobs:
 
   score:
     needs: [plan, shards]
-    if: always() && needs.plan.result == 'success' && needs.plan.outputs.count != '0'
+    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.plan.outputs.count != '0' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -168,8 +168,8 @@ jobs:
         env:
           SHARDS_RESULT: ${{ needs.shards.result }}
         run: |
-          shopt -s nullglob
-          stats=(shards/*/mutmut-cicd-stats.json)
+          shopt -s nullglob globstar
+          stats=(shards/**/mutmut-cicd-stats.json)
           if [ ${#stats[@]} -eq 0 ]; then
             if [ "$SHARDS_RESULT" = success ]; then
               echo "the patterns match no mutant; nothing scored" | tee -a "$GITHUB_STEP_SUMMARY"; exit 0
