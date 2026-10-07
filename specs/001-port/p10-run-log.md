@@ -69,3 +69,7 @@ User instructions (2026-10-07):
   not yet in P10's order. Plan-fix round 2 dispatched with the review-2 findings and the
   P11 integration (order part 1, P11, P10.R, P8, part 2; ADR claim; renames P11 touches
   move before P11).
+- Plan fixes for review 2 landed (`dd828d4`), all 16 findings resolved; P11 placed: part 1,
+  P11, P10.R (`release-0.0.1` branch), P8, part 2 (`p10-fixes`), golden group
+  (`p10-golden`), P7, P9. ADR 0026 fixed for P11.1. No overlap between what P10 renames
+  or deletes and P11's 20 promoted names (AST scan at `4e316a3`). Plan review 3 running.
