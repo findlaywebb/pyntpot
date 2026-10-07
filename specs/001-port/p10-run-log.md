@@ -121,3 +121,17 @@ User instructions (2026-10-07):
   deleted from `tests/benchmarks/test_ink.py`; their three rows dropped from
   `performance.md` with a sentence that their CodSpeed history ends. Check grep 4 then 0;
   prek exit 0; not-golden 172 s (1041 passed, 1 skipped); tolerance 320 s.
+- P10.2 answers (maintainer, 2026-10-07, verbatim):
+  "4. Do note it somewhere as a candidate. Maybe a new features dir that mirrors the
+  issues dir. and or add as a gh feature
+  6. Keep current look but add new possible feature to make it togglable
+  10. Ensure map and sheet are distinct everywhere. Sheet is a primative concept and map
+  is only for the map implementation side
+  Otherwise as recommended"
+  Read as: Q1 (2), Q2 (1), Q3 (1), Q4 (1) plus a candidate-feature file, Q5 (1), Q6 (B)
+  plus a candidate feature (a style switch that holds the stroke ends, off by default),
+  Q7 (C), Q8 (a), Q9 (a), Q10 (1) widened from the lettering scope to every `src`, test
+  and docs use ("sheet" only for `ink.sheet.Sheet` and its noise fields; "map" for the
+  drawn card on the maps side), Q11 (2), Q12 yes for a row a fix slice's G-self moves,
+  Q13 (1), Q14 (1). Candidate features go in a new `docs/features/`, mirroring
+  `docs/issues/`; GitHub issues are optional ("and or") and not created.
