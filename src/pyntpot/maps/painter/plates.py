@@ -7,13 +7,13 @@ wash and, when the style draws it, the route's pen plate, and writes the manifes
 Two plates carry the picture. `paper` is the card itself, drawn as it is. `wash` carries
 every pigment, white where it lays down nothing, and the page multiplies it over the
 card: the land cover and the relief are trimmed to the ribbon, the sea runs to the card
-edge, and the ink is drawn over the whole sheet. A coarse map of how dark the sheet is
-goes into the manifest, so a label can be placed on light ground rather than across a
-wood.
+edge, and the ink is drawn over the whole sheet. The dark grid, a coarse map of how dark
+the sheet is, goes into the manifest, so a label can be placed on light ground rather
+than across a wood.
 
 The phases draw from the job's shared generators, so the order they are called in here
-is the order the painting has always drawn in, and the plates' dither continues the
-sequence the wood left. It does not letter anything, and it does not read the cache.
+is fixed, and the plates' dither continues the sequence the wood left. It does not
+letter anything, and it does not read the cache.
 """
 
 from pathlib import Path
@@ -82,17 +82,17 @@ def _write(
 
 
 def paint_plates(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
-    """Paint one activity's plates and write them, with a manifest beside them.
+    """Paint one basemap's plates and write them, with a manifest beside them.
 
     Args:
         basemap: The basemap from `layers.build_basemap`.
-        style: The style the plates are painted in; its base digest is hashed into
-            the manifest with the basemap.
+        style: The style the plates are painted in; its base digest is appended
+            to the basemap's hash in the manifest.
         out_dir: Where to write; created when missing.
 
     Returns:
         The plates, with their manifest: files, byte counts, measurements and
-        the darkness grid.
+        the dark grid.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     job = PaintJob.begin(basemap, style, out_dir)

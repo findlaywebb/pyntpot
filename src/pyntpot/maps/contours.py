@@ -46,6 +46,7 @@ def marching_squares(grid: list[list[float]], level: float) -> list[list[Pt]]:
     segs: list[tuple[Pt, Pt]] = []
 
     def interp(a: float, b: float) -> float:
+        """Where `level` falls between two samples, as a share of the way from `a` to `b`."""
         return 0.5 if b == a else (level - a) / (b - a)
 
     table = {
@@ -85,6 +86,7 @@ def _stitch(segs: list[tuple[Pt, Pt]]) -> list[list[Pt]]:
     """Join contour segments end to end into polylines."""
 
     def key(p: Pt) -> tuple[float, float]:
+        """A point rounded to four decimals, so two segment ends that meet compare equal."""
         return (round(p[0], 4), round(p[1], 4))
 
     starts: dict[tuple[float, float], list[int]] = {}
@@ -119,13 +121,13 @@ def _stitch(segs: list[tuple[Pt, Pt]]) -> list[list[Pt]]:
 def _grid_line_to_metres(
     line: list[Pt], lats: list[float], lons: list[float], proj: Projection, pad: int = 0
 ) -> list[Pt]:
-    """Map a polyline in fractional grid space to route metres.
+    """Map a polyline in fractional grid space to card metres.
 
     Args:
         line: Points as (column, row), possibly fractional.
         lats: Grid latitudes, ascending.
         lons: Grid longitudes, ascending.
-        proj: The activity's projection.
+        proj: The track's projection.
         pad: Rings of padding added around the grid before contouring.
 
     Returns:
@@ -160,7 +162,7 @@ def contour_lines(
         grid: Elevation rows, row 0 southernmost.
         lats: Grid latitudes, ascending.
         lons: Grid longitudes, ascending.
-        proj: The activity's projection.
+        proj: The track's projection.
         interval: Metres between lines. Zero draws none.
         eps: Simplification tolerance in metres.
 
@@ -214,7 +216,7 @@ def sea_rings(
         grid: Elevation rows, row 0 southernmost.
         lats: Grid latitudes, ascending.
         lons: Grid longitudes, ascending.
-        proj: The activity's projection.
+        proj: The track's projection.
         sea_level: Metres at or below which a cell is water.
         eps: Simplification tolerance in metres.
 
@@ -239,7 +241,7 @@ def sea_rings(
 
 
 def _ring_is_wet(ring: list[Pt], padded: list[list[float]], level: float) -> bool:
-    """True when the cells a ring encloses are on the wet side of `level`."""
+    """True when at least half the cells a ring encloses are at or above `level`."""
     cols = [c for c, _ in ring]
     rows = [r for _, r in ring]
     lo_c, hi_c = int(min(cols)), int(max(cols)) + 1

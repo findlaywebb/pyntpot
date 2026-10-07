@@ -7,9 +7,9 @@ arrays one phase writes and a later one reads, plus the files written and their
 sizes. `drawable` turns basemap lines into the point lists the painter fills and
 strokes.
 
-The generators are shared down a sequence of items on purpose: each phase draws
-from its generator in the order the painting has always drawn, so a generator's
-state at any point is what it has always been. `PaintJob.begin` builds them from
+The generators are shared on purpose: the phases draw from them in one fixed
+order, so a generator's state at any point of a painting is the same on every
+run. `PaintJob.begin` builds them from
 the style's seeds; a generator a style switches off is `None` or never drawn from.
 
 `PaintJob` also states the options every wash on the plate is laid with (the
@@ -165,8 +165,8 @@ class PaintJob:
 
         `bloom_strength` scales the lift, which is the one number the whole
         bloom is built from: the centre gives up that share of its pigment and
-        the ridge is laid from what the centre gave up. So one multiplier
-        turns a demonstration of a backrun into a mark on the paper.
+        the ridge is laid from what the centre gave up. `None` when blooms are
+        off, or when the wash is too small for the count to reach one.
         """
         wash = self.style.wash
         if self.bloom_rng is None or wash.bloom_density <= 0:

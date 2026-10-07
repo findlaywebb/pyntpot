@@ -11,7 +11,9 @@ own plate, `ribbon` trims the ground to the ribbon, and `paper` paints the card.
 `plates` runs them all in order, writes the plates and the manifest, and is the one
 entry point, `paint_plates`.
 
-Every phase is `paint_<phase>(job, stack)`: it reads its settings from the style
-groups of `job.style` and writes into `stack`. This package does not draw
-labels, fetch anything or import `maps.lettering`.
+A phase is `paint_<phase>(job, stack)`: it reads its settings from the style
+groups of `job.style` and writes into `stack`. Two return what they lay instead:
+`paint_pen(job)` returns the ink layers and `paint_ribbon` the ground and its rim,
+for `plates` to composite. This package does not draw labels, fetch anything or
+import `maps.lettering`.
 """

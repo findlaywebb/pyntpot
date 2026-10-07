@@ -2,11 +2,11 @@
 
 Key names: `paper_plate`, the notebook card (cream rag, a worn border, a little foxing,
 and a grid when the style asks for one); and `relief_density`, a quiet shaded relief
-read from the elevation grid, in pigment density.
+read from the basemap's elevation patch, in pigment density.
 
-Both are pure functions of the sheet's noise, the plate's canvas and the style groups
-they read: neither draws from a shared generator, so neither moves the order the phases
-consume them in.
+Both are pure functions of the sheet's noise, the plate's canvas and what they are
+given: neither draws from a shared generator, so neither moves the order the phases
+consume the generators in.
 
 It does not write the card to disk, trim the relief to the ribbon or choose its
 pigment; the plates phase writes the card and the relief phase lays the density.
@@ -21,7 +21,7 @@ from pyntpot.maps.basemap import ElevationPatch
 
 
 def relief_density(grid: ElevationPatch, plate: Canvas, sheet: Sheet) -> np.ndarray:
-    """A quiet shaded relief from the SRTM grid, in pigment density."""
+    """A quiet shaded relief from the elevation patch, in pigment density."""
     n = grid.n
     v = np.asarray(grid.values, F32).reshape(n, n)
     gx = (
@@ -54,7 +54,7 @@ def relief_density(grid: ElevationPatch, plate: Canvas, sheet: Sheet) -> np.ndar
 
 
 def paper_plate(sheet: Sheet, plate: Canvas, style: PaperStyle, display_px: int) -> np.ndarray:
-    """The notebook card: cream rag, a worn border, a little foxing, no grid."""
+    """The notebook card: cream rag, a worn border, a little foxing, a grid if asked."""
     h, w = plate.h, plate.w
     base = rgb(style.paper_hex)
     img = np.repeat(base[None, None, :], h, 0).repeat(w, 1).copy()

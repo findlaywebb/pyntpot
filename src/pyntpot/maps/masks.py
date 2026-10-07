@@ -145,8 +145,9 @@ def _components(mask: list[bytearray], value: int) -> list[list[tuple[int, int]]
 def declutter(mask: list[bytearray], min_cells: int) -> list[bytearray]:
     """Drop specks and fill pinholes below `min_cells` in area.
 
-    A wood the size of four cells is noise on a sheet this size, and so is a
-    clearing the same size. Both go, which is what leaves few big shapes.
+    A blob smaller than `min_cells` is noise, and so is a clearing that small;
+    both go, which is what leaves few big shapes. A clearing that touches the
+    mask's edge is kept whatever its size, since it may run on past the edge.
     """
     out = [bytearray(row) for row in mask]
     for blob in _components(out, 1):

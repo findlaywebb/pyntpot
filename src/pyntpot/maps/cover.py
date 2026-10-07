@@ -7,9 +7,9 @@ round the card edge into the sea; `COVER_TAGS` and `COVER_ORDER`, the tag-to-pig
 table and the painting order.
 
 It does not fetch payloads, project a track, or paint anything: it reads the files the
-cache already holds and returns rings in route metres. Invariants: a missing payload
-is an empty result, never an error; the coast keeps its own vertices; a later entry of
-`COVER_TAGS` wins where two polygons overlap, so a plate carries one class per pixel.
+cache already holds and returns rings in card metres. Invariants: a missing payload
+is an empty result, never an error; the coast keeps its own vertices; a class later in
+`COVER_ORDER` is painted over an earlier one, so a plate carries one class per pixel.
 """
 
 from __future__ import annotations
@@ -62,8 +62,8 @@ CORNER_EPS = 1e-9
 SEA_SHARE = 0.5
 
 
-#: OSM tag to pigment class. Later in this list wins where two polygons overlap,
-#: so the plate carries one class per pixel and no two land pigments can stack.
+#: OSM tag to pigment class. An element that matches on more than one key takes
+#: the class of the last of `landuse`, `natural` and `leisure` that matches.
 COVER_TAGS: tuple[tuple[str, str, str], ...] = (
     ("landuse", "farmland", "farmland"),
     ("landuse", "farmyard", "built"),
@@ -101,7 +101,8 @@ COVER_TAGS: tuple[tuple[str, str, str], ...] = (
     ("natural", "wood", "wood"),
 )
 
-#: Painting order, low to high. A wood drawn over farmland replaces it.
+#: Painting order, low to high. A later class replaces an earlier one where they
+#: overlap, so the plate carries one class per pixel and no two land pigments stack.
 COVER_ORDER: tuple[str, ...] = (
     "farmland",
     "meadow",
@@ -123,8 +124,8 @@ def cover_rings(
     """Land cover rings by pigment class, clipped to the card and simplified.
 
     Args:
-        key: The activity, naming the cache file.
-        proj: The activity's projection.
+        key: The track's cache key, naming the cache file.
+        proj: The track's projection.
         clip: The card, in metres.
         eps: Simplification tolerance in metres.
         cache: Where the payload lives.
@@ -155,7 +156,7 @@ def cover_rings(
 
 
 def wood_rings(key: str, proj: Projection, clip: Clip, eps: float, cache: Cache) -> list[list[Pt]]:
-    """Wood rings straight from the renderer's own Overpass cache."""
+    """Wood rings from the cached feature payload, clipped to the card and simplified."""
     path = cache.features_path(key)
     rings: list[list[Pt]] = []
     if not path.exists():
@@ -282,7 +283,8 @@ def sea_from_coast(chains: list[list[Pt]], clip: Clip) -> list[list[Pt]]:
         clip: The card, in metres.
 
     Returns:
-        One closed ring, or an empty list when no chain crosses the card.
+        One closed ring round the longest chain that crosses the card, or an
+        empty list when none does or no closure holds more than half the probes.
     """
     open_chains = [
         c

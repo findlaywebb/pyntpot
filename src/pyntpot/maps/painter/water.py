@@ -39,9 +39,9 @@ def coast_run(d_sea: np.ndarray, wet: np.ndarray, band: float) -> float:
 
     The gradient of the distance into the sea points across the coast, so the
     coast itself runs at right angles to it. Orientation has no sign, so the
-    angles are doubled before they are averaged and halved after: a shore that
-    turns a corner gives the run of the longer side rather than the mean of the
-    two, which is what a painter's wrist would follow.
+    angles are doubled before they are averaged and halved after, weighted by
+    how much shore runs each way: a shore that turns a right angle gives the run
+    of its longer side, and a gentler bend a mean that leans towards it.
 
     Args:
         d_sea: Distance in render pixels from the land into the sea.
@@ -50,7 +50,7 @@ def coast_run(d_sea: np.ndarray, wet: np.ndarray, band: float) -> float:
 
     Returns:
         The angle, in image coordinates with the row axis downward. 0 when
-        there is no shore in the card.
+        no sea pixel within `band` of the shore has a gradient to read.
     """
     gy, gx = np.gradient(blur(d_sea, _COAST_BLUR))
     near = wet & (d_sea > 1.0) & (d_sea < band)

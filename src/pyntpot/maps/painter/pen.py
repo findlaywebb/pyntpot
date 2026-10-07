@@ -6,11 +6,11 @@ ribbon untrimmed; and `paint_route_pen`, which draws the route with the same bru
 engine as alpha the page tints with whatever ink it is set to.
 
 Roads and watercourses are painted with the same machinery as the wash: no vector
-stroke is drawn over the top. A watercourse is drawn at its own width where the payload
+stroke is drawn over the top. A watercourse is drawn at its own width where the basemap
 measured one, so a large river is as wide on the sheet as it is on the ground; the class
 still chooses the brush and the ink, and the pad is still read back through the class
-brush, so the reservoir and the break texture of the water layer are what they always
-were. The coast is chained rather than profiled: it is one line round the land and has
+brush, so the water layer keeps that brush's reservoir and break texture at any
+width. The coast is chained rather than profiled: it is one line round the land and has
 no width of its own to vary.
 
 Every watercourse and road draws from the job's ink generator, in the order laid; the
@@ -58,7 +58,7 @@ def _water_pad(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[Layer]:
                     style.brush.brushes[cls], px, job.scale, style.brush, cls
                 )[0]
             brush = wide[key]
-        # `wp` is the width along the river as a share of its widest point, so
+        # `r.profile` is the width along the river as a share of its widest point, so
         # an estuary narrows to a channel over its own length instead of being
         # drawn at one width throughout. The brush is built at the widest and
         # the profile only ever takes ink away.

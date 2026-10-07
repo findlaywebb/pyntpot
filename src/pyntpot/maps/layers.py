@@ -1,17 +1,18 @@
-"""Assembling the basemap: every layer one activity's cached payloads can give.
+"""Assembling the basemap: every layer one track's cached payloads can give.
 
 Key names: `build_basemap`, which reads the cached feature, land cover and elevation
 payloads and returns the typed `Basemap` the painter reads; `basemap`, the vector
 layers as plain data, with the roads, rivers and landmark candidates already chosen by
-the track's interaction with them; `BasemapInputs`, what one activity is assembled
-from; `scale_for`, how much coarser than a run's map a box this big is drawn.
+the track's interaction with them; `BasemapInputs`, what one track's basemap is
+assembled from; `scale_for`, how much coarser than a run's map a box this big is drawn.
 
 Everything is in the card's own metre space, the one `track_projection` puts a track
 in: x east, y north, origin at the south-west corner of the track's bounding box. A box
 is generalised by thresholds stated for a reference span and scaled up from it.
 
 It does not fetch anything, paint, or letter: with nothing cached for a box it returns
-`None`, the signal to draw the bare track. Invariants: the same payloads and style
+`None` (`build_basemap` does so whenever the feature payload is missing), the signal to
+draw the bare track. Invariants: the same payloads and style
 always give the same basemap; the roads and watercourses of `build_basemap` are the ones
 the vector map draws, decided by the same interaction rules.
 """
@@ -74,7 +75,7 @@ CARD_TRACK_EPS_M = 3.0
 INDEX_EPS_M = 6.0
 INDEX_STEP_M = 15.0
 
-#: The least a card's pixel size is simplified at, in metres.
+#: The least simplification tolerance a card's lines get, in metres.
 MIN_EPS_M = 2.0
 
 #: How much of a pixel the card's lines are simplified to.
@@ -89,10 +90,10 @@ DEFAULT_CLIP_MARGIN_M = 900.0
 
 @dataclass(frozen=True)
 class BasemapInputs:
-    """What one activity's basemap is assembled from.
+    """What one track's basemap is assembled from.
 
     Attributes:
-        key: The activity, naming the cache files.
+        key: The track's cache key, naming the cache files.
         track: The recorded track.
         cache: Where the cached payloads live.
         places: User-supplied places of interest, each with a `name`, `lat` and `lng`.
@@ -110,7 +111,7 @@ def scale_for(span_m: float) -> float:
 
 
 def _derived(options: BasemapStyle, factor: float) -> dict[str, Any]:
-    """The generalisation thresholds actually used, for the notes column."""
+    """The generalisation thresholds at this box's scale, which the layer builders read."""
     return {
         "scale": round(factor, 2),
         "road_eps_m": round(10.0 * factor, 1),
@@ -142,9 +143,9 @@ def _place_marks(
         x, y = proj(float(place["lat"]), float(place["lng"]))
         if not (xmin <= x <= xmax and ymin <= y <= ymax):
             continue
-        # `kind` and `always_label` are optional and default to what the file
-        # has always meant: a glyph named by `symbol`, with the name under it,
-        # chosen by the score like anything else. A `settlement` entry draws no
+        # `kind` and `always_label` are optional. By default a place is a glyph
+        # named by `symbol`, with the name under it, chosen by the score like
+        # anything else. A `settlement` entry draws no
         # glyph, and an `always_label` one is lettered whenever the box holds it.
         kind = str(place.get("kind", "marker"))
         symbol = place.get("symbol", "" if kind == "settlement" else "pin")
@@ -168,21 +169,21 @@ def basemap(
     route: list[Pt] | None = None,
     clip_margin_m: float = DEFAULT_CLIP_MARGIN_M,
 ) -> dict[str, Any] | None:
-    """Assemble every basemap layer for one activity from the cache.
+    """Assemble every basemap layer for one track from the cache.
 
     Args:
-        inputs: The activity, its track, its cache and its places.
+        inputs: The cache key, the track, its cache and its places.
         options: What to draw. The defaults are the basemap group's own.
-        route: The already-projected track, when the caller has one. The
-            snapshot's route is simplified before its origin is taken, so a road
-            projected from scratch could sit a metre or two off the track it
-            runs beside; passing the route pins the two to the same origin.
+        route: The already-projected track, when the caller has one. Its first
+            point fixes the origin, so a caller that simplified its track before
+            projecting it gets roads on the same origin as that track, not a
+            metre or two off it.
         clip_margin_m: Metres of ground kept around the track's bounding box
             when drawing, before the box's scale is applied.
 
     Returns:
-        Layers in route metre space, or None when nothing is cached for this
-        box, which is the renderer's signal to draw the bare track and say so.
+        The vector layers as plain data in card metres, or None when nothing
+        is cached for this box, the signal to draw the bare track and say so.
     """
     options = options or BasemapStyle()
     osm_file = inputs.cache.features_path(inputs.key)
@@ -260,21 +261,21 @@ def _cover(
 def build_basemap(
     inputs: BasemapInputs, style: Style, route: list[Pt] | None = None
 ) -> Basemap | None:
-    """Everything the painter needs for one activity, from the cache.
+    """Everything the painter needs for one track, from the cache.
 
     The land cover, the coast and the sea come from the two cached Overpass
     payloads; the roads and the watercourses come through `basemap`, so the
     same interaction rules decide what is drawn here as on the vector map.
 
     Args:
-        inputs: The activity, its track, its cache and its places.
+        inputs: The cache key, the track, its cache and its places.
         style: The style; its card, ribbon and brush groups fit the card and
             its basemap group says what is drawn. The clip margin is the card's
             own longer side, derived here.
         route: The already-projected track, when the caller has one.
 
     Returns:
-        The basemap in card metres, or None when nothing is cached for this box.
+        The basemap in card metres, or None when the feature payload is not cached.
     """
     key, cache = inputs.key, inputs.cache
     if not cache.features_path(key).exists():

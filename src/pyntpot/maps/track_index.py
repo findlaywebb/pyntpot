@@ -4,8 +4,9 @@ Key names: `TrackIndex`, which answers the distance from a point to the track an
 whether a line ran alongside the track or crossed it; `_densify`, a polyline
 resampled to a maximum point spacing.
 
-A road is on the map because the session met it, not because it exists, so every
-minor road and every stream is asked this question once. It does not decide which
+A road is on the map because the track met it, not because it exists, so the minor
+roads and the streams are each asked whether the track ran alongside them or crossed
+them. It does not decide which
 features to ask about and it does not draw anything. Invariants: a distance is
 never more than the cap it was given, and an empty neighbourhood answers the cap.
 """
@@ -19,8 +20,8 @@ from pyntpot.ink.polyline import Pt, segments_cross
 class TrackIndex:
     """A grid index over the track, for asking how near a feature ran to it.
 
-    A road is on the map because the session met it, not because it exists, so
-    every minor road and every stream is asked this question once.
+    A road is on the map because the track met it, not because it exists, so
+    the minor roads and the streams are each asked this question.
     """
 
     def __init__(self, points: list[Pt], cell_m: float = 120.0) -> None:
@@ -28,7 +29,8 @@ class TrackIndex:
 
         Args:
             points: The track in metres.
-            cell_m: Bucket size; queries scan the nine buckets around a point.
+            cell_m: Bucket size in metres; a distance query scans every bucket
+                within its cap of the point.
         """
         self.cell = cell_m
         self.points = points
@@ -63,10 +65,11 @@ class TrackIndex:
         Args:
             line: The feature in metres.
             within_m: How close counts as alongside.
-            run_m: How much of that contact is needed. A crossing needs none.
+            run_m: How many metres of unbroken contact are needed. A crossing
+                needs none.
 
         Returns:
-            Whether the feature is part of the session's story.
+            Whether the track ran alongside the feature or crossed it.
         """
         dense = _densify(line, step_m=20.0)
         near = [self.distance(x, y, cap_m=within_m + 1) <= within_m for x, y in dense]

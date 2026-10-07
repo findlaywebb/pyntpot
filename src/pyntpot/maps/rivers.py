@@ -38,8 +38,8 @@ CHANNEL_EASE_SAMPLES = 4
 #: How far a watercourse has to run *inside* a mapped water area before that
 #: area is taken as its own banks, in metres. A river is as wide as the water it
 #: runs along, not as the water it runs into: a stream that meets a big river
-#: inside the river's own polygon would otherwise measure 212 m and be drawn as
-#: the main river of the sheet.
+#: inside the river's own polygon would otherwise take the big river's width and
+#: be drawn as the main river of the sheet.
 WIDTH_RUN_M = 250.0
 
 
@@ -165,9 +165,9 @@ def measured_width_m(lines: list[list[Pt]], rings: list[list[Pt]]) -> float | No
     """How wide one watercourse really is, from the water area it runs in.
 
     OSM maps a big river twice: a centreline that says where it goes and a
-    polygon that says how much room it takes. The card only ever read the
-    centreline, so a big river was drawn at the width the importance curve chose
-    for it and not at the quarter kilometre it actually occupies.
+    polygon that says how much room it takes. The width is read off the
+    polygon, so a big river can be drawn at the room it occupies rather than at
+    the width the importance curve chooses for its class.
 
     Args:
         lines: The watercourse's centrelines, in metres.
@@ -195,11 +195,9 @@ def painted_width_px(floor_px: float, measured_m: float, mppd: float) -> float:
     **Thin water is exaggerated up to the class floor; wide water is drawn at
     its own width and never narrowed to fit.** The importance curve is what a
     watercourse is drawn at when nothing else says: a brook two metres across
-    has to be exaggerated fortyfold to appear on the sheet at all, and every map
-    ever drawn does that. It is a floor and not a target. A river that measures
-    wider than its floor is drawn at what it measures, and is not exaggerated
-    on top of that: a river wider than its floor is never narrowed and never
-    exaggerated further.
+    has to be exaggerated many times over to appear on the sheet at all. It is
+    a floor and not a target. A river that measures wider than its floor is
+    drawn at what it measures, and is not exaggerated on top of that.
 
     Args:
         floor_px: What this class is drawn at when nothing is measured.
@@ -207,7 +205,7 @@ def painted_width_px(floor_px: float, measured_m: float, mppd: float) -> float:
         mppd: Metres per display pixel.
 
     Returns:
-        The painted width in display pixels.
+        The painted width in display pixels, rounded to two decimals.
     """
     return round(max(floor_px, measured_m / max(mppd, 1e-9)), 2)
 
@@ -219,13 +217,13 @@ def major_rivers(
 
     **The main river of a box is the widest water in it, not the longest.** Run
     inside the box is a fact about the box rather than about the river: it can
-    make a buried sewer with 4.8 km of culvert across the sheet the main river,
-    and leave the wide river medium on the 2.6 km it clips off a corner.
+    make a culvert that crosses the whole sheet the main river, and leave a
+    wide river medium on the short stretch it clips off a corner.
 
     Width is measured off the water's own mapped area, which is what OSM maps
-    for exactly the rivers that have one. Where the box holds no mapped area at
-    all, which is the ordinary case away from a big river, the old rule stands
-    and the longest run wins; and a river with no area of its own never outranks
+    for exactly the rivers that have one. Where no watercourse in the box
+    measures a width, which is the ordinary case away from a big river, the
+    longest run wins; and a river with no area of its own never outranks
     one that has been measured, because a measurement is evidence and a run
     length is a coincidence of framing.
 

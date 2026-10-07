@@ -1,7 +1,7 @@
 """The cached Overpass payload, grouped into the vector layers of one map.
 
 Key names: `_osm_layers`, which reads the payload once and returns the wood, park,
-water, coast, road, river and landmark-candidate layers in route metres; `_dedupe`,
+water, coast, road, river and landmark-candidate layers in card metres; `_dedupe`,
 which keeps one landmark candidate per name; `BURIED_FRAC`, the share of a watercourse
 underground that drops it.
 
@@ -46,7 +46,7 @@ PARK_SEED = 9
 
 
 def _dedupe(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """One entry per named thing, nearest the track kept."""
+    """One entry per name, the nearest the track kept; every unnamed entry kept, nearest first."""
     best: dict[str, dict[str, Any]] = {}
     loose: list[dict[str, Any]] = []
     for entry in sorted(candidates, key=lambda c: c["d"]):
@@ -58,7 +58,7 @@ def _dedupe(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _kept_roads(found: Harvest) -> list[dict[str, Any]]:
-    """The roads whose road earned a place, counting the ways dropped with the rest."""
+    """The ways of every road that earned a place, counting the ways of the rest as dropped."""
     roads: list[dict[str, Any]] = []
     for road, entries in found.ways.items():
         if found.road_keep.get(road):
@@ -75,8 +75,8 @@ def _open_rivers(found: Harvest) -> list[dict[str, Any]]:
     buried river as a watercourse because it still flows; it runs in a sewer
     under a street and there is nothing to see. The test is per watercourse
     and by length, not per way: a river that passes under one short culvert
-    out of thirteen ways stays whole, and one that is `tunnel=yes` end to end
-    goes.
+    out of thirteen ways stays whole, and one that carries a `tunnel` tag end
+    to end goes.
     """
     gone = {
         key
@@ -155,7 +155,7 @@ def _osm_layers(
 
     Args:
         path: The cached Overpass payload.
-        proj: The activity's projection.
+        proj: The track's projection.
         clip: (xmin, ymin, xmax, ymax) in metres; everything is cut to it.
         index: The track, for the interaction tests.
         options: What to draw.
