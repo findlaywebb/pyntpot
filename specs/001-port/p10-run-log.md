@@ -105,3 +105,9 @@ User instructions (2026-10-07):
   Baseline `{"commit": "d30ff4b...", "dirty": false}`; AST-neutral 2 files; prek exit 0;
   not-golden 169 s (1043 passed, 1 skipped); tolerance 287 s; G-self 293 s (17 passed,
   byte-identical). The blurred-mask-rim member waits on Q7; P10.3c stays unticked.
+- P10.3a landed (`ab74d1c`): `draw_attribution` opens its hand without the `labels` gate;
+  `LetteringPolicy.labels` comment reworded; new
+  `TestLabelsOff::test_written_when_the_map_is_not_lettered`, red first (`assert None is
+  not None` on the bbox), then green. Baseline `{"commit": "d30ff4b...", "dirty": false}`;
+  prek exit 0; not-golden 167 s (1044 passed, 1 skipped); tolerance 292 s; G-self 295 s
+  (17 passed, byte-identical). D8 release blocker cleared.
