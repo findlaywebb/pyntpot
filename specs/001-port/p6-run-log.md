@@ -270,3 +270,271 @@ User instructions (2026-10-07 12:14 BST):
     deselected); `--golden-tolerance` 294 s (17 passed); byte-exact `pytest -m golden`
     304 s (17 passed). `git diff --stat -- src tests` empty.
 - 15:19 P6.2 verified and ticked (`bef4d29`). P6.3-fetch dispatched.
+- 15:30 P6.3-fetch (steps 1 to 3), from `bef4d29`; started 15:19. No repository file
+  changed except this log. `$SLICE` =
+  `/tmp/claude-0/-home-user-pyntpot/81b07070-1ea4-5527-9ae2-48b727070240/scratchpad/p6.3/`;
+  bodies under `$SLICE/refs/` (`<key>-<n>.{html,json,pdf,md,txt}`, headers beside each as
+  `.hdr`), every attempt in `$SLICE/attempts.tsv`. Requests 15:20:55 to 15:28:44 BST, wall
+  time 7 min 49 s (whole slice 15:19 to 15:30, 11 min). 73 requests (72 `curl`, 1
+  `git ls-remote`), 5 answered 429 (all the Wayback availability API), 8 connection
+  resets (OpenLibrary 3, Wayback snapshot 5). Pacing: one request at least 2 s after the
+  last, never two at once; backoff 5, 10, 20, 40 s on 429, 5xx or reset.
+  `grep -cE '^ *- maintainer-checked: https?://'` on this log printed `2` before the run.
+  - choice: fetch a work once when several keys cite it (Curtis 1997 canonical for
+    `edge-darkening`, `backruns`, `granulation`, `shallow-water`; Strassmann 1986 for
+    `bristle-brush` and `nib`; the Curtis PDF for `kubelka-munk` and `wet-area-bleed`;
+    Stamen for `multiply-compositing`, `box-blur`, `edge-darkening`), log one source line
+    and one evidence row per key, each naming the shared saved body | rule: step 1 (one
+    line per source); pacing rule | inputs: candidate table, P6.2 match table.
+  - choice: a canonical source given only as a DOI is checked against the identity the
+    plan's tool facts give it (author family names and year; title where the design
+    record or tool facts give one), and its citation fields are the Crossref record's,
+    case kept as the record gives it | rule: Source line (fields the record gives);
+    *Match* | inputs: tool facts, Crossref records.
+  - choice: IEEE `doi.org` answers 202 with an empty body after redirects, counted as
+    blocked | rule: route 2 (a page is blocked when its status is not 200) | inputs:
+    `box-blur-1.html`, `hillshade-1.html`, `bristle-brush-6.html` (0 bytes each).
+  - choice: no route 7 for any source but The Postman's Knock: every other own page
+    either verified at route 1 or was a DOI publisher page that route 2 verified, and
+    p5-watercolor verified at route 5 | rule: route 7 (only when routes 2 to 6 did not
+    verify) | inputs: the bodies below.
+  - choice: the 16 `named-only` works and the fixed `the canonical source above.` (9
+    lines) and `not recorded` (10 lines) design inputs are not fetched | rule: step 1;
+    fixed design-input lines | inputs: P6.2 match table.
+  - kubelka-munk | Kubelka, Munk 1931 (canonical) | none (no DOI, URL, title or ISBN;
+    route 6 through Kubelka 1948) | n/a | route 6 | first author Kubelka, year 1931,
+    volume 12, first page 593, venue "Zeits. f. tech. Physik" by abbreviation of
+    "Zeitschrift für technische Physik" | venue taken from the citing reference; title,
+    initials and last page in no record | 0
+    - attempt | https://doi.org/10.1364/JOSA.38.000448 | 200 at https://opg.optica.org/josa/abstract.cfm?uri=josa-38-5-448 (`kubelka-munk-1.html`, 200,727 bytes; folded title 10, `kubelka` 19, `1948` 14)
+    - attempt | https://api.crossref.org/works/10.1364%2FJOSA.38.000448 | 200 (`kubelka-munk-2.json`: "New Contributions to the Optics of Intensely Light-Scattering Materials Part I", Kubelka, Paul, 1948, *Journal of the Optical Society of America* 38(5), 448; 8 references, R4 `{"first-page":"593","volume":"12","author":"Kubelka","year":"1931","journal-title":"Zeits. f. tech. Physik"}`)
+    - evidence | kubelka-munk | Canonical source | Kubelka; Munk (1931). *Zeitschrift für technische Physik* 12, 593. | none | verified-via-index | cited in the reference list of Kubelka 1948, https://doi.org/10.1364/JOSA.38.000448, whose Optica page 200 shows its title, author and year, by first author, year, journal, volume and first page; second author from the design record; title, initials and last page in no fetched record, so not cited | 2026-10-07
+  - kubelka-munk | Curtis et al. 1997, grail PDF (design input) | https://grail.cs.washington.edu/projects/watercolor/paper_small.pdf | 200 | route 1 | PDF words `computer generated watercolor` 4, `curtis` 1, `anderson` 1, `seims` 1, `fleischer` 1 (as `fleischery`), `salesin` 4 (`pdftotext` to `kubelka-munk-3.txt`); `1997` 0 | year from the design record, not shown on the page | 0
+    - attempt | https://grail.cs.washington.edu/projects/watercolor/paper_small.pdf | 200 (`kubelka-munk-3.pdf`)
+    - evidence | kubelka-munk | Design input | Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997, year from the design record, not shown on the page). Computer-Generated Watercolor. | https://grail.cs.washington.edu/projects/watercolor/paper_small.pdf | verified | PDF 200, title and every author in the text | 2026-10-07
+  - kubelka-munk | Van Laerhoven, Van Reeth 2005 (design input) | https://api.crossref.org/works?query.bibliographic=Van+Laerhoven+Van+Reeth+Real-time+simulation+of+watery+paint&rows=5&... | 200 | route 3, then route 2 | first hit `10.1002/cav.95`: title folds equal, year 2005, authors Van Laerhoven, Van Reeth | title U+2010 in "Real‐time" written as ASCII hyphen (dash rule); venue, volume, issue, pages and initials added from the record | 0
+    - attempt | https://api.crossref.org/works?query.bibliographic=Van+Laerhoven+Van+Reeth+Real-time+simulation+of+watery+paint&rows=5&select=DOI,title,subtitle,issued,author,container-title,event | 200 (`kubelka-munk-4.json`; five hits: 10.1002/cav.95 "Real‐time simulation of watery paint" 2005; 10.1145/1187112.1187187 "Real-time simulation of thin paint media" 2005; 10.1109/cgi.2004.1309281 "Real-time watercolor painting on a distributed paper model" null; 10.1007/s00371-007-0144-5 "From dust till drawn" 2007; 10.1002/cav.406 "Paint‐on‐glass animation ..." 2011)
+    - attempt | https://doi.org/10.1002/cav.95 | 403 at https://onlinelibrary.wiley.com/doi/10.1002/cav.95, `<title>Just a moment...`, `cf-mitigated: challenge` (`kubelka-munk-5.html`)
+    - attempt | https://api.crossref.org/works/10.1002%2Fcav.95 | 200 (`kubelka-munk-6.json`)
+    - evidence | kubelka-munk | Design input | Van Laerhoven, T.; Van Reeth, F. (2005). Real-time simulation of watery paint. *Computer Animation and Virtual Worlds* 16(3-4), 429-439. | https://doi.org/10.1002/cav.95 | verified-via-index | Crossref record by bibliographic search, publisher page 403 challenge | 2026-10-07
+  - multiply-compositing | W3C Compositing and Blending Level 1 (canonical) | https://www.w3.org/TR/compositing-1/ | 200 | route 1 (standard) | `<title>` "Compositing and Blending Level 1"; `<p id="w3c-state">` "W3C Candidate Recommendation Draft", `<time class="dt-updated" datetime="2024-03-21">21 March 2024` | none | 0
+    - attempt | https://www.w3.org/TR/compositing-1/ | 200 (`multiply-compositing-1.html`)
+    - evidence | multiply-compositing | Canonical source | W3C (2024). Compositing and Blending Level 1. W3C Candidate Recommendation Draft, 21 March 2024. | https://www.w3.org/TR/compositing-1/ | verified | page 200, title and w3c-state W3C Candidate Recommendation Draft, updated 2024-03-21 | 2026-10-07
+  - multiply-compositing | Stamen, *Watercolor process* (design input) | https://stamen.com/watercolor-process-3dd5135861fe/ | 200 | route 1 | `watercolor process` 28, `zach watson` 2, `stamen` 270; `<title>` "Watercolor Process | Stamen"; `article:published_time` 2012-03-26 | pinned title, author and year as P6.2 logged | 0
+    - attempt | https://stamen.com/watercolor-process-3dd5135861fe/ | 200 (`multiply-compositing-2.html`)
+    - evidence | multiply-compositing | Design input | Watson, Z. (Stamen Design) (2012). Watercolor Process. | https://stamen.com/watercolor-process-3dd5135861fe/ | verified | page 200 with its pinned words, published 2012-03-26 | 2026-10-07
+  - multiply-compositing | osmanyy.com, *Risograph CSS* (design input) | https://osmanyy.com/projects/risograph-css/ | 200 | route 1 | `risograph css` 22, `osman` 25, `2025` 9; `<title>` "Risograph.css — Osman&#39;s Workshop"; `article:published_time` 2025-07-03 | pinned title, author and year as P6.2 logged | 0
+    - attempt | https://osmanyy.com/projects/risograph-css/ | 200 (`multiply-compositing-3.html`)
+    - evidence | multiply-compositing | Design input | Osman (osmanyy.com) (2025). Risograph.css. | https://osmanyy.com/projects/risograph-css/ | verified | page 200 with its pinned words, published 2025-07-03 | 2026-10-07
+  - zhang-suen | `10.1145/357994.358023` (canonical) | https://doi.org/10.1145/357994.358023 | 403 | route 2 | title, authors Zhang, Suen, year 1984 | none | 0
+    - attempt | https://doi.org/10.1145/357994.358023 | 403 at https://dl.acm.org/doi/10.1145/357994.358023, `<title>Just a moment...`, `cf-mitigated: challenge` (`zhang-suen-1.html`)
+    - attempt | https://api.crossref.org/works/10.1145%2F357994.358023 | 200 (`zhang-suen-2.json`)
+    - evidence | zhang-suen | Canonical source | Zhang, T. Y.; Suen, C. Y. (1984). A fast parallel algorithm for thinning digital patterns. *Communications of the ACM* 27(3), 236-239. | https://doi.org/10.1145/357994.358023 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+  - douglas-peucker | `10.3138/FM57-6770-U75U-7727` (canonical) | https://doi.org/10.3138/FM57-6770-U75U-7727 | 403 | route 2 | authors Douglas, Peucker, year 1973 | the design record's "Line simplification" is a description, not a title; title and venue from the record (record's capitals kept) | 0
+    - attempt | https://doi.org/10.3138/FM57-6770-U75U-7727 | 403 at https://utppublishing.com/doi/10.3138/FM57-6770-U75U-7727, `cf-mitigated: challenge` (`douglas-peucker-1.html`)
+    - attempt | https://api.crossref.org/works/10.3138%2FFM57-6770-U75U-7727 | 200 (`douglas-peucker-2.json`)
+    - evidence | douglas-peucker | Canonical source | DOUGLAS, D. H.; PEUCKER, T. K. (1973). ALGORITHMS FOR THE REDUCTION OF THE NUMBER OF POINTS REQUIRED TO REPRESENT A DIGITIZED LINE OR ITS CARICATURE. *Cartographica* 10(2), 112-122. | https://doi.org/10.3138/FM57-6770-U75U-7727 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+  - chaikin | `10.1016/0146-664X(74)90028-8` (canonical) | https://doi.org/10.1016/0146-664X(74)90028-8 | 200 stub | route 2 | title, author Chaikin, year 1974 | none | 0
+    - attempt | https://doi.org/10.1016/0146-664X%2874%2990028-8 | 200 at https://linkinghub.elsevier.com/retrieve/pii/0146664X74900288, `<title>Redirecting`, 2,655 bytes, folded title 1, `chaikin` 0, so blocked (`chaikin-1.html`)
+    - attempt | https://api.crossref.org/works/10.1016%2F0146-664X%2874%2990028-8 | 200 (`chaikin-2.json`)
+    - evidence | chaikin | Canonical source | Chaikin, G. M. (1974). An algorithm for high-speed curve generation. *Computer Graphics and Image Processing* 3(4), 346-349. | https://doi.org/10.1016/0146-664X(74)90028-8 | verified-via-index | Crossref record, publisher page 200 stub without authors | 2026-10-07
+  - catmull-rom | `10.1016/B978-0-12-079050-0.50020-5` (canonical) | https://doi.org/10.1016/B978-0-12-079050-0.50020-5 | 200 stub | route 2 | title, authors Catmull, Rom, year 1974 | none (record title in capitals, kept) | 0
+    - attempt | https://doi.org/10.1016/B978-0-12-079050-0.50020-5 | 200 at https://linkinghub.elsevier.com/retrieve/pii/B9780120790500500205, `<title>Redirecting`, 2,666 bytes, folded title 1, `catmull` 0, `rom` 0, so blocked (`catmull-rom-1.html`)
+    - attempt | https://api.crossref.org/works/10.1016%2FB978-0-12-079050-0.50020-5 | 200 (`catmull-rom-2.json`; `book-chapter`, no volume or issue)
+    - evidence | catmull-rom | Canonical source | Catmull, E.; Rom, R. (1974). A CLASS OF LOCAL INTERPOLATING SPLINES. *Computer Aided Geometric Design*, 317-326. | https://doi.org/10.1016/B978-0-12-079050-0.50020-5 | verified-via-index | Crossref record, publisher page 200 stub without authors | 2026-10-07
+  - marching-squares | `10.1145/37402.37422` (canonical, the 2-D case) | https://doi.org/10.1145/37402.37422 | 403 | route 2 | authors Lorensen, Cline, year 1987 | none | 0
+    - attempt | https://doi.org/10.1145/37402.37422 | 403 at https://dl.acm.org/doi/10.1145/37402.37422, `cf-mitigated: challenge` (`marching-squares-1.html`)
+    - attempt | https://api.crossref.org/works/10.1145%2F37402.37422 | 200 (`marching-squares-2.json`)
+    - evidence | marching-squares | Canonical source | Lorensen, W. E.; Cline, H. E. (1987). Marching cubes: A high resolution 3D surface construction algorithm. *ACM SIGGRAPH Computer Graphics* 21(4), 163-169. | https://doi.org/10.1145/37402.37422 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+  - lanczos | `10.1175/1520-0450(1979)018<1016:LFIOAT>2.0.CO;2` (canonical) | https://doi.org/10.1175/1520-0450(1979)018<1016:LFIOAT>2.0.CO;2 | 403 | route 2 | author Duchon, year 1979 | none | 0
+    - attempt | https://doi.org/10.1175/1520-0450%281979%29018%3C1016%3ALFIOAT%3E2.0.CO%3B2 | 403 at https://journals.ametsoc.org:443/view/journals/apme/18/8/1520-0450_1979_018_1016_lfioat_2_0_co_2.xml, "ERROR: The request could not be satisfied" (`lanczos-1.html`)
+    - attempt | https://api.crossref.org/works/10.1175%2F1520-0450%281979%29018%3C1016%3ALFIOAT%3E2.0.CO%3B2 | 200 (`lanczos-2.json`)
+    - evidence | lanczos | Canonical source | Duchon, C. E. (1979). Lanczos Filtering in One and Two Dimensions. *Journal of Applied Meteorology* 18(8), 1016-1022. | https://doi.org/10.1175/1520-0450(1979)018<1016:LFIOAT>2.0.CO;2 | verified-via-index | Crossref record, publisher page 403 | 2026-10-07
+  - value-noise | `10.1145/74334.74360` (canonical) | https://doi.org/10.1145/74334.74360 | 403 | route 2 | title "Algorithms for solid noise synthesis", author Lewis, year 1989 | none | 0
+    - attempt | https://doi.org/10.1145/74334.74360 | 403 at https://dl.acm.org/doi/10.1145/74334.74360, `cf-mitigated: challenge` (`value-noise-1.html`)
+    - attempt | https://api.crossref.org/works/10.1145%2F74334.74360 | 200 (`value-noise-2.json`)
+    - evidence | value-noise | Canonical source | Lewis, J. P. (1989). Algorithms for solid noise synthesis. *ACM SIGGRAPH Computer Graphics* 23(3), 263-270. | https://doi.org/10.1145/74334.74360 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+  - fbm | `10.1137/1010093` (canonical) | https://doi.org/10.1137/1010093 | 403 | route 2 | authors Mandelbrot, Van Ness, year 1968 | none | 0
+    - attempt | https://doi.org/10.1137/1010093 | 403 at https://epubs.siam.org/doi/10.1137/1010093, `cf-mitigated: challenge` (`fbm-1.html`)
+    - attempt | https://api.crossref.org/works/10.1137%2F1010093 | 200 (`fbm-2.json`)
+    - evidence | fbm | Canonical source | Mandelbrot, B. B.; Van Ness, J. W. (1968). Fractional Brownian Motions, Fractional Noises and Applications. *SIAM Review* 10(4), 422-437. | https://doi.org/10.1137/1010093 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+  - chamfer-distance | `10.1016/S0734-189X(86)80047-0` (canonical) | https://doi.org/10.1016/S0734-189X(86)80047-0 | 200 stub | route 2 | title, author Borgefors, year 1986 | none | 0
+    - attempt | https://doi.org/10.1016/S0734-189X%2886%2980047-0 | 200 at https://linkinghub.elsevier.com/retrieve/pii/S0734189X86800470, `<title>Redirecting`, 2,657 bytes, folded title 1, `borgefors` 0, so blocked (`chamfer-distance-1.html`)
+    - attempt | https://api.crossref.org/works/10.1016%2FS0734-189X%2886%2980047-0 | 200 (`chamfer-distance-2.json`)
+    - evidence | chamfer-distance | Canonical source | Borgefors, G. (1986). Distance transformations in digital images. *Computer Vision, Graphics, and Image Processing* 34(3), 344-371. | https://doi.org/10.1016/S0734-189X(86)80047-0 | verified-via-index | Crossref record, publisher page 200 stub without authors | 2026-10-07
+  - box-blur | `10.1109/TPAMI.1986.4767776` (canonical) | https://doi.org/10.1109/TPAMI.1986.4767776 | 202 | route 2 | author Wells, year 1986 | none | 0
+    - attempt | https://doi.org/10.1109/TPAMI.1986.4767776 | 202 at https://ieeexplore.ieee.org/document/4767776/, empty body (`box-blur-1.html`)
+    - attempt | https://api.crossref.org/works/10.1109%2FTPAMI.1986.4767776 | 200 (`box-blur-2.json`)
+    - evidence | box-blur | Canonical source | Wells, W. M. (1986). Efficient Synthesis of Gaussian Filters by Cascaded Uniform Filters. *IEEE Transactions on Pattern Analysis and Machine Intelligence* PAMI-8(2), 234-239. | https://doi.org/10.1109/TPAMI.1986.4767776 | verified-via-index | Crossref record, publisher page 202 with an empty body | 2026-10-07
+  - box-blur | Stamen, *Watercolor process* (design input) | https://stamen.com/watercolor-process-3dd5135861fe/ | 200 | route 1 | as for `multiply-compositing` (shared body `multiply-compositing-2.html`) | as P6.2 logged | 0
+    - attempt | https://stamen.com/watercolor-process-3dd5135861fe/ | 200 (shared, `multiply-compositing-2.html`)
+    - evidence | box-blur | Design input | Watson, Z. (Stamen Design) (2012). Watercolor Process. | https://stamen.com/watercolor-process-3dd5135861fe/ | verified | page 200 with its pinned words, published 2012-03-26 | 2026-10-07
+  - hillshade | `10.1109/PROC.1981.11918` (canonical) | https://doi.org/10.1109/PROC.1981.11918 | 202 | route 2 | title "Hill shading and the reflectance map" (equal to the design record's), author Horn, year 1981 | none | 0
+    - attempt | https://doi.org/10.1109/PROC.1981.11918 | 202 at https://ieeexplore.ieee.org/document/1456186/, empty body (`hillshade-1.html`)
+    - attempt | https://api.crossref.org/works/10.1109%2FPROC.1981.11918 | 200 (`hillshade-2.json`)
+    - evidence | hillshade | Canonical source | Horn, B. K. P. (1981). Hill shading and the reflectance map. *Proceedings of the IEEE* 69(1), 14-47. | https://doi.org/10.1109/PROC.1981.11918 | verified-via-index | Crossref record, publisher page 202 with an empty body | 2026-10-07
+  - hachures | Imhof, ISBN 9781589480261 (canonical) | https://openlibrary.org/isbn/9781589480261.json | 200 | route 4 | title "Cartographic Relief Presentation", author Eduard Imhof, published "June 1, 2007", publisher ESRI Press | none | 1 (reset, then 200 after 5 s); author fetch 2 (reset, reset, then 200)
+    - attempt | https://openlibrary.org/isbn/9781589480261.json | curl: (35) Recv failure: Connection reset by peer
+    - attempt | https://openlibrary.org/isbn/9781589480261.json | 200 at https://openlibrary.org/books/OL8832465M.json (`hachures-1.json`; `authors` `/authors/OL1273097A`, `by_statement` null)
+    - attempt | https://openlibrary.org/authors/OL1273097A.json | curl: (35) Recv failure: Connection reset by peer
+    - attempt | https://openlibrary.org/authors/OL1273097A.json | curl: (35) Recv failure: Connection reset by peer
+    - attempt | https://openlibrary.org/authors/OL1273097A.json | 200 (`hachures-2.json`, `.name` "Eduard Imhof")
+    - evidence | hachures | Canonical source | Imhof, E. (2007). Cartographic Relief Presentation. ESRI Press. ISBN 9781589480261. | none | verified-via-index | OpenLibrary ISBN record 9781589480261 and author record OL1273097A | 2026-10-07
+  - midpoint-displacement | `10.1145/358523.358553` (canonical) | https://doi.org/10.1145/358523.358553 | 403 | route 2 | authors Fournier, Fussell, Carpenter, year 1982 | none | 0
+    - attempt | https://doi.org/10.1145/358523.358553 | 403 at https://dl.acm.org/doi/10.1145/358523.358553, `cf-mitigated: challenge` (`midpoint-displacement-1.html`)
+    - attempt | https://api.crossref.org/works/10.1145%2F358523.358553 | 200 (`midpoint-displacement-2.json`)
+    - evidence | midpoint-displacement | Canonical source | Fournier, A.; Fussell, D.; Carpenter, L. (1982). Computer rendering of stochastic models. *Communications of the ACM* 25(6), 371-384. | https://doi.org/10.1145/358523.358553 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+  - midpoint-displacement | Tyler Hobbs 2017 (design input) | https://www.tylerxhobbs.com/words/a-guide-to-simulating-watercolor-paint-with-generative-art | 200 | route 1 | `a guide to simulating watercolor paint with generative art` 7, `tyler hobbs` 26, `2017` 6 | pinned title case and author as P6.2 logged | 0
+    - attempt | https://www.tylerxhobbs.com/words/a-guide-to-simulating-watercolor-paint-with-generative-art | 200 (`midpoint-displacement-3.html`)
+    - evidence | midpoint-displacement | Design input | Hobbs, T. (2017). A Guide to Simulating Watercolor Paint with Generative Art. | https://www.tylerxhobbs.com/words/a-guide-to-simulating-watercolor-paint-with-generative-art | verified | page 200 with its pinned words, 2017 in the body | 2026-10-07
+  - midpoint-displacement | axelinternet, p5-watercolor (design input; marker line, precedence) | https://github.com/axelinternet/p5-watercolor | 403 | route 5 | owner and name equal the entry's author and title; `git ls-remote` exit 0; README `hobbs` 2, `watercolor` 3 | none | 0
+    - attempt | https://github.com/axelinternet/p5-watercolor | 403, "GitHub access to this repository is not enabled for this session" (`midpoint-displacement-4.html`)
+    - attempt | git ls-remote https://github.com/axelinternet/p5-watercolor | exit 0, `HEAD` and `refs/heads/master` a3e995a, `refs/pull/1/head`, `refs/pull/1/merge` (`midpoint-displacement-5.txt`)
+    - attempt | https://raw.githubusercontent.com/axelinternet/p5-watercolor/HEAD/README.md | 200, heading "# Watercolor canvas", "p5 implementation of [Typer Hobbs generative watercolor simulation](http://www.tylerlhobbs.com/writings/watercolor)." (`midpoint-displacement-6.md`)
+    - evidence | midpoint-displacement | Design input | Hultman, A. (axelinternet) (2018, last commit, approximate). p5-watercolor. | https://github.com/axelinternet/p5-watercolor | maintainer-checked | maintainer-checked: run log 2026-10-07, owner axelinternet (Axel Hultman), About and README p5 implementation of Tyler Hobbs generative watercolor simulation, last commit about 2018; own page 403; route 5 matched, git ls-remote exit 0 at a3e995a and raw README 200, "p5 implementation of Typer Hobbs generative watercolor simulation" | 2026-10-07
+  - edge-darkening, backruns, granulation, shallow-water | `10.1145/258734.258896` (canonical; one fetch, four keys) | https://doi.org/10.1145/258734.258896 | 403 | route 2 | title "Computer-generated watercolor", authors Curtis, Anderson, Seims, Fleischer, Salesin, year 1997 | record title case "Computer-generated watercolor"; venue the record's container title | 0
+    - attempt | https://doi.org/10.1145/258734.258896 | 403 at http://portal.acm.org/citation.cfm?doid=258734.258896, `<title>Attention Required! | Cloudflare` (`edge-darkening-1.html`)
+    - attempt | https://api.crossref.org/works/10.1145%2F258734.258896 | 200 (`edge-darkening-2.json`; container "Proceedings of the 24th annual conference on Computer graphics and interactive techniques  - SIGGRAPH '97", two spaces before the hyphen in the record; 0 references)
+    - evidence | edge-darkening | Canonical source | Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997). Computer-generated watercolor. *Proceedings of the 24th annual conference on Computer graphics and interactive techniques - SIGGRAPH '97*, 421-430. | https://doi.org/10.1145/258734.258896 | verified-via-index | Crossref record, publisher page 403 Cloudflare block | 2026-10-07
+    - evidence | backruns | Canonical source | Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997). Computer-generated watercolor. *Proceedings of the 24th annual conference on Computer graphics and interactive techniques - SIGGRAPH '97*, 421-430. | https://doi.org/10.1145/258734.258896 | verified-via-index | Crossref record, publisher page 403 Cloudflare block | 2026-10-07
+    - evidence | granulation | Canonical source | Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997). Computer-generated watercolor. *Proceedings of the 24th annual conference on Computer graphics and interactive techniques - SIGGRAPH '97*, 421-430. | https://doi.org/10.1145/258734.258896 | verified-via-index | Crossref record, publisher page 403 Cloudflare block | 2026-10-07
+    - evidence | shallow-water | Canonical source | Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997). Computer-generated watercolor. *Proceedings of the 24th annual conference on Computer graphics and interactive techniques - SIGGRAPH '97*, 421-430. | https://doi.org/10.1145/258734.258896 | verified-via-index | Crossref record, publisher page 403 Cloudflare block | 2026-10-07
+  - edge-darkening | Bousseau et al. 2006 (design input) | https://api.crossref.org/works?query.bibliographic=Bousseau+Interactive+watercolor+rendering+with+temporal+coherence+and+abstraction&rows=5&... | 200 | route 3, then route 2 | first hit `10.1145/1124728.1124751`: title folds equal, year 2006, author Bousseau | "et al." expanded to the record's Kaplan, Thollot, Sillion; venue and pages from the record; the design record's "NPAR 2006" agrees with event "NPAR06" | 0
+    - attempt | https://api.crossref.org/works?query.bibliographic=Bousseau+Interactive+watercolor+rendering+with+temporal+coherence+and+abstraction&rows=5&select=DOI,title,subtitle,issued,author,container-title,event | 200 (`edge-darkening-3.json`; five hits: 10.1145/1124728.1124751 the title 2006; 10.1145/987657.987661 "Interactive rendering of suggestive contours with temporal coherence" 2004; 10.1201/b10627-8 "Utilizing Temporal Coherence" 2005; 10.1145/340916.340919 "Interactive dynamic abstraction" 2000; 10.32657/10220/47356 "Real-time watercolor rendering of 3D objects and animation with enhanced control" null)
+    - attempt | https://doi.org/10.1145/1124728.1124751 | 403 at https://dl.acm.org/doi/10.1145/1124728.1124751, `cf-mitigated: challenge` (`edge-darkening-4.html`)
+    - attempt | https://api.crossref.org/works/10.1145%2F1124728.1124751 | 200 (`edge-darkening-5.json`)
+    - evidence | edge-darkening | Design input | Bousseau, A.; Kaplan, M.; Thollot, J.; Sillion, F. X. (2006). Interactive watercolor rendering with temporal coherence and abstraction. *Proceedings of the 4th international symposium on Non-photorealistic animation and rendering*, 141-149. | https://doi.org/10.1145/1124728.1124751 | verified-via-index | Crossref record by bibliographic search, publisher page 403 challenge | 2026-10-07
+  - edge-darkening | Stamen, *Watercolor process* (design input) | https://stamen.com/watercolor-process-3dd5135861fe/ | 200 | route 1 | as for `multiply-compositing` (shared body `multiply-compositing-2.html`) | as P6.2 logged | 0
+    - attempt | https://stamen.com/watercolor-process-3dd5135861fe/ | 200 (shared, `multiply-compositing-2.html`)
+    - evidence | edge-darkening | Design input | Watson, Z. (Stamen Design) (2012). Watercolor Process. | https://stamen.com/watercolor-process-3dd5135861fe/ | verified | page 200 with its pinned words, published 2012-03-26 | 2026-10-07
+  - wet-area-bleed | `10.1145/1124728.1124732` (canonical, DOI fixed by the plan) | https://doi.org/10.1145/1124728.1124732 | 403 | route 2 | title begins with the design record's "Real-time watercolor illustrations of plants", authors Luft, Deussen; year 2006 | record title "... of plants using a blurred depth test"; year 2006 added (the design record gives none) | 0
+    - attempt | https://doi.org/10.1145/1124728.1124732 | 403 at https://dl.acm.org/doi/10.1145/1124728.1124732, `cf-mitigated: challenge` (`wet-area-bleed-1.html`)
+    - attempt | https://api.crossref.org/works/10.1145%2F1124728.1124732 | 200 (`wet-area-bleed-2.json`; event "NPAR06: The 4th International Symposium on Non-Photorealistic Animation")
+    - evidence | wet-area-bleed | Canonical source | Luft, T.; Deussen, O. (2006). Real-time watercolor illustrations of plants using a blurred depth test. *Proceedings of the 4th international symposium on Non-photorealistic animation and rendering*, 11-20. | https://doi.org/10.1145/1124728.1124732 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+  - wet-area-bleed | Curtis et al. 1997, grail PDF (design input) | https://grail.cs.washington.edu/projects/watercolor/paper_small.pdf | 200 | route 1 | as for `kubelka-munk` (shared body `kubelka-munk-3.pdf`) | year from the design record, not shown on the page | 0
+    - attempt | https://grail.cs.washington.edu/projects/watercolor/paper_small.pdf | 200 (shared, `kubelka-munk-3.pdf`)
+    - evidence | wet-area-bleed | Design input | Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997, year from the design record, not shown on the page). Computer-Generated Watercolor. | https://grail.cs.washington.edu/projects/watercolor/paper_small.pdf | verified | PDF 200, title and every author in the text | 2026-10-07
+  - bristle-brush, nib | `10.1145/15886.15911` (canonical; one fetch, two keys) | https://doi.org/10.1145/15886.15911 | 403 | route 2 | author Strassmann, year 1986 | none | 0
+    - attempt | https://doi.org/10.1145/15886.15911 | 403 at https://dl.acm.org/doi/10.1145/15886.15911, `cf-mitigated: challenge` (`bristle-brush-1.html`)
+    - attempt | https://api.crossref.org/works/10.1145%2F15886.15911 | 200 (`bristle-brush-2.json`)
+    - evidence | bristle-brush | Canonical source | Strassmann, S. (1986). Hairy brushes. *ACM SIGGRAPH Computer Graphics* 20(4), 225-232. | https://doi.org/10.1145/15886.15911 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+    - evidence | nib | Canonical source | Nearest published work: Strassmann, S. (1986). Hairy brushes. *ACM SIGGRAPH Computer Graphics* 20(4), 225-232. | https://doi.org/10.1145/15886.15911 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+  - bristle-brush | Chu, Tai 2005, MoXi (design input; DOI fixed by the plan) | https://doi.org/10.1145/1186822.1073221 | 403 | route 2 | title "MoXi" plus subtitle "real-time ink dispersion in absorbent paper" folds equal to the design record's, authors Chu, Tai, year 2005 | venue "ACM SIGGRAPH 2005 Papers" and pages from the record | 0
+    - attempt | https://doi.org/10.1145/1186822.1073221 | 403 at https://dl.acm.org/doi/10.1145/1186822.1073221, `cf-mitigated: challenge` (`bristle-brush-3.html`)
+    - attempt | https://api.crossref.org/works/10.1145%2F1186822.1073221 | 200 (`bristle-brush-4.json`; event "SIGGRAPH05: Special Interest Group on Computer Graphics and Interactive Techniques Conference")
+    - evidence | bristle-brush | Design input | Chu, N. S.-H.; Tai, C.-L. (2005). MoXi: real-time ink dispersion in absorbent paper. *ACM SIGGRAPH 2005 Papers*, 504-511. | https://doi.org/10.1145/1186822.1073221 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+  - bristle-brush | Baxter, Lin 2004 (design input) | https://api.crossref.org/works?query.bibliographic=Baxter+Lin+A+versatile+interactive+3D+brush+model&rows=5&... | 200 | route 3, then route 2 | first hit `10.1109/pccga.2004.1348363`: title folds equal; `issued` null, year 2004 from the container title "PG 2004"; authors Baxter, Lin | year 2004 from the container title; venue and pages from the record | 0
+    - attempt | https://api.crossref.org/works?query.bibliographic=Baxter+Lin+A+versatile+interactive+3D+brush+model&rows=5&select=DOI,title,subtitle,issued,author,container-title,event | 200 (`bristle-brush-5.json`; five hits: 10.1109/pccga.2004.1348363 the title, issued null; 10.1145/383259.383313 "DAB" 2001; 10.1145/1198555.1198618 "DAB" 2005; 10.1145/1186223.1186227 "A viscous paint model for interactive applications" 2004; 10.58837/chula.the.2012.932 "3D-Model rendering in Chinese brush style" null)
+    - attempt | https://doi.org/10.1109/pccga.2004.1348363 | 202 at https://ieeexplore.ieee.org/document/1348363/, empty body (`bristle-brush-6.html`)
+    - attempt | https://api.crossref.org/works/10.1109%2Fpccga.2004.1348363 | 200 (`bristle-brush-7.json`)
+    - evidence | bristle-brush | Design input | Baxter, W. V.; Lin, M. C. (2004). A versatile interactive 3D brush model. *12th Pacific Conference on Computer Graphics and Applications, 2004. PG 2004. Proceedings.*, 316-325. | https://doi.org/10.1109/pccga.2004.1348363 | verified-via-index | Crossref record by bibliographic search, issued null, year from the container title PG 2004, publisher page 202 with an empty body | 2026-10-07
+  - label-placement | `10.1559/152304075784313304` (canonical) | https://doi.org/10.1559/152304075784313304 | 403 | route 2 | author Imhof, year 1975 | none | 0
+    - attempt | https://doi.org/10.1559/152304075784313304 | 403 at https://www.tandfonline.com/doi/full/10.1559/152304075784313304, `cf-mitigated: challenge` (`label-placement-1.html`)
+    - attempt | https://api.crossref.org/works/10.1559%2F152304075784313304 | 200 (`label-placement-2.json`)
+    - evidence | label-placement | Canonical source | Imhof, E. (1975). Positioning Names on Maps. *The American Cartographer* 2(2), 128-144. | https://doi.org/10.1559/152304075784313304 | verified-via-index | Crossref record, publisher page 403 challenge | 2026-10-07
+  - closing | Stadia Maps, Stamen Watercolor docs | https://docs.stadiamaps.com/map-styles/stamen-watercolor/ | 200 | route 1 | `stamen watercolor` 43, `stadia maps` 22; `<title>` "Stamen Watercolor - Stadia Maps Documentation"; no published date | pinned title and (n.d.) as P6.2 logged | 0
+    - attempt | https://docs.stadiamaps.com/map-styles/stamen-watercolor/ | 200 (`closing-1.html`)
+    - evidence | closing | Read during design | Stadia Maps (n.d.). Stamen Watercolor. | https://docs.stadiamaps.com/map-styles/stamen-watercolor/ | verified | page 200 with its pinned words | 2026-10-07
+  - closing | ICA MapCarte 95/365, Wainwright | https://mapdesign.icaci.org/2014/04/mapcarte-95365-pictorial-guide-to-the-lakeland-fells-by-alfred-wainwright-1955-1966/ | 200 | route 1 | `mapcarte 95 365` 4, `pictorial guide to the lakeland fells` 17, `wainwright` 32, `commission on map design` 6, `2014` 49 | pinned title and author as P6.2 logged | 0
+    - attempt | https://mapdesign.icaci.org/2014/04/mapcarte-95365-pictorial-guide-to-the-lakeland-fells-by-alfred-wainwright-1955-1966/ | 200 (`closing-2.html`)
+    - evidence | closing | Read during design | ICA Commission on Map Design (2014). MapCarte 95/365: Pictorial Guide to the Lakeland Fells by Alfred Wainwright, 1955-1966. | https://mapdesign.icaci.org/2014/04/mapcarte-95365-pictorial-guide-to-the-lakeland-fells-by-alfred-wainwright-1955-1966/ | verified | page 200 with its pinned words, 2014 in the body | 2026-10-07
+  - closing | Adventures in Mapping 2024 | https://adventuresinmapping.com/2024/02/14/7595/ | 200 | route 1 | `adventures in mapping` 7, `tolkien style maps in a gis part 3 water` 5, `john nelson` 7, `2024` 29; `article:published_time` 2024-02-14 | pinned title and author as P6.2 logged | 0
+    - attempt | https://adventuresinmapping.com/2024/02/14/7595/ | 200 (`closing-3.html`)
+    - evidence | closing | Read during design | Nelson, J. (Adventures in Mapping) (2024). Tolkien Style Maps in a GIS: part 3, Water. | https://adventuresinmapping.com/2024/02/14/7595/ | verified | page 200 with its pinned words, published 2024-02-14 | 2026-10-07
+  - closing | Urban Sketching World, *Line and wash* | https://urbansketchingworld.com/line-and-wash/ | 200 | route 1 | `line and wash` 35, `urban sketching world` 3; no `article:published_time` | pinned title and (n.d.) as P6.2 logged | 0
+    - attempt | https://urbansketchingworld.com/line-and-wash/ | 200 (`closing-4.html`)
+    - evidence | closing | Read during design | Urban Sketching World (n.d.). Urban Sketching Examples: Line and Wash. | https://urbansketchingworld.com/line-and-wash/ | verified | page 200 with its pinned words | 2026-10-07
+  - closing | The Postman's Knock, *Illustrated wedding maps* (marker line, precedence) | https://thepostmansknock.com/illustrated-wedding-maps/ | 403 | none (routes 1 and 7 failed; routes 2 to 6 do not apply) | none from a route; fields from the 13:24 marker entry | none | Wayback API 4 retries, exhausted; snapshot 4 retries, exhausted
+    - attempt | https://thepostmansknock.com/illustrated-wedding-maps/ | 403, `<title>Just a moment...`, `cf-mitigated: challenge` (`closing-5.html`)
+    - attempt | https://archive.org/wayback/available?url=thepostmansknock.com/illustrated-wedding-maps/ | 429, and 429 after each wait of 5, 10, 20 and 40 s (`closing-6.json`), exhausted
+    - attempt | https://web.archive.org/web/20261007id_/https://thepostmansknock.com/illustrated-wedding-maps/ | curl: (35) Recv failure: Connection reset by peer, and the same after each wait of 5, 10, 20 and 40 s, exhausted
+    - evidence | closing | Read during design | Bugbee, L. (2014). Illustrated Wedding Maps. | https://thepostmansknock.com/illustrated-wedding-maps/ | maintainer-checked | maintainer-checked: run log 2026-10-07, Illustrated Wedding Maps, Lindsey Bugbee, 13 March 2014, title, author and year match, process section paywalled; own page 403 challenge; Wayback API 429 after backoff 5, 10, 20, 40 s; snapshot 20261007 connection reset after backoff 5, 10, 20, 40 s | 2026-10-07
+  - Not fetched, written as their exact lines: the 16 `named-only` works (`deegan-coffee-ring`,
+    `arxiv-watercolour-drying`, `lee-wet-on-wet`, `wetbrush`, `osm-overpass`,
+    `osm-tagging`, `opentopodata-srtm`, `open-elevation`, `patrick-hand`, `caveat`,
+    `svg-filter-effects`, `css-mix-blend-mode`, `wcag-aa-contrast`, `walk-guide-maps`,
+    `researcher-search-terms`, `maptiler-stadia-notes`); 9 `the canonical source above.`
+    lines; 10 `not recorded` lines.
+  - Final status by source line: 23 canonical lines, 1 `verified` (W3C) and 22
+    `verified-via-index` (route 2: 20; route 4: `hachures`; route 6: `kubelka-munk`); 12
+    fetched design-input lines, 7 `verified`, 4 `verified-via-index`, 1
+    `maintainer-checked`; 5 fetched closing lines, 4 `verified`, 1 `maintainer-checked`;
+    16 `named-only`. `unreachable` 0, `not-verified` 0. No candidate replaced; no
+    mismatch in any field.
+  - Corrections to design-sources entries (each from a record or pinned page): Van
+    Laerhoven, Van Reeth title U+2010 written as ASCII hyphen (dash rule; the only
+    U+2010 to U+2015 character in any copied field) and venue added; Bousseau "et al."
+    expanded to Kaplan, Thollot, Sillion; Luft, Deussen title extended by "using a blurred
+    depth test" and year 2006 added; MoXi venue "ACM SIGGRAPH 2005 Papers"; Baxter, Lin
+    year from the container title (issued null); Curtis 1997 record title case
+    "Computer-generated watercolor" on the canonical lines (the PDF design-input lines
+    keep the pinned "Computer-Generated Watercolor"); Douglas, Peucker and Chaikin given
+    their record titles (the design record has descriptions); Kubelka, Munk venue from
+    Kubelka 1948's reference; the page-title and author corrections P6.2 logged (Hobbs,
+    Stamen, Stadia, ICA, Adventures in Mapping, Urban Sketching, The Postman's Knock,
+    osmanyy) hold on the live pages.
+  - Step 3 (re-try `not-verified` and `unreachable` entries): none exist, so no retry
+    rows. choice: no step-3 re-try | rule: step 3 (only `not-verified` and `unreachable`
+    entries) | inputs: the evidence rows above. The Postman's Knock is
+    `maintainer-checked` by precedence; its archive route stays failed and is quoted.
+  - Issues filed: 0. Fixed: 0. No case outside a rule.
+- 15:50 P6.3-write (step 4, mechanical checks, gate), from `bef4d29` plus P6.3-fetch's
+  log entry; started 15:31, wall time 19 min (G-here 12 min of it). No `src/` or `tests/`
+  change. Owner files: `docs/explanation/references.md` (new, 182 lines, 23 entries plus
+  the closing section), `docs/README.md` (`explanation/` subfolder line), `GLOSSARY.md`
+  (`reference` row), this log. The `write-docs` skill was read (reference mode).
+  - choice: `$SCRIPTS` (`$SCRATCH/p6-scripts/`) did not exist, so P6.3-write wrote
+    `ast_neutral.py`, `refcheck.sh` and `doc_lines.py` there verbatim from the plan's three
+    blocks, two-space indentation stripped, and `SHA256SUMS` (`ast_neutral.py`
+    611a5ddf..., `refcheck.sh` cd899deb..., `doc_lines.py` cb06ad2e...);
+    `sha256sum -c` OK for all three | rule: Shared scripts | inputs: plan blocks, brief.
+  - choice: each source line written from the last (here the only) evidence row of its
+    source, 40 rows (23 canonical, 12 design input, 5 closing), by a generator script in
+    `$SLICE/write/gen.py`, never a fetch; line = label, citation fields, URL (omitted when
+    the row says `none`), `[<status>: <how-checked>; <date>]`; for the two
+    `maintainer-checked` rows the how-checked text already begins with the status, so it
+    is not doubled | rule: step 4; Source line; maintainer-checked | inputs: evidence rows.
+  - choice: design-input slots per entry in `design-sources.md` order as the inventory's
+    design-input column lists them (fixed lines and `named-only` lines in place) |
+    rule: reference format; P6.2 match table | inputs: `p6-inventory.md`.
+  - choice: entry headings use the inventory's Technique column text, `Implemented in:`
+    its Sites without line hints | rule: Key; Implemented in | inputs: `p6-inventory.md`.
+  - choice: `nib`'s canonical line begins `- Canonical source: Nearest published work:
+    Strassmann, S. (1986).` | rule: step 4, canonical-source rule 5 | inputs: evidence row.
+  - `Note:` lines, 5, each basis (a), each a code fact read from the site's body:
+    - `marching-squares` (a, the 2-D case, rule 3): `contours.marching_squares` traces one
+      level's polylines through square grid cells, crossings interpolated linearly.
+    - `lanczos` (a): applied through Pillow, `Image.Resampling.LANCZOS` at
+      `ink/pad.py:128` and `maps/compose.py:48,69,84,98`.
+    - `chamfer-distance` (a): weights 1 and 1.41421356 in `ink.noise.edt`, a sweep down
+      the rows and one back up.
+    - `hillshade` (a): slope and aspect from `numpy.gradient` (`maps.relief._shade`).
+    - `nib` (a, rule 5): laid through `ink.pad.InkPad`; own parts are the broad-nib width
+      (`letters.nib._pen_profile`, `(1 - thin) + thin * abs(sin(theta - angle))`), the
+      optional backing wash, and normal (not multiply) compositing of the ink layers.
+    - choice: no (b) note (P6.1 added no row) and no (c) note (no departure taken from a
+      saved body) | rule: step 4 `Note:` lines | inputs: inventory, evidence rows.
+  - Corrections in P6.3-write: none (no U+2010 to U+2015 character in the file; the one
+    dash correction is P6.3-fetch's, already in its evidence row). `strip_emdashes.py
+    --check`: `would replace 0, 0 remaining`.
+  - Mechanical checks, outputs:
+    - keys: `diff` empty, exit 0; 23 keys, none repeated.
+    - design-sources URLs: no `missing` line.
+    - `refcheck.sh`: exit 0, printing only:
+      `MAINTAINER-CHECKED 104: - Design input: Hultman, A. (axelinternet) (2018, last commit, approximate). p5-watercolor. https://github.com/axelinternet/p5-watercolor [...]`
+      and `MAINTAINER-CHECKED 170: - Read during design: Bugbee, L. (2014). Illustrated Wedding Maps. https://thepostmansknock.com/illustrated-wedding-maps/ [...]`.
+      No `UNREACHABLE` line.
+    - one canonical line per entry: prints nothing.
+    - `grep -c '^- Canonical source: Nearest published work:'
+      docs/explanation/references.md`: `1` (expected 1, the `nib` line).
+  - Entries by status: canonical 1 `verified`, 22 `verified-via-index`; design input 7
+    `verified`, 4 `verified-via-index`, 1 `maintainer-checked`, 4 `named-only`, 19 fixed;
+    closing 4 `verified`, 1 `maintainer-checked`, 12 `named-only`. `not-verified` 0,
+    `unreachable` 0. No row sent back to P6.3-fetch.
+  - Not done, out of the brief's owner files: the inventory's status column
+    (`p6-inventory.md`, listed in the slice's owner files) stays empty.
+  - Issues filed: 0. Fixed: 0. No case outside a rule.
+  - G-here, per stage: `uv sync` 1 s; `uv run prek` cannot spawn (as at P6.1 and P6.2),
+    so `uvx prek run --all-files` 4 s, green, no file touched; `pytest -m "not golden"`
+    156 s (1036 passed, 1 skipped, 17 deselected); `--golden-tolerance` 281 s (17
+    passed); byte-exact `pytest -m golden` 283 s (17 passed).

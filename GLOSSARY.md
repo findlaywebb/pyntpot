@@ -35,3 +35,4 @@ add the term here when you coin one.
 | candidate | One ranked annotation option for a track: a named road, a climb, a settlement or a landmark, with its rank within its kind, where it is, and the row the export writes. `maps.candidates.candidate.Candidate`. |
 | backdrop | What every name on the card is priced against: the card, the route in card pixels, the darkness grid and the named road centrelines. `maps.lettering.placement_costs.Backdrop`. |
 | terms | What one name is priced against where it is tried: the card, the darkness grid, the boxes already on the sheet, the roads it is charged for crossing and the weighted route. `maps.lettering.placement_costs.Terms`. |
+| reference | One entry of docs/explanation/references.md: a technique, its key, its canonical source and design input, and where the code implements it. |
