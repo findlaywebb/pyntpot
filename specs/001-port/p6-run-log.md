@@ -703,3 +703,9 @@ User instructions (2026-10-07 12:14 BST):
   explaining what P6 did, its findings, and examples of docstring and prose changes and
   additions; (2) a P10 in the port plan to triage and then address every issue found in
   the port process, past and future. Report writer and P10 planner dispatched.
+- 18:48 P10 added to the plan as a sketch (`2360a8a`; fattened later at P10.0 with a
+  plan-reviewer pass). Outcomes `fix`, `fix-golden`, `decide`, `close`, `defer`,
+  first applicable in the order close, defer, decide, fix-golden, fix. Recommended: triage
+  (P10.0 to P10.2) before P7.1 so release-blocking defects are known; pixel-moving fixes
+  after P8. 29 issue files at `d82f732` plus three non-file items (README badge, a
+  mutation run on `main`, the OpenTopoData budget question).
