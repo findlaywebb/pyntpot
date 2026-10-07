@@ -15,3 +15,10 @@ User instructions (2026-10-07 01:25 BST):
 ## Log
 
 - 01:25 P5.0 plan committed (`d1eb2c3`, `c123091`); plan-reviewer running.
+- 01:50 Plan review 1: BLOCK (3 blocking, 8 should-fix, 3 nits). Notable:
+  mutmut breaks with `tests/` selection (architecture tests scan `mutants/`);
+  ink+letters is 8310 mutants, about 4.5 to 9 h unsharded on 4 cores.
+  Orchestrator decisions sent to the fix agent: nightly sharded from the start
+  (N = ceil(hours / 3.5), at least 2; maps joins scope if N stays at most 8);
+  benchmarks kept, smoke budget 60 s with display ladder 450, 300, 200;
+  coverage measured on 3.13 and 3.14, lower figure gates.
