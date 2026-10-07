@@ -99,3 +99,9 @@ User instructions (2026-10-07):
   hooks); not-golden 172 s (1043 passed, 1 skipped); golden tolerance 294 s and exact
   288 s (17 passed each); no `src/` change, so no G-self. Issue file deleted; rows done.
   Re-checked on the branch: `uv run prek run --all-files` green.
+- P10.3c first commit landed (`119484b`): `ink-reservoir` and `pigment-separation` entries
+  in `references.md`, `Source:` lines in `ink.deposit.spend` and `ink.wash.separated`.
+  Red: `test_every_site_cites_its_key` named both sites; green after the two lines.
+  Baseline `{"commit": "d30ff4b...", "dirty": false}`; AST-neutral 2 files; prek exit 0;
+  not-golden 169 s (1043 passed, 1 skipped); tolerance 287 s; G-self 293 s (17 passed,
+  byte-identical). The blurred-mask-rim member waits on Q7; P10.3c stays unticked.
