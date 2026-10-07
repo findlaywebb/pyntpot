@@ -159,7 +159,7 @@ Order: after P10 part 1, P11 and P10.R; the upstream consumes the `v0.0.1` tag, 
 
 ## P9. Post-port cleanup
 
-Order: after P7.4, P8 and P10 (both parts).
+Order: after P7.4, P8, P10 (both parts) and P11.
 
 - [ ] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR 0022 supersedes D16's enforcement clause for the post-port tree (the rule stands)
 - [ ] P9.2 Retire the exemptions mechanism; ADR 0023

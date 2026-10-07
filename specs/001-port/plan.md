@@ -6134,7 +6134,8 @@ constants, `RouteInk.casing` and `pyntpot.ink.polyline.point_to_segment`
   deletion, rename or prose fix has no behaviour to fail; its row names the
   check (a grep, a vulture run at `--min-confidence 60`, or a test) that
   prints or fails if the thing comes back, and the slice runs it before
-  (it lists the target) and after (it lists nothing).
+  (it lists the target) and after (it lists nothing). A before-check whose
+  output differs from the brief stops the slice and is reported.
 - **Gates.** "Gate commands" of "P3 and P4: how to run a slice", with
   `$SCRATCH/before` read as `$SLICE/before`, where `$SLICE` is
   `$SCRATCH/<slice-id>/`, created empty by the orchestrating session. Until
@@ -6175,6 +6176,14 @@ constants, `RouteInk.casing` and `pyntpot.ink.polyline.point_to_segment`
   3. The part-2 slices land on `p10-fixes`, which branches from `main` at
      the tagged commit or later; its first commit is the bookkeeping commit
      that records the tag (P10.R), and the P8 hand-off record follows it.
+     Part 2's facts were measured before P11, so before dispatching the
+     first part-2 slice the orchestrating session re-runs, at `p10-fixes`'s
+     base, every part-2 slice's before-checks, the P10.10 AST scan and
+     `uv run vulture --min-confidence 60 src`; it updates each brief's
+     counts and names (a name P11 renamed, a P10.10 name P11 already
+     promoted) and records the deltas in the run log. A delta that changes
+     what a slice changes, not just a count, goes back for a plan fix and a
+     plan-reviewer pass before that slice starts.
   4. The golden group, if it exists, lands on `p10-golden`, which branches
      from `main` after the `p10-fixes` PR merges.
 
@@ -6250,8 +6259,8 @@ fix, the check named in its row that fails if it comes back. Parity holds
 byte-exact under G-here and G-self, or the goldens were regenerated once in
 the golden group under the rule and its ADR. G-here green.
 
-**Later issues.** An issue found after P10.1 starts, in P10's own slices or
-in P7 to P9, is filed in `docs/issues/` as before, appended as a row to
+**Later issues.** An issue found after P10.1 starts, in P10's own slices,
+in P11, or in P7 to P9, is filed in `docs/issues/` as before, appended as a row to
 `p10-triage.md` and triaged by the same rule. A new `fix` row joins the
 not-yet-started slice of its area when it shares that slice's files and
 keeps it within 600 changed lines; otherwise the orchestrating session cuts
@@ -6263,7 +6272,9 @@ maintainer decision". A new `fix-golden` row after the golden group has
 closed is `defer` with that reason, never a second regeneration in P10. A
 new slice goes into part 1 or part 2 by the rule that splits them ("Order
 and parallelism"); one cut after the `p10-triage` PR has merged joins
-part 2 whatever it reaches (part 2 still lands before P7.4). An issue found after P7.4 tags 0.1.0 is fixed in a 0.1.x
+part 2 whatever it reaches (part 2 still lands before P7.4); one cut after
+the `p10-fixes` PR has merged lands on its own branch `p10-late-<id>` from
+`main`, through its own PR, before P7.4. An issue found after P7.4 tags 0.1.0 is fixed in a 0.1.x
 patch release (maintainer, 2026-10-07: "0.1.0 can be candidate release and
 then 0.1.x can be fixes"); it never holds 0.1.0 back.
 
@@ -6399,8 +6410,9 @@ so:
   it under the name P10.10 would give it (the underscore dropped, or the
   clash name chosen by the P10.10 rule), and that P10.10 slice drops it
   from its list. If it adds a name a part-2 slice deletes (`Label.as_dict`,
-  the route constants, `RouteInk.casing`), the orchestrating session stops
-  and puts it to the maintainer as a later `decide` row.
+  the route constants, `RouteInk.casing`), P11.0 leaves the name out of
+  its list and files it as a later `decide` row, which stands `defer`
+  until the maintainer answers ("Later issues"); it opens no second stop.
 - P10.10's fresh names for clashing underscore names are checked against
   the public names P11 added as well as against `GLOSSARY.md`.
 
@@ -6692,7 +6704,8 @@ The shared files that force a sequence (every row in landing order):
   - **Q9 `maps-track-index-private-names-imported`.** 58 underscore names
     cross modules (ink 6, letters 6, other maps 12, maps lettering 34), not
     the 9 filed. Readings: (a) every name another `src` module imports is
-    public (the rule P3.2 applied to its moves): rename all 58 in four
+    public (the rule P3.2 applied to its moves; module-level, so it joins
+    no `__all__` and needs no ADR): rename all 58 in four
     slices by area, choosing a fresh name where dropping the underscore
     clashes (8 names: `skeleton._chains`, `compose._plates`,
     `contours._pad`, `placement_costs._on_paper`, `placement_lift._tilt`,
@@ -7434,7 +7447,8 @@ last bit).
   `uv lock`, the `pyntpot` version line only), `CHANGELOG.md` (a section
   below `## [Unreleased]`: `## [0.0.1] - <date>` with one paragraph: "A
   pre-release candidate for the upstream consumer's migration (P8 of the
-  port plan). Not for general use; 0.1.0 is the first release.").
+  port plan). Not for general use; 0.1.0 is the first release."; entries
+  already under `## [Unreleased]` move into the 0.0.1 section).
 - Leave alone: `src/**` (`__init__.py` reads the metadata),
   `.github/workflows/publish.yml`, `README.md` and `CONTRIBUTING.md`
   (P7.4 documents the trusted publisher), `tests/**`.
@@ -7508,7 +7522,12 @@ last bit).
   `docs/decisions/**` (accepted ADRs are records: ADR 0005's
   `geo._relief_layers` and `geo._osm_layers` are names in the deleted
   `_port.geo`, inside the field-to-group table that "What the window
-  freezes" fixes, and ADR 0009's mention is historical prose).
+  freezes" fixes, and ADR 0009's mention is historical prose),
+  `src/pyntpot/{ink,letters,maps}/__init__.py` and every `__all__`,
+  `tests/unit/test_public_api.py`, and P11's import test for the example
+  scripts. A renamed name is module-level, not public API (ADR 0007 as
+  amended by 0026: only names in an `__all__` are public); it joins no
+  `__all__` or package docstring and needs no ADR.
 - **The pin, test first**: P10.10a adds
   `test_no_module_imports_another_modules_private_name` to
   `tests/unit/maps/test_import_order.py`, parametrised over the defining
@@ -7648,7 +7667,12 @@ before P11.1 starts.
   widened names, and so before P7.2. P10.R tags 0.0.1 on its own branch
   after P11 merges, and P8 consumes that tag, so the upstream migration is
   written against the surface the release documents. P10 renames or
-  deletes no name this list promotes (P10, "P10 against P11"); a part-2
+  deletes no name this list promotes (P10, "P10 against P11"). P11.0
+  re-measures its list at its own starting commit; an underscore name it
+  adds that P10.10 would rename is promoted under the name P10.10 would
+  give it (the underscore dropped, or the clash name chosen by the P10.10
+  rule), and that P10.10 slice drops it; a name it adds that a part-2 slice
+  deletes is left out of the list and filed as a later `decide` row. A part-2
   slice that would rename or delete a name P11 has made public needs its
   own ADR and stops for the maintainer. P11 moves no pixel, so neither P8's
   hash nor P10's golden group depends on it. P9 runs after P7.4 and P8, so
