@@ -266,6 +266,8 @@ def separated(
     the layers still stack, but the two hues average where they overlap, which
     is what glazing keeps apart.
 
+    Source: `pigment-separation` in docs/explanation/references.md.
+
     Args:
         dens: The wash's density.
         key: The land class, which is what decides whether it separates.
