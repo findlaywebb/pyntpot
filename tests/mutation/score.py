@@ -1,10 +1,12 @@
-"""Sum mutmut's CI stats across runs and gate the mutation score.
+"""Sum mutmut's CI stats across runs and report the mutation score, advisory.
 
 Run from the repository root as
-`uv run python tests/mutation/score.py STATS [STATS ...]`, each `STATS` a
-`mutmut-cicd-stats.json` from `mutmut export-cicd-stats`. It sums the counts, logs them
-and the score, and exits 1 when the score is below `[tool.pyntpot.mutation] min_score`
-in `pyproject.toml`; with no mutant tested it logs "no mutants tested" and exits 0.
+`uv run python tests/mutation/score.py STATS [STATS ...] [--summary PATH]`, each `STATS`
+a `mutmut-cicd-stats.json` from `mutmut export-cicd-stats`. It sums the counts, logs them
+and the score, and appends a Markdown summary to `PATH` when given. The score is advisory:
+there is no threshold, and a low score never fails the run. Exit codes: 0 when the stats
+were read (whatever the score, and also when no mutant was tested), 1 when a stats file
+cannot be read, 2 when no `STATS` is given.
 
 Key types: a stats mapping holds mutmut's per-status counts (`killed`, `survived`,
 `no_tests`, `timeout`, ...). The score is
@@ -22,7 +24,6 @@ It does not read mutmut's `.meta` files or run mutmut.
 import argparse
 import json
 import logging
-import tomllib
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
@@ -51,34 +52,51 @@ def score(counts: Mapping[str, int]) -> float | None:
     return sum(counts[key] for key in CAUGHT) / tested
 
 
-def passes(result: float | None, min_score: float) -> bool:
-    """Return whether a score meets the floor; no mutant tested always passes."""
-    return result is None or result >= min_score
+def summary(counts: Mapping[str, int]) -> str:
+    """Return the Markdown run summary: score, survivor count and the tested outcomes."""
+    title = "## Mutation score (advisory)\n\n"
+    result = score(counts)
+    if result is None:
+        return title + "- No mutants tested.\n"
+    tested = sum(counts[key] for key in COUNTED)
+    detail = ", ".join(f"{key} {counts[key]}" for key in COUNTED)
+    return (
+        f"{title}- Score: {result:.4f}\n- Survivors: {counts['survived']}\n"
+        f"- Tested: {tested} ({detail})\n"
+    )
 
 
 def _parse(argv: list[str] | None) -> argparse.Namespace:
     """Parse the command line."""
-    parser = argparse.ArgumentParser(description="Sum mutmut CI stats and gate the score.")
+    parser = argparse.ArgumentParser(description="Sum mutmut CI stats and report the score.")
     parser.add_argument("stats", nargs="+", type=Path, metavar="STATS", help="stats JSON")
+    parser.add_argument("--summary", type=Path, metavar="PATH", help="append a Markdown summary")
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Log the summed counts and the score; return 1 below `min_score`, else 0."""
+    """Log the summed counts and the score; return 1 for an unreadable file, else 0."""
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     args = _parse(argv)
-    counts = total_counts(json.loads(path.read_text(encoding="utf-8")) for path in args.stats)
-    pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
-    min_score = float(pyproject["tool"]["pyntpot"]["mutation"]["min_score"])
+    stats = []
+    for path in args.stats:
+        try:
+            one = json.loads(path.read_text(encoding="utf-8"))
+            total_counts([one])
+        except (OSError, ValueError, KeyError):
+            logger.exception("cannot read stats %s", path)
+            return 1
+        stats.append(one)
+    counts = total_counts(stats)
     logger.info("counts: %s", ", ".join(f"{key} {value}" for key, value in counts.items()))
     result = score(counts)
     if result is None:
         logger.info("no mutants tested")
     else:
-        logger.info("mutation score %.4f, min_score %.4f", result, min_score)
-    if not passes(result, min_score):
-        logger.error("mutation score is below min_score")
-        return 1
+        logger.info("mutation score %.4f (advisory)", result)
+    if args.summary is not None:
+        with args.summary.open("a", encoding="utf-8") as handle:
+            handle.write(summary(counts))
     return 0
 
 

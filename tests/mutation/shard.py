@@ -1,9 +1,9 @@
-"""Split the mutation scope into the nightly's shards, largest module first.
+"""Split the mutation scope into shards, largest module first.
 
 Run from the repository root. `uv run python tests/mutation/shard.py --index I --out PATH`
 writes shard `I`'s mutmut patterns, one a line, to `PATH`;
 `--matrix-out PATH` instead appends `indices=[0, ..., N-1]` (JSON) to `PATH`, which the
-nightly's `plan` job passes as `$GITHUB_OUTPUT`. `--count N` defaults to
+mutation workflow's `plan` job, in its all mode, passes as `$GITHUB_OUTPUT`. `--count N` defaults to
 `[tool.pyntpot.mutation] shards` in `pyproject.toml`.
 
 Key types: a module is mutmut's dotted module name (`pyntpot.ink.polyline`; a package's
@@ -120,7 +120,7 @@ def shard_patterns(modules: Mapping[str, int], count: int) -> list[list[str]]:
 
 def _parse(argv: list[str] | None) -> argparse.Namespace:
     """Parse the command line."""
-    parser = argparse.ArgumentParser(description="Write one nightly shard's mutmut patterns.")
+    parser = argparse.ArgumentParser(description="Write one mutation shard's mutmut patterns.")
     task = parser.add_mutually_exclusive_group(required=True)
     task.add_argument("--index", type=int, metavar="I", help="the shard to write")
     task.add_argument("--matrix-out", type=Path, metavar="PATH", help="append the indices")

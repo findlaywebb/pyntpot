@@ -56,55 +56,6 @@ jobs:
       - name: Benchmarks (smoke)
         run: uv run pytest -m benchmark
 
-  # Mutation testing on the functions this pull request changed (ADR 0012). The nightly
-  # in mutation-nightly.yml covers the whole scope.
-  mutation:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v7.0.1
-        with:
-          fetch-depth: 0
-
-      - uses: astral-sh/setup-uv@v10.2.0
-        with:
-          enable-cache: true
-          version: "0.11.21"
-
-      - name: Sync
-        run: uv sync --locked
-
-      - name: Changed functions
-        run: uv run python tests/mutation/scope.py --base origin/${{ github.base_ref }} --out "$RUNNER_TEMP/patterns"
-
-      # `shell: bash` is `bash -eo pipefail`: inside the `if` condition `-e` does not fire,
-      # and `pipefail` carries mutmut's failure through `tee`.
-      - name: Mutation run
-        id: run
-        shell: bash
-        run: |
-          if [ ! -s "$RUNNER_TEMP/patterns" ]; then echo "no changed functions in the mutation scope"; echo tested=false >> "$GITHUB_OUTPUT"; exit 0; fi
-          if xargs -r -a "$RUNNER_TEMP/patterns" uv run mutmut run 2>&1 | tee "$RUNNER_TEMP/mutmut.log"; then
-            echo tested=true >> "$GITHUB_OUTPUT"
-          elif grep -q 'Filtered for specific mutants, but nothing matches' "$RUNNER_TEMP/mutmut.log"; then
-            echo "changed functions have no mutants"; echo tested=false >> "$GITHUB_OUTPUT"
-          else exit 1; fi
-
-      - name: Export stats
-        if: steps.run.outputs.tested == 'true'
-        run: uv run mutmut export-cicd-stats
-
-      # After a restricted run every untested mutant is `not checked`; keep the tested ones.
-      - name: Results
-        if: steps.run.outputs.tested == 'true'
-        run: |
-          uv run mutmut results | { grep -v ': not checked$' || true; }
-
-      - name: Score
-        if: steps.run.outputs.tested == 'true'
-        run: uv run python tests/mutation/score.py mutants/mutmut-cicd-stats.json
-
   prerelease:
     runs-on: ubuntu-latest
     continue-on-error: true

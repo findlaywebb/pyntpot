@@ -1,4 +1,4 @@
-"""Tests for the nightly shards: literal module tables and sources in, patterns out."""
+"""Tests for the mutation shards: literal module tables and sources in, patterns out."""
 
 import pytest
 

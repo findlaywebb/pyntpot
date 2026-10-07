@@ -158,3 +158,16 @@ User instructions (2026-10-07 01:25 BST):
 - 06:28 PR #7 opened. Diff review: nothing blocking; one should-fix (stamp specks never reached 2 px) and two nits fixed in `92b6a6b`, verified with two fresh seeds. prerelease (3.15) segfaults on main too; diagnosis pending.
 - 06:33 CI on `caeeaba`: checks 3.13/3.14, golden ubuntu/macos, mutation green. prerelease red: CPython 3.15.0b2 + numpy 2.5.2 segfault on `import numpy.random`, same on main; commented on PR #7 with a proposed uv bump (0.11.32, resolves b4), kept out of P5. CodSpeed detected 21 benchmarks.
 - 06:42 Final report published: https://claude.ai/artifact/NTexNXQ7rpHEmfprHEajyq. CodSpeed job about 11 min, under the 30 min rule; display_px stays 450. PR #7 waits on review and merge; P5.3b follows the first nightly on main.
+- 10:14 2026-10-07 P5.3c: mutation testing manual and advisory (maintainer decision).
+  - Costs that drove it: the nightly took about 12 h of runner time over its 4 shards; the PR job took 26 min for one changed function (72 mutants), so several changed functions hit its 60-min timeout.
+  - Files: `ci.yml` (`mutation` job removed), `mutation-nightly.yml` (removed), `mutation.yml` (new, `workflow_dispatch` modes changed/pattern/all), `pyproject.toml` (`min_score` removed), `tests/mutation/score.py` and `test_score.py` (advisory, `summary`, `--summary`), docstrings in `scope.py`, `shard.py`, `__init__.py`, `test_shard.py`, ADR 0012 (accepted), `spec.md` D17 row, `CONTRIBUTING.md`, this log, `tasks.md`.
+  - Plan-review correction: the `score` job writes "the patterns match no mutant; nothing scored" and exits 0 when no stats exist and the shards succeeded; it fails only when shards failed or were cancelled.
+  - Dry run of the plan step (extracted from the committed workflow):
+    - `changed` against `main`: exit 0, count 0, "nothing to run" summary.
+    - `changed` against the stub base `d44b420~1`: exit 0, count 1, shard 0 of 7 patterns, first `pyntpot.letters.nib.x__backing_wash*`.
+    - `pattern` with two patterns: exit 0, count 1, shard 0 of 2 patterns, first `pyntpot.ink.polyline.x_simplify*`.
+    - `pattern` empty: exit 1.
+    - `all`: exit 0, count 4, shards of 12, 10, 10 and 10 patterns.
+    - `score` step with no stats: shards success exit 0 with the "nothing scored" summary; shards failure exit 1.
+  - Gate: uv sync, ruff format and check, ty, lint-imports and `pytest -m "not golden"` green; YAML shape checks true; `min_score` and `mutation-nightly` appear only under `specs/001-port/` and in ADR 0012's decision text.
+  - P5.3b is superseded; `min_score` is gone.

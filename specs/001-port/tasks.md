@@ -116,7 +116,7 @@ Order: P5.0, P5.1, P5.2, P5.3a, P5.4, P5.3c on branch `p5-quality` (one PR). P5.
 - [x] P5.3a mutmut config, scope, shard and score scripts, PR job, sharded nightly; scope and shard count by rule; ADR 0012 proposed
 - [x] P5.4 Benchmarks, `checks` smoke step and CodSpeed workflow; display ladder by rule
 - [x] ~~P5.3b Mutation threshold from the first full sharded nightly (re-shard by rule if a shard runs over 255 min); ADR 0012 accepted~~ superseded by P5.3c
-- [ ] P5.3c Mutation testing manual and advisory: `mutation.yml` (`workflow_dispatch`, modes changed/pattern/all) replaces the PR job and the nightly; no `min_score`; ADR 0012 accepted
+- [x] P5.3c Mutation testing manual and advisory: `mutation.yml` (`workflow_dispatch`, modes changed/pattern/all) replaces the PR job and the nightly; no `min_score`; ADR 0012 accepted
 
 ## P6. Docstrings, prose and references
 

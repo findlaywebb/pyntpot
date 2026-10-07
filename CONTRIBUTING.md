@@ -23,7 +23,7 @@ uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fai
 uv run coverage report --include="src/pyntpot/maps/*" --fail-under=92 --precision=2
 ```
 
-CI runs mutation testing (ADR 0012): on a pull request over the functions it changed, and nightly over the whole scope. To run it locally on one module, pass mutmut a pattern; it needs Linux or macOS, because it forks. Results land in `mutants/`, which git ignores, and `uv run mutmut results` lists them.
+Mutation testing (ADR 0012) is manual and advisory: no pull-request or scheduled job runs it, and its score has no threshold. Run it after writing tests for a module, before a release, or when a test feels weak. On GitHub, open Actions → Mutation → Run workflow, pick the branch, and choose a mode: `changed` (the default) tests the functions the branch changed against `base` (default `main`); `pattern` tests the space-separated mutmut patterns in `pattern`, such as `pyntpot.ink.polyline*`; `all` tests the whole scope in `[tool.pyntpot.mutation] shards` parallel shards, about 12 hours of runner time. The run's summary shows the score and the survivor count, and each shard's artifact holds its stats and surviving mutants. Locally, pass mutmut a pattern; it needs Linux or macOS, because it forks. Results land in `mutants/`, which git ignores, and `uv run mutmut results` lists them.
 
 ```bash
 uv run mutmut run "pyntpot.ink.polyline*"

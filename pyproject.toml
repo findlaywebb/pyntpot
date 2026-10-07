@@ -239,8 +239,6 @@ pytest_add_cli_args = ["--hypothesis-profile=ci"]
 pytest_add_cli_args_test_selection = ["tests/unit", "tests/property", "-m", "not golden"]
 process_isolation = "forkserver"
 
-# The two numbers the mutation jobs read: the score floor (set from the first
-# full nightly) and the nightly's shard count (set from measured timings).
+# The shard count of the mutation workflow's "all" mode (set from measured timings; ADR 0012).
 [tool.pyntpot.mutation]
-min_score = 0.0
 shards = 4

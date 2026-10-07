@@ -1,10 +1,10 @@
-"""Turn a pull request's diff into mutmut patterns for the functions it changed.
+"""Turn a branch's diff into mutmut patterns for the functions it changed.
 
 Run from the repository root as
 `uv run python tests/mutation/scope.py --base REF --out PATH`. It diffs `REF...HEAD`
 under `src/pyntpot`, keeps the `.py` files that `[tool.mutmut] only_mutate` in
 `pyproject.toml` selects (mutmut's own `fnmatch` rule, where `*` spans `/`), and writes
-one mutmut pattern a line to `PATH`. The PR job passes them to `mutmut run`.
+one mutmut pattern a line to `PATH`. The mutation workflow's changed mode passes them to `mutmut run`.
 
 Key types: a pattern is a string. `pyntpot.<module>.x_<name>*` selects a top-level
 function's mutants and `pyntpot.<module>.xǁ<Class>ǁ<name>*` a method's, the names mutmut
@@ -19,7 +19,7 @@ Output is sorted and de-duplicated.
 It does not cover:
 
 - a change outside any function or method (module constants, class attributes, imports):
-  it emits nothing for it, and the nightly run covers it;
+  it emits nothing for it, and the workflow's all mode covers it;
 - a function or method with any decorator other than a single `staticmethod` or
   `classmethod`: mutmut generates no mutants for it, so no pattern is emitted;
 - a deleted file: it has no new source and no mutants.
