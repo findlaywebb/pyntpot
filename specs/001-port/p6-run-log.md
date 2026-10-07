@@ -24,3 +24,10 @@ User instructions (2026-10-07 12:14 BST):
   (Cloudflare), Crossref API 200 with matching metadata (429 on bursts: pause and retry),
   github.com 403 but `git ls-remote` works, OpenLibrary works on retry. Plan review 1
   running.
+- 12:52 Plan review 1: BLOCK (4 blocking, 8 should-fix, 9 nits; `reviews/p6-plan-review-1.md`).
+  Blocking: AST-neutral check rejects an added docstring; the Args/Returns rule would add
+  about 2,300 boilerplate lines and push five files over 400; the reference format has no
+  line for a design input and its "not verified" check can never fail; design inputs with
+  no DOI or URL have no lookup route. Orchestrator decision for the fix agent: Args/Returns
+  sections only on the top-level public API and only where they say something the
+  signature and summary do not; everything else fixes accuracy and shape only.
