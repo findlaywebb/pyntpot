@@ -3466,6 +3466,9 @@ version moves):
 
 #### P5.3b Set the mutation threshold; ADR 0012 accepted
 
+**Superseded by P5.3c (maintainer decision, 2026-10-07): do not run this
+slice.** It is kept as the record of the threshold plan that was dropped.
+
 - Predecessor: the merge of P5.1 to P5.4, then the first scheduled (or
   `workflow_dispatch`) run of `mutation-nightly.yml` on `main`.
 - A run is **full** when every shard succeeded and each shard job took at
@@ -3502,6 +3505,449 @@ version moves):
 - Gate: G-here, plus the next nightly on `main` after this lands green
   against the new `min_score` (trigger it with `workflow_dispatch`).
 - Commit: `Set the mutation score threshold`
+
+#### P5.3c Mutation testing becomes manual and advisory
+
+- Implements the maintainer's decision of 2026-10-07 (binding), which
+  supersedes P5.3b and amends D17. Predecessor P5.4 and the PR #7 review
+  commits. It lands as one more commit on `p5-quality` (PR #7), before the
+  merge, so the slow jobs never reach `main`. `mutation-nightly.yml` is not
+  on `main` yet, so nothing scheduled has to be switched off there.
+- **Why.** Mutation testing is too slow for automatic CI. Measured: the
+  nightly took about 12 h of runner time over its 4 shards for `ink` and
+  `letters`; the PR job took 26 min for one changed `polyline` function
+  (one edited line of `simplify`, 72 mutants), so a PR that changes several
+  functions hits the job's 60-min timeout. So mutation testing becomes a
+  manual workflow, its score is advisory, and there is no threshold.
+- **The tooling stays.** `[tool.mutmut]`, `scope.py`, `shard.py`, the shard
+  run step and the score formula are unchanged; only the triggers, the
+  threshold and the docs change.
+- Owner files:
+  - `.github/workflows/ci.yml`: delete the `mutation` job and the
+    two-line comment above it (`# Mutation testing on the functions this
+    pull request changed ...`), from that comment to the job's last line
+    (the `Score` step's `run:`). One blank line stays between `checks`'s
+    last step (`Benchmarks (smoke)`) and `prerelease:`. Nothing else in
+    the file changes.
+  - `.github/workflows/mutation-nightly.yml`: delete it (`git rm`).
+  - `.github/workflows/mutation.yml`: new, exactly as below. It is the
+    nightly's three jobs with a manual trigger and a mode-aware `plan`
+    job. Carried over unchanged: the action pins (checkout `v7.0.1`,
+    setup-uv `v10.2.0` with uv `0.11.21`, upload-artifact `v7.0.1`,
+    download-artifact `v8.0.1`; if `ci.yml`'s pins have moved by the time
+    of the edit, match `ci.yml`), the shard job's 300/270-min timeouts, the
+    `run` step's "nothing matches" handling, the stats and survivors steps
+    and their conditions, the artifact upload, the score job's stats glob
+    and its "Partial run" step. What changes:
+    - The only trigger is `workflow_dispatch`, with inputs `mode`
+      (choice `changed`, `pattern`, `all`; default `changed`), `pattern`
+      (string; space-separated mutmut patterns, read in mode `pattern`)
+      and `base` (string, default `main`, read in mode `changed`).
+    - `plan` emits `matrix`, `{"include": [{"index": I, "patterns": [...]}]}`
+      with one entry per non-empty pattern list, and `count`, the number
+      of entries. Mode `changed`: `scope.py --base origin/<base>` into one
+      list (so the checkout needs `fetch-depth: 0`); an empty list gives
+      `count=0`, a "nothing to run" line in the step summary, a green
+      run, and no shard. Mode `pattern`: the input split on whitespace
+      into one list; an empty input fails the job (`::error::`). Mode
+      `all`: `shard.py --matrix-out` gives the indices for
+      `[tool.pyntpot.mutation] shards`, and `shard.py --index I` fills
+      each list.
+    - The inputs reach the script through `env`, never interpolated into
+      it, so a pattern cannot inject shell.
+    - `shards` runs only when `count != '0'`; its patterns file comes from
+      the matrix entry (`jq -r '.[]'`) instead of `shard.py`; the mutmut
+      "nothing matches" message now reads "the patterns match no mutant".
+    - `score` needs `plan` and `shards`, runs when `plan` succeeded with
+      `count != '0'` (after failed shards too, as before), and passes
+      `--summary "$GITHUB_STEP_SUMMARY"` to `score.py`. The "no shard
+      stats" and "partial run" lines also go to the summary.
+
+    ```yaml
+    name: Mutation
+    run-name: Mutation (${{ inputs.mode }})
+
+    # Manual and advisory (ADR 0012): no schedule, no pull-request trigger, no threshold.
+    on:
+      workflow_dispatch:
+        inputs:
+          mode:
+            description: "changed: functions changed against base; pattern: the pattern input; all: the whole scope, sharded"
+            type: choice
+            options: [changed, pattern, all]
+            default: changed
+          pattern:
+            description: "mode pattern: space-separated mutmut patterns, e.g. pyntpot.ink.polyline*"
+            type: string
+            default: ""
+          base:
+            description: "mode changed: the branch to diff against (origin/<base>...HEAD)"
+            type: string
+            default: main
+
+    jobs:
+      plan:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        outputs:
+          matrix: ${{ steps.matrix.outputs.matrix }}
+          count: ${{ steps.matrix.outputs.count }}
+        steps:
+          - uses: actions/checkout@v7.0.1
+            with:
+              fetch-depth: 0
+
+          - uses: astral-sh/setup-uv@v10.2.0
+            with:
+              enable-cache: true
+              version: "0.11.21"
+
+          - name: Sync
+            run: uv sync --locked
+
+          # One matrix entry per non-empty pattern list: {"index": I, "patterns": [...]}.
+          # Inputs reach the script through env, never interpolated into it.
+          - name: Shard matrix
+            id: matrix
+            shell: bash
+            env:
+              MODE: ${{ inputs.mode }}
+              PATTERN: ${{ inputs.pattern }}
+              BASE: ${{ inputs.base }}
+            run: |
+              dir="$RUNNER_TEMP/shards"
+              mkdir -p "$dir"
+              case "$MODE" in
+                changed)
+                  uv run python tests/mutation/scope.py --base "origin/$BASE" --out "$dir/0" ;;
+                pattern)
+                  printf '%s\n' "$PATTERN" | tr -s ' \t' '\n' | sed '/^$/d' > "$dir/0"
+                  if [ ! -s "$dir/0" ]; then echo "::error::mode pattern needs the pattern input"; exit 1; fi ;;
+                all)
+                  uv run python tests/mutation/shard.py --matrix-out "$dir/indices.txt"
+                  for i in $(sed -n 's/^indices=//p' "$dir/indices.txt" | jq -r '.[]'); do
+                    uv run python tests/mutation/shard.py --index "$i" --out "$dir/$i"
+                  done ;;
+                *) echo "::error::unknown mode $MODE"; exit 1 ;;
+              esac
+              for f in "$dir"/[0-9]*; do
+                if [ -s "$f" ]; then
+                  jq -Rsc --argjson index "$(basename "$f")" '{index: $index, patterns: (split("\n") | map(select(length > 0)))}' "$f"
+                fi
+              done | jq -sc '{include: .}' > "$dir/matrix.json"
+              count=$(jq '.include | length' "$dir/matrix.json")
+              echo "matrix=$(cat "$dir/matrix.json")" >> "$GITHUB_OUTPUT"
+              echo "count=$count" >> "$GITHUB_OUTPUT"
+              if [ "$count" -eq 0 ]; then
+                echo "No changed functions in the mutation scope against origin/$BASE; nothing to run." | tee -a "$GITHUB_STEP_SUMMARY"
+              else
+                echo "Mode $MODE: $count shard(s)." | tee -a "$GITHUB_STEP_SUMMARY"
+              fi
+
+      shards:
+        needs: plan
+        if: needs.plan.outputs.count != '0'
+        runs-on: ubuntu-latest
+        timeout-minutes: 300
+        strategy:
+          fail-fast: false
+          matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+        steps:
+          - uses: actions/checkout@v7.0.1
+
+          - uses: astral-sh/setup-uv@v10.2.0
+            with:
+              enable-cache: true
+              version: "0.11.21"
+
+          - name: Sync
+            run: uv sync --locked
+
+          - name: Shard patterns
+            shell: bash
+            env:
+              PATTERNS: ${{ toJSON(matrix.patterns) }}
+            run: |
+              jq -r '.[]' <<< "$PATTERNS" > "$RUNNER_TEMP/patterns"
+              cat "$RUNNER_TEMP/patterns"
+
+          # `shell: bash` is `bash -eo pipefail`: inside the `if` condition `-e` does not fire,
+          # and `pipefail` carries mutmut's failure through `tee`. `xargs -r` never runs
+          # `mutmut run` with no pattern, which would test every mutant. Stopped at 270 minutes
+          # so the steps after it keep 30.
+          - name: Mutation run
+            id: run
+            shell: bash
+            timeout-minutes: 270
+            run: |
+              if xargs -r -a "$RUNNER_TEMP/patterns" uv run mutmut run 2>&1 | tee "$RUNNER_TEMP/mutmut.log"; then
+                echo tested=true >> "$GITHUB_OUTPUT"
+              elif grep -q 'Filtered for specific mutants, but nothing matches' "$RUNNER_TEMP/mutmut.log"; then
+                echo "the patterns match no mutant"; echo tested=false >> "$GITHUB_OUTPUT"
+              else exit 1; fi
+
+          # After a tested run, and after a failed or timed-out one so its partial counts
+          # still upload; not after "nothing matches".
+          - name: Export stats
+            if: always() && (steps.run.outputs.tested == 'true' || steps.run.outcome == 'failure')
+            run: uv run mutmut export-cicd-stats
+
+          # Without the filter the file lists every mutant outside this shard as `not checked`.
+          - name: Survivors
+            if: always() && (steps.run.outputs.tested == 'true' || steps.run.outcome == 'failure')
+            run: |
+              uv run mutmut results | { grep -v ': not checked$' || true; } > mutants/survivors.txt
+
+          - uses: actions/upload-artifact@v7.0.1
+            if: always()
+            with:
+              name: mutation-shard-${{ matrix.index }}
+              path: |
+                mutants/mutmut-cicd-stats.json
+                mutants/survivors.txt
+
+      score:
+        needs: [plan, shards]
+        if: always() && needs.plan.result == 'success' && needs.plan.outputs.count != '0'
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+          - uses: actions/checkout@v7.0.1
+
+          - uses: astral-sh/setup-uv@v10.2.0
+            with:
+              enable-cache: true
+              version: "0.11.21"
+
+          - name: Sync
+            run: uv sync --locked
+
+          - uses: actions/download-artifact@v8.0.1
+            with:
+              pattern: mutation-shard-*
+              path: shards
+
+          # Advisory: the score is reported, never compared with a threshold.
+          - name: Score
+            shell: bash
+            run: |
+              shopt -s nullglob
+              stats=(shards/*/mutmut-cicd-stats.json)
+              if [ ${#stats[@]} -eq 0 ]; then echo "no shard stats were uploaded" | tee -a "$GITHUB_STEP_SUMMARY"; exit 1; fi
+              uv run python tests/mutation/score.py --summary "$GITHUB_STEP_SUMMARY" "${stats[@]}"
+
+          - name: Partial run
+            if: needs.shards.result != 'success'
+            run: |
+              echo "partial run: a shard failed or timed out" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 1
+    ```
+    The plan step above was dry-run at plan time with the gate's snippet
+    below: `changed` against `main` gave `count=0`, `changed` against the
+    stub base gave one shard of 7 patterns, `pattern` with two patterns gave
+    one shard of 2, an empty `pattern` exited 1, and `all` gave 4 shards
+    of 12, 10, 10 and 10 patterns.
+  - `pyproject.toml`: in `[tool.pyntpot.mutation]`, delete
+    `min_score = 0.0` and keep `shards = 4`. The two-line comment above the
+    table names the score floor, so it becomes one line:
+    `# The shard count of the mutation workflow's "all" mode (set from measured timings; ADR 0012).`
+    Nothing else in the file changes.
+  - `tests/mutation/score.py`: advisory, no threshold.
+    - Delete `passes` and the `tomllib` import; `main` no longer reads
+      `pyproject.toml`.
+    - Keep `CAUGHT`, `COUNTED`, `total_counts` and `score` unchanged.
+    - Add `summary(counts: Mapping[str, int]) -> str`, the Markdown the
+      workflow appends to the step summary. For the counts killed 5,
+      timeout 1, survived 1, suspicious 1, no_tests 1, segfault 1 it
+      returns exactly:
+      ```text
+      ## Mutation score (advisory)
+
+      - Score: 0.6000
+      - Survivors: 1
+      - Tested: 10 (killed 5, timeout 1, survived 1, suspicious 1, no_tests 1, segfault 1)
+      ```
+      with a trailing newline (the `Tested` list follows `COUNTED`'s
+      order). When `score` is `None` it returns exactly
+      `"## Mutation score (advisory)\n\n- No mutants tested.\n"`.
+    - `main(argv)` takes `STATS [STATS ...]` (argparse `nargs="+"`, so no
+      path exits 2) and an optional `--summary PATH`. It reads each path
+      in turn; an `OSError`, a `ValueError` (bad JSON) or a `KeyError` (a
+      counted key missing, raised by `total_counts`) logs
+      `cannot read stats <path>: <error>` and returns 1. Otherwise it logs
+      the counts line as today, then `mutation score 0.6000 (advisory)` or
+      `no mutants tested`, appends `summary(counts)` to `--summary` when
+      given (open in `"a"` mode, UTF-8), and returns 0 whatever the score.
+    - The module docstring: purpose (sum the CI stats, report the score,
+      advisory with no threshold), the exit codes (0 when stats were read,
+      1 when one cannot be read, 2 when none is given), the score formula
+      and invariants as today; drop every `min_score` mention.
+  - `tests/mutation/test_score.py`: remove `passes`,
+    `test_no_tested_mutant_passes` and `test_the_floor_is_inclusive`. Keep
+    the other three tests. Add, with pinned literal expectations (never
+    built by calling `summary` on both sides):
+    - the summary of the six-outcome counts above equals the literal
+      block;
+    - the summary of an untested run equals the literal
+      `"## Mutation score (advisory)\n\n- No mutants tested.\n"`;
+    - `main([str(stats), "--summary", str(out)])` on a `tmp_path` stats
+      file written from `_stats(killed=3, survived=1, total=50)` returns 0
+      and `out` then holds exactly
+      `"## Mutation score (advisory)\n\n- Score: 0.7500\n- Survivors: 1\n- Tested: 4 (killed 3, timeout 0, survived 1, suspicious 0, no_tests 0, segfault 0)\n"`;
+    - `main` on a score below any old floor (`_stats(survived=4)`) still
+      returns 0 (the score is advisory);
+    - `main` returns 1 for an unreadable stats file, parametrized with
+      `ids=["missing", "not-json", "missing-key"]`: a path that does not
+      exist, a file holding `not json`, and a file holding `{"killed": 1}`.
+    - The module docstring says the score is advisory.
+  - Docstring-only edits, so no text calls the job a nightly or a PR job
+    (module docstrings are the agent contract); no logic, flag or test
+    changes:
+    - `tests/mutation/scope.py`: summary line `Turn a branch's diff into
+      mutmut patterns for the functions it changed.`; `The PR job passes
+      them to` becomes `The mutation workflow's changed mode passes them
+      to`; `the nightly run covers it` becomes `the workflow's all mode
+      covers it`.
+    - `tests/mutation/shard.py`: summary line `Split the mutation scope
+      into shards, largest module first.`; `which the nightly's plan job
+      passes as` becomes `which the mutation workflow's plan job, in its
+      all mode, passes as`; the argparse description becomes
+      `Write one mutation shard's mutmut patterns.`
+    - `tests/mutation/__init__.py`: `... the changed-function scope, the
+      shards and the score.`
+    - `tests/mutation/test_shard.py` module docstring: `Tests for the
+      mutation shards: ...` (rest unchanged).
+  - `docs/decisions/0012-mutation-threshold.md`: keep the filename (the
+    ADR table under "P3 and P4: how to run a slice" keeps the slug
+    `mutation-threshold`). Title
+    `# 0012 — Mutation testing, manual and advisory`, `Status: accepted`.
+    - Context: the spec (D17) asked for changed functions on every PR and
+      the whole scope nightly; P5.3a built both and proposed a threshold
+      from the first full nightly. The measured CI costs: the nightly
+      about 12 h of runner time over 4 shards for `ink` and `letters`;
+      the PR job 26 min for one changed `polyline` function (one edited
+      line of `simplify`, 72 mutants), so a PR changing several functions
+      that slow tests reach hits the 60-min timeout.
+    - Decision (maintainer, 2026-10-07): mutation testing runs manually
+      through `mutation.yml` (`workflow_dispatch` only; modes `changed`,
+      `pattern`, `all`), and its score is advisory: reported in the run
+      summary with the survivor count, never compared with a threshold.
+      No nightly, no PR job, no `min_score`, no ratchet. When to run it:
+      after writing tests for a module, before a release, and when a test
+      feels weak.
+    - Keep, updated to the new triggers, the existing sections:
+      configuration (`[tool.mutmut]`, the test selection and why,
+      `forkserver`, no `also_copy`); `[tool.pyntpot.mutation]` now holds
+      only `shards`; the changed-function mechanism and its gaps (now the
+      `changed` mode; "the nightly covers it" becomes "mode `all` covers
+      it"); the sharding (now mode `all`); the score formula; the
+      measured cost, scope and shard-count tables and rule as recorded.
+      Replace the "Threshold" section with the decision above.
+    - Consequences: no automatic CI signal for test strength; a run costs
+      what the tables say, so mode `all` is for occasions, not every
+      change; the `changed` mode inherits the PR job's gaps. Excluding
+      slow end-to-end tests (such as
+      `tests/unit/maps/test_cli.py::TestMap::test_a_full_cache_makes_no_request`,
+      72 s) from the mutation test selection is a possible later
+      improvement, not done here.
+    - It amends ADR 0001's consequence "run mutation testing in CI": a
+      sentence says so; ADR 0001 itself is not edited.
+    - A short history line: proposed at P5.3a with a PR job, a sharded
+      nightly and a threshold to come; accepted at P5.3c in this form
+      instead.
+  - `specs/001-port/spec.md`: append to the end of the D17 row only,
+    inside the last cell before its closing ` |`, the sentence
+    ` Superseded in part by ADR 0012 (2026-10-07): mutation testing runs manually, advisory, no nightly or PR job.`
+    No other word of the row or the table changes.
+  - `CONTRIBUTING.md`: replace the paragraph that starts `CI runs
+    mutation testing (ADR 0012)` with the following, and keep the
+    `uv run mutmut run "pyntpot.ink.polyline*"` block under it:
+
+    > Mutation testing (ADR 0012) is manual and advisory: no pull-request
+    > or scheduled job runs it, and its score has no threshold. Run it
+    > after writing tests for a module, before a release, or when a test
+    > feels weak. On GitHub, open Actions → Mutation → Run workflow, pick
+    > the branch, and choose a mode: `changed` (the default) tests the
+    > functions the branch changed against `base` (default `main`);
+    > `pattern` tests the space-separated mutmut patterns in `pattern`,
+    > such as `pyntpot.ink.polyline*`; `all` tests the whole scope in
+    > `[tool.pyntpot.mutation] shards` parallel shards, about 12 hours of
+    > runner time. The run's summary shows the score and the survivor
+    > count, and each shard's artifact holds its stats and surviving
+    > mutants. Locally, pass mutmut a pattern; it needs Linux or macOS,
+    > because it forks. Results land in `mutants/`, which git ignores, and
+    > `uv run mutmut results` lists them.
+
+    (One line in the file, as the paragraph it replaces; the quote marks
+    are not part of it.)
+  - `specs/001-port/p5-run-log.md`: append one entry,
+    `- <HH:MM> 2026-10-07 P5.3c: mutation testing manual and advisory
+    (maintainer decision).`, with sub-bullets: the measured costs that
+    drove it (nightly about 12 h over 4 shards; PR job 26 min for one
+    function); the files changed; each mode's dry-run result from the gate
+    (count and patterns per shard); the gate result; that P5.3b is
+    superseded and `min_score` is gone.
+  - `specs/001-port/tasks.md`: tick P5.3c in the same commit.
+- Leave alone:
+  - `tests/mutation/scope.py` and `shard.py` logic, flags and outputs, and
+    `test_scope.py` / `test_shard.py` apart from the docstring above.
+    The workflow uses their existing CLIs.
+  - `[tool.mutmut]` and its comment block, `shards = 4`, every other
+    `pyproject.toml` table, the ty and ruff config, and `uv.lock`.
+  - `ci.yml`'s `checks` and `prerelease` jobs; `codspeed.yml`,
+    `golden.yml`, `publish.yml`; `.gitignore` (`mutants/` stays).
+  - ADR 0001 (append-only; ADR 0012 records the amendment) and every
+    other ADR; the ADR table in this plan.
+  - `spec.md` apart from the D17 row's appended sentence; `plan.md`
+    (this slice and P5.3b's superseded note are the record).
+- Gate, in this environment (`SCRATCH` is the session scratchpad):
+  1. `uv sync && uv run ruff format --check . && uv run ruff check . && uv run ty check && uv run lint-imports && uv run pytest -m "not golden"`
+  2. YAML parse and shape (each `yq -e` prints `true`):
+     ```bash
+     test ! -e .github/workflows/mutation-nightly.yml
+     yq -e '(.on | keys == ["workflow_dispatch"]) and (.on.workflow_dispatch.inputs.mode.options == ["changed", "pattern", "all"]) and (.on.workflow_dispatch.inputs.mode.default == "changed") and (.on.workflow_dispatch.inputs.base.default == "main") and (.jobs | keys == ["plan", "score", "shards"])' .github/workflows/mutation.yml
+     yq -e '.jobs | has("mutation") | not' .github/workflows/ci.yml
+     ```
+  3. Dry run of the plan job's matrix logic per mode. It extracts the
+     `Shard matrix` and `Shard patterns` scripts from the committed
+     workflow, so it tests the file, not a copy. `d44b420~1` is a stub
+     base before a `letters` change; the stub ref is deleted afterwards.
+     ```bash
+     WF=.github/workflows/mutation.yml
+     yq -r '.jobs.plan.steps[] | select(.id == "matrix") | .run' "$WF" > "$SCRATCH/plan-step.sh"
+     yq -r '.jobs.shards.steps[] | select(.name == "Shard patterns") | .run' "$WF" > "$SCRATCH/shard-step.sh"
+     dry() {  # dry MODE PATTERN BASE
+       local rt="$SCRATCH/rt-$1"; rm -rf "$rt"; mkdir -p "$rt"; : > "$rt/out"; : > "$rt/summary"
+       RUNNER_TEMP="$rt" GITHUB_OUTPUT="$rt/out" GITHUB_STEP_SUMMARY="$rt/summary" \
+         MODE="$1" PATTERN="$2" BASE="$3" bash -eo pipefail "$SCRATCH/plan-step.sh" > /dev/null 2>&1
+       echo "mode=$1 exit=$? count=$(sed -n 's/^count=//p' "$rt/out") summary=$(cat "$rt/summary")"
+       sed -n 's/^matrix=//p' "$rt/out" | jq -c '.include[]' | while read -r entry; do
+         RUNNER_TEMP="$rt" PATTERNS="$(jq -c '.patterns' <<< "$entry")" bash -eo pipefail "$SCRATCH/shard-step.sh" > /dev/null
+         echo "  shard $(jq '.index' <<< "$entry"): $(wc -l < "$rt/patterns") patterns, first $(head -1 "$rt/patterns")"
+       done
+     }
+     dry changed "" main
+     git update-ref refs/remotes/origin/p5c-dry d44b420~1
+     dry changed "" p5c-dry
+     git update-ref -d refs/remotes/origin/p5c-dry
+     dry pattern "pyntpot.ink.polyline.x_simplify*  pyntpot.letters.hand*" main
+     dry pattern "   " main
+     dry all "" main
+     ```
+     Expected: `changed`/`main` exit 0, `count=0` and the "nothing to
+     run" summary (P5 does not touch `src/`); `changed`/stub exit 0,
+     `count=1`, at least one `pyntpot.letters.` pattern; `pattern` exit 0,
+     `count=1`, 2 patterns; empty `pattern` exit 1; `all` exit 0,
+     `count` equal to `shards` (4), every shard non-empty. Paste the
+     output into the run log.
+  4. `grep -rn "mutation-nightly\|min_score" --exclude-dir=.git --exclude-dir=.venv --exclude-dir=mutants --include=*.py --include=*.toml --include=*.yml --include=*.md .`
+     matches only `specs/001-port/` (plan, tasks, run log: history) and
+     ADR 0012's history line.
+- After the merge (not a gate; whoever merges PR #7 records it in the run
+  log): `workflow_dispatch` only works once the file is on the default
+  branch, so dispatch `gh workflow run mutation.yml --ref main -f mode=pattern -f pattern='pyntpot.letters.nib.x__ink_colour*'`
+  and check the run is green and its summary shows the score block.
+- Commit: `Make mutation testing manual and advisory`
 
 ### P6. Docstrings, prose and references (D24, D25)
 
