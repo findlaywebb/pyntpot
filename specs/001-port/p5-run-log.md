@@ -27,3 +27,7 @@ User instructions (2026-10-07 01:25 BST):
 - 01:47 Plan fixes for review 1 landed (`f4df084`). Two fix-agent additions
   kept: per-module patterns `x_*` and `xǁ*` (a package `__init__` name prefixes
   its submodules), and `shard.py` refusing an empty shard. Plan review 2 running.
+- 02:05 Plan review 2: BLOCK on one item (step-3 timing measurement double
+  counts across runs), plus should-fixes on the CI run script, scope.py edge
+  cases, survivor filtering and a P5.3b re-shard rule. All 14 round-1 findings
+  confirmed resolved. Fix agent dispatched.
