@@ -111,3 +111,9 @@ User instructions (2026-10-07):
   not None` on the bbox), then green. Baseline `{"commit": "d30ff4b...", "dirty": false}`;
   prek exit 0; not-golden 167 s (1044 passed, 1 skipped); tolerance 292 s; G-self 295 s
   (17 passed, byte-identical). D8 release blocker cleared.
+- Mutation run 1 on `main` (https://github.com/findlaywebb/pyntpot/actions/runs/37689849941,
+  head `1bae755`): `plan` passed; shard 0 reached 42 of the pattern's mutants (38 killed,
+  4 survived) and died at 9 min 14 s with "The runner has received a shutdown signal"
+  (exit 143), not the 270-minute step timeout; `score` failed with no stats. Runner loss
+  counts as death outside a test body, so the failed jobs were re-run once (attempt 2).
+  A second failure is real and is filed under "Later issues".
