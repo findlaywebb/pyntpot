@@ -73,3 +73,11 @@ User instructions (2026-10-07):
   P11, P10.R (`release-0.0.1` branch), P8, part 2 (`p10-fixes`), golden group
   (`p10-golden`), P7, P9. ADR 0026 fixed for P11.1. No overlap between what P10 renames
   or deletes and P11's 20 promoted names (AST scan at `4e316a3`). Plan review 3 running.
+- Plan review 3: PASS (0 blocking, 3 should-fix carried, 4 nits;
+  `reviews/p10-plan-review-3.md`). All 16 review-2 findings confirmed; the 58-name scan
+  re-run at HEAD agrees and shares no module with P11's 20 names. Carried into a plan
+  touch-up commit: re-measure part-2 facts at `p10-fixes`'s base and stop a slice whose
+  before-check differs (S1); P10.10's renamed names join no `__all__` and need no ADR
+  (S2); route issues found in P11 and fixes cut after `p10-fixes` merges (`p10-late-<id>`)
+  (S3); N1 to N4. P10.0 ticked. P10.1 started: a drafting agent re-runs every
+  reproduction and writes `p10-triage.md`; the orchestrating session checks and commits.
