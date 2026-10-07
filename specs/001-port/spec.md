@@ -120,13 +120,12 @@ ported code keeps its old names until P4.
 
 - The OpenTopoData daily budget is enforced per process only. A
   per-cache-dir counter adds state. Default is per process.
-- Design-input sources (P6.2): the papers and blogs read while designing
-  the wash, brush, lettering and label rules are not recorded in the
-  source tree. Recover them where possible; otherwise each entry cites the
-  canonical source only.
 
 ## Resolved questions
 
 - Coverage target (2026-10-07): a measured baseline that ratchets, not 100
   percent branch coverage before the first release. P5.2 sets it; ADR 0011
   records it.
+- Design-input sources (2026-10-07): recovered in `design-sources.md`;
+  where none was recorded, the entry cites the canonical source and says
+  so (D24).

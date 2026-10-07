@@ -178,3 +178,94 @@ User instructions (2026-10-07 12:14 BST):
   Fixed in `14286ba` (formatting only: `ast.dump` identical for `ast_neutral.py` and
   `doc_lines.py`; the plan's "14:05" references now 13:24); the issue file is removed.
   Orchestrator check: format and lint clean. P6.2 dispatched.
+- 15:18 P6.2 match the design sources to the inventory, from `7c5d482`; started 15:03,
+  wall time 15 min (G-here 13 min of it). No `src/` or `tests/` change. Owner files:
+  `p6-inventory.md` (design-input column), `spec.md` (open question moved to "Resolved
+  questions"), this log. Every `design-sources.md` entry is in the match table (33
+  bullets); none outside it.
+  - Matches, each `rule: match table | inputs: design-sources.md`:
+    - choice: Curtis et al. 1997 -> `edge-darkening`, `backruns`, `granulation`,
+      `shallow-water` (the canonical source above); `kubelka-munk`, `wet-area-bleed`
+      (own `Design input` line, grail URL)
+    - choice: Van Laerhoven, Van Reeth 2005 -> `kubelka-munk`
+    - choice: Bousseau et al. 2006 -> `edge-darkening`
+    - choice: Luft, Deussen -> `wet-area-bleed` (the canonical source above)
+    - choice: Chu, Tai 2005 (MoXi) -> `bristle-brush`
+    - choice: Baxter, Lin 2004 -> `bristle-brush`
+    - choice: Kubelka, Munk 1931 -> `kubelka-munk` (the canonical source above)
+    - choice: Deegan et al. -> `backruns` (`named-only` `deegan-coffee-ring`)
+    - choice: 2019 arXiv drying study -> `backruns` (`named-only` `arxiv-watercolour-drying`)
+    - choice: Lee, wet-on-wet -> `shallow-water` (`named-only` `lee-wet-on-wet`)
+    - choice: WetBrush -> `shallow-water` (`named-only` `wetbrush`)
+    - choice: Tyler Hobbs 2017 -> `midpoint-displacement`
+    - choice: axelinternet, p5-watercolor -> `midpoint-displacement` (status
+      `maintainer-checked`)
+    - choice: Horn 1981 -> `hillshade` (the canonical source above)
+    - choice: Douglas, Peucker 1973 -> `douglas-peucker`; Chaikin 1974 -> `chaikin` (each
+      the canonical source above)
+    - choice: Lanczos resampling (named) -> `lanczos` (not recorded)
+    - choice: Zhang, Suen 1984 (named in the code) -> `zhang-suen` (not recorded)
+    - choice: Marching squares (named in the code) -> `marching-squares` (not recorded)
+    - choice: Euclidean distance transform; fBm and value noise (named in the code) ->
+      `chamfer-distance`, `fbm`, `value-noise` (not recorded)
+    - choice: Stamen, *Watercolor process* -> `multiply-compositing`, `box-blur`,
+      `edge-darkening`
+    - choice: osmanyy.com, *Risograph CSS* -> `multiply-compositing`
+    - choice: Stadia Maps, ICA MapCarte 95/365, Adventures in Mapping 2024, Urban
+      Sketching World, The Postman's Knock -> closing
+    - choice: OSM via Overpass; OSM tagging; OpenTopoData SRTM; Open-Elevation; Patrick
+      Hand; Caveat; SVG filter effects; CSS mix-blend-mode; WCAG AA; walk-guide maps;
+      researcher search terms; MapTiler and Stadia notes -> closing (`named-only`)
+  - Rows with no table line, each choice: `original design reading not recorded; the
+    canonical source stands in.` | rule: P6.2 match rule (row the table gives no line) |
+    inputs: match table, inventory: `catmull-rom`, `hachures`, `nib`, `label-placement`;
+    with the six "not recorded" rows above, 10 rows carry that line. P6.1 added no row,
+    so no `design-input-for-<key>.md` issue.
+  - Design inputs per row: `kubelka-munk` 3, `multiply-compositing` 2, `zhang-suen` 1,
+    `douglas-peucker` 1, `chaikin` 1, `catmull-rom` 1, `marching-squares` 1, `lanczos` 1,
+    `value-noise` 1, `fbm` 1, `chamfer-distance` 1, `box-blur` 1, `hillshade` 1,
+    `hachures` 1, `midpoint-displacement` 2, `edge-darkening` 3, `backruns` 3,
+    `granulation` 1, `shallow-water` 3, `wet-area-bleed` 2, `bristle-brush` 2, `nib` 1,
+    `label-placement` 1 (equal to `refcheck.sh`'s `inputs` list).
+  - Closing section, 17 lines in `design-sources.md` order: Stadia Maps, "Stamen
+    Watercolor" (to fetch); ICA, "MapCarte 95/365: Pictorial Guide to the Lakeland Fells
+    by Alfred Wainwright, 1955-1966" (to fetch); Adventures in Mapping, "Tolkien Style
+    Maps in a GIS: part 3, Water" (to fetch); Urban Sketching World, "Urban Sketching
+    Examples: Line and Wash" (to fetch); The Postman's Knock, "Illustrated Wedding Maps"
+    (`maintainer-checked`); `named-only`: `osm-overpass`, `osm-tagging`,
+    `opentopodata-srtm`, `open-elevation`, `patrick-hand`, `caveat`, `svg-filter-effects`,
+    `css-mix-blend-mode`, `wcag-aa-contrast`, `walk-guide-maps`,
+    `researcher-search-terms`, `maptiler-stadia-notes`. By status: 12 `named-only`, 1
+    `maintainer-checked`, 4 assigned by P6.3's fetch.
+  - Corrections, pinned citation fields that differ from `design-sources.md` (rule:
+    match table, pinned page words; inputs: P6.2's table): Hobbs title "A Guide to
+    Simulating Watercolor Paint with Generative Art" (case), author Hobbs, T.; Stamen
+    title "Watercolor Process", author Watson, Z. (Stamen Design), year 2012 added;
+    Stadia title "Stamen Watercolor" (record: "Stamen Watercolor style docs"), (n.d.);
+    ICA title "MapCarte 95/365: Pictorial Guide to the Lakeland Fells by Alfred
+    Wainwright, 1955-1966" (record: "A Pictorial Guide ..., Alfred Wainwright, 1955 to
+    1966"), author "ICA Commission on Map Design" (record: "ICA Map Design Commission");
+    Adventures in Mapping title "Tolkien Style Maps in a GIS: part 3, Water" and author
+    Nelson, J. added; Urban Sketching title "Urban Sketching Examples: Line and Wash"
+    (record: "Line and wash"), (n.d.); Postman's Knock title "Illustrated Wedding Maps"
+    (case), author Bugbee, L., 2014 added; osmanyy title "Risograph.css" (record:
+    "Risograph CSS"), author Osman, year 2025 added.
+  - Greps behind the table, re-run at `7c5d482`, every count as pinned (no
+    `match-table-evidence.md`):
+    - `grep -rniIE 'wet.?area' src`: 11 lines, `ink/wash.py` 4, 142, 159, 164, 199, 309;
+      `ink/shallow_water.py` 44, 66; `ink/style.py` 109, 115, 119.
+      `sed -n '218,219p;228,230p' src/pyntpot/ink/wash.py`:
+      `rim = rim * (1.0 - o.wet * o.rim_drop)` and
+      `dens = dens * (1.0 - m_wet) + blur(dens, o.bleed_px) * m_wet`.
+      `grep -n 'wet_map\|def wet_field' src/pyntpot/maps/painter/cover.py`: 32, 95, 104.
+    - `grep -rliIE 'blob' src | wc -l`: 16 (15 `.py` and `maps/themes/default.toml`);
+      `grep -rniIE 'blob' src | wc -l`: 48.
+    - `grep -rnE '\bstarve\b|run_px|dip_px|pen_starve' src/pyntpot/ink/brush.py`: first
+      four lines `starve` 191, `run_px` 192, `dip_px` 194, `pen_starve` 202.
+    - `grep -rniIE 'luminance' src`: 2 lines, `ink/io.py:54`, `maps/painter/plates.py:42`.
+  - Issues filed: 0. Fixed: 0. No case outside a rule.
+  - G-here after the change, per stage: `uv sync` 0 s; `uv run prek` cannot spawn (as at
+    P6.1, `prek-not-in-the-environment`), so `uvx prek run --all-files` 4 s, green, no
+    file touched; `pytest -m "not golden"` 161 s (1036 passed, 1 skipped, 17
+    deselected); `--golden-tolerance` 294 s (17 passed); byte-exact `pytest -m golden`
+    304 s (17 passed). `git diff --stat -- src tests` empty.
