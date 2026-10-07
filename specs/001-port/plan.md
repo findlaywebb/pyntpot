@@ -487,7 +487,7 @@ the façade at P3.16 and P3.17, and its measurements were taken at
 - No re-export shims. When a name moves, every importer (including tests) is
   repointed in the same commit.
 - Commit when the slice's gate is green, message as given (imperative, one
-  line, no trailers), then tick the slice's line in `tasks.md` in the same
+  line, then the session's attribution trailers), then tick the slice's line in `tasks.md` in the same
   commit. Out-of-scope findings go to `docs/issues/`, not into the diff.
   **Who does what:** the implementer agent (`plan-slice-implementer`) edits,
   runs the gates and hands off; it never commits or pushes. The
@@ -5849,8 +5849,8 @@ hash, before anything is deleted. This phase touches only the upstream repo.
 Scaffolding the port needed and the finished port does not. Every slice here
 deletes or simplifies; none adds behaviour. The slice rules and gate commands
 are those of "P3 and P4: how to run a slice" (test first where a test
-changes, no shims, G-here, commit message imperative on one line with no
-trailers, tick `tasks.md` in the same commit). Nothing here removes a gate
+changes, no shims, G-here, commit message imperative on one line, then
+the session's attribution trailers, tick `tasks.md` in the same commit). Nothing here removes a gate
 that `CLAUDE.md` requires, touches the tolerance bound
 (`MAX_DIFFERING_FRACTION`, `MAX_CHANNEL_DELTA`) or the D22 pin handling, or
 edits a Key decisions row beyond the one appended note named in P9.1.
@@ -6160,12 +6160,10 @@ constants, `RouteInk.casing` and `pyntpot.ink.polyline.point_to_segment`
   `--precision=2`). A drop below a gate is answered with a test, never by
   lowering it.
 - **Commit messages.** Imperative, one line, as given in each slice.
-  Trailers follow P10.2's answer to Q1; until P10.3d lands, P10 commits
-  (the part-1 slices that start after P10.1 included) follow the practice
-  of this branch and of P6's "Branch and PR" rule (the attribution trailers
-  the session's system reminder gives), as P10.0's own commit does. P10.3d
-  then makes `CONTRIBUTING.md` and this plan state one rule, which every
-  later commit follows; commits already made are not rewritten.
+  Trailers follow P10.2's answer to Q1 (2): the attribution trailers the
+  session's system reminder gives, as P6's "Branch and PR" rule states and
+  P10.0's own commit does. `CONTRIBUTING.md` and this plan state that one
+  rule; commits already made are not rewritten.
 - **Branch and PR.** Four P10 PRs, in this order:
   1. P10.0 to P10.2 and every part-1 slice land on `p10-triage` and go to
      `main` through one PR. P11 then lands through its own branches and
