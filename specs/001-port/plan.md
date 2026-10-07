@@ -4049,6 +4049,7 @@ lines.
   docstring and `test_reference_keys.py` (P6.4) fails on a lost citation.
   ```python
   """Exit 1 unless every src/ file changed since BASE differs from it in docstrings and comments only."""
+
   import ast
   import subprocess
   import sys
@@ -4058,7 +4059,11 @@ lines.
 
 
   def _is_doc(stmt: ast.stmt) -> bool:
-      return isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Constant) and isinstance(stmt.value.value, str)
+      return (
+          isinstance(stmt, ast.Expr)
+          and isinstance(stmt.value, ast.Constant)
+          and isinstance(stmt.value.value, str)
+      )
 
 
   def code_only(source: str) -> str:
@@ -4616,11 +4621,11 @@ completeness check greps it):
     takes `maintainer-checked`, whatever the routes give; P6.3 still runs
     every route for it and logs each attempt, and quotes a route match in
     the how-checked text. Two entries have it, checked by the maintainer at
-    14:05 on 2026-10-07: axelinternet, p5-watercolor
+    13:24 on 2026-10-07: axelinternet, p5-watercolor
     (`https://github.com/axelinternet/p5-watercolor`) and The Postman's
     Knock (`https://thepostmansknock.com/illustrated-wedding-maps/`). Their
     two marker lines are already in the run log: the orchestrating session
-    wrote them under the 14:05 entry, from the maintainer's check, in
+    wrote them under the 13:24 entry, from the maintainer's check, in
     `6c1e380`. No one waits for the maintainer; P6.3 is still not
     dispatched while
     `grep -cE '^ *- maintainer-checked: https?://' specs/001-port/p6-run-log.md`
@@ -4968,7 +4973,7 @@ mismatch.
   | ICA MapCarte 95/365, Wainwright | closing. Page words `mapcarte 95 365`, `pictorial guide to the lakeland fells`, `wainwright`, `commission on map design`; cites "MapCarte 95/365: Pictorial Guide to the Lakeland Fells by Alfred Wainwright, 1955-1966", ICA Commission on Map Design (the site owner; the post is signed `@kennethfield`), 2014 | restraint, route weight and a warning about hatching moiré: a warning, not the hachures the `hachures` row draws down the slope |
   | Adventures in Mapping 2024 | closing. Page words `adventures in mapping`, `tolkien style maps in a gis part 3 water`, `john nelson`; cites "Tolkien Style Maps in a GIS: part 3, Water", Nelson, J. (Adventures in Mapping), 2024 | the style was rejected |
   | Urban Sketching World, *Line and wash* | closing. Page words `line and wash`, `urban sketching world`; cites "Urban Sketching Examples: Line and Wash", Urban Sketching World (the site owner; the post is by "Taria") (n.d.) | an idiom (ink first, wash after), no technique |
-  | The Postman's Knock | closing, status `maintainer-checked` (metadata only: the process section is behind a paywall). Not fetchable from here (403 challenge, 2026-10-07), so its words come from the design record and the 14:05 maintainer check: `illustrated wedding maps`, `bugbee` (route 7's snapshot, if one is reached); cites "Illustrated Wedding Maps", Bugbee, L., 2014 | the extent idiom: no code site trims the map's extent to a blob (`blob` is on 48 lines in 16 files: in `maps/` the generalised wood, park and sea shapes and their jitter, and JSON or digest variables; in `ink/` a stroke's set-down deposit; in `letters/` ink components, glyph dots and the soft halo under a word), and its edge bleed is the extent's, not a wash's `edge-darkening` |
+  | The Postman's Knock | closing, status `maintainer-checked` (metadata only: the process section is behind a paywall). Not fetchable from here (403 challenge, 2026-10-07), so its words come from the design record and the 13:24 maintainer check: `illustrated wedding maps`, `bugbee` (route 7's snapshot, if one is reached); cites "Illustrated Wedding Maps", Bugbee, L., 2014 | the extent idiom: no code site trims the map's extent to a blob (`blob` is on 48 lines in 16 files: in `maps/` the generalised wood, park and sea shapes and their jitter, and JSON or digest variables; in `ink/` a stroke's set-down deposit; in `letters/` ink components, glyph dots and the soft halo under a word), and its edge bleed is the extent's, not a wash's `edge-darkening` |
   | osmanyy.com, *Risograph CSS* | `multiply-compositing`. Page words `risograph css`, `osman`; cites "Risograph.css", Osman (osmanyy.com), 2025 (the page's `article:published_time`; the design record gives no year) | "Multiply as the medium" |
   | OpenStreetMap via Overpass; OSM tagging | closing: `named-only` lines `osm-overpass`, `osm-tagging` | data sources, no technique |
   | OpenTopoData SRTM 30 m; Open-Elevation | closing: `named-only` lines `opentopodata-srtm`, `open-elevation` | data sources |
@@ -5350,7 +5355,7 @@ mismatch.
   container's `awk`) on a scratch sample with all 23 entries at their pinned
   counts, the 16 `named-only` lines, the p5-watercolor and The Postman's
   Knock `maintainer-checked` lines and 17 closing lines, against a copy of
-  the run log whose two 14:05 entries were rewritten as marker lines: exit
+  the run log whose two 13:24 entries were rewritten as marker lines: exit
   0, printing the two `MAINTAINER-CHECKED` lines. Against the real run log
   (no marker lines yet) it exits 1 with `FAIL run log: 0 maintainer-checked
   marker lines, want 2`. Changing one thing at a time, it exits 1 naming the
@@ -5619,6 +5624,7 @@ Every one of these slices:
   into the tree; it ends by printing `doc_lines: N files`.
   ```python
   """Write each FILE's docstring and comment text to OUT/<FILE>.txt, every other character blanked, line numbers kept."""
+
   import ast
   import io
   import sys
@@ -5634,7 +5640,11 @@ Every one of these slices:
       for node in ast.walk(ast.parse(source)):
           if isinstance(node, DOC_OWNERS) and node.body:
               first = node.body[0]
-              if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+              if (
+                  isinstance(first, ast.Expr)
+                  and isinstance(first.value, ast.Constant)
+                  and isinstance(first.value.value, str)
+              ):
                   for n in range(first.lineno, first.end_lineno + 1):
                       kept[n - 1] = lines[n - 1]
       for tok in tokenize.generate_tokens(io.StringIO(source).readline):
@@ -5653,8 +5663,14 @@ Every one of these slices:
       sys.exit(f"doc_lines.py: OUT {out} is inside the checkout; give a scratch directory")
   for name in names:
       path = Path(name)
-      if path.is_absolute() or path.suffix != ".py" or not path.resolve().is_relative_to(root / "src"):
-          sys.exit(f"doc_lines.py: {name}: give a path relative to the worktree root, to a .py file under src/")
+      if (
+          path.is_absolute()
+          or path.suffix != ".py"
+          or not path.resolve().is_relative_to(root / "src")
+      ):
+          sys.exit(
+              f"doc_lines.py: {name}: give a path relative to the worktree root, to a .py file under src/"
+          )
   for name in names:
       target = out / f"{name}.txt"
       target.parent.mkdir(parents=True, exist_ok=True)
