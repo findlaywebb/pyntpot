@@ -584,3 +584,8 @@ User instructions (2026-10-07 12:14 BST):
     161 s, exit 0; `--golden-tolerance` 294 s (17 passed); byte-exact `pytest -m golden`
     284 s (17 passed). G-self `--golden-dir="$SLICE/before"` 288 s (17 passed).
   - Issues filed: 0. Fixed: 0. No case outside a rule.
+- 16:13 P6.4 verified and ticked (`5ff3c03`): 36 citation lines in 19 files, architecture
+  tests green (orchestrator rerun). `ink/wash.py` reached 361 lines against the plan's
+  predicted 360 (two keys on `wash`); under 400, no action. P6.5 dispatch: shared scripts
+  at `/tmp/claude-0/-home-user-pyntpot/81b07070-1ea4-5527-9ae2-48b727070240/scratchpad/p6-scripts` (SHA256SUMS OK); five detached worktrees at `5ff3c03` under
+  `/tmp/claude-0/-home-user-pyntpot/81b07070-1ea4-5527-9ae2-48b727070240/scratchpad/wt/p6.5{a..e}`; `$SLICE` = `/tmp/claude-0/-home-user-pyntpot/81b07070-1ea4-5527-9ae2-48b727070240/scratchpad/p6.5<x>/`. P6.5a-e dispatched in parallel.

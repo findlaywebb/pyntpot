@@ -134,7 +134,7 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 - [x] P6.1 References inventory (`p6-inventory.md`), sites by dotted path
 - [x] P6.2 Match `design-sources.md` to the inventory; spec open question resolved
 - [x] P6.3 Fetch and check every source; write `docs/explanation/references.md`
-- [ ] P6.4 Citation line in each implementing docstring; `tests/architecture/test_reference_keys.py`
+- [x] P6.4 Citation line in each implementing docstring; `tests/architecture/test_reference_keys.py`
 - [ ] P6.5a Docstring audit, then prose: `ink`
 - [ ] P6.5b Docstring audit, then prose: `letters`
 - [ ] P6.5c Docstring audit, then prose: `maps` façade, data and furniture
