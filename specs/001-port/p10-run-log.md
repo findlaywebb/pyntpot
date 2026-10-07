@@ -161,3 +161,9 @@ User instructions (2026-10-07):
   after. Baseline `{"commit": "489f3a6...", "dirty": false}`; AST-neutral 1 file; prek
   exit 0; not-golden 172 s; tolerance 312 s; G-self 300 s (17 passed, byte-identical).
   P10.3c ticked. All four release blockers (D8, Verification 1, D24 twice over) cleared.
+- Mutation run attempt 2 failed the same way: shard 0 died during the 43rd mutant of the
+  pattern (after 42: 38 killed, 4 survived), "The runner has received a shutdown signal",
+  exit 143, at 4 min 40 s. Deterministic, so real (a second failure is real). Working
+  hypothesis: one `simplify` mutant exhausts the runner's memory; mutmut caps time per
+  mutant, not memory. A capped local reproduction is running; the finding is filed under
+  "Later issues" once the mutant is named.
