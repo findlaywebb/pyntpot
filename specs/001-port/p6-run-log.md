@@ -51,3 +51,16 @@ User instructions (2026-10-07 12:14 BST):
   `unreachable` is allowed on design-input lines only (never on a canonical-source line)
   after every route fails, and the report lists each one; the jargon gate covers docstring
   and comment lines only, each finding rewritten or logged as kept with its reason.
+- 14:05 Maintainer checked the two design inputs that the proxy cannot fetch (screenshots,
+  2026-10-07). Plan fix agent told to add a `maintainer-checked` route (design-input lines
+  only, never canonical-source lines).
+  - axelinternet, p5-watercolor (https://github.com/axelinternet/p5-watercolor): owner
+    `axelinternet` (Axel Hultman), About "p5 implementation of Tyler Hobbs generative
+    watercolor simulation", README heading "Watercolor canvas" linking Hobbs's guide;
+    last commit about 8 years ago (about 2018); contributors axelinternet, mkontogiannis.
+    Matches the entry: implementation of the Hobbs method.
+  - The Postman's Knock, *Illustrated Wedding Maps*
+    (https://thepostmansknock.com/illustrated-wedding-maps/): author Lindsey Bugbee,
+    13 March 2014. Title, author and year match. The process section is behind a paywall
+    (TPK Premium), so the extent idiom (trim to a blob, bleed the edge) is not visible on
+    the page: metadata matched, technique not confirmed from the text.
