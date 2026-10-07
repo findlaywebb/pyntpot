@@ -15,5 +15,5 @@ Subfolders:
 
 - `decisions/`: Architecture Decision Records (`NNNN-title.md`).
 - `explanation/`: background and the references bibliography.
-- `runbooks/`: operational playbooks (dependency updates, releases).
+- `runbooks/`: operational playbooks (dependency updates).
 - `issues/`: one markdown file per out-of-scope issue found while doing something else.

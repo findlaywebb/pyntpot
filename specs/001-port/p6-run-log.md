@@ -658,3 +658,33 @@ User instructions (2026-10-07 12:14 BST):
   findings. Carried to P6.6: GLOSSARY `backdrop` and `terms` cells say "darkness grid"
   (term "dark grid"; P6.5c); "activity" and "label agent" reported left in
   `candidates/export`, `lettering/label`, `lettering/picks` (P6.5d). P6.6 dispatched.
+- 18:17 P6.6 prose audit of the docs and the phase gate. Start 17:55, end 18:17 BST (22 min wall). Start `c7c6fc1`; SHA256SUMS OK (3 scripts); skills read from `/root/.claude/skills/synced/*/{write-docs,ai-jargon-audit,emdash-audit}`.
+  Per file (detector findings before; fixed; kept; filed):
+  - `README.md`: 0 findings; no change; filed 0.
+  - `GLOSSARY.md`: 0 findings; fixed 2 (`backdrop` and `terms` rows: "darkness grid" -> "dark grid"); filed 0.
+  - `CHANGELOG.md`: 0 findings; no change (no entry, as the slice says); filed 0.
+  - `CONTRIBUTING.md`: 0 findings; fixed 1 (benchmark sentence grammar); filed 1 (`contributing-commit-trailers`).
+  - `docs/README.md`: 0 findings; fixed 1 (runbooks listed "releases"; only the dependency runbook exists).
+  - `docs/architecture.md`: 0 findings; fixed 3 (ink "imports nothing outside itself" -> no other pyntpot layer, it imports numpy and Pillow; letters "imports `ink` only" -> of the other layers; exemptions also cover the clock and random bans, and `NOTES.md` is more than a header).
+  - `docs/explanation/performance.md`: 0 findings; fixed 1 ("Each time ... assert" -> "Each times ... asserts").
+  - `docs/explanation/references.md`: 1 finding, kept; intro and `Note:` lines read, no change.
+    kept: precise term | docs/explanation/references.md:50 | surface | the cited title "Marching cubes: A high resolution 3D surface construction algorithm" on a source line, which P6.6 never changes
+    kept: rhythm | docs/explanation/references.md | 10 three-item lists | each is an entry's canonical, design-input and implemented-in lines, the fixed reference format
+  - `docs/runbooks/update-dependencies.md`: 0 findings; fixed 2 (the numpy, pillow and fonttools "pins are exact" -> floors in `pyproject.toml`, exact versions in `uv.lock`; heading dash stripped by `strip_emdashes.py`, "replaced 1, 0 remaining").
+  - British English: no change needed (`-ize`/`color`/`center` hits are cited titles and URLs in source lines, or "size"/"licensed", which are British).
+  - `strip_emdashes.py` over the nine covered files: 1 replaced (the runbook heading), 0 remaining.
+  Fixed 10, kept 2, filed 2 (`docs/issues/contributing-commit-trailers.md`, `docs/issues/src-docstrings-use-non-canonical-terms.md`).
+  - choice: GLOSSARY `backdrop` and `terms` say "dark grid" | rule: behaviour wins | inputs: `maps.lettering.placement_costs.Backdrop.dark` and `Terms.dark`, built in `maps.lettering.pipeline` as `{"w": dark.w, "h": dark.h, "v": dark.values}` from `maps.plates.DarkGrid`.
+  - choice: no `docs/issues/glossary-<term>.md` deferred by a P6.5 landing exists, so none decided | rule: P6.6 steps | inputs: `ls docs/issues`, P6.5 landing lines (deferred 0 each).
+  - choice: src leftovers filed in one note | rule: fix now or file (`src/` not owned) | inputs: `grep -rnI -i "activit\|label agent\|darkness grid" src/pyntpot`: "activity" in `candidates/export.py` lines 3 and 60 and `lettering/label.py` line 199; "label agent" in `maps/osm_elements.py` line 36, not in `lettering/picks.py` (nothing remains there); "darkness grid" in `lettering/placement_costs.py` lines 69 and 91, `lettering/spans.py` lines 129 and 171, `lettering/placement_along.py` line 212.
+  - choice: CONTRIBUTING "No co-authorship trailers" kept and filed | rule: none covers a policy clash between a doc and the branch's commit practice, so filed | inputs: `git log --format=%B 92b011c..HEAD` (every commit carries the trailers), the plan's "Branch and PR" rule.
+  - choice: prek as `uvx prek run --all-files` | rule: as every earlier slice, `docs/issues/prek-not-in-the-environment.md` | inputs: `uv run prek` cannot spawn.
+  Phase gate (all after the edits, before this entry):
+  1. `python3 -I "$SCRIPTS/ast_neutral.py" 92b011c` (merge-base with `origin/main` `92b011c47bc8`): `AST-neutral: 94 files`, exit 0, 1 s.
+  2. G-self baseline on `c7c6fc1` 61 s, `{"commit": "c7c6fc1d370dd8b336abfe656a86ffe5d592c16a", "dirty": false}`. G-here: uv sync 0 s; uvx prek exit 0, 4 s; not-golden 161 s (1042 passed, 1 skipped, 17 deselected); tolerance 308 s (17 passed); exact 296 s (17 passed); G-self compare 298 s (17 passed).
+  3. `refcheck.sh docs/explanation/references.md specs/001-port/p6-run-log.md`: exit 0, 0 s, no FAIL, no `not-verified`; it printed two lines and no UNREACHABLE:
+     MAINTAINER-CHECKED 104: Hultman, A. (axelinternet), p5-watercolor, https://github.com/axelinternet/p5-watercolor (design input)
+     MAINTAINER-CHECKED 170: Bugbee, L. (2014), Illustrated Wedding Maps, https://thepostmansknock.com/illustrated-wedding-maps/ (read during design)
+  4. `uv run pytest tests/architecture/test_reference_keys.py -v`: 6 passed in 0.60 s, exit 0, 2 s.
+  5. `! grep -rnI -e '—' -e '–' README.md GLOSSARY.md CHANGELOG.md CONTRIBUTING.md docs/README.md docs/architecture.md docs/explanation docs/runbooks src/pyntpot`: no output, exit 0, 0 s.
+  Total P6 wall time from the log: 12:14 to 18:17, 6 h 03 min.
