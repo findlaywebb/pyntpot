@@ -31,3 +31,5 @@ User instructions (2026-10-07 12:14 BST):
   no DOI or URL have no lookup route. Orchestrator decision for the fix agent: Args/Returns
   sections only on the top-level public API and only where they say something the
   signature and summary do not; everything else fixes accuracy and shape only.
+- 13:05 Maintainer agreed the Args/Returns rule: type hints carry most of what those
+  sections would say, and more documentation is not better documentation.
