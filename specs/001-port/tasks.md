@@ -108,10 +108,14 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 
 ## P5. Property tests, coverage, mutation, benchmarks
 
+Order: P5.0, P5.1, P5.2, P5.3a, P5.4 on branch `p5-quality` (one PR), then P5.3b after the first nightly on `main`.
+
+- [ ] P5.0 Fatten P5 into slices; plan-reviewer pass; spec coverage question resolved
 - [ ] P5.1 Property tests
 - [ ] P5.2 Coverage baseline and ADR 0011
-- [ ] P5.3 mutmut PR and nightly jobs, threshold ADR 0012
+- [ ] P5.3a mutmut config, scope and score scripts, PR and nightly jobs; ADR 0012 proposed
 - [ ] P5.4 Benchmarks and CodSpeed workflow
+- [ ] P5.3b Mutation threshold from the first nightly; ADR 0012 accepted
 
 ## P6. Docstrings, prose and references
 

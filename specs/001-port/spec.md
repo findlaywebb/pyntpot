@@ -118,12 +118,15 @@ ported code keeps its old names until P4.
 
 ## Open questions
 
-- Coverage target: the template demands 100 percent branch on core. P5
-  sets a measured baseline and ratchets. Confirm that is acceptable rather
-  than blocking the first release on 100 percent.
 - The OpenTopoData daily budget is enforced per process only. A
   per-cache-dir counter adds state. Default is per process.
 - Design-input sources (P6.2): the papers and blogs read while designing
   the wash, brush, lettering and label rules are not recorded in the
   source tree. Recover them where possible; otherwise each entry cites the
   canonical source only.
+
+## Resolved questions
+
+- Coverage target (2026-10-07): a measured baseline that ratchets, not 100
+  percent branch coverage before the first release. P5.2 sets it; ADR 0011
+  records it.
