@@ -184,7 +184,7 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 - [x] P10.4b Rename `edt` to `chamfer_distance`; delete `point_to_segment`
 - [x] P10.5a The outline route narrows the nib; delete `_radii`
 - [x] P10.8 Mark the slow CLI test golden
-- [ ] P10.9 Docs and terms: non-canonical terms, the OpenTopoData question, rule seven in tests; display pixels (Q2), "sheet" and "map" kept apart everywhere (Q10, widened)
+- [x] P10.9 Docs and terms: non-canonical terms, the OpenTopoData question, rule seven in tests; display pixels (Q2), "sheet" and "map" kept apart everywhere (Q10, widened)
 - [ ] P10.12 Cap the mutation run's memory (later issue; part 1)
 - [ ] P10.13 Test identifiers say map, not sheet (later issue; part 1, after P10.9)
 

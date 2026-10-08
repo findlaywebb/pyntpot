@@ -21,7 +21,7 @@ from support.measure import flat_measure
 
 
 def test_the_card_carries_no_more_spans_than_the_cap():
-    """Four brackets made the sheet cluttered, so three is the cap.
+    """Four brackets made the map cluttered, so three is the cap.
 
     Dropped in the payload's own order, because the agent is asked for its best
     first and that ordering is the only judgement available here.
@@ -38,9 +38,9 @@ def test_the_card_carries_no_more_spans_than_the_cap():
 
 
 def test_a_span_on_a_bend_is_drawn_on_the_convex_side_of_the_route():
-    """The whole term, through `place_spans`, on a sheet with nothing dark on it.
+    """The whole term, through `place_spans`, on a map with nothing dark on it.
 
-    With the darkness grid flat the free-paper rule is a coin toss decided by a
+    With the dark grid flat the free-paper rule is a coin toss decided by a
     tie-break, so this is exactly the near-tie the bend is meant to settle. The
     bracket lands outboard of the arc, further from its centre than the route
     is, which is the intended geometry. With the term off it is a
@@ -61,7 +61,7 @@ def test_a_span_on_a_bend_is_drawn_on_the_convex_side_of_the_route():
 
 
 def test_a_span_mark_never_crosses_any_piece_of_the_route():
-    """Rule seven, mechanically, on every shape the sheet has a case for.
+    """The route rule, mechanically, on every shape the map has a case for.
 
     Span marks are never drawn over any other piece of route. Any piece, so the whole track is
     tested and not the stretch alone, and the ticks are tested with the line
@@ -137,7 +137,7 @@ def test_the_mark_stops_short_of_a_tangle_rather_than_pushing_through_it():
 
 
 def test_a_span_with_nowhere_to_go_is_dropped_and_says_so(caplog):
-    """The answer when rule seven cannot be met is no mark, not a bad one."""
+    """The answer when the route rule cannot be met is no mark, not a bad one."""
     card = sheet_card()
     # Ground the route hatches from end to end, ten pixels between strands.
     # There is nowhere on it a mark can stand a cap height clear of a road,
@@ -187,7 +187,7 @@ def test_a_mark_prefers_clear_paper_to_lying_along_a_river():
 
 
 def test_an_end_tick_stops_short_of_the_route_rather_than_touching_it():
-    """A tick is part of the mark, so rule seven binds it too.
+    """A tick is part of the mark, so the route rule binds it too.
 
     The tick points at the road, because what it says is where on the road the
     span starts. On ground where the mark sits close, the leg that points at
@@ -210,7 +210,7 @@ def test_a_span_mark_sits_at_the_hand_drawn_offset():
     """The offset is measured off hand-drawn marks, not chosen between extremes.
 
     2.6 cap heights reads as detached and 0.9 reads as drawn on the road.
-    Hand-drawn marks run 10.7 to 14.5 card pixels from the route at a 14 px
+    Hand-drawn marks run 10.7 to 14.5 display pixels from the route at a 14 px
     cap height, which is 0.8 to 1.0 cap heights, and the offset is 1.2.
     """
     assert SPAN_OFFSET_CAPS == 1.2

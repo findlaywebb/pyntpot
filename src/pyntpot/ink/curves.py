@@ -93,9 +93,9 @@ def offset_curve(shape: list[Pt], side: int, offset_px: float) -> list[Pt]:
     pushed along the bisector of its two segments instead, far enough that both
     limbs stand off by the offset, which is a mitre and keeps the corner. Past
     `MITER_LIMIT` the mitre is cut back to a bevel, so a hairpin does not throw
-    a spike across the sheet.
+    a spike across the canvas.
 
-    `side` is +1 for the left of travel in card pixels and -1 for the right.
+    `side` is +1 for the left of travel in display pixels and -1 for the right.
     """
     out: list[Pt] = []
     for i, p in enumerate(shape):
@@ -126,7 +126,7 @@ def unit_normal(pts: list[Pt], i: int, j: int) -> Pt | None:
     """The unit normal of one segment, or None when there is no segment.
 
     Unlike `polyline.normal_at` it points right of the direction of travel
-    with y up (left of it in card pixels, whose y runs down), is taken along
+    with y up (left of it in display pixels, whose y runs down), is taken along
     the one segment from `i` to `j`, and is None rather than a fallback when
     that segment is degenerate.
     """

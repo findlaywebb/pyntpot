@@ -7,8 +7,8 @@ pen path; `HandStyle`, the seed every random draw of a label starts from;
 dataclasses of plain values, their fields documented by `#:` comments.
 
 It letters nothing and reads no theme. The defaults are the painter's own
-class defaults, not a resolved theme. Which names a map letters, and how many,
-is map policy and lives with the maps.
+class defaults, not a resolved theme. Which names are lettered, and how many,
+is the caller's policy; the `maps` package keeps it.
 
 Invariants: every field belongs to exactly one style group across the
 package; the module imports nothing from `pyntpot` but `ink`, for the brush and
@@ -39,7 +39,7 @@ class HandStyle:
     """The seed the hand draws every label's randomness from."""
 
     #: Every random draw a label makes comes from this plus the label's own
-    #: name, so an unchanged map letters identically on every render and a
+    #: name, so an unchanged set of names letters identically on every render and a
     #: deliberate reshuffle is one number.
     label_seed: int = 17
 
@@ -65,7 +65,7 @@ class NibStyle:
     #: underline, a pin), one step lighter, so the line recedes behind the name.
     label_leader_brush: str = "MAJ6-e"
     label_leader_width_px: float = 0.85
-    #: The pen's angle in degrees from the page's horizontal, in card pixels
+    #: The pen's angle in degrees from the page's horizontal, in display pixels
     #: with y down, so a negative angle turns anticlockwise on the page; and how
     #: much of the width it takes off a stroke drawn along it. Without this the
     #: letters come out one thickness the whole way round, which is a plotter
@@ -86,7 +86,7 @@ class NibStyle:
     #: river in the paper's own cream rather than written into it in a dark ink:
     #: the water is a mid-tone, so a dark ink is fighting it from the wrong side.
     #: Measured on a painted river, black holds 3.9:1 and this holds 4.7:1,
-    #: and the difference on the sheet is larger than the ratio suggests because
+    #: and the difference on the plate is larger than the ratio suggests because
     #: the letters no longer share a value with the bridges crossing them.
     label_in_water_ink: str = "#f8f4e9"
 

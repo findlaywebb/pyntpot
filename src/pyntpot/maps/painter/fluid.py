@@ -1,6 +1,6 @@
 """The fluid phase: one bounded shallow-water pass over everything the ribbon carries.
 
-Key names: `paint_fluid`, which runs the pass once for the whole sheet, on a grid
+Key names: `paint_fluid`, which runs the pass once for the whole map, on a grid
 `WashStyle.fluid_grid` times coarser than the plate, rather than once a class. The
 water does not know where one wash stops and the next begins, so the drying runs
 across a class boundary the way it does on paper. What comes back multiplies the

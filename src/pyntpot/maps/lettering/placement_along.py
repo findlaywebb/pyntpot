@@ -209,13 +209,13 @@ def _place_along(
         lb: The label, carrying the whole feature as its `baseline`.
         tw: How wide the name is.
         th: How tall it is.
-        terms: The card, the darkness grid, what is already on the sheet, the
+        terms: The card, the dark grid, what is already on the map, the
             named road centrelines for the crossing cost and the route in
             weighted parts for the route cost.
         apart_from: How far along this same line each window this name already
             took started, in pixels of run. This is what stops the major
             river's two names converging on the same reach of water. Measured
-            along the water rather than across the sheet: a river doubles back,
+            along the water rather than across the map: a river doubles back,
             and two points half a kilometre apart on the water can be a
             hundred pixels apart on the paper, which is what left the second
             "Eden" with no window at all.

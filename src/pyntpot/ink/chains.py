@@ -32,7 +32,7 @@ def join_strokes(lines: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
     OSM cuts a road at every junction, every bridge and every change of tag, so
     what a person calls one street arrives as dozens of ways. The lettering
     gathers them too (`maps.lettering.picks_roads.pick_roads`, "a numbered
-    road is one road"), and painting them apart makes the map look broken.
+    road is one road"), and painting them apart makes the painting look broken.
     Unjoined, each piece is a stroke of its own: a nib set down with a blot,
     tapered to a point at both ends, and lifted again. A median piece of 2.5
     display pixels against a 30 px lift is all taper and blot and never a line,
@@ -135,7 +135,7 @@ def join_chains(lines: list[list[Pt]], tol: float) -> list[list[Pt]]:
     not one of them closes. And a saddle cell hands marching squares two
     segments through one vertex, so a ring that crosses one comes back as two
     open chains; closing each of those with a straight line draws a chord
-    across the map that can leave a wedge of land lying over the sea.
+    across the canvas that can leave a wedge of land lying over the sea.
 
     Args:
         lines: Polylines, in whatever space they were traced. They are copied,

@@ -18,7 +18,7 @@ def test_a_tiny_card_writes_three_plates_and_a_manifest_that_names_them(tmp_path
 
 
 def test_the_dark_grid_has_the_cells_the_style_asks_for(tmp_path):
-    """The manifest's darkness grid is `dark_grid` cells wide and high, each in 0 to 1."""
+    """The manifest's dark grid is `dark_grid` cells wide and high, each in 0 to 1."""
     job = tiny_job(tmp_path / "plates")
     manifest = paint_plates(job.basemap, job.style, tmp_path / "plates").manifest
     gw, gh = job.style.card.dark_grid

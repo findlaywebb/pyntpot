@@ -134,7 +134,7 @@ def _derived(options: BasemapStyle, factor: float) -> dict[str, Any]:
 def _place_marks(
     places: list[dict[str, Any]], proj: Projection, clip: Clip
 ) -> list[dict[str, Any]]:
-    """Project the supplied places, keeping the ones inside the sheet."""
+    """Project the supplied places, keeping the ones inside the map."""
     xmin, ymin, xmax, ymax = clip
     out = []
     for place in places:

@@ -198,7 +198,7 @@ def draw_plate(
         plates: The painted plates, beside which the label plate is written.
         placed: The placed labels.
         spans: The placed spans.
-        route_px: The track in card pixels.
+        route_px: The track in display pixels.
         style: The style the card is lettered in; its brush style makes the
             lettering's brushes and ink pads.
         route: `centreline` or `outline`; the style's when not given.

@@ -39,7 +39,7 @@ def test_the_deformed_outline_wobbles_at_more_than_one_scale():
 
 
 def test_no_one_displacement_runs_away_with_a_long_segment():
-    """A field boundary drawn as two points must not be thrown across the sheet."""
+    """A field boundary drawn as two points must not be thrown across the canvas."""
     box = [(0.0, 0.0), (4000.0, 0.0), (4000.0, 3000.0), (0.0, 3000.0)]
     out = deform_ring(box, (np.random.default_rng(2), 0.26, 4, 0.55, 16.0, 0.5))
     # Every point stays within the cap of the straight edge it came off, give or

@@ -54,9 +54,9 @@ def point_in_ring(x: float, y: float, ring: list[Pt]) -> bool:
 def clip_ring(ring: list[Pt], box: tuple[float, float, float, float]) -> list[Pt]:
     """Sutherland-Hodgman clip of a ring to an axis-aligned rectangle.
 
-    A wood relation that covers the whole sheet is not dropped for being big:
-    it is cut down to the sheet, so a large wood still shades the corner of the
-    sheet it covers.
+    A wood relation that covers the whole map is not dropped for being big:
+    it is cut down to the map, so a large wood still shades the corner of the
+    map it covers.
 
     Args:
         ring: Closed ring in metres.

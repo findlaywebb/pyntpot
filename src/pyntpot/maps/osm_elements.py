@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-#: The tags a candidate carries forward, so the label agent can see what a thing
+#: The tags a candidate carries forward, so the caller can see what a thing
 #: is and `landmark_reach` can see how tall it stands.
 LANDMARK_TAG_KEYS = (
     "tourism",
@@ -138,7 +138,7 @@ def _soften(line: list[Pt], eps: float, options: BasemapStyle) -> list[Pt]:
     """Simplify a line, then round its corners off.
 
     A road drawn from OSM nodes is a survey; up to two Chaikin passes, when the
-    options generalise, make it a line someone drew, like the rest of the sheet.
+    options generalise, make it a line someone drew, like the rest of the map.
     """
     out = simplify(line, eps)
     if options.generalise and options.smooth_passes:
@@ -191,7 +191,7 @@ def _road(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
     # every junction, and answering the interaction test for each cut
     # alone would keep the block that crosses the route and drop the
     # next block along, so every side street would come off the route
-    # as a stub and the sheet would read as a comb. A road the track ran
+    # as a stub and the map would read as a comb. A road the track ran
     # along or across is on the card for as long as the card holds it.
     # A way with neither a number nor a name has no road to belong to,
     # so it is decided on its own.

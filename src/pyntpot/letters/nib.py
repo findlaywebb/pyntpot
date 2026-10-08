@@ -1,7 +1,7 @@
 """The nib: it runs the hand's marks through the ink engine onto one RGBA plate.
 
 Key types: `NibSurface`, what the nib writes on (the render canvas, the
-display-to-render `scale`, the darkness under the sheet and the paper's
+display-to-render `scale`, the darkness under the plate and the paper's
 granulation cell); `plate`, which strokes marks onto it and writes the file;
 `nib_brushes`, the brush per role and type size.
 
@@ -9,13 +9,13 @@ The plate is composited normally rather than multiplied, which is the whole
 reason it is its own plate: the backing wash is the paper's own colour and
 multiply can only darken. Everything on it is stroked through the same ink
 engine as the roads and the rivers and gated on the same paper, so the
-lettering is made of the map's ink and not printed over it. A broad nib held at
+lettering is made of the painted ink and not printed over it. A broad nib held at
 a fixed angle draws its full width across itself and almost nothing along
 itself, so a glyph's width follows the angle between the stroke and the nib.
 
 `plate` builds its own `Sheet` from the paper group and the surface, in one
 place. It does not decide what is written, where, or in which ink a class of
-feature takes (the marks arrive with their ink), and it builds no dark field:
+feature takes (the marks arrive with their ink), and it builds no dark grid:
 the caller hands the grid as an array.
 
 Invariants: the same marks, surface and groups write the same pixels; a mark
@@ -76,7 +76,7 @@ class NibSurface:
     Attributes:
         canvas: The render grid; only its `w` and `h` are read.
         scale: The display-to-render factor every mark is multiplied by.
-        dark: How dark the sheet is under each pixel, an `h` by `w` float
+        dark: How dark the ground is under each pixel, an `h` by `w` float
             array in [0, 1].
         gran_px: The paper granulation's cell size, in render pixels.
     """
@@ -199,7 +199,7 @@ def _backing_wash(
     sticker cut round the letters. This is one soft blob a word, granulated on
     the paper's own pits with a pooled rim, and it is absent where the ground
     is already pale enough to read on, so it says "the paint was lifted before
-    this was written" rather than sitting under every name on the sheet.
+    this was written" rather than sitting under every name on the plate.
 
     Args:
         cover: The ink density of the marks that asked for the wash.
@@ -252,7 +252,7 @@ def _items(marks: Sequence[Mark], groups: NibGroups, scale: float) -> dict[str, 
         )
         # Four of the inks are the style's own and are named; a span carries a
         # fifth, resolved from its intent, and it arrives as the colour itself.
-        # Anything else falls back to the map's ink rather than writing a name
+        # Anything else falls back to the label ink rather than writing a name
         # in a colour nobody chose.
         key = str(mark.ink)
         if key not in inks:

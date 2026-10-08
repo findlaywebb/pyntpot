@@ -99,7 +99,7 @@ def test_load_plates_missing_a_plate_is_none(tmp_path: Path) -> None:
 
 
 class TestDarkArray:
-    """`dark_array` is the one conversion of a darkness grid to a plate-sized array."""
+    """`dark_array` is the one conversion of a dark grid to a plate-sized array."""
 
     def test_no_grid_is_a_flat_middling_field(self) -> None:
         """No grid gives 0.35 everywhere at the requested shape."""

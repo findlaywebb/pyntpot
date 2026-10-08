@@ -63,7 +63,7 @@ def test_a_settlement_is_lettered_once_however_many_pools_found_it():
     """The name Elm arrived as a settlement and again as the nearest named feature."""
     # The settlement pool and the landmark pool have never known about each
     # other, so a village could be lettered twice, the second
-    # time at the end of a long leader from the top of the sheet. The guard is in
+    # time at the end of a long leader from the top of the map. The guard is in
     # the one funnel both pools go through.
     elm_settlement = _named("Elm", "settlement", TIER_SETTLEMENT, 495, 168)
     elm_landmark = _named("Elm", "place", TIER_LANDMARK, 495, 168)
@@ -74,7 +74,7 @@ def test_a_settlement_is_lettered_once_however_many_pools_found_it():
 
 def test_the_repeat_guard_is_per_kind_so_the_major_river_keeps_both_names():
     """A long river is read in pieces and is deliberately named twice."""
-    # A guard that were one number for the whole sheet would either letter the
+    # A guard that were one number for the whole map would either letter the
     # Lyn once or letter Elm twice, so the allowance belongs to the family.
     river_repeats = [
         _named("Lyn", "river", TIER_RIVER, 100, 100),

@@ -231,7 +231,7 @@ def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> li
 
     Zhang-Suen deletes a small round component from both sides at once and
     leaves nothing behind, so without this the tittle of an `i` and a `j` and
-    the whole of a full stop are missing from the sheet. A blob is drawn as a
+    the whole of a full stop are missing from the plate. A blob is drawn as a
     small ring rather than a point, because a nib asked to draw one point
     leaves no mark at all.
     """

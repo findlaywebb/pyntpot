@@ -183,7 +183,7 @@ def length(line: list[Pt]) -> float:
 def cumulative_length(line: Sequence[Pt], scale: float = 1.0) -> list[float]:
     """The length covered at each point of a polyline, from zero at its first.
 
-    Each step is divided by `scale` (floored at 1e-9), so a track drawn in card
+    Each step is divided by `scale` (floored at 1e-9), so a track drawn in display
     pixels with `scale` pixels per metre gives metres; at the default of 1.0 it
     is the length in the line's own units, since dividing by one is exact.
     """

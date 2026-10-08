@@ -2,7 +2,7 @@
 
 Key names: `_span_ticks`, the two short ticks at the ends of a span that point at the
 stretch of route it covers; `_span_label`, the name a span carries, set along its line
-when the span runs across the page and beside it when it does not.
+when the span runs across the map and beside it when it does not.
 
 It does not draw the span's line, choose its side or place the name among the others
 (the placer does that with every other name).

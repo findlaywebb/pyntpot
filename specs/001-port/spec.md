@@ -118,11 +118,13 @@ ported code keeps its old names until P4.
 
 ## Open questions
 
-- The OpenTopoData daily budget is enforced per process only. A
-  per-cache-dir counter adds state. Default is per process.
+None.
 
 ## Resolved questions
 
+- OpenTopoData budget (ADR 0004): a counter per provider instance, 1000
+  calls by default; nothing is shared between instances or processes, and
+  no per-cache-dir counter is kept.
 - Coverage target (2026-10-07): a measured baseline that ratchets, not 100
   percent branch coverage before the first release. P5.2 sets it; ADR 0011
   records it.

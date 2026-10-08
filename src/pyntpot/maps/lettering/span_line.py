@@ -110,20 +110,20 @@ def span_line(
        given up when it cannot be drawn clear on this side.
 
     Args:
-        route_px: The whole track in card pixels. The whole of it: the mark has
+        route_px: The whole track in display pixels. The whole of it: the mark has
             to clear the parts of the route the span does not cover as well.
         i0: First route index of the span.
         i1: Last route index of the span.
         side: +1 for the left of travel, -1 for the right, signed the way
             `_side_at` signs it.
-        offset_px: About how far off the route the mark sits, in card pixels.
+        offset_px: About how far off the route the mark sits, in display pixels.
             About: the offset is taken off the smoothed shape, so the gap to
             the track is whatever the smoothing left.
         clear_px: How near the route the mark may come. `SPAN_CLEAR_CAPS` of a
             cap height by default, worked back from the offset.
 
     Returns:
-        The mark in card pixels, or an empty list when it cannot be drawn clear
+        The mark in display pixels, or an empty list when it cannot be drawn clear
         of the route. An empty list is an answer: the span is dropped, and said
         to be dropped, rather than drawn across the road.
     """
@@ -282,7 +282,7 @@ def _first_loop(line: list[Pt]) -> tuple[int, int, Pt] | None:
 
 
 def doubling_px(sub: list[Pt], apart: float = 0.25) -> float:
-    """How near a stretch comes back to itself, in card pixels.
+    """How near a stretch comes back to itself, in display pixels.
 
     For every point, the distance to the nearest part of the stretch at least
     `apart` of its length away in index; the median of those. An out-and-back

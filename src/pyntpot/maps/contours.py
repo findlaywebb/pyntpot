@@ -208,9 +208,9 @@ def sea_rings(
     the sea and the beach are both at 0 m.
 
     The mask is padded with a ring of dry ground first, so every sea region
-    comes back as a closed loop rather than a line running off the sheet. The
+    comes back as a closed loop rather than a line running off the map. The
     padding sits outside the fetched box, which is already 1.5 km wider than the
-    track, so the seam is never on the drawn sheet.
+    track, so the seam is never on the drawn map.
 
     Args:
         grid: Elevation rows, row 0 southernmost.

@@ -6,7 +6,7 @@ baseline; `river_name`, a river's name without its "River".
 It does not pick settlements or roads, and it does not place a name.
 
 Invariants: the major river alone may be lettered twice, and only when it crosses most of
-the sheet.
+the map.
 """
 
 import math
@@ -31,19 +31,19 @@ from pyntpot.maps.lettering.placement_window import _on_line
 IN_WATER_CAPS = 2.2
 
 
-#: How many watercourses a sheet names. The major one always, and the best
+#: How many watercourses a map names. The major one always, and the best
 #: medium only when it is worth having beside it. Never a brook.
 RIVER_MAX = 2
 #: The fewest points a watercourse needs to be a line.
 MIN_LINE_POINTS = 2
 RIVER_REL_FLOOR = 0.2
 
-#: How much water a river has to have on the sheet before it is lettered twice,
+#: How much water a river has to have on the map before it is lettered twice,
 #: as a share of the card's longer side. The reason for the second name is that
-#: a river crossing the whole sheet is read in pieces; a river clipping a corner
+#: a river crossing the whole map is read in pieces; a river clipping a corner
 #: is read in one, and the second name has nowhere to go but away from its own
-#: water. With a single major watercourse on the sheet and only 295 px of
-#: water on a 900 px sheet, it would take both allowances and write the second
+#: water. With a single major watercourse on the map and only 295 px of
+#: water on a 900 px map, it would take both allowances and write the second
 #: one in open paper past the end of the river. The allowance is earned by the
 #: run, not by the rank.
 MAJOR_RIVER_TWICE_FRAC = 0.55
@@ -56,7 +56,7 @@ def pick_rivers(
     route_px: list[Pt],
     budget: int = RIVER_MAX,
 ) -> list[Label]:
-    """Which watercourses the sheet names, by run inside the card and proximity.
+    """Which watercourses the map names, by run inside the card and proximity.
 
     The painting classes answer "how wide is the brush" and are computed from
     run length alone, which cannot separate two tributaries of the same length.
@@ -67,7 +67,7 @@ def pick_rivers(
         basemap: The basemap, for the width each class was painted at.
         lines: The named lines, for the watercourses.
         card: The card, for the projection and its size.
-        route_px: The track in card pixels.
+        route_px: The track in display pixels.
         budget: How many to letter.
 
     Returns:

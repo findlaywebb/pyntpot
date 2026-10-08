@@ -35,7 +35,7 @@ def test_shade_bands_come_back_darkest_and_lightest_apart():
 
 
 def test_the_sun_never_lights_a_flat_plain():
-    """Flat ground carries no shade, so a flat sheet stays empty paper."""
+    """Flat ground carries no shade, so a flat map stays empty paper."""
     flat = [[100.0] * 6 for _ in range(6)]
     signal = _shade(flat, 30.0, 30.0, 315.0, 42.0, 1.4)
     assert all(abs(value) < 1e-6 for row in signal for value in row)

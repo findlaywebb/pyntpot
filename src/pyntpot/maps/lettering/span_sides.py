@@ -9,7 +9,7 @@ It does not draw a line and does not resolve span requests.
 
 Invariants: a side is `+1` or `-1`; `_freer_side` and `route_turn` sign it towards the
 normal `(-dy, dx)`, while `_convex_side` signs it as `span_line` draws it (+1 the left of
-travel in card pixels); a straight or S-shaped stretch has no outside, and a bend never
+travel in display pixels); a straight or S-shaped stretch has no outside, and a bend never
 outweighs a clearly clearer side.
 """
 
@@ -98,7 +98,7 @@ SPAN_CURVE_WEIGHT = 0.08
 #: most important number here, and the one the outside-of-the-bend rule
 #: lives or dies on.
 #:
-#: The route in card pixels is sampled about a pixel apart, and per-vertex turn
+#: The route in display pixels is sampled about a pixel apart, and per-vertex turn
 #: at that spacing is mostly the sampling, so the stretch is resampled before
 #: it is measured. **The right spacing is near the offset the bracket will be
 #: drawn at** (`SPAN_OFFSET_CAPS`), because contraction is what an offset line
@@ -114,13 +114,13 @@ SPAN_CURVE_SCALE_CAPS = 1.5
 def route_turn(line: list[Pt]) -> tuple[float, float]:
     """How far a polyline turns, net and gross, in degrees.
 
-    Signed the way a turn is signed in card pixels, where y runs down:
+    Signed the way a turn is signed in display pixels, where y runs down:
     positive turning is towards the normal `(-dy, dx)`. Only the ratio of the
     two numbers is used to decide anything, because which drawn side the bend's
     outside corresponds to is settled by measuring the marks, in `_convex_side`.
 
     Args:
-        line: The polyline, in card pixels, already sampled at the scale the
+        line: The polyline, in display pixels, already sampled at the scale the
             bend is to be read at.
 
     Returns:
@@ -154,7 +154,7 @@ def bend_strength(sub: list[Pt], scale_px: float) -> float:
     `_convex_side` on the drawn marks rather than from a normal.
 
     Args:
-        sub: The stretch of route the span covers, in card pixels.
+        sub: The stretch of route the span covers, in display pixels.
         scale_px: The spacing the stretch is resampled at before its turning
             is measured.
 
@@ -184,7 +184,7 @@ def _outward(sub: list[Pt]) -> tuple[Pt, Pt]:
     the bend.
 
     Args:
-        sub: The stretch of route, in card pixels.
+        sub: The stretch of route, in display pixels.
 
     Returns:
         `(middle, outward)`: the chord's middle, and a unit vector, or a zero
@@ -221,7 +221,7 @@ def _convex_side(span: Span, route_px: list[Pt], cap_px: float) -> tuple[int, di
 
     Args:
         span: The span, for its extent.
-        route_px: The track in card pixels.
+        route_px: The track in display pixels.
         cap_px: The lettering's cap height, which sets the probe offset.
 
     Returns:
@@ -269,7 +269,7 @@ def _curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_p
 
     Args:
         span: The span, for its extent.
-        route_px: The track in card pixels.
+        route_px: The track in display pixels.
         base: The side the free-paper rule chose, +1 or -1.
         margin: How far apart the two sides' mean darkness was.
         cap_px: The lettering's cap height, which sets the reading scale.
@@ -322,7 +322,7 @@ def _freer_side(
 
     Returns:
         `(side, margin)`: +1 for the side the normal `(-dy, dx)` points to,
-        which is the right of travel in card pixels where y runs down, -1 for
+        which is the right of travel in display pixels where y runs down, -1 for
         the other, and the difference in mean darkness between the two sides,
         from 0 to 1. The margin is what the bend's vote is weighed against.
     """

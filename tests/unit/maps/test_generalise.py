@@ -23,5 +23,5 @@ def test_generalise_returns_few_big_smooth_shapes():
 
 
 def test_generalise_of_nothing_is_nothing():
-    """An empty layer stays empty rather than becoming a full-sheet blob."""
+    """An empty layer stays empty rather than becoming a full-map blob."""
     assert generalise([], [], CLIP, Generalisation(cell=50.0)) == []

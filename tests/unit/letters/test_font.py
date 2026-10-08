@@ -7,7 +7,7 @@ import pytest
 from pyntpot.letters.font import DEFAULT_FONT, load
 from pyntpot.letters.trace import CENTRELINE, OUTLINE
 
-#: Every string this map actually letters, so the alphabet sheet and the tests
+#: Every string this map actually letters, so the alphabet specimen and the tests
 #: cover the same ground the card does.
 MAP_STRINGS = (
     "Monmouth",

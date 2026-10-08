@@ -7,7 +7,7 @@ well: `BRUSH_TREATMENTS`, keyed by sheet row `"1"` to `"8"`; `PEN_ROWS`, the row
 nib; and `BRUSH_COLOURS`, keyed by the id's three-letter prefix and then the colour column.
 
 A brush id `<PREFIX><row>-<column>`, such as `MAJ2-a`, is an opaque sheet cell name: this
-module never reads the prefix as a map class. Which class takes which cell is the style's
+module never reads the prefix as a feature class. Which class takes which cell is the style's
 `brushes` field. It stamps nothing and reads no paper.
 
 Invariants: a brush id naming a row or colour the sheet lacks raises `ValueError`; the

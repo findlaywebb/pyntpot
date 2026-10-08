@@ -1,6 +1,6 @@
 """Strand separation: the two limbs of a doubled-back route drawn beside each other.
 
-Key names: `separate_strands`, the route in card pixels with each doubled-back
+Key names: `separate_strands`, the route in display pixels with each doubled-back
 stretch pushed apart; `STRAND_GAP_WIDTHS`, the gap as a multiple of the route's
 stroke width.
 
@@ -44,7 +44,7 @@ def separate_strands(
     """Draw the two limbs of a doubled-back stretch beside each other.
 
     Where the track came back along a path it had already run, the two passes
-    are the same line on the sheet and the reader has nothing to read: at the
+    are the same line on the map and the reader has nothing to read: at the
     route's own weight the second pass lands in the first one's gaps and the
     out-and-back reads as a single street. This pushes each pass off that shared
     line onto its own side of it, which is what a hand drawing the same route
@@ -59,7 +59,7 @@ def separate_strands(
     which is a lap repeated, are parted by the order they were run in.
 
     Args:
-        route_px: The track in card pixels.
+        route_px: The track in display pixels.
         gap_px: How far apart, centre to centre, two strands are drawn.
 
     Returns:

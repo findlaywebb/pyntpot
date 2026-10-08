@@ -16,7 +16,7 @@ from pyntpot.maps.lettering_window import baseline
 from support.basemaps import class_style, river_label
 from support.lettering import open_hand
 
-#: A gentle, nearly straight river course, in card pixels.
+#: A gentle, nearly straight river course, in display pixels.
 COURSE = [(float(x), 100.0 + 4.0 * math.sin(x / 90.0)) for x in range(0, 400, 8)]
 
 

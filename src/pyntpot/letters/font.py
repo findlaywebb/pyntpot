@@ -9,7 +9,7 @@ and caches the result a glyph.
 The face is vendored under `fonts/`; its licence is `LICENSE-FONT` at the
 repository root. It is Patrick Hand, SIL Open Font License 1.1: an upright,
 unjoined print hand with even proportions and a large x-height. A looping
-connected script is too scripty and ornate for a map, however well it is
+connected script is too scripty and ornate for a plate of names, however well it is
 drawn. Patrick Hand is the opposite end of the same shelf.
 
 It does not rasterise, thin or trace (`letters.skeleton`, `letters.trace`), and
@@ -218,7 +218,7 @@ class OutlineFont:
 
     @property
     def name(self) -> str:
-        """The face's file name, for a note that says what lettered the map."""
+        """The face's file name, for a note that says what lettered the plate."""
         return self.path.stem
 
     def _name_of(self, ch: str) -> str | None:
@@ -234,7 +234,7 @@ class OutlineFont:
         Returns:
             The glyph. A character the face has not got comes back with a
             fixed advance of 0.28 em and nothing to draw, which is what a
-            missing glyph should look like on a map and not a box.
+            missing glyph should look like on a plate and not a box.
         """
         got = self._cache.get(ch)
         if got is not None:

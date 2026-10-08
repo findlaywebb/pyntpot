@@ -26,7 +26,7 @@ class BrushStyle:
     and are on.
     """
 
-    #: Seeds, so the same box paints the same sheet every time.
+    #: Seeds, so the same box paints the same plate every time.
     ink_seed: int = 91
     #: Watercourse width in display pixels: coefficient and exponent on the box
     #: in kilometres, then a floor and a ceiling. The exponents are negative, so

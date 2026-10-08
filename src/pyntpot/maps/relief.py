@@ -6,7 +6,7 @@ shaded and returned as a `data:` URI of a greyscale-plus-alpha PNG; `shade_bands
 the same shade cut into a few levels and traced as filled vector bands.
 
 A lit slope paints white and a shaded one black over a transparent flat ground, so
-one image reads as relief on a pale sheet and on a dark one. It does not fetch
+one image reads as relief on a pale ground and on a dark one. It does not fetch
 elevations, trace contours or place anything on a card. Invariants: flat ground
 carries no shade, and the raster and the bands compute the same signal.
 """
@@ -151,7 +151,7 @@ def hillshade_png(
 
     The image is greyscale plus alpha rather than plain grey: a lit slope paints
     white and a shaded one paints black, both over a transparent flat ground, so
-    the same PNG reads as relief on a pale sheet and on a dark one and the page
+    the same PNG reads as relief on a pale ground and on a dark one and the page
     needs no blend mode to make it work.
 
     Args:

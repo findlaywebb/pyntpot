@@ -2,7 +2,7 @@
 
 Key names: `NamedLines`, the roads, rivers, coast and crossings in card metres;
 `named_lines`, which builds them from a basemap; `road_lines`, which turns them into
-card-pixel lines a name is charged for crossing.
+display-pixel lines a name is charged for crossing.
 
 It does not choose a name or place one.
 
@@ -98,7 +98,7 @@ def named_lines(basemap: Basemap, tol_px: float) -> NamedLines:
 
 
 def road_lines(lines: NamedLines, card: Card) -> list[list[Pt]]:
-    """Everything on the card a name should not be laid across, in card pixels.
+    """Everything on the card a name should not be laid across, in display pixels.
 
     The named roads, the unnamed lanes, and the watercourses. All three are
     marks on the paper and a name written over any of them is harder to read,

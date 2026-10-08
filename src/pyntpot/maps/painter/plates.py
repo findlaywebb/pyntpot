@@ -7,8 +7,8 @@ wash and, when the style draws it, the route's pen plate, and writes the manifes
 Two plates carry the picture. `paper` is the card itself, drawn as it is. `wash` carries
 every pigment, white where it lays down nothing, and the page multiplies it over the
 card: the land cover and the relief are trimmed to the ribbon, the sea runs to the card
-edge, and the ink is drawn over the whole sheet. The dark grid, a coarse map of how dark
-the sheet is, goes into the manifest, so a label can be placed on light ground rather
+edge, and the ink is drawn over the whole map. The dark grid, a coarse grid of how dark
+the map is, goes into the manifest, so a label can be placed on light ground rather
 than across a wood.
 
 The phases draw from the job's shared generators, so the order they are called in here
@@ -39,7 +39,7 @@ from pyntpot.maps.style import Style
 
 
 def _dark_grid(job: PaintJob, lum: np.ndarray) -> DarkGrid:
-    """How dark the sheet is, in the style's grid of cells, from its mean luminance."""
+    """How dark the map is, in the style's grid of cells, from its mean luminance."""
     rh, rw = job.shape
     gw, gh = job.style.card.dark_grid
     ys = np.linspace(0, rh, gh + 1).astype(int)

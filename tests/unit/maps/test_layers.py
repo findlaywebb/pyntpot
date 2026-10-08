@@ -36,7 +36,7 @@ LNGS = [-3.8400 + 0.00040 * i for i in range(60)]
 #: A feature running alongside the track, 33 m off it for about a kilometre.
 BESIDE = [(LATS[i] + 0.00030, LNGS[i]) for i in range(5, 32)]
 
-#: The same shape, 660 m off: near enough to be on the sheet, far enough that
+#: The same shape, 660 m off: near enough to be on the map, far enough that
 #: the session never met it.
 AWAY = [(LATS[i] + 0.00600, LNGS[i]) for i in range(5, 32)]
 

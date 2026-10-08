@@ -49,7 +49,7 @@ _WET_FLOOR = 0.05
 Blooms = tuple[np.random.Generator, int, float, float, float]
 
 #: The settings that take the rim from `flow_edge`: how fast the width grows with area, the
-#: reference area as a share of the sheet and the decay length as a share of the
+#: reference area as a share of the canvas and the decay length as a share of the
 #: rim's width.
 Flow = tuple[float, float, float]
 
@@ -72,7 +72,7 @@ def flow_edge(
         sheet: The paper's noise fields.
         rim_px: The rim's width at the reference area.
         exp: How fast the width grows with area.
-        ref_frac: The reference area, as a share of the sheet.
+        ref_frac: The reference area, as a share of the canvas.
         frac: The decay length as a share of `rim_px`.
 
     Returns:
@@ -159,7 +159,7 @@ class WashOptions:
     uneven: float = 0.22
     #: How much the paper's tooth lightens it.
     tooth: float = 0.34
-    #: The shared wet-area map, when there is one. Inside it this wash bleeds
+    #: The shared wet-area field, when there is one. Inside it this wash bleeds
     #: into whatever is beside it and gives up most of its rim, because a class
     #: boundary under water is not an edge.
     wet: np.ndarray | None = None

@@ -68,7 +68,7 @@ SPAN_INTENT_INK = {
     "celebration": "#9a7212",
 }
 
-#: The user's own place, as a small house in card pixels with y down, drawn in
+#: The user's own place, as a small house in display pixels with y down, drawn in
 #: the map's own ink on the label plate, so the card and the page get the same
 #: pixels and reserve the same room for it.
 HOME_GLYPH = [(-7.0, 1.5), (0.0, -6.5), (7.0, 1.5), (7.0, 8.0), (-7.0, 8.0), (-7.0, 1.5)]
@@ -98,7 +98,7 @@ def box_size(hand: Hand, text: str, size: float) -> tuple[float, float]:
 
 
 def marks(hand: Hand, placed: Sequence[Label], spans: Sequence[Span]) -> list[Mark]:
-    """Everything on the label layer, as strokes in card pixels.
+    """Everything on the label layer, as strokes in display pixels.
 
     Args:
         hand: The hand that writes and wanders every mark.
@@ -173,7 +173,7 @@ def _crc(*parts: object) -> int:
 def _ink(lb: Label) -> str:
     """Which ink a label is written in: an ink token, or a colour.
 
-    A span is the one thing on the sheet whose colour is a judgement rather
+    A span is the one thing on the map whose colour is a judgement rather
     than a category, and the judgement is the payload's `intent`, resolved here
     from `SPAN_INTENT_INK`. A name on the water is written in the water's own
     ink, the colour of the thing it is now written on.

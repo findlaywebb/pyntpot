@@ -183,7 +183,7 @@ def test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_sheet(
     # meandering river is a fraction of the water between the two, and on the Lyn
     # it rejected every window the second name had left.
     card = sheet_card()
-    # A hairpin: two long reaches whose ends are near each other on the sheet.
+    # A hairpin: two long reaches whose ends are near each other on the map.
     down = [(60.0 + x * 0.6, 60.0 + x * 0.02) for x in range(0, 300, 4)]
     back = [(240.0 - x * 0.6, 74.0 + x * 0.02) for x in range(0, 300, 4)]
     water = down + back
@@ -264,7 +264,7 @@ def test_two_leaders_that_cross_are_swapped_over():
 
 
 def test_a_swap_that_reads_worse_is_refused():
-    """The swap is offered, not imposed: a name is never pushed off the sheet."""
+    """The swap is offered, not imposed: a name is never pushed off the map."""
     # A wide name and a narrow one can cross, and the wide one does not fit where
     # the narrow one is sitting. A shorter pair of leaders is not worth a name in
     # the torn margin.

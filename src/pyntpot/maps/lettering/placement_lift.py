@@ -25,7 +25,7 @@ _FEWEST_FOR_A_SEGMENT = 2
 _ZERO_LENGTH = 1e-9
 
 #: How far from the horizontal a window may run, in degrees, before a name is
-#: not set along it. A name set down the sheet is read by tilting the head,
+#: not set along it. A name set down the map is read by tilting the head,
 #: which is a worse fault than a name that does not follow its own feature, so
 #: a steep window is not used for any kind outside `TILT_EXEMPT_KINDS`.
 #:
@@ -166,7 +166,7 @@ def lift_middle(lb: Label, side: float) -> float:
 def _offset_line(line: list[Pt], lift: float) -> list[Pt]:
     """A polyline pushed off itself by `lift`, on the normal at each point.
 
-    Signed: positive is the upper side in card pixels, where y runs down. This
+    Signed: positive is the upper side in display pixels, where y runs down. This
     is the line a curved name is really written on, so it is what both the
     boxes and the pen use.
     """
@@ -214,7 +214,7 @@ def _curved_boxes(window: list[Pt], lb: Label, th: float, side: float | None = N
 def _tilt(line: list[Pt]) -> float:
     """How far a run leaves the horizontal, in degrees, ignoring its direction.
 
-    A name set down the sheet is read by tilting the head, which is a worse
+    A name set down the map is read by tilting the head, which is a worse
     fault than a name that does not follow its own feature, so a steep window
     is not used for any kind outside `TILT_EXEMPT_KINDS`.
     """

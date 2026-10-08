@@ -4,12 +4,12 @@ Key name: `journal_geometry`, which takes the track in metres and the card, ribb
 brush style groups, and returns the card box, the render and display sizes, the ribbon
 radius and the painted widths every layer is stated in.
 
-Every size on the sheet is derived from the track's span, so a 13 km box and a 3 km box
+Every size on the map is derived from the track's span, so a 13 km box and a 3 km box
 are drawn with the same weights on screen rather than the same weights on the ground.
 It does not fetch, project or clip anything and it paints nothing. Invariants: the
 card's aspect lies within the ribbon group's limits; the ribbon radius is a constant
 times the square root of the span plus a small-box offset, clamped, so a generous ribbon
-on a small box never swells to the whole sheet on a big one.
+on a small box never swells to the whole map on a big one.
 """
 
 from __future__ import annotations
@@ -50,17 +50,17 @@ def journal_geometry(
 ) -> dict[str, Any]:
     """The card, its ribbon radius, and every size the plate is painted at.
 
-    Every size on the sheet is derived from this, so a 13 km box and a 3 km box
+    Every size on the map is derived from this, so a 13 km box and a 3 km box
     are drawn with the same weights on screen rather than the same weights on
     the ground. The ribbon is a constant times the square root of the box plus
     a small-box offset: that keeps a generous ribbon on a small box without
-    swelling it to the whole sheet on a big one.
+    swelling it to the whole map on a big one.
 
     Args:
         route: The track in metres.
         card: The card's display size and supersampling.
         ribbon: The ribbon's fit and the card's framing.
-        brush: The widths and thresholds the sizes on the sheet are stated in.
+        brush: The widths and thresholds the sizes on the map are stated in.
 
     Returns:
         The card box, the render and display sizes, the ribbon radius, and the

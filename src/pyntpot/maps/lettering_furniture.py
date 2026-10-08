@@ -41,7 +41,7 @@ def leader(hand: Hand, ends: tuple[Pt, Pt], rng: np.random.Generator) -> list[Pt
     """A curve from the pin to the name, bent a different way each time.
 
     A leader exists only to disambiguate a pin, so it is the quietest mark on
-    the sheet and it never leaves at the same angle twice. It over-runs the pin
+    the map and it never leaves at the same angle twice. It over-runs the pin
     very slightly, because a real pen does not stop on the dot.
     """
     (ax, ay), (bx, by) = ends

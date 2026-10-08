@@ -53,7 +53,7 @@ def test_cumulative_length_divides_by_the_scale() -> None:
 
 
 def test_clip_line_splits_a_road_that_leaves_and_returns() -> None:
-    """A road that leaves the sheet comes back as two pieces, not one long jump."""
+    """A road that leaves the canvas comes back as two pieces, not one long jump."""
     line = [(0.0, 0.0), (50.0, 0.0), (500.0, 0.0), (50.0, 50.0), (10.0, 50.0)]
     pieces = clip_line(line, (0.0, 0.0, 100.0, 100.0))
     assert len(pieces) == 2

@@ -65,7 +65,7 @@ def test_two_strokes_crossing_never_double():
 def long_stroke(
     brush_id: str, width_px: float, over: str = "", length: int = 1500, **style_over: object
 ) -> tuple[np.ndarray, Brush]:
-    """One straight 1500 px stroke's density, as the swatch sheet paints it."""
+    """One straight 1500 px stroke's density, as a swatch image paints it."""
     h = 44
     style = replace(BrushStyle(), **style_over)
     brush, _ = brush_from_id(brush_id, width_px, 2.0, style, over)
@@ -120,7 +120,7 @@ def test_the_reservoir_is_read_off_the_final_density_not_the_deposits():
 
 
 def turned_stroke(vertical: bool, **style_over: object) -> tuple[np.ndarray, Sheet, Brush]:
-    """The same dry brush drawn across the same sheet, one way then the other."""
+    """The same dry brush drawn across the same paper, one way then the other."""
     size = 420
     style = replace(BrushStyle(), **style_over)
     brush, _ = brush_from_id("TRK4-d", 6.0, 2.0, style, "track")

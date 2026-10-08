@@ -122,7 +122,7 @@ LANDMARK_RADIUS_M = 300.0
 #: says, which is the whole point of a cathedral or a radio mast. Sixty metres
 #: of reach a metre of height puts a thirty-metre spire at 1.8 km and a 108 m
 #: dome at about 6.5 km, and the card's own box
-#: cuts anything the reader could not see on the sheet anyway.
+#: cuts anything the reader could not see on the map anyway.
 VISIBLE_PER_M = 60.0
 #: Past this, height stops buying reach. Nothing on a session's card is further
 #: off than this and still the thing a person would name.

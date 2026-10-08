@@ -33,7 +33,7 @@ from pyntpot.maps.style import Style
 
 log = logging.getLogger(__name__)
 
-#: The type size of the attribution line, in card pixels.
+#: The type size of the attribution line, in display pixels.
 ATTRIBUTION_SIZE_PX = 11.0
 
 #: How far the attribution block sits from the card's bottom and right edges.

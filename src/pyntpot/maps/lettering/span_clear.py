@@ -2,7 +2,7 @@
 
 Key names: `clear_of_route`, whether a line keeps its distance from every piece of the
 route; `_clear_of` and `_longest_clear`, a line pushed off the route and the longest
-stretch of it that stays clear; `span_bearing`, the angle a line makes across the page.
+stretch of it that stays clear; `span_bearing`, the angle a line makes across the map.
 
 It does not shape a span's line, choose its side or draw its ticks and name, and it
 never moves the route.
@@ -56,8 +56,8 @@ def _seg_in_box(a: Pt, b: Pt, x0: float, y0: float, x1: float, y1: float) -> boo
 #: it, in degrees of screen-space bearing.
 #:
 #: Three cases set the figure. The A66 drag and the long climb out of
-#: Keswick both run across the sheet and read well with the name along them;
-#: the A591 climb runs down the sheet from the viewer's point of view and does
+#: Keswick both run across the map and read well with the name along them;
+#: the A591 climb runs down the map from the viewer's point of view and does
 #: not, because the letters end up stacked and the reader has to tilt their
 #: head. Thirty-five degrees is where those three fall either side: it keeps
 #: anything within about a sixth of a turn of horizontal and rejects the rest.
@@ -71,7 +71,7 @@ def span_bearing(line: list[Pt]) -> float:
     """A span line's screen-space bearing off the horizontal, 0 to 90 degrees.
 
     The chord, not the local tangent: what decides whether a name reads along a
-    bracket is which way the bracket goes across the sheet, and a climb that
+    bracket is which way the bracket goes across the map, and a climb that
     wiggles about a westward chord still reads westward.
     """
     if len(line) < _FEWEST_FOR_A_SEGMENT:
@@ -100,7 +100,7 @@ CLEAR_BLUR = 4
 
 #: How far the repair may move one point of a mark in all, in clearances. Four,
 #: which is about two offsets. Past that the mark is not being nudged off a
-#: road, it is being thrown across the sheet, and the junction by the river
+#: road, it is being thrown across the map, and the junction by the river
 #: drew exactly that: a spike where the mark should have stopped short. A point
 #: that cannot be freed inside the cap is left where it is, and what is left of
 #: the mark is cut back to the run of it that is clear.
@@ -118,8 +118,8 @@ def clear_of_route(line: list[Pt], route_px: list[Pt], clear_px: float) -> bool:
     tenth of a pixel and is not is worse than one that is honestly refused.
 
     Args:
-        line: The mark, in card pixels.
-        route_px: The whole track in card pixels.
+        line: The mark, in display pixels.
+        route_px: The whole track in display pixels.
         clear_px: How near the route the mark may come.
 
     Returns:
@@ -183,7 +183,7 @@ def _clear_of(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
 
     Args:
         line: The mark as it came off the envelope.
-        route_px: The whole track in card pixels.
+        route_px: The whole track in display pixels.
         clear_px: How near the route the mark may come.
 
     Returns:
@@ -304,7 +304,7 @@ def _nearest_on(sub: list[Pt], p: Pt) -> int:
 def _side_at(sub: list[Pt], at: int, p: Pt) -> int:
     """Which side of the route a point falls on, at a known index.
 
-    +1 is the left of travel in card pixels, where y runs down the sheet: the
+    +1 is the left of travel in display pixels, where y runs down the map: the
     side `span_line` draws a mark on for `side=+1`.
     """
     a = sub[max(at - 1, 0)]

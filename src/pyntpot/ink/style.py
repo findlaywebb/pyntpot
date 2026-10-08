@@ -1,13 +1,13 @@
-"""The paper and the wash: what the ink engine lays a sheet and a wash with.
+"""The paper and the wash: what the ink engine lays paper and a wash with.
 
-Key types: `PaperStyle`, the sheet, its encoder and the compositing of the
+Key types: `PaperStyle`, the paper, its encoder and the compositing of the
 pigment stack over it; `WashStyle`, how a wash wets, bleeds, rims, blooms,
 separates and flows once it is down. Both are frozen dataclasses of plain
 values, each field documented by its `#:` comment.
 
 It paints nothing and reads no theme: a group is a value a painter is handed.
 The defaults are the painter's own class defaults, not a resolved theme; the
-theme supplies the values a map is painted with. The brush settings live in
+theme supplies the values a painting is made with. The brush settings live in
 `pyntpot.ink.brush_style`.
 
 Invariants: every field belongs to exactly one style group across the
@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class PaperStyle:
-    """The sheet: its encoder, grid, paper, seed and the compositing over it.
+    """The paper: its encoder, grid, paper, seed and the compositing over it.
 
     Read by the painter for every plate and by the lettering, which lays its
     backing wash on the same paper. The compositing and fibre fields are off
@@ -51,7 +51,7 @@ class PaperStyle:
     paper_worn: float = 0.20
     paper_vignette: float = 0.05
     paper_foxing: float = 0.09
-    #: Seeds, so the same box paints the same sheet every time.
+    #: Seeds, so the same box paints the same paper every time.
     sheet_seed: int = 11
     #: Kubelka-Munk glazing in place of multiply for the pigment stack. Multiply
     #: is transmission with no scattering, so two washes crossing lose chroma
@@ -104,7 +104,7 @@ class WashStyle:
     Every switch here is off or inert by default, until a theme turns one on.
     """
 
-    #: One wet-area map shared across the land classes, so a wash knows another
+    #: One wet-area field shared across the land classes, so a wash knows another
     #: is beside it: inside the union of the cover, neighbours bleed into each
     #: other and no class boundary carries its own rim. The outer silhouette of
     #: the land keeps its edge, which is the one that should have it.
@@ -116,7 +116,7 @@ class WashStyle:
     wet_rim_drop: float = 0.7
     #: How far back from the land's outer edge the wet area starts, as a
     #: multiple of the cover's own rim width. The silhouette of the whole land
-    #: mass is the one edge that should stay hard, so the wet map has to end
+    #: mass is the one edge that should stay hard, so the wet field has to end
     #: before it does.
     wet_bleed_edge_mult: float = 2.2
     #: Edge darkening from an outward flow term rather than mask minus blur.
@@ -168,10 +168,10 @@ class WashStyle:
     sea_variation_elong: float = 6.0
     sea_variation_band_m: float = 420.0
     sea_variation_seed: int = 73
-    #: How wide a gap in the land cover the wet map closes over, in render
+    #: How wide a gap in the land cover the wet field closes over, in render
     #: pixels, before it backs off from the land's edge. Measured, not guessed:
     #: on a woodland plate the classes meet along hairlines of unmapped ground,
-    #: the median class seam sits 2 px from one, and a wet map taken from the
+    #: the median class seam sits 2 px from one, and a wet field taken from the
     #: raw union is therefore punched full of holes exactly where two washes
     #: meet. At 5 px the share of seam that is wet goes from 0.00 to 0.58 while
     #: the dry share of the card moves 0.148 to 0.140, so the land's outer
@@ -195,7 +195,7 @@ class WashStyle:
     silhouette_deform_depth: int = 4
     #: A ceiling on one displacement, in metres: a floor, and a multiple of the
     #: plate's own metres per render pixel, so a long straight field boundary
-    #: is not thrown across the sheet on a wide box.
+    #: is not thrown across the canvas on a wide box.
     silhouette_deform_max_m: tuple[float, float] = (16.0, 3.0)
     #: Where the recursion stops, in render pixels: a segment shorter than this
     #: is already below the wash's own edge noise.
@@ -220,7 +220,7 @@ class WashStyle:
     #: What the heavy pigment shows over black, as a share of over white. A
     #: blue-black stains, so it is low.
     separation_transparency: float = 0.07
-    #: One bounded shallow-water pass over the whole sheet, on a coarse grid:
+    #: One bounded shallow-water pass over the whole canvas, on a coarse grid:
     #: velocities from the pressure gradient, a fixed number of relaxation
     #: iterations rather than a convergence test, the outward flow at the wet
     #: boundary, then pigment advected and deposited. It buys directional

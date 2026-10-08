@@ -12,7 +12,7 @@ from pyntpot.letters.style import FaceStyle, HandStyle
 
 from support.lettering import open_hand
 
-#: A straight synthetic line a name could be written along, in card pixels.
+#: A straight synthetic line a name could be written along, in display pixels.
 LINE = tuple((10.0 + 8.0 * i, 60.0) for i in range(30))
 
 
@@ -134,7 +134,7 @@ def test_the_face_measures_a_name_instead_of_counting_its_characters():
 
     A real face knows that `Abergavenny` and `Wllllllllll` are not the same
     width, and the default cannot: it counts characters. This is the change
-    that moves every label on the sheet.
+    that moves every label on the map.
     """
     hand = open_hand()
     assert isinstance(hand.font, OutlineFont)

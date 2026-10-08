@@ -3,7 +3,7 @@
 Key names: `baseline`, which returns the line a label is set along, or None to
 set it flat.
 
-The placer chooses a window against everything already on the sheet and leaves
+The placer chooses a window against everything already on the map and leaves
 it on the label; this is the fallback for a label that never went through it.
 A label anchored to a line is set along that
 line and a label anchored to a point is set horizontally beside it. Rivers,
@@ -42,7 +42,7 @@ def baseline(lb: Label, width: float) -> list[Pt] | None:
 
     Args:
         lb: The label; its placed window wins when it has one.
-        width: The set width of the name, in card pixels.
+        width: The set width of the name, in display pixels.
 
     Returns:
         The window read left to right, or None when the name is flat, short, or
