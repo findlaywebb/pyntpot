@@ -218,3 +218,11 @@ User instructions (2026-10-07):
   P10.12 (part 1). The later row `maps-tests-sheet-identifiers-name-the-map` cut as
   P10.13 (part 1, after P10.9). Both slices written under "Later issues", no plan review
   (each one small, owner files and check named).
+- P10.12 landed (`457e6ad`): the workflow's "Mutation run" step runs
+  `prlimit --as=3500000000 -- uv run mutmut run`; ADR 0012 gains the cap and how a capped
+  runaway scores, plus a History line; new
+  `tests/mutation/test_workflow.py::test_every_mutmut_run_is_under_an_address_space_cap`,
+  red first, green after. Gate: prek exit 0; not-golden 127 s (1043 passed, 1 skipped);
+  tolerance 392 s (18 passed). Mutation workflow dispatched on `p10-triage`
+  (`mode: pattern`, `pyntpot.ink.polyline.x_simplify*`, 204 queued); P10.12 and the
+  `tasks.md:124` row are done when that run completes with a score.
