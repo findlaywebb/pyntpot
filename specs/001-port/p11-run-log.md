@@ -1,0 +1,22 @@
+# P11 run log
+
+Orchestrating session's log for P11 (widen the public API for primitive-first tutorials),
+then P10.R (tag 0.0.1). Branch `p11-public-api`, cut from `main` at `ff752f6` (PR #9, P10
+part 1, merged).
+
+- 2026-10-08. Start. Read plan.md "### P11", "P10 against P11", "#### P10.R", "### P3 and
+  P4: how to run a slice"; `p10-run-log.md` (tail) and `p10-triage.md`.
+- Mutation run on `main` after the part-1 merge: run 37854572820 at `ff752f6`, success,
+  "counts: killed 59, timeout 1, survived 12, suspicious 0, no_tests 0, segfault 0",
+  "mutation score 0.8333 (advisory)". Recorded in `p10-run-log.md`; the `tasks.md:124` row
+  in `p10-triage.md` marked fully done.
+- AST-neutral script extracted verbatim from plan.md P6 "AST-neutral check" to
+  `$SCRATCH/p11-scripts/ast_neutral.py`, with `SHA256SUMS` beside it; at `ff752f6` it prints
+  "AST-neutral: 0 files".
+- G-self baseline on the clean starting commit, before any edit:
+  `PYTHONPATH=tests uv run python tests/golden/make_golden.py "$SCRATCH/before"`:
+  `{"commit": "ff752f6ff122e12b29edc8a6f6b117056529d202", "dirty": false}`, 1 min 36 s.
+- P11.0 dispatched to a plan author in a detached worktree at `ff752f6`. Maintainer
+  (2026-10-08): "Optimise plan and implementation for sub agent parallelisation"; relayed to
+  the author: parallel lines with disjoint owner files, a rule per shared file, per-slice
+  G-self baselines in each worktree, and an order diagram.

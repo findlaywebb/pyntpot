@@ -270,3 +270,10 @@ User instructions (2026-10-07):
   model as the plan says: each later branch (`p11-*`, `release-0.0.1`, `p10-fixes`,
   `p10-golden` if needed) is cut from `main` after the previous PR merges; none merges
   into `p10-triage`. Part 2 is its own PR.
+- Mutation run on `main` after the part-1 merge (https://github.com/findlaywebb/pyntpot/actions/runs/37854572820,
+  head `ff752f6`, pattern `pyntpot.ink.polyline.x_simplify*`): success, 2 min 34 s for the
+  mutation step, 3 min 20 s in all. Score job: "counts: killed 59, timeout 1, survived 12,
+  suspicious 0, no_tests 0, segfault 0", "mutation score 0.8333 (advisory)": all 72 mutants
+  tested; one mutant timed out on `main` that was killed on the PR branch's run, and the score
+  counts a timeout as detected, so the score is unchanged. The `tasks.md:124` row is fully done.
+  Recorded on `p11-public-api` as its first commit.
