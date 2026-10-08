@@ -226,3 +226,15 @@ User instructions (2026-10-07):
   tolerance 392 s (18 passed). Mutation workflow dispatched on `p10-triage`
   (`mode: pattern`, `pyntpot.ink.polyline.x_simplify*`, 204 queued); P10.12 and the
   `tasks.md:124` row are done when that run completes with a score.
+- P10.9 landed (`75ef5b9`), one slice, 491 changed lines in 80 files: 11 non-canonical sites,
+  the OpenTopoData bullet resolved ("per instance", ADR 0004; Open questions now none),
+  rule seven in 3 test docstrings, "display pixels" everywhere ("card pixel" grep empty;
+  `display pixels` and `render pixels` glossary rows), and the widened sheet/map pass
+  (non-`Sheet` "sheet" 391 lines to 262 kept, all the class, its fields, the brush sheet
+  or one log string; `map` glossary row). A follow-up pass reworded every "map" in `ink`
+  and `letters` prose (29 hits to 8 kept: the `maps` package named as a caller or
+  importer, and the ink key `"map"`, a runtime value). Gates: AST-neutral 58 files;
+  prek exit 0; not-golden exit 0; G-self exit 0 (18 passed, byte-identical) against
+  `{"commit": "fd2c2cd...", "dirty": false}`. New later row `letters-map-ink-key`
+  (issue filed): the `"map"` ink key in `letters`, `defer` to part 2 after P8's
+  upstream-read record, since `Mark` may carry it to an upstream reader.
