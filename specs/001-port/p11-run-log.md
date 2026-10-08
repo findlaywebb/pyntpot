@@ -34,3 +34,12 @@ part 1, merged).
   providers); parallel group 2: P11.5a, P11.5b and P11.5c (the example scripts), then a phase
   gate. 21 names promoted, none of them top-level. No name left out; no `decide` row.
   Plan-reviewer, round 1, dispatched.
+- Plan review 1: BLOCK, 1 blocker, 6 majors, 11 minors. B1: G-here never lints new
+  untracked files (prek passes tracked files only). M1: `maps/painter/plates.py` shared by
+  P11.2a and P11.2b with no merge rule. M2: unnamed owner files, and docstrings not
+  prescribed. M3: `paper_plate` promoted with a thin contract. M4: the lettering and
+  composition steps are not prescribed. M5: the route-map test is network-free only when it
+  passes. M6: promoting `Setting` and `Mark` makes the deferred `"map"` ink key public.
+  Checks that held: importer counts, names and signatures, the 58 P10.10 pairs, ty and
+  `_SCANNED` with `examples`, G-self across the `paper_plate` move, coverage headroom
+  (ink and letters 96.08, maps 93.30). Fix round 1 dispatched to a fresh agent.
