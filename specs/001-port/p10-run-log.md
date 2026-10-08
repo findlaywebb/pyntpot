@@ -238,3 +238,10 @@ User instructions (2026-10-07):
   `{"commit": "fd2c2cd...", "dirty": false}`. New later row `letters-map-ink-key`
   (issue filed): the `"map"` ink key in `letters`, `defer` to part 2 after P8's
   upstream-read record, since `Mark` may carry it to an upstream reader.
+- Mutation run on `p10-triage` (https://github.com/findlaywebb/pyntpot/actions/runs/37771476343,
+  head `457e6ad`): success, 4 min 11 s for the mutation step, 5 min in all. Score job:
+  "counts: killed 60, timeout 0, survived 12, suspicious 0, no_tests 0, segfault 0",
+  "mutation score 0.8333 (advisory)": all 72 mutants of the pattern tested, `_31` among
+  the killed. Far faster than P5's 26 min because P10.8 marked the 61 s CLI test golden,
+  so it left the mutation selection. P10.12 done and ticked; the `tasks.md:124` row
+  done.
