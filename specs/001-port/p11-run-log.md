@@ -43,3 +43,12 @@ part 1, merged).
   Checks that held: importer counts, names and signatures, the 58 P10.10 pairs, ty and
   `_SCANNED` with `examples`, G-self across the `paper_plate` move, coverage headroom
   (ink and letters 96.08, maps 93.30). Fix round 1 dispatched to a fresh agent.
+- Fix round 1 (a fresh agent): all 18 findings addressed, none kept against the review.
+  B1: P11's G-here runs `ruff format --check .` and `ruff check .` before prek. M1: a merge
+  rule for `plates.py`. M2 and M3: "Docstrings, decided"; `paper_plate`'s `plate` parameter
+  becomes `canvas`. M4: seven exact steps for lettering and composition. M5: the
+  route-map test asserts the cache key and its entries first, with providers at `budget=0`
+  and loopback endpoints. M6: option (a); ADR 0026 records the `"map"` key as public, and
+  renaming it needs its own ADR and a maintainer stop (`p10-triage.md` row updated). Plan
+  review 2 dispatched to a fresh reviewer, told that P11.0 is the branch's first plan
+  commit, not its first commit.
