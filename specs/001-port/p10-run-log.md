@@ -265,3 +265,8 @@ User instructions (2026-10-07):
   nits N1 to N6, N8, N9 (benchmark smoke re-measured: 18.7 to 20.2 s) and N11; N7 and N10
   left (cosmetic; already recorded). Gates: prek exit 0; AST-neutral 4 files; not-golden
   121 s (1043 passed, 1 skipped). Part 1 ready for its PR, held for the maintainer's go.
+- Maintainer (2026-10-08): "Yes, good to open prs." PR #9 opened from `p10-triage` to
+  `main` (https://github.com/findlaywebb/pyntpot/pull/9); subscribed to its events. Branch
+  model as the plan says: each later branch (`p11-*`, `release-0.0.1`, `p10-fixes`,
+  `p10-golden` if needed) is cut from `main` after the previous PR merges; none merges
+  into `p10-triage`. Part 2 is its own PR.
