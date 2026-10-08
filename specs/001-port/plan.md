@@ -7492,6 +7492,54 @@ last bit).
 - Commit: `Use the glossary's terms in docstrings and resolve the budget question`
   (`... and name the display pixels and the map` with Q2 and Q10)
 
+#### P10.12 Cap the mutation run's memory
+
+- Cut under "Later issues" after P10.1's mutation dispatch (row
+  `mutation-runaway-mutant-kills-the-runner`). Part 1: it changes no render. Implements
+  that row; predecessor P10.8 (landed). Parallel-safe with P10.9 (disjoint files).
+- Owner files: `.github/workflows/mutation.yml` (the "Mutation run" step only),
+  `docs/decisions/0012-mutation-threshold.md` (one bullet under its decision, where the
+  workflow's run settings are listed, and one line in its History, dated), a new
+  `tests/mutation/test_workflow.py`, `docs/issues/mutation-runaway-mutant-kills-the-runner.md`
+  (deleted), the row in `p10-triage.md`.
+- Leave alone: `[tool.mutmut]` in `pyproject.toml`, `scripts/` and `tests/mutation/`'s
+  other files, every other workflow, `src/**`.
+- Test first: `tests/mutation/test_workflow.py::test_every_mutmut_run_is_under_an_address_space_cap`,
+  docstring "Every mutmut run in the mutation workflow runs under an address-space cap.".
+  It reads `.github/workflows/mutation.yml` as text (no YAML dependency; pyyaml is not in
+  the dev group), finds every line containing `mutmut run`, and asserts each has
+  `prlimit --as=` before `uv run mutmut run`. Red today (the line has no `prlimit`).
+- Change: in the step's command, `xargs -r -a "$RUNNER_TEMP/patterns" uv run mutmut run`
+  becomes `xargs -r -a "$RUNNER_TEMP/patterns" prlimit --as=3500000000 -- uv run mutmut run`,
+  with a two-line comment above the step: the cap is per process and inherited by every
+  process mutmut forks, so a mutant that allocates without bound gets `MemoryError` (or
+  dies) instead of taking the runner down; 3.5 GB leaves about 1.2 GB over the largest
+  normal process (2,308 MB measured) and four capped children fit in 16 GB. ADR 0012 gains
+  the same fact as one bullet, and how such a mutant scores (killed on `MemoryError`,
+  timeout at the wall bound; suspicious or segfault if it dies outright).
+- Gate: G-here. After the PR is open, the orchestrating session dispatches `mutation.yml`
+  on the PR branch with `mode: pattern`, `pattern: pyntpot.ink.polyline.x_simplify*`; the
+  row is done when that run completes with a score (72 mutants tested, `_31` killed or
+  timeout). If it fails again, root-cause before any second change.
+- Commit: `Cap the memory of each mutation run process`
+
+#### P10.13 Test identifiers say map, not sheet
+
+- Cut under "Later issues" after P10.2 (row `maps-tests-sheet-identifiers-name-the-map`).
+  Part 1, tests only. Predecessor P10.9 (it rewords the same test files' docstrings).
+- Owner files: `tests/support/lettering.py` (`sheet_card` becomes `map_card`, with its
+  docstring) and every test that imports or calls it; the four test functions the row
+  names, renamed so "sheet" becomes "map" (`..._bigger_than_the_map_is_clipped_not_dropped`,
+  `..._only_when_it_runs_across_the_map`, `..._even_when_the_bend_runs_down_the_map`,
+  `..._along_the_water_not_across_the_map`); the row in `p10-triage.md`; the issue file
+  (deleted).
+- Leave alone: every identifier that means `ink.sheet.Sheet` (the row lists them),
+  `src/**`.
+- Check: the row's grep prints nothing; `uv run pytest --collect-only -q` collects the
+  same number of tests as before.
+- Gate: G-here (no `src/` change, so no G-self).
+- Commit: `Name the lettering test card and four tests for the map`
+
 #### P10.R Tag 0.0.1
 
 - The release step between P11 and P8 (maintainer, 2026-10-07: "0.0.1+

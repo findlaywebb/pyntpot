@@ -207,3 +207,14 @@ User instructions (2026-10-07):
   (bbox (0, 9, 115, 76)); green after. Vulture at 60 no longer lists `_radii`. Baseline
   `{"commit": "033db9c...", "dirty": false}`; prek exit 0; not-golden 112 s (1042 passed,
   1 skipped); tolerance 393 s; G-self 403 s (18 passed, byte-identical).
+- Mutation failure root-caused (capped local reproduction at `1bae755`, 49 min):
+  `pyntpot.ink.polyline.x_simplify__mutmut_31` (`best, bi = -1.0, lo` to `+1.0`) loops
+  for ever when every point lies within 1.0 of the chord, growing the stack about
+  90 to 100 MB/s; mutmut 3.8 caps CPU time only. "42 tested" was the count of finished
+  mutants with four running at once, so 31 was the one still running. Under
+  `prlimit --as=3500000000` the mutant gets `MemoryError` at 31 s and scores killed
+  (exact step text checked locally, 321 s). Filed as
+  `docs/issues/mutation-runaway-mutant-kills-the-runner.md`, row added, fix cut as
+  P10.12 (part 1). The later row `maps-tests-sheet-identifiers-name-the-map` cut as
+  P10.13 (part 1, after P10.9). Both slices written under "Later issues", no plan review
+  (each one small, owner files and check named).
