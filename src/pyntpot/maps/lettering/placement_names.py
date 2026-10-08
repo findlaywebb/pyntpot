@@ -45,7 +45,7 @@ def _stem(name: str) -> str:
 
 
 #: How many times the major watercourse carries its own name. Two, and only the
-#: major one: a river crossing the whole sheet is read in pieces, and a reader
+#: major one: a river crossing the whole map is read in pieces, and a reader
 #: who meets it at the bottom of the card should not have to trace it to the top
 #: to find out what it is. This is ordinary cartographic practice for a long
 #: feature. Every other watercourse gets
@@ -58,7 +58,7 @@ MAJOR_RIVER_LABELS = 2
 #: other, because the answer is different in each: the major watercourse is
 #: deliberately lettered twice, a road number once, and a place exactly once
 #: however many pools found it. A guard that were one number for the whole
-#: sheet would either letter the Eden once or letter Elm twice.
+#: map would either letter the Eden once or letter Elm twice.
 NAME_FAMILY = {"river": "water", "road": "road"}
 
 
@@ -79,7 +79,7 @@ NAME_ALLOWANCE_DEFAULT = 1
 
 #: How near two names have to be on the ground before they can be one place, in
 #: metres. Stated in metres and not in pixels because "basically the same
-#: place" is a fact about the ground rather than about the sheet: High Cup Nick
+#: place" is a fact about the ground rather than about the map: High Cup Nick
 #: and High Cup Nick Cairn are five metres apart and are one headland, which
 #: is a pixel on that card and would be a fifth of a pixel on a ride's, and
 #: neither number says anything a rule can be built on.
@@ -123,13 +123,13 @@ def dedupe_names(labels: list[Label], card: Card) -> list[Label]:
     Two rules, and they are the same rule at two distances.
 
     A name repeated exactly is lettered once inside its family, wherever the
-    two anchors are: a settlement named at both ends of the sheet is still one
+    two anchors are: a settlement named at both ends of the map is still one
     settlement. The major watercourse is the deliberate exception and carries
     its allowance in `NAME_ALLOWANCE`, which is why the guard is per family and
     not global.
 
     A name that contains another, within `NEAR_DUPLICATE_M` of it, is two names
-    for one place and the sheet keeps one. Which one is not a judgement about
+    for one place and the map keeps one. Which one is not a judgement about
     fame: the tiers already rank what a name *is*, so the lower tier wins, and
     between two of the same tier the shorter and more general name does. That
     gives the village over the nearest-feature repeat of it, and the headland

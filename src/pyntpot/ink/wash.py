@@ -19,7 +19,7 @@ from dataclasses import dataclass
 import numpy as np
 from PIL import Image
 
-from pyntpot.ink.noise import F32, blur, edt, fbm
+from pyntpot.ink.noise import F32, blur, chamfer_distance, fbm
 from pyntpot.ink.pigment import Layer
 from pyntpot.ink.shallow_water import shallow_water
 from pyntpot.ink.sheet import Sheet, rgb
@@ -49,7 +49,7 @@ _WET_FLOOR = 0.05
 Blooms = tuple[np.random.Generator, int, float, float, float]
 
 #: The settings that take the rim from `flow_edge`: how fast the width grows with area, the
-#: reference area as a share of the sheet and the decay length as a share of the
+#: reference area as a share of the canvas and the decay length as a share of the
 #: rim's width.
 Flow = tuple[float, float, float]
 
@@ -72,7 +72,7 @@ def flow_edge(
         sheet: The paper's noise fields.
         rim_px: The rim's width at the reference area.
         exp: How fast the width grows with area.
-        ref_frac: The reference area, as a share of the sheet.
+        ref_frac: The reference area, as a share of the canvas.
         frac: The decay length as a share of `rim_px`.
 
     Returns:
@@ -84,7 +84,7 @@ def flow_edge(
         return np.zeros_like(a)
     ref = max(a.size * ref_frac, 1.0)
     width = max(rim_px * frac * (area / ref) ** exp, 0.8)
-    d = edt(~inside)
+    d = chamfer_distance(~inside)
     rim = np.exp(-d / F32(width)) * a * (0.6 + 0.8 * sheet.coarse)
     return np.clip(rim, 0.0, 1.0)
 
@@ -159,7 +159,7 @@ class WashOptions:
     uneven: float = 0.22
     #: How much the paper's tooth lightens it.
     tooth: float = 0.34
-    #: The shared wet-area map, when there is one. Inside it this wash bleeds
+    #: The shared wet-area field, when there is one. Inside it this wash bleeds
     #: into whatever is beside it and gives up most of its rim, because a class
     #: boundary under water is not an edge.
     wet: np.ndarray | None = None
@@ -196,6 +196,7 @@ def wash(
 
     Source: `granulation` in docs/explanation/references.md.
     Source: `wet-area-bleed` in docs/explanation/references.md.
+    Source: `edge-darkening` in docs/explanation/references.md.
 
     Args:
         cover: Coverage in 0 to 1.
@@ -265,6 +266,8 @@ def separated(
     The pair only reads as two pigments through `km_glazing`. Under multiply
     the layers still stack, but the two hues average where they overlap, which
     is what glazing keeps apart.
+
+    Source: `pigment-separation` in docs/explanation/references.md.
 
     Args:
         dens: The wash's density.

@@ -67,7 +67,7 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
     """Every style group a map is painted, lettered and composed with.
 
     Attributes:
-        paper: The sheet, its encoder and the compositing over it.
+        paper: The paper, its encoder and the compositing over it.
         wash: How a wash wets, bleeds, rims, blooms, separates and flows.
         brush: The brushes each line class takes and how they behave.
         face: The face the hand opens and how a glyph becomes a pen path.

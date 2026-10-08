@@ -20,7 +20,7 @@ import math
 
 import numpy as np
 
-from pyntpot.ink.noise import edt
+from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.polyline import Pt, normals
 from pyntpot.letters.skeleton import (
     RASTER_EM,
@@ -85,17 +85,6 @@ def _half_width(skel: np.ndarray, reach: np.ndarray) -> float:
     """
     vals = reach[skel > 0]
     return float(np.median(vals)) if vals.size else 1.0
-
-
-def _radii(pts: list[Pt], reach: np.ndarray) -> list[float]:
-    """The inscribed radius under each point of a run, in raster pixels."""
-    h, w = reach.shape
-    out = []
-    for x, y in pts:
-        r = min(max(int(y), 0), h - 1)
-        c = min(max(int(x), 0), w - 1)
-        out.append(float(reach[r, c]))
-    return out
 
 
 def _edge(img: np.ndarray, at: Pt, along: Pt, cap: float) -> float:
@@ -242,7 +231,7 @@ def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> li
 
     Zhang-Suen deletes a small round component from both sides at once and
     leaves nothing behind, so without this the tittle of an `i` and a `j` and
-    the whole of a full stop are missing from the sheet. A blob is drawn as a
+    the whole of a full stop are missing from the plate. A blob is drawn as a
     small ring rather than a point, because a nib asked to draw one point
     leaves no mark at all.
     """
@@ -278,7 +267,7 @@ def _centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     skel = thin(img)
     # Distance from an inked pixel to the nearest blank one, which at a
     # terminal is half the stroke's own width: exactly what thinning ate.
-    reach = edt(img == 0)
+    reach = chamfer_distance(img == 0)
     k = upem / RASTER_EM
     half = _half_width(skel, reach) if skel.any() else 1.0
     on = {(int(r), int(c)) for r, c in zip(*np.nonzero(skel), strict=True)}

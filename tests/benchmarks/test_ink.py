@@ -9,7 +9,7 @@ from pytest_benchmark.fixture import BenchmarkFixture
 
 from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.noise import edt
+from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, Layer, composite
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.stamp import stamp
@@ -34,12 +34,6 @@ def sheet() -> Sheet:
     return Sheet(SIDE, SIDE, gran_px=6.0, seed=3)
 
 
-def _disc() -> np.ndarray:
-    """A float32 coverage disc of radius 180 centred on the plate."""
-    yy, xx = np.mgrid[0:SIDE, 0:SIDE].astype(np.float32)
-    return (np.hypot(xx - SIDE / 2, yy - SIDE / 2) < 180).astype(np.float32)
-
-
 def _blob() -> np.ndarray:
     """A coverage mask: a lumpy disc filling the middle of the plate."""
     yy, xx = np.mgrid[0:SIDE, 0:SIDE].astype(np.float32)
@@ -57,17 +51,6 @@ def _meander() -> np.ndarray:
     return np.stack([x, y], axis=1)
 
 
-def test_sheet_construction(benchmark: BenchmarkFixture) -> None:
-    """Times building a sheet's noise fields from one seed."""
-    benchmark(Sheet, 512, 512, gran_px=6.0, seed=3)
-
-
-def test_edt(benchmark: BenchmarkFixture) -> None:
-    """Times the chamfer distance from every cell of a sparse random mask."""
-    mask = np.random.default_rng(5).random((512, 512)) < 0.01
-    benchmark(edt, mask)
-
-
 def test_stamp_a_2000_point_path(benchmark: BenchmarkFixture) -> None:
     """Times stamping a river brush along a 2000 point sine path."""
     x = np.linspace(20, 1180, 2000)
@@ -78,14 +61,8 @@ def test_stamp_a_2000_point_path(benchmark: BenchmarkFixture) -> None:
     )
 
 
-def test_wash(benchmark: BenchmarkFixture, sheet: Sheet) -> None:
-    """Times one pigment's wash over a plain disc."""
-    cover = _disc()
-    benchmark(wash, cover, sheet, 0.52, 0.20)
-
-
 def test_building_a_sheet(benchmark: BenchmarkFixture) -> None:
-    """Times building a sheet's five noise fields from a second seed."""
+    """Times building a sheet's five noise fields from one seed."""
     benchmark(Sheet, SIDE, SIDE, 6.0, 11)
 
 
@@ -94,7 +71,7 @@ def test_the_distance_transform(benchmark: BenchmarkFixture) -> None:
     mask = np.zeros((SIDE, SIDE), dtype=bool)
     pts = _meander().round().astype(int)
     mask[pts[:, 1], pts[:, 0]] = True
-    benchmark(edt, mask)
+    benchmark(chamfer_distance, mask)
 
 
 @pytest.mark.parametrize("brush_id", ["TRK4-d", "RIV1-a"], ids=["dry-track", "wet-river"])

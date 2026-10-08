@@ -61,13 +61,13 @@ OWN_FEATURE_COST_PX = 3.0
 
 @dataclass(frozen=True)
 class Backdrop:
-    """What every name on the card is priced against: the page, the route and the roads.
+    """What every name on the card is priced against: the map, the route and the roads.
 
     Attributes:
         card: The card, for its size in display pixels.
-        route_px: The track in card pixels.
-        dark: The painter's darkness grid, `{"w", "h", "v"}`.
-        roads: Named road centrelines in card pixels. A name laid across one is
+        route_px: The track in display pixels.
+        dark: The painter's dark grid, `{"w", "h", "v"}`.
+        roads: Named road centrelines in display pixels. A name laid across one is
             costed, never forbidden.
     """
 
@@ -84,12 +84,12 @@ class Backdrop:
 
 @dataclass(frozen=True)
 class Terms:
-    """What one name is priced against where it is tried: the page and the sheet so far.
+    """What one name is priced against where it is tried: the card and the map so far.
 
     Attributes:
         card: The card, for its size in display pixels.
-        dark: The painter's darkness grid, `{"w", "h", "v"}`.
-        boxes: What is already on the sheet.
+        dark: The painter's dark grid, `{"w", "h", "v"}`.
+        boxes: What is already on the map.
         roads: The lines the name is charged for crossing, its own feature
             already removed.
         route: The route in weighted parts, for the route cost.
@@ -121,7 +121,7 @@ def _on_road(box: Box, roads: list[list[Pt]]) -> float:
 
     Deliberately not a count. A name that lands on a junction touches five ways
     and is one fault, not five, and counting them made a crossing the most
-    expensive thing on the sheet by an order of magnitude.
+    expensive thing on the map by an order of magnitude.
     """
     return 1.0 if _crossings(box, roads) else 0.0
 
@@ -139,7 +139,7 @@ def _overlap(box: Box, boxes: list[Box]) -> float:
 
 
 def _separation(box: Box, boxes: list[Box]) -> float:
-    """How far a box sits from the nearest thing already on the sheet.
+    """How far a box sits from the nearest thing already on the map.
 
     Capped, because past `SEPARATION_CAP_PX` more room is not something a
     reader can tell apart, and uncapped it would drag every name to the corner
@@ -169,7 +169,7 @@ def _darkness(box: Box, card: Card, dark: dict[str, Any]) -> float:
 
 
 def _on_paper(box: Box, card: Card) -> bool:
-    """Whether a box is wholly on the sheet rather than in the torn margin."""
+    """Whether a box is wholly inside the torn margin, on the paper."""
     x0, y0, x1, y1 = box
     return x0 > EDGE_PX and x1 < card.w - EDGE_PX and y0 > EDGE_PX and y1 < card.h - EDGE_PX
 

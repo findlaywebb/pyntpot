@@ -65,7 +65,7 @@ class Hand:
 
         Args:
             text: What is set.
-            size: The type size, in card pixels.
+            size: The type size, in display pixels.
             tracking: Extra letter spacing, in em units.
 
         Returns:
@@ -76,7 +76,7 @@ class Hand:
     def generator(self, seed: int) -> np.random.Generator:
         """This instance's own generator: the style's seed mixed with the caller's.
 
-        Every draw a name makes comes from here, so an unchanged map letters
+        Every draw a name makes comes from here, so an unchanged set of names letters
         identically on every render and a deliberate reshuffle is one number in
         the style.
         """
@@ -86,7 +86,7 @@ class Hand:
         """A hand's own wander along a line the caller drew, a different curve every instance.
 
         Args:
-            points: The line, in card pixels; its ends stay where they were.
+            points: The line, in display pixels; its ends stay where they were.
             rng: The generator the wander is drawn from.
             amount: How far it wanders; nothing is drawn when it is not positive.
 
@@ -100,7 +100,7 @@ class Hand:
         return [(float(x), float(y)) for x, y in got]
 
     def write(self, setting: Setting, rng: np.random.Generator) -> list[Mark]:
-        """A setting as one mark a glyph stroke, in card pixels.
+        """A setting as one mark a glyph stroke, in display pixels.
 
         Args:
             setting: What to write and how it is set.

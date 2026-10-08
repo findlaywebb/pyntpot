@@ -179,7 +179,7 @@ def hachures(
     Each stroke starts on a jittered grid and walks downhill; its length and its
     weight follow the slope, so flat ground stays empty paper and a steep face
     fills with dark strokes. Seeds near the track are skipped, because a hachure
-    crossing the line is the one mark on the sheet that reads as an error.
+    crossing the line is the one mark on the map that reads as an error.
 
     Source: `hachures` in docs/explanation/references.md.
 

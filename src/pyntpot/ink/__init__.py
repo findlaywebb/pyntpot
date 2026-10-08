@@ -2,7 +2,7 @@
 
 Public names: `Sheet` and `Canvas` (the paper and what is painted on it), `Brush`
 and `stamp` (a nib's marks), `wash` and `composite` (pigment laid and combined).
-It does not letter, read maps or touch the network.
+It does not letter, read geographic data or touch the network.
 """
 
 from pyntpot.ink.brush import Brush

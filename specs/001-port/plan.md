@@ -43,7 +43,7 @@ tests/fixtures/lynmouth/{track.gpx, overpass-lynmouth.json, landcover-lynmouth.j
 tests/architecture/  (template tests, edited per P0.6)
 tests/architecture/exemptions/{line_budget.txt, gates_off.txt, NOTES.md}   (only shrink; emptied at P4.19, deleted at P9.2)
 docs/{tutorials,how-to,reference,explanation}/  docs/explanation/references.md
-docs/decisions/  0001, 0002 exist; 0003 to 0023 are assigned in "ADR numbers" under P3 and P4
+docs/decisions/  0001, 0002 exist; 0003 to 0026 are assigned in "ADR numbers" under P3 and P4
 specs/001-port/{spec.md,plan.md,tasks.md,architecture.md,design-sources.md}   (design-sources.md deleted at P9.4)
 ```
 
@@ -487,7 +487,7 @@ the façade at P3.16 and P3.17, and its measurements were taken at
 - No re-export shims. When a name moves, every importer (including tests) is
   repointed in the same commit.
 - Commit when the slice's gate is green, message as given (imperative, one
-  line, no trailers), then tick the slice's line in `tasks.md` in the same
+  line, then the session's attribution trailers), then tick the slice's line in `tasks.md` in the same
   commit. Out-of-scope findings go to `docs/issues/`, not into the diff.
   **Who does what:** the implementer agent (`plan-slice-implementer`) edits,
   runs the gates and hands off; it never commits or pushes. The
@@ -525,6 +525,13 @@ the façade at P3.16 and P3.17, and its measurements were taken at
 | 0013 to 0021 | one per settled decision, in this order: D2, D5, D7, D8, D9, D20, D21, D23, D24 | P7.3 |
 | 0022 | `retire-banned-term-test` | P9.1 |
 | 0023 | `retire-exemptions` | P9.2 |
+| 0024 | `route-ink-names-follow-the-route` | P10.5b, only if Q5 is answered (2) |
+| 0025 | `second-golden-regeneration` | P10.11, only if the golden group exists |
+| 0026 | `widen-the-public-api` (amends 0007) | P11.1 |
+
+P10 and P11 run before P9 (maintainer, 2026-10-07), so 0024 to 0026 may be
+written before 0022 and 0023; the numbers stay fixed, and a number whose
+conditional slice never runs stays unused.
 
 P7.3's list also names the coverage baseline, the mutation threshold and the
 golden regeneration; those are 0011, 0012 and 0006. Where an earlier ADR
@@ -5797,6 +5804,11 @@ its key (`test_reference_keys.py`).
 
 ### P7. Docs and first release
 
+Order (maintainer, 2026-10-07): P7 starts after P10 part 2 (P10 "Order and
+parallelism"), so P7.1 to P7.3 document the fixed code, and P7.4 tags 0.1.0
+after them. 0.1.0 is a release candidate: an issue found after it is fixed in
+a 0.1.x patch release, never by holding 0.1.0.
+
 - README: what it is, a route map image, a non-map image (a lettered word
   on a washed circle from `examples/word.py`), install, three-line quick
   start, data policy, attribution requirement, licence, and a pointer to
@@ -5807,16 +5819,25 @@ its key (`test_reference_keys.py`).
   `docs/explanation/{how-the-wash-works,data-policy,performance,references}.md`.
 - ADRs for D2, D5, D7, D8, D9, D20, D21, D23, D24, the coverage
   baseline, the mutation threshold, the golden regeneration.
-- `CHANGELOG.md` 0.1.0. Configure the PyPI trusted publisher (manual,
-  documented in CONTRIBUTING). Confirm with the maintainer before the tag
-  and the publish.
+- `CHANGELOG.md` 0.1.0, and the `pyproject.toml` version (with `uv.lock`)
+  set back from P10.R's 0.0.1 to 0.1.0. Configure the PyPI trusted publisher
+  (manual, documented in CONTRIBUTING; already done if Q14 chose PyPI for
+  0.0.1). Confirm with the maintainer before the tag and the publish.
 - P7.2's tutorials, and ideally P7.1's quick start, depend on P11 (the
   widened public API); see P11, "Order".
 
 ### P8. The upstream consumer migrates to the public API
 
+Order (maintainer, 2026-10-07): P8 runs after P10 part 1, P11 and P10.R,
+and consumes the `v0.0.1` tag that P10.R makes once P11 has merged, so the
+upstream migrates against the widened surface; P10 part 2 follows it. At P8's hand-off the
+orchestrating session records "what upstream reads" in
+`specs/001-port/p10-triage.md` (P10 "Order and parallelism", "P8's
+hand-off").
+
 The upstream training-analysis repo records a reference render with the old
-code, adds `pyntpot` as a dependency (git tag until PyPI), migrates its
+code, adds `pyntpot` as a dependency (the `v0.0.1` git tag, or 0.0.1 from
+PyPI if Q14 chose PyPI), migrates its
 cache to the new keys, replaces its local copies of the engine and their
 tests with calls to the public API (`Basemap`, `Plates`, `Lettering`, D21),
 and updates its documentation. Verification: the same activity rendered
@@ -5828,22 +5849,25 @@ hash, before anything is deleted. This phase touches only the upstream repo.
 Scaffolding the port needed and the finished port does not. Every slice here
 deletes or simplifies; none adds behaviour. The slice rules and gate commands
 are those of "P3 and P4: how to run a slice" (test first where a test
-changes, no shims, G-here, commit message imperative on one line with no
-trailers, tick `tasks.md` in the same commit). Nothing here removes a gate
+changes, no shims, G-here, commit message imperative on one line, then
+the session's attribution trailers, tick `tasks.md` in the same commit). Nothing here removes a gate
 that `CLAUDE.md` requires, touches the tolerance bound
 (`MAX_DIFFERING_FRACTION`, `MAX_CHANNEL_DELTA`) or the D22 pin handling, or
 edits a Key decisions row beyond the one appended note named in P9.1.
 
-**Precondition for the whole phase.** P4.20, P7.4 and P8 are done and ticked,
-and the maintainer has confirmed the release (P7.4 already requires that
-confirmation). The order is P9.1, P9.2, P9.3, P9.4. P9.1 and P9.2 both edit
+**Precondition for the whole phase.** P4.20, P7.4, P8, P11 and P10 (both parts,
+the golden group included) are done and ticked, and the maintainer has
+confirmed the release (P7.4 already requires that confirmation). P10.9 edits
+`spec.md` and `GLOSSARY.md`, which P9.1 and P9.2 also edit; P10 lands first,
+and P9 starts from a tree that holds it. The order is P9.1, P9.2, P9.3, P9.4. P9.1 and P9.2 both edit
 `tests/architecture/_text_scan.py`, `tests/conftest.py` and `BOUNDARIES.md`,
 so they never run in parallel; P9.3 and P9.4 touch disjoint files and may run
 in parallel with each other after P9.2.
 
 **ADR numbers.** Fixed by the table under "P3 and P4: how to run a slice":
 P9.1 writes 0022 and P9.2 writes 0023 (0003 to 0021 belong to P3, P4, P5.2,
-P5.3 and P7.3). Before writing, `ls docs/decisions` must show the number
+P5.3 and P7.3, 0024 and 0025 to P10 and 0026 to P11, which may have
+written them already). Before writing, `ls docs/decisions` must show the number
 free; if it is taken, stop and report.
 
 #### P9.1 Retire the banned-term test
@@ -6006,33 +6030,25 @@ the ones that are fixed, in slices grouped by area and by golden impact. It
 adds no feature: a fix makes the code do what its docstring, the spec or a
 Key decision already says, or deletes what nothing uses. Out of scope as in
 `spec.md`: no new painting features, no performance work, no upstream change.
-
-**This is a sketch.** P10.0 fattens it into slices a sub-agent can execute,
-in the shape of P5.0 and P6.0: per-slice owner files, files to leave alone,
-the test for each fix, gate commands and commit messages. A plan-reviewer
-agent reviews the fattened section, and P10.1 does not start until the
-review passes. P10.0's owner files are this section and the P10 list in
-`tasks.md`; it measures every count it quotes at its own starting commit.
+Fattened at P10.0 from the sketch, using five read-only investigation
+dossiers (one per area) written at `91ff457`; every fact a slice relies on was
+re-checked at `dd19592` (which differs from `91ff457` only by
+`specs/001-port/p10-run-log.md`). Paragraphs that open with *(Evidence.)*
+record how a fact was proved; they are for the reviewer, and no slice brief
+carries them. Line numbers drift, so every site is named by its dotted path
+and the line is only a hint.
 
 **Scope.** Every file in `docs/issues/`, both those filed by P0 to P6 and any
 filed later, by P7, P8 and P9, up to the moment P10.1 starts; anything filed
 after that is handled under "Later issues" below. Also the issues the port
 recorded outside `docs/issues/`, which P10.1 turns into rows with the source
-named:
+named (the seed table in P10.1 lists them): the P5.4 README badge
+(`p5-run-log.md`), the manual Mutation workflow run on `main` (`tasks.md`,
+the P5 hand-off), the OpenTopoData budget (`spec.md`, Open questions), three
+run-log notes that close, and the findings P10.0's investigation surfaced
+without a file.
 
-- `specs/001-port/p5-run-log.md`, the P5.4 reconcile entry: the onboarding
-  PR's README badge, not adopted because the README was outside the slice's
-  owner files.
-- `specs/001-port/tasks.md`, the P5 hand-off: start the manual Mutation
-  workflow once on `main` to confirm it runs.
-- `specs/001-port/spec.md`, Open questions: the OpenTopoData daily budget is
-  enforced per process only.
-- `specs/001-port/p6-run-log.md` names no finding beyond the files it filed;
-  every P6 finding it records is a file in `docs/issues/`. P10.0 rereads both
-  run logs, and any run log P7 to P9 add, and adds a source line for each
-  finding that has no file.
-
-At `d82f732` `docs/issues/` holds 29 files:
+**Measured at P10.0** (`91ff457`, re-checked at `dd19592`):
 
 | Area prefix | Files | Filed by |
 | --- | --- | --- |
@@ -6042,6 +6058,148 @@ At `d82f732` `docs/issues/` holds 29 files:
 | `maps-` other (`osm-elements`, `style-groups`, `track-index`) | 4 | P6.5c, P6.5d, the P6 diff review |
 | `unlisted-technique-` | 3 | P6.1 |
 | no area prefix | 7 | P3.20 (`shared-generators`), P5 (`duplicate-benchmarks`, `slow-tests-in-mutation-runs`), P6.1 (`edt-is-a-chamfer-distance`, `prek-not-in-the-environment`), P6.6 (`contributing-commit-trailers`, `src-docstrings-use-non-canonical-terms`) |
+
+29 files, the same set as at `d82f732`. Golden-path facts every slice below
+leans on:
+
+- The golden path letters with no annotations and composes without the
+  attribution: `tests/support/golden.py::paint_fixture` calls
+  `letter(plates, basemap, None, style)` and
+  `compose(..., attribution=False)`. So `journal_picks` never runs, and
+  `resolve_spans(None, ...)` returns `[]`, so `place_spans`, `_freer_side`
+  and `_rung` never run on the golden card. The CLI (Verification 2) does
+  the same.
+- The default theme sets `label_route = "centreline"` and
+  `label_route_ink = "#c22050"`, and every `route_inks.*.colour` is
+  `"#c22050"`; `labels = true`.
+- No fixture way carries `tunnel=no`: the only `tunnel`-tagged watercourses
+  are 11 `stream` ways with `tunnel=culvert`.
+- No Lynmouth text (152 fixture names, the 9 placed label texts) uses a
+  character the vendored face lacks.
+- The configured vulture (`[tool.vulture] min_confidence = 80`) reports no
+  unused function or method: vulture scores those at 60. Every vulture check
+  below is `uv run vulture --min-confidence 60 src`.
+- prek is not in the project environment (`uv run prek --version` fails to
+  spawn), and CI (`.github/workflows/ci.yml`) never runs prek. P6 ran the
+  hooks as `uvx prek run --all-files`.
+- 58 underscore names defined in 23 `src` modules are imported by 23 other
+  `src` modules.
+
+*(Evidence.)* The investigation's deposit probe rebound
+`pyntpot.ink.stamp.deposit` with a counting wrapper and ran
+`paint_fixture` (60 s): 534 `deposit` calls (route pen 1, road pads 22,
+water pads 5, label marks 506), 3.38 million samples, none with a bilinear
+corner off the accumulator. The fixture `tunnel` count was taken over every
+element of `tests/fixtures/lynmouth/*.json` (648 Overpass elements: 11
+`stream`/`culvert`, 1 `service`/`building_passage`). The glyph probe tested
+each character of every `name`/`ref` string of the Overpass fixture against
+the face's cmap (66 distinct characters, none missing). A scratch pytest
+plugin that negated `_freer_side`'s side in process ran
+`uv run pytest tests -m "not golden"` green, so no existing test pins the
+span side sign. At `dd19592`: `grep -n "lettering.labels" src/pyntpot/maps`
+shows the gate at `attribution.py:64` and `lettering/pipeline.py:98`;
+`grep -rlnw edt --include=*.py src tests` lists 8 `src` files (the
+definition and 7 importers) and 6 test modules; `uv run vulture
+--min-confidence 60 src` prints about 45 lines, which include `_radii`, `Label.as_dict`, the three route
+constants, `RouteInk.casing` and `pyntpot.ink.polyline.point_to_segment`
+(no caller in `src` or `tests`; a finding no issue records).
+
+**Rules for the whole phase.**
+
+- **Triage first, then decisions, then fixes.** P10.1 changes no code.
+  P10.2 is P10's one stop point. A fix slice starts only when every row it
+  implements has the outcome `fix` in `p10-triage.md` (a conditional member,
+  named "if Qn" below, joins its slice only when the answer makes its row
+  `fix`; otherwise it is not done and its row keeps the answer's outcome).
+- **Slice rules** are those of "P3 and P4: how to run a slice": test first,
+  no mocks, no shims, `ids=` on every `parametrize`, place names from
+  `CONTRIBUTING.md`, coordinates in the D10 box, about 600 changed lines or
+  fewer, owner files implicitly include every importer of a renamed or
+  deleted name, out-of-scope findings filed in `docs/issues/` (and appended
+  as rows, "Later issues"). The implementer agent edits, runs the gates and
+  hands off; it never commits, and never edits `tasks.md`,
+  `p10-triage.md` or `p10-run-log.md`. P10.1, P10.2 and P10.R are not
+  given to an implementer: the orchestrating session runs them itself, so
+  P10.1 creates `p10-triage.md` and P10.2 writes into it. The orchestrating
+  session commits each slice as one commit, and in that same commit deletes
+  the issue files the slice fixes, marks their rows done in `p10-triage.md`
+  (with the commit's test or check) and ticks `tasks.md`. Three slices may
+  make one commit per member (P10.3c, P10.5b, P10.7, as their bodies say):
+  each commit deletes and marks done its own member's rows, and the
+  slice's last commit ticks `tasks.md`. P10.R ticks its line in the
+  bookkeeping commit that records the tag, not in its version commit
+  (P10.R).
+- **A behaviour fix starts with a failing test.** The slice runs the new
+  test before the fix and records the failure line in the hand-off. A
+  deletion, rename or prose fix has no behaviour to fail; its row names the
+  check (a grep, a vulture run at `--min-confidence 60`, or a test) that
+  prints or fails if the thing comes back, and the slice runs it before
+  (it lists the target) and after (it lists nothing). A before-check whose
+  output differs from the brief stops the slice and is reported.
+- **Gates.** "Gate commands" of "P3 and P4: how to run a slice", with
+  `$SCRATCH/before` read as `$SLICE/before`, where `$SLICE` is
+  `$SCRATCH/<slice-id>/`, created empty by the orchestrating session. Until
+  P10.3b lands, G-here's hook stage runs as `uvx prek run --all-files` (prek
+  is not in the environment); from P10.3b on it is `uv run prek run
+  --all-files` as written. G-here includes the byte-exact
+  `uv run pytest -m golden` (from P3.15 on). **A slice that changes any file
+  under `src/` runs G-here plus G-self**, and G-self must be byte-identical:
+  a slice whose G-self is not byte-identical does not land, and its row
+  moves to `fix-golden` (the golden group). A slice that changes only
+  docs, tests or tooling runs G-here only. A slice whose `src` change is
+  docstrings and comments only also runs the AST-neutral check of P6 (the
+  script block under P6 "Rules for the whole phase", **AST-neutral
+  check.**), written by the orchestrating session to
+  `$SCRIPTS/ast_neutral.py` with `$SCRIPTS = $SCRATCH/p10-scripts/` and a
+  `SHA256SUMS` beside it, exactly as P6's shared-scripts rule says; slices
+  never edit it.
+- **Coverage.** A slice that deletes or marks a non-golden test, or adds
+  `src` lines, runs the two coverage gates from `CONTRIBUTING.md`
+  (`CI=true uv run pytest -m "not golden and not benchmark" --cov`, then the
+  `ink, letters` gate at 95 and the `maps` gate at 92, both
+  `--precision=2`). A drop below a gate is answered with a test, never by
+  lowering it.
+- **Commit messages.** Imperative, one line, as given in each slice.
+  Trailers follow P10.2's answer to Q1 (2): the attribution trailers the
+  session's system reminder gives, as P6's "Branch and PR" rule states and
+  P10.0's own commit does. `CONTRIBUTING.md` and this plan state that one
+  rule; commits already made are not rewritten.
+- **Branch and PR.** Four P10 PRs, in this order:
+  1. P10.0 to P10.2 and every part-1 slice land on `p10-triage` and go to
+     `main` through one PR. P11 then lands through its own branches and
+     PRs (P11's plan), starting from `main` after that merge.
+  2. P10.R's version commit, after P11 has merged, goes on a short
+     `release-0.0.1` branch from `main` through its own PR; the `v0.0.1`
+     tag is made on the `main` commit that holds it (P10.R).
+  3. The part-2 slices land on `p10-fixes`, which branches from `main` at
+     the tagged commit or later; its first commit is the bookkeeping commit
+     that records the tag (P10.R), and the P8 hand-off record follows it.
+     Part 2's facts were measured before P11, so before dispatching the
+     first part-2 slice the orchestrating session re-runs, at `p10-fixes`'s
+     base, every part-2 slice's before-checks, the P10.10 AST scan and
+     `uv run vulture --min-confidence 60 src`; it updates each brief's
+     counts and names (a name P11 renamed, a P10.10 name P11 already
+     promoted) and records the deltas in the run log. A delta that changes
+     what a slice changes, not just a count, goes back for a plan fix and a
+     plan-reviewer pass before that slice starts.
+  4. The golden group, if it exists, lands on `p10-golden`, which branches
+     from `main` after the `p10-fixes` PR merges.
+
+  Both part-2 PRs merge before P7.1 starts. Bookkeeping commits that touch
+  only `p10-run-log.md`, `p10-triage.md` (the P8 hand-off record),
+  `specs/001-port/reviews/**` and, for the tag record alone, `tasks.md`'s
+  P10.R line are not slices; only the tag record ticks anything.
+- **Shared files are sequenced, never edited in parallel**: see "Order and
+  parallelism" below. Parallel slices run in detached worktrees as P3 and P4
+  ran them; the orchestrating session lands them one at a time, each rebased
+  onto the branch head with G-here re-run there, in the order the diagram
+  and the shared-file table give (where neither orders two slices, in the
+  order they finish).
+- **What each brief carries:** this preamble (without *(Evidence.)*
+  paragraphs), the Gate commands of "P3 and P4: how to run a slice" (its
+  first paragraph with `$MG` written out, G-here, and G-self where the slice
+  changes `src`), the slice's own body, its `$SLICE` path, `$SCRIPTS` when it
+  runs the AST-neutral check, and its starting commit.
 
 **Triage (P10.1).** Each issue gets exactly one outcome from this closed set:
 
@@ -6067,71 +6225,1490 @@ The rule takes the first that applies, in this order:
    G-self compare can differ.
 5. `fix` otherwise.
 
-Triage writes one table, `specs/001-port/p10-triage.md`, one row per issue:
-slug (or source and line for an issue without a file), area, kind (defect,
-dead code, naming or prose, references, test text, tooling or process),
-outcome, the rule number that assigned it, whether it blocks the first
-release (yes when it breaks a Key decision, a spec Verification step or a
-provider obligation under D8), whether a reproduction exists, and for a fix
-its size (changed lines, estimated) and the goldens it may move (by file
-name in `tests/golden/lynmouth/`, or none). A possible code defect (for
-example the span side sign, the stroke end smoothing, the deposit edge
-clamp, the `labels` switch and the attribution, `tunnel=no`, the landmark
-cap) needs a failing test before its fix, by the repo's TDD rule, so its row
-records whether the issue file already gives a reproduction and, if not,
-what the test will assert. Triage itself changes no code.
+A docstring P6 rewrote to describe the code is a record of the code, not a
+statement of intent: where P6's text and an earlier statement of intent (the
+upstream docstring, a policy docstring elsewhere, a Key decision) disagree,
+rule 1 does not apply.
 
 **Decisions (P10.2).** Every `decide` row goes into one list, put to the
 maintainer once, each item with the readings, the evidence and a
-recommended answer. This is P10's one sanctioned stop point: no fix slice
-that depends on an open item starts until the maintainer answers, and
-nothing else in P10 waits on the maintainer. Each answer is written into the
-row, and the row is triaged again by rules 1, 2, 4 and 5. If any row is
-`fix-golden`, the list also asks whether to open a second regeneration
-window, since P3.15 was written as the port's only one.
+recommended answer (P10.2 below holds the list). This is P10's one
+sanctioned stop point: no fix slice that depends on an open item starts
+until the maintainer answers, and nothing else in P10 waits on the
+maintainer (a slice whose rows are all `fix` at P10.1 may start while the
+list is open). Each answer is written into the row, and the row is triaged
+again by rules 1, 2, 4 and 5. The list always asks, as a conditional,
+whether to open a second regeneration window (Q12), since P3.15 was written
+as the port's only one, so a row that becomes `fix-golden` later has its
+answer already.
 
-**Address (P10.3 onwards).** P10.0 cuts the `fix` rows into slices by area
-(`ink`, `letters`, `maps` lettering, other `maps`, tests and tooling, docs
-and references), each within the P3 and P4 slice size and under the slice
-rules of "P3 and P4: how to run a slice" (test first, no shims, G-here and
-G-self byte-identical, commit message imperative on one line with no
-trailers). The `fix-golden` rows form one golden group that regenerates the
-goldens once: one commit per fix inside a regeneration window run as ADR
-0006 and P3.12 to P3.15 ran theirs (G-window per step, gate options per
-step, the tolerance bound unchanged, one regeneration at the end), recorded
-in a new ADR whose number P10.0 takes from `ls docs/decisions` (0024 if
-P9.2 has written 0023). A `fix` slice whose G-self compare is not
-byte-identical does not land; its row moves to `fix-golden`. Each fix slice
-deletes the issue files it fixes and marks their rows done in
+**Address (P10.3 onwards).** The `fix` rows are cut into the slices below by
+area (release blockers, `ink`, `letters`, `maps` lettering, other `maps`,
+tests and tooling, docs and terms, private names), each within the P3 and P4
+slice size. The `fix-golden` rows form one golden group (P10.11). Each fix
+slice deletes the issue files it fixes and marks their rows done in
 `p10-triage.md` in the same commit; a `close` row's file is deleted by the
-P10.1 commit.
-
-**Order.** P10 keeps its number, after P9, but its triage should run
-earlier. Recommended: P10.0, P10.1 and P10.2 run after P6 merges and before
-P7.1, because a release-blocking defect (the `labels` switch dropping the
-attribution that D8 requires is one candidate) must be known before the
-README states the attribution requirement and before P7.4 tags 0.1.0. A
-release-blocking `fix` slice lands before P7.4. The golden group lands after
-P8, because P8 proves the upstream render's recorded hash through
-`pyntpot`, and moved pixels would break that proof. The other fix slices run
-after P8; a slice that edits a file P9.1 or P9.2 owns (`tests/conftest.py`,
-`tests/architecture/`) does not run in parallel with them.
+commit that closes it (P10.1, or P10.2 for a row an answer closes).
 
 **Gate.** `docs/issues/` holds only `defer` items, each with its reason in
 `p10-triage.md`. Every issue closed by a fix has a test: for a behaviour fix,
 the reproduction test that failed before it; for a deletion, rename or prose
-fix, the check named in its row (`uv run vulture`, a grep, or an
-architecture test) that fails if it comes back. Parity holds byte-exact under
-G-here and G-self, or the goldens were regenerated once in the golden group
-under the rule and its ADR. G-here green.
+fix, the check named in its row that fails if it comes back. Parity holds
+byte-exact under G-here and G-self, or the goldens were regenerated once in
+the golden group under the rule and its ADR. G-here green.
 
-**Later issues.** An issue found after P10.1 starts, in P10's own slices or
-in P7 to P9, is filed in `docs/issues/` as before, appended as a row to
-`p10-triage.md` and triaged by the same rule. A new `decide` row after P10.2
-does not open a second stop: it goes into the phase's hand-off, and until the
-maintainer answers it stands as `defer` with the reason "awaiting a
-maintainer decision". A new `fix-golden` row after the golden group has closed is `defer`
-with that reason, never a second regeneration in P10.
+**Later issues.** An issue found after P10.1 starts, in P10's own slices,
+in P11, or in P7 to P9, is filed in `docs/issues/` as before, appended as a row to
+`p10-triage.md` and triaged by the same rule. A new `fix` row joins the
+not-yet-started slice of its area when it shares that slice's files and
+keeps it within 600 changed lines; otherwise the orchestrating session cuts
+a new slice, P10.12 onwards, with the fields every slice below has, and a
+plan-reviewer reviews it before it starts. A new `decide` row after P10.2
+does not open a second stop: it goes into the phase's hand-off, and until
+the maintainer answers it stands as `defer` with the reason "awaiting a
+maintainer decision". A new `fix-golden` row after the golden group has
+closed is `defer` with that reason, never a second regeneration in P10. A
+new slice goes into part 1 or part 2 by the rule that splits them ("Order
+and parallelism"); one cut after the `p10-triage` PR has merged joins
+part 2 whatever it reaches (part 2 still lands before P7.4); one cut after
+the `p10-fixes` PR has merged lands on its own branch `p10-late-<id>` from
+`main`, through its own PR, before P7.4. An issue found after P7.4 tags 0.1.0 is fixed in a 0.1.x
+patch release (maintainer, 2026-10-07: "0.1.0 can be candidate release and
+then 0.1.x can be fixes"); it never holds 0.1.0 back.
+
+A candidate feature (behaviour the library does not have and could add, such
+as the two recorded at P10.2 for Q4 and Q6) goes in `docs/features/`, one file
+per feature in the register of `docs/issues/`, not in `docs/issues/`. P10 does
+not triage it: it gets no row in `p10-triage.md`, and no P10 slice builds it.
+
+**Order and parallelism.** The maintainer set the phase order on
+2026-10-07 ("most of p10 now, 0.0.1+ as the release, then p8, then the rest
+of p10, then the p7 docs, then the 0.1.0, then p9"), and P11 joins it after
+part 1 (orchestrating session, 2026-10-07, told to the maintainer; P11,
+"Order"):
+
+1. P10.0, P10.1, P10.2 (the stop point).
+2. **Part 1**: the release blockers (P10.3a to P10.3d) and every fix slice
+   whose change no upstream render can reach: a change outside `src/`, a
+   docstring or comment, a rename, the deletion of uncalled code, or a
+   branch `letter` never takes (P10.4a, P10.4b, P10.5a, P10.8, P10.9).
+   Part 1 lands on `main` through the `p10-triage` PR.
+3. **P11** widens the public API. It starts only after part 1 has landed
+   on `main`, so no part-1 slice and no P11 slice ever hold the same file
+   (`GLOSSARY.md`, `letters/nib.py` and this plan are among the files both
+   edit), and it lands through its own PRs.
+4. **P10.R**: tag 0.0.1 for P8, on its own branch and PR after P11 merges.
+5. **P8** migrates the upstream consumer against `v0.0.1`, so its recorded
+   render hash is proved against an engine that part 2 has not touched,
+   through the surface P11 widened.
+6. **Part 2**: every fix an upstream render may reach (P10.4c, P10.5b, P10.6,
+   P10.7), the private-name renames (P10.10a to P10.10d, after every slice
+   that touches their files), and the golden group (P10.11), if any. Part 2
+   branches from `main` after the tag, so it rebases over P11.
+7. P7 (docs, then 0.1.0 at P7.4), then P9.
+
+The rule that splits the parts: a slice is in part 2 if it changes a branch
+that an upstream call of the public API can take and that can change a
+rendered PNG (the upstream render may pass landmarks and spans (D21), may
+have strokes near the card's edge, and may hold `tunnel=no` ways or
+uncovered characters), or if it deletes a name the upstream's use of the
+public API may read (`Label.as_dict` on `Lettering`'s labels,
+`RouteInk.casing` through `Style`, and the route constants: these wait for
+"what upstream reads", below). Names outside the package's exports
+(`ink.noise.edt`, `ink.polyline.point_to_segment`, `letters.trace._radii`)
+are part 1. The private-name renames are part 2 because they follow every
+slice that touches their files. Everything else is part 1. A release
+blocker is part 1 if it cannot change P8's verification render
+(`compose(..., attribution=False)` on the upstream's activity). P10.3a
+qualifies because `compose` calls `draw_attribution` only when
+`attribution` is true. A release blocker that could change that render
+goes to part 2 and still lands before P7.4.
+
+```
+P10.0 ─ P10.1 ─┬─ P10.2 (stop) ─ P10.3d ──────────────┐
+               ├─ P10.3a ─────────────────────────────┤
+               ├─ P10.3c ─┐                           │
+               ├─ P10.4a ─┴─ P10.4b ─ P10.5a ─────────┴─ P10.9 ──┐
+               ├─ P10.3b ────────────────────────────────────────┤
+               └─ P10.8 ─────────────────────────────────────────┴─ (part 1 merged) ─ P11 ─ P10.R ─ P8 ─ (part 2)
+
+(part 2) ─┬─ P10.4c ───────────┐
+          ├─ P10.6 ────────────┼─ P10.10a ─ P10.10b ─ P10.10c ─ P10.10d ─ P10.11 ─ P7.1 … P7.4 ─ P9
+          └─ P10.5b ─ P10.7 ───┘
+```
+
+The lines leaving one `├`/`┬` fork are branches that may run in parallel
+worktrees (their owner files are disjoint); `─` is a sequence, and a slice
+waits for every line that joins before it (P10.9 waits for P10.3d, P10.3a
+and P10.5a; the `p10-triage` PR merges once P10.3b, P10.9 and P10.8 have
+landed, so after all of part 1; P11 starts after that merge, and P10.R
+after P11 has merged). In part 1: P10.3a, P10.3b, P10.3c, P10.4a and P10.8 may start as
+soon as P10.1 has made their rows `fix`, while the P10.2 list is open (their
+rows depend on no question; P10.3c's Q7 member joins it only if the answer
+comes before it lands, otherwise it lands as P10.3c's second commit).
+P10.3d starts once Q1 is answered. P10.4b waits for P10.3c (`ink/wash.py`,
+`references.md`) and P10.4a (`tests/benchmarks/test_ink.py`); P10.5a waits
+for P10.4b (`letters/trace.py`); P10.9 waits for the P10.2 answers (Q2, Q9,
+Q10), P10.3d (`CONTRIBUTING.md`), P10.3a (`maps/attribution.py`) and P10.5a
+(`maps/lettering/pipeline.py`, `letters/nib.py` through P10.4b). P10.8 owns
+files no other slice touches. P10.R waits for every part-1 slice (P10.3b
+in particular: `pyproject.toml`, `uv.lock`) and for every P11 slice. In part 2: P10.4c and
+P10.6 own disjoint files; P10.5b and P10.7 share
+`maps/style_groups.py` and run in that order; P10.10a to P10.10d follow all
+four; P10.11 is last. A conditional slice whose answers remove every member
+is struck through in `tasks.md` and skipped in the sequence.
+
+**P8's hand-off: "what upstream reads".** When P8 is done, the orchestrating
+session reads the migrated upstream code (its import lines and the
+attributes it reads off `pyntpot` objects, from the call sites, in the
+upstream repo at P8's final commit) and appends to `p10-triage.md` a
+section `## Upstream reads (P8, <upstream commit>)`: every `pyntpot` name,
+attribute, method and module constant the upstream imports or reads, one
+per line with its call site. That is a bookkeeping commit on `p10-fixes`.
+It then re-triages two rows from it and writes the outcome, with a yes or
+no per name, into each row and into the brief; the implementer never
+decides it:
+
+- `maps-lettering-label-as-dict-unused`: `fix` in P10.6 (delete
+  `Label.as_dict`) if the list does not name `as_dict`; `close` with the
+  consumer named in `as_dict`'s docstring if it does.
+- `maps-style-groups-route-constants-have-no-reader` (under Q8's answer):
+  `ROUTE_INK`, `ROUTE_EFFECT_OFF`, `ROUTE_SHADOW` and `RouteInk.casing` are
+  decided per name: delete if the list does not name it; keep with one
+  sentence in the module docstring if it does. `CASING_COLOURS` follows
+  `RouteInk.casing` (kept, deferred or deleted with it), since `casing`
+  reads it; the brief carries no separate yes or no for it. A private
+  constant the list names is a D21 breach upstream and is filed as a later
+  issue.
+
+If P8 records no list, the `as_dict` row becomes `defer` ("no record of
+what upstream reads"), and the Q8 row applies D6 and D21 alone:
+`ROUTE_INK`, `ROUTE_EFFECT_OFF` and `ROUTE_SHADOW` in the private
+`maps.style_groups` are deleted, and `RouteInk.casing`, reachable through
+the public `Style`, becomes `defer` with the same reason, and
+`CASING_COLOURS` with it.
+
+**ADR numbers.** Fixed in the table under "P3 and P4: how to run a slice":
+P10.5b writes 0024 (`route-ink-names-follow-the-route`, only under Q5 (2))
+and P10.11 writes 0025 (`second-golden-regeneration`, only if the golden
+group exists). P11.1 writes 0026, the lowest number above 0023 that P10
+has not fixed. P10 runs before P9, so 0022 and 0023 do not exist yet;
+before writing, `ls docs/decisions` must show the number free, otherwise
+stop and report.
+
+**P10 against P9 and P7.** P10, both parts, lands before P7.1 and before P9.
+P10.9 edits `specs/001-port/spec.md` and `GLOSSARY.md`, which P9.1 and P9.2
+also edit, and P10.3c, P10.4b and P10.10c edit `references.md`, which P9.4
+folds `design-sources.md` into; P9 starts after P10, so none of them runs
+in parallel.
+
+**P10 against P11.** P11 runs strictly between part 1 and P10.R, so no
+P10 slice runs beside a P11 slice and no row of the table below names P11;
+part 2 branches from a `main` that holds P11. No P10 slice renames or
+deletes a name P11's gap list promotes (evidence below). Two rules keep it
+so:
+
+- P11.0 re-measures its list at its own starting commit, after part 1. If
+  that list adds an underscore name that P10.10 would rename, P11 promotes
+  it under the name P10.10 would give it (the underscore dropped, or the
+  clash name chosen by the P10.10 rule), and that P10.10 slice drops it
+  from its list. If it adds a name a part-2 slice deletes (`Label.as_dict`,
+  the route constants, `RouteInk.casing`), P11.0 leaves the name out of
+  its list and files it as a later `decide` row, which stands `defer`
+  until the maintainer answers ("Later issues"); it opens no second stop.
+- P10.10's fresh names for clashing underscore names are checked against
+  the public names P11 added as well as against `GLOSSARY.md`.
+
+*(Evidence.)* The names P10 renames or deletes: `ink.noise.edt` (renamed
+`chamfer_distance`), `ink.polyline.point_to_segment`, `letters.trace._radii`,
+`Label.as_dict`, `ROUTE_INK`, `ROUTE_EFFECT_OFF`, `ROUTE_SHADOW`,
+`CASING_COLOURS`, `RouteInk.casing`, and the 58 underscore names of P10.10
+(listed at `4e316a3` by the private-import AST scan of the P10.1 seed: 6 in
+`ink.tip`, 6 in `letters.skeleton` and `letters.trace`, 12 in other `maps`,
+34 in `maps.lettering`; every one starts with `_`). The names P11's "The
+gap" bullet promotes: `brush_from_id`, `BrushStyle`, `ink_density`,
+`PaperStyle`, `Layer`, `PIGMENTS`, `TRANSPARENCY`, `rgb`, `Setting`, `Mark`,
+`FaceStyle`, `HandStyle`, `NibGroups`, `plate`, `NibSurface`, `to_img`,
+`save_webp`, `Cache`, `OverpassFeatures` and `OpenTopoData` (none starts
+with `_`), plus `fetch`, `paint`, `letter` and `compose`, already public.
+Compared by defining module and name, the two sets share no entry, and no
+P10 slice renames a module. P10 touches some of P11's modules
+(`letters/nib.py` in P10.4b and P10.9, `draw_plate`'s `NibGroups` call in
+P10.5a), but changes none of those names.
+
+The shared files that force a sequence (every row in landing order):
+
+| File or site | Slices, in landing order |
+| --- | --- |
+| `src/pyntpot/maps/style_groups.py` | P10.3a (`LetteringPolicy.labels` comment), P10.9 (two "sheet" comments, widened Q10), ~~P10.5b (`RouteInks` docstring, if Q5 (2))~~ (removed: Q5 answered (1)), P10.7 (route constants, under Q8 and the upstream-read list) |
+| `src/pyntpot/maps/attribution.py` | P10.3a (the gate), P10.9 (pixel term, if Q2) |
+| `src/pyntpot/maps/osm_elements.py` | P10.9 (`LANDMARK_TAG_KEYS` comment), P10.7 (`_waterway`), P10.10c (`_polygon_rings`) |
+| `src/pyntpot/maps/lettering/pipeline.py` | P10.5a (`draw_plate`'s face), P10.9 (pixel term, if Q2), P10.5b (`draw_plate`'s nib, if Q5 (2)), P10.10d (renamed imports) |
+| `src/pyntpot/maps/lettering/{label,picks,spans,span_sides,placement*}.py` | P10.9 (terms), P10.6 (fixes), P10.10d (renames) |
+| `tests/unit/maps/lettering/test_spans.py` | P10.9 (the three "rule seven" docstrings, line 64's "the sheet" if Q10), P10.6 (new side test), P10.10d (repointed imports, if any) |
+| `src/pyntpot/letters/trace.py` | P10.4b (`edt` import), P10.5a (`_radii`), P10.10b (renames) |
+| `src/pyntpot/letters/nib.py` | P10.4b (`edt` import), P10.9 (the "dark field" docstring line), P10.10b (repointed imports, if any) |
+| `tests/unit/maps/lettering/test_draw_plate.py` | P10.5a (outline-route test), P10.5b (route-ink tests, if Q5 (2)) |
+| `src/pyntpot/maps/osm.py` | P10.7 (`_open_rivers` docstring), P10.10c (`_osm_layers`) |
+| `tests/support/lettering.py` | P10.9 (line 39's "card pixels", if Q2), P10.6 (`arc`'s docstring, only if it names the drawn side) |
+| `tests/benchmarks/test_ink.py` | P10.4a (deletions), P10.4b (the rename in `test_the_distance_transform`) |
+| `src/pyntpot/ink/wash.py` | P10.3c (`separated` docstring, and `wash`'s under Q7 (A) or (C)), P10.4b (import and calls of `edt`) |
+| `src/pyntpot/ink/deposit.py` | P10.3c (`spend` docstring), P10.4c (`deposit` body) |
+| `docs/explanation/references.md` | P10.3c (new entries), P10.4b (`chamfer-distance` lines), P10.10a (the `value-noise` and `fbm` lines, for `ink.tip._fbm1`), P10.10c (renamed `compose` sites); P9.4 after P10 |
+| `CONTRIBUTING.md` | P10.3d (`## Commits`); ~~P10.9 (one sentence, if Q9 (c))~~ (removed: Q9 answered (a)) |
+| `pyproject.toml`, `uv.lock` | P10.3b (prek), P10.R (version) |
+| `specs/001-port/spec.md`, `GLOSSARY.md` | P10.9, then P9.1 and P9.2 (after P10) |
+| `tests/architecture/**`, `tests/conftest.py` | owned by P9.1 and P9.2; no P10 slice edits them (the private-name pin goes in `tests/unit/maps/test_import_order.py`) |
+| `tasks.md`, `p10-triage.md`, `p10-run-log.md` | the orchestrating session only, at landing |
+
+#### P10.0 Fatten P10; plan-reviewer pass
+
+- This section. A plan-reviewer agent reviews it, and P10.1 does not start
+  until the review passes. `tasks.md` gains one line per slice id below.
+- Measured from five read-only investigation dossiers at `91ff457` (ink and
+  references; letters; maps lettering; other maps and `src` terms; tooling,
+  process and the run logs), each fact a slice uses re-checked at `dd19592`.
+- Owner files: `specs/001-port/plan.md` (this section),
+  `specs/001-port/tasks.md` (the P10 list). The orchestrating session adds
+  the review outcome to the run log.
+- Commit: `Fatten P10 into slices`
+
+#### P10.1 Triage table
+
+- Implements the triage; predecessor P10.0 (review passed). Touches no
+  `src/` or `tests/` file. Run by the orchestrating session, not an
+  implementer (it creates `p10-triage.md`).
+- Owner files: `specs/001-port/p10-triage.md` (new),
+  `specs/001-port/p10-run-log.md` (the orchestrating session appends the
+  entry), and the `docs/issues/` files of rows P10.1 closes (deleted).
+- Leave alone: `src/**`, `tests/**`, every issue file whose row is not
+  `close`.
+- **Re-verify each claim at P10.1's own starting commit**: run the
+  reproduction the issue file gives (or, where it gives none, the check
+  named in the seed below) and record the command and its one-line result
+  in the row. A claim that no longer reproduces is `close`, rule 1, whatever
+  the seed says. A row that differs from the seed records why.
+- **The table.** `p10-triage.md` header: starting commit, date, the rule
+  list (by reference to this section). Then one table, one row per issue,
+  with these columns: slug (or source and line for an item without a file);
+  area; kind (defect, dead code, naming or prose, references, test text,
+  tooling or process); outcome; rule number; blocks the first release (yes
+  when it breaks a Key decision, a spec Verification step or a provider
+  obligation under D8; the row names which); reproduction (the command run
+  and its result); test or check (for a behaviour fix the failing test it
+  starts with, for any other fix the check that fails if it comes back);
+  size (changed lines, estimated); goldens it may move (by file name in
+  `tests/golden/lynmouth/`, or none); slice (the id below, or the P10.2
+  question); done (empty until the slice lands; then its commit). Below the
+  table, a list "Read and resolved in the logs, no row" names the run-log
+  findings the logs already record as done (P10.0 found eight: the coverage
+  gate precision, the first CodSpeed job time, the 3.15 prerelease segfault,
+  PR #6's closure, P5.3b superseded by P5.3c, the plan's Python blocks and
+  ruff format, the inventory status column, and the glossary's "darkness
+  grid"), each with its source line and the commit or line that resolved it.
+- **Seed** (P10.0's proposal, which P10.1 confirms or changes with a logged
+  reason). "Q" points at the P10.2 question.
+
+  | Row | Area | Kind | Proposed outcome (rule) | Blocks release | Slice |
+  | --- | --- | --- | --- | --- | --- |
+  | `contributing-commit-trailers`, with the plan's own contradiction (P6 "Branch and PR" against "P3 and P4: how to run a slice", P9 and this section) folded in | process | tooling or process | decide (3), Q1 | no | P10.3d |
+  | `duplicate-benchmarks` | tests | test text | fix (5) | no | P10.4a |
+  | `edt-is-a-chamfer-distance` | ink | naming or prose | fix (5) | no | P10.4b |
+  | `ink-deposit-edge-clamp` | ink | defect | fix (5) | no | P10.4c |
+  | `ink-tip-smooth-path-ends` | ink | defect | decide (3), Q6 | no | P10.11 or close |
+  | `letters-card-pixels-and-display-pixels`, with "card pixels" in `ink/curves.py` (an `ink` module naming a `maps` grid) folded in | letters | naming or prose | decide (3), Q2 | no | P10.9 |
+  | `letters-font-missing-glyph-advance` | letters | defect | decide (3), Q3 | no | P10.5b or close |
+  | `letters-nib-outline-width-reads-face-route` | letters | defect | fix (5) | no | P10.5a |
+  | `letters-nib-pen-angle-ignores-writing-line` | letters | defect | decide (3), Q4 | no | P10.11 or close |
+  | `letters-style-label-route-ink-not-filled`, with the cache-key trap recorded (`route_inks` is in neither `BASE_GROUPS` nor `LETTERING_GROUPS`, so a fill without a key change reuses a stale label plate) | letters | defect | decide (3), Q5 | no | P10.5b or close |
+  | `letters-trace-radii-unused` | letters | dead code | fix (5) | no | P10.5a |
+  | `maps-lettering-label-as-dict-unused` | maps lettering | dead code | defer (2), "awaiting what upstream reads", until P8's hand-off re-triages it ("P8's hand-off") | no | P10.6 |
+  | `maps-lettering-picks-journal-picks-cap` | maps lettering | defect | fix (5) | no | P10.6 |
+  | `maps-lettering-sheet-homonym` | maps lettering | naming or prose | decide (3), Q10 | no | P10.9 |
+  | `maps-lettering-span-sides-curve-scale-offset` | maps lettering | defect | defer (2): the sweep needs the four upstream rides the repository does not hold (D16 keeps them out) and a scoring rule it does not record | no | none |
+  | `maps-lettering-span-sides-freer-side-sign` | maps lettering | defect | fix (5) | no | P10.6 |
+  | `maps-lettering-spans-place-spans-rung-order` | maps lettering | defect | decide (3), Q11 | no | P10.6 or close |
+  | `maps-lettering-spans-rule-seven-in-tests` | maps lettering | test text | fix (5) | no | P10.9 |
+  | `maps-osm-elements-tunnel-no` | maps | defect | fix (5) | no | P10.7 |
+  | `maps-style-groups-labels-switch-also-drops-the-attribution` | maps | defect | fix (5) | yes, D8 | P10.3a |
+  | `maps-style-groups-route-constants-have-no-reader`, with `RouteInk.casing` and `CASING_COLOURS` (read only by `casing`) and `RouteInk.effect` (read only by `casing`) folded in | maps | dead code | decide (3), Q8 | no | P10.7 or defer |
+  | `maps-track-index-private-names-imported` (58 names, not the 9 filed) | all | naming or prose | decide (3), Q9 | no | P10.10a to P10.10d |
+  | `prek-not-in-the-environment` | tooling | tooling or process | fix (5) | yes, Verification 1 | P10.3b |
+  | `shared-generators` | maps painter | defect | defer (2): per-item seeding is a new property of the painter that moves every golden, not a fix against any docstring, spec line or Key decision | no | none |
+  | `slow-tests-in-mutation-runs` (a): `tests/unit/maps/test_cli.py::TestMap::test_a_full_cache_makes_no_request` paints the whole fixture without `@pytest.mark.golden`, against the slice rule | tests | test text | fix (5) | no | P10.8 |
+  | `slow-tests-in-mutation-runs` (b): the wider mutation test selection | tooling | tooling or process | defer (2): a performance change to tooling that ADR 0012's Consequences leave for later | no | none (P10.8 narrows the file to this part) |
+  | `src-docstrings-use-non-canonical-terms` (11 sites, not the 8 filed) | maps, letters | naming or prose | fix (5) | no | P10.9 |
+  | `unlisted-technique-blurred-mask-rim` | references | references | decide (3), Q7 | yes under Q7 (A) or (C), D24 | P10.3c or close |
+  | `unlisted-technique-ink-reservoir` | references | references | fix (5) | yes, D24 | P10.3c |
+  | `unlisted-technique-pigment-separation` | references | references | fix (5) | yes, D24 | P10.3c |
+  | `CONTRIBUTING.md:5` "It is what CI runs": CI never runs prek (P10.0 finding, own row because it does not block the release) | tooling | tooling or process | fix (5) | no | P10.3b |
+  | `p5-run-log.md:125` the README badge | docs | naming or prose | decide (3), Q13: badge or no badge is a presentation choice nothing settles | no | P7.1's brief or close |
+  | `tasks.md:124` start the manual Mutation workflow once on `main` | tooling | tooling or process | fix (5), an action with no diff | no | the orchestrating session, after P10.1 |
+  | `spec.md:121` the OpenTopoData budget "per process" (ADR 0004: per instance) | docs | naming or prose | fix (5) | no | P10.9 |
+  | `p5-run-log.md:73` mutmut records 0.0 durations under forkserver | tooling | tooling or process | close (1): a fact about mutmut 3.8; no repo text claims otherwise | no | none |
+  | `p5-run-log.md:82` mutmut classes SIGKILL as segfault | tooling | tooling or process | close (1): ADR 0012 "Score" records it | no | none |
+  | `p6-run-log.md:54` two design inputs maintainer-checked | references | references | close (1): `references.md` records `maintainer-checked`; every canonical line is verified | no | none |
+  | `pyntpot.ink.polyline.point_to_segment` has no caller (P10.0 finding: vulture at 60) | ink | dead code | fix (5) | no | P10.4b |
+
+- Reproductions to run (each row's own if its file gives one): the
+  attribution probe (`draw_attribution` on a white 600 by 80 image with
+  `Style.default()` and with `lettering.labels=False`: a changed box, then
+  `None`); `uv run prek --version` (spawn error); `grep -c "prek"
+  .github/workflows/ci.yml` (0); the three `test_every_site_cites_its_key`
+  checks are not red yet (no entry exists), so the reproduction for the
+  `unlisted-technique-*` rows is `grep -c "<key>" docs/explanation/references.md`
+  (0) and the absence of a `Source:` line in the site's docstring; the
+  deposit call of the issue file (`acc[3, 0]` is 1.0); the `_smooth_path`
+  line of the issue file (ends 1.41 and 18.19); `grep -rlnw edt --include=*.py
+  src tests` (14 files); `uv run vulture --min-confidence 60 src` for
+  `_radii`, `as_dict`, the route constants, `casing` and
+  `point_to_segment`; `journal_picks(Annotations(landmarks=("A", "B",
+  "C")), basemap, 1)` over a `label_basemap` with those three candidates
+  (three entries); the issue's `_freer_side` probe (side 1, line middle y
+  283.2 on the solid side); a `tunnel=no` river through
+  `tests/unit/maps/test_layers.py`'s helpers (dropped); the 11-site
+  non-canonical grep plus the multiline search
+  `(label|darkness|dark)\s*\n\s*(#:?\s*)?(agent|grid|field)`;
+  `grep -rnIi "rule seven" tests src` (3 lines); the private-name AST scan
+  (58 names; the P10.10 pin is the same scan as a test);
+  `grep -B2 "def test_a_full_cache_makes_no_request" tests/unit/maps/test_cli.py`
+  (no marker).
+- **Rows `close` at P10.1** have no file (the three run-log rows) unless
+  re-verification closes a filed row; the commit deletes any such file.
+- **After the commit**, the orchestrating session dispatches the Mutation
+  workflow once on `main` (the `tasks.md:124` row): workflow `mutation.yml`,
+  ref `main`, inputs `mode: pattern`, `pattern: pyntpot.ink.polyline.x_simplify*`
+  (72 mutants, about 26 minutes; it exercises the plan, one shard, the
+  artifact upload and the score job), through the GitHub tools
+  (`actions_run_trigger`). It records the run URL, wall time and score line
+  in the run log, and the row is marked done in P10.2's commit. If dispatch
+  is refused, the row goes into P10.2's maintainer-actions list instead.
+- Hand-off: row count by outcome, every row that differs from the seed with
+  its reason, the reproduction results.
+- Gate: G-here (`git diff --stat -- src tests` is empty).
+- Commit: `Triage the port's issues`
+
+#### P10.2 Maintainer decisions
+
+- Implements the decisions stop; predecessor P10.1. Run by the
+  orchestrating session, not an implementer. It puts the list below to the
+  maintainer once, in this order (Q1 first: every later commit's trailer
+  rule depends on it), each with its readings, evidence, recommendation and
+  what each answer makes the row. It copies the evidence from the rows of
+  `p10-triage.md`, re-run at P10.1. The part-1 slices whose rows are all
+  `fix` at P10.1 may run while the list is open.
+- Owner files: `specs/001-port/p10-triage.md` (answers, re-triaged
+  outcomes, the mutation row marked done), `specs/001-port/p10-run-log.md`
+  (the maintainer's words verbatim), `specs/001-port/tasks.md` (a slice line
+  whose every member an answer removed is struck through with the reason),
+  the issue files of rows an answer closes (deleted).
+- **The questions.**
+  - **Q1 `contributing-commit-trailers`.** Readings: (1) no trailers
+    (`CONTRIBUTING.md` "No co-authorship trailers."; this plan's "P3 and P4"
+    slice rule and P9); (2) the session's attribution trailers
+    (`Co-Authored-By:` and `Claude-Session:`), as 32 of 80 commits at
+    `91ff457` carry them, P6's "Branch and PR" rule states, and the session
+    harness asks for. The maintainer's answer is itself the user's
+    instruction and decides the rule under either reading. Under (1), a line
+    in `CLAUDE.md` carries the rule into later sessions, whose system
+    reminder would otherwise ask for the trailers: the maintainer adds it,
+    or tells the session to (Maintainer actions). Recommended: (2). Under
+    (2) the row is `fix`: P10.3d edits `CONTRIBUTING.md` and this plan's
+    three phrases quoted in reading (1). Under (1) it is `fix`: the
+    `CLAUDE.md` line, and P10.3d edits P6's "Branch and PR" sentence and
+    this section's commit rule.
+  - **Q2 `letters-card-pixels-and-display-pixels`.** One grid, two names: "card
+    pixel" on 60 `src` lines in 22 files (mostly `maps/lettering`, also
+    `ink/curves.py`), "display pixel" on 66; `GLOSSARY.md` defines neither.
+    Readings: (1) "display pixels" (`maps.card.Card` names the grid
+    `display`; ADR 0003 and 0007 say "display pixels"; it pairs with
+    "render pixels"; "card" already prefixes "card metres"); (2) "card
+    pixels" (the glossary's `mark` and `backdrop` rows; the lettering code).
+    Recommended: (1). Either answer is `fix` in P10.9 (prose and glossary
+    only, about 70 lines).
+  - **Q3 `letters-font-missing-glyph-advance`.** A missing glyph advances
+    0.28 em; the face's space is 0.23 em; P6's docstring states 0.28.
+    Readings: (1) 0.28 is the ported literal (D5); under (2) an upstream
+    label with an uncovered character renders differently from 0.1.0 on
+    (part 2 runs after P8, so P8's hash is unaffected); (2) the
+    face's own space (the original docstring; a fixed literal ignores another
+    face's metrics). Recommended: (1), `close` (rule 1). Under (2): `fix` in
+    P10.5b (no Lynmouth text reaches the branch).
+  - **Q4 `letters-nib-pen-angle-ignores-writing-line`.** The nib angle is
+    fixed to the page; a name set along a path turns its glyphs but not the
+    nib. Readings: (1) page-fixed is the ported behaviour (the goldens were
+    made with it); (2) the nib turns with the writing
+    line (the upstream comment said "anticlockwise from the writing line").
+    Recommended: (1), `close` (rule 1), recorded as a candidate feature after
+    0.1.0. Under (2): `fix-golden` (rule 4: `East Lyn` is set along its
+    water on the golden card, so `labels-centreline.webp` and `map.png`
+    move), which needs Q12 yes, else `defer`.
+  - **Q5 `letters-style-label-route-ink-not-filled`.** Nothing copies the
+    route ink into `NibStyle.label_route_ink`. Readings: (1) independent
+    inks, the theme sets both (the current comment; ADR 0005 "Route ink":
+    `route_inks` is read only when the card is composed, so changing an ink
+    repaints no plate); (2) coupled: route-ink names follow the route (the
+    original upstream comment; `lettering_marks.KIND_INK` "the track is the
+    route's colour"). Recommended: (1), `close` (rule 1), because reading 2
+    contradicts ADR 0005's "Route ink" paragraph and would need a superseding
+    ADR. Under (2): `fix` in P10.5b, golden-neutral (the default inks are
+    equal), with the cache key taken from the filled style and ADR 0024
+    superseding that paragraph; adding `route_inks` to `LETTERING_GROUPS` is
+    rejected, because it would change the pinned `lettering_digest` literal
+    `d15ae2f30e9ca5ce` that "What the window freezes" fixes.
+  - **Q6 `ink-tip-smooth-path-ends`.** `_smooth_path` (`smooth_path` once
+    P10.10a has run under Q9 (a)) draws a stroke's ends
+    in by about 0.4 of the radius; P6's docstrings now say so. Readings: (A)
+    a defect, hold the ends (the original docstring); (B) the shipped look,
+    which the goldens pin. Recommended: (B), `close` (rule 1). Under (A):
+    `fix-golden` (every pen and label stroke passes through it:
+    `pen.webp`, `labels-centreline.webp`, `map.png`), which needs Q12 yes,
+    else `defer`.
+  - **Q7 `unlisted-technique-blurred-mask-rim`.** The no-flow branch of
+    `pyntpot.ink.wash.wash` (the rim as a mask minus its blur) is credited
+    in `design-sources.md` (Stamen, "rim darkening via blurred mask") and has
+    no entry. Readings: (A) its own entry `blurred-mask-rim` (inclusion rule
+    (b); `box-blur`, as simple, has one; the Stamen post is already verified
+    in `references.md`); (B) an elementary operation, excluded; (C) part of
+    the existing `edge-darkening` technique: P6's inclusion rule (b) lists
+    "edge darkening" as a `design-sources.md` technique, the Stamen post is
+    already one of `edge-darkening`'s design inputs, and the no-flow branch
+    (`wash.py:218-219`) is the other half of the same choice as
+    `flow_edge`; it needs no new key and no blog post as a canonical source,
+    which no other entry has. Recommended: (C). Under (C): `fix` in P10.3c
+    and a release blocker (D24): `pyntpot.ink.wash.wash` is added to
+    `edge-darkening`'s `Implemented in:` line, and `wash`'s docstring gains
+    ``Source: `edge-darkening` in docs/explanation/references.md.``. Under
+    (A): `fix` in P10.3c and a release blocker (D24), the new entry. Under
+    (B): `close` (rule 1).
+  - **Q8 `maps-style-groups-route-constants-have-no-reader`.** `ROUTE_INK`,
+    `ROUTE_EFFECT_OFF`, `ROUTE_SHADOW`, `CASING_COLOURS` and
+    `RouteInk.casing` have no reader in `pyntpot`; `RouteInk.effect` is read
+    only by `casing`. `maps.style_groups` is private (D6: "Everything else
+    is private"), and D21 says the upstream "never imports a private name",
+    so a D21-compliant consumer cannot read the four constants; only
+    `RouteInk.casing`, reached through the public `Style`, could be read.
+    Readings: (a) delete; (b) keep for the upstream SVG page, which draws
+    glow, casing and shadow (D21); (c) fill each route ink's `effect` from
+    `ROUTE_EFFECT_OFF`. Recommended: (a) for `ROUTE_INK`,
+    `ROUTE_EFFECT_OFF` and `ROUTE_SHADOW` on the D6 and D21 evidence, and
+    for `casing` only if P8's "Upstream reads" record (P10 "Order and
+    parallelism", "P8's hand-off") does not name it; `CASING_COLOURS`
+    follows `RouteInk.casing` (kept, deferred or deleted with it), since
+    `casing` reads it; keep the `effect` field (part of the theme schema
+    and the full digest).
+    Reject (c): it adds behaviour whose only reader is dead. Under (a) the
+    row is `fix` in P10.7 (part 2), re-triaged per name at P8's hand-off
+    (the three other constants and `casing`; `CASING_COLOURS` with
+    `casing`): a name the record shows read is kept with one sentence in
+    the module docstring. Under (b): `close` (rule 1), with the consumer named. Until
+    P8's hand-off the row stands as `defer` ("awaiting what upstream
+    reads").
+  - **Q9 `maps-track-index-private-names-imported`.** 58 underscore names
+    cross modules (ink 6, letters 6, other maps 12, maps lettering 34), not
+    the 9 filed. Readings: (a) every name another `src` module imports is
+    public (the rule P3.2 applied to its moves; module-level, so it joins
+    no `__all__` and needs no ADR): rename all 58 in four
+    slices by area, choosing a fresh name where dropping the underscore
+    clashes (8 names: `skeleton._chains`, `compose._plates`,
+    `contours._pad`, `placement_costs._on_paper`, `placement_lift._tilt`,
+    `placement_window._bow`, `placement_window._window`,
+    `placement_names._stem`), checked against `GLOSSARY.md`, and pin it with
+    an AST test; (b) only the 12 other-`maps` names, no pin; (c) underscore
+    means package-internal here: `close`, with a sentence in
+    `CONTRIBUTING.md`. Recommended: (a). Under (a): P10.10a to P10.10d.
+    Under (b): P10.10c only, without the pin. Under (c): `close`, and the
+    sentence lands in P10.9.
+  - **Q10 `maps-lettering-sheet-homonym`.** "Sheet" means both
+    `ink.sheet.Sheet` (the glossary's) and the map as drawn so far. In the
+    issue's scope (`src/pyntpot/maps/lettering/**` and the
+    `maps/lettering_*.py` modules) the second sense is on 52 lines in 15
+    files; three `GLOSSARY.md` rows use it (`wash`, `dark grid`, `terms`),
+    and one test line (`test_spans.py` line 64). Elsewhere in `maps` "sheet"
+    is on more lines (117 non-`Sheet` lines in 45 files), and "page" there
+    means the upstream SVG page (`compose.py`, `painter/*`), so neither is
+    in scope. Readings: (1) keep "sheet" for the class and call the drawn
+    card "map" (already the glossary's informal word); (2) accept a second
+    sense in the glossary (against "one canonical name per concept"); (3)
+    leave it. Recommended: (1), in the issue's scope only. Under (1) or
+    (2): `fix` in P10.9 (prose and glossary only; the test builder
+    `sheet_card` is an identifier and stays). Under (3): `close`.
+  - **Q11 `maps-lettering-spans-place-spans-rung-order`.** The longest span
+    takes the rung nearest the route. Readings: (1) the longest is the
+    outer rail (the original upstream docstring); (2) the longest is nearest
+    (the code ported verbatim, which every upstream card with overlapping
+    spans shows; neither order lets ticks cross, and none is dropped).
+    Recommended: (2), `close` (rule 1). Under (1): `fix` in P10.6, after
+    the side-sign fix; the order of `Lettering.spans` (D21) changes.
+  - **Q12 a second regeneration window**, always asked, as a conditional:
+    "If any answer above, or a later G-self difference in a fix slice, makes
+    a row `fix-golden`, may P10.11 open a second regeneration window?"
+    P3.15 was written as the port's only regeneration. Yes: P10.11 runs at
+    the end of part 2 under its rule. No: those rows are `defer` ("a look
+    change outside parity, after 0.1.0"). Recommended: yes only for rows
+    that a fix slice's G-self moves (a defect fix whose look change is a
+    side effect); Q4 (2) and Q6 (A) are look changes the recommendations
+    already close.
+  - **Q13 the README badge** (`p5-run-log.md:125`). P5.4 did not adopt the
+    CodSpeed badge from PR #6 (closed, not merged) because `README.md` was
+    outside its owner files; the README has no badge today, and
+    `docs/explanation/performance.md` already links the public dashboard.
+    Readings: (1) P7.1 adds the badge (CodSpeed runs on every PR and push
+    to `main`; the dashboard is public); (2) no badge (P7.1's README list
+    has none; a third-party image adds an external request to every README
+    view). Recommended: (1). Under (1): `fix` (rule 5), done by P7.1, with
+    one line in P7.1's brief (the badge links the `codspeed.io` form that
+    `performance.md` uses); no P10 slice. Under (2): `close` (rule 1).
+  - **Q14 publish 0.0.1 to PyPI, or tag only?** P10.R tags `v0.0.1` for
+    P8. Pushing a `v*` tag runs `.github/workflows/publish.yml`
+    (`environment: pypi`, `id-token: write`, `uv build`, then
+    `pypa/gh-action-pypi-publish`, trusted publishing). `pyntpot` is not on
+    PyPI (`https://pypi.org/pypi/pyntpot/json` returned 404 on 2026-10-07),
+    but a pending trusted publisher can be registered for a name not yet
+    on PyPI, and whether one is registered could not be checked from this
+    session; nor could whether the `pypi` environment has a required
+    reviewer (the proxy refuses the environments API). Readings: (1) tag
+    only: P8 installs from the git tag (spec D11, `spec.md:43`: "a git tag
+    until the first PyPI release"); before the tag push the maintainer
+    confirms that no pending trusted publisher for `pyntpot` is registered
+    on PyPI, or that the `pypi` environment requires their approval; the
+    Publish run on the tag then fails at the upload step, uploading
+    nothing, and the session records that run as expected (or the
+    maintainer rejects the deployment, if the environment asks for a
+    reviewer); (2) PyPI: before
+    the tag, the maintainer registers a pending trusted publisher on PyPI
+    (project `pyntpot`, owner `findlaywebb`, repository `pyntpot`,
+    workflow `publish.yml`, environment `pypi`); the tag push then
+    publishes 0.0.1 and claims the name, and that version can never be
+    uploaded again. Recommended: (1): 0.0.1 is a candidate for one
+    consumer, and 0.1.0 at P7.4 is the first public release. Either answer
+    leaves P10.R's commit and tag unchanged; it decides only the
+    maintainer action below and what the tag confirmation asks. (A tag
+    `publish.yml` ignores, such as `0.0.1` without the `v`, was weighed and
+    not taken: D11 asks only for "a git tag", but D14 fixes tags as `v*`,
+    and the confirmation above closes the risk.)
+- **Maintainer actions** (not decisions):
+  - the Mutation workflow run, if the orchestrating session's dispatch was
+    refused ("Actions, Mutation, Run workflow, branch `main`, mode
+    `pattern`, pattern `pyntpot.ink.polyline.x_simplify*`");
+  - under Q1 (1): the `CLAUDE.md` line stating that commits carry no
+    attribution trailers, added by the maintainer, or by the orchestrating
+    session when the maintainer tells it to (quoted in the run log);
+  - under Q14 (2): the pending trusted publisher on PyPI, before P10.R's
+    tag is pushed;
+  - at P10.R: confirm the `v0.0.1` tag before the orchestrating session
+    pushes it (as P7.4 asks for 0.1.0); under Q14 (1) the same confirmation
+    states that no pending trusted publisher for `pyntpot` is registered on
+    PyPI (or that the `pypi` environment requires the maintainer's
+    approval);
+  - at P10.R, if the proxy refuses `git push origin v0.0.1`: push
+    `v0.0.1` at `<sha>` (the session gives the sha).
+- **Fill-in table** (in `p10-triage.md` and the run log):
+
+  | Q | Row | Recommended | Answer (maintainer's words) | Row becomes |
+  | --- | --- | --- | --- | --- |
+  | Q1 | `contributing-commit-trailers` | (2) keep the trailers | | |
+  | Q2 | `letters-card-pixels-and-display-pixels` | (1) display pixels | | |
+  | Q3 | `letters-font-missing-glyph-advance` | (1) close | | |
+  | Q4 | `letters-nib-pen-angle-ignores-writing-line` | (1) close | | |
+  | Q5 | `letters-style-label-route-ink-not-filled` | (1) close | | |
+  | Q6 | `ink-tip-smooth-path-ends` | (B) close | | |
+  | Q7 | `unlisted-technique-blurred-mask-rim` | (C) part of `edge-darkening` | | |
+  | Q8 | `maps-style-groups-route-constants-have-no-reader` | (a) delete `ROUTE_INK`, `ROUTE_EFFECT_OFF`, `ROUTE_SHADOW`; `casing` by P8's "Upstream reads", `CASING_COLOURS` with it; defer until P8's hand-off | | |
+  | Q9 | `maps-track-index-private-names-imported` | (a) rename all, four slices, pin | | |
+  | Q10 | `maps-lettering-sheet-homonym` | (1) "map", in the issue's scope | | |
+  | Q11 | `maps-lettering-spans-place-spans-rung-order` | (2) close | | |
+  | Q12 | second regeneration window, if a row becomes `fix-golden` | yes for a row a fix slice's G-self moves | | |
+  | Q13 | `p5-run-log.md:125` the README badge | (1) P7.1 adds it | | |
+  | Q14 | 0.0.1 on PyPI or tag only | (1) tag only | | |
+
+- Each answer is re-triaged by rules 1, 2, 4 and 5 and written into its
+  row. An answer that names a reading not listed is recorded verbatim and
+  triaged by the same rules; if it needs a slice not cut here, "Later
+  issues" applies.
+- Gate: G-here (no `src/` or `tests/` change).
+- Commit: `Record the maintainer's answers to the P10 decisions`
+
+#### P10.3a The labels switch no longer gates the attribution
+
+- Implements `maps-style-groups-labels-switch-also-drops-the-attribution`
+  (D8: `compose` draws attribution unless `attribution=False`); predecessor
+  P10.1 (its row depends on no question, so it may run while the P10.2 list
+  is open). Part 1, release blocker: lands before P10.R, so before P8 and
+  P7.1 (P7.1's README states the attribution requirement).
+- Owner files: `src/pyntpot/maps/attribution.py`,
+  `src/pyntpot/maps/style_groups.py` (the `LetteringPolicy.labels` comment
+  only), `tests/unit/maps/test_attribution.py`.
+- Leave alone: `src/pyntpot/maps/lettering/pipeline.py` (its own `labels`
+  gate on the lettering is correct), `src/pyntpot/maps/pipeline.py`,
+  `tests/support/golden.py`, `tests/golden/`.
+- Test first: in `tests/unit/maps/test_attribution.py`, a new class
+  `TestLabelsOff` with `test_written_when_the_map_is_not_lettered`. It
+  builds `Style.default()` with `lettering` replaced by
+  `dataclasses.replace(style.lettering, labels=False)` (through
+  `model_copy(update=...)`), calls `draw_attribution` with `PINNED_TEXT` on
+  a white 600 by 80 RGB image, and asserts
+  `ImageChops.difference(image, white).getbbox() is not None`. Docstring:
+  "A style that letters no names still writes the attribution it is asked
+  for." No `golden` marker (no fixture paint). Red before the fix (the box
+  is `None`).
+- Change: `pyntpot.maps.attribution.draw_attribution` opens the hand with
+  `lettering_marks.open_hand(style)`, dropping the
+  `if style.lettering.labels else None`. Reword the
+  `pyntpot.maps.style_groups.LetteringPolicy.labels` comment to: "Letter the
+  map at all. Off, the lettering stage opens no hand: it places no labels or
+  spans and draws no label plate. The attribution follows `compose`'s
+  `attribution` flag alone." Confirm the `attribution` module docstring and
+  `pyntpot.maps.pipeline.compose`'s docstring still read true (the "no hand"
+  case is now only a missing face).
+- About 15 changed lines.
+- Gate: G-here plus G-self (byte-identical: the golden compose passes
+  `attribution=False`, and the default theme letters).
+- Commit: `Write the attribution whether or not the map is lettered`
+
+#### P10.3b prek in the dev group, and the hooks in CI
+
+- Implements `prek-not-in-the-environment` (Verification 1:
+  `uv run prek run --all-files` in a fresh `uv sync`) and the
+  `CONTRIBUTING.md:5` row ("It is what CI runs"); predecessor P10.1 (no
+  question). Part 1, release blocker: lands before P10.R, which shares
+  `pyproject.toml` and `uv.lock`.
+- Owner files: `pyproject.toml`, `uv.lock`, `.github/workflows/ci.yml`, and
+  any tracked file outside `src/` a hook rewrites when first run here
+  (listed in the hand-off). A hook that rewrites a file under `src/` stops
+  the slice (P6 ran the hooks green, so none is expected).
+- Leave alone: `CLAUDE.md` (agent-facing; the maintainer's to edit, and a
+  bare `prek run` works in an activated venv), `README.md` (P7.1's),
+  `CONTRIBUTING.md` (already says `uv run prek`; its line 5 becomes true),
+  `.pre-commit-config.yaml`, the `prerelease` job (`--no-dev`).
+- Check first: `uv run prek --version` fails to spawn, and
+  `grep -c "prek run" .github/workflows/ci.yml` prints `0`. After: the
+  version prints, and the grep prints `1`.
+- Change: `uv add --dev "prek>=0.5"` (one line in
+  `[dependency-groups] dev`, and the lock). In `ci.yml`'s `checks` job, a
+  step after `Audit dependencies` and before `Format`:
+  `- name: Hooks` with `run: uv run prek run --all-files`. The named
+  `Format`, `Lint`, `Types (ty)` and `Boundaries` steps stay. Then run
+  `uv run prek run --all-files` here until it is green; a file a hook
+  rewrites (a final newline, trailing whitespace) is fixed in this slice.
+- About 10 changed lines plus the lock diff.
+- Gate: G-here, with `uv run prek` from this slice on. CI on the PR is the
+  proof that the new step runs.
+- Commit: `Add prek to the dev group and run the hooks in CI`
+
+#### P10.3c Cite the ink reservoir and pigment separation
+
+- Implements `unlisted-technique-ink-reservoir`,
+  `unlisted-technique-pigment-separation`, and, if Q7 (C) or (A),
+  `unlisted-technique-blurred-mask-rim` (D24: every technique cites its
+  source); predecessor P10.1 for the two unconditional entries (no
+  question), P10.2 for the Q7 member. Part 1, release blocker: lands before
+  P10.R. If Q7's answer comes before the slice lands, its member joins the
+  one commit; otherwise it lands as a second commit under this slice id, and
+  the slice's last commit ticks `tasks.md`.
+- Owner files: `docs/explanation/references.md`,
+  `src/pyntpot/ink/deposit.py` (the `spend` docstring only),
+  `src/pyntpot/ink/wash.py` (the `separated` docstring, and the `wash`
+  docstring under Q7 (C) or (A)).
+- Leave alone: `specs/001-port/p6-inventory.md` and
+  `specs/001-port/design-sources.md` (dated records), the `bristle-brush`
+  entry, the `edge-darkening` entry (except, under Q7 (C), its
+  `Implemented in:` line), every executable line.
+- Test first: add the entries (and, under Q7 (C), the `Implemented in:`
+  addition), then run
+  `uv run pytest tests/architecture/test_reference_keys.py::test_every_site_cites_its_key`;
+  it fails with `sites that do not cite their entry's key:` naming
+  `ink-reservoir: pyntpot.ink.deposit.spend`,
+  `pigment-separation: pyntpot.ink.wash.separated` (and, under Q7 (C),
+  `edge-darkening: pyntpot.ink.wash.wash`, or under Q7 (A),
+  `blurred-mask-rim: pyntpot.ink.wash.wash`). Then add the docstring lines;
+  green. That test is also the check that fails if either half is removed.
+- Change: two new entries, appended after `label-placement` and before
+  "Read during design", in the existing format, every status copied
+  verbatim from the entry named (the records were checked then; no new
+  fetch):
+  - ``## `ink-reservoir` per-bristle ink reservoir with reload``: Canonical
+    source Baxter, Lin (2004), copied from `bristle-brush`'s design-input
+    line; `Design input: the canonical source above.`; Design input Chu,
+    Tai (2005), copied from `bristle-brush`;
+    ``Implemented in: `pyntpot.ink.deposit.spend` ``.
+  - ``## `pigment-separation` pigment separation into the paper's pits``:
+    Canonical source Curtis et al. (1997), copied from `granulation`;
+    `Design input: the canonical source above.`;
+    ``Implemented in: `pyntpot.ink.wash.separated` ``. Any Note states code
+    facts only.
+  - Under Q7 (C): no new entry; `edge-darkening`'s line becomes
+    ``Implemented in: `pyntpot.ink.wash.flow_edge`, `pyntpot.ink.wash.wash` ``.
+  - Under Q7 (A), a third entry, ``## `blurred-mask-rim` rim darkening by a
+    blurred mask``: Canonical source Watson (Stamen Design) (2012), copied
+    from the `edge-darkening` design-input line; `Design input: the
+    canonical source above.`; ``Implemented in: `pyntpot.ink.wash.wash` ``;
+    Note: the branch taken when `WashOptions.flow` is None.
+  Add ``Source: `ink-reservoir` in docs/explanation/references.md.`` to
+  `pyntpot.ink.deposit.spend`'s docstring,
+  ``Source: `pigment-separation` in docs/explanation/references.md.`` to
+  `pyntpot.ink.wash.separated`'s, and, under Q7 (C) or (A), a third
+  `Source:` line in `pyntpot.ink.wash.wash`'s (`edge-darkening` or
+  `blurred-mask-rim`), in the form the existing citation lines take.
+- About 20 changed lines.
+- Gate: G-here plus G-self, and the AST-neutral check (`AST-neutral: 2
+  files`).
+- Commit: `Cite the ink reservoir and pigment separation`; the Q7 member,
+  in the same commit or as the second one: `Cite the blurred-mask rim`
+  (the slice's message becomes
+  `Cite the ink reservoir, pigment separation and blurred-mask rim` when
+  it is one commit).
+
+#### P10.3d One commit trailer rule
+
+- Implements `contributing-commit-trailers` with the plan's own
+  contradiction; predecessor P10.2 (Q1), and, under Q1 (1), the `CLAUDE.md`
+  line (Maintainer actions). Part 1; the other P10.3 slices may land before
+  it under the interim rule ("Commit messages"), and every commit after it
+  follows its rule.
+- Owner files: `CONTRIBUTING.md` (the `## Commits` list),
+  `specs/001-port/plan.md` (the slice rule in "P3 and P4: how to run a
+  slice", the P9 preamble, P6's "Branch and PR" sentence, and this
+  section's "Commit messages" rule).
+- Leave alone: git history (commits already made keep their trailers or
+  lack of them), P0's record line (the `CONTRIBUTING.md` item in the list
+  of what P0 created), `CLAUDE.md` (under Q1 (1) the line is the
+  maintainer's, or the orchestrating session's on the maintainer's word;
+  the slice waits for it and quotes it in the hand-off).
+- Check first and after:
+  `rg -n -U -i "no\s+(co-authorship\s+)?trailers" CONTRIBUTING.md specs/001-port/plan.md`.
+  Before, it prints exactly seven lines: `CONTRIBUTING.md`'s `## Commits`
+  bullet, P0's record line, the "P3 and P4" slice rule (one line), the P9
+  preamble (two lines, the phrase wraps), and the first two lines of Q1 in
+  P10.2 (its reading (1) and its quote of `CONTRIBUTING.md`). After, under Q1 (2): only P0's record line and the Q1
+  lines. Under Q1 (1): the "before" set, plus P6's "Branch and PR"
+  sentence and this section's "Commit messages" rule. The hand-off pastes
+  both outputs.
+- Change under Q1 (2): `CONTRIBUTING.md`'s `## Commits` bullet that Q1
+  reading (1) quotes becomes "A commit made by an agent session ends with the attribution
+  trailers its session gives (`Co-Authored-By:`, `Claude-Session:`); no
+  other trailers."; the "P3 and P4" slice rule's parenthesis and P9's
+  phrase (both quoted in Q1 reading (1)) become "imperative, one line, then
+  the session's attribution trailers"; this section's rule drops its
+  "until P10.3d lands" clause. Under Q1 (1): P6's "Branch and PR" sentence
+  and this section's rule take the words of the "P3 and P4" slice rule's
+  parenthesis.
+- About 8 changed lines.
+- Gate: G-here.
+- Commit: `State one rule for commit trailers`
+
+#### P10.4a Delete the duplicate benchmarks
+
+- Implements `duplicate-benchmarks`; predecessor P10.1 (no question).
+  Part 1 (no `src` change).
+- Owner files: `tests/benchmarks/test_ink.py`,
+  `docs/explanation/performance.md`.
+- Leave alone: P5's text in this plan, `p5-run-log.md`,
+  `.github/workflows/codspeed.yml`, `test_stamp_a_2000_point_path` (not a
+  duplicate: other plate and path).
+- Check first and after:
+  `grep -cE "def test_(sheet_construction|edt|wash)\(|def _disc\(" tests/benchmarks/test_ink.py`
+  prints `4` before and `0` after.
+- Change: delete `test_sheet_construction`, `test_edt`, `test_wash` and
+  `_disc` from `tests/benchmarks/test_ink.py` (keeping
+  `test_building_a_sheet`, `test_the_distance_transform`,
+  `test_laying_a_wash`); reword `test_building_a_sheet`'s docstring to
+  "Times building a sheet's five noise fields from one seed." In
+  `performance.md`'s "Local baselines" table drop the three rows and add one
+  sentence under it: the three plan benchmarks were removed on the landing
+  date as duplicates of the PR #6 ones, which ends their CodSpeed history.
+- About 30 changed lines.
+- Gate: G-here (its non-golden run calls every benchmark once). It deletes
+  tests but not the coverage gates' tests: the coverage run deselects
+  benchmarks (`-m "not golden and not benchmark"`), so the Coverage rule's
+  gates cannot move and are not run.
+- Commit: `Delete the three duplicate ink benchmarks`
+
+#### P10.4b Rename `edt` to `chamfer_distance`; delete `point_to_segment`
+
+- Implements `edt-is-a-chamfer-distance` and the
+  `pyntpot.ink.polyline.point_to_segment` row (if P10.1 left it `fix`);
+  predecessors P10.4a (same benchmark file) and P10.3c (`ink/wash.py`,
+  `references.md`). Part 1 (neither name is exported by `pyntpot.ink`, and
+  the rename moves no pixel).
+- Owner files: `src/pyntpot/ink/noise.py` and the 7 importers
+  (`ink/raster.py`, `ink/wash.py`, `letters/nib.py`, `letters/trace.py`,
+  `maps/painter/cover.py`, `maps/painter/ribbon.py`,
+  `maps/painter/water.py`); the 6 test modules
+  (`tests/benchmarks/test_ink.py`, `tests/property/test_noise.py`,
+  `tests/unit/ink/test_shallow_water.py`, `tests/unit/ink/test_wash.py`,
+  `tests/unit/maps/painter/test_ribbon.py`,
+  `tests/unit/maps/painter/test_water.py`);
+  `docs/explanation/references.md` (the `chamfer-distance` entry);
+  `src/pyntpot/ink/polyline.py`.
+- Leave alone: `design-sources.md` and `p6-inventory.md` (dated records),
+  `GLOSSARY.md` (keep `edt` out), the benchmark names.
+- Check first and after: `grep -rnw edt src tests docs/explanation
+  --include=*.py --include=*.md` lists every site before and nothing after;
+  `tests/architecture/test_reference_keys.py` goes red if `references.md`
+  and the code disagree, so both move in this commit;
+  `grep -rnw point_to_segment src tests` lists the definition and its
+  docstring mention before and nothing after.
+- Change: rename `pyntpot.ink.noise.edt` to
+  `pyntpot.ink.noise.chamfer_distance`, repoint every import and call, update
+  the `noise` module docstring's key-names line, the
+  `tests/property/test_noise.py` module docstring and `references.md`'s
+  `Implemented in:` and Note lines. Delete
+  `pyntpot.ink.polyline.point_to_segment` and its name from the module
+  docstring's key-names line.
+- About 60 changed lines.
+- Gate: G-here plus G-self (a rename and an uncalled deletion: byte-identical
+  by construction).
+- Commit: `Rename edt to chamfer_distance and delete point_to_segment`
+
+#### P10.4c The deposit drops corners off the accumulator
+
+- Implements `ink-deposit-edge-clamp`; predecessors P10.3c (same file) and
+  P8. Part 2 (an upstream stroke near the card's edge may take the
+  branch).
+- Owner files: `src/pyntpot/ink/deposit.py` (`deposit`),
+  `tests/unit/ink/test_deposit.py` (new).
+- Leave alone: `ink/stamp.py`, `ink/pad.py`, `pyntpot.ink.deposit.pool`
+  (it already crops).
+- Tests first, in `tests/unit/ink/test_deposit.py` (module docstring: what
+  `deposit` lays and where):
+  - `test_a_sample_off_the_accumulator_lays_nothing`, parametrised over the
+    three accumulators (`ids=["ink", "res", "tooth"]`): an 8 by 8 float32
+    zero accumulator, `aux = {"res": zeros, "tooth": zeros}`, one sample at
+    `(x, y) = (-5.0, 3.0)` (`pos = (np.array([[-5.0]]), np.array([[3.0]]))`),
+    weights of one for every channel; asserts the named accumulator's sum is
+    `0.0` and `acc[3, 0] == 0.0`. Docstring: "A sample wholly off the plate
+    lays no ink on its edge pixels." Red today (`acc[3, 0]` is 1.0).
+  - `test_a_sample_half_off_the_edge_keeps_only_its_share_on_the_plate`:
+    one sample at `(-0.5, 3.0)`; asserts `acc[3, 0] == 0.5` and
+    `acc.sum() == 0.5`. Docstring: "Only the corners on the grid receive
+    their bilinear share." Red today (1.0).
+- Change: in `pyntpot.ink.deposit.deposit`, inside the corner loops, a mask
+  `keep = (iy0 + dy >= 0) & (iy0 + dy < h) & (ix0 + dx >= 0) & (ix0 + dx < w)`;
+  the clipped indices stay (so `np.add.at` stays in range), and each of the
+  three deposits multiplies **last** by the mask:
+  `(wgt * wx * wy * keep).ravel()` (and the same for `wgt_r`, `wgt_t`). The
+  existing products keep their order, and a float multiplied by `True` is
+  exact, so a sample on the grid deposits the same bits. Replace the
+  docstring sentence with "A corner that falls off the accumulator is
+  dropped."
+- About 10 changed `src` lines and 40 test lines.
+- Gate: G-here plus G-self, and the coverage gates.
+- Commit: `Drop deposit corners that fall off the accumulator`
+
+*(Evidence.)* The deposit probe (see "Measured at P10.0") found no sample
+with an off-grid corner in the golden render, so G-self is expected
+byte-identical; the multiply-last form is what keeps the in-grid products
+bit-equal (`wgt * (wx * wy * keep)` would reassociate and could differ in the
+last bit).
+
+#### P10.5a The outline route narrows the nib; delete `_radii`
+
+- Implements `letters-nib-outline-width-reads-face-route` and
+  `letters-trace-radii-unused`; predecessor P10.4b (`letters/trace.py`).
+  Part 1 (the `route` argument of `draw_plate` has no caller that `letter`
+  reaches, and `_radii` has none).
+- Owner files: `src/pyntpot/maps/lettering/pipeline.py` (`draw_plate`),
+  `tests/unit/maps/lettering/test_draw_plate.py`,
+  `src/pyntpot/letters/trace.py`.
+- Leave alone: `letters/nib.py` logic, `letters/hand.py`, `trace.OUTLINE`
+  (vulture's 60 percent hit is a false positive: tests import it).
+- Test first: `test_an_outline_route_is_written_with_the_finer_nib` in
+  `test_draw_plate.py`: paint `tiny_basemap()` plates into two directories;
+  into the first, `draw_plate(..., tiny_style(), route="outline")`; into the
+  second, `draw_plate(...)` with no `route` and a style whose
+  `face.label_route == "outline"` (`model_copy` with
+  `dataclasses.replace(style.face, label_route="outline")`), the same placed
+  label (a real place name, as the existing test uses) and route; assert the
+  two plates' pixels are equal (`ImageChops.difference(...).getbbox() is
+  None`). Docstring: "An outline route passed to `draw_plate` narrows the
+  nib as the face style's outline route does." Red today.
+- Check for the deletion: `uv run vulture --min-confidence 60 src | grep
+  _radii` and `grep -rn "def _radii" src` print a line before and nothing
+  after.
+- Change: in `pyntpot.maps.lettering.pipeline.draw_plate`, the nib groups
+  become `NibGroups(style.nib, dataclasses.replace(style.face,
+  label_route=hand.route), style.hand, style.brush, style.paper)`. Delete
+  `pyntpot.letters.trace._radii`. The label-plate key already differs
+  between routes (the marks and the stem differ), so no stale plate is
+  reused.
+- About 30 changed lines.
+- Gate: G-here plus G-self (the golden path never passes `route`, so the
+  face is unchanged; `_radii` has no caller).
+- Commit: `Narrow the nib for an outline route and delete _radii`
+
+#### P10.5b Letters fixes that wait on answers (conditional)
+
+- **Not run (P10.2).** Q5 was answered (1) and Q3 (1), so both rows are
+  `close` and both members below are removed; the slice is struck through in
+  `tasks.md` and skipped in the sequence, and ADR 0024 is not written. The
+  body stays as the record of what the other answers would have made it.
+- Exists only if Q5 is answered (2) or Q3 (2); each member lands only under
+  its answer. Predecessors P10.5a and P10.9 (`maps/lettering/pipeline.py`)
+  and P8. Part 2 (an upstream label may take either branch).
+- ~~**Member, if Q5 (2): route-ink names follow the route ink.**~~ Removed:
+  Q5 answered (1), row `close`.
+  - Owner files: `src/pyntpot/maps/lettering/pipeline.py`,
+    `src/pyntpot/letters/style.py` (the `label_route_ink` comment),
+    `src/pyntpot/maps/style_groups.py` (the `RouteInks` docstring, "only
+    `paint` and `compose` read it"), `tests/unit/maps/lettering/test_draw_plate.py`,
+    `docs/decisions/0024-route-ink-names-follow-the-route.md` (new; the
+    number is fixed by the ADR table; `ls docs/decisions` must show it free,
+    otherwise stop and report), superseding ADR 0005's "Route ink" sentence
+    "changing an ink repaints no plate".
+  - Leave alone: `maps/style.py`'s `LETTERING_GROUPS` and every pinned
+    digest (adding `route_inks` there would move `d15ae2f30e9ca5ce`; if the
+    slice finds it must, stop and report), `letters/nib.py`, the theme's
+    values.
+  - Tests first: `test_a_route_ink_name_follows_the_route_ink` (a `marker`
+    label drawn with `route_inks.ride.colour = "#2050c2"` equals, in pixels,
+    the same label drawn with the default route ink and
+    `nib.label_route_ink = "#2050c2"`; docstring "A name in the route's ink
+    is written in the colour the route is drawn in.") and
+    `test_a_new_route_ink_restrokes_the_label_plate` (changing only
+    `route_inks.ride.colour` changes the sidecar key; docstring "A label
+    plate is not reused across a change of route ink.").
+  - Change: in `draw_plate`, `nib = dataclasses.replace(style.nib,
+    label_route_ink=style.route_ink().colour)`; the key is taken from
+    `style.model_copy(update={"nib": nib})` and the `NibGroups` get `nib`.
+    For the default theme the filled nib equals the default, so the key and
+    the pixels do not change.
+- ~~**Member, if Q3 (2): a missing glyph advances as the face's space.**~~
+  Removed: Q3 answered (1), row `close`.
+  - Owner files: `src/pyntpot/letters/font.py`
+    (`OutlineFont.glyph`), `tests/unit/letters/test_font.py`.
+  - Test first: `test_a_missing_glyph_advances_as_the_faces_space`: the
+    advance of a character the face lacks (`"一"`) equals the advance of
+    `" "`, pinned as the literal `0.23`. Docstring: "A character the face
+    lacks advances as far as the face's own space." Red today (0.28).
+  - Change: the fallback reads the space's advance from the face's metrics
+    (with the current literal, 0.28 em, only when the face has no space
+    glyph, and no recursion through `glyph`); the docstring says so.
+- About 60 changed lines with both members.
+- Gate: G-here plus G-self, and the coverage gates.
+- Commit: `Letter route-ink names in the route's ink` and/or
+  `Advance a missing glyph by the face's space` (one commit per member, in
+  that order; the slice's last commit ticks `tasks.md`).
+
+#### P10.6 Maps lettering fixes
+
+- Implements `maps-lettering-picks-journal-picks-cap`,
+  `maps-lettering-span-sides-freer-side-sign`,
+  `maps-lettering-label-as-dict-unused` (only if the row is `fix` after
+  P8's hand-off, "what upstream reads"; the brief says yes or no).
+  ~~If Q11 (1), `maps-lettering-spans-place-spans-rung-order`~~ (removed:
+  Q11 answered (2), row `close`). Part 2 (the
+  upstream render may pass landmarks and spans). Predecessors P10.9 (the
+  same lettering files and `test_spans.py`) and P8's hand-off. The
+  rule-seven test text moved to P10.9 (part 1: no render reaches it).
+- Owner files: `src/pyntpot/maps/lettering/picks.py`,
+  `src/pyntpot/maps/lettering/span_sides.py`,
+  `src/pyntpot/maps/lettering/label.py`, ~~`src/pyntpot/maps/lettering/spans.py`
+  (Q11 (1) only)~~ (removed with the rung order), `tests/unit/maps/lettering/test_picks.py`,
+  `tests/unit/maps/lettering/test_span_sides.py`,
+  `tests/unit/maps/lettering/test_spans.py`,
+  `tests/support/lettering.py` (`arc`'s docstring only: reword it only if
+  it names the drawn side; it describes `route_turn`'s sign, side +1
+  towards `(-dy, dx)`, which the side fix leaves true).
+- Leave alone: `lettering/pipeline.py`, `style_groups.py`,
+  `annotations.py`, `journal_heuristic`, `span_line.py`, `span_clear.py`,
+  `ink/curves.py`, `SPAN_CURVE_SCALE_CAPS` (deferred row), the existing
+  docstrings of `test_spans.py` (P10.9 has reworded them).
+- **The landmark cap.** Tests first in `test_picks.py`:
+  `test_a_name_only_landmark_counts_against_the_landmark_cap` (a
+  `label_basemap(candidates=...)` with Watersmeet, Malham Cove and
+  Dovedale, each with `x`, `y`, `class` inside the D10 box;
+  `journal_picks(Annotations(landmarks=("Watersmeet", "Malham Cove",
+  "Dovedale")), basemap, 1)` returns one entry, `Watersmeet`;
+  docstring "A landmark given only by name counts against the landmark cap
+  like any other.") and `test_a_cap_of_nought_picks_no_landmark`
+  (`Annotations(landmarks=(Landmark(name="Watersmeet", lat=51.22,
+  lng=-3.81),))`, cap 0, returns `[]`; docstring "A cap of nought picks no
+  landmark."). Both red today (three entries; one entry). Change:
+  `pyntpot.maps.lettering.picks.journal_picks` checks
+  `if len(out) >= cap: break` at the top of the loop body, and the check at
+  the bottom goes; the docstring's last two sentences become "The list
+  stops once it holds `cap` landmarks."
+- **The freer side.** Tests first:
+  `test_span_sides.py::test_the_freer_side_is_signed_as_the_mark_is_drawn`
+  (route `[(100 + 5 * i, 300.0) for i in range(100)]`, card
+  `Card(box=(0, 0, 800, 600), display=(800, 600), render=(800, 600),
+  mpp=1.0, mpp_display=1.0)`, dark grid 16 by 12 solid in rows 0 to 5 and
+  clear below, `Span(name="Cat Bells", i0=10, i1=80)`, `cap_px=14`;
+  the side `_freer_side` returns, passed to `span_line(route, 10, 80, side,
+  14 * SPAN_OFFSET_CAPS)`, puts the line's middle point at `y > 300`, the
+  clear side, and the margin is `1.0`; docstring "The side the free paper
+  picks is the side the mark is then drawn on.") and
+  `test_spans.py::test_a_ground_span_takes_the_clearer_side_and_a_session_span_the_other`
+  (the same set-up through `place_spans` with `SpanSurroundings(card, route,
+  dark)` and `flat_measure`, in two calls with one span each, so the two
+  spans never share rungs: a `kind="climb"` span's line has mean `y > 300`
+  and a `kind="fast"` span's mean `y < 300`; docstring "The ground's mark
+  goes on the side with more free paper and the session's on the other.").
+  Both red today (283.2 for the ground span). Change: in
+  `pyntpot.maps.lettering.span_sides._freer_side`, the probe normal becomes
+  `nx, ny = (by - ay) / run, -(bx - ax) / run`, so `+1` is the left of
+  travel; its Returns text says "+1 for the left of travel, the side
+  `span_line` draws a mark on for `side=+1`"; the module invariant says
+  `_freer_side` and `_convex_side` sign a side as `span_line` draws it and
+  only `route_turn` signs towards `(-dy, dx)`.
+- **`as_dict`**, only if the brief says yes (P8's hand-off). Check before
+  and after: `grep -rn "def as_dict" src` and
+  `uv run vulture --min-confidence 60 src | grep as_dict`. Change: delete
+  `pyntpot.maps.lettering.label.Label.as_dict`, and drop `Any` from the
+  `typing` import if nothing else in `label.py` uses it. If the brief says
+  no, the slice keeps `as_dict` and adds one sentence to its docstring
+  naming the upstream consumer (from the "Upstream reads" record), and the
+  slice's commit closes the row.
+- ~~**If Q11 (1), the rung order**~~ (removed: Q11 answered (2), row
+  `close`; the member is not done), after the side fix: test first
+  `test_spans.py::test_the_longest_overlapping_span_is_the_outer_rail` (two
+  overlapping spans forced onto one side by a dark other side; the longer
+  has the larger `rank` and `offset_px`; docstring "Where spans overlap on a
+  side, the longest is drawn furthest out."); change: `place_spans`
+  iterates shortest first and its docstring's rung sentence says so.
+- About 115 changed lines (the rung order is removed).
+- Gate: G-here plus G-self (no spans or landmarks on the golden card), and
+  the coverage gates.
+- Commit: `Fix the landmark cap and the span side, and delete Label.as_dict`
+  (`Fix the landmark cap and the span side` when `as_dict` stays)
+
+#### P10.7 Other maps fixes
+
+- Implements `maps-osm-elements-tunnel-no` and, if Q8 (a), the names of
+  `maps-style-groups-route-constants-have-no-reader` that P8's hand-off
+  marks for deletion (the brief carries a yes or no per name);
+  predecessors P10.9 (`osm_elements.py`), P10.5b (`style_groups.py`, if
+  it runs) and P8's hand-off. Part 2 (an upstream box may hold `tunnel=no`
+  ways; the Q8 names wait for "what upstream reads").
+- Owner files: `src/pyntpot/maps/osm_elements.py` (`_waterway`),
+  `src/pyntpot/maps/osm.py` (the `_open_rivers` docstring),
+  `tests/unit/maps/test_layers.py`, and (Q8)
+  `src/pyntpot/maps/style_groups.py`.
+- Leave alone: `BURIED_FRAC`, the fixture, `tests/golden/`,
+  `default.toml`, `RouteInk.effect`, the digests in
+  `tests/unit/maps/test_style.py`, `CONSUMER_ONLY` in
+  `maps/style_groups.py` and its pin in `tests/unit/maps/test_style_groups.py`
+  (a tuple of field names in the frozen field-to-group table, not a list of
+  kept constants).
+- **`tunnel=no`.** Tests first in `test_layers.py`, built like
+  `test_a_buried_river_is_not_drawn`:
+  `test_a_river_tagged_not_in_a_tunnel_is_drawn` (one
+  `{"waterway": "river", "name": "Exe", "tunnel": "no"}` way on
+  `BESIDE`; `"Exe" in _river_names(...)`; docstring "A river tagged
+  `tunnel=no` end to end is on the ground and is drawn."; red today) and
+  `test_a_river_culverted_end_to_end_is_not_drawn` (the same with
+  `"tunnel": "culvert"` and the name Tay, absent; docstring "A river in a
+  culvert end to end is underground and is not drawn."; green before and
+  after, it pins the other side of the change). Change:
+  `pyntpot.maps.osm_elements._waterway` sets
+  `buried = tags.get("tunnel") not in (None, "", "no")`; the `_open_rivers`
+  docstring says a `tunnel` value other than `no`; check the `osm_elements`
+  module docstring still reads true.
+- **If Q8 (a)**: check before and after:
+  `grep -rn "ROUTE_INK\b\|ROUTE_EFFECT_OFF\|ROUTE_SHADOW\|CASING_COLOURS\|\.casing\b" src tests`
+  and `uv run vulture --min-confidence 60 src | grep style_groups` (the
+  grep does not match `def casing`, so the vulture line is the check for
+  `casing`). Change:
+  delete, with their comments, each of `ROUTE_INK`, `ROUTE_EFFECT_OFF`,
+  `ROUTE_SHADOW` and `RouteInk.casing` that the brief marks yes, and
+  `CASING_COLOURS` exactly when `casing` goes (the brief carries no
+  separate yes or no for it). A name marked no stays, and the module
+  docstring gains one sentence naming what stays and that the upstream
+  consumer reads it (`CASING_COLOURS` stays whenever `casing` does, since
+  `casing` reads it).
+  `typing.Any` stays (`RouteInk.effect` uses it).
+- About 25 changed lines, 60 with Q8.
+- Gate: G-here plus G-self (no fixture way has `tunnel=no`, and the 11
+  culverts stay buried), and the coverage gates.
+- Commit: `Draw rivers tagged tunnel=no`, then, under Q8 (a),
+  `Delete the route constants nothing reads` as a second commit; the
+  slice's last commit ticks `tasks.md`.
+
+#### P10.8 Mark the slow CLI test golden
+
+- Implements `slow-tests-in-mutation-runs` part (a); predecessor P10.1
+  (no question). Part 1 (no `src` change); its files are its own, so it
+  runs in parallel with any part-1 slice.
+- Owner files: `tests/unit/maps/test_cli.py`,
+  `docs/issues/slow-tests-in-mutation-runs.md` (narrowed to part (b), the
+  deferred selection change, and kept).
+- Leave alone: `[tool.mutmut]`, ADR 0012, the coverage figures in `ci.yml`.
+- Measure first: the two coverage gates on the starting commit; record the
+  `maps` total to two decimals.
+- Check first and after:
+  `grep -B2 "def test_a_full_cache_makes_no_request" tests/unit/maps/test_cli.py`
+  shows no `@pytest.mark.golden` before and shows it after.
+- Change: `@pytest.mark.golden` above
+  `TestMap.test_a_full_cache_makes_no_request`. Re-run the coverage gates.
+  If `maps` falls under 92.00, add a fast non-golden test of
+  `pyntpot.maps.cli.main` that reaches the lines the marked test alone
+  covered (for example through `--style` with a small-display copy of the
+  default theme), under 5 s; if no such route exists, stop and report.
+  Never lower the gate.
+- About 5 changed lines (about 40 with the extra test).
+- Gate: G-here and the coverage gates.
+- Commit: `Mark the full-fixture CLI test golden`
+
+#### P10.9 Docs and terms
+
+- Implements `src-docstrings-use-non-canonical-terms`, the `spec.md:121`
+  row, `maps-lettering-spans-rule-seven-in-tests`, and, by their answers,
+  `letters-card-pixels-and-display-pixels` (Q2),
+  `maps-lettering-sheet-homonym` (Q10 (1), widened at P10.2). The Q9 (c)
+  sentence is removed: Q9 was answered (a).
+  Predecessors P10.2 (the answers), P10.3d (`CONTRIBUTING.md`), P10.3a
+  (`maps/attribution.py`) and P10.5a (`maps/lettering/pipeline.py`, and
+  `letters/nib.py` through P10.4b). Part 1: docstrings, comments and test
+  text only. It lands before P10.6, P10.7, P10.5b and P10.10, which rebase
+  over it, and before P9.1 and P9.2 (`spec.md`, `GLOSSARY.md`).
+- Owner files: the `src` files named below (docstrings and comments only),
+  `GLOSSARY.md`, `specs/001-port/spec.md`, the test files the pixel grep
+  names (docstrings and comments only),
+  `tests/unit/maps/lettering/test_spans.py` (three docstrings), and the
+  `src` and test files the widened sheet list names (docstrings and comments
+  only). ~~`CONTRIBUTING.md` (Q9 (c) only)~~ (removed: Q9 answered (a)).
+- Leave alone: every identifier (`sheet_card` and the four test names that
+  say "the sheet" for the map are the later row
+  `maps-tests-sheet-identifiers-name-the-map`, a tests-only rename after
+  this slice), `tests/architecture/**` (no line there needs a change),
+  `tests/unit/maps/test_cli.py` (no line there), `docs/issues/**`,
+  `docs/decisions/**` (records), `specs/**` except `spec.md`'s question,
+  the "session" sites (no glossary row; out of scope), `default.toml`.
+- **Non-canonical terms.** Check before and after:
+  `grep -rnI -i "activit\|label agent\|darkness grid\|dark field" src/pyntpot --include=*.py`
+  (10 lines before) and the multiline search
+  `rg -nU -i "(label|darkness|dark)\s*\n\s*(#:?\s*)?(agent|grid|field)" src/pyntpot`
+  (`placement.place`'s `ground` entry before). Change, by dotted path:
+  `pyntpot.maps.candidates.export` module docstring and `landmark_export`'s
+  `inputs` ("activity" to "track"); the `pyntpot.maps.lettering.label`
+  comment above the span kinds ("of the activity" to "of the track");
+  `pyntpot.maps.osm_elements.LANDMARK_TAG_KEYS` comment ("the label agent"
+  to "the caller"); "darkness grid" to "dark grid" in
+  `placement_costs` (two `dark:` Args), `spans.SpanSurroundings`'s `dark`
+  attribute,
+  `placement_along`'s `terms:` and `placement.place`'s `ground` entry (the
+  split line); "dark field" to "dark grid" in the `pyntpot.maps.plates`
+  comment on `_NO_GRID_DARKNESS` and the `pyntpot.letters.nib` module
+  docstring. 11 sites.
+- **The OpenTopoData budget.** `spec.md`: the bullet moves from "Open
+  questions" to "Resolved questions" as "OpenTopoData budget (ADR 0004): a
+  counter per provider instance, 1000 calls by default; nothing is shared
+  between instances or processes, and no per-cache-dir counter is kept."
+  "Open questions" then reads "None." Check: `grep -n "per process"
+  specs/001-port/spec.md` prints nothing.
+- **Rule seven.** Check before and after: `grep -rnIiE "rule (seven|7)\b"
+  src tests` (3 lines before, none after; `-I` skips the `.pyc` files). Change: the three test
+  docstrings in `test_spans.py` say "the route rule" ("The route rule,
+  mechanically, ...", "when the route rule cannot be met", "so the route
+  rule binds it too"). Line 64 takes both this change and, under Q10, the
+  "the sheet" change below, in this one slice.
+- **If Q2 (1): display pixels.** Replace "card pixel(s)" with "display
+  pixel(s)" in `src` (60 lines, 22 files, `ink/curves.py` included), in test
+  docstrings and comments (7 lines) and in `GLOSSARY.md`'s `mark` and
+  `backdrop` rows; add a `display pixels` row ("the card's display grid,
+  origin top left, y down, that `Card.xy` maps card metres to; marks,
+  settings and type sizes are in it; not "card pixels"") and a
+  `render pixels` row. Keep every reworded docstring and comment line
+  within 100 columns (ruff's `E501` is off and `ruff format` does not
+  reflow docstrings, so nothing else catches it).
+  Check: `grep -rnI -i "card pixel" src tests GLOSSARY.md docs --exclude-dir=issues --exclude-dir=decisions`
+  prints nothing. Under Q2 (2), the same with the names swapped.
+- **Q10 (1), widened at P10.2: "sheet" and "map" kept apart everywhere.**
+  The maintainer: "Ensure map and sheet are distinct everywhere. Sheet is a
+  primative concept and map is only for the map implementation side". So
+  "sheet" is kept only for `ink.sheet.Sheet` and its noise fields (the
+  paper), in `src`, `tests` (docstrings, comments and test text),
+  `GLOSSARY.md` and docs; "map" names the card as drawn so far on the maps
+  side; "page" for the upstream SVG page stays (the `lettering/pipeline.py`
+  sentence "the page and the card both draw the same pixels", the
+  `lettering_marks` comment "the card and the page", and `compose` and
+  `painter/*` where "page" means the SVG page). Inside
+  `src/pyntpot/maps/lettering/**` and the `maps/lettering_*.py` modules,
+  "page" changes to "map" only where it means the drawn card
+  (`placement_costs`, `span_ends`, `span_clear`, each checked against its
+  code).
+  - Measured at P10.2 (`489f3a6`): `grep -rnIw -i sheet src tests docs
+    GLOSSARY.md` prints 399 lines. 125 use "sheet" in a sense other than the
+    `Sheet` and its noise fields: `maps` `src` 88 lines in 34 files (the
+    issue's lettering scope, 52 lines in 15 files, among them), `ink` and
+    `letters` `src` 14 lines in 7 files (`ink/wash.py`, `ink/style.py`,
+    `ink/brush_style.py`, `ink/curves.py`, `letters/nib.py`,
+    `letters/style.py`, `letters/trace.py`), test docstrings and comments 20
+    lines in 14 files, and three `GLOSSARY.md` rows (`wash`, `dark grid`,
+    `terms`). The slice re-runs the grep at its starting commit and writes
+    the lines it will change to `$SLICE/sheet-before.txt`; a count that
+    differs from 125 by more than the lines a predecessor slice changed
+    stops the slice.
+  - The words. On the maps side the drawn card is "the map" ("a river
+    crossing the whole sheet" becomes "the whole map"). `ink` and `letters`
+    know no map, so there the word is the glossary term the code means,
+    `canvas` or `plate` (for example "a share of the sheet" in
+    `ink.wash.flow_edge`), each checked against its code. A `PaperStyle`
+    docstring that says "The sheet, its encoder ..." (`ink.style`,
+    `maps.style`) says "The paper, ...". The "alphabet sheet" of
+    `tests/unit/letters/test_font.py` and the "swatch sheet" of
+    `tests/unit/ink/test_stamp.py` name a specimen image and are named as
+    what they are.
+  - `GLOSSARY.md`: add a `map` row ("the card as drawn so far, with
+    everything painted and lettered on it; the maps side's word, which `ink`
+    and `letters` never use"); reword the `wash`, `dark grid` and `terms`
+    rows; the `sheet` row adds "never the map".
+  - Check: `grep -rnIw -i sheet src tests docs GLOSSARY.md
+    --exclude-dir=issues --exclude-dir=decisions` prints exactly the
+    allowed list the brief carries, line by line:
+    (1) the class and its module: `Sheet`, `ink.sheet`, `ink/sheet.py`,
+    `tests/unit/ink/test_sheet.py`'s docstring, and the `"""A sheet."""`
+    of the fake modules in `tests/mutation/test_scope.py` and
+    `tests/architecture/test_reference_keys.py`;
+    (2) a name bound to a `Sheet` and prose about its fields: the parameter
+    or attribute `sheet` (`job.sheet`, `sheet.paper` and the other fields),
+    Args entries "The paper's noise fields", the fibre's "sheet-wide" axis
+    (`ink.sheet`, `ink.style`, `ink.noise`), "the sheet's mean tooth" in
+    `ink.wash.separated`, "the same sheet" in `maps.painter.plates` (the
+    paper a later plate gates on), the "paper sheet" and "the sheet's noise"
+    of `maps.painter.job` and `maps.painter.paper`, `docs/architecture.md`
+    line 11 and `docs/explanation/performance.md` line 13;
+    (3) the glossary's "brush sheet" and its cells, 17 lines outside
+    `docs/decisions/`: `ink/brush.py` (10), the `brush` Args of
+    `letters/nib.py`, `maps/painter/brushes.py`, `tests/unit/ink/test_brush.py`
+    (2), the `brush_id` Args of `test_stamp.py` and `test_pad.py`, and the
+    `brush sheet` row of `GLOSSARY.md`;
+    (4) the `log.info` string in `placement_names` ("the sheet already
+    names that place", a runtime string the AST-neutral check forbids
+    changing).
+    `grep -w` does not match `sheet_card` or the test names, so no
+    identifier is on the list.
+  - Size: about 300 changed lines for this member (125 lines reworded, the
+    rewraps, the `map` row), so P10.9 is about 410 in all, under the 600
+    line budget, and is not split. If the slice's diff passes 600 changed
+    lines it stops, and the orchestrating session splits it as P10.9a (the
+    terms, the spec bullet, rule seven, display pixels) and P10.9b (the
+    sheet and map pass), each with this body's checks.
+- ~~**If Q9 (c)**: one sentence in `CONTRIBUTING.md`.~~ Removed: Q9 was
+  answered (a).
+- About 35 changed lines alone; about 410 with Q2 and the widened Q10.
+- Gate: G-here plus G-self, and the AST-neutral check.
+- Commit: `Use the glossary's terms in docstrings and resolve the budget question`
+  (`... and name the display pixels and the map` with Q2 and Q10)
+
+#### P10.12 Cap the mutation run's memory
+
+- Cut under "Later issues" after P10.1's mutation dispatch (row
+  `mutation-runaway-mutant-kills-the-runner`). Part 1: it changes no render. Implements
+  that row; predecessor P10.8 (landed). Parallel-safe with P10.9 (disjoint files).
+- Owner files: `.github/workflows/mutation.yml` (the "Mutation run" step only),
+  `docs/decisions/0012-mutation-threshold.md` (one bullet under its decision, where the
+  workflow's run settings are listed, and one line in its History, dated), a new
+  `tests/mutation/test_workflow.py`, `docs/issues/mutation-runaway-mutant-kills-the-runner.md`
+  (deleted), the row in `p10-triage.md`.
+- Leave alone: `[tool.mutmut]` in `pyproject.toml`, `scripts/` and `tests/mutation/`'s
+  other files, every other workflow, `src/**`.
+- Test first: `tests/mutation/test_workflow.py::test_every_mutmut_run_is_under_an_address_space_cap`,
+  docstring "Every mutmut run in the mutation workflow runs under an address-space cap.".
+  It reads `.github/workflows/mutation.yml` as text (no YAML dependency; pyyaml is not in
+  the dev group), finds every line containing `mutmut run`, and asserts each has
+  `prlimit --as=` before `uv run mutmut run`. Red today (the line has no `prlimit`).
+- Change: in the step's command, `xargs -r -a "$RUNNER_TEMP/patterns" uv run mutmut run`
+  becomes `xargs -r -a "$RUNNER_TEMP/patterns" prlimit --as=3500000000 -- uv run mutmut run`,
+  with a two-line comment above the step: the cap is per process and inherited by every
+  process mutmut forks, so a mutant that allocates without bound gets `MemoryError` (or
+  dies) instead of taking the runner down; 3.5 GB leaves about 1.2 GB over the largest
+  normal process (2,308 MB measured) and four capped children fit in 16 GB. ADR 0012 gains
+  the same fact as one bullet, and how such a mutant scores (killed on `MemoryError`,
+  timeout at the wall bound; suspicious or segfault if it dies outright).
+- Gate: G-here. After the PR is open, the orchestrating session dispatches `mutation.yml`
+  on the PR branch with `mode: pattern`, `pattern: pyntpot.ink.polyline.x_simplify*`; the
+  row is done when that run completes with a score (72 mutants tested, `_31` killed or
+  timeout). If it fails again, root-cause before any second change.
+- Commit: `Cap the memory of each mutation run process`
+
+#### P10.13 Test identifiers say map, not sheet
+
+- Cut under "Later issues" after P10.2 (row `maps-tests-sheet-identifiers-name-the-map`).
+  Part 1, tests only. Predecessor P10.9 (it rewords the same test files' docstrings).
+- Owner files: `tests/support/lettering.py` (`sheet_card` becomes `map_card`, with its
+  docstring) and every test that imports or calls it; the four test functions the row
+  names, renamed so "sheet" becomes "map" (`..._bigger_than_the_map_is_clipped_not_dropped`,
+  `..._only_when_it_runs_across_the_map`, `..._even_when_the_bend_runs_down_the_map`,
+  `..._along_the_water_not_across_the_map`); the row in `p10-triage.md`; the issue file
+  (deleted).
+- Leave alone: every identifier that means `ink.sheet.Sheet` (the row lists them),
+  `src/**`.
+- Check: the row's grep prints nothing; `uv run pytest --collect-only -q` collects the
+  same number of tests as before.
+- Gate: G-here (no `src/` change, so no G-self).
+- Commit: `Name the lettering test card and four tests for the map`
+
+#### P10.R Tag 0.0.1
+
+- The release step between P11 and P8 (maintainer, 2026-10-07: "0.0.1+
+  as the release, then p8"; P11 before it, "Order and parallelism"). Run
+  by the orchestrating session, not an implementer. Predecessors: the
+  `p10-triage` PR merged to `main` (every part-1 slice, P10.3b in
+  particular: same `pyproject.toml` and `uv.lock`), every P11 slice merged
+  to `main`, and Q14 answered.
+- Branch: `release-0.0.1`, from `main` after P11's last PR merges; one
+  commit, one PR.
+- How the repository versions itself: `pyproject.toml` `[project]
+  version` (today `"0.1.0"`, never released: no tag exists, and `pyntpot`
+  is not on PyPI), mirrored in `uv.lock`'s `pyntpot` entry (CI runs
+  `uv sync --locked`, so the lock must match); `pyntpot.__version__` is
+  `importlib.metadata.version("pyntpot")` and needs no edit. The providers'
+  User-Agent strings read the same version; no test or golden pins it.
+- Owner files: `pyproject.toml` (`version = "0.0.1"`), `uv.lock` (by
+  `uv lock`, the `pyntpot` version line only), `CHANGELOG.md` (a section
+  below `## [Unreleased]`: `## [0.0.1] - <date>` with one paragraph: "A
+  pre-release candidate for the upstream consumer's migration (P8 of the
+  port plan). Not for general use; 0.1.0 is the first release."; entries
+  already under `## [Unreleased]` move into the 0.0.1 section).
+- Leave alone: `src/**` (`__init__.py` reads the metadata),
+  `.github/workflows/publish.yml`, `README.md` and `CONTRIBUTING.md`
+  (P7.4 documents the trusted publisher), `tests/**`.
+- Check: after `uv sync`,
+  `uv run python -c "import pyntpot; print(pyntpot.__version__)"` prints
+  `0.0.1`; `uv lock --check` passes.
+- Gate: G-here (no `src` change).
+- Commit: `Set the version to 0.0.1 for the upstream migration`, the one
+  commit on `release-0.0.1`. It does not tick `tasks.md`: P10.R is not done
+  until the tag exists.
+- The tag, after the `release-0.0.1` PR merges: an annotated tag on the
+  `main` commit that holds the version change (the merge commit, or the
+  rebased commit),
+  `git tag -a v0.0.1 -m "pyntpot 0.0.1, a candidate for the upstream migration"`.
+  The orchestrating session pushes it (`git push origin v0.0.1`) only after
+  the maintainer confirms in the conversation, as P7.4 requires for 0.1.0
+  (under Q14 (1) the confirmation also covers the pending trusted
+  publisher, Maintainer actions). If the proxy refuses the push, it becomes
+  a Maintainer action ("push `v0.0.1` at `<sha>`"), and P8 waits for it.
+- The record: `p10-fixes` branches from `main` at the tagged commit or
+  later, and its first commit is a bookkeeping commit that appends the tag
+  to `p10-run-log.md` (name, commit, Publish run URL and result) and ticks
+  `tasks.md`'s P10.R line, with the message `Record the v0.0.1 tag`. P8
+  does not start until that commit is pushed.
+- What the push triggers: `publish.yml` (`on: push: tags: ["v*"]`) builds
+  with `uv build` and runs `pypa/gh-action-pypi-publish` in the `pypi`
+  environment by trusted publishing. Under Q14 (1), tag only, the
+  maintainer has confirmed that no pending trusted publisher is registered
+  (or that the environment needs their approval), so the upload step fails
+  and nothing reaches PyPI; the
+  session records the run's URL and its failure as expected in the run log
+  (if the `pypi` environment asks for a reviewer, the maintainer rejects
+  the deployment instead). Under Q14 (2), the maintainer has registered the
+  pending trusted publisher first; the run publishes 0.0.1, and the session
+  records the PyPI URL. Either way the run's result is not a gate.
+- Hand-off for P8: the tag name and commit, and the dependency line the
+  upstream uses (`pyntpot @ git+https://github.com/findlaywebb/pyntpot@v0.0.1`
+  under Q14 (1), `pyntpot==0.0.1` under (2)).
+
+#### P10.10a to P10.10d Public names for what another module imports (conditional)
+
+- Implements `maps-track-index-private-names-imported` under Q9 (a) (under
+  Q9 (b): P10.10c only, without the pin). One slice per area of the
+  **defining** module: P10.10a `ink` (6 names, `ink.tip`), P10.10b
+  `letters` (6: `letters.skeleton`, `letters.trace._centrelines`), P10.10c
+  other `maps` (12: `track_index._densify`, `osm._osm_layers`,
+  `relief_layers._relief_layers`, `osm_elements._polygon_rings`,
+  `contours._ring_is_wet`, `contours._grid_line_to_metres`, `contours._pad`,
+  `masks._spread`, `relief_strokes._jitter`, `compose._paste_labels`,
+  `compose._plates`, `compose._route`), P10.10d `maps.lettering` (34).
+  The areas: `ink` is the package `pyntpot.ink`, `letters` is
+  `pyntpot.letters`, `maps.lettering` is the package
+  `pyntpot.maps.lettering`, and `maps` is every other module under
+  `pyntpot.maps`, the `maps.lettering_*` modules included. Part 2,
+  sequential, after P10.4c, P10.5b, P10.6 and P10.7 (every other P10 slice
+  that touches their files) and before P10.11; P9.4 (`references.md`) runs
+  after P10.
+- Owner files: the defining and importing modules of the slice's names,
+  their tests (which repoint their imports), the module docstrings that
+  list them as key names, `docs/explanation/references.md` (P10.10a for
+  the `value-noise` and `fbm` lines, which cite `ink.tip._fbm1`; P10.10c
+  for the three `compose` sites its `Implemented in:` lines cite; no other
+  renamed name is cited there), `tests/unit/maps/test_import_order.py`
+  (the pin).
+- Every `Implemented in:` path naming a renamed name moves in the same
+  commit; `tests/architecture/test_reference_keys.py` is the check (its
+  `test_every_site_cites_its_key` fails on a path that resolves to no
+  site).
+- Leave alone: behaviour, `tests/golden/`, the 32 underscore names tests
+  import that no other `src` module imports (tests may import privates),
+  `docs/decisions/**` (accepted ADRs are records: ADR 0005's
+  `geo._relief_layers` and `geo._osm_layers` are names in the deleted
+  `_port.geo`, inside the field-to-group table that "What the window
+  freezes" fixes, and ADR 0009's mention is historical prose),
+  `src/pyntpot/{ink,letters,maps}/__init__.py` and every `__all__`,
+  `tests/unit/test_public_api.py`, and P11's import test for the example
+  scripts. A renamed name is module-level, not public API (ADR 0007 as
+  amended by 0026: only names in an `__all__` are public); it joins no
+  `__all__` or package docstring and needs no ADR.
+- **The pin, test first**: P10.10a adds
+  `test_no_module_imports_another_modules_private_name` to
+  `tests/unit/maps/test_import_order.py`, parametrised over the defining
+  area (`ids=["ink", "letters", "maps", "maps.lettering"]` grow by one per
+  slice: each slice adds its own id). It walks the AST of `src/pyntpot` and
+  reports every `from pyntpot.<module> import _name` (dunders excepted) in
+  another module, and every `<bound module>._name` attribute access through
+  a module bound by an import, where the defining module is in the area.
+  Docstring: "No module reaches into another module's underscore names."
+  Each slice runs its new id red (listing its names), then renames until
+  green, and updates the test module's docstring to name the rule.
+- **Names**: drop the underscore. Where that clashes (P10.10b `_chains`;
+  P10.10c `_plates`, `_pad`; P10.10d `_on_paper`, `_tilt`, `_bow`,
+  `_window`, `_stem`) choose a name that says what the thing is, check it
+  against `GLOSSARY.md` and against the public names P11 added (P10
+  against P11), and list each choice in the hand-off. A name P11 has
+  already promoted under its P10.10 name is not renamed again.
+- Sizes (lines naming each name in its definer, importers and tests): about
+  32, 30, 60 and 231, plus docs.
+- Gate: G-here plus G-self (renames: byte-identical by construction), per
+  slice.
+- Commits: `Make the ink names other modules import public`,
+  `Make the letters names other modules import public`,
+  `Make the maps names other modules import public`,
+  `Make the lettering names other modules import public`
+
+#### P10.11 Golden group (conditional)
+
+- Empty at P10.0: no proposed fix moves a golden. It exists only if, after
+  P10.2, a row is `fix-golden` (Q4 (2), Q6 (A), or a fix slice whose G-self
+  was not byte-identical) and Q12 is yes; otherwise those rows are `defer`.
+- **After P10.2 it is empty unless a fix slice's G-self moves a row.** Q4
+  was answered (1) and Q6 (B): both look rows are `close`, and the two looks
+  are candidate features in `docs/features/`
+  (`letters-nib-follows-writing-line.md`, `ink-tip-hold-stroke-ends.md`).
+  Q12 is yes for a row a fix slice's G-self moves, so such a row is the only
+  way into this slice; the Q4 (2) and Q6 (A) steps below are removed.
+- The last slice of part 2: after P8 and after every other P10 slice, and
+  before P7.1, on `p10-golden`, as one
+  regeneration window run as ADR 0006 and P3.12 to P3.15 ran theirs: one
+  commit per fix inside the window, G-window per step with the step's gate
+  options, the tolerance bound (`MAX_DIFFERING_FRACTION`,
+  `MAX_CHANNEL_DELTA`) unchanged, the manifest hash required equal, and one
+  regeneration commit at the end as P3.15 made it. Window commits are
+  pushed to `p10-golden` only once the regeneration commit has landed with
+  G-here green; a session that must end mid-window pushes to the backup ref
+  `wip/p10-golden-window` and resumes from it, as P3's "Pushing" rule says,
+  and the ref is deleted after the push.
+- Gate options per step: ~~Q4 (2), the pen turns with the line:
+  `--require-identical paper.webp wash.webp pen.webp --max-fraction 0.005 --require-hash equal --require-labels-equal`;
+  Q6 (A), held stroke ends:
+  `--require-identical paper.webp wash.webp --max-fraction 0.005 --require-hash equal --require-labels-equal`~~
+  (removed: Q4 answered (1), Q6 (B)); a moved `fix` row: the options its slice states, with every output its
+  probe did not expect to move required identical.
+- Each step's test is the one its row names (removed with their steps: Q4 (2):
+  `tests/unit/letters/test_hand.py::test_a_name_along_a_turned_line_carries_the_turn_on_its_pen`;
+  Q6 (A): `tests/property/test_tip.py::test_smoothing_keeps_a_paths_two_ends`
+  and a unit pin of the issue's case, ends `0.0` and `19.6`), written red
+  first. P10.11 runs after P10.10a, so a brief for the removed Q6 (A) step
+  would have named the smoothing function by the name P10.10a left: `pyntpot.ink.tip.smooth_path` under
+  Q9 (a), `pyntpot.ink.tip._smooth_path` otherwise.
+- The ADR: `docs/decisions/0025-second-golden-regeneration.md` (the number
+  is fixed by the ADR table; P9 has not run, so 0022 and 0023 do not exist
+  yet; before writing, `ls docs/decisions` must show 0025 free, otherwise
+  stop and report), drafted at the first step and accepted at the
+  regeneration with the per-step table, as ADR 0006 was.
+- Commit messages: one per fix, as its row states; the last
+  `Regenerate the goldens once more for the look fixes`.
 
 ### P11. Widen the public API for primitive-first tutorials
 
@@ -6176,10 +7753,12 @@ before P11.1 starts.
 - **ADR.** A new ADR amends ADR 0007 (0007 stays, append-only, as the record
   of the first surface; its Consequences already require a new ADR for a new
   public name). Its number follows the rule of "P3 and P4: how to run a
-  slice": P11.0 takes the lowest number above 0023 (0013 to 0021 are reserved
-  for P7.3, 0022 and 0023 for P9) that `ls docs/decisions` does not show and
-  P10.0 has not fixed for its own ADR, and adds its row to the ADR numbers
-  table. If it is taken when the slice writes it, stop and report.
+  slice": P11 takes **0026**, the lowest number above 0023 (0013 to 0021 are
+  reserved for P7.3, 0022 and 0023 for P9) that `ls docs/decisions` does not
+  show and P10 has not fixed (P10 fixes 0024 for P10.5b and 0025 for
+  P10.11). The ADR numbers table already holds its row (0026,
+  `widen-the-public-api`, P11.1). If 0026 is taken when the slice writes
+  it, stop and report.
 - **Contract.** `tests/unit/test_public_api.py` pins the widened top-level
   `__all__`, and pins each layer package's `__all__` as well. Every promoted
   name carries the docstring contract (purpose, key types, what it does not
@@ -6197,15 +7776,25 @@ before P11.1 starts.
   in a public module's `__all__`, and a test runs each offline against the
   fixture. P11.0 decides whether the scripts are written in P11 or are
   stubs P7.2 fills.
-- **Order.** P11 runs after P10.1, so its triage table shows which private
-  names P10 renames or deletes before any is promoted, and before P7.1, so
-  the README's quick start and `examples/word.py` use the widened names; it
-  must land before P7.2. A P10 fix slice that renames a name P11 has made
-  public needs its own ADR, so P10.0 orders such fixes before P11 where it
-  can. P11 moves no pixel and may land before or after P10's golden group.
-  The widening is additive, so it is compatible with P8 on either side;
-  P8 should still start after P11, so the upstream migration is written
-  against the surface the release documents. P9 runs after P7.4 and P8, so
+- **Order.** The port's order is P10.0 to P10.2, P10 part 1, P11, P10.R
+  (tag 0.0.1), P8, P10 part 2, P7, P9 (P10, "Order and parallelism"). P11
+  starts only after P10 part 1 has landed on `main` (the `p10-triage` PR
+  merged), not merely after P10.1: its triage table then shows which
+  private names P10 renames or deletes, and no P11 slice holds a file a
+  part-1 slice holds (`GLOSSARY.md`, `letters/nib.py`, this plan). It lands
+  before P7.1, so the README's quick start and `examples/word.py` use the
+  widened names, and so before P7.2. P10.R tags 0.0.1 on its own branch
+  after P11 merges, and P8 consumes that tag, so the upstream migration is
+  written against the surface the release documents. P10 renames or
+  deletes no name this list promotes (P10, "P10 against P11"). P11.0
+  re-measures its list at its own starting commit; an underscore name it
+  adds that P10.10 would rename is promoted under the name P10.10 would
+  give it (the underscore dropped, or the clash name chosen by the P10.10
+  rule), and that P10.10 slice drops it; a name it adds that a part-2 slice
+  deletes is left out of the list and filed as a later `decide` row. A part-2
+  slice that would rename or delete a name P11 has made public needs its
+  own ADR and stops for the maintainer. P11 moves no pixel, so neither P8's
+  hash nor P10's golden group depends on it. P9 runs after P7.4 and P8, so
   it follows P11; P9.1 and P9.2 own files under `tests/architecture/`, which
   P11's import test also touches.
 

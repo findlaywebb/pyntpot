@@ -187,7 +187,7 @@ def coastline_chains(
 ) -> list[list[Pt]]:
     """Coastline ways as surveyed: clipped, joined, and never smoothed.
 
-    The coast is the one line on the sheet a reader would notice being wrong,
+    The coast is the one line on the map a reader would notice being wrong,
     so it keeps its own vertices. Offshore rocks come back as their own
     little rings and are ink specks at plate size, so only chains of real coast
     are kept.

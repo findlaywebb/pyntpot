@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyntpot.ink.noise import edt
+from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.shallow_water import shallow_water
 from pyntpot.ink.style import WashStyle
 
@@ -31,7 +31,7 @@ def test_the_water_carries_pigment_out_to_the_edge_it_dries_at():
     # noise it was handed.
     dep = shallow_water(wet, np.ones_like(wet), paper, fluid(40))
     inside = wet > 0.5
-    d = edt(~inside)
+    d = chamfer_distance(~inside)
     near = inside & (d <= 3)
     deep = inside & (d > 14)
     assert dep[near].mean() > dep[deep].mean() * 1.1

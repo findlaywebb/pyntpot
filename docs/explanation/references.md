@@ -75,8 +75,8 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 
 - Canonical source: Borgefors, G. (1986). Distance transformations in digital images. *Computer Vision, Graphics, and Image Processing* 34(3), 344-371. https://doi.org/10.1016/S0734-189X(86)80047-0 [verified-via-index: Crossref record, publisher page 200 stub without authors; 2026-10-07]
 - Design input: original design reading not recorded; the canonical source stands in.
-- Implemented in: `pyntpot.ink.noise.edt`
-- Note: the code's two-pass mask uses weights 1 and 1.41421356 (`pyntpot.ink.noise.edt`), one sweep down the rows and one back up.
+- Implemented in: `pyntpot.ink.noise.chamfer_distance`
+- Note: the code's two-pass mask uses weights 1 and 1.41421356 (`pyntpot.ink.noise.chamfer_distance`), one sweep down the rows and one back up.
 
 ## `box-blur` Gaussian by three box passes
 
@@ -110,7 +110,7 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 - Design input: the canonical source above.
 - Design input: Bousseau, A.; Kaplan, M.; Thollot, J.; Sillion, F. X. (2006). Interactive watercolor rendering with temporal coherence and abstraction. *Proceedings of the 4th international symposium on Non-photorealistic animation and rendering*, 141-149. https://doi.org/10.1145/1124728.1124751 [verified-via-index: Crossref record by bibliographic search, publisher page 403 challenge; 2026-10-07]
 - Design input: Watson, Z. (Stamen Design) (2012). Watercolor Process. https://stamen.com/watercolor-process-3dd5135861fe/ [verified: page 200 with its pinned words, published 2012-03-26; 2026-10-07]
-- Implemented in: `pyntpot.ink.wash.flow_edge`
+- Implemented in: `pyntpot.ink.wash.flow_edge`, `pyntpot.ink.wash.wash`
 
 ## `backruns` backruns (blooms)
 
@@ -160,6 +160,19 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 - Canonical source: Imhof, E. (1975). Positioning Names on Maps. *The American Cartographer* 2(2), 128-144. https://doi.org/10.1559/152304075784313304 [verified-via-index: Crossref record, publisher page 403 challenge; 2026-10-07]
 - Design input: original design reading not recorded; the canonical source stands in.
 - Implemented in: `pyntpot.maps.lettering.placement.place`
+
+## `ink-reservoir` per-bristle ink reservoir with reload
+
+- Canonical source: Baxter, W. V.; Lin, M. C. (2004). A versatile interactive 3D brush model. *12th Pacific Conference on Computer Graphics and Applications, 2004. PG 2004. Proceedings.*, 316-325. https://doi.org/10.1109/pccga.2004.1348363 [verified-via-index: Crossref record by bibliographic search, issued null, year from the container title PG 2004, publisher page 202 with an empty body; 2026-10-07]
+- Design input: Chu, N. S.-H.; Tai, C.-L. (2005). MoXi: real-time ink dispersion in absorbent paper. *ACM SIGGRAPH 2005 Papers*, 504-511. https://doi.org/10.1145/1186822.1073221 [verified-via-index: Crossref record, publisher page 403 challenge; 2026-10-07]
+- Design input: the canonical source above.
+- Implemented in: `pyntpot.ink.deposit.spend`
+
+## `pigment-separation` pigment separation into the paper's pits
+
+- Canonical source: Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997). Computer-generated watercolor. *Proceedings of the 24th annual conference on Computer graphics and interactive techniques - SIGGRAPH '97*, 421-430. https://doi.org/10.1145/258734.258896 [verified-via-index: Crossref record, publisher page 403 Cloudflare block; 2026-10-07]
+- Design input: the canonical source above.
+- Implemented in: `pyntpot.ink.wash.separated`
 
 ## Read during design, no technique here
 

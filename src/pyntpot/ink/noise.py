@@ -2,7 +2,7 @@
 
 Key functions: `value_noise` and `fbm`, smooth and fractal noise on the pixel grid;
 `fbm_aniso`, fractal noise stretched along one axis; `blur`, three box passes standing
-in for a Gaussian; `edt`, a chamfer distance transform; `smoothstep`, a soft step;
+in for a Gaussian; `chamfer_distance`, a chamfer distance transform; `smoothstep`, a soft step;
 `fill_holes`, the enclosed holes of a mask filled on a coarse copy. `F32` is the float
 type every field is held in.
 
@@ -178,7 +178,7 @@ def blur(a: np.ndarray, sigma: float) -> np.ndarray:
     return out
 
 
-def edt(mask: np.ndarray) -> np.ndarray:
+def chamfer_distance(mask: np.ndarray) -> np.ndarray:
     """Chamfer distance in pixels to the nearest True cell.
 
     Source: `chamfer-distance` in docs/explanation/references.md.

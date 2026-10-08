@@ -92,7 +92,7 @@ class CoverStyle:
     wood dabs.
     """
 
-    #: Seeds, so the same box paints the same sheet every time.
+    #: Seeds, so the same box paints the same map every time.
     dither_seed: int = 23
     land_cover: bool = True
     relief: bool = True
@@ -227,9 +227,9 @@ class LetteringPolicy:
     #: compete with them; three leaves room for both. Spans have their own cap
     #: in `lettering.spans.SPAN_MAX`.
     label_max: int = 3
-    #: Letter the map at all. Off, no hand is opened: the lettering stage
-    #: places no labels or spans and draws no label plate, and the attribution
-    #: line is not written either.
+    #: Letter the map at all. Off, the lettering stage opens no hand: it places
+    #: no labels or spans and draws no label plate. The attribution follows
+    #: `compose`'s `attribution` flag alone.
     labels: bool = True
     #: Letter the settlements, the watercourses and the roads the box holds, as
     #: the hierarchy asks: a settlement beside its dot with no leader, a river
@@ -246,7 +246,7 @@ class LetteringPolicy:
 #: on the pinker side, blended from the original rose (#e01c64) toward maroon,
 #: and lifted back toward it.
 #:
-#: The maroon read as one more dark mark on a sheet already carrying dark
+#: The maroon read as one more dark mark on a map already carrying dark
 #: washes: against cream it had the contrast (6.5:1) and against a wood or a
 #: built-up wash it had almost none, and the route is the one line on the card
 #: the reader is looking for. This is about 40% more luminous and carries more

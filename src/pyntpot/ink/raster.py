@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-from pyntpot.ink.noise import F32, edt
+from pyntpot.ink.noise import F32, chamfer_distance
 from pyntpot.ink.polyline import Pt
 from pyntpot.ink.sheet import Canvas
 
@@ -160,4 +160,4 @@ def stroke_mask(lines: list[list[Pt]], canvas: Canvas, width_px: float) -> np.nd
         hits[iy, ix] = True
     if width_px <= 1:
         return hits
-    return edt(hits) < width_px * 0.5
+    return chamfer_distance(hits) < width_px * 0.5

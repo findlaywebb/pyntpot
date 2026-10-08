@@ -27,7 +27,7 @@ from pyntpot.maps.lettering.placement_marks import _mark_through
 from pyntpot.maps.lettering_marks import box_size
 
 from support.basemaps import river_label, wide_card
-from support.lettering import flat_dark, open_hand, sheet_card
+from support.lettering import flat_dark, map_card, open_hand
 from support.measure import flat_measure
 
 
@@ -38,7 +38,7 @@ def test_a_curved_label_reserves_the_room_it_actually_takes():
     # reader saw. The window is chosen in the placer now and contributes a run of
     # small boxes, and this asserts both: that the boxes follow the water, and
     # that a name placed afterwards is pushed off them.
-    card = sheet_card()
+    card = map_card()
     water = [(float(x), 150.0 + 18.0 * math.sin(x / 70.0)) for x in range(20, 380, 6)]
     river = Label(
         name="Heddon",
@@ -88,7 +88,7 @@ def test_a_road_crossing_costs_and_a_longer_leader_is_the_cheaper_answer():
     # leader, or the cheap answer stays the one on the tarmac.
     assert max(LEADER_RUNGS) * LEADER_COST_PX < ROAD_CROSS_COST
 
-    card = sheet_card()
+    card = map_card()
     route = [(0.0, 290.0), (400.0, 290.0)]
     free = Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
     place([free], [], Backdrop(card, route, flat_dark(), []), [], flat_measure)
@@ -105,13 +105,13 @@ def test_a_road_crossing_costs_and_a_longer_leader_is_the_cheaper_answer():
     assert moved.box != free.box
 
 
-def test_a_river_follows_its_bend_even_when_the_bend_runs_down_the_sheet():
+def test_a_river_follows_its_bend_even_when_the_bend_runs_down_the_map():
     """The rule that overrules the tilt test for rivers only."""
     # A river name says which water it is by sitting on that water. A steep
     # window used to be refused outright, which put the Heddon and the lower Lyn
     # in clear paper beside their own bends; a name read sideways is better than
     # one that could be about anything.
-    card = sheet_card()
+    card = map_card()
     water = [(200.0 + 12.0 * math.sin(y / 60.0), float(y)) for y in range(20, 280, 5)]
     river = Label(
         name="Heddon",
@@ -133,7 +133,7 @@ def test_a_river_follows_its_bend_even_when_the_bend_runs_down_the_sheet():
 
 def test_the_tilt_test_still_holds_for_everything_that_is_not_a_river():
     """A road is not exempt: the rule that was overruled was about water."""
-    card = sheet_card()
+    card = map_card()
     tarmac = [(200.0 + 12.0 * math.sin(y / 60.0), float(y)) for y in range(20, 280, 5)]
     road = Label(
         name="A361", kind="road", px=200.0, py=150.0, tier=TIER_ROAD, size=14.0, baseline=tarmac
@@ -148,7 +148,7 @@ def test_a_span_name_lands_beside_the_bracket_it_belongs_to():
     # A name whose block is a good deal wider than its own bracket still has to
     # end up beside the bracket, on the outboard side, without the line through
     # the words.
-    card = sheet_card()
+    card = map_card()
     route = [(100.0 + i * 6.0, 200.0) for i in range(16)]
     bracket = [(100.0 + i * 6.0, 170.0) for i in range(16)]
     span = Label(
@@ -177,13 +177,13 @@ def test_a_span_name_lands_beside_the_bracket_it_belongs_to():
     assert _mark_through(span.box, span) == 0.0
 
 
-def test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_sheet():
+def test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_map():
     """A river doubles back, so a straight line between two names is not the gap."""
     # The guard used to measure the distance across the paper, which on a
     # meandering river is a fraction of the water between the two, and on the Lyn
     # it rejected every window the second name had left.
-    card = sheet_card()
-    # A hairpin: two long reaches whose ends are near each other on the sheet.
+    card = map_card()
+    # A hairpin: two long reaches whose ends are near each other on the map.
     down = [(60.0 + x * 0.6, 60.0 + x * 0.02) for x in range(0, 300, 4)]
     back = [(240.0 - x * 0.6, 74.0 + x * 0.02) for x in range(0, 300, 4)]
     water = down + back
@@ -258,13 +258,13 @@ def test_two_leaders_that_cross_are_swapped_over():
     _seat(a, 300.0, 200.0, 60.0)
     _seat(b, 300.0, 100.0, 60.0)
     assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
-    _uncross_leaders([a, b], Backdrop(sheet_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
+    _uncross_leaders([a, b], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
     assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is None
     assert a.leader[1][1] < b.leader[1][1], "each name is still past the other"
 
 
 def test_a_swap_that_reads_worse_is_refused():
-    """The swap is offered, not imposed: a name is never pushed off the sheet."""
+    """The swap is offered, not imposed: a name is never pushed off the map."""
     # A wide name and a narrow one can cross, and the wide one does not fit where
     # the narrow one is sitting. A shorter pair of leaders is not worth a name in
     # the torn margin.
@@ -273,7 +273,7 @@ def test_a_swap_that_reads_worse_is_refused():
     _seat(b, 110.0, 200.0, 160.0)
     assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
     seats = (a.box, b.box)
-    _uncross_leaders([a, b], Backdrop(sheet_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
+    _uncross_leaders([a, b], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
     assert (a.box, b.box) == seats, "a name was swapped off the paper"
 
 
@@ -291,5 +291,5 @@ def test_a_name_on_its_own_mark_is_never_swapped():
     )
     town.box, town.flat, town.leader = (70.0, 140.0, 130.0, 160.0), True, None
     seat = town.box
-    _uncross_leaders([a, town], Backdrop(sheet_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
+    _uncross_leaders([a, town], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
     assert town.box == seat

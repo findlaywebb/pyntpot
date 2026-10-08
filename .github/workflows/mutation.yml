@@ -108,13 +108,16 @@ jobs:
       # `shell: bash` is `bash -eo pipefail`: inside the `if` condition `-e` does not fire,
       # and `pipefail` carries mutmut's failure through `tee`. `xargs -r` never runs
       # `mutmut run` with no pattern, which would test every mutant. Stopped at 270 minutes
-      # so the steps after it keep 30.
+      # so the steps after it keep 30. The `prlimit` cap is per process and inherited by every
+      # process mutmut forks: a mutant that allocates without bound gets `MemoryError` (or dies)
+      # instead of taking the runner down. 3.5 GB leaves about 1.2 GB over the largest normal
+      # process (2,308 MB measured), and four capped children fit in 16 GB.
       - name: Mutation run
         id: run
         shell: bash
         timeout-minutes: 270
         run: |
-          if xargs -r -a "$RUNNER_TEMP/patterns" uv run mutmut run 2>&1 | tee "$RUNNER_TEMP/mutmut.log"; then
+          if xargs -r -a "$RUNNER_TEMP/patterns" prlimit --as=3500000000 -- uv run mutmut run 2>&1 | tee "$RUNNER_TEMP/mutmut.log"; then
             echo tested=true >> "$GITHUB_OUTPUT"
           elif grep -q 'Filtered for specific mutants, but nothing matches' "$RUNNER_TEMP/mutmut.log"; then
             echo "the patterns match no mutant"; echo tested=false >> "$GITHUB_OUTPUT"

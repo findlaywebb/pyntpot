@@ -47,7 +47,9 @@ Three skills under `.claude/skills/` are copied from an MIT-licensed upstream; s
 ## Commits
 
 - Imperative, one line.
-- No co-authorship trailers.
+- A commit made by an agent session ends with the attribution
+  trailers its session gives (`Co-Authored-By:`, `Claude-Session:`); no
+  other trailers.
 
 ## Place names in tests and examples
 

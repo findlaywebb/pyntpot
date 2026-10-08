@@ -16,12 +16,12 @@ from pyntpot.maps.lettering.spans import (
     resolve_spans,
 )
 
-from support.lettering import arc, corners, crosses, flat_dark, shapes, sheet_card
+from support.lettering import arc, corners, crosses, flat_dark, map_card, shapes
 from support.measure import flat_measure
 
 
 def test_the_card_carries_no_more_spans_than_the_cap():
-    """Four brackets made the sheet cluttered, so three is the cap.
+    """Four brackets made the map cluttered, so three is the cap.
 
     Dropped in the payload's own order, because the agent is asked for its best
     first and that ordering is the only judgement available here.
@@ -38,16 +38,16 @@ def test_the_card_carries_no_more_spans_than_the_cap():
 
 
 def test_a_span_on_a_bend_is_drawn_on_the_convex_side_of_the_route():
-    """The whole term, through `place_spans`, on a sheet with nothing dark on it.
+    """The whole term, through `place_spans`, on a map with nothing dark on it.
 
-    With the darkness grid flat the free-paper rule is a coin toss decided by a
+    With the dark grid flat the free-paper rule is a coin toss decided by a
     tie-break, so this is exactly the near-tie the bend is meant to settle. The
     bracket lands outboard of the arc, further from its centre than the route
     is, which is the intended geometry. With the term off it is a
     coin toss again and the assertion below is not guaranteed, which is the
     point of the switch.
     """
-    card = sheet_card()
+    card = map_card()
     centre = (200.0, 150.0)
     for turn, radius in ((45.0, 110.0), (-45.0, 110.0), (-80.0, 110.0)):
         route = arc(turn, r=radius)
@@ -61,7 +61,7 @@ def test_a_span_on_a_bend_is_drawn_on_the_convex_side_of_the_route():
 
 
 def test_a_span_mark_never_crosses_any_piece_of_the_route():
-    """Rule seven, mechanically, on every shape the sheet has a case for.
+    """The route rule, mechanically, on every shape the map has a case for.
 
     Span marks are never drawn over any other piece of route. Any piece, so the whole track is
     tested and not the stretch alone, and the ticks are tested with the line
@@ -70,7 +70,7 @@ def test_a_span_mark_never_crosses_any_piece_of_the_route():
     of a loop, the second limb of an S, and a lane that cuts across the corner
     the span ends in.
     """
-    card = sheet_card()
+    card = map_card()
     for name, route in shapes().items():
         span = Span(name=name, kind="climb", i0=0, i1=len(route) - 1)
         placed = place_spans(
@@ -97,7 +97,7 @@ def test_the_mark_follows_the_shape_in_a_few_strokes_and_does_not_hold_its_gap()
     So there are two failures to keep away from, not one. The mark has to have
     the road's turns in it, and it has to have only a few of them.
     """
-    card = sheet_card()
+    card = map_card()
     route = [(60.0 + i * 3.0, 120.0) for i in range(30)]
     route += [(150.0 + i * 2.1, 120.0 + i * 2.1) for i in range(1, 25)]
     route += [(202.0 + i * 3.0, 172.0) for i in range(1, 30)]
@@ -122,7 +122,7 @@ def test_the_mark_stops_short_of_a_tangle_rather_than_pushing_through_it():
     On a tight bend the mark ends well before the end of the stretch when the
     end of the stretch is a junction. Cutting back is allowed; crossing is not.
     """
-    card = sheet_card()
+    card = map_card()
     route = [(60.0 + i * 4.0, 150.0) for i in range(60)]
     # A lane across the far end of the stretch, on both sides of it.
     route += [(300.0, 150.0 + i * 4.0) for i in range(1, 12)]
@@ -137,8 +137,8 @@ def test_the_mark_stops_short_of_a_tangle_rather_than_pushing_through_it():
 
 
 def test_a_span_with_nowhere_to_go_is_dropped_and_says_so(caplog):
-    """The answer when rule seven cannot be met is no mark, not a bad one."""
-    card = sheet_card()
+    """The answer when the route rule cannot be met is no mark, not a bad one."""
+    card = map_card()
     # Ground the route hatches from end to end, ten pixels between strands.
     # There is nowhere on it a mark can stand a cap height clear of a road,
     # and no direction to push one that reaches open paper.
@@ -164,7 +164,7 @@ def test_a_mark_prefers_clear_paper_to_lying_along_a_river():
     how much mark each side yields, not a rule: with the water on one side of
     a straight lane and clear paper on the other, the mark takes the paper.
     """
-    card = sheet_card()
+    card = map_card()
     route = [(60.0 + i * 4.0, 150.0) for i in range(60)]
     river = [[(60.0 + i * 4.0, 150.0 - 20.0) for i in range(60)]]
     north, south = [], []
@@ -187,13 +187,13 @@ def test_a_mark_prefers_clear_paper_to_lying_along_a_river():
 
 
 def test_an_end_tick_stops_short_of_the_route_rather_than_touching_it():
-    """A tick is part of the mark, so rule seven binds it too.
+    """A tick is part of the mark, so the route rule binds it too.
 
     The tick points at the road, because what it says is where on the road the
     span starts. On ground where the mark sits close, the leg that points at
     the road is shortened until its tip clears it.
     """
-    card = sheet_card()
+    card = map_card()
     route = [(60.0 + i * 4.0, 150.0) for i in range(60)]
     span = Span(name="the lane", kind="climb", i0=0, i1=59)
     assert place_spans(
@@ -210,7 +210,7 @@ def test_a_span_mark_sits_at_the_hand_drawn_offset():
     """The offset is measured off hand-drawn marks, not chosen between extremes.
 
     2.6 cap heights reads as detached and 0.9 reads as drawn on the road.
-    Hand-drawn marks run 10.7 to 14.5 card pixels from the route at a 14 px
+    Hand-drawn marks run 10.7 to 14.5 display pixels from the route at a 14 px
     cap height, which is 0.8 to 1.0 cap heights, and the offset is 1.2.
     """
     assert SPAN_OFFSET_CAPS == 1.2

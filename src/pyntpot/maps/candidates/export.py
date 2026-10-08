@@ -1,6 +1,6 @@
 """The candidate export: what a track passes, for a caller to choose names from.
 
-Key names: `landmark_export`, one activity's route totals, the settlements it passed,
+Key names: `landmark_export`, one track's route totals, the settlements it passed,
 each climb grounded in that route, and every landmark candidate beside it;
 `CANDIDATE_BASEMAP`, the basemap style the export draws the landmarks with;
 `CANDIDATE_CLIP_MARGIN_M`, the ground kept round the track for them.
@@ -57,8 +57,8 @@ def landmark_export(inputs: BasemapInputs, route: list[Pt] | None = None) -> dic
     """What the caller reads: where the track went, and what is beside it.
 
     Args:
-        inputs: The activity, its track (with elevations, when the GPX carries
-            them), its cache and its places.
+        inputs: What the basemap is assembled from: the track (with elevations, when
+            the GPX carries them), its cache key, its cache and its places.
         route: The already-projected track, when the caller has one.
 
     Returns:

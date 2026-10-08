@@ -32,6 +32,9 @@ jobs:
       - name: Audit dependencies
         run: uv audit --preview-features audit-command
 
+      - name: Hooks
+        run: uv run prek run --all-files
+
       - name: Format
         run: uv run ruff format --check .
 

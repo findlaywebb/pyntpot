@@ -123,7 +123,7 @@ def test_the_river_the_route_crossed_beats_the_one_it_did_not():
 def test_the_second_river_name_is_earned_by_the_run():
     """A river that clips a corner is read in one piece and named once.
 
-    The second name exists because a river crossing the whole sheet is read in
+    The second name exists because a river crossing the whole map is read in
     pieces. The Severn has 295 px of water on a 900 px card and taking both
     allowances wrote the second name in open paper past the end of the river.
     """
@@ -136,4 +136,4 @@ def test_the_second_river_name_is_earned_by_the_run():
     short = [label.name for label in rivers(395)]  # 295 px of water
     assert short == ["Severn"], "a corner of river was lettered twice"
     long = [label.name for label in rivers(800)]  # 700 px of water
-    assert long == ["Severn", "Severn"], "a river across the sheet lost its second name"
+    assert long == ["Severn", "Severn"], "a river across the map lost its second name"

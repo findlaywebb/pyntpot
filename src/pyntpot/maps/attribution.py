@@ -33,7 +33,7 @@ from pyntpot.maps.style import Style
 
 log = logging.getLogger(__name__)
 
-#: The type size of the attribution line, in card pixels.
+#: The type size of the attribution line, in display pixels.
 ATTRIBUTION_SIZE_PX = 11.0
 
 #: How far the attribution block sits from the card's bottom and right edges.
@@ -61,7 +61,7 @@ def draw_attribution(image: Image.Image, text: str, style: Style) -> None:
     """
     if not text:
         return
-    hand = lettering_marks.open_hand(style) if style.lettering.labels else None
+    hand = lettering_marks.open_hand(style)
     if hand is None:
         log.info("no hand to write the attribution with, none is drawn")
         return

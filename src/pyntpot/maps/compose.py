@@ -1,4 +1,4 @@
-"""The raster card's drawing steps: the painted sheet, the route and the label plate.
+"""The raster card's drawing steps: the painted map, the route and the label plate.
 
 The page draws the map as an SVG with the plates inlined and the route, the
 pins and the names set in vector on top. These are the steps that lay the same

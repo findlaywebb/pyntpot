@@ -3,7 +3,7 @@
 Key types: `Setting`, one request to the hand: a text at a size, set either
 along a line or beside an anchor, with its slant, tracking, ink and whether the
 backing wash is lifted under it; `Mark`, one stroke for the nib to run along, in
-card pixels. `DEFAULT_LINE_PX` is the type size a mark belongs to when nothing
+display pixels. `DEFAULT_LINE_PX` is the type size a mark belongs to when nothing
 says otherwise.
 
 It writes nothing and chooses nothing. A setting is the outcome of placement,
@@ -49,7 +49,7 @@ class Setting:
 
     Args:
         text: What is written; the whole name, even when `lines` wraps it.
-        size: The type size, in card pixels.
+        size: The type size, in display pixels.
         anchor: Where a flat block is set from: its baseline and its `align` edge.
         path: The line a name is written along, at least two points.
         align: Which edge of a flat block sits on `anchor`.
@@ -93,7 +93,7 @@ class Setting:
 
 @dataclass
 class Mark:
-    """One stroke for the nib to run along, in card pixels.
+    """One stroke for the nib to run along, in display pixels.
 
     `role` sets the weight and whether the pen's angle modulates it, `ink`
     its ink token or a `#rrggbb` colour, `size` the type size it belongs to, and

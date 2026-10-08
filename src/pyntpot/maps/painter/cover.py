@@ -17,7 +17,7 @@ blooms from the job's shared generator, in class order.
 
 import numpy as np
 
-from pyntpot.ink.noise import F32, edt, smoothstep
+from pyntpot.ink.noise import F32, chamfer_distance, smoothstep
 from pyntpot.ink.pigment import Layer
 from pyntpot.ink.raster import Deform, deform_rings, fill_cov
 from pyntpot.ink.sheet import rgb
@@ -55,8 +55,8 @@ def wet_field(label: np.ndarray, style: WashStyle, rim_cov: float) -> np.ndarray
     dry = label == 0
     if style.wet_close_px > 0:
         gap = F32(style.wet_close_px)
-        dry = ~(edt(~(edt(label > 0) <= gap)) > gap)
-    return smoothstep(edt(dry) - F32(back), back)
+        dry = ~(chamfer_distance(~(chamfer_distance(label > 0) <= gap)) > gap)
+    return smoothstep(chamfer_distance(dry) - F32(back), back)
 
 
 def _deform(job: PaintJob) -> Deform | None:

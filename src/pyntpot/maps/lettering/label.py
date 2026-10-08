@@ -87,9 +87,9 @@ WRAP_MIN_SHARE = 0.25
 
 @dataclass
 class Label:
-    """One name on the sheet: what it is, where it points, and where it sits.
+    """One name on the map: what it is, where it points, and where it sits.
 
-    `px`/`py` are the anchor, the thing the name is about, in card pixels.
+    `px`/`py` are the anchor, the thing the name is about, in display pixels.
     `place` fills in the rest (`home_labels` does for a house): the box the
     name occupies, the point its baseline starts from with the anchor that goes
     with it, and the two ends of its leader when it has one.
@@ -116,7 +116,7 @@ class Label:
     #: bought a better position, and the boxes it claimed are the block's, so
     #: what is reserved and what is drawn are the same pixels.
     lines: list[str] = field(default_factory=list)
-    #: The line a curved label is set along, in card pixels. Empty is horizontal.
+    #: The line a curved label is set along, in display pixels. Empty is horizontal.
     baseline: list[Pt] = field(default_factory=list)
     #: The run of that line the placer actually chose, once it has chosen it.
     #: Empty means it has not, and the hand picks its own window unless `flat`.
@@ -127,7 +127,7 @@ class Label:
     #: reader would see a curve the placer had never defended a box for.
     flat: bool = False
     #: Which side of its own baseline a curved name sits on: +1 above the line
-    #: in card pixels, -1 below it. A span sets this outboard of the route.
+    #: in display pixels, -1 below it. A span sets this outboard of the route.
     lift: float = 1.0
     #: True when this name is written *on* its own feature rather than beside
     #: it. A river drawn at the quarter kilometre it occupies has room for its
@@ -142,7 +142,7 @@ class Label:
     #: A span's meaning, which is what its colour comes from. Empty on anything
     #: that is not a span.
     intent: str = ""
-    #: The mark this name belongs to, in card pixels: a span's own bracket.
+    #: The mark this name belongs to, in display pixels: a span's own bracket.
     #: With no leader drawn, the only thing joining a name to its mark is that
     #: the two are near each other, and "near" has to be measured against the
     #: whole mark and the whole block. Measured from the block's middle to the
@@ -150,7 +150,7 @@ class Label:
     #: is charged for its own width and a compact two-line block beside the
     #: middle of it is not, which is what pulls a wrapped name in close.
     mark: list[Pt] = field(default_factory=list)
-    #: The points the placer may hang this name off, in card pixels. Empty
+    #: The points the placer may hang this name off, in display pixels. Empty
     #: means the one anchor at `px`/`py`. A span offers several, spread along
     #: its own bracket, so a name blocked beside the middle of it slides along
     #: the line rather than away from it.
@@ -196,7 +196,7 @@ class Label:
 
 #: Every extent a span can be drawn for. The first group is the ground, the
 #: second the session, and which group a kind is in decides which side of the
-#: route it sits on. A span is not only a climb: any stretch of the activity
+#: route it sits on. A span is not only a climb: any stretch of the track
 #: worth remarking on is one, which is what `steady`, `fade` and `best_effort`
 #: are for.
 SPAN_GROUND = ("climb", "drag", "descent", "road", "water")
@@ -229,7 +229,7 @@ class Span:
     #: stack on each other.
     rank: int = 0
     offset_px: float = 0.0
-    #: The offset line in card pixels, and the two end ticks, likewise.
+    #: The offset line in display pixels, and the two end ticks, likewise.
     line: list[Pt] = field(default_factory=list)
     ticks: list[list[Pt]] = field(default_factory=list)
     label: Label | None = None

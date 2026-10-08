@@ -79,12 +79,12 @@ def place(
     """Put every name in its cheapest seat, one at a time in tier order.
 
     Curved names are placed here too: a river, a road or a span has its window
-    chosen here, against everything already on the sheet, and the run of small
+    chosen here, against everything already on the map, and the run of small
     boxes it really occupies goes back into the pile for the next name to
     avoid, so the box the placer defends and the pixels the reader sees are in
     the same place.
 
-    It is also the one funnel every name on the sheet goes through, whichever
+    It is also the one funnel every name on the map goes through, whichever
     pool found it, so it is where `dedupe_names` can see that the settlement
     "Elm" and the landmark "Elm" are one village.
 
@@ -93,13 +93,13 @@ def place(
     Source: `label-placement` in docs/explanation/references.md.
 
     Args:
-        labels: The names to place, each with its anchor already in card pixels.
-        spans: Spans to place first, so a span line is on the sheet before
+        labels: The names to place, each with its anchor already in display pixels.
+        spans: Spans to place first, so a span line is on the map before
             anything looks for room. Placed in place; their names join the
             queue and are placed with everything else.
-        ground: The card, the track in card pixels, the painter's darkness
-            grid and the named road centrelines. A name laid across a road is
-            costed, never forbidden.
+        ground: The card, the track in display pixels, the painter's
+            dark grid and the named road centrelines. A name laid across a road
+            is costed, never forbidden.
         taken: Boxes already spoken for, such as the home glyph's.
         measure_fn: How wide and tall a name is.
 
@@ -122,7 +122,7 @@ def place(
 
 #: How far a settlement's own ground reaches, in multiples of the size its
 #: name is lettered at. A town is lettered larger than a village and takes up
-#: more of the sheet, so one number covers both. Three: on a 900 px card that
+#: more of the map, so one number covers both. Three: on a 900 px card that
 #: is about 70 px round a town, which is the built-up part of the corner a
 #: span mark is drawn round rather than through.
 SETTLEMENT_GROUND_SIZES = 3.0
@@ -131,8 +131,8 @@ SETTLEMENT_GROUND_SIZES = 3.0
 def _places_to_avoid(labels: list[Label]) -> list[tuple[float, float, float, float]]:
     """The settlements a span mark would rather not be drawn through.
 
-    `(x, y, weight, radius)` in card pixels, weighted by how large the name is
-    set, which is how the sheet already says how big the place is.
+    `(x, y, weight, radius)` in display pixels, weighted by how large the name is
+    set, which is how the map already says how big the place is.
     """
     return [
         (lb.px, lb.py, lb.size / DEFAULT_LINE_PX, lb.size * SETTLEMENT_GROUND_SIZES)
@@ -200,7 +200,7 @@ def _place(
 
 
 def _leader_px(lb: Label) -> float:
-    """How long one label's leader is, in card pixels."""
+    """How long one label's leader is, in display pixels."""
     return math.dist(lb.leader[0], lb.leader[1]) if lb.leader else 0.0
 
 
@@ -264,7 +264,7 @@ def _seat_cost(lb: Label, ground: Backdrop, others: list[Box]) -> float:
 def _pair_cost(a: Label, b: Label, ground: Backdrop, others: list[Box]) -> float:
     """What two names cost where they currently sit, leaders included.
 
-    `b` is costed against `a`'s box as well as the rest of the sheet, so the
+    `b` is costed against `a`'s box as well as the rest of the map, so the
     overlap the two would make with each other is charged once rather than
     twice or not at all.
     """

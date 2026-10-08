@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from pyntpot.ink.noise import edt
+from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.sheet import Sheet
 from pyntpot.maps.painter.job import PlateStack
 from pyntpot.maps.painter.ribbon import paint_ribbon, ribbon_alpha
@@ -18,7 +18,7 @@ def _loop_distance(size: int = 120) -> np.ndarray:
     mask[89, 30:90] = True
     mask[30:90, 30] = True
     mask[30:90, 89] = True
-    return edt(mask)
+    return chamfer_distance(mask)
 
 
 class TestRibbonAlpha:

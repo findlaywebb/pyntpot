@@ -17,7 +17,7 @@ def two_squares(h: int = 200, w: int = 320) -> tuple[Sheet, np.ndarray, np.ndarr
 
 
 def fluid_fields(h: int = 96, w: int = 128) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """A wet area, some pigment in it, and a sheet of paper under it."""
+    """A wet area, some pigment in it, and paper under it."""
     rng = np.random.default_rng(4)
     wet = np.zeros((h, w), np.float32)
     wet[12:84, 16:112] = 1.0

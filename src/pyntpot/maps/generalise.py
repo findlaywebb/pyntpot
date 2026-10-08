@@ -6,10 +6,10 @@ Key names: `Generalisation`, the working grid and morphology of one pass;
 union-close-open-declutter-trace pass; `generalise_layer`, that pass plus the inner
 ring set and the tree seeds, as a dict of `outer`, `inner` and `seeds`.
 
-Everything that reaches the sheet has been through one grid, so a hundred stacked
+Everything that reaches the map has been through one grid, so a hundred stacked
 outlines become a few shapes. It does not read map data or write path data.
 Invariants: results are repeatable between builds, a mask's row 0 is its southern
-edge, and an empty input gives an empty result and not a full-sheet blob.
+edge, and an empty input gives an empty result and not a full-map blob.
 """
 
 import math
@@ -125,7 +125,7 @@ def generalise(
 ) -> list[list[Pt]]:
     """Raster generalisation: union, close, open, declutter, trace, smooth.
 
-    Everything that reaches the sheet has been through one grid, so what comes
+    Everything that reaches the map has been through one grid, so what comes
     out is a few big shapes with soft edges rather than a hundred outlines
     stacked on each other.
 

@@ -9,7 +9,7 @@ from pyntpot.letters.style import FaceStyle, HandStyle
 
 pytestmark = pytest.mark.benchmark
 
-#: A straight synthetic line a long name is written along, in card pixels.
+#: A straight synthetic line a long name is written along, in display pixels.
 LINE = tuple((10.0 + 8.0 * i, 60.0) for i in range(60))
 
 #: The two ways a glyph becomes a pen path.

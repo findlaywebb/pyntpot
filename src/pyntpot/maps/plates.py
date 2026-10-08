@@ -5,7 +5,7 @@ with their `Manifest` and the route in display pixels, both as recorded and
 with its doubled-back stretches pulled apart into strands; `Manifest`, the
 plates' sidecar record (`plates.json`): the base hash, the files written, the
 card they were painted on and the measurements later stages read; `DarkGrid`, the painter's coarse grid of how
-dark the painted sheet is; `dark_array`, which turns a `DarkGrid` into the
+dark the painted map is; `dark_array`, which turns a `DarkGrid` into the
 full-size darkness array a plate is written over, and is the only place one is
 converted.
 
@@ -42,13 +42,13 @@ if TYPE_CHECKING:
 
     from pyntpot.ink.polyline import Pt
 
-#: What the dark field is where there is no grid to read.
+#: The darkness assumed where there is no dark grid to read.
 _NO_GRID_DARKNESS = 0.35
 
 
 @dataclass(frozen=True)
 class DarkGrid:
-    """How dark the painted sheet is, cell by cell, on a coarse grid.
+    """How dark the painted map is, cell by cell, on a coarse grid.
 
     Attributes:
         w: Cells across.
@@ -97,7 +97,7 @@ class Manifest:
         wet_px: The painted width floor of each watercourse class, in display
             pixels.
         gran_px: The paper granulation's cell size, in render pixels.
-        dark: How dark the painted sheet is.
+        dark: How dark the painted map is.
         wood_px: Render pixels painted as wood.
         water_px: Render pixels painted as water.
     """

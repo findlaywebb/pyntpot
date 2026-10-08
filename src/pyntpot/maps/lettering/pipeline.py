@@ -29,7 +29,7 @@ otherwise names a file inside `Plates.directory`.
 
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import partial
 from pathlib import Path
 
@@ -198,7 +198,7 @@ def draw_plate(
         plates: The painted plates, beside which the label plate is written.
         placed: The placed labels.
         spans: The placed spans.
-        route_px: The track in card pixels.
+        route_px: The track in display pixels.
         style: The style the card is lettered in; its brush style makes the
             lettering's brushes and ink pads.
         route: `centreline` or `outline`; the style's when not given.
@@ -233,8 +233,9 @@ def draw_plate(
         dark_array(plates.manifest.dark, rh, rw),
         plates.manifest.gran_px,
     )
+    face = replace(style.face, label_route=hand.route)
     written = nib.plate(
-        marks, surface, NibGroups(style.nib, style.face, style.hand, style.brush, style.paper), path
+        marks, surface, NibGroups(style.nib, face, style.hand, style.brush, style.paper), path
     )
     if written is not None:
         side.write_text(json.dumps({"key": key, "face": hand.font.name, "route": hand.route}))

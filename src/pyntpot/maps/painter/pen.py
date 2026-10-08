@@ -7,7 +7,7 @@ engine as alpha the page tints with whatever ink it is set to.
 
 Roads and watercourses are painted with the same machinery as the wash: no vector
 stroke is drawn over the top. A watercourse is drawn at its own width where the basemap
-measured one, so a large river is as wide on the sheet as it is on the ground; the class
+measured one, so a large river is as wide on the map as it is on the ground; the class
 still chooses the brush and the ink, and the pad is still read back through the class
 brush, so the water layer keeps that brush's reservoir and break texture at any
 width. The coast is chained rather than profiled: it is one line round the land and has

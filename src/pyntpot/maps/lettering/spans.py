@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 #: The fewest points that make a segment.
 _FEWEST_FOR_A_SEGMENT = 2
 
-#: How many spans one card carries. Four made the sheet cluttered: with the
+#: How many spans one card carries. Four made the map cluttered: with the
 #: settlements, the rivers, the roads and the landmarks already on it, three
 #: brackets is where the card still reads as a map rather than as a diagram.
 #: Spans past the cap are dropped in the order the annotations list them, so
@@ -121,16 +121,16 @@ SPAN_RUNG_CAPS = 2.1
 
 @dataclass(frozen=True)
 class SpanSurroundings:
-    """What the spans are placed among: the card, the route and the rest of the sheet.
+    """What the spans are placed among: the card, the route and the rest of the map.
 
     Attributes:
         card: The card, for its size in display pixels.
-        route_px: The track in card pixels.
-        dark: The painter's darkness grid, `{"w", "h", "v"}`.
+        route_px: The track in display pixels.
+        dark: The painter's dark grid, `{"w", "h", "v"}`.
         avoid: Places the mark would rather not be drawn through, each an
-            `(x, y, weight, radius)` in card pixels. A cost and never a rule:
+            `(x, y, weight, radius)` in display pixels. A cost and never a rule:
             see `_drawn_side`.
-        lines: The watercourses, roads and lanes, in card pixels, which a mark
+        lines: The watercourses, roads and lanes, in display pixels, which a mark
             would rather not be drawn along. A cost as well.
     """
 
@@ -160,8 +160,8 @@ def place_spans(
     overlaps.
 
     The name is set along the span's own line when the span runs across the
-    sheet, on the far side of the line from the route so the order the eye
-    crosses is route, line, name. When the span runs down the sheet it is not:
+    map, on the far side of the line from the route so the order the eye
+    crosses is route, line, name. When the span runs down the map it is not:
     the name goes horizontally into whatever clear paper the placer can find
     beside it, and with no leader either way, because a name a few pixels from
     its own bracket does not need a line drawn to it.
@@ -198,7 +198,7 @@ def place_spans(
         if rank is None and span.side != base:
             # Curvature is a preference, not a licence to lose the span. If the
             # outside of the bend is already full and the inside is not, the
-            # span goes back inside rather than off the sheet.
+            # span goes back inside rather than off the map.
             log.info(
                 "span %r takes the inside of the bend: the outside is past the last rail", span.name
             )
@@ -240,7 +240,7 @@ def place_spans(
 #: it wins a rout and loses a close thing.
 SPAN_SIDE_SWAP_MARGIN = 1.25
 
-#: What a mark drawn through something the sheet has already given to a place
+#: What a mark drawn through something the map has already given to a place
 #: costs, as a share of its own length per unit of weight. A mark is drawn
 #: round a town rather than through it where it can be. That is leeway, so a
 #: cost: a mark with a
@@ -264,20 +264,20 @@ def _drawn_side(
     what the mark on that side turns out to be. Two things can only be known
     once it is drawn: whether the route left room for it at all, since a mark
     that meets a junction stops short of it, and whether it runs through a
-    place the sheet has already named or lies tight along a river. So both
+    place the map has already named or lies tight along a river. So both
     sides are drawn and scored on how much of a mark came back, less what it
     cost to cross a settlement and what it cost to lie on another strong line,
     and the chosen side keeps the span unless the other is clearly better.
 
     Args:
         span: The span, for its extent, side and offset.
-        route_px: The whole track in card pixels.
+        route_px: The whole track in display pixels.
         cap_px: The lettering's cap height.
         offset_px: The level the two marks are drawn at, which is the first
             rung's: the side is settled before the rung is.
-        avoid: `(x, y, weight, radius)` places, in card pixels, or None.
-        lines: The other strong line on the sheet - the watercourses, the
-            roads and the lanes - in card pixels, which a mark would rather
+        avoid: `(x, y, weight, radius)` places, in display pixels, or None.
+        lines: The other strong line on the map - the watercourses, the
+            roads and the lanes - in display pixels, which a mark would rather
             not be drawn along. A preference and nothing more: where the
             route runs down the far bank of a river there is nowhere else
             for the mark, and it may sit tight against the water.
@@ -306,7 +306,7 @@ def _drawn_side(
     return span.side, drawn[span.side]
 
 
-#: How near another strong line on the sheet counts as lying along it, in cap
+#: How near another strong line on the map counts as lying along it, in cap
 #: heights, and what that costs as a share of the mark's own length.
 #:
 #: A mark prefers clear paper and would

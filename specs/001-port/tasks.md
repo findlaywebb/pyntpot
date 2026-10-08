@@ -144,7 +144,7 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 
 ## P7. Docs and first release
 
-Depends on P11: P7.2, and ideally P7.1's quick start, run after it (plan.md, P11, "Order").
+Order: after P10 part 2 (maintainer, 2026-10-07). P7.1 to P7.3, then P7.4 tags 0.1.0, a release candidate; later issues are fixed in 0.1.x patch releases. Depends on P11: P7.2, and ideally P7.1's quick start, run after it (plan.md, P11, "Order").
 
 - [ ] P7.1 README with gallery images
 - [ ] P7.2 Tutorial, how-to guides, reference and explanation pages
@@ -153,9 +153,13 @@ Depends on P11: P7.2, and ideally P7.1's quick start, run after it (plan.md, P11
 
 ## P8. Upstream migration
 
+Order: after P10 part 1, P11 and P10.R; the upstream consumes the `v0.0.1` tag, made after P11 merges. At the hand-off the orchestrating session records "what upstream reads" in `p10-triage.md`; P10 part 2 follows.
+
 - [ ] P8.1 The upstream consumer migrates to the public API, with the recorded render hash reproduced first
 
 ## P9. Post-port cleanup
+
+Order: after P7.4, P8, P10 (both parts) and P11.
 
 - [ ] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR 0022 supersedes D16's enforcement clause for the post-port tree (the rule stands)
 - [ ] P9.2 Retire the exemptions mechanism; ADR 0023
@@ -164,19 +168,48 @@ Depends on P11: P7.2, and ideally P7.1's quick start, run after it (plan.md, P11
 
 ## P10. Triage and address the port's issues
 
-Order: P10.0 to P10.2 run after P6 merges and before P7.1; a release-blocking fix lands before P7.4; the golden group lands after P8; the other fix slices after P8 (plan.md, P10, "Order").
+Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach) on `p10-triage`, one PR; then P11, which starts only after part 1 has landed on `main`; then P10.R tags 0.0.1 (own `release-0.0.1` branch and PR, after P11 merges); then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the private-name renames, the golden group) on `p10-fixes`, branched from `main` at the tag or later (and `p10-golden`); then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
 
-- [ ] P10.0 Fatten P10 into slices; plan-reviewer pass
-- [ ] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue
-- [ ] P10.2 Maintainer decisions: the `decide` rows put once, answers recorded and re-triaged
-- [ ] P10.3 onwards: fix slices by area and golden impact, filled in at P10.0
+- [x] P10.0 Fatten P10 into slices; plan-reviewer pass
+- [x] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue; dispatch the Mutation workflow once on `main`
+- [x] P10.2 Maintainer decisions Q1 to Q14: answers recorded and re-triaged
+
+### Part 1 (before P8)
+
+- [x] P10.3a The labels switch no longer gates the attribution (release blocker, D8)
+- [x] P10.3b prek in the dev group, and the hooks in CI (release blocker, Verification 1)
+- [x] P10.3c Cite the ink reservoir and pigment separation, and the blurred-mask rim if Q7 (C) or (A) (release blocker, D24)
+- [x] P10.3d One commit trailer rule (Q1)
+- [x] P10.4a Delete the duplicate benchmarks
+- [x] P10.4b Rename `edt` to `chamfer_distance`; delete `point_to_segment`
+- [x] P10.5a The outline route narrows the nib; delete `_radii`
+- [x] P10.8 Mark the slow CLI test golden
+- [x] P10.9 Docs and terms: non-canonical terms, the OpenTopoData question, rule seven in tests; display pixels (Q2), "sheet" and "map" kept apart everywhere (Q10, widened)
+- [x] P10.12 Cap the mutation run's memory (later issue; part 1)
+- [x] P10.13 Test identifiers say map, not sheet (later issue; part 1, after P10.9)
+
+### Release
+
+- [ ] P10.R Tag 0.0.1 after P11 merges: version and changelog on `release-0.0.1`, `v0.0.1` pushed after the maintainer confirms (PyPI only if Q14 (2)); ticked by the tag record on `p10-fixes`
+
+### Part 2 (after P8 and its "what upstream reads" record)
+
+- [ ] P10.4c The deposit drops corners off the accumulator
+- [ ] ~~P10.5b Route-ink names follow the route ink (if Q5 (2); ADR 0024); a missing glyph advances as the face's space (if Q3 (2))~~ Not run: Q5 and Q3 were answered (1), so both members are closed (P10.2)
+- [ ] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict` (by the upstream-read record); ~~rung order if Q11 (1)~~ (removed: Q11 answered (2), row closed)
+- [ ] P10.7 Other maps: `tunnel=no`; route constants if Q8 (a), by the upstream-read record
+- [ ] P10.10a Public names for what other modules import: `ink` (if Q9 (a))
+- [ ] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
+- [ ] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))
+- [ ] P10.10d Public names for what other modules import: `maps.lettering` (if Q9 (a))
+- [ ] P10.11 Golden group, one regeneration window; ADR 0025 (if a row is `fix-golden` and Q12 yes). Empty after P10.2 (Q4 and Q6 closed): runs only if a fix slice's G-self moves a row
 
 ## P11. Widen the public API for primitive-first tutorials
 
-Order: after P10.1 and before P7.1; must land before P7.2; P8 starts after it (plan.md, P11, "Order").
+Order: after P10 part 1 has landed on `main` (not merely after P10.1), and before P10.R, P8 and P7.1 (plan.md, P11, "Order").
 
 - [ ] P11.0 Fatten P11 into slices; plan-reviewer pass
-- [ ] P11.1 ADR amending 0007 (number per the ADR numbers rule); widened `__all__` pinned in `test_public_api.py`
+- [ ] P11.1 ADR 0026 amending 0007; widened `__all__` pinned in `test_public_api.py`
 - [ ] P11.2 Promote the `ink` primitives: brush building, density, paper style, pigments, image writing
 - [ ] P11.3 Promote the `letters` primitives: setting, face and hand styles, the nib plate
 - [ ] P11.4 Promote the fetch cache and providers through `pyntpot.maps`

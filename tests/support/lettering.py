@@ -1,4 +1,4 @@
-"""Builders the lettering tests share: a sheet, a darkness grid, a hand, and route shapes."""
+"""Builders the lettering tests share: a card, a dark grid, a hand, and route shapes."""
 
 import itertools
 import math
@@ -12,7 +12,7 @@ from pyntpot.maps.card import Card
 Pt = tuple[float, float]
 
 
-def sheet_card() -> Card:
+def map_card() -> Card:
     """The smallest card the placer will accept: 400 by 300 display pixels, one pixel a metre."""
     return Card(
         box=(0.0, 0.0, 400.0, 300.0),
@@ -24,7 +24,7 @@ def sheet_card() -> Card:
 
 
 def flat_dark(w: int = 8, h: int = 8, v: float = 0.2) -> dict[str, Any]:
-    """A darkness grid with nothing dark in it, so it decides nothing."""
+    """A dark grid with nothing dark in it, so it decides nothing."""
     return {"w": w, "h": h, "v": [[v] * w for _ in range(h)]}
 
 
@@ -34,9 +34,9 @@ def open_hand() -> Hand:
 
 
 def arc(turn_deg: float, n: int = 60, r: float = 100.0, start: float = 180.0) -> list[Pt]:
-    """One circular arc turning `turn_deg`, centred so it sits on the sheet.
+    """One circular arc turning `turn_deg`, centred so it sits on the map.
 
-    Positive `turn_deg` turns towards side +1, which in card pixels is the
+    Positive `turn_deg` turns towards side +1, which in display pixels is the
     normal `(-dy, dx)`, so the centre of the arc is on side +1 and side -1 is
     the outside of the bend.
     """

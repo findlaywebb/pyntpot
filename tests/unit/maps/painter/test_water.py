@@ -5,7 +5,7 @@ import math
 
 import numpy as np
 
-from pyntpot.ink.noise import blur, edt
+from pyntpot.ink.noise import blur, chamfer_distance
 from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.style import WashStyle
 from pyntpot.ink.wash import WashOptions, wash
@@ -48,16 +48,16 @@ class TestSeaPatches:
     def test_the_streaking_runs_along_the_coast_not_across_it(self):
         """The direction is read off the shore, not chosen in advance."""
         cov = _sea_cover()
-        angle = coast_run(edt(cov <= 0.5), cov > 0.5, 40.0)
+        angle = coast_run(chamfer_distance(cov <= 0.5), cov > 0.5, 40.0)
         # The shore runs down the card, so the run of it is about a quarter turn.
         assert abs(abs(angle) - math.pi / 2) < 0.35
-        turned = coast_run(edt(cov.T <= 0.5), cov.T > 0.5, 40.0)
+        turned = coast_run(chamfer_distance(cov.T <= 0.5), cov.T > 0.5, 40.0)
         assert abs(turned) < 0.35  # the same coast laid the other way
 
     def test_no_shore_has_no_direction(self):
         """A card with no sea in reach of the band gives a run of zero."""
         cov = np.zeros((40, 40), np.float32)
-        assert coast_run(edt(cov <= 0.5), cov > 0.5, 20.0) == 0.0
+        assert coast_run(chamfer_distance(cov <= 0.5), cov > 0.5, 20.0) == 0.0
 
 
 class TestPaintWater:

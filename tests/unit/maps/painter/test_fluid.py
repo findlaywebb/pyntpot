@@ -1,4 +1,4 @@
-"""The fluid phase: one shallow-water pass over the trimmed layers, once for the whole sheet."""
+"""The fluid phase: one shallow-water pass over the trimmed layers, once for the whole map."""
 
 import dataclasses
 

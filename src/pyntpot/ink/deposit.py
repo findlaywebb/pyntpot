@@ -61,6 +61,8 @@ def spend(lay: Lay, wgt: np.ndarray, b: Brush) -> tuple[np.ndarray, np.ndarray]:
     harder spends it faster; each bristle falls at the same rate from its own
     starting load. `dip_px` is the reload: the seam it leaves is what makes a
     long line look drawn.
+
+    Source: `ink-reservoir` in docs/explanation/references.md.
     """
     phase = np.mod(np.cumsum(lay.ink.press) * b.step, b.dip_px)[:, None]
     res0 = lay.smp.res0

@@ -1,7 +1,7 @@
 """Which settlements a card names: ranked, merged into places and spaced apart.
 
 Key names: `settlements`, the candidate places merged by stem; `pick_settlements`, the
-labels the sheet carries and `settlement_budget`, how many a card this wide holds.
+labels the map carries and `settlement_budget`, how many a card this wide holds.
 
 It does not pick rivers, roads or landmarks, and it does not place a name.
 
@@ -27,9 +27,9 @@ SETTLEMENT_MAX_OFF_M = 1500.0
 #: Under this a settlement is not worth a name: a run through empty country gets
 #: one label or none rather than three hamlets.
 SETTLEMENT_FLOOR = 3.0
-#: How far apart two settlement names have to be on the sheet, in display pixels
+#: How far apart two settlement names have to be on the map, in display pixels
 #: of a 900 px card, so two villages a kilometre apart never both letter. Scaled
-#: with the card, because the constraint is the sheet and not the ground.
+#: with the card, because the constraint is the map and not the ground.
 SETTLEMENT_SEPARATION_PX = 120.0
 #: How near an end of the route a settlement has to be to have been where the
 #: session set off from or finished, as a fraction of the route's own length.
@@ -96,7 +96,7 @@ def pick_settlements(
     wanted: list[str] | None = None,
     budget: int | None = None,
 ) -> list[Label]:
-    """Which settlements the sheet names, by rank and by route relationship.
+    """Which settlements the map names, by rank and by route relationship.
 
     Never by raw distance order: a distance sort exhausts itself inside one
     town's wall plaques. Settlements draw from their own pool and their own
@@ -105,14 +105,14 @@ def pick_settlements(
     Args:
         basemap: The basemap, for its candidates.
         card: The card, for the projection and its size.
-        route_px: The track in card pixels.
+        route_px: The track in display pixels.
         always: Names the user's own file says to letter whenever the box
             holds them, which do not spend a slot.
         wanted: Names the annotations' `places` ask for, likewise.
         budget: How many to letter; from the card's width when not given.
 
     Returns:
-        One `Label` a settlement, highest score first, anchored in card pixels.
+        One `Label` a settlement, highest score first, anchored in display pixels.
     """
     always_set = {str(n).casefold() for n in (always or [])}
     wanted_set = {str(n).casefold() for n in (wanted or [])}

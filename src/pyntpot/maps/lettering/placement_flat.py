@@ -57,7 +57,7 @@ LEADER_RUNGS = (16.0, 30.0, 46.0, 64.0)
 
 #: What clear space is worth. Absence of collision is not the same as being
 #: legible: where several positions are all valid the one furthest from
-#: everything already on the sheet is the one to take, and this is what a pixel
+#: everything already on the map is the one to take, and this is what a pixel
 #: of that distance is worth against the rest of the cost.
 SEPARATION_WEIGHT = 0.55
 

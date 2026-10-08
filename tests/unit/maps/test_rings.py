@@ -30,7 +30,7 @@ def test_a_relation_split_across_ways_is_joined_into_one_ring():
     assert abs(signed_area(rings[0])) == pytest.approx(200.0)
 
 
-def test_a_polygon_bigger_than_the_sheet_is_clipped_not_dropped():
+def test_a_polygon_bigger_than_the_map_is_clipped_not_dropped():
     """A wood that covers everything is cut to the box, which is what shades it."""
     huge = [(-5000.0, -5000.0), (5000.0, -5000.0), (5000.0, 5000.0), (-5000.0, 5000.0)]
     cut = clip_ring(huge, (0.0, 0.0, 100.0, 50.0))

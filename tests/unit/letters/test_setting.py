@@ -7,7 +7,7 @@ import pytest
 
 from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark, Setting
 
-#: A straight line a name could be written along, in card pixels.
+#: A straight line a name could be written along, in display pixels.
 LINE = ((10.0, 40.0), (60.0, 38.0), (110.0, 41.0))
 
 
@@ -70,7 +70,7 @@ class TestSetting:
 
 
 class TestMark:
-    """A mark is one stroke in card pixels with pinned defaults."""
+    """A mark is one stroke in display pixels with pinned defaults."""
 
     def test_a_mark_defaults_to_a_washed_glyph_in_map_ink_at_the_line_size(self) -> None:
         """A mark given only points is a glyph, map ink, 20 px, no pen tilt, washed."""

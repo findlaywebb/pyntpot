@@ -36,7 +36,7 @@ def road_min_px(size: float) -> float:
 
 
 ROAD_MAX = 2
-#: How near the route a road has to run, in card pixels, to be one the session was on.
+#: How near the route a road has to run, in display pixels, to be one the session was on.
 ROAD_ON_ROUTE_PX = 40.0
 
 
@@ -47,7 +47,7 @@ def pick_roads(
     route_px: list[Pt],
     budget: int = ROAD_MAX,
 ) -> list[Label]:
-    """Which named roads the sheet numbers, set along their own tarmac.
+    """Which named roads the map numbers, set along their own tarmac.
 
     A road number is the quietest thing on the map and one of the most useful:
     it is how a rider works out where a climb actually was. A road is lettered
@@ -68,7 +68,7 @@ def pick_roads(
         basemap: The basemap, for the width each class was painted at.
         lines: The named lines, for the roads.
         card: The card, for the projection and its size.
-        route_px: The track in card pixels.
+        route_px: The track in display pixels.
         budget: How many to letter.
 
     Returns:

@@ -145,7 +145,7 @@ def ground_labels(
         basemap: The basemap, for its places and candidates.
         lines: The named lines, for the watercourses.
         card: The card, for the projection and its size.
-        route_px: The track in card pixels.
+        route_px: The track in display pixels.
         picks: The annotations, whose `places` name this track's exceptions;
             none adds nothing.
 
@@ -218,7 +218,7 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
 
 #: The fewest points a route needs for a start and a finish.
 MIN_ROUTE_POINTS = 2
-#: How near its start the route ends, in card pixels, for the two marks to be one.
+#: How near its start the route ends, in display pixels, for the two marks to be one.
 LOOP_CLOSE_PX = 30.0
 #: How far below its house a user's own place has its name written.
 HOME_NAME_DROP = 25.0

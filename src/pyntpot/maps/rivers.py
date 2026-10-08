@@ -39,7 +39,7 @@ CHANNEL_EASE_SAMPLES = 4
 #: area is taken as its own banks, in metres. A river is as wide as the water it
 #: runs along, not as the water it runs into: a stream that meets a big river
 #: inside the river's own polygon would otherwise take the big river's width and
-#: be drawn as the main river of the sheet.
+#: be drawn as the main river of the map.
 WIDTH_RUN_M = 250.0
 
 
@@ -195,7 +195,7 @@ def painted_width_px(floor_px: float, measured_m: float, mppd: float) -> float:
     **Thin water is exaggerated up to the class floor; wide water is drawn at
     its own width and never narrowed to fit.** The importance curve is what a
     watercourse is drawn at when nothing else says: a brook two metres across
-    has to be exaggerated many times over to appear on the sheet at all. It is
+    has to be exaggerated many times over to appear on the map at all. It is
     a floor and not a target. A river that measures wider than its floor is
     drawn at what it measures, and is not exaggerated on top of that.
 
@@ -217,7 +217,7 @@ def major_rivers(
 
     **The main river of a box is the widest water in it, not the longest.** Run
     inside the box is a fact about the box rather than about the river: it can
-    make a culvert that crosses the whole sheet the main river, and leave a
+    make a culvert that crosses the whole map the main river, and leave a
     wide river medium on the short stretch it clips off a corner.
 
     Width is measured off the water's own mapped area, which is what OSM maps
