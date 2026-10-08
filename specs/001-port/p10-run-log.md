@@ -256,3 +256,12 @@ User instructions (2026-10-07):
   `a16c6bc`: plan `Delete the three duplicate ink benchmarks`, actual
   `Delete the duplicate benchmarks`. P10.8 `743b3bf`: plan
   `Mark the full-fixture CLI test golden`, actual `Mark the slow CLI test golden`.
+- Part 1 diff review (fresh context, against the plan): 0 blocking, 3 should-fix,
+  11 nits; logic changed only in the 11 files the plan intends, P10.9 docstring-only,
+  ruff, ty, lint-imports and the architecture tests green. Fixes landed in one commit:
+  the `letters-map-ink-key` issue corrected (the key resolves to `NibStyle.label_ink`;
+  suggested name "label"), the `tasks.md:124` row done on the PR branch with a dispatch
+  on `main` after the merge, the three differing commit messages recorded above, and
+  nits N1 to N6, N8, N9 (benchmark smoke re-measured: 18.7 to 20.2 s) and N11; N7 and N10
+  left (cosmetic; already recorded). Gates: prek exit 0; AST-neutral 4 files; not-golden
+  121 s (1043 passed, 1 skipped). Part 1 ready for its PR, held for the maintainer's go.
