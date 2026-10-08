@@ -63,3 +63,12 @@ part 1, merged).
   the deferred P10 rows (`RouteInk.effect`/`casing`, `Label.as_dict`). The reviewer
   removed a stray worktree it had made at `/home/user/r2sim` (confirmed gone). Fix round 2
   dispatched to a fresh agent.
+- Fix round 2 (a fresh agent). N1: P11.2b's test imports from the defining modules; every
+  parallel slice now imports promoted names from their defining modules (the sweep found
+  no other miss). N2(a): ADR 0026 lists every token that crosses the surface, measured at
+  `ff752f6` (4 ink keys or a `#rrggbb` colour, 6 `Mark.role` roles, 2 `label_route` values,
+  3 `Setting.align` edges, 112 brush sheet ids and 6 override keys, 15 pigment keys,
+  `OpenTopoData`'s `dataset`). N2(b): ADR 0007 does not make classes reached through an
+  attribute public, so the rule is "public = names in a public module's `__all__`";
+  `RouteInk` and `Label` are not public, and the deferred P10 rows need no ADR. Minors
+  fixed. Plan review 3 dispatched to a fresh reviewer.
