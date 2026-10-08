@@ -195,3 +195,4 @@ User instructions (2026-10-07):
 - Untriaged later row: `maps-tests-sheet-identifiers-name-the-map` (slice not cut).
 - After part 1: P11, then P10.R (tag 0.0.1, tag only, after the maintainer confirms no
   pending PyPI trusted publisher), then P8, then part 2, P7, P9.
+- Resumed 2026-10-08 at `253dfc3`: P10.4b restarted from scratch; the capped mutant reproduction restarted.
