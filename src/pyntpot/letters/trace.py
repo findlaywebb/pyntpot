@@ -87,17 +87,6 @@ def _half_width(skel: np.ndarray, reach: np.ndarray) -> float:
     return float(np.median(vals)) if vals.size else 1.0
 
 
-def _radii(pts: list[Pt], reach: np.ndarray) -> list[float]:
-    """The inscribed radius under each point of a run, in raster pixels."""
-    h, w = reach.shape
-    out = []
-    for x, y in pts:
-        r = min(max(int(y), 0), h - 1)
-        c = min(max(int(x), 0), w - 1)
-        out.append(float(reach[r, c]))
-    return out
-
-
 def _edge(img: np.ndarray, at: Pt, along: Pt, cap: float) -> float:
     """How far the ink reaches from a point in one direction, up to `cap`."""
     h, w = img.shape
