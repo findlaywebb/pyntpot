@@ -86,3 +86,10 @@ part 1, merged).
   parameter keys, 2 `aux` keys, 7 `brushes` class keys, 3 `brush_width_px` keys, 3
   `river_curve` keys, 15 `pigment_transparency` keys. No completeness claim is left.
   R3-m1 to R3-m3 fixed (`--include=*.py` on 8 greps). Plan review 4 dispatched.
+- Plan review 4: BLOCK, 0 blockers, 1 major, 0 minors. R3 findings resolved; counts re-run
+  and matching; with 245 `.pyc` files present, all 12 greps print what the plan says.
+  R4-M1: the widened token rule reaches theme TOML keys (so it contradicts "`RouteInk.effect`
+  may be deleted freely") and OSM tags (it collides with P10.7's `tunnel=no` fix). Fix: a
+  token is a string a caller passes to a public name, or an enumerated string a public name
+  or field returns; field names follow the member rule; fetched provider data is not a
+  token. Fix round 4 dispatched to a fresh agent.
