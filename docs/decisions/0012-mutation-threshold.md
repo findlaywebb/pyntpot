@@ -49,6 +49,13 @@ writing tests for a module, before a release, and when a test feels weak.
   call in a fresh process.
 - No `also_copy`: mutmut copies every file under `source_paths`, so the font and the
   default theme reach `mutants/`.
+- `mutation.yml` runs `mutmut run` under `prlimit --as=3500000000 --`. The cap is per
+  process and inherited by every process mutmut forks, and mutmut 3.8 limits CPU time only,
+  so a mutant that allocates without bound (`x_simplify__mutmut_31` fills a 16 GB runner in
+  about two minutes) would otherwise take the runner down. 3.5 GB leaves about 1.2 GB over
+  the largest normal process (2,308 MB measured), and four capped children fit in 16 GB.
+  Such a mutant scores killed when a test gets `MemoryError`, timeout at the wall bound, and
+  suspicious or segfault if it dies outright.
 
 `[tool.pyntpot.mutation]` holds only `shards`, the shard count of mode `all`.
 
@@ -159,3 +166,6 @@ shard times correct `N`.
 
 Proposed at P5.3a with a PR job, a sharded nightly and a threshold to come; accepted at
 P5.3c in this form instead.
+
+2026-10-08 (P10.12): the run settings gain the address-space cap after a runaway mutant
+killed the runner in run 37689849941.
