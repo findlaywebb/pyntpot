@@ -26,3 +26,11 @@ part 1, merged).
   a merge rule per shared file the plan states, then re-runs G-here on the merged branch and
   G-self against the slice's own baseline. No slice relies on another parallel slice's
   unlanded edits, and a rename repoints all of its importers in the same slice.
+- P11.0 draft from the plan author, in the worktree at `ff752f6` (uncommitted): plan.md
+  +796/-74, tasks.md. Slices: P11.1 foundation (ADR 0026, the pins for each layer's
+  `__all__`, the examples harness); parallel group 1: P11.2a (`ink` marks and pigment,
+  `Layer` to `PigmentLayer`), P11.2b (`paper_plate` moved to `ink/paper.py`, new helper
+  `save_image`), P11.3 (`letters`, `plate` to `nib_plate`), P11.4 (`maps` cache and
+  providers); parallel group 2: P11.5a, P11.5b and P11.5c (the example scripts), then a phase
+  gate. 21 names promoted, none of them top-level. No name left out; no `decide` row.
+  Plan-reviewer, round 1, dispatched.
