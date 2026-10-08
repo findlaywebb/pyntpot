@@ -80,3 +80,9 @@ part 1, merged).
   the rule as the contract and gives the tokens as examples. Minors: `WashStyle` is an
   `ink` style; `grep -rlw` matches `.pyc` files; a sentence on ADR 0007's "free to move".
   Fix round 3 dispatched to a fresh agent.
+- Fix round 3 (a fresh agent). R3-M1: ADR 0026 states the rule as the contract (any string
+  a public name reads or returns as a key or enumerated value is public); the tokens are
+  examples, and the missing families are added, measured at `ff752f6`: 15 override
+  parameter keys, 2 `aux` keys, 7 `brushes` class keys, 3 `brush_width_px` keys, 3
+  `river_curve` keys, 15 `pigment_transparency` keys. No completeness claim is left.
+  R3-m1 to R3-m3 fixed (`--include=*.py` on 8 greps). Plan review 4 dispatched.
