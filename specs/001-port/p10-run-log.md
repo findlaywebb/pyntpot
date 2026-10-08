@@ -245,3 +245,8 @@ User instructions (2026-10-07):
   the killed. Far faster than P5's 26 min because P10.8 marked the 61 s CLI test golden,
   so it left the mutation selection. P10.12 done and ticked; the `tasks.md:124` row
   done.
+- P10.13 landed (`5d23e17`): `tests/support/lettering.py::sheet_card` renamed `map_card` (28
+  uses repointed) and four tests renamed "sheet" to "map". The row's check grep is
+  corrected (the seed missed `runs_across_the_sheet`) and prints nothing. Collected tests
+  1062 before and after (`-p no:randomly`, summed per file). prek exit 0; not-golden
+  125 s (1043 passed, 1 skipped); tolerance 417 s (18 passed). Part 1 is complete.
