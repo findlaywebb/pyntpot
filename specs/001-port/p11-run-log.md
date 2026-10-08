@@ -72,3 +72,11 @@ part 1, merged).
   attribute public, so the rule is "public = names in a public module's `__all__`";
   `RouteInk` and `Label` are not public, and the deferred P10 rows need no ADR. Minors
   fixed. Plan review 3 dispatched to a fresh reviewer.
+- Plan review 3: BLOCK, 0 blockers, 1 major, 3 minors. N1 confirmed: the import sweep was
+  re-run against each slice's own worktree state, and a cold import of all 106 `MODULES`
+  with group 1 and the `paper_plate` move applied finds no cycle. Probes hold (tokens,
+  shared values, `rgb`). R3-M1: ADR 0026 claims its token list is complete, but it misses
+  the `brush_overrides` parameter keys, the `aux` keys and some class keys; the fix states
+  the rule as the contract and gives the tokens as examples. Minors: `WashStyle` is an
+  `ink` style; `grep -rlw` matches `.pyc` files; a sentence on ADR 0007's "free to move".
+  Fix round 3 dispatched to a fresh agent.
