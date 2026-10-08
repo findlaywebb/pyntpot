@@ -6,13 +6,13 @@ from pyntpot.maps.lettering.label import TIER_SPAN, WRAP_LEADING, Label, block_s
 from pyntpot.maps.lettering.placement_costs import Terms
 from pyntpot.maps.lettering.placement_flat import _place_flat
 
-from support.lettering import flat_dark, sheet_card
+from support.lettering import flat_dark, map_card
 from support.measure import flat_measure
 
 
 def test_a_wrapped_name_is_written_on_the_lines_it_reserved():
     """The box is the block's, and the hand writes the block, not the name."""
-    card = sheet_card()
+    card = map_card()
     route = [(0.0, 295.0), (400.0, 295.0)]
     name = Label(
         name="the long climb out of Aviemore",

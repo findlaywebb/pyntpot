@@ -22,7 +22,7 @@ from pyntpot.maps.lettering.placement_names import (
 )
 
 from support.basemaps import hung_card, label_basemap
-from support.lettering import sheet_card
+from support.lettering import map_card
 
 
 def _named(name, kind, tier, x, y):
@@ -67,7 +67,7 @@ def test_a_settlement_is_lettered_once_however_many_pools_found_it():
     # the one funnel both pools go through.
     elm_settlement = _named("Elm", "settlement", TIER_SETTLEMENT, 495, 168)
     elm_landmark = _named("Elm", "place", TIER_LANDMARK, 495, 168)
-    kept = dedupe_names([elm_settlement, elm_landmark], sheet_card())
+    kept = dedupe_names([elm_settlement, elm_landmark], map_card())
     assert [label.name for label in kept] == ["Elm"]
     assert kept[0] is elm_settlement, "the lower tier is the one that survives"
 
@@ -84,7 +84,7 @@ def test_the_repeat_guard_is_per_kind_so_the_major_river_keeps_both_names():
         _named("Grasmere", "settlement", TIER_SETTLEMENT, 40, 40),
         _named("Grasmere", "settlement", TIER_SETTLEMENT, 340, 240),
     ]
-    kept = dedupe_names(river_repeats + towns, sheet_card())
+    kept = dedupe_names(river_repeats + towns, map_card())
     names = [label.name for label in kept]
     assert names.count("Lyn") == MAJOR_RIVER_LABELS == 2
     assert names.count("Grasmere") == 1
@@ -99,7 +99,7 @@ def test_two_names_for_one_place_keep_the_shorter_more_general_one():
     # standing on it.
     headland = _named("High Cup Nick", "viewpoint", TIER_LANDMARK, 248, 554)
     chimney = _named("High Cup Nick Cairn", "ruin", TIER_LANDMARK, 249, 553)
-    kept = dedupe_names([chimney, headland], sheet_card())
+    kept = dedupe_names([chimney, headland], map_card())
     assert [label.name for label in kept] == ["High Cup Nick"]
 
 
@@ -111,13 +111,13 @@ def test_a_town_and_a_monument_in_it_are_two_places_and_both_letter():
     memorial = _named(
         "Monmouth War Memorial", "monument", TIER_LANDMARK, 294 + NEAR_DUPLICATE_M * 2.0, 592
     )
-    kept = dedupe_names([town, memorial], sheet_card())
+    kept = dedupe_names([town, memorial], map_card())
     assert len(kept) == 2, "far enough apart to be a town and a thing in it"
     # And near enough, they are one place again.
     close = _named(
         "Monmouth War Memorial", "monument", TIER_LANDMARK, 294 + NEAR_DUPLICATE_M * 0.1, 592
     )
-    assert [label.name for label in dedupe_names([town, close], sheet_card())] == ["Monmouth"]
+    assert [label.name for label in dedupe_names([town, close], map_card())] == ["Monmouth"]
 
 
 def test_a_shared_word_is_not_a_shared_place():
@@ -135,4 +135,4 @@ def test_a_span_name_is_never_deduped():
         _named("the steady middle hour", "climb", TIER_SPAN, 100, 100),
         _named("the steady middle hour", "fast", TIER_SPAN, 110, 100),
     ]
-    assert len(dedupe_names(twice, sheet_card())) == 2
+    assert len(dedupe_names(twice, map_card())) == 2

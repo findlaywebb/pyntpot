@@ -19,7 +19,7 @@ from pyntpot.maps.lettering.span_line import span_line
 from support.measure import flat_measure
 
 
-def test_a_span_takes_its_name_along_it_only_when_it_runs_across_the_sheet():
+def test_a_span_takes_its_name_along_it_only_when_it_runs_across_the_map():
     """The bearing rule, on three cases.
 
     The A39 drag and the climb out of Aviemore run across the card and read

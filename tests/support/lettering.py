@@ -12,7 +12,7 @@ from pyntpot.maps.card import Card
 Pt = tuple[float, float]
 
 
-def sheet_card() -> Card:
+def map_card() -> Card:
     """The smallest card the placer will accept: 400 by 300 display pixels, one pixel a metre."""
     return Card(
         box=(0.0, 0.0, 400.0, 300.0),
