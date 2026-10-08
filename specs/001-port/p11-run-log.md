@@ -52,3 +52,14 @@ part 1, merged).
   renaming it needs its own ADR and a maintainer stop (`p10-triage.md` row updated). Plan
   review 2 dispatched to a fresh reviewer, told that P11.0 is the branch's first plan
   commit, not its first commit.
+- Plan review 2: BLOCK, 0 blockers, 2 majors, 5 minors; of round 1's 18 findings, 16 are
+  resolved and 2 partly. Re-run probes held: ruff on an untracked example; route-map cache
+  key `f173b2f7a20bb9d4`, and with `budget=0` providers the full map paints with no request
+  (99 s); every `paper_plate` caller passes the canvas positionally; the seven-step
+  lettering sequence passes ty and ruff and runs in under 2 s. N1: P11.2b's test imports
+  `PaperStyle` from `pyntpot.ink`, which only P11.2a exports, so P11.2b is red in its own
+  worktree. N2: ADR 0026's "one such token" is false, and its membership rule leaves
+  unclear whether classes reached only through attributes are public, which collides with
+  the deferred P10 rows (`RouteInk.effect`/`casing`, `Label.as_dict`). The reviewer
+  removed a stray worktree it had made at `/home/user/r2sim` (confirmed gone). Fix round 2
+  dispatched to a fresh agent.
