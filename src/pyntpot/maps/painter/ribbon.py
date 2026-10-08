@@ -15,7 +15,7 @@ top of the ground: the plates phase does.
 
 import numpy as np
 
-from pyntpot.ink.noise import F32, blur, edt, fill_holes, smoothstep
+from pyntpot.ink.noise import F32, blur, chamfer_distance, fill_holes, smoothstep
 from pyntpot.ink.pigment import composite
 from pyntpot.ink.raster import stroke_mask
 from pyntpot.ink.sheet import Sheet
@@ -69,7 +69,7 @@ def paint_ribbon(job: PaintJob, stack: PlateStack) -> tuple[np.ndarray, np.ndarr
     layers = job.layers
     rh, rw = job.shape
     route_mask = stroke_mask([list(layers.route)], job.canvas, 2.0)
-    d_route = edt(route_mask)
+    d_route = chamfer_distance(route_mask)
     tear_px = max(rw * ribbon.ribbon_tear_frac, ribbon.ribbon_tear_floor_px)
     land = None
     if ribbon.coast_hard_mask and stack.sea_cov.any():

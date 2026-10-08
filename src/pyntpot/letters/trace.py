@@ -20,7 +20,7 @@ import math
 
 import numpy as np
 
-from pyntpot.ink.noise import edt
+from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.polyline import Pt, normals
 from pyntpot.letters.skeleton import (
     RASTER_EM,
@@ -278,7 +278,7 @@ def _centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     skel = thin(img)
     # Distance from an inked pixel to the nearest blank one, which at a
     # terminal is half the stroke's own width: exactly what thinning ate.
-    reach = edt(img == 0)
+    reach = chamfer_distance(img == 0)
     k = upem / RASTER_EM
     half = _half_width(skel, reach) if skel.any() else 1.0
     on = {(int(r), int(c)) for r, c in zip(*np.nonzero(skel), strict=True)}

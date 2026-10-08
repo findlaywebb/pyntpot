@@ -9,7 +9,7 @@ from pytest_benchmark.fixture import BenchmarkFixture
 
 from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.noise import edt
+from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, Layer, composite
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.stamp import stamp
@@ -71,7 +71,7 @@ def test_the_distance_transform(benchmark: BenchmarkFixture) -> None:
     mask = np.zeros((SIDE, SIDE), dtype=bool)
     pts = _meander().round().astype(int)
     mask[pts[:, 1], pts[:, 0]] = True
-    benchmark(edt, mask)
+    benchmark(chamfer_distance, mask)
 
 
 @pytest.mark.parametrize("brush_id", ["TRK4-d", "RIV1-a"], ids=["dry-track", "wet-river"])

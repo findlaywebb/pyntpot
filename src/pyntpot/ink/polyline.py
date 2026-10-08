@@ -5,7 +5,7 @@ list of them. The functions measure a line (`length`,
 `cumulative_length`), reshape it (`simplify`, `smooth`,
 `clip_line`, `eased`, `ease_along`, `deform_line`), and answer local questions
 about it (`normal_at`, `normals`, `tangent_at`, `side`, `segments_cross`,
-`meet`, `seg_gap`, `foot_on`, `point_to_segment`).
+`meet`, `seg_gap`, `foot_on`).
 
 It knows no units: a line is in whatever space its caller works in, metres or
 pixels, and every tolerance is in that same space. It paints nothing, reads no
@@ -135,18 +135,6 @@ def clip_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[li
     if len(run) > 1:
         out.append(run)
     return out
-
-
-def point_to_segment(p: Pt, a: Pt, b: Pt) -> float:
-    """Distance from a point to a segment."""
-    dx, dy = b[0] - a[0], b[1] - a[1]
-    run = dx * dx + dy * dy
-    t = (
-        0.0
-        if run < _DEGENERATE_AREA
-        else max(0.0, min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / run))
-    )
-    return math.dist(p, (a[0] + dx * t, a[1] + dy * t))
 
 
 def normal_at(pts: list[Pt], i: int) -> Pt:

@@ -75,8 +75,8 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 
 - Canonical source: Borgefors, G. (1986). Distance transformations in digital images. *Computer Vision, Graphics, and Image Processing* 34(3), 344-371. https://doi.org/10.1016/S0734-189X(86)80047-0 [verified-via-index: Crossref record, publisher page 200 stub without authors; 2026-10-07]
 - Design input: original design reading not recorded; the canonical source stands in.
-- Implemented in: `pyntpot.ink.noise.edt`
-- Note: the code's two-pass mask uses weights 1 and 1.41421356 (`pyntpot.ink.noise.edt`), one sweep down the rows and one back up.
+- Implemented in: `pyntpot.ink.noise.chamfer_distance`
+- Note: the code's two-pass mask uses weights 1 and 1.41421356 (`pyntpot.ink.noise.chamfer_distance`), one sweep down the rows and one back up.
 
 ## `box-blur` Gaussian by three box passes
 

@@ -33,7 +33,7 @@ import numpy as np
 from pyntpot.ink.brush import Brush, brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.io import save_rgba
-from pyntpot.ink.noise import F32, blur, edt
+from pyntpot.ink.noise import F32, blur, chamfer_distance
 from pyntpot.ink.pad import InkPad
 from pyntpot.ink.sheet import Canvas, Sheet, rgb
 from pyntpot.ink.style import PaperStyle
@@ -212,7 +212,7 @@ def _backing_wash(
     """
     nib, paper = groups.nib, groups.paper
     reach = max(nib.label_wash_spread * nib.label_size_px * surface.scale, 2.0)
-    near = edt(cover > _COVERED)
+    near = chamfer_distance(cover > _COVERED)
     blob = blur(np.clip(1.0 - near / reach, 0.0, 1.0), reach * 0.35)
     dens = wash(
         np.clip(blob * 1.6, 0.0, 1.0),

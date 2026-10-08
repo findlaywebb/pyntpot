@@ -19,7 +19,7 @@ from dataclasses import dataclass
 import numpy as np
 from PIL import Image
 
-from pyntpot.ink.noise import F32, blur, edt, fbm
+from pyntpot.ink.noise import F32, blur, chamfer_distance, fbm
 from pyntpot.ink.pigment import Layer
 from pyntpot.ink.shallow_water import shallow_water
 from pyntpot.ink.sheet import Sheet, rgb
@@ -84,7 +84,7 @@ def flow_edge(
         return np.zeros_like(a)
     ref = max(a.size * ref_frac, 1.0)
     width = max(rim_px * frac * (area / ref) ** exp, 0.8)
-    d = edt(~inside)
+    d = chamfer_distance(~inside)
     rim = np.exp(-d / F32(width)) * a * (0.6 + 0.8 * sheet.coarse)
     return np.clip(rim, 0.0, 1.0)
 

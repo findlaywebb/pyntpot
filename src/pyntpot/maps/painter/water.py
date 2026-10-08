@@ -20,7 +20,7 @@ import math
 
 import numpy as np
 
-from pyntpot.ink.noise import F32, blur, edt, fbm, fbm_aniso
+from pyntpot.ink.noise import F32, blur, chamfer_distance, fbm, fbm_aniso
 from pyntpot.ink.pigment import Layer
 from pyntpot.ink.raster import fill_cov
 from pyntpot.ink.sheet import rgb
@@ -105,7 +105,7 @@ def sea_patches(dens: np.ndarray, sea_cov: np.ndarray, mpp: float, style: WashSt
     swing = centred(fbm(h, w, cell, 3, rng))
     streak_w = float(np.clip(style.sea_variation_streak, 0.0, 1.0))
     if streak_w > 0.0:
-        d_sea = edt(~wet)
+        d_sea = chamfer_distance(~wet)
         band = max(style.sea_variation_band_m / mpp, 4.0)
         angle = coast_run(d_sea, wet, band)
         streak = fbm_aniso(

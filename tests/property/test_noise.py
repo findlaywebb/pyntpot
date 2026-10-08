@@ -1,4 +1,4 @@
-"""Properties of `edt` and `blur`: bounded distances, and a blur that stays inside its input."""
+"""Properties of `chamfer_distance` and `blur`: bounded distances, and a blur that stays inside its input."""
 
 import math
 
@@ -8,7 +8,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hnp
 
-from pyntpot.ink.noise import blur, edt
+from pyntpot.ink.noise import blur, chamfer_distance
 
 from support.properties import UNTIMED
 
@@ -54,14 +54,14 @@ class TestEdt:
     @given(mask=masks())
     def test_it_is_zero_on_every_true_cell(self, mask: np.ndarray) -> None:
         """Each True cell is at distance zero."""
-        assert np.all(edt(mask)[mask] == 0)
+        assert np.all(chamfer_distance(mask)[mask] == 0)
 
     @UNTIMED
     @given(mask=masks())
     def test_it_is_bounded_by_the_true_distance(self, mask: np.ndarray) -> None:
         """The chamfer never undershoots the Euclidean distance and overshoots by at most 1.0825."""
         d = _brute_distance(mask)
-        out = edt(mask)
+        out = chamfer_distance(mask)
         assert np.all(out >= d - 1e-4)
         assert np.all(out <= 1.0825 * d + 1e-4)
 
@@ -70,13 +70,13 @@ class TestEdt:
     def test_more_true_cells_never_raise_it(self, pair: tuple[np.ndarray, np.ndarray]) -> None:
         """Adding True cells can only shorten the distance, cell by cell."""
         mask, extra = pair
-        assert np.all(edt(mask | extra) <= edt(mask))
+        assert np.all(chamfer_distance(mask | extra) <= chamfer_distance(mask))
 
     @UNTIMED
     @given(shape=SHAPES)
     def test_an_empty_mask_is_far_everywhere(self, shape: tuple[int, int]) -> None:
         """With nothing True every cell reads 1e6."""
-        assert np.all(edt(np.zeros(shape, bool)) == 1e6)
+        assert np.all(chamfer_distance(np.zeros(shape, bool)) == 1e6)
 
     @UNTIMED
     @given(pair=mask_pairs())
@@ -84,7 +84,7 @@ class TestEdt:
         """The mask passed in is unchanged."""
         mask, _ = pair
         before = mask.copy()
-        edt(mask)
+        chamfer_distance(mask)
         assert np.array_equal(mask, before)
 
 

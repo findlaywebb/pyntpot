@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from pyntpot.ink.noise import blur, edt, smoothstep
+from pyntpot.ink.noise import blur, chamfer_distance, smoothstep
 from pyntpot.ink.pigment import PIGMENTS, Layer
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.style import WashStyle
@@ -54,7 +54,7 @@ def test_two_classes_wet_at_once_bleed_into_each_other_rather_than_butt():
     """A boundary inside the land is not an edge; the outer silhouette still is."""
     sheet, left, right = two_squares()
     union = np.clip(left + right, 0, 1)
-    wet = smoothstep(edt(union < 0.5) - np.float32(16.0), 16.0)
+    wet = smoothstep(chamfer_distance(union < 0.5) - np.float32(16.0), 16.0)
     assert wet[100, 160] > 0.9, "the seam is inside the wet area"
     assert wet[100, 41] < 0.1, "the outer edge is not"
 
@@ -84,7 +84,7 @@ def test_the_flow_rim_is_wider_on_a_bigger_wash():
         yy, xx = np.ogrid[:260, :400]
         disc = ((yy - 130) ** 2 + (xx - 200) ** 2 < radius * radius).astype(np.float32)
         a = np.clip((blur(disc, 2.4) - 0.5) * 3.2 + 0.5, 0, 1)
-        inward = edt(~(a > 0.5))
+        inward = chamfer_distance(~(a > 0.5))
         for name, rim in (
             ("old", np.clip(a - blur(a, 7.0), 0, 1)),
             ("flow", flow_edge(a, sheet, 7.0, 0.125, 0.02, 0.38)),
@@ -100,7 +100,7 @@ def test_a_bloom_lifts_the_centre_and_deposits_it_at_the_front():
     """A backrun: lighter inside, a darker crenellated ridge where it stopped."""
     sheet, left, _ = two_squares()
     body = left > 0.5
-    core = body & (edt(~body) > 12)
+    core = body & (chamfer_distance(~body) > 12)
     flat = wash(left, sheet, 0.52, 0.20, WashOptions(rim_px=7.0))
     blown = wash(
         left,
@@ -171,7 +171,7 @@ def test_the_fluid_pass_modulates_the_washes_and_never_becomes_them():
     assert float((a * b).mean() / (a.std() * b.std())) > 0.8, "still the same wash"
     assert not np.allclose(after[body], before[body]), "but it has been worked"
     # Dry paper is dry paper: away from the wet area nothing is touched at all.
-    dry = edt(body) > 8
+    dry = chamfer_distance(body) > 8
     assert np.array_equal(after[dry], before[dry])
 
 

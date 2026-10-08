@@ -181,7 +181,7 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 - [x] P10.3c Cite the ink reservoir and pigment separation, and the blurred-mask rim if Q7 (C) or (A) (release blocker, D24)
 - [x] P10.3d One commit trailer rule (Q1)
 - [x] P10.4a Delete the duplicate benchmarks
-- [ ] P10.4b Rename `edt` to `chamfer_distance`; delete `point_to_segment`
+- [x] P10.4b Rename `edt` to `chamfer_distance`; delete `point_to_segment`
 - [ ] P10.5a The outline route narrows the nib; delete `_radii`
 - [x] P10.8 Mark the slow CLI test golden
 - [ ] P10.9 Docs and terms: non-canonical terms, the OpenTopoData question, rule seven in tests; display pixels (Q2), "sheet" and "map" kept apart everywhere (Q10, widened)
