@@ -20,3 +20,9 @@ part 1, merged).
   (2026-10-08): "Optimise plan and implementation for sub agent parallelisation"; relayed to
   the author: parallel lines with disjoint owner files, a rule per shared file, per-slice
   G-self baselines in each worktree, and an order diagram.
+- Maintainer (2026-10-08): "File clashes can be manned with working trees and conflicts
+  resolved when merging". Relayed to the P11.0 author: parallel slices may share files,
+  each in its own worktree; the orchestrating session resolves conflicts at each merge, by
+  a merge rule per shared file the plan states, then re-runs G-here on the merged branch and
+  G-self against the slice's own baseline. No slice relies on another parallel slice's
+  unlanded edits, and a rename repoints all of its importers in the same slice.
