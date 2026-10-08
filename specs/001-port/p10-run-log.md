@@ -196,3 +196,8 @@ User instructions (2026-10-07):
 - After part 1: P11, then P10.R (tag 0.0.1, tag only, after the maintainer confirms no
   pending PyPI trusted publisher), then P8, then part 2, P7, P9.
 - Resumed 2026-10-08 at `253dfc3`: P10.4b restarted from scratch; the capped mutant reproduction restarted.
+- P10.4b landed (`90c3812`): `ink.noise.edt` renamed `chamfer_distance` across 8 `src`
+  files, 6 test files and `references.md`; `ink.polyline.point_to_segment` deleted. Check
+  grep for both names prints nothing. Baseline `{"commit": "253dfc3...", "dirty": false}`;
+  prek exit 0; not-golden 111 s (1041 passed, 1 skipped); tolerance 364 s; G-self 400 s
+  (18 passed, byte-identical); `test_reference_keys` 7 passed.
