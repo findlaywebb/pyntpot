@@ -201,3 +201,9 @@ User instructions (2026-10-07):
   grep for both names prints nothing. Baseline `{"commit": "253dfc3...", "dirty": false}`;
   prek exit 0; not-golden 111 s (1041 passed, 1 skipped); tolerance 364 s; G-self 400 s
   (18 passed, byte-identical); `test_reference_keys` 7 passed.
+- P10.5a landed (`0484a72`): `draw_plate` builds `NibGroups` with
+  `replace(style.face, label_route=hand.route)`; `letters.trace._radii` deleted. Red:
+  `test_an_outline_route_is_written_with_the_finer_nib` failed on the plate difference
+  (bbox (0, 9, 115, 76)); green after. Vulture at 60 no longer lists `_radii`. Baseline
+  `{"commit": "033db9c...", "dirty": false}`; prek exit 0; not-golden 112 s (1042 passed,
+  1 skipped); tolerance 393 s; G-self 403 s (18 passed, byte-identical).
