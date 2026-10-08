@@ -1,4 +1,4 @@
-"""The paper and the wash: what the ink engine lays paper and a wash with.
+"""The paper and the wash: the settings the ink engine paints the paper and lays a wash with.
 
 Key types: `PaperStyle`, the paper, its encoder and the compositing of the
 pigment stack over it; `WashStyle`, how a wash wets, bleeds, rims, blooms,
@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class PaperStyle:
-    """The paper: its encoder, grid, paper, seed and the compositing over it.
+    """The paper: its encoder, grid, texture, seed and the compositing over it.
 
     Read by the painter for every plate and by the lettering, which lays its
     backing wash on the same paper. The compositing and fibre fields are off

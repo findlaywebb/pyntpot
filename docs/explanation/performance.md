@@ -61,8 +61,9 @@ setup. The module fixtures (the basemap, the painted plates, the lettering) cost
 The three plan benchmarks `test_sheet_construction`, `test_edt` and `test_wash` were removed
 on 2026-10-07 as duplicates of the PR #6 ones, which ends their CodSpeed history.
 
-The smoke run, `uv run pytest -m benchmark`, takes 17.8 s wall in total at
-`DISPLAY_PX = 450`.
+The smoke run, `uv run pytest -m benchmark`, takes about 19 s wall in total at
+`DISPLAY_PX = 450` (18.7 to 20.2 s over three runs on 2026-10-08, re-measured after the
+three duplicates were removed; 17.8 s before).
 
 ## CodSpeed
 

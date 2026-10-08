@@ -1,4 +1,4 @@
-"""Properties of `chamfer_distance` and `blur`: bounded distances, and a blur that stays inside its input."""
+"""Properties of `chamfer_distance` and `blur`: bounded distances, a blur inside its input."""
 
 import math
 

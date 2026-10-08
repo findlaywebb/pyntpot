@@ -45,7 +45,7 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
 
 
 def test_an_outline_route_is_written_with_the_finer_nib(tmp_path):
-    """An outline route passed to `draw_plate` narrows the nib as the face style's outline route does."""
+    """An outline route passed to `draw_plate` narrows the nib as the face style's outline does."""
     style = tiny_style()
     outline_style = style.model_copy(
         update={"face": dataclasses.replace(style.face, label_route="outline")}
@@ -74,5 +74,5 @@ def test_an_outline_route_is_written_with_the_finer_nib(tmp_path):
         paint_plates(tiny_basemap(), outline_style, second), placed, [], route, outline_style
     )
     assert by_argument is not None and by_style is not None
-    one, two = Image.open(by_argument), Image.open(by_style)
-    assert ImageChops.difference(one, two).getbbox() is None
+    with Image.open(by_argument) as one, Image.open(by_style) as two:
+        assert ImageChops.difference(one, two).getbbox() is None

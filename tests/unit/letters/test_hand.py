@@ -134,7 +134,7 @@ def test_the_face_measures_a_name_instead_of_counting_its_characters():
 
     A real face knows that `Abergavenny` and `Wllllllllll` are not the same
     width, and the default cannot: it counts characters. This is the change
-    that moves every label on the map.
+    that moves every label on the plate.
     """
     hand = open_hand()
     assert isinstance(hand.font, OutlineFont)

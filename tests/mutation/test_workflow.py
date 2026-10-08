@@ -1,4 +1,4 @@
-"""Tests for the mutation workflow's text: the run settings that keep a runaway mutant off the runner."""
+"""The mutation workflow's text: the settings that keep a runaway mutant off the runner."""
 
 from support import REPO_ROOT
 

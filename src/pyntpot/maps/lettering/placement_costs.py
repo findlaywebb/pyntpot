@@ -169,7 +169,7 @@ def _darkness(box: Box, card: Card, dark: dict[str, Any]) -> float:
 
 
 def _on_paper(box: Box, card: Card) -> bool:
-    """Whether a box is wholly on the map rather than in the torn margin."""
+    """Whether a box is wholly inside the torn margin, on the paper."""
     x0, y0, x1, y1 = box
     return x0 > EDGE_PX and x1 < card.w - EDGE_PX and y0 > EDGE_PX and y1 < card.h - EDGE_PX
 

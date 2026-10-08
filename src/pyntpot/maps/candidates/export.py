@@ -57,8 +57,8 @@ def landmark_export(inputs: BasemapInputs, route: list[Pt] | None = None) -> dic
     """What the caller reads: where the track went, and what is beside it.
 
     Args:
-        inputs: The track (with elevations, when the GPX carries
-            them), its cache and its places.
+        inputs: What the basemap is assembled from: the track (with elevations, when
+            the GPX carries them), its cache key, its cache and its places.
         route: The already-projected track, when the caller has one.
 
     Returns:

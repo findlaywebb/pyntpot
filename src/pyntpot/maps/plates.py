@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 
     from pyntpot.ink.polyline import Pt
 
-#: What the dark grid is where there is no grid to read.
+#: The darkness assumed where there is no dark grid to read.
 _NO_GRID_DARKNESS = 0.35
 
 

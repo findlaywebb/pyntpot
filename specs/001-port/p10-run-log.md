@@ -250,3 +250,9 @@ User instructions (2026-10-07):
   corrected (the seed missed `runs_across_the_sheet`) and prints nothing. Collected tests
   1062 before and after (`-p no:randomly`, summed per file). prek exit 0; not-golden
   125 s (1043 passed, 1 skipped); tolerance 417 s (18 passed). Part 1 is complete.
+- Part-1 review (S3): three slice commits carry a message other than the one the plan
+  gives, and the pushed history is left as it is. P10.3d `57d9548`: plan
+  `State one rule for commit trailers`, actual `State one commit trailer rule`. P10.4a
+  `a16c6bc`: plan `Delete the three duplicate ink benchmarks`, actual
+  `Delete the duplicate benchmarks`. P10.8 `743b3bf`: plan
+  `Mark the full-fixture CLI test golden`, actual `Mark the slow CLI test golden`.
