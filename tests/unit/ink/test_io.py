@@ -3,7 +3,7 @@
 import numpy as np
 from PIL import Image
 
-from pyntpot.ink.io import save_rgba, save_webp, to_img
+from pyntpot.ink.io import save_image, save_rgba, save_webp, to_img
 
 
 def _ramp_plate(h: int = 96, w: int = 96) -> np.ndarray:
@@ -114,3 +114,41 @@ def test_the_label_plate_is_written_losslessly_like_the_others(tmp_path):
     assert np.array_equal(back[..., :3][ink], ref[ink]), "the plate was not exact"
     assert np.array_equal(back[..., 3], want_a)
     assert not np.array_equal(got[..., :3][ink], ref[ink])
+
+
+class TestSaveImage:
+    """Writing a painted array to an image file."""
+
+    def test_a_png_holds_the_dithered_array(self, tmp_path):
+        """A PNG written from an array decodes to that array's pixels, each within one level of `round(value * 255)`."""
+        arr = _ramp_plate(24, 32)
+        path = tmp_path / "ramp.png"
+        save_image(arr, path, seed=7)
+        back = np.asarray(Image.open(path).convert("RGB"), np.int32)
+        want = np.round(arr * 255.0).astype(np.int32)
+        assert back.shape == (24, 32, 3)
+        assert np.abs(back - want).max() <= 1
+
+    def test_a_webp_is_written_lossless(self, tmp_path):
+        """A WebP written by `save_image` decodes to exactly `to_img`'s pixels for the same seed."""
+        arr = _ramp_plate(24, 32)
+        path = tmp_path / "ramp.webp"
+        save_image(arr, path, seed=7)
+        back = np.asarray(Image.open(path).convert("RGB"), np.uint8)
+        want = np.asarray(to_img(arr, np.random.default_rng(7)), np.uint8)
+        assert np.array_equal(back, want)
+
+    def test_one_seed_writes_one_file(self, tmp_path):
+        """Two writes of one array with one seed give the same bytes, and the returned size is the file's."""
+        arr = _ramp_plate(24, 32)
+        first, second = tmp_path / "first.png", tmp_path / "second.png"
+        size = save_image(arr, first, seed=3)
+        save_image(arr, second, seed=3)
+        assert first.read_bytes() == second.read_bytes()
+        assert size == first.stat().st_size
+
+    def test_the_directory_is_made(self, tmp_path):
+        """A path in a missing directory is written, the directory created."""
+        path = tmp_path / "missing" / "deeper" / "ramp.png"
+        assert save_image(_ramp_plate(8, 8), path) > 0
+        assert path.is_file()

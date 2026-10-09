@@ -39,7 +39,9 @@ INK_PUBLIC: tuple[str, ...] = (
     "brush_from_id",
     "composite",
     "ink_density",
+    "paper_plate",
     "rgb",
+    "save_image",
     "stamp",
     "wash",
 )
