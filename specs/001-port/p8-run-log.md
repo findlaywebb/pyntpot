@@ -76,3 +76,11 @@ activity" and identified upstream only.
   tag); gates pinned to `0dfffcca`; P8.Q recorded, P8.8 deleted; round-1 findings 1-7
   and the non-blocking items addressed. A fourth row foreseen,
   `maps-style-route-inks-name-sports` (defer). Plan-reviewer round 2 started.
+- Maintainer's standing instructions for this run (2026-10-09), verbatim: "Stop and ask
+  me: before merging any PR, in either repo; if the reference hash does not match." Also:
+  "Any gap in pyntpot's public surface is filed in pyntpot's p10-triage.md, not patched
+  around in upstream." And: "for pyntpot repo, no personal details should leak into it".
+- Plan-reviewer round 2: BLOCK, two findings (`vector_layers` takes 9 args against ruff
+  `max-args = 6`; ADR 0027 wording names "sport" twice). Round-1 findings fixed in
+  substance; about 40 facts spot-checked; no personal detail; bare `dict` return judged
+  acceptable. Thirteen non-blocking items. Fresh agent fixing; round 3 to follow.
