@@ -150,3 +150,9 @@ activity" and identified upstream only.
 - PR #12 CI green on `8cf499c`: checks (3.13, 3.14), golden (ubuntu, macos-15),
   prerelease, benchmarks, CodSpeed (no performance change); mergeable, clean. Held for
   the maintainer's merge; then the `v0.0.2` tag waits on the maintainer's confirmation.
+- Maintainer: "Merge and tag". PR #12 squash-merged as `0e094c7` on `main` (version
+  0.0.2). Annotated tag `v0.0.2` made locally on `0e094c7` ("pyntpot 0.0.2, a candidate
+  for the upstream migration"); the push was refused by the proxy four times ("send-pack:
+  unexpected disconnect while reading sideband packet"), as for `v0.0.1`. Branch pushes
+  work. Maintainer action: push `v0.0.2` at `0e094c7`. P8.1 waits on it. `origin/main`
+  merged into `p10-fixes` (a merge, not a rebase) and pushed.
