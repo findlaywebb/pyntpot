@@ -1,6 +1,6 @@
 [project]
 name = "pyntpot"
-version = "0.1.0"
+version = "0.0.1"
 description = "Hand-drawn watercolour and pen-and-ink painting for Python, with route maps"
 readme = "README.md"
 requires-python = ">=3.13"
