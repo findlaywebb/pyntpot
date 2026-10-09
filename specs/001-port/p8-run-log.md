@@ -159,3 +159,10 @@ activity" and identified upstream only.
 - Maintainer pushed `v0.0.2`: annotated `9fe2542` on `0e094c7` (checked with
   `git ls-remote`). Upstream `origin/main` still `e62657f`, so no check-first deltas.
   Upstream branch `p8-pyntpot-migration` cut from it and pushed; P8.1 started.
+- P8.1 landed upstream (`99218a1`): Python 3.13, ruff py313, dependency on `v0.0.2`,
+  hatch direct references. Lock source resolves to `0e094c7`; `__version__` 0.0.2; G-up
+  369 passed 9 skipped, ruff clean at py313, `--help` exits 0. Deviation: hatch metadata
+  set before `uv add --raw` (it refused otherwise). Upstream draft PR #1 opened, held.
+- Before P8.2: the reference record lacked the input copies "The reference, decided"
+  requires before P8.1 (missed at that point; no upstream code depends on them yet). An
+  agent is completing it against the old code at `e62657f`.
