@@ -277,3 +277,23 @@ User instructions (2026-10-07):
   tested; one mutant timed out on `main` that was killed on the PR branch's run, and the score
   counts a timeout as detected, so the score is unchanged. The `tasks.md:124` row is fully done.
   Recorded on `p11-public-api` as its first commit.
+- P10.R. P11 merged to `main` as `aa42cd8` (PR #10, squash). `release-0.0.1` cut from it:
+  one commit `45bb370` (`pyproject.toml` version `0.0.1`, the `uv.lock` version line,
+  the `CHANGELOG.md` 0.0.1 section); `__version__` printed `0.0.1`, `uv lock --check`
+  passed, G-here green (not-golden 1064 passed, 1 skipped; golden in tolerance 19
+  passed), CI 7 of 7 green. Merged as `90c2fd6` (PR #11, squash) on the maintainer's go.
+- Maintainer (2026-10-09), on merging and on the tag confirmation under Q14 (1), tag only
+  and no pending trusted publisher: "Good on both".
+- Tag: `v0.0.1`, annotated (`0d34737`), on `90c2fd6`, message "pyntpot 0.0.1, a
+  candidate for the upstream migration". The orchestrating session's push was refused by
+  the proxy (five attempts, "unexpected disconnect while reading sideband packet"; branch
+  pushes worked), so it became the maintainer action "push `v0.0.1` at `90c2fd6`",
+  which the maintainer did.
+- Publish run: https://github.com/findlaywebb/pyntpot/actions/runs/37919206681, failure as
+  expected under Q14 (1): checkout, setup-uv and Build succeeded; `pypa/gh-action-pypi-publish`
+  failed at trusted publishing (no publisher registered for `pyntpot`; environment
+  `pypi`, ref `refs/tags/v0.0.1`). Nothing reached PyPI.
+- Hand-off for P8: tag `v0.0.1` at `90c2fd6`; the upstream's dependency line is
+  `pyntpot @ git+https://github.com/findlaywebb/pyntpot@v0.0.1`. P10.R ticked in
+  `tasks.md`. `p10-fixes` branches from `main` at the tagged commit; part 2 waits for
+  P8's hand-off ("what upstream reads").

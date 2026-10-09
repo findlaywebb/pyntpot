@@ -190,7 +190,7 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 
 ### Release
 
-- [ ] P10.R Tag 0.0.1 after P11 merges: version and changelog on `release-0.0.1`, `v0.0.1` pushed after the maintainer confirms (PyPI only if Q14 (2)); ticked by the tag record on `p10-fixes`
+- [x] P10.R Tag 0.0.1 after P11 merges: version and changelog on `release-0.0.1`, `v0.0.1` pushed after the maintainer confirms (PyPI only if Q14 (2)); ticked by the tag record on `p10-fixes`
 
 ### Part 2 (after P8 and its "what upstream reads" record)
 
