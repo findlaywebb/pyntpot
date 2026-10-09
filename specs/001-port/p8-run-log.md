@@ -123,3 +123,9 @@ activity" and identified upstream only.
   'with_route_ink'"; gates green, golden 21 (two new route-ink goldens), G-self
   byte-identical, coverage 96.14 / 93.29. Rebasing onto `11ddd60`: CHANGELOG and GLOSSARY
   conflicts, a fresh agent resolving.
+- P8.P2c landed: rebased by a fresh agent onto `11ddd60` as `0cd5407` (CHANGELOG and
+  GLOSSARY unioned in landing order). Gates on the rebased commit green: format, ruff,
+  prek 9 hooks; not-golden 1068 run, 0 failed, 1 skipped; golden 21 (tolerance, exact),
+  G-self 21 byte-identical; coverage ink+letters 96.14, maps 94.03.
+- P8.P3 version commit started; in parallel a fresh-context review of the promotion diff
+  `90c2fd6..0cd5407`.
