@@ -84,3 +84,9 @@ activity" and identified upstream only.
   `max-args = 6`; ADR 0027 wording names "sport" twice). Round-1 findings fixed in
   substance; about 40 facts spot-checked; no personal detail; bare `dict` return judged
   acceptable. Thirteen non-blocking items. Fresh agent fixing; round 3 to follow.
+- Round-2 fixes (`3431466`): `vector_layers(track, cache, key, style, places=(), *,
+  origin=None)` (ruff-probed); ADR 0027 wording generic; 0027 row in the ADR table; all
+  non-blocking items. Gap rows renamed: `upstream-card-route-ink-by-sport` is now
+  `upstream-card-route-ink-fed`, `maps-style-route-inks-name-sports` is now
+  `maps-style-route-inks-one-read`. Place-name check: the one landmark named in P8 is
+  already in pyntpot's Lynmouth fixture, so kept. Plan-reviewer round 3 started.
