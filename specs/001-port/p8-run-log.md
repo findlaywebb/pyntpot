@@ -228,3 +228,11 @@ activity" and identified upstream only.
   docstrings (`__init__.py`, `__main__.py`, `charts.py`, `migrate_cache.py`, `style.py`,
   `schema.py`), so it is run as an import grep, which is its intent ("only routemap
   imports pyntpot"). Phase gate and a fresh-context review of the upstream diff started.
+- Phase gate on upstream `8e106b2`: all six steps pass. G-up 168 passed 6 skipped;
+  G-ref 1 passed. `geo migrate-cache` copied the old payloads to their key; `paint`
+  painted, then "up to date". `map --sport Ride --no-attribution`: 1800x1529, sha256
+  `0dfffccab9be726492f14f9ded582ed385ec81838e8ba120dcf20bb9cde26619`, identical to the
+  pin; `map` with defaults exits 0. `geo candidates`: keys exactly candidates, climbs, id,
+  points, route; 46 candidates, no `x` or `y`. Page: `class="route journal"` with plates,
+  `<g class="basemap"` and no journal without. Import greps clean; tree clean. Waiting on
+  the fresh-context review before the `origin/main` merge and P8.H.
