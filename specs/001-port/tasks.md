@@ -170,7 +170,7 @@ Order: after P10 part 1, P11 and P10.R. P8.P widens pyntpot's public API on its 
 - [x] P8.5a The route chart's vector washes on pyntpot's vector layers (after P8.3a and P8.3b)
 - [x] P8.5b The page's painted map on Basemap, Plates and Lettering, loaded once (after P8.5a and P8.4)
 - [x] P8.6 Documents (upstream group 1)
-- [ ] P8.7 Delete the old engine and its tests (after P8.2 green, P8.4, P8.5b and P8.6)
+- [x] P8.7 Delete the old engine and its tests (after P8.2 green, P8.4, P8.5b and P8.6)
 - [ ] P8.H Hand-off on the commit after the pre-merge `origin/main` merge: "what upstream reads" recorded in `p10-triage.md`; the two rows re-triaged
 
 ## P9. Post-port cleanup

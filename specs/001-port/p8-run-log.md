@@ -218,3 +218,13 @@ activity" and identified upstream only.
   `test_paint.py` tests use a test-local copy of the old card class until P8.7 deletes
   the file; the `journal_map` fallback note kept for unreadable plate files.
 - P8.7 (delete the old engine) started from it.
+- P8.7 landed upstream (`8e106b2`), no rebase. Precondition G-ref "1 passed in 52.59s".
+  Deleted `geo`, `paint`, `labels`, `outlinefont`, `mapcard` (13009 lines), the bundled
+  font and its licence, `tests/test_paint.py` (3520 lines, 154 tests); `httpx` and
+  `fonttools` dropped from the dependencies; four comments reworded. Check-after: no
+  import of a deleted module; only `routemap.py` imports pyntpot under `analysis/`. G-up
+  168 passed 6 skipped, ruff clean, `--help` 0; G-ref after "1 passed in 44.66s".
+- Phase gate step 6's `grep -rln "pyntpot"` also matches the word in comments and
+  docstrings (`__init__.py`, `__main__.py`, `charts.py`, `migrate_cache.py`, `style.py`,
+  `schema.py`), so it is run as an import grep, which is its intent ("only routemap
+  imports pyntpot"). Phase gate and a fresh-context review of the upstream diff started.
