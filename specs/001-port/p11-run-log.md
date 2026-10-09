@@ -182,3 +182,13 @@ part 1, merged).
   `composition.py`; `--help` fails under `python -OO` in `lettering.py` and
   `composition.py` (argparse reads `__doc__`); small convention differences between the
   scripts (logger names, `#:` comments, `GRAN_PX`/`SEED`, the "how to run" line).
+- Phase gate on `ec2ee91` (the head after every P11 slice): format check 328 files, ruff
+  clean, prek clean; not-golden 1064 passed, 1 skipped; golden in tolerance 19 passed;
+  golden byte-exact 19 passed; `tests/architecture/test_examples.py` and `tests/examples`
+  11 passed, covering the eight pinned stems (brush_stroke, composition, lettering,
+  nib_line, paper, pigments, route_map, wash); each of the seven primitive scripts'
+  `__main__` exits 0 and writes its `.png`; `examples/route_map.py --help` exits 0; the
+  four packages import; `grep -rnw Layer` prints only `ink/pigment.py:104`'s "dens: Layer
+  thickness" line; `grep -rn "nib\.plate("` prints nothing. CI on PR #10 at `ec2ee91`: 7 of
+  7 checks green (checks 3.13 and 3.14, prerelease, golden on ubuntu-latest and macos-15,
+  benchmarks, CodSpeed). P11 is ready to merge; held for the maintainer's go.
