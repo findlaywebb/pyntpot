@@ -5859,8 +5859,11 @@ plan-review round 1 of `23803fb` (BLOCK, 7 blocking findings, 8 should-fix,
 2 consider) and the maintainer's P8.Q answers; revised again after round 2
 of `a9b1fb2` (BLOCK, 2 blocking, 13 should-fix, 2 consider: the
 `vector_layers` signature reshaped to ruff's `max-args`, and the ADR's
-wording made generic). A plan-reviewer agent reviews it again before P8.P1
-starts. Measured at the upstream repo's `e62657f` (its
+wording made generic); passed at round 3 of `3431466` (PASS, no blocking
+finding), whose four should-fix items and one consider item are applied
+here (`CHAR_W` in P8.3b's owner range, P8.5b after P8.4, `page_map`'s
+defaults written out, the pen plate only for a pen ink, and
+`candidate_export` taking the key). Measured at the upstream repo's `e62657f` (its
 `main`, clean) and at pyntpot's `b69a7a8` (the head of `p8-plan`; `git diff
 --stat 90c2fd6 HEAD -- src tests pyproject.toml GLOSSARY.md CHANGELOG.md
 docs` is empty, and `90c2fd6` is `main` and `v0.0.1`); the round-2 probes
@@ -5908,16 +5911,19 @@ maintainer's words are in `specs/001-port/p8-run-log.md` (entries from
   sport-to-ink table stays upstream.
 - **Two deviations from the run log's wording, by design.** The run log
   records G1 as "public `landmark_export` over a public `Basemap`". The plan
-  promotes it as `candidate_export(track, cache, features, elevation)`
-  instead, because a `Basemap` cannot feed it: a basemap carries neither the
-  recorded track (the climbs read `Track.ele`) nor the cache key
-  (`basemap.py`'s docstring: "It carries no cache key, because the cache
-  owns its keys"), and the export reads its own wider basemap
+  promotes it as `candidate_export(track, cache, key)` instead, because a
+  `Basemap` cannot feed it: a basemap carries neither the recorded track
+  (the climbs read `Track.ele`) nor the cache key (`basemap.py`'s
+  docstring: "It carries no cache key, because the cache owns its keys"),
+  and the export reads its own wider basemap
   (`CANDIDATE_BASEMAP`), not the painted one ("The promotion, decided").
-  G2's `vector_layers` takes the cache key in place of the two providers
-  because ruff's `max-args = 6` (`pyproject.toml`) allows six parameters,
-  and the key is what the providers were needed for. The held PR's
-  description states both.
+  Both cache readers, `candidate_export` and G2's `vector_layers`, take the
+  cache key in place of the two providers: the key is all either needs the
+  providers for (the private export reads only `inputs.key`, for its `id`
+  and its payload paths, `export.py:56-102`), `Cache`'s own readers
+  (`features_path`, `plates_dir`, ...) all take the key, and for
+  `vector_layers` ruff's `max-args = 6` (`pyproject.toml`) leaves no room
+  for two providers. The held PR's description states both.
 - **Pin `v0.0.2`.** One pyntpot branch and PR (`p8-promote`), held for the
   maintainer's merge, then the tag; the upstream depends on `@v0.0.2` and
   starts only after the tag exists.
@@ -6053,18 +6059,21 @@ every P8.P slice). Designs, measured at `b69a7a8`:
   private `landmark_export` renamed as it is promoted, P11's rule: it
   exports the route, settlements and climbs as well as the landmarks, and
   `GLOSSARY.md`'s "candidate" row already calls this "the export"). New
-  signature, positional like `fetch`'s:
+  signature, the key taken as `vector_layers` takes it:
 
   ```python
-  def candidate_export(
-      track: Track, cache: Cache, features: Features, elevation: Elevation
-  ) -> dict[str, Any]:
+  def candidate_export(track: Track, cache: Cache, key: str) -> dict[str, Any]:
   ```
 
-  It reads `cache.key(track, features, elevation)` and assembles from the
-  cached payloads only (the providers are read for their `id`s; nothing is
-  fetched), building the private `BasemapInputs(key, track, cache, [])`
-  itself; the unused `route` parameter goes (no caller passes it). It does
+  `key` is `cache.key(track, features, elevation)` for the providers that
+  filled the cache, which the caller already holds (`Cache.key` is
+  public); the docstring says the key must be the track's. It assembles
+  from the payloads cached under `key` only (nothing is fetched), building
+  the private `BasemapInputs(key, track, cache, [])` itself. The private
+  export reads the providers for nothing but the key (`inputs.key`, its
+  `id` and its payload paths, `export.py:56-102`), so taking the key loses
+  nothing and matches `vector_layers` and `Cache`'s own key-taking readers;
+  the unused `route` parameter goes (no caller passes it). It does
   not take a `Basemap`: a basemap carries neither the recorded track (the
   climbs read `Track.ele`) nor the cache key (`basemap.py`'s docstring: "It
   carries no cache key, because the cache owns its keys"), and the export
@@ -6087,7 +6096,8 @@ every P8.P slice). Designs, measured at `b69a7a8`:
   above, "It chooses nothing and fetches nothing: a box with nothing cached
   has no candidates, no settlements and climbs that are not grounded", and
   the invariants of today's module docstring (a plain dictionary of numbers
-  and strings; climbs in route order). Exported from `pyntpot.maps`.
+  and strings; climbs in route order), with `Args` `key` worded as
+  `vector_layers`'s. Exported from `pyntpot.maps`.
 - **G2, `vector_layers` and `VectorLayers`** (new module
   `src/pyntpot/maps/vector_layers.py`, about 230 lines; `maps/layers.py` is
   331 lines and takes nothing). The typed value of the private
@@ -6118,7 +6128,7 @@ every P8.P slice). Designs, measured at `b69a7a8`:
   - `key` is `cache.key(track, features, elevation)` for the providers
     that filled the cache, which the caller already holds (`Cache.key` is
     public); taking it in place of the two providers keeps the signature
-    within the limit. A key for another box reads that box's payloads; the
+    within the limit, and is how `candidate_export` takes it. A key for another box reads that box's payloads; the
     docstring says the key must be the track's.
   - The picks travel in the style, not in a parameter: `style.basemap`'s
     public `pick_landmarks` (names that replace the chosen landmarks, as
@@ -6322,12 +6332,15 @@ If it is taken when P8.P1 writes it, stop and report. Its sections:
   well as the landmarks), `vector_layers` and `VectorLayers`
   (`maps.vector_layers`, new). One method joins `Style`, public with it:
   `with_route_ink`. The signatures, as "The promotion, decided" gives
-  them: `candidate_export(track, cache, features, elevation)`,
+  them: `candidate_export(track, cache, key)`,
   `vector_layers(track, cache, key, style, places=(), *, origin=None)`
   (the picks travel in `style.basemap`'s `pick_landmarks`, `pick_roads`
   and `pick_places`; the ground kept round the track is fixed at 900 m
   before the box's scale; six parameters, ruff's `max-args`), and
-  `with_route_ink(*, colour=None, width_px=None)`. ADR 0007's fixed route
+  `with_route_ink(*, colour=None, width_px=None)`. Both cache readers take
+  the cache key (`Cache.key` of the track and the providers that filled
+  the cache), not the providers: the key is all they read the providers
+  for, it is what `Cache`'s own readers take, and neither ever fetches. ADR 0007's fixed route
   ink is replaced by: the route ink is the theme's unless a caller feeds
   its colour and width. pyntpot has no notion of what a track records, and
   a caller that inks routes differently keeps its own table.
@@ -6358,8 +6371,8 @@ geometry, so the new row says it is not that):
 - `candidate export`: "What a track passes, for a caller to choose names
   from: the route's totals and the settlements it passed, in order, each
   climb grounded in that route, and every landmark candidate beside it, as
-  one JSON-ready dictionary read from the fetch cache.
-  `maps.candidates.export.candidate_export`." (P8.P2a)
+  one JSON-ready dictionary read from the fetch cache under the track's
+  key. `maps.candidates.export.candidate_export`." (P8.P2a)
 - `vector layers`: "The basemap's layers as SVG path data in card metres,
   read from the fetch cache under the track's key, with the landmarks and
   places chosen for the box (the style's picks replacing the chosen
@@ -6498,8 +6511,8 @@ do: it never fetches or paints unless the function's name says so):
   source.cache, source.key, style, places, origin=origin)`; never fetches.
   The picks arrive in `style` (`vector_style`).
 - `candidates(source: MapSource) -> dict[str, Any]`:
-  `candidate_export(source.track, source.cache, source.features,
-  source.elevation)`; never fetches.
+  `candidate_export(source.track, source.cache, source.key)`; never
+  fetches.
 - `card(route_map, style, *, attribution: bool = True, labels: bool = True)
   -> Image.Image`: `compose`, with `Lettering((), (), None)` when `labels` is
   false.
@@ -6774,10 +6787,11 @@ upstream parallel groups.
 P8.0 ─ P8.P1 ─┬─ P8.P2a ─┐
               ├─ P8.P2b ─┼─ P8.P3 ─ (PR merged, v0.0.2 tagged, main merged into p10-fixes)
               └─ P8.P2c ─┘                │
-                                          P8.1 ─ P8.2 ─┬─ P8.3a ─┬────────── P8.4 ──────────┐
-                                                       │         └─┬─ P8.5a ─ P8.5b ────────┼─ P8.7 ─ (phase gate, PR held) ─ P8.H
-                                                       ├─ P8.3b ───┘                        │
-                                                       └─ P8.6 ─────────────────────────────┘
+                                          P8.1 ─ P8.2 ─┬─ P8.3a ─┬─ P8.4 ──────┐
+                                                       │         │             ├─ P8.5b ─┬─ P8.7 ─ (phase gate, PR held) ─ P8.H
+                                                       │         └─┬─ P8.5a ───┘         │
+                                                       ├─ P8.3b ───┘                     │
+                                                       └─ P8.6 ──────────────────────────┘
 ```
 
 - **Sequential points.** P8.0 (this plan, reviewed); P8.P1 (the ADR);
@@ -6795,8 +6809,11 @@ P8.0 ─ P8.P1 ─┬─ P8.P2a ─┐
   fixes.
 - **Upstream parallel group 2**: P8.4 once P8.3a has landed; P8.5a once
   P8.3a and P8.3b have landed. P8.4 and P8.5a run at the same time (P8.6 may
-  still be open). P8.5b follows P8.5a (same functions in `charts.py`, and
-  it builds on P8.5a's `VectorLayers` reads).
+  still be open). P8.5b follows both P8.5a (same functions in `charts.py`,
+  and it builds on P8.5a's `VectorLayers` reads) and P8.4: it deletes
+  `charts._Card`, which `mapcard.compose` (`mapcard.py:146`) calls from
+  `cmd_map` until P8.4 moves `cmd_map` onto `routemap`, so no commit on the
+  branch carries a broken `map` command (no transient is accepted).
 - **Each slice runs in its own detached worktree**: pyntpot
   `git -C "$PYNTPOT" worktree add --detach "$SCRATCH/p8/wt-<slice-id>" p8-promote`,
   upstream `git -C "$UPSTREAM" worktree add --detach "$SCRATCH/p8/wt-<slice-id>" p8-pyntpot-migration`,
@@ -6804,7 +6821,8 @@ P8.0 ─ P8.P1 ─┬─ P8.P2a ─┐
   `.venv`; never a shared checkout. An upstream worktree has no `data/`, so
   the `needs_raw` tests skip as in the clean baseline. A slice never depends
   on another parallel slice's unlanded edits.
-- **Landing**, one slice at a time in the order they finish: commit in the
+- **Landing**, one slice at a time in the order they finish (P8.5b's
+  worktree is cut only once P8.4 and P8.5a have both landed): commit in the
   worktree, rebase onto the head of the slice's branch, resolve conflicts by
   the rules below, re-run the slice's gates on the rebased commit (G-here
   and G-self against the slice's own `$SLICE/before`, still valid because
@@ -6855,8 +6873,8 @@ P8.0 ─ P8.P1 ─┬─ P8.P2a ─┐
     union, in the list's order with the new bullets after `render`.
   - `analysis/report/charts.py`: P8.3b (the import block,
     `charts.py:41-52`, `__all__` and the comment above it, `:74-77`), then
-    P8.5a, then P8.5b, in that order by the diagram, so no two are open at
-    once.
+    P8.5a, then P8.5b (after P8.4 as well), in that order by the diagram,
+    so no two are open at once.
   - `analysis/report/render.py`: P8.5b only (P8.5a keeps its call sites
     working unchanged).
   - `tests/test_paint.py` (P8.5b removes the page tests, P8.7 deletes the
@@ -6919,7 +6937,9 @@ and holds it; P8.H follows on that commit.
 
 - This section. A plan-reviewer agent (fresh context) reviews it, and P8.P1
   does not start until the review passes. `tasks.md`'s P8 list becomes one
-  line per slice id below.
+  line per slice id below. Outcome: rounds 1 and 2 BLOCK (`23803fb`,
+  `a9b1fb2`); round 3 PASS (`3431466`), its five non-blocking items
+  applied before the commit.
 - Measured at the upstream `e62657f` and pyntpot `b69a7a8` (the commands are
   in the *(Evidence.)* paragraphs and each slice's checks).
 - Owner files: `specs/001-port/plan.md` (this section, and the ADR
@@ -6966,8 +6986,9 @@ and holds it; P8.H follows on that commit.
   `test_export.py`, repoint the one existing test that calls it
   (`test_the_real_box_offers_candidates_and_no_climb_without_elevation`,
   `:51`; the other, `:17`, reads `CANDIDATE_BASEMAP` and is unchanged) to
-  `candidate_export(track, Cache(FIXTURE_DIR), FixtureFeatures(),
-  FixtureElevation())` (from `support.providers`) and add
+  `candidate_export(track, Cache(FIXTURE_DIR), KEY)` (`KEY` from
+  `support.paths`, the fixture cache's key for `FixtureFeatures()` and
+  `FixtureElevation()`) and add
   `test_the_export_keys_are_the_contract` ("The export carries exactly the
   keys its contract names, at every level.": the fixture track with a
   synthetic `ele`, `100 + 300 * sin(pi * i / n)` for point `i` of `n`, so
@@ -6976,17 +6997,18 @@ and holds it; P8.H follows on that commit.
   pinned literal list, the five lists of "The promotion, decided", G1;
   at least one settlement and one climb, so no list is vacuous),
   `test_the_export_is_keyed_by_the_cache_key` ("The export's `id` is the
-  fetch cache's key for the track and the providers.": `export["id"] ==
-  KEY`) and `test_an_empty_cache_exports_no_candidates_or_settlements` ("A
+  fetch cache key it reads under.": `export["id"] == KEY`, and `KEY ==
+  Cache(FIXTURE_DIR).key(track, FixtureFeatures(), FixtureElevation())`)
+  and `test_an_empty_cache_exports_no_candidates_or_settlements` ("A
   box with nothing cached has no candidates and passes no settlements.",
-  `Cache(tmp_path)`: `candidates == []`, `route["settlements"] == []`,
+  `Cache(tmp_path)` and `KEY`: `candidates == []`, `route["settlements"] == []`,
   `points` the track's count).
 - Change: rename and re-sign as "The promotion, decided" gives it; the
   module docstring's key names and its "the package does not export it"
   sentence become "`pyntpot.maps` exports `candidate_export`"; export it
   from `pyntpot.maps` (merge rule); the GLOSSARY row; the CHANGELOG bullet
   "`pyntpot.maps.candidate_export`: what a track passes, read from the
-  fetch cache (was the private `landmark_export`)."
+  fetch cache under the track's key (was the private `landmark_export`)."
 - About 100 changed lines.
 - Gate: G-here (P11's form) plus G-self (byte-identical) plus the coverage
   gates.
@@ -7248,8 +7270,8 @@ and holds it; P8.H follows on that commit.
 
 - Predecessor: P8.2. Upstream parallel group 1.
 - Owner files (upstream): `analysis/report/svgtext.py` (new),
-  `analysis/report/labels.py` (the "vector map" section and its import
-  line `:38` only), `analysis/report/charts.py` (the import block,
+  `analysis/report/labels.py` (the "vector map" section, its import
+  line `:38` and `CHAR_W` at `:42` only), `analysis/report/charts.py` (the import block,
   `__all__` and the comment above it, `:74-77`, only),
   `analysis/report/__init__.py` (one docstring bullet).
 - Leave alone: every other line of `labels.py` and `charts.py`; the names'
@@ -7273,7 +7295,8 @@ and holds it; P8.H follows on that commit.
   page's own SVG text, a rough width, a haloed label, a theme ink, a small
   placer for the vector map; it does not letter the painted map).
   `labels.py:38` is deleted outright (round-1 finding 7: keeping any of its
-  names would be an unused import). `charts.py` imports the five from
+  names would be an unused import), and so is `labels.py:42` (`CHAR_W`,
+  which moves: after the move it has no reader in `labels.py`). `charts.py` imports the five from
   `svgtext`; `__all__` keeps them; the comment above `__all__` names
   `style.py`, `svgtext.py` and `labels.py` (P8.5b drops `labels.py`). `__init__.py` bullet "`svgtext`   the
   page's own SVG text helpers".
@@ -7330,8 +7353,8 @@ and holds it; P8.H follows on that commit.
   `routemap.fetch_basemap(map_source(track, cache_dir, contact,
   offline=False), map_style(), load_places(), force=args.force)` and prints
   the key and each payload's path and size; `cmd_geo_candidates` prints
-  `routemap.candidates(map_source(track, cache_dir))` with `id` set to the
-  activity and `x`, `y` popped, no `paint` import; `geo migrate-cache`
+  `routemap.candidates(map_source(track, cache_dir))` (which passes the
+  source's `key` to `candidate_export`) with `id` set to the activity and `x`, `y` popped, no `paint` import; `geo migrate-cache`
   (new, with `--cache-dir` and `--raw-dir`) calls
   `migrate_cache.migrate(cache_dir, raw_dir)` and prints its lines;
   `cmd_paint` reads the cache offline with `map_style()` (no argument: the
@@ -7432,8 +7455,10 @@ and holds it; P8.H follows on that commit.
 
 #### P8.5b The page's painted map on Basemap, Plates and Lettering, loaded once
 
-- Predecessor: P8.5a landed.
-- Owner files (upstream): `analysis/report/charts.py` (`journal_plates`,
+- Predecessors: P8.5a and P8.4 landed (P8.5b deletes `charts._Card`, which
+  the old `cmd_map` reaches through `mapcard.compose`, `mapcard.py:146`).
+- Owner files (upstream): `analysis/report/charts.py` (`basemap_data`'s
+  signature, one keyword below; `journal_plates`,
   `_Card`, `_journal_offset`, `_journal_route_path`, `_journal_route*`'s
   `card` parameter type, `_journal_lettering`, `journal_map`, the painted
   branch and the signature of `route_track`, `_basemap_caption`'s argument,
@@ -7469,13 +7494,22 @@ and holds it; P8.H follows on that commit.
     `drawn` (`route_map is not None or vector is not None`).
   - `page_map(snapshot, style, picks=None, *, cache_dir=None, raw_dir=None,
     places_file=None, base_style: Style | None = None) -> PageMap`: empty
-    unless `style.basemap`; one track from `routemap.page_track` (the GPX
-    first); `route_map = routemap.load(track, cache_dir, base_style or
+    unless `style.basemap`; then, with the defaults written out as P8.5a's
+    `basemap_data` writes them, `cache = cache_dir or
+    routemap.default_cache_dir()`, `places = routemap.load_places(places_file
+    or routemap.PLACES_FILE)` and one track, `track =
+    routemap.page_track(snapshot.activity.id, ...streams..., raw_dir)` (the
+    GPX first), read once; an empty `PageMap` when `track` is `None`. Then
+    `route_map = routemap.load(track, cache, base_style or
     map_style(sport=snapshot.activity.sport), picks, places)` (the session's
-    ink, so the strands sit as the old page placed them, `charts.py:2183-2184`);
-    `vector = basemap_data(...)` (P8.5a's) for the washes when unpainted and
-    for the footnote either way, as the old footnote read the vector dict
-    in both cases. Each is built once per page. Errors: one `try` round
+    ink, so the strands sit as the old page placed them,
+    `charts.py:2183-2184`) and `vector = basemap_data(snapshot, style,
+    picks, cache_dir=cache, places_file=places_file, track=track)` (P8.5a's,
+    given here a keyword-only `track: Track | None = None`: when given it is
+    used and `page_track` is not read again) for the washes when unpainted
+    and for the footnote either way, as the old footnote read the vector
+    dict in both cases. Each is built once per page, and the GPX is read
+    once. Errors: one `try` round
     `page_track` and `routemap.load` catches `OSError`, `ValueError` (a GPX
     time with no zone among them) and `KeyError`,
     logs a warning naming the activity and the exception (as the old
@@ -7498,8 +7532,10 @@ and holds it; P8.H follows on that commit.
     draws ..." appears only over a drawn map.
   - `journal_plates` is deleted and `journal_map` takes `(snapshot, style,
     route_map, highlights=None)`. The card is `route_map.plates.card` (`w`,
-    `h`); the plates' data URIs come from `plates.paths["paper"]`, `["wash"]`
-    and `["pen"]`; the route is drawn along `plates.strands`. Highlights and
+    `h`); the plates' data URIs come from `plates.paths["paper"]` and
+    `["wash"]`, and from `["pen"]` only when the ink's style is `"pen"`, as
+    today (`charts.py:2200-2201`), so the moved test `:941` still counts
+    exactly 3 data URIs (the card, the wash and the lettering); the route is drawn along `plates.strands`. Highlights and
     the hover `data-pts` index the strands by time: for each
     `snapshot.route` point, the strand point whose `track.time` is nearest
     (`bisect` on `route_map.source.track.time`), so the page keeps the
