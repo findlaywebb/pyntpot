@@ -236,3 +236,10 @@ activity" and identified upstream only.
   points, route; 46 candidates, no `x` or `y`. Page: `class="route journal"` with plates,
   `<g class="basemap"` and no journal without. Import greps clean; tree clean. Waiting on
   the fresh-context review before the `origin/main` merge and P8.H.
+- Upstream diff review (fresh context, `e62657f..8e106b2`): ship, no blocking finding.
+  Clean on private imports, `os.environ`, intervals.icu writes, docs vs flags, and the
+  page and CLI cache keys. Re-ran phase-gate steps 2, 3, 5 independently: same hash.
+  Findings folded into one fix commit by a fresh agent: (1) an unreadable GPX tracebacks
+  `paint` and aborts `geo migrate-cache`; (2) the painted-footnote test passes on the
+  vector layers alone; (3) a `FetchError` tracebacks; (4) a streams-fallback test proves
+  only the warning; (5) `read_text()` without an encoding.
