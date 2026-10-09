@@ -24,7 +24,7 @@ from pyntpot.ink.brush import Brush, brush_from_id
 from pyntpot.ink.io import save_alpha
 from pyntpot.ink.noise import F32
 from pyntpot.ink.pad import InkPad
-from pyntpot.ink.pigment import Layer
+from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.sheet import rgb
 from pyntpot.maps.basemap import Line
 from pyntpot.maps.painter.brushes import plate_brushes
@@ -39,7 +39,7 @@ def _lines_of(job: PaintJob, line: Line) -> list[np.ndarray]:
     return [job.canvas.px(r) for r in drawable((line,))]
 
 
-def _water_pad(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[Layer]:
+def _water_pad(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[PigmentLayer]:
     """Every watercourse and the coast in one pad, read back with the major river's brush."""
     layers = job.layers
     style = job.style
@@ -77,10 +77,10 @@ def _water_pad(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[Layer]:
     return [(pad.read(br["major"][0], job.sheet), rgb(br["major"][1]))]
 
 
-def _road_pads(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[Layer]:
+def _road_pads(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[PigmentLayer]:
     """One pad per road band, the minor bands only when the card carries minor roads."""
     layers = job.layers
-    out: list[Layer] = []
+    out: list[PigmentLayer] = []
     for key, band in _ROAD_BANDS.items():
         if key != "road_major" and not layers.minor_roads:
             continue
@@ -99,7 +99,7 @@ def _road_pads(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[Layer]:
     return out
 
 
-def paint_pen(job: PaintJob) -> list[Layer]:
+def paint_pen(job: PaintJob) -> list[PigmentLayer]:
     """The watercourse, coast and road ink layers, in laying order, untrimmed."""
     br = plate_brushes(job.style.brush, job.scale, dict(job.layers.wet_px))
     return [*_water_pad(job, br), *_road_pads(job, br)]

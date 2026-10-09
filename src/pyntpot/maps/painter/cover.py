@@ -18,7 +18,7 @@ blooms from the job's shared generator, in class order.
 import numpy as np
 
 from pyntpot.ink.noise import F32, chamfer_distance, smoothstep
-from pyntpot.ink.pigment import Layer
+from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.raster import Deform, deform_rings, fill_cov
 from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import WashStyle
@@ -91,11 +91,11 @@ def _label(job: PaintJob, stack: PlateStack, order: list[str]) -> None:
     stack.label[stack.water] = 0
 
 
-def _class_washes(job: PaintJob, stack: PlateStack, order: list[str]) -> list[Layer]:
+def _class_washes(job: PaintJob, stack: PlateStack, order: list[str]) -> list[PigmentLayer]:
     """One separated wash per labelled class, wet together across the cover."""
     style = job.style
     wet_map = wet_field(stack.label, style.wash, job.rim_cov)
-    layers: list[Layer] = []
+    layers: list[PigmentLayer] = []
     for i, cls in enumerate(order, 1):
         base, pool = style.cover.cover_cfg.get(cls, (0.5, 0.2))
         cov = (stack.label == i).astype(F32)
@@ -124,7 +124,7 @@ def _class_washes(job: PaintJob, stack: PlateStack, order: list[str]) -> list[La
     return layers
 
 
-def _pale_wash(job: PaintJob, stack: PlateStack) -> Layer:
+def _pale_wash(job: PaintJob, stack: PlateStack) -> PigmentLayer:
     """The single pale wash over everything that is not sea, drawn when cover is off."""
     cover = job.style.cover
     pale = 1.0 - np.maximum(stack.sea_cov, 0.0)

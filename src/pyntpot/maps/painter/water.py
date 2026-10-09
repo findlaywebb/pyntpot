@@ -21,7 +21,7 @@ import math
 import numpy as np
 
 from pyntpot.ink.noise import F32, blur, chamfer_distance, fbm, fbm_aniso
-from pyntpot.ink.pigment import Layer
+from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.raster import fill_cov
 from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import WashStyle
@@ -156,7 +156,7 @@ def paint_lakes(job: PaintJob, stack: PlateStack) -> None:
     )
 
 
-def sea_layer(job: PaintJob, stack: PlateStack) -> Layer | None:
+def sea_layer(job: PaintJob, stack: PlateStack) -> PigmentLayer | None:
     """The sea's wash, laid over the ribbon to the card edge, or `None` when there is none."""
     sea_cov = stack.sea_cov
     if not (sea_cov.any() and job.style.ribbon.sea_to_edge):

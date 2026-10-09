@@ -210,7 +210,7 @@ Order: after P10 part 1 has landed on `main` (not merely after P10.1), and befor
 
 - [x] P11.0 Fatten P11 into slices; plan-reviewer pass
 - [x] P11.1 The foundation: ADR 0026 amending 0007, the layer `__all__` pins, the examples harness (sequential)
-- [ ] P11.2a Promote the ink names for marks and pigment; `Layer` becomes `PigmentLayer` (parallel group 1)
+- [x] P11.2a Promote the ink names for marks and pigment; `Layer` becomes `PigmentLayer` (parallel group 1)
 - [ ] P11.2b Move `paper_plate` into `ink`; add `save_image` (parallel group 1)
 - [ ] P11.3 Promote the letters names; `plate` becomes `nib_plate` (parallel group 1)
 - [x] P11.4 Promote the fetch cache and the shipped providers through `pyntpot.maps` (parallel group 1)

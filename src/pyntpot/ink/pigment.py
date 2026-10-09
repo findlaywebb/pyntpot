@@ -1,8 +1,8 @@
 """Pigments and compositing: the colours a wash transmits and how a stack of layers is laid.
 
 Key names: `PIGMENTS`, what a full-strength wash of each pigment transmits; `TRANSPARENCY`,
-what each shows over black as a share of what it shows over white; `Layer`, one layer of the
-stack; `multiply_plate`, the stack as transmission; `km_rt` and `km_plate`, Kubelka-Munk
+what each shows over black as a share of what it shows over white; `PigmentLayer`, one layer of
+the stack; `multiply_plate`, the stack as transmission; `km_rt` and `km_plate`, Kubelka-Munk
 glazing; `composite`, the stack over a backing the way `PaperStyle` asks.
 
 It paints no wash and writes no file.
@@ -65,13 +65,13 @@ TRANSPARENCY = {
 #: One layer of the pigment stack: its density, its pigment over white, and,
 #: where the caller knows it, what that pigment shows over black as a share of
 #: that. Only Kubelka-Munk glazing reads the third; multiply ignores it.
-Layer = tuple[np.ndarray | None, np.ndarray] | tuple[np.ndarray | None, np.ndarray, float]
+PigmentLayer = tuple[np.ndarray | None, np.ndarray] | tuple[np.ndarray | None, np.ndarray, float]
 
 #: How many members a layer has when it names its own transparency.
 _WITH_TRANSPARENCY = 3
 
 
-def multiply_plate(layers: list[Layer], h: int, w: int) -> np.ndarray:
+def multiply_plate(layers: list[PigmentLayer], h: int, w: int) -> np.ndarray:
     """Stack densities into one white-backed multiply plate.
 
     Source: `multiply-compositing` in docs/explanation/references.md.
@@ -126,7 +126,9 @@ def km_rt(dens: np.ndarray, pig: np.ndarray, transparency: float) -> tuple[np.nd
     return sh / c, bf / c
 
 
-def km_plate(layers: list[Layer], base: np.ndarray, transparency: float = 0.06) -> np.ndarray:
+def km_plate(
+    layers: list[PigmentLayer], base: np.ndarray, transparency: float = 0.06
+) -> np.ndarray:
     """Glaze the layers optically over a backing, bottom layer first.
 
     Multiply is transmission with no scattering, so two washes crossing lose
@@ -154,7 +156,7 @@ def km_plate(layers: list[Layer], base: np.ndarray, transparency: float = 0.06) 
     return np.clip(out, 0.0, 1.0)
 
 
-def composite(layers: list[Layer], base: np.ndarray, style: PaperStyle) -> np.ndarray:
+def composite(layers: list[PigmentLayer], base: np.ndarray, style: PaperStyle) -> np.ndarray:
     """Stack one set of layers over a backing, the way the style asks.
 
     Source: `multiply-compositing` in docs/explanation/references.md.

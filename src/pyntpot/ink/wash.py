@@ -20,7 +20,7 @@ import numpy as np
 from PIL import Image
 
 from pyntpot.ink.noise import F32, blur, chamfer_distance, fbm
-from pyntpot.ink.pigment import Layer
+from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.shallow_water import shallow_water
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.style import WashStyle
@@ -252,7 +252,7 @@ def separated(
     transparency: float,
     sheet: Sheet,
     style: WashStyle,
-) -> list[Layer]:
+) -> list[PigmentLayer]:
     """One wash as one pigment, or as the two it is really mixed from.
 
     A tube green is a staining green with a heavier blue-black in it, and the
@@ -300,8 +300,8 @@ def separated(
 
 
 def fluid_modulate(
-    layers: list[Layer], wet: np.ndarray, sheet: Sheet, style: WashStyle
-) -> list[Layer]:
+    layers: list[PigmentLayer], wet: np.ndarray, sheet: Sheet, style: WashStyle
+) -> list[PigmentLayer]:
     """Modulate a stack of washes by one coarse shallow-water pass.
 
     The rule this holds to is that the pass modulates the painter and never
