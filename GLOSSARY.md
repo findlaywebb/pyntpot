@@ -44,3 +44,4 @@ add the term here when you coin one.
 | pigment | A colour a wash or a mark lays, named by its key; what a full-strength wash of it transmits, and what it shows over black as a share of that. `ink.pigment.PIGMENTS`, `TRANSPARENCY`. |
 | pigment layer | One layer of the pigment stack `composite` lays: a density, a pigment colour and optionally its transparency. Not the basemap's layers. `ink.pigment.PigmentLayer`. |
 | density | How much pigment or ink lies at a pixel, 0 to 1: what `wash` and `ink_density` return and a pigment layer carries. |
+| nib plate | The lettering's own RGBA plate: marks stroked through the ink engine on the paper's colour, composited normally rather than multiplied. `letters.nib.nib_plate`, on a `letters.nib.NibSurface`. |

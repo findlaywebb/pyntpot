@@ -234,7 +234,7 @@ def draw_plate(
         plates.manifest.gran_px,
     )
     face = replace(style.face, label_route=hand.route)
-    written = nib.plate(
+    written = nib.nib_plate(
         marks, surface, NibGroups(style.nib, face, style.hand, style.brush, style.paper), path
     )
     if written is not None:

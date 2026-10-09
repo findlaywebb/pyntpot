@@ -44,7 +44,17 @@ INK_PUBLIC: tuple[str, ...] = (
     "wash",
 )
 
-LETTERS_PUBLIC: tuple[str, ...] = ("Hand",)
+LETTERS_PUBLIC: tuple[str, ...] = (
+    "FaceStyle",
+    "Hand",
+    "HandStyle",
+    "Mark",
+    "NibGroups",
+    "NibStyle",
+    "NibSurface",
+    "Setting",
+    "nib_plate",
+)
 
 MAPS_PUBLIC: tuple[str, ...] = (
     "Annotations",
