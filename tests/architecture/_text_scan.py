@@ -6,7 +6,7 @@ from pathlib import Path
 from support import REPO_ROOT
 from support.exemptions import EXEMPTIONS_DIR
 
-_SCANNED = ("src", "tests", "docs", "README.md", "CHANGELOG.md", "GLOSSARY.md", "specs")
+_SCANNED = ("src", "tests", "docs", "README.md", "CHANGELOG.md", "GLOSSARY.md", "specs", "examples")
 _EXCLUDED_NAMES = frozenset({"LICENSE", "CODEOWNERS", "uv.lock"})
 _SKIPPED_DIRS = frozenset({"__pycache__", ".hypothesis", ".pytest_cache"})
 

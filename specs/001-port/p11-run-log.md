@@ -110,3 +110,14 @@ part 1, merged).
   `letters-map-ink-key` row). Slices: P11.1 (sequential foundation); group 1: P11.2a,
   P11.2b, P11.3 and P11.4 in parallel; group 2: P11.5a (after 2a and 2b), P11.5b (after 2a,
   2b and 3), P11.5c (after 4).
+- P11.1 landed (implementer in a detached worktree at `994b854`). Baseline
+  `{"commit": "994b854aeac021952b6b53c75f4c6e2e3ff5d407", "dirty": false}`. Red step:
+  "examples import a private or disallowed name: ['examples/scratch.py:1']" (line 1 only).
+  Gates: `ruff format --check .` (314 files) and `ruff check .` pass; prek all-files and
+  on the new files pass; not-golden 1051 passed, 1 skipped; golden in tolerance 18 passed;
+  golden byte-exact 18 passed; G-self 18 passed (byte-identical). Deviations:
+  `LETTERS_PUBLIC` is on one line (ruff format folds a one-item tuple); the ADR names no
+  phase or slice ids; two ty fixes in the harness (`isinstance` check on `main`'s return,
+  `getattr(node, "lineno", "?")`); about 340 changed lines, not 170, nearly all the
+  prescribed ADR. No rebase was needed (the head had not moved), so the gates ran on the
+  landed tree.

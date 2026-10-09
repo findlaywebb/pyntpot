@@ -1,4 +1,6 @@
-"""The top-level package exports exactly the public names."""
+"""The top-level package and each layer package export exactly their public names."""
+
+import importlib
 
 import pytest
 
@@ -25,6 +27,37 @@ PUBLIC: tuple[str, ...] = (
     "__version__",
 )
 
+INK_PUBLIC: tuple[str, ...] = (
+    "Brush",
+    "Canvas",
+    "Sheet",
+    "composite",
+    "stamp",
+    "wash",
+)
+
+LETTERS_PUBLIC: tuple[str, ...] = ("Hand",)
+
+MAPS_PUBLIC: tuple[str, ...] = (
+    "Annotations",
+    "Basemap",
+    "FetchError",
+    "Lettering",
+    "Plates",
+    "Style",
+    "Track",
+    "compose",
+    "fetch",
+    "letter",
+    "paint",
+)
+
+LAYERS: dict[str, tuple[str, ...]] = {
+    "pyntpot.ink": INK_PUBLIC,
+    "pyntpot.letters": LETTERS_PUBLIC,
+    "pyntpot.maps": MAPS_PUBLIC,
+}
+
 
 def test_all_is_exactly_the_public_names() -> None:
     """`pyntpot.__all__` holds the pinned public names and no others."""
@@ -46,3 +79,19 @@ def test_version_is_a_dotted_release() -> None:
 def test_sheet_constructs_from_the_top_level() -> None:
     """`pyntpot.Sheet(64, 64, 8.0)` constructs a sheet."""
     assert pyntpot.Sheet(64, 64, 8.0) is not None
+
+
+@pytest.mark.parametrize("module", LAYERS, ids=["ink", "letters", "maps"])
+def test_each_layer_all_is_exactly_its_public_names(module: str) -> None:
+    """Each layer package's `__all__` holds its pinned public names and no others."""
+    package = importlib.import_module(module)
+    assert set(package.__all__) == set(LAYERS[module])
+    assert len(package.__all__) == len(LAYERS[module])
+
+
+@pytest.mark.parametrize("module", LAYERS, ids=["ink", "letters", "maps"])
+def test_every_layer_public_name_resolves(module: str) -> None:
+    """Each pinned layer name is an attribute of its package."""
+    package = importlib.import_module(module)
+    for name in LAYERS[module]:
+        assert getattr(package, name) is not None, name
