@@ -18,3 +18,10 @@ activity" and identified upstream only.
   main instance reset the connection through the proxy, mirrors returned 500 and 504. The
   elevation source returned 200. Old code has no attribution text or flag (static grep,
   `__main__.py:361-373`). Retrying; no upstream edit until a hash is recorded.
+- P8 fattened (`23803fb`, plan +861 lines, `tasks.md` one line per slice). Slices: P8.1
+  (Python 3.13, dependency), P8.2 (reference-hash test), P8.Q (maintainer stop for the hash
+  and gap rows); group 1 P8.3a, P8.3b, P8.6; group 2 P8.4, P8.5a, P8.5b; P8.7 (delete the
+  engine), phase gate, P8.H (hand-off); P8.8 conditional. Writer foresees three `decide`
+  gap rows (candidate export, vector basemap, route ink by sport) and expects the hash to
+  miss (ADR 0006 step 3 moved `map.png`). The reference must be rendered with `--sport
+  Ride`; the retry agent was told. Plan-reviewer round 1 started.
