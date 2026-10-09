@@ -93,3 +93,10 @@ part 1, merged).
   token is a string a caller passes to a public name, or an enumerated string a public name
   or field returns; field names follow the member rule; fetched provider data is not a
   token. Fix round 4 dispatched to a fresh agent.
+- Fix round 4 (a fresh agent). R4-M1: the token rule is narrowed to strings a caller passes
+  to a public name (as an argument, or a key or value inside one, the class keys of a style
+  object the caller builds included) and enumerated strings a public name or field returns;
+  field names and the TOML keys that mirror them follow the member rule; fetched provider
+  data is not a token. Every family stays (pigment keys because callers subscript
+  `PIGMENTS` and `TRANSPARENCY`). Deleting the `effect` tables or `Label.as_dict` and the
+  `tunnel=no` fix need no ADR; renaming the `"map"` ink key does. Plan review 5 dispatched.
