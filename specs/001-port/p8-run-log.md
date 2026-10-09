@@ -34,3 +34,11 @@ activity" and identified upstream only.
   Detail (commands, cache hashes, versions) kept upstream in git-ignored
   `data/p8-reference/reference.md`. Upstream's own retry is 3 rounds of 4 s
   (`geo.py:1425-1436`); short for a busy mirror, not a P8 matter.
+- Plan-reviewer round 1: BLOCK, seven findings (hash gates unreachable at v0.0.1; page
+  track source vs `paint` cache key; `drawn` over a bare track; `paint --display` changing
+  the base digest; unnamed offline test factory; `geo candidates` under G1 (b); four wrong
+  check-first counts). Upstream facts sampled otherwise correct; no personal detail in the
+  diff. Reviewer rendered the reference inputs through v0.0.1's public API: sha256
+  `0dfffcca...`, differing fraction 0.104 (paper identical, wash 0.105, pen 0.004).
+  Treated as a reference-hash mismatch: an independent agent is verifying like-for-like
+  inputs and the cause before the maintainer is asked. Plan fixes held until then.
