@@ -198,3 +198,9 @@ activity" and identified upstream only.
   Deviations: about 910 new lines against about 560 planned (docstrings, not trimmed);
   `page_track` falls back to the streams on an unreadable GPX, with a warning.
 - Group 2 started: P8.4 and P8.5a in parallel worktrees from `5fd1a2c`.
+- P8.5a landed upstream (`1a18b57`), first of group 2, no rebase. Red: 9 failed
+  on "basemap_data() got an unexpected keyword argument 'cache_dir'". Check-first counts
+  as planned. G-up 319 passed 8 skipped (the old `tests/test_geo.py` page tests moved to
+  `tests/test_route_chart.py`; every other test in it removed as the slice says, which
+  empties the file, so its deletion, listed in P8.7, lands here), ruff clean,
+  `test_route_chart.py` format-clean, `--help` 0. No gap.
