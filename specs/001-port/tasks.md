@@ -215,5 +215,5 @@ Order: after P10 part 1 has landed on `main` (not merely after P10.1), and befor
 - [x] P11.3 Promote the letters names; `plate` becomes `nib_plate` (parallel group 1)
 - [x] P11.4 Promote the fetch cache and the shipped providers through `pyntpot.maps` (parallel group 1)
 - [x] P11.5a Tutorial scripts for the ink rungs (after P11.2a and P11.2b)
-- [ ] P11.5b Tutorial scripts for lettering and composition (after P11.2a, P11.2b and P11.3)
+- [x] P11.5b Tutorial scripts for lettering and composition (after P11.2a, P11.2b and P11.3)
 - [x] P11.5c Tutorial script for the route map (after P11.4)

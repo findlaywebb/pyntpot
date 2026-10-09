@@ -17,6 +17,8 @@ from support.examples import EXAMPLES_DIR
 #: The tutorial scripts' stems, one per rung.
 EXAMPLES: tuple[str, ...] = (
     "brush_stroke",
+    "composition",
+    "lettering",
     "nib_line",
     "paper",
     "pigments",
