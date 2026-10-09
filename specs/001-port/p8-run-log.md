@@ -172,3 +172,12 @@ activity" and identified upstream only.
   Caveat: `snapshot.json` was normalised from read-only pulls holding only the fields
   `normalise` reads (no projected fitness rows, today = 2026-10-09); it feeds only the
   phase gate's page check. P8.2 started in its worktree with the record copied in.
+- P8.2 landed upstream (`4c179d2`): `tests/test_map_parity.py`. Check-first: all seven
+  input copies match `reference.md`; `athlete/places.json` unchanged since `e62657f`.
+  G-up 370 passed 9 skipped, ruff clean, new file format-clean, `--help` 0. G-ref:
+  "tests/test_map_parity.py::test_reference_render_matches_pinned_hash PASSED",
+  "1 passed in 50.11s": the reference inputs through `v0.0.2`'s public API give
+  `0dfffcca...6619` exactly. Deviations: the test finds the payloads by glob (no activity
+  in the test) and skips unless exactly one overpass payload is present; the plan's
+  docstring wording carries `# noqa: E501`.
+- Group 1 started in parallel worktrees from `4c179d2`: P8.3a, P8.3b, P8.6.
