@@ -253,3 +253,10 @@ activity" and identified upstream only.
   around upstream; filed as a triage row on `p10-fixes`.
 - Upstream `origin/main` still `e62657f`, already in the branch: the pre-merge merge is a
   no-op, so the phase gate re-runs on `9139760`, and P8.H reads that commit.
+- Phase gate re-run on upstream `9139760` (P8's final commit; `origin/main` merge a
+  no-op): all six steps pass. G-up 171 passed 6 skipped, G-ref 1 passed; migrate-cache
+  copied, paint then "up to date"; `map --sport Ride --no-attribution` sha256
+  `0dfffccab9be726492f14f9ded582ed385ec81838e8ba120dcf20bb9cde26619`, identical to the
+  pin; candidates keys exact, 46, no `x`/`y`; page journal with plates, basemap without;
+  import greps clean; tree clean. (A container restart lost the first attempt at this
+  run and at P8.H; both re-run from scratch.) Upstream PR #1 ready for the maintainer.
