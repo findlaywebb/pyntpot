@@ -129,3 +129,56 @@ part 1, merged).
   formatted, ruff clean; the pytest counts were not captured); `test_import_order.py`
   (cold import) passes; G-self 18 passed, byte-identical (474 s). No coverage gate: the
   slice adds only imports. No deviations.
+- Group 1 dispatched at `5e5848f` (four implementers, each in its own detached worktree under
+  `$SCRATCH/p11/`, each with its own G-self baseline at `5e5848f`, `dirty: false`).
+- P11.4 landed first (above).
+- P11.2a: implementer at `5e5848f` (`Layer` importers repointed: 10 files, 6 `src` and 4
+  tests, as the plan counts; after the change the grep finds only the "dens: Layer
+  thickness" line). Rebased onto `73b2ff7`; `GLOSSARY.md` conflicted and was resolved by the
+  rule, every row kept in landing order. Landed as `6132cd9`. Gates on the rebased tree:
+  format check 314 files, ruff clean, prek exit 0, not-golden 1051 passed, 1 skipped
+  (re-run with the real exit status: the first chain piped pytest through `tail`, so its
+  exit status was `tail`'s; every later gate run uses `pipefail`); golden in tolerance,
+  byte-exact and G-self each 18 of 18.
+- P11.3: implementer at `5e5848f` (`nib.plate` call sites repointed: 3 files, 2 `src` and 1
+  test, plus 2 docs, as the plan counts; issue filed:
+  `docs/issues/ink-stroke-mark-shares-the-mark-term.md`). Rebased onto `6132cd9`
+  (`GLOSSARY.md` and `tasks.md` resolved by rule). Landed as `a35f133`. Gates: format check
+  315 files, ruff clean, not-golden 1051 passed, 1 skipped; tolerance, byte-exact and G-self
+  18 passed each.
+- P11.2b: implementer at `5e5848f` (`paper_plate` moved to `ink/paper.py`; `save_image`
+  added). Rebased onto `a35f133`. Conflicts in `ink/__init__.py` (imports and `__all__`
+  merged as a union in RUF022 order; the docstring is the plan's merged text, verified
+  programmatically by the diff review), `maps/painter/plates.py` (both import edits kept),
+  `tests/unit/test_public_api.py` (union) and `tasks.md`. Landed as `797e871`. Gates:
+  not-golden 1056 passed, 1 skipped; tolerance and byte-exact 18 passed (the first chain
+  hit the 30-minute background limit after these); re-run: G-self 18 passed; coverage:
+  ink and letters 96.14% (gate 95), maps 93.28% (gate 92).
+- P11.5c: implementer at `73b2ff7` (the route map test asserts the cache key and payloads
+  before running; providers at `budget=0` on loopback; about 90 s). Rebased onto `797e871`
+  with no conflict and landed as `ae68ab0`. Gates: format check 319 files, ruff clean,
+  not-golden 1056 passed, 1 skipped; tolerance, byte-exact and G-self 19 passed each (the
+  route map test is golden-marked, so 19).
+- P11.5a and P11.5b: implementers at `797e871`. P11.5a was rebased onto `ae68ab0`, then
+  P11.5b onto it (`EXAMPLES` merged as an alphabetical union of all eight stems;
+  `tasks.md`). P11.5a (`7cfc9e7`): format check 325 files, ruff clean, prek exit 0,
+  not-golden 1061 passed, 1 skipped, the examples tests 7 passed. The stack top, P11.5b
+  (`d338a48`), holds both: format check 328 files, ruff clean, prek exit 0, not-golden 1064
+  passed, 1 skipped; tolerance, byte-exact and G-self (P11.5b's baseline) 19 passed each.
+  A container restart stopped the last stage, G-self against P11.5a's baseline; that
+  baseline is identical to P11.5b's (both made at `797e871`; `cmp` of `baseline.json`
+  shows no difference), so it is the same comparison. Both landed by fast-forward to
+  `d338a48`.
+- The time each golden stage takes here is about 9 to 10 minutes per stage when up to four
+  gate runs share the 4-core box, against the plan's "3 to 4 minutes"; recorded, no action.
+- P11 diff review (fresh context, `ff752f6..d338a48` against the plan): 0 blocking, 2
+  should-fix, 4 nits. ruff, ty, lint-imports (3 contracts) clean; the rename greps clean;
+  no shims; the surface is additive against ADR 0007; every changed file is in an owner list
+  or the orchestrator's bookkeeping; the six merge artefacts follow the merge rules; all
+  commit messages match the plan. Should-fix, both bookkeeping, done in this commit: these
+  landing entries, and the triage row for the issue P11.3 filed. Nits left as they are, for
+  P7.2's tutorial pass (the plan prescribes the first two): "Grasmere" at size 36 runs 6 px
+  past its 120 px span in `lettering.py`; "Keswick" is written over the brush stroke in
+  `composition.py`; `--help` fails under `python -OO` in `lettering.py` and
+  `composition.py` (argparse reads `__doc__`); small convention differences between the
+  scripts (logger names, `#:` comments, `GRAN_PX`/`SEED`, the "how to run" line).
