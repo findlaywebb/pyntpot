@@ -66,3 +66,7 @@ activity" and identified upstream only.
   a route-ink sport selection), one ADR, its own branch and PR held for the maintainer's
   merge, then tag `v0.0.2`; P8 depends on `@v0.0.2`. Plan to be refixed (review round 1
   findings plus these answers) by a fresh agent and reviewed again.
+- Maintainer on G3: "the pyntpot code should of course be generic - not sport map
+  oriented. So it just needs methods to feed in the colour". G3 becomes a caller-supplied
+  route ink (no sport concept in pyntpot; upstream keeps its own sport-to-colour table);
+  the same generic test applies to G1 and G2. Plan agent told.
