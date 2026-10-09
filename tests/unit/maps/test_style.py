@@ -191,3 +191,62 @@ class TestDigests:
         changed = style.model_copy(update={"nib": nib})
         assert changed.base_digest() == style.base_digest()
         assert changed.lettering_digest() != style.lettering_digest()
+
+
+#: Fed colours that are not a `#` and six hexadecimal digits.
+BAD_COLOURS: tuple[str, ...] = ("#abc", "c22050", "#zz0000", "#c22050x")
+
+#: Fed widths that are not a finite number above zero.
+BAD_WIDTHS: tuple[float, ...] = (0.0, -1.0, float("inf"), float("nan"), True)
+
+
+class TestFedRouteInk:
+    """`with_route_ink` feeds the route's colour and width and keeps the rest of the style."""
+
+    def test_a_fed_ink_sets_the_colour_and_width(self) -> None:
+        """A fed colour and width reach `route_ink()`; its treatment and effect stay the theme's."""
+        style = Style.default()
+        ink = style.with_route_ink(colour="#2050c2", width_px=4.8).route_ink()
+        assert (ink.colour, ink.px) == ("#2050c2", 4.8)
+        assert ink.style == style.route_ink().style
+        assert ink.effect == style.route_ink().effect
+
+    def test_feeding_nothing_keeps_the_style(self) -> None:
+        """Feeding nothing, or the default ink's own colour and width, gives an equal style."""
+        style = Style.default()
+        assert style.with_route_ink() == style
+        assert style.with_route_ink(colour="#c22050", width_px=5.4) == style
+
+    def test_a_fed_ink_moves_only_the_full_digest(self) -> None:
+        """A fed ink moves `digest()` and leaves the base and lettering digests at their pins."""
+        fed = Style.default().with_route_ink(colour="#2050c2", width_px=4.8)
+        assert fed.digest() != DIGEST
+        assert (fed.base_digest(), fed.lettering_digest()) == (BASE_DIGEST, LETTERING_DIGEST)
+
+    @pytest.mark.parametrize(
+        "colour", BAD_COLOURS, ids=["three-digits", "no-hash", "not-hex", "trailing"]
+    )
+    def test_a_fed_colour_must_be_six_hex_digits(self, colour: str) -> None:
+        """A colour that is not a `#` and six hexadecimal digits raises `ValueError`."""
+        with pytest.raises(ValueError, match="colour"):
+            Style.default().with_route_ink(colour=colour)
+
+    @pytest.mark.parametrize(
+        "width_px", BAD_WIDTHS, ids=["zero", "negative", "infinite", "not-a-number", "bool"]
+    )
+    def test_a_fed_width_must_be_above_zero(self, width_px: float) -> None:
+        """A width that is not a finite number above zero, or is a bool, raises `ValueError`."""
+        with pytest.raises(ValueError, match="width"):
+            Style.default().with_route_ink(width_px=width_px)
+
+    def test_equal_fed_values_give_equal_digests(self) -> None:
+        """A whole-number width equals its float, and a colour's case does not move `digest()`."""
+        style = Style.default()
+        assert (
+            style.with_route_ink(width_px=5).digest() == style.with_route_ink(width_px=5.0).digest()
+        )
+        assert (
+            style.with_route_ink(colour="#C22050").digest()
+            == style.with_route_ink(colour="#c22050").digest()
+            == DIGEST
+        )
