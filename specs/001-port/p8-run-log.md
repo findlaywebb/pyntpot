@@ -58,3 +58,6 @@ activity" and identified upstream only.
   tone differ; geometry matches). On the gaps: G1 "Explain more"; G2 "I think we just
   need a new promotion layer that it quickest to do now"; G3 "again - something to
   promote now".
+- Maintainer on the comparison crops: "For the wash differences - this seems to be due to
+  the random seeding. Stylistically they are the same". Matches the bisection: shared
+  generators amplify the sub-pixel geometry moves (`shared-generators`, deferred).
