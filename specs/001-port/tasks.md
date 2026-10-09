@@ -164,7 +164,7 @@ Order: after P10 part 1, P11 and P10.R. P8.P widens pyntpot's public API on its 
 - [x] P8.P3 Version 0.0.2, the PR held for the maintainer's merge, the `v0.0.2` tag, `main` merged into `p10-fixes` (sequential)
 - [x] P8.1 Python 3.13 and the pyntpot 0.0.2 dependency (sequential, after the tag)
 - [x] P8.2 The reference render through pyntpot: `0dfffcca...` pinned (sequential; a mismatch stops the run)
-- [ ] P8.3a The seam module, the offline test helper and the public-import test (upstream group 1)
+- [x] P8.3a The seam module, the offline test helper and the public-import test (upstream group 1)
 - [x] P8.3b The page's SVG text helpers leave the lettering module (upstream group 1)
 - [ ] P8.4 The command line on pyntpot, and the cache migration (after P8.3a)
 - [ ] P8.5a The route chart's vector washes on pyntpot's vector layers (after P8.3a and P8.3b)

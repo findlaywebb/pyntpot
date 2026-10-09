@@ -190,3 +190,11 @@ activity" and identified upstream only.
   `data/README.md`; +143/-89). G-up on the rebased commit 370 passed 9 skipped, ruff
   clean, `--help` 0; plan's grep and the em-dash grep on added lines empty. Note:
   `analysis/README.md` keeps 28 em-dashes in untouched old lines.
+- P8.3a landed upstream (implementer at `616c5d5`; red: "ImportError: cannot import name
+  'routemap' from 'analysis.report'"). Rebased onto `0d810df` with one conflict,
+  `analysis/report/__init__.py`, resolved by a fresh agent as the union (routemap, then
+  svgtext) as `5fd1a2c`. G-up on it: 385 passed 9 skipped (15 new), ruff clean, four new
+  files format-clean, `--help` 0. No gap: every pyntpot import is a public name.
+  Deviations: about 910 new lines against about 560 planned (docstrings, not trimmed);
+  `page_track` falls back to the streams on an unreadable GPX, with a warning.
+- Group 2 started: P8.4 and P8.5a in parallel worktrees from `5fd1a2c`.
