@@ -121,3 +121,11 @@ part 1, merged).
   `getattr(node, "lineno", "?")`); about 340 changed lines, not 170, nearly all the
   prescribed ADR. No rebase was needed (the head had not moved), so the gates ran on the
   landed tree.
+- P11.4 landed (implementer at `5e5848f`; the head had not moved, so no rebase). Baseline
+  `{"commit": "5e5848f337a730308cca70e78946850411c99073", "dirty": false}`. Red step: the
+  `MAPS_PUBLIC` pin failed with "Extra items in the right set: 'OverpassFeatures' 'Cache'
+  'OpenTopoData'" before the `src` change. `maps/__init__.py` exports the three names;
+  GLOSSARY gains `fetch cache` and `provider`. Gates: P11's G-here chain exit 0 (314 files
+  formatted, ruff clean; the pytest counts were not captured); `test_import_order.py`
+  (cold import) passes; G-self 18 passed, byte-identical (474 s). No coverage gate: the
+  slice adds only imports. No deviations.

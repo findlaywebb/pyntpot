@@ -41,8 +41,11 @@ LETTERS_PUBLIC: tuple[str, ...] = ("Hand",)
 MAPS_PUBLIC: tuple[str, ...] = (
     "Annotations",
     "Basemap",
+    "Cache",
     "FetchError",
     "Lettering",
+    "OpenTopoData",
+    "OverpassFeatures",
     "Plates",
     "Style",
     "Track",

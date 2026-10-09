@@ -39,3 +39,5 @@ add the term here when you coin one.
 | backdrop | What every name on the card is priced against: the card, the route in display pixels, the dark grid and the named road centrelines. `maps.lettering.placement_costs.Backdrop`. |
 | terms | What one name is priced against where it is tried: the card, the dark grid, the boxes already on the map, the roads it is charged for crossing and the weighted route. `maps.lettering.placement_costs.Terms`. |
 | reference | One entry of docs/explanation/references.md: a technique, its key, its canonical source and design input, and where the code implements it. |
+| fetch cache | The directory a fetch keeps its provider payloads in, keyed on the track's box, the margin and the providers' ids, which also holds each key's plates and lettering. `maps.cache.Cache`. |
+| provider | A source of map data behind the `Features` or `Elevation` protocol; the shipped ones are `maps.providers.overpass.OverpassFeatures` and `maps.providers.opentopodata.OpenTopoData`. |
