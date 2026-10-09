@@ -90,3 +90,9 @@ activity" and identified upstream only.
   `upstream-card-route-ink-fed`, `maps-style-route-inks-name-sports` is now
   `maps-style-route-inks-one-read`. Place-name check: the one landmark named in P8 is
   already in pyntpot's Lynmouth fixture, so kept. Plan-reviewer round 3 started.
+- Plan-reviewer round 3: PASS at `3431466`. Round-2 findings fixed; must-holds checked
+  (hash pins, promotion, generic wording, no personal detail with the architecture tests
+  green at HEAD, disjoint owners, hand-off); about 35 fresh facts correct; the promotion's
+  new names probed in a scratch worktree (ty, ruff, lint-imports, architecture tests
+  green, `MAPS_PUBLIC` red as the intended red step). Five non-blocking items being folded
+  in before P8.P1.
