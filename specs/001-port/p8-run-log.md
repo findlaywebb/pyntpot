@@ -211,3 +211,10 @@ activity" and identified upstream only.
   the CLI reaches `Track` through `routemap` (so `routemap` stays the one pyntpot
   importer); migration paths come from `Cache.*_path`.
 - P8.5b started from `452ec86`.
+- P8.5b landed upstream (`2e4c89bfae928431ae5886ab45915738aadca6ae`, short `2e4c89b`), no rebase. Red: "ImportError: cannot import
+  name 'PageMap'". G-up 320 passed 8 skipped, ruff clean, `test_route_chart.py`
+  format-clean, `--help` 0; G-ref "1 passed in 53.17s". No gap. Deviations: 16 tests
+  moved from `test_paint.py` (the plan said 15; its line list holds 16); four kept
+  `test_paint.py` tests use a test-local copy of the old card class until P8.7 deletes
+  the file; the `journal_map` fallback note kept for unreadable plate files.
+- P8.7 (delete the old engine) started from it.
