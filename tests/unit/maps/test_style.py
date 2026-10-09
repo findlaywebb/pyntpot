@@ -194,10 +194,10 @@ class TestDigests:
 
 
 #: Fed colours that are not a `#` and six hexadecimal digits.
-BAD_COLOURS: tuple[str, ...] = ("#abc", "c22050", "#zz0000")
+BAD_COLOURS: tuple[str, ...] = ("#abc", "c22050", "#zz0000", "#c22050x")
 
-#: Fed widths that are not above zero.
-BAD_WIDTHS: tuple[float, ...] = (0.0, -1.0)
+#: Fed widths that are not a finite number above zero.
+BAD_WIDTHS: tuple[float, ...] = (0.0, -1.0, float("inf"), float("nan"), True)
 
 
 class TestFedRouteInk:
@@ -223,14 +223,30 @@ class TestFedRouteInk:
         assert fed.digest() != DIGEST
         assert (fed.base_digest(), fed.lettering_digest()) == (BASE_DIGEST, LETTERING_DIGEST)
 
-    @pytest.mark.parametrize("colour", BAD_COLOURS, ids=["three-digits", "no-hash", "not-hex"])
+    @pytest.mark.parametrize(
+        "colour", BAD_COLOURS, ids=["three-digits", "no-hash", "not-hex", "trailing"]
+    )
     def test_a_fed_colour_must_be_six_hex_digits(self, colour: str) -> None:
         """A colour that is not a `#` and six hexadecimal digits raises `ValueError`."""
         with pytest.raises(ValueError, match="colour"):
             Style.default().with_route_ink(colour=colour)
 
-    @pytest.mark.parametrize("width_px", BAD_WIDTHS, ids=["zero", "negative"])
+    @pytest.mark.parametrize(
+        "width_px", BAD_WIDTHS, ids=["zero", "negative", "infinite", "not-a-number", "bool"]
+    )
     def test_a_fed_width_must_be_above_zero(self, width_px: float) -> None:
-        """A width that is not above zero raises `ValueError`."""
+        """A width that is not a finite number above zero, or is a bool, raises `ValueError`."""
         with pytest.raises(ValueError, match="width"):
             Style.default().with_route_ink(width_px=width_px)
+
+    def test_equal_fed_values_give_equal_digests(self) -> None:
+        """A whole-number width equals its float, and a colour's case does not move `digest()`."""
+        style = Style.default()
+        assert (
+            style.with_route_ink(width_px=5).digest() == style.with_route_ink(width_px=5.0).digest()
+        )
+        assert (
+            style.with_route_ink(colour="#C22050").digest()
+            == style.with_route_ink(colour="#c22050").digest()
+            == DIGEST
+        )

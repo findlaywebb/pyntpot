@@ -18,6 +18,10 @@ FED_COLOUR = "#2050c2"
 #: A width fed in place of the theme's route width, in display pixels.
 FED_WIDTH_PX = 4.8
 
+#: A thin and a wide fed width, in display pixels, both drawn in the fed colour.
+THIN_WIDTH_PX = 2.0
+WIDE_WIDTH_PX = 12.0
+
 #: No labels, no spans and no label plate, so the route is the top mark on the card.
 UNLETTERED = Lettering((), (), None)
 
@@ -50,6 +54,12 @@ def _middle_route_pixel(card: Image.Image, plates: Plates) -> tuple[int, int, in
     rgb = np.asarray(card.convert("RGB"))
     red, green, blue = (int(channel) for channel in rgb[round(y * k), round(x * k)])
     return red, green, blue
+
+
+def _fed_coloured_pixels(card: Image.Image) -> int:
+    """How many of the card's pixels are bluer than red by a clear margin, as the fed colour is."""
+    rgb = np.asarray(card.convert("RGB")).astype(int)
+    return int(np.count_nonzero(rgb[..., 2] - rgb[..., 0] > 64))
 
 
 @pytest.mark.golden
@@ -94,3 +104,14 @@ class TestFedRouteInk:
         }
         assert moved
         assert set(moved) <= doubled
+
+    def test_a_fed_width_draws_a_wider_line_for_a_non_pen_ink(self, painted: Painted) -> None:
+        """For an ink that is not the pen, a wider fed width covers more of the card in its colour."""
+        assert painted.style.route_ink().style != "pen"
+        thin_style = painted.style.with_route_ink(colour=FED_COLOUR, width_px=THIN_WIDTH_PX)
+        wide_style = painted.style.with_route_ink(colour=FED_COLOUR, width_px=WIDE_WIDTH_PX)
+        thin = compose(painted.plates, UNLETTERED, painted.basemap, thin_style, attribution=False)
+        wide = compose(painted.plates, UNLETTERED, painted.basemap, wide_style, attribution=False)
+        thin_count = _fed_coloured_pixels(thin)
+        assert thin_count > 0
+        assert _fed_coloured_pixels(wide) > 2 * thin_count

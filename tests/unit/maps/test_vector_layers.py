@@ -4,6 +4,7 @@ import dataclasses
 import shutil
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -22,6 +23,12 @@ FIXTURE_RIVER_WIDTH_PX = 8.0
 
 #: A landmark candidate the fixture box offers, named by its own payload.
 PICKED = "Lyndale Bridge"
+
+#: Supplied places on the track's first points, as a caller supplies them.
+PLACES: tuple[dict[str, object], ...] = (
+    {"name": "Watersmeet", "lat": 51.230678, "lng": -3.828447, "symbol": "house", "note": "tea"},
+    {"name": "Countisbury", "lat": 51.230578, "lng": -3.828998, "kind": "settlement"},
+)
 
 
 @pytest.fixture(scope="module")
@@ -107,6 +114,7 @@ def test_picked_landmarks_replace_the_chosen_ones(track: Track) -> None:
     layers = vector_layers(track, Cache(FIXTURE_DIR), KEY, picked)
     assert layers is not None
     assert [landmark["n"] for landmark in layers.landmarks] == [PICKED]
+    assert layers.landmarks[0]["picked"] is True
 
 
 def test_an_origin_places_the_track_s_first_point(track: Track) -> None:
@@ -140,3 +148,38 @@ def test_reading_writes_nothing(track: Track, tmp_path: Path) -> None:
     assert vector_layers(track, Cache(root), KEY, Style.default()) is not None
     after = sorted((p.relative_to(root), p.stat().st_mtime_ns) for p in root.rglob("*"))
     assert after == before
+
+
+def test_supplied_places_inside_the_box_are_carried(track: Track) -> None:
+    """A supplied place inside the box is carried with `name` as `n` and `symbol` as `sym`."""
+    layers = vector_layers(track, Cache(FIXTURE_DIR), KEY, Style.default(), PLACES)
+    assert layers is not None
+    marks = [
+        (place["n"], place["sym"], place["kind"], place["always"], place["note"])
+        for place in layers.places
+    ]
+    assert marks == [
+        ("Watersmeet", "house", "marker", False, "tea"),
+        ("Countisbury", "", "settlement", False, ""),
+    ]
+    assert all(isinstance(place["x"], float) for place in layers.places)
+
+
+def test_landmark_and_place_entries_are_read_only(track: Track) -> None:
+    """Changing a landmark or place entry, or a landmark's tags, raises `TypeError`."""
+    layers = vector_layers(track, Cache(FIXTURE_DIR), KEY, Style.default(), PLACES)
+    assert layers is not None
+    entries: tuple[Any, ...] = (layers.places[0], layers.landmarks[0], layers.landmarks[0]["tags"])
+    for entry in entries:
+        with pytest.raises(TypeError):
+            entry["n"] = "Lynton"
+
+
+def test_an_elevation_only_cache_gives_relief_and_no_features(track: Track, tmp_path: Path) -> None:
+    """With only the elevation payload cached the value is the relief, with no roads or rivers."""
+    shutil.copy(Cache(FIXTURE_DIR).elevation_path(KEY), tmp_path)
+    layers = vector_layers(track, Cache(tmp_path), KEY, Style.default())
+    assert layers is not None
+    assert len(layers.sources) == 1
+    assert (layers.roads, layers.rivers, layers.coastline) == ((), (), ())
+    assert layers.sea.path

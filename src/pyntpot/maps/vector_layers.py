@@ -114,6 +114,12 @@ class HillshadeImage:
 class VectorLayers:
     """The basemap's layers for one track, as SVG path data in card metres.
 
+    The value is read-only: the dataclass is frozen and each landmark and place entry,
+    with any mapping nested in it, is a read-only view, so changing one raises
+    `TypeError`. Those views cannot be pickled, deep-copied or hashed, so a value
+    carrying any landmark or place cannot be either; a caller that needs that copies
+    the entries out with `dict`.
+
     Attributes:
         key: The fetch cache's key the layers were read under.
         clip: The box drawn, west, south, east, north, in card metres.

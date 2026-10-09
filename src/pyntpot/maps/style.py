@@ -26,6 +26,7 @@ ink moves `digest` and neither of the other two.
 import dataclasses
 import hashlib
 import json
+import math
 import re
 import tomllib
 import typing
@@ -155,17 +156,24 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         return self.route_inks.ride
 
     def with_route_ink(self, *, colour: str | None = None, width_px: float | None = None) -> Self:
-        """A copy of the style whose route is drawn in this colour and at this width.
+        """A copy of the style whose route is inked in this colour and spaced for this width.
 
         Only the colour and the width are fed: the route's treatment and its effect
-        keys stay the theme's. The width also sets how far apart `paint` draws the
-        strands of a doubled-back route. Only `digest()` moves, never
+        keys stay the theme's. The width sets how far apart `paint` draws the strands
+        of a doubled-back route. The compose step draws the route line at the fed
+        width, except when the treatment is `"pen"` and a pen plate was painted: then
+        it tints that plate, whose stroke width is the `route` group's
+        `route_pen_width_px`, so the fed width only respaces the strands. Only
+        `digest()` moves, never
         `base_digest()` or `lettering_digest()`, so no plate is repainted.
 
         Args:
             colour: The route's colour as `#rrggbb`, or `None` to keep the theme's.
+                It is stored in lower case, so colours that differ only in case give
+                equal styles and equal digests.
             width_px: The route's width in display pixels, or `None` to keep the
-                theme's.
+                theme's. It is stored as a float, so `5` and `5.0` give equal styles
+                and equal digests.
 
         Returns:
             A copy whose `route_ink()` has the fed colour and width; with neither
@@ -173,17 +181,19 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
 
         Raises:
             ValueError: When `colour` is not a `#` and six hexadecimal digits, or
-                `width_px` is not above zero.
+                `width_px` is a bool, or is not a finite number above zero.
         """
         if colour is not None and _HEX_COLOUR.fullmatch(colour) is None:
             raise ValueError(f"route colour {colour!r} is not a # and six hexadecimal digits")
-        if width_px is not None and not width_px > 0:
-            raise ValueError(f"route width {width_px!r} px is not above zero")
+        if width_px is not None and (
+            isinstance(width_px, bool) or not math.isfinite(width_px) or width_px <= 0
+        ):
+            raise ValueError(f"route width {width_px!r} px is not a finite number above zero")
         ink = self.route_ink()
         fed = dataclasses.replace(
             ink,
-            colour=ink.colour if colour is None else colour,
-            px=ink.px if width_px is None else width_px,
+            colour=ink.colour if colour is None else colour.lower(),
+            px=ink.px if width_px is None else float(width_px),
         )
         inks = dataclasses.replace(self.route_inks, ride=fed)
         return self.model_copy(update={"route_inks": inks})
