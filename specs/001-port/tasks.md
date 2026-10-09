@@ -155,11 +155,11 @@ Order: after P10 part 2 (maintainer, 2026-10-07). P7.1 to P7.3, then P7.4 tags 0
 
 Order: after P10 part 1, P11 and P10.R. P8.P widens pyntpot's public API on its own branch `p8-promote` (one PR to `main`, held for the maintainer), then `v0.0.2` is tagged and `main` is merged into `p10-fixes`; the upstream consumes `v0.0.2` on its branch `p8-pyntpot-migration`, one PR held for the maintainer. Each slice runs in its own detached worktree (plan.md, P8, "Order and parallelism"); ticks land in the run-log commit that records each landing. At the hand-off the orchestrating session records "what upstream reads" in `p10-triage.md`; P10 part 2 follows.
 
-- [ ] P8.0 Fatten P8 into slices; plan-reviewer pass (revised after round 1 and the P8.Q answers)
+- [ ] P8.0 Fatten P8 into slices; plan-reviewer pass (revised after rounds 1 and 2 and the P8.Q answers)
 - [x] P8.Q Maintainer's answers, recorded in `p8-run-log.md`: accept ADR 0006 and re-pin to pyntpot's render; promote the three gaps in pyntpot now, generic; pin `v0.0.2`
 - [ ] P8.P1 ADR 0027: the candidate export, the vector layers and a fed route ink (sequential)
 - [ ] P8.P2a Promote the candidate export as `candidate_export` (pyntpot parallel group)
-- [ ] P8.P2b Promote the vector layers as `vector_layers` and `VectorLayers` (pyntpot parallel group)
+- [ ] P8.P2b Promote the vector layers as `vector_layers(track, cache, key, style, places=(), *, origin=None)` and `VectorLayers` (pyntpot parallel group)
 - [ ] P8.P2c Feed the route ink: `Style.with_route_ink` (pyntpot parallel group)
 - [ ] P8.P3 Version 0.0.2, the PR held for the maintainer's merge, the `v0.0.2` tag, `main` merged into `p10-fixes` (sequential)
 - [ ] P8.1 Python 3.13 and the pyntpot 0.0.2 dependency (sequential, after the tag)
@@ -171,7 +171,7 @@ Order: after P10 part 1, P11 and P10.R. P8.P widens pyntpot's public API on its 
 - [ ] P8.5b The page's painted map on Basemap, Plates and Lettering, loaded once (after P8.5a)
 - [ ] P8.6 Documents (upstream group 1)
 - [ ] P8.7 Delete the old engine and its tests (after P8.2 green, P8.4, P8.5b and P8.6)
-- [ ] P8.H Hand-off: "what upstream reads" recorded in `p10-triage.md`; the two rows re-triaged
+- [ ] P8.H Hand-off on the commit after the pre-merge `origin/main` merge: "what upstream reads" recorded in `p10-triage.md`; the two rows re-triaged
 
 ## P9. Post-port cleanup
 
