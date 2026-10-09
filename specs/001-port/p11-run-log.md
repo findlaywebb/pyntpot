@@ -100,3 +100,13 @@ part 1, merged).
   data is not a token. Every family stays (pigment keys because callers subscript
   `PIGMENTS` and `TRANSPARENCY`). Deleting the `effect` tables or `Label.as_dict` and the
   `tunnel=no` fix need no ADR; renaming the `"map"` ink key does. Plan review 5 dispatched.
+- Plan review 5: PASS, 0 blockers, 0 majors, 3 minors (R5-m1 `RouteInk.effect` is kept by
+  P10.7 and Q8, not deleted; R5-m2 dict entries are tokens only through a field of a class
+  in some `__all__`; R5-m3 "to choose a behaviour" restored, so free values such as colours
+  are not tokens). All three applied by a fresh agent, and the rule text is now identical in
+  its three places. Reviews: five rounds (1 blocker, 6 majors and 11 minors; then 2 majors
+  and 5 minors; 1 and 3; 1 and 0; 0 and 3).
+- P11.0 landed: `Fatten P11 into slices` (plan.md +1403/-76, tasks.md, `p10-triage.md`'s
+  `letters-map-ink-key` row). Slices: P11.1 (sequential foundation); group 1: P11.2a,
+  P11.2b, P11.3 and P11.4 in parallel; group 2: P11.5a (after 2a and 2b), P11.5b (after 2a,
+  2b and 3), P11.5c (after 4).

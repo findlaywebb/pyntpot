@@ -5824,7 +5824,12 @@ a 0.1.x patch release, never by holding 0.1.0.
   (manual, documented in CONTRIBUTING; already done if Q14 chose PyPI for
   0.0.1). Confirm with the maintainer before the tag and the publish.
 - P7.2's tutorials, and ideally P7.1's quick start, depend on P11 (the
-  widened public API); see P11, "Order".
+  widened public API); see P11, "Order". P11 writes the eight rung
+  scripts under `examples/`; P7.2 writes the prose around them. P7.1's `examples/word.py`
+  follows their convention (P11, "The example scripts, decided": `main(out_dir)`
+  returning the file written, public names only) and adds its own test under
+  `tests/examples/`; `tests/architecture/test_examples.py` checks it without
+  a pin.
 
 ### P8. The upstream consumer migrates to the public API
 
@@ -6405,7 +6410,7 @@ in parallel.
 **P10 against P11.** P11 runs strictly between part 1 and P10.R, so no
 P10 slice runs beside a P11 slice and no row of the table below names P11;
 part 2 branches from a `main` that holds P11. No P10 slice renames or
-deletes a name P11's gap list promotes (evidence below). Two rules keep it
+deletes a name P11's gap list promotes (evidence below). Four rules keep it
 so:
 
 - P11.0 re-measures its list at its own starting commit, after part 1. If
@@ -6418,6 +6423,44 @@ so:
   until the maintainer answers ("Later issues"); it opens no second stop.
 - P10.10's fresh names for clashing underscore names are checked against
   the public names P11 added as well as against `GLOSSARY.md`.
+- A value, not only a name, can cross the public surface. P11 promotes
+  `Setting` and `Mark`, so the ink key `"map"` they default to is public
+  behaviour from P11 on (ADR 0026), and the deferred row
+  `letters-map-ink-key`, which would rename it, is a change to a public
+  name's behaviour: when part 2 or P8's hand-off takes it up, it carries
+  its own ADR and stops for the maintainer, like any rename of a name P11
+  made public. ADR 0026's rule makes every other such token public
+  behaviour on the same terms; its words, quoted exactly: "a token is a
+  string a caller passes to choose one of the behaviours a public name
+  offers (a free value such as a colour, a text or a contact string is not
+  one), as an argument of a public name or as a key or a value inside a dict
+  that is such an argument or a field of a class named in some `__all__`, or
+  an enumerated string that a public name or a public field returns; every
+  token is part of the public surface. A dict whose keys mirror a class's
+  fields (a theme TOML table, the input of `Style.model_validate`) is read
+  as that class's fields, so a string inside it is a token only where this
+  rule reaches it through a field of a class named in some `__all__`." A
+  field's name, theme TOML keys that
+  mirror fields included, follows the member rule below, and a string a
+  provider fetches (OSM tags) is data, not a token, so the
+  `maps-osm-elements-tunnel-no` fix (P10.7) needs no ADR. Among them: the other ink keys,
+  `Mark.role`'s roles, `FaceStyle.label_route`'s routes, `Setting.align`'s
+  edges, the brush sheet ids, the override keys and the parameter keys
+  inside them, the `aux` keys, the class keys of `BrushStyle`'s and
+  `PaperStyle`'s dict fields, the pigment keys and `OpenTopoData`'s
+  dataset. No P10 row renames any of them.
+- Members follow ADR 0026's scope: the members of a class named in some
+  `__all__` are public, and a class reached only through an attribute of a
+  public object and named in no `__all__` is not a public name, so its
+  members may change without an ADR. The two deferred rows that delete
+  members therefore need no ADR and no stop:
+  `maps-style-groups-route-constants-have-no-reader` (`RouteInk.casing`,
+  while P10.7 and Q8 keep the `effect` field; `RouteInk` is reached through `Style.route_inks`
+  and is in no `__all__`; the module constants it deletes are in no
+  `__all__` either) and `maps-lettering-label-as-dict-unused`
+  (`Label.as_dict`; `Label` is reached through `Lettering.labels`, the
+  attribute ADR 0007 fixes, and is in no `__all__`). P8's "Upstream reads"
+  still decides them, as the rows say.
 
 *(Evidence.)* The names P10 renames or deletes: `ink.noise.edt` (renamed
 `chamfer_distance`), `ink.polyline.point_to_segment`, `letters.trace._radii`,
@@ -6434,7 +6477,11 @@ with `_`), plus `fetch`, `paint`, `letter` and `compose`, already public.
 Compared by defining module and name, the two sets share no entry, and no
 P10 slice renames a module. P10 touches some of P11's modules
 (`letters/nib.py` in P10.4b and P10.9, `draw_plate`'s `NibGroups` call in
-P10.5a), but changes none of those names.
+P10.5a), but changes none of those names. P11.0 re-measured the list
+at `ff752f6` (P11, "The gap, re-measured"): it adds `NibStyle`, `paper_plate` and the new helper
+`save_image`, drops `to_img` and `save_webp`, and renames `Layer` to
+`PigmentLayer` and `plate` to `nib_plate`; the comparison still finds no
+shared entry.
 
 The shared files that force a sequence (every row in landing order):
 
@@ -7716,87 +7763,1305 @@ Asked for by the maintainer on 2026-10-07: P7's tutorials start from the
 painting primitives (paper, wash, brush stroke, nib line, pigment compositing,
 lettering, composition) and show what the engine does beyond maps; a route map
 is one application among many. Today no minimal primitive sequence can be
-written with public names alone. **This is a sketch.** P11.0 fattens it into
-slices in the shape of P5.0 and P6.0, and a plan-reviewer agent reviews it
-before P11.1 starts.
+written with public names alone. Fattened at P11.0 into the slices below, in
+the shape of P5.0, P6.0 and P10.0; a plan-reviewer agent reviews it before
+P11.1 starts. Every measurement below was taken at `ff752f6` (the `main`
+commit that merged P10 part 1, #9) unless it names another commit. Paragraphs
+that open with *(Evidence.)* record how a fact was proved; they are for the
+reviewer, and no slice brief carries them.
 
-- **The gap**, measured at `91ff457`; each name below is private under ADR
-  0007 and is needed by the minimal sequence in the test named:
-  `ink.brush.brush_from_id` and `ink.brush_style.BrushStyle` to build a usable
-  `Brush` (`tests/unit/ink/test_stamp.py`); `ink.pad.ink_density` to turn
-  `stamp`'s accumulator into density; `ink.style.PaperStyle`, which
-  `composite` requires, `ink.pigment.Layer` (its layer type),
-  `ink.pigment.PIGMENTS` and `TRANSPARENCY`, and `ink.sheet.rgb`
-  (`test_wash.py`, `test_pigment.py`); `letters.setting.Setting` (and `Mark`),
+- **The gap**, first measured at `91ff457` and re-measured at `ff752f6`
+  ("The gap, re-measured" below, which supersedes this bullet's list): each
+  name is private under ADR 0007 and is needed by the minimal sequence of a
+  rung. The sketch's list was: `ink.brush.brush_from_id` and
+  `ink.brush_style.BrushStyle` to build a usable `Brush`; `ink.pad.ink_density`
+  to turn `stamp`'s accumulator into density; `ink.style.PaperStyle`, which
+  `composite` requires, `ink.pigment.Layer`, `ink.pigment.PIGMENTS` and
+  `TRANSPARENCY`, and `ink.sheet.rgb`; `letters.setting.Setting` and `Mark`,
   `letters.style.FaceStyle`, `HandStyle` and `NibGroups`, and
-  `letters.nib.plate` with `NibSurface` to render lettering
-  (`tests/unit/letters/test_hand.py`, `test_nib.py`); `ink.io.to_img` and
-  `save_webp` to write a file; and `maps.cache.Cache` with the providers
-  `maps.providers.overpass.OverpassFeatures` and
-  `maps.providers.opentopodata.OpenTopoData` to call `fetch`
-  (`tests/support/golden.py` uses `Cache` and the fixture providers). P11.0
-  re-measures the list at its own starting commit.
+  `letters.nib.plate` with `NibSurface`; `ink.io.to_img` and `save_webp`; and
+  `maps.cache.Cache` with `maps.providers.overpass.OverpassFeatures` and
+  `maps.providers.opentopodata.OpenTopoData`. The re-measure adds
+  `letters.style.NibStyle` (which `NibGroups` needs) and
+  `maps.painter.paper.paper_plate` (the paper rung), and replaces `to_img`
+  and `save_webp` by one helper, `save_image`.
 - **The decision is widening** (maintainer, 2026-10-07): the existing
   functions and types become public; no parallel convenience layer. A thin
-  helper is added only where the raw sequence is unreasonable for a tutorial,
-  for example writing a painted array to an image file (`to_img` needs a
-  generator, `save_webp` an image). A name that becomes public says what it
-  is: a terse private name (`rgb`, `plate`, `to_img`) may be renamed as it is
-  promoted, every importer repointed in the same commit, no shims. No name in
+  helper is added only where the raw sequence is unreasonable for a tutorial:
+  one, `pyntpot.ink.save_image` (P11.2b). A name that becomes public says what
+  it is: a terse private name may be renamed as it is promoted, every importer
+  repointed in the same commit, no shims. P11.0 renames two (`Layer` to
+  `PigmentLayer`, `plate` to `nib_plate`) and moves one (`paper_plate`, from
+  `maps.painter.paper` to a new `ink.paper`, under its own name, its
+  parameter `plate` renamed `canvas` because it names a `Canvas`). No name in
   ADR 0007's list is renamed or removed: the widening is additive.
 - **Where the names live.** The public modules stay `pyntpot` and the layer
   packages `pyntpot.ink`, `pyntpot.letters` and `pyntpot.maps`, each with an
-  `__all__`; P11.0 decides which promoted names are also top-level. The
-  boundary is unchanged: `maps -> letters -> ink`, `ink` and `letters` import
-  neither `httpx` nor `pydantic`, and import-linter and `tests/architecture/`
-  stay as they are.
-- **ADR.** A new ADR amends ADR 0007 (0007 stays, append-only, as the record
-  of the first surface; its Consequences already require a new ADR for a new
-  public name). Its number follows the rule of "P3 and P4: how to run a
-  slice": P11 takes **0026**, the lowest number above 0023 (0013 to 0021 are
-  reserved for P7.3, 0022 and 0023 for P9) that `ls docs/decisions` does not
-  show and P10 has not fixed (P10 fixes 0024 for P10.5b and 0025 for
-  P10.11). The ADR numbers table already holds its row (0026,
-  `widen-the-public-api`, P11.1). If 0026 is taken when the slice writes
-  it, stop and report.
-- **Contract.** `tests/unit/test_public_api.py` pins the widened top-level
-  `__all__`, and pins each layer package's `__all__` as well. Every promoted
-  name carries the docstring contract (purpose, key types, what it does not
-  do, invariants), and the package docstrings of `pyntpot`, `ink`, `letters`
-  and `maps` list the new names. Each new concept gets its one canonical term
-  in `GLOSSARY.md` (for example paper style, pigment, setting, nib plate),
-  checked against existing entries first. Painting is unchanged, so parity
-  stays byte-exact under G-here and G-self.
+  `__all__`. **No promoted name is also top-level**: `pyntpot.__all__` stays
+  exactly ADR 0007's list (the map types and stages, and the engine's
+  `Sheet`, `Brush`, `Canvas`, `stamp`, `wash`, `composite` and `Hand`), and a
+  tutorial imports the rest from its layer package (`from pyntpot.ink import
+  brush_from_id`). Reasons: the top level stays the short façade the README's
+  quick start uses; names such as `TRANSPARENCY`, `Mark` or `Cache` read
+  clearly only beside their package; and ADR 0007's Boundary already reaches
+  the providers and the cache through `pyntpot.maps`, never the top level.
+  The boundary is unchanged: `maps -> letters -> ink`, `ink` and `letters`
+  import neither `httpx` nor `pydantic`, and import-linter and the existing
+  `tests/architecture/` checks stay as they are (P11 adds one architecture
+  test and widens one scanned-path tuple; it changes no contract).
+- **ADR.** `docs/decisions/0026-widen-the-public-api.md` amends ADR 0007
+  (0007 stays, append-only, as the record of the first surface; its
+  Consequences already require a new ADR for a new public name). Its number
+  follows the rule of "P3 and P4: how to run a slice": P11 takes **0026**,
+  the lowest number above 0023 (0013 to 0021 are reserved for P7.3, 0022 and
+  0023 for P9) that `ls docs/decisions` does not show and P10 has not fixed
+  (P10 fixes 0024 for P10.5b and 0025 for P10.11). The ADR numbers table
+  already holds its row (0026, `widen-the-public-api`, P11.1). At `ff752f6`,
+  `ls docs/decisions` shows 0001 to 0012 and `README.md`: 0026 is free. If it
+  is taken when P11.1 writes it, stop and report.
+- **Contract.** `tests/unit/test_public_api.py` keeps its top-level pin
+  (unchanged, since no promoted name is top-level) and pins each layer
+  package's `__all__` as well (P11.1 adds the pins at today's contents; each
+  promotion slice grows its own package's tuple). Every promoted name carries
+  the docstring contract (purpose, key types, what it does not do,
+  invariants), and the package docstrings of `pyntpot`, `ink`, `letters` and
+  `maps` say what is public. Each new concept gets its one canonical term in
+  `GLOSSARY.md`, checked against existing entries first (the rows are fixed
+  per slice below). Painting is unchanged, so parity stays byte-exact under
+  G-here and G-self in every slice that touches `src/`.
 - **Acceptance.** Each P7 tutorial rung can be written with public names
   only: paper, wash, brush stroke, nib line, pigment compositing, lettering,
   composition (writing the finished image to a file), then a route map with
-  `fetch`, `paint`, `letter` and `compose`. A test proves it: the tutorial
-  sequences live as scripts (under `examples/`, which P7.1's `word.py` joins),
-  an architecture test parses each and fails on any import that is not a name
-  in a public module's `__all__`, and a test runs each offline against the
-  fixture. P11.0 decides whether the scripts are written in P11 or are
-  stubs P7.2 fills.
+  `fetch`, `paint`, `letter` and `compose`. P11 writes the eight rung scripts
+  itself under `examples/` (not stubs: a stub would make the run test prove
+  nothing); P7.2 writes the tutorial prose around them, and P7.1 adds
+  `examples/word.py` beside them under the same convention. An architecture
+  test (`tests/architecture/test_examples.py`) parses every `examples/*.py`
+  and fails on any `pyntpot` import that is not a name in a public module's
+  `__all__`, and tests under `tests/examples/` run each script offline
+  against the Lynmouth fixture.
 - **Order.** The port's order is P10.0 to P10.2, P10 part 1, P11, P10.R
   (tag 0.0.1), P8, P10 part 2, P7, P9 (P10, "Order and parallelism"). P11
   starts only after P10 part 1 has landed on `main` (the `p10-triage` PR
-  merged), not merely after P10.1: its triage table then shows which
-  private names P10 renames or deletes, and no P11 slice holds a file a
-  part-1 slice holds (`GLOSSARY.md`, `letters/nib.py`, this plan). It lands
+  merged): it has, as `ff752f6` (#9), so P11.0 measures there. No P11 slice
+  holds a file a part-1 slice holds, because part 1 is merged. P11 lands
   before P7.1, so the README's quick start and `examples/word.py` use the
   widened names, and so before P7.2. P10.R tags 0.0.1 on its own branch
   after P11 merges, and P8 consumes that tag, so the upstream migration is
-  written against the surface the release documents. P10 renames or
-  deletes no name this list promotes (P10, "P10 against P11"). P11.0
-  re-measures its list at its own starting commit; an underscore name it
-  adds that P10.10 would rename is promoted under the name P10.10 would
-  give it (the underscore dropped, or the clash name chosen by the P10.10
-  rule), and that P10.10 slice drops it; a name it adds that a part-2 slice
-  deletes is left out of the list and filed as a later `decide` row. A part-2
-  slice that would rename or delete a name P11 has made public needs its
-  own ADR and stops for the maintainer. P11 moves no pixel, so neither P8's
-  hash nor P10's golden group depends on it. P9 runs after P7.4 and P8, so
-  it follows P11; P9.1 and P9.2 own files under `tests/architecture/`, which
-  P11's import test also touches.
+  written against the surface the release documents. P10 renames or deletes
+  no name this list promotes ("The gap, re-measured", against the P10 list).
+  A part-2 slice that would rename or delete a name P11 has made public needs
+  its own ADR and stops for the maintainer. P11 moves no pixel, so neither
+  P8's hash nor P10's golden group depends on it. P9 runs after P7.4 and P8,
+  so it follows P11; P9.1 and P9.2 own files under `tests/architecture/`,
+  which P11.1 also touches (`test_examples.py`, new, and `_text_scan.py`'s
+  `_SCANNED` tuple), so P9's briefs read those files as P11 left them.
+
+**The gap, re-measured** (`ff752f6`). For each rung, the minimal call
+sequence, written from the tests the sketch names, and every name it needs
+that is in no `__all__` today (defining module in brackets). Names already
+public are in plain text after the arrow.
+
+| Rung | Minimal sequence (from) | Private names it needs |
+| --- | --- | --- |
+| paper | `Sheet(h, w, gran_px, seed)`, `Canvas(0, 0, w, h, w, h)`, `paper_plate(sheet, canvas, PaperStyle(), w)`, then write the array (`tests/unit/maps/painter/test_paper.py`) | `paper_plate` (`maps.painter.paper`), `PaperStyle` (`ink.style`), and a writer: `to_img`, `save_webp` (`ink.io`) |
+| wash | a coverage mask, `wash(cover, sheet, base, pool)`, then `composite([(density, rgb(PIGMENTS[key]))], paper, PaperStyle())` (`tests/unit/ink/test_wash.py`, `test_pigment.py`) | `PIGMENTS`, `Layer` (`ink.pigment`), `rgb` (`ink.sheet`), `PaperStyle` |
+| brush stroke | `brush_from_id(id, width, scale, BrushStyle())`, `stamp(acc, line, brush, rng)`, `ink_density(acc, brush, sheet)`, then composite (`tests/unit/ink/test_stamp.py`) | `brush_from_id` (`ink.brush`), `BrushStyle` (`ink.brush_style`), `ink_density` (`ink.pad`) |
+| nib line | as the brush stroke, with a pen-row cell (`MAJ6-e`, row 6 is in `PEN_ROWS`) (`test_stamp.py::test_the_pen_sets_down_where_it_touches_and_nowhere_else`) | as the brush stroke |
+| pigment compositing | two washes as layers with `TRANSPARENCY[key]`, `composite` under `PaperStyle(km_glazing=False)` and `True` (`tests/unit/ink/test_pigment.py`) | `TRANSPARENCY`, `PIGMENTS`, `Layer`, `rgb`, `PaperStyle` |
+| lettering | `Hand(FaceStyle(), HandStyle())`, `hand.write(Setting(text, size, path=line), hand.generator(seed))`, `plate(marks, NibSurface(canvas, scale, dark, gran_px), NibGroups(NibStyle(), FaceStyle(), HandStyle(), BrushStyle(), PaperStyle()), path)` (`tests/unit/letters/test_hand.py`, `test_nib.py`) | `Setting`, `Mark` (`letters.setting`; `Mark` is what `write` returns and `plate` takes, named in a caller's annotations), `FaceStyle`, `HandStyle`, `NibStyle`, `NibGroups` (`letters.style`), `NibSurface`, `plate` (`letters.nib`) |
+| composition to file | the paper, the washes and a stroke composited, the lettering plate laid over with Pillow, one file written | the union of the rows above, and a writer |
+| route map | `Track.from_gpx`, `Cache(dir)`, `OverpassFeatures(contact)`, `OpenTopoData(contact)`, `fetch`, `paint`, `letter`, `compose`, `Image.save` (`tests/support/golden.py`) | `Cache` (`maps.cache`), `OverpassFeatures` (`maps.providers.overpass`), `OpenTopoData` (`maps.providers.opentopodata`) |
+
+Against P10 (rules of "P10 against P11"): none of these names starts with
+`_`, so none is among P10.10's underscore names, and none is in P10's rename
+or delete list (`ink.noise.edt`, already `chamfer_distance` at `ff752f6`;
+`ink.polyline.point_to_segment`, already deleted; `letters.trace._radii`,
+already deleted; `Label.as_dict`; `ROUTE_INK`, `ROUTE_EFFECT_OFF`,
+`ROUTE_SHADOW`, `CASING_COLOURS`; `RouteInk.casing`). So no name is promoted
+under a P10.10 name, no name is left out, and **no later `decide` row is
+filed**. No part-2 slice's owner list names a P11 rename site except P10.10b's
+"repointed imports in `letters/nib.py`, if any", which re-measures at
+`p10-fixes`'s base by P10's "Branch and PR" rule.
+
+One deferred row reaches past names: `letters-map-ink-key` (`p10-triage.md`,
+defer, part 2 after P8's hand-off) means to rename the ink key `"map"`, the
+default of `Setting.ink` and `Mark.ink` and the token `nib_plate` resolves to
+`NibStyle.label_ink`. Promoting `Setting` and `Mark` makes that key part of
+two public classes' behaviour, so the rename becomes a change to a public
+name and, by "P10 against P11", needs its own ADR and stops for the
+maintainer. P11 keeps both classes promoted (the lettering rung cannot be
+written without them) and changes no key: P11.0 updates the row's triage
+cell and "P10 against P11" to say so, ADR 0026 records it (P11.1), and no
+example script spells `"map"`: each takes the default ink, so a later
+rename changes no tutorial line.
+
+The ink key is one of several string tokens that cross the public surface
+with the promoted names. ADR 0026 (P11.1) states the rule that makes them
+public behaviour; its words, quoted exactly: "a token is a string a caller
+passes to choose one of the behaviours a public name offers (a free value
+such as a colour, a text or a contact string is not one), as an argument of
+a public name or as a key or a value inside a dict that is such an argument
+or a field of a class named in some `__all__`, or an enumerated string that
+a public name or a public field returns; every token is part of the public
+surface. A dict whose keys mirror a class's fields (a theme TOML table, the
+input of `Style.model_validate`) is read as that class's fields, so a string
+inside it is a token only where this rule reaches it through a field of a
+class named in some `__all__`." Field names (theme
+TOML keys that mirror fields included) follow the member rule instead, and
+provider data such as OSM tags is not a token. It names the families
+measured at `ff752f6` as examples; the rule governs the rest. No P10 row
+renames another. ADR 0026 also scopes the
+members: a class reached only through a public attribute and named in no
+`__all__` (`RouteInk` through `Style`, `Label` through `Lettering.labels`)
+is not public, so the deferred rows that delete `RouteInk.casing` and
+`Label.as_dict` need no ADR (P10.7 and Q8 keep the `effect` field) ("P10 against P11").
+
+*(Evidence.)* The tokens, at `ff752f6`: `nib.py:242` holds the four ink
+keys (`{"map", "route", "water", "in_water"}`), and `:264-270` resolves
+them, any other key falling back to `"map"` unless it is a `#rrggbb`;
+`style.py:32` is `label_route: str = "centreline"`, and `nib.py:119` and
+`hand.py:59` read `"outline"` against it. A scratch script,
+`uv run python -I scratchpad/n2probe/tokens.py` (imports `MARK_WEIGHT`,
+`Align`, `BRUSH_TREATMENTS`, `BRUSH_COLOURS`, `BrushStyle`, `PIGMENTS`,
+`TRANSPARENCY`), printed: roles 6 (`glyph`, `leader`, `span`, `tick`,
+`underline`, `pin`); align `('start', 'middle', 'end')`; brush ids 112
+(8 rows by 14 class and colour cells); overrides 6 (`coast`, `lane`,
+`major`, `medium`, `minor`, `track`); pigments 15, transparency 15, the
+same keys. A second scratch script,
+`uv run python -I scratchpad/n2probe/members.py` (regex over
+`ink/brush.py`'s `over.get("…"` and `ink/pad.py`'s `aux["…"]`, then the
+dict fields of `BrushStyle()` and `PaperStyle()`), printed: override
+parameter keys 15 (`bleed`, `bristles`, `darkness`, `dry`, `gap`,
+`jitter_px`, `lift`, `load`, `pool`, `press`, `press_cell_px`, `solid`,
+`texture`, `thr`, `wobble_px`; `_sheet_brush`, `ink/brush.py:264-283`);
+`aux` keys 2 (`res`, `tooth`; `ink/pad.py:75-95`); class keys 7 across
+`brushes` (7: `coast`, `lane`, `major`, `medium`, `minor`, `road_major`,
+`track`), `brush_width_px` (3) and `river_curve` (3);
+`pigment_transparency` 15 land-class keys. `opentopodata.py:90` sets `self.id = f"opentopodata-{dataset}"`.
+Every listed family stays a token under the narrowed rule, none moves out:
+ink keys, `align`, `label_route` and the class keys are passed in
+`Setting`, `FaceStyle`, `BrushStyle` and `PaperStyle` arguments (and
+`Hand`'s `route`), roles are returned by `Mark.role`, brush ids, override
+keys, their parameter keys and `aux` keys are arguments or keys inside
+arguments of `brush_from_id`, `ink_density` and `stamp` (or `NibStyle`
+fields), pigment keys subscript `PIGMENTS` and `TRANSPARENCY`, and
+`dataset` is `OpenTopoData`'s argument; theme keys
+(`maps/style.py:118-166`) and OSM tags (`maps/osm_elements.py:228`) are
+outside it.
+ADR 0007 fixes `Lettering.labels` among the attributes the SVG page reads,
+but names no style group and not `Label`, and its Decision makes public
+only the names in `pyntpot.__all__`, so it makes none of those classes
+public: the scope rule collides with nothing it fixed.
+
+*(Evidence.)* Keeping the classes and the key, rather than renaming the key
+inside P11.3, keeps the widening additive and leaves the row's answer to P8's
+hand-off, which the row waits on: `grep -rnIw '"map"' src/pyntpot/letters` at
+`ff752f6` prints five lines (`letters/nib.py:242`, `:259`, `:267`,
+`letters/setting.py:75`, `:106`), every one a default or a resolution of the
+token, and no public name's spelling; hiding the key while the classes are
+public would need a wrapper type, the parallel layer the maintainer ruled out.
+
+*(Evidence.)* `git rev-parse --short HEAD` is `ff752f6`. The import lines of
+the named tests (`sed -n 1,15p` of each) give the private imports above. The
+P10.10 list at `ff752f6`: a scratch AST script over `src/pyntpot` collecting
+every `from pyntpot.<module> import _name` (dunders excepted) prints 58
+distinct pairs, the same count P10.1 recorded; no promoted name is among them.
+`grep -rnw point_to_segment src tests --include=*.py` and `grep -rnw _radii src tests --include=*.py`
+print nothing; `grep -n "def chamfer_distance" src/pyntpot/ink/noise.py`
+prints one line. The real providers are offline-safe on a full cache:
+`Cache.ensure` calls a provider only for a payload file that does not exist,
+the cache key reads only the box, the margin and the providers' `id`
+(`"overpass"`, `"opentopodata-srtm30m"`, the ids `tests/support/providers.py`
+copies), and both constructors send no request (their docstrings, and
+`OverpassFeatures.__init__`/`OpenTopoData.__init__` store a `None` client).
+The test's providers: a scratch script (`uv run python -I` over
+`tests/fixtures/lynmouth`) built `OverpassFeatures(CONTACT,
+("http://127.0.0.1:9/api/interpreter",), budget=0)` and
+`OpenTopoData(CONTACT, "http://127.0.0.1:9", budget=0)`; `Cache(fixture).key(
+Track.from_gpx(fixture / "track.gpx"), features, elevation)` printed
+`f173b2f7a20bb9d4`, `support.paths.KEY`; `features.features(box)` and
+`elevation.grid(box, 4)` each raised `ProviderBudgetExceededError` (the
+budget check precedes the request in both, `overpass.py:263`,
+`opentopodata.py:120`).
+
+**Promoted names, decided.** 21 names: 19 existing, renamed where the rule
+demands, one moved, and one new helper. Importer counts are files that name
+the old name outside its definer, measured at `ff752f6` with the command in
+the slice.
+
+| Public name | Was | Joins `__all__` of | Top-level | Importers to repoint | Slice |
+| --- | --- | --- | --- | --- | --- |
+| `BrushStyle` | `ink.brush_style.BrushStyle` | `pyntpot.ink` | no | none (kept name) | P11.2a |
+| `brush_from_id` | `ink.brush.brush_from_id` | `pyntpot.ink` | no | none | P11.2a |
+| `ink_density` | `ink.pad.ink_density` | `pyntpot.ink` | no | none | P11.2a |
+| `PaperStyle` | `ink.style.PaperStyle` | `pyntpot.ink` | no | none | P11.2a |
+| `PIGMENTS` | `ink.pigment.PIGMENTS` | `pyntpot.ink` | no | none | P11.2a |
+| `TRANSPARENCY` | `ink.pigment.TRANSPARENCY` | `pyntpot.ink` | no | none | P11.2a |
+| `PigmentLayer` | `ink.pigment.Layer` (renamed) | `pyntpot.ink` | no | 10 files: 6 `src`, 4 tests | P11.2a |
+| `rgb` | `ink.sheet.rgb` | `pyntpot.ink` | no | none | P11.2a |
+| `paper_plate` | `maps.painter.paper.paper_plate` (moved to `ink.paper`; parameter `plate` renamed `canvas`) | `pyntpot.ink` | no | 2 files: 1 `src`, 1 test (its three tests move to `tests/unit/ink/test_paper.py`) | P11.2b |
+| `save_image` | new, `ink.io.save_image` | `pyntpot.ink` | no | none | P11.2b |
+| `Setting`, `Mark` | `letters.setting` | `pyntpot.letters` | no | none | P11.3 |
+| `FaceStyle`, `HandStyle`, `NibStyle`, `NibGroups` | `letters.style` | `pyntpot.letters` | no | none | P11.3 |
+| `NibSurface` | `letters.nib.NibSurface` | `pyntpot.letters` | no | none | P11.3 |
+| `nib_plate` | `letters.nib.plate` (renamed) | `pyntpot.letters` | no | 3 files: 2 `src`, 1 test; 2 docs | P11.3 |
+| `Cache` | `maps.cache.Cache` | `pyntpot.maps` | no | none | P11.4 |
+| `OverpassFeatures` | `maps.providers.overpass.OverpassFeatures` | `pyntpot.maps` | no | none | P11.4 |
+| `OpenTopoData` | `maps.providers.opentopodata.OpenTopoData` | `pyntpot.maps` | no | none | P11.4 |
+
+A name kept is kept everywhere: its importers keep importing it from its
+defining module (adding a package `__all__` entry repoints nothing). The
+renames, and why the rule demands them:
+
+- `Layer` to `PigmentLayer`: `GLOSSARY.md`'s "layers" is
+  `maps.basemap.Layers`, the basemap's typed geometry; a public `ink.Layer`
+  would give that term a second meaning. `PigmentLayer` clashes with no
+  glossary row and no public name (`grep -rnw PigmentLayer src tests docs --include=*.py --include=*.md`
+  prints nothing at `ff752f6`).
+- `plate` to `nib_plate`: "plate" is the glossary's word for every painted
+  raster layer, so a bare `pyntpot.letters.plate` would name all of them;
+  `nib_plate` is the nib's plate, the glossary row P11.3 adds
+  (`grep -rnw nib_plate src tests docs --include=*.py --include=*.md` prints nothing at `ff752f6`).
+- Kept: `rgb` (it returns an RGB triple, and its docstring says from what;
+  renaming it would repoint 14 importing files for no gain in meaning), `TRANSPARENCY`
+  and `PIGMENTS` (read beside `pyntpot.ink` they are the pigments' table and
+  their transparencies), `Cache` (one cache for fetches, plates and
+  lettering keys, A7: "fetch cache" would undersell it), and the style
+  groups (the glossary's "style group" row already names them).
+- `paper_plate` moves because the paper rung is an engine primitive that
+  reads only `ink` names (`Sheet`, `Canvas`, `PaperStyle`, `rgb`, `F32`), and
+  promoting it through `pyntpot.maps` would put a primitive in the
+  application layer. `relief_density` stays in `maps.painter.paper` (it reads
+  `maps.basemap.ElevationPatch`).
+- Not promoted: `to_img` and `save_webp` (`save_image` covers the tutorial;
+  they stay module-level), `ink_aux` (inert for a default `BrushStyle`, so no
+  rung needs it), `nib_brushes`, `PEN_ROWS` and `WashOptions` (a rung reads
+  better without them).
+- `ink.stroke.Mark` (the pressure and width along one stroke) is private and
+  stays so, but it shares the glossary's "mark" with `letters.setting.Mark`.
+  P11.3 files it as a later issue (below); it is not P11's to rename.
+
+**Docstrings, decided.** Every promoted name meets the contract (purpose, key
+types, what it does not do, invariants) through its own docstring or `#:`
+comment, read with its module docstring. Measured at `ff752f6`, only the six
+below fall short; each slice writes exactly this text (the summary line
+stays where it says "kept") and changes no other docstring of a promoted
+name. Code blocks give the docstring body as it sits in the file.
+
+- `rgb` (`src/pyntpot/ink/sheet.py`, P11.2a): summary kept, then:
+
+  ```text
+  Args:
+      hex_s: A `#rrggbb` string; the `#` is optional.
+
+  Returns:
+      A float32 array of red, green and blue, each in 0 to 1.
+
+  Raises:
+      ValueError: When one of the first three pairs is empty or not
+          hexadecimal (a three- or four-digit short form, for one).
+          Characters after the sixth digit are not read.
+  ```
+
+- `FaceStyle` (`src/pyntpot/letters/style.py`, P11.3): summary kept, then
+  "Read by `Hand`, which opens the face, and by `nib_plate` through
+  `NibGroups`. The defaults open the vendored face and write along its
+  centreline. It opens no font itself."
+- `HandStyle` (same file, P11.3): summary kept, then "Read by `Hand`, which
+  mixes `label_seed` into every generator it hands out, so one seed and one
+  text write the same marks. It holds no generator itself."
+- `NibStyle` (same file, P11.3): summary kept, then "Read by `nib_plate`
+  through `NibGroups`. Inks are `#rrggbb` strings, sizes and widths are in
+  display pixels, the angle is in degrees. It draws nothing itself."
+- `NibGroups` (same file, P11.3): summary kept, then:
+
+  ```text
+  One frozen value, so `nib_plate` takes one argument; it holds no defaults,
+  and `NibGroups(NibStyle(), FaceStyle(), HandStyle(), BrushStyle(),
+  PaperStyle())` is the class defaults throughout.
+
+  Attributes:
+      nib: The nib, its inks, widths and angle, and the backing wash.
+      face: The face and how a glyph becomes a pen path.
+      hand: The seed the marks' randomness starts from.
+      brush: The ink engine's brush group, for the shared brush geometry.
+      paper: The paper the plate is laid on, for its colour and encoder.
+  ```
+
+- `paper_plate` (`src/pyntpot/ink/paper.py`, P11.2b), its parameter `plate`
+  renamed `canvas` in the signature and the body (both callers pass it
+  positionally, so no call changes):
+
+  ```text
+  Paint the paper: cream rag, a worn border, a vignette, a little foxing, a grid if asked.
+
+  Args:
+      sheet: The paper's noise fields, of the canvas's size; two more
+          fields are drawn from its generator.
+      canvas: The raster painted on; only its `w` and `h` are read.
+      style: The paper's colour, tooth, wear, vignette, foxing and grid.
+      display_px: The width, in pixels, the style's `grid_spacing_px` is
+          measured against; the canvas width is the usual value, and gives
+          a line every `grid_spacing_px` canvas pixels. Read only when the
+          style asks for a grid.
+
+  Returns:
+      An `(h, w, 3)` float array in 0 to 1.
+
+  It lays no pigment and writes nothing. On one sheet the result depends
+  on how many fields were drawn from the sheet's generator before it.
+  ```
+
+Kept as they are, because they already state the contract: `BrushStyle`,
+`PaperStyle`, `brush_from_id`, `ink_density`, `Setting`, `Mark`,
+`NibSurface`, `nib_plate` (its summary and `Args` as today, only the name
+changes), `Cache`, `OverpassFeatures`, `OpenTopoData`, and the three data
+names `PIGMENTS`, `TRANSPARENCY` and `PigmentLayer`, which carry the
+contract in the `#:` comment above each (the `PigmentLayer` comment keeps
+its text, "One layer of the pigment stack: ..."). Their files are therefore
+not in any owner list for docstring work.
+
+*(Evidence.)* `sed -n 26,30p src/pyntpot/ink/sheet.py`,
+`sed -n 24,102p src/pyntpot/letters/style.py` and `sed -n 56,78p
+src/pyntpot/maps/painter/paper.py` at `ff752f6` show the one-line docstrings;
+`rgb("#abc")`, `rgb("#abcd")` and `rgb("#zz0000")` raise `ValueError`,
+`rgb("2a3b4c")` returns three floats, and `rgb("#abcde")` returns three
+floats without error (its third pair is `"e"`);
+`grep -n "^#:" -A1` over `ink/pigment.py` shows the three `#:` comments;
+`Sheet.noise` (`ink/sheet.py:125`) draws from the sheet's own generator;
+`paper_plate`'s body reads only `plate.h` and `plate.w`; its two callers,
+`maps/painter/plates.py:112` and the three test calls, pass the canvas
+positionally; `Hand.__init__` reads `face.label_route`, `face.label_face`
+and `hand.label_seed`, and `nib_plate` reads `groups.nib`, `.face`,
+`.hand`, `.brush` and `.paper`.
+
+**The helper, decided.** In `src/pyntpot/ink/io.py`, below `save_webp`:
+
+- Signature: `save_image(image: np.ndarray, path: Path, *, seed: int = 0) -> int`.
+- Body: create `path.parent`; `img = to_img(image, np.random.default_rng(seed))`;
+  when `path.suffix.lower() == ".webp"` return `save_webp(img, path,
+  lossless=True)`, otherwise `img.save(path)` and return
+  `path.stat().st_size`.
+- Docstring contract: summary "Write a painted RGB array to an image file and
+  return its size in bytes."; it dithers as `to_img` does, with a generator
+  seeded from `seed`, so one array and seed write one file; the format follows
+  the suffix (`.webp` is written lossless, every other suffix by Pillow's
+  encoder for it, `.png` the usual); `Args:` `image` (`(h, w, 3)` floats in 0
+  to 1, as `composite` and `paper_plate` return), `path`, `seed`;
+  `Returns:` the size in bytes; `Raises:` `ValueError` when Pillow knows no
+  format for the suffix. It writes no alpha (that is `save_rgba`) and does
+  not decide what is painted. The `io` module docstring's key-functions line
+  gains it, and its "Each `save_` function writes the file, creating its
+  directory, and returns its size in bytes" stays true.
+
+**The example scripts, decided.** P11 writes them; they are the tutorial
+sequences, and P7.2 quotes them.
+
+- Files, one per rung: `examples/paper.py`, `wash.py`, `brush_stroke.py`,
+  `nib_line.py`, `pigments.py` (P11.5a); `lettering.py`, `composition.py`
+  (P11.5b); `route_map.py` (P11.5c). No number prefix (ruff `N999` rejects a
+  module name that is not an identifier), no name a standard-library module
+  has, and no `examples/__init__.py`. The rung order lives in each module
+  docstring's first line ("Rung 1 of the tutorial: ...") and in P7.2's text.
+- Convention, every script: a module docstring (what the rung shows, the
+  public names it introduces, and how to run it, for example
+  `uv run python examples/wash.py out/`); `logging` only, never `print`; a
+  function `main(out_dir: Path) -> Path` that paints, writes the finished
+  image into `out_dir` (creating it) and returns the finished image's path,
+  logging the path at INFO (the lettering and composition scripts also
+  write the nib plate they lay over beside it, as their sequences say); and
+  `if __name__ == "__main__":` parsing its arguments with
+  `argparse` (`out_dir` positional), calling `logging.basicConfig(level=logging.INFO)`
+  and `main`. `route_map.py` alone takes more:
+  `main(out_dir: Path, *, track: Path, cache_dir: Path, features: OverpassFeatures, elevation: OpenTopoData) -> Path`,
+  so its providers are injected: its `__main__` block reads positional
+  `track`, `cache_dir`, `out_dir` and `contact` and builds
+  `OverpassFeatures(contact)` and `OpenTopoData(contact)` (the public
+  servers) to pass in, and its test passes providers that cannot reach a
+  network ("The offline run test"). Imports: the standard library, `numpy`, `PIL`, and `pyntpot`
+  only by `from <public module> import <name in its __all__>`. Fixed seeds
+  everywhere, so one run writes the same files. Image sizes, small enough that
+  each primitive script runs in under 5 s here, width by height in pixels:
+  360 by 240 for paper, wash, brush stroke, nib line and lettering; 720 by
+  240 for pigments (two panels); 480 by 320 for the composition. Text written comes from `CONTRIBUTING.md`'s place
+  names (`Grasmere` for the lettering rung, `Keswick` for the composition).
+  No script spells an ink key (`"map"` among them): a `Setting` takes its
+  default ink. Every primitive script's finished image is a `.png` written
+  by `save_image`; the only other file a primitive script writes is the nib plate
+  `nib_plate` writes (`lettering-plate.webp`, `composition-plate.webp`). The
+  route map's card is the Pillow image `compose` returns, written with its
+  own `save` as `map.png`.
+- Each script's sequence is the row of "The gap, re-measured" with public
+  names: paper (`Sheet`, `Canvas`, `PaperStyle`, `paper_plate`,
+  `save_image`); wash (a disc mask in numpy, `wash`, `PIGMENTS["water"]`,
+  `rgb`, `composite` over the paper plate); brush stroke (a wet `RIV1-a` and a
+  dry `TRK4-d` stroke along two sine lines, `BrushStyle`, `brush_from_id`,
+  `stamp`, `ink_density`, composited in the colour `brush_from_id` returns);
+  nib line (`MAJ6-e`, row 6 a pen, stamped along a spiral, the same names);
+  pigments (two overlapping discs, `farmland` and `wood`, each a
+  `PigmentLayer` carrying `TRANSPARENCY[key]`, composited under
+  `PaperStyle(km_glazing=False)` and under `km_glazing=True` and written side
+  by side with `np.concatenate`); lettering and composition as the
+  sequence below; route map (`Track.from_gpx(track)`, `Cache(cache_dir)`,
+  the injected `features` and `elevation`, `style = Style.default()`,
+  `basemap = fetch(track, cache, features, elevation, style)`,
+  `plates = paint(basemap, style, cache.plates_dir(cache.key(track,
+  features, elevation)))`, as `tests/support/golden.py` does,
+  `lettering = letter(plates, basemap, None, style)`,
+  `card = compose(plates, lettering, basemap, style)` with the default
+  attribution (on), and `card.save(out_dir / "map.png")`).
+- The lettering and composition sequence, verbatim in steps (public names
+  only; `W`, `H`, `GRAN_PX` and `SEED` are the script's constants, the size
+  fixed above):
+  1. `sheet = Sheet(H, W, GRAN_PX, SEED)`, `canvas = Canvas(0, 0, W, H, W, H)`,
+     `paper = paper_plate(sheet, canvas, PaperStyle(), W)`.
+  2. Composition only: a disc mask, its `wash` density and one `RIV1-a`
+     brush stroke's `ink_density`, built from "The shared values" below
+     (not read from P11.5a's scripts, which P11.5b cannot see), and
+     `paper = composite([(wash_density,
+     rgb(PIGMENTS["water"])), (stroke_density, rgb(stroke_hex))], paper,
+     PaperStyle())`.
+  3. `face, hand_style = FaceStyle(), HandStyle()`, `hand = Hand(face,
+     hand_style)`, `marks: list[Mark] = hand.write(Setting(NAME, 36.0,
+     path=line), hand.generator(SEED))`, where `NAME` is `"Grasmere"` or
+     `"Keswick"` and `line` is a tuple of `(x, y)` display-pixel points along
+     a gentle sine across the middle third of the canvas.
+  4. `surface = NibSurface(canvas, 1.0, np.zeros((H, W), np.float32), GRAN_PX)`,
+     `groups = NibGroups(NibStyle(), face, hand_style, BrushStyle(),
+     PaperStyle())`, `plate_path = nib_plate(marks, surface, groups,
+     out_dir / "<stem>-plate.webp")` (`lettering-plate.webp`,
+     `composition-plate.webp`).
+  5. `if plate_path is None: raise RuntimeError(...)` with the message "the
+     hand wrote no marks", so ty narrows the path and an empty plate fails
+     loudly rather than writing a bare paper.
+  6. `rgba = np.asarray(Image.open(plate_path).convert("RGBA"), np.float32) / 255`,
+     `alpha = rgba[..., 3:]`, `out = paper * (1 - alpha) + rgba[..., :3] * alpha`
+     (the plate is composited normally, as GLOSSARY's "nib plate" says).
+  7. `path = out_dir / "<stem>.png"`, `save_image(out, path, seed=SEED)`,
+     log and return `path`.
+- The shared values, written into each script that uses them (`wash.py`,
+  `brush_stroke.py` for its `RIV1-a` stroke, and `composition.py`), so
+  P11.5a and P11.5b, which run side by side, pick the same: the disc mask
+  is `((xx - W / 2) ** 2 + (yy - H / 2) ** 2 <= (0.3 * min(W, H)) ** 2)`
+  as `float32`, over `yy, xx = np.mgrid[0:H, 0:W]`; its density is
+  `wash(disc, sheet, 0.6, 0.3)`; the stroke is
+  `brush, stroke_hex = brush_from_id("RIV1-a", 6.0, 1.0, BrushStyle())`,
+  stamped into `acc = np.zeros((H, W), np.float32)` along
+  `np.column_stack([x, H / 2 + 0.12 * H * np.sin(2 * np.pi * x / W)])`,
+  `x = np.linspace(0.1 * W, 0.9 * W, 200)`, with
+  `stamp(acc, line, brush, np.random.default_rng(SEED))`, then
+  `ink_density(acc, brush, sheet)`. A script's other values (the dry
+  `TRK4-d` stroke, the spiral, the pigment discs) are its own. (Probed at
+  `ff752f6` with today's private paths, `scratchpad/n2probe/shared.py` at
+  480 by 320: wash density up to 0.879, stroke density up to 1.0, the
+  composite `(320, 480, 3)` in 0.090 to 0.958, in about 1 s.)
+- The offline run test: `tests/examples/` (a package with an
+  `__init__.py` whose docstring is
+  `"""Tests that run the tutorial scripts in examples/."""`), one test module
+  per examples slice, each parametrised over its own stems with `ids=` the
+  stems. The helper `tests/support/examples.py` (P11.1) holds
+  `EXAMPLES_DIR = REPO_ROOT / "examples"` and
+  `run_example(stem: str, out_dir: Path, **options: object) -> Path`, which
+  runs the script with `runpy.run_path(str(EXAMPLES_DIR / f"{stem}.py"),
+  run_name=f"example_{stem}")` (so its `__main__` block does not run), calls
+  its `main(out_dir, **options)` and returns the path. No network: the
+  primitive scripts touch none. The route-map test copies the fixture into a
+  temporary cache directory and passes providers that cannot send a
+  request: `OverpassFeatures(CONTACT, ("http://127.0.0.1:9/api/interpreter",), budget=0)`
+  and `OpenTopoData(CONTACT, "http://127.0.0.1:9", budget=0)`, with
+  `CONTACT = "pyntpot-tests@example.invalid"`. A budget of 0 raises
+  `ProviderBudgetExceededError` before any request, and the endpoint is the
+  loopback discard port in any case; neither changes a provider's `id`, so
+  the cache key is the fixture's. Before running the script the test
+  asserts `Cache(cache).key(Track.from_gpx(cache / "track.gpx"), features,
+  elevation) == KEY` (`KEY` from `support.paths`) and that the three payload
+  files for `KEY` exist, so a changed key, dataset, margin or provider fails
+  there, before any fetch; after it, the cache still holds exactly one
+  `overpass-*.json`, one `landcover-*.json` and one `elevation-*.json`.
+  The repository's other offline support, `tests/support/http_server.py`
+  (a loopback server for provider tests) and `support.providers`' fixture
+  providers, is not used: the script is run with the shipped providers, as
+  a reader runs it. The route-map test paints
+  the whole fixture (about 30 to 100 s; the plan-reviewer measured 99 s on
+  a 4-core box, so budget 3 to 4 minutes for G-here's two golden stages),
+  so it carries `@pytest.mark.golden`; the
+  primitive tests carry no marker. `tests/examples/` is outside the mutation
+  selection (unit and property tests only), which is wanted.
+- The architecture test: `tests/architecture/test_examples.py` (P11.1),
+  beside P9.1's and P9.2's files, which it does not touch. It reads the four
+  public `__all__` lists by AST from `src/pyntpot/__init__.py` and
+  `src/pyntpot/{ink,letters,maps}/__init__.py` (the `__all__` assignment's
+  list of string constants; every one of the four is an annotated
+  assignment, `__all__: list[str] = [...]`, so the reader matches
+  `ast.AnnAssign` as well as `ast.Assign`; importing the package is not
+  needed, as for every architecture test), and parses every `examples/*.py`. Public means: a
+  `from M import N` where `M` is one of `pyntpot`, `pyntpot.ink`,
+  `pyntpot.letters`, `pyntpot.maps` and `N` is in that module's `__all__`.
+  Every other `pyntpot` import is a violation (`import pyntpot` in any form, a
+  private module, a name not in the list, `*`), and so is a relative import,
+  an import whose top-level module is neither in `sys.stdlib_module_names`
+  nor one of `numpy`, `PIL`, `pyntpot`, an `importlib` import and a call to
+  `__import__`. It pins the eight stems in `EXAMPLES: tuple[str, ...]`, which
+  P11.1 creates empty and each examples slice grows by its own stems, and a
+  second test requires every pinned stem to exist (so the import check cannot
+  pass vacuously once a slice has landed). That test loops over `EXAMPLES`
+  inside one test function, collecting every missing stem into one
+  assertion, rather than parametrising: a parametrise over the empty tuple
+  P11.1 creates would collect as a skip. `examples/word.py` (P7.1) is
+  checked by the glob without joining the pin.
+- Gates over `examples/`: ruff's configuration covers the whole repository,
+  and P11's G-here runs it over the file system, new files included
+  ("Gates"); P11.1
+  adds `"examples"` to `[tool.ty.src] include` in `pyproject.toml` (at
+  `ff752f6` `uv run ty check` passes with the entry and no `examples/`
+  directory: "All checks passed!") and to `_SCANNED` in
+  `tests/architecture/_text_scan.py`, so the coordinate check covers the
+  scripts. The scripts carry no coordinates (the route map reads the
+  fixture's `track.gpx` path it is given).
+
+**Rules for the whole phase.**
+
+- **Slice rules** are those of "P3 and P4: how to run a slice": test first,
+  no mocks, no shims, `ids=` on every `parametrize`, place names from
+  `CONTRIBUTING.md`, coordinates in the D10 box, about 600 changed lines or
+  fewer, owner files implicitly include every importer of a renamed or moved
+  name, out-of-scope findings filed in `docs/issues/` (and appended as rows to
+  `p10-triage.md` by the orchestrating session, P10 "Later issues").
+- **Who does what.** The implementer agent edits, runs the gates and hands
+  off; it never commits, pushes, or edits `tasks.md`, `p10-triage.md` or
+  `specs/001-port/p11-run-log.md`. The orchestrating session creates each
+  slice's worktree and `$SLICE`, lands each slice as one commit with the
+  slice's message and the attribution trailers the session's system reminder
+  gives (P10.3d's rule), ticks the slice's `tasks.md` line in that commit,
+  and records each landing (commit, G-here and G-self results, merge
+  conflicts resolved) in `specs/001-port/p11-run-log.md` (created at the
+  start of P11, before P11.0's commit; the orchestrating session owns it and
+  no slice creates it).
+- **Branch and PR.** One branch, `p11-public-api`, from `main` at `ff752f6`
+  or later, and one PR to `main`, opened after the first landing and merged
+  after the last slice and the phase gate. The branch already carries the
+  orchestrating session's bookkeeping commits (the Mutation-run record
+  first, then run-log commits); they stay as pushed, never reordered.
+  P11.0's commit ("Fatten P11 into slices", this plan with the review
+  passed) is the first plan commit on `p11-public-api`, after those
+  bookkeeping commits, not a commit on `main`; P11.1 starts from it. P10.R starts after the PR
+  merges.
+- **Gates.** "Gate commands" of "P3 and P4: how to run a slice", with
+  `$SCRATCH/before` read as `$SLICE/before`, where `$SLICE` is
+  `$SCRATCH/p11/<slice-id>/`, created empty by the orchestrating session.
+  prek is in the dev group (P10.3b), so G-here's hook stage is
+  `uv run prek run --all-files` as written. G-here includes the byte-exact
+  `uv run pytest -m golden`. **P11's G-here** (every "G-here" below means
+  this form) puts two ruff runs before the hooks, because the implementer
+  never stages a file and `prek run --all-files` passes only tracked files
+  to its file-filtered hooks (`ruff-format`, `ruff`, `end-of-file-fixer`,
+  `trailing-whitespace`), so a new file would reach none of them:
+  `uv sync && uv run ruff format --check . && uv run ruff check . && uv run prek run --all-files && uv run pytest -m "not golden" && uv run pytest -m golden --golden-tolerance && uv run pytest -m golden`.
+  Ruff walks the file system, so every new `.py` (scripts, tests, helpers,
+  `ink/paper.py`) is formatted and linted, test docstrings and the print
+  ban included. A slice that adds a file that is not Python (P11.1's ADR,
+  P11.3's issue file) also runs `uv run prek run --files <each new file>`
+  after the hooks, which hands that file to every hook by name. The
+  hand-off quotes `git status --short`, so the orchestrator sees each new
+  file. **A slice that changes any file under `src/`
+  runs G-here plus G-self**, and G-self must be byte-identical: P11 moves no
+  pixel, so a G-self difference stops the slice, which is reported and not
+  landed. Renames and moves are byte-identical by construction; the
+  AST-neutral check of P6 does not apply (a rename changes identifiers). A
+  slice that changes no `src` file runs G-here only.
+- **Coverage.** A slice that adds `src` lines (P11.2b only) runs the two
+  coverage gates from `CONTRIBUTING.md`
+  (`CI=true uv run pytest -m "not golden and not benchmark" --cov`, then the
+  `ink, letters` gate at 95 and the `maps` gate at 92, both
+  `--precision=2`). A drop is answered with a test, never by lowering a gate.
+- **What each brief carries:** this preamble without *(Evidence.)*
+  paragraphs, "Docstrings, decided" (P11.2a, P11.2b, P11.3), "The helper,
+  decided" and "The example scripts, decided" where the slice uses them,
+  the merge rules of the files it shares, the Gate commands of "P3 and P4:
+  how to run a slice" (its first paragraph with `$MG` written out, and
+  G-self where the slice changes `src`) with G-here in P11's form from
+  "Gates", the slice's body, its `$SLICE` path and its starting
+  commit (the head of `p11-public-api` when its worktree was made).
+
+*(Evidence.)* P11's G-here, probed at `ff752f6` with a scratch untracked
+`examples/probe.py` holding `print(x)`: `uv run ruff check .` reported it
+(`T201`), and `uv run ruff format --check .` counted it among the files
+checked; `uv run prek run --files probe_untracked.py` on an untracked file
+ran every hook on it (ruff reported its `print`); both scratch files were
+deleted. The plan-reviewer's probe showed `prek run --all-files` skipping an
+untracked file.
+
+**Order and parallelism.** Cut for the most parallel work (maintainer,
+2026-10-08): one short sequential foundation, then four promotion slices at
+once, then three example slices, each starting as soon as the promotions it
+imports have landed.
+
+```
+P11.0 ─ P11.1 ─┬─ P11.2a ─┐
+               ├─ P11.2b ─┼─────────────── P11.5a ─┐
+               ├─ P11.3 ──┴─────────────── P11.5b ─┼─ (phase gate, PR merged) ─ P10.R
+               └─ P11.4 ────────────────── P11.5c ─┘
+```
+
+- **Sequential points.** P11.0 (this plan, reviewed), then P11.1 (the
+  foundation: the ADR, the pins at today's contents, the examples test
+  harness, the `ty` and scan entries), which every other slice builds on; and
+  the phase gate at the end. Nothing else is ordered by more than its
+  imports.
+- **Parallel group 1**, after P11.1 has landed: P11.2a, P11.2b, P11.3 and
+  P11.4, all four at once. None imports a name another of them promotes or
+  renames, and every name a slice promotes is imported, by its own files
+  and its own tests, from its defining module, never from the package a
+  sibling slice is growing: P11.2a renames `Layer` (its importers are `ink` and
+  `maps/painter/*` modules and four tests); P11.2b moves `paper_plate` (its
+  importers are `maps/painter/plates.py` and `tests/unit/maps/painter/test_paper.py`)
+  and adds `save_image`; P11.3 renames `plate` (its importers are
+  `maps/attribution.py`, `maps/lettering/pipeline.py` and
+  `tests/unit/letters/test_nib.py`); P11.4 adds three exports. Each slice
+  repoints every importer of its own name within itself. The importer sets
+  are disjoint but for one file: `src/pyntpot/maps/painter/plates.py`
+  imports both `Layer` (P11.2a) and `paper_plate` (P11.2b), and its merge
+  rule is below.
+
+  *(Evidence.)* The sweep, at `ff752f6`, over every file a group-1 or
+  group-2 slice writes or tells its implementer to import: `grep -nE
+  "^from pyntpot" <file>` over the owner files of P11.2a, P11.2b, P11.3
+  and P11.4 (`letters/nib.py`, `letters/style.py`, `letters/__init__.py`,
+  `maps/attribution.py`, `maps/lettering/pipeline.py`,
+  `tests/unit/letters/test_nib.py`, `maps/__init__.py`, `ink/__init__.py`,
+  `ink/io.py`, `tests/unit/ink/test_io.py`, `ink/sheet.py`,
+  `ink/pigment.py`, `maps/painter/paper.py`,
+  `tests/unit/maps/painter/test_paper.py`, `maps/painter/plates.py` and
+  the other `Layer` importers, tests included), then `grep -nE "^from
+  pyntpot\.(ink|letters|maps) import|^from pyntpot import"` over the same
+  files, shows every `pyntpot` name taken from its defining module; the
+  second grep prints only four lines, `from pyntpot.letters import nib`
+  and `from pyntpot.maps import lettering_marks` in `maps/attribution.py`
+  and `maps/lettering/pipeline.py`, which import submodules, not names a
+  slice promotes (P11.3 repoints their `nib.plate` calls itself). The one
+  cross-slice file is `plates.py`, under its merge rule. The plan's own prescribed imports were read slice by slice:
+  P11.2b's new `tests/unit/ink/test_paper.py` imported `PaperStyle` from
+  `pyntpot.ink`, a name only P11.2a exports, and now imports it from
+  `pyntpot.ink.style` (and `paper_plate` from `pyntpot.ink.paper`);
+  `ink/paper.py`, `test_io.py` and the pins (`importlib`, strings) import
+  nothing a sibling adds. P11.3's and P11.4's prescribed imports are their
+  own names from their defining modules. In group 2, P11.5a's scripts
+  import `pyntpot.ink` names that ADR 0007 or P11.2a or P11.2b make
+  public, P11.5b's add `Hand` (ADR 0007) and P11.3's names, and P11.5c's
+  script and test import `Track`, `Style` and the four stages (ADR 0007)
+  and P11.4's three names from `pyntpot.maps`; the tests otherwise import
+  `tests/support` (P11.1). Each slice's predecessors in the diagram cover
+  every name it imports, so no dependency is added.
+- **Parallel group 2**: P11.5a starts once P11.2a and P11.2b have landed
+  (its scripts import their names); P11.5b once P11.2a, P11.2b and P11.3
+  have landed; P11.5c once P11.4 has landed (it may run while group 1's
+  other slices are still open). P11.5a, P11.5b and P11.5c run at the same
+  time as each other.
+- **Each slice runs in its own detached worktree**
+  (`git worktree add --detach "$SCRATCH/p11/wt-<slice-id>" p11-public-api`),
+  never in a shared checkout. The implementer makes the G-self baseline in
+  that worktree on its clean starting commit, before the first edit
+  (`$MG "$SLICE/before"`; the hand-off quotes `baseline.json`, and a dirty
+  baseline is invalid). A slice never depends on another parallel slice's
+  unlanded edits: it starts from a branch head that holds every slice its
+  line waits for.
+- **Landing**, one slice at a time in the order they finish: the
+  orchestrating session commits the slice in its worktree, rebases it onto
+  the head of `p11-public-api`, resolves any conflict by the merge rules
+  below, re-runs G-here on the rebased commit and, for a slice that changes
+  `src`, G-self against that slice's own `$SLICE/before` (still valid:
+  every P11 slice is byte-identical, so a baseline from an earlier head paints
+  the same pixels), then fast-forwards `p11-public-api` to it, pushes, and
+  removes the worktree. A red gate after a rebase is fixed in that slice's
+  commit before landing, never in another slice.
+- **Shared files and their merge rules.** Parallel slices may edit the same
+  file in their own worktrees (maintainer, 2026-10-08: clashes are
+  acceptable; the orchestrator resolves them when it lands each slice).
+  P11.1 creates every skeleton the parallel slices append to, so a conflict
+  is always two additions side by side:
+  - `src/pyntpot/ink/__init__.py` (P11.2a, P11.2b): imports, union, then
+    `uv run ruff check --fix` and `uv run ruff format` order them; `__all__`,
+    union, sorted as ruff's `RUF022` sorts it. The docstring: each slice
+    writes the first paragraph with its own added sentences only and moves
+    the non-goal sentence to a second paragraph of its own; after both have
+    landed the docstring is exactly:
+
+    ```text
+    The ink engine: paper, washes, brushes and pigment.
+
+    Public names: `Sheet` and `Canvas` (the paper and what is painted on it), `Brush`
+    and `stamp` (a nib's marks), `wash` and `composite` (pigment laid and combined).
+    To build a mark and read it back: `BrushStyle` and `brush_from_id` (a brush from a
+    brush sheet cell) and `ink_density` (a stamped accumulator as density). To colour
+    and lay pigment: `PIGMENTS`, `TRANSPARENCY`, `rgb`, `PigmentLayer`, and
+    `PaperStyle`, which `composite` reads. To make and keep an image: `paper_plate`
+    (the cream paper) and `save_image` (a painted array written to a file).
+
+    It does not letter, read geographic data or touch the network.
+    ```
+
+  - `src/pyntpot/maps/painter/plates.py` (P11.2a, P11.2b): keep both
+    slices' import edits, P11.2a's `from pyntpot.ink.pigment import
+    PigmentLayer, composite` and its `list[PigmentLayer]` annotation, and
+    P11.2b's `from pyntpot.ink.paper import paper_plate` with the
+    `from pyntpot.maps.painter.paper import paper_plate` line removed; then
+    `uv run ruff check --fix` and `uv run ruff format` order the imports.
+  - `tests/unit/test_public_api.py` (P11.2a, P11.2b, P11.3, P11.4): each
+    slice edits only its own package's tuple; within `INK_PUBLIC`, union, in
+    the order ruff's `RUF022` gives an `__all__` (upper-case constants, then
+    classes, then functions, each alphabetical), as P11.1 orders it.
+  - `GLOSSARY.md` (P11.2a, P11.2b, P11.3, P11.4): P11.2a, P11.3 and P11.4
+    append rows at the end of the table, kept, every row, in landing order;
+    P11.2b edits the existing `plate` row in place, and no other slice
+    touches that row, so its edit stands.
+  - `tests/architecture/test_examples.py` (P11.5a, P11.5b, P11.5c): the
+    `EXAMPLES` tuple only; union, alphabetical.
+  - `tests/unit/maps/test_import_order.py`, `src/pyntpot/ink/io.py`,
+    `src/pyntpot/ink/paper.py`, `src/pyntpot/maps/painter/paper.py`,
+    `tests/unit/maps/painter/test_paper.py`, `tests/unit/ink/test_paper.py`,
+    `tests/unit/ink/test_io.py` (P11.2b only); `src/pyntpot/ink/pigment.py`,
+    `src/pyntpot/ink/sheet.py` and the other `Layer` importers (P11.2a only);
+    `src/pyntpot/letters/nib.py`, `src/pyntpot/letters/style.py`,
+    `src/pyntpot/maps/attribution.py`,
+    `src/pyntpot/maps/lettering/pipeline.py`,
+    `tests/unit/letters/test_nib.py`, `docs/explanation/references.md`, the
+    feature doc and the new issue file (P11.3 only): no conflict.
+  - Owned by one slice only: `docs/decisions/0026-widen-the-public-api.md`,
+    `pyproject.toml`, `tests/architecture/_text_scan.py`,
+    `tests/support/examples.py`, `tests/examples/__init__.py`,
+    `src/pyntpot/__init__.py`, `BOUNDARIES.md`, `docs/architecture.md`
+    (P11.1); `src/pyntpot/letters/__init__.py`
+    (P11.3); `src/pyntpot/maps/__init__.py` (P11.4); each `examples/*.py` and
+    `tests/examples/test_*.py` (its examples slice).
+  - `tasks.md`, `p10-triage.md`, `p11-run-log.md`: the orchestrating session
+    only, at landing.
+  Every file a slice's owner list names appears above, either as a shared
+  file with its rule or as owned by one slice.
+- **Splitting further**, if a session runs short: P11.5a splits by script
+  (paper and wash first, since the others composite over the paper plate;
+  then brush stroke, nib line and pigments), each sub-slice adding its own
+  stems and parametrised cases; P11.2b splits into the move and the helper
+  (disjoint files except `ink/__init__.py` and the pin). The others are under
+  150 changed lines and do not split.
+
+**Phase gate** (the orchestrating session, on the head of `p11-public-api`
+after the last landing): G-here green; `uv run pytest
+tests/architecture/test_examples.py tests/examples -v` lists the eight stems
+and passes; each `__main__` block runs once, as P7.2's readers will run it:
+`uv run python examples/<stem>.py "$SCRATCH/p11/phase/<stem>"` for each of
+the seven primitive stems exits 0 and writes its `.png`, and
+`uv run python examples/route_map.py --help` exits 0 (a real run would
+fetch); `uv run python -c "import pyntpot, pyntpot.ink, pyntpot.letters,
+pyntpot.maps"` succeeds; `grep -rnw "Layer" src tests --include=*.py` prints
+only `src/pyntpot/ink/pigment.py`'s "dens: Layer thickness" line;
+`grep -rn "nib\.plate(" src tests --include=*.py` prints nothing; the CI run on the PR is
+green. Then the PR merges and P10.R may start.
+
+#### P11.0 Fatten P11; plan-reviewer pass
+
+- This section, and the matching lines in "P10 against P11" and P7. A
+  plan-reviewer agent reviews it, and P11.1 does not start until the review
+  passes. `tasks.md`'s P11 list becomes one line per slice id below.
+- Measured at `ff752f6` (the commands are in the *(Evidence.)* paragraphs and
+  each slice's checks).
+- Owner files: `specs/001-port/plan.md` (this section, the "P10 against P11"
+  evidence sentence, its rule count and its ink-key and members bullets, the P7 bullet on
+  `examples/word.py`), `specs/001-port/tasks.md` (the P11 list),
+  `specs/001-port/p10-triage.md` (the `letters-map-ink-key` row's triage
+  cell). The orchestrating session adds the review outcome to the
+  existing `p11-run-log.md`.
+- Commit: `Fatten P11 into slices`, the first plan commit on
+  `p11-public-api`, after the orchestrator's bookkeeping commits ("Branch
+  and PR").
+
+#### P11.1 The foundation: ADR 0026, the layer pins, the examples harness
+
+- Predecessor: P11.0 (review passed). Sequential: every other P11 slice
+  starts from a head that holds it.
+- Owner files: `docs/decisions/0026-widen-the-public-api.md` (new),
+  `tests/unit/test_public_api.py`, `src/pyntpot/__init__.py` (the docstring
+  only), `pyproject.toml` (`[tool.ty.src] include` only),
+  `tests/architecture/_text_scan.py` (`_SCANNED` only),
+  `tests/architecture/test_examples.py` (new), `tests/support/examples.py`
+  (new), `tests/examples/__init__.py` (new), `BOUNDARIES.md` (one line),
+  `docs/architecture.md` (one paragraph).
+- Leave alone: every `__all__`, the layer package docstrings, `src/**`
+  beyond the top-level docstring, `docs/decisions/0007-public-api.md`
+  (append-only record), the other `tests/architecture/` files (P9.1's and
+  P9.2's), `GLOSSARY.md`.
+- Check first: `ls docs/decisions` shows no `0026-*`; otherwise stop and
+  report.
+- Test first: write `tests/architecture/test_examples.py` as "The example
+  scripts, decided" describes, with `EXAMPLES: tuple[str, ...] = ()` and the
+  two tests `test_every_pinned_example_exists` (docstring: "Each pinned
+  tutorial script is in examples/.") and
+  `test_examples_import_only_public_names` (docstring: "An example imports
+  pyntpot names only from a public module's __all__, and otherwise only the
+  standard library, numpy and Pillow."). Prove it red before green: a scratch
+  `examples/scratch.py` holding `from pyntpot.ink.brush import brush_from_id`
+  and `from pyntpot.ink import Brush` makes the second test fail naming line 1
+  and not line 2; delete the scratch file (and the then empty `examples/`),
+  and it passes. The hand-off quotes the failure line.
+- The layer pins: in `tests/unit/test_public_api.py`, keep `PUBLIC` and its
+  four tests unchanged; add `INK_PUBLIC` (`"Brush", "Canvas", "Sheet",
+  "composite", "stamp", "wash"`), `LETTERS_PUBLIC` (`"Hand"`) and
+  `MAPS_PUBLIC` (`"Annotations", "Basemap", "FetchError", "Lettering",
+  "Plates", "Style", "Track", "compose", "fetch", "letter", "paint"`), each
+  one name per line in that order (ruff's `RUF022` order for an `__all__`:
+  upper-case constants, then classes, then functions, each alphabetical), and `LAYERS = {"pyntpot.ink": INK_PUBLIC,
+  "pyntpot.letters": LETTERS_PUBLIC, "pyntpot.maps": MAPS_PUBLIC}`; two tests
+  parametrised over the three modules with `ids=["ink", "letters", "maps"]`:
+  `test_each_layer_all_is_exactly_its_public_names` ("Each layer package's
+  `__all__` holds its pinned public names and no others.", set equality and
+  equal length, via `importlib.import_module`) and
+  `test_every_layer_public_name_resolves` ("Each pinned layer name is an
+  attribute of its package."). Green at once (they pin today's contents); the
+  module docstring becomes "The top-level package and each layer package
+  export exactly their public names."
+- The ADR, `# 0026 — Widen the public API`, `Status: accepted`, sections as
+  in `0002-hexagonal-layers.md`. Context: P7's tutorials start from the
+  primitives, and under ADR 0007 nothing outside `pyntpot.__all__` is
+  public. Decision: this ADR amends 0007; the public surface is
+  `pyntpot.__all__` (unchanged, 0007's list) and the `__all__` of
+  `pyntpot.ink`, `pyntpot.letters` and `pyntpot.maps`; a name in no
+  `__all__` is private, whatever module defines it; the table of "Promoted
+  names, decided" (public name, defining module, package), the two renames
+  and the move with their reasons, and the helper `save_image`; `FetchError`
+  and the map names already in `pyntpot.maps.__all__` are public by this
+  rule; no promoted name is top-level, and why; the boundary is unchanged.
+  Members, with the scope stated: the public API is the names in a public
+  module's `__all__` and their documented signatures. The attributes and
+  methods, not starting with `_`, of a class named in some `__all__` are
+  public with it: the fields of the five style groups promoted here
+  (`PaperStyle`, `BrushStyle`, `FaceStyle`, `HandStyle`, `NibStyle`) and of
+  `NibGroups`, the fields of `Setting`, `Mark` and `NibSurface`, `Cache`'s
+  methods (`key` and `plates_dir` among them), and the attributes of
+  0007's map types. For those map types this widens ADR 0007's "Anything
+  not listed is free to move or be renamed": their members reached only
+  through attributes (`Style`'s inherited pydantic methods among them) are
+  public from this ADR on, while what 0007 binds stays bound, the names in
+  `__all__` and their documented signatures. A class reachable only through
+  an attribute of a public object and named in no `__all__` is not itself a
+  public name: the style groups reached only through `Style` (`WashStyle`
+  from `ink.style`; `CardStyle`, `RibbonStyle`, `CoverStyle`, `RouteStyle`,
+  `RouteInks`, `RouteInk`, `LetteringPolicy`, `BasemapStyle` from
+  `maps.style_groups`), and `Label` reached through `Lettering.labels`. Its members may change without an ADR (the public
+  attribute that holds it, such as `Style.route_inks` or
+  `Lettering.labels`, stays fixed), and P8's "Upstream reads" governs them
+  as before. A field's default value is behaviour, not a name, and is not
+  fixed by this ADR: the rule below fixes a token's spelling and meaning,
+  so a default that is a token (`"map"`, `"centreline"`, `"srtm30m"`) keeps
+  its spelling, while retuning a default to another value
+  (`PaperStyle.paper_hex`, the `NibStyle.label_*` inks, another brush id
+  for `NibStyle.label_brush`) needs no ADR. The rule, which is the
+  contract: a token is a string a caller passes to choose one of the
+  behaviours a public name offers (a free value such as a colour, a text or
+  a contact string is not one), as an argument of a public name or as a key
+  or a value inside a dict that is such an argument or a field of a class
+  named in some `__all__`, or an enumerated string that a public name or a
+  public field returns; every token is part of the public surface. A dict
+  whose keys mirror a class's fields (a theme TOML table, the input of
+  `Style.model_validate`) is read as that class's fields, so a string inside
+  it is a token only where this rule reaches it through a field of a class
+  named in some `__all__`. A
+  field's name, and so a theme TOML key that mirrors a field, is a member
+  and follows the member rule above, not this one; a string a provider
+  fetches (an OSM tag key or value, an elevation payload field) is data,
+  not a token. The tokens measured at `ff752f6` are
+  examples, not a closed list; among them: the four ink keys
+  `"map"`, `"route"`, `"water"` and `"in_water"` on `Setting.ink` and
+  `Mark.ink` (which also take a free `#rrggbb` colour, not a token);
+  `Mark.role`'s six roles (`"glyph"`,
+  `"leader"`, `"span"`, `"tick"`, `"underline"`, `"pin"`); the two routes
+  `"centreline"` and `"outline"` of `FaceStyle.label_route` (and of
+  `Hand`'s `route`); `Setting.align`'s three edges (`"start"`, `"middle"`,
+  `"end"`); the 112 brush sheet ids (`RIV1-a`, `MAJ6-e`, ...) that
+  `brush_from_id`, `NibStyle.label_brush` and `NibStyle.label_leader_brush`
+  take, and the six `BrushStyle.brush_overrides` keys `brush_from_id`'s
+  `override` names; the 15 parameter keys of those overrides' entries that
+  `brush_from_id` reads (`jitter_px`, `press_cell_px`, `wobble_px`,
+  `darkness`, `bristles`, `gap`, `dry`, `thr`, `texture`, `press`, `load`,
+  `pool`, `bleed`, `lift`, `solid`); the two `aux` keys `"res"` and
+  `"tooth"` of `ink_density` and `stamp`; the seven class keys (`major`,
+  `medium`, `minor`, `coast`, `road_major`, `lane`, `track`) of
+  `BrushStyle.brushes`, `brush_width_px` and `river_curve`, and the 15
+  land-class keys of `PaperStyle.pigment_transparency`; the 15 pigment keys
+  a caller subscripts `PIGMENTS` and `TRANSPARENCY` with; and `OpenTopoData`'s `dataset` (`"srtm30m"` by default, which enters the
+  provider's `id` and so the cache key). Each is public behaviour from this
+  ADR on. The default ink `"map"`, which `nib_plate` resolves to
+  `NibStyle.label_ink`, is the one a deferred P10 row would rename:
+  `letters-map-ink-key` will carry its own ADR and stop for the
+  maintainer.
+  Consequences: tutorials and `examples/` import only public names, and
+  `tests/architecture/test_examples.py` enforces it; a new public name, or a
+  change to one, to a public member or to a token this rule makes public, still
+  needs a new ADR; a module-level name in no `__all__` (P10.10's renamed
+  names among them), and a member of a class in no `__all__` (so
+  `RouteInk.effect`, `RouteInk.casing` and `Label.as_dict`), may move, be
+  renamed or be deleted freely. None of these is a token change: the
+  `[route_inks.*.effect]` theme tables are read as `RouteInk`'s fields,
+  and `RouteInk` is in no `__all__`, so neither the table header nor the
+  entries inside `RouteInk.effect` are tokens;
+  `Label.as_dict` is no public name, so its keys are no token; and the
+  `maps-osm-elements-tunnel-no` fix (P10.7) changes how `fetch` reads OSM
+  tags, which are provider data. None of the three needs an ADR, while a
+  rename of the ink key `"map"`, which a caller passes as `Setting.ink`
+  and `Mark.ink` returns, does.
+- The top-level docstring becomes, exactly: first paragraph as today with
+  its last sentence "Everything else is private." replaced by "The layer
+  packages export more."; second paragraph: "It does not re-export the layer
+  packages' other names: `pyntpot.ink`, `pyntpot.letters` and `pyntpot.maps`
+  each list their public names in their own `__all__`, and a name in no
+  `__all__` is private. The providers and the cache are reached through
+  `pyntpot.maps`. `Sheet`, `Canvas`, `wash`, `composite`, `Brush` and `stamp`
+  are re-exported from `ink`; `Hand` from `letters`. `__version__` is the
+  installed distribution's version."
+- The harness: `tests/support/examples.py` as "The example scripts, decided"
+  gives it (module docstring: "Run a tutorial script in examples/ the way its
+  test does: load it without its main block, call its `main`, return the
+  file it wrote."); `tests/examples/__init__.py` with its one-line docstring;
+  `"examples"` appended to `[tool.ty.src] include` and to `_SCANNED`.
+- The docs that describe what P11.1 changes: in `BOUNDARIES.md`, the
+  personal-content bullet's paths become "`src/`, `tests/`, `docs/`,
+  `examples/` and the root docs"; in `docs/architecture.md`, a paragraph
+  after "The boundary is enforced ..." reads, exactly: "The public surface
+  is `pyntpot.__all__` and the `__all__` of each layer package (ADR 0026);
+  a name in no `__all__` is private. `examples/` holds the tutorial
+  scripts, one per rung, which import only public names
+  (`tests/architecture/test_examples.py`) and run offline under
+  `tests/examples/`."
+- About 170 changed lines.
+- Gate: G-here (P11's form, with `uv run prek run --files` over the new ADR)
+  plus G-self (the `src` change is one docstring: byte-identical).
+- Commit: `Amend the public API with ADR 0026 and pin each layer's names`
+
+#### P11.2a Promote the ink names for marks and pigment; `Layer` becomes `PigmentLayer`
+
+- Predecessor: P11.1. Parallel group 1.
+- Owner files: `src/pyntpot/ink/__init__.py`, `src/pyntpot/ink/pigment.py`,
+  the 6 `src` importers of `Layer` (`ink/wash.py`, `maps/painter/pen.py`,
+  `maps/painter/plates.py`, `maps/painter/job.py`, `maps/painter/water.py`,
+  `maps/painter/cover.py`), the 4 test importers
+  (`tests/unit/ink/test_wash.py`, `tests/unit/ink/test_pigment.py`,
+  `tests/property/test_pigment.py`, `tests/benchmarks/test_ink.py`),
+  `tests/unit/test_public_api.py` (`INK_PUBLIC` only), `GLOSSARY.md`,
+  `src/pyntpot/ink/sheet.py` (`rgb`'s docstring only).
+- Leave alone: behaviour, `tests/golden/`, every other `__init__.py`,
+  `docs/decisions/**` (records), the prose "Layer thickness" in
+  `km_rt`'s docstring (a sentence, not the alias).
+- Check first and after: `grep -rnw Layer src tests --include=*.py` lists 39
+  lines in 11 files before; after, only `src/pyntpot/ink/pigment.py`'s
+  "dens: Layer thickness" line. `grep -rnw PigmentLayer src tests docs --include=*.py --include=*.md`
+  prints nothing before.
+- Test first: add `"BrushStyle"`, `"PIGMENTS"`, `"PaperStyle"`,
+  `"PigmentLayer"`, `"TRANSPARENCY"`, `"brush_from_id"`, `"ink_density"` and
+  `"rgb"` to `INK_PUBLIC` (in `RUF022` order, as "Shared files and their
+  merge rules" says); the two layer tests go red for `ink`.
+- Change: rename the alias `pyntpot.ink.pigment.Layer` to `PigmentLayer` and
+  repoint every import and annotation; the `pigment` module docstring's
+  key-names line says `PigmentLayer`. In `pyntpot.ink.__init__`, import and
+  export the eight names; the docstring becomes the merged text of "Shared
+  files and their merge rules" without its last public-names sentence ("To
+  make and keep an image: ..."), which is P11.2b's. `rgb`'s docstring
+  becomes the text "Docstrings, decided" gives; no other docstring of a
+  promoted name changes (the `PigmentLayer` `#:` comment keeps its text).
+- GLOSSARY rows, appended: `pigment` ("A colour a wash or a mark lays,
+  named by its key; what a full-strength wash of it transmits, and what it
+  shows over black as a share of that. `ink.pigment.PIGMENTS`,
+  `TRANSPARENCY`."), `pigment layer` ("One layer of the pigment stack
+  `composite` lays: a density, a pigment colour and optionally its
+  transparency. Not the basemap's layers. `ink.pigment.PigmentLayer`."),
+  `density` ("How much pigment or ink lies at a pixel, 0 to 1: what `wash`
+  and `ink_density` return and a pigment layer carries.").
+- About 120 changed lines.
+- Gate: G-here (P11's form) plus G-self (a rename: byte-identical by
+  construction), the baseline made in the slice's own worktree on its clean
+  starting commit.
+- Commit: `Make the ink names for marks and pigment public; rename Layer to PigmentLayer`
+
+#### P11.2b Move `paper_plate` into `ink`; add `save_image`
+
+- Predecessor: P11.1. Parallel group 1. Implements "The helper, decided".
+- Owner files: `src/pyntpot/ink/paper.py` (new), `src/pyntpot/ink/io.py`,
+  `src/pyntpot/ink/__init__.py`, `src/pyntpot/maps/painter/paper.py`,
+  `src/pyntpot/maps/painter/plates.py` (its import),
+  `tests/unit/maps/painter/test_paper.py` (the paper tests leave it),
+  `tests/unit/ink/test_paper.py` (new), `tests/unit/ink/test_io.py`,
+  `tests/unit/maps/test_import_order.py` (`MODULES` only),
+  `tests/unit/test_public_api.py` (`INK_PUBLIC` only), `GLOSSARY.md` (the
+  `plate` row only).
+- Leave alone: `relief_density` and its tests, `docs/decisions/0005-style-groups.md`
+  (its reader table is a record of the port), `to_img`, `save_webp`,
+  `save_alpha`, `save_rgba`, `tests/golden/`, `tests/unit/maps/painter/jobs.py`.
+- Check first: `grep -rlw paper_plate src tests --include=*.py` lists
+  `src/pyntpot/maps/painter/paper.py`, `src/pyntpot/maps/painter/plates.py`
+  and `tests/unit/maps/painter/test_paper.py`; after, it lists
+  `src/pyntpot/ink/__init__.py`, `src/pyntpot/ink/io.py` (`save_image`'s
+  `Args` names it), `src/pyntpot/ink/paper.py`,
+  `src/pyntpot/maps/painter/plates.py`, `tests/unit/ink/test_paper.py` and
+  `tests/unit/test_public_api.py` (its `INK_PUBLIC` holds the string).
+  `grep -rnw save_image src tests --include=*.py` prints nothing before.
+- Test first: add `"paper_plate"` and `"save_image"` to `INK_PUBLIC` (red).
+  Move class `TestPaperPlate` from `tests/unit/maps/painter/test_paper.py`
+  to new `tests/unit/ink/test_paper.py` (module docstring "Tests for the
+  paper plate: the cream paper painted from the sheet alone."), importing
+  `paper_plate` from `pyntpot.ink.paper` and `PaperStyle` from
+  `pyntpot.ink.style` (their defining modules: `PaperStyle` joins
+  `pyntpot.ink` only in P11.2a, which runs beside this slice), and `Sheet`
+  and `Canvas` from `pyntpot.ink` (red: no module `pyntpot.ink.paper` yet),
+  with a module-level builder
+  `_paper(style: PaperStyle, display_px: int = 90) -> np.ndarray` that calls
+  `paper_plate(Sheet(60, 90, 4.0, 11), Canvas(0, 0, 90, 60, 90, 60), style,
+  display_px)` on a fresh sheet each call. The class docstring is "The paper
+  plate."; its three tests keep their assertions on `PaperStyle()` in place
+  of `Style.default()` and `tiny_job`:
+  `test_the_paper_is_the_canvas_size_and_inside_the_unit_range` ("The
+  paper is an RGB array of the canvas's shape, within 0 to 1."),
+  `test_the_border_is_worn_darker_than_the_middle` ("The edge of the paper
+  carries more wear than its centre.", row 0 against rows 25 to 35 and
+  columns 40 to 50), and `test_a_grid_darkens_the_paper_along_its_lines`
+  ("Turning the grid on makes the paper darker overall.", `display_px`
+  80, `dataclasses.replace(PaperStyle(), grid=...)`). The grid branch stays
+  covered. In `tests/unit/ink/test_io.py`, class
+  `TestSaveImage`: `test_a_png_holds_the_dithered_array` ("A PNG written
+  from an array decodes to that array's pixels, each within one level of
+  `round(value * 255)`."), `test_a_webp_is_written_lossless` ("A WebP
+  written by `save_image` decodes to exactly `to_img`'s pixels for the same
+  seed."), `test_one_seed_writes_one_file` ("Two writes of one array with
+  one seed give the same bytes, and the returned size is the file's."), and
+  `test_the_directory_is_made` ("A path in a missing directory is written,
+  the directory created."), each on a small synthetic array under
+  `tmp_path`, importing `save_image` and `to_img` from `pyntpot.ink.io`
+  as the file imports its other names. All red first (no `save_image`).
+- Change: move `paper_plate` from `maps/painter/paper.py` into new
+  `src/pyntpot/ink/paper.py` (imports `numpy`, `F32` from `ink.noise`,
+  `Canvas`, `Sheet`, `rgb` from `ink.sheet`, `PaperStyle` from `ink.style`),
+  with its parameter `plate` renamed `canvas` in the signature and the body
+  and the docstring "Docstrings, decided" gives; no other line of the body
+  changes. The new module's docstring, exactly:
+
+  ```text
+  The paper plate: the cream paper painted from the sheet alone.
+
+  Key name: `paper_plate`, cream rag, a worn border, a vignette, a little
+  foxing, and a grid when the style asks for one.
+
+  It writes nothing to disk and lays no pigment; the caller composites over
+  it and writes it.
+
+  Invariants: the paper is an `(h, w, 3)` array in 0 to 1, the canvas's
+  size; it draws two fields from the sheet's own generator (`Sheet.noise`),
+  so on one sheet it depends on what was drawn before it, and it draws from
+  no other generator.
+  ```
+
+  Repoint `maps/painter/plates.py` to `pyntpot.ink.paper` (its call is
+  positional and does not change). The `maps.painter.paper` module docstring
+  becomes, exactly: summary "The relief: the density painted from the sheet
+  and the elevation patch alone.", then "Key name: `relief_density`, a quiet
+  shaded relief read from the basemap's elevation patch, in pigment
+  density. The paper plate is `pyntpot.ink.paper`.", then "It is a pure
+  function of the sheet's noise, the plate's canvas and the patch: it draws
+  from no shared generator, so it does not move the order the phases
+  consume the generators in.", then "It does not trim the relief to the
+  ribbon or choose its pigment; the relief phase lays the density."; its
+  unused imports (`rgb`, `PaperStyle`) go. `tests/unit/maps/painter/test_paper.py`
+  keeps `TestReliefDensity`; its module docstring becomes "The relief: the
+  density painted from the sheet and the elevation patch alone.", and the
+  imports only the paper tests used go: `dataclasses`, `paper_plate` and
+  `Style` (the relief tests read `tiny_job`, `Sheet`, `ElevationPatch` and
+  `numpy`, which stay). Add `"pyntpot.ink.paper"`
+  to `MODULES` after `"pyntpot.ink.io"`. Add `save_image` to `ink/io.py`
+  exactly as "The helper, decided" gives it; the `io` module docstring's
+  key-functions line gains "`save_image`, a painted RGB array written to
+  any image file Pillow knows, WebP lossless", and its non-goal becomes
+  "It does not decide what is painted or, except in `save_image`, which
+  always writes WebP lossless, whether to write lossless: the caller passes
+  the setting it read from its style." In `pyntpot.ink.__init__`, import
+  and export both names; the docstring becomes the merged text of "Shared
+  files and their merge rules" without P11.2a's two sentences ("To build a
+  mark ..." and "To colour and lay pigment: ...").
+- GLOSSARY: the `plate` row becomes "One painted raster layer: paper, wash,
+  pen, labels; the painter writes each to disk." (the paper plate is an
+  array the caller writes). No new row: "plate" covers the paper plate, and
+  the `ink` docstrings say "the paper", never "card", which is the maps
+  frame.
+- About 230 changed lines (the 30 moved lines do not count).
+- Gate: G-here (P11's form) plus G-self (a move, a positional parameter
+  rename and an uncalled addition: byte-identical; the baseline made in the
+  slice's own worktree), and the coverage gates.
+- Commit: `Move paper_plate into ink and add save_image`
+
+#### P11.3 Promote the letters names; `plate` becomes `nib_plate`
+
+- Predecessor: P11.1. Parallel group 1.
+- Owner files: `src/pyntpot/letters/__init__.py`, `src/pyntpot/letters/nib.py`,
+  `src/pyntpot/maps/attribution.py` (the call),
+  `src/pyntpot/maps/lettering/pipeline.py` (the call),
+  `tests/unit/letters/test_nib.py`, `docs/explanation/references.md` (the
+  `nib` entry's `Implemented in:` line),
+  `docs/features/letters-nib-follows-writing-line.md` (its one mention),
+  `tests/unit/test_public_api.py` (`LETTERS_PUBLIC` only), `GLOSSARY.md`,
+  `docs/issues/ink-stroke-mark-shares-the-mark-term.md` (new),
+  `src/pyntpot/letters/style.py` (four class docstrings only).
+- Leave alone: behaviour, `tests/golden/`, `docs/decisions/**`,
+  `ink/stroke.py` (the issue records the clash; this slice does not rename
+  it), the prose word "plate" in test docstrings.
+- Check first and after: `grep -rnE "nib\.plate\b|letters\.nib\.plate\b|import NibSurface, plate" src tests docs --include=*.py --include=*.md`
+  lists `maps/attribution.py:87`, `maps/lettering/pipeline.py:237`,
+  `tests/unit/letters/test_nib.py:11`, `docs/explanation/references.md:155`
+  and `docs/features/letters-nib-follows-writing-line.md:33` before, and
+  nothing after; `tests/architecture/test_reference_keys.py` fails if
+  `references.md` and the code disagree, so both move here.
+- Test first: add `"FaceStyle"`, `"HandStyle"`, `"Mark"`, `"NibGroups"`,
+  `"NibStyle"`, `"NibSurface"`, `"Setting"` and `"nib_plate"` to
+  `LETTERS_PUBLIC` (red for `letters`).
+- Change: rename `pyntpot.letters.nib.plate` to `nib_plate`, repoint the two
+  `nib.plate(` calls and the test's import and every call in it (five
+  `plate(` call lines at `ff752f6`: 40, 48, 49, 60, 61), and the `nib`
+  module docstring's two mentions. In `pyntpot.letters.__init__`, import
+  and export the eight names, and its docstring's public-names paragraph
+  becomes: "Public names: `Hand`, which sets a text along a line or beside an
+  anchor in the face its style names (the vendored one by default);
+  `Setting` and `Mark`, what the hand is asked to write and the marks it
+  writes; `FaceStyle`, `HandStyle` and `NibStyle`, its style groups, with
+  `NibGroups`, the groups the nib reads; and `NibSurface` and `nib_plate`,
+  which strokes marks onto one RGBA plate and writes it." The non-goal
+  sentence stays. The `FaceStyle`, `HandStyle`, `NibStyle` and `NibGroups`
+  docstrings become the text "Docstrings, decided" gives; no other docstring
+  of a promoted name changes, and no ink key is renamed (ADR 0026, the
+  `letters-map-ink-key` row).
+- The issue file, in the register of `docs/issues/`: `ink.stroke.Mark` (the
+  pressure and width along one stroke, private) shares the glossary's
+  "mark", which is `letters.setting.Mark`, now public; one name per concept
+  says the private one is renamed; suggested `StrokeProfile`; area `ink`.
+  The orchestrating session appends its row to `p10-triage.md` at landing
+  and it is triaged by P10's rule ("Later issues"); no P11 slice fixes it.
+- GLOSSARY row, appended: `nib plate` ("The lettering's own RGBA plate:
+  marks stroked through the ink engine on the paper's colour, composited
+  normally rather than multiplied. `letters.nib.nib_plate`, on a
+  `letters.nib.NibSurface`.").
+- About 110 changed lines.
+- Gate: G-here (P11's form, with `uv run prek run --files` over the new
+  issue file) plus G-self (a rename: byte-identical by construction), the
+  baseline made in the slice's own worktree on its clean starting commit.
+- Commit: `Make the letters names public; rename plate to nib_plate`
+
+#### P11.4 Promote the fetch cache and the shipped providers through `pyntpot.maps`
+
+- Predecessor: P11.1. Parallel group 1.
+- Owner files: `src/pyntpot/maps/__init__.py`,
+  `tests/unit/test_public_api.py` (`MAPS_PUBLIC` only), `GLOSSARY.md`.
+- Leave alone: `src/pyntpot/maps/providers/__init__.py` (its empty `__all__`
+  stays: the providers are reached through `pyntpot.maps`), the protocols
+  `Features` and `Elevation` (no rung needs them), `maps/cache.py` and the
+  provider modules (no change), `tests/golden/`.
+- Test first: add `"Cache"`, `"OpenTopoData"` and `"OverpassFeatures"` to
+  `MAPS_PUBLIC` (red for `maps`).
+- Change: in `pyntpot.maps.__init__`, import `Cache` from `maps.cache`,
+  `OpenTopoData` from `maps.providers.opentopodata` and `OverpassFeatures`
+  from `maps.providers.overpass`, and export them. Its docstring becomes:
+  "Exports the map types `Track`, `Basemap`, `Style`, `Plates`, `Lettering`
+  and `Annotations`, the stages `fetch`, `paint`, `letter` and `compose`,
+  `FetchError`, the fetch cache `Cache`, and the shipped providers
+  `OverpassFeatures` and `OpenTopoData`. The provider protocols, the
+  candidates and the command line are reached through their own modules,
+  not exported here." The cold-import test in `test_import_order.py` proves
+  no cycle.
+- GLOSSARY rows, appended: `fetch cache` ("The directory a fetch keeps its
+  provider payloads in, keyed on the track's box, the margin and the
+  providers' ids, which also holds each key's plates and lettering.
+  `maps.cache.Cache`."), `provider` ("A source of map data behind the
+  `Features` or `Elevation` protocol; the shipped ones are
+  `maps.providers.overpass.OverpassFeatures` and
+  `maps.providers.opentopodata.OpenTopoData`.").
+- About 30 changed lines.
+- Gate: G-here (P11's form) plus G-self (imports only: byte-identical; the
+  baseline made in the slice's own worktree).
+- Commit: `Export the fetch cache and the shipped providers from pyntpot.maps`
+
+#### P11.5a Tutorial scripts for the ink rungs
+
+- Predecessors: P11.2a and P11.2b landed. Parallel group 2.
+- Owner files: `examples/paper.py`, `examples/wash.py`,
+  `examples/brush_stroke.py`, `examples/nib_line.py`, `examples/pigments.py`
+  (all new), `tests/examples/test_ink_examples.py` (new),
+  `tests/architecture/test_examples.py` (`EXAMPLES` only).
+- Leave alone: `src/**`, `tests/support/examples.py`, the other examples.
+- Test first: add the five stems to `EXAMPLES` (red: the files are
+  missing). `tests/examples/test_ink_examples.py` (module docstring "The ink
+  rungs' scripts run offline and each writes its image."), one test
+  parametrised over the five stems with `ids=` the stems,
+  `test_the_script_writes_an_image` ("The script writes one PNG of the
+  rung's size that is not one flat colour."): `run_example(stem, tmp_path)`,
+  then the file exists under `tmp_path`, Pillow opens it as RGB at the size
+  "The example scripts, decided" fixes for the rung (pinned in a `SIZES`
+  dict in the test module), and its extrema differ in every channel.
+  Red first (no scripts).
+- Change: the five scripts, as "The example scripts, decided" gives them.
+- About 330 changed lines.
+- Gate: G-here (P11's form; no `src` change).
+- Commit: `Add the ink rungs' tutorial scripts`
+
+#### P11.5b Tutorial scripts for lettering and composition
+
+- Predecessors: P11.2a, P11.2b and P11.3 landed. Parallel group 2.
+- Owner files: `examples/lettering.py`, `examples/composition.py` (new),
+  `tests/examples/test_letters_examples.py` (new),
+  `tests/architecture/test_examples.py` (`EXAMPLES` only).
+- Leave alone: as P11.5a.
+- Test first: add the two stems to `EXAMPLES`; in
+  `tests/examples/test_letters_examples.py` (module docstring "The
+  lettering and composition scripts run offline and each writes its
+  image."), the same parametrised test over the two stems, plus
+  `test_the_lettering_plate_carries_alpha_only_near_the_name` ("The
+  lettering script's RGBA plate is transparent at its corners and opaque
+  somewhere."), which opens `lettering-plate.webp` beside the returned PNG
+  and reads its alpha band. Red first.
+- Change: the two scripts, as "The example scripts, decided" gives them,
+  steps 1 to 7 of its lettering and composition sequence; neither spells an
+  ink key.
+- About 170 changed lines.
+- Gate: G-here (P11's form; no `src` change).
+- Commit: `Add the lettering and composition tutorial scripts`
+
+#### P11.5c Tutorial script for the route map
+
+- Predecessor: P11.4 landed (P11.1 holds the harness). Parallel group 2.
+- Owner files: `examples/route_map.py` (new),
+  `tests/examples/test_route_map_example.py` (new),
+  `tests/architecture/test_examples.py` (`EXAMPLES` only).
+- Leave alone: as P11.5a, and `tests/support/golden.py`,
+  `tests/support/providers.py`.
+- Test first: add `"route_map"` to `EXAMPLES`; in
+  `tests/examples/test_route_map_example.py` (module docstring "The route
+  map script paints the Lynmouth fixture from a full cache, with providers
+  that cannot reach a network."), `@pytest.mark.golden`
+  `test_the_route_map_paints_from_the_cache_alone` ("From a cache holding
+  the fixture's payloads, the script writes the map without a provider
+  call."): copy `FIXTURE_DIR` to `cache = tmp_path / "cache"`; build
+  `features` and `elevation` as "The offline run test" gives them (budget
+  0, loopback endpoints); assert `Cache(cache).key(Track.from_gpx(cache /
+  "track.gpx"), features, elevation) == KEY` and that `overpass-{KEY}.json`,
+  `landcover-{KEY}.json` and `elevation-{KEY}.json` exist in `cache`, so a
+  key or payload mismatch fails here with no fetch; then
+  `run_example("route_map", tmp_path / "out", track=cache / "track.gpx",
+  cache_dir=cache, features=features, elevation=elevation)`; then the
+  returned path is `tmp_path / "out" / "map.png"`, it opens as RGB, and
+  `cache` holds exactly one `overpass-*.json`, one `landcover-*.json` and
+  one `elevation-*.json`. Red first (no script).
+- Change: `examples/route_map.py`, as "The example scripts, decided" gives
+  it (`main` takes the providers; `__main__` builds the public ones from
+  `contact`); its docstring says that a first run fetches from the public
+  Overpass and OpenTopoData servers within their usage limits, that
+  `contact` is how their operators can reach the caller, that a later run
+  with the same track reads the cache and fetches nothing, and that the map
+  carries the attribution `compose` draws by default.
+- About 120 changed lines.
+- Gate: G-here (P11's form; no `src` change; its golden stage runs the new
+  test).
+- Commit: `Add the route map tutorial script`
 
 ## Known facts
 
