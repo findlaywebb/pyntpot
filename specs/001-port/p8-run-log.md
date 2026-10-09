@@ -70,3 +70,9 @@ activity" and identified upstream only.
   oriented. So it just needs methods to feed in the colour". G3 becomes a caller-supplied
   route ink (no sport concept in pyntpot; upstream keeps its own sport-to-colour table);
   the same generic test applies to G1 and G2. Plan agent told.
+- Plan refixed by a fresh agent (`a9b1fb2`): promotion group P8.P1
+  (ADR 0027), P8.P2a-c in parallel (G1 `candidate_export`, G2 `vector_layers` /
+  `VectorLayers`, G3 `Style.with_route_ink(colour, width_px)`), P8.P3 (0.0.2, PR held,
+  tag); gates pinned to `0dfffcca`; P8.Q recorded, P8.8 deleted; round-1 findings 1-7
+  and the non-blocking items addressed. A fourth row foreseen,
+  `maps-style-route-inks-name-sports` (defer). Plan-reviewer round 2 started.
