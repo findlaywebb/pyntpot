@@ -70,6 +70,7 @@ MAPS_PUBLIC: tuple[str, ...] = (
     "Style",
     "Track",
     "VectorLayers",
+    "candidate_export",
     "compose",
     "fetch",
     "letter",

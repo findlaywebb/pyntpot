@@ -9,6 +9,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `pyntpot.maps.vector_layers` and `VectorLayers`: the basemap's layers as SVG path data,
   read from the fetch cache, for a caller that draws its own map.
+- `pyntpot.maps.candidate_export`: what a track passes, read from the fetch cache under
+  the track's key (was the private `landmark_export`).
 
 ## [0.0.1] - 2026-10-09
 
