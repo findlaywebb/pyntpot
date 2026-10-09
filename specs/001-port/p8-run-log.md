@@ -42,3 +42,12 @@ activity" and identified upstream only.
   `0dfffcca...`, differing fraction 0.104 (paper identical, wash 0.105, pen 0.004).
   Treated as a reference-hash mismatch: an independent agent is verifying like-for-like
   inputs and the cause before the maintainer is asked. Plan fixes held until then.
+- Hash mismatch verified (independent agent, fresh venv, v0.0.1 from git): like-for-like
+  inputs (same payloads, GPX track, port-default style, ride ink, no landmark picks,
+  `attribution=False`); sha256 `0dfffccab9be726492f14f9ded582ed385ec81838e8ba120dcf20bb9cde26619`.
+  Bisected: `020c3ff` and `3e49f61` render the old reference exactly; `637573c` (ADR 0006
+  step 3: full-precision geometry, card pin removed) renders the v0.0.1 hash byte for byte,
+  nothing later moves a pixel. Wash 0.105 is shared-generator amplification of sub-pixel
+  moves (deferred `shared-generators`); pen 0.004 is the unrounded route. No public setting
+  restores rounding; rounding the public `Basemap` to 0.1 m and re-applying the pin offset
+  before `paint` reproduces `745936...a7` exactly. Run stopped for the maintainer.
