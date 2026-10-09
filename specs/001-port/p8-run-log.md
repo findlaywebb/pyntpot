@@ -181,3 +181,7 @@ activity" and identified upstream only.
   in the test) and skips unless exactly one overpass payload is present; the plan's
   docstring wording carries `# noqa: E501`.
 - Group 1 started in parallel worktrees from `4c179d2`: P8.3a, P8.3b, P8.6.
+- P8.3b landed upstream (`dc2fa1a`), first of group 1, no rebase: `svgtext.py` holds the
+  page's SVG text helpers, moved unchanged (AST-identical; layout by `ruff format`).
+  Check-first: charts.py 26 to 22 hits (five imports became one), labels.py 7 to 0. G-up
+  370 passed 9 skipped, ruff clean, `svgtext.py` format-clean, `--help` 0.
