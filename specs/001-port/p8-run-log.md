@@ -137,3 +137,13 @@ activity" and identified upstream only.
   read-only, `picked` and elevation-only untested; (5) no compose width test. A fresh
   agent fixing all five as one commit before P8.P3. Out of scope, noted for P10:
   `maps/layers.py:109` still says "a run's map" (pre-existing wording).
+- Review fixes landed (`ad47df0`, fresh agent; baseline `{"commit":
+  "0cd540795d16485b1d2f3766fc5de4122b9b1fe6", "dirty": false}`; red 3 failed: equal fed
+  values' digests, bool and infinite widths). Gates green, golden 22, G-self 22
+  byte-identical, coverage 96.14 / 94.04, default digest `25ae6fee082ebff5`. Trade-off
+  noted for P10: the places test keeps every place inside the Lynmouth box, so the
+  out-of-box drop filter is untested.
+- P8.P3 version commit rebased onto the fix as `8cf499c`. Gate: `__version__` 0.0.2, lock
+  check 48 packages, format 333, ruff clean, prek 9 hooks, not-golden 1093 passed 1
+  skipped (personal-terms file absent here), golden 22 (tolerance, exact). `p8-promote`
+  pushed; PR #12 to `main` opened and held for the maintainer.
