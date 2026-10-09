@@ -156,3 +156,6 @@ activity" and identified upstream only.
   unexpected disconnect while reading sideband packet"), as for `v0.0.1`. Branch pushes
   work. Maintainer action: push `v0.0.2` at `0e094c7`. P8.1 waits on it. `origin/main`
   merged into `p10-fixes` (a merge, not a rebase) and pushed.
+- Maintainer pushed `v0.0.2`: annotated `9fe2542` on `0e094c7` (checked with
+  `git ls-remote`). Upstream `origin/main` still `e62657f`, so no check-first deltas.
+  Upstream branch `p8-pyntpot-migration` cut from it and pushed; P8.1 started.
