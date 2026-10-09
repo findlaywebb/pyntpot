@@ -185,3 +185,8 @@ activity" and identified upstream only.
   page's SVG text helpers, moved unchanged (AST-identical; layout by `ruff format`).
   Check-first: charts.py 26 to 22 hits (five imports became one), labels.py 7 to 0. G-up
   370 passed 9 skipped, ruff clean, `svgtext.py` format-clean, `--help` 0.
+- P8.6 landed upstream: rebased cleanly onto `dc2fa1a` as `0d810df` (documents only:
+  render-map and session-review skills, `analysis/README.md`, `analysis/report/README.md`,
+  `data/README.md`; +143/-89). G-up on the rebased commit 370 passed 9 skipped, ruff
+  clean, `--help` 0; plan's grep and the em-dash grep on added lines empty. Note:
+  `analysis/README.md` keeps 28 em-dashes in untouched old lines.
