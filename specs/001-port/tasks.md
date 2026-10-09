@@ -153,9 +153,21 @@ Order: after P10 part 2 (maintainer, 2026-10-07). P7.1 to P7.3, then P7.4 tags 0
 
 ## P8. Upstream migration
 
-Order: after P10 part 1, P11 and P10.R; the upstream consumes the `v0.0.1` tag, made after P11 merges. At the hand-off the orchestrating session records "what upstream reads" in `p10-triage.md`; P10 part 2 follows.
+Order: after P10 part 1, P11 and P10.R; the upstream consumes the `v0.0.1` tag, made after P11 merges. Upstream branch `p8-pyntpot-migration`, one PR held for the maintainer; each upstream slice in its own detached worktree (plan.md, P8, "Order and parallelism"); ticks land in the run-log commit that records each landing. At the hand-off the orchestrating session records "what upstream reads" in `p10-triage.md`; P10 part 2 follows.
 
-- [ ] P8.1 The upstream consumer migrates to the public API, with the recorded render hash reproduced first
+- [ ] P8.0 Fatten P8 into slices; plan-reviewer pass
+- [ ] P8.1 Python 3.13 and the pyntpot dependency (sequential)
+- [ ] P8.2 The reference render through pyntpot: the recorded hash, pinned (sequential; a mismatch stops the run)
+- [ ] P8.Q Maintainer stop: the reference result and the three foreseen gaps
+- [ ] P8.3a The seam module and the public-import test (parallel group 1)
+- [ ] P8.3b The page's SVG text helpers leave the lettering module (parallel group 1)
+- [ ] P8.4 The command line on pyntpot, and the cache migration (after P8.3a)
+- [ ] P8.5a The page's painted map on Basemap, Plates and Lettering (after P8.3a and P8.3b)
+- [ ] P8.5b The route chart without plates, and its footnote (after P8.5a)
+- [ ] P8.6 Documents (parallel group 1)
+- [ ] P8.7 Delete the old engine and its tests (after P8.2 green, P8.4, P8.5b and P8.6)
+- [ ] P8.8 The candidate export on pyntpot (only under G1 (b), after a pyntpot tag that exports it)
+- [ ] P8.H Hand-off: "what upstream reads" recorded in `p10-triage.md`; the two rows re-triaged
 
 ## P9. Post-port cleanup
 
