@@ -25,3 +25,12 @@ activity" and identified upstream only.
   gap rows (candidate export, vector basemap, route ink by sport) and expects the hash to
   miss (ADR 0006 step 3 moved `map.png`). The reference must be rendered with `--sport
   Ride`; the retry agent was told. Plan-reviewer round 1 started.
+- Reference render recorded, old code at upstream `e62657f`, clean tree, no code or env
+  change; the fetch succeeded on spaced retries (main Overpass instance still resets TLS;
+  a mirror answered once its 500s cleared). 1800x1529 PNG, sha256 with `--sport Ride` (the
+  comparable reference) `745936193e2b6a7af4d43063424974311234200f07ab441328c5de224b9475a7`;
+  default sport `89a9a24dd86a323c60e00746e652f7ee161f5242ab7730f622a4d9ebe9e5facb`.
+  Deterministic: Ride render repeated after deleting the plates, same PNG and plates.
+  Detail (commands, cache hashes, versions) kept upstream in git-ignored
+  `data/p8-reference/reference.md`. Upstream's own retry is 3 rounds of 4 s
+  (`geo.py:1425-1436`); short for a busy mirror, not a P8 matter.
