@@ -83,6 +83,7 @@ MODULES: tuple[str, ...] = (
     "pyntpot.maps.relief_layers",
     "pyntpot.maps.basemap_strokes",
     "pyntpot.maps.layers",
+    "pyntpot.maps.vector_layers",
     "pyntpot.maps.candidates.export",
     "pyntpot.maps.basemap",
     "pyntpot.maps.plates",

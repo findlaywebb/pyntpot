@@ -45,3 +45,4 @@ add the term here when you coin one.
 | pigment layer | One layer of the pigment stack `composite` lays: a density, a pigment colour and optionally its transparency. Not the basemap's layers. `ink.pigment.PigmentLayer`. |
 | density | How much pigment or ink lies at a pixel, 0 to 1: what `wash` and `ink_density` return and a pigment layer carries. |
 | nib plate | The lettering's own RGBA plate: marks stroked through the ink engine on the paper's colour, composited normally rather than multiplied. `letters.nib.nib_plate`, on a `letters.nib.NibSurface`. |
+| vector layers | The basemap's layers as SVG path data in card metres, read from the fetch cache under the track's key, with the landmarks and places chosen for the box (the style's picks replacing the chosen landmarks), for a caller that draws its own map instead of painting one. Not the painter's layers. `maps.vector_layers.VectorLayers`, built by `vector_layers`. |

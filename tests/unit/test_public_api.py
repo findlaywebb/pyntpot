@@ -69,10 +69,12 @@ MAPS_PUBLIC: tuple[str, ...] = (
     "Plates",
     "Style",
     "Track",
+    "VectorLayers",
     "compose",
     "fetch",
     "letter",
     "paint",
+    "vector_layers",
 )
 
 LAYERS: dict[str, tuple[str, ...]] = {
