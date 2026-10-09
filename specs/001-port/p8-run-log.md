@@ -147,3 +147,6 @@ activity" and identified upstream only.
   check 48 packages, format 333, ruff clean, prek 9 hooks, not-golden 1093 passed 1
   skipped (personal-terms file absent here), golden 22 (tolerance, exact). `p8-promote`
   pushed; PR #12 to `main` opened and held for the maintainer.
+- PR #12 CI green on `8cf499c`: checks (3.13, 3.14), golden (ubuntu, macos-15),
+  prerelease, benchmarks, CodSpeed (no performance change); mergeable, clean. Held for
+  the maintainer's merge; then the `v0.0.2` tag waits on the maintainer's confirmation.
