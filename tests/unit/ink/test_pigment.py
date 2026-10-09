@@ -3,7 +3,14 @@
 import numpy as np
 import pytest
 
-from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, Layer, composite, km_plate, multiply_plate
+from pyntpot.ink.pigment import (
+    PIGMENTS,
+    TRANSPARENCY,
+    PigmentLayer,
+    composite,
+    km_plate,
+    multiply_plate,
+)
 from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import PaperStyle
 from pyntpot.ink.wash import wash
@@ -14,7 +21,7 @@ from support.washes import two_squares
 def test_multiply_is_still_multiply_when_glazing_is_off():
     """The compositing path with the flag off is the arithmetic it replaced."""
     sheet, left, right = two_squares(80, 120)
-    layers: list[Layer] = [
+    layers: list[PigmentLayer] = [
         (wash(left, sheet, 0.52, 0.20), rgb(PIGMENTS["farmland"]), 0.10),
         (wash(right, sheet, 0.72, 0.30), rgb(PIGMENTS["wood"])),
     ]

@@ -10,7 +10,7 @@ from pytest_benchmark.fixture import BenchmarkFixture
 from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.noise import chamfer_distance
-from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, Layer, composite
+from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, PigmentLayer, composite
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.stamp import stamp
 from pyntpot.ink.style import PaperStyle
@@ -118,7 +118,7 @@ def test_compositing_a_stack(benchmark: BenchmarkFixture, sheet: Sheet, glazing:
     """Times compositing four washes over the paper, by multiply or by glazing."""
     cover = _blob()
     keys = ("farmland", "wood", "water", "heath")
-    layers: list[Layer] = [
+    layers: list[PigmentLayer] = [
         (wash(np.roll(cover, 40 * i, axis=1), sheet, 0.5, 0.2), rgb(PIGMENTS[k]), TRANSPARENCY[k])
         for i, k in enumerate(keys)
     ]

@@ -30,5 +30,5 @@ a path (or fold it into `Mark.pen`), and add it to the nib angle in `_items`
 when the switch is on. A new `NibStyle` field holds the switch, in the lettering
 group so that a change restrokes the label plate. A test writes one word along
 a horizontal path and along the same path turned 90 degrees, strokes both with
-`nib.plate` with the switch on, and compares the stroke widths of the same
+`nib.nib_plate` with the switch on, and compares the stroke widths of the same
 glyph; a second test pins that the switch off leaves `Mark.pen` unchanged.

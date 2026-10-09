@@ -23,7 +23,12 @@ from pyntpot.ink.style import PaperStyle
 
 @dataclass(frozen=True)
 class FaceStyle:
-    """The face the hand is opened with, and how a glyph is turned into a pen path."""
+    """The face the hand is opened with, and how a glyph is turned into a pen path.
+
+    Read by `Hand`, which opens the face, and by `nib_plate` through
+    `NibGroups`. The defaults open the vendored face and write along its
+    centreline. It opens no font itself.
+    """
 
     #: How a glyph is turned into something the pen follows. `centreline` thins
     #: the face's own outline to a written skeleton; `outline` draws round the
@@ -36,7 +41,11 @@ class FaceStyle:
 
 @dataclass(frozen=True)
 class HandStyle:
-    """The seed the hand draws every label's randomness from."""
+    """The seed the hand draws every label's randomness from.
+
+    Read by `Hand`, which mixes `label_seed` into every generator it hands out,
+    so one seed and one text write the same marks. It holds no generator itself.
+    """
 
     #: Every random draw a label makes comes from this plus the label's own
     #: name, so an unchanged set of names letters identically on every render and a
@@ -46,7 +55,12 @@ class HandStyle:
 
 @dataclass(frozen=True)
 class NibStyle:
-    """The nib: size, inks, widths, angle, and the backing wash laid under a name."""
+    """The nib: size, inks, widths, angle, and the backing wash laid under a name.
+
+    Read by `nib_plate` through `NibGroups`. Inks are `#rrggbb` strings, sizes
+    and widths are in display pixels, the angle is in degrees. It draws nothing
+    itself.
+    """
 
     #: The size the hand is written at, in display pixels.
     label_size_px: float = 20.0
@@ -93,7 +107,19 @@ class NibStyle:
 
 @dataclass(frozen=True)
 class NibGroups:
-    """The style groups the nib reads, passed as one value."""
+    """The style groups the nib reads, passed as one value.
+
+    One frozen value, so `nib_plate` takes one argument; it holds no defaults,
+    and `NibGroups(NibStyle(), FaceStyle(), HandStyle(), BrushStyle(),
+    PaperStyle())` is the class defaults throughout.
+
+    Attributes:
+        nib: The nib, its inks, widths and angle, and the backing wash.
+        face: The face and how a glyph becomes a pen path.
+        hand: The seed the marks' randomness starts from.
+        brush: The ink engine's brush group, for the shared brush geometry.
+        paper: The paper the plate is laid on, for its colour and encoder.
+    """
 
     nib: NibStyle
     face: FaceStyle

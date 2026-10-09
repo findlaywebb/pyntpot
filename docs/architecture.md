@@ -20,6 +20,11 @@ The layering is `maps -> letters -> ink`: each layer imports only the layers to 
 The boundary is enforced by import-linter (`[tool.importlinter]` in `pyproject.toml`) and
 the AST fitness tests in `tests/architecture/`. See `BOUNDARIES.md`.
 
+The public surface is `pyntpot.__all__` and the `__all__` of each layer package (ADR 0026);
+a name in no `__all__` is private. `examples/` holds the tutorial scripts, one per rung,
+which import only public names (`tests/architecture/test_examples.py`) and run offline
+under `tests/examples/`.
+
 ## Exemptions
 
 `tests/architecture/exemptions/` is the one sanctioned relaxation of the gates: files

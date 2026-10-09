@@ -6,7 +6,7 @@ add the term here when you coin one.
 |---|---|
 | sheet | The paper's noise fields, seeded; never the map. `ink.sheet.Sheet`. |
 | canvas | A world-unit box and the pixel grid it paints to. `ink.sheet.Canvas`. |
-| plate | One painted raster layer written to disk: paper, wash, pen, labels. |
+| plate | One painted raster layer: paper, wash, pen, labels; the painter writes each to disk. |
 | plates | The set of plates plus its manifest for one render. `maps.plates.Plates`, with its manifest `plates.json`. |
 | brush | One mark-making tool, in render pixels: a tip of bristles stamped along a path. `ink.brush.Brush`. |
 | brush sheet | The catalogue of brush cells: stroke treatments by row `"1"` to `"8"`, the rows that are a nib, and ink colours by the id's three-letter prefix and column. A brush id `<PREFIX><row>-<column>` such as `MAJ2-a` is an opaque cell name; `ink` never reads the prefix as a feature class. `ink.brush.BRUSH_TREATMENTS`, `PEN_ROWS`, `BRUSH_COLOURS`. |
@@ -39,3 +39,9 @@ add the term here when you coin one.
 | backdrop | What every name on the card is priced against: the card, the route in display pixels, the dark grid and the named road centrelines. `maps.lettering.placement_costs.Backdrop`. |
 | terms | What one name is priced against where it is tried: the card, the dark grid, the boxes already on the map, the roads it is charged for crossing and the weighted route. `maps.lettering.placement_costs.Terms`. |
 | reference | One entry of docs/explanation/references.md: a technique, its key, its canonical source and design input, and where the code implements it. |
+| fetch cache | The directory a fetch keeps its provider payloads in, keyed on the track's box, the margin and the providers' ids, which also holds each key's plates and lettering. `maps.cache.Cache`. |
+| provider | A source of map data behind the `Features` or `Elevation` protocol; the shipped ones are `maps.providers.overpass.OverpassFeatures` and `maps.providers.opentopodata.OpenTopoData`. |
+| pigment | A colour a wash or a mark lays, named by its key; what a full-strength wash of it transmits, and what it shows over black as a share of that. `ink.pigment.PIGMENTS`, `TRANSPARENCY`. |
+| pigment layer | One layer of the pigment stack `composite` lays: a density, a pigment colour and optionally its transparency. Not the basemap's layers. `ink.pigment.PigmentLayer`. |
+| density | How much pigment or ink lies at a pixel, 0 to 1: what `wash` and `ink_density` return and a pigment layer carries. |
+| nib plate | The lettering's own RGBA plate: marks stroked through the ink engine on the paper's colour, composited normally rather than multiplied. `letters.nib.nib_plate`, on a `letters.nib.NibSurface`. |

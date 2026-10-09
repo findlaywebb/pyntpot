@@ -152,7 +152,7 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 
 - Canonical source: Nearest published work: Strassmann, S. (1986). Hairy brushes. *ACM SIGGRAPH Computer Graphics* 20(4), 225-232. https://doi.org/10.1145/15886.15911 [verified-via-index: Crossref record, publisher page 403 challenge; 2026-10-07]
 - Design input: original design reading not recorded; the canonical source stands in.
-- Implemented in: `pyntpot.letters.nib.plate`
+- Implemented in: `pyntpot.letters.nib.nib_plate`
 - Note: the marks are laid through the library's bristle ink pad (`pyntpot.ink.pad.InkPad`); this library's own are the broad-nib width, which follows the angle between the stroke and the nib (`pyntpot.letters.nib._pen_profile`), the optional backing wash under the marks that ask for one, and each ink's layer composited normally over the last rather than multiplied.
 
 ## `label-placement` label placement (clearance, set along a line, one name a place)

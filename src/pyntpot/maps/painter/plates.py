@@ -21,14 +21,14 @@ from pathlib import Path
 import numpy as np
 
 from pyntpot.ink.io import save_webp, to_img
-from pyntpot.ink.pigment import Layer, composite
+from pyntpot.ink.paper import paper_plate
+from pyntpot.ink.pigment import PigmentLayer, composite
 from pyntpot.ink.sheet import rgb
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.painter.cover import paint_cover
 from pyntpot.maps.painter.fluid import paint_fluid
 from pyntpot.maps.painter.job import PaintJob, PlateStack
-from pyntpot.maps.painter.paper import paper_plate
 from pyntpot.maps.painter.pen import paint_pen, paint_route_pen
 from pyntpot.maps.painter.relief import paint_relief
 from pyntpot.maps.painter.ribbon import paint_ribbon
@@ -55,7 +55,7 @@ def _wash_plate(job: PaintJob, stack: PlateStack) -> np.ndarray:
     """The wash: the ground, then the sea, the pooled rim and the ink over it."""
     style = job.style
     ground, rim = paint_ribbon(job, stack)
-    over: list[Layer] = []
+    over: list[PigmentLayer] = []
     sea = sea_layer(job, stack)
     if sea is not None:
         over.append(sea)

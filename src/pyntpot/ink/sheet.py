@@ -24,7 +24,19 @@ PAPER = "#f3ead6"
 
 
 def rgb(hex_s: str) -> np.ndarray:
-    """One hex colour as three floats in 0 to 1."""
+    """One hex colour as three floats in 0 to 1.
+
+    Args:
+        hex_s: A `#rrggbb` string; the `#` is optional.
+
+    Returns:
+        A float32 array of red, green and blue, each in 0 to 1.
+
+    Raises:
+        ValueError: When one of the first three pairs is empty or not
+            hexadecimal (a three- or four-digit short form, for one).
+            Characters after the sixth digit are not read.
+    """
     h = hex_s.lstrip("#")
     return np.array([int(h[i : i + 2], 16) / 255.0 for i in (0, 2, 4)], F32)
 

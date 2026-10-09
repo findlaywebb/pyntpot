@@ -84,7 +84,7 @@ def draw_attribution(image: Image.Image, text: str, style: Style) -> None:
             _GRAN_PX,
         )
         groups = nib.NibGroups(style.nib, style.face, style.hand, style.brush, style.paper)
-        path = nib.plate(marks, surface, groups, Path(work) / "attribution.webp")
+        path = nib.nib_plate(marks, surface, groups, Path(work) / "attribution.webp")
         if path is None:
             log.info("the attribution drew nothing")
             return

@@ -31,7 +31,7 @@ from typing import Self
 import numpy as np
 
 from pyntpot.ink.noise import F32
-from pyntpot.ink.pigment import Layer
+from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.sheet import Canvas, Sheet
 from pyntpot.ink.wash import Blooms
 from pyntpot.maps.basemap import Basemap, Layers, Line
@@ -205,7 +205,7 @@ class PlateStack:
     water: np.ndarray
     label: np.ndarray
     wood_mask: np.ndarray
-    trimmed: list[Layer] = field(default_factory=list)
+    trimmed: list[PigmentLayer] = field(default_factory=list)
     files: dict[str, str] = field(default_factory=dict)
     sizes: dict[str, int] = field(default_factory=dict)
 

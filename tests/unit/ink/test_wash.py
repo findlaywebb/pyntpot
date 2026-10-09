@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from pyntpot.ink.noise import blur, chamfer_distance, smoothstep
-from pyntpot.ink.pigment import PIGMENTS, Layer
+from pyntpot.ink.pigment import PIGMENTS, PigmentLayer
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.style import WashStyle
 from pyntpot.ink.wash import WashOptions, flow_edge, fluid_modulate, separated, wash
@@ -12,7 +12,7 @@ from pyntpot.ink.wash import WashOptions, flow_edge, fluid_modulate, separated, 
 from support.washes import fluid_fields, two_squares
 
 
-def density(layer: Layer) -> np.ndarray:
+def density(layer: PigmentLayer) -> np.ndarray:
     """A layer's density, which these tests always give it."""
     assert layer[0] is not None
     return layer[0]
@@ -162,7 +162,7 @@ def test_the_fluid_pass_modulates_the_washes_and_never_becomes_them():
     sheet = Sheet(96, 128, gran_px=8.0, seed=5)
     style = WashStyle(fluid_pass=True)
     before = wash(wet, sheet, 0.55, 0.22, WashOptions(rim_px=7.0))
-    layers: list[Layer] = [(before.copy(), rgb(PIGMENTS["wood"]), 0.05)]
+    layers: list[PigmentLayer] = [(before.copy(), rgb(PIGMENTS["wood"]), 0.05)]
     after = density(fluid_modulate(layers, wet, sheet, style)[0])
     body = wet > 0.5
     assert after.min() >= 0.0 and after.max() <= 1.0
@@ -178,6 +178,6 @@ def test_the_fluid_pass_modulates_the_washes_and_never_becomes_them():
 def test_a_sheet_with_nothing_wet_on_it_comes_back_untouched():
     """A pass that has nothing to do hands the plate straight back."""
     sheet = Sheet(64, 64, gran_px=8.0, seed=5)
-    layers: list[Layer] = [(np.zeros((64, 64), np.float32), rgb(PIGMENTS["wood"]))]
+    layers: list[PigmentLayer] = [(np.zeros((64, 64), np.float32), rgb(PIGMENTS["wood"]))]
     same = fluid_modulate(layers, np.zeros((64, 64), np.float32), sheet, WashStyle(fluid_pass=True))
     assert same is layers

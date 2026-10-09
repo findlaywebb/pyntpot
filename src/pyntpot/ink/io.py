@@ -1,12 +1,13 @@
 """Writing plates: the dither that hides banding and the WebP encoders.
 
 Key functions: `to_img`, an RGB image with a little dither; `save_webp`, one RGB plate;
+`save_image`, a painted RGB array written to any image file Pillow knows, WebP lossless;
 `save_alpha`, a white plate carrying alpha for one the page tints itself; `save_rgba`, a
 plate carrying its own colour and alpha. Each `save_` function writes the file, creating its
 directory, and returns its size in bytes.
 
-It does not decide what is painted or whether to write lossless: the caller passes the
-setting it read from its style.
+It does not decide what is painted or, except in `save_image`, which always writes WebP
+lossless, whether to write lossless: the caller passes the setting it read from its style.
 
 Invariants: lossless writes the exact pixels that were composed; a plate's alpha is stored
 as 8 bits, rounded to nearest.
@@ -45,6 +46,37 @@ def save_webp(img: Image.Image, path: Path, quality: int = 74, *, lossless: bool
         img.save(path, format="WEBP", lossless=True, method=5)
     else:
         img.save(path, format="WEBP", quality=quality, method=5)
+    return path.stat().st_size
+
+
+def save_image(image: np.ndarray, path: Path, *, seed: int = 0) -> int:
+    """Write a painted RGB array to an image file and return its size in bytes.
+
+    It dithers as `to_img` does, with a generator seeded from `seed`, so one
+    array and seed write one file. The format follows the suffix: `.webp` is
+    written lossless, every other suffix by Pillow's encoder for it, `.png`
+    the usual.
+
+    Args:
+        image: The painted array, `(h, w, 3)` floats in 0 to 1, as `composite`
+            and `paper_plate` return.
+        path: Where to write it; its directory is created.
+        seed: Seeds the dither's generator.
+
+    Returns:
+        The file's size in bytes.
+
+    Raises:
+        ValueError: When Pillow knows no format for the suffix.
+
+    It writes no alpha (that is `save_rgba`) and does not decide what is
+    painted.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img = to_img(image, np.random.default_rng(seed))
+    if path.suffix.lower() == ".webp":
+        return save_webp(img, path, lossless=True)
+    img.save(path)
     return path.stat().st_size
 
 

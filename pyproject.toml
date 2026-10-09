@@ -172,7 +172,7 @@ all = "error"
 unresolved-import = "warn"  # third-party stubs are sometimes missing
 
 [tool.ty.src]
-include = ["src", "tests"]
+include = ["src", "tests", "examples"]
 # make_golden_old.py imports the pre-port package from the originating project; it is excluded here because that package is not installable.
 exclude = [
     "tests/golden/make_golden_old.py",

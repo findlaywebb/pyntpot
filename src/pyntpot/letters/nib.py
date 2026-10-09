@@ -2,7 +2,7 @@
 
 Key types: `NibSurface`, what the nib writes on (the render canvas, the
 display-to-render `scale`, the darkness under the plate and the paper's
-granulation cell); `plate`, which strokes marks onto it and writes the file;
+granulation cell); `nib_plate`, which strokes marks onto it and writes the file;
 `nib_brushes`, the brush per role and type size.
 
 The plate is composited normally rather than multiplied, which is the whole
@@ -13,7 +13,7 @@ lettering is made of the painted ink and not printed over it. A broad nib held a
 a fixed angle draws its full width across itself and almost nothing along
 itself, so a glyph's width follows the angle between the stroke and the nib.
 
-`plate` builds its own `Sheet` from the paper group and the surface, in one
+`nib_plate` builds its own `Sheet` from the paper group and the surface, in one
 place. It does not decide what is written, where, or in which ink a class of
 feature takes (the marks arrive with their ink), and it builds no dark grid:
 the caller hands the grid as an array.
@@ -272,7 +272,9 @@ def _ink_colour(key: str, nib: NibStyle) -> str:
     return named.get(key, key)
 
 
-def plate(marks: Sequence[Mark], surface: NibSurface, groups: NibGroups, path: Path) -> Path | None:
+def nib_plate(
+    marks: Sequence[Mark], surface: NibSurface, groups: NibGroups, path: Path
+) -> Path | None:
     """Write the marks as one RGBA plate.
 
     Source: `nib` in docs/explanation/references.md.
