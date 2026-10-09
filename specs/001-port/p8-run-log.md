@@ -110,3 +110,16 @@ activity" and identified upstream only.
   prek all hooks, not-golden 1074 passed 1 skipped, golden 19 (tolerance, byte-exact);
   G-self 19 byte-identical; coverage ink+letters 96.14 (gate 95), maps 93.98 (gate 92),
   `vector_layers.py` 286 lines at 100%. Check-first figures held. No deviation.
+- P8.P2a landed (implementer at `c317f8b`, baseline `{"commit":
+  "d63bf2ca031614ee878c3e4d09957dcef277ba3a", "dirty": false}`; red: `test_public_api`
+  `[maps]` and "ImportError: cannot import name 'candidate_export'"). Rebased onto
+  `870d31e` with conflicts in CHANGELOG, GLOSSARY, `maps/__init__.py`, `test_public_api.py`,
+  resolved by a fresh agent by the merge rules (union; docstring paragraph as the rule
+  gives it; `__all__` RUF022 order) as `11ddd60`. Gates on the rebased commit: format,
+  ruff, prek (ty, import-linter, architecture) green; not-golden no failures (1059 passed,
+  1 skipped in the coverage run); golden 19 (tolerance, byte-exact), G-self 19
+  byte-identical; coverage ink+letters 96.14, maps 94.02.
+- P8.P2c implementer done (`de5ec3b`): red 10 failed on "'Style' object has no attribute
+  'with_route_ink'"; gates green, golden 21 (two new route-ink goldens), G-self
+  byte-identical, coverage 96.14 / 93.29. Rebasing onto `11ddd60`: CHANGELOG and GLOSSARY
+  conflicts, a fresh agent resolving.

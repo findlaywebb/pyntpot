@@ -158,7 +158,7 @@ Order: after P10 part 1, P11 and P10.R. P8.P widens pyntpot's public API on its 
 - [x] P8.0 Fatten P8 into slices; plan-reviewer pass (rounds 1 and 2 BLOCK, round 3 PASS; revised after the P8.Q answers)
 - [x] P8.Q Maintainer's answers, recorded in `p8-run-log.md`: accept ADR 0006 and re-pin to pyntpot's render; promote the three gaps in pyntpot now, generic; pin `v0.0.2`
 - [x] P8.P1 ADR 0027: the candidate export, the vector layers and a fed route ink (sequential)
-- [ ] P8.P2a Promote the candidate export as `candidate_export(track, cache, key)` (pyntpot parallel group)
+- [x] P8.P2a Promote the candidate export as `candidate_export(track, cache, key)` (pyntpot parallel group)
 - [x] P8.P2b Promote the vector layers as `vector_layers(track, cache, key, style, places=(), *, origin=None)` and `VectorLayers` (pyntpot parallel group)
 - [ ] P8.P2c Feed the route ink: `Style.with_route_ink` (pyntpot parallel group)
 - [ ] P8.P3 Version 0.0.2, the PR held for the maintainer's merge, the `v0.0.2` tag, `main` merged into `p10-fixes` (sequential)
