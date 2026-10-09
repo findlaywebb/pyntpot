@@ -129,3 +129,11 @@ activity" and identified upstream only.
   G-self 21 byte-identical; coverage ink+letters 96.14, maps 94.03.
 - P8.P3 version commit started; in parallel a fresh-context review of the promotion diff
   `90c2fd6..0cd5407`.
+- Promotion diff review (fresh context, `90c2fd6..0cd5407`): fix first. API matches ADR
+  0027; default digest `25ae6fee082ebff5` unchanged; no sport wording; all gates green in
+  a probe worktree. Findings: (1, blocking) `with_route_ink` admits `inf` and `True`, and
+  `5` vs `5.0` or colour case move `digest()`; (2) docstring overclaims width for a pen
+  ink; (3) `VectorLayers` not picklable or hashable, undocumented; (4) `places`,
+  read-only, `picked` and elevation-only untested; (5) no compose width test. A fresh
+  agent fixing all five as one commit before P8.P3. Out of scope, noted for P10:
+  `maps/layers.py:109` still says "a run's map" (pre-existing wording).
