@@ -274,3 +274,6 @@ activity" and identified upstream only.
 - P8 done. Held for the maintainer: upstream PR #1 (`p8-pyntpot-migration`) and this
   branch's PR to `p10-fixes`. Open `decide` rows from P8: `upstream-provider-error-private`
   and `maps-style-route-inks-one-read` (defer). P10 part 2 follows.
+- Maintainer: "Merge them in". Upstream PR #1 merged into upstream `main` as `53b1b04`
+  (a merge commit, keeping the slice commits); pyntpot PR #13 (`p8-plan`) merged into
+  `p10-fixes` as `a918b73`. Run stopped; P10 part 2 follows on `p10-fixes`.
