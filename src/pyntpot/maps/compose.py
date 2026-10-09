@@ -58,7 +58,7 @@ def _route(
     ink: RouteInk,
     k: float,
 ) -> None:
-    """The route, in the sport's own ink, drawn onto the card in place.
+    """The route, in the route ink, drawn onto the card in place.
 
     The painter's pen plate is white carrying alpha so the page can tint it, so
     the same plate is tinted here. A style with no pen plate draws the line.
