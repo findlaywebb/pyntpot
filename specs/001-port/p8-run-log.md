@@ -61,3 +61,8 @@ activity" and identified upstream only.
 - Maintainer on the comparison crops: "For the wash differences - this seems to be due to
   the random seeding. Stylistically they are the same". Matches the bisection: shared
   generators amplify the sub-pixel geometry moves (`shared-generators`, deferred).
+- Maintainer: G1 "Yes, promote all three"; pin "Pin v0.0.2": one pyntpot promotion slice
+  (G1 public `landmark_export` over a public `Basemap`, G2 a public vector-layer value, G3
+  a route-ink sport selection), one ADR, its own branch and PR held for the maintainer's
+  merge, then tag `v0.0.2`; P8 depends on `@v0.0.2`. Plan to be refixed (review round 1
+  findings plus these answers) by a fresh agent and reviewed again.
