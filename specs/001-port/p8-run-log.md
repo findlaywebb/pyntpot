@@ -166,3 +166,9 @@ activity" and identified upstream only.
 - Before P8.2: the reference record lacked the input copies "The reference, decided"
   requires before P8.1 (missed at that point; no upstream code depends on them yet). An
   agent is completing it against the old code at `e62657f`.
+- Reference record completed upstream in git-ignored `data/p8-reference/`: the three
+  old-named payloads, the GPX, `places.json` at `e62657f`, the analysis payload and
+  `snapshot.json`, each with its sha256 in `reference.md`, plus a Preconditions section.
+  Caveat: `snapshot.json` was normalised from read-only pulls holding only the fields
+  `normalise` reads (no projected fitness rows, today = 2026-10-09); it feeds only the
+  phase gate's page check. P8.2 started in its worktree with the record copied in.
