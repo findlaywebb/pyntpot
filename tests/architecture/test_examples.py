@@ -15,7 +15,7 @@ from support import REPO_ROOT
 from support.examples import EXAMPLES_DIR
 
 #: The tutorial scripts' stems, one per rung.
-EXAMPLES: tuple[str, ...] = ()
+EXAMPLES: tuple[str, ...] = ("route_map",)
 
 _PUBLIC_MODULES = ("pyntpot", "pyntpot.ink", "pyntpot.letters", "pyntpot.maps")
 _THIRD_PARTY = frozenset({"numpy", "PIL", "pyntpot"})
