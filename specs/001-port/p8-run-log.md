@@ -204,3 +204,10 @@ activity" and identified upstream only.
   `tests/test_route_chart.py`; every other test in it removed as the slice says, which
   empties the file, so its deletion, listed in P8.7, lands here), ruff clean,
   `test_route_chart.py` format-clean, `--help` 0. No gap.
+- P8.4 landed upstream: implementer red "3 failed, 1 passed, 1 deselected, 2 errors"
+  (fetch test left out of the red run, the old command reaches the network); rebased
+  cleanly onto `1a18b57` as `452ec86`. Gates on it: 326 passed 8 skipped, ruff clean, two
+  new files format-clean, `--help` 0, G-ref "1 passed in 46.42s". No gap. Deviations:
+  the CLI reaches `Track` through `routemap` (so `routemap` stays the one pyntpot
+  importer); migration paths come from `Cache.*_path`.
+- P8.5b started from `452ec86`.
