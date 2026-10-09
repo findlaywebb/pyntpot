@@ -96,3 +96,11 @@ activity" and identified upstream only.
   new names probed in a scratch worktree (ty, ruff, lint-imports, architecture tests
   green, `MAPS_PUBLIC` red as the intended red step). Five non-blocking items being folded
   in before P8.P1.
+- Triage rows filed on `p10-fixes` (`b17a3f9`): `upstream-candidate-export-private` fix
+  P8.P2a, `upstream-vector-basemap-private` fix P8.P2b, `upstream-card-route-ink-fed` fix
+  P8.P2c, `maps-style-route-inks-one-read` defer.
+- `p8-promote` cut from `main` at `90c2fd6`. P8.P1 landed (`d63bf2c`): ADR 0027, 108
+  lines, wording grep empty. G-here green: format 329 files, ruff clean, prek all hooks,
+  not-golden 1064 passed 1 skipped, golden 19 passed (tolerance and byte-exact). Deviation:
+  the title's dash follows every existing ADR title. P8.P2a, P8.P2b, P8.P2c started in
+  parallel worktrees from `d63bf2c`.
