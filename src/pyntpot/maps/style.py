@@ -15,7 +15,8 @@ the first 16 hex digits of the SHA-256 of its group digests joined in field orde
 
 `route_ink` hands `paint` and the compose step the route's ink, and the basemap group says what
 the basemap draws. The style paints, letters and fetches nothing itself. The route ink
-is always the ride ink; there is no sport selection.
+is the theme's, unless a caller feeds its colour and width with `with_route_ink`; the
+style knows nothing of what a track records.
 
 Invariants: a theme naming an unknown key, at the top level, inside a group or
 inside a route ink, is rejected; a style never changes once built; changing a route
@@ -25,6 +26,7 @@ ink moves `digest` and neither of the other two.
 import dataclasses
 import hashlib
 import json
+import re
 import tomllib
 import typing
 from importlib import resources
@@ -61,6 +63,8 @@ BASE_GROUPS: tuple[str, ...] = (
 #: The groups only the lettering reads, in field order.
 LETTERING_GROUPS: tuple[str, ...] = ("face", "nib", "hand", "lettering")
 _DIGEST_HEX = 16
+#: A colour a caller may feed: a `#` and six hexadecimal digits.
+_HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
 
 
 class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
@@ -77,8 +81,8 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         ribbon: The trimmed extent of the painted ground and the card around it.
         cover: Land cover and the wood.
         route: The route's own painted plate.
-        route_inks: One resolved route ink per sport, read only when the route
-            is placed and drawn.
+        route_inks: The theme's named route inks, of which `route_ink()` reads
+            one, read only when the route is placed and drawn.
         lettering: Which names a map letters, and how many.
         basemap: What the basemap draws, and how much of it.
     """
@@ -147,8 +151,42 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         return _combined(self, LETTERING_GROUPS)
 
     def route_ink(self) -> RouteInk:
-        """The route's ink: always the ride ink, as there is no sport selection."""
+        """The route's ink: the theme's, with any colour and width `with_route_ink` fed in."""
         return self.route_inks.ride
+
+    def with_route_ink(self, *, colour: str | None = None, width_px: float | None = None) -> Self:
+        """A copy of the style whose route is drawn in this colour and at this width.
+
+        Only the colour and the width are fed: the route's treatment and its effect
+        keys stay the theme's. The width also sets how far apart `paint` draws the
+        strands of a doubled-back route. Only `digest()` moves, never
+        `base_digest()` or `lettering_digest()`, so no plate is repainted.
+
+        Args:
+            colour: The route's colour as `#rrggbb`, or `None` to keep the theme's.
+            width_px: The route's width in display pixels, or `None` to keep the
+                theme's.
+
+        Returns:
+            A copy whose `route_ink()` has the fed colour and width; with neither
+            fed, a copy equal to this style.
+
+        Raises:
+            ValueError: When `colour` is not a `#` and six hexadecimal digits, or
+                `width_px` is not above zero.
+        """
+        if colour is not None and _HEX_COLOUR.fullmatch(colour) is None:
+            raise ValueError(f"route colour {colour!r} is not a # and six hexadecimal digits")
+        if width_px is not None and not width_px > 0:
+            raise ValueError(f"route width {width_px!r} px is not above zero")
+        ink = self.route_ink()
+        fed = dataclasses.replace(
+            ink,
+            colour=ink.colour if colour is None else colour,
+            px=ink.px if width_px is None else width_px,
+        )
+        inks = dataclasses.replace(self.route_inks, ride=fed)
+        return self.model_copy(update={"route_inks": inks})
 
 
 def _check_keys(group: type, value: object, where: str) -> None:

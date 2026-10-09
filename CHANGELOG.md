@@ -12,6 +12,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `pyntpot.maps.candidate_export`: what a track passes, read from the fetch cache under
   the track's key (was the private `landmark_export`).
 
+### Changed
+
+- `Style.with_route_ink`: a caller feeds the route's colour and width; the default route
+  ink is unchanged.
+
 ## [0.0.1] - 2026-10-09
 
 A pre-release candidate for the upstream consumer's migration (P8 of the port plan). Not
