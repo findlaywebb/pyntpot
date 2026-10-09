@@ -9143,6 +9143,8 @@ last bit).
   no, the slice keeps `as_dict` and adds one sentence to its docstring
   naming the upstream consumer (from the "Upstream reads" record), and the
   slice's commit closes the row.
+  P8's hand-off (`p10-triage.md`, Upstream reads (P8, 9139760)): as_dict no,
+  so it is deleted.
 - ~~**If Q11 (1), the rung order**~~ (removed: Q11 answered (2), row
   `close`; the member is not done), after the side fix: test first
   `test_spans.py::test_the_longest_overlapping_span_is_the_outer_rail` (two
@@ -9201,6 +9203,9 @@ last bit).
   consumer reads it (`CASING_COLOURS` stays whenever `casing` does, since
   `casing` reads it).
   `typing.Any` stays (`RouteInk.effect` uses it).
+  P8's hand-off (`p10-triage.md`, Upstream reads (P8, 9139760)): ROUTE_INK
+  no, ROUTE_EFFECT_OFF no, ROUTE_SHADOW no, RouteInk.casing no, so each is
+  deleted, and CASING_COLOURS with `casing`.
 - About 25 changed lines, 60 with Q8.
 - Gate: G-here plus G-self (no fixture way has `tunnel=no`, and the 11
   culverts stay buried), and the coverage gates.

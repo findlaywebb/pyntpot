@@ -260,3 +260,17 @@ activity" and identified upstream only.
   pin; candidates keys exact, 46, no `x`/`y`; page journal with plates, basemap without;
   import greps clean; tree clean. (A container restart lost the first attempt at this
   run and at P8.H; both re-run from scratch.) Upstream PR #1 ready for the maintainer.
+- P8.H, the hand-off, on upstream `9139760`. Read-only agent: 9 pyntpot import lines;
+  107 reads under `analysis/`, 59 under `tests/`; 70 reads of the upstream's own style
+  names left out; the by-name grep (42 hits, all upstream-own) agrees. No D21 breach:
+  every pyntpot name imported or reached through `routemap` is public. Section
+  `## Upstream reads (P8, 9139760)` appended to `p10-triage.md` on `p10-fixes` (`b19bd3b`).
+  Re-triage by the bullet's rules: `maps-lettering-label-as-dict-unused`: as_dict no,
+  `fix` in P10.6 (delete `Label.as_dict`). `maps-style-groups-route-constants-have-no-reader`:
+  ROUTE_INK no, ROUTE_EFFECT_OFF no, ROUTE_SHADOW no, RouteInk.casing no, each deleted,
+  `CASING_COLOURS` with `casing`, `fix` in P10.7; `RouteInk.effect` (folded into
+  the row, filled from the theme TOML, and P10.7 keeps `typing.Any` for it) left to
+  P10.7's brief. Both outcomes written into the P10.6 and P10.7 briefs in plan.md.
+- P8 done. Held for the maintainer: upstream PR #1 (`p8-pyntpot-migration`) and this
+  branch's PR to `p10-fixes`. Open `decide` rows from P8: `upstream-provider-error-private`
+  and `maps-style-route-inks-one-read` (defer). P10 part 2 follows.
