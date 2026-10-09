@@ -104,3 +104,9 @@ activity" and identified upstream only.
   not-golden 1064 passed 1 skipped, golden 19 passed (tolerance and byte-exact). Deviation:
   the title's dash follows every existing ADR title. P8.P2a, P8.P2b, P8.P2c started in
   parallel worktrees from `d63bf2c`.
+- P8.P2b landed (`870d31e`), first of the group, no rebase. Baseline `{"commit":
+  "d63bf2ca031614ee878c3e4d09957dcef277ba3a", "dirty": false}`. Red: "ImportError: cannot
+  import name 'VectorLayers' from 'pyntpot.maps'". G-here green: format 331, ruff clean,
+  prek all hooks, not-golden 1074 passed 1 skipped, golden 19 (tolerance, byte-exact);
+  G-self 19 byte-identical; coverage ink+letters 96.14 (gate 95), maps 93.98 (gate 92),
+  `vector_layers.py` 286 lines at 100%. Check-first figures held. No deviation.
