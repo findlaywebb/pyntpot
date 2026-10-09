@@ -51,3 +51,10 @@ activity" and identified upstream only.
   moves (deferred `shared-generators`); pen 0.004 is the unrounded route. No public setting
   restores rounding; rounding the public `Basemap` to 0.1 m and re-applying the pin offset
   before `paint` reproduces `745936...a7` exactly. Run stopped for the maintainer.
+- P8.Q (asked early, after the review measured the mismatch). Maintainer on the hash:
+  "Accept ADR 0006, re-pin": the migrated render's reference is the v0.0.1 hash
+  `0dfffcca...6619`; the old `745936...a7` stays recorded with the bisection as the
+  explained difference. Shown old-vs-new comparisons first (wash granulation and edge
+  tone differ; geometry matches). On the gaps: G1 "Explain more"; G2 "I think we just
+  need a new promotion layer that it quickest to do now"; G3 "again - something to
+  promote now".
