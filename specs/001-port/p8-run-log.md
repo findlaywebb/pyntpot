@@ -243,3 +243,13 @@ activity" and identified upstream only.
   `paint` and aborts `geo migrate-cache`; (2) the painted-footnote test passes on the
   vector layers alone; (3) a `FetchError` tracebacks; (4) a streams-fallback test proves
   only the warning; (5) `read_text()` without an encoding.
+- Review fixes landed upstream (`9139760`, fresh agent; red "3 failed": ValueError twice,
+  FetchError once). An unreadable GPX gives a one-line error and exit 2 from `paint`, and
+  "unreadable GPX, skipped" in `geo migrate-cache`; `geo fetch` reports `FetchError` and
+  exits 2; the painted-footnote and streams-fallback tests now exercise what they name;
+  `read_text` reads UTF-8. G-up 171 passed 6 skipped; G-ref 1 passed.
+- Gap found: a real network failure in `geo fetch` raises pyntpot's `ProviderError`,
+  which no public `__all__` exports, so it still prints a traceback upstream. Not patched
+  around upstream; filed as a triage row on `p10-fixes`.
+- Upstream `origin/main` still `e62657f`, already in the branch: the pre-merge merge is a
+  no-op, so the phase gate re-runs on `9139760`, and P8.H reads that commit.
