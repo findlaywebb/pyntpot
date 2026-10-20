@@ -7,10 +7,10 @@ outside of a bend, the outside weighed against clearance, and the clearer of two
 
 It does not draw a line and does not resolve span requests.
 
-Invariants: a side is `+1` or `-1`; `_freer_side` and `route_turn` sign it towards the
-normal `(-dy, dx)`, while `_convex_side` signs it as `span_line` draws it (+1 the left of
-travel in display pixels); a straight or S-shaped stretch has no outside, and a bend never
-outweighs a clearly clearer side.
+Invariants: a side is `+1` or `-1`; `_freer_side` and `_convex_side` sign it as
+`span_line` draws it (+1 the left of travel in display pixels), and only `route_turn` signs
+it towards the normal `(-dy, dx)`; a straight or S-shaped stretch has no outside, and a bend
+never outweighs a clearly clearer side.
 """
 
 import logging
@@ -318,13 +318,13 @@ def _freer_side(
     """Which side of its own extent has the more free paper, and by how much.
 
     Each side is probed three cap heights off the route along the normal
-    `(-dy, dx)`; a probe off the card counts as solid ink.
+    `(dy, -dx)`; a probe off the card counts as solid ink.
 
     Returns:
-        `(side, margin)`: +1 for the side the normal `(-dy, dx)` points to,
-        which is the right of travel in display pixels where y runs down, -1 for
-        the other, and the difference in mean darkness between the two sides,
-        from 0 to 1. The margin is what the bend's vote is weighed against.
+        `(side, margin)`: +1 for the left of travel, the side `span_line` draws
+        a mark on for `side=+1`, -1 for the other, and the difference in mean
+        darkness between the two sides, from 0 to 1. The margin is what the
+        bend's vote is weighed against.
     """
     gw, gh, grid = dark["w"], dark["h"], dark["v"]
     score = {1: [], -1: []}
@@ -334,7 +334,7 @@ def _freer_side(
         run = math.hypot(bx - ax, by - ay)
         if run < _ZERO_PX:
             continue
-        nx, ny = -(by - ay) / run, (bx - ax) / run
+        nx, ny = (by - ay) / run, -(bx - ax) / run
         for side in (1, -1):
             x = ax + nx * side * cap_px * 3.0
             y = ay + ny * side * cap_px * 3.0

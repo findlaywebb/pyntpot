@@ -2,6 +2,7 @@
 
 import math
 
+from pyntpot.maps.card import Card
 from pyntpot.maps.lettering import span_sides
 from pyntpot.maps.lettering.label import Span
 from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, _resample, span_line
@@ -11,6 +12,7 @@ from pyntpot.maps.lettering.span_sides import (
     SPAN_CURVE_WEIGHT,
     _convex_side,
     _curved_side,
+    _freer_side,
     bend_strength,
     route_turn,
 )
@@ -95,3 +97,18 @@ def test_the_bend_is_a_weighted_term_and_a_clearer_side_still_wins():
         assert _curved_side(span, route, inside, 0.01, 14.0) == inside
     finally:
         span_sides.SPAN_CURVE_SIDE = True
+
+
+def test_the_freer_side_is_signed_as_the_mark_is_drawn():
+    """The side the free paper picks is the side the mark is then drawn on."""
+    route = [(100.0 + 5.0 * i, 300.0) for i in range(100)]
+    card = Card(
+        box=(0, 0, 800, 600), display=(800, 600), render=(800, 600), mpp=1.0, mpp_display=1.0
+    )
+    # Solid ink above the route, clear paper below it.
+    dark = {"w": 16, "h": 12, "v": [[1.0 if r <= 5 else 0.0] * 16 for r in range(12)]}
+    span = Span(name="Cat Bells", i0=10, i1=80)
+    side, margin = _freer_side(span, route, dark, card, 14.0)
+    line = span_line(route, 10, 80, side, 14.0 * SPAN_OFFSET_CAPS)
+    assert line[len(line) // 2][1] > 300.0, "the mark went on the solid side"
+    assert margin == 1.0

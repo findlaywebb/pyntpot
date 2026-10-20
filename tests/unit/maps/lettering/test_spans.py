@@ -5,6 +5,7 @@ import math
 
 from pyntpot.ink.polyline import foot_on, length, simplify
 from pyntpot.maps.annotations import Annotations, SpanRequest
+from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import Span
 from pyntpot.maps.lettering.span_clear import SPAN_CLEAR_CAPS, clear_of_route
 from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS
@@ -218,3 +219,21 @@ def test_a_span_mark_sits_at_the_hand_drawn_offset():
     # And the clearance is not scaled off it: a mark drawn nearer the road
     # still keeps half a cap height from every strand of it.
     assert SPAN_CLEAR_CAPS == 0.5
+
+
+def test_a_ground_span_takes_the_clearer_side_and_a_fast_span_the_other():
+    """The ground's mark goes on the side with more free paper and the fast span's on the other."""
+    route = [(100.0 + 5.0 * i, 300.0) for i in range(100)]
+    card = Card(
+        box=(0, 0, 800, 600), display=(800, 600), render=(800, 600), mpp=1.0, mpp_display=1.0
+    )
+    # Solid ink above the route, clear paper below it.
+    dark = {"w": 16, "h": 12, "v": [[1.0 if r <= 5 else 0.0] * 16 for r in range(12)]}
+    mean_y = {}
+    for kind in ("climb", "fast"):
+        span = Span(name="Cat Bells", kind=kind, i0=10, i1=80)
+        placed = place_spans([span], SpanSurroundings(card, route, dark), flat_measure, cap_px=14.0)
+        assert placed, f"the {kind} span was not placed"
+        mean_y[kind] = sum(y for _, y in span.line) / len(span.line)
+    assert mean_y["climb"] > 300.0, "the ground span went on the solid side"
+    assert mean_y["fast"] < 300.0, "the fast span went on the clear side"
