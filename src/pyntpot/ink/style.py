@@ -156,7 +156,7 @@ class WashStyle:
     #: the pigment worked along the shore rather than across it.
     sea_variation: bool = False
     #: The size of a patch on the ground, in metres, so the same sea reads the
-    #: same on a 3 km run and a 40 km ride. Converted at the plate's own mpp.
+    #: same on a 3 km box and a 40 km box. Converted at the plate's own mpp.
     sea_variation_cell_m: float = 600.0
     #: How far the density swings across those patches, 0 to 1, where 1 is plus
     #: or minus the wash's own density.

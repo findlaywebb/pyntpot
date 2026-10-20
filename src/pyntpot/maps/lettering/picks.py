@@ -175,7 +175,7 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
     """Where the track set off and where it finished, in the route's own ink.
 
     The ground is drawn in the map's ink and the track in the route's, and
-    these two are the track: they are facts about the ride, not about the
+    these two are the track: they are facts about the track, not about the
     place. A loop puts them on top of each other, so it gets one mark.
     """
     if len(route_px) < MIN_ROUTE_POINTS:

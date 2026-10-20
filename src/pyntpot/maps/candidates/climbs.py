@@ -1,7 +1,7 @@
 """Climbs: the sustained rises in a track, and the distances they are measured in.
 
-Key names: `rank_climbs`, the climbs of a track as candidates, in the order they
-were ridden or run and ranked by metres gained; `cumulative`, `haversine`,
+Key names: `rank_climbs`, the climbs of a track as candidates, in the order the track
+climbed them and ranked by metres gained; `cumulative`, `haversine`,
 `bearing` and `compass`, the great-circle measures a climb and its grounding
 are stated in.
 
@@ -48,7 +48,7 @@ MIN_SAMPLES = 3
 
 EARTH_RADIUS_M = 6371000.0
 
-#: The eight points a rider actually says out loud. Sixteen is a chart bearing,
+#: The eight points someone on the track actually says out loud. Sixteen is a chart bearing,
 #: not a description of which way a road went.
 COMPASS = ("north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west")
 
@@ -221,7 +221,7 @@ def rank_climbs(track: Track, line: Line) -> list[Candidate]:
         line: The track in card metres, one point per track sample.
 
     Returns:
-        One candidate per climb, in the order they were ridden or run, each
+        One candidate per climb, in the order the track climbed them, each
         ranked by metres gained. `name` is empty, since naming a climb is the
         caller's judgement; `at_m` is where the felt climb starts and `where`
         the point on `line` it starts at. `detail` carries the felt span, its

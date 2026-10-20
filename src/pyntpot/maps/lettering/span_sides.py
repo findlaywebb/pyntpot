@@ -59,7 +59,7 @@ SPAN_CURVE_SIDE: bool = True
 #: Thirty-five degrees is a little over a third of a right angle over the whole
 #: stretch, which is about where a road stops reading as a road that goes
 #: somewhere and starts reading as a bend. It is also where the sweep settles:
-#: over the four cached rides, 25 degrees moves 33 stretches for 24 better and
+#: over the four cached tracks, 25 degrees moves 33 stretches for 24 better and
 #: 8 worse, 35 moves 32 for 24 and 7, and 45 and 60 both drop a win to save
 #: nothing. The A591 climb on the Dovedale card turns 11 degrees over its
 #: whole extent and gets no vote: a span on a straight stretch staying where
@@ -104,7 +104,7 @@ SPAN_CURVE_WEIGHT = 0.08
 #: drawn at** (`SPAN_OFFSET_CAPS`), because contraction is what an offset line
 #: does at its own offset: a bend the offset can see is a bend that squeezes it. Read
 #: coarser, the measure answers a different question and stops predicting
-#: anything. Over 187 stretches from the four cached rides, the share of the
+#: anything. Over 187 stretches from the four cached tracks, the share of the
 #: decisive cases the outside gets right is 89% read at 1.5 caps, 79% at 2,
 #: 60% at 3 and 46% at 4, which is a coin toss. 1.5 is where the sweep peaks;
 #: the trend either side of it is the argument.
@@ -264,7 +264,7 @@ def _curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_p
     what the outside would actually look like is already in hand, and where the
     outside's mark comes back empty or not clear of the route while the
     free-paper side's is clear, the move is refused. Measured over the four
-    cached rides this refusal is what
+    cached tracks this refusal is what
     turns the term from roughly even into clearly worth having.
 
     Args:

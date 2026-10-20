@@ -12,7 +12,7 @@ from support.basemaps import hung_card, label_basemap
 def test_a_road_is_lettered_by_its_number_and_falls_back_to_its_name():
     """The rule: "A361" where OSM has a number, the name where it does not.
 
-    A number places a climb for a rider reading the card. A name like "Aviemore
+    A number places a climb for someone reading the card. A name like "Aviemore
     Road" is longer, eats a corner and says nothing at 26 m a pixel.
     """
     numbered = [[round(float(x), 1), 0.0] for x in range(0, 4000, 25)]

@@ -60,7 +60,7 @@ def pick_rivers(
 
     The painting classes answer "how wide is the brush" and are computed from
     run length alone, which cannot separate two tributaries of the same length.
-    What separates them on a ride is the route: the one it crossed is the one
+    What separates them on a track is the route: the one it crossed is the one
     worth naming.
 
     Args:

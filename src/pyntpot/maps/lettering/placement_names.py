@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 #: The qualifiers a pair of settlements is split by. Upper and Lower Swell
-#: are one place to the person riding through them, and are called by their
+#: are one place to the person passing through them, and are called by their
 #: stem.
 QUALIFIERS = (
     "Upper",
@@ -81,7 +81,7 @@ NAME_ALLOWANCE_DEFAULT = 1
 #: metres. Stated in metres and not in pixels because "basically the same
 #: place" is a fact about the ground rather than about the map: High Cup Nick
 #: and High Cup Nick Cairn are five metres apart and are one headland, which
-#: is a pixel on that card and would be a fifth of a pixel on a ride's, and
+#: is a pixel on that card and would be a fifth of a pixel on a big box's, and
 #: neither number says anything a rule can be built on.
 NEAR_DUPLICATE_M = 150.0
 

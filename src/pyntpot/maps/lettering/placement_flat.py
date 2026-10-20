@@ -80,7 +80,7 @@ NEAR_GAP_COST_PX = 4.0
 #: route, not worth having to save a few pixels of separation.
 #:
 #: Chosen by argument first and now measured against a card that exercises it.
-#: On the Dovedale ride, "the long climb out of Keswick" costs 190.4 on
+#: On one cached track, "the long climb out of Keswick" costs 190.4 on
 #: one line and 133.7 on its best two, so a break buys 56.7; "the A591 climb
 #: past Ambleside" costs 107.1 against 105.5, so a break buys 1.6. Anything
 #: from about 2 to about 56 separates those two cases, and 26 is the middle of

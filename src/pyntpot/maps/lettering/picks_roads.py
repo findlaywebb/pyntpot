@@ -50,10 +50,10 @@ def pick_roads(
     """Which named roads the map numbers, set along their own tarmac.
 
     A road number is the quietest thing on the map and one of the most useful:
-    it is how a rider works out where a climb actually was. A road is lettered
+    it is how someone on the track works out where a climb actually was. A road is lettered
     by its number where OSM has one, and by its name only where it has none:
     "A591" places a climb, "Keswick Road" eats a corner and says nothing at
-    26 m a pixel. Only the roads the ride was on, and only where there is
+    26 m a pixel. Only the roads the track was on, and only where there is
     enough of one inside the card to write on.
 
     **A numbered road is one road, whatever OSM calls each mile of it.** A

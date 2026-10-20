@@ -89,12 +89,12 @@ def test_the_settlements_are_chosen_by_rank_and_by_route_not_by_distance():
     )
     picked = [label.name for label in pick_settlements(basemap, card, route_px)]
     assert "Abergavenny" in picked and "Monmouth" in picked
-    assert "Faraway" not in picked, "over 1.5 km off the route is not this ride"
+    assert "Faraway" not in picked, "over 1.5 km off the route is not this track"
     assert len(picked) <= settlement_budget(card.w)
 
 
 def test_a_hamlet_alone_in_empty_country_is_not_worth_a_name():
-    """A floor, so a run through nowhere gets one label or none, not three."""
+    """A floor, so a track through nowhere gets one label or none, not three."""
     basemap, card, route_px = _labelled_card(
         candidates=[
             _place_node("Brendon", "hamlet", 300.0, 44.0, 700),
