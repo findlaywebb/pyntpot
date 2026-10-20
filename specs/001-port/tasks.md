@@ -210,7 +210,7 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 
 ### Part 2 (after P8 and its "what upstream reads" record)
 
-- [ ] P10.4c The deposit drops corners off the accumulator
+- [x] P10.4c The deposit drops corners off the accumulator
 - [ ] ~~P10.5b Route-ink names follow the route ink (if Q5 (2); ADR 0024); a missing glyph advances as the face's space (if Q3 (2))~~ Not run: Q5 and Q3 were answered (1), so both members are closed (P10.2)
 - [x] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict` (by the upstream-read record); ~~rung order if Q11 (1)~~ (removed: Q11 answered (2), row closed)
 - [ ] P10.7 Other maps: `tunnel=no`; route constants if Q8 (a), by the upstream-read record

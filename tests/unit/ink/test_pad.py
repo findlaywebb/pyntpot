@@ -151,11 +151,14 @@ def test_a_finer_grid_converges_on_the_mark_the_brush_describes():
 
     The saturation and the paper gate are per pixel, so the plate's grid is
     where a thin mark's edge is decided. Painting the whole ink pipeline on a
-    finer grid and reducing the density back converges: against a stroke
-    painted six times finer, the plate's own grid is most of twice as far off
-    as a grid twice as fine.
+    finer grid and reducing the density back converges on a stroke painted six
+    times finer: the weight of ink closes on it first order in the grid
+    (twice as fine leaves under half the plate grid's gap), and the
+    pixel-by-pixel difference falls with each, most with the first doubling, since the
+    bristle texture each grid draws for itself sets a floor. The line stays
+    clear of the plate's edge, which is not what is measured here.
     """
-    h, w = 40, 500
+    h, w = 90, 500
     t = np.linspace(20.0, w - 20.0, 900)
     pts = np.stack([t, 8.0 + t / 7.0], axis=1)  # a shallow diagonal: the worst case
     sheet = Sheet(h, w, gran_px=9.0, seed=11)
@@ -169,9 +172,14 @@ def test_a_finer_grid_converges_on_the_mark_the_brush_describes():
         return pad.read(brush, sheet)
 
     ref = at(6)
-    err = [float(np.abs(at(ss) - ref).mean()) for ss in (1, 2, 3)]
+    dens = [at(ss) for ss in (1, 2, 3)]
+    assert not ref[-3:].any()  # the whole mark is on the plate
+    gap = [abs(float(d.sum()) - float(ref.sum())) for d in dens]
+    err = [float(np.abs(d - ref).mean()) for d in dens]
+    assert gap[0] > gap[1] > gap[2]
+    assert gap[1] < gap[0] * 0.5  # first order in 1/ink_ss predicts 0.4
     assert err[0] > err[1] > err[2]
-    assert err[1] < err[0] * 0.7
+    assert err[1] < err[0] * 0.8
 
 
 def test_a_finer_grid_lays_the_same_weight_of_ink():
