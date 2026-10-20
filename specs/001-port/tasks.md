@@ -217,7 +217,7 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 - [x] P10.14 Say track and box, not run and ride, in docstrings and comments (later issue; part 2, after P10.6 and P10.7)
 - [x] P10.15 Pin that a place off the map is dropped (later issue; part 2, after P10.7 and P10.14)
 - [x] P10.16 `fetch` raises `FetchError` when a provider cannot answer (later issue; part 2, parallel, before P10.10c; ADR 0028)
-- [ ] P10.17 The ink stroke's Mark becomes StrokeProfile (later issue; part 2, beside P10.10b, before P10.10c)
+- [x] P10.17 The ink stroke's Mark becomes StrokeProfile (later issue; part 2, beside P10.10b, before P10.10c)
 - [x] P10.10a Public names for what other modules import: `ink` (if Q9 (a))
 - [x] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
 - [ ] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))

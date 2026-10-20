@@ -20,7 +20,7 @@ import numpy as np
 from pyntpot.ink.brush import Brush
 from pyntpot.ink.deposit import channels, deposit, pool, weights
 from pyntpot.ink.noise import F32
-from pyntpot.ink.stroke import Lay, Mark, Sampled, Tip, Trace
+from pyntpot.ink.stroke import Lay, Sampled, StrokeProfile, Tip, Trace
 from pyntpot.ink.tip import fbm1, smooth_path, spread, tip_band, tip_drift, unfold
 
 #: Shortest path, in render pixels, that is worth a stamp.
@@ -79,7 +79,7 @@ def _pressure(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> np.nd
     return press * ends * (1.0 + b.load * np.exp(-t / load_px))
 
 
-def _width(tr: Trace, b: Brush, press: np.ndarray, wprof: np.ndarray | None) -> Mark:
+def _width(tr: Trace, b: Brush, press: np.ndarray, wprof: np.ndarray | None) -> StrokeProfile:
     """The mark's width along the stroke, from pressure, a width profile and a nib's run."""
     width = b.width * (0.62 + 0.38 * press)
     if wprof is not None and len(wprof) > 1:
@@ -95,7 +95,7 @@ def _width(tr: Trace, b: Brush, press: np.ndarray, wprof: np.ndarray | None) -> 
         spent = 1.0 - np.exp(-np.mod(np.cumsum(press) * b.step, b.dip_px) / b.run_px)
         nib = (1.0 - b.pen_thin * spent).astype(F32)
         width = width * nib
-    return Mark(press, width, spent)
+    return StrokeProfile(press, width, spent)
 
 
 def _wobble(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> Trace:
@@ -194,7 +194,7 @@ def _sample_tip(tip: Tip, b: Brush, width: np.ndarray) -> Sampled:
     return Sampled(m_hi, u, bw, dc, ds, fp, fq, res0, prof, mean_w)
 
 
-def _offsets(tr: Trace, ink: Mark, tip: Tip, smp: Sampled, b: Brush) -> np.ndarray:
+def _offsets(tr: Trace, ink: StrokeProfile, tip: Tip, smp: Sampled, b: Brush) -> np.ndarray:
     """Where each sample across the tip sits, sideways of the path, at every stamp."""
     if tip.jit_log is not None:
         jitter = b.jitter * spread(tip.jit_log, tip.u_log, smp.u)
