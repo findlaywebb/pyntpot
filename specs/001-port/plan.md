@@ -5814,7 +5814,13 @@ a 0.1.x patch release, never by holding 0.1.0.
 - README: what it is, a route map image, a non-map image (a lettered word
   on a washed circle from `examples/word.py`), install, three-line quick
   start, data policy, attribution requirement, licence, and a pointer to
-  `references.md`.
+  `references.md`. It also carries the CodSpeed badge, written
+  exactly as
+  `[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/findlaywebb/pyntpot)`
+  (the link is the dashboard address `docs/explanation/performance.md`
+  gives): P10.2's answer Q13 (1),
+  row `p5-run-log.md:125` in `p10-triage.md`, which P7.1's commit marks
+  done.
 - `docs/tutorials/first-map.md`; `docs/how-to/{self-host-providers,
   write-a-theme,use-the-engine-without-maps}.md`; `docs/reference/`
   (public API, style fields, CLI, cache layout, manifest format);
@@ -8145,7 +8151,7 @@ part 1 (orchestrating session, 2026-10-07, told to the maintainer; P11,
    through the surface P11 widened.
 6. **Part 2**: every fix an upstream render may reach (P10.4c, P10.5b, P10.6,
    P10.7), the later slices cut after the `p10-triage` PR merged (P10.14,
-   P10.15, P10.16), the private-name renames (P10.10a to P10.10d, after every slice
+   P10.15, P10.16, P10.17), the private-name renames (P10.10a to P10.10d, after every slice
    that touches their files), and the golden group (P10.11), if any. Part 2
    branches from `main` after the tag, so it rebases over P11.
 7. P7 (docs, then 0.1.0 at P7.4), then P9.
@@ -8178,7 +8184,8 @@ P10.0 ─ P10.1 ─┬─ P10.2 (stop) ─ P10.3d ──────────
 (part 2) ─┬─ P10.4c ───────────────────────────────┐
           ├─ P10.6 ────────────┐                   │
           ├─ P10.5b ─ P10.7 ───┴─ P10.14 ─ P10.15 ─┴─ P10.10a ─ P10.10b ─┬─ P10.10c ─ P10.10d ─ P10.11 ─ P7.1 … P7.4 ─ P9
-          └─ P10.16 ─────────────────────────────────────────────────────┘
+          ├─ P10.16 ─────────────────────────────────────────────────────┤
+          └─ P10.17 ─────────────────────────────────────────────────────┘
 ```
 
 The lines leaving one `├`/`┬` fork are branches that may run in parallel
@@ -8207,7 +8214,11 @@ in parallel with all of them, P10.10a and P10.10b included; P10.10a and
 P10.10b follow the other six, and P10.10c and P10.10d follow all seven
 (P10.10c repoints imports in `maps/layers.py`, `maps/masks.py` and
 `maps/pipeline.py`, the last after P10.16, and P10.10d
-renames in the lettering modules P10.6 and P10.14 edit); P10.11 is last. A conditional slice whose answers remove every member
+renames in the lettering modules P10.6 and P10.14 edit); P10.17 (the
+`ink.stroke.Mark` rename, cut after P10.10a had landed) owns only
+`ink/stroke.py` and `ink/stamp.py`, which no P10.10b, P10.10c or P10.10d
+name touches, so it may run beside P10.10b and lands before P10.10c,
+whichever of it and P10.10b finishes first landing first; P10.11 is last. A conditional slice whose answers remove every member
 is struck through in `tasks.md` and skipped in the sequence.
 
 **P8's hand-off: "what upstream reads".** When P8 is done, the orchestrating
@@ -8330,7 +8341,9 @@ P10.5a), but changes none of those names. P11.0 re-measured the list
 at `ff752f6` (P11, "The gap, re-measured"): it adds `NibStyle`, `paper_plate` and the new helper
 `save_image`, drops `to_img` and `save_webp`, and renames `Layer` to
 `PigmentLayer` and `plate` to `nib_plate`; the comparison still finds no
-shared entry.
+shared entry. The later rename of `ink.stroke.Mark` to `StrokeProfile`
+(P10.17) adds no shared entry either: P11 named it as
+not promoted ("The gap, re-measured"), and it is in no `__all__`.
 
 The shared files that force a sequence (every row in landing order):
 
@@ -8357,6 +8370,7 @@ The shared files that force a sequence (every row in landing order):
 | `tests/benchmarks/test_ink.py` | P10.4a (deletions), P10.4b (the rename in `test_the_distance_transform`) |
 | `src/pyntpot/ink/wash.py` | P10.3c (`separated` docstring, and `wash`'s under Q7 (A) or (C)), P10.4b (import and calls of `edt`) |
 | `src/pyntpot/ink/deposit.py` | P10.3c (`spend` docstring), P10.4c (`deposit` body) |
+| `src/pyntpot/ink/stamp.py` | P10.10a (repointed imports of `ink.tip`'s names), P10.17 (`Mark` becomes `StrokeProfile`, with `ink/stroke.py`); no other part-2 slice touches either file |
 | `docs/explanation/references.md` | P10.3c (new entries), P10.4b (`chamfer-distance` lines), P10.10a (the `value-noise` and `fbm` lines, for `ink.tip._fbm1`), P10.10c (renamed `compose` sites); P9.4 after P10 |
 | `CONTRIBUTING.md` | P10.3d (`## Commits`); ~~P10.9 (one sentence, if Q9 (c))~~ (removed: Q9 answered (a)) |
 | `pyproject.toml`, `uv.lock` | P10.3b (prek), P10.R (version) |
@@ -9972,6 +9986,102 @@ clean. About 13% of err(1) is the half-pixel shift of the later row
   `Make the letters names other modules import public`,
   `Make the maps names other modules import public`,
   `Make the lettering names other modules import public`
+
+#### P10.17 `ink.stroke.Mark` becomes `StrokeProfile` (later issue)
+
+Implements the later row `ink-stroke-mark-shares-the-mark-term` (filed by
+P11.3, outcome `fix`). P10.10a had landed (`6824cfe`) when the row was
+placed, so "Later issues" does not let it join that slice: it is a new
+slice, plan-reviewed, run as its own dispatch from the `p10-fixes` head
+(which holds `6824cfe`). It changes 14 lines (+7/-7, counted as
+`6824cfe`'s 141 was), about 155 with nothing else; far under 600. It owns
+no file of P10.10b, P10.10c or P10.10d (checked: the importers of
+`letters.skeleton` and `letters.trace` are `letters/font.py` and their
+tests, and no `maps` or `letters` module imports `ink.stroke`; P10.10b to
+P10.10d never import it), so it may run beside P10.10b, and it lands,
+rebased onto the head with G-here re-run there, before P10.10c starts.
+
+- `$SLICE` is `$SCRATCH/P10.17/`, created empty, and its G-self baseline
+  is made at the head where this dispatch starts, never reused from
+  P10.10a's dispatch (made at a different commit).
+
+- What it fixes: `pyntpot.ink.stroke.Mark` (the pressure and width
+  along one stroke, and how far a nib has run down) carries the
+  glossary's "mark", which is `pyntpot.letters.setting.Mark`, public as
+  `pyntpot.letters.Mark` since ADR 0026. One concept keeps one name, so
+  the private class is renamed.
+- The name: `StrokeProfile`, the issue file's suggestion, kept after
+  these checks at `6e903c9`: `GLOSSARY.md` has no "profile" row and no
+  row for `ink.stroke`'s other records (`Trace`, `Tip`, `Sampled`,
+  `Lay`), so the new name is not a term and gets no row; no `__all__`
+  and no identifier in `src`, `tests`, `examples` or `docs` is or
+  contains `StrokeProfile` (the only hit is the issue file); it says
+  what the record holds (the press, width and spent arrays sampled
+  along the stroke), and it is no sport or activity word (the P10.14
+  rule). The prose word "profile" elsewhere (`stamp`'s `wprof`, "width
+  profile", `Sampled.prof`, `River.profile`) names other things and
+  stays.
+- Public reach: none, so no ADR and no stop. `ink.stroke` is imported
+  only by `ink/stamp.py` and `ink/deposit.py`; `stamp`, the one public
+  name in either, returns `None`; `Lay`, the only other record holding
+  one, is in no `__all__`; the probe below prints `[]`. If the probe
+  prints anything else, or the class is found reached through a public
+  name or a token (ADR 0026), stop and report: the rename then needs an
+  ADR and the maintainer.
+- Owner files: `src/pyntpot/ink/stroke.py`, `src/pyntpot/ink/stamp.py`.
+  The orchestrating session deletes
+  `docs/issues/ink-stroke-mark-shares-the-mark-term.md` in the commit.
+- Change, every site (lines at `6e903c9`, found by their text):
+  - `ink/stroke.py:3`, the module docstring's "`Mark`, the pressure
+    and" becomes "`StrokeProfile`, the pressure and" (the line becomes
+    97 characters, under the 100 of `line-length`; no re-wrap).
+  - `ink/stroke.py:31`, `class Mark:` becomes `class StrokeProfile:`;
+    its docstring ("Pressure and width along a stroke, and how far a
+    nib has run down.") stays.
+  - `ink/stroke.py:76`, `Lay`'s field `ink: Mark` becomes
+    `ink: StrokeProfile`; the field name `ink` stays (renaming it moves
+    the five `lay.ink.` reads in `ink/deposit.py`, outside this row).
+  - `ink/stamp.py:23`, the import becomes
+    `from pyntpot.ink.stroke import Lay, Sampled, StrokeProfile, Tip, Trace`
+    (ruff's isort order).
+  - `ink/stamp.py:82`, `_width`'s return annotation `-> Mark:` becomes
+    `-> StrokeProfile:` (94 characters, no wrap).
+  - `ink/stamp.py:98`, `return Mark(press, width, spent)` becomes
+    `return StrokeProfile(press, width, spent)`.
+  - `ink/stamp.py:197`, `_offsets`'s parameter `ink: Mark` becomes
+    `ink: StrokeProfile`.
+- Leave alone: behaviour, `tests/` (no test names the class),
+  `GLOSSARY.md` (its "mark" row already names `letters.setting.Mark`),
+  `docs/explanation/references.md` (no `Implemented in:` line names
+  `ink.stroke`), `CHANGELOG.md` (a private rename), every `__all__`,
+  the local variable `ink` in `stamp` and `_offsets`, the prose word
+  "mark" in `ink` docstrings (the painted mark), `docs/decisions/**`,
+  and the plan's own mentions of `ink.stroke.Mark` (P11 records).
+- Check before and after (run from the worktree root):
+  1. `grep -rnw "class Mark" src/pyntpot/ink --include=*.py` prints
+     `src/pyntpot/ink/stroke.py:31:class Mark:` before, nothing after.
+  2. `grep -rnw Mark src/pyntpot/ink --include=*.py` prints 7 lines
+     before (`stroke.py:3`, `:31`, `:76`; `stamp.py:23`, `:82`, `:98`,
+     `:197`), nothing after: no `ink` module still names `Mark`.
+  3. `grep -rnw StrokeProfile src tests examples docs GLOSSARY.md --include=*.py --include=*.md`
+     prints only `docs/issues/ink-stroke-mark-shares-the-mark-term.md:19`
+     before; after, the same issue-file line plus the 7 sites of check 2
+     (the issue file goes in the orchestrating session's commit).
+  4. The public-reach probe over all seven `__all__` modules (`pyntpot`,
+     `ink`, `letters`, `maps`, `maps.providers`, `maps.candidates`,
+     `maps.lettering`), before only:
+     `uv run python -I -c "import importlib; from pyntpot.ink.stroke import Mark; mods = [importlib.import_module(m) for m in ('pyntpot', 'pyntpot.ink', 'pyntpot.letters', 'pyntpot.maps', 'pyntpot.maps.providers', 'pyntpot.maps.candidates', 'pyntpot.maps.lettering')]; print([p.__name__ for p in mods if any(getattr(p, n, None) is Mark for n in p.__all__)])"`
+     prints `[]`.
+  A before-check whose output differs stops the slice and is reported.
+- The render: identifiers only, no executable change, so neither the
+  golden card nor `compose(..., attribution=False)` on any caller's
+  track can change; G-self byte-identical proves it for the fixture.
+- Gate: G-here (P11's form) plus G-self (a rename: byte-identical by
+  construction). No AST-neutral check (identifiers change). No coverage
+  gate (no `src` line added, no test deleted).
+- Commit: `Rename the ink stroke's Mark to StrokeProfile`. This commit
+  marks the row done in `p10-triage.md` (with checks 1 to 3) and ticks
+  P10.17 in `tasks.md`.
 
 #### P10.11 Golden group (conditional)
 
