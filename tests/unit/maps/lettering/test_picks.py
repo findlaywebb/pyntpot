@@ -2,7 +2,9 @@
 
 import math
 
+from pyntpot.maps.annotations import Annotations, Landmark
 from pyntpot.maps.basemap import River, Road
+from pyntpot.maps.lettering.picks import journal_picks
 from pyntpot.maps.lettering.picks_lines import named_lines
 from pyntpot.maps.lettering.picks_rivers import pick_rivers
 from pyntpot.maps.lettering.picks_settlements import (
@@ -137,3 +139,27 @@ def test_the_second_river_name_is_earned_by_the_run():
     assert short == ["Severn"], "a corner of river was lettered twice"
     long = [label.name for label in rivers(800)]  # 700 px of water
     assert long == ["Severn", "Severn"], "a river across the map lost its second name"
+
+
+def _named_candidate(name, x, y):
+    """One candidate as the basemap carries it: a name, a position and a class."""
+    return {"name": name, "x": x, "y": y, "class": "attraction"}
+
+
+def test_a_name_only_landmark_counts_against_the_landmark_cap():
+    """A landmark given only by name counts against the landmark cap like any other."""
+    basemap = label_basemap(
+        candidates=[
+            _named_candidate("Watersmeet", 200.0, 44.0),
+            _named_candidate("Malham Cove", 500.0, 50.0),
+            _named_candidate("Dovedale", 900.0, 30.0),
+        ]
+    )
+    picks = Annotations(landmarks=("Watersmeet", "Malham Cove", "Dovedale"))
+    assert [p["name"] for p in journal_picks(picks, basemap, 1)] == ["Watersmeet"]
+
+
+def test_a_cap_of_nought_picks_no_landmark():
+    """A cap of nought picks no landmark."""
+    picks = Annotations(landmarks=(Landmark(name="Watersmeet", lat=51.22, lng=-3.81),))
+    assert journal_picks(picks, label_basemap(), 0) == []

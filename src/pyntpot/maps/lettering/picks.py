@@ -32,9 +32,8 @@ def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list
 
     A landmark with its own latitude and longitude is placed there. One that is
     only a name, or has no position, is looked up by name in the basemap's
-    candidates and dropped when none matches. The list stops once a landmark
-    with its own fields brings it to `cap`; a name-only landmark is never
-    counted against `cap`.
+    candidates and dropped when none matches. The list stops once it holds
+    `cap` landmarks.
     """
     wanted = list(getattr(picks, "landmarks", None) or [])
     if not wanted:
@@ -42,6 +41,8 @@ def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list
     by_name = {c["name"]: c for c in basemap.candidates}
     out: list[dict[str, Any]] = []
     for entry in wanted:
+        if len(out) >= cap:
+            break
         if isinstance(entry, str):
             found = by_name.get(entry)
             if not found:
@@ -71,8 +72,6 @@ def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list
         else:
             item["lat"], item["lng"] = float(lat), float(lng)
         out.append(item)
-        if len(out) >= cap:
-            break
     return out
 
 
