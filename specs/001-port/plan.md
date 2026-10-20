@@ -43,7 +43,7 @@ tests/fixtures/lynmouth/{track.gpx, overpass-lynmouth.json, landcover-lynmouth.j
 tests/architecture/  (template tests, edited per P0.6)
 tests/architecture/exemptions/{line_budget.txt, gates_off.txt, NOTES.md}   (only shrink; emptied at P4.19, deleted at P9.2)
 docs/{tutorials,how-to,reference,explanation}/  docs/explanation/references.md
-docs/decisions/  0001, 0002 exist; 0003 to 0027 are assigned in "ADR numbers" under P3 and P4
+docs/decisions/  0001, 0002 exist; 0003 to 0028 are assigned in "ADR numbers" under P3 and P4
 specs/001-port/{spec.md,plan.md,tasks.md,architecture.md,design-sources.md}   (design-sources.md deleted at P9.4)
 ```
 
@@ -529,8 +529,9 @@ the façade at P3.16 and P3.17, and its measurements were taken at
 | 0025 | `second-golden-regeneration` | P10.11, only if the golden group exists |
 | 0026 | `widen-the-public-api` (amends 0007) | P11.1 |
 | 0027 | `candidate-export-vector-layers-and-route-ink` (amends 0007 and 0026) | P8.P1 |
+| 0028 | `fetch-wraps-provider-errors` (amends 0004) | P10.16 |
 
-P10 and P11 run before P9 (maintainer, 2026-10-07), so 0024 to 0026 may be
+P10 and P11 run before P9 (maintainer, 2026-10-07), so 0024 to 0028 may be
 written before 0022 and 0023; the numbers stay fixed, and a number whose
 conditional slice never runs stays unused.
 
@@ -8143,7 +8144,8 @@ part 1 (orchestrating session, 2026-10-07, told to the maintainer; P11,
    render hash is proved against an engine that part 2 has not touched,
    through the surface P11 widened.
 6. **Part 2**: every fix an upstream render may reach (P10.4c, P10.5b, P10.6,
-   P10.7), the private-name renames (P10.10a to P10.10d, after every slice
+   P10.7), the later slices cut after the `p10-triage` PR merged (P10.14,
+   P10.15, P10.16), the private-name renames (P10.10a to P10.10d, after every slice
    that touches their files), and the golden group (P10.11), if any. Part 2
    branches from `main` after the tag, so it rebases over P11.
 7. P7 (docs, then 0.1.0 at P7.4), then P9.
@@ -8173,9 +8175,10 @@ P10.0 ─ P10.1 ─┬─ P10.2 (stop) ─ P10.3d ──────────
                ├─ P10.3b ────────────────────────────────────────┤
                └─ P10.8 ─────────────────────────────────────────┴─ (part 1 merged) ─ P11 ─ P10.R ─ P8 ─ (part 2)
 
-(part 2) ─┬─ P10.4c ───────────┐
-          ├─ P10.6 ────────────┼─ P10.10a ─ P10.10b ─ P10.10c ─ P10.10d ─ P10.11 ─ P7.1 … P7.4 ─ P9
-          └─ P10.5b ─ P10.7 ───┘
+(part 2) ─┬─ P10.4c ───────────────────────────────┐
+          ├─ P10.6 ────────────┐                   │
+          ├─ P10.5b ─ P10.7 ───┴─ P10.14 ─ P10.15 ─┴─ P10.10a ─ P10.10b ─┬─ P10.10c ─ P10.10d ─ P10.11 ─ P7.1 … P7.4 ─ P9
+          └─ P10.16 ─────────────────────────────────────────────────────┘
 ```
 
 The lines leaving one `├`/`┬` fork are branches that may run in parallel
@@ -8195,8 +8198,16 @@ Q10), P10.3d (`CONTRIBUTING.md`), P10.3a (`maps/attribution.py`) and P10.5a
 files no other slice touches. P10.R waits for every part-1 slice (P10.3b
 in particular: `pyproject.toml`, `uv.lock`) and for every P11 slice. In part 2: P10.4c and
 P10.6 own disjoint files; P10.5b and P10.7 share
-`maps/style_groups.py` and run in that order; P10.10a to P10.10d follow all
-four; P10.11 is last. A conditional slice whose answers remove every member
+`maps/style_groups.py` and run in that order; P10.14 waits for P10.6
+(`lettering/picks.py`, `lettering/span_sides.py`, `test_picks.py`) and
+P10.7 (`test_layers.py`), and P10.15 waits for P10.7 and P10.14
+(`test_layers.py`);
+P10.16 owns files no other part-2 slice before P10.10c touches and runs
+in parallel with all of them, P10.10a and P10.10b included; P10.10a and
+P10.10b follow the other six, and P10.10c and P10.10d follow all seven
+(P10.10c repoints imports in `maps/layers.py`, `maps/masks.py` and
+`maps/pipeline.py`, the last after P10.16, and P10.10d
+renames in the lettering modules P10.6 and P10.14 edit); P10.11 is last. A conditional slice whose answers remove every member
 is struck through in `tasks.md` and skipped in the sequence.
 
 **P8's hand-off: "what upstream reads".** When P8 is done, the orchestrating
@@ -8233,7 +8244,9 @@ the public `Style`, becomes `defer` with the same reason, and
 P10.5b writes 0024 (`route-ink-names-follow-the-route`, only under Q5 (2))
 and P10.11 writes 0025 (`second-golden-regeneration`, only if the golden
 group exists). P11.1 writes 0026, the lowest number above 0023 that P10
-has not fixed. P10 runs before P9, so 0022 and 0023 do not exist yet;
+has not fixed. P8.P1 wrote 0027. P10.16 writes
+0028 (`fetch-wraps-provider-errors`), the lowest number above 0027. P10
+runs before P9, so 0022 and 0023 do not exist yet;
 before writing, `ls docs/decisions` must show the number free, otherwise
 stop and report.
 
@@ -8327,7 +8340,14 @@ The shared files that force a sequence (every row in landing order):
 | `src/pyntpot/maps/attribution.py` | P10.3a (the gate), P10.9 (pixel term, if Q2) |
 | `src/pyntpot/maps/osm_elements.py` | P10.9 (`LANDMARK_TAG_KEYS` comment), P10.7 (`_waterway`), P10.10c (`_polygon_rings`) |
 | `src/pyntpot/maps/lettering/pipeline.py` | P10.5a (`draw_plate`'s face), P10.9 (pixel term, if Q2), P10.5b (`draw_plate`'s nib, if Q5 (2)), P10.10d (renamed imports) |
-| `src/pyntpot/maps/lettering/{label,picks,spans,span_sides,placement*}.py` | P10.9 (terms), P10.6 (fixes), P10.10d (renames) |
+| `src/pyntpot/maps/lettering/{label,picks,spans,span_sides,placement*}.py` | P10.9 (terms), P10.6 (fixes), P10.14 (sport words in `picks.py`, `span_sides.py`, `placement_names.py`, `placement_flat.py`), P10.10d (renames) |
+| `src/pyntpot/maps/lettering/picks_{rivers,roads,settlements}.py` | P10.14 (sport words), P10.10d (renames, where it touches them) |
+| `src/pyntpot/maps/layers.py` | P10.14 (sport words in the module docstring, `REFERENCE_SPAN_M`'s comment, `scale_for`), P10.10c (repointed imports of `_osm_layers`, `_relief_layers`, `_densify`) |
+| `src/pyntpot/maps/masks.py` | P10.14 (one comment line), P10.10c (`_spread`) |
+| `src/pyntpot/maps/pipeline.py` | P10.16 (`fetch` wraps `ProviderError`), P10.10c (repointed imports of `compose._paste_labels`, `_plates`, `_route`) |
+| `tests/unit/maps/test_layers.py` | P10.7 (`tunnel=no` tests), P10.14 (two docstrings and the `run`/`ride` locals), P10.15 (the off-map place test; after both) |
+| `tests/unit/maps/lettering/test_picks.py` | P10.6 (landmark cap tests), P10.14 (two strings) |
+| `src/pyntpot/maps/candidates/{climbs,landmark_classes,landmarks,places,roads}.py`, `tests/unit/maps/candidates/test_{climbs,places}.py`, `tests/unit/maps/lettering/test_picks_roads.py` | P10.14 (sport words), P10.10d (`test_picks_roads.py`'s repointed imports, if any); no other part-2 slice touches them |
 | `tests/unit/maps/lettering/test_spans.py` | P10.9 (the three "rule seven" docstrings, line 64's "the sheet" if Q10), P10.6 (new side test), P10.10d (repointed imports, if any) |
 | `src/pyntpot/letters/trace.py` | P10.4b (`edt` import), P10.5a (`_radii`), P10.10b (renames) |
 | `src/pyntpot/letters/nib.py` | P10.4b (`edt` import), P10.9 (the "dark field" docstring line), P10.10b (repointed imports, if any) |
@@ -9428,6 +9448,312 @@ last bit).
 - Gate: G-here (no `src/` change, so no G-self).
 - Commit: `Name the lettering test card and four tests for the map`
 
+#### P10.14 Say track and box, not run and ride
+
+- Cut under "Later issues" after P8's hand-off (row `p8-run-log.md:138-139`,
+  "a run's map", widened to every sport word for a track). Part 2 (cut
+  after the `p10-triage` PR merged); docstrings and comments only in `src`,
+  so no render can change. It is its own slice, not a member of an
+  existing one: the maintainer instructed (2026-10-20) that the two notes
+  P8 recorded are triaged by the plan's rules without widening an
+  existing slice, and its files span `ink`, other `maps` and P10.6's
+  lettering files, so no single not-yet-started slice holds them.
+  Predecessors P10.6 (`lettering/picks.py`, `lettering/span_sides.py`,
+  `test_picks.py`) and P10.7 (`test_layers.py`); P10.15 and P10.10a
+  follow it.
+- The rule it applies: pyntpot has no notion of what a track records (ADR
+  0027; `maps/track.py:9`, "A track has no sport field"), so no `src`
+  docstring or comment calls a track a run or a ride, or the person on it
+  a rider or a runner. A "run" or "ride" that names the journey becomes
+  "track"; one that names the size of the ground becomes a box; "a rider"
+  or "a runner" becomes "someone on the track"; "riding through" becomes
+  "passing through". "Run" for a run of points, of a line or of a river's
+  ways is a different word and stays. `GLOSSARY.md` has "track" and
+  "box" (in "basemap", "fetch cache") and no term for the person, so the
+  replacement names no new term.
+- Owner files: `src/pyntpot/ink/brush_style.py`, `src/pyntpot/ink/style.py`,
+  `src/pyntpot/maps/layers.py`, `src/pyntpot/maps/masks.py`, in
+  `src/pyntpot/maps/candidates/`: `climbs.py`, `landmark_classes.py`,
+  `landmarks.py`, `places.py`, `roads.py`; in
+  `src/pyntpot/maps/lettering/`: `picks.py`, `picks_rivers.py`,
+  `picks_roads.py`, `picks_settlements.py`, `placement_flat.py`,
+  `placement_names.py`, `span_sides.py`; `tests/unit/maps/test_layers.py`,
+  `tests/unit/maps/lettering/test_picks.py`,
+  `tests/unit/maps/lettering/test_picks_roads.py`,
+  `tests/unit/maps/candidates/test_climbs.py`,
+  `tests/unit/maps/candidates/test_places.py`.
+- Leave alone: the `route_inks.ride` field and everything that names it
+  (`maps/style_groups.py`'s `RouteInks.run` and `.ride` and their comments,
+  `maps/style.py`'s two reads, `default.toml`, `test_style.py`,
+  `test_style_groups.py`: the deferred row `maps-style-route-inks-one-read`);
+  every "session" and the `Label.why` value `"the rider's own place"`
+  (`lettering/picks.py:262`): `Label.why` values are text the upstream
+  reads, so values and not prose, and the later row
+  `maps-lettering-session-and-rider-for-a-track` ("session and rider in
+  `Label.why`") holds them; `test_layers.py:153` ("a long run" of a
+  river's ways) and `:40`; the test name
+  `test_climbs_come_in_the_order_ridden_and_are_ranked_by_metres_gained`
+  (an identifier); `tests/golden/make_golden_old.py`,
+  `tests/mutation/score.py`; every identifier, string value, field and key
+  in `src`.
+- Check before and after. Each check compares the count and the matched
+  text, not the line numbers: the numbers below are as at `7902589`, and
+  P10.6 and P10.7 land first and move some of them (P10.7 deletes lines
+  above `style_groups.py:297` and adds tests after `test_layers.py:141`).
+  A count or a matched text that differs at the starting commit stops the
+  slice (phase rules).
+  1. `grep -rnIwE "rides?|ride's|ridden|run's|riders?|rider's|riding|runners?" src/pyntpot --include=*.py`
+     prints 34 lines before (the 29 below, the four `route_inks.ride`
+     lines: `maps/style.py:156`, `:198`, `maps/style_groups.py:297`,
+     `:298`, and `lettering/picks.py:262`'s `why` value) and only those
+     five after.
+  2. `grep -rnIE "a run through|box a run|km run|run past" src/pyntpot --include=*.py`
+     prints 4 lines before (`ink/style.py:159`, `maps/layers.py:62`,
+     `candidates/landmark_classes.py:29`, `lettering/picks_settlements.py:27`)
+     and nothing after.
+  3. Over `tests/unit`, without the two `route_inks` test files:
+     a. `grep -rnIwE "rides?|ride's|ridden|run's|riders?|rider's|riding|runners?" tests/unit --exclude=test_style.py --exclude=test_style_groups.py`
+        prints 11 lines before (`test_layers.py:220`, `:225` to `:230`,
+        `test_picks.py:90`, `test_picks_roads.py:15`,
+        `candidates/test_places.py:102`, `candidates/test_climbs.py:136`)
+        and nothing after.
+     b. `grep -nw run tests/unit/maps/test_layers.py tests/unit/maps/lettering/test_picks.py`
+        prints 10 lines before (`test_layers.py:153`, `:165`, `:220`,
+        `:224`, `:226` to `:230`, `test_picks.py:95`) and one after, the
+        river line ("on one way in a long run is not a sewer").
+     The other `run` lines under `tests/unit` (a run of a stroke, of a
+     shore, of a road, `subprocess.run`) are not a track and stay.
+- Change, `src` (34 lines in 16 files; the words replaced, the rest of each
+  line kept, rewrapped within the line length; every changed line stays a
+  docstring or `#` comment line):
+  - `ink/brush_style.py:34`: "on a ride and a brook" becomes "on a big box
+    and a brook".
+  - `ink/style.py:159`: "on a 3 km run and a 40 km ride" becomes "on a
+    3 km box and a 40 km box".
+  - `maps/layers.py:7` and `:109`: "than a run's map" becomes "than the
+    reference box". `:62`: "The box a run makes." becomes "The reference
+    box's span."; `:63`: "so a ride over four times the ground" becomes
+    "so a box four times as wide"; `:64`: "at a run's detail" becomes "at
+    the reference box's detail".
+  - `maps/masks.py:28`: "a ride's map" becomes "a big box's map".
+  - `candidates/climbs.py:4` and `:224`: "they were ridden or run" becomes
+    "the track climbed them"; `:51`: "a rider actually says" becomes
+    "someone on the track actually says".
+  - `candidates/landmark_classes.py:29`: "a thing to run past and see"
+    becomes "a thing to pass and see"; `:76`: "what a runner would pick
+    out" becomes "what someone on the track would pick out".
+  - `candidates/landmarks.py:11` and `:12`: "the things a" / "runner
+    navigates by" becomes "the things" / "someone on the track navigates
+    by"; `:62`: "the things a runner navigates by" becomes "the things
+    someone on the track navigates by".
+  - `candidates/places.py:4` and `:182`: "the language a rider would use"
+    becomes "the language someone on the track would use"; `:8` and `:9`:
+    "the vocabulary a" / "rider uses" becomes "the vocabulary" / "someone
+    on the track uses".
+  - `candidates/roads.py:49`: "the name a rider gives a climb" becomes
+    "the name someone on the track gives a climb".
+  - `lettering/picks.py:179`: "facts about the ride" becomes "facts about
+    the track".
+  - `lettering/placement_names.py:24`: "the person riding through them"
+    becomes "the person passing through them"; `:84`: "on a ride's"
+    becomes "on a big box's".
+  - `lettering/picks_rivers.py:63`: "on a ride" becomes "on a track".
+  - `lettering/picks_roads.py:53`: "how a rider works out" becomes "how
+    someone on the track works out"; `:56`: "the roads the ride was on"
+    becomes "the roads the track was on".
+  - `lettering/picks_settlements.py:25`: "part of this ride" becomes "part
+    of this track"; `:27`: "a run through empty country" becomes "a track
+    through empty country"; `:36`: "against the ride" becomes "against the
+    track".
+  - `lettering/placement_flat.py:83`: the comment's opening clause, which
+    names one track and a place outside the fixture box, becomes "On one
+    cached track, a long climb's name costs 190.4 on"; `:84` onwards stay.
+  - `lettering/span_sides.py:62`, `:107` and `:267`: the word "rides"
+    becomes "tracks".
+- Change, tests: `test_layers.py:165`, "a feature of the run" becomes "a
+  feature of the track"; `:220`, the docstring becomes "A big box is drawn
+  coarser than a small one, rather than shrunk to fit."; `:224` to `:230`,
+  the locals `run` and `ride` become `small` and `big`;
+  `test_picks.py:90`, "is not this ride" becomes "is not this track";
+  `:95`, "a run through nowhere" becomes "a track through nowhere";
+  `test_picks_roads.py:15`, "for a rider reading the card" becomes "for
+  someone reading the card"; `candidates/test_places.py:102`, "a rider
+  would use" becomes "someone on the track would use";
+  `candidates/test_climbs.py:136`, "ridden order is kept" becomes "the
+  track's order is kept".
+- About 50 changed lines.
+- Gate: the AST-neutral check against the starting commit, G-here (P11's
+  form) plus G-self (byte-identical: no executable `src` line changes). No
+  coverage gate (no `src` line added, no test deleted).
+- Commit: `Say track and box, not run and ride, in docstrings and comments`
+
+#### P10.15 Pin that a place off the map is dropped
+
+- Cut under "Later issues" after P8's hand-off (row `p8-run-log.md:143-145`,
+  the out-of-box place filter is untested). Part 2 (cut after the
+  `p10-triage` PR merged); tests only. It is a slice of its own, not a
+  third member of P10.7, though both are other `maps` and share
+  `test_layers.py`: the maintainer instructed (2026-10-20) that the two
+  notes P8 recorded are triaged by the plan's rules without widening an
+  existing slice, so the "Later issues" clause that cuts a new slice
+  applies. Predecessors P10.7 and P10.14 (both `test_layers.py`; it lands
+  after both); P10.10a follows it.
+- Owner files: `tests/unit/maps/test_layers.py`.
+- Leave alone: `src/**` (the filter is right: `fetch`'s `places` argument
+  says a place off the card is dropped, and `_place_marks`' docstring says
+  it keeps the ones inside the map), `tests/unit/maps/test_vector_layers.py`
+  (`vector_layers` passes places through to the same `_place_marks`,
+  `vector_layers.py:204`, `:236`).
+- Test: `test_a_place_off_the_map_is_dropped(tmp_path)`, after
+  `test_places_are_drawn_from_the_places_passed_in`: places
+  `[{"name": "Lynton", "lat": 51.2255, "lng": -3.8350},
+  {"name": "Countisbury", "lat": 51.2500, "lng": -3.8300}]` through
+  `_layers(_inputs(tmp_path, [], places))`, then
+  `assert [p["n"] for p in data["places"]] == ["Lynton"]`. Docstring "A
+  place passed in that falls off the map is dropped, and one on it is
+  kept." Both points are in the D10 box; Countisbury is about 2.6 km north
+  of the module's track, past its 900 m clip margin (the track's span is
+  under `REFERENCE_SPAN_M`, so the scale is 1).
+- Check that it pins the filter (the before-check of a test-only fix): the
+  test passes on the starting commit; then, in the slice's worktree only,
+  delete the two filter lines of `pyntpot.maps.layers._place_marks`
+  (`if not (xmin <= x <= xmax and ymin <= y <= ymax):` and its
+  `continue`, `layers.py:144-145` at `7902589`; found by their text, as
+  the line numbers may move), run the test and see it
+  fail with `Countisbury` in the list, then
+  `git checkout -- src/pyntpot/maps/layers.py`; `git status --short src`
+  prints nothing. The hand-off records the failure line.
+- About 10 changed lines.
+- Gate: G-here (P11's form; no `src` change, so no G-self).
+- Commit: `Pin that a place off the map is dropped`
+
+#### P10.16 `fetch` raises `FetchError` when a provider cannot answer
+
+- Cut under "Later issues" after the maintainer's answer of 2026-10-20 on
+  `upstream-provider-error-private` ("wrap it": `fetch` catches
+  `ProviderError` and raises `FetchError` from it). Part 2 (cut after the
+  `p10-triage` PR merged). Its files are not those of any not-yet-started
+  slice of its area, so it is its own slice. Predecessor: P8's hand-off
+  only; it runs in parallel with P10.4c, P10.6, P10.7, P10.14, P10.15,
+  P10.10a and P10.10b (disjoint files), and lands before P10.10c
+  (`maps/pipeline.py`, whose imports P10.10c repoints).
+- Owner files: `src/pyntpot/maps/pipeline.py` (`fetch`, `FetchError`, the
+  module docstring), `tests/unit/maps/test_pipeline_fetch_paint.py`,
+  `docs/decisions/0028-fetch-wraps-provider-errors.md` (new) and
+  `CHANGELOG.md` (`## [Unreleased]` only).
+- Leave alone: `maps/providers/**` (`ProviderError` and
+  `ProviderBudgetExceededError` stay where they are, private, and the
+  providers keep raising them), `maps/cache.py` (`Cache.ensure` keeps
+  letting them through: the later row
+  `maps-provider-error-private-beyond-fetch`), `maps/cli.py`, every `__all__` and
+  `tests/unit/test_public_api.py` (no name joins or leaves the public
+  surface), ADR 0004 and ADR 0026 (accepted records: 0028 amends 0004 by
+  its own text), `tests/support/providers.py`, `tests/golden/`.
+- The sites, at `7902589` (no part-2 slice before it touches these files,
+  so the numbers hold at its starting commit; a check still matches by
+  text): `FetchError` is
+  defined at `pyntpot.maps.pipeline.FetchError` (`pipeline.py:59`) and
+  raised only in `fetch` (`:94`); `ProviderError` and its subclass
+  `ProviderBudgetExceededError` are defined in `maps/providers/base.py`
+  (`:27`, `:31`) and raised by the shipped providers
+  (`providers/overpass.py:264`, `:299`; `providers/opentopodata.py:121`,
+  `:135`, `:140`, `:145`); `fetch` reaches them through `Cache.ensure`
+  (`pipeline.py:90`), which calls the providers unguarded (`cache.py:227`,
+  `:230`, `:233`). No `src` module and no test catches a `ProviderError`
+  from `fetch`: `maps/cli.py:75` calls `fetch` with no handler, and the
+  only tests that catch `ProviderError` call a provider directly
+  (`tests/unit/maps/providers/test_overpass.py:82`,
+  `test_opentopodata.py:64`, `:71`, `:78`); they stay as they are. Scope:
+  `fetch` only. `Cache.ensure`, `OverpassFeatures.features` and
+  `.landcover` and `OpenTopoData.grid` are public too and still raise
+  `ProviderError`; the answer names `fetch`, so they are the later row
+  `maps-provider-error-private-beyond-fetch` ("`ProviderError` from the
+  other public names", a `decide` standing as `defer`), not this slice.
+  The upstream reads `Cache.ensure` for its forced refetch (Upstream
+  reads (P8, 9139760): `analysis/report/routemap.py:361` calls it with
+  `force=True` before `fetch`, which has no `force`), so that path still
+  raises the private type after this slice; the hand-off says so.
+- Check first: `ls docs/decisions` shows no `0028-*` file (otherwise stop
+  and report).
+- Test first, in `tests/unit/maps/test_pipeline_fetch_paint.py` (no
+  mock: a hand-written provider like the module's
+  `_VanishingElevation`; `tests/architecture/test_testing_discipline.py`
+  bans only `unittest.mock` and `pytest_mock` imports). Beside
+  `_VanishingElevation`, add `class _FailingElevation`, docstring "An
+  elevation provider under the fixture's id that cannot answer.", whose
+  `__init__(self, error: ProviderError)` keeps the error, whose `id` and
+  `credit` properties return `"opentopodata-srtm30m"` and `SRTM_CREDIT`,
+  and whose `grid(self, box, n)` raises the kept error. Import
+  `ProviderBudgetExceededError` and `ProviderError` from
+  `pyntpot.maps.providers.base` (tests may import privates);
+  `SRTM_CREDIT` is already imported from `support.providers`. In `TestFetch` add
+  `test_a_provider_that_cannot_answer_raises_fetch_error`, parametrised
+  over `error` with
+  `[ProviderError("opentopodata-srtm30m said 'INVALID_REQUEST'"),
+  ProviderBudgetExceededError("opentopodata-srtm30m: the budget of 1000
+  calls is spent")]` and `ids=["provider-error", "budget-spent"]`,
+  taking the module's `track` and `style` fixtures and `tmp_path`: under
+  `pytest.raises(FetchError) as caught`, `pipeline.fetch(track,
+  Cache(tmp_path), FixtureFeatures(), _FailingElevation(error), style)`;
+  then `assert caught.value.__cause__ is error` and
+  `assert str(error) in str(caught.value)`. Docstring "A provider that
+  cannot answer makes `fetch` raise `FetchError` from the provider's
+  error.". Red today (the `ProviderError` escapes `pytest.raises`); the
+  hand-off records the failure line.
+- Change: `pipeline.py` imports `ProviderError` with `Elevation` and
+  `Features` from `pyntpot.maps.providers.base`; in `fetch`,
+  `key = cache.ensure(track, features, elevation)` becomes
+  `try: key = cache.ensure(track, features, elevation)` with
+  `except ProviderError as exc: raise FetchError(f"a provider could not
+  answer: {exc}") from exc`. Nothing else in `fetch` moves.
+- Docstrings, each stating what is raised as a capability fact:
+  `FetchError`'s becomes "Raised by `fetch` when it cannot build a
+  basemap: a provider could not answer, with the provider's error as the
+  cause, or the cached features were missing once the fetch had run.";
+  `fetch`'s `Raises:` entry becomes "FetchError: When a provider cannot
+  answer, a budget refusal included, raised from the provider's error;
+  or when the features payload is missing after the fetch, as when the
+  cache directory was changed underneath it."; in the module docstring,
+  the key-names sentence's `FetchError` clause becomes "`FetchError`,
+  raised when a provider cannot answer or the cached features are gone
+  once the fetch has run", and the invariants gain "a `ProviderError`
+  from either provider reaches `fetch`'s caller as `FetchError`".
+- `CHANGELOG.md`: under `## [Unreleased]`, a `### Changed` subsection
+  (created, as P8.P2c's was) with one bullet: "`pyntpot.maps.fetch`
+  raises `FetchError` when a provider cannot answer, with the provider's
+  error as its cause (ADR 0028); it let the private `ProviderError`
+  through before." No version section: P7 writes 0.1.0.
+- ADR `docs/decisions/0028-fetch-wraps-provider-errors.md`, `Status:
+  accepted`, its heading in 0027's form with the title "`fetch` raises
+  `FetchError` when a provider cannot answer", in 0027's shape (Context,
+  Decision, Consequences). Context: `fetch` let `ProviderError` through
+  from `Cache.ensure`, and no `__all__` exports it, so a caller could
+  catch it only as `RuntimeError`; the maintainer chose to wrap it
+  (2026-10-20). Decision: this ADR amends ADR 0004's "Errors", which
+  stays as written; `fetch` catches `ProviderError`, a
+  `ProviderBudgetExceededError` included, and raises `FetchError` from
+  it, the provider's error as `__cause__`; `FetchError` means `fetch`
+  could not build a basemap, because a provider could not answer or the
+  cached features were missing once the fetch had run; no name joins or
+  leaves an `__all__`; `ProviderError` and `ProviderBudgetExceededError`
+  stay private, and `Cache.ensure` and the providers' own methods still
+  raise them. Consequences: the default render, every golden and the
+  pinned digests are unchanged, since only the failure path of `fetch`
+  changes; the payloads fetched before the failure stay cached
+  (`Cache.ensure`'s invariant); a caller that caught `RuntimeError`
+  still catches it, as `FetchError` is one; a new public name, or a
+  change to one, still needs a new ADR.
+- `compose(..., attribution=False)` output cannot change: a `fetch` that
+  returns returns the same basemap as before, and only a `fetch` that
+  fails changes. G-self is byte-identical.
+- About 90 changed lines with the ADR.
+- Gate: G-here (P11's form, with `uv run prek run --files
+  docs/decisions/0028-fetch-wraps-provider-errors.md`, the new ADR, which
+  `prek run --all-files` never passes to the file-filtered hooks while it
+  is untracked) plus G-self (it changes no painted path), and the coverage
+  gates (it adds `src` lines).
+- Commit: `Raise FetchError when a provider cannot answer`
+
 #### P10.R Tag 0.0.1
 
 - The release step between P11 and P8 (maintainer, 2026-10-07: "0.0.1+
@@ -9504,8 +9830,10 @@ last bit).
   `pyntpot.letters`, `maps.lettering` is the package
   `pyntpot.maps.lettering`, and `maps` is every other module under
   `pyntpot.maps`, the `maps.lettering_*` modules included. Part 2,
-  sequential, after P10.4c, P10.5b, P10.6 and P10.7 (every other P10 slice
-  that touches their files) and before P10.11; P9.4 (`references.md`) runs
+  sequential, after P10.4c, P10.5b, P10.6, P10.7, P10.14 and P10.15
+  (every other P10 slice that touches their files, and P10.15 by the
+  diagram), P10.10c and P10.10d after P10.16 too (`maps/pipeline.py`),
+  and before P10.11; P9.4 (`references.md`) runs
   after P10.
 - Owner files: the defining and importing modules of the slice's names,
   their tests (which repoint their imports), the module docstrings that
@@ -9518,8 +9846,14 @@ last bit).
   commit; `tests/architecture/test_reference_keys.py` is the check (its
   `test_every_site_cites_its_key` fails on a path that resolves to no
   site).
-- Leave alone: behaviour, `tests/golden/`, the 32 underscore names tests
-  import that no other `src` module imports (tests may import privates),
+- Leave alone: behaviour, `tests/golden/`, the underscore names tests
+  import that no other `src` module imports (tests may import privates;
+  the slice re-counts them with the AST scan at its starting commit and
+  records the count in the hand-off: the part-2 step-3 scan finds 31
+  underscore names tests import and 13 of them that no other `src` module
+  imports, at `7902589` and identically at `91ff457`, the commit P10.0
+  started from; P10.0's 32 counted the first set, not the second, so
+  the drop from 32 to 13 is the counting, not the code),
   `docs/decisions/**` (accepted ADRs are records: ADR 0005's
   `geo._relief_layers` and `geo._osm_layers` are names in the deleted
   `_port.geo`, inside the field-to-group table that "What the window

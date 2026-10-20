@@ -184,7 +184,7 @@ Order: after P7.4, P8, P10 (both parts) and P11.
 
 ## P10. Triage and address the port's issues
 
-Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach) on `p10-triage`, one PR; then P11, which starts only after part 1 has landed on `main`; then P10.R tags 0.0.1 (own `release-0.0.1` branch and PR, after P11 merges); then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the private-name renames, the golden group) on `p10-fixes`, branched from `main` at the tag or later (and `p10-golden`); then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
+Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach, the later slices P10.12 and P10.13 among them) on `p10-triage`, one PR; then P11, which starts only after part 1 has landed on `main`; then P10.R tags 0.0.1 (own `release-0.0.1` branch and PR, after P11 merges); then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the later slices P10.14, P10.15 and P10.16, the private-name renames, the golden group) on `p10-fixes`, branched from `main` at the tag or later (and `p10-golden`); then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
 
 - [x] P10.0 Fatten P10 into slices; plan-reviewer pass
 - [x] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue; dispatch the Mutation workflow once on `main`
@@ -214,6 +214,9 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 - [ ] ~~P10.5b Route-ink names follow the route ink (if Q5 (2); ADR 0024); a missing glyph advances as the face's space (if Q3 (2))~~ Not run: Q5 and Q3 were answered (1), so both members are closed (P10.2)
 - [ ] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict` (by the upstream-read record); ~~rung order if Q11 (1)~~ (removed: Q11 answered (2), row closed)
 - [ ] P10.7 Other maps: `tunnel=no`; route constants if Q8 (a), by the upstream-read record
+- [ ] P10.14 Say track and box, not run and ride, in docstrings and comments (later issue; part 2, after P10.6 and P10.7)
+- [ ] P10.15 Pin that a place off the map is dropped (later issue; part 2, after P10.7 and P10.14)
+- [ ] P10.16 `fetch` raises `FetchError` when a provider cannot answer (later issue; part 2, parallel, before P10.10c; ADR 0028)
 - [ ] P10.10a Public names for what other modules import: `ink` (if Q9 (a))
 - [ ] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
 - [ ] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))
