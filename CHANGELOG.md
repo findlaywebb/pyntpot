@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- `pyntpot.maps.fetch` raises `FetchError` when a provider cannot answer, with the
+  provider's error as its cause (ADR 0028); it let the private `ProviderError` through
+  before.
+
 ## [0.0.2] - 2026-10-09
 
 A second pre-release candidate for the upstream consumer's migration: the candidate export, the vector layers and a fed route ink become public (ADR 0027). Not for general use; 0.1.0 is the first release.
