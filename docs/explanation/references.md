@@ -63,13 +63,13 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 
 - Canonical source: Lewis, J. P. (1989). Algorithms for solid noise synthesis. *ACM SIGGRAPH Computer Graphics* 23(3), 263-270. https://doi.org/10.1145/74334.74360 [verified-via-index: Crossref record, publisher page 403 challenge; 2026-10-07]
 - Design input: original design reading not recorded; the canonical source stands in.
-- Implemented in: `pyntpot.ink.noise.value_noise`, `pyntpot.ink.noise._value_noise_at`, `pyntpot.ink.tip._fbm1`
+- Implemented in: `pyntpot.ink.noise.value_noise`, `pyntpot.ink.noise._value_noise_at`, `pyntpot.ink.tip.fbm1`
 
 ## `fbm` fractional Brownian motion
 
 - Canonical source: Mandelbrot, B. B.; Van Ness, J. W. (1968). Fractional Brownian Motions, Fractional Noises and Applications. *SIAM Review* 10(4), 422-437. https://doi.org/10.1137/1010093 [verified-via-index: Crossref record, publisher page 403 challenge; 2026-10-07]
 - Design input: original design reading not recorded; the canonical source stands in.
-- Implemented in: `pyntpot.ink.noise.fbm`, `pyntpot.ink.noise.fbm_aniso`, `pyntpot.ink.tip._fbm1`
+- Implemented in: `pyntpot.ink.noise.fbm`, `pyntpot.ink.noise.fbm_aniso`, `pyntpot.ink.tip.fbm1`
 
 ## `chamfer-distance` chamfer distance transform
 

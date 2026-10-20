@@ -10,7 +10,7 @@ from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.pad import ink_density
 from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.stamp import stamp
-from pyntpot.ink.tip import _tip_band
+from pyntpot.ink.tip import tip_band
 
 
 def test_a_dry_brush_breaks_where_a_wet_one_does_not():
@@ -249,7 +249,7 @@ def tip_across(
     # Against the mark's own envelope rather than its mean, so what comes back
     # is the holes and steps inside the mark and not the tip's bell, nor the
     # sideways wander of the whole mark, which is a wander and not a fault.
-    env = _tip_band(prof, prof.shape[1] / 5.0)
+    env = tip_band(prof, prof.shape[1] / 5.0)
     return prof / np.maximum(env, 1e-9)
 
 
