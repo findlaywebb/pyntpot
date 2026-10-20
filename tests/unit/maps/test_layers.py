@@ -212,6 +212,16 @@ def test_places_are_drawn_from_the_places_passed_in(tmp_path: Path) -> None:
     assert [(p["n"], p["sym"]) for p in data["places"]] == [("Home", "house")]
 
 
+def test_a_place_off_the_map_is_dropped(tmp_path: Path) -> None:
+    """A place passed in that falls off the map is dropped, and one on it is kept."""
+    places = [
+        {"name": "Lynton", "lat": 51.2255, "lng": -3.8350},
+        {"name": "Countisbury", "lat": 51.2500, "lng": -3.8300},
+    ]
+    data = _layers(_inputs(tmp_path, [], places))
+    assert [p["n"] for p in data["places"]] == ["Lynton"]
+
+
 def test_home_is_untouched_by_the_new_keys() -> None:
     """`Home` has a symbol, no kind and no always_label, and draws as it always did."""
     entries = [{"name": "Home", "symbol": "house", "lat": 51.2255, "lng": -3.835}]

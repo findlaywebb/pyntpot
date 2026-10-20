@@ -215,7 +215,7 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 - [x] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict` (by the upstream-read record); ~~rung order if Q11 (1)~~ (removed: Q11 answered (2), row closed)
 - [x] P10.7 Other maps: `tunnel=no`; route constants if Q8 (a), by the upstream-read record
 - [x] P10.14 Say track and box, not run and ride, in docstrings and comments (later issue; part 2, after P10.6 and P10.7)
-- [ ] P10.15 Pin that a place off the map is dropped (later issue; part 2, after P10.7 and P10.14)
+- [x] P10.15 Pin that a place off the map is dropped (later issue; part 2, after P10.7 and P10.14)
 - [x] P10.16 `fetch` raises `FetchError` when a provider cannot answer (later issue; part 2, parallel, before P10.10c; ADR 0028)
 - [ ] P10.10a Public names for what other modules import: `ink` (if Q9 (a))
 - [ ] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
