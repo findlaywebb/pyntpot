@@ -8970,9 +8970,16 @@ The shared files that force a sequence (every row in landing order):
   P8. Part 2 (an upstream stroke near the card's edge may take the
   branch).
 - Owner files: `src/pyntpot/ink/deposit.py` (`deposit`),
-  `tests/unit/ink/test_deposit.py` (new).
-- Leave alone: `ink/stamp.py`, `ink/pad.py`, `pyntpot.ink.deposit.pool`
-  (it already crops).
+  `tests/unit/ink/test_deposit.py` (new),
+  `tests/unit/ink/test_pad.py`
+  (`test_a_finer_grid_converges_on_the_mark_the_brush_describes`), because
+  that test's 0.7 bound was measured on the off-plate pile-up this slice
+  removes.
+- Leave alone: `ink/stamp.py`, `ink/pad.py` (its `lay` puts the finer grid
+  a fraction of a pixel off the plate's: the later row
+  `ink-pad-lay-half-pixel-shift`, not this slice),
+  `pyntpot.ink.deposit.pool` (it already crops), every other test in
+  `test_pad.py`.
 - Tests first, in `tests/unit/ink/test_deposit.py` (module docstring: what
   `deposit` lays and where):
   - `test_a_sample_off_the_accumulator_lays_nothing`, parametrised over the
@@ -8995,15 +9002,87 @@ The shared files that force a sequence (every row in landing order):
   exact, so a sample on the grid deposits the same bits. Replace the
   docstring sentence with "A corner that falls off the accumulator is
   dropped."
-- About 10 changed `src` lines and 40 test lines.
+- Change, `tests/unit/ink/test_pad.py`: replace
+  `test_a_finer_grid_converges_on_the_mark_the_brush_describes` with
+  exactly this text (the file's imports already cover it: `np`, `Sheet`,
+  `BrushStyle`, `brush_from_id`, `InkPad`):
+
+  ```python
+  def test_a_finer_grid_converges_on_the_mark_the_brush_describes():
+      """What the eye reads as pixelation is the ink's own grid.
+
+      The saturation and the paper gate are per pixel, so the plate's grid is
+      where a thin mark's edge is decided. Painting the whole ink pipeline on a
+      finer grid and reducing the density back converges on a stroke painted six
+      times finer: the weight of ink closes on it first order in the grid
+      (twice as fine leaves under half the plate grid's gap), and the
+      pixel-by-pixel difference falls with each, most with the first doubling, since the
+      bristle texture each grid draws for itself sets a floor. The line stays
+      clear of the plate's edge, which is not what is measured here.
+      """
+      h, w = 90, 500
+      t = np.linspace(20.0, w - 20.0, 900)
+      pts = np.stack([t, 8.0 + t / 7.0], axis=1)  # a shallow diagonal: the worst case
+      sheet = Sheet(h, w, gran_px=9.0, seed=11)
+
+      def at(ss: int) -> np.ndarray:
+          style = BrushStyle(ink_ss=ss)
+          brush, _ = brush_from_id("MAJ6-e", 3.0, 2.0, style, "route")
+          pad = InkPad((h, w), brush, style)
+          assert pad.acc.shape == (h * ss, w * ss)
+          pad.lay([(brush, pts)], np.random.default_rng(91))
+          return pad.read(brush, sheet)
+
+      ref = at(6)
+      dens = [at(ss) for ss in (1, 2, 3)]
+      assert not ref[-3:].any()  # the whole mark is on the plate
+      gap = [abs(float(d.sum()) - float(ref.sum())) for d in dens]
+      err = [float(np.abs(d - ref).mean()) for d in dens]
+      assert gap[0] > gap[1] > gap[2]
+      assert gap[1] < gap[0] * 0.5  # first order in 1/ink_ss predicts 0.4
+      assert err[0] > err[1] > err[2]
+      assert err[1] < err[0] * 0.8
+  ```
+
+  Against the current test it changes only the plate height (40 to 90),
+  the docstring and the assertions; the t-range, line, sheet, brush, seeds
+  and `at` helper are the same. It keeps `err[0] > err[1] > err[2]`: on
+  the plate err(3) is 2 to 3% under err(2). The
+  replacement passes on the base commit too, since nothing it paints lands
+  off the plate, so it is not a red-first test; the two `test_deposit.py`
+  tests are. The bound 0.8 comes from the measured on-plate range of
+  err(2)/err(1), 0.69 to 0.75, not from the failing number, and the new
+  ink-weight assertions are the stronger convergence claim.
+- About 10 changed `src` lines and 60 test lines.
 - Gate: G-here plus G-self, and the coverage gates.
-- Commit: `Drop deposit corners that fall off the accumulator`
+- Commit: `Drop deposit corners that fall off the accumulator` (one commit,
+  the test replacement included).
 
 *(Evidence.)* The deposit probe (see "Measured at P10.0") found no sample
 with an off-grid corner in the golden render, so G-self is expected
 byte-identical; the multiply-last form is what keeps the in-grid products
 bit-equal (`wgt * (wx * wy * keep)` would reassociate and could differ in the
 last bit).
+
+*(Evidence.)* A first P10.4c run (base `cc1b510`) had G-self byte-identical
+and the two `test_deposit.py` tests red before and green after, but
+`test_pad.py`'s convergence test went red: `assert err[1] < err[0] * 0.7`,
+0.0103 against 0.0130 times 0.7; the full not-golden run was 1096 passed,
+1 skipped, 1 failed (only that test). Its line `y = 8 + t/7` leaves a plate
+40 high near t = 224, and the old clamp piled every off-plate sample on
+row 39 at every `ink_ss`, which inflated err(1). The 0.7 entered with the
+bulk import `3593962`; no plan, ADR or log cites a measurement for it. On
+the plate (six geometries, slopes 1/18 to flat, plates 16 to 140 high, the
+fixed `deposit`), err(2)/err(1) is 0.69 to 0.75, worst 0.750, and identical
+on the old code. Past `ink_ss` 2 the pixel error floors on the bristle
+texture each grid draws (two rng seeds at the same `ink_ss` differ by about
+twice the cross-grid error) and still falls from `ink_ss` 2 to 3 against
+the `ink_ss` 6 reference in every geometry measured, and turns up only at
+`ink_ss` 4 against an `ink_ss` 8 reference, which the test does not measure. The total ink weight converges first order in 1/`ink_ss`: the
+normalised gap is 1, 0.39, 0.20, 0.12, 0.03 against a predicted 1, 0.43,
+0.24, 0.14, 0.05. A plate 80 high still has ink on its edge; 90 high is
+clean. About 13% of err(1) is the half-pixel shift of the later row
+`ink-pad-lay-half-pixel-shift`.
 
 #### P10.5a The outline route narrows the nib; delete `_radii`
 
@@ -9523,8 +9602,11 @@ last bit).
         river line ("on one way in a long run is not a sewer").
      The other `run` lines under `tests/unit` (a run of a stroke, of a
      shore, of a road, `subprocess.run`) are not a track and stay.
-- Change, `src` (34 lines in 16 files; the words replaced, the rest of each
-  line kept, rewrapped within the line length; every changed line stays a
+- Change, `src` (35 lines in 16 files: the 29 lines of check 1 to change,
+  the 3 of check 2 not in it, and the 3 lines a rewrap moves,
+  `candidates/climbs.py:3`, `candidates/landmarks.py:11` and
+  `candidates/places.py:8`; the words replaced, the rest of each line
+  kept, rewrapped within the line length; every changed line stays a
   docstring or `#` comment line):
   - `ink/brush_style.py:34`: "on a ride and a brook" becomes "on a big box
     and a brook".
@@ -9536,8 +9618,8 @@ last bit).
     "so a box four times as wide"; `:64`: "at a run's detail" becomes "at
     the reference box's detail".
   - `maps/masks.py:28`: "a ride's map" becomes "a big box's map".
-  - `candidates/climbs.py:4` and `:224`: "they were ridden or run" becomes
-    "the track climbed them"; `:51`: "a rider actually says" becomes
+  - `candidates/climbs.py:3` and `:4`, and `:224`: "they were ridden or
+    run" becomes "the track climbed them"; `:51`: "a rider actually says" becomes
     "someone on the track actually says".
   - `candidates/landmark_classes.py:29`: "a thing to run past and see"
     becomes "a thing to pass and see"; `:76`: "what a runner would pick
@@ -9565,9 +9647,9 @@ last bit).
     of this track"; `:27`: "a run through empty country" becomes "a track
     through empty country"; `:36`: "against the ride" becomes "against the
     track".
-  - `lettering/placement_flat.py:83`: the comment's opening clause, which
-    names one track and a place outside the fixture box, becomes "On one
-    cached track, a long climb's name costs 190.4 on"; `:84` onwards stay.
+  - `lettering/placement_flat.py:83`: the comment's opening clause, up to
+    its first comma (it names a personal route), becomes "On one cached
+    track,"; the quoted label and `:84` onwards stay.
   - `lettering/span_sides.py:62`, `:107` and `:267`: the word "rides"
     becomes "tracks".
 - Change, tests: `test_layers.py:165`, "a feature of the run" becomes "a
@@ -9670,9 +9752,10 @@ last bit).
   `maps-provider-error-private-beyond-fetch` ("`ProviderError` from the
   other public names", a `decide` standing as `defer`), not this slice.
   The upstream reads `Cache.ensure` for its forced refetch (Upstream
-  reads (P8, 9139760): `analysis/report/routemap.py:361` calls it with
-  `force=True` before `fetch`, which has no `force`), so that path still
-  raises the private type after this slice; the hand-off says so.
+  reads (P8, 9139760) lists `analysis/report/routemap.py:361`, and that
+  line, read from the upstream at `9139760`, calls it with `force=True`
+  before `fetch`, which has no `force`), so that path still raises the
+  private type after this slice; the hand-off says so.
 - Check first: `ls docs/decisions` shows no `0028-*` file (otherwise stop
   and report).
 - Test first, in `tests/unit/maps/test_pipeline_fetch_paint.py` (no
@@ -9852,8 +9935,9 @@ last bit).
   records the count in the hand-off: the part-2 step-3 scan finds 31
   underscore names tests import and 13 of them that no other `src` module
   imports, at `7902589` and identically at `91ff457`, the commit P10.0
-  started from; P10.0's 32 counted the first set, not the second, so
-  the drop from 32 to 13 is the counting, not the code),
+  started from; P10.0's 32 was a count of the first set (31 by this
+  scan), not the second, so the drop from 32 to 13 is the counting, not
+  the code),
   `docs/decisions/**` (accepted ADRs are records: ADR 0005's
   `geo._relief_layers` and `geo._osm_layers` are names in the deleted
   `_port.geo`, inside the field-to-group table that "What the window

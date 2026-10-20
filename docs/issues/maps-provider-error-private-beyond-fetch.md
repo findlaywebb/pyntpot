@@ -12,7 +12,7 @@ let the providers' errors through. `Cache.ensure` calls the providers with no ha
 
 The upstream consumer reaches this path: its forced refetch calls
 `Cache.ensure(..., force=True)` before `fetch`, because `fetch` takes no `force`
-argument. A network failure there reaches the consumer as the private type, whether or not
+argument (read from the upstream at `9139760`, `analysis/report/routemap.py:361`). A network failure there reaches the consumer as the private type, whether or not
 `fetch` wraps it.
 
 To show it: `python -c "import pyntpot.maps as m; print('ProviderError' in m.__all__)"`
