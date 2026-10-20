@@ -16,7 +16,7 @@ home name is never wrapped; a wrapped name has at most `MAX_LINES` lines.
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Literal
 
 from pyntpot.ink.polyline import Pt
 from pyntpot.letters.setting import DEFAULT_LINE_PX
@@ -175,23 +175,6 @@ class Label:
     def ly(self) -> float:
         """The leader's text end, y."""
         return self.leader[1][1] if self.leader else self.py
-
-    def as_dict(self) -> dict[str, Any]:
-        """The placed label as a dict, the leader's text end as `lx`/`ly`."""
-        return {
-            "name": self.name,
-            "kind": self.kind,
-            "why": self.why,
-            "px": self.px,
-            "py": self.py,
-            "tx": self.tx,
-            "ty": self.ty,
-            "anchor": self.anchor,
-            "lx": self.lx,
-            "ly": self.ly,
-            "tier": self.tier,
-            "size": self.size,
-        }
 
 
 #: Every extent a span can be drawn for. The first group is the ground, the
