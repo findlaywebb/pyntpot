@@ -330,3 +330,45 @@ User instructions (2026-10-07):
   `ProviderError` and raises `FetchError` from it. A public-surface change, so it carries
   an ADR (0028, the lowest free number above 0027). Goes to a plan fix and a
   plan-reviewer pass before its slice starts.
+- Plan fix for part 2 (`cc1b510`, then `51f3024`), drafted by a fresh agent and reviewed by
+  fresh plan-reviewers: round 1 BLOCK (sport words missed, the new ADR not passed to the
+  hooks, line-number checks, a personal route name), round 2 PASS with nits. New slices,
+  each its own because the maintainer said not to widen a slice for P8's notes: P10.14
+  (generic wording in docstrings and comments), P10.15 (pin the out-of-box place
+  filter), P10.16 (`fetch` wraps provider errors, ADR 0028). New `defer` rows:
+  `maps-provider-error-private-beyond-fetch` (`Cache.ensure` and the providers' own
+  methods still raise `ProviderError`; the upstream's forced refetch calls
+  `Cache.ensure` directly), `maps-lettering-session-and-rider-for-a-track` (16 lines, 5
+  of them `Label.why` values the upstream reads) and `ink-pad-lay-half-pixel-shift`
+  (`fix-golden` by rule 4, standing `defer`). The reviewer's "fold P10.15 into P10.7"
+  was not applied, for the same instruction.
+- P10.4c's first attempt stopped: the fix turned
+  `test_pad.py::test_a_finer_grid_converges_on_the_mark_the_brush_describes` red. That
+  test's line left the plate, so the edge clamp inflated err(1); its 0.7 bound (from the
+  bulk import) fails on an on-plate line on the old code too (err(2)/err(1) 0.69 to 0.75
+  across 6 geometries and 7 seed pairs). Plan fix `51f3024` (review BLOCK, then PASS):
+  `test_pad.py` joins P10.4c's owners; the replacement keeps the line on a 90-high plate,
+  keeps `err[0] > err[1] > err[2]`, adds a first-order ink-weight check, and bounds the
+  first doubling at 0.8.
+- Landed (each rebased onto the head and G-here re-run there; G-self byte-identical on
+  the starting commit):
+  - P10.6 `1cc2d4f`, `37e8f6d`, `4aca4ec` (one commit per member). The new test named
+    "session" was renamed to say "fast span" before commit. Re-gate: not-golden 1097
+    passed 1 skipped; tolerance 22 passed; exact 22 passed. Coverage 96.14 / 94.35.
+  - P10.16 `c7b9e25`. Red first: `ProviderError: opentopodata-srtm30m said
+    'INVALID_REQUEST'`. Re-gate: not-golden 1099 passed 1 skipped; golden 22 and 22.
+    Coverage 96.14 / 94.05.
+  - P10.4c `0a45f00`. Red first: `assert np.float32(1.0) == 0.0` (and `== 0.5`); the
+    replacement `test_pad` test passes on base and fix. Re-gate: golden 22 and 22.
+    Coverage 96.14 / 94.04.
+- Render record (`compose(..., attribution=False)` on the default style, for a real
+  caller; the golden fixture is unchanged by each): P10.6 changes it when annotations
+  carry name-only landmarks beyond the cap, or spans (every span's side flips).
+  P10.4c changes it when a stroke reaches or crosses the card's edge (the edge pixels
+  get lighter). P10.7's first member changes it when a river or stream way is tagged
+  `tunnel=no`. P10.16 and P10.7's second member cannot. The upstream pins `@v0.0.2`, so
+  none reaches it until it bumps.
+  - P10.7 `d516aab`, `f85bfe4` (one commit per member). Red first: `assert 'Exe' in
+    set()`. Re-gate: golden 22 and 22. Coverage 96.14 / 94.37. Vulture now also prints
+    `style_groups.py:252: unused variable 'effect'`: `RouteInk.effect` is kept as decided
+    (read for style equality and by `test_style.py`), so the line stays.
