@@ -75,8 +75,8 @@ def _open_rivers(found: Harvest) -> list[dict[str, Any]]:
     buried river as a watercourse because it still flows; it runs in a sewer
     under a street and there is nothing to see. The test is per watercourse
     and by length, not per way: a river that passes under one short culvert
-    out of thirteen ways stays whole, and one that carries a `tunnel` tag end
-    to end goes.
+    out of thirteen ways stays whole, and one that carries a `tunnel` value
+    other than `no` end to end goes.
     """
     gone = {
         key

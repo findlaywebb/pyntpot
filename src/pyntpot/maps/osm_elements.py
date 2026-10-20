@@ -225,7 +225,7 @@ def _waterway(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: 
     run_m = scope.derived["interaction_run_m"]
     name = tags.get("name", "")
     waterway = tags["waterway"]
-    buried = bool(tags.get("tunnel"))
+    buried = tags.get("tunnel") not in (None, "", "no")
     for piece in clip_line(_geom(entry, scope.proj), scope.clip):
         river = waterway == "river"
         keep = (

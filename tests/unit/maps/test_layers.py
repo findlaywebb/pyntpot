@@ -149,6 +149,18 @@ def test_a_buried_river_is_not_drawn(tmp_path: Path) -> None:
     assert "Open water" in kept
 
 
+def test_a_river_tagged_not_in_a_tunnel_is_drawn(tmp_path: Path) -> None:
+    """A river tagged `tunnel=no` end to end is on the ground and is drawn."""
+    elements = [_way(1, {"waterway": "river", "name": "Exe", "tunnel": "no"}, BESIDE)]
+    assert "Exe" in _river_names(tmp_path, elements)
+
+
+def test_a_river_culverted_end_to_end_is_not_drawn(tmp_path: Path) -> None:
+    """A river in a culvert end to end is underground and is not drawn."""
+    elements = [_way(1, {"waterway": "river", "name": "Tay", "tunnel": "culvert"}, BESIDE)]
+    assert "Tay" not in _river_names(tmp_path, elements)
+
+
 def test_a_river_that_passes_under_one_culvert_stays_whole(tmp_path: Path) -> None:
     """A river tagged `tunnel=culvert` on one way in a long run is not a sewer."""
     long_open = [(LATS[i] + 0.00030, LNGS[i]) for i in range(5, 40)]
