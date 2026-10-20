@@ -297,3 +297,36 @@ User instructions (2026-10-07):
   `pyntpot @ git+https://github.com/findlaywebb/pyntpot@v0.0.1`. P10.R ticked in
   `tasks.md`. `p10-fixes` branches from `main` at the tagged commit; part 2 waits for
   P8's hand-off ("what upstream reads").
+
+## Part 2
+
+- Step 3, the before-check re-run at `p10-fixes`'s head `7902589` (base `0e094c7`, v0.0.2),
+  read-only agent in a detached worktree; vulture and the AST scan also re-run at
+  `ff752f6` (pre-P11) for the diff. No delta changes what a slice does.
+  - P10.4c, P10.6, P10.7, P10.11: every before-check as the brief states (P10.4c
+    `acc[3,0]` 1.0 for both samples; P10.6 picks 3 and 1, `_freer_side` side 1 at y 283.2,
+    `def as_dict` at `label.py:179`; P10.7 route constants at `style_groups.py:256, 259,
+    270, 272, 288`, `tunnel=no` and `tunnel=culvert` rivers both dropped, `_waterway` at
+    `osm_elements.py:228`; ADR 0025 free).
+  - P10.10 AST scan: the same 58 names (ink 6, letters 6, maps 12, maps.lettering 34),
+    identical at `ff752f6` and now; `vector_layers.py` imports public names only; the same
+    8 clashes; no stripped name in any `__all__` (P11 and P8.P names included) or in
+    `GLOSSARY.md`. Count delta: the scan finds 13 underscore names that tests import and
+    no other `src` module imports where the P10.10 brief says 32; the scan is identical
+    at `ff752f6`, so this is a counting-method difference, not a code change. The rule
+    is unchanged; the brief keeps the rule and the slice re-counts.
+  - Vulture (`--min-confidence 60 src`): 52 lines (42 at `ff752f6`). New: `ink/io.py:52
+    save_image` (P11), `maps/style.py:158 with_route_ink`, 8 in `maps/vector_layers.py`
+    (P8.P); `landmark_export` renamed `candidate_export` (`export.py:57`). Nothing
+    vanished. Part-2 after-checks grep vulture by name, not by line count.
+  - New readers of the names P10.6 and P10.7 delete: none in `src` or `tests`
+    (`with_route_ink` replaces colour and px only; `_check_keys` checks dataclass fields,
+    and `casing` is a property). `effect["casing_colour"]` stays in `default.toml` as
+    effect data that `RouteInk.effect` keeps.
+  - P8 notes, measured: "a run's map" at `maps/layers.py:7` and `:109`; the out-of-box
+    place filter is `maps/layers.py:144-145` (`_place_marks`; `vector_layers` passes it
+    through), and deleting it leaves `pytest -m "not golden"` green.
+- Maintainer (2026-10-20) on `upstream-provider-error-private`: wrap it: `fetch` catches
+  `ProviderError` and raises `FetchError` from it. A public-surface change, so it carries
+  an ADR (0028, the lowest free number above 0027). Goes to a plan fix and a
+  plan-reviewer pass before its slice starts.
