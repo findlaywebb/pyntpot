@@ -28,7 +28,7 @@ from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.recordingPen import DecomposingRecordingPen
 from fontTools.ttLib import TTFont
 
-from pyntpot.letters.trace import CENTRELINE, _centrelines
+from pyntpot.letters.trace import CENTRELINE, centrelines
 
 if TYPE_CHECKING:
     from pyntpot.ink.polyline import Pt
@@ -253,7 +253,7 @@ class OutlineFont:
             self._cache[ch] = Glyph(ch, advance, [])
             return self._cache[ch]
         if self.route == CENTRELINE:
-            paths = _centrelines(contours, self.upem)
+            paths = centrelines(contours, self.upem)
         else:
             paths = [[(x / self.upem, y / self.upem) for x, y in c] for c in contours]
         self._cache[ch] = Glyph(ch, advance, paths)

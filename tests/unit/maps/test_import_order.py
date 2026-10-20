@@ -208,7 +208,7 @@ def test_letters_imports_only_ink() -> None:
 
 
 #: The defining areas the private-name rule covers so far, one per renaming slice.
-PRIVATE_NAME_AREAS: tuple[str, ...] = ("ink",)
+PRIVATE_NAME_AREAS: tuple[str, ...] = ("ink", "letters")
 
 
 def _area(module: str) -> str:

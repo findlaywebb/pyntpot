@@ -24,11 +24,11 @@ from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.polyline import Pt, normals
 from pyntpot.letters.skeleton import (
     RASTER_EM,
-    _chains,
-    _components,
-    _crossings,
-    _fill,
-    _prune,
+    components,
+    crossings,
+    fill,
+    prune,
+    skeleton_chains,
     thin,
 )
 
@@ -236,7 +236,7 @@ def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> li
     leaves no mark at all.
     """
     out: list[list[Pt]] = []
-    for blob in _components(img):
+    for blob in components(img):
         if any(p in drawn for p in blob):
             continue
         rows = [r for r, _c in blob]
@@ -253,7 +253,7 @@ def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> li
     return out
 
 
-def _centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
+def centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     """One glyph's skeleton, in em units with y up.
 
     The free ends are pushed back out along their own direction by the
@@ -263,7 +263,7 @@ def _centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     two strokes that made them, and a blob the thinning ate whole comes back as
     a dot.
     """
-    img, ox, oy = _fill(contours, upem)
+    img, ox, oy = fill(contours, upem)
     skel = thin(img)
     # Distance from an inked pixel to the nearest blank one, which at a
     # terminal is half the stroke's own width: exactly what thinning ate.
@@ -271,11 +271,11 @@ def _centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     k = upem / RASTER_EM
     half = _half_width(skel, reach) if skel.any() else 1.0
     on = {(int(r), int(c)) for r, c in zip(*np.nonzero(skel), strict=True)}
-    free = {p for p in on if _crossings(p, on) <= 1}
+    free = {p for p in on if crossings(p, on) <= 1}
     runs: list[list[Pt]] = []
     drawn: set[tuple[int, int]] = set()
     kept: list[tuple[list[tuple[int, int]], list[Pt]]] = []
-    for chain in _prune(_chains(skel), SPUR_EM * RASTER_EM):
+    for chain in prune(skeleton_chains(skel), SPUR_EM * RASTER_EM):
         pts = [(c + 0.5, r + 0.5) for r, c in chain]
         if len(pts) < MIN_STROKE:
             continue
