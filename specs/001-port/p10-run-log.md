@@ -417,3 +417,10 @@ User instructions (2026-10-07):
   certifi 2026.10.19, pillow 13.0.0. Audit clean; `uv lock --check` passes; G-here green
   (not-golden 1110 passed 1 skipped; golden 22 and 22); golden output byte-identical to
   the pre-bump baseline; coverage 96.14 / 94.41; benchmarks 18 passed.
+- Maintainer (2026-10-21), on the three deferred rows in PR #25's hand-off
+  (`ink-pad-lay-half-pixel-shift`, `maps-provider-error-private-beyond-fetch`,
+  `maps-lettering-session-and-rider-for-a-track`): "Those three changes all make sense to
+  do to me." Read as: fix the half-pixel shift under the golden-group rules; wrap
+  `ProviderError` wherever a public name can leak it, as for `fetch`; reword the
+  `Label.why` values as well as the prose. Each goes to a plan fix and a plan-reviewer
+  pass before its slice starts.
