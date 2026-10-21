@@ -222,7 +222,7 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 - [x] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
 - [x] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))
 - [x] P10.10d Public names for what other modules import: `maps.lettering` (if Q9 (a))
-- [ ] P10.11 Golden group, one regeneration window; ADR 0025 (if a row is `fix-golden` and Q12 yes). Empty after P10.2 (Q4 and Q6 closed): runs only if a fix slice's G-self moves a row
+- [ ] ~~P10.11 Golden group, one regeneration window; ADR 0025 (if a row is `fix-golden` and Q12 yes)~~ Not run: no part-2 slice's G-self moved a pixel, and the one `fix-golden` row (`ink-pad-lay-half-pixel-shift`) stands `defer`
 
 ## P11. Widen the public API for primitive-first tutorials
 

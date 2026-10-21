@@ -372,3 +372,33 @@ User instructions (2026-10-07):
     set()`. Re-gate: golden 22 and 22. Coverage 96.14 / 94.37. Vulture now also prints
     `style_groups.py:252: unused variable 'effect'`: `RouteInk.effect` is kept as decided
     (read for style equality and by `test_style.py`), so the line stays.
+  - P10.14 `a3eb905`. AST-neutral 16 files; check 1 prints only the five deferred lines.
+    Re-gate: not-golden 1105 passed 1 skipped; golden 22 and 22. The personal route name
+    in `placement_flat.py:83`'s comment is gone.
+  - P10.15 `fdd0f86`. Red with the filter lines deleted: `assert ['Lynton', 'Countisbury']
+    == ['Lynton']`; `layers.py` restored byte for byte. G-here: not-golden 1106 passed.
+    `74b368d` files `tests-invented-place-name` ("Faraway" in `test_picks.py`, from the
+    port) as a later `defer` row.
+- Gap found at P10.10a: the `fix` row `ink-stroke-mark-shares-the-mark-term` (filed by
+  P11.3, "joins P10.10a ... plan-reviewed") had no brief; step 3 had not swept open rows.
+  Plan fix `609cbcd` (review BLOCK: a landed slice cannot take a member, so a new slice;
+  then PASS) cut it as P10.17 and swept every open `fix` row: the README badge row moved
+  to P7.1's brief (Q13 (1) put it there), and rows 63 to 65 got the Done cells P8 had
+  not written (pre-squash ids, landed in `0e094c7`).
+- The renames (G-self byte-identical for each; the pin
+  `test_no_module_imports_another_modules_private_name` red first for each new id):
+  - P10.10a `6824cfe`: 6 `ink` names. `6e903c9` files
+    `docs-feature-note-cites-old-smooth-path-name` as a later `defer` row.
+  - P10.10b `fa3c084`: 6 `letters` names; clash `_chains` became `skeleton_chains`.
+  - P10.17 `0a16b8c`: `ink.stroke.Mark` became `StrokeProfile`; the public-reach probe
+    over the seven `__all__` modules prints `[]`.
+  - P10.10c `17f9939`: 12 `maps` names; clashes `compose._plates` became `painted_map`,
+    `contours._pad` became `padded_grid`.
+  - P10.10d `2b7116f`: 34 `maps.lettering` names; clashes `box_on_paper`, `line_tilt`,
+    `line_bow`, `line_window`, `name_stem`. The AST scan prints 0 pairs; the last re-gate:
+    not-golden 1110 passed 1 skipped, golden 22 and 22.
+- P10.11 not run: no part-2 slice moved a golden pixel, and the one `fix-golden` row
+  (`ink-pad-lay-half-pixel-shift`) stands `defer`. No `p10-golden` branch; part 2 is
+  one PR. For the maintainer's hand-off: `ink-pad-lay-half-pixel-shift` (a golden
+  decision), `maps-provider-error-private-beyond-fetch` and
+  `maps-lettering-session-and-rider-for-a-track` (both `defer`, awaiting an answer).
