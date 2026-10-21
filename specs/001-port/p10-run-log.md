@@ -439,3 +439,21 @@ User instructions (2026-10-07):
   calls). The comparison script read RGB only; the repo's `differing_fraction` counts
   alpha for RGBA outputs. Canonical fractions (`make_golden.py --compare`, delta > 2):
   map 0.060095, wash 0.053400, labels-centreline 0.038954, pen 0.007298, paper 0.
+- Plan fix `563676c` (draft, review BLOCK on the consumer's name in two hand-off notes,
+  a seed-dependent `err[1] > err[2]` in P10.11's `test_pad.py` change and a missing
+  CHANGELOG line; then a confirmation BLOCK on the exact test docstring; then applied as
+  prescribed) adds P10.18, P10.19 and P10.11's body. P10.11's `test_pad.py` change, by
+  the reviewer's seed sweep: err(2)/err(1) is 0.793 to 0.815 after the half-pixel fix
+  (0.695 to 0.750 before), so the first-doubling bound becomes 0.85; err(3)/err(2) is
+  0.910 to 1.037, so `err[1] > err[2]` is dropped for `err[2] < err[0] * 0.9`.
+- P10.18 `ec1266c`: `ProviderError` and `ProviderBudgetExceededError` exported from
+  `pyntpot.maps`; `FetchError` moved to `maps/cache.py` (`pyntpot.maps.FetchError`
+  unchanged); `Cache.ensure` wraps; `fetch`'s own wrap removed as unreachable; ADR 0029.
+  Red first: the provider's error escaping `pytest.raises`, and the `__all__` pin. G-self
+  byte-identical; not-golden 1115 passed 1 skipped; golden 22 and 22; coverage 96.14 /
+  94.41.
+- P10.19 `ec062f9`: the five `Label.why` values say "track" and
+  "home"; 11 prose lines reworded. Red first: `('start', 'where the session began') !=
+  ('start', 'where the track began')`. G-self byte-identical (`why` is never drawn);
+  not-golden 1117 passed 1 skipped; golden 22 and 22. Three test lines outside the rows
+  still say "session": filed as `tests-session-wording` (`defer`).
