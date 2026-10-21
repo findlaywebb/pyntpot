@@ -9235,12 +9235,12 @@ clean. About 13% of err(1) is the half-pixel shift of the later row
   14 * SPAN_OFFSET_CAPS)`, puts the line's middle point at `y > 300`, the
   clear side, and the margin is `1.0`; docstring "The side the free paper
   picks is the side the mark is then drawn on.") and
-  `test_spans.py::test_a_ground_span_takes_the_clearer_side_and_a_session_span_the_other`
+  `test_spans.py::test_a_ground_span_takes_the_clearer_side_and_a_fast_span_the_other`
   (the same set-up through `place_spans` with `SpanSurroundings(card, route,
   dark)` and `flat_measure`, in two calls with one span each, so the two
   spans never share rungs: a `kind="climb"` span's line has mean `y > 300`
   and a `kind="fast"` span's mean `y < 300`; docstring "The ground's mark
-  goes on the side with more free paper and the session's on the other.").
+  goes on the side with more free paper and the fast span's on the other.").
   Both red today (283.2 for the ground span). Change: in
   `pyntpot.maps.lettering.span_sides._freer_side`, the probe normal becomes
   `nx, ny = (by - ay) / run, -(bx - ax) / run`, so `+1` is the left of
