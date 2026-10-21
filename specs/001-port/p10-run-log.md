@@ -457,3 +457,32 @@ User instructions (2026-10-07):
   ('start', 'where the track began')`. G-self byte-identical (`why` is never drawn);
   not-golden 1117 passed 1 skipped; golden 22 and 22. Three test lines outside the rows
   still say "session": filed as `tests-session-wording` (`defer`).
+- PR #25 (`p10-fixes`) merged to `main` as `79a95ad` (squash) on the maintainer's
+  standing go ("You are good to merge pr25 when it is ready"), CI 7 of 7 green on
+  `76fa144`.
+- P10.11, the golden group, on `p10-golden` from `79a95ad`. Step 0 baseline at `79a95ad`.
+  Step 1 `693c88b` (`Lay the finer ink grid centre to centre with the plate`): red first
+  `assert 19.92800499178153 == 20.207119701747484 ± 0.1`; the step compare's only
+  violations were the four accepted `--max-fraction` lines (wash 0.053400, pen 0.007298,
+  labels-centreline 0.038954, map 0.060095; paper identical; hash
+  `340a7f6e260ee1e2-e5a5f1b4b3ca2177` equal; labels equal), committed as the
+  maintainer-accepted exception. Not-golden 1118 passed 1 skipped; coverage 96.14 / 94.57.
+  Backup ref `wip/p10-golden-window` pushed at `693c88b` (container restarts), deleted
+  after the push. Step 2, the regeneration: four images and `plates.json` changed (paper
+  byte-identical; hash unchanged; `plates.json` final newline restored by the hook);
+  G-here green (not-golden 1118 passed 1 skipped; golden 22 and 22); the final compare
+  byte-identical against both the new goldens and step 1; old and new `map.png` look the
+  same. ADR 0025 accepted.
+- PR #26 opened (`p10-golden` to `main`). CI red on `checks (3.13)`, `(3.14)` and
+  `prerelease`: the two smoke tests' exact `SMOKE_SHA`, wash only. Cause: numpy's float32
+  wash differs by 1 ulp between AVX-512 and non-AVX-512 paths; after the half-pixel fix one
+  pixel, (90, 97), rounds one level apart. `NPY_DISABLE_CPU_FEATURES=X86_V4` reproduces CI's
+  hash. One comment on the PR. Plan fix `5e174a0` (review BLOCK on the mutation run, which
+  runs the same tests exact; then PASS) added P10.11 step 3 and ADR 0030.
+- P10.11 step 3: the smoke lock is exact locally; under `--golden-tolerance` (CI's Tests
+  steps and `[tool.mutmut]`) paper and pen stay byte-exact and wash is compared with
+  `differing_fraction` against `tests/golden/smoke/wash.webp`, which a test pins to
+  `SMOKE_SHA["wash"]`. Red: exact under X86_V4, 2 failed. Green: tolerance under X86_V4
+  (3 passed; whole not-golden 1101 passed 1 skipped; mutmut selection 1035 passed); G-here
+  green (not-golden 1119 passed 1 skipped; golden 22 and 22); coverage 96.14 / 94.57; no
+  `src` or `tests/golden/lynmouth` change.

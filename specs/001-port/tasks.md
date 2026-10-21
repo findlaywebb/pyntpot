@@ -224,7 +224,7 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 - [x] P10.10d Public names for what other modules import: `maps.lettering` (if Q9 (a))
 - [x] P10.18 The provider errors are public, and `Cache.ensure` wraps them (later issue; part 2, after P10.10d and P10.17, before the `p10-fixes` PR merges; ADR 0029)
 - [x] P10.19 Say track, not session or rider, in the lettering (later issue; part 2, after P10.18: `CHANGELOG.md`)
-- [ ] P10.11 Golden group, one regeneration window for the half-pixel fix (`ink-pad-lay-half-pixel-shift`, Q12 widened by the maintainer 2026-10-21); ADR 0025; on `p10-golden` after the `p10-fixes` PR merges
+- [x] P10.11 Golden group, one regeneration window for the half-pixel fix (`ink-pad-lay-half-pixel-shift`, Q12 widened by the maintainer 2026-10-21); ADR 0025; on `p10-golden` after the `p10-fixes` PR merges; then step 3, the smoke lock compared within the golden bound on CI (`tests-smoke-lock-cpu-bound`, ADR 0030)
 
 ## P11. Widen the public API for primitive-first tutorials
 

@@ -139,9 +139,11 @@ class InkPad:
     eye reads as pixelation: a lane is under four render pixels wide and its
     splat lands on a visible stair. `ink_ss` paints the whole ink pipeline, the
     saturation and the paper gate included, on a grid that many times finer and
-    Lanczos-reduces the density back. Doing it after the gate rather than
-    before is the point: the reduce then averages ink, which is what the eye
-    does, instead of averaging deposits and gating the average.
+    Lanczos-reduces the density back. A line is laid on the finer grid centre
+    to centre: the centre of plate pixel `i` is fine pixel
+    `i * ink_ss + (ink_ss - 1) / 2`. Doing it after the gate rather than before
+    is the point: the reduce then averages ink, which is what the eye does,
+    instead of averaging deposits and gating the average.
 
     At `ink_ss` of 1 the pad is the plate's own accumulator and every brush is
     stamped unscaled.
@@ -170,6 +172,10 @@ class InkPad:
             got = self._brushes[id(b)] = scaled_brush(b, self.ss)
         return got
 
+    def _on_grid(self, line: np.ndarray) -> np.ndarray:
+        """A render-pixel polyline on the pad's grid, pixel centre on pixel centre."""
+        return line * self.ss + (self.ss - 1) / 2 if self.ss > 1 else line
+
     def lay(
         self,
         items: list[tuple[Brush, np.ndarray]],
@@ -195,7 +201,7 @@ class InkPad:
             for (b, line), prof in zip(items, profiles, strict=True):
                 stamp(
                     self.acc,
-                    line * self.ss if self.ss > 1 else line,
+                    self._on_grid(line),
                     self._at(b),
                     rng,
                     aux=self.aux,
@@ -206,7 +212,7 @@ class InkPad:
             for b, line in items:
                 stamp(
                     self.acc,
-                    line * self.ss if self.ss > 1 else line,
+                    self._on_grid(line),
                     self._at(b),
                     rng,
                     aux=self.aux,
@@ -219,7 +225,7 @@ class InkPad:
             for line in chain_lines(lines, self.tol):
                 stamp(
                     self.acc,
-                    line * self.ss if self.ss > 1 else line,
+                    self._on_grid(line),
                     self._at(b),
                     rng,
                     aux=self.aux,

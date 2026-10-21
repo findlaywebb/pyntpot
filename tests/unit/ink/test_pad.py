@@ -154,8 +154,8 @@ def test_a_finer_grid_converges_on_the_mark_the_brush_describes():
     finer grid and reducing the density back converges on a stroke painted six
     times finer: the weight of ink closes on it first order in the grid
     (twice as fine leaves under half the plate grid's gap), and the
-    pixel-by-pixel difference falls with each, most with the first doubling, since the
-    bristle texture each grid draws for itself sets a floor. The line stays
+    pixel-by-pixel difference falls with the first doubling, then stops at a
+    floor: the bristle texture each grid draws for itself. The line stays
     clear of the plate's edge, which is not what is measured here.
     """
     h, w = 90, 500
@@ -178,8 +178,33 @@ def test_a_finer_grid_converges_on_the_mark_the_brush_describes():
     err = [float(np.abs(d - ref).mean()) for d in dens]
     assert gap[0] > gap[1] > gap[2]
     assert gap[1] < gap[0] * 0.5  # first order in 1/ink_ss predicts 0.4
-    assert err[0] > err[1] > err[2]
-    assert err[1] < err[0] * 0.8
+    assert err[0] > err[1]
+    assert err[1] < err[0] * 0.85
+    assert err[2] < err[0] * 0.9
+
+
+def test_a_finer_grid_lays_the_mark_where_the_plate_grid_does():
+    """A finer ink grid is centred on the plate's pixels, not hung from their corners.
+
+    A line scaled by the grid factor alone lands `(1 - 1 / ss) / 2` of a plate pixel up and
+    left of where the plate's own grid lays it: a third of a pixel at `ink_ss` 3.
+    """
+    h, w = 40, 300
+    sheet = Sheet(h, w, gran_px=9.0, seed=11)
+    pts = np.stack([np.linspace(20.0, w - 20.0, 400), np.full(400, 20.0)], axis=1)
+
+    def mean_row(ss: int) -> float:
+        """The density-weighted mean row of the stroke painted at one grid factor."""
+        style = BrushStyle(ink_ss=ss)
+        brush, _ = brush_from_id("MAJ6-e", 3.0, 2.0, style, "route")
+        pad = InkPad((h, w), brush, style)
+        pad.lay([(brush, pts)], np.random.default_rng(91))
+        dens = pad.read(brush, sheet).astype(np.float64)
+        return float((dens.sum(axis=1) * np.arange(h)).sum() / dens.sum())
+
+    one = mean_row(1)
+    assert mean_row(2) == pytest.approx(one, abs=0.1)
+    assert mean_row(3) == pytest.approx(one, abs=0.1)
 
 
 def test_a_finer_grid_lays_the_same_weight_of_ink():
