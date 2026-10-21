@@ -91,7 +91,7 @@ def rasterise(
     return mask
 
 
-def _spread(mask: list[bytearray], radius: int, *, grow: bool) -> list[bytearray]:
+def spread(mask: list[bytearray], radius: int, *, grow: bool) -> list[bytearray]:
     """Dilate or erode a mask by a square of `radius` cells, separably."""
     if radius <= 0:
         return [bytearray(row) for row in mask]

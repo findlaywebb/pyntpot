@@ -1,6 +1,6 @@
 """The cached Overpass payload, grouped into the vector layers of one map.
 
-Key names: `_osm_layers`, which reads the payload once and returns the wood, park,
+Key names: `osm_layers`, which reads the payload once and returns the wood, park,
 water, coast, road, river and landmark-candidate layers in card metres; `_dedupe`,
 which keeps one landmark candidate per name; `BURIED_FRAC`, the share of a watercourse
 underground that drops it.
@@ -139,7 +139,7 @@ def _fills(found: Harvest, scope: Scope) -> dict[str, Any]:
     }
 
 
-def _osm_layers(
+def osm_layers(
     path: Path,
     proj: Projection,
     clip: Clip,

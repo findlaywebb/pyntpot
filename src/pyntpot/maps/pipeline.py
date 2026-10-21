@@ -45,7 +45,7 @@ from PIL import Image
 from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
-from pyntpot.maps.compose import _paste_labels, _plates, _route
+from pyntpot.maps.compose import painted_map, paste_labels, route
 from pyntpot.maps.layers import BasemapInputs, build_basemap
 from pyntpot.maps.lettering.pipeline import Lettering
 from pyntpot.maps.painter.plates import paint_plates
@@ -167,13 +167,13 @@ def compose(
     Returns:
         The card, at the size of the paper plate.
     """
-    card = _plates(plates)
+    card = painted_map(plates)
     k = card.width / max(plates.card.display[0], 1)
-    _route(card, plates, list(plates.strands), style.route_ink(), k)
+    route(card, plates, list(plates.strands), style.route_ink(), k)
     if lettering.plate_path is None:
         log.info("no label plate for %s, the card has no lettering", plates.directory)
     else:
-        _paste_labels(card, lettering.plate_path)
+        paste_labels(card, lettering.plate_path)
     if attribution:
         draw_attribution(card, attribution_text(basemap.credits), style)
     return card

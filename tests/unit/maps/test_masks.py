@@ -1,6 +1,6 @@
 """Binary masks: rasterising, morphology and speck removal."""
 
-from pyntpot.maps.masks import _components, _spread, declutter, rasterise
+from pyntpot.maps.masks import _components, declutter, rasterise, spread
 
 
 def _square(x0: float, y0: float, side: float) -> list[tuple[float, float]]:
@@ -51,5 +51,5 @@ def test_the_close_joins_two_woods_a_field_apart():
     """Closing is what turns a scatter of inclosures into one forest."""
     apart = rasterise([_square(100, 100, 300), _square(460, 100, 300)], [], CLIP, 50.0)
     assert len(_components(apart, 1)) == 2
-    closed = _spread(_spread(apart, 2, grow=True), 2, grow=False)
+    closed = spread(spread(apart, 2, grow=True), 2, grow=False)
     assert len(_components(closed, 1)) == 1

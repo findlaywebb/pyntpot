@@ -118,7 +118,7 @@ def _stitch(segs: list[tuple[Pt, Pt]]) -> list[list[Pt]]:
     return join_chains(out, tol=1e-6)
 
 
-def _grid_line_to_metres(
+def grid_line_to_metres(
     line: list[Pt], lats: list[float], lons: list[float], proj: Projection, pad: int = 0
 ) -> list[Pt]:
     """Map a polyline in fractional grid space to card metres.
@@ -141,7 +141,7 @@ def _grid_line_to_metres(
     return out
 
 
-def _pad(grid: list[list[float]], value: float) -> list[list[float]]:
+def padded_grid(grid: list[list[float]], value: float) -> list[list[float]]:
     """A copy of the grid with one ring of `value` around it, so every level closes."""
     width = len(grid[0]) + 2
     edge = [value] * width
@@ -178,7 +178,7 @@ def contour_lines(
     level = lo
     while level < hi:
         for line in marching_squares(grid, level):
-            metres = _grid_line_to_metres(line, lats, lons, proj)
+            metres = grid_line_to_metres(line, lats, lons, proj)
             metres = simplify(smooth(metres, passes=2, closed=False), eps)
             if len(metres) >= CONTOUR_MIN_POINTS:
                 out.append(
@@ -226,21 +226,21 @@ def sea_rings(
     mask = [[1.0 if value <= sea_level else 0.0 for value in row] for row in grid]
     if not any(value for row in mask for value in row):
         return [], []
-    padded = _pad(mask, 0.0)
+    padded = padded_grid(mask, 0.0)
     water: list[list[Pt]] = []
     islands: list[list[Pt]] = []
     for ring in marching_squares(padded, 0.5):
         if len(ring) < LOOP_MIN_POINTS:
             continue
-        wet = _ring_is_wet(ring, padded, 0.5)
-        metres = _grid_line_to_metres(ring, lats, lons, proj, pad=1)
+        wet = ring_is_wet(ring, padded, 0.5)
+        metres = grid_line_to_metres(ring, lats, lons, proj, pad=1)
         metres = simplify(smooth(metres, passes=2, closed=True), eps)
         if len(metres) >= SHORE_MIN_POINTS:
             (water if wet else islands).append(metres)
     return water, islands
 
 
-def _ring_is_wet(ring: list[Pt], padded: list[list[float]], level: float) -> bool:
+def ring_is_wet(ring: list[Pt], padded: list[list[float]], level: float) -> bool:
     """True when at least half the cells a ring encloses are at or above `level`."""
     cols = [c for c, _ in ring]
     rows = [r for _, r in ring]

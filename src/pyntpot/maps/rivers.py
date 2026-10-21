@@ -14,7 +14,7 @@ water is drawn at its own width.
 
 from pyntpot.ink.polyline import Pt, eased, length, normal_at
 from pyntpot.maps.rings import point_in_ring
-from pyntpot.maps.track_index import _densify
+from pyntpot.maps.track_index import densify
 
 #: The fewest points that make a ring a water area.
 MIN_RING_POINTS = 3
@@ -123,7 +123,7 @@ def channel(line: list[Pt], rings: list[list[Pt]]) -> tuple[list[Pt], list[float
         be, and the width in metres at each of those samples, or None at a
         sample that is not in mapped water.
     """
-    pts = _densify(line, WIDTH_STEP_M)
+    pts = densify(line, WIDTH_STEP_M)
     boxed = _ring_boxes(rings)
     widths: list[float | None] = []
     offsets: list[float] = []

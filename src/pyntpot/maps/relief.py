@@ -21,7 +21,7 @@ from typing import Any, cast
 import numpy as np
 
 from pyntpot.ink.polyline import simplify, smooth
-from pyntpot.maps.contours import _grid_line_to_metres, _pad, marching_squares
+from pyntpot.maps.contours import grid_line_to_metres, marching_squares, padded_grid
 from pyntpot.maps.projection import Projection
 from pyntpot.maps.svg_path import path_d
 
@@ -208,7 +208,7 @@ def shade_bands(
     """
     lats, lons = terrain.lats, terrain.lons
     fine = _resample(terrain.grid, sun.upsample)
-    signal = _pad(
+    signal = padded_grid(
         _shade(
             fine,
             terrain.dx / sun.upsample,
@@ -230,7 +230,7 @@ def shade_bands(
             rings = marching_squares(flipped, abs(level))
             parts = []
             for ring in rings:
-                metres = _grid_line_to_metres(ring, fine_lats, fine_lons, terrain.proj, pad=1)
+                metres = grid_line_to_metres(ring, fine_lats, fine_lons, terrain.proj, pad=1)
                 metres = simplify(smooth(metres, passes=1, closed=False), eps)
                 if len(metres) >= BAND_MIN_POINTS:
                     parts.append(path_d(metres, close=True))
