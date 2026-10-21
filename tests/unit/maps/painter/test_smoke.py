@@ -96,13 +96,14 @@ SMOKE_RIVERS = (
 #: bristle drift stopped being drawn independently per bristle: the tip was
 #: folding over itself and landing as filaments with bare paper between them,
 #: which shows as streaking. `paper` has not moved either time, because
-#: neither change touches the card. The lock still holds: a change that moves
-#: these hashes again is a change to what the reader sees and has to be argued
-#: for.
+#: neither change touches the card. Then when the finer ink grid was centred on
+#: the plate's pixels (ADR 0025); `paper` again did not move. The lock still
+#: holds: a change that moves these hashes again is a change to what the reader
+#: sees and has to be argued for.
 SMOKE_SHA = {
     "paper": "014d13332900f01fd6653d9405e933aaec9efe2f17ce78f8fa523b1e6954e93e",
-    "pen": "33614c92d30798b8ce823c5c1473115f46f7277ffe4b3345dc31f626c8fa03a6",
-    "wash": "c45a643c36a9459cbefc748dce925222d410f537dede660db283284eea702c03",
+    "pen": "138f107e493424697401008137990bc4c4152d055fc392a12f5e59ad6cc8c688",
+    "wash": "c1617293c916b15a3d86d54cbd7d5c83ba1c2b18261db07b8b9ba7f973a67272",
 }
 
 

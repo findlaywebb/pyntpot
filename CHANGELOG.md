@@ -31,6 +31,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Span labels go on the side with more free paper for the ground span, and the other
   span on the opposite side; the side sign was reversed.
 - A river or stream tagged `tunnel=no` is drawn instead of dropped.
+- A mark painted on a finer ink grid (`ink_ss` above 1; the default theme's 3) is
+  centred on the plate's pixels; it sat a third of a pixel up and left (ADR 0025).
 
 ## [0.0.2] - 2026-10-09
 
