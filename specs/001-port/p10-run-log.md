@@ -424,3 +424,13 @@ User instructions (2026-10-07):
   `ProviderError` wherever a public name can leak it, as for `fetch`; reword the
   `Label.why` values as well as the prose. Each goes to a plan fix and a plan-reviewer
   pass before its slice starts.
+- Maintainer (2026-10-21), on the three follow-ups: `maps-provider-error-private-beyond-fetch`:
+  export `ProviderError` and `ProviderBudgetExceededError` from `pyntpot.maps`, and
+  `Cache.ensure` wraps them in `FetchError` (ADR 0029). `maps-lettering-session-and-rider-for-a-track`:
+  "the rider's own place" becomes "home"; the session values say "track".
+  `ink-pad-lay-half-pixel-shift`: shown before, after and diff (x8) comparisons
+  (differing fractions at delta > 2: map 0.0601, wash 0.0534, labels-centreline 0.0344,
+  pen 0.0005; paper identical; manifest hash and labels equal), the maintainer accepted
+  the drift: "Accept it - identical to human eye". It is the golden group's one
+  explained exception to the 0.005 step bound, as ADR 0006's step 3 was; P10.11 runs on
+  `p10-golden` after the `p10-fixes` PR merges, with ADR 0025.
