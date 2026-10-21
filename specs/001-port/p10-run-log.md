@@ -402,3 +402,11 @@ User instructions (2026-10-07):
   one PR. For the maintainer's hand-off: `ink-pad-lay-half-pixel-shift` (a golden
   decision), `maps-provider-error-private-beyond-fetch` and
   `maps-lettering-session-and-rider-for-a-track` (both `defer`, awaiting an answer).
+- Part-2 diff review (fresh context, `7902589..761e04d`): ready; 0 blocking. Should-fix:
+  the plan and triage still named the side test "session span" (now "fast span"), and
+  `CHANGELOG.md` lacked the four behaviour fixes; nit: two unwrapped issue-file lines.
+  All fixed in `87cbfce`. Fast checks in a scratch copy: prek green, not-golden 1110
+  passed 1 skipped.
+- PR #25 opened from `p10-fixes` to `main`
+  (https://github.com/findlaywebb/pyntpot/pull/25); subscribed to its events. Held for
+  the maintainer's go. No `p10-golden` PR: the golden group is empty.
