@@ -43,7 +43,7 @@ tests/fixtures/lynmouth/{track.gpx, overpass-lynmouth.json, landcover-lynmouth.j
 tests/architecture/  (template tests, edited per P0.6)
 tests/architecture/exemptions/{line_budget.txt, gates_off.txt, NOTES.md}   (only shrink; emptied at P4.19, deleted at P9.2)
 docs/{tutorials,how-to,reference,explanation}/  docs/explanation/references.md
-docs/decisions/  0001, 0002 exist; 0003 to 0028 are assigned in "ADR numbers" under P3 and P4
+docs/decisions/  0001, 0002 exist; 0003 to 0030 are assigned in "ADR numbers" under P3 and P4
 specs/001-port/{spec.md,plan.md,tasks.md,architecture.md,design-sources.md}   (design-sources.md deleted at P9.4)
 ```
 
@@ -530,6 +530,8 @@ the façade at P3.16 and P3.17, and its measurements were taken at
 | 0026 | `widen-the-public-api` (amends 0007) | P11.1 |
 | 0027 | `candidate-export-vector-layers-and-route-ink` (amends 0007 and 0026) | P8.P1 |
 | 0028 | `fetch-wraps-provider-errors` (amends 0004) | P10.16 |
+| 0029 | `provider-errors-public-and-cache-wraps` | P10.18 |
+| 0030 | `smoke-lock-tolerant-on-ci` (applies 0006's per-platform rule to the smoke box) | P10.11 step 3 |
 
 P10 and P11 run before P9 (maintainer, 2026-10-07), so 0024 to 0028 may be
 written before 0022 and 0023; the numbers stay fixed, and a number whose
@@ -8269,7 +8271,9 @@ group exists). P11.1 writes 0026, the lowest number above 0023 that P10
 has not fixed. P8.P1 wrote 0027. P10.16 writes
 0028 (`fetch-wraps-provider-errors`), the lowest number above 0027.
 P10.18 writes 0029 (`provider-errors-public-and-cache-wraps`), the lowest
-number above 0028; P10.19 writes none (`Label` is in no `__all__`). P10
+number above 0028; P10.19 writes none (`Label` is in no `__all__`).
+P10.11's step 3 writes 0030 (`smoke-lock-tolerant-on-ci`), the lowest
+number above 0029. P10
 runs before P9, so 0022 and 0023 do not exist yet;
 before writing, `ls docs/decisions` must show the number free, otherwise
 stop and report.
@@ -10572,6 +10576,9 @@ landing on `p10-fixes` before PR #25 merges.
   G-here green; a session that must end mid-window pushes to the backup ref
   `wip/p10-golden-window` and resumes from it, as P3's "Pushing" rule says,
   and the ref is deleted after the push. One PR, `p10-golden` to `main`.
+  Step 3 (the smoke lock on CI) follows the regeneration as an ordinary
+  commit on `p10-golden`, outside the window, and the PR merges only
+  once its CI is green.
 - Precondition (the orchestrating session, before dispatching step 1):
   this plan fix measured the full fix below at `0685d14` (step 1's compare
   against a clean step 0 in a scratch worktree): paper identical, wash
@@ -10748,7 +10755,8 @@ landing on `p10-fixes` before PR #25 merges.
   `tests/golden/lynmouth/` (the hash in it is unchanged), and ADR 0025,
   accepted. `GOLDEN_HASH` in `tests/unit/maps/test_pipeline_fetch_paint.py`
   does not change. Commit: `Regenerate the goldens once more for the
-  half-pixel fix`; it ticks P10.11 in `tasks.md`.
+  half-pixel fix`; it ticked P10.11 in `tasks.md` (`735bb30`). The plan
+  fix that added step 3 unticked it; step 3's commit ticks it again.
 - The ADR: `docs/decisions/0025-second-golden-regeneration.md` (the number
   is fixed by the ADR table; before writing, `ls docs/decisions` must show
   no `0025-*`, otherwise stop and report), drafted at step 1 as `Status:
@@ -10779,6 +10787,271 @@ landing on `p10-fixes` before PR #25 merges.
   needs its own ADR.
 - Gate after the window: G-here (P11's form, with the exact golden run)
   on the regeneration commit.
+- Step 3, the smoke lock on CI (row `tests-smoke-lock-cpu-bound`; a
+  test-and-CI commit on `p10-golden` after the regeneration, outside the
+  window; it moves no golden pixel and changes no `src` file, so `compose`
+  output and every plate are unchanged). Run by an implementer in a
+  detached worktree from the head of `p10-golden` (`735bb30`, the
+  regeneration commit, or a later commit on the branch that changes none
+  of the owner files below); the orchestrating session commits and pushes
+  `p10-golden`.
+  - The problem. PR #26's CI fails `checks (3.13)` and `checks (3.14)` at
+    the Tests step (`uv run pytest -m "not golden and not benchmark"
+    --cov`) on `test_smoke.py:124` and `:250`, `assert got == SMOKE_SHA`,
+    for the wash plate only: CI writes
+    `8f90ea05b1bc4742c8ffc645efb569137e6bfb94a534bae1c95285a61ec9a197`,
+    step 1 pinned `c1617293...7272`. numpy dispatches the float32 wash
+    maths to AVX-512 code where the CPU has it and to other code where it
+    does not; the two round the last bit differently at about 1000 to
+    1300 pixels, and `to_img` (`src/pyntpot/ink/io.py:25`) rounds to 8
+    bits. On `main` no such difference crosses a rounding boundary; after
+    step 1 one does, and pixel (row 90, column 97) of the 148 by 240 wash
+    plate moves by one level. Paper and pen are equal in both modes. So
+    the exact smoke hash is a property of the CPU, as ADR 0006 found for
+    the goldens, and step 1 is correct. The same 2 tests fail mutmut's
+    stats run, which runs `tests/unit tests/property -m "not golden"` in
+    exact mode (`[tool.mutmut]` in `pyproject.toml`), and mutmut exits 1
+    when its stats run fails ("failed to collect stats"), so since
+    `735bb30` a `Mutation` dispatch on a runner without AVX-512 tests no
+    mutant.
+  - Precondition: `grep -c avx512f /proc/cpuinfo` prints a number above
+    0 (the machine that pinned `SMOKE_SHA`; otherwise
+    `NPY_DISABLE_CPU_FEATURES=X86_V4` changes nothing and the check below
+    cannot go red: stop and report).
+  - Check first, before any edit (measured for this plan at `735bb30`):
+    1. `NPY_DISABLE_CPU_FEATURES=X86_V4 uv run pytest
+       tests/unit/maps/painter/test_smoke.py -k approved`: 2 failed
+       (`test_the_flags_off_still_paint_the_plates_that_were_approved`
+       and `test_the_wash_flags_off_still_paint_the_plates_that_were_approved`,
+       the wash hash `8f90ea05...a197`, CI's).
+    2. The same with `--golden-tolerance`: 2 failed (the tests do not
+       read the flag yet).
+    3. `uv run pytest tests/unit/maps/painter/test_smoke.py -k approved`:
+       2 passed.
+    4. `NPY_DISABLE_CPU_FEATURES=X86_V4 uv run pytest -m "not golden and
+       not benchmark" --golden-tolerance`: the same 2 failed and no other
+       (about 105 s).
+    The hand-off quotes the four summary lines; any other outcome stops
+    the step.
+  - Produce the committed wash plate, before editing any test file, on the
+    step's starting commit with a clean tree (`git status --short` prints
+    nothing), on the machine of the precondition:
+
+    ```
+    PYTHONPATH=tests uv run python -c "import sys; from pathlib import Path; from pyntpot.maps.painter.plates import paint_plates; from unit.maps.painter.test_smoke import smoke_box; style, basemap = smoke_box(); paint_plates(basemap, style, Path(sys.argv[1]))" "$SLICE/smoke"
+    mkdir -p tests/golden/smoke
+    cp "$SLICE/smoke/wash.webp" tests/golden/smoke/
+    sha256sum "$SLICE"/smoke/*.webp tests/golden/smoke/wash.webp
+    ```
+
+    `$SLICE` is `$SCRATCH/P10.11-step3/`, created empty. This is the
+    painter call the two tests make (`smoke_box()`, then `paint_plates`
+    into a fresh directory), so the three files are byte-identical to what
+    the tests paint here: `sha256sum` must print exactly the three
+    `SMOKE_SHA` values (`paper` `014d1333...e93e`, `pen`
+    `138f107e...c688`, `wash` `c1617293...7272`) and the wash value again
+    for the committed copy, otherwise stop. Only the wash plate is
+    committed: paper and pen are compared byte for byte with `SMOKE_SHA`
+    in both modes (equal under `X86_V4`, measured), so a copy of them
+    would be read by nothing. `plates.json` is not copied. Measured for
+    this plan: all three equal; `wash.webp` is 8662 bytes.
+  - Where it lives, and why there: `tests/golden/smoke/`, beside
+    `tests/golden/lynmouth/`. It is an approved output, as the goldens
+    are, not an input (`tests/fixtures/` holds inputs). "What the window
+    freezes" freezes the file set of `tests/golden/lynmouth/` only, and
+    this step leaves it as it is; no architecture test pins the contents
+    of `tests/golden/` (the coordinate scan skips binary files, and its
+    exemption names `tests/golden/lynmouth/plates.json` only). mutmut
+    copies the whole of `tests/` into `mutants/`, so the committed plate
+    is there for its runs, which pass `--golden-tolerance` from this step
+    on (the `pyproject.toml` change below) and so read it.
+  - Owner files: `tests/golden/smoke/wash.webp` (new),
+    `tests/support/paths.py`, `tests/unit/maps/painter/test_smoke.py`,
+    `.github/workflows/ci.yml`, `pyproject.toml` (`[tool.mutmut]` only),
+    `docs/decisions/0030-smoke-lock-tolerant-on-ci.md` (new). Left alone:
+    everything under `src/`, `tests/golden/lynmouth/`,
+    `tests/golden/test_parity.py`, `tests/golden/make_golden.py`,
+    `tests/support/golden.py`, `tests/conftest.py`, `golden.yml`,
+    `CONTRIBUTING.md`, `CHANGELOG.md` (nothing a user sees changes), ADRs
+    0006, 0011 and 0025.
+  - The bound constants stay in `tests/golden/test_parity.py`. The smoke
+    tests import them from there, as
+    `tests/unit/maps/test_pipeline_letter_compose.py:10` already does
+    (`from golden.test_parity import MAX_CHANNEL_DELTA,
+    MAX_DIFFERING_FRACTION`). Moving them to `tests/support/golden.py`
+    would also repoint `make_golden.py:24` and
+    `test_pipeline_letter_compose.py:10` and contradict "Parity rules" and
+    ADR 0025, which name `test_parity.py` as their home, for no gain;
+    their values never change either way.
+  - Change, `tests/support/paths.py`: after `GOLDEN_DIR`, add
+    `#: The smoke box's approved wash plate, the bytes
+    \`SMOKE_SHA["wash"]\` in the painter's smoke test pins.` and `SMOKE_DIR: Path = _TESTS / "golden" /
+    "smoke"`. The module docstring's first line becomes "The fixture key
+    and the fixture, golden and smoke-plate directories, the only source
+    of each."
+  - Change, `tests/unit/maps/painter/test_smoke.py`:
+    - Imports: `from collections.abc import Mapping`, `from pathlib
+      import Path`, `from golden.test_parity import MAX_CHANNEL_DELTA,
+      MAX_DIFFERING_FRACTION`, `from support.golden import
+      differing_fraction`, `from support.paths import SMOKE_DIR`, placed
+      where `uv run ruff check --fix` sorts them.
+    - The comment above `SMOKE_SHA` gains, after "a change that moves
+      these hashes again is a change to what the reader sees and has to be
+      argued for.", the lines "The bytes are this machine's. A numpy that
+      runs the wash on other vector instructions can round a last bit the
+      other way and move a wash pixel by one level, so the wash plate
+      itself is committed in `tests/golden/smoke/`, and under
+      `--golden-tolerance` the tests compare the wash with it within the
+      golden pixel bound instead; paper and pen stay byte for byte (ADR
+      0030)."
+    - After `smoke_box`, a helper:
+
+      ```
+      def assert_the_approved_plates(out: Path, files: Mapping[str, str], tolerant: bool) -> None:
+          """Assert the smoke box's plates in `out` are the approved ones.
+
+          Byte for byte by default. In tolerance mode `paper` and `pen` stay byte for byte, and
+          `wash`, the one plate whose last bit depends on the CPU's vector instructions, is
+          compared with its committed copy in `SMOKE_DIR` within the golden pixel bound.
+          """
+          got = {name: hashlib.sha256((out / fn).read_bytes()).hexdigest() for name, fn in files.items()}
+          if not tolerant:
+              assert got == SMOKE_SHA
+              return
+          exact = {name: sha for name, sha in got.items() if name != "wash"}
+          assert exact == {name: sha for name, sha in SMOKE_SHA.items() if name != "wash"}
+          fraction = differing_fraction(out / files["wash"], SMOKE_DIR / "wash.webp", MAX_CHANNEL_DELTA)
+          assert fraction <= MAX_DIFFERING_FRACTION, f"wash: {fraction:.4%} of pixels differ"
+      ```
+
+      The quoted code is the content, not the final layout: after the edit
+      run `uv run ruff check --fix` and `uv run ruff format` on the file
+      and keep what they write (measured for this plan, at the repository's
+      line length the formatter leaves this helper as it is and only the
+      import order moves).
+    - `test_the_flags_off_still_paint_the_plates_that_were_approved`
+      takes `(tmp_path, golden_tolerance)`, docstring "The whole point of
+      the flags: the same seed still writes the approved plates.", and
+      its body is `style, basemap = smoke_box()`, `manifest =
+      paint_plates(basemap, style, tmp_path).manifest`,
+      `assert_the_approved_plates(tmp_path, manifest.files,
+      golden_tolerance)`.
+      `test_the_wash_flags_off_still_paint_the_plates_that_were_approved`
+      changes the same way, docstring "Three more fields on the style, and
+      the same seed writes the approved plates.". No other test changes:
+      the rest compare `paper` with `SMOKE_SHA["paper"]` (equal in both
+      modes) or two plates painted on the same machine.
+    - A new test after the helper, exact everywhere because it reads
+      committed bytes, not painted ones:
+
+      ```
+      def test_the_committed_wash_plate_is_the_approved_bytes():
+          """The wash plate another machine compares with is the one `SMOKE_SHA` pins."""
+          got = hashlib.sha256((SMOKE_DIR / "wash.webp").read_bytes()).hexdigest()
+          assert got == SMOKE_SHA["wash"]
+      ```
+    The file stays under 400 lines (311 at `735bb30`; 331 with this
+    step's code, measured).
+  - Change, `.github/workflows/ci.yml`: the `checks` job's Tests step
+    runs `uv run pytest -m "not golden and not benchmark" --cov
+    --golden-tolerance`, under the comment `# Tolerance mode: the smoke
+    box's exact bytes are pinned on the machine that made them, and a
+    runner's numpy may round the wash a last bit differently (ADR 0030).`;
+    the `prerelease` job's Tests step runs `uv run --no-sync pytest -m
+    "not golden" --golden-tolerance`. Nothing else in the file changes.
+    In the not-golden suite only the two smoke tests read the flag: every
+    other reader of `golden_tolerance` (`tests/golden/test_parity.py:41`,
+    `tests/unit/maps/test_pipeline_letter_compose.py:131`) is
+    golden-marked, so deselected there. Coverage is measured over
+    `pyntpot` only (`[tool.coverage.run] source`), and the same `src`
+    lines run in both modes, so the two coverage gates read the same
+    figures.
+  - Change, `pyproject.toml`, `[tool.mutmut]` only: `pytest_add_cli_args
+    = ["--hypothesis-profile=ci"]` (its value at `735bb30`; keep every
+    entry it has when the step runs) becomes `pytest_add_cli_args =
+    ["--hypothesis-profile=ci", "--golden-tolerance"]`, and the comment
+    block above `[tool.mutmut]` gains, as its last line before the closing
+    `# ----` rule, `# --golden-tolerance: the smoke wash plate is compared
+    within the golden bound (ADR 0030).` Nothing else in the file changes.
+    `pytest_add_cli_args_test_selection` keeps `-m "not golden"`, so the
+    flag reaches only the two smoke tests, and the mutants are killed by
+    the same tests as before. Without it mutmut's stats run fails on
+    those two tests on a runner without AVX-512 and the workflow tests no
+    mutant (the problem above).
+  - Check after (measured for this plan with the code above; `-k
+    approved` now also selects the new pin): `NPY_DISABLE_CPU_FEATURES=X86_V4
+    uv run pytest tests/unit/maps/painter/test_smoke.py -k approved`: 2
+    failed, 1 passed (exact stays bound to the CPU, as intended); with
+    `--golden-tolerance`: 3 passed (paper and pen byte-equal, the wash
+    within the bound); `uv run pytest
+    tests/unit/maps/painter/test_smoke.py`: 14 passed, exact on the
+    machine of the precondition; the same with `--golden-tolerance`: 14
+    passed.
+  - Gates: G-here (P11's form, with `uv run prek run --files
+    docs/decisions/0030-smoke-lock-tolerant-on-ci.md` after the hooks);
+    then `NPY_DISABLE_CPU_FEATURES=X86_V4 uv run pytest -m "not golden
+    and not benchmark" --golden-tolerance` (green); then mutmut's
+    selection with its new arguments, `NPY_DISABLE_CPU_FEATURES=X86_V4 uv
+    run pytest tests/unit tests/property -m "not golden"
+    --hypothesis-profile=ci --golden-tolerance` (green; 1035 passed in
+    about 100 s, measured for this plan); then CI's own Tests
+    step and the two coverage gates: `CI=true uv run pytest -m "not
+    golden and not benchmark" --cov --golden-tolerance`, `uv run coverage
+    report --include="src/pyntpot/ink/*,src/pyntpot/letters/*"
+    --fail-under=95 --precision=2`, `uv run coverage report
+    --include="src/pyntpot/maps/*" --fail-under=92 --precision=2`; then
+    `git diff --stat HEAD -- src tests/golden/lynmouth` prints nothing.
+    No G-self: no `src` change. Done is CI green on PR #26 (`checks
+    (3.13)`, `checks (3.14)` and the golden jobs).
+  - The ADR: `docs/decisions/0030-smoke-lock-tolerant-on-ci.md` (before
+    writing, `ls docs/decisions` must show no `0030-*`, otherwise stop and
+    report), `Status: accepted`, in ADR 0006's form. A new ADR, not an
+    amendment of ADR 0025: `docs/decisions/README.md` makes ADRs
+    append-only ("supersede, don't rewrite"), this plan says an accepted
+    ADR changes only by a superseding one, and 0025 is accepted at
+    `735bb30`; the change is also a gate change in its own right
+    (`CLAUDE.md`: "Contract changes are ADRs"), latent on `main` before
+    step 1 exposed it. It supersedes nothing: it applies ADR 0006's
+    "exact parity is per platform" to the smoke lock. Context: the
+    problem above, with the CI run's hash, the pixel, the
+    `NPY_DISABLE_CPU_FEATURES=X86_V4` reproduction and the mutation
+    workflow's failed stats run; and the effective bound against the
+    measured difference: 0.005 of a 148 by 240 plate is 177 pixels, about
+    11% of the pen's 1592 inked pixels, so the bound on this plate size
+    is coarse, while the difference measured is 1 pixel at 1 level, on
+    the wash only, with paper and pen byte-equal. Context also records the
+    pinning machine: `uname -a`, Python, numpy and Pillow versions,
+    `avx512f` present. Decision: the smoke box's wash plate is committed
+    in `tests/golden/smoke/`; the smoke lock stays byte-exact by default,
+    so G-here holds it exactly on the machine that pinned it; under
+    `--golden-tolerance` `paper` and `pen` stay byte-exact against
+    `SMOKE_SHA`, and only `wash` is compared with its committed copy
+    within the golden bound (`MAX_DIFFERING_FRACTION = 0.005`,
+    `MAX_CHANNEL_DELTA = 2`, unchanged, imported from
+    `tests/golden/test_parity.py`), so the coarse bound covers only the
+    plate the CPU moves; CI's `checks` and `prerelease` Tests steps and
+    the mutation runs (`[tool.mutmut]` `pytest_add_cli_args`) pass the
+    flag; a test pins the committed wash plate to `SMOKE_SHA["wash"]`, so
+    the two cannot drift apart. Alternatives, rejected: two pinned
+    hashes, one per CPU, which lists CPUs one by one, so a third platform
+    (ARM, or a numpy for a later Python) breaks the lock again;
+    quantising the wash before `to_img`, which changes `src`, moves golden
+    pixels and reopens the ADR 0025 window, and any quantisation step
+    still has a boundary a one-ulp difference can cross; pinning the hash
+    under baseline-only numpy dispatch, which needs the variable set
+    before numpy is imported, against the `os.environ` ban, and works
+    only on x86. Consequences: a change that moves the smoke plates
+    updates `SMOKE_SHA` and the committed wash plate in the same commit,
+    painted by the command above; on another machine the local suite
+    passes `--golden-tolerance`, as the golden suite does; a CPU
+    difference that ever reaches paper or pen fails tolerance mode as
+    well, and needs its own ADR; the coverage run of ADR 0011 gains the
+    flag and measures the same lines; the mutation workflow passes the
+    flag too, so its stats run no longer depends on the runner's CPU, and
+    the mutants are killed by the same tests as before.
+  - The orchestrating session marks `tests-smoke-lock-cpu-bound` done in
+    `p10-triage.md` and ticks P10.11 in `tasks.md` in this commit.
+  - Commit: `Compare the smoke plates within the golden bound on CI`.
 
 ### P11. Widen the public API for primitive-first tutorials
 

@@ -73,6 +73,7 @@ the files in `tests/golden/lynmouth/` the fix may move.
 | `tests-invented-place-name` (later, found by P10.14) | tests | test text | defer | 2 | no | `tests/unit/maps/lettering/test_picks.py:87` and `:92` name a place "Faraway", against `CLAUDE.md`'s real-UK-names rule; "Little Combes" and "Tarns Bridge" (`:83`, `:84`) may be invented too | `grep -n Faraway tests/unit/maps/lettering/test_picks.py` prints nothing | S | none | none (part 2 is not widened for findings outside its rows; filed in `docs/issues/tests-invented-place-name.md`) | |
 | `docs-feature-note-cites-old-smooth-path-name` (later, found by P10.10a) | docs | naming or prose | defer | 2 | no | `docs/features/ink-tip-hold-stroke-ends.md` cites `_smooth_path` twice; P10.10a made it `smooth_path` | `grep -n _smooth_path docs/features/ink-tip-hold-stroke-ends.md` prints nothing | S | none | none (part 2 is not widened for findings outside its rows; filed in `docs/issues/docs-feature-note-cites-old-smooth-path-name.md`) | |
 | `tests-session-wording` (later, found by the P10.19 plan fix) | tests | naming or prose | defer | 2 | no | `tests/unit/maps/test_layers.py:40`, `:92` and `tests/unit/maps/test_track_index.py:32` say "session" | `grep -nw session tests/unit/maps/test_layers.py tests/unit/maps/test_track_index.py` prints nothing | S | none | none (outside the rows P10.14 and P10.19 fixed; filed in `docs/issues/tests-session-wording.md`) | |
+| `tests-smoke-lock-cpu-bound`: the painter's smoke lock `SMOKE_SHA` is exact only on a CPU whose numpy runs the wash on the same vector instructions (later, found by PR #26's CI, 2026-10-21; no issue file: the source is the CI run, and P10.11 fixes it in the same PR) | tests | tooling or process | fix | 5 | no (it blocks PR #26, not the release) | at `735bb30`: CI's `checks (3.13)` and `(3.14)` fail `test_smoke.py:124` and `:250` on the wash plate only (`8f90ea05...a197` against the pinned `c1617293...7272`); `NPY_DISABLE_CPU_FEATURES=X86_V4 uv run pytest tests/unit/maps/painter/test_smoke.py -k approved` reproduces CI's hash: 2 failed, one pixel (row 90, column 97 of 148 by 240) one level off, so `differing_fraction` at `MAX_CHANNEL_DELTA` 2 is 0; paper and pen equal; with that flag `uv run pytest -m "not golden and not benchmark" --golden-tolerance` fails these 2 and no other; mutmut's stats run (`tests/unit tests/property -m "not golden"`, exact) fails on the same 2, so a `Mutation` dispatch on such a runner stops before testing a mutant | the same `X86_V4` run with `--golden-tolerance`: 3 passed after the step (the 2 and the new pin); `NPY_DISABLE_CPU_FEATURES=X86_V4 uv run pytest tests/unit tests/property -m "not golden" --hypothesis-profile=ci --golden-tolerance` green; `test_smoke.py::test_the_committed_wash_plate_is_the_approved_bytes` | about 60, and one committed plate (the wash, about 9 KB) | none (`tests/golden/smoke/` is new; `tests/golden/lynmouth/` is not touched) | P10.11 (step 3, `p10-golden`; ADR 0030) | |
 
 Counts at P10.1: 38 rows (30 for the 29 files, `slow-tests-in-mutation-runs` split in two,
 and 8 without a file): `fix` 19, `decide` 12, `defer` 4, `close` 3, `fix-golden` 0.
@@ -103,6 +104,10 @@ answers made `maps-provider-error-private-beyond-fetch` and
 `maps-lettering-session-and-rider-for-a-track` `fix`, P10.18 and P10.19, and
 `ink-pad-lay-half-pixel-shift` `fix-golden`, P10.11): `fix` 38, `decide` 0, `defer` 7,
 `close` 8, `fix-golden` 1.
+
+Counts after the P10.11 step 3 plan fix (2026-10-21): 56 rows (the later `tests-smoke-lock-cpu-bound`
+row added, `fix`, P10.11 step 3; `tests-session-wording`, added as `defer` by the P10.19 plan fix, is
+counted here too): `fix` 39, `decide` 0, `defer` 8, `close` 8, `fix-golden` 1.
 
 ## P10.2 answers
 
