@@ -184,7 +184,7 @@ Order: after P7.4, P8, P10 (both parts) and P11.
 
 ## P10. Triage and address the port's issues
 
-Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach, the later slices P10.12 and P10.13 among them) on `p10-triage`, one PR; then P11, which starts only after part 1 has landed on `main`; then P10.R tags 0.0.1 (own `release-0.0.1` branch and PR, after P11 merges); then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the later slices P10.14, P10.15, P10.16 and P10.17, the private-name renames, the golden group) on `p10-fixes`, branched from `main` at the tag or later (and `p10-golden`); then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
+Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach, the later slices P10.12 and P10.13 among them) on `p10-triage`, one PR; then P11, which starts only after part 1 has landed on `main`; then P10.R tags 0.0.1 (own `release-0.0.1` branch and PR, after P11 merges); then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the later slices P10.14, P10.15, P10.16 and P10.17, the private-name renames, then the later slices P10.18 and P10.19, in that order, before the `p10-fixes` PR merges) on `p10-fixes`, branched from `main` at the tag or later; then the golden group P10.11 on `p10-golden`, from `main` after that merge; then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
 
 - [x] P10.0 Fatten P10 into slices; plan-reviewer pass
 - [x] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue; dispatch the Mutation workflow once on `main`
@@ -222,7 +222,9 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 - [x] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
 - [x] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))
 - [x] P10.10d Public names for what other modules import: `maps.lettering` (if Q9 (a))
-- [ ] ~~P10.11 Golden group, one regeneration window; ADR 0025 (if a row is `fix-golden` and Q12 yes)~~ Not run: no part-2 slice's G-self moved a pixel, and the one `fix-golden` row (`ink-pad-lay-half-pixel-shift`) stands `defer`
+- [ ] P10.18 The provider errors are public, and `Cache.ensure` wraps them (later issue; part 2, after P10.10d and P10.17, before the `p10-fixes` PR merges; ADR 0029)
+- [ ] P10.19 Say track, not session or rider, in the lettering (later issue; part 2, after P10.18: `CHANGELOG.md`)
+- [ ] P10.11 Golden group, one regeneration window for the half-pixel fix (`ink-pad-lay-half-pixel-shift`, Q12 widened by the maintainer 2026-10-21); ADR 0025; on `p10-golden` after the `p10-fixes` PR merges
 
 ## P11. Widen the public API for primitive-first tutorials
 

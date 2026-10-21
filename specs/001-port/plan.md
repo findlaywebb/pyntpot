@@ -8151,7 +8151,8 @@ part 1 (orchestrating session, 2026-10-07, told to the maintainer; P11,
    through the surface P11 widened.
 6. **Part 2**: every fix an upstream render may reach (P10.4c, P10.5b, P10.6,
    P10.7), the later slices cut after the `p10-triage` PR merged (P10.14,
-   P10.15, P10.16, P10.17), the private-name renames (P10.10a to P10.10d, after every slice
+   P10.15, P10.16, P10.17, and P10.18 and P10.19, cut on 2026-10-21 while the
+   `p10-fixes` PR was open), the private-name renames (P10.10a to P10.10d, after every slice
    that touches their files), and the golden group (P10.11), if any. Part 2
    branches from `main` after the tag, so it rebases over P11.
 7. P7 (docs, then 0.1.0 at P7.4), then P9.
@@ -8183,7 +8184,7 @@ P10.0 ─ P10.1 ─┬─ P10.2 (stop) ─ P10.3d ──────────
 
 (part 2) ─┬─ P10.4c ───────────────────────────────┐
           ├─ P10.6 ────────────┐                   │
-          ├─ P10.5b ─ P10.7 ───┴─ P10.14 ─ P10.15 ─┴─ P10.10a ─ P10.10b ─┬─ P10.10c ─ P10.10d ─ P10.11 ─ P7.1 … P7.4 ─ P9
+          ├─ P10.5b ─ P10.7 ───┴─ P10.14 ─ P10.15 ─┴─ P10.10a ─ P10.10b ─┬─ P10.10c ─ P10.10d ─ P10.18 ─ P10.19 ─ P10.11 ─ P7.1 … P7.4 ─ P9
           ├─ P10.16 ─────────────────────────────────────────────────────┤
           └─ P10.17 ─────────────────────────────────────────────────────┘
 ```
@@ -8218,7 +8219,17 @@ renames in the lettering modules P10.6 and P10.14 edit); P10.17 (the
 `ink.stroke.Mark` rename, cut after P10.10a had landed) owns only
 `ink/stroke.py` and `ink/stamp.py`, which no P10.10b, P10.10c or P10.10d
 name touches, so it may run beside P10.10b and lands before P10.10c,
-whichever of it and P10.10b finishes first landing first; P10.11 is last. A conditional slice whose answers remove every member
+whichever of it and P10.10b finishes first landing first; P10.18 and
+P10.19 (cut on 2026-10-21, after P10.10d and P10.17 had landed and the
+`p10-fixes` PR was open) follow P10.10d and P10.17 and land on
+`p10-fixes` before that PR merges; they do not run in parallel: their
+files are otherwise disjoint (P10.18 owns `maps/cache.py`,
+`maps/pipeline.py`, `maps/__init__.py`, the three provider modules,
+`test_cache.py`, `test_public_api.py` and ADR 0029; P10.19 owns six
+lettering modules, `candidates/landmark_classes.py`, `test_picks.py` and
+`test_picks_roads.py`), but both edit `CHANGELOG.md`'s
+`## [Unreleased]`, so P10.18 lands first and P10.19 starts from the head
+that holds it; P10.11 is last. A conditional slice whose answers remove every member
 is struck through in `tasks.md` and skipped in the sequence.
 
 **P8's hand-off: "what upstream reads".** When P8 is done, the orchestrating
@@ -8256,7 +8267,9 @@ P10.5b writes 0024 (`route-ink-names-follow-the-route`, only under Q5 (2))
 and P10.11 writes 0025 (`second-golden-regeneration`, only if the golden
 group exists). P11.1 writes 0026, the lowest number above 0023 that P10
 has not fixed. P8.P1 wrote 0027. P10.16 writes
-0028 (`fetch-wraps-provider-errors`), the lowest number above 0027. P10
+0028 (`fetch-wraps-provider-errors`), the lowest number above 0027.
+P10.18 writes 0029 (`provider-errors-public-and-cache-wraps`), the lowest
+number above 0028; P10.19 writes none (`Label` is in no `__all__`). P10
 runs before P9, so 0022 and 0023 do not exist yet;
 before writing, `ls docs/decisions` must show the number free, otherwise
 stop and report.
@@ -8353,14 +8366,14 @@ The shared files that force a sequence (every row in landing order):
 | `src/pyntpot/maps/attribution.py` | P10.3a (the gate), P10.9 (pixel term, if Q2) |
 | `src/pyntpot/maps/osm_elements.py` | P10.9 (`LANDMARK_TAG_KEYS` comment), P10.7 (`_waterway`), P10.10c (`_polygon_rings`) |
 | `src/pyntpot/maps/lettering/pipeline.py` | P10.5a (`draw_plate`'s face), P10.9 (pixel term, if Q2), P10.5b (`draw_plate`'s nib, if Q5 (2)), P10.10d (renamed imports) |
-| `src/pyntpot/maps/lettering/{label,picks,spans,span_sides,placement*}.py` | P10.9 (terms), P10.6 (fixes), P10.14 (sport words in `picks.py`, `span_sides.py`, `placement_names.py`, `placement_flat.py`), P10.10d (renames) |
-| `src/pyntpot/maps/lettering/picks_{rivers,roads,settlements}.py` | P10.14 (sport words), P10.10d (renames, where it touches them) |
+| `src/pyntpot/maps/lettering/{label,picks,spans,span_sides,placement*}.py` | P10.9 (terms), P10.6 (fixes), P10.14 (sport words in `picks.py`, `span_sides.py`, `placement_names.py`, `placement_flat.py`), P10.10d (renames), P10.19 (session and rider words, and the `why` values, in `picks.py`, `label.py`, `spans.py`, `placement_names.py`) |
+| `src/pyntpot/maps/lettering/picks_{rivers,roads,settlements}.py` | P10.14 (sport words), P10.10d (renames, where it touches them), P10.19 (`picks_roads.py`, `picks_settlements.py`) |
 | `src/pyntpot/maps/layers.py` | P10.14 (sport words in the module docstring, `REFERENCE_SPAN_M`'s comment, `scale_for`), P10.10c (repointed imports of `_osm_layers`, `_relief_layers`, `_densify`) |
 | `src/pyntpot/maps/masks.py` | P10.14 (one comment line), P10.10c (`_spread`) |
-| `src/pyntpot/maps/pipeline.py` | P10.16 (`fetch` wraps `ProviderError`), P10.10c (repointed imports of `compose._paste_labels`, `_plates`, `_route`) |
+| `src/pyntpot/maps/pipeline.py` | P10.16 (`fetch` wraps `ProviderError`), P10.10c (repointed imports of `compose._paste_labels`, `_plates`, `_route`), P10.18 (`FetchError` moves to `maps/cache.py`; `fetch`'s own wrap goes) |
 | `tests/unit/maps/test_layers.py` | P10.7 (`tunnel=no` tests), P10.14 (two docstrings and the `run`/`ride` locals), P10.15 (the off-map place test; after both) |
-| `tests/unit/maps/lettering/test_picks.py` | P10.6 (landmark cap tests), P10.14 (two strings) |
-| `src/pyntpot/maps/candidates/{climbs,landmark_classes,landmarks,places,roads}.py`, `tests/unit/maps/candidates/test_{climbs,places}.py`, `tests/unit/maps/lettering/test_picks_roads.py` | P10.14 (sport words), P10.10d (`test_picks_roads.py`'s repointed imports, if any); no other part-2 slice touches them |
+| `tests/unit/maps/lettering/test_picks.py` | P10.6 (landmark cap tests), P10.14 (two strings), P10.19 (the `why` test) |
+| `src/pyntpot/maps/candidates/{climbs,landmark_classes,landmarks,places,roads}.py`, `tests/unit/maps/candidates/test_{climbs,places}.py`, `tests/unit/maps/lettering/test_picks_roads.py` | P10.14 (sport words), P10.10d (`test_picks_roads.py`'s repointed imports, if any), P10.19 (`landmark_classes.py`'s session line, `test_picks_roads.py`'s `why` test); no other part-2 slice touches them |
 | `tests/unit/maps/lettering/test_spans.py` | P10.9 (the three "rule seven" docstrings, line 64's "the sheet" if Q10), P10.6 (new side test), P10.10d (repointed imports, if any) |
 | `src/pyntpot/letters/trace.py` | P10.4b (`edt` import), P10.5a (`_radii`), P10.10b (renames) |
 | `src/pyntpot/letters/nib.py` | P10.4b (`edt` import), P10.9 (the "dark field" docstring line), P10.10b (repointed imports, if any) |
@@ -8373,6 +8386,8 @@ The shared files that force a sequence (every row in landing order):
 | `src/pyntpot/ink/stamp.py` | P10.10a (repointed imports of `ink.tip`'s names), P10.17 (`Mark` becomes `StrokeProfile`, with `ink/stroke.py`); no other part-2 slice touches either file |
 | `docs/explanation/references.md` | P10.3c (new entries), P10.4b (`chamfer-distance` lines), P10.10a (the `value-noise` and `fbm` lines, for `ink.tip._fbm1`), P10.10c (renamed `compose` sites); P9.4 after P10 |
 | `CONTRIBUTING.md` | P10.3d (`## Commits`); ~~P10.9 (one sentence, if Q9 (c))~~ (removed: Q9 answered (a)) |
+| `CHANGELOG.md` (`## [Unreleased]`) | P10.16 (`### Changed`), the part-2 review fix `87cbfce` (`### Fixed`), P10.18 (`### Added`, and a `### Changed` bullet), P10.19 (a `### Changed` bullet), P10.11 (a `### Fixed` bullet, on `p10-golden` after the `p10-fixes` PR merges, so after P10.18's and P10.19's edits) |
+| `tests/unit/ink/test_pad.py` | P10.4c (the convergence test replaced), P10.11 (step 1: the centring test, and the convergence test P10.4c wrote replaced: bound 0.85, `err[0] > err[1]` and `err[2] < err[0] * 0.9`) |
 | `pyproject.toml`, `uv.lock` | P10.3b (prek), P10.R (version) |
 | `specs/001-port/spec.md`, `GLOSSARY.md` | P10.9, then P9.1 and P9.2 (after P10) |
 | `tests/architecture/**`, `tests/conftest.py` | owned by P9.1 and P9.2; no P10 slice edits them (the private-name pin goes in `tests/unit/maps/test_import_order.py`) |
@@ -8665,7 +8680,9 @@ The shared files that force a sequence (every row in landing order):
     change outside parity, after 0.1.0"). Recommended: yes only for rows
     that a fix slice's G-self moves (a defect fix whose look change is a
     side effect); Q4 (2) and Q6 (A) are look changes the recommendations
-    already close.
+    already close. (2026-10-21: the maintainer widened the yes to the
+    later `fix-golden` row `ink-pad-lay-half-pixel-shift`, accepting its
+    drift; P10.11 runs it.)
   - **Q13 the README badge** (`p5-run-log.md:125`). P5.4 did not adopt the
     CodSpeed badge from PR #6 (closed, not merged) because `README.md` was
     outside its owner files; the README has no badge today, and
@@ -10083,48 +10100,685 @@ rebased onto the head with G-here re-run there, before P10.10c starts.
   marks the row done in `p10-triage.md` (with checks 1 to 3) and ticks
   P10.17 in `tasks.md`.
 
-#### P10.11 Golden group (conditional)
+#### P10.18 The provider errors are public, and `Cache.ensure` wraps them (later issue)
 
-- Empty at P10.0: no proposed fix moves a golden. It exists only if, after
-  P10.2, a row is `fix-golden` (Q4 (2), Q6 (A), or a fix slice whose G-self
-  was not byte-identical) and Q12 is yes; otherwise those rows are `defer`.
-- **After P10.2 it is empty unless a fix slice's G-self moves a row.** Q4
-  was answered (1) and Q6 (B): both look rows are `close`, and the two looks
+Implements the later row `maps-provider-error-private-beyond-fetch`
+(outcome `fix` after the maintainer's answer of 2026-10-21: export
+`ProviderError` and `ProviderBudgetExceededError` from `pyntpot.maps`, the
+providers' documented errors (ADR 0004), and have `Cache.ensure` wrap them
+in `FetchError` as `fetch` does). Every other part-2 slice had landed and
+PR #25 was open when the row became `fix`, so "Later issues" lets it join
+no slice: it is a new slice, plan-reviewed, run as its own dispatch from
+the `p10-fixes` head (`0685d14` or later), landing on `p10-fixes` before
+PR #25 merges. Predecessors: P10.10d and P10.17 (landed). P10.19 follows
+it (`CHANGELOG.md`, "Order and parallelism").
+
+- `$SLICE` is `$SCRATCH/P10.18/`, created empty; its G-self baseline is
+  made at the head where this dispatch starts.
+- The sites, at `0685d14` (no slice lands between that commit and this
+  one's start except the orchestrating session's bookkeeping, so the
+  numbers hold; a check still matches by text):
+  - `Cache.ensure` (`maps/cache.py:198`) calls the providers with no
+    handler (`:227` `features.features`, `:230` `features.landcover`,
+    `:233` `elevation.grid`); its docstring (`:206` to `:221`) has no
+    `Raises:` section. `cache.py` already imports `Elevation` and
+    `Features` from `pyntpot.maps.providers.base` (`:44`). `Cache` is
+    the frozen dataclass at `:73` to `:74`; the module constants end at
+    `PLATES_SUBDIR` (`:70`).
+  - `OverpassFeatures.features` (`providers/overpass.py:227`) and
+    `.landcover` (`:245`) raise through `_query`:
+    `ProviderBudgetExceededError` at `:264` and `ProviderError` at `:299`
+    (in `_send`); both methods' `Raises:` already name the two classes
+    (`:230` to `:232`, `:248` to `:250`). `OpenTopoData.grid`
+    (`providers/opentopodata.py:98`) raises through `_call`:
+    `ProviderBudgetExceededError` at `:121`, `ProviderError` at `:135`,
+    `:140` and `:145`; its `Raises:` (`:101` to `:104`) names both.
+  - `ProviderError` and `ProviderBudgetExceededError` are defined in
+    `maps/providers/base.py` (`:27`, `:31`); the module docstring names
+    them at `:5` to `:7`. `pyntpot.maps.providers.__all__` is `[]`
+    (`providers/__init__.py:3`) and stays so: the public surface is the
+    `__all__` of `pyntpot`, `pyntpot.ink`, `pyntpot.letters` and
+    `pyntpot.maps` (ADR 0026).
+  - `fetch` wraps at `maps/pipeline.py:98` to `:101` (`try: key =
+    cache.ensure(...)`, `except ProviderError as exc: raise
+    FetchError(f"a provider could not answer: {exc}") from exc`).
+    `FetchError` is defined at `pipeline.py:61` to `:66`, and
+    `pipeline.py` imports `Cache` from `pyntpot.maps.cache` (`:47`) and
+    `ProviderError` with `Elevation` and `Features` (`:53`).
+  - `pyntpot.maps` imports `Cache` (`maps/__init__.py:14`) and `FetchError`
+    from `pyntpot.maps.pipeline` (`:17`); `__all__` is `:25` to `:43`; the
+    docstring lists the exports at `:3` to `:9`.
+  - The public-surface pin is `tests/unit/test_public_api.py`:
+    `MAPS_PUBLIC` (`:61` to `:79`), read by
+    `test_each_layer_all_is_exactly_its_public_names` (`:110`) and
+    `test_every_layer_public_name_resolves` (`:118`). The other test that
+    reads an `__all__`, `tests/architecture/test_examples.py`, reads them
+    by AST and lists no names, so it needs no change.
+- Where `FetchError` lives. `cache.py` cannot import it from
+  `pipeline.py`: `pipeline.py` imports `cache.py` (`:47`), so the import
+  would be a cycle. `FetchError` therefore moves, unchanged in name and
+  base (`RuntimeError`), into `maps/cache.py`, the module whose `ensure`
+  now raises it. `pipeline.py` and `maps/__init__.py` import it from
+  there, so `pyntpot.maps.FetchError` is the same class at the same public
+  path, and every existing `__all__` entry stays. No shim: `pipeline.py`
+  imports `FetchError` because it raises it (`pipeline.py:105`, the
+  missing-features error).
+- Whether `fetch`'s own wrap stays: it goes. `fetch` reaches a provider
+  only through `cache.ensure` (`pipeline.py:99`; its other provider
+  reads, `features.credit` and `elevation.credit` at `:109`, are
+  attributes, not calls that fetch), and after this slice `ensure` raises
+  `FetchError`, which is not a `ProviderError`, for any provider, a
+  caller's own included. The `except` in `fetch` could then never run, so
+  it would be an unreachable branch. `fetch`'s behaviour is unchanged and
+  stays pinned by P10.16's
+  `tests/unit/maps/test_pipeline_fetch_paint.py::TestFetch::test_a_provider_that_cannot_answer_raises_fetch_error`,
+  which this slice does not edit and which must stay green.
+- Owner files: `src/pyntpot/maps/cache.py`, `src/pyntpot/maps/pipeline.py`,
+  `src/pyntpot/maps/__init__.py`, `src/pyntpot/maps/providers/base.py`,
+  `src/pyntpot/maps/providers/overpass.py` and
+  `src/pyntpot/maps/providers/opentopodata.py` (module docstrings only),
+  `tests/unit/maps/test_cache.py`, `tests/unit/test_public_api.py`,
+  `docs/decisions/0029-provider-errors-public-and-cache-wraps.md` (new),
+  `CHANGELOG.md` (`## [Unreleased]` only). The orchestrating session
+  deletes `docs/issues/maps-provider-error-private-beyond-fetch.md` in the
+  commit.
+- Leave alone: `tests/unit/maps/test_pipeline_fetch_paint.py` (its import
+  `from pyntpot.maps.pipeline import FetchError` keeps working, since
+  `pipeline.py` imports the class); the providers' code and their
+  methods' `Raises:` entries (they already name `ProviderError` and
+  `ProviderBudgetExceededError`, which are now public by those names);
+  `pyntpot.maps.providers.__all__`; `pyntpot.__all__` and the `PUBLIC`
+  tuple; ADR 0004, ADR 0026 and ADR 0028 (accepted records: 0029 amends
+  0004 and 0028 by its own text); `GLOSSARY.md` (it has no error terms;
+  "provider" and "fetch cache" are unchanged); `maps/cli.py`;
+  `tests/support/providers.py`; `tests/golden/`;
+  `tests/unit/maps/providers/**`.
+- Check first: `ls docs/decisions` shows no `0029-*` file (at `0685d14`
+  the highest is `0028-fetch-wraps-provider-errors.md`); otherwise stop
+  and report.
+- Checks before and after (run from the worktree root):
+  1. `grep -rn "class FetchError" src/pyntpot` prints
+     `src/pyntpot/maps/pipeline.py:61:class FetchError(RuntimeError):`
+     before and one line in `src/pyntpot/maps/cache.py` after.
+  2. `grep -rn "except ProviderError" src/pyntpot` prints
+     `src/pyntpot/maps/pipeline.py:100:` before and one line in
+     `src/pyntpot/maps/cache.py` after.
+  3. `uv run python -I -c "import pyntpot.maps as m; print(sorted(n for n in m.__all__ if n.endswith('Error')))"`
+     prints `['FetchError']` before and
+     `['FetchError', 'ProviderBudgetExceededError', 'ProviderError']`
+     after.
+  A before-check whose output differs stops the slice and is reported.
+- Test first (no mock: hand-written providers, as P10.16's
+  `_FailingElevation`), both red before any `src` change:
+  - `tests/unit/maps/test_cache.py`: extend the import at `:17` to
+    `from pyntpot.maps.providers.base import (Elevation, ElevationGrid,
+    Features, ProviderBudgetExceededError, ProviderError)` and add
+    `from pyntpot.maps import FetchError` (public path, importable
+    today). Beside `_OtherElevation` add `class
+    _FailingFeatures(FixtureFeatures)`, docstring "The fixture feature
+    payloads, except that one query raises a kept error.", whose
+    `__init__(self, error: ProviderError, failing: str) -> None`
+    (docstring "Keep the error and the query, `features` or `landcover`,
+    that raises it.") calls `super().__init__()` and keeps both, and whose
+    `features(self, box: BoundingBox) -> str` and `landcover(self, box:
+    BoundingBox) -> str` each raise the kept error when `failing` names
+    them and otherwise return `super()`'s answer (docstring "Raise the
+    kept error if this query is the failing one, else answer from the
+    fixture."); and `class _FailingElevation(FixtureElevation)`,
+    docstring "The fixture elevation provider, whose grid raises a kept
+    error.", whose `__init__(self, error: ProviderError) -> None`
+    (docstring "Keep the error the grid raises.") calls
+    `super().__init__()` and keeps it, and whose `grid(self, box:
+    BoundingBox, n: int) -> ElevationGrid` (docstring "Raise the kept
+    error instead of answering.") raises it. In `TestEnsure` add
+    `test_a_provider_that_cannot_answer_raises_fetch_error`, parametrised
+    over `("failing", "error")` with
+    `[("features", ProviderError("every Overpass endpoint refused the query")),
+    ("landcover", ProviderBudgetExceededError("overpass: the budget of 100 queries is spent")),
+    ("grid", ProviderError("opentopodata-srtm30m said 'INVALID_REQUEST'")),
+    ("grid", ProviderBudgetExceededError("opentopodata-srtm30m: the budget of 1000 calls is spent"))]`
+    and `ids=["features-refused", "landcover-budget-spent",
+    "grid-refused", "grid-budget-spent"]`, taking the module's `track`
+    fixture and `tmp_path`: `features: Features =
+    FixtureFeatures() if failing == "grid" else _FailingFeatures(error,
+    failing)`, `elevation: Elevation = _FailingElevation(error) if
+    failing == "grid" else FixtureElevation()`; under
+    `pytest.raises(FetchError) as caught`, `Cache(tmp_path).ensure(track,
+    features, elevation, force=True)` (forced, as the upstream's refetch
+    calls it); then `assert caught.value.__cause__ is error` and
+    `assert str(error) in str(caught.value)`. Docstring "A provider that
+    cannot answer makes `ensure` raise `FetchError` from the provider's
+    error.". Red today: the provider's error escapes `pytest.raises`.
+  - `tests/unit/test_public_api.py`: add `"ProviderBudgetExceededError"`
+    and `"ProviderError"` to `MAPS_PUBLIC`, after `"Plates"` (sorted
+    order), which makes the two `[maps]` cases red; and add
+    `test_the_provider_errors_are_the_providers_own() -> None`, docstring
+    "`pyntpot.maps` exports the errors the providers raise, the budget
+    refusal a `ProviderError`.": `maps =
+    importlib.import_module("pyntpot.maps")`, `base =
+    importlib.import_module("pyntpot.maps.providers.base")`, then
+    `assert maps.ProviderError is base.ProviderError`,
+    `assert maps.ProviderBudgetExceededError is base.ProviderBudgetExceededError`
+    and `assert issubclass(maps.ProviderBudgetExceededError,
+    maps.ProviderError)` (`importlib` is already imported, `:3`; an
+    import inside the function would trip ruff's `PLC0415`). Red today
+    with an `AttributeError`.
+  The hand-off records each failure line.
+- Change, `src`:
+  - `maps/cache.py`: the import at `:44` becomes `from
+    pyntpot.maps.providers.base import Elevation, Features,
+    ProviderError`. After `PLATES_SUBDIR` and before `@dataclass`, add
+    `class FetchError(RuntimeError):` with the docstring "Raised when a
+    track's payloads cannot be fetched or its basemap built." then a
+    blank line and "`Cache.ensure`, and `fetch` through it, raise it when
+    a provider could not answer, with the provider's error as the cause;
+    `fetch` also raises it when the cached features were missing once the
+    fetch had run.". In `ensure`, the three `path = ...` / `if force or
+    not path.exists(): _write(...)` pairs (`:225` to `:233`) go inside
+    `try:`, with `except ProviderError as exc: raise FetchError(f"a
+    provider could not answer: {exc}") from exc`; `key`, `box` and the
+    `mkdir` (`:222` to `:224`) stay before the `try`, and `return key`
+    stays after it, outside the `try`. The order of the calls and the
+    write after each call do not change.
+  - `maps/pipeline.py`: `:47` becomes `from pyntpot.maps.cache import
+    Cache, FetchError`; `:53` becomes `from pyntpot.maps.providers.base
+    import Elevation, Features`; the class `FetchError` (`:61` to `:66`)
+    and its two following blank lines go; in `fetch`, `:98` to `:101`
+    become `key = cache.ensure(track, features, elevation)`. Nothing else
+    in `fetch` moves.
+  - `maps/__init__.py`: `:14` becomes `from pyntpot.maps.cache import
+    Cache, FetchError`; `:17` becomes `from pyntpot.maps.pipeline import
+    compose, fetch, paint`; add `from pyntpot.maps.providers.base import
+    ProviderBudgetExceededError, ProviderError` before the
+    `providers.opentopodata` import (ruff's isort order); add
+    `"ProviderBudgetExceededError"` and `"ProviderError"` to `__all__`
+    after `"Plates"`.
+- Docstrings, each a capability fact:
+  - `Cache.ensure` gains, after `Returns:`, "Raises:" with "FetchError:
+    When a provider cannot answer, a budget refusal included, raised from
+    the provider's error. The payloads written before the failure stay on
+    disk.".
+  - `maps/cache.py`'s module docstring: the key-types paragraph gains the
+    sentence "`FetchError` is raised when a provider cannot answer; it is
+    defined here because `ensure` is where the providers are called, and
+    `maps.pipeline.fetch` raises it too."; the invariants gain "a
+    `ProviderError` from a provider leaves `ensure` as `FetchError`, the
+    provider's error as its cause". Rewrap within the line length.
+  - `maps/pipeline.py`'s module docstring: `:8`, "`FetchError`, raised
+    when" becomes "`FetchError` (from `maps.cache`), raised when"; the
+    invariant at `:30` ("a `ProviderError` from either provider reaches
+    `fetch`'s caller as `FetchError`") stays, as it stays true. `fetch`'s
+    `Raises:` (`:92` to `:96`) stays.
+  - `maps/__init__.py`'s docstring: "the shipped providers
+    `OverpassFeatures` and `OpenTopoData`," becomes "the shipped providers
+    `OverpassFeatures` and `OpenTopoData` and the errors they raise,
+    `ProviderError` and `ProviderBudgetExceededError`,"; the sentence on
+    the provider protocols stays. Rewrap.
+  - `maps/providers/base.py`'s module docstring: after the key-types
+    sentence (`:3` to `:7`) add "Both errors are public, as
+    `pyntpot.maps.ProviderError` and
+    `pyntpot.maps.ProviderBudgetExceededError`; `Cache.ensure`, and so
+    `fetch`, raises `FetchError` from them.". The two class docstrings
+    stay.
+  - `maps/providers/overpass.py`'s module docstring: after "It does not
+    parse, validate or cache the payloads, ..." paragraph add the
+    paragraph "Its errors are `ProviderError` and
+    `ProviderBudgetExceededError`, public through `pyntpot.maps`.".
+    `maps/providers/opentopodata.py`'s module docstring: after "raises
+    `ProviderError`." (`:12`) add "Both errors are public through
+    `pyntpot.maps`." Rewrap each paragraph within the line length.
+- `CHANGELOG.md`, under `## [Unreleased]`: a new `### Added` subsection
+  above `### Changed` (Keep a Changelog's order) with one bullet:
+  "`pyntpot.maps.ProviderError` and `pyntpot.maps.ProviderBudgetExceededError`,
+  the errors the shipped providers raise when they cannot answer or their
+  budget is spent (ADR 0029)."; and under `### Changed`, after P10.16's
+  bullet, "`Cache.ensure` raises `FetchError` when a provider cannot
+  answer, with the provider's error as its cause (ADR 0029), as `fetch`
+  does." No version section: P7 writes 0.1.0.
+- ADR `docs/decisions/0029-provider-errors-public-and-cache-wraps.md`,
+  `Status: accepted`, its heading in 0028's form with the title "The
+  provider errors are public, and `Cache.ensure` wraps them", in 0028's
+  shape (Context, Decision, Consequences). Context: ADR 0028 made `fetch`
+  raise `FetchError` when a provider cannot answer and kept
+  `ProviderError` and `ProviderBudgetExceededError` private, so
+  `Cache.ensure` and the shipped providers' `features`, `landcover` and
+  `grid`, public through `Cache`, `OverpassFeatures` and `OpenTopoData`
+  (ADR 0026), still raised a type a caller could catch only as
+  `RuntimeError`; a caller that forces a refetch calls `Cache.ensure`
+  itself, since `fetch` takes no `force`; the maintainer chose
+  (2026-10-21) to export both errors and to have `Cache.ensure` wrap
+  them. Decision: this ADR amends ADR 0004's "Errors" and ADR 0028,
+  which stay as written; `ProviderError` and
+  `ProviderBudgetExceededError` join `pyntpot.maps.__all__`, still
+  defined in `pyntpot.maps.providers.base` and raised by the providers'
+  own methods, which replaces ADR 0028's "No name joins or leaves an
+  `__all__`" and "stay private"; `Cache.ensure` catches `ProviderError`,
+  a `ProviderBudgetExceededError` included, from any provider it calls
+  and raises `FetchError` from it, the provider's error as `__cause__`;
+  `FetchError` is defined in `pyntpot.maps.cache`, because
+  `maps.pipeline` imports `maps.cache`, and its public path
+  `pyntpot.maps.FetchError` is unchanged; `fetch` catches nothing
+  itself, as it reaches the providers only through `Cache.ensure`, and
+  raises `FetchError` on a provider failure as ADR 0028 says.
+  Consequences: a provider called directly raises a public type, and
+  `Cache.ensure` and `fetch` raise one `FetchError` with the provider's
+  error as its cause; the default render, every golden and the pinned
+  digests are unchanged, since only failure paths change; the payloads
+  written before a failure stay on disk (`Cache.ensure`'s invariant); a
+  caller that caught `RuntimeError` still catches both; a new public
+  name, or a change to one, still needs a new ADR.
+- The render: only failure paths change (an `ensure` or `fetch` that
+  returns returns the same key and basemap as before), so neither the
+  golden card nor `compose(..., attribution=False)` on any caller's
+  track can change. G-self is byte-identical.
+- About 150 changed lines with the ADR.
+- Gate: G-here (P11's form, with `uv run prek run --files
+  docs/decisions/0029-provider-errors-public-and-cache-wraps.md`, the new
+  ADR, which `prek run --all-files` never passes to the file-filtered
+  hooks while it is untracked; G-here's `uv run lint-imports` and the
+  cold-import test in `tests/unit/maps/test_import_order.py` prove there
+  is no cycle) plus G-self (byte-identical), and the coverage gates (it
+  adds `src` lines). No AST-neutral check (executable lines change).
+- Commit: `Export the provider errors and wrap them in Cache.ensure`. This
+  commit marks the row done in `p10-triage.md` (with the two tests and
+  checks 1 to 3) and ticks P10.18 in `tasks.md`.
+- For the hand-off: the upstream (read at the upstream's `53b1b04`)
+  calls `Cache.ensure(..., force=True)` with no handler
+  (`analysis/report/routemap.py:361`) and catches only `FetchError`
+  (`analysis/report/__main__.py:115`, through the re-export at
+  `routemap.py:62`), so once it bumps past this commit a provider failure
+  in its forced refetch reaches that handler too.
+
+#### P10.19 Say track, not session or rider, in the lettering (later issue)
+
+Implements the later row `maps-lettering-session-and-rider-for-a-track`
+(outcome `fix` after the maintainer's answer of 2026-10-21, reading (1):
+reword all 16 lines, the five `Label.why` values included). Like P10.18
+it is a new slice, plan-reviewed, run as its own dispatch from the
+`p10-fixes` head after P10.18 has landed (they share `CHANGELOG.md`),
+landing on `p10-fixes` before PR #25 merges.
+
+- `$SLICE` is `$SCRATCH/P10.19/`, created empty; its G-self baseline is
+  made at the head where this dispatch starts, never reused from
+  P10.18's.
+- The rule is P10.14's (ADR 0027, "pyntpot has no notion of what a track
+  records"): no `src` text calls the track a session, or the person on it
+  a rider. A "session" that names the journey becomes "track";
+  `GLOSSARY.md` has "track" and "map", and the replacements name no new
+  term. The one rider value becomes "home", the label's own kind.
+- Public reach: `Label` (`maps/lettering/label.py`) is in no `__all__`; it
+  is reached through `Lettering.labels`. Under ADR 0026 ("Members", and
+  "P10 against P11" above) the members of a class named in no `__all__`
+  may change without an ADR, and a `why` value is text the code sets, not
+  a token a caller passes. So no ADR and no stop; the `CHANGELOG.md` line
+  tells a caller what it will read.
+- What reads `why` in `src`: `grep -rn "\.why\b" src/pyntpot` prints only
+  `maps/lettering/span_ends.py:108` (`why=span.why`, copying a span's
+  reason into its label); `why=` elsewhere only sets it
+  (`lettering/picks.py`, `picks_rivers.py:136`, `picks_roads.py:110`,
+  `picks_settlements.py:153`, `spans.py:81`, `pipeline.py:158`). Nothing
+  draws it: the golden labels record is the placed names only
+  (`tests/support/golden.py:65`, `label.name`), and the lettering key is
+  hashed from the marks, whose class (`letters.setting.Mark`) has no
+  `why` field. So no plate, no golden and no key can move.
+- Owner files: in `src/pyntpot/maps/lettering/`: `picks.py`,
+  `picks_roads.py`, `picks_settlements.py`, `placement_names.py`,
+  `spans.py`, `label.py`; `src/pyntpot/maps/candidates/landmark_classes.py`;
+  `tests/unit/maps/lettering/test_picks.py`,
+  `tests/unit/maps/lettering/test_picks_roads.py`; `CHANGELOG.md`
+  (`## [Unreleased]` only). The orchestrating session deletes
+  `docs/issues/maps-lettering-session-and-rider-for-a-track.md` in the
+  commit.
+- Change, every site (lines at `0685d14`, found by their text; only the
+  quoted words change, the rest of each line stays, and each line gets
+  shorter, so nothing rewraps):
+  - The five `why` values:
+    - `lettering/picks.py:189` and `:200` (`route_markers`):
+      `why="where the session began"` becomes
+      `why="where the track began"`.
+    - `lettering/picks.py:209`: `why="where the session ended"` becomes
+      `why="where the track ended"`.
+    - `lettering/picks.py:261` (`home_labels`):
+      `why="the rider's own place"` becomes `why="home"`.
+    - `lettering/picks_roads.py:110` (`pick_roads`):
+      `why="road the session was on"` becomes
+      `why="road the track was on"`.
+  - The 11 docstring and comment lines:
+    - `candidates/landmark_classes.py:127`: "Nothing on a session's card"
+      becomes "Nothing on a track's card".
+    - `lettering/placement_names.py:139`: "of the session rather than a
+      name" becomes "of the track rather than a name".
+    - `lettering/spans.py:155`: "the session takes the other" becomes
+      "the track takes the other" (the ground spans take one side, the
+      track's own spans the other, as `label.py:181` groups them).
+    - `lettering/picks_roads.py:3`: "the roads the session was on"
+      becomes "the roads the track was on"; `:10`: "session was never
+      on is not lettered." becomes "track was never on is not
+      lettered."; `:39`: "to be one the session was on." becomes "to be
+      one the track was on."; `:100`, the comment "a road the session
+      was never on is not this map's" becomes "a road the track was never
+      on is not this map's".
+    - `lettering/picks_settlements.py:35`: "session set off from or
+      finished" becomes "track set off from or finished" (as `picks.py:5`
+      already says, "where the track set off and finished").
+    - `lettering/label.py:181`: "the second the session, and which group"
+      becomes "the second the track, and which group" (as `picks.py:178`
+      says, "facts about the track, not about the place");
+      `:192`: "One stretch of the session the map annotates" becomes "One
+      stretch of the track the map annotates"; `:222`: "not about the
+      session." becomes "not about the track.".
+- Leave alone: the identifiers `SPAN_GROUND`, `SPAN_EFFORT` and the span
+  kinds; `label.py:4`'s "one effort or climb" (not a session or rider
+  word, and not this row); the four `route_inks.ride` lines
+  (`maps/style.py:156`, `:198`, `maps/style_groups.py:261`, `:262`: the
+  deferred row `maps-style-route-inks-one-read`); the three test lines
+  that say "session" (`tests/unit/maps/test_layers.py:40`, `:92`,
+  `tests/unit/maps/test_track_index.py:32`: the row is `src` only);
+  `GLOSSARY.md`; `docs/decisions/**`; every other `why` value.
+- Checks before and after (each compares the count and the matched text,
+  not the line numbers; a count or a text that differs at the starting
+  commit stops the slice):
+  1. `grep -rnIwi session src/pyntpot` prints 15 lines before (the four
+     `session` values and the 11 prose lines above) and nothing after.
+  2. `grep -rnIw "rider's" src/pyntpot` prints 1 line before (`why="the
+     rider's own place"`) and nothing after.
+  3. `grep -rnIwE "rides?|ride's|ridden|run's|riders?|rider's|riding|runners?" src/pyntpot --include=*.py`
+     prints 5 lines before (the four `route_inks.ride` lines and the
+     `rider's` value) and only the four `route_inks.ride` lines after
+     (P10.14's check 1 then holds with no `why` value left).
+- Test first, red before any `src` change:
+  - `tests/unit/maps/lettering/test_picks.py`: the import at `:7` becomes
+    `from pyntpot.maps.lettering.picks import home_labels, journal_picks,
+    route_markers` (`label_basemap`, `tiny_style` and `wide_card` are
+    already imported, `:16`). Add
+    `test_the_markers_and_the_home_say_why_in_track_words()`, docstring
+    "The start, finish and home labels give their reason in track words,
+    with no sport word.": `open_route = route_markers([(10.0, 10.0),
+    (200.0, 10.0)])`; `loop = route_markers([(10.0, 10.0), (200.0, 10.0),
+    (12.0, 12.0)])` (its ends 2.8 px apart, under `LOOP_CLOSE_PX`, 30);
+    `home, _boxes = home_labels(label_basemap(places=({"sym": "house",
+    "x": 400.0, "y": 300.0, "n": "Lynton"},)), wide_card(), tiny_style(),
+    lambda name, size: (len(name) * size * 0.5, size))`; then
+    `assert [(label.name, label.why) for label in open_route] ==
+    [("start", "where the track began"), ("finish", "where the track
+    ended")]`, `assert [(label.name, label.why) for label in loop] ==
+    [("start", "where the track began")]` and `assert [(label.name,
+    label.why) for label in home] == [("Lynton", "home")]`.
+  - `tests/unit/maps/lettering/test_picks_roads.py`: add
+    `test_a_road_label_says_the_track_was_on_it()`, docstring "A lettered
+    road gives its reason in track words, with no sport word.", on the
+    first test's ground: `numbered = [[round(float(x), 1), 0.0] for x in
+    range(0, 4000, 25)]`, `lines = {"roads": [{"n": "Lyn Valley Road",
+    "c": "major", "r": "A361", "d": numbered}]}`, `card = hung_card(400,
+    300, 10.0, top=400.0)`, `route = [(float(x), 45.0) for x in range(0,
+    400, 10)]`; then `assert [(label.name, label.why) for label in
+    pick_roads(label_basemap(), lines, card, route, budget=2)] ==
+    [("A361", "road the track was on")]`.
+  At `0685d14` these calls return `[('start', 'where the session
+  began'), ('finish', 'where the session ended')]`, `[('start', 'where
+  the session began')]`, `[('Lynton', "the rider's own place")]` and
+  `[('A361', 'road the session was on')]` (run in a scratch copy for
+  this plan), so both tests fail on their first assert; the hand-off
+  records each failure line.
+- `CHANGELOG.md`, under `## [Unreleased]`, `### Changed` (after P10.18's
+  bullet): "The reasons the start, finish, home and road labels carry in
+  `Lettering.labels` (`Label.why`, which a caller may show as a tooltip)
+  say track, not session or rider: "where the track began", "where the
+  track ended", "home" and "road the track was on"."
+- The render: `why` is not drawn and keys nothing (above), so neither the
+  golden card nor `compose(..., attribution=False)` on any caller's track
+  can change. G-self is byte-identical.
+- About 45 changed lines.
+- Gate: G-here (P11's form) plus G-self (byte-identical). No AST-neutral
+  check (five string values change). No coverage gate (no `src` line
+  added, no test deleted).
+- Commit: `Say track, not session or rider, in the lettering`. This commit
+  marks the row done in `p10-triage.md` (with the two tests and checks 1
+  to 3) and ticks P10.19 in `tasks.md`.
+- For the hand-off: the upstream only shows `why` as a tooltip
+  (`analysis/report/charts.py:2017`, read at the upstream's
+  `53b1b04`), and its test compares the tooltip text with the computed
+  `label.why` (`tests/test_route_chart.py:586`), not a literal, so nothing
+  there breaks when it bumps; its cards' tooltips read the new text.
+
+#### P10.11 Golden group: the half-pixel fix, one regeneration window
+
+- Empty at P10.0: no proposed fix moved a golden. After P10.2, Q4 was
+  answered (1) and Q6 (B): both look rows are `close`, and the two looks
   are candidate features in `docs/features/`
-  (`letters-nib-follows-writing-line.md`, `ink-tip-hold-stroke-ends.md`).
-  Q12 is yes for a row a fix slice's G-self moves, so such a row is the only
-  way into this slice; the Q4 (2) and Q6 (A) steps below are removed.
-- The last slice of part 2: after P8 and after every other P10 slice, and
-  before P7.1, on `p10-golden`, as one
-  regeneration window run as ADR 0006 and P3.12 to P3.15 ran theirs: one
-  commit per fix inside the window, G-window per step with the step's gate
-  options, the tolerance bound (`MAX_DIFFERING_FRACTION`,
-  `MAX_CHANNEL_DELTA`) unchanged, the manifest hash required equal, and one
-  regeneration commit at the end as P3.15 made it. Window commits are
+  (`letters-nib-follows-writing-line.md`, `ink-tip-hold-stroke-ends.md`);
+  their steps are removed (the Q4 (2) step would have gated
+  `--require-identical paper.webp wash.webp pen.webp --max-fraction 0.005 --require-hash equal --require-labels-equal`
+  and tested
+  `tests/unit/letters/test_hand.py::test_a_name_along_a_turned_line_carries_the_turn_on_its_pen`;
+  the Q6 (A) step `--require-identical paper.webp wash.webp --max-fraction 0.005 --require-hash equal --require-labels-equal`
+  and `tests/property/test_tip.py::test_smoothing_keeps_a_paths_two_ends`).
+  Q12's answer was yes only for a row a fix slice's G-self moves, and no
+  part-2 slice's G-self moved a pixel.
+- **The maintainer widened Q12 on 2026-10-21** for the later row
+  `ink-pad-lay-half-pixel-shift`: first "Those three changes all make
+  sense to do to me", then, shown before, after and difference (x8)
+  comparisons of the fix, "Accept it - identical to human eye"
+  (`p10-run-log.md`, the entries of 2026-10-21). The row is `fix-golden`
+  with slice P10.11, and it is the window's one step. Its drift past the
+  0.005 step bound is accepted in advance as the window's one explained
+  exception, as ADR 0006's step 3 was. P10.11 is no longer struck.
+- Branch: `p10-golden`, from `main` after the `p10-fixes` PR (#25) has
+  merged (so after P10.18 and P10.19), and before P7.1. Run by an
+  implementer for the step, in a detached worktree from that `main`
+  commit; the orchestrating session commits each window commit and makes
+  the regeneration commit, as P3.12 to P3.15 ran theirs. Window commits are
   pushed to `p10-golden` only once the regeneration commit has landed with
   G-here green; a session that must end mid-window pushes to the backup ref
   `wip/p10-golden-window` and resumes from it, as P3's "Pushing" rule says,
-  and the ref is deleted after the push.
-- Gate options per step: ~~Q4 (2), the pen turns with the line:
-  `--require-identical paper.webp wash.webp pen.webp --max-fraction 0.005 --require-hash equal --require-labels-equal`;
-  Q6 (A), held stroke ends:
-  `--require-identical paper.webp wash.webp --max-fraction 0.005 --require-hash equal --require-labels-equal`~~
-  (removed: Q4 answered (1), Q6 (B)); a moved `fix` row: the options its slice states, with every output its
-  probe did not expect to move required identical.
-- Each step's test is the one its row names (removed with their steps: Q4 (2):
-  `tests/unit/letters/test_hand.py::test_a_name_along_a_turned_line_carries_the_turn_on_its_pen`;
-  Q6 (A): `tests/property/test_tip.py::test_smoothing_keeps_a_paths_two_ends`
-  and a unit pin of the issue's case, ends `0.0` and `19.6`), written red
-  first. P10.11 runs after P10.10a, so a brief for the removed Q6 (A) step
-  would have named the smoothing function by the name P10.10a left: `pyntpot.ink.tip.smooth_path` under
-  Q9 (a), `pyntpot.ink.tip._smooth_path` otherwise.
+  and the ref is deleted after the push. One PR, `p10-golden` to `main`.
+- Precondition (the orchestrating session, before dispatching step 1):
+  this plan fix measured the full fix below at `0685d14` (step 1's compare
+  against a clean step 0 in a scratch worktree): paper identical, wash
+  0.053400, pen 0.007298, labels-centreline 0.038954, map 0.060095,
+  manifest hash `340a7f6e260ee1e2-e5a5f1b4b3ca2177` equal, `labels.txt`
+  equal. The run log records the comparison the maintainer accepted as
+  map 0.0601, wash 0.0534, labels-centreline 0.0344, pen 0.0005: map and
+  wash agree, pen and labels-centreline do not. A variant that shifts
+  only the unjoined and chained calls (not the profiles call) gives wash
+  0.044275, pen 0.007298, labels-centreline 0.000384, map 0.040395, so it
+  is not that either. The orchestrating session finds which change made
+  the accepted images (its comparison script and patch in the scratchpad
+  of the session that made them). If it was this fix and the two figures
+  were mistranscribed, it corrects them in the run log and dispatches;
+  otherwise it shows the maintainer this fix's before, after and
+  difference images with the figures above, and dispatches only on an
+  acceptance of these figures, recorded in the run log. Either way the
+  figures the maintainer accepted for this exact change are the step's
+  expected figures below. The step's expected figures and the recorded
+  figures are always `make_golden.py`'s, the window's compare tool,
+  rounded to four decimals. Another script's figures for the same pair
+  are noted beside them in the run log and ADR 0025, never used as the
+  gate.
+- `$SLICE` is `$SCRATCH/P10.11/`, created empty. Step 0, the baseline, is
+  made on the window's starting commit before any edit:
+  `PYTHONPATH=tests uv run python tests/golden/make_golden.py "$SLICE/step-0"`;
+  its `baseline.json` must say `"dirty": false`.
+- Step 1, the fix (row `ink-pad-lay-half-pixel-shift`).
+  - Owner files: `src/pyntpot/ink/pad.py`, `tests/unit/ink/test_pad.py`,
+    `tests/unit/maps/painter/test_smoke.py`,
+    `docs/decisions/0025-second-golden-regeneration.md` (new, drafted),
+    `CHANGELOG.md` (`## [Unreleased]` only).
+    The orchestrating session deletes
+    `docs/issues/ink-pad-lay-half-pixel-shift.md` in this step's commit
+    and marks the row done there.
+  - What it fixes: `InkPad.lay` (`ink/pad.py:172`) maps a polyline onto
+    the finer grid as `line * self.ss` in all three of its `stamp` calls
+    (the profiles path `:196` to `:203`, the unjoined path `:207` to
+    `:213`, the chained path `:220` to `:226`; the expression at `:198`,
+    `:209` and `:222`), which aligns the grids at their corners: plate
+    pixel `i` covers fine pixels `i * ss` to `i * ss + ss - 1`, centred on
+    `i * ss + (ss - 1) / 2`. So every mark at `ink_ss` above 1 sits
+    `(1 - 1 / ss) / 2` of a plate pixel up and left; the default theme
+    sets `ink_ss = 3` (`maps/themes/default.toml:123`).
+  - Test first, in `tests/unit/ink/test_pad.py` (its imports already hold
+    `numpy`, `pytest`, `brush_from_id`, `BrushStyle`, `InkPad`, `Sheet`):
+    add `test_a_finer_grid_lays_the_mark_where_the_plate_grid_does()`,
+    docstring "A finer ink grid is centred on the plate's pixels, not
+    hung from their corners." then a blank line and "A line scaled by the
+    grid factor alone lands `(1 - 1 / ss) / 2` of a plate pixel up and
+    left of where the plate's own grid lays it: a third of a pixel at
+    `ink_ss` 3.". Body: `h, w = 40, 300`; `sheet = Sheet(h, w,
+    gran_px=9.0, seed=11)`; `pts = np.stack([np.linspace(20.0, w - 20.0,
+    400), np.full(400, 20.0)], axis=1)`; a local `def mean_row(ss: int)
+    -> float:` (docstring "The density-weighted mean row of the stroke
+    painted at one grid factor.") that builds `style =
+    BrushStyle(ink_ss=ss)`, `brush, _ = brush_from_id("MAJ6-e", 3.0, 2.0,
+    style, "route")`, `pad = InkPad((h, w), brush, style)`,
+    `pad.lay([(brush, pts)], np.random.default_rng(91))`, `dens =
+    pad.read(brush, sheet).astype(np.float64)` and returns
+    `float((dens.sum(axis=1) * np.arange(h)).sum() / dens.sum())`; then
+    `one = mean_row(1)`, `assert mean_row(2) == pytest.approx(one,
+    abs=0.1)` and `assert mean_row(3) == pytest.approx(one, abs=0.1)`.
+    It measures across the stroke only: along it the stroke's two ends
+    sit differently on each grid. Measured for this plan: today 20.207 at
+    1, 19.928 at 2, 19.883 at 3 (red on the first assert, 0.28 off); with
+    the fix 20.207, 20.199, 20.221.
+  - Change: add to `InkPad` a method `_on_grid(self, line: np.ndarray) ->
+    np.ndarray`, docstring "A render-pixel polyline on the pad's grid,
+    pixel centre on pixel centre.", returning `line * self.ss + (self.ss -
+    1) / 2 if self.ss > 1 else line`; the three `stamp` calls pass
+    `self._on_grid(line)` in place of `line * self.ss if self.ss > 1 else
+    line`. `InkPad`'s class docstring gains, after "and Lanczos-reduces
+    the density back.", the sentence "A line is laid on the finer grid
+    centre to centre: the centre of plate pixel `i` is fine pixel `i *
+    ink_ss + (ink_ss - 1) / 2`.". At `ink_ss` 1 nothing changes.
+  - Two existing tests move with the fix, and the step changes them with
+    the reason in the test (both measured for this plan at `0685d14`
+    with the fix applied; `uv run pytest -m "not golden and not
+    benchmark"` then fails these three cases and no other):
+    - `test_pad.py::test_a_finer_grid_converges_on_the_mark_the_brush_describes`:
+      this step replaces the test P10.4c wrote. Its assertion `assert
+      err[1] < err[0] * 0.8` fails with the fix (err(2)/err(1) 0.810). The
+      old ratios were inflated: the `ink_ss` 6 reference sat 5/12 px off
+      the `ink_ss` 1 mark but only 1/6 px off the `ink_ss` 2 mark, so
+      err(1) carried more grid offset than err(2), and the 0.69 to 0.75
+      measured at P10.4c (its *(Evidence.)*) flattered the first
+      doubling. With the fix all three grids sit on the reference's
+      centres, and the test asserts what still holds:
+      - The `gap` assertions stay as they are.
+      - The test's docstring is set to exactly this text:
+
+        ```
+            """What the eye reads as pixelation is the ink's own grid.
+
+            The saturation and the paper gate are per pixel, so the plate's grid is
+            where a thin mark's edge is decided. Painting the whole ink pipeline on a
+            finer grid and reducing the density back converges on a stroke painted six
+            times finer: the weight of ink closes on it first order in the grid
+            (twice as fine leaves under half the plate grid's gap), and the
+            pixel-by-pixel difference falls with the first doubling, then stops at a
+            floor: the bristle texture each grid draws for itself. The line stays
+            clear of the plate's edge, which is not what is measured here.
+            """
+        ```
+      - The final three assertions, after the unchanged `gap` asserts, are
+        exactly these lines (`err[1] > err[2]` is dropped; the bound is 0.85,
+        was 0.8):
+
+        ```
+            assert err[0] > err[1]
+            assert err[1] < err[0] * 0.85
+            assert err[2] < err[0] * 0.9
+        ```
+      - Every other line of the test stays as it is at `0685d14`.
+      *(Evidence.)* Measured on the test's geometry and three more, over
+      rng seeds 1, 2, 3, 7, 42, 91, 123 and 2024 and sheet seeds 1, 5 and
+      23 (8 rng seeds, 3 sheet seeds, 4 geometries): err(2)/err(1) is
+      0.695 to 0.750 before the fix and 0.793 to 0.815 after; err(3)/err(2)
+      after the fix is 0.910 to 1.037, err(3)/err(1) at most 0.845, and
+      `err[1] > err[2]` fails on rng seeds 1, 7, 123 and 2024 (at seed 91 its margin is 1.2%). The `gap`
+      assertions hold in every case. An earlier measurement at one seed
+      only (six geometries, err(3)/err(2) 0.973 to 0.994) had suggested
+      keeping `err[1] > err[2]`; the sweep shows it holds by the pinned
+      seed's luck.
+    - `tests/unit/maps/painter/test_smoke.py::SMOKE_SHA` (read by
+      `test_the_flags_off_still_paint_the_plates_that_were_approved` and
+      `test_the_wash_flags_off_still_paint_the_plates_that_were_approved`):
+      `"pen"` becomes
+      `"138f107e493424697401008137990bc4c4152d055fc392a12f5e59ad6cc8c688"`
+      and `"wash"` becomes
+      `"c1617293c916b15a3d86d54cbd7d5c83ba1c2b18261db07b8b9ba7f973a67272"`;
+      `"paper"` stays. Its comment gains "Then when the finer ink grid was
+      centred on the plate's pixels (ADR 0025); `paper` again did not
+      move." Values that differ from these stop the step.
+  - `CHANGELOG.md`, under `## [Unreleased]`, `### Fixed` (P10.11 lands on
+    `p10-golden` after the `p10-fixes` PR merges, so this edit follows
+    P10.18's and P10.19's): "A mark painted on a finer ink grid (`ink_ss`
+    above 1; the default theme's 3) is centred on the plate's pixels; it
+    sat a third of a pixel up and left (ADR 0025)."
+  - Gate: G-window (`uv sync && uv run ruff format --check . && uv run
+    ruff check . && uv run prek run --all-files && uv run prek run --files
+    docs/decisions/0025-second-golden-regeneration.md && uv run pytest -m
+    "not golden"`; the `--files` run passes the new ADR, which `prek run
+    --all-files` never passes to the file-filtered hooks while it is
+    untracked; golden-marked tests are not run inside the window), the
+    coverage gates (it adds `src` lines), then the step
+    compare: `PYTHONPATH=tests uv run python tests/golden/make_golden.py
+    "$SLICE/step-1" --compare "$SLICE/step-0" --compare tests/golden/lynmouth
+    --require-identical paper.webp --max-fraction 0.005 --require-hash
+    equal --require-labels-equal`.
+  - The accepted exception: this compare exits 1, and that does not stop
+    the step when its `gate violated` lines are exactly the `--max-fraction`
+    lines of `wash.webp`, `pen.webp`, `labels-centreline.webp` and
+    `map.png`, and each of the four fractions, rounded to four decimals,
+    equals the figure the maintainer accepted (the precondition: at this
+    plan's measurement 0.0534, 0.0073, 0.0390 and 0.0601). Any other
+    violation stops the step (do not commit, root-cause, report): a
+    `paper.webp` that is not byte-identical, a manifest hash rule
+    violation, a `labels.txt` difference, or a fraction that differs from
+    the accepted figure. The step is committed with its measured
+    fractions recorded in ADR 0025's table and the hand-off.
+  - Commit: `Lay the finer ink grid centre to centre with the plate`.
+- Step 2, the regeneration (orchestrating session), as P3.15 made it:
+  G-window's non-golden gate green; `PYTHONPATH=tests uv run python
+  tests/golden/make_golden.py tests/golden/lynmouth` (in place; it writes
+  no `baseline.json` or `labels.txt` there); `uv run pytest -m golden`
+  (byte-exact, passes by construction) and G-here (P11's form); then
+  `PYTHONPATH=tests uv run python tests/golden/make_golden.py
+  "$SLICE/final" --compare tests/golden/lynmouth --compare "$SLICE/step-1"
+  --require-identical all --require-hash equal`, which must exit 0, and
+  whose second compare's lines must all say byte-identical. Open the old
+  and new `map.png`. Owner files: the five outputs and `plates.json` in
+  `tests/golden/lynmouth/` (the hash in it is unchanged), and ADR 0025,
+  accepted. `GOLDEN_HASH` in `tests/unit/maps/test_pipeline_fetch_paint.py`
+  does not change. Commit: `Regenerate the goldens once more for the
+  half-pixel fix`; it ticks P10.11 in `tasks.md`.
 - The ADR: `docs/decisions/0025-second-golden-regeneration.md` (the number
-  is fixed by the ADR table; P9 has not run, so 0022 and 0023 do not exist
-  yet; before writing, `ls docs/decisions` must show 0025 free, otherwise
-  stop and report), drafted at the first step and accepted at the
-  regeneration with the per-step table, as ADR 0006 was.
-- Commit messages: one per fix, as its row states; the last
-  `Regenerate the goldens once more for the look fixes`.
+  is fixed by the ADR table; before writing, `ls docs/decisions` must show
+  no `0025-*`, otherwise stop and report), drafted at step 1 as `Status:
+  proposed` and made `Status: accepted` at step 2, in ADR 0006's form.
+  Context: `InkPad.lay` hung the finer ink grid from the plate's pixel
+  corners, so every mark painted at `ink_ss` above 1 sat `(1 - 1 / ss) /
+  2` of a plate pixel up and left, a third of a pixel at the default
+  `ink_ss` 3; the fix moves every plate a pad paints, so it needs a
+  regeneration, which ADR 0006 made the port's only one; the maintainer
+  widened Q12 for this row and, shown the comparisons, accepted the drift
+  ("Accept it - identical to human eye", 2026-10-21). Decision: one
+  window of one fix step and the regeneration; the tolerance bound
+  (`MAX_DIFFERING_FRACTION = 0.005`, `MAX_CHANNEL_DELTA = 2`) is not
+  changed; the hash input does not change (the step requires the hash
+  equal); step 1 exceeds the per-step bound on wash, pen,
+  labels-centreline and map and is committed as the one
+  maintainer-accepted exception, as ADR 0006's step 3 was, because its
+  drift is explained: the whole ink layer moves by a third of a pixel
+  down and right, and paper, which no pad paints, is byte-identical. The
+  steps table (step, commit, expected outcome, gate options) and the
+  outcome table (per-output differing fraction against step 0, hash,
+  `labels.txt`), the cumulative compare against the old goldens, the
+  fractions the maintainer was shown, the two test changes and why, and
+  the machine (`uname -a`, Python, numpy, Pillow versions). Consequences:
+  the goldens record the corrected grid; G-self and the byte-exact golden
+  run hold from the regeneration on; the maintainer's exact run on their
+  machine is the follow-up check, as ADR 0006 says; a further regeneration
+  needs its own ADR.
+- Gate after the window: G-here (P11's form, with the exact golden run)
+  on the regeneration commit.
 
 ### P11. Widen the public API for primitive-first tutorials
 
