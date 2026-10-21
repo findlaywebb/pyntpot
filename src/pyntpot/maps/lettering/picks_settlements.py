@@ -16,15 +16,15 @@ from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import TIER_SETTLEMENT, Label
-from pyntpot.maps.lettering.placement_names import _stem
+from pyntpot.maps.lettering.placement_names import name_stem
 
 #: What a settlement is worth before the route is taken into account.
 SETTLEMENT_RANK = {"city": 4.0, "town": 3.0, "village": 2.0, "suburb": 1.5, "hamlet": 1.0}
 #: How near two members of a pair have to be to be the same place, in metres.
 MERGE_M = 1500.0
-#: Past this a settlement is not part of this ride.
+#: Past this a settlement is not part of this track.
 SETTLEMENT_MAX_OFF_M = 1500.0
-#: Under this a settlement is not worth a name: a run through empty country gets
+#: Under this a settlement is not worth a name: a track through empty country gets
 #: one label or none rather than three hamlets.
 SETTLEMENT_FLOOR = 3.0
 #: How far apart two settlement names have to be on the map, in display pixels
@@ -32,8 +32,8 @@ SETTLEMENT_FLOOR = 3.0
 #: with the card, because the constraint is the map and not the ground.
 SETTLEMENT_SEPARATION_PX = 120.0
 #: How near an end of the route a settlement has to be to have been where the
-#: session set off from or finished, as a fraction of the route's own length.
-#: Stated against the ride rather than in metres because on a loop through empty
+#: track set off from or finished, as a fraction of the route's own length.
+#: Stated against the track rather than in metres because on a loop through empty
 #: country the one settlement for miles is nearest to both ends and has earned
 #: nothing by it.
 SETTLEMENT_ENDPOINT_FRAC = 0.05
@@ -64,7 +64,7 @@ def settlements(basemap: Basemap) -> list[dict[str, Any]]:
         )
     groups: list[dict[str, Any]] = []
     for entry in sorted(found, key=lambda e: e["off_route_m"]):
-        stem = _stem(entry["name"])
+        stem = name_stem(entry["name"])
         for group in groups:
             if group["stem"] != stem:
                 continue

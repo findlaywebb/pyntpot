@@ -2,7 +2,9 @@
 
 import math
 
+from pyntpot.maps.annotations import Annotations, Landmark
 from pyntpot.maps.basemap import River, Road
+from pyntpot.maps.lettering.picks import home_labels, journal_picks, route_markers
 from pyntpot.maps.lettering.picks_lines import named_lines
 from pyntpot.maps.lettering.picks_rivers import pick_rivers
 from pyntpot.maps.lettering.picks_settlements import (
@@ -87,12 +89,12 @@ def test_the_settlements_are_chosen_by_rank_and_by_route_not_by_distance():
     )
     picked = [label.name for label in pick_settlements(basemap, card, route_px)]
     assert "Abergavenny" in picked and "Monmouth" in picked
-    assert "Faraway" not in picked, "over 1.5 km off the route is not this ride"
+    assert "Faraway" not in picked, "over 1.5 km off the route is not this track"
     assert len(picked) <= settlement_budget(card.w)
 
 
 def test_a_hamlet_alone_in_empty_country_is_not_worth_a_name():
-    """A floor, so a run through nowhere gets one label or none, not three."""
+    """A floor, so a track through nowhere gets one label or none, not three."""
     basemap, card, route_px = _labelled_card(
         candidates=[
             _place_node("Brendon", "hamlet", 300.0, 44.0, 700),
@@ -137,3 +139,46 @@ def test_the_second_river_name_is_earned_by_the_run():
     assert short == ["Severn"], "a corner of river was lettered twice"
     long = [label.name for label in rivers(800)]  # 700 px of water
     assert long == ["Severn", "Severn"], "a river across the map lost its second name"
+
+
+def _named_candidate(name, x, y):
+    """One candidate as the basemap carries it: a name, a position and a class."""
+    return {"name": name, "x": x, "y": y, "class": "attraction"}
+
+
+def test_a_name_only_landmark_counts_against_the_landmark_cap():
+    """A landmark given only by name counts against the landmark cap like any other."""
+    basemap = label_basemap(
+        candidates=[
+            _named_candidate("Watersmeet", 200.0, 44.0),
+            _named_candidate("Malham Cove", 500.0, 50.0),
+            _named_candidate("Dovedale", 900.0, 30.0),
+        ]
+    )
+    picks = Annotations(landmarks=("Watersmeet", "Malham Cove", "Dovedale"))
+    assert [p["name"] for p in journal_picks(picks, basemap, 1)] == ["Watersmeet"]
+
+
+def test_a_cap_of_nought_picks_no_landmark():
+    """A cap of nought picks no landmark."""
+    picks = Annotations(landmarks=(Landmark(name="Watersmeet", lat=51.22, lng=-3.81),))
+    assert journal_picks(picks, label_basemap(), 0) == []
+
+
+def test_the_markers_and_the_home_say_why_in_track_words():
+    """The start, finish and home labels give their reason in track words, with no sport word."""
+    open_route = route_markers([(10.0, 10.0), (200.0, 10.0)])
+    # Its ends 2.8 px apart, under LOOP_CLOSE_PX.
+    loop = route_markers([(10.0, 10.0), (200.0, 10.0), (12.0, 12.0)])
+    home, _boxes = home_labels(
+        label_basemap(places=({"sym": "house", "x": 400.0, "y": 300.0, "n": "Lynton"},)),
+        wide_card(),
+        tiny_style(),
+        lambda name, size: (len(name) * size * 0.5, size),
+    )
+    assert [(label.name, label.why) for label in open_route] == [
+        ("start", "where the track began"),
+        ("finish", "where the track ended"),
+    ]
+    assert [(label.name, label.why) for label in loop] == [("start", "where the track began")]
+    assert [(label.name, label.why) for label in home] == [("Lynton", "home")]

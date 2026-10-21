@@ -6,7 +6,9 @@ them. Two more keys say when a painted thing is still current: `Cache.base_key`,
 hash the base plates' manifest carries (the basemap's canonical text and the style's base
 digest), and `Cache.lettering_key`, the key of the label plate (the marks the nib
 strokes, the base hash and the style's lettering digest). `Cache.load_plates` reads a
-plates directory back.
+plates directory back. `FetchError` is raised when a provider cannot answer; it is
+defined here because `ensure` is where the providers are called, and
+`maps.pipeline.fetch` raises it too.
 
 The key is the first 16 hex characters of the `sha256` of the canonical JSON of the
 bounding box (rounded to six decimal places), the margin and both provider ids. It
@@ -28,7 +30,8 @@ a manifest and checks its plates are on disk; it does not compare hashes.
 Invariants: `ensure` fetches features, then land cover, then elevation, and writes each
 payload to its path as soon as its call returns, before the next call, so a failure
 part-way leaves every earlier payload on disk; it calls a provider only for a payload
-whose file is missing, unless forced.
+whose file is missing, unless forced; a `ProviderError` from a provider leaves `ensure`
+as `FetchError`, the provider's error as its cause.
 """
 
 import hashlib
@@ -41,7 +44,7 @@ from pathlib import Path
 from pyntpot.letters.setting import Mark
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.plates import Manifest, Plates
-from pyntpot.maps.providers.base import Elevation, Features
+from pyntpot.maps.providers.base import Elevation, Features, ProviderError
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 
@@ -68,6 +71,15 @@ MARK_PLACES = 3
 
 #: The subdirectory holding painted plates, one directory per key.
 PLATES_SUBDIR = "plates"
+
+
+class FetchError(RuntimeError):
+    """Raised when a track's payloads cannot be fetched or its basemap built.
+
+    `Cache.ensure`, and `fetch` through it, raise it when a provider could not answer,
+    with the provider's error as the cause; `fetch` also raises it when the cached
+    features were missing once the fetch had run.
+    """
 
 
 @dataclass(frozen=True)
@@ -218,19 +230,27 @@ class Cache:
 
         Returns:
             The key the payloads are cached under.
+
+        Raises:
+            FetchError: When a provider cannot answer, a budget refusal included,
+                raised from the provider's error. The payloads written before the
+                failure stay on disk.
         """
         key = self.key(track, features, elevation)
         box = track.bounding_box(MARGIN_M)
         self.directory.mkdir(parents=True, exist_ok=True)
-        path = self.features_path(key)
-        if force or not path.exists():
-            _write(path, features.features(box))
-        path = self.landcover_path(key)
-        if force or not path.exists():
-            _write(path, features.landcover(track.bounding_box(LANDCOVER_MARGIN_M)))
-        path = self.elevation_path(key)
-        if force or not path.exists():
-            _write(path, elevation.grid(box, ELEVATION_SAMPLES).to_json())
+        try:
+            path = self.features_path(key)
+            if force or not path.exists():
+                _write(path, features.features(box))
+            path = self.landcover_path(key)
+            if force or not path.exists():
+                _write(path, features.landcover(track.bounding_box(LANDCOVER_MARGIN_M)))
+            path = self.elevation_path(key)
+            if force or not path.exists():
+                _write(path, elevation.grid(box, ELEVATION_SAMPLES).to_json())
+        except ProviderError as exc:
+            raise FetchError(f"a provider could not answer: {exc}") from exc
         return key
 
 

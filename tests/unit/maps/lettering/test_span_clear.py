@@ -8,12 +8,12 @@ from pyntpot.maps.lettering.label import TIER_SPAN, Span
 from pyntpot.maps.lettering.span_clear import (
     SPAN_ALONG_MAX_BEARING_DEG,
     SPAN_CLEAR_CAPS,
-    _nearest_on,
     _side_at,
     clear_of_route,
+    nearest_on,
     span_bearing,
 )
-from pyntpot.maps.lettering.span_ends import _span_label, _span_ticks
+from pyntpot.maps.lettering.span_ends import span_label, span_ticks
 from pyntpot.maps.lettering.span_line import span_line
 
 from support.measure import flat_measure
@@ -38,7 +38,7 @@ def test_a_span_takes_its_name_along_it_only_when_it_runs_across_the_map():
     for line, along in ((across, True), (down, False)):
         span = Span(name="the long drag up the valley", kind="drag", i0=0, i1=2)
         span.line = list(line)
-        label = _span_label(span, [(0.0, 0.0), (1.0, 1.0), (2.0, 2.0)], 14.0, flat_measure)
+        label = span_label(span, [(0.0, 0.0), (1.0, 1.0), (2.0, 2.0)], 14.0, flat_measure)
         assert bool(label.baseline) is along
         # Never a leader, either way: a name beside its own bracket needs none.
         assert label.tier == TIER_SPAN
@@ -57,7 +57,7 @@ def test_the_module_signs_a_side_one_way_and_the_mark_lands_on_it():
     for side in (1, -1):
         line = span_line(route, 0, len(route) - 1, side, 20.0)
         assert line, f"side {side} drew nothing"
-        votes = [_side_at(route, _nearest_on(route, p), p) for p in line]
+        votes = [_side_at(route, nearest_on(route, p), p) for p in line]
         assert sum(votes) / len(votes) == side, (
             f"the mark asked for side {side} landed on the other one"
         )
@@ -84,7 +84,7 @@ def test_a_spans_end_tick_points_from_the_line_at_the_end_of_the_stretch():
     route += [(334.0 + i * 2.0, 200.0 - i * 6.0) for i in range(1, 6)]
     span = Span(name="the long climb", i0=0, i1=len(route) - 1)
     span.line = [(100.0, 160.0), (300.0, 130.0)]
-    ticks = _span_ticks(span, route, 14.0)
+    ticks = span_ticks(span, route, 14.0)
     assert len(ticks) == 2
     for tick, at in zip(ticks, (span.i0, span.i1), strict=True):
         (x0, y0), (x1, y1) = tick[0], tick[-1]

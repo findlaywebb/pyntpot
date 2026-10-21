@@ -149,6 +149,18 @@ def test_a_buried_river_is_not_drawn(tmp_path: Path) -> None:
     assert "Open water" in kept
 
 
+def test_a_river_tagged_not_in_a_tunnel_is_drawn(tmp_path: Path) -> None:
+    """A river tagged `tunnel=no` end to end is on the ground and is drawn."""
+    elements = [_way(1, {"waterway": "river", "name": "Exe", "tunnel": "no"}, BESIDE)]
+    assert "Exe" in _river_names(tmp_path, elements)
+
+
+def test_a_river_culverted_end_to_end_is_not_drawn(tmp_path: Path) -> None:
+    """A river in a culvert end to end is underground and is not drawn."""
+    elements = [_way(1, {"waterway": "river", "name": "Tay", "tunnel": "culvert"}, BESIDE)]
+    assert "Tay" not in _river_names(tmp_path, elements)
+
+
 def test_a_river_that_passes_under_one_culvert_stays_whole(tmp_path: Path) -> None:
     """A river tagged `tunnel=culvert` on one way in a long run is not a sewer."""
     long_open = [(LATS[i] + 0.00030, LNGS[i]) for i in range(5, 40)]
@@ -162,7 +174,7 @@ def test_a_river_that_passes_under_one_culvert_stays_whole(tmp_path: Path) -> No
 
 
 def test_rivers_are_always_drawn_and_a_stream_has_to_earn_it(tmp_path: Path) -> None:
-    """A river is a feature of the ground; a stream is only a feature of the run."""
+    """A river is a feature of the ground; a stream is only a feature of the track."""
     elements = [
         _way(
             1, {"waterway": "river", "name": "The river"}, [(51.2290, -3.8400), (51.2290, -3.8200)]
@@ -200,6 +212,16 @@ def test_places_are_drawn_from_the_places_passed_in(tmp_path: Path) -> None:
     assert [(p["n"], p["sym"]) for p in data["places"]] == [("Home", "house")]
 
 
+def test_a_place_off_the_map_is_dropped(tmp_path: Path) -> None:
+    """A place passed in that falls off the map is dropped, and one on it is kept."""
+    places = [
+        {"name": "Lynton", "lat": 51.2255, "lng": -3.8350},
+        {"name": "Countisbury", "lat": 51.2500, "lng": -3.8300},
+    ]
+    data = _layers(_inputs(tmp_path, [], places))
+    assert [p["n"] for p in data["places"]] == ["Lynton"]
+
+
 def test_home_is_untouched_by_the_new_keys() -> None:
     """`Home` has a symbol, no kind and no always_label, and draws as it always did."""
     entries = [{"name": "Home", "symbol": "house", "lat": 51.2255, "lng": -3.835}]
@@ -217,17 +239,17 @@ def test_a_box_with_nothing_cached_has_no_layers(tmp_path: Path) -> None:
 
 
 def test_generalisation_scales_with_the_box() -> None:
-    """A ride's box is drawn coarser than a run's, rather than shrunk to fit."""
+    """A big box is drawn coarser than a small one, rather than shrunk to fit."""
     assert scale_for(3000.0) == 1.0
     assert scale_for(12000.0) == pytest.approx(3.0)
     assert scale_for(100000.0) == MAX_SCALE
-    run = _derived(BasemapStyle(), scale_for(3200.0))
-    ride = _derived(BasemapStyle(), scale_for(13000.0))
-    assert ride["road_eps_m"] > run["road_eps_m"]
-    assert ride["landmark_radius_m"] > run["landmark_radius_m"]
-    assert ride["landmark_cap"] >= run["landmark_cap"]
-    assert ride["cell_m"] > run["cell_m"]
-    assert ride["min_area_ha"] > run["min_area_ha"]
+    small = _derived(BasemapStyle(), scale_for(3200.0))
+    big = _derived(BasemapStyle(), scale_for(13000.0))
+    assert big["road_eps_m"] > small["road_eps_m"]
+    assert big["landmark_radius_m"] > small["landmark_radius_m"]
+    assert big["landmark_cap"] >= small["landmark_cap"]
+    assert big["cell_m"] > small["cell_m"]
+    assert big["min_area_ha"] > small["min_area_ha"]
 
 
 @pytest.fixture(scope="module")

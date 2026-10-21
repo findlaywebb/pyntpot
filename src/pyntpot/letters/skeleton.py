@@ -1,9 +1,9 @@
 """A glyph's ink filled on a small grid, thinned and walked into chains.
 
-`_fill` rasterises a glyph's contours with an even-odd scanline fill, `thin`
-takes the bitmap to a one pixel Zhang-Suen skeleton, and `_chains` walks that
-skeleton into runs split at every junction, which `_prune` clears of the short
-spurs thinning grows. `_components` finds the separate blobs of ink. All of it
+`fill` rasterises a glyph's contours with an even-odd scanline fill, `thin`
+takes the bitmap to a one pixel Zhang-Suen skeleton, and `skeleton_chains` walks that
+skeleton into runs split at every junction, which `prune` clears of the short
+spurs thinning grows. `components` finds the separate blobs of ink. All of it
 works in raster pixels as `(row, col)`.
 
 Thinning is the risk: a medial axis forks at every join and every terminal, and
@@ -42,7 +42,7 @@ PASSING = 2
 SPECKLE = 2
 
 
-def _fill(contours: list[list[Pt]], upem: int, pad: int = 3) -> tuple[np.ndarray, float, float]:
+def fill(contours: list[list[Pt]], upem: int, pad: int = 3) -> tuple[np.ndarray, float, float]:
     """A filled bitmap of one glyph, and where its bottom left corner sits.
 
     Even-odd scanline fill rather than a library rasteriser, because a glyph is
@@ -144,7 +144,7 @@ def _ring(p: tuple[int, int]) -> list[tuple[int, int]]:
     ]
 
 
-def _crossings(p: tuple[int, int], on: set[tuple[int, int]]) -> int:
+def crossings(p: tuple[int, int], on: set[tuple[int, int]]) -> int:
     """How many strokes meet at a pixel, by transitions round its own ring.
 
     Counting neighbours instead is the mistake that fragments a skeleton: a
@@ -209,7 +209,7 @@ def _loops(
     return out
 
 
-def _chains(skel: np.ndarray) -> list[list[tuple[int, int]]]:
+def skeleton_chains(skel: np.ndarray) -> list[list[tuple[int, int]]]:
     """The skeleton walked into chains, split at every junction.
 
     Args:
@@ -221,7 +221,7 @@ def _chains(skel: np.ndarray) -> list[list[tuple[int, int]]]:
     """
     on = {(int(r), int(c)) for r, c in zip(*np.nonzero(skel), strict=True)}
     nbrs = {p: [q for q in _ring(p) if q in on] for p in on}
-    cross = {p: _crossings(p, on) for p in on}
+    cross = {p: crossings(p, on) for p in on}
     nodes = {p for p in on if cross[p] != PASSING}
     seen: set[tuple[tuple[int, int], tuple[int, int]]] = set()
     out: list[list[tuple[int, int]]] = []
@@ -239,7 +239,7 @@ def _chains(skel: np.ndarray) -> list[list[tuple[int, int]]]:
     return out
 
 
-def _prune(chains: list[list[tuple[int, int]]], limit: float) -> list[list[tuple[int, int]]]:
+def prune(chains: list[list[tuple[int, int]]], limit: float) -> list[list[tuple[int, int]]]:
     """Drop the short branches thinning grows at joins and at terminals."""
     ends: dict[tuple[int, int], int] = {}
     for chain in chains:
@@ -254,7 +254,7 @@ def _prune(chains: list[list[tuple[int, int]]], limit: float) -> list[list[tuple
     return keep or chains
 
 
-def _components(img: np.ndarray) -> list[list[tuple[int, int]]]:
+def components(img: np.ndarray) -> list[list[tuple[int, int]]]:
     """The ink's connected components, eight-connected."""
     on = {(int(r), int(c)) for r, c in zip(*np.nonzero(img), strict=True)}
     out: list[list[tuple[int, int]]] = []

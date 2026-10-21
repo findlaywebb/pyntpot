@@ -1,6 +1,6 @@
 """Setting a name along a road, river or bracket line at the cheapest window of it.
 
-Key names: `_place_along`, the window of a line a name is set along, tried on both sides
+Key names: `place_along`, the window of a line a name is set along, tried on both sides
 of the line where the kind allows it; `_window_shape`, whether a window bends too far to
 read; `_ground_cost`, what a window costs a reader, on the terms the flat answer is
 scored on; the constants that say how far a window may turn and bow.
@@ -23,31 +23,31 @@ from pyntpot.maps.lettering.label import (
 from pyntpot.maps.lettering.placement_costs import (
     ROUTE_REACH_PX,
     Terms,
-    _darkness,
-    _near_route,
-    _on_paper,
-    _on_road,
-    _overlap,
-    _separation,
+    box_on_paper,
+    darkness,
+    near_route,
+    on_road,
+    overlap,
+    separation,
 )
 from pyntpot.maps.lettering.placement_flat import ROAD_CROSS_COST, SEPARATION_WEIGHT
 from pyntpot.maps.lettering.placement_lift import (
     MAX_LOCAL_TILT_DEG,
     MAX_TILT_DEG,
     TILT_EXEMPT_KINDS,
-    _curved_boxes,
-    _reading,
-    _tilt,
-    _tilt_max,
+    curved_boxes,
+    line_tilt,
+    reading,
+    tilt_max,
 )
 from pyntpot.maps.lettering.placement_window import (
     MAX_BOW_FRAC,
     MAX_TURN_DEG,
-    _bow,
-    _turning,
-    _window,
+    line_bow,
+    line_window,
+    turning,
 )
-from pyntpot.maps.lettering.span_line import _resample
+from pyntpot.maps.lettering.span_line import resample
 
 #: What a pixel of travel away from where a curved name started costs. Light,
 #: because the freedom to slide along the whole feature is the point; not zero,
@@ -101,21 +101,21 @@ def _window_shape(
         `(turn, tilt, bow)`: how far the window turns, how far its chord leaves
         the horizontal, and how far it bows off that chord as a share of it.
     """
-    turn = _turning(window)
+    turn = turning(window)
     if turn > turn_max:
         return None
     chord = math.dist(window[0], window[-1]) or 1.0
-    bow = _bow(window) / chord
+    bow = line_bow(window) / chord
     if bow > bow_max:
         return None
-    tilt = _tilt(window)
+    tilt = line_tilt(window)
     # A river follows its own bend whatever the bearing. Everything else
     # still has a steep window refused outright: a name read by tilting the
     # head is a worse fault than a name that does not follow its feature,
     # and a span's bracket is a line the renderer drew rather than a fact
     # about the ground, so it earns less patience than water does.
     if lb.kind not in TILT_EXEMPT_KINDS and (
-        tilt > MAX_TILT_DEG or _tilt_max(window) > MAX_LOCAL_TILT_DEG
+        tilt > MAX_TILT_DEG or tilt_max(window) > MAX_LOCAL_TILT_DEG
     ):
         return None
     return turn, tilt, bow
@@ -134,17 +134,17 @@ def _ground_cost(lb: Label, window: list[Pt], cells: list[Box], terms: Terms) ->
     # thin lane is ordinary cartography. Overlap with another label is
     # not discounted.
     soft = RIVER_GROUND_FRAC if lb.kind in TILT_EXEMPT_KINDS else 1.0
-    ground = sum(_overlap(box, terms.boxes) for box in cells) / n
+    ground = sum(overlap(box, terms.boxes) for box in cells) / n
     # A name written on the water is not charged for the water being
     # dark: that is the ground it was sent to sit on, and charging it
     # would send the name off down the river to its palest reach.
     dark_frac = 0.0 if lb.in_water else soft
-    ground += sum(_darkness(box, terms.card, terms.dark) for box in cells) / n * 150 * dark_frac
+    ground += sum(darkness(box, terms.card, terms.dark) for box in cells) / n * 150 * dark_frac
     # A curved name has to keep off the route as much as a flat one
     # does, or a span name is written straight across the track it
     # belongs to.
     reach = max(ROUTE_REACH_PX, lb.size)
-    ground += sum(_near_route(box, terms.route, reach) for box in cells) / n
+    ground += sum(near_route(box, terms.route, reach) for box in cells) / n
     # The share of the name that lies on tarmac, so a long name
     # clipping one lane at its tail is not scored as if the whole of it
     # were on a road.
@@ -154,10 +154,10 @@ def _ground_cost(lb: Label, window: list[Pt], cells: list[Box], terms: Terms) ->
     # cartography, and a name across a bridge is worse when there is a
     # clear reach of water just beside it.
     road_cost = IN_WATER_ROAD_COST if lb.in_water else ROAD_CROSS_COST * soft
-    ground += (sum(_on_road(box, terms.roads) for box in cells) / n) * road_cost
+    ground += (sum(on_road(box, terms.roads) for box in cells) / n) * road_cost
     mid = window[len(window) // 2]
     ground += math.dist(mid, (lb.px, lb.py)) * ANCHOR_PULL
-    ground -= min(_separation(box, terms.boxes) for box in cells) * SEPARATION_WEIGHT
+    ground -= min(separation(box, terms.boxes) for box in cells) * SEPARATION_WEIGHT
     return ground
 
 
@@ -182,7 +182,7 @@ def _sides(lb: Label) -> tuple[float, ...]:
 
 def _read_side(window: list[Pt], side: float) -> tuple[list[Pt], float]:
     """The window the name reads along, and the side it lifts to once that is settled."""
-    read = _reading(window)
+    read = reading(window)
     # Turning the window round turns its normal round with it, so the side the
     # name lifts to has to turn as well or the boxes the placer defended and
     # the pixels the hand writes are on opposite sides of the line.
@@ -191,7 +191,7 @@ def _read_side(window: list[Pt], side: float) -> tuple[list[Pt], float]:
     return read, side
 
 
-def _place_along(
+def place_along(
     lb: Label,
     tw: float,
     th: float,
@@ -231,7 +231,7 @@ def _place_along(
     span = lb.tier == TIER_SPAN
     turn_max = SPAN_MAX_TURN_DEG if span else MAX_TURN_DEG
     bow_max = SPAN_MAX_BOW_FRAC if span else MAX_BOW_FRAC
-    line = _resample(lb.baseline, max(want / 24.0, 2.0))
+    line = resample(lb.baseline, max(want / 24.0, 2.0))
     if length(line) < want:
         return None
     apart = max(length(line) * RIVER_REPEAT_FRAC, want)
@@ -240,7 +240,7 @@ def _place_along(
     best: tuple[float, list[Pt], list[Box], float, float, float] | None = None
     step = max(len(line) // 60, 1)
     for i in range(0, len(line), step):
-        window = _window(line, i, want)
+        window = line_window(line, i, want)
         if window is None:
             break
         shape = _window_shape(lb, window, turn_max, bow_max)
@@ -251,8 +251,8 @@ def _place_along(
         if any(abs(here - other) < apart for other in apart_from or []):
             continue
         for side in sides:
-            cells = _curved_boxes(window, lb, th, side)
-            if not all(_on_paper(box, terms.card) for box in cells):
+            cells = curved_boxes(window, lb, th, side)
+            if not all(box_on_paper(box, terms.card) for box in cells):
                 continue
             # Two scores, because two different questions are being asked.
             #

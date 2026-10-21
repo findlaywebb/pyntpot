@@ -12,7 +12,11 @@ from pyntpot.maps.cache import Cache
 from pyntpot.maps.credit import Credit
 from pyntpot.maps.pipeline import FetchError
 from pyntpot.maps.plates import Plates
-from pyntpot.maps.providers.base import ElevationGrid
+from pyntpot.maps.providers.base import (
+    ElevationGrid,
+    ProviderBudgetExceededError,
+    ProviderError,
+)
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import BoundingBox, Track
 
@@ -63,6 +67,28 @@ class _VanishingElevation:
         for path in self._cache_dir.glob("overpass-*.json"):
             path.unlink()
         return self._inner.grid(box, n)
+
+
+class _FailingElevation:
+    """An elevation provider under the fixture's id that cannot answer."""
+
+    def __init__(self, error: ProviderError) -> None:
+        """Keep the error every grid request raises."""
+        self._error = error
+
+    @property
+    def id(self) -> str:
+        """The fixture elevation provider's id."""
+        return "opentopodata-srtm30m"
+
+    @property
+    def credit(self) -> Credit:
+        """The fixture elevation provider's credit."""
+        return SRTM_CREDIT
+
+    def grid(self, box: BoundingBox, n: int) -> ElevationGrid:
+        """Raise the kept error instead of answering."""
+        raise self._error
 
 
 @pytest.fixture(scope="module")
@@ -125,6 +151,25 @@ class TestFetch:
         message = str(caught.value)
         assert KEY in message
         assert str(cache.features_path(KEY)) in message
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            ProviderError("opentopodata-srtm30m said 'INVALID_REQUEST'"),
+            ProviderBudgetExceededError("opentopodata-srtm30m: the budget of 1000 calls is spent"),
+        ],
+        ids=["provider-error", "budget-spent"],
+    )
+    def test_a_provider_that_cannot_answer_raises_fetch_error(
+        self, error: ProviderError, track: Track, style: Style, tmp_path: Path
+    ) -> None:
+        """A provider that cannot answer makes `fetch` raise `FetchError` from the provider's error."""
+        with pytest.raises(FetchError) as caught:
+            pipeline.fetch(
+                track, Cache(tmp_path), FixtureFeatures(), _FailingElevation(error), style
+            )
+        assert caught.value.__cause__ is error
+        assert str(error) in str(caught.value)
 
 
 @pytest.mark.golden

@@ -192,3 +192,5 @@ part 1, merged).
   thickness" line; `grep -rn "nib\.plate("` prints nothing. CI on PR #10 at `ec2ee91`: 7 of
   7 checks green (checks 3.13 and 3.14, prerelease, golden on ubuntu-latest and macos-15,
   benchmarks, CodSpeed). P11 is ready to merge; held for the maintainer's go.
+- Maintainer (2026-10-09): "Continue with merge and next step". PR #10 merged to `main` as
+  `aa42cd8` (squash). P11 is done; P10.R followed (recorded in `p10-run-log.md`).

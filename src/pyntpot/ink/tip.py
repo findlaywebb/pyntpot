@@ -1,9 +1,9 @@
 """The tip: the bristle fields a stamp samples across and along a stroke.
 
-Key names: `_tip_band`, bandlimiting the tip's weights; `_tip_drift`, each bristle's drift
-phase; `_unfold`, scaling a drift back until the tip stops crossing itself; `_fbm1`, fractal
-noise along a stroke with no period; `_spread`, carrying a per-bristle field onto the
-sampled tip; `_smooth_path`, rounding a path's corners to the brush's width.
+Key names: `tip_band`, bandlimiting the tip's weights; `tip_drift`, each bristle's drift
+phase; `unfold`, scaling a drift back until the tip stops crossing itself; `fbm1`, fractal
+noise along a stroke with no period; `spread`, carrying a per-bristle field onto the
+sampled tip; `smooth_path`, rounding a path's corners to the brush's width.
 
 It stamps nothing and builds no brush. Every random draw takes the generator it is handed,
 so the order the caller draws in is the pattern.
@@ -23,7 +23,7 @@ _MIN_TIP = 3
 _MIN_PAIR = 2
 
 
-def _tip_band(w: np.ndarray, sigma: float) -> np.ndarray:
+def tip_band(w: np.ndarray, sigma: float) -> np.ndarray:
     """Bandlimit one stamp's weights across the tip.
 
     A treatment names its bristle count once, so a tip is the same number of
@@ -62,7 +62,7 @@ def _tip_band(w: np.ndarray, sigma: float) -> np.ndarray:
     return out.astype(F32)
 
 
-def _tip_drift(m: int, b: Brush, rng: np.random.Generator) -> np.ndarray:
+def tip_drift(m: int, b: Brush, rng: np.random.Generator) -> np.ndarray:
     """Each bristle's sideways drift, as a quadrature pair per bristle.
 
     A bristle wanders sideways as the stroke goes on, and with no sharing
@@ -86,13 +86,11 @@ def _tip_drift(m: int, b: Brush, rng: np.random.Generator) -> np.ndarray:
         `(2, m)`, the cosine and sine of each bristle's drift phase.
     """
     q = rng.normal(size=(2, m)).astype(F32)
-    q = _tip_band(q, b.coherence * m)
+    q = tip_band(q, b.coherence * m)
     return q / np.maximum(np.hypot(q[0], q[1]), F32(1e-6))
 
 
-def _unfold(
-    off: np.ndarray, base: np.ndarray, jitter: np.ndarray, keep: float = 0.25
-) -> np.ndarray:
+def unfold(off: np.ndarray, base: np.ndarray, jitter: np.ndarray, keep: float = 0.25) -> np.ndarray:
     """Scale a drift back until the tip stops crossing itself.
 
     Even a shared drift can close the gap between two bristles where the tip
@@ -124,7 +122,7 @@ def _unfold(
     return base + jitter * F32(k)
 
 
-def _fbm1(
+def fbm1(
     t: np.ndarray, cell: float, b: Brush, rng: np.random.Generator, rows: int = 1
 ) -> np.ndarray:
     """Fractal noise along a stroke, with no period in it, in about -1 to 1.
@@ -174,7 +172,7 @@ def _fbm1(
     return np.clip(out * F32(0.707 / max(sd, 0.30)), -1.6, 1.6)
 
 
-def _spread(vals: np.ndarray, u_log: np.ndarray, u: np.ndarray) -> np.ndarray:
+def spread(vals: np.ndarray, u_log: np.ndarray, u: np.ndarray) -> np.ndarray:
     """Resample a per-logical-bristle field across the sampled tip.
 
     The tip is a handful of logical bristles, then sampled across at sub-pixel
@@ -196,7 +194,7 @@ def _spread(vals: np.ndarray, u_log: np.ndarray, u: np.ndarray) -> np.ndarray:
     return vals[:, idx] * (1.0 - f) + vals[:, idx + 1] * f
 
 
-def _smooth_path(
+def smooth_path(
     x: np.ndarray, y: np.ndarray, radius: float, step: float
 ) -> tuple[np.ndarray, np.ndarray]:
     """Round a polyline's corners to a brush's own width.

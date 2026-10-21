@@ -25,7 +25,7 @@ def _fill_ring(
     """Scanline-fill one ring into a mask, in place.
 
     Testing every cell against every ring is the obvious way and far too slow on
-    a ride's map; a scanline costs one pass over the ring's own points per row
+    a big box's map; a scanline costs one pass over the ring's own points per row
     it covers.
 
     Args:
@@ -91,7 +91,7 @@ def rasterise(
     return mask
 
 
-def _spread(mask: list[bytearray], radius: int, *, grow: bool) -> list[bytearray]:
+def spread(mask: list[bytearray], radius: int, *, grow: bool) -> list[bytearray]:
     """Dilate or erode a mask by a square of `radius` cells, separably."""
     if radius <= 0:
         return [bytearray(row) for row in mask]

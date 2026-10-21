@@ -1,12 +1,12 @@
 """What a span's name pays for sitting near its own mark.
 
-Key names: `_mark_gap`, how far a name sits from the mark beside the route;
-`_mark_through`, what the mark running through the name costs.
+Key names: `mark_gap`, how far a name sits from the mark beside the route;
+`mark_through`, what the mark running through the name costs.
 
 It does not choose a position or move a mark.
 
-Invariants: a name that is not a span's is charged its rung's distance by `_mark_gap`
-and nothing by `_mark_through`.
+Invariants: a name that is not a span's is charged its rung's distance by `mark_gap`
+and nothing by `mark_through`.
 """
 
 import math
@@ -56,7 +56,7 @@ SPAN_MARK_THROUGH_COST = 110.0
 SPAN_INBOARD_COST = 150.0
 
 
-def _mark_gap(box: Box, lb: Label, fallback: float) -> float:
+def mark_gap(box: Box, lb: Label, fallback: float) -> float:
     """How far a block sits from the mark it names, for the leaderless cost.
 
     A rung is the clear space between the anchor and the near edge of the
@@ -85,7 +85,7 @@ def _mark_gap(box: Box, lb: Label, fallback: float) -> float:
     return sum(gaps) / len(gaps)
 
 
-def _mark_through(box: Box, lb: Label) -> float:
+def mark_through(box: Box, lb: Label) -> float:
     """What a block across, or inboard of, its own bracket costs.
 
     Two faults with one measure, because both are about where the block sits

@@ -130,7 +130,7 @@ def deposit(
     """Deposit the weights bilinearly.
 
     Rounding to the nearest pixel instead would put steps and stair-edges in
-    the mark. A sample off the accumulator lands on its nearest edge pixel.
+    the mark. A corner that falls off the accumulator is dropped.
     """
     h, w = acc.shape
     px, py = pos
@@ -146,12 +146,15 @@ def deposit(
         for dx in (0, 1):
             wx = ax if dx else (1.0 - ax)
             ix = np.clip(ix0 + dx, 0, w - 1)
+            # The clipped indices keep `np.add.at` in range; the mask, multiplied
+            # last so an on-grid corner deposits the same bits, drops the weight.
+            keep = (iy0 + dy >= 0) & (iy0 + dy < h) & (ix0 + dx >= 0) & (ix0 + dx < w)
             at = (iy.ravel(), ix.ravel())
-            np.add.at(acc, at, (wgt * wx * wy).ravel())
+            np.add.at(acc, at, (wgt * wx * wy * keep).ravel())
             if aux is not None and wgt_r is not None:
-                np.add.at(aux["res"], at, (wgt_r * wx * wy).ravel())
+                np.add.at(aux["res"], at, (wgt_r * wx * wy * keep).ravel())
             if aux is not None and wgt_t is not None:
-                np.add.at(aux["tooth"], at, (wgt_t * wx * wy).ravel())
+                np.add.at(aux["tooth"], at, (wgt_t * wx * wy * keep).ravel())
 
 
 def pool(acc: np.ndarray, b: Brush, x: float, y: float) -> None:

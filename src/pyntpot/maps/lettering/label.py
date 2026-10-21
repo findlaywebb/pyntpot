@@ -16,7 +16,7 @@ home name is never wrapped; a wrapped name has at most `MAX_LINES` lines.
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Literal
 
 from pyntpot.ink.polyline import Pt
 from pyntpot.letters.setting import DEFAULT_LINE_PX
@@ -176,26 +176,9 @@ class Label:
         """The leader's text end, y."""
         return self.leader[1][1] if self.leader else self.py
 
-    def as_dict(self) -> dict[str, Any]:
-        """The placed label as a dict, the leader's text end as `lx`/`ly`."""
-        return {
-            "name": self.name,
-            "kind": self.kind,
-            "why": self.why,
-            "px": self.px,
-            "py": self.py,
-            "tx": self.tx,
-            "ty": self.ty,
-            "anchor": self.anchor,
-            "lx": self.lx,
-            "ly": self.ly,
-            "tier": self.tier,
-            "size": self.size,
-        }
-
 
 #: Every extent a span can be drawn for. The first group is the ground, the
-#: second the session, and which group a kind is in decides which side of the
+#: second the track, and which group a kind is in decides which side of the
 #: route it sits on. A span is not only a climb: any stretch of the track
 #: worth remarking on is one, which is what `steady`, `fade` and `best_effort`
 #: are for.
@@ -206,7 +189,7 @@ SPAN_EFFORT = ("fast", "hard_set", "best_effort", "fade", "walk", "headwind", "s
 
 @dataclass
 class Span:
-    """One stretch of the session the map annotates, with extent, not a pin.
+    """One stretch of the track the map annotates, with extent, not a pin.
 
     A span request states an extent in one of three vocabularies
     (`maps.annotations.SpanRequest`); by the time it is here it has been
@@ -236,7 +219,7 @@ class Span:
 
     @property
     def ground(self) -> bool:
-        """True when this span is a fact about the ground, not about the session."""
+        """True when this span is a fact about the ground, not about the track."""
         return self.kind in SPAN_GROUND
 
 
@@ -337,7 +320,7 @@ def feature_px(basemap: Basemap, kind: str, cls: str, own: float = 0.0) -> float
     return float(ROAD_PX_DEFAULT.get(cls, 3.4)) * WET_SPREAD
 
 
-def _outboard(span: Span, route_px: list[Pt]) -> float:
+def outboard(span: Span, route_px: list[Pt]) -> float:
     """Which side of a span's own line is away from the route: +1 or -1.
 
     The line is the stretch's smoothed shape pushed off the route, bridged at a

@@ -8,8 +8,8 @@ offered in.
 
 **The order is notability, not distance.** Nearest-first is a list of plaques in
 a city: the eighty nearest things can fail to reach out of one district, so a
-zoo is not offered and a drinking fountain is. `landmark_rank` puts the things a
-runner navigates by first and, inside a tier, the ones sitting most comfortably
+zoo is not offered and a drinking fountain is. `landmark_rank` puts the things
+someone on the track navigates by first and, inside a tier, the ones sitting most comfortably
 inside their own reach. **The reach is the thing's own**, read off its class and
 off whatever height OSM states, so a statue is worth naming from a hundred
 metres and a hill from six kilometres.
@@ -59,7 +59,7 @@ def landmark_reach(entry: Mapping[str, Any], scale: float = 1.0) -> float:
 def landmark_rank(entry: Mapping[str, Any], scale: float = 1.0) -> tuple[int, float]:
     """What order the candidates are offered in: notability, then comfort.
 
-    The first term is the tier, so the things a runner navigates by come before
+    The first term is the tier, so the things someone on the track navigates by come before
     the things they pass; the second is how comfortably the thing sits inside its
     own reach, so within a tier the nearer and the taller both rise.
     """

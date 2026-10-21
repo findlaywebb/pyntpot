@@ -20,20 +20,20 @@ from typing import Any
 from pyntpot.ink.polyline import Pt, meet
 from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.lettering.label import WRAP_LEADING, Box, Label, Measure, Span
-from pyntpot.maps.lettering.placement_along import _place_along
+from pyntpot.maps.lettering.placement_along import place_along
 from pyntpot.maps.lettering.placement_costs import (
     ROUTE_REACH_PX,
     Backdrop,
     Terms,
-    _darkness,
-    _near_route,
-    _off_own,
-    _off_own_feature,
-    _on_paper,
-    _on_road,
-    _overlap,
+    box_on_paper,
+    darkness,
+    near_route,
+    off_own,
+    off_own_feature,
+    on_road,
+    overlap,
 )
-from pyntpot.maps.lettering.placement_flat import LEADER_COST_PX, ROAD_CROSS_COST, _best_flat
+from pyntpot.maps.lettering.placement_flat import LEADER_COST_PX, ROAD_CROSS_COST, best_flat
 from pyntpot.maps.lettering.placement_lift import TILT_EXEMPT_KINDS
 from pyntpot.maps.lettering.placement_names import dedupe_names
 from pyntpot.maps.lettering.spans import SpanSurroundings, place_spans
@@ -160,11 +160,11 @@ def _place(
     for lb in labels:
         tw, th = measure_fn(lb.name, lb.size)
         mine = _route_for(lb, route_px, thin)
-        terms = Terms(ground.card, ground.dark, boxes, _off_own(ground.roads, lb), mine)
+        terms = Terms(ground.card, ground.dark, boxes, off_own(ground.roads, lb), mine)
         along = None
         if lb.baseline and len(lb.name) >= MIN_CURVED_CHARS:
-            along = _place_along(lb, tw, th, terms, repeats.get(lb.name, []))
-        flat = _best_flat(lb, terms, measure_fn)
+            along = place_along(lb, tw, th, terms, repeats.get(lb.name, []))
+        flat = best_flat(lb, terms, measure_fn)
         # Two real candidates, one scale. Setting a name on its own feature is
         # worth something in itself, and `ALONG_BONUS` is that something; past
         # it, a name jammed against three others on its river is worse than the
@@ -251,13 +251,13 @@ def _seat_cost(lb: Label, ground: Backdrop, others: list[Box]) -> float:
     """
     box = lb.box
     assert box is not None
-    cost = 0.0 if _on_paper(box, ground.card) else 400.0
+    cost = 0.0 if box_on_paper(box, ground.card) else 400.0
     route = _route_for(lb, ground.route_px, ground.thin)
-    cost += _near_route(box, route, max(ROUTE_REACH_PX, lb.size))
-    cost += _overlap(box, others)
-    cost += _darkness(box, ground.card, ground.dark) * 150
-    cost += _on_road(box, ground.roads) * ROAD_CROSS_COST
-    cost += _off_own_feature(box, lb)
+    cost += near_route(box, route, max(ROUTE_REACH_PX, lb.size))
+    cost += overlap(box, others)
+    cost += darkness(box, ground.card, ground.dark) * 150
+    cost += on_road(box, ground.roads) * ROAD_CROSS_COST
+    cost += off_own_feature(box, lb)
     return cost
 
 

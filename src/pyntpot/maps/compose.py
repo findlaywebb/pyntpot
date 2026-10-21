@@ -3,8 +3,8 @@
 The page draws the map as an SVG with the plates inlined and the route, the
 pins and the names set in vector on top. These are the steps that lay the same
 plates into a single raster card instead, so the picture can be handed over
-alone: `_plates` multiplies the wash over the paper, `_route` draws the route on it in
-the route ink, and `_paste_labels` pastes the label plate over both. The
+alone: `painted_map` multiplies the wash over the paper, `route` draws the route on it in
+the route ink, and `paste_labels` pastes the label plate over both. The
 compose stage calls them in that order.
 
 Nothing here paints, fetches, letters or places a name: it takes plates the
@@ -37,7 +37,7 @@ def _rgb(colour: str) -> tuple[int, int, int]:
     return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
 
 
-def _plates(plates: Plates) -> Image.Image:
+def painted_map(plates: Plates) -> Image.Image:
     """The card itself: the wash multiplied over the paper, as the painter composed it.
 
     Source: `multiply-compositing` in docs/explanation/references.md.
@@ -51,7 +51,7 @@ def _plates(plates: Plates) -> Image.Image:
     return ImageChops.multiply(paper, wash)
 
 
-def _route(
+def route(
     card_img: Image.Image,
     plates: Plates,
     route_px: list[tuple[float, float]],
@@ -89,7 +89,7 @@ def _route(
     card_img.paste(Image.new("RGB", card_img.size, colour), (0, 0), mask)
 
 
-def _paste_labels(card_img: Image.Image, plate: Path) -> None:
+def paste_labels(card_img: Image.Image, plate: Path) -> None:
     """The label plate, over the painting, at the card's own size.
 
     The card and the page draw the same pixels, because they are the same

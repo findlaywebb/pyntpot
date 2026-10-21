@@ -21,7 +21,7 @@ the files in `tests/golden/lynmouth/` the fix may move.
 | `contributing-commit-trailers`, with the plan's own contradiction (P6 "Branch and PR" against "P3 and P4", P9 and P10) | process | tooling or process | fix (Q1 (2): the session's attribution trailers) | 5 | no | `rg -n -U -i "no\s+(co-authorship\s+)?trailers" CONTRIBUTING.md specs/001-port/plan.md`: 7 lines (`CONTRIBUTING.md:50`; plan 139, 490, 5852, 5853, 6603, 6604); 48 of 96 commits carry `Co-Authored-By:` and `Claude-Session:` | P10.3d's `rg` before and after | about 8 | none | P10.3d | done, P10.3d |
 | `duplicate-benchmarks` | tests | test text | fix | 5 | no | `grep -cE "def test_(sheet_construction\|edt\|wash)\(\|def _disc\(" tests/benchmarks/test_ink.py`: 4; the three onboarding twins present (lines 87, 92, 126) | the same grep prints 0 | about 30 | none | P10.4a | done, P10.4a |
 | `edt-is-a-chamfer-distance` | ink | naming or prose | fix | 5 | no | `grep -rlnw edt --include=*.py src tests`: 14 files (8 `src`: the definition and 7 importers, not the nine the file says; 6 tests) | `grep -rnw edt src tests docs/explanation --include=*.py --include=*.md` prints nothing; `test_reference_keys.py` | about 55 | none | P10.4b | done, P10.4b |
-| `ink-deposit-edge-clamp` | ink | defect | fix | 5 | no | `deposit(zeros 8x8, None, ([[-5.0]], [[3.0]]), ones, None, None)`: `acc[3, 0]` 1.0, sum 1.0 | `tests/unit/ink/test_deposit.py::test_a_sample_off_the_accumulator_lays_nothing` and `test_a_sample_half_off_the_edge_keeps_only_its_share_on_the_plate`, red first | about 50 | none (no off-grid corner in the golden render, P10.0 probe) | P10.4c | |
+| `ink-deposit-edge-clamp` | ink | defect | fix | 5 | no | `deposit(zeros 8x8, None, ([[-5.0]], [[3.0]]), ones, None, None)`: `acc[3, 0]` 1.0, sum 1.0 | `tests/unit/ink/test_deposit.py::test_a_sample_off_the_accumulator_lays_nothing` and `test_a_sample_half_off_the_edge_keeps_only_its_share_on_the_plate`, red first | about 50 | none (no off-grid corner in the golden render, P10.0 probe) | P10.4c | done, P10.4c (`tests/unit/ink/test_deposit.py`; `test_pad.py`'s convergence test replaced) |
 | `ink-tip-smooth-path-ends` | ink | defect | close (Q6 (B)): the drawn-in ends are the shipped look the goldens pin; issue file deleted, the held ends recorded as the candidate feature `docs/features/ink-tip-hold-stroke-ends.md` (a style switch, off by default) | 1 | no | `_smooth_path(arange(50) * 0.4, zeros, 3.36, 0.4)`: ends 1.41 and 18.19 (raw 0.0 and 19.6) | none (closed) | 0 | none | none |  |
 | `letters-card-pixels-and-display-pixels`, with "card pixels" in `ink/curves.py` folded in | letters | naming or prose | fix (Q2 (1): "display pixels") | 5 | no | "card pixel" on 60 `src` lines in 22 files (`ink/curves.py:98`, `:129` among them), 7 test lines, 2 `GLOSSARY.md` rows; "display pixel" on 66 `src` lines (the file says 57 and 67) | `grep -rnI -i "card pixel" src tests GLOSSARY.md docs --exclude-dir=issues --exclude-dir=decisions` prints nothing (names swapped under Q2 (2)) | about 70 | none | P10.9 | done, P10.9 |
 | `letters-font-missing-glyph-advance` | letters | defect | close (Q3 (1)): 0.28 em is the ported literal (D5), and the docstring states it; issue file deleted | 1 | no | `OutlineFont().glyph("\u4e00").advance` 0.28; `glyph(" ").advance` 0.23 | none (closed) | 0 | none (no Lynmouth text uses a missing character) | none |  |
@@ -29,17 +29,17 @@ the files in `tests/golden/lynmouth/` the fix may move.
 | `letters-nib-pen-angle-ignores-writing-line` | letters | defect | close (Q4 (1)): the page-fixed nib is the ported behaviour the goldens pin; issue file deleted, the turning nib recorded as the candidate feature `docs/features/letters-nib-follows-writing-line.md` | 1 | no | "Lyn" written along a horizontal and a vertical path: `Mark.pen` -0.0389 on both, so the nib does not turn; `_pen_profile` of a horizontal and a vertical segment 0.800 and 0.890 | none (closed) | 0 | none | none |  |
 | `letters-style-label-route-ink-not-filled`, with the cache-key trap (`route_inks` in neither `BASE_GROUPS` nor `LETTERING_GROUPS`) | letters | defect | close (Q5 (1)): independent inks, the theme sets both, as ADR 0005 "Route ink" says; issue file deleted | 1 | no | `grep -rn label_route_ink src`: read only at `letters/nib.py:268`, set only by `letters/style.py:83` and `default.toml:181`; nothing copies `Style.route_ink()` into it; both `#c22050` in the default theme | none (closed) | 0 | none (the default inks are equal) | none |  |
 | `letters-trace-radii-unused` | letters | dead code | fix | 5 | no | `uv run vulture --min-confidence 60 src`: `letters/trace.py:90: unused function '_radii'`; `grep -rn _radii src tests`: the definition only | the vulture run and `grep -rn "def _radii" src` print nothing | about 10 | none | P10.5a | done, P10.5a |
-| `maps-lettering-label-as-dict-unused` | maps lettering | dead code | defer (awaiting what upstream reads, until P8's hand-off re-triages it) | 2 | no | vulture at 60: `maps/lettering/label.py:179: unused method 'as_dict'`; `grep -rn as_dict src tests`: the definition only | `grep -rn "def as_dict" src` and the vulture run print nothing | about 10 | none | P10.6 (after P8's hand-off) | |
-| `maps-lettering-picks-journal-picks-cap` | maps lettering | defect | fix | 5 | no | `journal_picks(Annotations(landmarks=("A", "B", "C")), label_basemap(...), 1)`: `['A', 'B', 'C']` | `tests/unit/maps/lettering/test_picks.py::test_a_name_only_landmark_counts_against_the_landmark_cap` and `test_a_cap_of_nought_picks_no_landmark`, red first | about 40 | none (no landmarks on the golden card) | P10.6 | |
+| `maps-lettering-label-as-dict-unused` | maps lettering | dead code | fix (Upstream reads (P8, 9139760): `as_dict` no, so `Label.as_dict` is deleted) | 5 | no | vulture at 60: `maps/lettering/label.py:179: unused method 'as_dict'`; `grep -rn as_dict src tests`: the definition only | `grep -rn "def as_dict" src` and the vulture run print nothing | about 10 | none | P10.6 | done, P10.6 (vulture at 60 and `grep -rn as_dict src tests` print nothing) |
+| `maps-lettering-picks-journal-picks-cap` | maps lettering | defect | fix | 5 | no | `journal_picks(Annotations(landmarks=("A", "B", "C")), label_basemap(...), 1)`: `['A', 'B', 'C']` | `tests/unit/maps/lettering/test_picks.py::test_a_name_only_landmark_counts_against_the_landmark_cap` and `test_a_cap_of_nought_picks_no_landmark`, red first | about 40 | none (no landmarks on the golden card) | P10.6 | done, P10.6 (`test_picks.py`, the two cap tests) |
 | `maps-lettering-sheet-homonym` | maps lettering | naming or prose | fix (Q10 (1), widened: "sheet" only for `ink.sheet.Sheet` and its noise fields everywhere in `src`, `tests`, `GLOSSARY.md` and docs; "map" for the drawn card on the maps side; "page" for the upstream SVG page stays) | 5 | no | widened at P10.2 (`grep -rnIw -i sheet src tests docs GLOSSARY.md`): 399 lines; 125 in a sense other than `ink.sheet.Sheet` and its noise fields (`maps` `src` 88 in 34 files, the lettering scope's 52 among them; `ink` and `letters` `src` 14 in 7 files; tests 20 in 14 files; `GLOSSARY.md` 3: `wash`, `dark grid`, `terms`); 18 more are the glossary's "brush sheet" (17 outside `docs/decisions/`). The identifiers that name the drawn map (`sheet_card`, four test names) are the later row below | P10.9's `grep -rnIw -i sheet` prints only the allowed list | about 300 | none | P10.9 | done, P10.9 |
 | `maps-lettering-span-sides-curve-scale-offset` | maps lettering | defect | defer: the sweep needs the four upstream rides the repository does not hold (D16) and a scoring rule it does not record | 2 | no | `SPAN_CURVE_SCALE_CAPS` 1.5, `SPAN_OFFSET_CAPS` 1.2 | none (deferred) | n/a | none (no spans on the golden card) | none | |
-| `maps-lettering-span-sides-freer-side-sign` | maps lettering | defect | fix | 5 | no | the file's probe: `_freer_side` returns `(1, 1.0)`; `span_line(route, 10, 80, 1, 16.8)` middle `(500.0, 283.2)`, on the solid side | `test_span_sides.py::test_the_freer_side_is_signed_as_the_mark_is_drawn` and `test_spans.py::test_a_ground_span_takes_the_clearer_side_and_a_session_span_the_other`, red first | about 65 | none (no spans on the golden card) | P10.6 | |
+| `maps-lettering-span-sides-freer-side-sign` | maps lettering | defect | fix | 5 | no | the file's probe: `_freer_side` returns `(1, 1.0)`; `span_line(route, 10, 80, 1, 16.8)` middle `(500.0, 283.2)`, on the solid side | `test_span_sides.py::test_the_freer_side_is_signed_as_the_mark_is_drawn` and `test_spans.py::test_a_ground_span_takes_the_clearer_side_and_a_fast_span_the_other`, red first | about 65 | none (no spans on the golden card) | P10.6 | done, P10.6 (`test_span_sides.py` and `test_spans.py`, the side tests) |
 | `maps-lettering-spans-place-spans-rung-order` | maps lettering | defect | close (Q11 (2)): the longest span nearest the route is the ported order every upstream card shows; issue file deleted | 1 | no | `_rung` on an empty side gives `Span(i0=10, i1=90)` rung 0, then the overlapping `Span(i0=30, i1=50)` rung 1 | none (closed) | 0 | none | none |  |
 | `maps-lettering-spans-rule-seven-in-tests` | maps lettering | test text | fix | 5 | no | `grep -rnIi "rule seven" tests src`: 3 lines (`test_spans.py` 64, 140, 190) | `grep -rnIiE "rule (seven\|7)\b" src tests` prints nothing | about 3 | none | P10.9 | done, P10.9 |
-| `maps-osm-elements-tunnel-no` | maps | defect | fix | 5 | no | an `Exe` river way with `tunnel=no` on `BESIDE` through `test_layers.py`'s `_river_names`: kept `[]` (dropped); with `tunnel=culvert`: `[]` | `tests/unit/maps/test_layers.py::test_a_river_tagged_not_in_a_tunnel_is_drawn`, red first (and `test_a_river_culverted_end_to_end_is_not_drawn`, green both sides) | about 25 | none (no fixture way has `tunnel=no`) | P10.7 | |
+| `maps-osm-elements-tunnel-no` | maps | defect | fix | 5 | no | an `Exe` river way with `tunnel=no` on `BESIDE` through `test_layers.py`'s `_river_names`: kept `[]` (dropped); with `tunnel=culvert`: `[]` | `tests/unit/maps/test_layers.py::test_a_river_tagged_not_in_a_tunnel_is_drawn`, red first (and `test_a_river_culverted_end_to_end_is_not_drawn`, green both sides) | about 25 | none (no fixture way has `tunnel=no`) | P10.7 | done, P10.7 (`test_layers.py::test_a_river_tagged_not_in_a_tunnel_is_drawn`) |
 | `maps-style-groups-labels-switch-also-drops-the-attribution` | maps | defect | fix | 5 | yes, D8 | attribution probe (`draw_attribution` on white 600 by 80, `Style.default()`): box `(453, 45, 592, 72)`; with `lettering.labels=False`: `None`. Readers: `attribution.py:64`, `lettering/pipeline.py:98` | `tests/unit/maps/test_attribution.py::TestLabelsOff::test_written_when_the_map_is_not_lettered`, red first | about 15 | none (golden compose passes `attribution=False`) | P10.3a | done, P10.3a |
-| `maps-style-groups-route-constants-have-no-reader`, with `RouteInk.casing`, `CASING_COLOURS` and `RouteInk.effect` folded in | maps | dead code | defer (Q8 (a)): awaiting what upstream reads, until P8's hand-off re-triages it per name (`ROUTE_INK`, `ROUTE_EFFECT_OFF`, `ROUTE_SHADOW`, `RouteInk.casing`; `CASING_COLOURS` with `casing`) | 2 | no | vulture at 60: `ROUTE_INK` (256), `ROUTE_EFFECT_OFF` (259), `ROUTE_SHADOW` (272), property `casing` (284); grep: each constant only at its definition, `CASING_COLOURS` read only in `casing`, `.effect` read only in `casing` | P10.7's grep and `uv run vulture --min-confidence 60 src` print nothing for the deleted names | about 35 | none | P10.7 (after P8's hand-off) |  |
-| `maps-track-index-private-names-imported` (58 names, not the 9 filed) | all | naming or prose | fix (Q9 (a): every name another module imports is public, pinned) | 5 | no | private-name AST scan: 58 names, 23 defining and 23 importing modules (ink 6, letters 6, other maps 12, maps lettering 34); 8 clash on dropping the underscore | `tests/unit/maps/test_import_order.py::test_no_module_imports_another_modules_private_name`, red per area first | about 350 plus docs | none | P10.10a to P10.10d |  |
+| `maps-style-groups-route-constants-have-no-reader`, with `RouteInk.casing`, `CASING_COLOURS` and `RouteInk.effect` folded in | maps | dead code | fix (Q8 (a), Upstream reads (P8, 9139760)): `ROUTE_INK` no, `ROUTE_EFFECT_OFF` no, `ROUTE_SHADOW` no, `RouteInk.casing` no, so each is deleted; `CASING_COLOURS`, read only by `casing`, is deleted with it; `RouteInk.effect` (folded in, read only by `casing`, but filled from the theme TOML) is left to P10.7's brief | 5 | no | vulture at 60: `ROUTE_INK` (256), `ROUTE_EFFECT_OFF` (259), `ROUTE_SHADOW` (272), property `casing` (284); grep: each constant only at its definition, `CASING_COLOURS` read only in `casing`, `.effect` read only in `casing` | P10.7's grep and `uv run vulture --min-confidence 60 src` print nothing for the deleted names | about 35 | none | P10.7 | done, P10.7 (the route-constants grep over `src` and `tests` and vulture at 60 print none of the names) |
+| `maps-track-index-private-names-imported` (58 names, not the 9 filed) | all | naming or prose | fix (Q9 (a): every name another module imports is public, pinned) | 5 | no | private-name AST scan: 58 names, 23 defining and 23 importing modules (ink 6, letters 6, other maps 12, maps lettering 34); 8 clash on dropping the underscore | `tests/unit/maps/test_import_order.py::test_no_module_imports_another_modules_private_name`, red per area first | about 350 plus docs | none | P10.10a to P10.10d | done, P10.10a to P10.10d (`tests/unit/maps/test_import_order.py::test_no_module_imports_another_modules_private_name`, four ids; the AST scan prints 0 pairs) |
 | `prek-not-in-the-environment` | tooling | tooling or process | fix | 5 | yes, Verification 1 | `uv run prek --version`: `error: Failed to spawn: prek` | `uv run prek --version` prints the version | about 10 plus the lock | none | P10.3b | done, P10.3b |
 | `shared-generators` | maps painter | defect | defer: per-item seeding is a new property of the painter that moves every golden, not a fix against any docstring, spec line or Key decision | 2 | no | `maps/painter/job.py:110`: one `bloom_rng` per job places every wash's blooms in turn; `ink/raster.py:61` `deform_ring` over a shared generator; no golden run (the file's evidence is ADR 0006's) | none (deferred) | n/a | `wash.webp`, `labels-centreline.webp`, `map.png`, if ever done | none | |
 | `slow-tests-in-mutation-runs` (a): `test_cli.py::TestMap::test_a_full_cache_makes_no_request` paints the whole fixture unmarked | tests | test text | fix | 5 | no | `grep -B2 "def test_a_full_cache_makes_no_request" tests/unit/maps/test_cli.py`: no `@pytest.mark.golden` | the same grep shows the marker; the two coverage gates | about 5 (40 with an extra test) | none | P10.8 | done, P10.8 (`743b3bf`) |
@@ -49,7 +49,7 @@ the files in `tests/golden/lynmouth/` the fix may move.
 | `unlisted-technique-ink-reservoir` | references | references | fix | 5 | yes, D24 | `grep -c ink-reservoir docs/explanation/references.md`: 0; `spend`'s docstring has no `Source:` line; `design-sources.md:26`, `:28` name it | `test_reference_keys.py::test_every_site_cites_its_key`, red first (after the entry is added) | about 10 | none | P10.3c | done, P10.3c |
 | `unlisted-technique-pigment-separation` | references | references | fix | 5 | yes, D24 | `grep -c pigment-separation docs/explanation/references.md`: 0; `separated`'s docstring has no `Source:` line | `test_reference_keys.py::test_every_site_cites_its_key`, red first (after the entry is added) | about 10 | none | P10.3c | done, P10.3c |
 | `CONTRIBUTING.md:5` "It is what CI runs": CI never runs prek | tooling | tooling or process | fix | 5 | no | `grep -c prek .github/workflows/ci.yml`: 0 | `grep -c "prek run" .github/workflows/ci.yml` prints 1 | about 3 | none | P10.3b | done, P10.3b |
-| `p5-run-log.md:125` the README badge | docs | naming or prose | fix (Q13 (1): P7.1 adds the badge) | 5 | no | `grep -c -i codspeed README.md`: 0; `docs/explanation/performance.md:71` links the dashboard | the badge line in `README.md` (P7.1) | about 1 | none | P7.1's brief (no P10 slice) |  |
+| `p5-run-log.md:125` the README badge | docs | naming or prose | fix (Q13 (1): P7.1 adds the badge) | 5 | no | `grep -c -i codspeed README.md`: 0; `docs/explanation/performance.md:71` links the dashboard | the badge line in `README.md` (P7.1) | about 1 | none | P7.1 (`plan.md`, P7, the README bullet; no P10 slice) |  |
 | `tasks.md:124` start the manual Mutation workflow once on `main` | tooling | tooling or process | fix (an action with no diff) | 5 | no | `gh run list -R findlaywebb/pyntpot --workflow mutation.yml`: no runs | the run's URL and score line in `p10-run-log.md` | 0 | none | the orchestrating session, after P10.1 | done: run 37771476343 on `p10-triage` (after P10.12, score 0.8333); run 37689849941 on `main` (before P10.12) lost the runner; after the part-1 merge, run 37854572820 on `main` at `ff752f6` completed (killed 59, timeout 1, survived 12; score 0.8333), recorded in `p10-run-log.md` |
 | `spec.md:121` the OpenTopoData budget "per process" (ADR 0004: per instance) | docs | naming or prose | fix | 5 | no | `spec.md:121` still under "Open questions": "enforced per process only"; ADR 0004 line 34: "Per instance, not per process" | `grep -n "per process" specs/001-port/spec.md` prints nothing | about 6 | none | P10.9 | done, P10.9 |
 | `p5-run-log.md:73` mutmut records 0.0 durations under forkserver | tooling | tooling or process | close: a fact about mutmut 3.8; no repo text claims otherwise | 1 | no | line 73 to 74 records it; ADR 0012 states no duration | none | 0 | none | none | |
@@ -59,7 +59,20 @@ the files in `tests/golden/lynmouth/` the fix may move.
 | `maps-tests-sheet-identifiers-name-the-map` (later, found at P10.2 by the widened Q10 count) | tests | naming or prose | fix | 5 | no | `grep -rnI sheet_card tests --include=*.py`: 28 lines (the builder `tests/support/lettering.py::sheet_card`, a card for the lettering tests, and its uses in `test_spans.py`, `test_placement.py`, `test_placement_names.py`, `test_placement_flat.py`); four test names say "the sheet" for the drawn map: `test_rings.py::test_a_polygon_bigger_than_the_sheet_is_clipped_not_dropped`, `test_span_clear.py::test_a_span_takes_its_name_along_it_only_when_it_runs_across_the_sheet`, `test_placement.py::test_a_river_follows_its_bend_even_when_the_bend_runs_down_the_sheet` and `::test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_sheet`. Identifiers that mean `Sheet` stay: `sheet_seed`, `letters.nib._sheet`, `ink.brush._sheet_brush` (the brush sheet), `test_a_sheet_with_no_fibre_is_the_sheet_it_always_was`, `test_a_sheet_with_nothing_wet_on_it_comes_back_untouched`, `test_a_directional_break_follows_the_stroke_not_the_sheet`, `test_building_a_sheet`, `test_sheet_constructs_from_the_top_level` | `grep -rnIE "sheet_card|_the_sheet_(is_clipped|not_across)|runs_(down|across)_the_sheet" tests --include=*.py` prints nothing (the seed grep missed `runs_across_the_sheet`) | about 35 | none | P10.13 | done, P10.13 |
 | `mutation-runaway-mutant-kills-the-runner` (later, found at P10.1's mutation dispatch) | tooling | tooling or process | fix | 5 | no | run 37689849941, both attempts: shard died at exit 143 (runner shutdown) during `x_simplify__mutmut_31`; capped local run `prlimit --as=3500000000 -- uv run mutmut run pyntpot.ink.polyline.x_simplify__mutmut_31`: `MemoryError` at 31 s, status killed | text test over `.github/workflows/mutation.yml`: the "Mutation run" step runs `prlimit --as=` before `uv run mutmut run`; then the pattern dispatch completes on the PR branch | about 25 | none | P10.12 | done, P10.12 (`457e6ad`; run 37771476343: 72 tested, killed 60, survived 12, score 0.8333) |
 | `letters-map-ink-key` (later, found by P10.9's layer check) | letters | naming or prose | defer (awaiting what upstream reads, until P8's hand-off re-triages it). The key now crosses the public surface: P11 makes `Setting` and `Mark` public and ADR 0026 records the key as public behaviour, so the rename needs its own ADR and stops for the maintainer (plan.md, "P10 against P11") | 2 | no | `grep -rnIw '"map"' src/pyntpot/letters`: the ink key string `"map"` at `letters/nib.py` (3 sites) and `letters/setting.py` (2 sites), a `letters` value naming a maps concept, against the Q10 answer; `_ink_colour` resolves it to `NibStyle.label_ink`, the default label ink, so a name such as `"label"` fits (no ink key has it) | rename the key so no `ink` or `letters` value says "map"; the grep prints nothing | about 20 | none expected (G-self) | part 2 (after P8's hand-off) | |
-| `ink-stroke-mark-shares-the-mark-term` (later, filed by P11.3) | ink | naming or prose | fix | 5 | no | `pyntpot.ink.stroke.Mark` (private, used by `ink.stroke` and `ink.stamp`) shares the glossary's "mark" with `pyntpot.letters.Mark`, public since ADR 0026 | rename `ink.stroke.Mark` (for example to `StrokeProfile`), importers repointed, no shim; `grep -rnw "class Mark" src/pyntpot/ink` prints nothing | about 30 | none expected (G-self) | part 2 (cut after the `p10-triage` PR merged): joins P10.10a if it shares its files within 600 lines, otherwise a new slice, plan-reviewed | |
+| `ink-stroke-mark-shares-the-mark-term` (later, filed by P11.3) | ink | naming or prose | fix | 5 | no | `pyntpot.ink.stroke.Mark` (private, used by `ink.stroke` and `ink.stamp`) shares the glossary's "mark" with `pyntpot.letters.Mark`, public since ADR 0026 | rename `ink.stroke.Mark` (for example to `StrokeProfile`), importers repointed, no shim; `grep -rnw "class Mark" src/pyntpot/ink` prints nothing | about 30 | none expected (G-self) | P10.17 (`plan.md`, P10.17): renamed `StrokeProfile`; a new slice, since P10.10a had landed (`6824cfe`) when the row was placed (changes 14, about 155), runs beside P10.10b, before P10.10c | done, P10.17 (`grep -rnw "class Mark" src/pyntpot/ink` and `grep -rnw Mark src/pyntpot/ink` print nothing; the public-reach probe prints `[]`) |
+| `upstream-candidate-export-private` | maps | missing public name | fix (P8.Q: promote now) | 5 | no | see plan.md, P8 "Upstream reads" (found by P8.0) | a test through the public name, written first | set in P8.P2a | none expected | P8.P2a | done, P8.P2a (pre-squash `11ddd60`, `p8-run-log.md:113-119`, landed in `0e094c7`, PR #12; `test_public_api.py` `[maps]` and the `candidate_export` import, red first) |
+| `upstream-vector-basemap-private` | maps | missing public name | fix (P8.Q: promote now) | 5 | no | see plan.md, P8 "Upstream reads" (found by P8.0) | a test through the public name, written first | set in P8.P2b | none expected | P8.P2b | done, P8.P2b (pre-squash `870d31e`, `p8-run-log.md:107`, landed in `0e094c7`, PR #12; the `VectorLayers` import, red first) |
+| `upstream-card-route-ink-fed` | maps | missing public name | fix (P8.Q: promote now, generic: a caller-fed route ink colour and width) | 5 | no | see plan.md, P8 "Upstream reads" (found by P8.0) | a test through `Style.with_route_ink`, written first | set in P8.P2c | none expected | P8.P2c | done, P8.P2c (pre-squash `0cd5407`, `p8-run-log.md:126`, landed in `0e094c7`, PR #12; the `with_route_ink` tests, red first) |
+| `maps-style-route-inks-one-read` (later, found by P8.0) | maps | naming or prose | defer (part 2: the theme's `route_inks` table holds four named inks of which `route_ink()` reads one; a rename moves the pinned `digest()` literal and needs its own ADR) | 2 | no | see plan.md, P8 "Upstream reads" (found by P8.0) | rename so the table and its reader agree; the grep prints nothing | not yet sized | moves the pinned `digest()` literal | none | |
+| `upstream-provider-error-private` (later, found by P8.0) | maps | missing public name | fix (maintainer, 2026-10-20: "wrap it": `fetch` catches `ProviderError` and raises `FetchError` from it; ADR 0028, `fetch-wraps-provider-errors`). Scope `fetch` only; the other public names that let it through are the next row | 5 | no (upstream degrades to a traceback) | at `0e094c7` (v0.0.2): a network failure during `fetch` raises `ProviderError`, which no public `__all__` (pyntpot, pyntpot.maps) exports, so a consumer cannot catch it by a public name; only `FetchError` is public. At `7902589`: `fetch` calls `Cache.ensure` unguarded (`maps/pipeline.py:90`); no `src` module or test catches `ProviderError` from `fetch` | `tests/unit/maps/test_pipeline_fetch_paint.py::TestFetch::test_a_provider_that_cannot_answer_raises_fetch_error`, red first | about 90 with the ADR | none (only the failure path of `fetch` changes) | P10.16 | done, P10.16 (`test_pipeline_fetch_paint.py::test_a_provider_that_cannot_answer_raises_fetch_error`) |
+| `maps-provider-error-private-beyond-fetch`: `ProviderError` from the other public names (later, found by the plan fix for `upstream-provider-error-private`, 2026-10-20) | maps | missing public name | fix (maintainer, 2026-10-21: export `ProviderError` and `ProviderBudgetExceededError` from `pyntpot.maps`, the providers' documented errors (ADR 0004), and have `Cache.ensure` wrap them in `FetchError` as `fetch` does; ADR 0029, `provider-errors-public-and-cache-wraps`). Earlier readings, before the answer: (1) export both; (2) keep both private and have `Cache.ensure` wrap them; the answer takes both | 5 | no | at `7902589`: `Cache.ensure` (`maps/cache.py:198`, public through `Cache`) calls the providers unguarded (`:227`, `:230`, `:233`); `OverpassFeatures.features` and `.landcover` raise `ProviderError` (`providers/overpass.py:299`) and `ProviderBudgetExceededError` (`:264`); `OpenTopoData.grid` raises `ProviderError` (`providers/opentopodata.py:135`, `:140`, `:145`) and `ProviderBudgetExceededError` (`:121`); `pyntpot.maps.__all__` exports neither error. Upstream reads (P8, 9139760) lists `Cache.ensure` (`analysis/report/routemap.py:361`), the upstream's forced refetch: that line, read from the upstream at `9139760`, calls `Cache.ensure(..., force=True)` before `fetch`, and `fetch` has no `force`, so after P10.16 the forced path still lets the private type reach the upstream. At `0685d14` (unchanged): `fetch` wraps at `maps/pipeline.py:98` to `:101`; `FetchError` is defined at `pipeline.py:61`, and `pipeline.py` imports `Cache` (`:47`), so `cache.py` cannot import `FetchError` from it without a cycle: P10.18 moves `FetchError` into `maps/cache.py`, public path unchanged | `tests/unit/maps/test_cache.py::TestEnsure::test_a_provider_that_cannot_answer_raises_fetch_error` and `tests/unit/test_public_api.py::test_the_provider_errors_are_the_providers_own` (with the two `[maps]` pin cases), red first; P10.18's checks 1 to 3 | about 150 with the ADR | none (only failure paths change) | P10.18 | done, P10.18 (`test_cache.py::test_a_provider_that_cannot_answer_raises_fetch_error`; `test_public_api.py` pins the two exports) |
+| `maps-lettering-session-and-rider-for-a-track`: "session and rider in `Label.why`", "session" and "rider" for a track in `src` (later, found by the plan fix for P10.14, 2026-10-20) | maps lettering | naming or prose | fix (maintainer, 2026-10-21: reading (1), reword all 16, the five `Label.why` values included: "where the track began", "where the track ended", "road the track was on", "home"). `Label` is in no `__all__` (ADR 0026, "Members"), so no ADR | 5 | no | at `0685d14`, `grep -rnIwi session src/pyntpot`: 15 lines, and `grep -rnIw "rider's" src/pyntpot`'s `why="the rider's own place"` (`maps/lettering/picks.py:261`, the one sport word P10.14 leaves): 16; `why` values at `maps/lettering/picks.py:189`, `:200`, `:209`, `:261` and `picks_roads.py:110`; docstrings and comments at `candidates/landmark_classes.py:127`, `lettering/placement_names.py:139`, `spans.py:155`, `picks_roads.py:3`, `:10`, `:39`, `:100`, `picks_settlements.py:35`, `label.py:181`, `:192`, `:222`. Five of the lines are `Label.why` values, text the upstream shows as a tooltip (`analysis/report/charts.py:2017`) and whose test compares with the computed value (`tests/test_route_chart.py:586`); `why` is not drawn on any plate | `tests/unit/maps/lettering/test_picks.py::test_the_markers_and_the_home_say_why_in_track_words` and `tests/unit/maps/lettering/test_picks_roads.py::test_a_road_label_says_the_track_was_on_it`, red first; P10.19's greps print nothing (checks 1 and 2) and only the four `route_inks.ride` lines (check 3) | about 45 | none (G-self) | P10.19 | done, P10.19 (`test_picks.py::test_the_markers_and_the_home_say_why_in_track_words`, `test_picks_roads.py::test_a_road_label_says_the_track_was_on_it`) |
+| `p8-run-log.md:138-139` "a run's map" at `maps/layers.py:7` and `:109`, widened to every sport word for a track (later, noted by P8 for P10) | maps, ink | naming or prose | fix | 5 | no | ADR 0027: "pyntpot has no notion of what a track records"; `maps/track.py:9`: "A track has no sport field". At `7902589`: `grep -rnIwE "rides?\|ride's\|ridden\|run's\|riders?\|rider's\|riding\|runners?" src/pyntpot --include=*.py`: 34 lines, 29 to change, the four `route_inks.ride` lines left to `maps-style-route-inks-one-read` and `picks.py:262`'s `Label.why` value left to `maps-lettering-session-and-rider-for-a-track`; `grep -rnIE "a run through\|box a run\|km run\|run past" src/pyntpot --include=*.py`: 4 lines, 3 not in the first; with the three lines a rewrap moves (`candidates/climbs.py:3`, `candidates/landmarks.py:11`, `candidates/places.py:8`), 35 `src` docstring and comment lines in 16 files, not the 2 noted; 14 test lines in `test_layers.py`, `test_picks.py`, `test_picks_roads.py`, `candidates/test_places.py` and `candidates/test_climbs.py`. "session" and the `why` value are not this row | P10.14's greps print only the four `route_inks.ride` lines, `picks.py:262` and the river line of `test_layers.py`; the AST-neutral check | about 50 | none | P10.14 | done, P10.14 (check 1 prints only the five deferred lines; checks 2 and 3a print nothing; AST-neutral 16 files) |
+| `p8-run-log.md:143-145` the out-of-box place filter is untested (later, noted by P8 for P10) | maps | test text | fix | 5 | no | the filter is `maps/layers.py:144-145` in `_place_marks`; `maps/vector_layers.py:204`, `:236` pass places through to it; with the two lines deleted, `uv run pytest -m "not golden"` stays green (part-2 step-3 re-run at `7902589`) | `tests/unit/maps/test_layers.py::test_a_place_off_the_map_is_dropped`, red with the two filter lines deleted | about 10 | none | P10.15 | done, P10.15 (`test_layers.py::test_a_place_off_the_map_is_dropped`, red with the filter deleted) |
+| `ink-pad-lay-half-pixel-shift`: the ink pad's finer grid sits a fraction of a pixel off the plate's (later, found by the plan fix for P10.4c, 2026-10-20) | ink | defect | fix-golden (maintainer, 2026-10-21: Q12 widened for this row; shown before, after and difference comparisons, "Accept it - identical to human eye"; its drift past the 0.005 step bound is the window's one accepted exception, ADR 0025). Before the answer: `defer`, since Q12's yes covered only a row a fix slice's G-self moves | 4 | no | `InkPad.lay` stamps `line * self.ss` in all three of its `stamp` calls (`ink/pad.py`, the profiles, unjoined and chained paths), aligning the grids at their corners, so a mark at `ink_ss` above 1 sits `(1 - 1 / ss) / 2` of a plate pixel up and left. At `cc1b510`: a horizontal `MAJ6-e` route stroke (width 3.0) at `y = 20.0` on a `Sheet(40, 300, gran_px=9.0, seed=11)`, rng seed 91, has its density-weighted mean row at 20.21 with `ink_ss` 1 and 19.88 with `ink_ss` 3; with `(ss - 1) / (2 * ss)` added to the polyline, 20.22. About 13% of `test_pad.py`'s err(1) (P10.4c, *(Evidence.)*) | `tests/unit/ink/test_pad.py::test_a_finer_grid_lays_the_mark_where_the_plate_grid_does`, red first (mean row 19.883 at `ink_ss` 3 against 20.207 at 1, bound 0.1) | about 40 in the step (with the two moved tests), and the regeneration | wash, pen, labels-centreline and map (paper identical, hash and labels equal) | P10.11 (step 1; `p10-golden`, after the `p10-fixes` PR merges) | |
+| `tests-invented-place-name` (later, found by P10.14) | tests | test text | defer | 2 | no | `tests/unit/maps/lettering/test_picks.py:87` and `:92` name a place "Faraway", against `CLAUDE.md`'s real-UK-names rule; "Little Combes" and "Tarns Bridge" (`:83`, `:84`) may be invented too | `grep -n Faraway tests/unit/maps/lettering/test_picks.py` prints nothing | S | none | none (part 2 is not widened for findings outside its rows; filed in `docs/issues/tests-invented-place-name.md`) | |
+| `docs-feature-note-cites-old-smooth-path-name` (later, found by P10.10a) | docs | naming or prose | defer | 2 | no | `docs/features/ink-tip-hold-stroke-ends.md` cites `_smooth_path` twice; P10.10a made it `smooth_path` | `grep -n _smooth_path docs/features/ink-tip-hold-stroke-ends.md` prints nothing | S | none | none (part 2 is not widened for findings outside its rows; filed in `docs/issues/docs-feature-note-cites-old-smooth-path-name.md`) | |
+| `tests-session-wording` (later, found by the P10.19 plan fix) | tests | naming or prose | defer | 2 | no | `tests/unit/maps/test_layers.py:40`, `:92` and `tests/unit/maps/test_track_index.py:32` say "session" | `grep -nw session tests/unit/maps/test_layers.py tests/unit/maps/test_track_index.py` prints nothing | S | none | none (outside the rows P10.14 and P10.19 fixed; filed in `docs/issues/tests-session-wording.md`) | |
 
 Counts at P10.1: 38 rows (30 for the 29 files, `slow-tests-in-mutation-runs` split in two,
 and 8 without a file): `fix` 19, `decide` 12, `defer` 4, `close` 3, `fix-golden` 0.
@@ -73,6 +86,23 @@ and `letters-map-ink-key` rows added): `fix` 27, `decide` 0, `defer` 6, `close` 
 
 Counts after P11: 42 rows (the later `ink-stroke-mark-shares-the-mark-term` row added, filed by
 P11.3): `fix` 28, `decide` 0, `defer` 6, `close` 8, `fix-golden` 0.
+
+Counts after the part-2 plan fix (2026-10-20): 51 rows (P8's five rows, the two P8 notes as
+P10.14 and P10.15, and the later `maps-provider-error-private-beyond-fetch` and
+`maps-lettering-session-and-rider-for-a-track` rows added; P8's hand-off made
+`maps-lettering-label-as-dict-unused` and `maps-style-groups-route-constants-have-no-reader`
+`fix`; the maintainer's answer made `upstream-provider-error-private` `fix`): `fix` 36,
+`decide` 0, `defer` 7, `close` 8, `fix-golden` 0.
+
+Counts after the P10.4c plan fix (2026-10-20): 52 rows (the later `ink-pad-lay-half-pixel-shift`
+row added): `fix` 36, `decide` 0, `defer` 8, `close` 8, `fix-golden` 0.
+
+Counts after the 2026-10-21 plan fix: 54 rows (the later `tests-invented-place-name` and
+`docs-feature-note-cites-old-smooth-path-name` `defer` rows added since; the maintainer's
+answers made `maps-provider-error-private-beyond-fetch` and
+`maps-lettering-session-and-rider-for-a-track` `fix`, P10.18 and P10.19, and
+`ink-pad-lay-half-pixel-shift` `fix-golden`, P10.11): `fix` 38, `decide` 0, `defer` 7,
+`close` 8, `fix-golden` 1.
 
 ## P10.2 answers
 
@@ -94,7 +124,7 @@ and the reading of them, are in `p10-run-log.md`. Each row above was re-triaged 
 | Q9 | `maps-track-index-private-names-imported` | (a) rename all, four slices, pin | as recommended | `fix` (rule 5), P10.10a to P10.10d |
 | Q10 | `maps-lettering-sheet-homonym` | (1) "map", in the issue's scope | "Ensure map and sheet are distinct everywhere. Sheet is a primative concept and map is only for the map implementation side" | `fix` (rule 5), P10.9, widened from the lettering scope to every `src`, test, `GLOSSARY.md` and docs use: "sheet" only for `ink.sheet.Sheet` and its noise fields, "map" for the drawn card on the maps side, "page" for the upstream SVG page stays (125 lines); the identifiers that name the drawn map are the later row `maps-tests-sheet-identifiers-name-the-map` |
 | Q11 | `maps-lettering-spans-place-spans-rung-order` | (2) close | as recommended | `close` (rule 1); issue file deleted |
-| Q12 | second regeneration window, if a row becomes `fix-golden` | yes for a row a fix slice's G-self moves | as recommended | no row is `fix-golden`; P10.11 stays empty unless a fix slice's G-self moves a row |
+| Q12 | second regeneration window, if a row becomes `fix-golden` | yes for a row a fix slice's G-self moves | as recommended | no row is `fix-golden`; P10.11 stays empty unless a fix slice's G-self moves a row. 2026-10-21: the maintainer widened the yes to the later row `ink-pad-lay-half-pixel-shift` ("Accept it - identical to human eye"), so P10.11 runs it |
 | Q13 | `p5-run-log.md:125` the README badge | (1) P7.1 adds it | as recommended | `fix` (rule 5), one line in P7.1's brief; no P10 slice |
 | Q14 | 0.0.1 on PyPI or tag only | (1) tag only | as recommended | no row; P10.R tags only, and the maintainer's tag confirmation states that no pending trusted publisher for `pyntpot` is registered on PyPI (or that the `pypi` environment requires approval) |
 
@@ -125,3 +155,242 @@ the log names is not in this history; its fix is in `91ff457`.
 - `p6-run-log.md:629`: `GLOSSARY.md`'s "darkness grid". Fixed in P6.6 (log line 664); no
   `GLOSSARY.md` line says "darkness grid". The `src` sites the same log lines left are
   the `src-docstrings-use-non-canonical-terms` row.
+
+## Upstream reads (P8, 9139760)
+
+Every pyntpot name, attribute, method and module constant the upstream imports or reads at P8's final commit (`9139760`), one per line with its call site, derived per plan P8.H. Reads of the upstream's own style names are left out and counted under "Left out". The rows `maps-lettering-label-as-dict-unused` and `maps-style-groups-route-constants-have-no-reader` are re-triaged from the answers below.
+
+Files (step 1, `grep -rlnE "routemap|pyntpot" analysis tests --include=*.py`): `analysis/report/__init__.py`, `analysis/report/routemap.py`, `analysis/report/schema.py`, `analysis/report/migrate_cache.py`, `analysis/report/__main__.py`, `analysis/report/style.py`, `analysis/report/charts.py`, `tests/test_route_chart.py`, `tests/offline_map.py`, `tests/test_cli_map.py`, `tests/test_map_parity.py`, `tests/test_routemap.py`, `tests/test_public_pyntpot.py`. Of these, `__init__.py`, `schema.py` and `style.py` mention pyntpot in prose only and read nothing from it.
+
+Conventions: one line per pyntpot name per file. When a file reads the same name at more than one line, the lines are listed together. A name is written as `PyntpotType.member`, using the pyntpot type the value comes from, even when the value arrives through an upstream helper (`routemap.load`, `RouteMap.plates`, `MapSource.cache`, `page_map(...).route_map.lettering` and so on). Calls to imported constructors and functions (`Track(...)`, `fetch(...)`, `paint(...)` and the like) are covered by the Imports list and are not repeated below. Two kinds of read are not pyntpot reads and are left out: upstream's own `MapSource` and `RouteMap` fields, and PIL methods on the `Image` that `compose` returns (`save`, `width`, `height`, `tobytes`).
+
+### Imports
+
+- `analysis/report/routemap.py:42` - `from pyntpot.ink import Canvas`
+- `analysis/report/routemap.py:43` - `from pyntpot.letters import Hand, Mark, NibGroups, NibSurface, Setting, nib_plate`
+- `analysis/report/routemap.py:44` - `from pyntpot.maps import (Annotations, Basemap, Cache, Lettering, OpenTopoData, OverpassFeatures, Plates, Style, Track, VectorLayers, candidate_export, compose, fetch, letter, paint, vector_layers)`
+- `analysis/report/routemap.py:62` - `from pyntpot.maps import FetchError as FetchError`
+- `tests/test_route_chart.py:28` - `from pyntpot.maps import VectorLayers`
+- `tests/offline_map.py:12` - `from pyntpot.maps import Style, Track`
+- `tests/test_cli_map.py:28` - `from pyntpot.maps import OpenTopoData, OverpassFeatures, Track`
+- `tests/test_map_parity.py:26` - `from pyntpot.maps import (Cache, OpenTopoData, OverpassFeatures, Style, Track, compose, fetch, letter, paint)`
+- `tests/test_routemap.py:21` - `from pyntpot.maps import Lettering`
+
+No `import pyntpot` statement exists, and no `from` import names a pyntpot module other than `pyntpot.ink`, `pyntpot.letters` or `pyntpot.maps`.
+
+### Reads, analysis/
+
+- `Track.from_gpx` - `analysis/report/routemap.py:185`
+- `Track.lat` - `analysis/report/routemap.py:189`
+- `Cache.key` - `analysis/report/routemap.py:232`
+- `Cache.features_path` - `analysis/report/routemap.py:239`
+- `Cache.landcover_path` - `analysis/report/routemap.py:240`
+- `Cache.elevation_path` - `analysis/report/routemap.py:241`
+- `Cache.plates_dir` - `analysis/report/routemap.py:248`
+- `Style.default` - `analysis/report/routemap.py:285, 313`
+- `Style.card` - `analysis/report/routemap.py:288`
+- `CardStyle.display_px` (a field named in `dataclasses.replace`) - `analysis/report/routemap.py:288`
+- `Style.face` - `analysis/report/routemap.py:290, 494, 510`
+- `FaceStyle.label_route` (a field named in `dataclasses.replace`) - `analysis/report/routemap.py:290`
+- `Style.model_copy` (inherited from pydantic) - `analysis/report/routemap.py:292, 326`
+- `Style.with_route_ink` (keywords `colour`, `width_px`) - `analysis/report/routemap.py:295`
+- `Style.basemap` - `analysis/report/routemap.py:314`
+- `BasemapStyle` every field name (from `dataclasses.fields`, each matched to `ChartStyle.basemap_<name>`) - `analysis/report/routemap.py:317`
+- `BasemapStyle.pick_landmarks` (a field named in `dataclasses.replace`) - `analysis/report/routemap.py:321`
+- `BasemapStyle.pick_roads` (a field named in `dataclasses.replace`) - `analysis/report/routemap.py:324`
+- `BasemapStyle.pick_places` (a field named in `dataclasses.replace`) - `analysis/report/routemap.py:325`
+- `Annotations.model_validate` (inherited from pydantic) - `analysis/report/routemap.py:333`
+- `Cache.ensure` - `analysis/report/routemap.py:361` (`source.cache.ensure(source.track, source.features, source.elevation, force=True)`, before `fetch`; read from the upstream at `9139760`)
+- `Cache.load_plates` - `analysis/report/routemap.py:371`
+- `Plates.hash` - `analysis/report/routemap.py:372`
+- `Cache.base_key` - `analysis/report/routemap.py:372`
+- `Style.hand` - `analysis/report/routemap.py:494, 510`
+- `Style.nib` - `analysis/report/routemap.py:497, 510`
+- `NibStyle.label_size_px` - `analysis/report/routemap.py:497`
+- `Hand.write` - `analysis/report/routemap.py:502`
+- `Hand.generator` - `analysis/report/routemap.py:502`
+- `Style.brush` - `analysis/report/routemap.py:510`
+- `Style.paper` - `analysis/report/routemap.py:510, 517`
+- `PaperStyle.paper_hex` - `analysis/report/routemap.py:517`
+- `Track` (read as `routemap.Track`) - `analysis/report/migrate_cache.py:63`
+- `Track.from_gpx` - `analysis/report/migrate_cache.py:63`
+- `Cache.features_path` - `analysis/report/migrate_cache.py:69`
+- `Cache.landcover_path` - `analysis/report/migrate_cache.py:69`
+- `Cache.elevation_path` - `analysis/report/migrate_cache.py:69`
+- `Track` (read as `routemap.Track`, used in an annotation and a call) - `analysis/report/__main__.py:76, 84`
+- `Track.from_gpx` - `analysis/report/__main__.py:84`
+- `Track.lat` - `analysis/report/__main__.py:88, 89`
+- `FetchError` (read as `routemap.FetchError`) - `analysis/report/__main__.py:115`
+- `Cache.features_path` - `analysis/report/__main__.py:120`
+- `Cache.landcover_path` - `analysis/report/__main__.py:120`
+- `Cache.elevation_path` - `analysis/report/__main__.py:121`
+- `candidate_export(...)["candidates"]` (through `routemap.candidates`) - `analysis/report/__main__.py:140`
+- `candidate_export(...)["candidates"][*]["x"]` and `["y"]` (removed with `pop`) - `analysis/report/__main__.py:141, 142`
+- `Plates.directory` - `analysis/report/__main__.py:178, 182`
+- `Plates.hash` - `analysis/report/__main__.py:178, 182`
+- `Plates.card` - `analysis/report/__main__.py:181`
+- `Card.display` - `analysis/report/__main__.py:181`
+- `Track` (read as `routemap.Track`, annotation only) - `analysis/report/charts.py:1277`
+- `VectorLayers` (read as `routemap.VectorLayers`, annotation only) - `analysis/report/charts.py:1277, 1407, 1545, 1654, 2214`
+- `Style` (read as `routemap.Style`, annotation only) - `analysis/report/charts.py:2225`
+- `VectorLayers.key` - `analysis/report/charts.py:1437`
+- `VectorLayers.sea` - `analysis/report/charts.py:1459, 1463`
+- `VectorLayers.mapped_sea` - `analysis/report/charts.py:1459`
+- `VectorLayers.park` - `analysis/report/charts.py:1465`
+- `VectorLayers.wood` - `analysis/report/charts.py:1468, 1469, 1471, 1671`
+- `VectorLayers.lakes` - `analysis/report/charts.py:1473`
+- `VectorArea.path` - `analysis/report/charts.py:1459, 1465, 1468, 1469, 1473, 1671`
+- `VectorArea.inner` - `analysis/report/charts.py:1463, 1471`
+- `VectorLayers.river_width_px` - `analysis/report/charts.py:1477`
+- `VectorLayers.rivers` - `analysis/report/charts.py:1478, 1514, 1677`
+- `VectorLayers.contours` - `analysis/report/charts.py:1508, 1666`
+- `VectorLayers.coastline` - `analysis/report/charts.py:1521`
+- `VectorLayers.roads` - `analysis/report/charts.py:1525, 1673`
+- `VectorLayers.hachures` - `analysis/report/charts.py:1503, 1666`
+- `VectorLine.cls` - `analysis/report/charts.py:1479, 1509, 1515, 1526`
+- `VectorLine.path` - `analysis/report/charts.py:1481, 1504, 1510, 1517, 1522, 1527`
+- `VectorLine.weight` - `analysis/report/charts.py:1506`
+- `VectorLayers.hillshade_image` - `analysis/report/charts.py:1487, 1665`
+- `VectorLayers.hillshade_bands` - `analysis/report/charts.py:1498, 1665`
+- `HillshadeBand.sign` - `analysis/report/charts.py:1499`
+- `HillshadeBand.path` - `analysis/report/charts.py:1500`
+- `VectorLayers.trees` - `analysis/report/charts.py:1533, 1534`
+- `VectorLayers.landmarks` - `analysis/report/charts.py:1552, 1680`
+- `VectorLayers.landmarks[*]["x"]` - `analysis/report/charts.py:1553, 1555`
+- `VectorLayers.landmarks[*]["y"]` - `analysis/report/charts.py:1555`
+- `VectorLayers.landmarks[*]["n"]` - `analysis/report/charts.py:1561, 1563, 1564`
+- `VectorLayers.landmarks[*]["cls"]` - `analysis/report/charts.py:1561`
+- `VectorLayers.landmarks[*]["d"]` - `analysis/report/charts.py:1562`
+- `VectorLayers.places` - `analysis/report/charts.py:1569, 1683`
+- `VectorLayers.places[*]["x"]` and `["y"]` - `analysis/report/charts.py:1570`
+- `VectorLayers.places[*]["sym"]` - `analysis/report/charts.py:1573`
+- `VectorLayers.places[*]["n"]` - `analysis/report/charts.py:1577, 1578, 1580`
+- `HillshadeImage.x` - `analysis/report/charts.py:1631`
+- `HillshadeImage.y` - `analysis/report/charts.py:1631`
+- `HillshadeImage.h` - `analysis/report/charts.py:1631, 1633`
+- `HillshadeImage.href` - `analysis/report/charts.py:1632`
+- `HillshadeImage.w` - `analysis/report/charts.py:1633`
+- `Card.mpp_display` (the `Plates.card` value, passed down to `_journal_chevrons`) - `analysis/report/charts.py:1841`
+- `Card.w` - `analysis/report/charts.py:1895, 1896, 1898, 2011, 2140, 2141, 2145, 2147`
+- `Card.h` - `analysis/report/charts.py:1895, 1897, 1898, 2011, 2140, 2141, 2145, 2147`
+- `Lettering.plate_path` - `analysis/report/charts.py:2007, 2010`
+- `Lettering.labels` - `analysis/report/charts.py:2012`
+- `Label.box` - `analysis/report/charts.py:2013`
+- `Label.px` - `analysis/report/charts.py:2013`
+- `Label.py` - `analysis/report/charts.py:2013`
+- `Label.name` - `analysis/report/charts.py:2016`
+- `Label.why` - `analysis/report/charts.py:2017`
+- `Plates.card` - `analysis/report/charts.py:2129`
+- `Plates.strands` - `analysis/report/charts.py:2130`
+- `Track.time` (through `RouteMap.source.track`) - `analysis/report/charts.py:2133`
+- `Plates.paths` - `analysis/report/charts.py:2139`
+- `Plates.paths["paper"]` - `analysis/report/charts.py:2144`
+- `Plates.paths["wash"]` - `analysis/report/charts.py:2146`
+- `Plates.paths["pen"]` (a membership test, then a read) - `analysis/report/charts.py:2151, 2152`
+
+### Reads, tests/
+
+- `Track.lat` - `tests/offline_map.py:54`
+- `Track.lng` - `tests/offline_map.py:54`
+- `Track.time` - `tests/offline_map.py:56, 57`
+- `Cache.directory` - `tests/offline_map.py:90`
+- `Track.bounding_box` - `tests/offline_map.py:91`
+- `Cache.features_path` - `tests/offline_map.py:99`
+- `Cache.landcover_path` - `tests/offline_map.py:100`
+- `Cache.elevation_path` - `tests/offline_map.py:101`
+- `Track.from_gpx` - `tests/test_map_parity.py:67`
+- `Cache.directory` - `tests/test_map_parity.py:71`
+- `Cache.key` - `tests/test_map_parity.py:72`
+- `Cache.features_path` - `tests/test_map_parity.py:73`
+- `Cache.landcover_path` - `tests/test_map_parity.py:74`
+- `Cache.elevation_path` - `tests/test_map_parity.py:75`
+- `Style.default` - `tests/test_map_parity.py:77`
+- `Plates.strands` - `tests/test_routemap.py:80`
+- `Style.route_ink` (pyntpot's, called with no sport) - `tests/test_routemap.py:99`
+- `RouteInk.px` (pyntpot's `RouteInk`) - `tests/test_routemap.py:99`
+- `Style.base_digest` - `tests/test_routemap.py:100`
+- `Style.basemap` - `tests/test_routemap.py:110, 117`
+- `BasemapStyle.roads` - `tests/test_routemap.py:111`
+- `BasemapStyle.landmark_max` - `tests/test_routemap.py:112`
+- `BasemapStyle.hillshade_mode` - `tests/test_routemap.py:113`
+- `BasemapStyle.pick_landmarks` - `tests/test_routemap.py:118`
+- `BasemapStyle.pick_roads` - `tests/test_routemap.py:119`
+- `BasemapStyle.pick_places` - `tests/test_routemap.py:120`
+- `Annotations.landmarks` - `tests/test_routemap.py:127, 128, 129`
+- `Landmark.name` (pyntpot's annotation `Landmark`) - `tests/test_routemap.py:129`
+- `Landmark.lat` (pyntpot's annotation `Landmark`) - `tests/test_routemap.py:129`
+- `Annotations.places` - `tests/test_routemap.py:130`
+- `Annotations.spans` - `tests/test_routemap.py:131`
+- `SpanRequest.name` - `tests/test_routemap.py:131`
+- `VectorLayers.roads` - `tests/test_routemap.py:145`
+- `VectorLine.name` - `tests/test_routemap.py:145`
+- `VectorLayers.bounds` - `tests/test_routemap.py:148`
+- `candidate_export(...)["id"]` (through `routemap.candidates`) - `tests/test_routemap.py:154`
+- `candidate_export(...)["points"]` (through `routemap.candidates`) - `tests/test_routemap.py:155`
+- `Track.lat` - `tests/test_routemap.py:168, 171`
+- `Track.time` - `tests/test_routemap.py:182, 185`
+- `Lettering.plate_path` - `tests/test_routemap.py:208`
+- `Track.from_gpx` - `tests/test_cli_map.py:132`
+- `candidate_export(...)` key set `id`, `points`, `route`, `climbs`, `candidates` (read from the CLI's JSON) - `tests/test_cli_map.py:159`
+- `candidate_export(...)["id"]` (read from the CLI's JSON, where the CLI has overwritten it) - `tests/test_cli_map.py:160`
+- `candidate_export(...)["candidates"]` (read from the CLI's JSON) - `tests/test_cli_map.py:161, 162`
+- `candidate_export(...)["candidates"][*]["name"]` - `tests/test_cli_map.py:161`
+- `candidate_export(...)["candidates"][*]["x"]` and `["y"]` (asserted absent) - `tests/test_cli_map.py:162`
+- `Cache.elevation_path` (through `MapSource.cache`) - `tests/test_cli_map.py:286`
+- `Cache.features_path` (through `MapSource.cache`) - `tests/test_cli_map.py:287`
+- `VectorLayers` (annotation only) - `tests/test_route_chart.py:84`
+- `VectorLayers.bounds` - `tests/test_route_chart.py:114`
+- `VectorLayers.roads` - `tests/test_route_chart.py:217, 222`
+- `VectorLine.name` - `tests/test_route_chart.py:217, 222`
+- `VectorLine.cls` - `tests/test_route_chart.py:222`
+- `Lettering.labels` - `tests/test_route_chart.py:579, 586, 588`
+- `Lettering.plate_path` - `tests/test_route_chart.py:579, 582`
+- `Label.name` - `tests/test_route_chart.py:586`
+- `Label.why` - `tests/test_route_chart.py:586`
+- `Track.time` (through `RouteMap.source.track`) - `tests/test_route_chart.py:663`
+- module `__all__` of `pyntpot`, `pyntpot.ink`, `pyntpot.letters` and `pyntpot.maps` (through `importlib`) - `tests/test_public_pyntpot.py:26`
+
+### Left out (upstream-own names): 70
+
+Each left-out read is one occurrence of a name at one `file:line`. Definitions are not counted.
+
+- `analysis/report/style.py`, 7 reads: `ROUTE_INK` at 65, 67 and 194; `CASING_COLOURS` at 88; `RouteInk` at 250 (annotation) and 262 (constructor); `ROUTE_EFFECT_OFF` at 266.
+- `analysis/report/charts.py`, 34 reads:
+  - imports from `analysis.report.style`: `CASING_COLOURS` at 45, `ROUTE_EFFECT_OFF` at 49, `ROUTE_INK` at 50, `ROUTE_SHADOW` at 51 and `RouteInk` at 53;
+  - its own `__all__` entries for those five names, at 70, 71 (three) and 72;
+  - `RouteInk` annotations at 1880 and 1918;
+  - 13 upstream `RouteInk` attribute reads in `_journal_route_line` and `_journal_route_effects`: `px` at 1889, 1941, 1954 and 1959; `colour` at 1890, 1899, 1914 and 1953; `style` at 1892, 1934 and 1941; `effect` at 1933; and `casing` at 1958;
+  - `ROUTE_SHADOW` at 1968;
+  - 8 upstream `RouteInk` attribute reads in `journal_map`: `style` at 2151; `px` at 2172, 2176, 2184 and 2192; `colour` at 2175, 2183 and 2192.
+- `analysis/report/routemap.py`, 2 reads: upstream `RouteInk.colour` and `.px` from `ChartStyle().route_ink(sport)`, at 295.
+- `tests/test_routemap.py`, 1 read: upstream `ChartStyle().route_ink(<sport>).px` at 99. The pyntpot read on the same line is listed above.
+- `tests/test_route_chart.py`, 26 reads of upstream `RouteInk` attributes (`style`, `px`, `colour`, `effect`, `casing`) on `ChartStyle.route_ink` results, at 417 (three), 418, 419, 420, 422 (three), 429 (three), 430 (six), 431, 432 (three), 433, 434 (two, one of them `.casing`) and 491 (`.casing`).
+
+### Cross-check
+
+The step 4 grep (`grep -rnwE "as_dict|casing|ROUTE_INK|ROUTE_EFFECT_OFF|ROUTE_SHADOW|CASING_COLOURS" analysis tests --include=*.py`) returns 42 hits: 12 in `analysis/report/style.py`, 15 in `analysis/report/charts.py` and 15 in `tests/test_route_chart.py`. None of them is a pyntpot read.
+
+- `analysis/report/style.py:32, 36, 47, 49`: upstream definitions of `ROUTE_INK`, `ROUTE_EFFECT_OFF`, `CASING_COLOURS` and `ROUTE_SHADOW`.
+- `analysis/report/style.py:85`: the definition of upstream `RouteInk.casing`. Lines 56 and 86 are prose in docstrings.
+- `analysis/report/style.py:65, 67, 88, 194, 266`: reads of upstream's own constants.
+- `analysis/report/charts.py:45, 49, 50, 51`: imports from `analysis.report.style`. Lines 70 and 71 are entries in charts' own `__all__`.
+- `analysis/report/charts.py:1958`: `ink.casing`, where `ink` is upstream's `RouteInk` from `ChartStyle.route_ink`.
+- `analysis/report/charts.py:1968`: upstream's `ROUTE_SHADOW`.
+- `analysis/report/charts.py:1936, 1939, 1956`: a local variable named `casing`. Line 1957 is the SVG class string `route-casing`. Lines 1870, 1920 and 1923 are prose in docstrings.
+- `tests/test_route_chart.py:434, 491`: upstream `RouteInk.casing` on `ChartStyle(...).route_ink(...)`.
+- `tests/test_route_chart.py:487, 494, 495, 496`: a local helper function named `casing`.
+- `tests/test_route_chart.py:442, 449, 450, 454, 478, 479, 480, 481, 513`: SVG strings, comments and a docstring.
+- `as_dict`: no hits.
+
+The by-name grep and the call-site lists agree. Neither has a pyntpot read of any of these six names: every hit from the grep is upstream-own, and the call-site walk found no pyntpot read of them.
+
+### Answers
+
+- **Does upstream read pyntpot's `Label.as_dict`? No.** `as_dict` has no hits in `analysis/` or `tests/`. Upstream reads `Label` fields directly: `box`, `px`, `py`, `name` and `why` at `analysis/report/charts.py:2013-2017`, and `name` and `why` at `tests/test_route_chart.py:586`.
+- **Does upstream read pyntpot's `ROUTE_INK`? No.** Every `ROUTE_INK` is upstream's own, from `analysis/report/style.py:32`.
+- **Does upstream read pyntpot's `ROUTE_EFFECT_OFF`? No.** Every one is upstream's own, from `style.py:36`.
+- **Does upstream read pyntpot's `ROUTE_SHADOW`? No.** Every one is upstream's own, from `style.py:49`, and the only read is at `charts.py:1968`.
+- **Does upstream read pyntpot's `RouteInk.casing`? No.** The `.casing` reads at `charts.py:1958`, `tests/test_route_chart.py:434` and `tests/test_route_chart.py:491` are all on upstream's `RouteInk` (`style.py:76`), returned by `ChartStyle.route_ink`. The one read of pyntpot's `RouteInk` is `.px`, at `tests/test_routemap.py:99`.
+- **Does upstream read pyntpot's `CASING_COLOURS`? No.** Every one is upstream's own, from `style.py:47`.
+- **Any D21 breach? None.** Every pyntpot name that upstream imports, or reads as a module attribute through `routemap` (`Track`, `VectorLayers`, `Style`, `FetchError`), is in the `__all__` of `pyntpot.ink`, `pyntpot.letters` or `pyntpot.maps` at v0.0.2. No module outside those is imported.
+- **For information, not a breach:** some attribute reads reach values whose types no `__all__` exports: `Card`, `Label`, `VectorArea`, `VectorLine`, `HillshadeBand`, `HillshadeImage`, `CardStyle`, `BasemapStyle`, pyntpot's `RouteInk`, `Landmark` and `SpanRequest`. (`FaceStyle`, `NibStyle` and `PaperStyle`, also reached by attribute, are exported by `pyntpot.letters` and `pyntpot.ink`.) Upstream never imports any of these types by name. It only reads attributes on values that public functions and fields return.

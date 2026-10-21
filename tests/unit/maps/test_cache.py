@@ -2,10 +2,12 @@
 
 import dataclasses
 from pathlib import Path
+from typing import override
 
 import pytest
 
 from pyntpot.letters.setting import Mark
+from pyntpot.maps import FetchError
 from pyntpot.maps.cache import (
     ELEVATION_SAMPLES,
     KEY_LENGTH,
@@ -14,7 +16,13 @@ from pyntpot.maps.cache import (
     Cache,
 )
 from pyntpot.maps.credit import Credit
-from pyntpot.maps.providers.base import Elevation, ElevationGrid, Features
+from pyntpot.maps.providers.base import (
+    Elevation,
+    ElevationGrid,
+    Features,
+    ProviderBudgetExceededError,
+    ProviderError,
+)
 from pyntpot.maps.providers.opentopodata import OpenTopoData
 from pyntpot.maps.providers.overpass import OverpassFeatures
 from pyntpot.maps.style import Style
@@ -44,6 +52,44 @@ class _OtherElevation(FixtureElevation):
     """The fixture elevation grid under another dataset's id."""
 
     id = "opentopodata-eudem25m"
+
+
+class _FailingFeatures(FixtureFeatures):
+    """The fixture feature payloads, except that one query raises a kept error."""
+
+    def __init__(self, error: ProviderError, failing: str) -> None:
+        """Keep the error and the query, `features` or `landcover`, that raises it."""
+        super().__init__()
+        self._error = error
+        self._failing = failing
+
+    @override
+    def features(self, box: BoundingBox) -> str:
+        """Raise the kept error if this query is the failing one, else answer from the fixture."""
+        if self._failing == "features":
+            raise self._error
+        return super().features(box)
+
+    @override
+    def landcover(self, box: BoundingBox) -> str:
+        """Raise the kept error if this query is the failing one, else answer from the fixture."""
+        if self._failing == "landcover":
+            raise self._error
+        return super().landcover(box)
+
+
+class _FailingElevation(FixtureElevation):
+    """The fixture elevation provider, whose grid raises a kept error."""
+
+    def __init__(self, error: ProviderError) -> None:
+        """Keep the error the grid raises."""
+        super().__init__()
+        self._error = error
+
+    @override
+    def grid(self, box: BoundingBox, n: int) -> ElevationGrid:
+        """Raise the kept error instead of answering."""
+        raise self._error
 
 
 class _Recorder:
@@ -281,6 +327,37 @@ class TestEnsure:
             "landcover": ("features",),
             "elevation": ("features", "landcover"),
         }
+
+    @pytest.mark.parametrize(
+        ("failing", "error"),
+        [
+            ("features", ProviderError("every Overpass endpoint refused the query")),
+            (
+                "landcover",
+                ProviderBudgetExceededError("overpass: the budget of 100 queries is spent"),
+            ),
+            ("grid", ProviderError("opentopodata-srtm30m said 'INVALID_REQUEST'")),
+            (
+                "grid",
+                ProviderBudgetExceededError(
+                    "opentopodata-srtm30m: the budget of 1000 calls is spent"
+                ),
+            ),
+        ],
+        ids=["features-refused", "landcover-budget-spent", "grid-refused", "grid-budget-spent"],
+    )
+    def test_a_provider_that_cannot_answer_raises_fetch_error(
+        self, track: Track, tmp_path: Path, failing: str, error: ProviderError
+    ) -> None:
+        """A provider that cannot answer makes `ensure` raise `FetchError` from the provider's error."""
+        features: Features = (
+            FixtureFeatures() if failing == "grid" else _FailingFeatures(error, failing)
+        )
+        elevation: Elevation = _FailingElevation(error) if failing == "grid" else FixtureElevation()
+        with pytest.raises(FetchError) as caught:
+            Cache(tmp_path).ensure(track, features, elevation, force=True)
+        assert caught.value.__cause__ is error
+        assert str(error) in str(caught.value)
 
 
 def test_a_base_plate_style_change_changes_the_base_key_and_the_lettering_key():

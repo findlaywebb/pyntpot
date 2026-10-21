@@ -22,11 +22,11 @@ from pyntpot.maps.lettering.label import Measure, Span
 from pyntpot.maps.lettering.span_clear import (
     SPAN_ALONG_MAX_BEARING_DEG,
     SPAN_CLEAR_CAPS,
-    _route_near,
+    route_near,
 )
-from pyntpot.maps.lettering.span_ends import _span_label, _span_ticks
-from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, _resample, span_line
-from pyntpot.maps.lettering.span_sides import _curved_side, _freer_side
+from pyntpot.maps.lettering.span_ends import span_label, span_ticks
+from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, resample, span_line
+from pyntpot.maps.lettering.span_sides import curved_side, freer_side
 
 log = logging.getLogger(__name__)
 
@@ -152,9 +152,9 @@ def place_spans(
     """Choose a side and a rung for every span, and draw its mark.
 
     The ground takes the side of the route with more free paper over its own
-    extent; the session takes the other, so the two never interleave. Where the
+    extent; the track takes the other, so the two never interleave. Where the
     stretch bends, the outside of the bend takes that choice off the free side
-    unless the free side is clearly freer: see `_curved_side`. Within a side
+    unless the free side is clearly freer: see `curved_side`. Within a side
     the spans are taken longest first: the first takes the rung nearest the
     route, and a later span moves out one rung past every span on that side it
     overlaps.
@@ -184,9 +184,9 @@ def place_spans(
     placed: list[Span] = []
     used: dict[int, list[tuple[int, int, int]]] = {1: [], -1: []}
     for span in spans:
-        free, margin = _freer_side(span, route_px, around.dark, around.card, cap_px)
+        free, margin = freer_side(span, route_px, around.dark, around.card, cap_px)
         base = free if span.ground else -free
-        span.side = _curved_side(span, route_px, base, margin, cap_px)
+        span.side = curved_side(span, route_px, base, margin, cap_px)
         # The side is settled before the rung, because the rung is what nests
         # one span inside another on a side and a span that moves afterwards
         # would nest against a side it is no longer on. The mark that settles
@@ -226,8 +226,8 @@ def place_spans(
             # road the reader is looking at, which is the route rule.
             log.info("span %r is not drawn: no mark clears the route", span.name)
             continue
-        span.ticks = _span_ticks(span, route_px, cap_px)
-        span.label = _span_label(span, route_px, cap_px, measure_fn, along_max_deg)
+        span.ticks = span_ticks(span, route_px, cap_px)
+        span.label = span_label(span, route_px, cap_px, measure_fn, along_max_deg)
         used[span.side].append((span.i0, span.i1, rank))
         placed.append(span)
     return placed
@@ -332,8 +332,8 @@ def _on_line_cost(line: list[Pt], lines: list[list[Pt]] | None, cap_px: float) -
     if run <= 0.0:
         return 0.0
     reach = cap_px * SPAN_LINE_REACH_CAPS
-    pts = _resample(line, max(run / 60.0, 1.0))
-    near = [_route_near(line, other, reach) for other in lines]
+    pts = resample(line, max(run / 60.0, 1.0))
+    near = [route_near(line, other, reach) for other in lines]
     near = [other for other in near if len(other) > 1]
     if not near:
         return 0.0
@@ -354,7 +354,7 @@ def _feature_cost(line: list[Pt], avoid: list[tuple[float, float, float, float]]
     run = length(line)
     if run <= 0.0:
         return 0.0
-    pts = _resample(line, max(run / 60.0, 1.0))
+    pts = resample(line, max(run / 60.0, 1.0))
     cost = 0.0
     for x, y, weight, radius in avoid:
         if radius <= 0.0:

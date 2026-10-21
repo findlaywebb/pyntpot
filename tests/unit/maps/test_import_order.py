@@ -1,9 +1,12 @@
 """The import rule between the layered packages, and the cold import of every module.
 
 `ink` never imports `letters` or `maps`; `letters` imports only `ink` from the
-package. The checks read the AST of `src/pyntpot`, counting direct imports only; the
-cold-import test proves the chains. import-linter's layers contract enforces the same
-direction over the whole graph.
+package. No module reaches into another module's underscore names: a name another
+module imports carries no underscore, checked per defining area (such a name is
+module-level, not public API, which is only what an `__all__` lists). The checks read
+the AST of `src/pyntpot`, counting direct imports only; the cold-import test proves the
+chains. import-linter's layers contract enforces the same direction over the whole
+graph.
 """
 
 import ast
@@ -202,3 +205,79 @@ def test_ink_imports_no_other_layer() -> None:
 def test_letters_imports_only_ink() -> None:
     """No `letters` module imports anything from `pyntpot` but `ink` and itself."""
     assert _violations("letters", ("pyntpot.ink", "pyntpot.letters")) == []
+
+
+#: The defining areas the private-name rule covers, one per renaming slice.
+PRIVATE_NAME_AREAS: tuple[str, ...] = ("ink", "letters", "maps", "maps.lettering")
+
+
+def _area(module: str) -> str:
+    """Return the defining area of a module: `ink`, `letters`, `maps.lettering` or `maps`."""
+    for area in ("ink", "letters", "maps.lettering"):
+        if _under(module, f"pyntpot.{area}"):
+            return area
+    return "maps" if _under(module, "pyntpot.maps") else ""
+
+
+def _is_private(name: str) -> bool:
+    """Return whether a name is an underscore name, dunders excepted."""
+    return name.startswith("_") and not (name.startswith("__") and name.endswith("__"))
+
+
+def _dotted(node: ast.expr) -> str:
+    """Return the dotted name an attribute chain spells, or an empty string."""
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        head = _dotted(node.value)
+        return f"{head}.{node.attr}" if head else ""
+    return ""
+
+
+def _from_imports(
+    module: str, path: Path, tree: ast.Module, known: set[str]
+) -> tuple[dict[str, str], list[tuple[str, str]]]:
+    """Return the modules each local name is bound to, and the underscore names imported."""
+    bound: dict[str, str] = {}
+    found: list[tuple[str, str]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                local = alias.asname or alias.name.partition(".")[0]
+                bound[local] = alias.name if alias.asname else local
+        elif isinstance(node, ast.ImportFrom):
+            base = _base(node, module, path)
+            for alias in node.names:
+                if f"{base}.{alias.name}" in known:
+                    bound[alias.asname or alias.name] = f"{base}.{alias.name}"
+                elif _is_private(alias.name) and base in known and base != module:
+                    found.append((base, alias.name))
+    return bound, found
+
+
+def _private_reaches(module: str, path: Path, known: set[str]) -> list[tuple[str, str]]:
+    """Return (defining module, name) for every underscore name a module takes from another."""
+    tree = ast.parse(path.read_text(), filename=str(path))
+    bound, found = _from_imports(module, path, tree, known)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute) and _is_private(node.attr):
+            head, _, rest = _dotted(node.value).partition(".")
+            owner = ".".join(filter(None, (bound.get(head, ""), rest)))
+            if head in bound and owner in known and owner != module:
+                found.append((owner, node.attr))
+    return found
+
+
+@pytest.mark.parametrize("area", PRIVATE_NAME_AREAS, ids=PRIVATE_NAME_AREAS)
+def test_no_module_imports_another_modules_private_name(area: str) -> None:
+    """No module reaches into another module's underscore names."""
+    files = sorted(p for p in PACKAGE.rglob("*.py") if "__pycache__" not in p.parts)
+    modules = {_module_name(path): path for path in files}
+    known = set(modules)
+    reaches = [
+        f"{module}: {owner}.{name}"
+        for module, path in modules.items()
+        for owner, name in _private_reaches(module, path, known)
+        if _area(owner) == area
+    ]
+    assert sorted(reaches) == []

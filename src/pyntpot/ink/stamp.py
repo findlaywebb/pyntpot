@@ -20,8 +20,8 @@ import numpy as np
 from pyntpot.ink.brush import Brush
 from pyntpot.ink.deposit import channels, deposit, pool, weights
 from pyntpot.ink.noise import F32
-from pyntpot.ink.stroke import Lay, Mark, Sampled, Tip, Trace
-from pyntpot.ink.tip import _fbm1, _smooth_path, _spread, _tip_band, _tip_drift, _unfold
+from pyntpot.ink.stroke import Lay, Sampled, StrokeProfile, Tip, Trace
+from pyntpot.ink.tip import fbm1, smooth_path, spread, tip_band, tip_drift, unfold
 
 #: Shortest path, in render pixels, that is worth a stamp.
 _MIN_PATH_PX = 2.5
@@ -50,7 +50,7 @@ def _trace(pts: np.ndarray, b: Brush) -> Trace | None:
     y = np.interp(t, cum, pts[:, 1]).astype(F32)
     if b.smooth > 0:
         # Before the tangent, because the fold at a cusp is in the normal.
-        x, y = _smooth_path(x, y, b.smooth, total / max(n - 1, 1))
+        x, y = smooth_path(x, y, b.smooth, total / max(n - 1, 1))
     tx = np.gradient(x)
     ty = np.gradient(y)
     ln = np.hypot(tx, ty)
@@ -64,7 +64,7 @@ def _pressure(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> np.nd
     t = tr.t
     if b.organic:
         # The sine pressure comes back every 2 pi press cells; the lattice does not.
-        press = 1.0 + b.press * _fbm1(t, _TAU * b.press_cell * b.org_mult, b, rng)[:, 0]
+        press = 1.0 + b.press * fbm1(t, _TAU * b.press_cell * b.org_mult, b, rng)[:, 0]
     else:
         press = 1.0 + b.press * (
             np.sin(ph + t / b.press_cell) * 0.6 + np.sin(ph * 1.7 + t / (b.press_cell * 0.36)) * 0.4
@@ -79,7 +79,7 @@ def _pressure(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> np.nd
     return press * ends * (1.0 + b.load * np.exp(-t / load_px))
 
 
-def _width(tr: Trace, b: Brush, press: np.ndarray, wprof: np.ndarray | None) -> Mark:
+def _width(tr: Trace, b: Brush, press: np.ndarray, wprof: np.ndarray | None) -> StrokeProfile:
     """The mark's width along the stroke, from pressure, a width profile and a nib's run."""
     width = b.width * (0.62 + 0.38 * press)
     if wprof is not None and len(wprof) > 1:
@@ -95,7 +95,7 @@ def _width(tr: Trace, b: Brush, press: np.ndarray, wprof: np.ndarray | None) -> 
         spent = 1.0 - np.exp(-np.mod(np.cumsum(press) * b.step, b.dip_px) / b.run_px)
         nib = (1.0 - b.pen_thin * spent).astype(F32)
         width = width * nib
-    return Mark(press, width, spent)
+    return StrokeProfile(press, width, spent)
 
 
 def _wobble(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> Trace:
@@ -104,7 +104,7 @@ def _wobble(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> Trace:
     if b.organic:
         # The sine wander comes back every 210 render pixels at the default step,
         # which on a road drawn end to end is the thing the eye picks out first.
-        wob = b.wobble * _fbm1(t, _TAU * 33.45 * b.unit * b.org_mult, b, rng)[:, 0]
+        wob = b.wobble * fbm1(t, _TAU * 33.45 * b.unit * b.org_mult, b, rng)[:, 0]
     else:
         wob = b.wobble * (
             np.sin(ph * 2.3 + t / (46.0 * b.step / 0.55)) * 0.6
@@ -128,7 +128,7 @@ def _draw_tip(t: np.ndarray, b: Brush, rng: np.random.Generator) -> Tip:
     )
     tex = b.texture
     bw_log = (rng.random(m) * 0.55 + 0.62) * keep * ((1.0 - tex) + tex * clump)
-    drift_log = _tip_drift(m, b, rng)
+    drift_log = tip_drift(m, b, rng)
     fp_log = rng.random(m) * _TAU
     fq_log = rng.random(m) * 0.6 + 0.7
     # Each bristle sets off with its own load, and the fat ones carry more, so
@@ -151,7 +151,7 @@ def _organic_fields(
     against each other into a long repeat. Drawn per logical bristle and
     spread across the tip by the caller.
     """
-    jit_log = _fbm1(t, _TAU * 62.0 * b.unit * b.org_mult, b, rng, m)
+    jit_log = fbm1(t, _TAU * 62.0 * b.unit * b.org_mult, b, rng, m)
     if b.coherence > 0:
         # The same sharing as the sine's phases, and for the same reason:
         # each bristle's drift is its own field, and neighbours can be driven
@@ -159,9 +159,9 @@ def _organic_fields(
         # smoothing independent fields together flattens them and the point
         # is who drifts with whom, not how far.
         was = float(jit_log.std())
-        jit_log = _tip_band(jit_log, b.coherence * m)
+        jit_log = tip_band(jit_log, b.coherence * m)
         jit_log = jit_log * F32(was / max(float(jit_log.std()), 1e-6))
-    along_log = _fbm1(t, _TAU * 24.0 * b.unit * b.org_mult, b, rng, m)
+    along_log = fbm1(t, _TAU * 24.0 * b.unit * b.org_mult, b, rng, m)
     return jit_log, along_log
 
 
@@ -194,10 +194,10 @@ def _sample_tip(tip: Tip, b: Brush, width: np.ndarray) -> Sampled:
     return Sampled(m_hi, u, bw, dc, ds, fp, fq, res0, prof, mean_w)
 
 
-def _offsets(tr: Trace, ink: Mark, tip: Tip, smp: Sampled, b: Brush) -> np.ndarray:
+def _offsets(tr: Trace, ink: StrokeProfile, tip: Tip, smp: Sampled, b: Brush) -> np.ndarray:
     """Where each sample across the tip sits, sideways of the path, at every stamp."""
     if tip.jit_log is not None:
-        jitter = b.jitter * _spread(tip.jit_log, tip.u_log, smp.u)
+        jitter = b.jitter * spread(tip.jit_log, tip.u_log, smp.u)
     else:
         # The sine drift, written as a quadrature pair so the phase can be
         # shared across the tip: `dc` and `ds` are the cosine and sine of one
@@ -210,7 +210,7 @@ def _offsets(tr: Trace, ink: Mark, tip: Tip, smp: Sampled, b: Brush) -> np.ndarr
     base = smp.u[None, :] * ink.width[:, None] * F32(0.5)
     off = base + jitter
     if b.coherence > 0:
-        off = _unfold(off, base, jitter)
+        off = unfold(off, base, jitter)
     return off
 
 
@@ -222,7 +222,7 @@ def _lanes(tr: Trace, tip: Tip, smp: Sampled, b: Brush) -> np.ndarray:
     everything that varies across the mark apart from its own shape.
     """
     if tip.along_log is not None:
-        along = 0.5 + 0.5 * _spread(tip.along_log, tip.u_log, smp.u)
+        along = 0.5 + 0.5 * spread(tip.along_log, tip.u_log, smp.u)
     else:
         along = 0.5 + 0.5 * np.sin(
             smp.fp[None, :] + tr.t[:, None] * smp.fq[None, :] / (24.0 * b.unit)
@@ -236,7 +236,7 @@ def _lanes(tr: Trace, tip: Tip, smp: Sampled, b: Brush) -> np.ndarray:
         # dropped lanes and the break texture are all bandlimited together. The
         # stroke's own length is untouched, and so are the deposit positions:
         # the mark keeps its width and its edge.
-        lane = _tip_band(lane, b.band_px * b.unit * smp.m_hi / smp.mean_w)
+        lane = tip_band(lane, b.band_px * b.unit * smp.m_hi / smp.mean_w)
     if b.contrast != 1.0:
         # How hard the lanes are, about the tip's own mean, so the knob moves
         # the streaking and not the mark's profile or how much ink it carries.

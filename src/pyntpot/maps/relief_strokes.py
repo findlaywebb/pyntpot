@@ -99,7 +99,7 @@ class Field:
         return (-gx, -gy), math.hypot(gx, gy)
 
 
-def _jitter(i: int, j: int, salt: int = 0) -> tuple[float, float]:
+def jitter(i: int, j: int, salt: int = 0) -> tuple[float, float]:
     """Two repeatable pseudo-random numbers in [-0.5, 0.5) for one grid cell.
 
     Repeatable matters: a hachure field that moved every time the page was
@@ -151,7 +151,7 @@ def _stroke_at(
     """The weight and line of the hachure seeded in one cell, or None for none."""
     xmin, ymin, xmax, ymax = clip
     spacing_m = hatching.spacing_m
-    jx, jy = _jitter(i, j)
+    jx, jy = jitter(i, j)
     x = xmin + (i + 0.5 + jx * 0.8) * spacing_m
     y = ymin + (j + 0.5 + jy * 0.8) * spacing_m
     if not (xmin <= x <= xmax and ymin <= y <= ymax):
@@ -239,7 +239,7 @@ def wave_strokes(
     rows = int((ymax - ymin) / spacing_m) + 1
     for j in range(rows):
         for i in range(cols):
-            jx, jy = _jitter(i, j, salt=7)
+            jx, jy = jitter(i, j, salt=7)
             x = xmin + (i + 0.5 + jx) * spacing_m
             y = ymin + (j + 0.5 + jy) * spacing_m
             if not (xmin <= x <= xmax and ymin <= y <= ymax):

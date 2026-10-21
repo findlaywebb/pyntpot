@@ -32,9 +32,8 @@ def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list
 
     A landmark with its own latitude and longitude is placed there. One that is
     only a name, or has no position, is looked up by name in the basemap's
-    candidates and dropped when none matches. The list stops once a landmark
-    with its own fields brings it to `cap`; a name-only landmark is never
-    counted against `cap`.
+    candidates and dropped when none matches. The list stops once it holds
+    `cap` landmarks.
     """
     wanted = list(getattr(picks, "landmarks", None) or [])
     if not wanted:
@@ -42,6 +41,8 @@ def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list
     by_name = {c["name"]: c for c in basemap.candidates}
     out: list[dict[str, Any]] = []
     for entry in wanted:
+        if len(out) >= cap:
+            break
         if isinstance(entry, str):
             found = by_name.get(entry)
             if not found:
@@ -71,8 +72,6 @@ def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list
         else:
             item["lat"], item["lng"] = float(lat), float(lng)
         out.append(item)
-        if len(out) >= cap:
-            break
     return out
 
 
@@ -176,7 +175,7 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
     """Where the track set off and where it finished, in the route's own ink.
 
     The ground is drawn in the map's ink and the track in the route's, and
-    these two are the track: they are facts about the ride, not about the
+    these two are the track: they are facts about the track, not about the
     place. A loop puts them on top of each other, so it gets one mark.
     """
     if len(route_px) < MIN_ROUTE_POINTS:
@@ -187,7 +186,7 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
             Label(
                 name="start",
                 kind="marker",
-                why="where the session began",
+                why="where the track began",
                 px=start[0],
                 py=start[1],
                 tier=TIER_MARKER,
@@ -198,7 +197,7 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
         Label(
             name="start",
             kind="marker",
-            why="where the session began",
+            why="where the track began",
             px=start[0],
             py=start[1],
             tier=TIER_MARKER,
@@ -207,7 +206,7 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
         Label(
             name="finish",
             kind="marker",
-            why="where the session ended",
+            why="where the track ended",
             px=end[0],
             py=end[1],
             tier=TIER_MARKER,
@@ -259,7 +258,7 @@ def home_labels(
             Label(
                 name=name,
                 kind="home",
-                why="the rider's own place",
+                why="home",
                 px=x,
                 py=y,
                 tier=TIER_PLACE,

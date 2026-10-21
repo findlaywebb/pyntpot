@@ -5,7 +5,8 @@ is handed and builds the track's `Basemap` from the cached payloads; `paint`,
 which paints a basemap's plates into a directory, or hands back the plates
 already there when their manifest carries the current hash; `compose`, which
 lays the painted plates, the route and the label plate into one raster card;
-`FetchError`, raised when the cached features are gone once the fetch has run.
+`FetchError` (from `maps.cache`), raised when a provider cannot answer or the cached features are gone
+once the fetch has run.
 The stage between `paint` and `compose` is `maps.lettering.pipeline.letter`.
 
 `fetch` takes the style, because the card, the ribbon and the watercourse widths
@@ -26,6 +27,7 @@ resolves no path against the working directory: the cache and the plates
 directory are always arguments.
 
 Invariants: `fetch` calls a provider only for a payload missing from the cache;
+a `ProviderError` from either provider reaches `fetch`'s caller as `FetchError`;
 `paint` writes nothing when the plates in its directory carry the hash of the
 basemap and the style's base groups, and every plate they name is on disk; the
 returned `Plates.route_px` and `Plates.strands` each have one point per point
@@ -42,8 +44,8 @@ from PIL import Image
 
 from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
-from pyntpot.maps.cache import Cache
-from pyntpot.maps.compose import _paste_labels, _plates, _route
+from pyntpot.maps.cache import Cache, FetchError
+from pyntpot.maps.compose import painted_map, paste_labels, route
 from pyntpot.maps.layers import BasemapInputs, build_basemap
 from pyntpot.maps.lettering.pipeline import Lettering
 from pyntpot.maps.painter.plates import paint_plates
@@ -54,10 +56,6 @@ from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 
 log = logging.getLogger(__name__)
-
-
-class FetchError(RuntimeError):
-    """The cached features for a track were missing once the fetch had run."""
 
 
 def fetch(
@@ -84,8 +82,10 @@ def fetch(
         The basemap, carrying the track's times and both providers' credits.
 
     Raises:
-        FetchError: When the features payload is missing after the fetch, as
-            when the cache directory was changed underneath it.
+        FetchError: When a provider cannot answer, a budget refusal included,
+            raised from the provider's error; or when the features payload is
+            missing after the fetch, as when the cache directory was changed
+            underneath it.
     """
     key = cache.ensure(track, features, elevation)
     inputs = BasemapInputs(key, track, cache, [dict(place) for place in places])
@@ -156,13 +156,13 @@ def compose(
     Returns:
         The card, at the size of the paper plate.
     """
-    card = _plates(plates)
+    card = painted_map(plates)
     k = card.width / max(plates.card.display[0], 1)
-    _route(card, plates, list(plates.strands), style.route_ink(), k)
+    route(card, plates, list(plates.strands), style.route_ink(), k)
     if lettering.plate_path is None:
         log.info("no label plate for %s, the card has no lettering", plates.directory)
     else:
-        _paste_labels(card, lettering.plate_path)
+        paste_labels(card, lettering.plate_path)
     if attribution:
         draw_attribution(card, attribution_text(basemap.credits), style)
     return card

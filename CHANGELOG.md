@@ -5,6 +5,33 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `pyntpot.maps.ProviderError` and `pyntpot.maps.ProviderBudgetExceededError`, the
+  errors the shipped providers raise when they cannot answer or their budget is spent
+  (ADR 0029).
+
+### Changed
+
+- `pyntpot.maps.fetch` raises `FetchError` when a provider cannot answer, with the
+  provider's error as its cause (ADR 0028); it let the private `ProviderError` through
+  before.
+- `Cache.ensure` raises `FetchError` when a provider cannot answer, with the provider's
+  error as its cause (ADR 0029), as `fetch` does.
+- The reasons the start, finish, home and road labels carry in `Lettering.labels`
+  (`Label.why`, which a caller may show as a tooltip) say track, not session or rider:
+  "where the track began", "where the track ended", "home" and "road the track was on".
+
+### Fixed
+
+- A stroke that reaches or crosses the card's edge no longer piles its off-card ink
+  onto the edge pixels (`ink.deposit`).
+- Name-only landmarks beyond the cap are dropped, and a cap of 0 picks none
+  (`journal_picks`).
+- Span labels go on the side with more free paper for the ground span, and the other
+  span on the opposite side; the side sign was reversed.
+- A river or stream tagged `tunnel=no` is drawn instead of dropped.
+
 ## [0.0.2] - 2026-10-09
 
 A second pre-release candidate for the upstream consumer's migration: the candidate export, the vector layers and a fed route ink become public (ADR 0027). Not for general use; 0.1.0 is the first release.

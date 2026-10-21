@@ -4,7 +4,9 @@ Key types: `Features`, a source of OpenStreetMap feature and land cover payloads
 bounding box; `Elevation`, a source of elevation grids; `ElevationGrid`, an `n` by `n`
 lattice of elevations over a box; `ProviderError`, raised when a provider cannot answer;
 and `ProviderBudgetExceededError`, raised before the call that would pass a provider's
-usage budget.
+usage budget. Both errors are public, as `pyntpot.maps.ProviderError` and
+`pyntpot.maps.ProviderBudgetExceededError`; `Cache.ensure`, and so `fetch`, raises
+`FetchError` from them.
 
 The two protocols are the package's only protocols. A provider carries a stable `id`,
 which the fetch cache keys on, and the `Credit` its data is owed. This module fetches

@@ -146,16 +146,32 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 
 Order: after P10 part 2 (maintainer, 2026-10-07). P7.1 to P7.3, then P7.4 tags 0.1.0, a release candidate; later issues are fixed in 0.1.x patch releases. Depends on P11: P7.2, and ideally P7.1's quick start, run after it (plan.md, P11, "Order").
 
-- [ ] P7.1 README with gallery images
+- [ ] P7.1 README with gallery images, and the CodSpeed badge (Q13 (1), row `p5-run-log.md:125`)
 - [ ] P7.2 Tutorial, how-to guides, reference and explanation pages
 - [ ] P7.3 ADRs 0013 to 0021 for the settled decisions
 - [ ] P7.4 Changelog 0.1.0, trusted publisher, confirm, tag and publish
 
 ## P8. Upstream migration
 
-Order: after P10 part 1, P11 and P10.R; the upstream consumes the `v0.0.1` tag, made after P11 merges. At the hand-off the orchestrating session records "what upstream reads" in `p10-triage.md`; P10 part 2 follows.
+Order: after P10 part 1, P11 and P10.R. P8.P widens pyntpot's public API on its own branch `p8-promote` (one PR to `main`, held for the maintainer), then `v0.0.2` is tagged and `main` is merged into `p10-fixes`; the upstream consumes `v0.0.2` on its branch `p8-pyntpot-migration`, one PR held for the maintainer. Each slice runs in its own detached worktree (plan.md, P8, "Order and parallelism"); ticks land in the run-log commit that records each landing. At the hand-off the orchestrating session records "what upstream reads" in `p10-triage.md`; P10 part 2 follows.
 
-- [ ] P8.1 The upstream consumer migrates to the public API, with the recorded render hash reproduced first
+- [x] P8.0 Fatten P8 into slices; plan-reviewer pass (rounds 1 and 2 BLOCK, round 3 PASS; revised after the P8.Q answers)
+- [x] P8.Q Maintainer's answers, recorded in `p8-run-log.md`: accept ADR 0006 and re-pin to pyntpot's render; promote the three gaps in pyntpot now, generic; pin `v0.0.2`
+- [x] P8.P1 ADR 0027: the candidate export, the vector layers and a fed route ink (sequential)
+- [x] P8.P2a Promote the candidate export as `candidate_export(track, cache, key)` (pyntpot parallel group)
+- [x] P8.P2b Promote the vector layers as `vector_layers(track, cache, key, style, places=(), *, origin=None)` and `VectorLayers` (pyntpot parallel group)
+- [x] P8.P2c Feed the route ink: `Style.with_route_ink` (pyntpot parallel group)
+- [x] P8.P3 Version 0.0.2, the PR held for the maintainer's merge, the `v0.0.2` tag, `main` merged into `p10-fixes` (sequential)
+- [x] P8.1 Python 3.13 and the pyntpot 0.0.2 dependency (sequential, after the tag)
+- [x] P8.2 The reference render through pyntpot: `0dfffcca...` pinned (sequential; a mismatch stops the run)
+- [x] P8.3a The seam module, the offline test helper and the public-import test (upstream group 1)
+- [x] P8.3b The page's SVG text helpers leave the lettering module (upstream group 1)
+- [x] P8.4 The command line on pyntpot, and the cache migration (after P8.3a)
+- [x] P8.5a The route chart's vector washes on pyntpot's vector layers (after P8.3a and P8.3b)
+- [x] P8.5b The page's painted map on Basemap, Plates and Lettering, loaded once (after P8.5a and P8.4)
+- [x] P8.6 Documents (upstream group 1)
+- [x] P8.7 Delete the old engine and its tests (after P8.2 green, P8.4, P8.5b and P8.6)
+- [x] P8.H Hand-off on the commit after the pre-merge `origin/main` merge: "what upstream reads" recorded in `p10-triage.md`; the two rows re-triaged
 
 ## P9. Post-port cleanup
 
@@ -168,7 +184,7 @@ Order: after P7.4, P8, P10 (both parts) and P11.
 
 ## P10. Triage and address the port's issues
 
-Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach) on `p10-triage`, one PR; then P11, which starts only after part 1 has landed on `main`; then P10.R tags 0.0.1 (own `release-0.0.1` branch and PR, after P11 merges); then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the private-name renames, the golden group) on `p10-fixes`, branched from `main` at the tag or later (and `p10-golden`); then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
+Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach, the later slices P10.12 and P10.13 among them) on `p10-triage`, one PR; then P11, which starts only after part 1 has landed on `main`; then P10.R tags 0.0.1 (own `release-0.0.1` branch and PR, after P11 merges); then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the later slices P10.14, P10.15, P10.16 and P10.17, the private-name renames, then the later slices P10.18 and P10.19, in that order, before the `p10-fixes` PR merges) on `p10-fixes`, branched from `main` at the tag or later; then the golden group P10.11 on `p10-golden`, from `main` after that merge; then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
 
 - [x] P10.0 Fatten P10 into slices; plan-reviewer pass
 - [x] P10.1 Triage table `specs/001-port/p10-triage.md`: one row and one outcome per issue; dispatch the Mutation workflow once on `main`
@@ -190,19 +206,25 @@ Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P
 
 ### Release
 
-- [ ] P10.R Tag 0.0.1 after P11 merges: version and changelog on `release-0.0.1`, `v0.0.1` pushed after the maintainer confirms (PyPI only if Q14 (2)); ticked by the tag record on `p10-fixes`
+- [x] P10.R Tag 0.0.1 after P11 merges: version and changelog on `release-0.0.1`, `v0.0.1` pushed after the maintainer confirms (PyPI only if Q14 (2)); ticked by the tag record on `p10-fixes`
 
 ### Part 2 (after P8 and its "what upstream reads" record)
 
-- [ ] P10.4c The deposit drops corners off the accumulator
+- [x] P10.4c The deposit drops corners off the accumulator
 - [ ] ~~P10.5b Route-ink names follow the route ink (if Q5 (2); ADR 0024); a missing glyph advances as the face's space (if Q3 (2))~~ Not run: Q5 and Q3 were answered (1), so both members are closed (P10.2)
-- [ ] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict` (by the upstream-read record); ~~rung order if Q11 (1)~~ (removed: Q11 answered (2), row closed)
-- [ ] P10.7 Other maps: `tunnel=no`; route constants if Q8 (a), by the upstream-read record
-- [ ] P10.10a Public names for what other modules import: `ink` (if Q9 (a))
-- [ ] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
-- [ ] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))
-- [ ] P10.10d Public names for what other modules import: `maps.lettering` (if Q9 (a))
-- [ ] P10.11 Golden group, one regeneration window; ADR 0025 (if a row is `fix-golden` and Q12 yes). Empty after P10.2 (Q4 and Q6 closed): runs only if a fix slice's G-self moves a row
+- [x] P10.6 Maps lettering: landmark cap, span side sign, `Label.as_dict` (by the upstream-read record); ~~rung order if Q11 (1)~~ (removed: Q11 answered (2), row closed)
+- [x] P10.7 Other maps: `tunnel=no`; route constants if Q8 (a), by the upstream-read record
+- [x] P10.14 Say track and box, not run and ride, in docstrings and comments (later issue; part 2, after P10.6 and P10.7)
+- [x] P10.15 Pin that a place off the map is dropped (later issue; part 2, after P10.7 and P10.14)
+- [x] P10.16 `fetch` raises `FetchError` when a provider cannot answer (later issue; part 2, parallel, before P10.10c; ADR 0028)
+- [x] P10.17 The ink stroke's Mark becomes StrokeProfile (later issue; part 2, beside P10.10b, before P10.10c)
+- [x] P10.10a Public names for what other modules import: `ink` (if Q9 (a))
+- [x] P10.10b Public names for what other modules import: `letters` (if Q9 (a))
+- [x] P10.10c Public names for what other modules import: other `maps` (if Q9 (a) or (b))
+- [x] P10.10d Public names for what other modules import: `maps.lettering` (if Q9 (a))
+- [x] P10.18 The provider errors are public, and `Cache.ensure` wraps them (later issue; part 2, after P10.10d and P10.17, before the `p10-fixes` PR merges; ADR 0029)
+- [x] P10.19 Say track, not session or rider, in the lettering (later issue; part 2, after P10.18: `CHANGELOG.md`)
+- [ ] P10.11 Golden group, one regeneration window for the half-pixel fix (`ink-pad-lay-half-pixel-shift`, Q12 widened by the maintainer 2026-10-21); ADR 0025; on `p10-golden` after the `p10-fixes` PR merges
 
 ## P11. Widen the public API for primitive-first tutorials
 

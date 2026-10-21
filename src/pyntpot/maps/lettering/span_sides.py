@@ -1,16 +1,16 @@
 """Which side of the route a span's line stands on, and how strongly the route bends there.
 
 Key names: `route_turn` and `bend_strength`, how far and how steadily a stretch bends;
-`_convex_side`, `_curved_side` and `_freer_side`, the three readings of a side (the
+`_convex_side`, `curved_side` and `freer_side`, the three readings of a side (the
 outside of a bend, the outside weighed against clearance, and the clearer of two); the
 `SPAN_CURVE_*` constants that weigh the bend.
 
 It does not draw a line and does not resolve span requests.
 
-Invariants: a side is `+1` or `-1`; `_freer_side` and `route_turn` sign it towards the
-normal `(-dy, dx)`, while `_convex_side` signs it as `span_line` draws it (+1 the left of
-travel in display pixels); a straight or S-shaped stretch has no outside, and a bend never
-outweighs a clearly clearer side.
+Invariants: a side is `+1` or `-1`; `freer_side` and `_convex_side` sign it as
+`span_line` draws it (+1 the left of travel in display pixels), and only `route_turn` signs
+it towards the normal `(-dy, dx)`; a straight or S-shaped stretch has no outside, and a bend
+never outweighs a clearly clearer side.
 """
 
 import logging
@@ -21,7 +21,7 @@ from pyntpot.ink.polyline import Pt
 from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import Span
 from pyntpot.maps.lettering.span_clear import SPAN_CLEAR_CAPS, clear_of_route
-from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, _resample, span_line
+from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, resample, span_line
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ SPAN_CURVE_SIDE: bool = True
 #: Thirty-five degrees is a little over a third of a right angle over the whole
 #: stretch, which is about where a road stops reading as a road that goes
 #: somewhere and starts reading as a bend. It is also where the sweep settles:
-#: over the four cached rides, 25 degrees moves 33 stretches for 24 better and
+#: over the four cached tracks, 25 degrees moves 33 stretches for 24 better and
 #: 8 worse, 35 moves 32 for 24 and 7, and 45 and 60 both drop a win to save
 #: nothing. The A591 climb on the Dovedale card turns 11 degrees over its
 #: whole extent and gets no vote: a span on a straight stretch staying where
@@ -104,7 +104,7 @@ SPAN_CURVE_WEIGHT = 0.08
 #: drawn at** (`SPAN_OFFSET_CAPS`), because contraction is what an offset line
 #: does at its own offset: a bend the offset can see is a bend that squeezes it. Read
 #: coarser, the measure answers a different question and stops predicting
-#: anything. Over 187 stretches from the four cached rides, the share of the
+#: anything. Over 187 stretches from the four cached tracks, the share of the
 #: decisive cases the outside gets right is 89% read at 1.5 caps, 79% at 2,
 #: 60% at 3 and 46% at 4, which is a coin toss. 1.5 is where the sweep peaks;
 #: the trend either side of it is the argument.
@@ -163,7 +163,7 @@ def bend_strength(sub: list[Pt], scale_px: float) -> float:
     """
     if len(sub) < _FEWEST_WITH_A_MIDDLE or scale_px <= 0.0:
         return 0.0
-    net, gross = route_turn(_resample(sub, scale_px))
+    net, gross = route_turn(resample(sub, scale_px))
     if gross <= _ZERO_LENGTH or abs(net) < SPAN_CURVE_MIN_TURN_DEG:
         return 0.0
     if abs(net) / gross < SPAN_CURVE_MIN_COHERENCE:
@@ -249,7 +249,7 @@ def _convex_side(span: Span, route_px: list[Pt], cap_px: float) -> tuple[int, di
     return (1 if reach[1] > reach[-1] else -1), marks
 
 
-def _curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_px: float) -> int:
+def curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_px: float) -> int:
     """The side the bracket goes on once the bend has had its say.
 
     A weighted term and never an override. The free-paper choice arrives with
@@ -264,7 +264,7 @@ def _curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_p
     what the outside would actually look like is already in hand, and where the
     outside's mark comes back empty or not clear of the route while the
     free-paper side's is clear, the move is refused. Measured over the four
-    cached rides this refusal is what
+    cached tracks this refusal is what
     turns the term from roughly even into clearly worth having.
 
     Args:
@@ -312,19 +312,19 @@ def _curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_p
     return outside
 
 
-def _freer_side(
+def freer_side(
     span: Span, route_px: list[Pt], dark: dict[str, Any], card: Card, cap_px: float
 ) -> tuple[int, float]:
     """Which side of its own extent has the more free paper, and by how much.
 
     Each side is probed three cap heights off the route along the normal
-    `(-dy, dx)`; a probe off the card counts as solid ink.
+    `(dy, -dx)`; a probe off the card counts as solid ink.
 
     Returns:
-        `(side, margin)`: +1 for the side the normal `(-dy, dx)` points to,
-        which is the right of travel in display pixels where y runs down, -1 for
-        the other, and the difference in mean darkness between the two sides,
-        from 0 to 1. The margin is what the bend's vote is weighed against.
+        `(side, margin)`: +1 for the left of travel, the side `span_line` draws
+        a mark on for `side=+1`, -1 for the other, and the difference in mean
+        darkness between the two sides, from 0 to 1. The margin is what the
+        bend's vote is weighed against.
     """
     gw, gh, grid = dark["w"], dark["h"], dark["v"]
     score = {1: [], -1: []}
@@ -334,7 +334,7 @@ def _freer_side(
         run = math.hypot(bx - ax, by - ay)
         if run < _ZERO_PX:
             continue
-        nx, ny = -(by - ay) / run, (bx - ax) / run
+        nx, ny = (by - ay) / run, -(bx - ax) / run
         for side in (1, -1):
             x = ax + nx * side * cap_px * 3.0
             y = ay + ny * side * cap_px * 3.0

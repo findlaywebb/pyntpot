@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 
 from pyntpot.ink.chains import join_chains
 from pyntpot.ink.polyline import Pt, clip_line, simplify
-from pyntpot.maps.osm_elements import _polygon_rings
+from pyntpot.maps.osm_elements import polygon_rings
 from pyntpot.maps.rings import clip_ring, point_in_ring
 
 if TYPE_CHECKING:
@@ -147,7 +147,7 @@ def cover_rings(
                 cls = lookup.get((tag_key, tags[tag_key]), cls)
         if cls is None:
             continue
-        outer, _inner = _polygon_rings(entry, proj)
+        outer, _inner = polygon_rings(entry, proj)
         for ring in outer:
             cut = clip_ring(ring, clip)
             if len(cut) > RING_POINTS_OVER:
@@ -165,7 +165,7 @@ def wood_rings(key: str, proj: Projection, clip: Clip, eps: float, cache: Cache)
         tags = entry.get("tags") or {}
         if tags.get("landuse") != "forest" and tags.get("natural") != "wood":
             continue
-        outer, _ = _polygon_rings(entry, proj)
+        outer, _ = polygon_rings(entry, proj)
         for ring in outer:
             cut = clip_ring(ring, clip)
             if len(cut) > RING_POINTS_OVER:

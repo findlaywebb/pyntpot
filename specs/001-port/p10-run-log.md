@@ -277,3 +277,183 @@ User instructions (2026-10-07):
   tested; one mutant timed out on `main` that was killed on the PR branch's run, and the score
   counts a timeout as detected, so the score is unchanged. The `tasks.md:124` row is fully done.
   Recorded on `p11-public-api` as its first commit.
+- P10.R. P11 merged to `main` as `aa42cd8` (PR #10, squash). `release-0.0.1` cut from it:
+  one commit `45bb370` (`pyproject.toml` version `0.0.1`, the `uv.lock` version line,
+  the `CHANGELOG.md` 0.0.1 section); `__version__` printed `0.0.1`, `uv lock --check`
+  passed, G-here green (not-golden 1064 passed, 1 skipped; golden in tolerance 19
+  passed), CI 7 of 7 green. Merged as `90c2fd6` (PR #11, squash) on the maintainer's go.
+- Maintainer (2026-10-09), on merging and on the tag confirmation under Q14 (1), tag only
+  and no pending trusted publisher: "Good on both".
+- Tag: `v0.0.1`, annotated (`0d34737`), on `90c2fd6`, message "pyntpot 0.0.1, a
+  candidate for the upstream migration". The orchestrating session's push was refused by
+  the proxy (five attempts, "unexpected disconnect while reading sideband packet"; branch
+  pushes worked), so it became the maintainer action "push `v0.0.1` at `90c2fd6`",
+  which the maintainer did.
+- Publish run: https://github.com/findlaywebb/pyntpot/actions/runs/37919206681, failure as
+  expected under Q14 (1): checkout, setup-uv and Build succeeded; `pypa/gh-action-pypi-publish`
+  failed at trusted publishing (no publisher registered for `pyntpot`; environment
+  `pypi`, ref `refs/tags/v0.0.1`). Nothing reached PyPI.
+- Hand-off for P8: tag `v0.0.1` at `90c2fd6`; the upstream's dependency line is
+  `pyntpot @ git+https://github.com/findlaywebb/pyntpot@v0.0.1`. P10.R ticked in
+  `tasks.md`. `p10-fixes` branches from `main` at the tagged commit; part 2 waits for
+  P8's hand-off ("what upstream reads").
+
+## Part 2
+
+- Step 3, the before-check re-run at `p10-fixes`'s head `7902589` (base `0e094c7`, v0.0.2),
+  read-only agent in a detached worktree; vulture and the AST scan also re-run at
+  `ff752f6` (pre-P11) for the diff. No delta changes what a slice does.
+  - P10.4c, P10.6, P10.7, P10.11: every before-check as the brief states (P10.4c
+    `acc[3,0]` 1.0 for both samples; P10.6 picks 3 and 1, `_freer_side` side 1 at y 283.2,
+    `def as_dict` at `label.py:179`; P10.7 route constants at `style_groups.py:256, 259,
+    270, 272, 288`, `tunnel=no` and `tunnel=culvert` rivers both dropped, `_waterway` at
+    `osm_elements.py:228`; ADR 0025 free).
+  - P10.10 AST scan: the same 58 names (ink 6, letters 6, maps 12, maps.lettering 34),
+    identical at `ff752f6` and now; `vector_layers.py` imports public names only; the same
+    8 clashes; no stripped name in any `__all__` (P11 and P8.P names included) or in
+    `GLOSSARY.md`. Count delta: the scan finds 13 underscore names that tests import and
+    no other `src` module imports where the P10.10 brief says 32; the scan is identical
+    at `ff752f6`, so this is a counting-method difference, not a code change. The rule
+    is unchanged; the brief keeps the rule and the slice re-counts.
+  - Vulture (`--min-confidence 60 src`): 52 lines (42 at `ff752f6`). New: `ink/io.py:52
+    save_image` (P11), `maps/style.py:158 with_route_ink`, 8 in `maps/vector_layers.py`
+    (P8.P); `landmark_export` renamed `candidate_export` (`export.py:57`). Nothing
+    vanished. Part-2 after-checks grep vulture by name, not by line count.
+  - New readers of the names P10.6 and P10.7 delete: none in `src` or `tests`
+    (`with_route_ink` replaces colour and px only; `_check_keys` checks dataclass fields,
+    and `casing` is a property). `effect["casing_colour"]` stays in `default.toml` as
+    effect data that `RouteInk.effect` keeps.
+  - P8 notes, measured: "a run's map" at `maps/layers.py:7` and `:109`; the out-of-box
+    place filter is `maps/layers.py:144-145` (`_place_marks`; `vector_layers` passes it
+    through), and deleting it leaves `pytest -m "not golden"` green.
+- Maintainer (2026-10-20) on `upstream-provider-error-private`: wrap it: `fetch` catches
+  `ProviderError` and raises `FetchError` from it. A public-surface change, so it carries
+  an ADR (0028, the lowest free number above 0027). Goes to a plan fix and a
+  plan-reviewer pass before its slice starts.
+- Plan fix for part 2 (`cc1b510`, then `51f3024`), drafted by a fresh agent and reviewed by
+  fresh plan-reviewers: round 1 BLOCK (sport words missed, the new ADR not passed to the
+  hooks, line-number checks, a personal route name), round 2 PASS with nits. New slices,
+  each its own because the maintainer said not to widen a slice for P8's notes: P10.14
+  (generic wording in docstrings and comments), P10.15 (pin the out-of-box place
+  filter), P10.16 (`fetch` wraps provider errors, ADR 0028). New `defer` rows:
+  `maps-provider-error-private-beyond-fetch` (`Cache.ensure` and the providers' own
+  methods still raise `ProviderError`; the upstream's forced refetch calls
+  `Cache.ensure` directly), `maps-lettering-session-and-rider-for-a-track` (16 lines, 5
+  of them `Label.why` values the upstream reads) and `ink-pad-lay-half-pixel-shift`
+  (`fix-golden` by rule 4, standing `defer`). The reviewer's "fold P10.15 into P10.7"
+  was not applied, for the same instruction.
+- P10.4c's first attempt stopped: the fix turned
+  `test_pad.py::test_a_finer_grid_converges_on_the_mark_the_brush_describes` red. That
+  test's line left the plate, so the edge clamp inflated err(1); its 0.7 bound (from the
+  bulk import) fails on an on-plate line on the old code too (err(2)/err(1) 0.69 to 0.75
+  across 6 geometries and 7 seed pairs). Plan fix `51f3024` (review BLOCK, then PASS):
+  `test_pad.py` joins P10.4c's owners; the replacement keeps the line on a 90-high plate,
+  keeps `err[0] > err[1] > err[2]`, adds a first-order ink-weight check, and bounds the
+  first doubling at 0.8.
+- Landed (each rebased onto the head and G-here re-run there; G-self byte-identical on
+  the starting commit):
+  - P10.6 `1cc2d4f`, `37e8f6d`, `4aca4ec` (one commit per member). The new test named
+    "session" was renamed to say "fast span" before commit. Re-gate: not-golden 1097
+    passed 1 skipped; tolerance 22 passed; exact 22 passed. Coverage 96.14 / 94.35.
+  - P10.16 `c7b9e25`. Red first: `ProviderError: opentopodata-srtm30m said
+    'INVALID_REQUEST'`. Re-gate: not-golden 1099 passed 1 skipped; golden 22 and 22.
+    Coverage 96.14 / 94.05.
+  - P10.4c `0a45f00`. Red first: `assert np.float32(1.0) == 0.0` (and `== 0.5`); the
+    replacement `test_pad` test passes on base and fix. Re-gate: golden 22 and 22.
+    Coverage 96.14 / 94.04.
+- Render record (`compose(..., attribution=False)` on the default style, for a real
+  caller; the golden fixture is unchanged by each): P10.6 changes it when annotations
+  carry name-only landmarks beyond the cap, or spans (every span's side flips).
+  P10.4c changes it when a stroke reaches or crosses the card's edge (the edge pixels
+  get lighter). P10.7's first member changes it when a river or stream way is tagged
+  `tunnel=no`. P10.16 and P10.7's second member cannot. The upstream pins `@v0.0.2`, so
+  none reaches it until it bumps.
+  - P10.7 `d516aab`, `f85bfe4` (one commit per member). Red first: `assert 'Exe' in
+    set()`. Re-gate: golden 22 and 22. Coverage 96.14 / 94.37. Vulture now also prints
+    `style_groups.py:252: unused variable 'effect'`: `RouteInk.effect` is kept as decided
+    (read for style equality and by `test_style.py`), so the line stays.
+  - P10.14 `a3eb905`. AST-neutral 16 files; check 1 prints only the five deferred lines.
+    Re-gate: not-golden 1105 passed 1 skipped; golden 22 and 22. The personal route name
+    in `placement_flat.py:83`'s comment is gone.
+  - P10.15 `fdd0f86`. Red with the filter lines deleted: `assert ['Lynton', 'Countisbury']
+    == ['Lynton']`; `layers.py` restored byte for byte. G-here: not-golden 1106 passed.
+    `74b368d` files `tests-invented-place-name` ("Faraway" in `test_picks.py`, from the
+    port) as a later `defer` row.
+- Gap found at P10.10a: the `fix` row `ink-stroke-mark-shares-the-mark-term` (filed by
+  P11.3, "joins P10.10a ... plan-reviewed") had no brief; step 3 had not swept open rows.
+  Plan fix `609cbcd` (review BLOCK: a landed slice cannot take a member, so a new slice;
+  then PASS) cut it as P10.17 and swept every open `fix` row: the README badge row moved
+  to P7.1's brief (Q13 (1) put it there), and rows 63 to 65 got the Done cells P8 had
+  not written (pre-squash ids, landed in `0e094c7`).
+- The renames (G-self byte-identical for each; the pin
+  `test_no_module_imports_another_modules_private_name` red first for each new id):
+  - P10.10a `6824cfe`: 6 `ink` names. `6e903c9` files
+    `docs-feature-note-cites-old-smooth-path-name` as a later `defer` row.
+  - P10.10b `fa3c084`: 6 `letters` names; clash `_chains` became `skeleton_chains`.
+  - P10.17 `0a16b8c`: `ink.stroke.Mark` became `StrokeProfile`; the public-reach probe
+    over the seven `__all__` modules prints `[]`.
+  - P10.10c `17f9939`: 12 `maps` names; clashes `compose._plates` became `painted_map`,
+    `contours._pad` became `padded_grid`.
+  - P10.10d `2b7116f`: 34 `maps.lettering` names; clashes `box_on_paper`, `line_tilt`,
+    `line_bow`, `line_window`, `name_stem`. The AST scan prints 0 pairs; the last re-gate:
+    not-golden 1110 passed 1 skipped, golden 22 and 22.
+- P10.11 not run: no part-2 slice moved a golden pixel, and the one `fix-golden` row
+  (`ink-pad-lay-half-pixel-shift`) stands `defer`. No `p10-golden` branch; part 2 is
+  one PR. For the maintainer's hand-off: `ink-pad-lay-half-pixel-shift` (a golden
+  decision), `maps-provider-error-private-beyond-fetch` and
+  `maps-lettering-session-and-rider-for-a-track` (both `defer`, awaiting an answer).
+- Part-2 diff review (fresh context, `7902589..761e04d`): ready; 0 blocking. Should-fix:
+  the plan and triage still named the side test "session span" (now "fast span"), and
+  `CHANGELOG.md` lacked the four behaviour fixes; nit: two unwrapped issue-file lines.
+  All fixed in `87cbfce`. Fast checks in a scratch copy: prek green, not-golden 1110
+  passed 1 skipped.
+- PR #25 opened from `p10-fixes` to `main`
+  (https://github.com/findlaywebb/pyntpot/pull/25); subscribed to its events. Held for
+  the maintainer's go. No `p10-golden` PR: the golden group is empty.
+- PR #25's CI went red at `Audit dependencies` on both Pythons, before any test step:
+  new advisories against the locked `certifi` 2026.7.22 (2) and `pillow` 12.3.0 (9).
+  Not this PR's: the lock has not changed since `0e094c7`, and `uv audit` fails there
+  too. Lock-only bump (`uv lock --upgrade-package pillow --upgrade-package certifi`):
+  certifi 2026.10.19, pillow 13.0.0. Audit clean; `uv lock --check` passes; G-here green
+  (not-golden 1110 passed 1 skipped; golden 22 and 22); golden output byte-identical to
+  the pre-bump baseline; coverage 96.14 / 94.41; benchmarks 18 passed.
+- Maintainer (2026-10-21), on the three deferred rows in PR #25's hand-off
+  (`ink-pad-lay-half-pixel-shift`, `maps-provider-error-private-beyond-fetch`,
+  `maps-lettering-session-and-rider-for-a-track`): "Those three changes all make sense to
+  do to me." Read as: fix the half-pixel shift under the golden-group rules; wrap
+  `ProviderError` wherever a public name can leak it, as for `fetch`; reword the
+  `Label.why` values as well as the prose. Each goes to a plan fix and a plan-reviewer
+  pass before its slice starts.
+- Maintainer (2026-10-21), on the three follow-ups: `maps-provider-error-private-beyond-fetch`:
+  export `ProviderError` and `ProviderBudgetExceededError` from `pyntpot.maps`, and
+  `Cache.ensure` wraps them in `FetchError` (ADR 0029). `maps-lettering-session-and-rider-for-a-track`:
+  "the rider's own place" becomes "home"; the session values say "track".
+  `ink-pad-lay-half-pixel-shift`: shown before, after and diff (x8) comparisons
+  (differing fractions at delta > 2: map 0.0601, wash 0.0534, labels-centreline 0.0344,
+  pen 0.0005; paper identical; manifest hash and labels equal), the maintainer accepted
+  the drift: "Accept it - identical to human eye". It is the golden group's one
+  explained exception to the 0.005 step bound, as ADR 0006's step 3 was; P10.11 runs on
+  `p10-golden` after the `p10-fixes` PR merges, with ADR 0025.
+- Correction to the comparison figures above: the images the maintainer accepted were made
+  with the three-call fix (`line * self.ss + (self.ss - 1) / 2` at each of `lay`'s stamp
+  calls). The comparison script read RGB only; the repo's `differing_fraction` counts
+  alpha for RGBA outputs. Canonical fractions (`make_golden.py --compare`, delta > 2):
+  map 0.060095, wash 0.053400, labels-centreline 0.038954, pen 0.007298, paper 0.
+- Plan fix `563676c` (draft, review BLOCK on the consumer's name in two hand-off notes,
+  a seed-dependent `err[1] > err[2]` in P10.11's `test_pad.py` change and a missing
+  CHANGELOG line; then a confirmation BLOCK on the exact test docstring; then applied as
+  prescribed) adds P10.18, P10.19 and P10.11's body. P10.11's `test_pad.py` change, by
+  the reviewer's seed sweep: err(2)/err(1) is 0.793 to 0.815 after the half-pixel fix
+  (0.695 to 0.750 before), so the first-doubling bound becomes 0.85; err(3)/err(2) is
+  0.910 to 1.037, so `err[1] > err[2]` is dropped for `err[2] < err[0] * 0.9`.
+- P10.18 `ec1266c`: `ProviderError` and `ProviderBudgetExceededError` exported from
+  `pyntpot.maps`; `FetchError` moved to `maps/cache.py` (`pyntpot.maps.FetchError`
+  unchanged); `Cache.ensure` wraps; `fetch`'s own wrap removed as unreachable; ADR 0029.
+  Red first: the provider's error escaping `pytest.raises`, and the `__all__` pin. G-self
+  byte-identical; not-golden 1115 passed 1 skipped; golden 22 and 22; coverage 96.14 /
+  94.41.
+- P10.19 `ec062f9`: the five `Label.why` values say "track" and
+  "home"; 11 prose lines reworded. Red first: `('start', 'where the session began') !=
+  ('start', 'where the track began')`. G-self byte-identical (`why` is never drawn);
+  not-golden 1117 passed 1 skipped; golden 22 and 22. Three test lines outside the rows
+  still say "session": filed as `tests-session-wording` (`defer`).

@@ -1,13 +1,13 @@
 """Which named roads a card numbers, set along their own tarmac.
 
-Key names: `pick_roads`, the labels for the roads the session was on; `road_ref`, the
+Key names: `pick_roads`, the labels for the roads the track was on; `road_ref`, the
 number to letter out of OSM's `ref`; `road_min_px`, the shortest run a number may be set
 along.
 
 It does not pick settlements or rivers, and it does not place a name.
 
 Invariants: a numbered road is one road whatever its pieces are called; a road the
-session was never on is not lettered.
+track was never on is not lettered.
 """
 
 import math
@@ -36,7 +36,7 @@ def road_min_px(size: float) -> float:
 
 
 ROAD_MAX = 2
-#: How near the route a road has to run, in display pixels, to be one the session was on.
+#: How near the route a road has to run, in display pixels, to be one the track was on.
 ROAD_ON_ROUTE_PX = 40.0
 
 
@@ -50,10 +50,10 @@ def pick_roads(
     """Which named roads the map numbers, set along their own tarmac.
 
     A road number is the quietest thing on the map and one of the most useful:
-    it is how a rider works out where a climb actually was. A road is lettered
+    it is how someone on the track works out where a climb actually was. A road is lettered
     by its number where OSM has one, and by its name only where it has none:
     "A591" places a climb, "Keswick Road" eats a corner and says nothing at
-    26 m a pixel. Only the roads the ride was on, and only where there is
+    26 m a pixel. Only the roads the track was on, and only where there is
     enough of one inside the card to write on.
 
     **A numbered road is one road, whatever OSM calls each mile of it.** A
@@ -97,7 +97,7 @@ def pick_roads(
         if length(line) < shortest:
             continue
         near = min(min(math.dist(p, q) for q in thin) for p in line[::2])
-        if near > ROAD_ON_ROUTE_PX:  # a road the session was never on is not this map's
+        if near > ROAD_ON_ROUTE_PX:  # a road the track was never on is not this map's
             continue
         best[key] = (length(line) - near, line)
     out: list[Label] = []
@@ -107,7 +107,7 @@ def pick_roads(
             Label(
                 name=key,
                 kind="road",
-                why="road the session was on",
+                why="road the track was on",
                 px=mid[0],
                 py=mid[1],
                 tier=TIER_ROAD,

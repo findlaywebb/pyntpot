@@ -12,7 +12,7 @@ from support.basemaps import hung_card, label_basemap
 def test_a_road_is_lettered_by_its_number_and_falls_back_to_its_name():
     """The rule: "A361" where OSM has a number, the name where it does not.
 
-    A number places a climb for a rider reading the card. A name like "Aviemore
+    A number places a climb for someone reading the card. A name like "Aviemore
     Road" is longer, eats a corner and says nothing at 26 m a pixel.
     """
     numbered = [[round(float(x), 1), 0.0] for x in range(0, 4000, 25)]
@@ -81,3 +81,13 @@ def test_a_numbered_road_is_gathered_by_its_number_not_by_its_street_name():
     assert [label.name for label in got] == ["A3052"]
     # No one leg is long enough on its own; the number is what gathers them.
     assert length(got[0].baseline) > road_min_px(got[0].size)
+
+
+def test_a_road_label_says_the_track_was_on_it():
+    """A lettered road gives its reason in track words, with no sport word."""
+    numbered = [[round(float(x), 1), 0.0] for x in range(0, 4000, 25)]
+    lines = {"roads": [{"n": "Lyn Valley Road", "c": "major", "r": "A361", "d": numbered}]}
+    card = hung_card(400, 300, 10.0, top=400.0)
+    route = [(float(x), 45.0) for x in range(0, 400, 10)]
+    got = pick_roads(label_basemap(), lines, card, route, budget=2)
+    assert [(label.name, label.why) for label in got] == [("A361", "road the track was on")]

@@ -26,7 +26,7 @@ from pyntpot.maps.providers.overpass import (
 
 #: `historic` values that are a monument someone put there on purpose. The rest
 #: of the tag's range is a site rather than a marker: a colliery, a station and
-#: an earthwork are all history, but none of them is a thing to run past and see.
+#: an earthwork are all history, but none of them is a thing to pass and see.
 MONUMENT_HISTORIC = (
     "monument",
     "memorial",
@@ -73,7 +73,7 @@ LANDMARK_CLASSES: dict[str, bool] = {
 #: eight metres away is not notable at all. One radius for everything made the
 #: first half impossible and the second half inevitable.
 #:
-#: The tier is what a runner would pick out first, not what OSM thinks is
+#: The tier is what someone on the track would pick out first, not what OSM thinks is
 #: important: a hill, a tower, a spire, a named building and a bridge are the
 #: things you navigate by, a monument or a statue is something you pass, and a
 #: ruin or a plaque is something you would have to stop and read.
@@ -124,7 +124,7 @@ LANDMARK_RADIUS_M = 300.0
 #: dome at about 6.5 km, and the card's own box
 #: cuts anything the reader could not see on the map anyway.
 VISIBLE_PER_M = 60.0
-#: Past this, height stops buying reach. Nothing on a session's card is further
+#: Past this, height stops buying reach. Nothing on a track's card is further
 #: off than this and still the thing a person would name.
 REACH_CAP_M = 8000.0
 

@@ -46,7 +46,7 @@ Index = dict[tuple[int, int], list[int]]
 def named_roads(payload: Mapping[str, Any], projection: Projection) -> list[dict[str, Any]]:
     """Every named or numbered road in the cached OSM payload, projected.
 
-    A road number is often the name a rider gives a climb, so a road with no
+    A road number is often the name someone on the track gives a climb, so a road with no
     name but a `ref` is named by it. Ways with fewer than two points are left
     out.
 

@@ -2,7 +2,7 @@
 
 Key names: `sort_element`, which files one payload element under the layer it belongs
 to; `Harvest`, the layers collected so far; `Scope`, what every element is read against;
-`_geom` and `_polygon_rings`, which project one element's geometry; `_soften`, the line
+`_geom` and `polygon_rings`, which project one element's geometry; `_soften`, the line
 tidying the road, river and coast layers share; `LANDMARK_TAG_KEYS`, the tags a
 landmark candidate carries forward.
 
@@ -117,7 +117,7 @@ def _geom(entry: dict[str, Any], proj: Projection) -> list[Pt]:
     return [proj(g["lat"], g["lon"]) for g in entry.get("geometry") or [] if g]
 
 
-def _polygon_rings(entry: dict[str, Any], proj: Projection) -> Rings:
+def polygon_rings(entry: dict[str, Any], proj: Projection) -> Rings:
     """Outer and inner rings of one way or relation, in metres."""
     if entry.get("type") == "way":
         pts = _geom(entry, proj)
@@ -169,7 +169,7 @@ def _candidate(name: str, tags: dict[str, Any], at: Pt, index: TrackIndex) -> di
 
 def _area_rings(entry: dict[str, Any], eps: float, scope: Scope) -> Rings:
     """Outer and inner rings of an area, cut to the box and simplified."""
-    outer, inner = _polygon_rings(entry, scope.proj)
+    outer, inner = polygon_rings(entry, scope.proj)
     cut = [clip_ring(r, scope.clip) for r in outer]
     holes = [clip_ring(r, scope.clip) for r in inner]
     return (
@@ -225,7 +225,7 @@ def _waterway(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: 
     run_m = scope.derived["interaction_run_m"]
     name = tags.get("name", "")
     waterway = tags["waterway"]
-    buried = bool(tags.get("tunnel"))
+    buried = tags.get("tunnel") not in (None, "", "no")
     for piece in clip_line(_geom(entry, scope.proj), scope.clip):
         river = waterway == "river"
         keep = (
@@ -287,7 +287,7 @@ def _area_landmark(
     zoo as a multipolygon, and a multipolygon is a relation, so a card can
     offer the zoo as well as the statue that stands in it.
     """
-    rings, _holes = _polygon_rings(entry, scope.proj)
+    rings, _holes = polygon_rings(entry, scope.proj)
     pts = [p for ring in rings for p in ring] if rings else _geom(entry, scope.proj)
     if not pts:
         return

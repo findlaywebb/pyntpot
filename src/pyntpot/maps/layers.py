@@ -4,7 +4,7 @@ Key names: `build_basemap`, which reads the cached feature, land cover and eleva
 payloads and returns the typed `Basemap` the painter reads; `basemap`, the vector
 layers as plain data, with the roads, rivers and landmark candidates already chosen by
 the track's interaction with them; `BasemapInputs`, what one track's basemap is
-assembled from; `scale_for`, how much coarser than a run's map a box this big is drawn.
+assembled from; `scale_for`, how much coarser than the reference box a box this big is drawn.
 
 Everything is in the card's own metre space, the one `track_projection` puts a track
 in: x east, y north, origin at the south-west corner of the track's bounding box. A box
@@ -41,13 +41,13 @@ from pyntpot.maps.cover import (
     sea_from_coast,
     wood_rings,
 )
-from pyntpot.maps.osm import _osm_layers
+from pyntpot.maps.osm import osm_layers
 from pyntpot.maps.projection import track_projection
-from pyntpot.maps.relief_layers import _relief_layers
+from pyntpot.maps.relief_layers import relief_layers
 from pyntpot.maps.rings import clip_ring
 from pyntpot.maps.style_groups import BasemapStyle
 from pyntpot.maps.svg_path import parse_path
-from pyntpot.maps.track_index import TrackIndex, _densify
+from pyntpot.maps.track_index import TrackIndex, densify
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -59,9 +59,9 @@ if TYPE_CHECKING:
 
 Clip = tuple[float, float, float, float]
 
-#: The box a run makes. Every generalisation threshold below is stated for this
-#: span and scaled up from it, so a ride over four times the ground is drawn at
-#: four times the tolerance rather than at a run's detail shrunk to fit.
+#: The reference box's span. Every generalisation threshold below is stated for this
+#: span and scaled up from it, so a box four times as wide is drawn at
+#: four times the tolerance rather than at the reference box's detail shrunk to fit.
 REFERENCE_SPAN_M = 4000.0
 MAX_SCALE = 4.0
 
@@ -106,7 +106,7 @@ class BasemapInputs:
 
 
 def scale_for(span_m: float) -> float:
-    """How much coarser than a run's map a box this big should be drawn."""
+    """How much coarser than the reference box a box this big should be drawn."""
     return min(max(span_m / REFERENCE_SPAN_M, 1.0), MAX_SCALE)
 
 
@@ -209,12 +209,12 @@ def basemap(
     # Simplified so the index is small, then densified so it is honest: the
     # index measures distance to a vertex, and a straight kilometre simplifies
     # to two of them, which would put a road running beside it half a field away.
-    index = TrackIndex(_densify(simplify(pts, INDEX_EPS_M), INDEX_STEP_M))
+    index = TrackIndex(densify(simplify(pts, INDEX_EPS_M), INDEX_STEP_M))
     if osm_file.exists():
-        out.update(_osm_layers(osm_file, proj, clip, index, options, derived))
+        out.update(osm_layers(osm_file, proj, clip, index, options, derived))
         out["sources"].append(f"OSM via Overpass, {osm_file.stat().st_size // 1024} KB cached")
     if elev_file.exists():
-        out.update(_relief_layers(elev_file, proj, clip, options, derived, index))
+        out.update(relief_layers(elev_file, proj, clip, options, derived, index))
         out["sources"].append("SRTM 30 m via OpenTopoData")
     out["places"] = _place_marks(inputs.places, proj, clip)
     out["landmarks"] = pick_landmarks(
