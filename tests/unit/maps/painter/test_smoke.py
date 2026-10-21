@@ -5,9 +5,12 @@ Everything here paints a box a few dozen pixels across, so the suite stays fast.
 
 import dataclasses
 import hashlib
+from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 import numpy as np
+from golden.test_parity import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION
 from PIL import Image
 
 from pyntpot.ink.sheet import rgb
@@ -22,6 +25,8 @@ from support.basemaps import (
     tiny_style,
     with_fields,
 )
+from support.golden import differing_fraction
+from support.paths import SMOKE_DIR
 
 
 def read(style: Style, name: str) -> Any:
@@ -99,7 +104,12 @@ SMOKE_RIVERS = (
 #: neither change touches the card. Then when the finer ink grid was centred on
 #: the plate's pixels (ADR 0025); `paper` again did not move. The lock still
 #: holds: a change that moves these hashes again is a change to what the reader
-#: sees and has to be argued for.
+#: sees and has to be argued for. The bytes are this machine's. A numpy that
+#: runs the wash on other vector instructions can round a last bit the other way
+#: and move a wash pixel by one level, so the wash plate itself is committed in
+#: `tests/golden/smoke/`, and under `--golden-tolerance` the tests compare the
+#: wash with it within the golden pixel bound instead; paper and pen stay byte
+#: for byte (ADR 0030).
 SMOKE_SHA = {
     "paper": "014d13332900f01fd6653d9405e933aaec9efe2f17ce78f8fa523b1e6954e93e",
     "pen": "138f107e493424697401008137990bc4c4152d055fc392a12f5e59ad6cc8c688",
@@ -113,15 +123,34 @@ def smoke_box(**over: object) -> tuple[Style, Basemap]:
     return style, tiny_basemap(style=style, roads=SMOKE_ROADS, rivers=SMOKE_RIVERS)
 
 
-def test_the_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
-    """The whole point of the flags: the same seed still writes the same bytes."""
+def assert_the_approved_plates(out: Path, files: Mapping[str, str], tolerant: bool) -> None:
+    """Assert the smoke box's plates in `out` are the approved ones.
+
+    Byte for byte by default. In tolerance mode `paper` and `pen` stay byte for byte, and
+    `wash`, the one plate whose last bit depends on the CPU's vector instructions, is
+    compared with its committed copy in `SMOKE_DIR` within the golden pixel bound.
+    """
+    got = {name: hashlib.sha256((out / fn).read_bytes()).hexdigest() for name, fn in files.items()}
+    if not tolerant:
+        assert got == SMOKE_SHA
+        return
+    exact = {name: sha for name, sha in got.items() if name != "wash"}
+    assert exact == {name: sha for name, sha in SMOKE_SHA.items() if name != "wash"}
+    fraction = differing_fraction(out / files["wash"], SMOKE_DIR / "wash.webp", MAX_CHANNEL_DELTA)
+    assert fraction <= MAX_DIFFERING_FRACTION, f"wash: {fraction:.4%} of pixels differ"
+
+
+def test_the_committed_wash_plate_is_the_approved_bytes():
+    """The wash plate another machine compares with is the one `SMOKE_SHA` pins."""
+    got = hashlib.sha256((SMOKE_DIR / "wash.webp").read_bytes()).hexdigest()
+    assert got == SMOKE_SHA["wash"]
+
+
+def test_the_flags_off_still_paint_the_plates_that_were_approved(tmp_path, golden_tolerance):
+    """The whole point of the flags: the same seed still writes the approved plates."""
     style, basemap = smoke_box()
     manifest = paint_plates(basemap, style, tmp_path).manifest
-    got = {
-        name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
-        for name, fn in manifest.files.items()
-    }
-    assert got == SMOKE_SHA
+    assert_the_approved_plates(tmp_path, manifest.files, golden_tolerance)
 
 
 def test_every_flag_on_together_still_paints_the_box(tmp_path):
@@ -239,15 +268,11 @@ def test_every_phase_two_wash_option_is_off_by_default():
     assert not read(style, "fluid_pass")
 
 
-def test_the_wash_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
-    """Three more fields on the style, and the same seed writes the same bytes."""
+def test_the_wash_flags_off_still_paint_the_plates_that_were_approved(tmp_path, golden_tolerance):
+    """Three more fields on the style, and the same seed writes the approved plates."""
     style, basemap = smoke_box()
     manifest = paint_plates(basemap, style, tmp_path).manifest
-    got = {
-        name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
-        for name, fn in manifest.files.items()
-    }
-    assert got == SMOKE_SHA
+    assert_the_approved_plates(tmp_path, manifest.files, golden_tolerance)
 
 
 def test_each_wash_flag_moves_the_plate_and_none_of_them_moves_the_card(tmp_path):

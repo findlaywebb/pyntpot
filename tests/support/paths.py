@@ -1,4 +1,4 @@
-"""The fixture key and the fixture and golden directories, the only source of each.
+"""The fixture key and the fixture, golden and smoke-plate directories, the only source of each.
 
 Imports only `pathlib`, never the package, so `conftest.py` can read it in sessions
 that must not load `pyntpot`, such as the architecture tests.
@@ -17,3 +17,6 @@ FIXTURE_DIR: Path = _TESTS / "fixtures" / "lynmouth"
 
 #: The committed golden outputs for the Lynmouth fixture.
 GOLDEN_DIR: Path = _TESTS / "golden" / "lynmouth"
+
+#: The smoke box's approved wash plate, the bytes `SMOKE_SHA["wash"]` in the painter's smoke test pins.
+SMOKE_DIR: Path = _TESTS / "golden" / "smoke"

@@ -473,3 +473,16 @@ User instructions (2026-10-07):
   G-here green (not-golden 1118 passed 1 skipped; golden 22 and 22); the final compare
   byte-identical against both the new goldens and step 1; old and new `map.png` look the
   same. ADR 0025 accepted.
+- PR #26 opened (`p10-golden` to `main`). CI red on `checks (3.13)`, `(3.14)` and
+  `prerelease`: the two smoke tests' exact `SMOKE_SHA`, wash only. Cause: numpy's float32
+  wash differs by 1 ulp between AVX-512 and non-AVX-512 paths; after the half-pixel fix one
+  pixel, (90, 97), rounds one level apart. `NPY_DISABLE_CPU_FEATURES=X86_V4` reproduces CI's
+  hash. One comment on the PR. Plan fix `5e174a0` (review BLOCK on the mutation run, which
+  runs the same tests exact; then PASS) added P10.11 step 3 and ADR 0030.
+- P10.11 step 3: the smoke lock is exact locally; under `--golden-tolerance` (CI's Tests
+  steps and `[tool.mutmut]`) paper and pen stay byte-exact and wash is compared with
+  `differing_fraction` against `tests/golden/smoke/wash.webp`, which a test pins to
+  `SMOKE_SHA["wash"]`. Red: exact under X86_V4, 2 failed. Green: tolerance under X86_V4
+  (3 passed; whole not-golden 1101 passed 1 skipped; mutmut selection 1035 passed); G-here
+  green (not-golden 1119 passed 1 skipped; golden 22 and 22); coverage 96.14 / 94.57; no
+  `src` or `tests/golden/lynmouth` change.
