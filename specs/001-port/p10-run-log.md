@@ -410,3 +410,10 @@ User instructions (2026-10-07):
 - PR #25 opened from `p10-fixes` to `main`
   (https://github.com/findlaywebb/pyntpot/pull/25); subscribed to its events. Held for
   the maintainer's go. No `p10-golden` PR: the golden group is empty.
+- PR #25's CI went red at `Audit dependencies` on both Pythons, before any test step:
+  new advisories against the locked `certifi` 2026.7.22 (2) and `pillow` 12.3.0 (9).
+  Not this PR's: the lock has not changed since `0e094c7`, and `uv audit` fails there
+  too. Lock-only bump (`uv lock --upgrade-package pillow --upgrade-package certifi`):
+  certifi 2026.10.19, pillow 13.0.0. Audit clean; `uv lock --check` passes; G-here green
+  (not-golden 1110 passed 1 skipped; golden 22 and 22); golden output byte-identical to
+  the pre-bump baseline; coverage 96.14 / 94.41; benchmarks 18 passed.
