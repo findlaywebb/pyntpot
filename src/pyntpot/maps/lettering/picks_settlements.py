@@ -32,7 +32,7 @@ SETTLEMENT_FLOOR = 3.0
 #: with the card, because the constraint is the map and not the ground.
 SETTLEMENT_SEPARATION_PX = 120.0
 #: How near an end of the route a settlement has to be to have been where the
-#: session set off from or finished, as a fraction of the route's own length.
+#: track set off from or finished, as a fraction of the route's own length.
 #: Stated against the track rather than in metres because on a loop through empty
 #: country the one settlement for miles is nearest to both ends and has earned
 #: nothing by it.

@@ -4,7 +4,7 @@ import math
 
 from pyntpot.maps.annotations import Annotations, Landmark
 from pyntpot.maps.basemap import River, Road
-from pyntpot.maps.lettering.picks import journal_picks
+from pyntpot.maps.lettering.picks import home_labels, journal_picks, route_markers
 from pyntpot.maps.lettering.picks_lines import named_lines
 from pyntpot.maps.lettering.picks_rivers import pick_rivers
 from pyntpot.maps.lettering.picks_settlements import (
@@ -163,3 +163,22 @@ def test_a_cap_of_nought_picks_no_landmark():
     """A cap of nought picks no landmark."""
     picks = Annotations(landmarks=(Landmark(name="Watersmeet", lat=51.22, lng=-3.81),))
     assert journal_picks(picks, label_basemap(), 0) == []
+
+
+def test_the_markers_and_the_home_say_why_in_track_words():
+    """The start, finish and home labels give their reason in track words, with no sport word."""
+    open_route = route_markers([(10.0, 10.0), (200.0, 10.0)])
+    # Its ends 2.8 px apart, under LOOP_CLOSE_PX.
+    loop = route_markers([(10.0, 10.0), (200.0, 10.0), (12.0, 12.0)])
+    home, _boxes = home_labels(
+        label_basemap(places=({"sym": "house", "x": 400.0, "y": 300.0, "n": "Lynton"},)),
+        wide_card(),
+        tiny_style(),
+        lambda name, size: (len(name) * size * 0.5, size),
+    )
+    assert [(label.name, label.why) for label in open_route] == [
+        ("start", "where the track began"),
+        ("finish", "where the track ended"),
+    ]
+    assert [(label.name, label.why) for label in loop] == [("start", "where the track began")]
+    assert [(label.name, label.why) for label in home] == [("Lynton", "home")]

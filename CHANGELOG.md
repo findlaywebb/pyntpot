@@ -18,6 +18,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   before.
 - `Cache.ensure` raises `FetchError` when a provider cannot answer, with the provider's
   error as its cause (ADR 0029), as `fetch` does.
+- The reasons the start, finish, home and road labels carry in `Lettering.labels`
+  (`Label.why`, which a caller may show as a tooltip) say track, not session or rider:
+  "where the track began", "where the track ended", "home" and "road the track was on".
 
 ### Fixed
 

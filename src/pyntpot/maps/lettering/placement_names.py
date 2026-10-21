@@ -136,7 +136,7 @@ def dedupe_names(labels: list[Label], card: Card) -> list[Label]:
     over the chimney standing on it.
 
     A span is never deduped. Its name is the caller's prose about a stretch
-    of the session rather than a name for somewhere, and two stretches may
+    of the track rather than a name for somewhere, and two stretches may
     fairly be called the same thing.
 
     Args:

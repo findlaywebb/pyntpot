@@ -186,7 +186,7 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
             Label(
                 name="start",
                 kind="marker",
-                why="where the session began",
+                why="where the track began",
                 px=start[0],
                 py=start[1],
                 tier=TIER_MARKER,
@@ -197,7 +197,7 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
         Label(
             name="start",
             kind="marker",
-            why="where the session began",
+            why="where the track began",
             px=start[0],
             py=start[1],
             tier=TIER_MARKER,
@@ -206,7 +206,7 @@ def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> l
         Label(
             name="finish",
             kind="marker",
-            why="where the session ended",
+            why="where the track ended",
             px=end[0],
             py=end[1],
             tier=TIER_MARKER,
@@ -258,7 +258,7 @@ def home_labels(
             Label(
                 name=name,
                 kind="home",
-                why="the rider's own place",
+                why="home",
                 px=x,
                 py=y,
                 tier=TIER_PLACE,

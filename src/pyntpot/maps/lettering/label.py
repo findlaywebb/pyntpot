@@ -178,7 +178,7 @@ class Label:
 
 
 #: Every extent a span can be drawn for. The first group is the ground, the
-#: second the session, and which group a kind is in decides which side of the
+#: second the track, and which group a kind is in decides which side of the
 #: route it sits on. A span is not only a climb: any stretch of the track
 #: worth remarking on is one, which is what `steady`, `fade` and `best_effort`
 #: are for.
@@ -189,7 +189,7 @@ SPAN_EFFORT = ("fast", "hard_set", "best_effort", "fade", "walk", "headwind", "s
 
 @dataclass
 class Span:
-    """One stretch of the session the map annotates, with extent, not a pin.
+    """One stretch of the track the map annotates, with extent, not a pin.
 
     A span request states an extent in one of three vocabularies
     (`maps.annotations.SpanRequest`); by the time it is here it has been
@@ -219,7 +219,7 @@ class Span:
 
     @property
     def ground(self) -> bool:
-        """True when this span is a fact about the ground, not about the session."""
+        """True when this span is a fact about the ground, not about the track."""
         return self.kind in SPAN_GROUND
 
 

@@ -152,7 +152,7 @@ def place_spans(
     """Choose a side and a rung for every span, and draw its mark.
 
     The ground takes the side of the route with more free paper over its own
-    extent; the session takes the other, so the two never interleave. Where the
+    extent; the track takes the other, so the two never interleave. Where the
     stretch bends, the outside of the bend takes that choice off the free side
     unless the free side is clearly freer: see `curved_side`. Within a side
     the spans are taken longest first: the first takes the rung nearest the
