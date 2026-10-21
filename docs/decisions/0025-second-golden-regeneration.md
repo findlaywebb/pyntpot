@@ -1,6 +1,6 @@
 # 0025 — Second golden regeneration: the finer ink grid laid centre to centre
 
-Status: proposed
+Status: accepted
 
 ## Context
 
@@ -38,15 +38,19 @@ the goldens are regenerated once at the end.
 | Step | Commit | Expected | Gate options |
 |---|---|---|---|
 | 0 | `79a95ad` | baseline, made on the window's starting commit (`"dirty": false`) | none |
-| 1 | `Lay the finer ink grid centre to centre with the plate` | `paper.webp` byte-identical to step 0; wash, pen, labels-centreline and map past the bound at the accepted figures; the hash equal; `labels.txt` equal | `--require-identical paper.webp --max-fraction 0.005 --require-hash equal --require-labels-equal` |
+| 1 | `693c88b` `Lay the finer ink grid centre to centre with the plate` | `paper.webp` byte-identical to step 0; wash, pen, labels-centreline and map past the bound at the accepted figures; the hash equal; `labels.txt` equal | `--require-identical paper.webp --max-fraction 0.005 --require-hash equal --require-labels-equal` |
 | 2 | `Regenerate the goldens once more for the half-pixel fix` | every output byte-identical to step 1 | `--require-identical all --require-hash equal` |
 
-Outcome of step 1's gate compare, against step 0 (differing fraction per output, past the
-channel bound):
+Outcome of each step's gate compare, against the previous step (differing fraction per
+output, past the channel bound):
 
 | Step | paper | wash | pen | labels-centreline | map | Hash | `labels.txt` |
 |---|---|---|---|---|---|---|---|
 | 1 | 0 (identical) | 0.053400 | 0.007298 | 0.038954 | 0.060095 | `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, equal | equal |
+| 2 | 0 (identical) | 0 (identical) | 0 (identical) | 0 (identical) | 0 (identical) | `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, equal | equal |
+
+Step 1 exceeded the per-step bound; it was committed as the one maintainer-accepted
+exception, its drift explained (see Step 1 below).
 
 ### Step 1
 
@@ -106,6 +110,67 @@ labels-centreline 0.038954, pen 0.007298, paper 0.
 - `tests/unit/maps/painter/test_smoke.py::SMOKE_SHA`: the `pen` and `wash` hashes of the
   smoke plate move, since the pad paints both; `paper` does not.
 
+Accepted by the maintainer as the one exception in the window; the per-step bound and the
+parity tolerance are unchanged.
+
+### Hashes
+
+- Manifest hash of the old goldens and after step 1: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`.
+- Manifest hash of the regenerated goldens: `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, unchanged:
+  the fix moves pixels, not the geometry or style the hash covers. `GOLDEN_HASH` in
+  `tests/unit/maps/test_pipeline_fetch_paint.py` is unchanged.
+
+### Regeneration
+
+The window closed with one regeneration: `tests/golden/make_golden.py` painted the
+Lynmouth fixture into `tests/golden/lynmouth/` in place, on the step-1 commit `693c88b`,
+after G-window's non-golden gate passed there. It writes no `baseline.json` or
+`labels.txt` into the golden directory, which still holds exactly `paper.webp`,
+`wash.webp`, `pen.webp`, `labels-centreline.webp`, `map.png` and `plates.json`.
+`paper.webp` came out byte-identical to the old golden and is unchanged in the commit.
+Every image is byte-identical to the step-1 output, and `plates.json` is too but for the
+final newline the end-of-file hook adds; its hash is unchanged, and only its `sizes`,
+`bytes` and `dark` entries moved. The byte-exact golden run (`uv run pytest -m golden`)
+and G-here then passed.
+
+Final compare, a fresh paint against the regenerated goldens (the gate,
+`--require-identical all --require-hash equal`, exit 0):
+
+```
+paper.webp against tests/golden/lynmouth: identical yes, differing fraction 0.000000
+wash.webp against tests/golden/lynmouth: identical yes, differing fraction 0.000000
+pen.webp against tests/golden/lynmouth: identical yes, differing fraction 0.000000
+labels-centreline.webp against tests/golden/lynmouth: identical yes, differing fraction 0.000000
+map.png against tests/golden/lynmouth: identical yes, differing fraction 0.000000
+manifest hash: 340a7f6e260ee1e2-e5a5f1b4b3ca2177 here, 340a7f6e260ee1e2-e5a5f1b4b3ca2177 in tests/golden/lynmouth
+```
+
+and against the step-1 output (every line byte-identical, so the regenerated files are the
+last step's):
+
+```
+paper.webp against step-1: identical yes, differing fraction 0.000000
+wash.webp against step-1: identical yes, differing fraction 0.000000
+pen.webp against step-1: identical yes, differing fraction 0.000000
+labels-centreline.webp against step-1: identical yes, differing fraction 0.000000
+map.png against step-1: identical yes, differing fraction 0.000000
+manifest hash: 340a7f6e260ee1e2-e5a5f1b4b3ca2177 here, 340a7f6e260ee1e2-e5a5f1b4b3ca2177 in step-1
+```
+
+`labels.txt` is equal to step 1's.
+
+Cumulative drift, regenerated goldens against the old ones (the step-1 cumulative record,
+`make_golden.py`'s figures): paper 0, wash 0.053400, pen 0.007298, labels-centreline
+0.038954, map 0.060095; hash `340a7f6e260ee1e2-e5a5f1b4b3ca2177`, unchanged. The
+maintainer was shown the RGB-only figures for the same pair (map 0.0601, wash 0.0534,
+labels-centreline 0.0344, pen 0.0005); they are noted, not the gate. Old and new
+`map.png` look the same to the eye.
+
+What moved and why: the half-pixel fix (step 1) alone. Every mark a pad paints moved a
+third of a plate pixel down and right onto the plate's own grid, which moves the wash,
+the pen, the labels-centreline plate and the composed map; no pad paints the paper, and
+neither the geometry nor the style the hash covers changed.
+
 ## Consequences
 
 - The goldens record the corrected grid. G-self and the byte-exact golden run hold from
@@ -114,6 +179,9 @@ labels-centreline 0.038954, pen 0.007298, paper 0.
   exact parity is per platform and tolerance mode is the cross-platform gate.
 - A further regeneration needs its own ADR.
 
-The machine step 1 was measured on: the agent's Linux container,
+The machine step 1 was measured on and the goldens were regenerated on: the agent's
+Linux container,
 `Linux vm 6.18.44-fc-v140 #1 SMP PREEMPT_DYNAMIC @0 x86_64 x86_64 x86_64 GNU/Linux`,
-Python 3.13.16, numpy 2.5.2, Pillow 13.0.0, fonttools 4.63.0.
+Python 3.13.16, with the parity stack at its pins: numpy 2.5.2, Pillow 13.0.0,
+fonttools 4.63.0. G-here runs the goldens byte-exact there; every other platform uses
+the tolerance gate.
