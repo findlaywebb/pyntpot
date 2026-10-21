@@ -1,7 +1,7 @@
 """Setting a name flat beside its anchor, on the cheapest rung, broken over lines when that pays.
 
 Key names: `_place_flat`, one horizontal name tried on every side of its anchor at every
-rung of the ladder; `_best_flat`, the cheapest answer over every way the name may be
+rung of the ladder; `best_flat`, the cheapest answer over every way the name may be
 broken; `ROAD_CROSS_COST`, `LEADER_COST_PX`, `SEPARATION_WEIGHT` and `WRAP_COST`, the
 prices the answers are weighed in.
 
@@ -26,15 +26,15 @@ from pyntpot.maps.lettering.label import (
 from pyntpot.maps.lettering.placement_costs import (
     ROUTE_REACH_PX,
     Terms,
-    _darkness,
-    _near_route,
-    _off_own_feature,
-    _on_paper,
-    _on_road,
-    _overlap,
-    _separation,
+    box_on_paper,
+    darkness,
+    near_route,
+    off_own_feature,
+    on_road,
+    overlap,
+    separation,
 )
-from pyntpot.maps.lettering.placement_marks import SPAN_MARK_COST_PX, _mark_gap, _mark_through
+from pyntpot.maps.lettering.placement_marks import SPAN_MARK_COST_PX, mark_gap, mark_through
 
 #: What a name laid across a road costs. Not a constraint: sometimes there is
 #: nowhere else, and a name that vanished would be worse than one that crosses
@@ -89,7 +89,7 @@ NEAR_GAP_COST_PX = 4.0
 WRAP_COST = 26.0
 
 
-def _best_flat(lb: Label, terms: Terms, measure_fn: Measure) -> float:
+def best_flat(lb: Label, terms: Terms, measure_fn: Measure) -> float:
     """The cheapest horizontal answer over every way the name may be broken.
 
     A second line is charged `WRAP_COST`, so it is taken when it buys a
@@ -161,18 +161,18 @@ def _place_flat(
                 x0, y0 = cx - tw / 2, cy - th / 2
                 box = (x0, y0, x0 + tw, y0 + th)
                 cost = 0.0
-                inside = _on_paper(box, terms.card)
+                inside = box_on_paper(box, terms.card)
                 if not inside:
                     cost += 400
-                cost += _near_route(box, terms.route, max(ROUTE_REACH_PX, lb.size))
-                cost += _overlap(box, terms.boxes)
-                cost += _darkness(box, terms.card, terms.dark) * 150
-                cost += _on_road(box, terms.roads) * ROAD_CROSS_COST
-                cost += _off_own_feature(box, lb)
+                cost += near_route(box, terms.route, max(ROUTE_REACH_PX, lb.size))
+                cost += overlap(box, terms.boxes)
+                cost += darkness(box, terms.card, terms.dark) * 150
+                cost += on_road(box, terms.roads) * ROAD_CROSS_COST
+                cost += off_own_feature(box, lb)
                 gap_px = SPAN_MARK_COST_PX if lb.tier == TIER_SPAN else per_px
-                cost += _mark_gap(box, lb, dist) * gap_px
-                cost += _mark_through(box, lb)
-                cost -= _separation(box, terms.boxes) * SEPARATION_WEIGHT
+                cost += mark_gap(box, lb, dist) * gap_px
+                cost += mark_through(box, lb)
+                cost -= separation(box, terms.boxes) * SEPARATION_WEIGHT
                 here = (cost, cx, cy, x0, y0, ox, ax, ay)
                 if best is None or cost < best[0]:
                     best = here

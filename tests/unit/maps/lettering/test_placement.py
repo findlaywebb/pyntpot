@@ -15,15 +15,15 @@ from pyntpot.maps.lettering.label import (
 )
 from pyntpot.maps.lettering.placement import _reseat, _uncross_leaders, place
 from pyntpot.maps.lettering.placement_along import IN_WATER_ROAD_COST
-from pyntpot.maps.lettering.placement_costs import Backdrop, _crossings, _on_road
+from pyntpot.maps.lettering.placement_costs import Backdrop, _crossings, on_road
 from pyntpot.maps.lettering.placement_flat import LEADER_COST_PX, LEADER_RUNGS, ROAD_CROSS_COST
 from pyntpot.maps.lettering.placement_lift import (
     MAX_TILT_DEG,
     TILT_EXEMPT_KINDS,
-    _curved_boxes,
-    _tilt,
+    curved_boxes,
+    line_tilt,
 )
-from pyntpot.maps.lettering.placement_marks import _mark_through
+from pyntpot.maps.lettering.placement_marks import mark_through
 from pyntpot.maps.lettering_marks import box_size
 
 from support.basemaps import river_label, wide_card
@@ -127,7 +127,7 @@ def test_a_river_follows_its_bend_even_when_the_bend_runs_down_the_map():
     )
     assert river.window, "a vertical river was not set along its own water"
     assert not river.flat
-    assert _tilt(river.window) > MAX_TILT_DEG, "this window is a steep one"
+    assert line_tilt(river.window) > MAX_TILT_DEG, "this window is a steep one"
     assert "river" in TILT_EXEMPT_KINDS
 
 
@@ -174,7 +174,7 @@ def test_a_span_name_lands_beside_the_bracket_it_belongs_to():
     near = min(min(math.dist(((x0 + x1) / 2, y), q) for q in bracket) for y in (y0, y1))
     assert near < 3.0 * span.size, f"the name landed {near:.0f} px off its bracket"
     assert (y0 + y1) / 2 < 170.0, "the name sat between the bracket and the road"
-    assert _mark_through(span.box, span) == 0.0
+    assert mark_through(span.box, span) == 0.0
 
 
 def test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_map():
@@ -219,9 +219,9 @@ def test_a_name_on_the_water_is_moved_off_a_bridge():
         [],
         partial(box_size, hand),
     )
-    cells = _curved_boxes(name.window, name, name.size)
+    cells = curved_boxes(name.window, name, name.size)
     assert cells
-    assert sum(_on_road(c, [bridge]) for c in cells) == 0
+    assert sum(on_road(c, [bridge]) for c in cells) == 0
 
 
 def _leadered(name, x, y):

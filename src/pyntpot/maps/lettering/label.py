@@ -320,7 +320,7 @@ def feature_px(basemap: Basemap, kind: str, cls: str, own: float = 0.0) -> float
     return float(ROAD_PX_DEFAULT.get(cls, 3.4)) * WET_SPREAD
 
 
-def _outboard(span: Span, route_px: list[Pt]) -> float:
+def outboard(span: Span, route_px: list[Pt]) -> float:
     """Which side of a span's own line is away from the route: +1 or -1.
 
     The line is the stretch's smoothed shape pushed off the route, bridged at a

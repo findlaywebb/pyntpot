@@ -16,7 +16,7 @@ from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import TIER_SETTLEMENT, Label
-from pyntpot.maps.lettering.placement_names import _stem
+from pyntpot.maps.lettering.placement_names import name_stem
 
 #: What a settlement is worth before the route is taken into account.
 SETTLEMENT_RANK = {"city": 4.0, "town": 3.0, "village": 2.0, "suburb": 1.5, "hamlet": 1.0}
@@ -64,7 +64,7 @@ def settlements(basemap: Basemap) -> list[dict[str, Any]]:
         )
     groups: list[dict[str, Any]] = []
     for entry in sorted(found, key=lambda e: e["off_route_m"]):
-        stem = _stem(entry["name"])
+        stem = name_stem(entry["name"])
         for group in groups:
             if group["stem"] != stem:
                 continue

@@ -20,7 +20,7 @@ from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import TIER_RIVER, Label, feature_px
 from pyntpot.maps.lettering.picks_lines import NamedLines
 from pyntpot.maps.lettering.placement_names import MAJOR_RIVER_LABELS
-from pyntpot.maps.lettering.placement_window import _on_line
+from pyntpot.maps.lettering.placement_window import on_line
 
 #: How much water a name needs under it before it is written on the water, as a
 #: multiple of its own type size. Two and a bit: the letters occupy about one
@@ -127,7 +127,7 @@ def pick_rivers(
         times = MAJOR_RIVER_LABELS if rank == 0 and twice else 1
         for n in range(times):
             at = (n + 1) / (times + 1)
-            anchor = _on_line(line, cumulative_length(line), run * at)[0]
+            anchor = on_line(line, cumulative_length(line), run * at)[0]
             size = DEFAULT_LINE_PX * 0.9
             out.append(
                 Label(

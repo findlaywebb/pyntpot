@@ -1,7 +1,7 @@
 """Keeping a span's mark clear of the route: the clear stretches and the bearing of a line.
 
 Key names: `clear_of_route`, whether a line keeps its distance from every piece of the
-route; `_clear_of` and `_longest_clear`, a line pushed off the route and the longest
+route; `clear_of` and `_longest_clear`, a line pushed off the route and the longest
 stretch of it that stays clear; `span_bearing`, the angle a line makes across the map.
 
 It does not shape a span's line, choose its side or draw its ticks and name, and it
@@ -20,16 +20,16 @@ from pyntpot.ink.polyline import Pt, foot_on, length, seg_gap
 _FEWEST_WITH_A_MIDDLE = 3
 
 #: The fewest points that make a segment.
-_FEWEST_FOR_A_SEGMENT = 2
+FEWEST_FOR_A_SEGMENT = 2
 
 #: Below this a distance in pixels is zero.
-_ZERO_PX = 1e-6
+ZERO_PX = 1e-6
 
 #: Below this a slab test treats a segment as parallel to the slab.
 _PARALLEL_EPS = 1e-12
 
 
-def _seg_in_box(a: Pt, b: Pt, x0: float, y0: float, x1: float, y1: float) -> bool:
+def seg_in_box(a: Pt, b: Pt, x0: float, y0: float, x1: float, y1: float) -> bool:
     """Whether a segment touches an axis-aligned box, by the slab test."""
     if max(a[0], b[0]) < x0 or min(a[0], b[0]) > x1 or max(a[1], b[1]) < y0 or min(a[1], b[1]) > y1:
         return False
@@ -74,7 +74,7 @@ def span_bearing(line: list[Pt]) -> float:
     bracket is which way the bracket goes across the map, and a climb that
     wiggles about a westward chord still reads westward.
     """
-    if len(line) < _FEWEST_FOR_A_SEGMENT:
+    if len(line) < FEWEST_FOR_A_SEGMENT:
         return 90.0
     a, b = line[0], line[-1]
     ang = abs(math.degrees(math.atan2(b[1] - a[1], b[0] - a[0])))
@@ -125,10 +125,10 @@ def clear_of_route(line: list[Pt], route_px: list[Pt], clear_px: float) -> bool:
     Returns:
         True when the mark is clear of everything.
     """
-    if len(line) < _FEWEST_FOR_A_SEGMENT or len(route_px) < _FEWEST_FOR_A_SEGMENT:
+    if len(line) < FEWEST_FOR_A_SEGMENT or len(route_px) < FEWEST_FOR_A_SEGMENT:
         return True
-    near = _route_near(line, route_px, clear_px)
-    if len(near) < _FEWEST_FOR_A_SEGMENT:
+    near = route_near(line, route_px, clear_px)
+    if len(near) < FEWEST_FOR_A_SEGMENT:
         return True
     for a, b in itertools.pairwise(line):
         for c, d in itertools.pairwise(near):
@@ -137,7 +137,7 @@ def clear_of_route(line: list[Pt], route_px: list[Pt], clear_px: float) -> bool:
     return True
 
 
-def _route_near(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
+def route_near(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
     """The run of route that could come near a mark, as one polyline.
 
     Every segment of route that touches the mark's own box grown by the
@@ -150,7 +150,7 @@ def _route_near(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]
     points alone drops exactly those: the mark then measures itself against a
     road that is not there and reads as clear of one it lies on.
     """
-    if len(line) < 1 or len(route_px) < _FEWEST_FOR_A_SEGMENT:
+    if len(line) < 1 or len(route_px) < FEWEST_FOR_A_SEGMENT:
         return []
     pad = clear_px + 8.0
     x0 = min(x for x, _ in line) - pad
@@ -160,7 +160,7 @@ def _route_near(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]
     out: list[Pt] = []
     last = -2
     for i, (a, b) in enumerate(itertools.pairwise(route_px)):
-        if not _seg_in_box(a, b, x0, y0, x1, y1):
+        if not seg_in_box(a, b, x0, y0, x1, y1):
             continue
         if i > last and out:
             out.append(out[-1])  # a break: a zero-length step, not a road
@@ -171,7 +171,7 @@ def _route_near(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]
     return out
 
 
-def _clear_of(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
+def clear_of(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
     """Push a mark off any strand of route it came near, or give it up.
 
     The route rule (a mark never comes within the clearance of the route) is a
@@ -191,15 +191,15 @@ def _clear_of(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
         that keeps `CLEAR_KEEP_FRAC` of its length; an empty list when there is
         none.
     """
-    if len(line) < _FEWEST_FOR_A_SEGMENT:
+    if len(line) < FEWEST_FOR_A_SEGMENT:
         return []
     out = list(line)
     walked = [0.0] * len(out)
     for _ in range(CLEAR_PASSES):
         if clear_of_route(out, route_px, clear_px):
             return out
-        near = _route_near(out, route_px, clear_px * 6.0)
-        if len(near) < _FEWEST_FOR_A_SEGMENT:
+        near = route_near(out, route_px, clear_px * 6.0)
+        if len(near) < FEWEST_FOR_A_SEGMENT:
             return out
         feet = [foot_on(p, near) for p in out]
         want = _blur([max(0.0, clear_px * 1.3 - d) for d, _ in feet], CLEAR_BLUR)
@@ -209,9 +209,7 @@ def _clear_of(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[Pt]:
                 moved.append(p)
                 continue
             ux, uy = (
-                ((p[0] - foot[0]) / d, (p[1] - foot[1]) / d)
-                if d > _ZERO_PX
-                else _away_from(near, p)
+                ((p[0] - foot[0]) / d, (p[1] - foot[1]) / d) if d > ZERO_PX else _away_from(near, p)
             )
             step = min(push, CLEAR_PUSH_CAP * clear_px - walked[i])
             if step <= 0.0:
@@ -244,7 +242,7 @@ def _longest_clear(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[
     """
     if len(line) < _FEWEST_WITH_A_MIDDLE:
         return []
-    near = _route_near(line, route_px, clear_px)
+    near = route_near(line, route_px, clear_px)
     ok = [foot_on(p, near)[0] >= clear_px * 1.05 for p in line] if near else [True] * len(line)
     best: tuple[int, int] = (0, 0)
     at = None
@@ -269,7 +267,7 @@ def _longest_clear(line: list[Pt], route_px: list[Pt], clear_px: float) -> list[
 
 def _away_from(poly: list[Pt], p: Pt) -> Pt:
     """A unit vector square to a polyline, for a point sitting exactly on it."""
-    at = _nearest_on(poly, p)
+    at = nearest_on(poly, p)
     a = poly[max(at - 1, 0)]
     b = poly[min(at + 1, len(poly) - 1)]
     run = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
@@ -296,7 +294,7 @@ def _blur(series: list[float], passes: int) -> list[float]:
     return out
 
 
-def _nearest_on(sub: list[Pt], p: Pt) -> int:
+def nearest_on(sub: list[Pt], p: Pt) -> int:
     """The index of the route point a mark's own point stands beside."""
     return min(range(len(sub)), key=lambda i: (sub[i][0] - p[0]) ** 2 + (sub[i][1] - p[1]) ** 2)
 

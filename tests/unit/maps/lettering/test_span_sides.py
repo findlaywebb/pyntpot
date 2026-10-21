@@ -5,15 +5,15 @@ import math
 from pyntpot.maps.card import Card
 from pyntpot.maps.lettering import span_sides
 from pyntpot.maps.lettering.label import Span
-from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, _resample, span_line
+from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, resample, span_line
 from pyntpot.maps.lettering.span_sides import (
     SPAN_CURVE_MIN_COHERENCE,
     SPAN_CURVE_MIN_TURN_DEG,
     SPAN_CURVE_WEIGHT,
     _convex_side,
-    _curved_side,
-    _freer_side,
     bend_strength,
+    curved_side,
+    freer_side,
     route_turn,
 )
 
@@ -67,7 +67,7 @@ def test_a_straight_or_an_s_bend_has_no_outside_and_the_bend_does_not_vote():
     back = arc(-100.0, r=140.0)
     ox, oy = back[0]
     ess = first + [(x - ox + first[-1][0] + dx, y - oy + first[-1][1] + dy) for x, y in back]
-    net, gross = route_turn(_resample(ess, 21.0))
+    net, gross = route_turn(resample(ess, 21.0))
     assert gross > SPAN_CURVE_MIN_TURN_DEG * 2, "the S does turn"
     assert abs(net) / gross < SPAN_CURVE_MIN_COHERENCE
     assert bend_strength(ess, 21.0) == 0.0
@@ -86,15 +86,15 @@ def test_the_bend_is_a_weighted_term_and_a_clearer_side_still_wins():
     outside = _convex_side(span, route, 14.0)[0]
     inside = -outside
     # A near tie: the bend turns the side round.
-    assert _curved_side(span, route, inside, 0.01, 14.0) == outside
+    assert curved_side(span, route, inside, 0.01, 14.0) == outside
     # A margin past what the vote is worth: the free paper keeps it.
-    assert _curved_side(span, route, inside, SPAN_CURVE_WEIGHT * 2, 14.0) == inside
+    assert curved_side(span, route, inside, SPAN_CURVE_WEIGHT * 2, 14.0) == inside
     # Already on the outside: nothing to do either way.
-    assert _curved_side(span, route, outside, 0.01, 14.0) == outside
+    assert curved_side(span, route, outside, 0.01, 14.0) == outside
     # And with the term off, the free-paper answer stands whatever the bend.
     span_sides.SPAN_CURVE_SIDE = False
     try:
-        assert _curved_side(span, route, inside, 0.01, 14.0) == inside
+        assert curved_side(span, route, inside, 0.01, 14.0) == inside
     finally:
         span_sides.SPAN_CURVE_SIDE = True
 
@@ -108,7 +108,7 @@ def test_the_freer_side_is_signed_as_the_mark_is_drawn():
     # Solid ink above the route, clear paper below it.
     dark = {"w": 16, "h": 12, "v": [[1.0 if r <= 5 else 0.0] * 16 for r in range(12)]}
     span = Span(name="Cat Bells", i0=10, i1=80)
-    side, margin = _freer_side(span, route, dark, card, 14.0)
+    side, margin = freer_side(span, route, dark, card, 14.0)
     line = span_line(route, 10, 80, side, 14.0 * SPAN_OFFSET_CAPS)
     assert line[len(line) // 2][1] > 300.0, "the mark went on the solid side"
     assert margin == 1.0

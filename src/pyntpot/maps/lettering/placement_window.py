@@ -1,7 +1,7 @@
 """Windows of a line: the run a name is set along, how far it turns, and where a distance falls.
 
-Key names: `_window`, the run of a line a name's width long from a start; `_turning`
-and `_bow`, how far a run turns and how far it bows off its chord; `_on_line` and
+Key names: `line_window`, the run of a line a name's width long from a start; `turning`
+and `line_bow`, how far a run turns and how far it bows off its chord; `on_line` and
 `_bisect`, the point and bearing at a distance along a line.
 
 It does not choose a window, price one or write along it.
@@ -24,7 +24,7 @@ MAX_TURN_DEG = 62.0
 MAX_BOW_FRAC = 0.09
 
 
-def _window(line: list[Pt], start: int, want: float) -> list[Pt] | None:
+def line_window(line: list[Pt], start: int, want: float) -> list[Pt] | None:
     """The run of a line from one point that is `want` long, or None."""
     out = [line[start]]
     run = 0.0
@@ -36,7 +36,7 @@ def _window(line: list[Pt], start: int, want: float) -> list[Pt] | None:
     return None
 
 
-def _turning(pts: list[Pt]) -> float:
+def turning(pts: list[Pt]) -> float:
     """Total turning along a polyline, in degrees.
 
     The test that decides whether text can be set along something. Curvature at
@@ -51,14 +51,14 @@ def _turning(pts: list[Pt]) -> float:
     return math.degrees(total)
 
 
-def _bow(pts: list[Pt]) -> float:
+def line_bow(pts: list[Pt]) -> float:
     """How far a run wanders off the straight line between its own ends."""
     (ax, ay), (bx, by) = pts[0], pts[-1]
     run = math.hypot(bx - ax, by - ay) or 1.0
     return max(abs((bx - ax) * (ay - y) - (ax - x) * (by - ay)) / run for x, y in pts)
 
 
-def _on_line(line: list[Pt], cum: list[float], at: float) -> tuple[Pt, float]:
+def on_line(line: list[Pt], cum: list[float], at: float) -> tuple[Pt, float]:
     """The point at an arc length along a line, and the tangent's angle there."""
     at = min(max(at, 0.0), cum[-1])
     i = min(_bisect(cum, at), len(line) - 2)

@@ -1,14 +1,14 @@
 """What a name costs where it sits: crossings, overlap, darkness, the route and its own feature.
 
-Key names: `_crossings`, `_on_road`, `_overlap`, `_separation`, `_darkness`, `_on_paper`
-and `_near_route`, which price one box against the roads, the other names, the painted
-plates and the route; `_off_own` and `_off_own_feature`, which leave a name's own line
+Key names: `_crossings`, `on_road`, `overlap`, `separation`, `darkness`, `box_on_paper`
+and `near_route`, which price one box against the roads, the other names, the painted
+plates and the route; `off_own` and `off_own_feature`, which leave a name's own line
 out of the roads it keeps off; `_is_own_feature`.
 
 It does not choose a position and does not move a box; a caller adds these prices up.
 
 Invariants: a price is never negative; no price here asks whether the box is on the
-paper, which `_on_paper` answers for the caller.
+paper, which `box_on_paper` answers for the caller.
 """
 
 import itertools
@@ -19,7 +19,7 @@ from typing import Any
 from pyntpot.ink.polyline import Pt, foot_on
 from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import NO_LEADER, Box, Label
-from pyntpot.maps.lettering.span_clear import _seg_in_box
+from pyntpot.maps.lettering.span_clear import seg_in_box
 
 #: The fewest points that make a segment.
 _FEWEST_FOR_A_SEGMENT = 2
@@ -110,13 +110,13 @@ def _crossings(box: Box, roads: list[list[Pt]]) -> int:
     hit = 0
     for line in roads:
         for a, b in itertools.pairwise(line):
-            if _seg_in_box(a, b, x0, y0, x1, y1):
+            if seg_in_box(a, b, x0, y0, x1, y1):
                 hit += 1
                 break
     return hit
 
 
-def _on_road(box: Box, roads: list[list[Pt]]) -> float:
+def on_road(box: Box, roads: list[list[Pt]]) -> float:
     """Whether a box sits on tarmac at all: 1.0 or 0.0.
 
     Deliberately not a count. A name that lands on a junction touches five ways
@@ -126,7 +126,7 @@ def _on_road(box: Box, roads: list[list[Pt]]) -> float:
     return 1.0 if _crossings(box, roads) else 0.0
 
 
-def _overlap(box: Box, boxes: list[Box]) -> float:
+def overlap(box: Box, boxes: list[Box]) -> float:
     """Total area a box shares with what is already placed."""
     x0, y0, x1, y1 = box
     total = 0.0
@@ -138,7 +138,7 @@ def _overlap(box: Box, boxes: list[Box]) -> float:
     return total
 
 
-def _separation(box: Box, boxes: list[Box]) -> float:
+def separation(box: Box, boxes: list[Box]) -> float:
     """How far a box sits from the nearest thing already on the map.
 
     Capped, because past `SEPARATION_CAP_PX` more room is not something a
@@ -156,7 +156,7 @@ def _separation(box: Box, boxes: list[Box]) -> float:
     return best
 
 
-def _darkness(box: Box, card: Card, dark: dict[str, Any]) -> float:
+def darkness(box: Box, card: Card, dark: dict[str, Any]) -> float:
     """Mean darkness of the painter's own grid under a box."""
     gw, gh, grid = dark["w"], dark["h"], dark["v"]
     x0, y0, x1, y1 = box
@@ -168,7 +168,7 @@ def _darkness(box: Box, card: Card, dark: dict[str, Any]) -> float:
     return float(sum(cells) / len(cells)) if cells else 0.3
 
 
-def _on_paper(box: Box, card: Card) -> bool:
+def box_on_paper(box: Box, card: Card) -> bool:
     """Whether a box is wholly inside the torn margin, on the paper."""
     x0, y0, x1, y1 = box
     return x0 > EDGE_PX and x1 < card.w - EDGE_PX and y0 > EDGE_PX and y1 < card.h - EDGE_PX
@@ -195,7 +195,7 @@ def _is_own_feature(line: list[Pt], baseline: list[Pt]) -> bool:
     return near >= OWN_LINE_FRAC * len(line)
 
 
-def _off_own(roads: list[list[Pt]], lb: Label) -> list[list[Pt]]:
+def off_own(roads: list[list[Pt]], lb: Label) -> list[list[Pt]]:
     """The lines a name is charged for crossing, its own feature removed.
 
     `road_lines` is everything a name should not be laid across, and it holds
@@ -214,7 +214,7 @@ def _off_own(roads: list[list[Pt]], lb: Label) -> list[list[Pt]]:
     return [line for line in roads if not _is_own_feature(line, lb.baseline)]
 
 
-def _off_own_feature(box: Box, lb: Label) -> float:
+def off_own_feature(box: Box, lb: Label) -> float:
     """What sitting away from the thing it names costs a road or a river name.
 
     A name set flat beside a line still belongs to that line, and with no
@@ -237,7 +237,7 @@ def _off_own_feature(box: Box, lb: Label) -> float:
     return max(near - lb.size - OWN_FEATURE_SLACK_PX, 0.0) * OWN_FEATURE_COST_PX
 
 
-def _near_route(
+def near_route(
     box: Box, thin: list[tuple[list[Pt], float]], reach: float = ROUTE_REACH_PX
 ) -> float:
     """What sitting on or beside the route costs one box.

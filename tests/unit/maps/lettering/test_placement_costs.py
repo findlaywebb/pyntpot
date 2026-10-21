@@ -2,7 +2,7 @@
 
 from pyntpot.maps.lettering.label import TIER_ROAD, Label
 from pyntpot.maps.lettering.picks_lines import road_lines
-from pyntpot.maps.lettering.placement_costs import _off_own, _off_own_feature, _on_road
+from pyntpot.maps.lettering.placement_costs import off_own, off_own_feature, on_road
 
 from support.basemaps import hung_card, river_label
 
@@ -20,8 +20,8 @@ def test_a_road_name_stays_near_the_road_it_names():
         name="A361", kind="road", px=200.0, py=150.0, tier=TIER_ROAD, size=14.0, baseline=tarmac
     )
     close = (0.0, 0.0, 40.0, 40.0)
-    assert _off_own_feature(close, far) > 0.0
-    assert _off_own_feature((190.0, 140.0, 230.0, 160.0), near) == 0.0
+    assert off_own_feature(close, far) > 0.0
+    assert off_own_feature((190.0, 140.0, 230.0, 160.0), near) == 0.0
 
 
 def test_a_name_is_not_charged_for_crossing_the_thing_it_names():
@@ -33,10 +33,10 @@ def test_a_name_is_not_charged_for_crossing_the_thing_it_names():
     water = [(100.0, 400.0), (800.0, 400.0)]
     bridge = [(500.0, 300.0), (500.0, 500.0)]
     name = river_label(40.0)
-    kept = _off_own([water, bridge], name)
+    kept = off_own([water, bridge], name)
     assert kept == [bridge]
     # A name beside its feature is filtered the same way; everything else stays.
-    assert _off_own([bridge], name) == [bridge]
+    assert off_own([bridge], name) == [bridge]
 
 
 def test_an_unnamed_lane_and_a_watercourse_both_cost_a_name_that_crosses_them():
@@ -53,4 +53,4 @@ def test_an_unnamed_lane_and_a_watercourse_both_cost_a_name_that_crosses_them():
     lines = road_lines(named, card)
     assert len(lines) == 3, "the lanes and the water are not in the crossing cost"
     for y in (10.0, 60.0, 120.0):
-        assert _on_road((100.0, y - 4, 200.0, y + 4), lines) == 1.0
+        assert on_road((100.0, y - 4, 200.0, y + 4), lines) == 1.0

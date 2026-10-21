@@ -207,8 +207,8 @@ def test_letters_imports_only_ink() -> None:
     assert _violations("letters", ("pyntpot.ink", "pyntpot.letters")) == []
 
 
-#: The defining areas the private-name rule covers so far, one per renaming slice.
-PRIVATE_NAME_AREAS: tuple[str, ...] = ("ink", "letters", "maps")
+#: The defining areas the private-name rule covers, one per renaming slice.
+PRIVATE_NAME_AREAS: tuple[str, ...] = ("ink", "letters", "maps", "maps.lettering")
 
 
 def _area(module: str) -> str:

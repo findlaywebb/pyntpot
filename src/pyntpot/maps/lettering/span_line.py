@@ -2,7 +2,7 @@
 
 Key names: `span_line`, the line drawn beside a stretch of route at an offset;
 `shape_curve`, a stretch's raw path reduced to a few strokes; `doubling_px`, how far a
-stretch doubles back on itself; `_resample`, a polyline at an even step.
+stretch doubles back on itself; `resample`, a polyline at an even step.
 
 It does not choose which side of the route the line sits on and does not place the name.
 
@@ -15,7 +15,7 @@ import math
 
 from pyntpot.ink.curves import offset_curve, spline
 from pyntpot.ink.polyline import Pt, foot_on, length, meet, simplify
-from pyntpot.maps.lettering.span_clear import SPAN_CLEAR_CAPS, _clear_of, _nearest_on
+from pyntpot.maps.lettering.span_clear import SPAN_CLEAR_CAPS, clear_of, nearest_on
 
 #: The fewest points a stretch needs before it can be said to double back.
 _FEWEST_TO_DOUBLE = 8
@@ -140,7 +140,7 @@ def span_line(
     line = _uncross(
         _forward_only(_drop_folds(offset_curve(shape, side, offset_px), shape, offset_px), shape)
     )
-    return _clear_of(line, route_px, clear_px)
+    return clear_of(line, route_px, clear_px)
 
 
 def shape_curve(raw: list[Pt], offset_px: float) -> list[Pt]:
@@ -154,7 +154,7 @@ def shape_curve(raw: list[Pt], offset_px: float) -> list[Pt]:
     a corner. See `_corners_of`.
     """
     step = max(offset_px * SHAPE_STEP_FRAC, 1.0)
-    even = _resample(raw, step)
+    even = resample(raw, step)
     corners = simplify(even, offset_px * SHAPE_SIMPLIFY_FRAC)
     if len(corners) < _FEWEST_FOR_A_SEGMENT:
         return list(raw)
@@ -246,7 +246,7 @@ def _forward_only(line: list[Pt], shape: list[Pt]) -> list[Pt]:
     out: list[Pt] = []
     seen = -1
     for p in line:
-        at = _nearest_on(shape, p)
+        at = nearest_on(shape, p)
         if at < seen:
             continue
         out.append(p)
@@ -365,7 +365,7 @@ def _mouth_path(raw: list[Pt], offset_px: float) -> list[Pt]:
 MOUTH_MIN_SPAN = 2.5
 
 
-def _resample(line: list[Pt], step: float) -> list[Pt]:
+def resample(line: list[Pt], step: float) -> list[Pt]:
     """A polyline at an even spacing, so an arc length is a straight lookup."""
     if len(line) < _FEWEST_FOR_A_SEGMENT or step <= 0:
         return list(line)

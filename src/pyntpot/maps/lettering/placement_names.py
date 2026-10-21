@@ -1,6 +1,6 @@
 """One name, once: dropping a label that repeats another's name or place.
 
-Key names: `dedupe_names`, the labels that survive when two name one place; `_stem`,
+Key names: `dedupe_names`, the labels that survive when two name one place; `name_stem`,
 `_words` and `_one_place`, how two names are judged to be the same place;
 `NAME_FAMILY` and `NAME_ALLOWANCE`, how many of a family one card keeps.
 
@@ -39,7 +39,7 @@ QUALIFIERS = (
 )
 
 
-def _stem(name: str) -> str:
+def name_stem(name: str) -> str:
     """A settlement name without its leading qualifier."""
     return re.sub(rf"^({'|'.join(QUALIFIERS)})\s+", "", str(name)).strip()
 
@@ -97,7 +97,7 @@ NEAR_DUPLICATE_EXTRA_WORDS = 2
 
 def _words(name: str) -> list[str]:
     """A name as comparable words: case folded, unpunctuated, unqualified."""
-    plain = re.sub(r"[^\w\s]", " ", _stem(str(name)))
+    plain = re.sub(r"[^\w\s]", " ", name_stem(str(name)))
     return plain.casefold().split()
 
 

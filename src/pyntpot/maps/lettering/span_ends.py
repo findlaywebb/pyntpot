@@ -1,7 +1,7 @@
 """A span's end ticks and its name: where each is drawn beside the mark.
 
-Key names: `_span_ticks`, the two short ticks at the ends of a span that point at the
-stretch of route it covers; `_span_label`, the name a span carries, set along its line
+Key names: `span_ticks`, the two short ticks at the ends of a span that point at the
+stretch of route it covers; `span_label`, the name a span carries, set along its line
 when the span runs across the map and beside it when it does not.
 
 It does not draw the span's line, choose its side or place the name among the others
@@ -14,12 +14,12 @@ set along a line sits on the far side of the line from the route.
 import math
 
 from pyntpot.ink.polyline import Pt, length
-from pyntpot.maps.lettering.label import TIER_SPAN, Label, Measure, Span, _outboard
+from pyntpot.maps.lettering.label import TIER_SPAN, Label, Measure, Span, outboard
 from pyntpot.maps.lettering.span_clear import (
-    _FEWEST_FOR_A_SEGMENT,
-    _ZERO_PX,
+    FEWEST_FOR_A_SEGMENT,
     SPAN_ALONG_MAX_BEARING_DEG,
     SPAN_CLEAR_CAPS,
+    ZERO_PX,
     clear_of_route,
     span_bearing,
 )
@@ -31,7 +31,7 @@ from pyntpot.maps.lettering.span_clear import (
 SPAN_TICK_CAPS = 0.85
 
 
-def _span_ticks(span: Span, route_px: list[Pt], cap_px: float) -> list[list[Pt]]:
+def span_ticks(span: Span, route_px: list[Pt], cap_px: float) -> list[list[Pt]]:
     """A tick from each end of the mark, pointing at the end of the stretch.
 
     The end marks run from the end of the line towards the end of the segment,
@@ -46,7 +46,7 @@ def _span_ticks(span: Span, route_px: list[Pt], cap_px: float) -> list[list[Pt]]
     so the route rule binds it too: it is shortened until its tip clears the road
     it points at, and left off when even a short one would touch it.
     """
-    if len(span.line) < _FEWEST_FOR_A_SEGMENT:
+    if len(span.line) < FEWEST_FOR_A_SEGMENT:
         return []
     out = []
     length = cap_px * SPAN_TICK_CAPS
@@ -54,7 +54,7 @@ def _span_ticks(span: Span, route_px: list[Pt], cap_px: float) -> list[list[Pt]]
     for end, at in ((span.line[0], span.i0), (span.line[-1], span.i1)):
         target = route_px[at]
         run = math.dist(end, target)
-        if run < _ZERO_PX:
+        if run < ZERO_PX:
             continue
         ux, uy = (target[0] - end[0]) / run, (target[1] - end[1]) / run
         reach = min(length, max(run - clear, 0.0))
@@ -67,7 +67,7 @@ def _span_ticks(span: Span, route_px: list[Pt], cap_px: float) -> list[list[Pt]]
     return out
 
 
-def _span_label(
+def span_label(
     span: Span,
     route_px: list[Pt],
     cap_px: float,
@@ -82,7 +82,7 @@ def _span_label(
     """
     mid = span.line[len(span.line) // 2] if span.line else (0.0, 0.0)
     size = cap_px * (1.0 if span.ground else 0.85)
-    lift = _outboard(span, route_px)
+    lift = outboard(span, route_px)
     width, _h = measure_fn(span.name, size)
     along = (
         bool(span.line)

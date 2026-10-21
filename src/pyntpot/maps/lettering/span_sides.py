@@ -1,13 +1,13 @@
 """Which side of the route a span's line stands on, and how strongly the route bends there.
 
 Key names: `route_turn` and `bend_strength`, how far and how steadily a stretch bends;
-`_convex_side`, `_curved_side` and `_freer_side`, the three readings of a side (the
+`_convex_side`, `curved_side` and `freer_side`, the three readings of a side (the
 outside of a bend, the outside weighed against clearance, and the clearer of two); the
 `SPAN_CURVE_*` constants that weigh the bend.
 
 It does not draw a line and does not resolve span requests.
 
-Invariants: a side is `+1` or `-1`; `_freer_side` and `_convex_side` sign it as
+Invariants: a side is `+1` or `-1`; `freer_side` and `_convex_side` sign it as
 `span_line` draws it (+1 the left of travel in display pixels), and only `route_turn` signs
 it towards the normal `(-dy, dx)`; a straight or S-shaped stretch has no outside, and a bend
 never outweighs a clearly clearer side.
@@ -21,7 +21,7 @@ from pyntpot.ink.polyline import Pt
 from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import Span
 from pyntpot.maps.lettering.span_clear import SPAN_CLEAR_CAPS, clear_of_route
-from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, _resample, span_line
+from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, resample, span_line
 
 log = logging.getLogger(__name__)
 
@@ -163,7 +163,7 @@ def bend_strength(sub: list[Pt], scale_px: float) -> float:
     """
     if len(sub) < _FEWEST_WITH_A_MIDDLE or scale_px <= 0.0:
         return 0.0
-    net, gross = route_turn(_resample(sub, scale_px))
+    net, gross = route_turn(resample(sub, scale_px))
     if gross <= _ZERO_LENGTH or abs(net) < SPAN_CURVE_MIN_TURN_DEG:
         return 0.0
     if abs(net) / gross < SPAN_CURVE_MIN_COHERENCE:
@@ -249,7 +249,7 @@ def _convex_side(span: Span, route_px: list[Pt], cap_px: float) -> tuple[int, di
     return (1 if reach[1] > reach[-1] else -1), marks
 
 
-def _curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_px: float) -> int:
+def curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_px: float) -> int:
     """The side the bracket goes on once the bend has had its say.
 
     A weighted term and never an override. The free-paper choice arrives with
@@ -312,7 +312,7 @@ def _curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_p
     return outside
 
 
-def _freer_side(
+def freer_side(
     span: Span, route_px: list[Pt], dark: dict[str, Any], card: Card, cap_px: float
 ) -> tuple[int, float]:
     """Which side of its own extent has the more free paper, and by how much.
