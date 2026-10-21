@@ -434,3 +434,8 @@ User instructions (2026-10-07):
   the drift: "Accept it - identical to human eye". It is the golden group's one
   explained exception to the 0.005 step bound, as ADR 0006's step 3 was; P10.11 runs on
   `p10-golden` after the `p10-fixes` PR merges, with ADR 0025.
+- Correction to the comparison figures above: the images the maintainer accepted were made
+  with the three-call fix (`line * self.ss + (self.ss - 1) / 2` at each of `lay`'s stamp
+  calls). The comparison script read RGB only; the repo's `differing_fraction` counts
+  alpha for RGBA outputs. Canonical fractions (`make_golden.py --compare`, delta > 2):
+  map 0.060095, wash 0.053400, labels-centreline 0.038954, pen 0.007298, paper 0.
