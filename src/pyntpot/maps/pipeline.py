@@ -5,7 +5,7 @@ is handed and builds the track's `Basemap` from the cached payloads; `paint`,
 which paints a basemap's plates into a directory, or hands back the plates
 already there when their manifest carries the current hash; `compose`, which
 lays the painted plates, the route and the label plate into one raster card;
-`FetchError`, raised when a provider cannot answer or the cached features are gone
+`FetchError` (from `maps.cache`), raised when a provider cannot answer or the cached features are gone
 once the fetch has run.
 The stage between `paint` and `compose` is `maps.lettering.pipeline.letter`.
 
@@ -44,26 +44,18 @@ from PIL import Image
 
 from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
-from pyntpot.maps.cache import Cache
+from pyntpot.maps.cache import Cache, FetchError
 from pyntpot.maps.compose import painted_map, paste_labels, route
 from pyntpot.maps.layers import BasemapInputs, build_basemap
 from pyntpot.maps.lettering.pipeline import Lettering
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.plates import Plates
-from pyntpot.maps.providers.base import Elevation, Features, ProviderError
+from pyntpot.maps.providers.base import Elevation, Features
 from pyntpot.maps.strands import STRAND_GAP_WIDTHS, separate_strands
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 
 log = logging.getLogger(__name__)
-
-
-class FetchError(RuntimeError):
-    """Raised by `fetch` when it cannot build a basemap.
-
-    A provider could not answer, with the provider's error as the cause, or the
-    cached features were missing once the fetch had run.
-    """
 
 
 def fetch(
@@ -95,10 +87,7 @@ def fetch(
             missing after the fetch, as when the cache directory was changed
             underneath it.
     """
-    try:
-        key = cache.ensure(track, features, elevation)
-    except ProviderError as exc:
-        raise FetchError(f"a provider could not answer: {exc}") from exc
+    key = cache.ensure(track, features, elevation)
     inputs = BasemapInputs(key, track, cache, [dict(place) for place in places])
     basemap = build_basemap(inputs, style)
     if basemap is None:

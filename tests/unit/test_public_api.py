@@ -67,6 +67,8 @@ MAPS_PUBLIC: tuple[str, ...] = (
     "OpenTopoData",
     "OverpassFeatures",
     "Plates",
+    "ProviderBudgetExceededError",
+    "ProviderError",
     "Style",
     "Track",
     "VectorLayers",
@@ -121,3 +123,12 @@ def test_every_layer_public_name_resolves(module: str) -> None:
     package = importlib.import_module(module)
     for name in LAYERS[module]:
         assert getattr(package, name) is not None, name
+
+
+def test_the_provider_errors_are_the_providers_own() -> None:
+    """`pyntpot.maps` exports the errors the providers raise, the budget refusal a `ProviderError`."""
+    maps = importlib.import_module("pyntpot.maps")
+    base = importlib.import_module("pyntpot.maps.providers.base")
+    assert maps.ProviderError is base.ProviderError
+    assert maps.ProviderBudgetExceededError is base.ProviderBudgetExceededError
+    assert issubclass(maps.ProviderBudgetExceededError, maps.ProviderError)

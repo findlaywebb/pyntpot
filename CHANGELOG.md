@@ -5,11 +5,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `pyntpot.maps.ProviderError` and `pyntpot.maps.ProviderBudgetExceededError`, the
+  errors the shipped providers raise when they cannot answer or their budget is spent
+  (ADR 0029).
+
 ### Changed
 
 - `pyntpot.maps.fetch` raises `FetchError` when a provider cannot answer, with the
   provider's error as its cause (ADR 0028); it let the private `ProviderError` through
   before.
+- `Cache.ensure` raises `FetchError` when a provider cannot answer, with the provider's
+  error as its cause (ADR 0029), as `fetch` does.
 
 ### Fixed
 
