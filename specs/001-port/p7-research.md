@@ -1,0 +1,277 @@
+# P7 research: what makes great READMEs, docs and guides, and what it means for pyntpot
+
+Researched 2026-10-23, before P7 is cut into slices. Six research notes sit under
+`research/p7/`, each with its case studies and sources:
+
+1. `1-readmes.md`: 18 READMEs fetched raw (rich, textual, httpx, uv, ruff, FastAPI, Typer,
+   Pydantic, polars, attrs, requests, Flask, prettymaps, vsketch, Pillow, matplotlib,
+   manim) plus GitHub, makeareadme and Write the Docs guidance.
+2. `2-docs-structure.md`: Diátaxis in practice (Django, NumPy, Canonical, Python core),
+   its critics, Stripe, FastAPI, Pydantic, polars, SQLAlchemy, Rust; reference tooling;
+   the docs-site question.
+3. `3-visual-libraries.md`: matplotlib, sphinx-gallery, scikit-image, three.js, p5.js,
+   Processing, manim, vsketch, prettymaps, cartopy, datashader, Hobbs, Stamen.
+4. `4-tutorials.md`: Django polls, the Rust Book, FastAPI, Flask, Elm, Svelte, polars,
+   Stripe quickstarts, Julia Evans, learning research (worked examples, fading,
+   expertise reversal).
+5. `5-release-surface.md`: PyPI rendering, metadata, badges, changelogs, the ODbL and
+   OSMF attribution rules, 0.x policy, docs gates.
+6. `6-identity-and-voice.md`: the core point distilled from the repo; Rough.js,
+   Excalidraw, tldraw, xkcd mode, p5.js, Processing, Charm, Rich, Nature of Code,
+   Ciechanowski, Stamen.
+
+This note is the synthesis. It proposes; nothing here is decided until the maintainer
+says so. The decisions are in section 4.
+
+## 1. The core point
+
+pyntpot paints the way a painter works. It does not lay a filter over a render: it lays
+cream paper with tooth and foxing, floods washes that pool at their edges and granulate
+into the paper, drags brushes that run dry and reload, glazes pigments by Kubelka-Munk,
+and letters names with a nib. Three things set it apart:
+
+- **It simulates the craft**, and every technique cites its source (`references.md`).
+- **It is deterministic**: a painting that looks accidental comes out the same, byte for
+  byte, from the same seed.
+- **Maps are its first application, not the whole of it.** `ink` and `letters` paint
+  anything; `maps` sits on top.
+
+It is also polite to the commons: a contact string is required, provider limits are
+kept, and the credit is lettered on the card.
+
+Candidate lines (from notes 1, 5 and 6):
+
+| Use | Candidate |
+| --- | --- |
+| Tagline, PyPI summary, GitHub description (plain, greppable) | "Hand-drawn watercolour and pen-and-ink painting for Python, with route maps." (current) |
+| Same slot, verb-led alternative | "Paint hand-drawn watercolour and pen-and-ink images in Python, with route maps from OpenStreetMap." |
+| README lede after the hero | "Lay a wash, pull a brush, letter a name." |
+| README lede, alternative | "Pictures and maps painted the way a painter works: paper, wash, pen, then the names." |
+
+## 2. The through-line: how the core point and style run through everything
+
+Every source agreed on one rule, and it answers "weave the core point and styling
+through it all":
+
+**The pictures carry the style; the words stay plain.** Rough.js, Rich, Charm and Stamen
+all put their identity into the product's own output, not into decorated prose. Where
+projects style the words (Charm's jokes, handwriting fonts as body text) it dates fast
+or hurts reading.
+
+From that rule:
+
+1. **Every image is painted by pyntpot, from a tested script.** The wordmark, the README
+   hero, the gallery, the reference swatches, the explanation figures, the social preview.
+   No stock images, no hand-made diagrams. Each caption names its script and seed
+   ("Painted by `examples/wash.py`, seed 11"), which turns determinism into something a
+   reader can check. A test fails when a docs image has no script that writes it.
+2. **The wordmark is painted.** `examples/word.py` letters "pyntpot" on a washed disc
+   (the paint pot in the name). It opens the README, and forms half of the social preview.
+3. **The tutorial follows the painter's order of work**: stretch the paper, lay a wash,
+   pull a brush, mix the pigments, take up the pen, letter a name, compose the sheet,
+   paint a route. That is also the `ink -> letters -> maps` order, so the craft story
+   and the architecture agree; the tutorial says so in one line.
+4. **Explanation pages are short essays on the craft**, built one effect at a time from a
+   single seed, as Ciechanowski and Stamen do: a flat wash, then edge darkening, then
+   granulation, each step a figure, each ending on its `references.md` key.
+5. **One recurring setting.** Lynmouth (Lyn, Heddon, Brendon, Watersmeet) for every map
+   figure, as Stamen carried one London tile through every stage. Real UK names from
+   `CONTRIBUTING.md` elsewhere.
+6. **Style by page type.** More in the README, the tutorial and the explanation essays;
+   little in how-to guides; none in reference beyond a swatch where a value is a colour
+   or a brush (matplotlib's xkcd mode has a dry reference page, which is right).
+7. **A one-page voice guide.** British English; no em or en dashes; glossary terms only;
+   studio verbs ("paints", "lays a wash", "letters") over software verbs ("renders",
+   "generates"); no hype words; designed gaps stated as capability facts. The trap
+   list: "sheet" means the paper's noise fields, not paper; "canvas" is a pixel grid;
+   "map" never appears in `ink` or `letters` docs; never "filter", "effect" or "shader",
+   because the pitch rests on simulation and those words undo it.
+8. **Stated values**, three short lines in the README: every image reproduces from its
+   seed; every technique cites its source; data providers are asked politely and
+   credited on the card.
+9. **Accessibility.** Lettered text is always repeated as real text. Patrick Hand is for
+   images, never body text. Alt text says what the picture shows or what changed
+   ("the same disc wash, now with pigment pooled at its edge"). Images sit on opaque
+   cream paper with a margin, which reads in light and dark mode alike.
+
+## 3. Proposed shape of P7
+
+### README
+
+Order: wordmark and tagline; the hero route map with a provenance caption; the non-map
+image beside it; few badges (PyPI version, Python versions, CI, licence, CodSpeed); what
+it is in two short paragraphs, including what it does not do; stated values; a gallery
+strip of the eight tutorial outputs, each linking to its page; install (`pip` and
+`uv add`); quick start; crediting the data; documentation links; status (0.x policy);
+licence. The "Develop" section moves to `CONTRIBUTING.md`; gates, ADRs, phases and
+`CLAUDE.md` stay out.
+
+**Quick start.** The outline's "three-line quick start" does not exist in Python: a map
+takes seven calls and two providers. Two honest versions, each followed by its picture:
+
+- A map, by the command line, in three lines:
+  `pyntpot map route.gpx -o map.png --cache cache/ --contact you@example.org`.
+- The engine, in Python: the `wash.py` disc in about eight lines, offline.
+
+**Images on PyPI.** The README is the PyPI page. PyPI hosts no images and does not
+resolve relative paths, and strips `<picture>`, so every image is an absolute raw URL
+pinned to the `v0.1.0` tag, small (under 500 KB for the hero, under 60 KB per
+thumbnail), with alt text. The 2.7 MB golden `map.png` is not the hero; a downscaled copy
+from a tested script is.
+
+### Docs tree
+
+```
+docs/
+  index.md                 landing page: one painting, four signposted routes
+  gallery.md               every image from examples/, captioned
+  tutorials/
+    index.md
+    paint-a-watercolour.md rungs 1 to 7, one section per rung
+    first-map.md           rung 8, the application
+  how-to/                  only guides with a real task behind them (section 4, F)
+  reference/
+    ink.md letters.md maps.md   generated from the docstrings
+    style-fields.md cli.md      generated, or pinned by a test
+    cache-layout.md manifest.md hand-written, each pinned by a test
+    pigments.md brushes.md      painted swatch sheets
+    glossary.md
+  explanation/
+    how-the-wash-works.md the-hand-and-the-nib.md data-policy.md
+    performance.md references.md
+```
+
+The maintainer records (`decisions/`, `issues/`, `features/`, `runbooks/`,
+`architecture.md`) stay where they are but out of the reader's path.
+
+**Each tutorial section has the same shape** (Flask, Elm, Rust Book): the finished
+picture first; the command and the log line it prints; the script's `main` quoted
+verbatim; "what to notice" (the pigment pooled inside the edge, the dry stroke breaking
+on the tooth); one "try changing" line. First success is rung 1, offline, inside five
+minutes.
+
+**Keeping prose and code in step.** Tutorial code blocks are verbatim copies of script
+regions under a marker comment; a test checks each block against its script, and that
+every rung is quoted. Images are compared with a fresh run under `--golden-tolerance`.
+
+**Reference is generated from the docstrings**, which are already the agent contract;
+hand-writing a second copy would drift. A test checks that every public name appears
+once. A docstring that reads badly when rendered is a docstring finding, not a reason to
+rewrite it in the docs.
+
+### Release surface
+
+- PyPI trusted publisher created before the tag (a pending publisher; Q14 chose tag only
+  for 0.0.x, so the two upload jobs on `v0.0.1` and `v0.0.2` failed as expected and must
+  never be re-run).
+- `publish.yml`: check the tag matches the version, run the gates before upload, pin the
+  publish action, create the GitHub release from the changelog section.
+- Metadata: classifiers (3.13, GIS, Artistic Software; no `License ::` classifier, which
+  conflicts with the PEP 639 expression), `Documentation` and `Changelog` URLs.
+- GitHub: description identical to the PyPI summary; topics craft-first (watercolour,
+  pen-and-ink, hand-drawn, hand-lettering, generative-art) then maps; a painted
+  1280 by 640 social preview.
+- CHANGELOG 0.1.0 with a short summary for newcomers and compare links; `CITATION.cff`;
+  a bug-report form.
+- `docs/explanation/data-policy.md`: a map is an ODbL Produced Work; turning attribution
+  off moves the duty to the caller; the cache and the exports are Derivative Databases
+  if republished; the providers' usage limits.
+- Status statement: on 0.x a minor release may break the API and a patch never does;
+  painted pixels may change between minors.
+- Docs gates: lychee for links (offline per PR, online weekly), `twine check --strict`,
+  a test that README links are absolute, the README quick start copied from a tested
+  example.
+- The publisher setup goes in `docs/runbooks/release.md`, not `CONTRIBUTING.md`.
+
+## 4. Decisions for the maintainer
+
+Each has a recommendation. The big ones shape the slicing; the smaller ones have
+defaults that the plan will use unless changed.
+
+### The big ones
+
+**A. A docs site, or plain Markdown on GitHub? (amends D13 if a site)**
+GitHub strips all styling, so plain Markdown carries the voice and the pictures but not
+the look. A site can carry the look, and here uniquely the theme can be painted by
+pyntpot itself (paper texture, a pigment palette, brush-stroke rules, Patrick Hand for
+display headings), at build time, from public API. A site also gives generated reference
+and a strict build that fails on a broken link or a missing public name. Engines in
+October 2026: Material for MkDocs is in maintenance mode (critical fixes end
+5 May 2027); Zensical, from the same team, is at 0.0.71 with 0.1.0 due 5 November 2026
+and supports mkdocstrings, which renders this repo's Markdown-style docstrings
+correctly (Sphinx does not). Options:
+1. A small Zensical site on GitHub Pages at 0.1, source kept as plain Markdown so it
+   still reads on GitHub. **Recommended**, with the site setup as its own late slice so
+   it can slip to 0.1.x without holding the release.
+2. Keep D13: plain Markdown, reference generated by pdoc.
+3. Plain Markdown at 0.1, site at 0.2.
+
+**B. Tutorial shape.**
+1. Two pages: `paint-a-watercolour.md` (rungs 1 to 7, one section each) and
+   `first-map.md` (rung 8). **Recommended**: the rungs are short, and the outline's
+   map-only tutorial would leave seven tested scripts unexplained.
+2. Eight pages, one per rung (suits a site).
+
+**C. Rung order.** Pigments (rung 5) come after the pen, which breaks the painter's
+order. Move it to rung 4, before the nib (a docstring renumbering and the test list).
+**Recommended.**
+
+**D. Pin every docs image as a golden.** The ink rung tests check only size, mode and
+"not one flat colour", so a rung can change visually and stay green. Making each
+gallery image its own comparison baseline (three.js does this) closes the gap and keeps
+the docs truthful. It widens what is pinned, so it needs an ADR alongside 0006 and 0025.
+**Recommended.**
+
+**E. How far the painted identity goes.**
+1. Images only: wordmark, hero, gallery, swatch sheets, explanation figures, social
+   preview.
+2. Option 1 plus a painted site theme (paper texture, palette, brush rules, Patrick Hand
+   display headings). **Recommended if A is a site.**
+3. Option 2 plus lettered page-title images and section vignettes on every page. Not
+   recommended: it starts to tip into decoration, and costs accessibility.
+
+**F. The "East Lp" label.** The golden Lynmouth map letters the East Lyn twice, once
+as "East Lyn" and once as "East Lp", where the label is cut near the route. It is the
+obvious hero image. Options: fix it before 0.1.0 (a code fix plus a golden
+regeneration window), or file it and use a hero render that does not show it.
+**Recommended: file it now under `docs/issues/` and fix it before 0.1.0**, as the hero is
+the first thing anyone sees.
+
+### The smaller calls
+
+| | Question | Default |
+| --- | --- | --- |
+| G | Tagline and README lede | Keep the current tagline; lede "Lay a wash, pull a brush, letter a name." |
+| H | Quick start | Command line (three lines) then the Python wash (about eight), each with its picture |
+| I | How-to guides | Paint a map from your GPX with the command line; change the route's colour and width; work offline and reuse the cache; credit the map data; write a theme (starting from a copy of `default.toml`); self-host the providers; paint your own shapes with the engine |
+| J | Provider protocols `Features` and `Elevation` are not public, so no guide can show writing a new provider | Keep them private at 0.1; the self-host guide covers the shipped providers only |
+| K | Offline first map | Link the Lynmouth fixture files at the tag, so the first map paints from cache with no request |
+| L | Reference swatch sheets for `PIGMENTS` and the brush ids | Yes: brush ids like `RIV1-a` mean nothing without a picture |
+| M | Social preview and wordmark | Both painted by tested scripts (`word.py`, a new preview script) |
+| N | `CITATION.cff`, bug-report form | Yes; a code of conduct only with a public contact address |
+| O | Changelog tooling | Hand-written Keep a Changelog, no towncrier |
+
+## 5. Corrections to the P7 outline in `plan.md`
+
+- "Three-line quick start": true only for the command line (H).
+- `first-map.md` alone is not the tutorial (B).
+- `use-the-engine-without-maps` repeats rungs 1 to 7; reframe it as painting the
+  reader's own shapes.
+- `write-a-theme` must start from the packaged `default.toml`: `Style.from_toml` needs
+  every group.
+- "Set back from P10.R's 0.0.1 to 0.1.0": the tree is at 0.0.2.
+- "Configure the PyPI trusted publisher (documented in CONTRIBUTING)": document it in
+  `docs/runbooks/release.md`; it is not configured yet.
+- Missing from the outline: the gallery and its pin test, the tutorial sync test, image
+  hosting by absolute URL, a caption per image, the docs gates, the voice guide, the
+  data-policy page's four duties, the status statement, the release surface outside the
+  repo, and the `publish.yml` fixes.
+
+## 6. Found along the way
+
+- The "East Lp" double label on the golden map (F).
+- The ink rung tests cannot see a visual change (D).
+- The sdist and wheel carry no `tests/`, so the ODbL Overpass fixtures never reach PyPI;
+  keep it so, and keep `docs/` out of the distributions too.
+- The current packages pass `twine check --strict`.
+- The GitHub repo has no topics, homepage or social preview.
