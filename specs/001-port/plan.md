@@ -5836,14 +5836,15 @@ the test place behind every existing golden; its retirement is on the post-port
 roadmap (`docs/features/tests-retire-lynmouth.md`). Each new track is synthetic, never
 a recorded activity and never marking a home or a personal route (D16): a generated
 loop like Lynmouth's, except the Yr Wyddfa track, which follows the public path's own
-OpenStreetMap geometry (the Pyg Track and the Crib Goch ridge path, joined in order and
-resampled) because a loop cannot follow a ridge.
+OpenStreetMap geometry (the Pyg Track, the Crib Goch ridge path and the Llanberis Path,
+joined in order and resampled) because a loop cannot follow a ridge. It is the one
+fixture allowed 6 MB, for its longer box; it is rural, so it is expected under that.
 
 | Directory | Place | Kind | Track |
 | --- | --- | --- | --- |
 | `tests/fixtures/keswick/` | Keswick and Derwentwater, the Lake District | nature and town | loop of about 6 km from Keswick round the north of Derwentwater |
 | `tests/fixtures/trotternish/` | the Quiraing, Trotternish, Skye | nature | loop of about 5 km under the Quiraing |
-| `tests/fixtures/yr-wyddfa/` | Crib Goch to the summit of Yr Wyddfa, Eryri | nature | one way, about 4 km, from Pen-y-Pass along the Pyg Track and over the Crib Goch ridge to the summit (maintainer, 2026-10-23) |
+| `tests/fixtures/yr-wyddfa/` | Over Crib Goch to the summit of Yr Wyddfa, Eryri | nature | one way, about 12 km: from Pen-y-Pass along the Pyg Track and over the Crib Goch ridge to the summit, then down the Llanberis Path to Llanberis (maintainer, 2026-10-23) |
 | `tests/fixtures/oxford/` | central Oxford | urban | loop of about 3 km through the centre |
 | `tests/fixtures/y-fenni/` | Y Fenni (Abergavenny) | urban | loop of about 3 km through the town |
 
