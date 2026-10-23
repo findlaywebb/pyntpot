@@ -335,3 +335,8 @@ host is allowed or the maintainer records them locally.
   post-port roadmap.
 - **Q-P7** (a) at 0.1, example theme files; (b) on the post-port roadmap.
 - **Q-P8** All of it in 0.1.0; only the docs site may slip to 0.1.x.
+
+**Welsh names on the cards** (maintainer, 2026-10-23): the Y Fenni card reads "Y Fenni",
+not "Abergavenny"; the card's other names may be English or Welsh for now. Taken into
+P7 as P7.3b (a style setting naming the tags lettering reads), so the parked note
+`docs/features/maps-prefer-welsh-names.md` is deleted when P7.3b lands.

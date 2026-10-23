@@ -536,6 +536,7 @@ the façade at P3.16 and P3.17, and its measurements were taken at
 | 0032 | `focus-place-fixtures` (amends D10) | P7.3 |
 | 0033 | `docs-images-and-examples` (amends 0006 and 0026) | P7.4 |
 | 0034 | `docs-site` (amends D13) | P7.14 |
+| 0035 | `lettering-name-tags` | P7.3b |
 
 P10 and P11 run before P9 (maintainer, 2026-10-07), so 0024 to 0028 may be
 written before 0022 and 0023; the numbers stay fixed, and a number whose
@@ -5853,10 +5854,12 @@ its README licenses it so.
 
 Where OSM names a way or node, P7.3 records its id and version in the README; places
 named above with no OSM feature are reached by the nearest way the brief's selection
-step shows. Lettering reads OSM's `name` tag, which in Wales is often the English name
-(the Y Fenni card may letter "Abergavenny"); preferring `name:cy` is parked
-(`docs/features/maps-prefer-welsh-names.md`, P7.0) unless the maintainer takes it into
-P7.
+step shows. Lettering reads OSM's `name` tag, which in Wales is often the English name: at P7.0
+the Y Fenni town node carries `name` "Abergavenny" and `name:cy` "Y Fenni". The
+maintainer wants the card to read "Y Fenni" and does not mind English or Welsh for its
+other names (2026-10-23), so P7.3b adds a style setting naming the tags lettering
+reads, in order; the default reads `name` alone, so no golden moves, and the Y Fenni
+card reads `name:cy` first.
 
 **Network.** At P7.0: `overpass-api.de` resets connections from the session's egress
 (CONNECT succeeds, the TLS handshake is reset; plain HTTP returns "upstream connect
@@ -5871,7 +5874,7 @@ first.
 **ADR numbers.** 0013 to 0021 stay reserved for P7.11. 0024 stays unused: P10.5b did
 not run. P7 takes **0031** `third-golden-regeneration` (P7.1), **0032**
 `focus-place-fixtures` (amends D10, P7.3), **0033** `docs-images-and-examples` (amends
-0006 and 0026, P7.4), **0034** `docs-site` (amends D13, P7.14). At `a804fe3`, `ls
+0006 and 0026, P7.4), **0034** `docs-site` (amends D13, P7.14), **0035** `lettering-name-tags` (P7.3b). At `a804fe3`, `ls
 docs/decisions` shows 0001 to 0012, 0025 to 0030 and `README.md`. A slice that finds
 its number taken stops and reports.
 
@@ -5893,14 +5896,14 @@ paragraph under it, and P9's order line in `tasks.md`, which P7.0 repoints.
 **Order and parallelism.**
 
 ```
-P7.0 ─ P7.1 (PR 1) ─ P7.2 ─ P7.3 ─ P7.4 ─┬─ P7.5 ──┐
-                                          ├─ P7.6a ─┤
-                                          ├─ P7.6b ─┤
-                                          ├─ P7.6c ─┤
-                                          ├─ P7.7 ──┼─ P7.13 (PR 2) ─ P7.14 (PR 3) ─ P7.R (PR 4)
-                                          ├─ P7.8 ──┤
-                                          ├─ P7.9 ──┤
-                                          └─ P7.10 ─┘
+P7.0 ─ P7.1 (PR 1) ─ P7.2 ─ P7.3 ─ P7.3b ─ P7.4 ─┬─ P7.5 ──┐
+                                                  ├─ P7.6a ─┤
+                                                  ├─ P7.6b ─┤
+                                                  ├─ P7.6c ─┤
+                                                  ├─ P7.7 ──┼─ P7.13 (PR 2) ─ P7.14 (PR 3) ─ P7.R (PR 4)
+                                                  ├─ P7.8 ──┤
+                                                  ├─ P7.9 ──┤
+                                                  └─ P7.10 ─┘
 P7.11 and P7.12: any time after P7.2, beside anything, before P7.13.
 ```
 
@@ -5975,8 +5978,8 @@ small `size=` option.
 
 This section; the `tasks.md` lines; the ADR numbers table (sorted, 0024 marked unused,
 0031 to 0034 added) and the paragraph under it (repointed to P7.11); P9's order line;
-`docs/features/maps-prefer-welsh-names.md`. Leave alone: `src/**`, `tests/**`, other
-`docs/**`. Done when a plan-reviewer round passes.
+`docs/features/maps-prefer-welsh-names.md` (written parked, then taken into P7.3b).
+Leave alone: `src/**`, `tests/**`, other `docs/**`. Done when a plan-reviewer round passes.
 
 #### P7.1. The East Lyn label: third golden regeneration (branch `p7-golden`)
 
@@ -6134,6 +6137,40 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
 - Commit: one per fixture, `Record the <place> fixture`, then `Widen the coordinate
   gate to one box per fixture`.
 - Done: five fixtures (or the parked ones logged), their cards looked at, the gate green.
+
+#### P7.3b. Lettering reads the name tags a style names
+
+- Predecessor: P7.3 (the Y Fenni fixture recorded).
+- Check first: `osm_elements.py` reads `tags.get("name", "")` at its five sites
+  (`:186`, `:226`, `:260`, `:297`, `:303` at `a804fe3`); the recorded Y Fenni Overpass
+  payload holds the town node with `name` "Abergavenny" and `name:cy` "Y Fenni".
+- ADR 0035 `lettering-name-tags`: the `lettering` style group gains `name_tags:
+  tuple[str, ...]`, default `("name",)`; every name the map reads from OSM is the first
+  of those tags present on the element, else empty, as today. A new style field is
+  public behaviour (ADR 0005, 0026's token rule: a tag name is a token).
+- Owner files: `src/pyntpot/maps/osm_elements.py` (one helper, `_name(tags, name_tags)`,
+  used at every site), the lettering group's dataclass and `maps/themes/default.toml`
+  (the field and its default), whatever passes the style to `osm_elements` (named by
+  the check-first step, at most two modules; more stops and reports),
+  `tests/unit/maps/test_osm_elements.py` (red first:
+  `test_a_place_is_named_by_the_first_tag_the_style_lists`, an element with `name`
+  "Abergavenny" and `name:cy` "Y Fenni" read under `("name:cy", "name")` and under the
+  default; `test_an_element_without_the_preferred_tag_falls_back_to_name`),
+  `examples/themes/y-fenni.toml` (the default theme with `name_tags = ["name:cy",
+  "name"]`, used by every Y Fenni card in the docs and by `test_places.py`'s Y Fenni
+  case), `GLOSSARY.md` (a row if a term is new), `docs/decisions/0035-lettering-name-tags.md`,
+  `docs/features/maps-prefer-welsh-names.md` (deleted: the feature exists),
+  `tests/golden/test_places.py` (the Y Fenni case loads that theme and pins that the
+  placed labels include "Y Fenni" and not "Abergavenny"), `tasks.md`, `p7-run-log.md`.
+- Leave alone: `tests/golden/lynmouth/**` (the default reads `name` alone: the parity
+  test must stay byte-identical, and `$MG $SCRATCH/after --compare tests/golden/lynmouth
+  --require-identical all --require-hash equal` proves it; the style digest of the
+  default must not change, so the field is excluded from the digest when it equals its
+  default, or the plan's stop applies), other themes.
+- Stop: the default style's digest or any golden moves.
+- Gate: G-here; `-m golden` locally; the compare above.
+- Commit: `Let a style choose which name tags the map letters`.
+- Done: the Y Fenni card letters "Y Fenni"; every golden byte-identical.
 
 #### P7.4. Docs image pipeline and the gallery pins
 
