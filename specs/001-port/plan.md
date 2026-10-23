@@ -522,7 +522,11 @@ the façade at P3.16 and P3.17, and its measurements were taken at
 | 0010 | `layers-contract` | P4.19 |
 | 0011 | `coverage-baseline` | P5.2 |
 | 0012 | `mutation-threshold` | P5.3 |
-| 0013 to 0021 | one per settled decision, in this order: D2, D5, D7, D8, D9, D20, D21, D23, D24 | P7.3 |
+| 0013 to 0021 | one per settled decision, in this order: D2, D5, D7, D8, D9, D20, D21, D23, D24 | P7.11 (the outline's P7.3) |
+| 0031 | `third-golden-regeneration` | P7.1 |
+| 0032 | `focus-place-fixtures` (amends D10) | P7.3 |
+| 0033 | `docs-images-and-examples` (amends 0006 and 0026) | P7.4 |
+| 0034 | `docs-site` (amends D13) | P7.14 |
 | 0022 | `retire-banned-term-test` | P9.1 |
 | 0023 | `retire-exemptions` | P9.2 |
 | 0024 | `route-ink-names-follow-the-route` | P10.5b, only if Q5 is answered (2) |
@@ -5808,38 +5812,421 @@ its key (`test_reference_keys.py`).
 
 ### P7. Docs and first release
 
-Order (maintainer, 2026-10-07): P7 starts after P10 part 2 (P10 "Order and
-parallelism"), so P7.1 to P7.3 document the fixed code, and P7.4 tags 0.1.0
-after them. 0.1.0 is a release candidate: an issue found after it is fixed in
-a 0.1.x patch release, never by holding 0.1.0.
+Fattened at P7.0 (2026-10-23) from the outline that stood here, after the research in
+`p7-research.md` (six notes under `research/p7/`) and the maintainer's answers recorded
+in its sections 7 to 9. A plan-reviewer agent reviews this section before P7.1 starts.
+Every measurement below was taken at `a804fe3` (`main`, after P10.11 merged, #26)
+unless it names another commit. A slice re-measures what its brief names at its own
+base before it edits, and stops and reports if a fact here no longer holds.
 
-- README: what it is, a route map image, a non-map image (a lettered word
-  on a washed circle from `examples/word.py`), install, three-line quick
-  start, data policy, attribution requirement, licence, and a pointer to
-  `references.md`. It also carries the CodSpeed badge, written
-  exactly as
-  `[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/findlaywebb/pyntpot)`
-  (the link is the dashboard address `docs/explanation/performance.md`
-  gives): P10.2's answer Q13 (1),
-  row `p5-run-log.md:125` in `p10-triage.md`, which P7.1's commit marks
-  done.
-- `docs/tutorials/first-map.md`; `docs/how-to/{self-host-providers,
-  write-a-theme,use-the-engine-without-maps}.md`; `docs/reference/`
-  (public API, style fields, CLI, cache layout, manifest format);
-  `docs/explanation/{how-the-wash-works,data-policy,performance,references}.md`.
-- ADRs for D2, D5, D7, D8, D9, D20, D21, D23, D24, the coverage
-  baseline, the mutation threshold, the golden regeneration.
-- `CHANGELOG.md` 0.1.0, and the `pyproject.toml` version (with `uv.lock`)
-  set back from P10.R's 0.0.1 to 0.1.0. Configure the PyPI trusted publisher
-  (manual, documented in CONTRIBUTING; already done if Q14 chose PyPI for
-  0.0.1). Confirm with the maintainer before the tag and the publish.
-- P7.2's tutorials, and ideally P7.1's quick start, depend on P11 (the
-  widened public API); see P11, "Order". P11 writes the eight rung
-  scripts under `examples/`; P7.2 writes the prose around them. P7.1's `examples/word.py`
-  follows their convention (P11, "The example scripts, decided": `main(out_dir)`
-  returning the file written, public names only) and adds its own test under
-  `tests/examples/`; `tests/architecture/test_examples.py` checks it without
-  a pin.
+**What P7 delivers.** The docs and the 0.1.0 release, built on one rule from the
+research: the pictures carry the style, the words stay plain. Every image in the README
+and `docs/` is painted by pyntpot from a tested script and pinned like a golden; the
+prose is calm, British, in the glossary's terms. Beyond the outline it adds: the East
+Lyn lettering fix (slice 1, by the maintainer), recorded fixtures for the maintainer's
+focus places, a second tutorial set of non-map pieces ("Painting with Python"),
+example themes that restyle the map, painted reference sheets, a docs site, and a
+hardened release workflow.
+
+**Focus places** (maintainer, 2026-10-23, `p7-research.md` sections 7 and 9). Nature:
+the Lake District, the Highlands and Skye, Eryri. Urban: Ambleside, Keswick, Oxford,
+Y Fenni. Welsh names for Welsh places everywhere (Eryri, Yr Wyddfa, Y Fenni). Five get
+recorded map fixtures; Ambleside appears in lettering and non-map pieces. Lynmouth stays
+the test place behind every existing golden; its retirement is on the post-port
+roadmap (`docs/features/tests-retire-lynmouth.md`). Each new track is synthetic, a
+generated loop like Lynmouth's, never a recorded activity and never marking a home or
+a personal route (D16).
+
+| Directory | Place | Kind | Track |
+| --- | --- | --- | --- |
+| `tests/fixtures/keswick/` | Keswick and Derwentwater, the Lake District | nature and town | loop of about 6 km from Keswick round the north of Derwentwater |
+| `tests/fixtures/trotternish/` | the Quiraing, Trotternish, Skye | nature | loop of about 5 km under the Quiraing |
+| `tests/fixtures/yr-wyddfa/` | Yr Wyddfa from Llanberis, Eryri | nature | loop of about 6 km on the lower slopes above Llanberis |
+| `tests/fixtures/oxford/` | central Oxford | urban | loop of about 3 km through the centre |
+| `tests/fixtures/y-fenni/` | Y Fenni (Abergavenny) | urban | loop of about 3 km through the town |
+
+**Network.** `overpass-api.de` resets connections from the session's egress (the
+proxy's CONNECT succeeds, the TLS handshake is reset; plain HTTP returns "upstream
+connect error"); `overpass.openstreetmap.fr` answers 403 to unlisted users;
+`https://maps.mail.ru/osm/tools/overpass/api/interpreter` answers, slowly (13 to 19 s
+for a small query, one 504 in three). OpenTopoData answers. The shipped
+`OverpassFeatures.id` is `"overpass"` whatever its endpoints, so payloads fetched
+through the mirror carry the same cache key as through the default endpoints. P7.3
+records through the mirror and names it in each fixture README.
+
+**ADR numbers.** 0013 to 0021 stay reserved for P7.11 (D2, D5, D7, D8, D9, D20, D21,
+D23, D24, in that order). 0024 stays unused: P10.5b did not run. P7 takes the next free
+numbers: **0031** `third-golden-regeneration` (P7.1), **0032** `focus-place-fixtures`
+(amends D10, P7.3), **0033** `docs-images-and-examples` (amends 0006 and 0026, P7.4),
+**0034** `docs-site` (amends D13, P7.14). At `a804fe3`, `ls docs/decisions` shows 0001
+to 0012, 0025 to 0030 and `README.md`. A slice that finds its number taken stops and
+reports.
+
+**Renumbering.** The outline's four IDs are superseded: outline P7.1 (README) is now
+P7.13; outline P7.2 (tutorial, how-to, reference, explanation) is P7.5 to P7.10;
+outline P7.3 (ADRs 0013 to 0021) is P7.11; outline P7.4 (changelog, publisher, tag) is
+P7.R. Earlier phases' text that names the old IDs is history and is not edited, except
+the ADR numbers table row for 0013 to 0021 and P9's order line in `tasks.md`, which
+P7.0 repoints.
+
+**Branches and PRs.** Three PRs and an optional fourth, each held for the maintainer's
+merge:
+
+1. `p7-golden`, from `main`: P7.1 alone, as `p10-golden` was for P10.11.
+2. `p7-docs-release`, from `main` after the `p7-golden` PR merges (merging `main` in;
+   the branch already holds the research commits): P7.2 to P7.13.
+3. `p7-docs-site`, from `p7-docs-release` once P7.13 has landed there, or from `main`
+   after PR 2 merges: P7.14. It may slip to 0.1.x without holding the release.
+4. `release-0.1.0`, from `main` after PR 2 (and PR 3 if it is ready) merge: P7.R.
+
+**Order and parallelism.**
+
+```
+P7.0 ─ P7.1 (PR 1) ─ P7.2 ─ P7.3 ─ P7.4 ─┬─ P7.5 ──┐
+                                          ├─ P7.6a ─┤
+                                          ├─ P7.6b ─┤
+                                          ├─ P7.6c ─┤
+                                          ├─ P7.7 ──┼─ P7.13 (PR 2) ─ P7.14 (PR 3) ─ P7.R (PR 4)
+                                          ├─ P7.8 ──┤
+                                          ├─ P7.9 ──┤
+                                          └─ P7.10 ─┘
+P7.11 and P7.12: any time after P7.2, in parallel with anything, before P7.13.
+```
+
+The parallel group runs each slice in its own detached worktree off the branch head,
+landed one at a time by the orchestrating session (P8's and P11's rule). Owner lists
+are disjoint; two shared files are append-only and take one row or block per slice,
+merged by the orchestrating session: `tests/support/docs_images.py` (the image
+registry, P7.4) and `GLOSSARY.md`.
+
+**Gates for every slice.** G-here: `uv run prek run --all-files && uv run pytest`,
+green. Golden slices also run `uv run pytest -m golden` locally (exact). Human-facing
+prose (README, `docs/` except `decisions/`, CONTRIBUTING, CHANGELOG, GLOSSARY) carries
+no em or en dash: `! grep -rnI -e '—' -e '–' README.md CONTRIBUTING.md CHANGELOG.md
+GLOSSARY.md docs --exclude-dir=decisions` (P6's gate, extended to the new pages). Each
+slice ticks its `tasks.md` line in its landing commit and adds a dated entry to
+`p7-run-log.md` (created by P7.1).
+
+**Shared conventions** (P7.2 writes them into `CONTRIBUTING.md`; every content slice
+follows them):
+
+- Voice: second person, present tense, British English, sentence-case headings; the
+  Google developer documentation style guide except its spelling; glossary terms only;
+  studio verbs ("paints", "lays a wash", "letters") over "renders" and "generates"; no
+  hype words; no em or en dashes.
+- Traps: "sheet" is the paper's noise fields, not paper; "canvas" is the pixel grid;
+  "map" never appears in `ink` or `letters` pages; never "filter", "effect" or
+  "shader" for what the engine does.
+- Style by page type: README, tutorials and explanation carry images on every page;
+  how-to guides show a result image where one exists; reference carries none except
+  the swatch sheets.
+- Every image: painted by a script registered in `tests/support/docs_images.py`;
+  captioned "Painted by `examples/<stem>.py`" with its seed where the script takes
+  one; alt text says what the picture shows or what changed; lettered text in an image
+  is repeated as real text beside it.
+- Places: focus places for new figures; Lynmouth names only in the Lynmouth map; never
+  an invented name.
+- Designed gaps are stated as capability facts, never roadmap numbers.
+
+#### P7.0. Fatten P7; plan-reviewer pass
+
+This section, the `tasks.md` lines, the ADR table row and P9's order line. Leave alone:
+`src/**`, `tests/**`, `docs/**`. Done when the plan-reviewer passes it.
+
+#### P7.1. The East Lyn label: third golden regeneration (branch `p7-golden`)
+
+The defect and its root cause are in
+`docs/issues/maps-lettering-curved-name-window-and-flat-repeat.md`. The maintainer saw
+the before and after and accepted the fix, including "B3234" set flat beside Lynton
+("Fix looks good, make it slice 1", 2026-10-23).
+
+- Owner files: `src/pyntpot/maps/lettering/{label,placement,pipeline}.py`,
+  `src/pyntpot/maps/lettering_marks.py`, `src/pyntpot/maps/lettering/picks_rivers.py`
+  (its comment only), `tests/unit/maps/lettering/test_placement.py`,
+  `tests/unit/maps/test_lettering_marks.py`,
+  `tests/unit/maps/test_pipeline_letter_compose.py` (`PINNED_LABELS`),
+  `tests/golden/lynmouth/{labels-centreline.webp,map.png}`,
+  `docs/decisions/0031-third-golden-regeneration.md`, the issue file (closed by
+  deletion in the last step, as resolved issues are), a new
+  `docs/issues/maps-lettering-flat-boxes-without-tracking.md`,
+  `specs/001-port/p7-run-log.md` (new), `tasks.md`.
+- Leave alone: `src/pyntpot/letters/**` (the clamp in `Hand._along` stays: running
+  glyphs past the walk would hide placer errors), `paper.webp`, `wash.webp`,
+  `pen.webp`, `plates.json`, `tests/golden/test_parity.py`'s bounds, ADR 0006 and
+  0025 (append-only).
+- Step 0: baseline with `make_golden.py` at the branch's starting commit, clean tree.
+- Step 1, fix A, test first. Red: `test_a_curved_name_is_given_a_window_as_long_as_the_hand_writes_it`
+  (a river label on a long straight line; window length at least
+  `hand.measure(name, size, KIND_TRACKING["river"])[0]`; 65.0 against 85.0 today) and
+  `test_every_glyph_of_a_placed_name_sits_inside_its_window` (glyph centres from the
+  face's run with the kind's tracking all within the lifted walk). Green:
+  `KIND_TRACKING` moves from `lettering_marks.py` to `lettering/label.py` (placement
+  cannot import `lettering_marks`: that imports `lettering_window`, which imports
+  `placement`); `Measure` and `box_size` take a tracking argument, default 0.0;
+  `placement.py` measures the along-window width with the kind's tracking. Flat boxes
+  keep their untracked width; that defect is filed, not fixed. Gate:
+  `--require-identical paper.webp wash.webp pen.webp --require-hash equal --require-labels-equal`;
+  labels-centreline and map may move past the bound, recorded as the explained step.
+- Step 2, fix B, test first. Red:
+  `test_a_rivers_second_name_with_no_water_left_is_dropped_not_set_flat` (one river,
+  two labels, water with one usable straight reach then a zigzag the shape test
+  refuses; `place` returns one label, set along the water). Green: in
+  `placement._place`, a river label that repeats a placed name and finds no window on
+  its water is dropped; a river's first name keeps its flat fallback. The docstrings
+  of `placement.py` and the comment at `picks_rivers.py` say so.
+  `test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_map` stays
+  green. `PINNED_LABELS` loses the second "East Lyn". Gate: as step 1 without
+  `--require-labels-equal`; `labels.txt` differs by exactly that one line.
+- Step 3: regenerate once; every output byte-identical to step 2.
+- ADR 0031 in ADR 0025's shape: context, the steps table with commits, the per-step
+  outcome table, the hashes, the maintainer's acceptance quoted, consequences
+  (the pinned labels list now has nine names).
+- Stop: if paper, wash, pen or the manifest hash move, or a label other than the
+  second "East Lyn" disappears, stop and report with the compare log.
+- PR: `p7-golden` to `main`, held for the maintainer.
+
+#### P7.2. Voice guide and conventions
+
+- Owner files: `CONTRIBUTING.md` (a "Writing docs" section with the shared
+  conventions above; the place-name list reordered to lead with the focus places,
+  "Snowdon" replaced by "Yr Wyddfa", Eryri and Y Fenni added, Abergavenny kept only
+  where a test needs its length; the Lynmouth box sentence widened to "a fixture box",
+  the wording P7.3's ADR fixes), `CLAUDE.md` (the place-name line: focus places and
+  "coordinates stay inside a fixture box"), `README.md` (the "Develop" section moves
+  to CONTRIBUTING, nothing else), `docs/README.md` (two lists: user docs, maintainer
+  records), `tasks.md`, `p7-run-log.md`.
+- Leave alone: every other doc; `src/**`; `tests/**`.
+- Check: the architecture tests that scan names and coordinates stay green (no
+  coordinate is added here).
+- Done: the conventions exist in one place every later brief can cite.
+
+#### P7.3. Focus-place fixtures
+
+- ADR 0032 amends D10: the coordinate gate allows a table of boxes, one per fixture
+  directory, each the track's box; synthetic coordinates in `src/`, `tests/`,
+  `examples/` and `docs/` lie in one of them. The fixture rules (synthetic track,
+  cache-key file names, README with source, date, boxes and licences) apply to every
+  fixture.
+- Owner files: `tests/architecture/test_coordinates.py` (one box becomes the table;
+  `_EXEMPT` gains each fixture's three payload files and README),
+  `tests/fixtures/{keswick,trotternish,yr-wyddfa,oxford,y-fenni}/` (each `track.gpx`,
+  three payloads, `README.md`), `tests/fixtures/make_track.py` (new: writes a
+  synthetic loop GPX from a centre, a radius and a seed, with no time, elevation or
+  activity type, the way the Lynmouth README describes its track),
+  `tests/fixtures/record_fixture.py` (new: runs `Cache.ensure` for a track through
+  `OverpassFeatures(contact, endpoints=(MIRROR,))` and `OpenTopoData(contact)` into
+  the fixture directory, then checks the three file names equal the default
+  providers' cache key), `tests/examples/test_places.py` (new, `golden`-marked: each
+  fixture paints a card offline from a copy of its directory, through the public
+  stages, with no request), `docs/decisions/0032-focus-place-fixtures.md`,
+  `tasks.md`, `p7-run-log.md`.
+- Leave alone: `tests/fixtures/lynmouth/**`, `tests/golden/**`, `src/**`.
+- Steps: make each track; record each fixture (the mirror is slow: one query at a
+  time, the provider's own budget and backoff, retried at most three times on 504);
+  write each README from the Lynmouth README's template; paint each card once and
+  look at it.
+- Budgets: each fixture directory at most 4 MB. An urban fixture over budget shrinks
+  its loop (to 2 km, then 1.5 km) and re-records.
+- Stop and park: a place whose card does not paint, or paints with a defect that is
+  not a quick fix, is parked by the parking rule (`docs/features/` or `docs/issues/`,
+  and a line in `p7-research.md`), and the slices that would show it use Keswick
+  instead. A place the mirror cannot serve after three tries on two days is parked
+  the same way.
+- D16 check: each track is generated from a centre, a radius and a seed, never traced
+  from a recorded activity, and its README says so.
+
+#### P7.4. Docs image pipeline and the gallery pins
+
+- ADR 0033: every image in the README and `docs/` is painted by a script and pinned
+  like a golden (amends 0006's golden set); the examples may import, beyond numpy and
+  Pillow, the packages named in the ADR (`svgelements`, for P7.6c only), held in the
+  `dev` dependency group, never the runtime (amends 0026's examples rule).
+- Owner files: `tests/support/docs_images.py` (new: the registry, a tuple of entries,
+  each the image path under `docs/images/`, the script stem, the options passed to
+  its `main`, the fixture it reads if any, the output size and format),
+  `tests/golden/make_docs_images.py` (new: paints every registered image, or those
+  named, downsizes to the entry's size, writes WebP at quality 85, method 6, or PNG
+  where the entry says; `--compare` as `make_golden.py`),
+  `tests/golden/test_docs_images.py` (new, `golden`: each committed image equals a
+  fresh paint, exact locally, under `--golden-tolerance`'s bound on CI),
+  `tests/architecture/test_docs_images.py` (new: every file under `docs/images/` is
+  registered and every entry's file exists; every image a Markdown file in the README
+  or `docs/` shows is registered; size budgets; every README image and link is an
+  absolute URL), `tests/architecture/test_examples.py` (`_THIRD_PARTY` read from the
+  ADR's list), `docs/images/gallery/*.webp` (the eight rung outputs, 480 px wide),
+  `docs/decisions/0033-docs-images-and-examples.md`, `pyproject.toml` and `uv.lock`
+  (`svgelements` in `dev`, for P7.6c), `tasks.md`, `p7-run-log.md`.
+- Budgets (fixed in the ADR and the test): thumbnail at most 60 KB, page image at most
+  250 KB, hero at most 400 KB, all of `docs/images/` at most 4 MB.
+- README image URLs: `https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/...`
+  until P7.R rewrites `main` to `v0.1.0`; the architecture test accepts either.
+- Leave alone: `examples/*.py` (the rungs are unchanged here), `src/**`.
+
+#### P7.5. Tutorial: paint a watercolour, then a first map
+
+- Owner files: `examples/{nib_line,pigments}.py` (docstrings only: pigments becomes
+  rung 4 and the nib line rung 5, the painter's order; the other rungs' "earlier
+  rungs" lists follow), `docs/tutorials/index.md`,
+  `docs/tutorials/paint-a-watercolour.md` (rungs 1 to 7, one section each),
+  `docs/tutorials/first-map.md` (rung 8, from a focus-place fixture linked at the tag,
+  then the reader's own GPX against the public services),
+  `tests/architecture/test_tutorials.py` (new: every code block under a
+  `<!-- from examples/<stem>.py -->` marker is a verbatim substring of that script;
+  every rung is quoted; every `uv run python examples/...` command names an existing
+  script), registry rows for the tutorial images, `tasks.md`, `p7-run-log.md`.
+- Each rung section: the picture first; the command and the log line it prints; the
+  quoted `main`; "what to notice"; one "try changing" line. Section titles are studio
+  steps ("Stretch the paper", "Lay a wash", "Pull a brush", "Mix two pigments", "Take
+  up the pen", "Letter a name", "Compose the sheet"). The opening says the order is the
+  painter's and the code's (`ink`, then `letters`, then `maps`).
+- Leave alone: every rung's code; `src/**`.
+
+#### P7.6a. Painting with Python: curves and symmetry
+
+- Owner files: `examples/curves.py` (rose curves, a Lissajous figure and a
+  spirograph, drawn with the pen), `examples/kaleidoscope.py` (one motif washed and
+  inked, repeated by mirror and rotation), `docs/tutorials/painting-with-python/{index,curves,symmetry}.md`,
+  `tests/examples/test_painting_with_python.py` (new file; one test per script it
+  owns), their registry rows, `tasks.md`, `p7-run-log.md`.
+- Every script: `main(out_dir)` returning the file written, public names only, fixed
+  seeds, offline, under 20 s on the CI runner. Lettered titles use focus-place names
+  only where a name is wanted.
+
+#### P7.6b. Painting with Python: fractals
+
+- Owner files: `examples/fern.py` (a Barnsley fern grown by its four affine maps,
+  painted as brush dabs in two greens), `examples/gasket.py` (an Apollonian gasket,
+  each circle a washed disc, glazed by Kubelka-Munk),
+  `docs/tutorials/painting-with-python/fractals.md`, appended tests in
+  `test_painting_with_python.py`, registry rows, `tasks.md`, `p7-run-log.md`.
+- Same script rules as P7.6a.
+
+#### P7.6c. Painting with Python: pictures
+
+- Owner files: `examples/derwentwater.py` (a Lake District scene: layered hill
+  washes, a lake, a lettered "Derwentwater"), `examples/svg_drawing.py` and
+  `examples/drawings/fell.svg` (a small drawing made for the repo, MIT; filled shapes
+  washed, strokes inked; read with `svgelements`),
+  `docs/tutorials/painting-with-python/{pictures,vector-drawing}.md`, appended tests,
+  registry rows, `tasks.md`, `p7-run-log.md`.
+- The vector page says plainly that pyntpot does not read SVG itself and links the
+  parked feature.
+- Stop: if `svgelements` fails a gate (types, a warning under `filterwarnings =
+  error`), the script parses its own small drawing with `xml.etree` and a path subset
+  it states (M, L, C, Z), and the ADR 0033 list drops the package.
+
+#### P7.7. Map styles
+
+- Owner files: `examples/themes/{pen-and-ink,sepia,bold,winter}.toml` (each a full
+  theme, starting from a copy of `default.toml`), `examples/map_styles.py` (paints the
+  Keswick fixture once per theme, offline), `docs/how-to/write-a-theme.md` (copy the
+  default, change a group, load it; troubleshooting keyed on the validation errors a
+  reader meets), a test that each theme loads with `Style.from_toml` and paints,
+  registry rows, `tasks.md`, `p7-run-log.md`.
+- No theme imitates a real map publisher's look. The default theme is unchanged.
+- The page links the parked feature `docs/features/maps-named-themes.md`.
+
+#### P7.8. How-to guides
+
+- Owner files under `docs/how-to/`: `index.md`, `map-from-the-command-line.md`,
+  `change-the-route-ink.md`, `work-offline-and-reuse-the-cache.md`,
+  `credit-the-map-data.md`, `self-host-providers.md` (the shipped providers against
+  your own servers; links `docs/features/maps-public-provider-protocols.md`),
+  `paint-your-own-shapes.md` (the engine from the reader's own mask and path, not a
+  repeat of the tutorial); registry rows for any result images; `tasks.md`,
+  `p7-run-log.md`.
+- Each guide: titled by its goal, assumes the tutorial, steps then result, and a
+  "When it goes wrong" list keyed on what the reader sees.
+
+#### P7.9. Reference
+
+- Owner files under `docs/reference/`: `index.md`, `cli.md` (pinned by a test against
+  `pyntpot map --help`), `style-fields.md` (pinned by a test that every field of every
+  style group is named), `cache-layout.md` and `manifest.md` (each pinned by a test
+  that the documented keys exist), `pigments.md` and `brushes.md` (with the swatch
+  sheets from new `examples/pigment_swatches.py` and `examples/brush_sheet.py`),
+  `glossary.md` (a pointer to `GLOSSARY.md`); the pin tests in
+  `tests/architecture/test_reference_pages.py` (new); registry rows; `tasks.md`,
+  `p7-run-log.md`.
+- The API reference itself is generated by P7.14; until then `index.md` points to the
+  layer packages' docstrings.
+
+#### P7.10. Explanation
+
+- Owner files under `docs/explanation/`: `index.md`, `how-the-wash-works.md` (one
+  figure per effect from one seed, from new `examples/wash_stages.py`, each section
+  ending on its `references.md` key), `the-hand-and-the-nib.md`, `data-policy.md`
+  (a map is an ODbL Produced Work; turning attribution off moves the duty to the
+  caller; the cache and the exports are Derivative Databases if republished; the
+  providers' usage limits; the credit's legibility); registry rows; `tasks.md`,
+  `p7-run-log.md`. `performance.md` and `references.md` are kept, linked from the
+  index.
+- An effect that cannot be isolated with public names is shown as far as it can be,
+  and the gap is parked by the parking rule.
+
+#### P7.11. ADRs 0013 to 0021
+
+The outline's P7.3, unchanged: one ADR per settled decision D2, D5, D7, D8, D9, D20,
+D21, D23, D24, numbered 0013 to 0021 in that order, each a short pointer where an
+existing ADR already carries the decision. Owner files: those nine ADRs,
+`docs/decisions/README.md`, `tasks.md`, `p7-run-log.md`.
+
+#### P7.12. Docs gates
+
+- Owner files: `.github/workflows/ci.yml` (a `docs` job: `lychee --offline` over the
+  README and `docs/`, `uv build` then `twine check --strict dist/*`),
+  `.github/workflows/links.yml` (new: weekly online link check, advisory),
+  `lychee.toml`, `pyproject.toml` (`twine` in `dev`), `uv.lock`, `tasks.md`,
+  `p7-run-log.md`.
+- A broken internal link fails the PR; an external link failure is reported weekly,
+  never blocking.
+
+#### P7.13. README, wordmark, landing page and gallery
+
+- Owner files: `README.md`, `examples/word.py` ("pyntpot" lettered by the hand on a
+  washed disc), `examples/social_preview.py` (1280 by 640 PNG: a painted map of a
+  focus place and the wordmark), `docs/index.md` (landing page: one painting, four
+  signposted routes), `docs/gallery.md`, registry rows for the hero, wordmark, gallery
+  and preview, the README quick-start test (`tests/architecture/test_readme.py`: the
+  Python quick start is a verbatim excerpt of `examples/wash.py`), `tasks.md`,
+  `p7-run-log.md`.
+- README order: wordmark and tagline (the current one), hero map with a provenance
+  caption, the non-map image, badges (PyPI version, Python versions, CI, licence,
+  CodSpeed in the form Q13 fixed), what it is (two short paragraphs, including what it
+  does not do), stated values, the gallery strip, install (`pip` and `uv add`), quick
+  start (the command line in three lines, then the Python wash), crediting the data,
+  documentation links, status (the 0.x policy), licence.
+- Marks Q13's row done in `p10-triage.md`.
+
+#### P7.14. Docs site (branch `p7-docs-site`; may slip to 0.1.x)
+
+- ADR 0034 amends D13: a site on GitHub Pages; the source stays plain Markdown that
+  reads on GitHub.
+- Engine: Zensical if its 0.1.0 is on PyPI when the slice starts, else Material for
+  MkDocs pinned; mkdocstrings for the API reference of the four public modules, one
+  page per layer; a strict build in CI.
+- Theme assets painted by `examples/site_theme.py` (paper texture, a palette from
+  `PIGMENTS` as CSS variables, a brush-stroke rule) and Patrick Hand for display
+  headings only; body and code in a plain face.
+- Nav: the user docs; `decisions/`, `issues/`, `features/` and `runbooks/` left out.
+- Maintainer action: enable Pages from Actions in the repo settings.
+
+#### P7.R. Release 0.1.0 (branch `release-0.1.0`)
+
+- Owner files: `docs/runbooks/release.md` (pending trusted publisher on PyPI, the
+  GitHub settings: description equal to the PyPI summary, topics craft-first, the
+  homepage, the social preview upload), `.github/workflows/publish.yml` (fail unless
+  the tag equals `v` plus the project version; run the gates; pin the publish action
+  to a release; create the GitHub release with the changelog section as notes and the
+  dists attached), `pyproject.toml` (version 0.1.0; classifiers for Python 3.13,
+  Scientific/Engineering :: GIS and Artistic Software, no licence classifier;
+  `Documentation` and `Changelog` URLs), `uv.lock`, `CHANGELOG.md` (0.1.0, a short
+  newcomer summary, compare links), `CITATION.cff`,
+  `.github/ISSUE_TEMPLATE/bug.yml`, `README.md` (image URLs `main` to `v0.1.0`, the
+  only edit), `tasks.md`, `p7-run-log.md`.
+- Never re-run the failed `v0.0.1` and `v0.0.2` publish jobs.
+- Maintainer actions before the tag: the pending publisher, the GitHub settings, and
+  confirming the release in the conversation. Then the tag, which publishes.
 
 ### P8. The upstream consumer migrates to the public API
 
