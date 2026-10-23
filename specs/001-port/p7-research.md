@@ -308,3 +308,12 @@ Facts behind them, checked 2026-10-23:
 
 Questions (Q-P1 to Q-P8) and recommendations are set out in the chat of 2026-10-23 and
 recorded here with their answers once given.
+
+**Parking rule** (maintainer, 2026-10-23): an idea that cannot be done in P7 is parked and
+the feature it needs goes to `docs/features/`. Parked so far:
+`ink-read-svg-drawings.md` (Q-P6 b), `maps-named-themes.md` (Q-P7 b),
+`maps-public-provider-protocols.md` (default J).
+
+**Blocker for Q-P1:** this session's network policy denies `overpass-api.de` and its
+mirrors (OpenTopoData answers), so new place fixtures cannot be recorded here until the
+host is allowed or the maintainer records them locally.
