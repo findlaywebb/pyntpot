@@ -231,7 +231,7 @@ the docs truthful. It widens what is pinned, so it needs an ADR alongside 0006 a
    recommended: it starts to tip into decoration, and costs accessibility.
 
 **F. The "East Lp" label.** The golden Lynmouth map letters the East Lyn twice, once
-as "East Lyn" and once as "East Lp", where the label is cut near the route. It is the
+as "East Lyn" and once as "East Lp". (Corrected after the root cause: the route is not involved; see `docs/issues/maps-lettering-curved-name-window-and-flat-repeat.md`.) It is the
 obvious hero image. Options: fix it before 0.1.0 (a code fix plus a golden
 regeneration window), or file it and use a hero render that does not show it.
 **Recommended: file it now under `docs/issues/` and fix it before 0.1.0**, as the hero is
