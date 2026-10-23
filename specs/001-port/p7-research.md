@@ -317,3 +317,21 @@ the feature it needs goes to `docs/features/`. Parked so far:
 **Blocker for Q-P1:** this session's network policy denies `overpass-api.de` and its
 mirrors (OpenTopoData answers), so new place fixtures cannot be recorded here until the
 host is allowed or the maintainer records them locally.
+
+## 9. Maintainer's answers to Q-P1 to Q-P8, 2026-10-23
+
+- **Q-P1** Maps for: Keswick and Derwentwater (the Lake District), Skye, Eryri around Yr
+  Wyddfa, Oxford, and **Y Fenni** in place of St Ives (the maintainer's choice). Ambleside
+  appears in the lettering and non-map pieces. Each map's track is invented along a
+  public path and marks no home or personal route (D16).
+- **Q-P2** Lynmouth stays the test place for now, slated for retirement at a later point
+  of stability (`docs/features/tests-retire-lynmouth.md`, post-port roadmap).
+- **Q-P3** Widen the coordinate gate to one box per place, by ADR.
+- **Q-P4** Welsh names for Welsh places (Eryri, Yr Wyddfa, Y Fenni) everywhere, including
+  the CONTRIBUTING name list.
+- **Q-P5** The "Painting with Python" set as recommended, except the fractal: the Koch
+  snowflake is too stereotyped; a more beautiful fractal is open (Q-P9).
+- **Q-P6** (a) at 0.1, a third-party SVG reader in the example only; (b) on the
+  post-port roadmap.
+- **Q-P7** (a) at 0.1, example theme files; (b) on the post-port roadmap.
+- **Q-P8** All of it in 0.1.0; only the docs site may slip to 0.1.x.

@@ -182,6 +182,15 @@ Order: after P7.4, P8, P10 (both parts) and P11.
 - [ ] P9.3 Delete `make_golden_old.py` and the last `ty` exclude
 - [ ] P9.4 Delete `design-sources.md` once `references.md` covers it
 
+## Post-port roadmap
+
+Not part of the port. Each item becomes its own spec under `specs/` when it is taken up
+(maintainer, 2026-10-23, `p7-research.md` section 9).
+
+- [ ] A public SVG reader in `ink` (`docs/features/ink-read-svg-drawings.md`)
+- [ ] Themes shipped in the package and chosen by name (`docs/features/maps-named-themes.md`)
+- [ ] Retire Lynmouth as the test place once the API and the goldens are stable, moving the goldens and tests to the focus places (`docs/features/tests-retire-lynmouth.md`)
+
 ## P10. Triage and address the port's issues
 
 Order (maintainer, 2026-10-07; `plan.md` P10, "Order and parallelism"): P10.0, P10.1, P10.2 (the one stop point), then part 1 (the release blockers and every fix no upstream render can reach, the later slices P10.12 and P10.13 among them) on `p10-triage`, one PR; then P11, which starts only after part 1 has landed on `main`; then P10.R tags 0.0.1 (own `release-0.0.1` branch and PR, after P11 merges); then P8 consumes it, and the orchestrating session records "what upstream reads" in `p10-triage.md`; then part 2 (every fix an upstream render may reach, the later slices P10.14, P10.15, P10.16 and P10.17, the private-name renames, then the later slices P10.18 and P10.19, in that order, before the `p10-fixes` PR merges) on `p10-fixes`, branched from `main` at the tag or later; then the golden group P10.11 on `p10-golden`, from `main` after that merge; then P7 and P9. Part-1 slices whose rows are `fix` at P10.1 may run while the P10.2 list is open. Conditional slices run only under the answers `plan.md` names.
