@@ -275,3 +275,36 @@ the first thing anyone sees.
   keep it so, and keep `docs/` out of the distributions too.
 - The current packages pass `twine check --strict`.
 - The GitHub repo has no topics, homepage or social preview.
+
+## 7. Maintainer's answers, 2026-10-23
+
+- A to F and the defaults G to O: accepted as recommended. F is fixed before 0.1.0.
+- **New directive, places.** The docs, examples and tests focus on these places.
+  Nature: the Lake District, the Highlands and Skye, Eryri (Welsh names are used:
+  Eryri, not Snowdonia). Urban: Ambleside, Keswick, Oxford, St Ives.
+- **New directive, non-map tutorials.** Beyond the eight rungs: more abstract pieces;
+  Python making mathematical shapes, fractals and symmetries; drawing pictures; taking a
+  vector drawing and painting it.
+- **New directive, map styles.** Examples that restyle the map, so the docs are not
+  limited to the default theme, which reflects the upstream project's taste.
+- **Process.** Every decision for the maintainer is set out in the chat, not only in a
+  file.
+
+## 8. Open questions raised by the new directives
+
+Facts behind them, checked 2026-10-23:
+
+- The coordinate gate (`tests/architecture/test_coordinates.py`, D10) allows one box,
+  Lynmouth, and every golden and map test reads the Lynmouth fixtures (about 3.5 MB of
+  recorded provider payloads plus a track).
+- `pyntpot.maps.svg_path.parse_path` reads back only the `M`/`L` paths pyntpot writes;
+  there is no general SVG reader, public or private.
+- The public `ink` names (`wash`, `stamp`, `Brush`, `brush_from_id`, `paper_plate`,
+  `composite`, `PigmentLayer`) take numpy masks and point lists, which is enough to paint
+  curves, fractals and symmetric figures from Python with no new API.
+- The default theme's route inks are named `run`, `ride`, `swim` and `other`; `Style`
+  covers paper, wash, brush, face, nib, hand, card, ribbon, cover, route, lettering and
+  basemap groups.
+
+Questions (Q-P1 to Q-P8) and recommendations are set out in the chat of 2026-10-23 and
+recorded here with their answers once given.
