@@ -5833,15 +5833,17 @@ the Lake District, the Highlands and Skye, Eryri. Urban: Ambleside, Keswick, Oxf
 Y Fenni. Welsh names for Welsh places everywhere (Eryri, Yr Wyddfa, Y Fenni). Five get
 recorded map fixtures; Ambleside appears in lettering and non-map pieces. Lynmouth stays
 the test place behind every existing golden; its retirement is on the post-port
-roadmap (`docs/features/tests-retire-lynmouth.md`). Each new track is synthetic, a
-generated loop like Lynmouth's, never a recorded activity and never marking a home or
-a personal route (D16).
+roadmap (`docs/features/tests-retire-lynmouth.md`). Each new track is synthetic, never
+a recorded activity and never marking a home or a personal route (D16): a generated
+loop like Lynmouth's, except the Yr Wyddfa track, which follows the public path's own
+OpenStreetMap geometry (the Pyg Track and the Crib Goch ridge path, joined in order and
+resampled) because a loop cannot follow a ridge.
 
 | Directory | Place | Kind | Track |
 | --- | --- | --- | --- |
 | `tests/fixtures/keswick/` | Keswick and Derwentwater, the Lake District | nature and town | loop of about 6 km from Keswick round the north of Derwentwater |
 | `tests/fixtures/trotternish/` | the Quiraing, Trotternish, Skye | nature | loop of about 5 km under the Quiraing |
-| `tests/fixtures/yr-wyddfa/` | Yr Wyddfa from Llanberis, Eryri | nature | loop of about 6 km on the lower slopes above Llanberis |
+| `tests/fixtures/yr-wyddfa/` | Crib Goch to the summit of Yr Wyddfa, Eryri | nature | one way, about 4 km, from Pen-y-Pass along the Pyg Track and over the Crib Goch ridge to the summit (maintainer, 2026-10-23) |
 | `tests/fixtures/oxford/` | central Oxford | urban | loop of about 3 km through the centre |
 | `tests/fixtures/y-fenni/` | Y Fenni (Abergavenny) | urban | loop of about 3 km through the town |
 
@@ -6011,8 +6013,10 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   `_EXEMPT` gains each fixture's three payload files and README),
   `tests/fixtures/{keswick,trotternish,yr-wyddfa,oxford,y-fenni}/` (each `track.gpx`,
   three payloads, `README.md`), `tests/fixtures/make_track.py` (new: writes a
-  synthetic loop GPX from a centre, a radius and a seed, with no time, elevation or
-  activity type, the way the Lynmouth README describes its track),
+  synthetic GPX with no time, elevation or activity type, the way the Lynmouth README
+  describes its track, either as a loop from a centre, a radius and a seed, or along
+  named OpenStreetMap ways fetched once through the mirror, joined end to end and
+  resampled to a fixed spacing; the way ids are written into the fixture README),
   `tests/fixtures/record_fixture.py` (new: runs `Cache.ensure` for a track through
   `OverpassFeatures(contact, endpoints=(MIRROR,))` and `OpenTopoData(contact)` into
   the fixture directory, then checks the three file names equal the default
@@ -6032,8 +6036,9 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   and a line in `p7-research.md`), and the slices that would show it use Keswick
   instead. A place the mirror cannot serve after three tries on two days is parked
   the same way.
-- D16 check: each track is generated from a centre, a radius and a seed, never traced
-  from a recorded activity, and its README says so.
+- D16 check: each track is generated, from a centre, a radius and a seed or from a
+  public path's OpenStreetMap geometry, never traced from a recorded activity, and its
+  README says so.
 
 #### P7.4. Docs image pipeline and the gallery pins
 
