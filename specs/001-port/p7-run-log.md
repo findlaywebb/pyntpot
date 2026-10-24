@@ -128,3 +128,13 @@ append-only registry `tests/support/docs_images.py`, resolved by keeping both bl
 For the maintainer: the Keswick card works but is weak as the hero. The route runs out
 and back over itself, a shop ("The Retro Zone") is lettered as a landmark, and the lake
 is faint in the default theme (clear in "bold").
+
+## P7.10 landed (2026-10-24)
+
+Three essays (how the wash works, the hand and the nib, data policy), `wash_stages.py`
+and `nib_stages.py` with 14 figures (437 KB of 500 KB), figure tests under 2 s. Parked:
+`docs/features/ink-public-wash-options.md`, because `WashOptions` is not public, so a
+truly flat body, backruns, bleed, the flow rim, pit granulation, pigment separation and
+the shallow-water pass are described in words with their keys but have no figure. The
+data-policy page covers five duties (the brief said four: legibility is the fifth). The
+runs-dry nib figure uses an exaggerated reservoir, as its caption says.

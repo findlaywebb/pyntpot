@@ -159,7 +159,7 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [x] P7.7 Map styles: four example themes and the theme guide (parallel group)
 - [x] P7.8 How-to guides (parallel group)
 - [x] P7.9 Reference pages, pinned, with the pigment and brush sheets (parallel group)
-- [ ] P7.10 Explanation: how the wash works, the hand and the nib, data policy (parallel group)
+- [x] P7.10 Explanation: how the wash works, the hand and the nib, data policy (parallel group)
 - [x] P7.11 ADRs 0013 to 0021 for the settled decisions (the outline's P7.3)
 - [x] P7.12 Docs gates: link check, `twine check`
 - [ ] P7.13 README, wordmark, landing page, gallery and social preview, and the CodSpeed badge (Q13 (1), row `p5-run-log.md:125`) (the outline's P7.1)
