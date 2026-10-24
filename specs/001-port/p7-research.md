@@ -372,3 +372,5 @@ Recorded as given; to be planned as a P7 revision round.
   Agents should decide what is genuinely worth lettering at each place, for example the
   Angel Bakery and the Tŷ Melin bakery in Y Fenni; bridges and colleges in Oxford; the
   Moot Hall (the town hall) in Keswick.
+- **Skye is missing its key feature: it is an island.** The map should show a large
+  stretch of coastline, if not the whole island.
