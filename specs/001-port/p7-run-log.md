@@ -164,3 +164,23 @@ Orchestrator fix at landing, `tests/golden/test_places.py`: the label pin compar
 distinct names, because Oxford places one "Cherwell" on CI and in later local runs where
 the recording run placed two (a placement near-tie); and the Y Fenni assertions now test
 the lettered names, not the pinned list (they were tautological).
+
+## Docs-image pins redesigned (2026-10-24, orchestrating session; provisional)
+
+CI failed several docs-image pins under `--golden-tolerance` on both OSes (fern 3 to 9%,
+route map 1.4%, sepia 3.1%, gasket 0.75%; bound 0.5%), while this sandbox is exact.
+Measured cause: sub-LSB CPU noise flips 0.04 to 0.09% of 8-bit pixels by at most 2
+levels, but lossy WebP at q90 turns that into 3 to 10% of pixels past the bound; only
+lossless is immune, and lossless page images are too large to publish. The bound and the
+delta were not changed. Design now (ADR 0033, "Pins across platforms", provisional for
+the maintainer): each entry also commits a lossless PNG master, at most 240 px wide, under
+`tests/golden/docs/` (46 masters, 2.3 MB); exact mode checks the docs image and the
+master; tolerance mode (CI) checks the master only. Under simulated noise no master
+pixel moves by more than 2. Before this, the fern and the gasket were also given
+per-element random streams so a float flip cannot cascade (they were not the cause, but
+it keeps any flip local). The CI failure artifact now holds the painted images only (it
+was 190 MB with the fixture copies).
+
+For the maintainer: this departs from the plan's order. P7.4's done line (a green two-OS
+run before the fan-out) was not met overnight, because the fan-out ran in parallel to
+save time; the drift surfaced on the draft PR afterwards.

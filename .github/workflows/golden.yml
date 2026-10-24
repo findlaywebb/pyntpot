@@ -35,5 +35,8 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: golden-paints-${{ matrix.os }}
-          path: ${{ runner.temp }}/pytest
+          # The painted images only, not the copied fixture caches.
+          path: |
+            ${{ runner.temp }}/pytest/**/*.png
+            ${{ runner.temp }}/pytest/**/*.webp
           retention-days: 7
