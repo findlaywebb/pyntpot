@@ -166,7 +166,8 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [ ] P7.14 Docs site, ADR 0034 (`p7-docs-site`; may slip to 0.1.x)
 - [ ] P7.V0 Revision round 1: fatten from the maintainer's feedback and the five agent reports; plan-reviewer pass
 - [ ] P7.V1 Fixture trimming: minified, unread fields and tags dropped, goldens byte-identical
-- [ ] P7.V9a Fixtures for the showcase maps: Ambleside (Loughrigg), Skye (island road trip), Oxford (colleges and bridges), Y Fenni (food tour)
+- [ ] P7.V1b Fetch margins as options, so Skye shows the whole island and Yr Wyddfa a wider view; ADR 0040
+- [ ] P7.V9a Fixtures for the showcase maps: Ambleside (Loughrigg), Skye (island road trip), Oxford (colleges and bridges), Y Fenni (food tour); Yr Wyddfa re-recorded wider
 - [ ] P7.V2 Water areas keep their islands (the Oxford Cherwell); ADR 0036
 - [ ] P7.V3 A leader never crosses a placed label (the Keswick kink)
 - [ ] P7.V4 The skeleton draws each stroke once (K, k, e, m, n, d, o)

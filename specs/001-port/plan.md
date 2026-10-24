@@ -6555,9 +6555,9 @@ and the conversation):
 8. Tŷ Melin is lettered as a custom label at a hand-placed point: the docs' example of
    a curated entry with its own coordinates. No town hall on the food tour.
 9. Route style: candidate B, a wet pen (`MAJ1-e`) in maroon, with the doubled-back legs
-   kept apart. (Recommended in the conversation; the maintainer's "yes" answers did not
-   name a letter, so P7.V0's chat message states it and the maintainer may switch to C
-   before P7.V9 starts.)
+   kept apart (maintainer, 2026-10-24).
+12. A wider fetch: `fetch` takes the margins as public options, so Skye shows the whole
+    island's coast and Yr Wyddfa a wider view (maintainer, 2026-10-24).
 10. The SVG page shows the raw SVG source, the drawing flat, and each painting step.
 11. Parked, not in this round: a wider command line (`docs/features/cli-wider-commands.md`);
     the paper edge and foxing restyle (every image moves; P7.V0 writes
@@ -6572,14 +6572,14 @@ and 0025: `make_golden.py --compare` first, the moved images looked at, the labe
 diffed and recorded in the run log). `p7-docs-site` (PR #29) takes P7.V14 and merges
 `p7-docs-release` in after P7.V13. `release-0.1.0` (PR #30) waits for this round.
 
-**ADR numbers.** 0036 `fourth-golden-regeneration` (P7.V2 to P7.V7 append to it, one
+**ADR numbers.** 0040 `fetch-margins` (P7.V1b), 0036 `fourth-golden-regeneration` (P7.V2 to P7.V7 append to it, one
 section each), 0037 `showcase-style-fields` (P7.V8), 0038 `journal-notes` (P7.V9b),
 0039 `artist-pigments` (P7.V8b). A slice that finds its number taken stops and reports.
 
 **Order and parallelism.**
 
 ```
-P7.V0 ─ P7.V1 ─ P7.V9a ─ P7.V2 ─ P7.V3 ─ P7.V4 ─ P7.V5 ─ P7.V6 ─ P7.V7 ─┬─ P7.V8 ──┐
+P7.V0 ─ P7.V1 ─ P7.V1b ─ P7.V9a ─ P7.V2 ─ P7.V3 ─ P7.V4 ─ P7.V5 ─ P7.V6 ─ P7.V7 ─┬─ P7.V8 ──┐
                                                                           ├─ P7.V8b ─┼─ P7.V10 ─ P7.V11 ─┐
                                                                           └─ P7.V9b ─┘                   │
    ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -6589,7 +6589,7 @@ P7.V0 ─ P7.V1 ─ P7.V9a ─ P7.V2 ─ P7.V3 ─ P7.V4 ─ P7.V5 ─ P7.V6 ─
      └─ P7.V12d ─┘
 ```
 
-P7.V9a (fixtures, network) runs before the engine chain so every golden the chain
+P7.V1b (the fetch margin) lands before P7.V9a, which records with it. P7.V9a (fixtures, network) runs before the engine chain so every golden the chain
 moves is over the final fixture set. P7.V2 to P7.V7 (engine fixes that move goldens)
 run one at a time; each regenerates every pin it moves, the docs-image pins included.
 P7.V8, P7.V8b and P7.V9b are additive (no golden moves) and run in parallel in their
@@ -6652,6 +6652,31 @@ maintainer names decision 9 (route B) explicitly.
 - Gate: G-here; `-m golden` exact. Commit: `Trim the fixture payloads to what the
   code reads`. Done: sizes before and after per directory in the run log; the
   P7.3 budgets lowered in P7.V9a, not here.
+
+#### P7.V1b. Fetch margins as options
+
+- Predecessor: P7.V1.
+- At `60e4335`: `Cache.ensure` (cache.py:210) fetches features and elevation over the
+  module constant `MARGIN_M` (1500 m) and land cover over `LANDCOVER_MARGIN_M` (2600 m);
+  `Cache.key` already hashes a margin, but `ensure` never varies it; `fetch`
+  (pipeline.py:61) takes no margin. No theme or argument can widen the ground fetched.
+- ADR 0040 `fetch-margins`: `fetch(..., margin_m: float = MARGIN_M,
+  landcover_margin_m: float = LANDCOVER_MARGIN_M)` and the same keywords on
+  `Cache.ensure`, passed through to the payload paths and `Cache.key`. At the defaults
+  the key and every payload name are unchanged, so no fixture is renamed and no golden
+  moves. Each margin must be at least 0 and at most 20 000 m, and `landcover_margin_m`
+  at least `margin_m`; otherwise `ValueError` naming the bad value. The card frame is
+  unchanged by the margins (it stays a theme matter, the ribbon fields).
+- Owner files: `src/pyntpot/maps/{cache,pipeline}.py`, `src/pyntpot/maps/cli.py` (a
+  `--margin-m` option, the land-cover margin defaulting to the larger of its default
+  and the given margin), their tests, `tests/fixtures/record_fixture.py` (`--margin-m`,
+  `--landcover-margin-m`), `docs/decisions/0040-fetch-margins.md`, run log, tasks.
+- Test first: default margins give the same key as today (a pinned literal key for the
+  Lynmouth track); a wider margin gives a different key and a wider requested box (read
+  from the providers' request, using the offline recording providers the tests already
+  use, never a mock); bad margins raise.
+- Gate: G-here; `-m golden` exact with no golden moved.
+- Commit: `Fetch margins as options`.
 
 #### P7.V2. Water areas keep their islands
 
@@ -6801,7 +6826,7 @@ maintainer names decision 9 (route B) explicitly.
 
 #### P7.V9a. Fixtures for the showcase maps (network)
 
-- Predecessor: P7.V1. Before the engine chain.
+- Predecessor: P7.V1b. Before the engine chain.
 - Owner files: `tests/fixtures/{ambleside,skye}/` (new), `tests/fixtures/{oxford,y-fenni}/`
   (re-recorded),
   `tests/architecture/test_coordinates.py` (boxes and budgets), `tests/support/paths.py`,
@@ -6816,7 +6841,9 @@ maintainer names decision 9 (route B) explicitly.
     the A855 by the Storr to Staffin and round the north to Uig, the A87 and A850 to
     Dunvegan, the A863 and B8009 to Carbost and the Glen Brittle road, back by the A863
     and A87 by Sligachan to Portree. Via-node checks at Staffin, Uig, Dunvegan Castle's
-    access road and Sligachan. Resample at 100 m, not 20 m. The payloads are trimmed
+    access road and Sligachan. Resample at 100 m, not 20 m. Recorded with
+    `margin_m=6000` and `landcover_margin_m=6000`, so the coast beyond the roads (the
+    Waternish, Duirinish and Sleat shores, Raasay's facing coast) is in the payload. The payloads are trimmed
     with `--simplify-m 15` (a quarter of a pixel at the 1200 px card). If the mirror
     cannot answer the whole-island query, split nothing: stop and report the error
     and the counts.
@@ -6833,8 +6860,11 @@ maintainer names decision 9 (route B) explicitly.
     coordinates in the run log). Tŷ Melin's point: from its public address, placed by
     the slice on its building's OSM way or its street, and named in the chat message
     for the maintainer to confirm before P7.V10 uses it.
+  - **Yr Wyddfa, re-recorded wider** (same track): `margin_m=3000`,
+    `landcover_margin_m=4000`, so the card can show Llyn Padarn, the Glyderau's flank
+    and Llyn Cwellyn's side of the massif.
 - Budgets: re-set from the trimmed sizes: each fixture under 6 MB on disk, `skye/`
-  under 8 MB; over budget stops and reports.
+  and `yr-wyddfa/` under 10 MB; over budget stops and reports.
 - Goldens: `test_places.py` expected label lists rewritten from the first run (as
   P7.3 did), recorded in the run log.
 - `keswick/` and `trotternish/` stay until P7.V12a moves the pages off them.
