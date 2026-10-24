@@ -368,3 +368,7 @@ Recorded as given; to be planned as a P7 revision round.
 - **Some Python curve drawings** could swap the pen for the brush.
 - **Some lettering** shows odd pixelation; perhaps double the grid density.
 - **"Keswick"** lettering has an unexplained kink.
+- **Landmarks worth calling out.** "The Retro Zone" (a shop) must not be a highlight.
+  Agents should decide what is genuinely worth lettering at each place, for example the
+  Angel Bakery and the Tŷ Melin bakery in Y Fenni; bridges and colleges in Oxford; the
+  Moot Hall (the town hall) in Keswick.
