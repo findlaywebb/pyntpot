@@ -1,0 +1,15 @@
+# Link-check config for README.md and docs/ (CI job `docs`, workflow links.yml).
+#
+# Install lychee locally with `cargo binstall lychee`, or download the release binary
+# from https://github.com/lycheeverse/lychee/releases and put it on PATH.
+#
+# Run offline, as CI does:  lychee --offline --config lychee.toml README.md docs
+# The weekly online check (links.yml) adds no --offline flag.
+
+no_progress = true
+
+exclude_path = [
+    # Records of past decisions and specs keep links as written.
+    "docs/decisions",
+    "specs",
+]

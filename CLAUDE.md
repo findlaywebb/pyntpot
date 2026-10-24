@@ -51,7 +51,7 @@ import-linter and `tests/architecture/`.
   does *not* do, invariants. State designed gaps as capability facts, never spec or
   roadmap numbers (enforced by an architecture test).
 - **No `os.environ` / `os.getenv`**: config is injected (enforced by test).
-- **Place names** in tests and examples are predominantly real UK countryside names across regions (a few landmark city names allowed), never invented; coordinates stay in the Lynmouth fixture box. See `CONTRIBUTING.md`.
+- **Place names** in tests and examples are real UK places, the focus places first; Welsh names for Welsh places; coordinates stay inside a fixture box; never invented. See `CONTRIBUTING.md`.
 - Logging only, never `print` (enforced). `raise ... from exc`. `pathlib` over `os.path`.
 - One canonical name per concept: check `GLOSSARY.md` before introducing a term.
 - Names say what a thing is. Shallow nesting (3 to 4 levels at most).

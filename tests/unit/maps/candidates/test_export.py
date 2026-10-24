@@ -106,6 +106,7 @@ def test_the_candidate_basemap_is_the_old_candidate_options() -> None:
         "pick_landmarks": (),
         "pick_roads": (),
         "pick_places": (),
+        "name_tags": ("name",),
         "generalise": False,
         "cell_m": 60.0,
         "morph_cells": 2,

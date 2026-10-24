@@ -32,7 +32,14 @@ import numpy as np
 from pyntpot.ink.polyline import Pt
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark, Setting
-from pyntpot.maps.lettering.label import NO_LEADER, SPAN_EFFORT, TIER_SPAN, Label, Span
+from pyntpot.maps.lettering.label import (
+    KIND_TRACKING,
+    NO_LEADER,
+    SPAN_EFFORT,
+    TIER_SPAN,
+    Label,
+    Span,
+)
 from pyntpot.maps.lettering.placement_lift import lift_baseline, offset_line
 from pyntpot.maps.lettering_furniture import leader, pin, underline
 from pyntpot.maps.lettering_window import baseline
@@ -44,11 +51,6 @@ log = logging.getLogger(__name__)
 #: is the water, and the track is the route's colour. Everything else in the
 #: hierarchy follows from that one rule.
 KIND_INK = {"river": "water", "marker": "route"}
-
-#: Extra letter spacing a kind is set with, in em units. Water is set wide
-#: because that is how a printed map has always said "this is a river" without
-#: changing the size, and a road is set slightly wide for the same reason.
-KIND_TRACKING = {"river": 0.24, "road": 0.10, "settlement": 0.05}
 
 #: How far a kind leans. Water is italic by convention.
 KIND_SLANT = {"river": 0.22}
@@ -91,9 +93,14 @@ def open_hand(style: Style, route: str | None = None) -> Hand | None:
         return None
 
 
-def box_size(hand: Hand, text: str, size: float) -> tuple[float, float]:
-    """A name's width and height with the room the placer reserves: half an em more."""
-    width, height = hand.measure(text, size)
+def box_size(hand: Hand, text: str, size: float, tracking: float = 0.0) -> tuple[float, float]:
+    """A name's width and height with the room the placer reserves: half an em more.
+
+    `tracking` is the extra letter spacing the name is written with, in em units
+    (its kind's `KIND_TRACKING`), so a curved name's window is as long as the hand
+    writes it.
+    """
+    width, height = hand.measure(text, size, tracking)
     return width + size * 0.5, height
 
 

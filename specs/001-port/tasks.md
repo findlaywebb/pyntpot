@@ -144,12 +144,27 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 
 ## P7. Docs and first release
 
-Order: after P10 part 2 (maintainer, 2026-10-07). P7.1 to P7.3, then P7.4 tags 0.1.0, a release candidate; later issues are fixed in 0.1.x patch releases. Depends on P11: P7.2, and ideally P7.1's quick start, run after it (plan.md, P11, "Order").
+Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the research in `p7-research.md`. PR 1 `p7-golden` (P7.1); PR 2 `p7-docs-release` (P7.2, P7.11, P7.12, P7.3, P7.3b, P7.4 in that order; then P7.5 to P7.10 in parallel worktrees; then P7.13); PR 3 `p7-docs-site` (P7.14, may slip to 0.1.x); PR 4 `release-0.1.0` (P7.R). The outline's P7.1 to P7.4 are now P7.13, P7.5 to P7.10, P7.11 and P7.R.
 
-- [ ] P7.1 README with gallery images, and the CodSpeed badge (Q13 (1), row `p5-run-log.md:125`)
-- [ ] P7.2 Tutorial, how-to guides, reference and explanation pages
-- [ ] P7.3 ADRs 0013 to 0021 for the settled decisions
-- [ ] P7.4 Changelog 0.1.0, trusted publisher, confirm, tag and publish
+- [x] P7.0 Fatten P7 into slices; plan-reviewer pass (rounds 1 and 2 BLOCK, round 3 PASS, its notes folded in)
+- [x] P7.1 The East Lyn label: window measured with tracking, a river's repeat dropped when it finds no water; third golden regeneration, ADR 0031 (`p7-golden`)
+- [x] P7.2 Voice guide and conventions: CONTRIBUTING "Writing docs", the focus places and Welsh names, "Develop" moves out of the README
+- [x] P7.3 Focus-place fixtures (Keswick, Trotternish, Pen-y-Pass over Crib Goch to Yr Wyddfa and down to Llanberis, Oxford, Y Fenni) and the coordinate boxes, ADR 0032
+- [x] P7.3b Lettering reads the name tags a style names, so the Y Fenni card letters "Y Fenni"; ADR 0035
+- [x] P7.4 Docs image pipeline: the registry, the regeneration script, the pins and budgets, the gallery thumbnails; ADR 0033
+- [x] P7.5 Tutorial: paint a watercolour (rungs 1 to 7, pigments before the pen) and a first map; the tutorial sync test (parallel group)
+- [x] P7.6a Painting with Python: curves and symmetry (parallel group)
+- [x] P7.6b Painting with Python: the Barnsley fern and the Apollonian gasket (parallel group)
+- [x] P7.6c Painting with Python: a Derwentwater picture and a vector drawing painted (parallel group)
+- [x] P7.7 Map styles: four example themes and the theme guide (parallel group)
+- [x] P7.8 How-to guides (parallel group)
+- [x] P7.9 Reference pages, pinned, with the pigment and brush sheets (parallel group)
+- [x] P7.10 Explanation: how the wash works, the hand and the nib, data policy (parallel group)
+- [x] P7.11 ADRs 0013 to 0021 for the settled decisions (the outline's P7.3)
+- [x] P7.12 Docs gates: link check, `twine check`
+- [x] P7.13 README, wordmark, landing page, gallery and social preview, and the CodSpeed badge (Q13 (1), row `p5-run-log.md:125`) (the outline's P7.1)
+- [ ] P7.14 Docs site, ADR 0034 (`p7-docs-site`; may slip to 0.1.x)
+- [ ] P7.R Release 0.1.0: runbook, publish workflow, metadata, changelog, citation; confirm, tag and publish (the outline's P7.4)
 
 ## P8. Upstream migration
 
@@ -175,12 +190,21 @@ Order: after P10 part 1, P11 and P10.R. P8.P widens pyntpot's public API on its 
 
 ## P9. Post-port cleanup
 
-Order: after P7.4, P8, P10 (both parts) and P11.
+Order: after P7.R (the 0.1.0 release, the outline's P7.4), P8, P10 (both parts) and P11.
 
 - [ ] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR 0022 supersedes D16's enforcement clause for the post-port tree (the rule stands)
 - [ ] P9.2 Retire the exemptions mechanism; ADR 0023
 - [ ] P9.3 Delete `make_golden_old.py` and the last `ty` exclude
 - [ ] P9.4 Delete `design-sources.md` once `references.md` covers it
+
+## Post-port roadmap
+
+Not part of the port. Each item becomes its own spec under `specs/` when it is taken up
+(maintainer, 2026-10-23, `p7-research.md` section 9).
+
+- [ ] A public SVG reader in `ink` (`docs/features/ink-read-svg-drawings.md`)
+- [ ] Themes shipped in the package and chosen by name (`docs/features/maps-named-themes.md`)
+- [ ] Retire Lynmouth as the test place once the API and the goldens are stable, moving the goldens and tests to the focus places (`docs/features/tests-retire-lynmouth.md`)
 
 ## P10. Triage and address the port's issues
 

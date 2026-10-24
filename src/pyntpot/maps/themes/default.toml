@@ -342,6 +342,7 @@ landmark_radius_m = 300.0
 pick_landmarks = []
 pick_roads = []
 pick_places = []
+name_tags = ["name"]
 generalise = false
 cell_m = 60.0
 morph_cells = 2

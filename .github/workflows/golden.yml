@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 # Exact golden comparison is the local gate only: a CI runner's OS or BLAS build is not
 # guaranteed to match the machine the goldens were made on, bit for bit.
@@ -26,4 +27,16 @@ jobs:
         run: uv sync --locked
 
       - name: Golden parity (tolerance)
-        run: uv run pytest -m golden --golden-tolerance
+        run: uv run pytest -m golden --golden-tolerance --basetemp=${{ runner.temp }}/pytest
+
+      # A failing fresh paint is only inspectable if its pictures outlive the runner.
+      - name: Keep the fresh paints
+        if: failure()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: golden-paints-${{ matrix.os }}
+          # The painted images only, not the copied fixture caches.
+          path: |
+            ${{ runner.temp }}/pytest/**/*.png
+            ${{ runner.temp }}/pytest/**/*.webp
+          retention-days: 7

@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   checks:
@@ -60,6 +61,33 @@ jobs:
 
       - name: Benchmarks (smoke)
         run: uv run pytest -m benchmark
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+          version: "0.11.21"
+          python-version: "3.13"
+
+      - name: Sync
+        run: uv sync --locked
+
+      # Offline: relative links and fragments only; the weekly links.yml checks the web.
+      - name: Links (lychee, offline)
+        uses: lycheeverse/lychee-action@v2.9.0
+        with:
+          args: --offline --config lychee.toml README.md docs
+          fail: true
+
+      - name: Build
+        run: uv build
+
+      - name: Package description (twine)
+        run: uv run twine check --strict dist/*
 
   prerelease:
     runs-on: ubuntu-latest

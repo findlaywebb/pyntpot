@@ -192,6 +192,16 @@ class TestDigests:
         assert changed.base_digest() == style.base_digest()
         assert changed.lettering_digest() != style.lettering_digest()
 
+    def test_a_non_default_name_tags_moves_the_base_and_full_digests(self) -> None:
+        """Other `name_tags` move `base_digest()` and `digest()`, and the default's pins hold."""
+        style = Style.default()
+        basemap = dataclasses.replace(style.basemap, name_tags=("name:cy", "name"))
+        changed = style.model_copy(update={"basemap": basemap})
+        assert changed.base_digest() != BASE_DIGEST
+        assert changed.digest() != DIGEST
+        assert changed.lettering_digest() == LETTERING_DIGEST
+        assert (style.digest(), style.base_digest()) == (DIGEST, BASE_DIGEST)
+
 
 #: Fed colours that are not a `#` and six hexadecimal digits.
 BAD_COLOURS: tuple[str, ...] = ("#abc", "c22050", "#zz0000", "#c22050x")

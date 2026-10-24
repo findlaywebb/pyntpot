@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A small drawing of a fell, a tarn, a wall and two trees, made for pyntpot and
+     released under the repository's MIT licence. Paths use only M, L, C and Z. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <!-- Filled shapes, back to front. The script washes each in the nearest pigment. -->
+  <path id="sun" fill="#ecdfbe" stroke="none"
+        d="M 82 115 C 82 99 96 87 110 87 C 126 87 138 99 138 115 C 138 131 126 143 110 143 C 96 143 82 131 82 115 Z"/>
+  <path id="far-fell" fill="#bfd2cd" stroke="none"
+        d="M 40 270 C 90 210 130 160 190 142 C 230 132 260 160 300 175 C 340 190 380 150 430 140 C 480 132 530 200 560 270 L 40 270 Z"/>
+  <path id="main-fell" fill="#a8c286" stroke="none"
+        d="M 150 300 C 200 230 260 150 340 100 C 390 70 430 80 470 130 C 510 180 540 240 570 300 L 570 345 L 330 345 L 150 300 Z"/>
+  <path id="tarn" fill="#9ec4de" stroke="none"
+        d="M 360 342 C 368 333 420 332 442 340 C 452 348 420 354 395 354 C 372 354 352 350 360 342 Z"/>
+  <path id="left-rise" fill="#a8c286" stroke="none"
+        d="M 30 360 L 30 320 C 70 270 140 255 200 280 C 250 300 280 320 330 335 L 330 360 Z"/>
+  <path id="right-field" fill="#cfdfae" stroke="none"
+        d="M 330 360 L 330 335 C 400 320 480 300 570 310 L 570 360 Z"/>
+  <path id="oak-crown" fill="#a8c286" stroke="none"
+        d="M 106 242 C 106 230 117 220 128 220 C 140 220 150 230 150 242 C 150 254 140 264 128 264 C 117 264 106 254 106 242 Z"/>
+  <path id="hawthorn-crown" fill="#a8c286" stroke="none"
+        d="M 486 296 C 486 288 492 282 500 282 C 508 282 514 288 514 296 C 514 304 508 310 500 310 C 492 310 486 304 486 296 Z"/>
+  <!-- Strokes, inked along their points. The class says which pen. -->
+  <path id="skyline" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.6"
+        d="M 150 300 C 200 230 260 150 340 100 C 390 70 430 80 470 130"/>
+  <path id="wall" class="pen" fill="none" stroke="#3a3a46" stroke-width="2.4"
+        d="M 62 322 C 105 296 150 286 205 298 C 245 307 275 326 322 342"/>
+  <path id="wall-top" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.2"
+        d="M 66 314 C 108 290 152 279 205 291 C 245 300 275 318 318 334"/>
+  <path id="wall-stones-a" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.2"
+        d="M 100 301 L 101 310 M 138 290 L 139 299 M 178 288 L 179 297 M 224 297 L 225 306 M 262 310 L 263 319 M 296 325 L 297 334"/>
+  <path id="track" class="track" fill="none" stroke="#7a5a3a" stroke-width="1.8"
+        d="M 336 345 C 360 322 300 304 340 284 C 380 266 322 236 372 206 C 402 188 392 156 412 126"/>
+  <path id="beck" class="beck" fill="none" stroke="#4a7fa8" stroke-width="2"
+        d="M 346 262 C 352 292 336 314 354 338"/>
+  <path id="oak-trunk" class="pen" fill="none" stroke="#3a3a46" stroke-width="3"
+        d="M 128 286 L 128 262"/>
+  <path id="hawthorn-trunk" class="pen" fill="none" stroke="#3a3a46" stroke-width="2"
+        d="M 500 324 L 500 310"/>
+  <path id="bird-a" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.5"
+        d="M 215 80 C 222 72 228 74 232 80 C 236 74 242 72 249 80"/>
+  <path id="bird-b" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.2"
+        d="M 270 58 C 275 52 279 54 282 58 C 285 54 290 52 295 58"/>
+</svg>

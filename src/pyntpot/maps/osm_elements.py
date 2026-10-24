@@ -154,6 +154,14 @@ def _inside(x: float, y: float, clip: Clip) -> bool:
     return xmin <= x <= xmax and ymin <= y <= ymax
 
 
+def _name(tags: dict[str, Any], name_tags: tuple[str, ...]) -> str:
+    """The first of the style's name tags the element carries and fills, else empty."""
+    for key in name_tags:
+        if tags.get(key):
+            return str(tags[key])
+    return ""
+
+
 def _candidate(name: str, tags: dict[str, Any], at: Pt, index: TrackIndex) -> dict[str, Any]:
     """One landmark candidate at a point, with how far off the track it sits."""
     x, y = at
@@ -183,7 +191,7 @@ def _road(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
     options = scope.options
     within = scope.derived["interaction_m"]
     run_m = scope.derived["interaction_run_m"]
-    name = tags.get("name", "")
+    name = _name(tags, options.name_tags)
     highway = tags["highway"]
     major = highway in MAJOR_ROADS
     ref = str(tags.get("ref") or "")
@@ -223,7 +231,7 @@ def _waterway(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: 
     options = scope.options
     within = scope.derived["interaction_m"]
     run_m = scope.derived["interaction_run_m"]
-    name = tags.get("name", "")
+    name = _name(tags, options.name_tags)
     waterway = tags["waterway"]
     buried = tags.get("tunnel") not in (None, "", "no")
     for piece in clip_line(_geom(entry, scope.proj), scope.clip):
@@ -257,7 +265,7 @@ def _coastline(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found:
     for piece in clip_line(_geom(entry, scope.proj), scope.clip):
         line = _soften(piece, eps, scope.options)
         if len(line) >= MIN_LINE_POINTS:
-            found.coast.append({"n": tags.get("name", ""), "d": path_d(line)})
+            found.coast.append({"n": _name(tags, scope.options.name_tags), "d": path_d(line)})
 
 
 def _area(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harvest) -> None:
@@ -294,13 +302,14 @@ def _area_landmark(
     cx = sum(p[0] for p in pts) / len(pts)
     cy = sum(p[1] for p in pts) / len(pts)
     if _inside(cx, cy, scope.clip):
-        found.candidates.append(_candidate(tags.get("name", ""), tags, (cx, cy), scope.index))
+        name = _name(tags, scope.options.name_tags)
+        found.candidates.append(_candidate(name, tags, (cx, cy), scope.index))
 
 
 def sort_element(entry: dict[str, Any], scope: Scope, found: Harvest) -> None:
     """Sort one payload element into the layer it belongs to."""
     tags = entry.get("tags") or {}
-    name = tags.get("name", "")
+    name = _name(tags, scope.options.name_tags)
     if entry.get("type") == "node":
         x, y = scope.proj(entry["lat"], entry["lon"])
         if _inside(x, y, scope.clip):

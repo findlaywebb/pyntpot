@@ -53,19 +53,51 @@ Three skills under `.claude/skills/` are copied from an MIT-licensed upstream; s
 
 ## Place names in tests and examples
 
-Use real UK countryside names, spread across regions so no file clusters round one area.
-A few landmark city names are fine. Never invent a name. Where a string is drawn,
-measured or compared, pick a real name of the same length.
+Use real UK places, the focus places first, spread across regions so no file clusters
+round one area. A few landmark city names are fine. Never invent a name. Use Welsh names
+for Welsh places. Where a string is drawn, measured or compared, pick a real name of the
+same length.
 
-- **Towns and villages:** Abergavenny, Ambleside, Aviemore, Bakewell, Braemar,
-  Brecon, Buxton, Castleton, Crickhowell, Glencoe, Grasmere, Hawes, Keswick,
-  Malham, Monmouth, Pitlochry, Settle, St Ives, Zennor.
-- **Rivers:** Dee, Derwent, Eden, Exe, Kennet, Medway, Severn, Tay, Tweed, Usk.
+- **Focus places:** the Lake District, Ambleside, Keswick, the Highlands, Skye, Eryri,
+  Oxford, Y Fenni.
+- **Towns and villages:** Aberhonddu, Ambleside, Aviemore, Bakewell, Braemar,
+  Buxton, Castleton, Crucywel, Glencoe, Grasmere, Hawes, Keswick, Machynlleth, Malham,
+  Pitlochry, Settle, St Ives, Trefynwy, Y Fenni, Zennor.
+- **Rivers:** Dee, Derwent, Eden, Exe, Kennet, Medway, Severn, Tay, Tweed, Wysg. The Dee
+  and the Severn cross into England and keep their English names; the Wysg is wholly
+  Welsh and takes its Welsh name.
 - **Roads:** A470, A5, A66, A591, A82, A9, B4521.
-- **Parks and landmarks:** Regent's Park, Dovedale, Malham Cove, Cat Bells, Snowdon.
+- **Parks and landmarks:** Regent's Park, Dovedale, Malham Cove, Cat Bells, Yr Wyddfa.
 
-Coordinates always stay inside the Lynmouth fixture box. Names that belong to the
-Lynmouth fixture (Lyn, Heddon, Brendon, Watersmeet) stay as they are.
+Coordinates always stay inside a fixture box. Lynmouth is the first box; the focus-place
+fixtures add the others. Names that belong to the Lynmouth fixture (Lyn, Heddon,
+Brendon, Watersmeet) stay as they are.
+
+## Writing docs
+
+These conventions apply to the README and everything under `docs/`. The pictures carry
+the style; the words stay plain.
+
+- **Voice:** second person, present tense, British English, sentence-case headings. Follow
+  the Google developer documentation style guide, except its spelling. Use glossary terms
+  only (`GLOSSARY.md`). Prefer studio verbs ("paints", "lays a wash", "letters") to
+  "renders" and "generates". No hype words. No em or en dashes.
+- **Traps:** "sheet" is the paper's noise fields, not paper. "Canvas" is the pixel grid.
+  "Map" never appears in `ink` or `letters` pages. Never call what the engine does a
+  "filter", an "effect" or a "shader".
+- **Images by page type:** the README, tutorials and explanation pages show an image on
+  every page. How-to guides show a result image where one exists. Reference pages show
+  none, except the swatch sheets.
+- **Every image** is registered in `tests/support/docs_images.py`. Its caption reads
+  "Painted by `examples/<stem>.py`", with the seed where the script takes one. Its alt
+  text says what the picture shows or what changed. Lettered text in an image is
+  repeated as real text beside it.
+- **Places:** use the focus places for new figures. Lynmouth names appear only for the
+  Lynmouth card. Never invent a name.
+- **Designed gaps** are stated as capability facts, never as roadmap numbers.
+
+Before you commit docs, search the human-facing prose (everything except
+`docs/decisions/`) for em and en dashes; the search finds none.
 
 ## Security scanning
 
