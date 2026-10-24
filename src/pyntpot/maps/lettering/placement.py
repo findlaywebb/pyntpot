@@ -9,9 +9,10 @@ It does not pick what is named (a caller hands in the labels), does not measure 
 (the caller's `measure` does) and draws nothing.
 
 Invariants: labels come back in tier order each carrying its box and anchor, and its
-window when it is set along a line; a name that repeats another's place is dropped; two
-flat names whose leaders cross are swapped over when the swap uncrosses them and makes
-the pair cheaper.
+window when it is set along a line; a name that repeats another's place is dropped, and
+so is a river's repeat that finds no window on its water, rather than set flat; two flat
+names whose leaders cross are swapped over when the swap uncrosses them and makes the
+pair cheaper.
 """
 
 import math
@@ -98,7 +99,10 @@ def place(
     pool found it, so it is where `dedupe_names` can see that the settlement
     "Elm" and the landmark "Elm" are one village.
 
-    A label that names a place another already names is dropped.
+    A label that names a place another already names is dropped, and so is a
+    river's repeat of a name already set along its water when no window on that
+    water is left for it: a river's first name keeps its flat fallback, its
+    repeat does not.
 
     Source: `label-placement` in docs/explanation/references.md.
 
@@ -168,6 +172,9 @@ def _place(
     on top of another label, text on a dark wash, text laid across a road. The
     card's edge is not in that list because it is not a cost: a candidate on
     the paper beats every candidate off it outright.
+
+    A river's repeat of a name already set along its water, with no window
+    left on that water, is not placed at all.
     """
     placed: list[Label] = []
     route_px, thin = ground.route_px, ground.thin
@@ -182,6 +189,10 @@ def _place(
         if lb.baseline and len(lb.name) >= MIN_CURVED_CHARS:
             tw, th = measure_tracked(lb.name, lb.size, KIND_TRACKING.get(lb.kind, 0.0))
             along = place_along(lb, tw, th, terms, repeats.get(lb.name, []))
+        if along is None and lb.kind == "river" and repeats.get(lb.name):
+            # The second name of a river that has no water left is dropped: set
+            # flat beside its first it would be a second, unrelated river.
+            continue
         flat = best_flat(lb, terms, measure_fn)
         # Two real candidates, one scale. Setting a name on its own feature is
         # worth something in itself, and `ALONG_BONUS` is that something; past

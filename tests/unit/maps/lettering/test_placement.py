@@ -364,3 +364,26 @@ def test_every_glyph_of_a_placed_name_sits_inside_its_window():
     centres = [pen_x + adv * 0.5 for _ch, pen_x, adv, paths in run if paths]
     assert centres
     assert max(centres) <= reach
+
+
+def test_a_rivers_second_name_with_no_water_left_is_dropped_not_set_flat():
+    """A repeat that finds no window on its water is not set on paper beside the first."""
+    card = map_card()
+    reach = [(20.0 + x * 4.0, 150.0) for x in range(31)]
+    zigzag = [(144.0 + x * 6.0, 150.0 + (8.0 if x % 2 else -8.0)) for x in range(30)]
+    water = reach + zigzag
+    names = [
+        Label(name="Lyn", kind="river", px=px, py=150.0, tier=TIER_RIVER, size=13.0, baseline=water)
+        for px in (100.0, 250.0)
+    ]
+    got = place(
+        names,
+        [],
+        Backdrop(card, [(0.0, 295.0), (400.0, 295.0)], flat_dark()),
+        [],
+        flat_measure,
+        measure_tracked=lambda name, size, tracking: flat_measure(name, size),
+    )
+    assert len(got) == 1
+    assert got[0].window, "the one name left is set along the water"
+    assert not got[0].flat
