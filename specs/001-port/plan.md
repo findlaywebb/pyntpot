@@ -536,7 +536,7 @@ the façade at P3.16 and P3.17, and its measurements were taken at
 | 0032 | `focus-place-fixtures` (amends D10) | P7.3 |
 | 0033 | `docs-images-and-examples` (amends 0006 and 0026) | P7.4 |
 | 0034 | `docs-site` (amends D13) | P7.14 |
-| 0035 | `lettering-name-tags` | P7.3b |
+| 0035 | `lettering-name-tags` (amends 0005) | P7.3b |
 
 P10 and P11 run before P9 (maintainer, 2026-10-07), so 0024 to 0028 may be
 written before 0022 and 0023; the numbers stay fixed, and a number whose
@@ -5817,7 +5817,8 @@ Fattened at P7.0 (2026-10-23) from the outline that stood here, after the resear
 `p7-research.md` (six notes under `research/p7/`) and the maintainer's answers recorded
 in its sections 7 to 9; revised after plan review 1 (`reviews/p7-plan-review-1.md`,
 BLOCK, every finding addressed below) and review 2
-(`reviews/p7-plan-review-2.md`, BLOCK, every finding addressed below). Every measurement was taken at `a804fe3`
+(`reviews/p7-plan-review-2.md`, BLOCK, every finding addressed below); review 3
+(`reviews/p7-plan-review-3.md`) passed, its notes folded in. Every measurement was taken at `a804fe3`
 (`main`, after P10.11 merged, #26) unless it names another commit. Each slice
 re-measures what its brief names at its own base before it edits, and stops and reports
 if a fact here no longer holds.
@@ -5988,7 +5989,7 @@ small `size=` option.
 #### P7.0. Fatten P7; plan-reviewer pass
 
 This section; the `tasks.md` lines; the ADR numbers table (sorted, 0024 marked unused,
-0031 to 0034 added) and the paragraph under it (repointed to P7.11); P9's order line;
+0031 to 0035 added) and the paragraph under it (repointed to P7.11); P9's order line;
 `docs/features/maps-prefer-welsh-names.md` (written parked, then taken into P7.3b).
 Leave alone: `src/**`, `tests/**`, other `docs/**`. Done when a plan-reviewer round passes.
 
@@ -6015,6 +6016,8 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   last step, as resolved issues are), new
   `docs/issues/maps-lettering-flat-boxes-without-tracking.md`, new
   `specs/001-port/p7-run-log.md`, `tasks.md`.
+- Line budget: `placement.py` is 351 lines; if the fixes pass 400, its along-water
+  helpers split into `placement_water.py` (an owner file).
 - Leave alone: `Measure` and every call site of it other than `place` and `_place`
   (`label.py`'s `block_size`, `picks.py`, `placement_flat.py`, `span_ends.py`,
   `spans.py`, `attribution.py`, `tests/support/measure.py::flat_measure`): the flat-box
@@ -6105,7 +6108,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
 
 #### P7.3. Focus-place fixtures
 
-- Predecessor: P7.2.
+- Predecessor: P7.12.
 - Check first: the mirror answers a one-node query; `OverpassFeatures.id` is
   `"overpass"`; `test_coordinates.py` holds one box.
 - ADR 0032 amends D10: the coordinate gate allows a table of boxes, one per fixture
@@ -6140,7 +6143,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
 - Selecting ways: `--list-ways` per place, read by name and `sac_scale` against the
   table's route; the chosen ids are recorded in the README. Checks for every track:
   `--length-km` with the table's range; for Yr Wyddfa also `--start-node <Pen-y-Pass car
-  park>:150`, `--via-node <summit trig point>:30` and `--end-node <the node where the
+  park, or a node of its outline if it is mapped as a way>:150`, `--via-node <summit trig point>:30` and `--end-node <the node where the
   Llanberis Path meets the public road>:30`, node ids recorded, never coordinates.
 - `record_fixture.py`: `--contact`, `--fixture DIR`; runs `Cache.ensure` for the track
   through `OverpassFeatures(contact, endpoints=(MIRROR,))` and `OpenTopoData(contact)`
@@ -6175,14 +6178,17 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   tags present on the element, else empty, as today. `_group_digest` omits the fields
   named in a new `DIGEST_OMITS_AT_DEFAULT = ("name_tags",)` while they equal their
   default, so the default style's digests, the manifest hash and every golden stay
-  byte-identical. The candidate export (`candidates/places.py`, `candidates/roads.py`)
-  keeps reading `name`; the field is scoped to `osm_elements`. A tag name is a token
-  (ADR 0026).
+  byte-identical (review 3 checked: the basemap digest stays `52ecda2b5685fa55`).
+  The candidate export (`candidates/places.py`, `candidates/roads.py`)
+  keeps reading `name`; the field is scoped to `osm_elements`. An OSM tag key is data,
+  not a token (ADR 0026), and `BasemapStyle` is in no `__all__`; the setting is reached
+  through a theme file.
 - Owner files: `src/pyntpot/maps/osm_elements.py` (one helper, `_name(tags,
   name_tags)`, at every site), `src/pyntpot/maps/style_groups.py` (the field),
   `src/pyntpot/maps/style.py` (`DIGEST_OMITS_AT_DEFAULT` and its module docstring's
-  digest definition), `src/pyntpot/maps/themes/default.toml` (unchanged unless the
-  loader needs the key; it does not, as a default), `tests/unit/maps/test_osm_elements.py`
+  digest definition), `src/pyntpot/maps/themes/default.toml` (gains `name_tags = ["name"]` so it stays a
+  full theme; no digest moves), `tests/unit/maps/candidates/test_export.py` (its literal
+  dict of `asdict(CANDIDATE_BASEMAP)` gains `"name_tags": ("name",)`, written by hand), `tests/unit/maps/test_osm_elements.py`
   (new; red first: `test_a_place_is_named_by_the_first_tag_the_style_lists`, an element
   with `name` "Abergavenny" and `name:cy` "Y Fenni" read under `("name:cy", "name")` and
   under the default; `test_an_element_without_the_preferred_tag_falls_back_to_name`),
@@ -6196,6 +6202,8 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   `docs/decisions/0035-lettering-name-tags.md`,
   `docs/features/maps-prefer-welsh-names.md` (deleted: the feature exists), `GLOSSARY.md`
   (a row if a term is new), `tasks.md`, `p7-run-log.md`.
+- Check before pinning: P7.3's recorded Y Fenni labels include "Abergavenny" (the town
+  is lettered at all); if not, stop and report.
 - Leave alone: `tests/golden/lynmouth/**`, `layers.py`, `osm.py`, the lettering group,
   other themes.
 - Proof: `$MG $SCRATCH/after --compare tests/golden/lynmouth --require-identical all
@@ -6207,7 +6215,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
 
 #### P7.4. Docs image pipeline and the gallery pins
 
-- Predecessor: P7.3.
+- Predecessor: P7.3b.
 - ADR 0033: every image in the README and `docs/` is painted by a registered script and
   pinned like a golden (amends 0006's golden set); the script contract; the budgets;
   the examples may import, beyond numpy and Pillow, the packages in `test_examples.py`'s
@@ -6261,7 +6269,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
 - Budgets (pinned in the test): thumbnail 60 KB, page 250 KB, hero 400 KB, preview
   900 KB (GitHub's limit is 1 MB). Shares: P7.4 0.5 MB,
   P7.5 0.5, P7.6a 0.4, P7.6b 0.4, P7.6c 0.4, P7.7 0.6, P7.8 0.3, P7.9 0.5, P7.10 0.5,
-  P7.13 2.8 (hero, wordmark, preview, the five place cards), P7.14 0.2 (theme
+  P7.13 2.7 (hero, wordmark, preview, the five place cards), P7.14 0.2 (theme
   assets); `docs/images/` total 7 MB.
 - Gate: G-here; `-m golden` locally; then push and dispatch `golden.yml` on the branch
   (GitHub MCP `actions_run_trigger`) and record the run. Its time against the
@@ -6352,8 +6360,9 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   `p7-run-log.md`.
 - No theme imitates a real map publisher's look. The default theme is unchanged. The
   page links `docs/features/maps-named-themes.md`.
+- Test first: `test_example_themes.py` red before the theme files exist.
 - Gate: G-here; `-m golden` locally; the golden job's time recorded.
-- Commit: `Show the map in four example themes`.
+- Commit: `Show the map in four example themes`. Done: both theme tests green.
 
 #### P7.8. How-to guides
 
@@ -6442,7 +6451,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
 - Predecessor: the parallel group, P7.11 and P7.12 landed.
 - Owner files: `README.md`, `examples/word.py` ("pyntpot" lettered by the hand on a
   washed disc), `examples/place_card.py` (a fixture's card by the script contract, with the
-  optional `theme`; registry entries for the hero, the Keswick card at 1200 px, kind
+  optional `theme` and `size: int = 900`, applied to `card.display_px` by `model_copy`; registry entries for the hero, the Keswick card with `size=1200`, kind
   `hero`, and the five place cards at 720 px, kind `page`, the Y Fenni card with
   `theme="examples/themes/y-fenni.toml"`), `examples/social_preview.py` (1280 by 640 JPEG under 900 KB: the Keswick card
   beside the wordmark), `docs/index.md` (landing page: one painting, four signposted
