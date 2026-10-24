@@ -179,4 +179,25 @@ IMAGES += (
     DocsImage(
         "painting-with-python/gasket.webp", "gasket", (), None, 640, "page", "webp-lossy", "P7.6b"
     ),
+    # P7.6c: Painting with Python, pictures.
+    DocsImage(
+        "painting-with-python/derwentwater.webp",
+        "derwentwater",
+        (),
+        None,
+        720,
+        "page",
+        "webp-lossy",
+        "P7.6c",
+    ),
+    DocsImage(
+        "painting-with-python/svg-drawing.webp",
+        "svg_drawing",
+        (),
+        None,
+        720,
+        "page",
+        "webp-lossy",
+        "P7.6c",
+    ),
 )
