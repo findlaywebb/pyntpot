@@ -229,14 +229,34 @@ plates = paint(basemap, style, cache.plates_dir(cache.key(route, features, eleva
 callouts = Annotations.model_validate(
     {
         "landmarks": [
-            {"name": "Castell y Fenni", "kind": "castle", "why": "the Norman castle",
-             "lat": ..., "lng": ...},
-            {"name": "Priordy y Fenni", "kind": "worship", "why": "Grade I priory church",
-             "lat": ..., "lng": ...},
-            {"name": "Angel Bakery", "kind": "bakery", "why": "much-loved bakery",
-             "lat": ..., "lng": ...},
-            {"name": "Pont y Fenni", "kind": "bridge", "why": "Grade II* Usk bridge",
-             "lat": ..., "lng": ...},
+            {
+                "name": "Castell y Fenni",
+                "kind": "castle",
+                "why": "the Norman castle",
+                "lat": ...,
+                "lng": ...,
+            },
+            {
+                "name": "Priordy y Fenni",
+                "kind": "worship",
+                "why": "Grade I priory church",
+                "lat": ...,
+                "lng": ...,
+            },
+            {
+                "name": "Angel Bakery",
+                "kind": "bakery",
+                "why": "much-loved bakery",
+                "lat": ...,
+                "lng": ...,
+            },
+            {
+                "name": "Pont y Fenni",
+                "kind": "bridge",
+                "why": "Grade II* Usk bridge",
+                "lat": ...,
+                "lng": ...,
+            },
             "Borough Theatre",  # a bare name: looked up among the candidates
         ]
     }
