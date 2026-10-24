@@ -7,7 +7,7 @@ servers' limits.
 This guide covers the two services pyntpot ships providers for, `OverpassFeatures` and
 `OpenTopoData`, run on servers you control. It does not cover writing a provider of your
 own: the `Features` and `Elevation` protocols are not part of `pyntpot.maps`'s public
-names. [A caller could write their own data provider](../features/maps-public-provider-protocols.md)
+names. [A caller could write their own data provider](https://github.com/findlaywebb/pyntpot/blob/main/docs/features/maps-public-provider-protocols.md)
 describes the gap.
 
 You need the tutorial's first map behind you ([First map](../tutorials/first-map.md)), an

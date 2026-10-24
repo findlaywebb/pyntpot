@@ -351,3 +351,27 @@ IMAGES += (
         "social-preview.jpg", "social_preview", (), "keswick", 1280, "preview", "jpeg", "P7.13"
     ),
 )
+
+IMAGES += (
+    # P7.14: the docs site's paper and brush-stroke rule.
+    DocsImage(
+        "site/paper.webp",
+        "site_theme",
+        (("figure", "paper"),),
+        None,
+        960,
+        "page",
+        "webp-lossy",
+        "P7.14",
+    ),
+    DocsImage(
+        "site/rule.webp",
+        "site_theme",
+        (("figure", "rule"),),
+        None,
+        960,
+        "page",
+        "webp-lossy",
+        "P7.14",
+    ),
+)

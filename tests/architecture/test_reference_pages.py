@@ -94,8 +94,10 @@ class TestEveryPageExists:
         assert _page(name).strip(), f"docs/reference/{name} is missing or empty"
 
     def test_glossary_page_points_to_the_glossary(self):
-        """The glossary page links to GLOSSARY.md at the repo root."""
-        assert "../../GLOSSARY.md" in _page("glossary.md")
+        """The glossary page links to GLOSSARY.md at the repo root, by its URL on GitHub because the docs site does not hold the file."""
+        assert "(https://github.com/findlaywebb/pyntpot/blob/main/GLOSSARY.md)" in _page(
+            "glossary.md"
+        )
 
 
 class TestCli:

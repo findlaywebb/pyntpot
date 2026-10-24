@@ -1,0 +1,111 @@
+# The docs site (ADR 0034). The source stays plain Markdown that reads on GitHub; this file
+# only chooses which of it the site shows. decisions/, issues/, features/, runbooks/ and
+# architecture.md are maintainer records and stay out.
+site_name: pyntpot
+site_description: Hand-drawn watercolour and pen-and-ink painting for Python, with route maps
+site_url: https://findlaywebb.github.io/pyntpot/
+repo_url: https://github.com/findlaywebb/pyntpot
+repo_name: findlaywebb/pyntpot
+edit_uri: edit/main/docs/
+docs_dir: docs
+strict: true
+
+exclude_docs: |
+  README.md
+  architecture.md
+  decisions/
+  issues/
+  features/
+  runbooks/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Switch to the dark scheme
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to the light scheme
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - content.code.copy
+
+extra_css:
+  - stylesheets/pyntpot.css
+
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: false
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_root_full_path: false
+            show_root_toc_entry: true
+            show_source: false
+            heading_level: 2
+            members_order: source
+            show_signature_annotations: true
+            separate_signature: true
+            signature_crossrefs: true
+
+nav:
+  - Home: index.md
+  - Gallery: gallery.md
+  - Tutorials:
+      - tutorials/index.md
+      - Paint a watercolour: tutorials/paint-a-watercolour.md
+      - First map: tutorials/first-map.md
+      - Painting with Python:
+          - tutorials/painting-with-python/index.md
+          - Curves: tutorials/painting-with-python/curves.md
+          - Symmetry: tutorials/painting-with-python/symmetry.md
+          - Fractals: tutorials/painting-with-python/fractals.md
+          - Vector drawing: tutorials/painting-with-python/vector-drawing.md
+          - Pictures: tutorials/painting-with-python/pictures.md
+  - How-to guides:
+      - how-to/index.md
+      - how-to/write-a-theme.md
+      - how-to/map-from-the-command-line.md
+      - how-to/work-offline-and-reuse-the-cache.md
+      - how-to/credit-the-map-data.md
+      - how-to/change-the-route-ink.md
+      - how-to/paint-your-own-shapes.md
+      - how-to/self-host-providers.md
+  - Reference:
+      - reference/index.md
+      - reference/cli.md
+      - reference/style-fields.md
+      - reference/cache-layout.md
+      - reference/manifest.md
+      - reference/pigments.md
+      - reference/brushes.md
+      - reference/glossary.md
+      - API:
+          - reference/pyntpot.md
+          - reference/ink.md
+          - reference/letters.md
+          - reference/maps.md
+  - Explanation:
+      - explanation/index.md
+      - explanation/how-the-wash-works.md
+      - explanation/the-hand-and-the-nib.md
+      - explanation/data-policy.md
+      - explanation/performance.md
+      - explanation/references.md

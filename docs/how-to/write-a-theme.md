@@ -7,7 +7,7 @@ assumes you have painted a first map from the [tutorial](../tutorials/index.md).
 
 The package ships one theme, and `Style.default()` loads it. Every other look is a file
 you write and load yourself. Choosing a theme by name, from Python or from the command
-line, is [a feature the package does not have yet](../features/maps-named-themes.md).
+line, is [a feature the package does not have yet](https://github.com/findlaywebb/pyntpot/blob/main/docs/features/maps-named-themes.md).
 
 ## Steps
 

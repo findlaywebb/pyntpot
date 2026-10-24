@@ -97,7 +97,10 @@ class TestPages:
         """The vector page states that pyntpot reads no SVG and links the feature note."""
         text = (PAGES / "vector-drawing.md").read_text()
         assert "does not read SVG" in text
-        assert "(../../features/ink-read-svg-drawings.md)" in text
+        assert (
+            "(https://github.com/findlaywebb/pyntpot/blob/main/docs/features/ink-read-svg-drawings.md)"
+            in text
+        )
 
     @pytest.mark.parametrize("page", ["pictures", "vector-drawing"], ids=["pictures", "vector"])
     def test_each_page_shows_its_registered_image_and_no_dashes(self, page):

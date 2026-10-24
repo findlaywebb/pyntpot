@@ -5,7 +5,7 @@ dry-stone wall and two trees. Filled shapes become washes; strokes are inked wit
 
 pyntpot does not read SVG itself. The engine paints masks and point lists, and this script
 does its own reading of one file with the standard library. If you want pyntpot to read
-drawings for you, [the feature note](../../features/ink-read-svg-drawings.md) says what
+drawings for you, [the feature note](https://github.com/findlaywebb/pyntpot/blob/main/docs/features/ink-read-svg-drawings.md) says what
 that would look like.
 
 ![A pale sun, a blue-grey far fell and a green main fell stand above two green banks; a tarn sits on the fell, a pen-ruled wall crosses the left bank, and a track and a beck run down towards two small trees and a pair of birds.](../../images/painting-with-python/svg-drawing.webp)
