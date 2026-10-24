@@ -340,3 +340,31 @@ host is allowed or the maintainer records them locally.
 not "Abergavenny"; the card's other names may be English or Welsh for now. Taken into
 P7 as P7.3b (a style setting naming the tags lettering reads), so the parked note
 `docs/features/maps-prefer-welsh-names.md` is deleted when P7.3b lands.
+
+## 10. Maintainer feedback, round 1 (2026-10-24, after the overnight run)
+
+Recorded as given; to be planned as a P7 revision round.
+
+- **Route colour** looks too digital; go for a more maroon style.
+- **Maps as hero images.** Many maps do not come across well: the routes are not iconic,
+  and the styling is tuned to the maintainer's sports maps. As the docs' hero images they
+  need to be more striking.
+- **The main hero should be Ambleside**, showing more landscape.
+- **Oxford** does not show the city well: more roads need drawing. The route should go
+  along Queen's Lane and by the Radcliffe Camera, and through Christ Church on the return;
+  out and back over Magdalen Bridge is good. Something odd happens with the Isis,
+  perhaps the flood plain.
+- **Image review.** Agents should review and critique every image.
+- **The main tutorial** alternates between explaining concepts and the underlying
+  engine; both are wanted, but together they read as incoherent.
+- **The Python is a bit hard to follow**, partly from limits of the current code base,
+  to address in future.
+- **Show, not just tell.** Where the docs say ink or colour can change, show a grid of
+  options made with a Python `for` loop.
+- **The circle fractal** (the Apollonian gasket) does not work; reconsider which fractal.
+- **The fern is the favourite image: keep it unchanged.**
+- **Nature pieces** should lean into procedural generation: small random perturbations
+  giving a varied family of outputs.
+- **Some Python curve drawings** could swap the pen for the brush.
+- **Some lettering** shows odd pixelation; perhaps double the grid density.
+- **"Keswick"** lettering has an unexplained kink.
