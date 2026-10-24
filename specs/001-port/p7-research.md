@@ -389,3 +389,13 @@ The maintainer said the recommendations offered so far are good. Those were:
    the code reads, without rounding coordinates. Existing fixtures are re-recorded, and
    goldens must come out byte-identical. This is folded into the revision round.
 7. Any fern family is a separate new image; the existing fern is untouched.
+
+### 10.2 Further feedback
+
+- **Out of scope:** a command line for much more of the library, including theme
+  cloning. Parked on the post-port roadmap (`docs/features/cli-wider-commands.md`).
+- **In scope:** the SVG example shows the raw SVG and each step to the painting, so the
+  reader sees what is gained and what changes.
+- **Skye** at whole-island scale should be simplified further than 10 cm coordinates;
+  proposed as a road trip with short journal notes ("Tuesday: Dunvegan Castle and the
+  Coral Beaches"). **Each showcased map is a different theme or idea.**
