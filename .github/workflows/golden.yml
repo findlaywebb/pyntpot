@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 # Exact golden comparison is the local gate only: a CI runner's OS or BLAS build is not
 # guaranteed to match the machine the goldens were made on, bit for bit.
