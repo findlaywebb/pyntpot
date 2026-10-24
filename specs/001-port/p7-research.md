@@ -399,3 +399,6 @@ The maintainer said the recommendations offered so far are good. Those were:
 - **Skye** at whole-island scale should be simplified further than 10 cm coordinates;
   proposed as a road trip with short journal notes ("Tuesday: Dunvegan Castle and the
   Coral Beaches"). **Each showcased map is a different theme or idea.**
+- **Y Fenni food tour.** The maintainer added Bean & Bread, Rate of Rise and Shepherd's
+  Ice Cream to the Angel Bakery and Tŷ Melin. The first four are in OpenStreetMap
+  (checked 2026-10-24); Tŷ Melin is not.
