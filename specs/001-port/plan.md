@@ -6560,10 +6560,13 @@ and the conversation):
     island's coast and Yr Wyddfa a wider view (maintainer, 2026-10-24).
 10. The SVG page shows the raw SVG source, the drawing flat, and each painting step.
 11. Parked, not in this round: a wider command line (`docs/features/cli-wider-commands.md`);
-    the paper edge and foxing restyle (every image moves; P7.V0 writes
-    `docs/features/paper-edge-and-foxing.md`); readability of the example Python where
+    readability of the example Python where
     the API makes it hard (P7.V0 writes `docs/features/examples-read-simply.md` with the
     cases the critiques found); card supersample 3 (doubles card paint time).
+13. The paper is restyled in the library (P7.V7b): a warm, narrow, uneven edge in
+    place of the grey vignette, and foxing as small rust specks in place of grey
+    smudges; foxing is also off in the reference and explanation figures (P7.V12b)
+    (maintainer, 2026-10-24).
 
 **Branch.** All on `p7-docs-release` (PR #28), landed slice by slice by the
 orchestrating session. The engine slices that move goldens land in sequence and each
@@ -6572,16 +6575,16 @@ and 0025: `make_golden.py --compare` first, the moved images looked at, the labe
 diffed and recorded in the run log). `p7-docs-site` (PR #29) takes P7.V14 and merges
 `p7-docs-release` in after P7.V13. `release-0.1.0` (PR #30) waits for this round.
 
-**ADR numbers.** 0040 `fetch-margins` (P7.V1b), 0036 `fourth-golden-regeneration` (P7.V2 to P7.V7 append to it, one
+**ADR numbers.** 0040 `fetch-margins` (P7.V1b), 0036 `fourth-golden-regeneration` (P7.V2 to P7.V7b append to it, one
 section each), 0037 `showcase-style-fields` (P7.V8), 0038 `journal-notes` (P7.V9b),
 0039 `artist-pigments` (P7.V8b). A slice that finds its number taken stops and reports.
 
 **Order and parallelism.**
 
 ```
-P7.V0 ─ P7.V1 ─ P7.V1b ─ P7.V9a ─ P7.V2 ─ P7.V3 ─ P7.V4 ─ P7.V5 ─ P7.V6 ─ P7.V7 ─┬─ P7.V8 ──┐
-                                                                          ├─ P7.V8b ─┼─ P7.V10 ─ P7.V11 ─┐
-                                                                          └─ P7.V9b ─┘                   │
+P7.V0 ─ P7.V1 ─ P7.V1b ─ P7.V9a ─ P7.V2 ─ P7.V3 ─ P7.V4 ─ P7.V5 ─ P7.V6 ─ P7.V7 ─ P7.V7b ─┬─ P7.V8 ──┐
+                                                                                   ├─ P7.V8b ─┼─ P7.V10 ─ P7.V11 ─┐
+                                                                                   └─ P7.V9b ─┘                   │
    ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┘
    └─┬─ P7.V12a ─┐
      ├─ P7.V12b ─┤
@@ -6590,17 +6593,17 @@ P7.V0 ─ P7.V1 ─ P7.V1b ─ P7.V9a ─ P7.V2 ─ P7.V3 ─ P7.V4 ─ P7.V5 �
 ```
 
 P7.V1b (the fetch margin) lands before P7.V9a, which records with it. P7.V9a (fixtures, network) runs before the engine chain so every golden the chain
-moves is over the final fixture set. P7.V2 to P7.V7 (engine fixes that move goldens)
+moves is over the final fixture set. P7.V2 to P7.V7b (engine fixes that move goldens)
 run one at a time; each regenerates every pin it moves, the docs-image pins included.
 P7.V8, P7.V8b and P7.V9b are additive (no golden moves) and run in parallel in their
-own worktrees after P7.V7. P7.V12a to d are the docs group, parallel, in worktrees,
+own worktrees after P7.V7b. P7.V12a to d are the docs group, parallel, in worktrees,
 landed one at a time.
 
 **Shared files and their merge rules.** As P7's table, plus:
 
 | File | Who adds to it | Rule |
 | --- | --- | --- |
-| `docs/decisions/0036-fourth-golden-regeneration.md` | P7.V2 creates; P7.V3 to P7.V7 append | one section per slice, in order (they are sequential) |
+| `docs/decisions/0036-fourth-golden-regeneration.md` | P7.V2 creates; P7.V3 to P7.V7b append | one section per slice, in order (they are sequential) |
 | `src/pyntpot/maps/style.py` (`DIGEST_OMITS_AT_DEFAULT`) | P7.V8 only | |
 | `tests/architecture/test_coordinates.py`, `tests/golden/test_places.py` | P7.V9a; P7.V5 and P7.V10 rewrite expected labels; P7.V12a removes two entries | sequential, never two at once |
 | `examples/themes/*.toml` | P7.V10 only | P7.V12 slices read themes, never edit them; a needed change is reported |
@@ -6613,8 +6616,7 @@ the round: no published image scores below 3 of 5.
 #### P7.V0. Fatten the round; plan-reviewer pass
 
 This section; the `tasks.md` lines; the decisions recorded in `p7-research.md` 10.3;
-`docs/features/paper-edge-and-foxing.md` and `docs/features/examples-read-simply.md`
-(parked); the five agent reports copied from the scratchpad into
+`docs/features/examples-read-simply.md` (parked); the five agent reports copied from the scratchpad into
 `specs/001-port/research/p7/critique/` (maps, pictures, reference, causes, landmarks),
 with coordinates stripped from the landmark note. Leave alone: `src/**`, `tests/**`,
 other `docs/**`. Done when a plan-reviewer round passes; the chat message to the
@@ -6788,9 +6790,38 @@ maintainer names decision 9 (route B) explicitly.
   where the strands separate them.
 - Commit: `The pen route follows the separated strands`.
 
+#### P7.V7b. The paper's edge and foxing
+
+- Predecessor: P7.V7.
+- At `60e4335`, `ink/paper.paper_plate` (paper.py:41-54): the worn border
+  (`paper_worn`, decay `max(w * 0.012, 8)`) and the vignette (`paper_vignette` 0.05,
+  decay `w * 0.34`) multiply all three channels alike, so the edge greys; foxing
+  (`paper_foxing` 0.09) is `sheet.noise(120.0, 2)` thresholded at 0.80, broad grey
+  smudges at the same places on every sheet of a seed.
+- Fix:
+  - Edge: the vignette's decay narrows to `w * 0.08`, its width modulated by the
+    sheet's low-frequency noise (amplitude half the decay) so it is uneven; the worn
+    border and the vignette darken through a warm tint (`PAPER_EDGE_TINT`, a module
+    constant near raw sienna `#b08a5a`: each channel multiplied by
+    `1 - k * (1 - tint_channel)`), so the edge browns, never greys.
+  - Foxing: small specks from a high-frequency field (`sheet.noise(6.0, 1)`, or the
+    nearest scale the sheet offers), thresholded so about 0.3% of the area is touched,
+    each speck tinted rust (`PAPER_FOX_TINT`, near `#9a5a32`) by the same per-channel
+    rule, strength `paper_foxing`. The style fields and their defaults are unchanged.
+- Owner files: `src/pyntpot/ink/paper.py`, its unit test file at the base, ADR 0036
+  section, every golden that moves (expected: all of them), run log, tasks.
+- Test first: on a plain sheet, red over blue at an edge pixel is greater than at the
+  centre (warm, not grey); the edge darkening is within 2% of the centre's value a
+  tenth of the width in; foxed pixels cover under 1% of the sheet and every connected
+  speck is under 0.2% of the width across; red over blue at a speck exceeds the
+  paper's.
+- Golden: `--compare` first; every image is expected to move; the run log records the
+  largest channel change away from the edge band, which should be foxing only.
+- Commit: `The paper browns at its edge and foxes in specks`.
+
 #### P7.V8. Showcase style fields
 
-- Predecessor: P7.V7. Parallel with P7.V8b and P7.V9b.
+- Predecessor: P7.V7b. Parallel with P7.V8b and P7.V9b.
 - ADR 0037: three style fields, each omitted from its group's digest at its default
   (`DIGEST_OMITS_AT_DEFAULT`), so no golden moves:
   - `basemap.minor_road_classes`: the minor highway classes `roads = "all"` keeps;
@@ -6811,7 +6842,7 @@ maintainer names decision 9 (route B) explicitly.
 
 #### P7.V8b. Artist's pigments
 
-- Predecessor: P7.V7. Parallel.
+- Predecessor: P7.V7b. Parallel.
 - ADR 0039: `ink.PIGMENTS` gains painters' pigments for non-map pieces and routes:
   ultramarine, cerulean, burnt sienna, raw sienna, yellow ochre, sap green, indigo,
   perylene maroon, quinacridone rose, Payne's grey; each with a hex and a
@@ -6872,7 +6903,7 @@ maintainer names decision 9 (route B) explicitly.
 
 #### P7.V9b. Journal notes
 
-- Predecessor: P7.V7. Parallel with P7.V8 and P7.V8b.
+- Predecessor: P7.V7b. Parallel with P7.V8 and P7.V8b.
 - ADR 0038: `Annotations` gains `notes`, each `{text, lat, lng}`. `letter` places each
   note as a wrapped flat block (the hand's existing row leading) in the card's margin
   band, nearest the side its point is on, with a leader to the point; notes are placed

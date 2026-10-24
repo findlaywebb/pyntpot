@@ -414,3 +414,5 @@ The maintainer said the recommendations offered so far are good. Those were:
 - Journal notes, and one idea per showcased map: yes.
 - (The two earlier "yes" answers were to the previous block: Skye simplified to its
   card's scale, and the journal notes and one-idea table as first proposed.)
+- Paper: foxing off in the reference and explanation figures, and the paper's edge and
+  foxing restyled in the library (warm, narrow, uneven edge; rust specks) in this round.
