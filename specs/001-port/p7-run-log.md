@@ -82,3 +82,49 @@ stop when passed, with raw and compressed sizes recorded per fixture. Payloads s
 byte-for-byte as recorded. For the maintainer to confirm or overrule in the morning;
 overruling means trimming the fetch margins, a change to the cache key and so a code
 decision, not a fixture one.
+
+## P7.3, P7.4 and the parallel group landed (2026-10-24, overnight)
+
+All by slice agents in detached worktrees, cherry-picked in order: P7.3, P7.4, then P7.5,
+P7.6a, P7.6b, P7.6c, P7.9, P7.8, P7.7. The group ran from P7.4's commit with the Keswick
+fixture copied in untracked (P7.3 had not landed yet); each slice's only expected red was
+the coordinate gate on those untracked files. Each slice ran its own golden pins exact;
+the full suite runs at landing and on the PR. Landing conflicts were all in the shared
+append-only registry `tests/support/docs_images.py`, resolved by keeping both blocks.
+
+- **P7.3**: five fixtures; sizes raw / gzip: Keswick 6.66 MB / 1.06 MB; Trotternish
+  1.12 / 0.18; Yr Wyddfa 10.59 / 1.69 (budget 2.5); Oxford 8.83 / 1.46 (37 KB under
+  1.5); Y Fenni 3.87 / 0.62. Lengths: 6.74, 6.58, 11.10, 2.70, 2.78 km, all in range.
+  Yr Wyddfa checks: start 35 m from the Pen-y-Pass car park outline node, 8 m from the
+  summit trig point, 0 m from the Llanberis Path's road end. `--ways` gained an
+  `ID:FROM:TO` cut, as the mountain and town ways cannot be used whole; two summit
+  spurs were dropped from the specs. `test_coordinates.py` exempts itself (it holds the
+  boxes table). Golden job locally +4 min (five cards). All recorded through the mirror
+  with the repo URL as contact.
+- **P7.4**: registry, regeneration script, pins, budgets, gallery (8 entries, 185 KB of
+  500 KB). SVG spike: `svgelements` 1.9.6 imports clean under `-W error` but fails `ty`
+  (unresolved imports), so it was rejected; P7.6c reads SVG with `xml.etree`. Golden
+  locally +1 min.
+- **P7.5**: the two tutorial pages, the sync test (5 tests), pigments now rung 4 and the
+  nib rung 5; 8 page images, 211 KB. Keswick first paint about 59 s, 3.5 s cached.
+- **P7.6a**: curves (rose, Lissajous, spirograph) and a kaleidoscope; 123 KB.
+- **P7.6b**: Barnsley fern and Apollonian gasket (reworked once at orchestrator review
+  so the container shows and the discs sit inside it; cap raised to 300 circles); 83 KB.
+- **P7.6c**: Derwentwater and the SVG drawing (fell.svg fixed once at review: skyline,
+  tarn); 44 KB.
+- **P7.7**: four example themes (pen-and-ink, sepia, bold, winter); 182 KB; golden
+  map-style test about 4 min locally. Rivers can be non-blue only through `MAJ` brush ids.
+- **P7.8**: six how-to guides, the command test; 58 KB. Noticed: `OpenTopoData.credit`
+  is fixed to "NASA SRTM" whatever dataset a self-hosted server serves (the guide says so).
+- **P7.9**: reference pages with 20 pin tests; pigment and brush sheets, 65 KB. The
+  architecture suite now imports `pyntpot` (to read the CLI parser and the style
+  dataclasses) and argparse's private `_actions`.
+- **Fix at landing**: prek's `ruff format` formats Python blocks inside Markdown, so an
+  excerpt quoted from inside a function is dedented and then fails the verbatim sync.
+  The gasket's layer-building became its own top-level function `gasket_layers`, quoted
+  whole; the image is unchanged (pin exact). The rule for every page: quote whole
+  top-level functions or statements.
+
+For the maintainer: the Keswick card works but is weak as the hero. The route runs out
+and back over itself, a shop ("The Retro Zone") is lettered as a landmark, and the lake
+is faint in the default theme (clear in "bold").

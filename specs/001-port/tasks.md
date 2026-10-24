@@ -149,16 +149,16 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [x] P7.0 Fatten P7 into slices; plan-reviewer pass (rounds 1 and 2 BLOCK, round 3 PASS, its notes folded in)
 - [x] P7.1 The East Lyn label: window measured with tracking, a river's repeat dropped when it finds no water; third golden regeneration, ADR 0031 (`p7-golden`)
 - [x] P7.2 Voice guide and conventions: CONTRIBUTING "Writing docs", the focus places and Welsh names, "Develop" moves out of the README
-- [ ] P7.3 Focus-place fixtures (Keswick, Trotternish, Pen-y-Pass over Crib Goch to Yr Wyddfa and down to Llanberis, Oxford, Y Fenni) and the coordinate boxes, ADR 0032
+- [x] P7.3 Focus-place fixtures (Keswick, Trotternish, Pen-y-Pass over Crib Goch to Yr Wyddfa and down to Llanberis, Oxford, Y Fenni) and the coordinate boxes, ADR 0032
 - [ ] P7.3b Lettering reads the name tags a style names, so the Y Fenni card letters "Y Fenni"; ADR 0035
-- [ ] P7.4 Docs image pipeline: the registry, the regeneration script, the pins and budgets, the gallery thumbnails; ADR 0033
-- [ ] P7.5 Tutorial: paint a watercolour (rungs 1 to 7, pigments before the pen) and a first map; the tutorial sync test (parallel group)
-- [ ] P7.6a Painting with Python: curves and symmetry (parallel group)
-- [ ] P7.6b Painting with Python: the Barnsley fern and the Apollonian gasket (parallel group)
-- [ ] P7.6c Painting with Python: a Derwentwater picture and a vector drawing painted (parallel group)
-- [ ] P7.7 Map styles: four example themes and the theme guide (parallel group)
-- [ ] P7.8 How-to guides (parallel group)
-- [ ] P7.9 Reference pages, pinned, with the pigment and brush sheets (parallel group)
+- [x] P7.4 Docs image pipeline: the registry, the regeneration script, the pins and budgets, the gallery thumbnails; ADR 0033
+- [x] P7.5 Tutorial: paint a watercolour (rungs 1 to 7, pigments before the pen) and a first map; the tutorial sync test (parallel group)
+- [x] P7.6a Painting with Python: curves and symmetry (parallel group)
+- [x] P7.6b Painting with Python: the Barnsley fern and the Apollonian gasket (parallel group)
+- [x] P7.6c Painting with Python: a Derwentwater picture and a vector drawing painted (parallel group)
+- [x] P7.7 Map styles: four example themes and the theme guide (parallel group)
+- [x] P7.8 How-to guides (parallel group)
+- [x] P7.9 Reference pages, pinned, with the pigment and brush sheets (parallel group)
 - [ ] P7.10 Explanation: how the wash works, the hand and the nib, data policy (parallel group)
 - [x] P7.11 ADRs 0013 to 0021 for the settled decisions (the outline's P7.3)
 - [x] P7.12 Docs gates: link check, `twine check`
