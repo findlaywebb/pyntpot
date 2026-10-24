@@ -179,17 +179,17 @@ $pigments
 
 def _hex(colour: np.ndarray) -> str:
     """Return a colour of three floats in 0 to 1 as `#rrggbb`."""
-    r, g, b = (int(round(float(c) * 255)) for c in colour)
+    r, g, b = (round(float(c) * 255) for c in colour)
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
 def _rgba(colour: np.ndarray, alpha: float) -> str:
     """Return a colour of three floats in 0 to 1 as a CSS `rgb()` with an alpha."""
-    r, g, b = (int(round(float(c) * 255)) for c in colour)
+    r, g, b = (round(float(c) * 255) for c in colour)
     return f"rgb({r} {g} {b} / {alpha})"
 
 
-def _paper(white: bool = False) -> PaperStyle:
+def _paper(*, white: bool = False) -> PaperStyle:
     """Return the default paper without its worn border, vignette or foxing; white paper for the rule, which the page multiplies."""
     plain = PaperStyle(paper_worn=0.0, paper_vignette=0.0, paper_foxing=0.0)
     return replace(plain, paper_hex="#ffffff") if white else plain

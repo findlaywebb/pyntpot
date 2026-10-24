@@ -7,6 +7,7 @@ import pytest
 from PIL import Image
 
 from pyntpot.ink import PIGMENTS
+
 from support import REPO_ROOT
 from support.examples import run_example
 
