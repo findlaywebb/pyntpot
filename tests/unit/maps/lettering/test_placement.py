@@ -54,7 +54,7 @@ def test_a_curved_label_reserves_the_room_it_actually_takes():
         baseline=water,
     )
     later = Label(
-        name="Monmouth Castle",
+        name="Trefynwy Castle",
         kind="monument",
         px=200.0,
         py=150.0,

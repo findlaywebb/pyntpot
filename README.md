@@ -5,14 +5,7 @@ Hand-drawn watercolour and pen-and-ink painting for Python, with route maps.
 Status: pre-release. The painting engine (`pyntpot.ink`), hand lettering
 (`pyntpot.letters`) and the route-map application (`pyntpot.maps`) are in place.
 
-## Develop
-
-```bash
-uv sync
-uv run prek run --all-files && uv run pytest
-```
-
-See `CONTRIBUTING.md`, `CLAUDE.md`, `BOUNDARIES.md` and `docs/`.
+See `CONTRIBUTING.md` to develop, and `CLAUDE.md`, `BOUNDARIES.md` and `docs/`.
 
 ## Licence
 
