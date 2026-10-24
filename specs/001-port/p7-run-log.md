@@ -184,3 +184,17 @@ was 190 MB with the fixture copies).
 For the maintainer: this departs from the plan's order. P7.4's done line (a green two-OS
 run before the fan-out) was not met overnight, because the fan-out ran in parallel to
 save time; the drift surfaced on the draft PR afterwards.
+
+## P7.13 landed (2026-10-24)
+
+README in the prescribed order (wordmark, tagline, Keswick hero, Derwentwater as the
+non-map image, lede, five badges, what it is, stated values, gallery strip, install,
+quick start, credit, docs, status, licence; every image and repo link absolute at
+`main`). `word.py` (the painted wordmark), `place_card.py` (hero at 1200 px and the five
+place cards, Y Fenni with its Welsh theme), `social_preview.py` (1280 by 640 JPEG,
+102 KB); 8 images and masters, 0.42 MB of the 2.7 MB share. `docs/index.md`,
+`docs/gallery.md`, the five index pages' prose, `docs/README.md`'s user list; lychee's
+index exclusion removed (offline: 202 OK, 0 errors); `test_readme.py`; Q13 marked done
+in `p10-triage.md`. The README's Python quick start is `wash.py` from its constants to
+the end of `main`, verbatim. Agent's judgement, shared: the hero has wide empty paper
+on the left and stray river strokes; the wordmark is plain.
