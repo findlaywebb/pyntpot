@@ -196,6 +196,10 @@ class BasemapStyle:
     pick_landmarks: tuple[str, ...] = ()
     pick_roads: tuple[str, ...] = ()
     pick_places: tuple[str, ...] = ()
+    #: The OSM tags that name a feature, in order of preference: the map letters the first
+    #: one an element carries, else nothing. `("name:cy", "name")` letters Welsh names
+    #: where OSM has them. The candidate export keeps reading `name`.
+    name_tags: tuple[str, ...] = ("name",)
     #: The generalisation stage, which runs before anything is drawn: the wood,
     #: the parkland and the sea are rasterised, closed, opened, decluttered and
     #: traced back as a few smooth shapes. Off draws the raw OSM outlines.

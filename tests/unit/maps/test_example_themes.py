@@ -1,4 +1,4 @@
-"""The four example themes in `examples/themes/` are full themes that load and differ from the default and each other."""
+"""The example themes in `examples/themes/` are full themes that load and differ from the default and each other."""
 
 import pytest
 
@@ -7,7 +7,7 @@ from pyntpot.maps import Style
 from support import REPO_ROOT
 
 THEMES_DIR = REPO_ROOT / "examples" / "themes"
-THEME_NAMES = ("pen-and-ink", "sepia", "bold", "winter")
+THEME_NAMES = ("pen-and-ink", "sepia", "bold", "winter", "y-fenni")
 
 
 class TestExampleThemes:

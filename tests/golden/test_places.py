@@ -19,6 +19,7 @@ from pyntpot.maps import (
     paint,
 )
 
+from support import REPO_ROOT
 from support.paths import (
     FIXTURES,
     KESWICK_KEY,
@@ -41,9 +42,11 @@ class Place:
     directory: str
     key: str
     labels: list[str]
+    #: A theme file under the repository root, or empty for the default style.
+    theme: str = ""
 
 
-#: Each place's labels are the names the default style places, in placement order, pinned from
+#: Each place's labels are the names its style (the default unless `theme` is given) places, in placement order, pinned from
 #: the first painting of the recorded fixture.
 PLACES = (
     Place(
@@ -103,10 +106,10 @@ PLACES = (
         "y-fenni",
         Y_FENNI_KEY,
         [
-            "Abergavenny",
-            "Llanfoist",
-            "Usk",
-            "Usk",
+            "Y Fenni",
+            "Llan-ffwyst",
+            "Afon Wysg",
+            "Afon Wysg",
             "Gavenny River",
             "A40",
             "B4246",
@@ -115,6 +118,7 @@ PLACES = (
             "Borough Theatre",
             "start",
         ],
+        theme="examples/themes/y-fenni.toml",
     ),
 )
 
@@ -128,7 +132,7 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
     elevation = OpenTopoData(CONTACT, "http://127.0.0.1:9", budget=0)
     track = Track.from_gpx(cache_dir / "track.gpx")
     cache = Cache(cache_dir)
-    style = Style.default()
+    style = Style.from_toml(REPO_ROOT / place.theme) if place.theme else Style.default()
     assert cache.key(track, features, elevation) == place.key
     before = sorted(p.name for p in cache_dir.iterdir())
 
@@ -138,6 +142,9 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
     card = compose(plates, lettering, basemap, style)
 
     assert [label.name for label in lettering.labels] == place.labels
+    if place.theme:
+        assert "Y Fenni" in place.labels
+        assert "Abergavenny" not in place.labels
     assert sorted(p.name for p in cache_dir.iterdir() if p.name != "plates") == before
     card.save(tmp_path / "map.png")
     with Image.open(tmp_path / "map.png") as saved:

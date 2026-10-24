@@ -313,6 +313,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `pick_landmarks` | array | `[]` | Names the payload picked: replaces the landmark heuristic when given. |
 | `pick_roads` | array | `[]` | Names of minor roads to keep. |
 | `pick_places` | array | `[]` | Has no reader; kept for the upstream consumer. |
+| `name_tags` | array | `["name"]` | The OSM tags that name a feature, in order of preference: the map letters the first one an element carries. `["name:cy", "name"]` letters Welsh names where OSM has them. |
 | `generalise` | boolean | `false` | Rasterise, close, open, declutter and trace the wood, the parkland and the sea back as a few smooth shapes. Off draws the raw outlines. |
 | `cell_m` | number | `60.0` | Metres per cell of the working grid, stated for a 4 km box and scaled up. |
 | `morph_cells` | integer | `2` | Radius of the close and open, in cells. |
