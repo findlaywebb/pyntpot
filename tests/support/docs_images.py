@@ -310,3 +310,44 @@ IMAGES += (
         "P7.10",
     ),
 )
+
+
+#: The five focus places the README's gallery shows: fixture, theme, then the card's name.
+_PLACES: tuple[tuple[str, str | None], ...] = (
+    ("keswick", None),
+    ("trotternish", None),
+    ("yr-wyddfa", None),
+    ("oxford", None),
+    ("y-fenni", "examples/themes/y-fenni.toml"),
+)
+
+IMAGES += (
+    # P7.13: the README's wordmark and hero, the place cards, and the social preview.
+    DocsImage("word.webp", "word", (), None, 480, "page", "webp-lossy", "P7.13"),
+    DocsImage(
+        "hero.webp",
+        "place_card",
+        (("size", 1200),),
+        "keswick",
+        1200,
+        "hero",
+        "webp-lossy",
+        "P7.13",
+    ),
+    *(
+        DocsImage(
+            f"places/{fixture}.webp",
+            "place_card",
+            (("size", 720), *((("theme", theme),) if theme else ())),
+            fixture,
+            720,
+            "page",
+            "webp-lossy",
+            "P7.13",
+        )
+        for fixture, theme in _PLACES
+    ),
+    DocsImage(
+        "social-preview.jpg", "social_preview", (), "keswick", 1280, "preview", "jpeg", "P7.13"
+    ),
+)

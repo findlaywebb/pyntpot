@@ -1,6 +1,6 @@
 # How-to guides
 
-This page is a stub: its prose is written when the docs land together. The pages it will list are below.
+Each guide solves one task and assumes you have done the [tutorials](../tutorials/index.md). Pick the one that matches what you want.
 
 - [Write a theme: copy the default, change a group and load it](write-a-theme.md)
 - [Map from the command line](map-from-the-command-line.md)

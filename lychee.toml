@@ -9,8 +9,6 @@
 no_progress = true
 
 exclude_path = [
-    # Stubs until the docs landing slice writes their prose and removes this line.
-    "docs/**/index.md",
     # Records of past decisions and specs keep links as written.
     "docs/decisions",
     "specs",

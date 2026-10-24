@@ -1,6 +1,6 @@
 # Reference
 
-This page is a stub: its prose is written when the docs land together. The pages it will list are below.
+These pages list what pyntpot has, and nothing else. For how to use it, see the [tutorials](../tutorials/index.md) and the [how-to guides](../how-to/index.md). The two sheets are painted, so you can see a pigment or a brush before you choose it.
 
 - [The command line: every option](cli.md)
 - [Style fields: every field of every style group](style-fields.md)
