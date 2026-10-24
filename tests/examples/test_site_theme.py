@@ -28,9 +28,11 @@ def _scheme(css: str, selector: str) -> dict[str, str]:
     blocks = {name: dict(_PROPERTY.findall(body)) for name, body in _BLOCK.findall(css)}
     root = blocks[":root"]
     found: dict[str, str] = {}
-    for name, value in {**root, **blocks[selector]}.items():
+    merged = {**root, **blocks[selector]}
+    for name, declared in merged.items():
+        value = declared
         while (match := re.fullmatch(r"var\((--[\w-]+)\)", value)) is not None:
-            value = {**root, **blocks[selector]}[match.group(1)]
+            value = merged[match.group(1)]
         found[name] = value
     return found
 
