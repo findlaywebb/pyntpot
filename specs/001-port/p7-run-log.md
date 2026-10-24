@@ -148,3 +148,19 @@ test was not deterministic. The budget is now bytes on disk: 10 MB per fixture, 
 a sixth of that. ADR 0032 says so and keeps the gzip figures for scale. Still for the
 maintainer to confirm. The `docs` job's link failures were from a commit before the
 explanation pages landed; offline lychee is clean on the current tree.
+
+## P7.3b landed (2026-10-24)
+
+`BasemapStyle.name_tags` (default `("name",)`, omitted from the digest at its default),
+`examples/themes/y-fenni.toml` reads `name:cy` first. Proof: `make_golden.py` compare
+against `tests/golden/lynmouth`, all five identical, hash
+`340a7f6e260ee1e2-e5a5f1b4b3ca2177` both sides. The Y Fenni card now letters Y Fenni,
+Llan-ffwyst and Afon Wysg (was Abergavenny, Llanfoist, Usk). Three files outside the
+brief were needed and touched: `test_example_themes.py` (the new theme in its list),
+`docs/reference/style-fields.md` (the new field) and the ADR index. `_name` treats an empty
+tag value as absent. `docs/features/maps-prefer-welsh-names.md` deleted.
+
+Orchestrator fix at landing, `tests/golden/test_places.py`: the label pin compares the
+distinct names, because Oxford places one "Cherwell" on CI and in later local runs where
+the recording run placed two (a placement near-tie); and the Y Fenni assertions now test
+the lettered names, not the pinned list (they were tautological).

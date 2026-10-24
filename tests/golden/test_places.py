@@ -46,8 +46,10 @@ class Place:
     theme: str = ""
 
 
-#: Each place's labels are the names its style (the default unless `theme` is given) places, in placement order, pinned from
-#: the first painting of the recorded fixture.
+#: Each place's labels are the names its style (the default unless `theme` is given) places, pinned
+#: from the first painting of the recorded fixture. The test compares the distinct names only: how
+#: many times a long river is named, and in what order, can shift on a placement near-tie between
+#: platforms (CI placed one "Cherwell" on Oxford where the recording machine placed two).
 PLACES = (
     Place(
         "keswick",
@@ -125,7 +127,7 @@ PLACES = (
 
 @pytest.mark.parametrize("place", PLACES, ids=[p.directory for p in PLACES])
 def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path) -> None:
-    """From a copy of the fixture, no request is made, the card paints and its labels are the pinned names."""
+    """From a copy of the fixture, no request is made, the card paints and it letters the pinned names."""
     cache_dir = tmp_path / "cache"
     shutil.copytree(FIXTURES / place.directory, cache_dir)
     features = OverpassFeatures(CONTACT, ("http://127.0.0.1:9/api/interpreter",), budget=0)
@@ -141,10 +143,11 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
     lettering = letter(plates, basemap, None, style)
     card = compose(plates, lettering, basemap, style)
 
-    assert [label.name for label in lettering.labels] == place.labels
+    names = {label.name for label in lettering.labels}
+    assert names == set(place.labels)
     if place.theme:
-        assert "Y Fenni" in place.labels
-        assert "Abergavenny" not in place.labels
+        assert "Y Fenni" in names
+        assert "Abergavenny" not in names
     assert sorted(p.name for p in cache_dir.iterdir() if p.name != "plates") == before
     card.save(tmp_path / "map.png")
     with Image.open(tmp_path / "map.png") as saved:
