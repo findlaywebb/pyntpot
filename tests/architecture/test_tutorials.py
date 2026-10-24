@@ -25,7 +25,7 @@ _WATERCOLOUR_RUNGS: tuple[tuple[str, str], ...] = (
     ("pigments", "Mix two pigments"),
     ("nib_line", "Take up the pen"),
     ("lettering", "Letter a name"),
-    ("composition", "Compose the sheet"),
+    ("composition", "Compose the painting"),
 )
 
 _MARKED_BLOCK = re.compile(

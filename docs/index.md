@@ -1,6 +1,6 @@
 # pyntpot
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a pink route looping through the town, with the names written by hand](images/hero.webp)
+![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](images/hero.webp)
 
 *Painted by `examples/place_card.py` (size 1200).*
 
@@ -10,7 +10,7 @@ and not the whole of it. Choose the route that fits what you want to do.
 
 ## Choose a route
 
-- **Learn by painting.** The [tutorials](tutorials/index.md) take you from a sheet of
+- **Learn by painting.** The [tutorials](tutorials/index.md) take you from a piece of
   paper to a route map in order, and then to pictures that are not maps.
 - **Get a job done.** The [how-to guides](how-to/index.md) each solve one task: write a
   theme, map from the command line, work offline, credit the data.

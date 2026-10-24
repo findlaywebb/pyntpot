@@ -8,9 +8,9 @@ does its own reading of one file with the standard library. If you want pyntpot 
 drawings for you, [the feature note](../../features/ink-read-svg-drawings.md) says what
 that would look like.
 
-![A pale sun, a blue-grey far fell and a green main fell stand above two green banks; a tarn sits on the fell, a pen-ruled wall crosses the left bank, and a track and a beck run down toward two small trees and a pair of birds.](../../images/painting-with-python/svg-drawing.webp)
+![A pale sun, a blue-grey far fell and a green main fell stand above two green banks; a tarn sits on the fell, a pen-ruled wall crosses the left bank, and a track and a beck run down towards two small trees and a pair of birds.](../../images/painting-with-python/svg-drawing.webp)
 
-Painted by `examples/svg_drawing.py`, seed 5.
+*Painted by `examples/svg_drawing.py`, seed 5.*
 
 Run the script yourself:
 
@@ -18,7 +18,7 @@ Run the script yourself:
 uv run python examples/svg_drawing.py out/
 ```
 
-It reads [`examples/drawings/fell.svg`](../../../examples/drawings/fell.svg), a drawing
+It reads [`examples/drawings/fell.svg`](https://github.com/findlaywebb/pyntpot/blob/main/examples/drawings/fell.svg), a drawing
 made for this repository and released under its MIT licence, and writes
 `out/svg_drawing.png`.
 
@@ -58,10 +58,10 @@ footpath, `beck` a blue one for the stream. The `stroke-width` sets the brush's 
 `ink_density` turns what the stamps laid into ink, and `composite` lays it over the
 washes.
 
-## Fit it to the sheet
+## Fit it to the paper
 
 The drawing's `viewBox` is 600 by 400. The script scales it to fill 88 per cent of the
-sheet's width and centres it, so the picture keeps a margin of bare paper. That is the
+paper's width and centres it, so the picture keeps a margin of bare paper. That is the
 only transform: there are no `transform` attributes, and the script ignores any it meets.
 
 ## Try it

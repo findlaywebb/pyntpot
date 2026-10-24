@@ -4,7 +4,7 @@
 
 Hand-drawn watercolour and pen-and-ink painting for Python, with route maps.
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a pink route looping through the town, with the names written by hand](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/hero.webp)
+![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/hero.webp)
 
 *Painted by `examples/place_card.py`: the Keswick card, from a route that follows public paths.*
 
@@ -23,7 +23,7 @@ Lay a wash, pull a brush, letter a name.
 ## What it is
 
 pyntpot paints watercolour and pen-and-ink pictures in Python the way a painter works.
-It stretches a sheet of paper with tooth and foxing, lays washes that pool at their
+It stretches paper with tooth and foxing, lays washes that pool at their
 edges and settle into the grain, pulls brushes that run dry and reload, glazes pigments
 over one another, and letters names with a nib. It is a painting engine (`pyntpot.ink`),
 hand lettering on top of it (`pyntpot.letters`), and route maps on top of both
@@ -44,8 +44,8 @@ Each picture is one rung of the tutorial, and links to its page.
 
 | | | | |
 | --- | --- | --- | --- |
-| [![A sheet of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/paper.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#stretch-the-paper)<br>`examples/paper.py` | [![A soft blue disc on cream paper, its edge a little darker than its middle](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/wash.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#lay-a-wash)<br>`examples/wash.py` | [![Two strokes on cream paper: a wet blue one above a drier olive one that breaks into flecks](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/brush-stroke.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#pull-a-brush)<br>`examples/brush_stroke.py` | [![Two panels of overlapping green discs, the overlap a different green in each](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/pigments.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#mix-two-pigments)<br>`examples/pigments.py` |
-| [![A dark ink spiral of three turns drawn with a pen nib](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/nib-line.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#take-up-the-pen)<br>`examples/nib_line.py` | [![The name Grasmere written by hand in dark ink along a gentle wave](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/lettering.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#letter-a-name)<br>`examples/lettering.py` | [![A blue wash disc, a wet brush stroke across it and the name Keswick written over both](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/composition.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#compose-the-sheet)<br>`examples/composition.py` | [![A hand-painted map of Keswick and Derwentwater with a pink route looping through the town](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/route-map.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/first-map.md)<br>`examples/route_map.py` |
+| [![A piece of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/paper.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#stretch-the-paper)<br>`examples/paper.py` | [![A soft blue disc on cream paper, its edge a little darker than its middle](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/wash.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#lay-a-wash)<br>`examples/wash.py` | [![Two strokes on cream paper: a wet blue one above a drier olive one that breaks into flecks](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/brush-stroke.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#pull-a-brush)<br>`examples/brush_stroke.py` | [![Two panels of overlapping green discs, the overlap a different green in each](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/pigments.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#mix-two-pigments)<br>`examples/pigments.py` |
+| [![A dark ink spiral of three turns drawn with a pen nib](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/nib-line.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#take-up-the-pen)<br>`examples/nib_line.py` | [![The name Ambleside written by hand in dark ink along a gentle wave](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/lettering.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#letter-a-name)<br>`examples/lettering.py` | [![A blue wash disc, a wet brush stroke across it and the name Keswick written over both](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/composition.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md#compose-the-painting)<br>`examples/composition.py` | [![A hand-painted map of Keswick and Derwentwater with a crimson route looping through the town](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/gallery/route-map.webp)](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/first-map.md)<br>`examples/route_map.py` |
 
 More pictures, each with its script, are in the [gallery](https://github.com/findlaywebb/pyntpot/blob/main/docs/gallery.md).
 
@@ -77,11 +77,30 @@ pyntpot map route.gpx -o map.png \
 [command line how-to](https://github.com/findlaywebb/pyntpot/blob/main/docs/how-to/map-from-the-command-line.md) shows the output.
 
 Or paint with the engine in Python, with no network. This lays one wash of water over
-the paper; it is the whole of `examples/wash.py` after its imports, and the
+the paper. The block is `examples/wash.py` from its imports to the end of `main`, and the
 [tutorial](https://github.com/findlaywebb/pyntpot/blob/main/docs/tutorials/paint-a-watercolour.md) explains each line:
 
 <!-- from examples/wash.py -->
 ```python
+import logging
+from pathlib import Path
+
+import numpy as np
+
+from pyntpot.ink import (
+    PIGMENTS,
+    Canvas,
+    PaperStyle,
+    Sheet,
+    composite,
+    paper_plate,
+    rgb,
+    save_image,
+    wash,
+)
+
+logger = logging.getLogger(__name__)
+
 #: The image's width and height, in pixels.
 W, H = 360, 240
 #: The size of the paper's granulation noise, in pixels.
@@ -105,6 +124,12 @@ def main(out_dir: Path) -> Path:
     save_image(out, path, seed=SEED)
     logger.info("wrote %s", path)
     return path
+```
+
+Then call it. It writes `out/wash.png`:
+
+```python
+main(Path("out"))
 ```
 
 ![A soft blue disc on cream paper, its edge a little darker than its middle and its body lightly granular](https://raw.githubusercontent.com/findlaywebb/pyntpot/main/docs/images/tutorials/wash.webp)

@@ -1,7 +1,6 @@
 # Paint a watercolour
 
-You are going to paint seven small pictures, one after another, each with a script of
-about forty lines. By the end you will have stretched a sheet of paper, laid a wash on
+You are going to paint seven small pictures, one after another, each with a short script. By the end you will have stretched paper, laid a wash on
 it, pulled a brush and a pen across it, mixed two pigments, written a name by hand and
 put the lot together on one painting. Nothing is drawn by a graphics library behind your
 back: every mark comes from the engine you can read in the script.
@@ -29,7 +28,7 @@ page.
 
 ## Stretch the paper
 
-![A sheet of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](../images/tutorials/paper.webp)
+![A piece of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](../images/tutorials/paper.webp)
 
 *Painted by `examples/paper.py`, seed 11.*
 
@@ -60,7 +59,7 @@ def main(out_dir: Path) -> Path:
 
 ### What to notice
 
-- The edge is darker than the middle, as if the sheet had been handled and left on a
+- The edge is darker than the middle, as if the paper had been handled and left on a
   windowsill. Nothing straight or perfect has been drawn there.
 - Fine grain runs all over, and a few soft blotches sit about the page. Real paper
   is never one flat colour, and this is the first thing that tells you it was made by a
@@ -68,7 +67,7 @@ def main(out_dir: Path) -> Path:
 - The picture is plain because the paper has to be. Everything after this rung is
   painted onto it, and shows its grain through.
 
-**Try changing** `SEED` to another number: you get another sheet of the same stock, its
+**Try changing** `SEED` to another number: you get another piece of the same stock, its
 blotches in different places.
 
 ## Lay a wash
@@ -295,9 +294,9 @@ def main(out_dir: Path) -> Path:
 
 ## Letter a name
 
-![The name Grasmere written by hand in dark ink along a gentle wave, its letters each a little different in size and slant](../images/tutorials/lettering.webp)
+![The name Ambleside written by hand in dark ink along a gentle wave, its letters each a little different in size and slant](../images/tutorials/lettering.webp)
 
-*Painted by `examples/lettering.py`, seed 7. The name is Grasmere.*
+*Painted by `examples/lettering.py`, seed 7. The name is Ambleside.*
 
 Now the hand. A `Hand` writes a `Setting`, which is a text at a size set along a line,
 as a list of `Mark`: the strokes the nib will run along. You give it a face (`FaceStyle`)
@@ -356,7 +355,7 @@ def main(out_dir: Path) -> Path:
 ### What to notice
 
 - The letters are not stamped from a template. The hand writes each one afresh, so the
-  two e's of "Grasmere" are cousins and not copies, as they would be in a person's
+  three e's of "Ambleside" are cousins and not copies, as they would be in a person's
   writing.
 - The name follows the wave and rides it, each letter turned to the line beneath it,
   and not stood upright on a baseline.
@@ -366,7 +365,7 @@ def main(out_dir: Path) -> Path:
 **Try changing** `SEED` to `8` and run it again. The hand writes the same name another
 way, the way a second try at your own signature differs from the first.
 
-## Compose the sheet
+## Compose the painting
 
 ![A pale blue wash disc on cream paper, a wet blue brush stroke running across it in a long wave and the name Keswick written by hand over both](../images/tutorials/composition.webp)
 

@@ -135,7 +135,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `dry_dir_elong` | number | `4.5` | How many times longer than wide a break is. |
 | `dry_dir_cell_px` | number | `0.9` | Width of one break across the mark, in display pixels. |
 | `dry_dir_gain` | number | `1.0` | How hard the directional tooth is, against the paper's own contrast. |
-| `dry_dir_mix` | number | `0.8` | How far the gate moves from the paper's tooth toward the directional texture. |
+| `dry_dir_mix` | number | `0.8` | How far the gate moves from the paper's tooth towards the directional texture. |
 | `pen_starve` | boolean | `true` | Let a nib run down: its line thins and lightens over a long run and returns at the reload. |
 | `pen_reservoir` | number | `420.0` | A nib's run, as a multiple of its width. |
 | `pen_thin` | number | `0.26` | How much of its width and ink an empty nib has lost. |
@@ -275,7 +275,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `style` | string | `"solid"` | The route's treatment, such as `solid` or `dotted`. |
 | `px` | number | `5.4` | Width in display pixels. It also sets how far apart the strands of a doubled-back route are drawn. |
 | `colour` | string | `"#c22050"` | Colour as `#rrggbb`. |
-| `effect` | table | table | Table of the treatment's keys: casing, glow, shadow, blend and adaptive percentage. |
+| `effect` | table | table | Table of the treatment's keys: casing, glow, shadow, blend and adaptive percentage. No module reads it: see "Fields with no reader". |
 
 ## `lettering`
 
@@ -338,6 +338,8 @@ These painter fields are read by no module. They belong to no group and a theme 
 ## Fields with no reader
 
 `hillshade_opacity` and `pick_places`, in `basemap`, are fields of the group that no module reads. They are kept for the upstream consumer.
+
+The `effect` table of each `route_inks.<sport>` is the same: it loads and validates, but nothing paints a casing, glow or shadow from it, so setting it changes no card. The gap is recorded in `docs/issues/maps-route-ink-effect-unread.md`.
 
 ## Not style fields
 

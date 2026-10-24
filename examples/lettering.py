@@ -1,6 +1,6 @@
 """Rung 6 of the tutorial: a name written by hand with a nib, laid over the paper.
 
-The hand sets "Grasmere" along a gentle sine across the middle of a 360 by 240 sheet, the
+The hand sets "Ambleside" along a gentle sine across the middle of a 360 by 240 picture, the
 nib strokes its marks onto one RGBA plate, and the plate is laid over the cream paper the
 normal way, by its alpha.
 
@@ -45,14 +45,14 @@ logger = logging.getLogger(__name__)
 W, H = 360, 240
 GRAN_PX = 3.0
 SEED = 7
-NAME = "Grasmere"
+NAME = "Ambleside"
 STEM = "lettering"
 
 
 def _line() -> tuple[tuple[float, float], ...]:
-    """Return a gentle sine across the middle third of the canvas, in display pixels."""
-    x = np.linspace(W / 3, 2 * W / 3, 40)
-    y = H / 2 + 0.04 * H * np.sin(2 * np.pi * (x - W / 3) / (W / 3))
+    """Return a gentle sine across the middle half of the canvas, in display pixels."""
+    x = np.linspace(W / 4, 3 * W / 4, 60)
+    y = H / 2 + 0.04 * H * np.sin(2 * np.pi * (x - W / 4) / (W / 2))
     return tuple((float(px), float(py)) for px, py in zip(x, y, strict=True))
 
 

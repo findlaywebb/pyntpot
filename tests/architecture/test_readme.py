@@ -99,3 +99,11 @@ def test_the_python_quick_start_is_a_verbatim_excerpt_of_the_wash_script() -> No
     assert ast.parse(code).body, "the block holds no statements"
     assert len(covered) == len(ast.parse(code).body), "the block cuts a statement in two"
     assert lines[start:end] == code.splitlines()
+
+
+def test_the_quick_start_calls_the_excerpt_so_it_runs_as_pasted() -> None:
+    """A second Python block after the excerpt calls `main`, so a reader who pastes both gets a picture."""
+    found = _MARKED_BLOCK.search(_README)
+    assert found is not None
+    after = _README[found.end() :]
+    assert 'main(Path("out"))' in after.split("##", 1)[0]

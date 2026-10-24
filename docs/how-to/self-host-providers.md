@@ -55,6 +55,7 @@ their documentation.
    plates = paint(basemap, style, cache.plates_dir(cache.key(route, features, elevation)))
    lettering = letter(plates, basemap, None, style)
    card = compose(plates, lettering, basemap, style)
+   Path("out").mkdir(exist_ok=True)
    card.save("out/self-hosted.png")
    ```
 

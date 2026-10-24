@@ -100,7 +100,7 @@ edge bleeds out a little, because paper wicks.
 
 Where a pen touches down it leaves more than where it travels: a blot, and a little extra
 ink that runs out over the first few widths. Lettering turns both right down, because a blot
-on the crossbar of a t is a blob and not character; the figure uses the pen as the sheet
+on the crossbar of a t is a blob and not character; the figure uses the pen as the brush sheet
 makes it.
 
 ![One long pen stroke running in two arcs across paper, with a small dark blot where the nib first touched down on the left.](../images/explanation/nib-set-down.webp)

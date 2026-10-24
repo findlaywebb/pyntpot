@@ -2,7 +2,7 @@
 
 ![A five-petalled rose curve drawn in ink with a pen, its petals washed pale tan, on cream paper with a wide margin](../../images/curves/rose.webp)
 
-Painted by `examples/curves.py` (seed 5, `figure="rose"`).
+*Painted by `examples/curves.py` (seed 5, `figure="rose"`).*
 
 A curve is a rule that gives a point on the paper for every value of a number `t`. Step
 `t` in small increments, join the points with a pen, and the curve appears. This page
@@ -51,7 +51,7 @@ def spirograph(t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 ![A Lissajous figure in ink, three swings across to two down, crossing itself in a knot, with its enclosed loops washed pale blue](../../images/curves/lissajous.webp)
 
-Painted by `examples/curves.py` (seed 5, `figure="lissajous"`).
+*Painted by `examples/curves.py` (seed 5, `figure="lissajous"`).*
 
 ## Scale the curve to the paper
 
@@ -115,7 +115,7 @@ the painted paper in the ink colour the brush came with.
 
 ![A spirograph curve in ink: nine long loops round a small bare centre, with the loops washed pale green](../../images/curves/spirograph.webp)
 
-Painted by `examples/curves.py` (seed 5, `figure="spirograph"`).
+*Painted by `examples/curves.py` (seed 5, `figure="spirograph"`).*
 
 ## What to notice
 
@@ -127,5 +127,5 @@ Painted by `examples/curves.py` (seed 5, `figure="spirograph"`).
 
 ## Try changing
 
-Change the factor 5 in `rose` to 4 for eight petals: an even factor doubles the petals.
+Change the factor 5 in `rose` to 7 for seven petals: an odd factor k gives k petals over half a turn. An even factor draws twice as many, but only over a whole turn, so change the rose's `np.pi` in `FIGURES` to `2 * np.pi` as well.
 Change 3 and 2 in `lissajous` to 5 and 4 for a denser knot.

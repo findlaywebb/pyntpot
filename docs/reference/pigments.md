@@ -4,7 +4,7 @@ A pigment is a colour a wash or a mark lays, named by its key. This page lists e
 
 ![Fifteen washed discs, each one pigment laid alone on the paper, in rows of five in the order of the table below.](../images/reference/pigment-swatches.webp)
 
-Painted by `examples/pigment_swatches.py`, seed 11. The discs read left to right, top to bottom, in the order of the table.
+*Painted by `examples/pigment_swatches.py`, seed 11.* The discs read left to right, top to bottom, in the order of the table.
 
 ## Entries
 

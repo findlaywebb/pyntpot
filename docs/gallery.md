@@ -6,37 +6,37 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Paint a watercolour](tutorials/paint-a-watercolour.md)
 
-![A sheet of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](images/tutorials/paper.webp)
+![A piece of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](images/tutorials/paper.webp)
 
-*Painted by `examples/paper.py`.*
+*Painted by `examples/paper.py` (seed 11).*
 
 ![A soft blue disc on cream paper, its edge a little darker than its middle and its body lightly granular](images/tutorials/wash.webp)
 
-*Painted by `examples/wash.py`.*
+*Painted by `examples/wash.py` (seed 11).*
 
 ![Two strokes on cream paper: a steady, wet blue stroke above a drier olive stroke that breaks into flecks towards its end](images/tutorials/brush-stroke.webp)
 
-*Painted by `examples/brush_stroke.py`.*
+*Painted by `examples/brush_stroke.py` (seed 11).*
 
 ![Two panels, each with a yellow-green disc overlapping a deeper green one; the overlap is a different green in the two panels](images/tutorials/pigments.webp)
 
-*Painted by `examples/pigments.py`.*
+*Painted by `examples/pigments.py` (seed 11).*
 
 ![A dark ink spiral of three turns drawn with a pen nib on cream paper, its line slightly uneven where the ink meets the grain](images/tutorials/nib-line.webp)
 
-*Painted by `examples/nib_line.py`.*
+*Painted by `examples/nib_line.py` (seed 11).*
 
-![The name Grasmere written by hand in dark ink along a gentle wave, its letters each a little different in size and slant](images/tutorials/lettering.webp)
+![The name Ambleside written by hand in dark ink along a gentle wave, its letters each a little different in size and slant](images/tutorials/lettering.webp)
 
-*Painted by `examples/lettering.py`.*
+*Painted by `examples/lettering.py` (seed 7).*
 
 ![A pale blue wash disc on cream paper, a wet blue brush stroke running across it in a long wave and the name Keswick written by hand over both](images/tutorials/composition.webp)
 
-*Painted by `examples/composition.py`.*
+*Painted by `examples/composition.py` (seed 7).*
 
 ### [First map](tutorials/first-map.md)
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a pink route looping through the town, with the names written by hand](images/tutorials/route-map.webp)
+![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](images/tutorials/route-map.webp)
 
 *Painted by `examples/route_map.py`.*
 
@@ -46,43 +46,43 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ![A five-petalled rose curve drawn in ink with a pen, its petals washed pale tan, on cream paper with a wide margin](images/curves/rose.webp)
 
-*Painted by `examples/curves.py` (figure rose).*
+*Painted by `examples/curves.py` (seed 5, figure rose).*
 
 ![A Lissajous figure in ink, three swings across to two down, crossing itself in a knot, with its enclosed loops washed pale blue](images/curves/lissajous.webp)
 
-*Painted by `examples/curves.py` (figure lissajous).*
+*Painted by `examples/curves.py` (seed 5, figure lissajous).*
 
 ![A spirograph curve in ink: nine long loops round a small bare centre, with the loops washed pale green](images/curves/spirograph.webp)
 
-*Painted by `examples/curves.py` (figure spirograph).*
+*Painted by `examples/curves.py` (seed 5, figure spirograph).*
 
 ### [Symmetry: one motif, repeated by mirror and rotation](tutorials/painting-with-python/symmetry.md)
 
 ![A twelve-petalled blue rosette with green diamonds and tan discs, drawn in ink inside a ring, like stained glass in watercolour](images/curves/kaleidoscope.webp)
 
-*Painted by `examples/kaleidoscope.py`.*
+*Painted by `examples/kaleidoscope.py` (seed 9).*
 
 ### [Fractals: a fern and a gasket](tutorials/painting-with-python/fractals.md)
 
 ![A fern with a thin stem and curling fronds, washed in two greens on cream paper. The fronds are a deeper green and the two lowest leaflets a paler one.](images/painting-with-python/fern.webp)
 
-*Painted by `examples/fern.py`.*
+*Painted by `examples/fern.py` (seed 7).*
 
 ![Washed discs packed inside a ringed circle: two large pale blue discs, a large green one and ochre and green ones below, with ever smaller discs filling the gaps and brown beads at the rim. Where two discs overlap, a darker lens shows both pigments.](images/painting-with-python/gasket.webp)
 
-*Painted by `examples/gasket.py`.*
+*Painted by `examples/gasket.py` (seed 11).*
 
 ### [Pictures: layered hill washes and a lettered Derwentwater](tutorials/painting-with-python/pictures.md)
 
 ![Five washes of hill in blue-grey, grey-brown and green recede above a streaked blue lake that mirrors them; a small wooded island sits on the water and "Derwentwater" is written below.](images/painting-with-python/derwentwater.webp)
 
-*Painted by `examples/derwentwater.py`.*
+*Painted by `examples/derwentwater.py` (seed 21).*
 
 ### [Vector drawing: a small drawing, its filled shapes washed and its strokes inked](tutorials/painting-with-python/vector-drawing.md)
 
-![A pale sun, a blue-grey far fell and a green main fell stand above two green banks; a tarn sits on the fell, a pen-ruled wall crosses the left bank, and a track and a beck run down toward two small trees and a pair of birds.](images/painting-with-python/svg-drawing.webp)
+![A pale sun, a blue-grey far fell and a green main fell stand above two green banks; a tarn sits on the fell, a pen-ruled wall crosses the left bank, and a track and a beck run down towards two small trees and a pair of birds.](images/painting-with-python/svg-drawing.webp)
 
-*Painted by `examples/svg_drawing.py`.*
+*Painted by `examples/svg_drawing.py` (seed 5).*
 
 ## How-to guides
 
@@ -114,7 +114,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ![A hill-shaped fell washed in pale blue-green with a black pen line along its smooth skyline, and the name Skiddaw lettered by hand along a gentle curve beneath it.](images/how-to/own-shapes.webp)
 
-*Painted by `examples/how_to_own_shapes.py`.*
+*Painted by `examples/how_to_own_shapes.py` (seed 5).*
 
 ### [Map from the command line](how-to/map-from-the-command-line.md)
 
@@ -128,13 +128,13 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ![Fifteen washed discs, each one pigment laid alone on the paper, in rows of five in the order of the table below.](images/reference/pigment-swatches.webp)
 
-*Painted by `examples/pigment_swatches.py`.*
+*Painted by `examples/pigment_swatches.py` (seed 11).*
 
 ### [Brushes](reference/brushes.md)
 
 ![The brush sheet: fourteen rows of eight short wavy strokes, one stroke for each brush id, in the colour of its ink. Treatments 4 and 7 break up as dry brushes; the others lay a continuous line.](images/reference/brush-sheet.webp)
 
-*Painted by `examples/brush_sheet.py`.*
+*Painted by `examples/brush_sheet.py` (seed 11).*
 
 ## Explanation
 
@@ -142,61 +142,61 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ![A flat, evenly tinted blue disc with a hard, clean edge on cream paper.](images/explanation/wash-mask.webp)
 
-*Painted by `examples/wash_stages.py` (figure mask, size 480).*
+*Painted by `examples/wash_stages.py` (seed 11, figure mask, size 480).*
 
 ![The same disc as a wash: the edge is soft and a little uneven, and the blue deepens and fades slowly across the disc.](images/explanation/wash-body.webp)
 
-*Painted by `examples/wash_stages.py` (figure body, size 480).*
+*Painted by `examples/wash_stages.py` (seed 11, figure body, size 480).*
 
 ![The same wash with a darker band of blue just inside the edge, so the disc looks outlined by its own pigment.](images/explanation/wash-rim.webp)
 
-*Painted by `examples/wash_stages.py` (figure rim, size 480).*
+*Painted by `examples/wash_stages.py` (seed 11, figure rim, size 480).*
 
 ![The same wash on paper with a fine grain: the blue is broken into a pale speckle with darker flecks, and the edge band is still there.](images/explanation/wash-grain.webp)
 
-*Painted by `examples/wash_stages.py` (figure grain, size 480).*
+*Painted by `examples/wash_stages.py` (seed 11, figure grain, size 480).*
 
 ![Two overlapping discs, blue on the left and yellow-green on the right, with a deep, dull green where they cross.](images/explanation/wash-overlap.webp)
 
-*Painted by `examples/wash_stages.py` (figure overlap, size 480).*
+*Painted by `examples/wash_stages.py` (seed 11, figure overlap, size 480).*
 
 ![The same two discs glazed: where they cross the green is cleaner and lighter than the multiplied one, and each disc still reads through the other.](images/explanation/wash-glaze.webp)
 
-*Painted by `examples/wash_stages.py` (figure glaze, size 480).*
+*Painted by `examples/wash_stages.py` (seed 11, figure glaze, size 480).*
 
 ### [The hand and the nib](explanation/the-hand-and-the-nib.md)
 
 ![A single gently waving line running across cream paper, drawn with a narrow pen nib.](images/explanation/nib-line.webp)
 
-*Painted by `examples/nib_stages.py` (figure line, size 360).*
+*Painted by `examples/nib_stages.py` (seed 7, figure line, size 360).*
 
 ![The word Keswick written along the line in an even, unmodulated pen line, every stroke the same width.](images/explanation/nib-centreline.webp)
 
-*Painted by `examples/nib_stages.py` (figure centreline, size 360).*
+*Painted by `examples/nib_stages.py` (seed 7, figure centreline, size 360).*
 
 ![The same word with strokes that thicken and thin: strokes that fall to the right are heavy and strokes that rise to the right are light.](images/explanation/nib-broad.webp)
 
-*Painted by `examples/nib_stages.py` (figure broad, size 360).*
+*Painted by `examples/nib_stages.py` (seed 7, figure broad, size 360).*
 
 ![The same word written with the nib turned the other way, so the strokes that rise to the right are heavy and the ones that fall to the right are light.](images/explanation/nib-turned.webp)
 
-*Painted by `examples/nib_stages.py` (figure turned, size 360).*
+*Painted by `examples/nib_stages.py` (seed 7, figure turned, size 360).*
 
 ![The word Keswick written in dark ink over a dark green wash, legible but low in contrast against the wash.](images/explanation/nib-ground.webp)
 
-*Painted by `examples/nib_stages.py` (figure ground, size 360).*
+*Painted by `examples/nib_stages.py` (seed 7, figure ground, size 360).*
 
 ![The same word with a pale, soft-edged patch of paper showing through the green wash behind it, so the ink is much clearer.](images/explanation/nib-backing.webp)
 
-*Painted by `examples/nib_stages.py` (figure backing, size 360).*
+*Painted by `examples/nib_stages.py` (seed 7, figure backing, size 360).*
 
 ![One long pen stroke running in two arcs across paper, with a small dark blot where the nib first touched down on the left.](images/explanation/nib-set-down.webp)
 
-*Painted by `examples/nib_stages.py` (figure set-down, size 360).*
+*Painted by `examples/nib_stages.py` (seed 7, figure set-down, size 360).*
 
 ![The same stroke, now thinning along each run and swelling back at each reload, so the line has a visible rhythm of fading and refilling.](images/explanation/nib-runs-dry.webp)
 
-*Painted by `examples/nib_stages.py` (figure runs-dry, size 360).*
+*Painted by `examples/nib_stages.py` (seed 7, figure runs-dry, size 360).*
 
 ## Places
 
@@ -204,33 +204,33 @@ The five focus places, each painted from a recorded fixture by one script. Every
 
 ### [Keswick and Derwentwater](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/keswick)
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes, blue rivers, orange roads and a pink route through the town; the names include Keswick, Portinscale and Crosthwaite](images/places/keswick.webp)
+![A hand-painted map of Keswick and Derwentwater: green and cream washes, blue rivers, orange roads and a crimson route through the town; the names include Keswick, Portinscale and Crosthwaite](images/places/keswick.webp)
 
-*Painted by `examples/place_card.py`.* The card letters Keswick, Portinscale, Crosthwaite, Derwent, Greta.
+*Painted by `examples/place_card.py`.* Among the names it letters are Keswick, Portinscale, Crosthwaite, Derwent Bridge, Lake Road Chapel, Derwent, Greta and A5271; the list is not complete.
 
 ### [The Quiraing, Trotternish, Skye](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/trotternish)
 
-![A hand-painted map of the Quiraing on Skye: a narrow cream and green ribbon of land with a pink route looping along it, lettered Fir Bhreugach, The Prison and Quiraing South Pinnacle](images/places/trotternish.webp)
+![A hand-painted map of the Quiraing on Skye: a narrow cream and green ribbon of land with a crimson route looping along it, lettered Fir Bhreugach, The Prison and Quiraing South Pinnacle](images/places/trotternish.webp)
 
-*Painted by `examples/place_card.py`.* The card letters Fir Bhreugach, Quiraing South Pinnacle, The Prison, Brogaig.
+*Painted by `examples/place_card.py`.* Among the names it letters are Fir Bhreugach, Quiraing South Pinnacle, The Prison, Brogaig; the list is not complete.
 
 ### [Over Crib Goch to the summit of Yr Wyddfa, Eryri](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/yr-wyddfa)
 
-![A hand-painted map of the route over Crib Goch to Yr Wyddfa: a long pale ribbon of ground with a pink route along its ridge, lettered Garnedd Ugain, Yr Wyddfa, Crib Goch and Llanberis](images/places/yr-wyddfa.webp)
+![A hand-painted map of the route over Crib Goch to Yr Wyddfa: a long pale ribbon of ground with a crimson route along its ridge, lettered Garnedd Ugain, Yr Wyddfa, Crib Goch and Llanberis](images/places/yr-wyddfa.webp)
 
-*Painted by `examples/place_card.py`.* The card letters Llanberis, Garnedd Ugain, Yr Wyddfa, Crib Goch.
+*Painted by `examples/place_card.py`.* Among the names it letters are Llanberis, Garnedd Ugain, Yr Wyddfa, Crib Goch; the list is not complete.
 
 ### [Central Oxford](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/oxford)
 
-![A hand-painted map of central Oxford: pale washes for the city, a dark blue wash for the river Cherwell and a pink route round Christ Church Meadow, lettered Christ Church, Tom Tower and Magdalen Tower](images/places/oxford.webp)
+![A hand-painted map of central Oxford: pale washes for the city, a dark blue wash for the river Cherwell and a crimson route round Christ Church Meadow, lettered Christ Church, Tom Tower and Magdalen Tower](images/places/oxford.webp)
 
-*Painted by `examples/place_card.py`.* The card letters Christ Church, Tom Tower, Magdalen Tower, Cherwell.
+*Painted by `examples/place_card.py`.* Among the names it letters are Christ Church, Tom Tower, Magdalen Tower, Cherwell; the list is not complete.
 
 ### [Y Fenni](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/y-fenni)
 
-![A hand-painted map of Y Fenni: washes for the town, the blue river Wysg and a pink route round the castle and the meadows, with the town lettered Y Fenni](images/places/y-fenni.webp)
+![A hand-painted map of Y Fenni: washes for the town, the blue river Wysg and a crimson route round the castle and the meadows, with the town lettered Y Fenni](images/places/y-fenni.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml`.* The card letters Y Fenni, Afon Wysg, Llan-ffwyst.
+*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml`.* Among the names it letters are Y Fenni, Afon Wysg, Llan-ffwyst, Gavenny River, Borough Theatre and A40; the list is not complete.
 
 ## The README
 
@@ -240,11 +240,11 @@ The pictures that open the [README](https://github.com/findlaywebb/pyntpot#readm
 
 *Painted by `examples/word.py`. The word is pyntpot.*
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a pink route looping through the town, with the names written by hand](images/hero.webp)
+![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](images/hero.webp)
 
 *Painted by `examples/place_card.py` (size 1200).*
 
-![The Keswick card on the left and the pyntpot wordmark on the right, on one sheet of cream paper](images/social-preview.jpg)
+![The Keswick card on the left and the pyntpot wordmark on the right, on one piece of cream paper](images/social-preview.jpg)
 
 *Painted by `examples/social_preview.py`. The word is pyntpot.*
 
@@ -252,30 +252,34 @@ The pictures that open the [README](https://github.com/findlaywebb/pyntpot#readm
 
 The README's strip is one thumbnail for each rung of the [tutorials](tutorials/index.md), from the paper to the route map.
 
-![A sheet of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](images/gallery/paper.webp)
+![A piece of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](images/gallery/paper.webp)
 
-*Painted by `examples/paper.py`.*
+*Painted by `examples/paper.py` (seed 11).*
 
 ![A soft blue disc on cream paper, its edge a little darker than its middle](images/gallery/wash.webp)
 
-*Painted by `examples/wash.py`.*
+*Painted by `examples/wash.py` (seed 11).*
 
 ![Two strokes on cream paper: a wet blue one above a drier olive one that breaks into flecks](images/gallery/brush-stroke.webp)
 
-*Painted by `examples/brush_stroke.py`.*
+*Painted by `examples/brush_stroke.py` (seed 11).*
 
 ![Two panels of overlapping green discs, the overlap a different green in each](images/gallery/pigments.webp)
 
-*Painted by `examples/pigments.py`.*
+*Painted by `examples/pigments.py` (seed 11).*
 
 ![A dark ink spiral of three turns drawn with a pen nib](images/gallery/nib-line.webp)
 
-*Painted by `examples/nib_line.py`.*
+*Painted by `examples/nib_line.py` (seed 11).*
 
-![The name Grasmere written by hand in dark ink along a gentle wave](images/gallery/lettering.webp)
+![The name Ambleside written by hand in dark ink along a gentle wave](images/gallery/lettering.webp)
 
-*Painted by `examples/lettering.py`.*
+*Painted by `examples/lettering.py` (seed 7).*
 
 ![A blue wash disc, a wet brush stroke across it and the name Keswick written over both](images/gallery/composition.webp)
 
-*Painted by `examples/composition.py`.*
+*Painted by `examples/composition.py` (seed 7).*
+
+![A hand-painted map of Keswick and Derwentwater with a crimson route looping through the town](images/gallery/route-map.webp)
+
+*Painted by `examples/route_map.py`.*

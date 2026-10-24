@@ -2,7 +2,7 @@
 
 ![A twelve-petalled blue rosette with green diamonds and tan discs, drawn in ink inside a ring, like stained glass in watercolour](../../images/curves/kaleidoscope.webp)
 
-Painted by `examples/kaleidoscope.py` (seed 9).
+*Painted by `examples/kaleidoscope.py` (seed 9).*
 
 A kaleidoscope draws something small once and repeats it. This page paints a rosette that
 way: a petal, a leaf, a diamond, a disc and a spoke are each listed once, then repeated by

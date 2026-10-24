@@ -24,6 +24,10 @@ lettered in the style's hand. It joins each source's short credit with a middle 
 line carries the URL because the guidelines ask for it on a static or printed image, where a
 link cannot be followed.
 
+![The Keswick card with its credit lettered small at the bottom right corner, below the foot of the route.](../images/places/keswick.webp)
+
+*Painted by `examples/place_card.py`. The credit is the small line at the bottom right.*
+
 The elevation is NASA's SRTM data, served by OpenTopoData. SRTM carries no use restriction.
 It is credited anyway, and OpenTopoData's public service has its own limits, below.
 

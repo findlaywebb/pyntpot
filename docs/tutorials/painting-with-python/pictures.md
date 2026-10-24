@@ -6,7 +6,7 @@ Nothing here is a map. Every shape is a numpy mask, and `wash` turns each one in
 
 ![Five washes of hill in blue-grey, grey-brown and green recede above a streaked blue lake that mirrors them; a small wooded island sits on the water and "Derwentwater" is written below.](../../images/painting-with-python/derwentwater.webp)
 
-Painted by `examples/derwentwater.py`, seed 21.
+*Painted by `examples/derwentwater.py`, seed 21.*
 
 The picture reads "Derwentwater". Run the script yourself:
 
@@ -29,7 +29,7 @@ cover = ((yy >= ridge[None, :]) & (yy < shore + 2) & inside).astype(np.float32)
 dens = wash(cover, sheet, crest, 0.25)
 ```
 
-`inside` is the sheet less its margin, so no wash reaches the edge and the paper stays
+`inside` is the picture less its margin, so no wash reaches the edge and the paper stays
 bare all round. `crest` is the density of the flat body of the wash and `0.25` the extra
 pigment that pools at its edge, which is what outlines each hill.
 
@@ -40,7 +40,7 @@ a pixel under two washes is darker than under one. That is the recession: the fa
 under nothing but its own wash, is pale; the near bank sits on the washes before it and is
 dark. Nothing darkens a hill by hand.
 
-Two touches finish each hill. The density fades toward its foot, where mist lies:
+Two touches finish each hill. The density fades towards its foot, where mist lies:
 
 ```python
 mist = 0.62 + 0.38 * np.exp(-np.clip(yy - ridge[None, :], 0, None) / (0.14 * h))
@@ -48,7 +48,7 @@ mist = 0.62 + 0.38 * np.exp(-np.clip(yy - ridge[None, :], 0, None) / (0.14 * h))
 
 And the nearer hills granulate. `wash` has its own granulation; the script adds more by
 scaling the density with the sheet's `gran` field, which is the paper's noise, so the
-pigment settles in the same hollows wherever it is laid. The far fell takes none of it
+pigment follows the same grain field wherever it is laid. The far fell takes none of it
 and the banks take the most.
 
 ## The lake and what it holds

@@ -4,7 +4,7 @@ A brush is one mark-making tool, in render pixels: a tip of bristles stamped alo
 
 ![The brush sheet: fourteen rows of eight short wavy strokes, one stroke for each brush id, in the colour of its ink. Treatments 4 and 7 break up as dry brushes; the others lay a continuous line.](../images/reference/brush-sheet.webp)
 
-Painted by `examples/brush_sheet.py`, seed 11. Every brush is stroked at 4 pixels wide. Each image row is one prefix and colour column from the table below; its eight strokes are treatments 1 to 8, left to right.
+*Painted by `examples/brush_sheet.py`, seed 11.* Every brush is stroked at 4 pixels wide. Each image row is one prefix and colour column from the table below; its eight strokes are treatments 1 to 8, left to right.
 
 ## Id form
 
