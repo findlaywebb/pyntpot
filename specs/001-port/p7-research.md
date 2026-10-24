@@ -402,3 +402,13 @@ The maintainer said the recommendations offered so far are good. Those were:
 - **Y Fenni food tour.** The maintainer added Bean & Bread, Rate of Rise and Shepherd's
   Ice Cream to the Angel Bakery and Tŷ Melin. The first four are in OpenStreetMap
   (checked 2026-10-24); Tŷ Melin is not.
+
+### 10.3 Decisions, 2026-10-24 (later)
+
+- Tŷ Melin: added by hand as a custom label, the docs' example of a curated entry.
+- No town hall on the Y Fenni map: it is a food tour.
+- Landmark fixes: both the curated callouts and the general ranking fix.
+- Skye: a whole-island road trip, simplified to its card's scale: yes.
+- Journal notes, and one idea per showcased map with Y Fenni as the food tour: yes.
+- Route style: not yet named by letter; candidate B (wet pen, maroon) is taken as
+  recommended unless the maintainer switches.
