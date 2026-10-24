@@ -211,3 +211,12 @@ minors. Ambleside is now the name the lettering rung writes (its sine widened so
 letters read). Left for the maintainer: the shop "The Retro Zone" lettered as a landmark on
 the Keswick card (the hero), and the gasket cap raised to 300. Issues filed:
 `maps-route-ink-effect-unread.md`, `maps-lettering-river-name-clipped-at-path-end.md`.
+
+## P7.R prepared on `release-0.1.0` (2026-10-24)
+
+Version 0.1.0, classifiers, keywords, `Documentation` and `Changelog` URLs, `uv lock`;
+`publish.yml` (tag must equal `v` plus the version; the checks; build; `pypa/gh-action-pypi-publish@v1.14.3`,
+verified with `git ls-remote`; a `release` job with `contents: write` that creates the GitHub
+release with the changelog section as notes); `docs/runbooks/release.md`; the 0.1.0
+changelog section (date left as Unreleased for the maintainer); `CITATION.cff` (no version);
+`.github/ISSUE_TEMPLATE/bug.yml`; README image URLs at `v0.1.0`. Nothing tagged or published.

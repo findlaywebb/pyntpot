@@ -3,27 +3,53 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.1.0] - Unreleased
+
+The maintainer sets the date when the release is tagged.
+
+The first release meant for general use. pyntpot paints hand-drawn watercolour and
+pen-and-ink pictures in Python: paper, washes, brushes, nibs, pigments and hand lettering,
+and, built on those, a route map from a GPX track, OpenStreetMap data and elevation. This
+release adds the documentation (tutorials, how-to guides, reference and essays, also built
+as a site), example themes and place fixtures, and fixes how names are lettered on a map.
+0.0.1 and 0.0.2 were candidates for one consumer and are not for general use.
+
+### Breaking changes
+
+- Maps paint differently from 0.0.2. A name set along a curve is now cut a window as long
+  as the hand writes it, with its kind's letter spacing, so river, road and settlement
+  names sit and break differently (the Lynmouth card letters "East Lyn" once, along the
+  water, where it lettered it twice). A river's repeat that finds no window on its water
+  is dropped instead of set flat. A stroke at the card's edge and a mark on a finer ink
+  grid also paint differently (see Fixed). Pixels, label positions and `Lettering.labels`
+  differ from 0.0.2; the fetch cache keys do not change.
+- `pyntpot.maps.fetch` and `Cache.ensure` raise `FetchError` when a provider cannot
+  answer, with the provider's error as its cause. Catch `FetchError`, not the provider's
+  error.
+- The reasons the start, finish, home and road labels carry (`Label.why`) say track, not
+  session or rider: "where the track began", "where the track ended", "home" and "road the
+  track was on".
 
 ### Added
 
+- `BasemapStyle.name_tags`, the tags a name is read from, first one present wins (default
+  `("name",)`); a style that leaves it alone keeps its digest. `examples/themes/y-fenni.toml`
+  reads `name:cy` first, so the Y Fenni card letters Y Fenni, Llan-ffwyst and Afon Wysg.
 - `pyntpot.maps.ProviderError` and `pyntpot.maps.ProviderBudgetExceededError`, the
   errors the shipped providers raise when they cannot answer or their budget is spent
   (ADR 0029).
-
-### Changed
-
-- `pyntpot.maps.fetch` raises `FetchError` when a provider cannot answer, with the
-  provider's error as its cause (ADR 0028); it let the private `ProviderError` through
-  before.
-- `Cache.ensure` raises `FetchError` when a provider cannot answer, with the provider's
-  error as its cause (ADR 0029), as `fetch` does.
-- The reasons the start, finish, home and road labels carry in `Lettering.labels`
-  (`Label.why`, which a caller may show as a tooltip) say track, not session or rider:
-  "where the track began", "where the track ended", "home" and "road the track was on".
+- Documentation: a README, two tutorial series, how-to guides, reference pages, essays, a
+  gallery, and a docs site built with MkDocs Material (ADRs 0013 to 0021, 0033, 0034).
+- Example themes (`examples/themes/`: pen-and-ink, sepia, bold, winter, y-fenni) and
+  example scripts that paint every image in the docs from `examples/`.
+- Recorded place fixtures for Keswick, Trotternish, Yr Wyddfa, Oxford and Y Fenni, with
+  `make_track.py` and `record_fixture.py` to make more.
+- A bug report form for issues.
 
 ### Fixed
 
+- A curved name's window is measured with its kind's letter spacing, so a long name no
+  longer overruns the water it is set along.
 - A stroke that reaches or crosses the card's edge no longer piles its off-card ink
   onto the edge pixels (`ink.deposit`).
 - Name-only landmarks beyond the cap are dropped, and a cap of 0 picks none
@@ -54,3 +80,7 @@ A second pre-release candidate for the upstream consumer's migration: the candid
 
 A pre-release candidate for the upstream consumer's migration (P8 of the port plan). Not
 for general use; 0.1.0 is the first release.
+
+[0.1.0]: https://github.com/findlaywebb/pyntpot/compare/v0.0.2...v0.1.0
+[0.0.2]: https://github.com/findlaywebb/pyntpot/compare/v0.0.1...v0.0.2
+[0.0.1]: https://github.com/findlaywebb/pyntpot/releases/tag/v0.0.1
