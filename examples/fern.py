@@ -13,7 +13,8 @@ mask becomes a `wash`. The frond, the points that last took the 85 per cent map,
 are glazed by Kubelka-Munk, so where leaflet meets frond the greens stay green. A second,
 sharper count of all the points is laid over the washes in `wood` to draw the veins and
 the stem. At most 400 sampled points then get a brush dab: `stamp` lays a short stroke of a
-wet brush, and `ink_density` turns it into a darker green.
+wet brush, and `ink_density` turns it into a darker green. Each dab draws from a generator of
+its own, so a last-digit difference on another platform can change one dab and no other.
 
 Public names it uses, all from `pyntpot.ink`: `Sheet`, `Canvas`, `PaperStyle`, `paper_plate`,
 `wash`, `PIGMENTS`, `TRANSPARENCY`, `rgb`, `composite`, `brush_from_id`, `BrushStyle`, `stamp`,
@@ -115,12 +116,13 @@ def _dabs(points: np.ndarray, w: int, h: int, scale: float, sheet: Sheet, seed: 
     brush, _ = brush_from_id("RIV1-a", 2.0 * scale, 1.0, BrushStyle())
     pick = points[rng.choice(len(points), size=min(MAX_DABS, len(points)), replace=False)]
     acc = np.zeros((h, w), np.float32)
-    for x, y, _ in pick:
+    for i, (x, y, _) in enumerate(pick):
+        dab_rng = np.random.default_rng([seed, i])
         px = (x - X_MIN) / (X_MAX - X_MIN) * w
         py = (1.0 - y / Y_MAX) * h
-        lean = rng.normal(-0.5, 0.35)
+        lean = dab_rng.normal(-0.5, 0.35)
         tip = (px + 8 * scale * np.sin(lean), py - 8 * scale * np.cos(lean))
-        stamp(acc, np.array([(px, py), tip]), brush, rng)
+        stamp(acc, np.array([(px, py), tip]), brush, dab_rng)
     return ink_density(acc, brush, sheet)
 
 

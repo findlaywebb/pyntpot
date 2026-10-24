@@ -16,7 +16,10 @@ root is needed again.
 `gasket_circles` starts from the container (curvature -1) and three circles inside it
 (curvatures 2, 3 and 6), finds the four circles that fill the first gaps, and repeats: every new circle
 makes a new gap with each pair of its neighbours. It stops at recursion depth 5 and keeps
-at most 300 circles, the largest first.
+at most 300 circles, the largest first. Radii are compared rounded to nine places, ties go to
+the shallower depth and then to the order found, and each circle's shade is drawn from a
+generator of its own, so no platform's last-digit rounding can change which circle is kept
+or what any other circle looks like.
 
 Each circle is then a `wash` of its own, a disc a shade larger than the circle so that it
 overlaps its neighbours. The washes are grouped by depth into at most six pigment layers,
@@ -121,8 +124,8 @@ def gasket_circles(depth: int) -> list[Circle]:
                 found.append(new)
                 grown.append(([*quad[:j], new, *quad[j + 1 :]], j))
         frontier = grown
-    found.sort(key=lambda c: (-c.radius, c.depth))
-    return found[:MAX_CIRCLES]
+    order = sorted(range(len(found)), key=lambda i: (-round(found[i].radius, 9), found[i].depth, i))
+    return [found[i] for i in order[:MAX_CIRCLES]]
 
 
 def _disc(circle: Circle, size: int, centre_px: float, scale_px: float) -> np.ndarray:
@@ -136,9 +139,7 @@ def _disc(circle: Circle, size: int, centre_px: float, scale_px: float) -> np.nd
     return disc * inside
 
 
-def _ring(
-    size: int, centre_px: float, scale_px: float, sheet: Sheet, rng: np.random.Generator
-) -> np.ndarray:
+def _ring(size: int, centre_px: float, scale_px: float, sheet: Sheet, seed: int) -> np.ndarray:
     """The container's edge as one thin brush stroke round it, as ink density."""
     brush, _ = brush_from_id("LAN1-a", 2.4 * size / SIZE, 1.0, BrushStyle())
     angle = np.linspace(0.0, 2.0 * np.pi, 720)
@@ -146,25 +147,24 @@ def _ring(
         [centre_px + scale_px * np.cos(angle), centre_px + scale_px * np.sin(angle)]
     )
     acc = np.zeros((size, size), np.float32)
-    stamp(acc, path, brush, rng)
+    stamp(acc, path, brush, np.random.default_rng([seed, MAX_CIRCLES]))
     return ink_density(acc, brush, sheet)
 
 
-def gasket_layers(size: int, sheet: Sheet, rng: np.random.Generator) -> list[PigmentLayer]:
+def gasket_layers(size: int, sheet: Sheet, seed: int) -> list[PigmentLayer]:
     """Wash every circle of the gasket and group the washes into pigment layers."""
     centre_px, scale_px = size / 2, 0.40 * size
     layers = [np.zeros((size, size), np.float32) for _ in range(MAX_LAYERS)]
-    for circle in gasket_circles(MAX_DEPTH):
+    for rank, circle in enumerate(gasket_circles(MAX_DEPTH)):
         layer = 0 if circle.curvature < 0 else 1 + min(circle.depth, MAX_LAYERS - 2)
-        base = (
-            0.3 if circle.curvature < 0 else rng.uniform(0.2, 0.45) + 0.5 * circle.depth / MAX_DEPTH
-        )
+        shade = np.random.default_rng([seed, rank]).uniform(0.2, 0.45)
+        base = 0.3 if circle.curvature < 0 else shade + 0.5 * circle.depth / MAX_DEPTH
         disc = _disc(circle, size, centre_px, scale_px)
         small = scale_px * circle.radius < SMALL_PX
         body = disc * base * 1.3 if small else wash(disc, sheet, base, 0.55)
         layers[layer] = np.maximum(layers[layer], body)
     layers[MAX_LAYERS - 1] = np.maximum(
-        layers[MAX_LAYERS - 1], 0.9 * _ring(size, centre_px, scale_px, sheet, rng)
+        layers[MAX_LAYERS - 1], 0.9 * _ring(size, centre_px, scale_px, sheet, seed)
     )
     stack: list[PigmentLayer] = [
         (density, rgb(PIGMENTS[key]), TRANSPARENCY[key])
@@ -179,9 +179,8 @@ def main(out_dir: Path, size: int = SIZE, seed: int = SEED) -> Path:
     canvas = Canvas(0, 0, size, size, size, size)
     style = PaperStyle(km_glazing=True, paper_foxing=0.03)
     paper = paper_plate(sheet, canvas, style, size)
-    rng = np.random.default_rng(seed)
 
-    stack = gasket_layers(size, sheet, rng)
+    stack = gasket_layers(size, sheet, seed)
     path = out_dir / "gasket.png"
     save_image(composite(stack, paper, style), path, seed=seed)
     logger.info("wrote %s", path)

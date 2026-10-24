@@ -168,8 +168,8 @@ def gasket_circles(depth: int) -> list[Circle]:
                 found.append(new)
                 grown.append(([*quad[:j], new, *quad[j + 1 :]], j))
         frontier = grown
-    found.sort(key=lambda c: (-c.radius, c.depth))
-    return found[:MAX_CIRCLES]
+    order = sorted(range(len(found)), key=lambda i: (-round(found[i].radius, 9), found[i].depth, i))
+    return [found[i] for i in order[:MAX_CIRCLES]]
 ```
 
 ### From circles to washes
@@ -183,21 +183,20 @@ two real washes would.
 <!-- from examples/gasket.py -->
 
 ```python
-def gasket_layers(size: int, sheet: Sheet, rng: np.random.Generator) -> list[PigmentLayer]:
+def gasket_layers(size: int, sheet: Sheet, seed: int) -> list[PigmentLayer]:
     """Wash every circle of the gasket and group the washes into pigment layers."""
     centre_px, scale_px = size / 2, 0.40 * size
     layers = [np.zeros((size, size), np.float32) for _ in range(MAX_LAYERS)]
-    for circle in gasket_circles(MAX_DEPTH):
+    for rank, circle in enumerate(gasket_circles(MAX_DEPTH)):
         layer = 0 if circle.curvature < 0 else 1 + min(circle.depth, MAX_LAYERS - 2)
-        base = (
-            0.3 if circle.curvature < 0 else rng.uniform(0.2, 0.45) + 0.5 * circle.depth / MAX_DEPTH
-        )
+        shade = np.random.default_rng([seed, rank]).uniform(0.2, 0.45)
+        base = 0.3 if circle.curvature < 0 else shade + 0.5 * circle.depth / MAX_DEPTH
         disc = _disc(circle, size, centre_px, scale_px)
         small = scale_px * circle.radius < SMALL_PX
         body = disc * base * 1.3 if small else wash(disc, sheet, base, 0.55)
         layers[layer] = np.maximum(layers[layer], body)
     layers[MAX_LAYERS - 1] = np.maximum(
-        layers[MAX_LAYERS - 1], 0.9 * _ring(size, centre_px, scale_px, sheet, rng)
+        layers[MAX_LAYERS - 1], 0.9 * _ring(size, centre_px, scale_px, sheet, seed)
     )
     stack: list[PigmentLayer] = [
         (density, rgb(PIGMENTS[key]), TRANSPARENCY[key])

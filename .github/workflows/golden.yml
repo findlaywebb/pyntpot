@@ -27,4 +27,13 @@ jobs:
         run: uv sync --locked
 
       - name: Golden parity (tolerance)
-        run: uv run pytest -m golden --golden-tolerance
+        run: uv run pytest -m golden --golden-tolerance --basetemp=${{ runner.temp }}/pytest
+
+      # A failing fresh paint is only inspectable if its pictures outlive the runner.
+      - name: Keep the fresh paints
+        if: failure()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: golden-paints-${{ matrix.os }}
+          path: ${{ runner.temp }}/pytest
+          retention-days: 7
