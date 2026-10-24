@@ -69,3 +69,16 @@ names; Trefynwy and Machynlleth keep the old lengths and no pin moved. The dash-
 command could not be written into CONTRIBUTING (it matches its own dashes), so it is a
 prose instruction there. G-here green in the worktree (1119 passed, 1 skipped; golden 22
 passed under tolerance).
+
+## P7.3 budget re-based (2026-10-24, orchestrating session)
+
+P7.3 stopped at its budget: Keswick's payloads are 6.6 MB raw (overpass 2.8 MB, land
+cover 3.8 MB) against 4 MB. The raw budget measured the wrong thing. Git stores blobs
+zlib-compressed and `tests/` is in neither the sdist nor the wheel, so what a fixture
+costs the repo is its compressed size: Lynmouth's payloads gzip to about 0.56 MB (raw
+3.6 MB) and Keswick's to about 1.05 MB (raw 6.6 MB). The orchestrating session re-based
+the budget on gzip-compressed size: 1.5 MB per fixture, 2.5 MB for `yr-wyddfa/`, still a
+stop when passed, with raw and compressed sizes recorded per fixture. Payloads stay
+byte-for-byte as recorded. For the maintainer to confirm or overrule in the morning;
+overruling means trimming the fetch margins, a change to the cache key and so a code
+decision, not a fixture one.
