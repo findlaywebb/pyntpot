@@ -108,6 +108,25 @@ def _gallery(
     )
 
 
+def _stages(
+    stem: str, prefix: str, figures: tuple[str, ...], width: int, encoding: Encoding, slice_: str
+) -> tuple[DocsImage, ...]:
+    """Return one page entry per figure of a script that paints its figures a stage at a time, `width` pixels wide."""
+    return tuple(
+        DocsImage(
+            f"explanation/{prefix}-{figure}.webp",
+            stem,
+            (("figure", figure), ("size", width)),
+            None,
+            width,
+            "page",
+            encoding,
+            slice_,
+        )
+        for figure in figures
+    )
+
+
 IMAGES: tuple[DocsImage, ...] = (
     # P7.4: the gallery, one thumbnail per tutorial rung.
     _gallery("paper", "paper", 360, "webp-lossy"),
@@ -255,5 +274,22 @@ IMAGES += (
             "P7.7",
         )
         for name in ("pen-and-ink", "sepia", "bold", "winter")
+    ),
+    # P7.10: the explanation essays' figures, a wash and a name each built a stage at a time.
+    *_stages(
+        "wash_stages",
+        "wash",
+        ("mask", "body", "rim", "grain", "overlap", "glaze"),
+        480,
+        "webp-lossy",
+        "P7.10",
+    ),
+    *_stages(
+        "nib_stages",
+        "nib",
+        ("line", "centreline", "broad", "turned", "ground", "backing", "set-down", "runs-dry"),
+        360,
+        "webp-lossless",
+        "P7.10",
     ),
 )
