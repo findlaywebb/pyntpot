@@ -118,6 +118,40 @@ IMAGES: tuple[DocsImage, ...] = (
     _gallery("lettering", "lettering", 360, "webp-lossless"),
     _gallery("composition", "composition", 480, "webp-lossy"),
     _gallery("route-map", "route_map", 720, "webp-lossy", "keswick"),
+    # P7.6a: curves and symmetry.
+    DocsImage(
+        "curves/rose.webp",
+        "curves",
+        (("figure", "rose"),),
+        None,
+        640,
+        "page",
+        "webp-lossy",
+        "P7.6a",
+    ),
+    DocsImage(
+        "curves/lissajous.webp",
+        "curves",
+        (("figure", "lissajous"),),
+        None,
+        640,
+        "page",
+        "webp-lossy",
+        "P7.6a",
+    ),
+    DocsImage(
+        "curves/spirograph.webp",
+        "curves",
+        (("figure", "spirograph"),),
+        None,
+        640,
+        "page",
+        "webp-lossy",
+        "P7.6a",
+    ),
+    DocsImage(
+        "curves/kaleidoscope.webp", "kaleidoscope", (), None, 640, "page", "webp-lossy", "P7.6a"
+    ),
 )
 
 
