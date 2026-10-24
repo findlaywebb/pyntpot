@@ -20,3 +20,12 @@ morning. Deviations from the plan's order, decided by the orchestrating session:
 - Slices do not write this log or `tasks.md`; the orchestrating session appends their
   entries at landing.
 - The providers' contact string for recording is the repo URL, not a personal address.
+
+## P7.11 landed (2026-10-24)
+
+ADRs 0013 to 0021 by a slice agent in a worktree (commit cherry-picked). Pointers: 0013
+(to 0002, 0010), 0016 (to 0004, adds the attribution switch), 0017 (to 0004), 0019 (to
+0007, 0026, 0027), 0020 (to 0005). Full: 0014, 0015, 0018, 0021. `docs/decisions/README.md`
+gains an index of 0001 to 0030. G-here green in the worktree. Noticed: ADR 0007's stale
+`_port` sentence, filed as `docs/issues/docs-adr-0007-stale-port-wording.md`. The ADR
+titles keep the house "—" in their headings; `docs/decisions` is outside the dash gate.
