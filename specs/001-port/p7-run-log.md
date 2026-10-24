@@ -138,3 +138,13 @@ truly flat body, backruns, bleed, the flow rim, pit granulation, pigment separat
 the shallow-water pass are described in words with their keys but have no figure. The
 data-policy page covers five duties (the brief said four: legibility is the fifth). The
 runs-dry nib figure uses an exaggerated reservoir, as its caption says.
+
+## Fixture budget re-based again (2026-10-24, orchestrating session)
+
+CI's `checks` jobs failed the gzip budget on Oxford: 1,506,991 bytes there against
+1,462,704 on the recording machine. The compressed size depends on the zlib build, so the
+test was not deterministic. The budget is now bytes on disk: 10 MB per fixture, 12 MB for
+`yr-wyddfa/` (largest today: Oxford 8.83 MB, Yr Wyddfa 10.59 MB); git stores them at about
+a sixth of that. ADR 0032 says so and keeps the gzip figures for scale. Still for the
+maintainer to confirm. The `docs` job's link failures were from a commit before the
+explanation pages landed; offline lychee is clean on the current tree.

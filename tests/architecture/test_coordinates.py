@@ -3,10 +3,9 @@
 `BOXES` holds one box per fixture directory, each the track's box rounded outward to 0.01
 degree, as Lynmouth's is. A latitude and a longitude close together must both lie in the
 same fixture's box. The fixture budget test lives here too: each fixture directory stays
-within its gzip size (ADR 0032).
+within its size in bytes (ADR 0032).
 """
 
-import gzip
 import re
 
 import pytest
@@ -43,9 +42,9 @@ KEYS = {
     "y-fenni": Y_FENNI_KEY,
 }
 
-#: Gzip budgets in bytes: 1.5 MB for a fixture directory, 2.5 MB for `yr-wyddfa/`.
-BUDGET_BYTES = 1_500_000
-BUDGETS = {"yr-wyddfa": 2_500_000}
+#: Budgets in bytes on disk: 10 MB for a fixture directory, 12 MB for `yr-wyddfa/`.
+BUDGET_BYTES = 10_000_000
+BUDGETS = {"yr-wyddfa": 12_000_000}
 
 
 def _fixture_files(name: str) -> list[str]:
@@ -113,8 +112,8 @@ def test_a_pair_split_across_two_boxes_is_caught() -> None:
 
 @pytest.mark.parametrize("name", list(BOXES), ids=list(BOXES))
 def test_a_fixture_directory_is_within_its_budget(name: str) -> None:
-    """A fixture directory's files, each gzipped at the default level, sum to within its budget."""
+    """A fixture directory's files sum to within its budget in bytes."""
     files = [path for path in (FIXTURES / name).iterdir() if path.is_file()]
-    compressed = sum(len(gzip.compress(path.read_bytes())) for path in files)
+    size = sum(path.stat().st_size for path in files)
     budget = BUDGETS.get(name, BUDGET_BYTES)
-    assert compressed <= budget, f"{name}: {compressed} gzip bytes over the {budget} budget"
+    assert size <= budget, f"{name}: {size} bytes over the {budget} budget"
