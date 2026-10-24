@@ -119,3 +119,23 @@ IMAGES: tuple[DocsImage, ...] = (
     _gallery("composition", "composition", 480, "webp-lossy"),
     _gallery("route-map", "route_map", 720, "webp-lossy", "keswick"),
 )
+
+
+def _rung(
+    name: str, stem: str, width: int, encoding: Encoding, fixture: str | None = None
+) -> DocsImage:
+    """Return one tutorial page image entry, painted by a rung's script."""
+    return DocsImage(f"tutorials/{name}.webp", stem, (), fixture, width, "page", encoding, "P7.5")
+
+
+IMAGES += (
+    # P7.5: the tutorials' page images, one per rung, each at its own width.
+    _rung("paper", "paper", 360, "webp-lossy"),
+    _rung("wash", "wash", 360, "webp-lossy"),
+    _rung("brush-stroke", "brush_stroke", 360, "webp-lossy"),
+    _rung("pigments", "pigments", 720, "webp-lossy"),
+    _rung("nib-line", "nib_line", 360, "webp-lossless"),
+    _rung("lettering", "lettering", 360, "webp-lossless"),
+    _rung("composition", "composition", 480, "webp-lossy"),
+    _rung("route-map", "route_map", 900, "webp-lossy", "keswick"),
+)

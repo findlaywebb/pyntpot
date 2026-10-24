@@ -1,4 +1,4 @@
-"""Rung 5 of the tutorial: how two pigments combine where they overlap.
+"""Rung 4 of the tutorial: how two pigments combine where they overlap.
 
 Two washes, `farmland` and `wood`, are laid as overlapping discs. Each is a
 `PigmentLayer`: its density, its colour from `PIGMENTS`, and its `TRANSPARENCY`, what
