@@ -41,3 +41,31 @@ reported as an error, so the offline check does catch broken local links. `twine
 (lychee 0.24.2 rejects the value). Open: the done line's green run on GitHub;
 `workflow_dispatch` only dispatches from the default branch, so it is met by the draft
 PR's run instead.
+
+## P7.1 landed on `p7-golden`, PR #27 held (2026-10-24)
+
+Commits `20dab4c` (fix A), `af44f73` (fix B), `3902526` (regeneration, ADR 0031, the
+flat-box issue). Steps against the previous step, manifest hash
+`340a7f6e260ee1e2-e5a5f1b4b3ca2177` throughout: step 1 paper, wash, pen identical,
+labels-centreline 0.058434, map 0.016597, labels equal; step 2 identical on those three,
+labels-centreline 0.015885, map 0.002907, `labels.txt` diff exactly `< East Lyn`; step 3
+all identical. Cumulative against the old goldens: labels-centreline 0.067173, map
+0.017122. Three tests added in `test_placement.py` (now 389 lines); `placement.py` 380
+lines. Deviations: the red tests were written against the new signature, so they were
+red by import or `TypeError` before the fix and by `2 == 1` for fix B, not by the 65.0
+against 85.0 figures; two golden-comparing tests in the non-golden suite are red between
+commits 1 and 3, as in ADR 0025's window; `make_golden` dropped `plates.json`'s trailing
+newline and the committed file was restored. The new card was looked at: one "East Lyn"
+along the water, "B3234" flat beside Lynton. `p7-golden` merged into `p7-docs-release`;
+the resolved issue file deleted here.
+
+## P7.2 landed (2026-10-24)
+
+Commit cherry-picked from its worktree, no conflict with P7.1. CONTRIBUTING gains
+"Writing docs" and the Welsh-named, focus-first place list (Dee and Severn kept English,
+with the reason); CLAUDE.md's place line; README's "Develop" section becomes a pointer;
+`docs/README.md` points to `docs/index.md` in plain text. Six test files take the Welsh
+names; Trefynwy and Machynlleth keep the old lengths and no pin moved. The dash-gate
+command could not be written into CONTRIBUTING (it matches its own dashes), so it is a
+prose instruction there. G-here green in the worktree (1119 passed, 1 skipped; golden 22
+passed under tolerance).
