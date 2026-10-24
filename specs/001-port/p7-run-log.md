@@ -211,3 +211,16 @@ minors. Ambleside is now the name the lettering rung writes (its sine widened so
 letters read). Left for the maintainer: the shop "The Retro Zone" lettered as a landmark on
 the Keswick card (the hero), and the gasket cap raised to 300. Issues filed:
 `maps-route-ink-effect-unread.md`, `maps-lettering-river-name-clipped-at-path-end.md`.
+
+## P7.14 on its own branch, PR #29 (2026-10-24)
+
+Material for MkDocs 9.7.7 (Zensical is at 0.0.72, before the 0.1 the plan's rule asks
+for) with mkdocstrings-python 2.0.10, a strict build on every PR and a Pages deploy on
+push to `main`; generated API reference with a test that every public name appears once;
+the painted theme (paper, brush rule, `PIGMENTS` palette as CSS, contrast tested), Patrick
+Hand for headings only. Fixes at landing: `.gitignore`'s `site/` also ignored
+`docs/images/site/` and its masters (now `/site/`); four lint findings the slice missed.
+`p7-docs-release` merged into it after the review fixes; strict build clean. Its tasks.md
+line is ticked when #29 merges. Maintainer action: enable Pages from Actions. Docstring
+findings: `PIGMENTS`, `TRANSPARENCY` and `PigmentLayer` use `#:` comments, which the
+reference does not show; `stamp`'s source line is plain text.
