@@ -3,9 +3,11 @@
 import math
 from functools import partial
 
-from pyntpot.ink.polyline import meet
+from pyntpot.ink.polyline import length, meet
+from pyntpot.letters.hand import Hand
 from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.lettering.label import (
+    KIND_TRACKING,
     TIER_LANDMARK,
     TIER_RIVER,
     TIER_ROAD,
@@ -21,7 +23,9 @@ from pyntpot.maps.lettering.placement_lift import (
     MAX_TILT_DEG,
     TILT_EXEMPT_KINDS,
     curved_boxes,
+    lift_baseline,
     line_tilt,
+    offset_line,
 )
 from pyntpot.maps.lettering.placement_marks import mark_through
 from pyntpot.maps.lettering_marks import box_size
@@ -63,6 +67,7 @@ def test_a_curved_label_reserves_the_room_it_actually_takes():
         Backdrop(card, [(0.0, 290.0), (400.0, 290.0)], flat_dark()),
         [],
         flat_measure,
+        measure_tracked=lambda name, size, tracking: flat_measure(name, size),
     )
     assert river.window, "the river was not set along its own water"
     assert not river.flat
@@ -91,7 +96,14 @@ def test_a_road_crossing_costs_and_a_longer_leader_is_the_cheaper_answer():
     card = map_card()
     route = [(0.0, 290.0), (400.0, 290.0)]
     free = Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
-    place([free], [], Backdrop(card, route, flat_dark(), []), [], flat_measure)
+    place(
+        [free],
+        [],
+        Backdrop(card, route, flat_dark(), []),
+        [],
+        flat_measure,
+        measure_tracked=lambda name, size, tracking: flat_measure(name, size),
+    )
     # A road laid straight down the middle of the box the placer just chose.
     assert free.box is not None
     x0, _y0, x1, _y1 = free.box
@@ -99,7 +111,14 @@ def test_a_road_crossing_costs_and_a_longer_leader_is_the_cheaper_answer():
     assert _crossings(free.box, road) > 0
 
     moved = Label(name="Castle", kind="monument", px=200.0, py=150.0, size=14.0)
-    place([moved], [], Backdrop(card, route, flat_dark(), road), [], flat_measure)
+    place(
+        [moved],
+        [],
+        Backdrop(card, route, flat_dark(), road),
+        [],
+        flat_measure,
+        measure_tracked=lambda name, size, tracking: flat_measure(name, size),
+    )
     assert moved.box is not None
     assert _crossings(moved.box, road) == 0, "the road was not avoided"
     assert moved.box != free.box
@@ -123,7 +142,12 @@ def test_a_river_follows_its_bend_even_when_the_bend_runs_down_the_map():
         baseline=water,
     )
     place(
-        [river], [], Backdrop(card, [(0.0, 295.0), (400.0, 295.0)], flat_dark()), [], flat_measure
+        [river],
+        [],
+        Backdrop(card, [(0.0, 295.0), (400.0, 295.0)], flat_dark()),
+        [],
+        flat_measure,
+        measure_tracked=lambda name, size, tracking: flat_measure(name, size),
     )
     assert river.window, "a vertical river was not set along its own water"
     assert not river.flat
@@ -138,7 +162,14 @@ def test_the_tilt_test_still_holds_for_everything_that_is_not_a_river():
     road = Label(
         name="A361", kind="road", px=200.0, py=150.0, tier=TIER_ROAD, size=14.0, baseline=tarmac
     )
-    place([road], [], Backdrop(card, [(0.0, 295.0), (400.0, 295.0)], flat_dark()), [], flat_measure)
+    place(
+        [road],
+        [],
+        Backdrop(card, [(0.0, 295.0), (400.0, 295.0)], flat_dark()),
+        [],
+        flat_measure,
+        measure_tracked=lambda name, size, tracking: flat_measure(name, size),
+    )
     assert road.flat, "a steep road window was accepted"
 
 
@@ -168,6 +199,7 @@ def test_a_span_name_lands_beside_the_bracket_it_belongs_to():
         Backdrop(card, route, {"w": 2, "h": 2, "v": [[0.0, 0.0], [0.0, 0.0]]}),
         [],
         flat_measure,
+        measure_tracked=lambda name, size, tracking: flat_measure(name, size),
     )
     assert span.box is not None
     x0, y0, x1, y1 = span.box
@@ -199,6 +231,7 @@ def test_a_rivers_two_names_are_kept_apart_along_the_water_not_across_the_map():
         Backdrop(card, [(0.0, 295.0), (400.0, 295.0)], flat_dark()),
         [],
         flat_measure,
+        measure_tracked=lambda name, size, tracking: flat_measure(name, size),
     )
     assert river.window and second.window, "the second name lost its water"
     # Far apart along the water, and that is what the guard measures.
@@ -218,6 +251,7 @@ def test_a_name_on_the_water_is_moved_off_a_bridge():
         Backdrop(wide_card(), [(0.0, 0.0)], dark, [name.baseline, bridge]),
         [],
         partial(box_size, hand),
+        measure_tracked=lambda name, size, tracking: flat_measure(name, size),
     )
     cells = curved_boxes(name.window, name, name.size)
     assert cells
@@ -293,3 +327,63 @@ def test_a_name_on_its_own_mark_is_never_swapped():
     seat = town.box
     _uncross_leaders([a, town], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
     assert town.box == seat
+
+
+def _placed_east_lyn() -> tuple[Label, Hand]:
+    """One river name set on a long straight reach with a real hand's measures."""
+    hand = open_hand()
+    water = [(10.0 + x * 4.0, 150.0) for x in range(0, 95)]
+    river = Label(name="East Lyn", kind="river", px=200.0, py=150.0, tier=TIER_RIVER, size=18.0)
+    river.baseline = water
+    place(
+        [river],
+        [],
+        Backdrop(map_card(), [(0.0, 290.0), (400.0, 290.0)], flat_dark()),
+        [],
+        partial(box_size, hand),
+        measure_tracked=partial(box_size, hand),
+    )
+    return river, hand
+
+
+def test_a_curved_name_is_given_a_window_as_long_as_the_hand_writes_it():
+    """A river's window is cut from its width set with the river's tracking."""
+    river, hand = _placed_east_lyn()
+    assert river.window, "the river was not set along its own water"
+    written = hand.measure(river.name, river.size, KIND_TRACKING["river"])[0]
+    assert length(river.window) >= written
+
+
+def test_every_glyph_of_a_placed_name_sits_inside_its_window():
+    """No glyph centre falls past the walk's end, where the hand would clamp it."""
+    river, hand = _placed_east_lyn()
+    assert river.window, "the river was not set along its own water"
+    walk = offset_line(river.window, lift_baseline(river, river.lift))
+    reach = length(walk)
+    run = hand.font.run(river.name, river.size, KIND_TRACKING["river"])
+    centres = [pen_x + adv * 0.5 for _ch, pen_x, adv, paths in run if paths]
+    assert centres
+    assert max(centres) <= reach
+
+
+def test_a_rivers_second_name_with_no_water_left_is_dropped_not_set_flat():
+    """A repeat that finds no window on its water is not set on paper beside the first."""
+    card = map_card()
+    reach = [(20.0 + x * 4.0, 150.0) for x in range(31)]
+    zigzag = [(144.0 + x * 6.0, 150.0 + (8.0 if x % 2 else -8.0)) for x in range(30)]
+    water = reach + zigzag
+    names = [
+        Label(name="Lyn", kind="river", px=px, py=150.0, tier=TIER_RIVER, size=13.0, baseline=water)
+        for px in (100.0, 250.0)
+    ]
+    got = place(
+        names,
+        [],
+        Backdrop(card, [(0.0, 295.0), (400.0, 295.0)], flat_dark()),
+        [],
+        flat_measure,
+        measure_tracked=lambda name, size, tracking: flat_measure(name, size),
+    )
+    assert len(got) == 1
+    assert got[0].window, "the one name left is set along the water"
+    assert not got[0].flat
