@@ -58,7 +58,7 @@ the duty to credit then falls to you.
 
 ![The Keswick route map card: a looping route in crimson over washes of green and blue, with rivers, roads and names lettered by hand.](../images/gallery/route-map.webp)
 
-Painted by `examples/route_map.py`, which makes the same card as the command.
+*Painted by `examples/route_map.py`, which makes the same card as the command.*
 
 ## When it goes wrong
 

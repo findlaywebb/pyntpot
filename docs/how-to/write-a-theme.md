@@ -60,18 +60,17 @@ changes between looks.
 
 ![A route map of Keswick in near-black ink on pale paper, with grey roads and rivers and a black route.](../images/map-styles/pen-and-ink.webp)
 
-Painted by `examples/map_styles.py` with `figure="pen-and-ink"`.
+*Painted by `examples/map_styles.py` with `figure="pen-and-ink"`.*
 
 The colour washes are off: `land_cover` is false in `[cover]`, so the land takes one pale
 grey tint. The `[brush.brushes]` table picks grey and black ink for the roads and rivers,
-`[brush]` thins the rivers, and `[route_inks.ride]` lays the route in black with a cream
-casing so that it still stands out.
+`[brush]` thins the rivers, and `[route_inks.ride]` lays the route in black.
 
 ### Sepia
 
 ![A route map of Keswick in faded browns on yellowed, foxed paper with a dark vignette.](../images/map-styles/sepia.webp)
 
-Painted by `examples/map_styles.py` with `figure="sepia"`.
+*Painted by `examples/map_styles.py` with `figure="sepia"`.*
 
 The `[paper]` table yellows the paper and raises the wear, the foxing and the vignette.
 Every pigment in `[cover.pigments]` is a faded brown or ochre, and the brush ids in
@@ -81,17 +80,17 @@ Every pigment in `[cover.pigments]` is a faded brown or ochre, and the brush ids
 
 ![A route map of Keswick in saturated greens, oranges and blues, with a thick magenta route.](../images/map-styles/bold.webp)
 
-Painted by `examples/map_styles.py` with `figure="bold"`.
+*Painted by `examples/map_styles.py` with `figure="bold"`.*
 
 The pigments in `[cover.pigments]` are saturated, and `[paper.pigment_transparency]`
 makes them denser. `river_mult` widens the rivers, `[nib]` letters larger and heavier, and
-`[route_inks.ride]` lays a wide magenta route with a cream casing.
+`[route_inks.ride]` lays a wide magenta route.
 
 ### Winter
 
 ![A route map of Keswick in cool greys and blues on pale blue-white paper, with a scarlet route.](../images/map-styles/winter.webp)
 
-Painted by `examples/map_styles.py` with `figure="winter"`.
+*Painted by `examples/map_styles.py` with `figure="winter"`.*
 
 The paper is a pale blue-white without foxing, the pigments are greys and blues, and the
 roads are inked in grey. The route is the one warm colour on the card.

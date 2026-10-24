@@ -49,7 +49,7 @@ pyntpot map [-h] -o OUTPUT --cache CACHE --contact CONTACT [--style STYLE] [--no
 - Argument: `CACHE`, a path
 - Required: yes
 - Help text: the cache directory
-- Description: the directory the fetch cache lives in. Created when missing. Nothing is resolved against the working directory.
+- Description: the directory the fetch cache lives in. Created when missing. Relative paths are taken as given, relative to where you run the command.
 
 ### `--contact`
 
@@ -84,6 +84,7 @@ pyntpot map [-h] -o OUTPUT --cache CACHE --contact CONTACT [--style STYLE] [--no
 | Status | Meaning |
 | --- | --- |
 | 0 | The PNG was written. |
+| 1 | Any other error, such as a missing GPX file or a failed fetch; the traceback names it. |
 | 2 | A required argument is missing or an argument is not understood, as `argparse` exits. |
 
 ## What the command does not take

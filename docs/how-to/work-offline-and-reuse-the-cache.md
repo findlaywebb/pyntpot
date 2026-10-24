@@ -51,6 +51,7 @@ providers a budget of zero. A provider with no budget refuses before it sends a 
 a payload the cache lacks stops the run instead of starting a download:
 
 ```python
+track = Track.from_gpx(Path("route.gpx"))
 features = OverpassFeatures("https://example.org/your-project", budget=0)
 elevation = OpenTopoData("https://example.org/your-project", budget=0)
 basemap = fetch(track, Cache(Path("cache")), features, elevation, Style.default())

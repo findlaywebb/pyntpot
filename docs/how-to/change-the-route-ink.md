@@ -38,12 +38,12 @@ script, or in a theme ([Write a theme](write-a-theme.md)).
    `paint` logs that it repainted nothing and the run takes seconds:
 
    ```text
-   plates in cache/plates/f2f4692b66d96eb9 are current, nothing repainted
-   wrote out/route_ink.png
+   INFO:pyntpot.maps.pipeline:plates in cache/plates/f2f4692b66d96eb9 are current, nothing repainted
+   INFO:__main__:wrote out/route_ink.png
    ```
 
-   The route ink is not part of what the plates are painted from. Only `compose` reads
-   it, when it draws the route over them.
+   No plate is painted from the route ink. `paint` reads its width only to space the
+   strands of a doubled-back route, and `compose` draws it over the plates.
 
 ## Result
 

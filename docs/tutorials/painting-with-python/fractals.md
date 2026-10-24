@@ -1,7 +1,7 @@
 # Fractals: a fern and a gasket
 
 Two old pieces of mathematics make good paintings, because each one is a few lines of
-rule that fill a whole sheet. In this page you paint a Barnsley fern, whose rule is four
+rule that fill a whole picture. In this page you paint a Barnsley fern, whose rule is four
 affine maps and their odds, and an Apollonian gasket, whose rule is Descartes' circle
 theorem. The engine does the painting: the maths only says where the pigment goes.
 
@@ -9,7 +9,7 @@ theorem. The engine does the painting: the maths only says where the pigment goe
 
 ![A fern with a thin stem and curling fronds, washed in two greens on cream paper. The fronds are a deeper green and the two lowest leaflets a paler one.](../../images/painting-with-python/fern.webp)
 
-Painted by `examples/fern.py`, seed 7.
+*Painted by `examples/fern.py`, seed 7.*
 
 Run it with:
 
@@ -107,7 +107,7 @@ veins and the stem, and last, at most 400 sampled points get a short dab of a we
 
 ![Washed discs packed inside a ringed circle: two large pale blue discs, a large green one and ochre and green ones below, with ever smaller discs filling the gaps and brown beads at the rim. Where two discs overlap, a darker lens shows both pigments.](../../images/painting-with-python/gasket.webp)
 
-Painted by `examples/gasket.py`, seed 11.
+*Painted by `examples/gasket.py`, seed 11.*
 
 Run it with:
 

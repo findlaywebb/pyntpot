@@ -1,6 +1,6 @@
 # First map
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a pink route looping through the town, with the names written by hand](../images/tutorials/route-map.webp)
+![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](../images/tutorials/route-map.webp)
 
 *Painted by `examples/route_map.py`.*
 
@@ -17,10 +17,10 @@ each name can sit without crossing the route.
 Do [Paint a watercolour](paint-a-watercolour.md) first if you have not, so that the
 names below are familiar.
 
-## Fetch the Keswick files
+## Copy the Keswick files
 
 The first map paints a short loop round Keswick in the Lake District, from files you
-download once. They are four, kept in the repository's
+already have. They are four, kept in your clone's
 [`tests/fixtures/keswick`](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/keswick)
 directory:
 
@@ -31,17 +31,14 @@ directory:
 | `landcover-f2f4692b66d96eb9.json` | The land cover round the route, from the same service. |
 | `elevation-f2f4692b66d96eb9.json` | The heights, as OpenTopoData returned them. |
 
-Make a directory called `keswick` in the repository's top directory and fetch the four
-files into it:
+Copy the directory to `keswick` in the top directory of your clone:
 
 ```console
-$ mkdir keswick
-$ cd keswick
-$ for f in track.gpx overpass-f2f4692b66d96eb9.json landcover-f2f4692b66d96eb9.json elevation-f2f4692b66d96eb9.json; do
->   curl -fsSLO "https://raw.githubusercontent.com/findlaywebb/pyntpot/main/tests/fixtures/keswick/$f"
-> done
-$ cd ..
+$ cp -r tests/fixtures/keswick keswick
 ```
+
+Work on the copy, not on the fixture. The run writes its painted plates into the cache
+directory, and a copy keeps them out of the repository's tree.
 
 Keep the three data files' names exactly as they are. Each name ends in the fetch cache's
 key for this track and these providers, and that is how the cache finds a payload it
@@ -122,10 +119,10 @@ Read it as the four stages it is:
 - The rivers are wet blue brush strokes, the Derwent and the Greta, and the roads are
   rust-coloured strokes. They are the brushes you pulled on the third rung, each chosen
   for what it draws.
-- The route is a pink line, laid last over the washes and the roads, so it reads as the
+- The route is a crimson line, laid last over the washes and the roads, so it reads as the
   one thing on the card that was drawn on purpose.
-- The names are in the hand's writing: "Keswick", "Portinscale", "Crosthwaite", "Derwent
-  Bridge", "Lake Road Chapel", "The Retro Zone". The river names follow the water's
+- The names are in the hand's writing: towns and villages such as "Keswick",
+  "Portinscale" and "Crosthwaite", and buildings such as "Lake Road Chapel". The river names follow the water's
   curve, "Derwent" and "Greta", and "A5271" runs along its road. Each name is tried in
   several places and set where it crosses the least.
 - At the foot, small lettering credits OpenStreetMap, whose data the card is made from.
