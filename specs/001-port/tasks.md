@@ -144,7 +144,7 @@ Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, th
 
 ## P7. Docs and first release
 
-Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the research in `p7-research.md`. PR 1 `p7-golden` (P7.1); PR 2 `p7-docs-release` (P7.2 to P7.13; P7.5 to P7.10 in parallel worktrees after P7.4; P7.11 and P7.12 any time after P7.2); PR 3 `p7-docs-site` (P7.14, may slip to 0.1.x); PR 4 `release-0.1.0` (P7.R). The outline's P7.1 to P7.4 are now P7.13, P7.5 to P7.10, P7.11 and P7.R.
+Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the research in `p7-research.md`. PR 1 `p7-golden` (P7.1); PR 2 `p7-docs-release` (P7.2, P7.11, P7.12, P7.3, P7.3b, P7.4 in that order; then P7.5 to P7.10 in parallel worktrees; then P7.13); PR 3 `p7-docs-site` (P7.14, may slip to 0.1.x); PR 4 `release-0.1.0` (P7.R). The outline's P7.1 to P7.4 are now P7.13, P7.5 to P7.10, P7.11 and P7.R.
 
 - [ ] P7.0 Fatten P7 into slices; plan-reviewer pass
 - [ ] P7.1 The East Lyn label: window measured with tracking, a river's repeat dropped when it finds no water; third golden regeneration, ADR 0031 (`p7-golden`)
