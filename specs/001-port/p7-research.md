@@ -374,3 +374,18 @@ Recorded as given; to be planned as a P7 revision round.
   Moot Hall (the town hall) in Keswick.
 - **Skye is missing its key feature: it is an island.** The map should show a large
   stretch of coastline, if not the whole island.
+
+### 10.1 Decisions after round 1
+
+The maintainer said the recommendations offered so far are good. Those were:
+
+1. A showcase theme for the hero maps; the default theme stays as it is.
+2. Ambleside hero route: the Loughrigg circuit, via Loughrigg Terrace and Rydal Water.
+3. Maps: drop Keswick as a map, keep Skye, Yr Wyddfa and Y Fenni, rework Oxford.
+4. Replace the gasket with a family of procedural trees. The fern image stays unchanged.
+5. Tutorial rhythm: picture, what a painter does, how the engine models it, code, what
+   to notice, then a `for`-loop variation grid.
+6. Fixture size: the recorder stores fixtures minified, keeping only the fields and tags
+   the code reads, without rounding coordinates. Existing fixtures are re-recorded, and
+   goldens must come out byte-identical. This is folded into the revision round.
+7. Any fern family is a separate new image; the existing fern is untouched.
