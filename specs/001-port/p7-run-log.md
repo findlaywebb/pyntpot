@@ -198,3 +198,16 @@ index exclusion removed (offline: 202 OK, 0 errors); `test_readme.py`; Q13 marke
 in `p10-triage.md`. The README's Python quick start is `wash.py` from its constants to
 the end of `main`, verbatim. Agent's judgement, shared: the hero has wide empty paper
 on the left and stray river strokes; the wordmark is plain.
+
+## Fresh-context review and its fixes (2026-10-24)
+
+A fresh-context reviewer read the whole P7 diff against the plan
+(`reviews/p7-docs-review.md`): no blockers, six majors, seventeen minors; accuracy held
+wherever a reader would test it. Fixed in one commit: the route ink's unread `effect`
+(claims dropped, listed as a field with no reader, issue filed); the rose "Try changing"
+step; the README quick start now runs as pasted; "sheet" no longer used for paper ("Compose
+the painting"); first-map copies the fixture from the clone; place-card captions; most
+minors. Ambleside is now the name the lettering rung writes (its sine widened so the first
+letters read). Left for the maintainer: the shop "The Retro Zone" lettered as a landmark on
+the Keswick card (the hero), and the gasket cap raised to 300. Issues filed:
+`maps-route-ink-effect-unread.md`, `maps-lettering-river-name-clipped-at-path-end.md`.
