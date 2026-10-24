@@ -242,4 +242,18 @@ IMAGES += (
         "webp-lossy",
         "P7.8",
     ),
+    # P7.7: the Keswick card in each example theme.
+    *(
+        DocsImage(
+            f"map-styles/{name}.webp",
+            "map_styles",
+            (("figure", name),),
+            "keswick",
+            720,
+            "page",
+            "webp-lossy",
+            "P7.7",
+        )
+        for name in ("pen-and-ink", "sepia", "bold", "winter")
+    ),
 )
