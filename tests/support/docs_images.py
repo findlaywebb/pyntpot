@@ -221,4 +221,25 @@ IMAGES += (
         "webp-lossy",
         "P7.9",
     ),
+    # P7.8: the how-to guides' result images.
+    DocsImage(
+        "how-to/route-ink.webp",
+        "how_to_route_ink",
+        (),
+        "keswick",
+        720,
+        "page",
+        "webp-lossy",
+        "P7.8",
+    ),
+    DocsImage(
+        "how-to/own-shapes.webp",
+        "how_to_own_shapes",
+        (),
+        None,
+        480,
+        "page",
+        "webp-lossy",
+        "P7.8",
+    ),
 )
