@@ -183,6 +183,8 @@ two real washes would.
 <!-- from examples/gasket.py -->
 
 ```python
+def gasket_layers(size: int, sheet: Sheet, rng: np.random.Generator) -> list[PigmentLayer]:
+    """Wash every circle of the gasket and group the washes into pigment layers."""
     centre_px, scale_px = size / 2, 0.40 * size
     layers = [np.zeros((size, size), np.float32) for _ in range(MAX_LAYERS)]
     for circle in gasket_circles(MAX_DEPTH):
@@ -201,6 +203,7 @@ two real washes would.
         (density, rgb(PIGMENTS[key]), TRANSPARENCY[key])
         for density, key in zip(layers, LAYER_PIGMENTS, strict=True)
     ]
+    return stack
 ```
 
 ## Try changing

@@ -150,14 +150,8 @@ def _ring(
     return ink_density(acc, brush, sheet)
 
 
-def main(out_dir: Path, size: int = SIZE, seed: int = SEED) -> Path:
-    """Wash and glaze the gasket, write `gasket.png` into `out_dir` and return its path."""
-    sheet = Sheet(size, size, GRAN_PX * size / SIZE, seed)
-    canvas = Canvas(0, 0, size, size, size, size)
-    style = PaperStyle(km_glazing=True, paper_foxing=0.03)
-    paper = paper_plate(sheet, canvas, style, size)
-    rng = np.random.default_rng(seed)
-
+def gasket_layers(size: int, sheet: Sheet, rng: np.random.Generator) -> list[PigmentLayer]:
+    """Wash every circle of the gasket and group the washes into pigment layers."""
     centre_px, scale_px = size / 2, 0.40 * size
     layers = [np.zeros((size, size), np.float32) for _ in range(MAX_LAYERS)]
     for circle in gasket_circles(MAX_DEPTH):
@@ -176,6 +170,18 @@ def main(out_dir: Path, size: int = SIZE, seed: int = SEED) -> Path:
         (density, rgb(PIGMENTS[key]), TRANSPARENCY[key])
         for density, key in zip(layers, LAYER_PIGMENTS, strict=True)
     ]
+    return stack
+
+
+def main(out_dir: Path, size: int = SIZE, seed: int = SEED) -> Path:
+    """Wash and glaze the gasket, write `gasket.png` into `out_dir` and return its path."""
+    sheet = Sheet(size, size, GRAN_PX * size / SIZE, seed)
+    canvas = Canvas(0, 0, size, size, size, size)
+    style = PaperStyle(km_glazing=True, paper_foxing=0.03)
+    paper = paper_plate(sheet, canvas, style, size)
+    rng = np.random.default_rng(seed)
+
+    stack = gasket_layers(size, sheet, rng)
     path = out_dir / "gasket.png"
     save_image(composite(stack, paper, style), path, seed=seed)
     logger.info("wrote %s", path)
