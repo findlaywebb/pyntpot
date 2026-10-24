@@ -172,4 +172,11 @@ IMAGES += (
     _rung("lettering", "lettering", 360, "webp-lossless"),
     _rung("composition", "composition", 480, "webp-lossy"),
     _rung("route-map", "route_map", 900, "webp-lossy", "keswick"),
+    # P7.6b: painting with Python, the fern and the gasket.
+    DocsImage(
+        "painting-with-python/fern.webp", "fern", (), None, 600, "page", "webp-lossy", "P7.6b"
+    ),
+    DocsImage(
+        "painting-with-python/gasket.webp", "gasket", (), None, 640, "page", "webp-lossy", "P7.6b"
+    ),
 )
