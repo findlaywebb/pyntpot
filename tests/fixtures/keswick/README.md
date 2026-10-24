@@ -166,11 +166,11 @@ budget (1.5 MB) is measured as the gzip size of each file at the default level, 
 
 | File | Bytes | Gzip bytes |
 |---|---|---|
-| `elevation-f2f4692b66d96eb9.json` | 43,997 | 8,106 |
+| `elevation-f2f4692b66d96eb9.json` | 43,998 | 8,108 |
 | `landcover-f2f4692b66d96eb9.json` | 3,777,758 | 578,351 |
 | `overpass-f2f4692b66d96eb9.json` | 2,816,505 | 463,405 |
 | `track.gpx` | 16,482 | 2,537 |
-| **Total** | **6,654,742** | **1,052,399** |
+| **Total, README excluded** | **6,654,743** | **1,052,401** |
 
 ## Licences and attribution
 
