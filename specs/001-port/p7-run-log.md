@@ -29,3 +29,15 @@ ADRs 0013 to 0021 by a slice agent in a worktree (commit cherry-picked). Pointer
 gains an index of 0001 to 0030. G-here green in the worktree. Noticed: ADR 0007's stale
 `_port` sentence, filed as `docs/issues/docs-adr-0007-stale-port-wording.md`. The ADR
 titles keep the house "—" in their headings; `docs/decisions` is outside the dash gate.
+
+## P7.12 landed (2026-10-24)
+
+`ci.yml` gains `workflow_dispatch` and a `docs` job (lychee `v2.9.0` offline, `uv build`,
+`twine check --strict`); weekly advisory `links.yml`; `lychee.toml`; twine 7.0.0 in
+`dev`. Local: lychee 0.24.2 parses the config (every current README and docs link is
+remote, so offline excludes all 42); a scratch file with a broken relative link is
+reported as an error, so the offline check does catch broken local links. `twine check
+--strict` passes on the wheel and sdist. G-here green. `include_fragments` left out
+(lychee 0.24.2 rejects the value). Open: the done line's green run on GitHub;
+`workflow_dispatch` only dispatches from the default branch, so it is met by the draft
+PR's run instead.
