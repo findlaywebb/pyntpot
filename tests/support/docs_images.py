@@ -200,4 +200,25 @@ IMAGES += (
         "webp-lossy",
         "P7.6c",
     ),
+    # P7.9: the reference's two sheets.
+    DocsImage(
+        "reference/pigment-swatches.webp",
+        "pigment_swatches",
+        (),
+        None,
+        600,
+        "page",
+        "webp-lossy",
+        "P7.9",
+    ),
+    DocsImage(
+        "reference/brush-sheet.webp",
+        "brush_sheet",
+        (),
+        None,
+        800,
+        "page",
+        "webp-lossy",
+        "P7.9",
+    ),
 )
