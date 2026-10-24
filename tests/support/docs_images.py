@@ -30,6 +30,11 @@ Adding entries. A slice appends one block of entries under a comment naming the 
 a landing conflict is resolved by keeping both blocks. The slice's share must be in
 `SLICE_SHARE_BYTES`.
 
+Pins across platforms. Each entry also has a lossless reference master, a PNG at
+`tests/golden/docs/<image path with .png>`, `MASTER_WIDTH` pixels wide at most (the
+entry's width if narrower). Lossy re-encoding amplifies sub-LSB float noise, so on CI the
+master, not the lossy file, is compared (ADR 0033).
+
 It does not paint, encode or read any image: `tests/golden/make_docs_images.py` paints
 and encodes, `tests/golden/test_docs_images.py` pins, and
 `tests/architecture/test_docs_images.py` checks the registry against the files and the
@@ -37,10 +42,17 @@ Markdown that shows them.
 """
 
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 from typing import Literal
 
 #: Where the committed images live, relative to the repo root.
 IMAGES_DIR = "docs/images"
+
+#: Where the lossless reference masters live, relative to the repo root.
+MASTERS_DIR = "tests/golden/docs"
+
+#: The widest a reference master is; a narrower entry keeps its own width.
+MASTER_WIDTH = 240
 
 Kind = Literal["thumbnail", "page", "hero", "preview"]
 Encoding = Literal["webp-lossless", "webp-lossy", "jpeg"]
@@ -70,6 +82,11 @@ class DocsImage:
     kind: Kind
     encoding: Encoding
     slice: str
+
+
+def master_path(image: str) -> str:
+    """Return a docs image's reference master path under `MASTERS_DIR`: its path with `.png`."""
+    return str(PurePosixPath(image).with_suffix(".png"))
 
 
 #: The most one file may weigh, by kind. The social preview stays under GitHub's 1 MB limit.

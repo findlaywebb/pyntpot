@@ -2,7 +2,8 @@
 
 `support.docs_images.IMAGES` is the registry. This checks it against the files under
 `docs/images/` and against the Markdown that shows them: every file is registered and every
-entry has its file; every image a Markdown file shows is registered; each file is within its
+entry has its file; every entry has its lossless master under `tests/golden/docs/` and every
+master has an entry; every image a Markdown file shows is registered; each file is within its
 kind's budget, each slice within its share, the directory within its total; and the README
 links nothing by a relative path. A link or image into this repo from the README is an
 absolute URL on `raw.githubusercontent.com/findlaywebb/pyntpot/` or
@@ -20,11 +21,14 @@ from support.docs_images import (
     IMAGES,
     IMAGES_DIR,
     KIND_BUDGET_BYTES,
+    MASTERS_DIR,
     SLICE_SHARE_BYTES,
     TOTAL_BUDGET_BYTES,
+    master_path,
 )
 
 _IMAGES_ROOT = REPO_ROOT / IMAGES_DIR
+_MASTERS_ROOT = REPO_ROOT / MASTERS_DIR
 _REPO = "findlaywebb/pyntpot"
 _RAW_PREFIX = f"/{_REPO}/"
 _REF = re.compile(r"main|v\d[^/]*")
@@ -97,6 +101,14 @@ def test_every_file_is_registered_and_every_entry_has_its_file() -> None:
     registered = [entry.image for entry in IMAGES]
     assert len(registered) == len(set(registered)), "an image is registered twice"
     assert _files() == set(registered)
+
+
+def test_every_entry_has_its_master_and_every_master_has_an_entry() -> None:
+    """The PNG masters under tests/golden/docs/ and the registered masters' paths are the same set."""
+    found = {
+        p.relative_to(_MASTERS_ROOT).as_posix() for p in _MASTERS_ROOT.rglob("*") if p.is_file()
+    }
+    assert found == {master_path(entry.image) for entry in IMAGES}
 
 
 def test_each_entry_names_a_known_slice_and_an_extension_its_encoding_writes() -> None:

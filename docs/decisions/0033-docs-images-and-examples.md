@@ -60,3 +60,38 @@ repository does not fill with pictures.
 - The golden job grows by the pins; its time is recorded in the run log.
 - The examples may not import a vector reader; the SVG page says pyntpot does not read SVG
   itself.
+
+## Pins across platforms
+
+Status: provisional, pending the maintainer's review (overnight run, 2026-10-24).
+
+The lossy WebP pins failed on CI (ubuntu and macOS) under `--golden-tolerance`, by 0.75% to
+8.8% of pixels against a bound of 0.5% at a channel delta of 2, while the regenerating
+platform was exact. The cause is not the painting. Sub-LSB CPU float noise flips only 0.04%
+to 0.09% of 8-bit pixels, by at most 2 levels. A lossy re-encode amplifies that: the
+quantised transform coefficients change, and 3% to 10% of decoded pixels move by more than 2.
+Lossless encoding never amplifies it. The fraction of pixels differing by more than 2, for a
+fresh paint against a paint with sub-LSB noise, by encoding:
+
+| Image     | q90   | q95  | q100 | Lossless |
+|-----------|-------|------|------|----------|
+| fern      | 10.07 | 4.86 | 0.57 | 0        |
+| gasket    | 3.31  | 1.67 | 0.22 | 0        |
+| route-map | 5.06  | 3.47 | 0.39 | 0        |
+| sepia     | 5.77  | 4.02 | 0.55 | 0        |
+
+Lossless docs images would fit no budget (the fern is 416 KB, the route map 586 KB), and
+raising the quality still leaves two rows over the bound. The bound and the delta are
+unchanged. Instead:
+
+- Each registry entry has a lossless reference master, a PNG at
+  `tests/golden/docs/<image path with .png>`: the fresh paint downsized with LANCZOS, never
+  enlarged, to the lesser of the entry's width and 240 pixels, written without optimisation so
+  the bytes are deterministic.
+- `make_docs_images.py` writes the docs image and its master, and `--compare` covers both.
+- Without `--golden-tolerance` the pin requires the committed docs image, decoded, to equal
+  the fresh paint encoded the same way and decoded, and the committed master to equal the fresh
+  master exactly. With it, only the master is compared, by `differing_fraction` under the
+  parity bound. A lossy docs file is then checked on CI for existence, registration and budget
+  by the architecture test, which also requires every entry to have its master and every
+  master its entry, and for exact equality on the regenerating platform.
