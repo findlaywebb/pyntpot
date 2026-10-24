@@ -7,7 +7,7 @@ assumes you have painted a first map from the [tutorial](../tutorials/index.md).
 
 The package ships one theme, and `Style.default()` loads it. Every other look is a file
 you write and load yourself. Choosing a theme by name, from Python or from the command
-line, is [a feature the package does not have yet](../features/maps-named-themes.md).
+line, is [a feature the package does not have yet](https://github.com/findlaywebb/pyntpot/blob/main/docs/features/maps-named-themes.md).
 
 ## Steps
 
@@ -46,13 +46,13 @@ line, is [a feature the package does not have yet](../features/maps-named-themes
     ```
 
     Pass `style` to `fetch`, `paint`, `letter` and `compose`, as
-    [`examples/route_map.py`](../../examples/route_map.py) does with the default. Plates
+    [`examples/route_map.py`](https://github.com/findlaywebb/pyntpot/blob/main/examples/route_map.py) does with the default. Plates
     painted in another style are painted again, so a change to the theme is always seen.
 
 ## Four example themes
 
-The themes in [`examples/themes/`](../../examples/themes/) are each a copy of the default
-with a few groups changed. [`examples/map_styles.py`](../../examples/map_styles.py) paints
+The themes in [`examples/themes/`](https://github.com/findlaywebb/pyntpot/tree/main/examples/themes/) are each a copy of the default
+with a few groups changed. [`examples/map_styles.py`](https://github.com/findlaywebb/pyntpot/blob/main/examples/map_styles.py) paints
 the Keswick route in one of them. Read the files beside the pictures to see how little
 changes between looks.
 
