@@ -9,9 +9,10 @@ It does not pick what is named (a caller hands in the labels), does not measure 
 (the caller's `measure` does) and draws nothing.
 
 Invariants: labels come back in tier order each carrying its box and anchor, and its
-window when it is set along a line; a name that repeats another's place is dropped; two
-flat names whose leaders cross are swapped over when the swap uncrosses them and makes
-the pair cheaper.
+window when it is set along a line; a name that repeats another's place is dropped, and
+so is a river's repeat that finds no window on its water, rather than set flat; two flat
+names whose leaders cross are swapped over when the swap uncrosses them and makes the
+pair cheaper.
 """
 
 import math
@@ -19,7 +20,15 @@ from typing import Any
 
 from pyntpot.ink.polyline import Pt, meet
 from pyntpot.letters.setting import DEFAULT_LINE_PX
-from pyntpot.maps.lettering.label import WRAP_LEADING, Box, Label, Measure, Span
+from pyntpot.maps.lettering.label import (
+    KIND_TRACKING,
+    WRAP_LEADING,
+    Box,
+    Label,
+    Measure,
+    MeasureTracked,
+    Span,
+)
 from pyntpot.maps.lettering.placement_along import place_along
 from pyntpot.maps.lettering.placement_costs import (
     ROUTE_REACH_PX,
@@ -75,6 +84,8 @@ def place(
     ground: Backdrop,
     taken: list[Box],
     measure_fn: Measure,
+    *,
+    measure_tracked: MeasureTracked,
 ) -> list[Label]:
     """Put every name in its cheapest seat, one at a time in tier order.
 
@@ -88,7 +99,10 @@ def place(
     pool found it, so it is where `dedupe_names` can see that the settlement
     "Elm" and the landmark "Elm" are one village.
 
-    A label that names a place another already names is dropped.
+    A label that names a place another already names is dropped, and so is a
+    river's repeat of a name already set along its water when no window on that
+    water is left for it: a river's first name keeps its flat fallback, its
+    repeat does not.
 
     Source: `label-placement` in docs/explanation/references.md.
 
@@ -101,7 +115,10 @@ def place(
             dark grid and the named road centrelines. A name laid across a road
             is costed, never forbidden.
         taken: Boxes already spoken for, such as the home glyph's.
-        measure_fn: How wide and tall a name is.
+        measure_fn: How wide and tall a name is set flat.
+        measure_tracked: How wide and tall a name is when the hand writes it
+            with its kind's tracking, which is how long the window a curved
+            name is cut to has to be.
 
     Returns:
         The labels that survive `dedupe_names`, the spans' names among them, in
@@ -117,7 +134,7 @@ def place(
         place_spans(spans, around, measure_fn)
         todo += [span.label for span in spans if span.label is not None]
     ordered = sorted(dedupe_names(todo, ground.card), key=lambda lb: lb.tier)
-    return _place(ordered, ground, boxes, measure_fn)
+    return _place(ordered, ground, boxes, measure_fn, measure_tracked=measure_tracked)
 
 
 #: How far a settlement's own ground reaches, in multiples of the size its
@@ -142,7 +159,12 @@ def _places_to_avoid(labels: list[Label]) -> list[tuple[float, float, float, flo
 
 
 def _place(
-    labels: list[Label], ground: Backdrop, boxes: list[Box], measure_fn: Measure
+    labels: list[Label],
+    ground: Backdrop,
+    boxes: list[Box],
+    measure_fn: Measure,
+    *,
+    measure_tracked: MeasureTracked,
 ) -> list[Label]:
     """Place each label, curved along its own line where it has one.
 
@@ -150,6 +172,9 @@ def _place(
     on top of another label, text on a dark wash, text laid across a road. The
     card's edge is not in that list because it is not a cost: a candidate on
     the paper beats every candidate off it outright.
+
+    A river's repeat of a name already set along its water, with no window
+    left on that water, is not placed at all.
     """
     placed: list[Label] = []
     route_px, thin = ground.route_px, ground.thin
@@ -158,12 +183,16 @@ def _place(
     # its first.
     repeats: dict[str, list[float]] = {}
     for lb in labels:
-        tw, th = measure_fn(lb.name, lb.size)
         mine = _route_for(lb, route_px, thin)
         terms = Terms(ground.card, ground.dark, boxes, off_own(ground.roads, lb), mine)
         along = None
         if lb.baseline and len(lb.name) >= MIN_CURVED_CHARS:
+            tw, th = measure_tracked(lb.name, lb.size, KIND_TRACKING.get(lb.kind, 0.0))
             along = place_along(lb, tw, th, terms, repeats.get(lb.name, []))
+        if along is None and lb.kind == "river" and repeats.get(lb.name):
+            # The second name of a river that has no water left is dropped: set
+            # flat beside its first it would be a second, unrelated river.
+            continue
         flat = best_flat(lb, terms, measure_fn)
         # Two real candidates, one scale. Setting a name on its own feature is
         # worth something in itself, and `ALONG_BONUS` is that something; past

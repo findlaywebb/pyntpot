@@ -27,7 +27,6 @@ PINNED_LABELS = (
     "Lynton",
     "Barbrook",
     "East Lyn",
-    "East Lyn",
     "A39",
     "B3234",
     "Saint Mary the Virgin",
