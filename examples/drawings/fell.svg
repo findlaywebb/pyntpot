@@ -7,10 +7,10 @@
         d="M 82 115 C 82 99 96 87 110 87 C 126 87 138 99 138 115 C 138 131 126 143 110 143 C 96 143 82 131 82 115 Z"/>
   <path id="far-fell" fill="#bfd2cd" stroke="none"
         d="M 40 270 C 90 210 130 160 190 142 C 230 132 260 160 300 175 C 340 190 380 150 430 140 C 480 132 530 200 560 270 L 40 270 Z"/>
-  <path id="main-fell" fill="#c9d5a4" stroke="none"
-        d="M 150 300 C 200 230 260 150 340 100 C 390 70 430 80 470 130 C 510 180 540 240 570 300 L 150 300 Z"/>
+  <path id="main-fell" fill="#a8c286" stroke="none"
+        d="M 150 300 C 200 230 260 150 340 100 C 390 70 430 80 470 130 C 510 180 540 240 570 300 L 570 345 L 330 345 L 150 300 Z"/>
   <path id="tarn" fill="#9ec4de" stroke="none"
-        d="M 290 240 C 300 224 350 220 372 232 C 388 242 370 256 335 258 C 305 260 282 252 290 240 Z"/>
+        d="M 360 342 C 368 333 420 332 442 340 C 452 348 420 354 395 354 C 372 354 352 350 360 342 Z"/>
   <path id="left-rise" fill="#a8c286" stroke="none"
         d="M 30 360 L 30 320 C 70 270 140 255 200 280 C 250 300 280 320 330 335 L 330 360 Z"/>
   <path id="right-field" fill="#cfdfae" stroke="none"
@@ -31,7 +31,7 @@
   <path id="track" class="track" fill="none" stroke="#7a5a3a" stroke-width="1.8"
         d="M 336 345 C 360 322 300 304 340 284 C 380 266 322 236 372 206 C 402 188 392 156 412 126"/>
   <path id="beck" class="beck" fill="none" stroke="#4a7fa8" stroke-width="2"
-        d="M 336 258 C 344 282 328 304 342 336"/>
+        d="M 346 262 C 352 292 336 314 354 338"/>
   <path id="oak-trunk" class="pen" fill="none" stroke="#3a3a46" stroke-width="3"
         d="M 128 286 L 128 262"/>
   <path id="hawthorn-trunk" class="pen" fill="none" stroke="#3a3a46" stroke-width="2"
