@@ -27,10 +27,8 @@ from support import REPO_ROOT
 from support.paths import (
     AMBLESIDE_KEY,
     FIXTURES,
-    KESWICK_KEY,
     OXFORD_KEY,
     SKYE_KEY,
-    TROTTERNISH_KEY,
     Y_FENNI_KEY,
     YR_WYDDFA_KEY,
 )
@@ -98,28 +96,6 @@ PLACES = (
             "start",
         ],
         theme="examples/themes/ambleside.toml",
-    ),
-    Place(
-        "keswick",
-        KESWICK_KEY,
-        [
-            "Keswick",
-            "Portinscale",
-            "Crosthwaite",
-            "Greta",
-            "Greta",
-            "Derwent",
-            "A5271",
-            "Theatre by the Lake",
-            "Friar's Crag",
-            "Derwent Pencil Museum",
-            "start",
-        ],
-    ),
-    Place(
-        "trotternish",
-        TROTTERNISH_KEY,
-        ["Brogaig", "The Prison", "Quiraing South Pinnacle", "Fir Bhreugach", "start"],
     ),
     Place(
         "yr-wyddfa",

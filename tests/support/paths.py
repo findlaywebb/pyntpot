@@ -17,8 +17,6 @@ FIXTURE_DIR: Path = _TESTS / "fixtures" / "lynmouth"
 
 #: The cache keys of the focus-place fixtures with the shipped providers' ids, which name
 #: each fixture's payload files. Each directory beside the Lynmouth one is `FIXTURES / <name>`.
-KESWICK_KEY: str = "f2f4692b66d96eb9"
-TROTTERNISH_KEY: str = "70696067aa04a7f8"
 YR_WYDDFA_KEY: str = "353c7a77ae84f4c1"
 OXFORD_KEY: str = "edf326cc49d5cc52"
 Y_FENNI_KEY: str = "31d229011257f9fa"
