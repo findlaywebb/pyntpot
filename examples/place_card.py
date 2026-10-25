@@ -14,7 +14,8 @@ the place's fixture: the card letters the curated callouts and journal notes tha
 `examples/places.toml` holds for it, read with `tomllib`, and letters none for a place it does
 not list.
 
-The README's hero is the Ambleside card at 1200 pixels, in `examples/themes/ambleside.toml`.
+The README's hero is the Ambleside card at 1200 pixels, in `examples/themes/ambleside-hero.toml`,
+a calmer copy of `ambleside.toml` with fewer cover patches, thinner becks and roads and a heavier route.
 The five place cards of the gallery, Ambleside, Skye, Yr Wyddfa, Oxford and Y Fenni, are
 painted at 720, each in its own theme from `examples/themes/`. Y Fenni takes
 `examples/themes/y-fenni.toml`, which letters the Welsh name where OpenStreetMap carries one.

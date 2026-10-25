@@ -1091,3 +1091,33 @@ mid grey-brown that shows bare 8 px past each strip, so a covering veil reads as
 `nib_stages` and its test. Quoted blocks resynced on the watercolour, curves and fractals pages. Pins regenerated for the
 twenty entries above and checked exact. Not done: the `farmland` spacing in the pigment card ("far mLand") is the hand's,
 a library matter.
+### P7.V13 maps fix-up 1
+
+Answers the round-2 map critique (`research/p7/critique/round-2/maps.md`) and the maintainer's hero note.
+
+**Decision (changes decision 9's blend).** The five showcase themes' four route inks take `blend = "normal"`
+in place of `multiply`: multiplied over the Rothay and the washes the maroon went near black, and the grid's
+every ink read black over water. The pen's texture is kept; the route now keeps its colour.
+
+**Under 3.** `places/y-fenni`: card framed on the tour (`ribbon_k` 4, `ribbon_c` 60, `ribbon_min_m` 260,
+`card_grow_mult` 0.9), a paler built wash (`#f1c9a6`); the leaders no longer strike "Y Fenni", all four food
+stops and Tŷ Melin stay, "Llan-ffwyst" falls outside the card (removed from the pinned labels).
+`gallery/route-map`: `place_card` in the Ambleside theme with its callouts (the README and gallery text follow;
+the tutorial keeps the default look). `how-to/route-ink-grid`: six cells (maroon, indigo, burnt sienna by a wet
+and a dry pen), cropped to the loop with the ribbon fields, normal blend, rows and columns lettered with the hand
+(nib plate at twice, Lanczos). The how-to page's prose and snippet follow; the solid row is dropped.
+
+**Theme and callouts.** Ambleside: Loughrigg Fell and Grasmere added (Windermere lies outside the fixture box, so no callout), Rydal Cave dropped (it
+was lettered on the lake), `label_max` 5. Skye: Portree and The Cuillin, `label_max` 2 (the journal notes keep
+their place). Oxford: honey paler and weaker (`#ecc98a`, 0.7); the meadow hole and the colleges are not theme
+faults (see the issue notes). The hero and social preview take a calmer `examples/themes/ambleside-hero.toml`
+(coarser cover, flat wood texture, thin becks and roads, route 6 px); the social preview's crop and wordmark
+moved so the whole loop shows and the wordmark sits on the quiet fell.
+
+**Issue notes filed** (library faults left alone): leaders cross labels; land name on a lake; names under
+strokes and lakes; retraced legs drawn parallel; pale label backing; clipped stubs; Skye's mainland as sea;
+Christ Church Meadow unpainted (a red-meadow experiment shows the ring is lost after `polygon_rings`);
+colleges without a pigment class; long chapel names on Lynmouth; river-start blob on the hero.
+
+**Images moved:** `hero`, `social-preview`, the five `places/*`, `gallery/route-map`, `how-to/route-ink-grid`,
+and their masters.

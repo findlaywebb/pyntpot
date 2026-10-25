@@ -16,13 +16,18 @@ callouts = [
     { name = "Bridge House", lat = 54.433168, lng = -2.963484 },
     { name = "Rydal Water", lat = 54.447436, lng = -2.992923 },
     { name = "Loughrigg Terrace", lat = 54.442324, lng = -3.015681 },
-    { name = "Rydal Cave", lat = 54.4431789, lng = -2.9965662 },
+    { name = "Loughrigg Fell", lat = 54.4374547, lng = -3.0083697 },
+    { name = "Grasmere", lat = 54.447, lng = -3.0195 },
 ]
 
 # --------------------------------------------------------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------------------------------------
 
 [skye]
+callouts = [
+    { name = "Portree", lat = 57.413053, lng = -6.194446 },
+    { name = "The Cuillin", lat = 57.22, lng = -6.23 },
+]
 notes = [
     { text = "Monday: over the bridge, then Armadale", lat = 57.0726, lng = -5.8975 },
     { text = "Tuesday: Dunvegan Castle and the Coral Beaches", lat = 57.4466, lng = -6.5886 },

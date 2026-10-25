@@ -264,7 +264,7 @@ colour = "#7b2335"
 
 [route_inks.run.effect]
 adaptive_pct = 0
-blend = "multiply"
+blend = "normal"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0
@@ -279,7 +279,7 @@ colour = "#7b2335"
 
 [route_inks.ride.effect]
 adaptive_pct = 0
-blend = "multiply"
+blend = "normal"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0
@@ -294,7 +294,7 @@ colour = "#7b2335"
 
 [route_inks.swim.effect]
 adaptive_pct = 0
-blend = "multiply"
+blend = "normal"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0
@@ -309,7 +309,7 @@ colour = "#7b2335"
 
 [route_inks.other.effect]
 adaptive_pct = 0
-blend = "multiply"
+blend = "normal"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0
