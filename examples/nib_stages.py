@@ -83,6 +83,8 @@ FIGURES: tuple[str, ...] = (
 )
 #: The width the figures are designed at, in pixels; the height is five ninths of it.
 DESIGN_W = 360
+#: How many times larger the nib plate is painted than the figure, before it is downsized.
+NIB_SCALE = 2
 #: The size of the paper's granulation noise, in pixels at the design width.
 GRAN_PX = 3.0
 #: The seed of the paper's noise, the hand, the nib and the dither the file is written with.
@@ -125,7 +127,11 @@ def _name(figure: str, canvas: Canvas, sheet: Sheet, paper: np.ndarray, unit: fl
     hand = Hand(face, hand_style)
     setting = Setting(NAME, TYPE_PX, path=_line(canvas.w / unit, h / unit), wash=figure != "ground")
     marks = hand.write(setting, hand.generator(SEED))
-    surface = NibSurface(canvas, unit, ground, GRAN_PX * unit)
+    big = Canvas(
+        0, 0, NIB_SCALE * canvas.w, NIB_SCALE * canvas.h, NIB_SCALE * canvas.w, NIB_SCALE * canvas.h
+    )
+    dark2 = np.repeat(np.repeat(ground, NIB_SCALE, axis=0), NIB_SCALE, axis=1)
+    surface = NibSurface(big, NIB_SCALE * unit, dark2, GRAN_PX * NIB_SCALE * unit)
     groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
     return _lay_plate(marks, surface, groups, paper)
 
@@ -139,7 +145,9 @@ def _lay_plate(
         if written is None:
             raise RuntimeError("the hand wrote no marks")
         with Image.open(written) as plate:
-            rgba = np.asarray(plate.convert("RGBA"), np.float32) / 255
+            size = (surface.canvas.w // NIB_SCALE, surface.canvas.h // NIB_SCALE)
+            small = plate.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
+    rgba = np.asarray(small, np.float32) / 255
     alpha = rgba[..., 3:]
     return paper * (1 - alpha) + rgba[..., :3] * alpha
 

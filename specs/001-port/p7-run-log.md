@@ -885,3 +885,20 @@ Nothing was dropped by the placer.
    relief), so the strong relief is `cover.relief_strength` alone.
 5. Keswick's `test_places` row fails at the base (the landmark ranking now offers other names): it is
    the regeneration slice's, not changed here.
+### P7.V11 Lettered examples painted at nib scale 2
+
+`lettering.py`, `word.py`, `composition.py`, `derwentwater.py`, `how_to_own_shapes.py` and
+`nib_stages.py` paint their nib plate on a canvas `NIB_SCALE` (2) times the picture and downsize it
+with Lanczos, so the nib's edge is resolved at twice the display grid (cause: causes report item 4).
+Published widths unchanged. The plate file written beside each image is now twice the image's size
+(test first: `test_the_nib_plate_is_painted_at_twice_the_image_size`). The two quoted blocks of
+`paint-a-watercolour.md` follow the scripts. Regenerated, with their masters: `word`,
+`gallery/{lettering,composition}`, `tutorials/{lettering,composition}`,
+`painting-with-python/derwentwater`, `how-to/own-shapes` and `explanation/nib-{centreline,broad,turned,ground,backing}`
+(`nib-line`, `nib-set-down` and `nib-runs-dry` carry no plate and did not move). Encodings and
+qualities unchanged; `gallery/lettering.webp` stays lossless at 56,558 bytes against the 60,000 budget,
+so no lossy fallback. Looked at before and after at 100 % and 200 %: the lettering is crisp, the edges
+no longer stair-stepped or blurred; the strokes read thinner and finer than the old soft blobs, which is
+the nib's true width now resolved. Side by side: `scratchpad/v11-crisp.png`. The other docs-image pins
+fail until the engine regeneration lands (expected). The golden CI run is to be recorded at the
+checkpoint.
