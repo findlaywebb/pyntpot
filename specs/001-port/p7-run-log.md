@@ -958,3 +958,23 @@ pieces drier brushes (`TRK3-a`, `TRK4-a`) with `wprof` and density falling, so i
 **Not done.** A for-loop grid for the curves page (for example a rose with 3, 5 and 7 petals) is not
 painted; the families are the page's for-loop grids. The fern family keeps the fern's own pigments
 (`wood`, `scrub`), not painter's pigments, to stay one family with `fern.webp`.
+## P7.V12b The watercolour tutorial in one rhythm (2026-10-25)
+
+`docs/tutorials/paint-a-watercolour.md` rewritten to decision 5's rhythm: picture, what a painter does,
+how the engine models it, code, what to notice, then a `for`-loop grid (`examples/tutorial_grids.py`, new,
+`figure=` paper, wash, brush, pigments, nib, lettering, composition; each 720 px wide, lettered labels at
+nib scale 2 brought down with Lanczos). The rung scripts and their quoted blocks are untouched.
+
+Reference and explanation figures: `reference/pigment-swatches` is now a labelled pigment card (graded
+strip over an ink bar, Kubelka-Munk, 960 px); `reference/brush-sheet` is the treatment-by-width grid
+(`brush_sheet.py` `figure="grid"`, 960 px; the `sheet` figure stays); `explanation/wash-glaze` is the
+transparency grid (multiply row against Kubelka-Munk row, 800 px); `nib-broad` and `nib-turned` are removed
+for `nib-angles` (840 px); `nib-hands` (nine seeds, 840 px) is new; `nib-ground` and `nib-backing` sit on an
+irregular pooled sap-green wash. Registry: a `"P7.V12b"` block (share 1,000,000; measured about 895,000),
+the older entries edited as the plan names. Widths of the two nib grids were cut from 900 to 840 to stay
+under the 250 kB page budget (lossless).
+
+Pins: only my entries were regenerated and pinned (`test_docs_images.py -k` on the 14 entries, exact:
+pass). Other pins are the regeneration slice's. P7.V11 is parallel, not in this base: the new lettered code
+uses the scale-2 pattern itself; `nib_stages.py`'s existing figures still paint at scale 1 and will
+conflict textually with P7.V11 around `_name`.

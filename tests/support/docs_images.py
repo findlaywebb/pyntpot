@@ -110,6 +110,7 @@ SLICE_SHARE_BYTES: dict[str, int] = {
     "P7.8": 300_000,
     "P7.9": 500_000,
     "P7.10": 500_000,
+    "P7.V12b": 1_000_000,
     "P7.13": 2_700_000,
     "P7.14": 200_000,
     "P7.V10": 300_000,
@@ -244,7 +245,7 @@ IMAGES += (
         "pigment_swatches",
         (),
         None,
-        600,
+        960,
         "page",
         "webp-lossy",
         "P7.9",
@@ -252,9 +253,9 @@ IMAGES += (
     DocsImage(
         "reference/brush-sheet.webp",
         "brush_sheet",
-        (),
+        (("figure", "grid"),),
         None,
-        800,
+        960,
         "page",
         "webp-lossy",
         "P7.9",
@@ -298,15 +299,25 @@ IMAGES += (
     *_stages(
         "wash_stages",
         "wash",
-        ("mask", "body", "rim", "grain", "overlap", "glaze"),
+        ("mask", "body", "rim", "grain", "overlap"),
         480,
+        "webp-lossy",
+        "P7.10",
+    ),
+    DocsImage(
+        "explanation/wash-glaze.webp",
+        "wash_stages",
+        (("figure", "glaze"), ("size", 800)),
+        None,
+        800,
+        "page",
         "webp-lossy",
         "P7.10",
     ),
     *_stages(
         "nib_stages",
         "nib",
-        ("line", "centreline", "broad", "turned", "ground", "backing", "set-down", "runs-dry"),
+        ("line", "centreline", "ground", "backing", "set-down", "runs-dry"),
         360,
         "webp-lossless",
         "P7.10",
@@ -384,6 +395,10 @@ IMAGES += (
             ("washes", "webp-lossy"),
             ("ink", "webp-lossy"),
         )
+    ),
+)
+
+IMAGES += (
     # P7.V12c: the tree, the tree family and the fern family.
     DocsImage(
         "painting-with-python/tree.webp",
@@ -414,5 +429,43 @@ IMAGES += (
         "page",
         "webp-lossy",
         "P7.V12c",
+    ),
+)
+
+IMAGES += (
+    # P7.V12b: the watercolour tutorial's variation grids, one per rung, and the hand and nib page's two grids.
+    *(
+        DocsImage(
+            f"tutorials/grid-{figure}.webp",
+            "tutorial_grids",
+            (("figure", figure),),
+            None,
+            720,
+            "page",
+            encoding,
+            "P7.V12b",
+        )
+        for figure, encoding in (
+            ("paper", "webp-lossy"),
+            ("wash", "webp-lossy"),
+            ("brush", "webp-lossy"),
+            ("pigments", "webp-lossy"),
+            ("nib", "webp-lossless"),
+            ("lettering", "webp-lossless"),
+            ("composition", "webp-lossy"),
+        )
+    ),
+    *(
+        DocsImage(
+            f"explanation/nib-{figure}.webp",
+            "nib_stages",
+            (("figure", figure), ("size", 840)),
+            None,
+            840,
+            "page",
+            "webp-lossless",
+            "P7.V12b",
+        )
+        for figure in ("angles", "hands")
     ),
 )
