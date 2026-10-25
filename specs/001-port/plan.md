@@ -6636,6 +6636,7 @@ docs group, parallel, in worktrees, landed one at a time.
 | `GLOSSARY.md`; `tests/unit/test_public_api.py` | P7.V8b (`painter's pigment`; `PAINTERS_PIGMENTS`, `PAINTERS_TRANSPARENCY`); P7.V9b (`journal note`; `JournalNote`) | one row or line each, keep both |
 | `tests/architecture/test_coordinates.py`, `tests/support/paths.py` | P7.V9a; P7.V12a removes two entries | sequential |
 | `tests/golden/test_places.py` | P7.V9a (fixtures, margins, labels); P7.V2 to P7.V7b (expected labels, when they move); P7.V10 (themes and callouts); P7.V12a (removes two entries) | sequential, never two at once |
+| `tests/unit/maps/painter/test_smoke.py`, `tests/golden/smoke/*` | P7.V6 (pen and wash hashes), then P7.V7b (paper) | sequential, never two at once |
 | `tests/support/docs_images.py` (the registry) | P7.V9a (`_PLACES` margins and `place` options); P7.V10 (`_PLACES` rows); P7.V11 (lettered entries' encoding or width, if a budget needs it); P7.V12a (its new block; and in older blocks: P7.4 `gallery/route-map`, P7.5 `tutorials/route-map`, P7.7 the four `map-styles`, P7.8 `how-to/route-ink`, P7.13 `hero`, `social-preview` and the Keswick and Trotternish `_PLACES` rows); P7.V12b (its new block; in older blocks P7.9 `pigment-swatches` and `brush-sheet`, P7.10 `wash-glaze`, `nib-broad` and `nib-turned`); P7.V12c (its new block; in P7.6b the gasket; in P7.6a `rose` and `spirograph` regenerated); P7.V12d (its new block; P7.6c `svg-drawing`) | in the parallel group, each slice only the entries named here; keep both |
 | `tests/architecture/test_tutorials.py` | P7.V12d only (the `.svg` marker form; `vector-drawing.md` in `_tutorial_pages()`) | |
 | `docs/gallery.md` | P7.V12a ("First map", "How-to guides", "Places", "The README"); P7.V12b ("Paint a watercolour", "Reference", "Explanation"); P7.V12c ("Curves", "Fractals"); P7.V12d ("Vector drawing") | each slice its own sections only; keep both |
@@ -6999,7 +7000,9 @@ the chat message to the maintainer names decision 9 (route B).
   the centre. Fix: the span is `ceil(3 * r)`, which puts the side midpoint at
   `exp(-4.5)` (1.1%).
 - Owner files: `src/pyntpot/ink/deposit.py`, its test, `tests/golden/test_places.py`
-  (expected labels, if they move), ADR 0036 section, moved goldens, docs images and
+  (expected labels, if they move), `tests/unit/maps/painter/test_smoke.py` (the
+  `SMOKE_SHA` pen and wash hashes, which move because `stamp.py:287` calls `pool`) and
+  `tests/golden/smoke/wash.webp`, ADR 0036 section, moved goldens, docs images and
   masters, run log, tasks. Also the benchmark budget: re-measure
   `tests/benchmarks/test_ink.py` and record; a slowdown over 15% stops and reports.
 - Test first: a wide pool's deposit at the side midpoint of its span is below 1.5% of
@@ -7088,8 +7091,9 @@ the chat message to the maintainer names decision 9 (route B).
     np.quantile(sheet.gran, 1 - FOX_SPECK_AREA)`, `FOX_SPECK_AREA = 0.003`, so the same
     share of every sheet is touched whatever its `gran_px` (3 px in `lettering` and
     `composition`, 8 px in most examples, 18 render px or more on a card, 60 px on
-    `wash_stages`' slow sheet); weighted by
-    `0.4 + 0.6 * n120` so the specks gather as foxing does; each speck tinted rust
+    `wash_stages`' slow sheet). The threshold is on `sheet.gran` alone; the weight
+    `0.4 + 0.6 * n120` sets each speck's strength only (never its extent), so the
+    specks gather as foxing does; each speck tinted rust
     (`PAPER_FOX_TINT`, near `#9a5a32`) by the same per-channel rule, strength
     `paper_foxing`. The other style fields and their defaults are unchanged.
   - `paper.py`'s invariant is updated: it draws two fields from the sheet's generator,
@@ -7107,7 +7111,7 @@ the chat message to the maintainer names decision 9 (route B).
   threaded through `make_docs_images.py`'s `_encode`. No entry sets it unless the rule
   below fires.
 - Budget rule: every regenerated image stays within its kind's budget and its slice's
-  share (P7.10's share is at 437 of 500 KB). A lossless entry that would pass either
+  share (P7.10's share is at 437 of 500 KB). A lossless entry that would exceed either
   goes to lossy WebP at quality 95, recorded; a lossy entry over either stops and
   reports.
 - Owner files: `src/pyntpot/ink/{paper,style}.py`, `src/pyntpot/maps/themes/default.toml`
@@ -7126,9 +7130,9 @@ the chat message to the maintainer names decision 9 (route B).
     equals a literal pinned from the base before the edit;
   - both edges leave the sheet's generator in the same state (the next `sheet.noise`
     draw is equal after either);
-  - with `paper_vignette=0.0` and `paper_foxing=0.0`, on one seeded sheet, the
-    `"warm"` and `"classic"` plates are equal (to 1e-6) more than a tenth of the width
-    in: the draws and the tooth are unchanged;
+  - with `paper_vignette=0.0`, `paper_foxing=0.0` and `paper_worn=0.0`, on one seeded
+    sheet, the `"warm"` and `"classic"` plates are equal everywhere (to 1e-6): the
+    draws and the tooth are unchanged (review 4 measured 0.0);
   - `"warm"`: red over blue at an edge pixel is greater than at the centre (warm, not
     grey); with `paper_tooth=0` (the tooth alone is ±4%), the edge darkening is within
     2% of the centre's value a tenth of the width in; red over blue at a speck exceeds
@@ -7139,7 +7143,9 @@ the chat message to the maintainer names decision 9 (route B).
     1457 render pixels, `gran_px` 22.4), built in a module-scoped fixture beside
     `tests/unit/maps/painter/jobs.py`, in `test_smoke.py` (no `tests/unit/ink/` test
     imports `maps`): foxed pixels cover under 1% of the sheet and every connected speck
-    is under 0.8% of the width across (14.4 px on the job sheet).
+    is at most `2 * gran_px` across (speck size follows the grain, measured 1.0 to 1.88
+    times `gran_px` over 8 seeds in review 4); the run log records the job sheet's
+    largest speck in display pixels for P7.V13 to judge.
 - Golden: `--compare` first; every image is expected to move, its interior too: the
   classic vignette (`exp(-edge_px / (w * 0.34))` at 0.05) darkens 3.7% a tenth of the
   width in and about 1.9% at a 3:2 sheet's centre, and the warm one far less, so every
@@ -7324,7 +7330,7 @@ the chat message to the maintainer names decision 9 (route B).
   Published widths are unchanged. Encodings follow the registry's own rule: the
   lettering and nib entries are lossless already and stay so; the mixed figures
   (`word.webp`, a washed disc with lettering over it, composition, Derwentwater, own
-  shapes) stay `webp-lossy`. A lettered thumbnail that would pass its kind's budget
+  shapes) stay `webp-lossy`. A lettered thumbnail that would exceed its kind's budget
   (`gallery/lettering.webp` is lossless at 55.2 KB against 60 KB) falls back to lossy
   WebP at quality 95 (P7.V7b's `DocsImage.quality`), recorded; still over stops and
   reports. P7.V12b's new lettered figures use this scale-2 pattern.
