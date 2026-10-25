@@ -221,7 +221,11 @@ def _road(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
             }
         )
         if road not in found.road_keep:
-            found.road_keep[road] = options.roads == "all" or major or name in options.pick_roads
+            found.road_keep[road] = (
+                (options.roads == "all" and highway in options.minor_road_classes)
+                or major
+                or name in options.pick_roads
+            )
         if not found.road_keep[road] and options.roads == "key":
             found.road_keep[road] = scope.index.interacts(piece, within, run_m)
 

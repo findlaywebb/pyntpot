@@ -1,13 +1,15 @@
 """A fed route ink reaches the strands and the card, and repaints nothing."""
 
+import dataclasses
 import shutil
 from typing import NamedTuple
 
 import numpy as np
 import pytest
-from PIL import Image
+from PIL import Image, ImageChops, ImageStat
 
 from pyntpot.maps import Basemap, Cache, Lettering, Plates, Style, Track, compose, fetch, paint
+from pyntpot.maps.compose import route as compose_route
 
 from support.paths import FIXTURE_DIR, KEY
 from support.providers import FixtureElevation, FixtureFeatures
@@ -98,7 +100,7 @@ class TestFedRouteInk:
         doubled = {
             i
             for i, (strand_point, route_point) in enumerate(
-                zip(painted.plates.strands, painted.plates.route_px, strict=True)
+                zip(painted.plates.strands, list(painted.plates.route_px), strict=True)
             )
             if strand_point != route_point
         }
@@ -115,3 +117,68 @@ class TestFedRouteInk:
         thin_count = _fed_coloured_pixels(thin)
         assert thin_count > 0
         assert _fed_coloured_pixels(wide) > 2 * thin_count
+
+
+#: A pale card the route is drawn on, and a dark ink to draw it in.
+PALE = (235, 235, 235)
+DARK_INK = "#401018"
+DARK_WASH = (60, 60, 60)
+
+
+def _routed(painted: Painted, background: tuple[int, int, int], **effect: object) -> Image.Image:
+    """The route drawn in a dark ink over a flat card, with the effect keys given."""
+    style = painted.style.with_route_ink(colour=DARK_INK)
+    ink = style.route_ink()
+    ink = dataclasses.replace(ink, effect={**ink.effect, **effect})
+    card = Image.new("RGB", painted.plates.card.display, background)
+    compose_route(card, painted.plates, list(painted.plates.route_px), ink, 1.0)
+    return card
+
+
+def _brightness(card: Image.Image) -> float:
+    """The card's mean brightness over every channel."""
+    return sum(ImageStat.Stat(card).mean) / 3
+
+
+@pytest.mark.golden
+class TestRouteBlendAndOpacity:
+    """The route ink's `blend` and `opacity` effect keys reach the card."""
+
+    def test_multiply_over_a_dark_wash_is_darker_than_normal(self, painted: Painted) -> None:
+        """A multiply route over a dark wash darkens it where a normal route would lighten it."""
+        normal = _routed(painted, DARK_WASH, blend="normal")
+        multiplied = _routed(painted, DARK_WASH, blend="multiply")
+        assert _brightness(multiplied) < _brightness(normal)
+
+    def test_a_pen_route_multiplies_too(self, painted: Painted) -> None:
+        """A route drawn from the pen plate honours multiply as the solid route does."""
+        style = painted.style.with_route_ink(colour="#c8d0ff")
+        ink = dataclasses.replace(style.route_ink(), style="pen")
+        multiplied = dataclasses.replace(ink, effect={**ink.effect, "blend": "multiply"})
+        normal = Image.new("RGB", painted.plates.card.display, DARK_WASH)
+        darker = normal.copy()
+        compose_route(normal, painted.plates, list(painted.plates.route_px), ink, 1.0)
+        compose_route(darker, painted.plates, list(painted.plates.route_px), multiplied, 1.0)
+        assert _brightness(darker) < _brightness(normal)
+
+    def test_half_opacity_is_lighter_than_full(self, painted: Painted) -> None:
+        """A route at opacity 0.5 leaves a pale card lighter than the same route at 1.0."""
+        full = _routed(painted, PALE, opacity=1.0)
+        half = _routed(painted, PALE, opacity=0.5)
+        assert _brightness(half) > _brightness(full)
+
+    def test_an_effect_without_opacity_reads_one(self, painted: Painted) -> None:
+        """An effect table with no `opacity` draws exactly as one that says 1.0."""
+        absent = _routed(painted, PALE)
+        stated = _routed(painted, PALE, opacity=1.0)
+        assert ImageChops.difference(absent, stated).getbbox() is None
+
+    def test_an_unknown_blend_is_rejected(self, painted: Painted) -> None:
+        """A blend that is neither normal nor multiply raises, naming it."""
+        with pytest.raises(ValueError, match="screen"):
+            _routed(painted, PALE, blend="screen")
+
+    def test_an_opacity_outside_zero_to_one_is_rejected(self, painted: Painted) -> None:
+        """An opacity above one raises, naming it."""
+        with pytest.raises(ValueError, match=r"1\.5"):
+            _routed(painted, PALE, opacity=1.5)

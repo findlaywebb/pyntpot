@@ -97,6 +97,7 @@ def test_the_candidate_basemap_is_the_old_candidate_options() -> None:
         "sea_style": "fill",
         "contour_interval": 50.0,
         "roads": "key",
+        "minor_road_classes": ("tertiary", "unclassified", "residential", "track", "service"),
         "rivers": "key",
         "interaction_m": 60.0,
         "interaction_run_m": 100.0,

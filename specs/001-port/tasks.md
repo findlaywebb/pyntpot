@@ -175,7 +175,7 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [ ] P7.V6 The nib's touch-down has no square edge
 - [ ] P7.V7 The pen route keeps its legs apart
 - [ ] P7.V7b The paper browns at its edge and foxes in rust specks: `paper_edge = "warm"` the default (every image regenerated, the fern included)
-- [ ] P7.V8 Showcase style fields: minor road classes, relief strength, route blend; ADR 0037
+- [x] P7.V8 Showcase style fields: minor road classes, relief strength, route blend; ADR 0037
 - [x] P7.V8b Painter's pigments, a separate `PAINTERS_PIGMENTS` table; ADR 0039
 - [ ] P7.V9b Journal notes on a map, seated first as flat blocks with leaders; ADR 0038
 - [ ] P7.V10 Showcase themes (maroon pen route, more landscape) and curated callouts

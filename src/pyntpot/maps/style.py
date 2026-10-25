@@ -67,8 +67,9 @@ BASE_GROUPS: tuple[str, ...] = (
 LETTERING_GROUPS: tuple[str, ...] = ("face", "nib", "hand", "lettering")
 _DIGEST_HEX = 16
 #: Fields left out of a group digest while they equal their default, so a field added
-#: later moves no digest of a style that leaves it alone: the basemap's `name_tags`.
-DIGEST_OMITS_AT_DEFAULT: tuple[str, ...] = ("name_tags",)
+#: later moves no digest of a style that leaves it alone: the basemap's `name_tags` and
+#: `minor_road_classes`, and the cover's `relief_strength`.
+DIGEST_OMITS_AT_DEFAULT: tuple[str, ...] = ("name_tags", "minor_road_classes", "relief_strength")
 #: A colour a caller may feed: a `#` and six hexadecimal digits.
 _HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
 

@@ -66,3 +66,18 @@ def test_roads_and_rivers_are_named_by_the_same_rule() -> None:
     assert _sorted(river, ("name",)).rivers[0]["n"] == "River Usk"
     assert next(iter(_sorted(road, WELSH_FIRST).ways.values()))[0]["n"] == "Heol Merthyr"
     assert next(iter(_sorted(road, ("name",)).ways.values()))[0]["n"] == "Merthyr Road"
+
+
+def test_minor_road_classes_without_service_drop_a_service_way() -> None:
+    """With `roads = "all"`, a service way is kept by default and dropped once `service` is not listed."""
+    service = _way("highway", "service", {"name": "Mill Lane"})
+    track = _way("highway", "track", {"name": "Hill Track"})
+    kept = _sorted(service, ("name",))
+    assert list(kept.road_keep.values()) == [True]
+    narrowed = replace(BasemapStyle(), roads="all", minor_road_classes=("track",))
+    scope = _scope(("name",))
+    scope = Scope(scope.proj, scope.clip, scope.index, narrowed, scope.derived)
+    found = Harvest()
+    sort_element(service, scope, found)
+    sort_element(track, scope, found)
+    assert found.road_keep == {("Mill Lane", "service"): False, ("Hill Track", "track"): True}

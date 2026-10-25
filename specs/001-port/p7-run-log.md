@@ -337,3 +337,18 @@ The old `oxford/track.gpx` and `y-fenni/track.gpx` stay with their payloads; par
 `track.new.gpx` and re-records. `test_coordinates.py` gains the `ambleside` and `skye` boxes
 (each the track's box rounded outward to 0.01); the two new fixtures have no cache key until part 2.
 The Oxford and Y Fenni boxes already hold their new tracks and are unchanged.
+
+## P7.V8 Showcase style fields (2026-10-25)
+
+`basemap.minor_road_classes` (default `MINOR_ROADS`, read in `osm_elements._road` for `roads = "all"`),
+`cover.relief_strength` (default 1.0, scales `relief_density` and its 0.40 cap, passed in by
+`painter/relief.py`), and `compose.route` reading `blend` (`normal` or `multiply`) and `opacity`
+(default 1.0, not written into `default.toml`) for the solid and the pen route; ADR 0037. Both
+dataclass fields join `DIGEST_OMITS_AT_DEFAULT`, so the default style's three digests are
+unchanged (pinned tests hold). Re-pinned: `CoverStyle` default-fields digest in
+`test_style_groups.py`, `f201b60695520db7` to `a128e6b0e70f5c23` (the new field changes the
+hashed JSON); `BasemapStyle` defaults and both field-order rows gained the new names. Docs:
+`style-fields.md` (the two fields, a `blend` and `opacity` table under the route inks, the
+"no reader" note narrowed). Edits to files other slices own, kept minimal: none of the
+P7.V2 to P7.V7b slices' files beyond `painter/paper.py` (one signature default and the density
+line), which P7.V2 to P7.V7b do not edit as far as their briefs say.

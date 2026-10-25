@@ -13,7 +13,7 @@ import pydantic
 import pytest
 
 from pyntpot.maps.style import Style
-from pyntpot.maps.style_groups import BasemapStyle, RouteInk
+from pyntpot.maps.style_groups import BasemapStyle, CoverStyle, RouteInk
 
 from support import REPO_ROOT
 
@@ -201,6 +201,35 @@ class TestDigests:
         assert changed.digest() != DIGEST
         assert changed.lettering_digest() == LETTERING_DIGEST
         assert (style.digest(), style.base_digest()) == (DIGEST, BASE_DIGEST)
+
+    def test_a_default_showcase_field_leaves_every_digest(self) -> None:
+        """`minor_road_classes` and `relief_strength` at their defaults leave the three pins."""
+        style = Style.default()
+        assert style.basemap.minor_road_classes == BasemapStyle().minor_road_classes
+        assert style.cover.relief_strength == CoverStyle().relief_strength == 1.0
+        assert (style.digest(), style.base_digest(), style.lettering_digest()) == (
+            DIGEST,
+            BASE_DIGEST,
+            LETTERING_DIGEST,
+        )
+
+    def test_fewer_minor_road_classes_move_the_base_and_full_digests(self) -> None:
+        """A minor road class set without `service` moves `base_digest()` and `digest()` only."""
+        style = Style.default()
+        basemap = dataclasses.replace(style.basemap, minor_road_classes=("tertiary", "track"))
+        changed = style.model_copy(update={"basemap": basemap})
+        assert changed.base_digest() != BASE_DIGEST
+        assert changed.digest() != DIGEST
+        assert changed.lettering_digest() == LETTERING_DIGEST
+
+    def test_a_stronger_relief_moves_the_base_and_full_digests(self) -> None:
+        """A relief strength of 2 moves `base_digest()` and `digest()` only."""
+        style = Style.default()
+        cover = dataclasses.replace(style.cover, relief_strength=2.0)
+        changed = style.model_copy(update={"cover": cover})
+        assert changed.base_digest() != BASE_DIGEST
+        assert changed.digest() != DIGEST
+        assert changed.lettering_digest() == LETTERING_DIGEST
 
 
 #: Fed colours that are not a `#` and six hexadecimal digits.
