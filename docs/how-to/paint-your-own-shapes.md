@@ -68,7 +68,7 @@ You need the tutorial's seven steps behind you
 
 ## Result
 
-![A hill-shaped fell washed in pale blue-green with a black pen line along its smooth skyline, and the name Skiddaw lettered by hand along a gentle curve beneath it.](../images/how-to/own-shapes.webp)
+![A hill-shaped fell washed in pale blue-green that fades out toward its foot, with a black pen line that swells and thins along its smooth skyline, and the name Skiddaw lettered by hand, centred beneath it on clean paper.](../images/how-to/own-shapes.webp)
 
 *Painted by `examples/how_to_own_shapes.py`, seed 5.* The name lettered along the bottom is
 "Skiddaw". The skyline is nine points of your own, in `SKYLINE` at the top of the script;

@@ -74,7 +74,9 @@ FULL_POINTS, FULL_DABS, FULL_AREA = 200_000, 400, 600 * 800
 #: A family is this many ferns across and this many down.
 ACROSS, DOWN = 3, 3
 #: The share of a cell a fern's width and its height may fill.
-FIT_WIDTH, FIT_HEIGHT = 0.9, 0.92
+FIT_WIDTH, FIT_HEIGHT = 0.8, 0.8
+#: The margin of paper round the grid, as a share of its width.
+MARGIN = 0.05
 #: The size of the paper's granulation noise, in pixels, at the single fern's width.
 GRAN_PX = 8.0
 #: The default seed, and the default width of the grid in pixels.
@@ -85,7 +87,7 @@ SIZE = 900
 def perturbed(maps: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     """Return the four maps moved a few per cent: the frond turned and scaled, the leaflets' matrices nudged."""
     out = maps.copy()
-    theta = np.radians(rng.uniform(0.5, 5.5))
+    theta = np.radians(rng.uniform(-1.0, 6.0))
     scale = rng.uniform(0.835, 0.865)
     out[1, :4] = scale * np.array([np.cos(theta), np.sin(theta), -np.sin(theta), np.cos(theta)])
     out[1, 5] = maps[1, 5] * rng.uniform(0.94, 1.06)
@@ -169,11 +171,15 @@ def main(out_dir: Path, size: int = SIZE, seed: int = SEED) -> Path:
     w, h = size, size * 4 // 3
     style = PaperStyle(km_glazing=True, paper_foxing=0.03)
     paper = paper_plate(Sheet(h, w, GRAN_PX * size / 600, seed), Canvas(0, 0, w, h, w, h), style, w)
-    cw, ch = w // ACROSS, h // DOWN
+    pad = round(MARGIN * w)
+    cw, ch = (w - 2 * pad) // ACROSS, (h - 2 * pad) // DOWN
     densities = [np.zeros((h, w), np.float32) for _ in range(4)]
     for i in range(ACROSS * DOWN):
         row, col = divmod(i, ACROSS)
-        window = (slice(row * ch, (row + 1) * ch), slice(col * cw, (col + 1) * cw))
+        window = (
+            slice(pad + row * ch, pad + (row + 1) * ch),
+            slice(pad + col * cw, pad + (col + 1) * cw),
+        )
         sheet = Sheet(ch, cw, GRAN_PX * cw / 600, seed + i)
         for target, density in zip(densities, paint_fern((ch, cw), sheet, seed + i), strict=True):
             target[window] = density

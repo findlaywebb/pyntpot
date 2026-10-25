@@ -140,7 +140,7 @@ lets the plant vary.
 
 A fern's character is in its four maps, so a family of ferns is the same four maps with
 their numbers moved a little. `perturbed` keeps the stem map, which only draws the stem.
-It turns the frond map by between half a degree and five and a half, scales it by a few
+It turns the frond map by between minus one degree and six, scales it by a few
 per cent, and moves every entry of the two leaflet matrices by up to 6 per cent:
 
 <!-- from examples/fern_family.py -->
@@ -149,7 +149,7 @@ per cent, and moves every entry of the two leaflet matrices by up to 6 per cent:
 def perturbed(maps: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     """Return the four maps moved a few per cent: the frond turned and scaled, the leaflets' matrices nudged."""
     out = maps.copy()
-    theta = np.radians(rng.uniform(0.5, 5.5))
+    theta = np.radians(rng.uniform(-1.0, 6.0))
     scale = rng.uniform(0.835, 0.865)
     out[1, :4] = scale * np.array([np.cos(theta), np.sin(theta), -np.sin(theta), np.cos(theta)])
     out[1, 5] = maps[1, 5] * rng.uniform(0.94, 1.06)
@@ -177,14 +177,18 @@ def _fit(points: np.ndarray, w: int, h: int) -> np.ndarray:
 
 Each fern is painted in a cell of its own, at the cell's size, with the points and the dabs
 in proportion to the cell's area. The loop paints one cell at a time into the nine-cell
-grid, giving every cell its own seed, which is the only thing that differs between cells:
+grid, giving every cell its own seed, which is the only thing that differs between cells.
+`pad`, defined above the loop, is the margin of paper round the grid, 5 per cent of its width:
 
 <!-- from examples/fern_family.py -->
 
 ```python
     for i in range(ACROSS * DOWN):
         row, col = divmod(i, ACROSS)
-        window = (slice(row * ch, (row + 1) * ch), slice(col * cw, (col + 1) * cw))
+        window = (
+            slice(pad + row * ch, pad + (row + 1) * ch),
+            slice(pad + col * cw, pad + (col + 1) * cw),
+        )
         sheet = Sheet(ch, cw, GRAN_PX * cw / 600, seed + i)
         for target, density in zip(densities, paint_fern((ch, cw), sheet, seed + i), strict=True):
             target[window] = density
@@ -199,7 +203,7 @@ grid, giving every cell its own seed, which is the only thing that differs betwe
 
 ## A tree
 
-![A tree with a brown trunk that forks into thinner limbs, ending in a spray of fine dark twigs under washes of green and yellow ochre, with a short ochre stroke of ground at its foot.](../../images/painting-with-python/tree.webp)
+![A tree with a brown trunk that forks into thinner limbs and fine dark twigs, with washes of green and yellow ochre and flecks of leaf laid over its outer limbs as foliage, and a short ochre stroke of ground at its foot.](../../images/painting-with-python/tree.webp)
 
 *Painted by `examples/trees.py`, seed 4, `figure="tree"`.*
 
@@ -333,26 +337,29 @@ def _lay(
         stamp(acc, path, brush, np.random.default_rng([seed, i]), wprof=wprof)
 ```
 
-The canopy goes under the limbs. `_crown` marks a disc at each of the last limbs' tips, and
-`wash` turns the mask into a green wash. A second, smaller wash of the same green deepens
-some tips, and a wash of `yellow_ochre` warms a few. `composite` glazes them all by
-Kubelka-Munk, so a warm leaf is still a leaf. The limbs go over the washes in
-`burnt_sienna`, the twigs in `perylene_maroon`, and a few short dabs of a wet brush in
-`sap_green` and `indigo` are laid last, as the leaves.
+The foliage goes over the limbs, as the leaves of a tree in leaf hang in front of its
+branches. The limbs go down first in `burnt_sienna` and the twigs in `perylene_maroon`. Then
+`_crown` marks a lumpy disc at each of the last limbs' tips (each disc's edge swells and
+dips, so the crown is not a ring of bubbles), and `wash` turns the mask into a green wash.
+A second, smaller wash of the same green deepens some tips, and a wash of `yellow_ochre`
+warms a few. `composite` glazes them all by Kubelka-Munk, so the limbs show through the
+foliage and a warm leaf is still a leaf. A few short dabs of a wet brush in `sap_green` and
+`indigo` are laid last, as the leaves.
 
 ### What to notice
 
 - The trunk is a brush stroke with a soft, streaked edge, and the twigs are fine, even
   lines: the hand-over from brush to pen is where a limb gets thinner than a brush can
   draw.
-- The washes stop short of some twigs and run past others, because they are laid over
-  the limbs' tips and not over the limbs.
+- The foliage stops short of some twigs and runs past others, because it is laid over
+  the limbs' tips and not over the limbs, so the trunk and the first forks read plainly and
+  the twigs show through the leaves.
 - A child starts exactly as wide as the limb it carries on from ends, so no joint has a
   step in it.
 
 ## A family of trees
 
-![Nine trees in a three by three grid, each with a brown trunk, fine dark twigs and washes of green and ochre. All nine are one kind of tree, and no two have the same shape, lean or crown.](../../images/painting-with-python/tree-family.webp)
+![Nine trees in a three by three grid, each with a brown trunk, fine dark twigs and a crown of green and ochre washes, with a margin of paper round every tree. All nine are one kind of tree, and no two have the same shape, lean or crown.](../../images/painting-with-python/tree-family.webp)
 
 *Painted by `examples/trees.py`, seed 4, `figure="family"`.*
 

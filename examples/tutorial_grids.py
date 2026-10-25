@@ -13,7 +13,7 @@ The grids, in the order of the rungs:
 - `wash`: the wash body 0.3, 0.6 and 0.9 across, two `sheet_seed`s down.
 - `brush`: four brushes across, each stroked at 3, 6 and 12 pixels down.
 - `pigments`: four painter's pigment pairs, multiplied above and glazed by Kubelka-Munk below.
-- `nib`: the nib's angle across and `label_pen_thin` down, "Keswick" written in each cell.
+- `nib`: the nib's angle across and `label_pen_thin` down, "Ambleside" written in each cell.
 - `lettering`: "Keswick" written by nine hand seeds, three by three.
 - `composition`: three hand seeds across, the name's backing wash off and on down.
 
@@ -83,6 +83,8 @@ NIB_SCALE = 2
 LABEL_PX, LABEL_INK = 21.0, "#4a3a2a"
 #: The name the lettered grids write.
 NAME = "Keswick"
+#: The name the nib grid writes: its bowls and diagonals show the nib's angle better than "Keswick".
+NIB_NAME = "Ambleside"
 
 Box = tuple[int, int, int, int]
 
@@ -120,12 +122,15 @@ def _letter(
     nib: NibStyle,
     seed: int = SEED,
     ground: np.ndarray | None = None,
+    pool: float = 0.5,
 ) -> np.ndarray:
     """Letter the settings over `img` with the nib and return the result.
 
     The nib plate is painted at `NIB_SCALE` times the size of `img`, then brought down to it
     with Lanczos, and laid over `img` by its alpha. `ground` is how dark the paint is under
-    each pixel of `img`, as the nib's backing wash reads it; none means bare paper.
+    each pixel of `img`, as the nib's backing wash reads it; none means bare paper. `pool` is
+    `BrushStyle.pen_pool_radius_frac`: the default 0.5 is the library's, and a pen over 2 pixels
+    wide wants about 0.15, or its ink pools into a grey halo round the word.
 
     Raises:
         RuntimeError: When the hand wrote no marks, so there is no plate to lay.
@@ -140,7 +145,7 @@ def _letter(
     dark = np.asarray(Image.fromarray(dark).resize((big_w, big_h), Image.Resampling.BILINEAR))
     canvas = Canvas(0, 0, big_w, big_h, big_w, big_h)
     surface = NibSurface(canvas, NIB_SCALE, dark, GRAN_PX * NIB_SCALE)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
+    groups = NibGroups(nib, face, hand_style, BrushStyle(pen_pool_radius_frac=pool), PaperStyle())
     with tempfile.TemporaryDirectory() as scratch:
         written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
         if written is None:
@@ -269,16 +274,17 @@ def _pigment_grid() -> np.ndarray:
 
 
 def _nib_grid() -> np.ndarray:
-    """Letter a name with the nib at four angles across and three `label_pen_thin`s down."""
-    angles, thins = (-38, 0, 38, 90), (0.0, 0.52, 0.85)
-    boxes, h = _layout(len(angles), len(thins), 92, 92, 46)
+    """Letter a name with the nib at three angles across and two `label_pen_thin`s down."""
+    angles, thins = (-38, 0, 90), (0.5, 0.85)
+    boxes, h = _layout(len(angles), len(thins), 100, 92, 46)
     out = _paper(W, h)
     for r, thin in enumerate(thins):
         for c, angle in enumerate(angles):
             x, y, w, ch = boxes[r][c]
-            nib = NibStyle(label_pen_angle_deg=angle, label_pen_thin=thin, label_pen_width_px=3.6)
-            setting = Setting(NAME, 42.0, anchor=(w / 2, 0.68 * ch), align="middle", wash=False)
-            out[y : y + ch, x : x + w] = _letter(out[y : y + ch, x : x + w], [setting], nib)
+            nib = NibStyle(label_pen_angle_deg=angle, label_pen_thin=thin, label_pen_width_px=2.0)
+            setting = Setting(NIB_NAME, 50.0, anchor=(w / 2, 0.68 * ch), align="middle", wash=False)
+            cell = out[y : y + ch, x : x + w]
+            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib, pool=0.15)
     return _labels(out, boxes, angles, thins)
 
 
@@ -289,9 +295,10 @@ def _lettering_grid() -> np.ndarray:
     for r, row in enumerate(boxes):
         for c, (x, y, w, ch) in enumerate(row):
             setting = Setting(NAME, 56.0, anchor=(w / 2, 0.7 * ch), align="middle", wash=False)
-            nib = NibStyle(label_pen_width_px=2.6)
+            nib = NibStyle(label_pen_width_px=1.8)
             seed = 3 * r + c + 1
-            out[y : y + ch, x : x + w] = _letter(out[y : y + ch, x : x + w], [setting], nib, seed)
+            cell = out[y : y + ch, x : x + w]
+            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib, seed, pool=0.15)
     return out
 
 
@@ -299,19 +306,19 @@ def _composition_cell(w: int, h: int, seed: int, *, backing: bool) -> np.ndarray
     """Paint a wash, a wet stroke and the name over them in one cell, and return the cell."""
     sheet = Sheet(h, w, GRAN_PX, SEED)
     paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
-    density = wash(_disc(w, h, w / 2, h / 2, 0.36 * h), sheet, 0.9, 0.3)
+    density = wash(_disc(w, h, w / 2, 0.46 * h, 0.36 * h), sheet, 0.9, 0.3)
     brush, stroke_hex = brush_from_id("RIV1-a", 4.0, 1.0, BrushStyle())
     acc = np.zeros((h, w), np.float32)
     x = np.linspace(0.08 * w, 0.92 * w, 160)
-    wave = h / 2 + 0.2 * h * np.sin(2 * np.pi * x / w)
+    wave = 0.82 * h + 0.05 * h * np.sin(2 * np.pi * x / w)
     stamp(acc, np.column_stack([x, wave]), brush, np.random.default_rng(SEED))
     stroke = ink_density(acc, brush, sheet)
     painted = composite(
         [(density, rgb(PIGMENTS["water"])), (stroke, rgb(stroke_hex))], paper, PaperStyle()
     )
-    setting = Setting(NAME, 30.0, anchor=(w / 2, 0.58 * h), align="middle", wash=backing)
-    nib = NibStyle(label_pen_width_px=2.0, label_wash_alpha=0.8, label_wash_spread=0.6)
-    return _letter(painted, [setting], nib, seed, ground=np.maximum(density, stroke))
+    setting = Setting(NAME, 30.0, anchor=(w / 2, 0.52 * h), align="middle", wash=backing)
+    nib = NibStyle(label_pen_width_px=1.8)
+    return _letter(painted, [setting], nib, seed, np.maximum(density, stroke), pool=0.15)
 
 
 def _composition_grid() -> np.ndarray:

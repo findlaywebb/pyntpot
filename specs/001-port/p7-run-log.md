@@ -1074,3 +1074,40 @@ and the site name. The nav gains `how-to/letter-your-own-landmarks.md`.
 
 **Registry.** `site/header.webp` under a new `"P7.V14"` share of 100,000; `paper` and `rule` keep their
 `"P7.14"` entries at the new widths. Pins and masters for the three regenerated and checked exact.
+## P7.V13 pictures fix-up 1 (2026-10-25)
+
+Fix-up commit for the round-2 picture and reference critiques (`critique/round-2/pictures.md`, `reference.md`);
+examples, docs pages, registry and the example tests only, no `src/`, no map image, theme or `places.toml`.
+
+**Under 3, repainted (self-assessed, old to new).** `tutorials/pigments` and `gallery/pigments` 1.5 to 3.5: the
+panels are now cerulean over yellow ochre, a painter's pair from `PAINTERS_PIGMENTS`, so multiplied is a grey-olive and
+glazed a clean green, which the caption says. `tutorials/grid-nib` 2.5 to 3: "Ambleside" at 50 px with a 2 px pen, three
+angles by two thinnings (0.5, 0.85; the `thin = 0` row is dropped), no halo; the angle shows plainly only at 90 degrees.
+`tutorials/composition` and `gallery/composition` 2.5 to 3.5: the path is trimmed to the word's width with
+`hand.measure`, centred on the disc, 4 degrees of turn, the name above a burnt sienna stroke. `how-to/own-shapes` 2.5 to
+3.5: the wash fades out over its foot, the skyline swells and thins (`wprof`), the name is centred below on clean paper
+and hand seed 2 has no gap. `word.webp` 2.5 to 3.5: lossless (101,622 bytes), pen pool 0.15 so no blots at stroke starts,
+the green disc moved up to overlap the blue by about a third, hand seed 11 picked from the first thirty for a level
+baseline. `explanation/nib-line` is retired: the line is a faint pencil guide under the name in `nib-centreline`,
+`nib-ground` and `nib-backing` (2 to 3.5, with the page updated); its registry entry, file and master are removed.
+
+**The halo.** `BrushStyle(pen_pool_radius_frac=0.15)` in `tutorial_grids` (`_letter(..., pool=)`, for the nib, lettering
+and composition grids), `composition`, `word`, `how_to_own_shapes` and `nib_stages`; `grid-lettering` pen 1.8 px. The
+grid-composition backing uses the nib's defaults and the stroke is lowered clear of the name. Filed:
+`docs/issues/ink-pen-pool-halo.md`.
+
+**Cheap improvements.** Spirograph (3 to 3.5): a wash for each of the nine loops so crossings deepen, and one brush cut
+into sixteen pieces blended from ultramarine through cerulean to sap green. Tree (3 to 3.5) and family (3.5 to 4): the
+foliage is laid after the limbs and twigs, the crown discs have lumpy edges and a lighter rim, the shade stroke runs from
+a sixth to five sixths of the trunk and swells, and the limbs fit 0.66 by 0.74 of the cell with the foot at 0.91. Fern
+family (4 to 4): `FIT` 0.8, a 5 per cent sheet margin and a wider curl (-1 to 6 degrees). Paper alt text in the README
+updated. Brush sheet (4 to 4): "fine nib" is lettered "light nib". Pigment card (3 to 3.5): a crisp 10 px bar of
+mid grey-brown that shows bare 8 px past each strip, so a covering veil reads as a lightening.
+
+**Filed (library only).** `ink-pen-pool-halo.md`, `ink-pen-runs-dry-reload-is-a-hard-step.md`,
+`letters-pen-width-flickers-with-the-stroke-direction.md`.
+
+**Registry and pages.** `word.webp` lossless; the `nib-line` explanation entry removed and `line` dropped from
+`nib_stages` and its test. Quoted blocks resynced on the watercolour, curves and fractals pages. Pins regenerated for the
+twenty entries above and checked exact. Not done: the `farmland` spacing in the pigment card ("far mLand") is the hand's,
+a library matter.

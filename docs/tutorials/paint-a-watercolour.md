@@ -296,7 +296,7 @@ Try changing `"MAJ7-e"` to `"RIV1-a"`, and a fourth wet brush replaces the scrat
 
 ## Mix two pigments
 
-![Two panels, each with a yellow-green disc overlapping a deeper green one; the overlap is a different green in the two panels](../images/tutorials/pigments.webp)
+![Two panels, each with a blue disc overlapping a yellow-ochre one; the overlap is a different green in the two panels](../images/tutorials/pigments.webp)
 
 *Painted by `examples/pigments.py`, seed 11.*
 
@@ -306,8 +306,9 @@ pigment behaves: a transparent stain lets the layer under it through, and a cove
 colour hides it.
 
 The engine holds that as a number. Each `PigmentLayer` is a density, a colour from
-`PIGMENTS` and a `TRANSPARENCY`: what the pigment shows over black, as a share of what
-it shows over white. A pigment near 0 is a transparent glaze; one near 1 covers what lies
+`PAINTERS_PIGMENTS` and a `PAINTERS_TRANSPARENCY`: what the pigment shows over black, as a
+share of what it shows over white. These are a painter's tubes, here cerulean and yellow
+ochre. A pigment near 0 is a transparent glaze; one near 1 covers what lies
 beneath it. `composite` stacks the layers the way the `PaperStyle` asks. With
 `km_glazing=False` it multiplies them. With `km_glazing=True` it glazes them by
 Kubelka-Munk, which reads each layer's transparency. The script paints both and sets
@@ -333,8 +334,12 @@ def main(out_dir: Path) -> Path:
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
     layers: list[PigmentLayer] = [
-        (wash(_disc(centre_x), sheet, 0.6, 0.3), rgb(PIGMENTS[key]), TRANSPARENCY[key])
-        for key, centre_x in (("farmland", 0.38 * W), ("wood", 0.62 * W))
+        (
+            wash(_disc(centre_x), sheet, 0.6, 0.3),
+            rgb(PAINTERS_PIGMENTS[key]),
+            PAINTERS_TRANSPARENCY[key],
+        )
+        for key, centre_x in (("cerulean", 0.38 * W), ("yellow_ochre", 0.62 * W))
     ]
     multiplied = composite(layers, paper, PaperStyle(km_glazing=False))
     glazed = composite(layers, paper, PaperStyle(km_glazing=True))
@@ -361,10 +366,10 @@ def main(out_dir: Path) -> Path:
 
 *Painted by `examples/tutorial_grids.py`, `figure="pigments"`. The labels read 1 to 4 across, and multiply and glazed down.*
 
-The map pigments are pale on purpose. A painter's tubes are not, and the engine keeps
-them beside the map's, in `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY`: cerulean,
-yellow ochre, quinacridone rose and burnt sienna here. The grid glazes them over each
-other in four pairs, and the loop lays each pair twice, once multiplied and once glazed.
+The map's own pigments, `PIGMENTS` and `TRANSPARENCY`, are pale on purpose, so that a
+map's washes sit quietly under its lettering. A painter's tubes are not, and the engine
+keeps them beside the map's: cerulean, yellow ochre, quinacridone rose and burnt sienna
+here. The grid glazes them over each other in four pairs, and the loop lays each pair twice, once multiplied and once glazed.
 
 <!-- from examples/tutorial_grids.py -->
 ```python
@@ -452,36 +457,38 @@ def main(out_dir: Path) -> Path:
 
 ### Vary it
 
-![The name Keswick written twelve times in three rows of four. The columns turn the nib through four angles; the rows thin the line along the nib by none, about half and most. In the top row every stroke is one width; in the bottom row the strokes along the nib fall away to hairlines, and which strokes those are changes with the angle.](../images/tutorials/grid-nib.webp)
+![The name Ambleside written six times in two rows of three. The columns turn the nib through three angles; the rows thin the line along the nib by about half and by most. In the top row the strokes keep most of their weight; in the bottom row the strokes along the nib fall away to hairlines, most plainly in the upright stems of the right-hand cell, where the nib is turned to 90 degrees.](../images/tutorials/grid-nib.webp)
 
-*Painted by `examples/tutorial_grids.py`, `figure="nib"`. The name is Keswick. The labels read -38, 0, 38 and 90 across, and 0, 0.52 and 0.85 down.*
+*Painted by `examples/tutorial_grids.py`, `figure="nib"`. The name is Ambleside. The labels read -38, 0 and 90 across, and 0.5 and 0.85 down.*
 
 The spiral turns in every direction, so the nib's angle does not show in it. A name has
 strokes in known directions, so the grid writes one. This is the next rung's hand, met
 early: a `NibStyle` sets the nib's angle in degrees from the page's horizontal
 (`label_pen_angle_deg`) and how much of its width a stroke along it loses
-(`label_pen_thin`). At 0 the pen is a plotter's, one width the whole way round. At 0.85
-the strokes along the nib are fine hairlines, and turning the nib moves them from the
-rising strokes (-38) to the level ones (0), the falling ones (38) and the upright ones (90). The labels in every grid
-on this page are written the same way.
+(`label_pen_thin`). At 0 the pen would be a plotter's, one width the whole way round; the
+grid starts at half. At 0.85 the strokes along the nib are fine hairlines, and turning the
+nib moves them from the rising strokes (-38) to the level ones (0) and the upright ones
+(90), where the stems of "Ambleside" thin most plainly. The labels in every grid on this
+page are written the same way.
 
 <!-- from examples/tutorial_grids.py -->
 ```python
 def _nib_grid() -> np.ndarray:
-    """Letter a name with the nib at four angles across and three `label_pen_thin`s down."""
-    angles, thins = (-38, 0, 38, 90), (0.0, 0.52, 0.85)
-    boxes, h = _layout(len(angles), len(thins), 92, 92, 46)
+    """Letter a name with the nib at three angles across and two `label_pen_thin`s down."""
+    angles, thins = (-38, 0, 90), (0.5, 0.85)
+    boxes, h = _layout(len(angles), len(thins), 100, 92, 46)
     out = _paper(W, h)
     for r, thin in enumerate(thins):
         for c, angle in enumerate(angles):
             x, y, w, ch = boxes[r][c]
-            nib = NibStyle(label_pen_angle_deg=angle, label_pen_thin=thin, label_pen_width_px=3.6)
-            setting = Setting(NAME, 42.0, anchor=(w / 2, 0.68 * ch), align="middle", wash=False)
-            out[y : y + ch, x : x + w] = _letter(out[y : y + ch, x : x + w], [setting], nib)
+            nib = NibStyle(label_pen_angle_deg=angle, label_pen_thin=thin, label_pen_width_px=2.0)
+            setting = Setting(NIB_NAME, 50.0, anchor=(w / 2, 0.68 * ch), align="middle", wash=False)
+            cell = out[y : y + ch, x : x + w]
+            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib, pool=0.15)
     return _labels(out, boxes, angles, thins)
 ```
 
-Try changing `thins` to `(0.0, 0.3, 0.6)`, and the swelling softens.
+Try changing `thins` to `(0.0, 0.3)`, and the swelling softens.
 
 ## Letter a name
 
@@ -579,9 +586,10 @@ def _lettering_grid() -> np.ndarray:
     for r, row in enumerate(boxes):
         for c, (x, y, w, ch) in enumerate(row):
             setting = Setting(NAME, 56.0, anchor=(w / 2, 0.7 * ch), align="middle", wash=False)
-            nib = NibStyle(label_pen_width_px=2.6)
+            nib = NibStyle(label_pen_width_px=1.8)
             seed = 3 * r + c + 1
-            out[y : y + ch, x : x + w] = _letter(out[y : y + ch, x : x + w], [setting], nib, seed)
+            cell = out[y : y + ch, x : x + w]
+            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib, seed, pool=0.15)
     return out
 ```
 
@@ -590,7 +598,7 @@ the same way nine times.
 
 ## Compose the painting
 
-![A pale blue wash disc on cream paper, a wet blue brush stroke running across it in a long wave and the name Keswick written by hand over both](../images/tutorials/composition.webp)
+![A pale blue wash disc on cream paper with the name Keswick written by hand across its middle, and a wet burnt sienna brush stroke curving under the name and across the disc's foot](../images/tutorials/composition.webp)
 
 *Painted by `examples/composition.py`, seed 7. The name is Keswick.*
 
@@ -600,9 +608,11 @@ goes last, on top of the paint, and where the paint is dark enough to hide it a 
 lifts a patch of colour with a damp brush first, so that the name has a pale place to sit.
 
 The engine does it in the same order. The paper goes down first. The wash and the wet
-brush stroke are composited over it. Then the hand sets "Keswick" along a wave across the
-middle, the nib strokes its marks onto a plate, and the plate is laid over everything by
-its alpha. The paint is underneath and the lettering on top.
+brush stroke are composited over it. Then the hand sets "Keswick" along a line that is as
+long as the word is wide, centred on the disc and above the stroke (`_line` measures the
+word with `hand.measure`, so the line is not longer than it needs and the name does not
+ride a wave), the nib strokes its marks onto a plate, and the plate is laid over everything
+by its alpha. The paint is underneath and the lettering on top.
 
 ```console
 $ uv run python examples/composition.py out/
@@ -637,12 +647,14 @@ def main(out_dir: Path) -> Path:
 
     face, hand_style = FaceStyle(), HandStyle()
     hand = Hand(face, hand_style)
-    marks: list[Mark] = hand.write(Setting(NAME, 36.0, path=_line()), hand.generator(SEED))
+    marks: list[Mark] = hand.write(Setting(NAME, NAME_PX, path=_line()), hand.generator(SEED))
 
     canvas2 = Canvas(0, 0, NIB_SCALE * W, NIB_SCALE * H, NIB_SCALE * W, NIB_SCALE * H)
     dark2 = np.zeros((NIB_SCALE * H, NIB_SCALE * W), np.float32)
     surface = NibSurface(canvas2, NIB_SCALE, dark2, GRAN_PX * NIB_SCALE)
-    groups = NibGroups(NibStyle(), face, hand_style, BrushStyle(), PaperStyle())
+    groups = NibGroups(
+        NibStyle(), face, hand_style, BrushStyle(pen_pool_radius_frac=0.15), PaperStyle()
+    )
     plate_path = nib_plate(marks, surface, groups, out_dir / f"{STEM}-plate.webp")
     if plate_path is None:
         raise RuntimeError("the hand wrote no marks")
@@ -659,8 +671,9 @@ def main(out_dir: Path) -> Path:
     return path
 ```
 
-The helper `_wash_and_stroke`, defined above `main` in the script, holds the disc and the
-brush stroke from the earlier rungs.
+The helpers `_line` and `_wash_and_stroke`, defined above `main` in the script, hold the
+path the name follows and the disc and the brush stroke from the earlier rungs. The stroke
+is laid in burnt sienna, a painter's pigment from the last rung but one.
 
 ### What to notice
 
@@ -673,7 +686,7 @@ brush stroke from the earlier rungs.
 
 ### Vary it
 
-![Six small copies of the painting in two rows of three, a blue disc with a wave of blue brushwork and the name Keswick over both. The three columns differ only in the hand's seed, so the name is written three ways. In the top row the name sits straight on the paint; in the bottom row a pale patch of paper shows through the paint behind the letters.](../images/tutorials/grid-composition.webp)
+![Six small copies of the painting in two rows of three, a blue disc with the name Keswick centred on it and a wave of blue brushwork under the name. The three columns differ only in the hand's seed, so the name is written three ways. In the top row the name sits straight on the paint; in the bottom row a pale patch of paper shows through the paint behind the letters.](../images/tutorials/grid-composition.webp)
 
 *Painted by `examples/tutorial_grids.py`, `figure="composition"`. The name is Keswick. The labels read seed 1, seed 2 and seed 3 across, and off and on down.*
 

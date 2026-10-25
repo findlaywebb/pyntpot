@@ -81,8 +81,9 @@ LAST_BRUSHED = 3
 THREE_ODDS, DARK_ODDS, DEEP_SHARE = 0.18, 0.08, 0.45
 #: How hard young limbs are drawn toward the light, in radians over their length.
 TROPISM = 0.45
-#: The widest a tree stands, as a share of its cell's width, and the tallest, of its height.
-FIT_WIDTH, FIT_HEIGHT = 0.8, 0.8
+#: The widest a tree's limbs stand, as a share of its cell's width, and the tallest, of its height,
+#: and how far down the cell the trunk's foot is. The rest is margin for the crown, which reaches past the limbs.
+FIT_WIDTH, FIT_HEIGHT, FOOT = 0.66, 0.74, 0.91
 #: A family is this many trees across and this many down.
 ACROSS, DOWN = 3, 3
 #: Brushes follow the stroke smoothly and drift as a hand does.
@@ -90,12 +91,12 @@ STYLE = BrushStyle(brush_organic=True, stroke_smooth=True)
 #: Each layer, bottom first, with its painter's pigment.
 LAYERS = (
     ("ground", "raw_sienna"),
-    ("canopy", "sap_green"),
-    ("canopy2", "sap_green"),
-    ("warm", "yellow_ochre"),
     ("limbs", "burnt_sienna"),
     ("shade", "perylene_maroon"),
     ("twigs", "perylene_maroon"),
+    ("canopy", "sap_green"),
+    ("canopy2", "sap_green"),
+    ("warm", "yellow_ochre"),
     ("leaves", "sap_green"),
     ("leaves2", "indigo"),
 )
@@ -204,7 +205,7 @@ def fitted(limbs: list[Limb], cell: tuple[int, int]) -> list[Limb]:
     pts = np.vstack([limb.path for limb in limbs])
     lo, hi = pts.min(axis=0), pts.max(axis=0)
     k = min(FIT_WIDTH * w / (hi[0] - lo[0]), FIT_HEIGHT * h / (hi[1] - lo[1]))
-    foot = np.array([w * 0.5, h * 0.94])
+    foot = np.array([w * 0.5, h * FOOT])
     origin = np.array([(lo[0] + hi[0]) / 2, hi[1]])
     return [
         Limb(
@@ -253,13 +254,17 @@ def _lay(
 def _crown(
     tips: np.ndarray, radius: float, cell: tuple[int, int], rng: np.random.Generator
 ) -> np.ndarray:
-    """Return a 0 to 1 mask of discs of about `radius` pixels centred on `tips`."""
+    """Return a 0 to 1 mask of lumpy discs of about `radius` pixels centred on `tips`: each edge swells and dips twice or thrice."""
     h, w = cell
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
     mask = np.zeros((h, w), bool)
     for x, y in tips:
         r = radius * rng.uniform(0.7, 1.3)
-        mask |= (xx - x) ** 2 + (yy - y) ** 2 <= r * r
+        a, b, p, q = rng.uniform(0.12, 0.3), rng.uniform(0.12, 0.3), *rng.uniform(0.0, 6.3, 2)
+        theta = np.arctan2(yy - y, xx - x)
+        mask |= np.hypot(xx - x, yy - y) <= r * (
+            1 + a * np.sin(2 * theta + p) + b * np.sin(3 * theta + q)
+        )
     return mask.astype(np.float32)
 
 
@@ -286,16 +291,16 @@ def paint_tree(
     """Paint one tree in a `(height, width)` cell and return its densities by layer name, `LAYERS`."""
     h, w = cell
     rng = np.random.default_rng(seed)
-    limbs = fitted(grow(np.array([w * 0.5, h * 0.94]), h * 0.22, w * 0.07, shape, rng), cell)
+    limbs = fitted(grow(np.array([w * 0.5, h * FOOT]), h * 0.22, w * 0.07, shape, rng), cell)
     tips = np.array([(*limb.path[-1], limb.depth) for limb in limbs if limb.depth >= DEPTH - 2])
     warm = tips[rng.random(len(tips)) < rng.uniform(0.1, 0.4), :2]
     layers = {
-        "canopy": wash(_crown(tips[:, :2], w * 0.075, cell, rng), sheet, 0.3, 0.3),
+        "canopy": wash(_crown(tips[:, :2], w * 0.075, cell, rng), sheet, 0.3, 0.15),
         "canopy2": wash(
             _crown(tips[rng.random(len(tips)) < DEEP_SHARE, :2], w * 0.05, cell, rng),
             sheet,
             0.3,
-            0.3,
+            0.15,
         ),
         "warm": wash(_crown(warm, w * 0.07, cell, rng), sheet, 0.4, 0.3),
     }
@@ -303,7 +308,7 @@ def paint_tree(
     dry, _ = brush_from_id("TRK4-d", w * 0.025, 1.0, STYLE)
     stamp(
         ground,
-        np.array([(w * 0.34, h * 0.947), (w * 0.66, h * 0.944)]),
+        np.array([(w * 0.34, h * (FOOT + 0.007)), (w * 0.66, h * (FOOT + 0.004))]),
         dry,
         rng,
         wprof=np.sin(np.linspace(0.05, np.pi - 0.05, 12)) ** 0.6,
@@ -318,8 +323,9 @@ def paint_tree(
     layers["limbs"] = ink_density(brushed, wet, sheet)
     layers["twigs"] = 0.7 * ink_density(penned, nib, sheet)
     shade = np.zeros((h, w), np.float32)
-    trunk = [
-        (p + np.column_stack([0.22 * wd, np.zeros_like(wd)]), 0.3 * wd)
+    swell = np.sin(np.linspace(0.05, np.pi - 0.05, 10)) ** 0.5
+    trunk = [  # from a sixth to five sixths of the way up the trunk, swelling and thinning out
+        (p[2:12] + np.column_stack([0.22 * wd[2:12], np.zeros(10)]), 0.3 * wd[2:12] * swell)
         for p, wd in _strokes(limbs[:1], penned=False)
     ]
     _lay(shade, trunk, "RIV2-a", 1.0, seed + 2)

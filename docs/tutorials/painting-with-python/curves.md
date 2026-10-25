@@ -81,8 +81,8 @@ def _points(figure: str, size: int) -> np.ndarray:
 A painter lays the wash first and lets it dry, then paints the line. The wash needs a
 coverage mask: 1 inside the shape and 0 outside. Pillow's `ImageDraw.polygon` fills the
 polygon the curve's points make, and it fills where the outline winds an odd number of
-times round a spot. That is why the middle of the Lissajous figure and the heart of the
-spirograph stay bare paper while the loops carry colour. `wash` turns the mask into
+times round a spot. That is why the middle of the Lissajous figure stays bare paper while its loops carry
+colour. The spirograph is washed one loop at a time instead, and the loops' washes add up where they cross. `wash` turns the mask into
 pigment density on the paper's noise, and `composite` lays that density over the paper in
 the pigment's colour.
 
@@ -98,7 +98,7 @@ def _cover(points: np.ndarray, size: int) -> np.ndarray:
 
 ## Paint the rose with a brush
 
-![A spirograph painted with a brush: a pale blue wash fills its loops, and one long line runs round them, deep blue at the start, then lighter blue, then green and broken where the brush runs dry](../../images/curves/spirograph.webp)
+![A spirograph painted with a brush: a pale blue wash fills its loops, and one long line runs round them, deep blue at the start, shading through blue to green and breaking up where the brush runs dry; the washes deepen where the loops cross](../../images/curves/spirograph.webp)
 
 *Painted by `examples/curves.py` (seed 5, `figure="spirograph"`).*
 
@@ -158,11 +158,13 @@ def _paint_rose(
 
 ## Paint the spirograph with one long stroke
 
-The spirograph is one stroke from start to end, so the painter lets it run dry. The script
-cuts the stroke into three pieces and lays them end to end: `ultramarine`, then `cerulean`,
-then `sap_green`. The first piece is a wet brush (`RIV2-a`), and the next two are drier ones
-(`TRK3-a` and `TRK4-a`). `wprof` thins the width along the stroke and the density falls with
-it, so the line breaks up toward the end, as a brush does as it empties.
+The spirograph is one stroke from start to end, so the painter lets it run dry. Under it
+the script lays a pale `cerulean` wash for each of the nine loops, and where loops cross the
+washes add up, so the crossings deepen. The stroke itself is one brush (`TRK3-a`) cut into
+sixteen short pieces laid end to end, each a step further along a blend from `ultramarine`
+through `cerulean` to `sap_green` (`_mixed`), so the colour changes gradually and not in
+steps. `wprof` thins the width along the stroke and the density falls with it, so the line
+breaks up toward the end, as a brush does as it empties.
 
 <!-- from examples/curves.py -->
 
@@ -170,22 +172,23 @@ it, so the line breaks up toward the end, as a brush does as it empties.
 def _paint_spirograph(
     points: np.ndarray, sheet: Sheet, size: int, rng: np.random.Generator
 ) -> list[PigmentLayer]:
-    """Return the spirograph's layers: a pale wash, then one long stroke in three pigments that runs drier."""
-    layers = [(wash(_cover(points, size), sheet, 0.3, 0.3), "cerulean")]
-    thirds = np.array_split(np.arange(len(points)), 3)
-    for i, (idx, key) in enumerate(
-        zip(thirds, ("ultramarine", "cerulean", "sap_green"), strict=True)
-    ):
-        stop = min(idx[-1] + 2, len(points))
-        part = points[idx[0] : stop]
-        brush, _ = brush_from_id(
-            ("RIV2-a", "TRK3-a", "TRK4-a")[i], 6.0 * size / SIZE, 1.0, BrushStyle()
-        )
+    """Return the spirograph's layers: a pale wash for each loop, then one long stroke that changes colour as it runs drier."""
+    layers: list[PigmentLayer] = [
+        (wash(_cover(loop, size), sheet, 0.2, 0.3), rgb(PAINTERS_PIGMENTS["cerulean"]), 0.22)
+        for loop in _loops(points, 9, 222)
+    ]
+    brush, _ = brush_from_id("TRK3-a", 6.0 * size / SIZE, 1.0, BrushStyle())
+    pieces = np.array_split(np.arange(len(points)), 16)
+    for idx in pieces:
+        t0, t1 = idx[0] / len(points), (idx[-1] + 1) / len(points)
+        part = points[idx[0] : min(idx[-1] + 3, len(points))]
         acc = np.zeros((size, size), np.float32)
-        fade = np.linspace(1.0 - i / 3, 1.0 - (i + 1) / 3, 24)
-        stamp(acc, part, brush, rng, wprof=0.45 + 0.55 * fade)
-        layers.append((ink_density(acc, brush, sheet) * (0.55 + 0.45 * fade.mean()), key))
-    return _stack(layers)
+        stamp(acc, part, brush, rng, wprof=np.linspace(1.0 - 0.55 * t0, 1.0 - 0.55 * t1, 24))
+        colour, clear = _mixed((t0 + t1) / 2)
+        layers.append(
+            (ink_density(acc, brush, sheet) * (1.0 - 0.45 * (t0 + t1) / 2), colour, clear)
+        )
+    return layers
 ```
 
 ## Draw the Lissajous figure with the pen
@@ -223,4 +226,4 @@ colour the brush came with.
 
 Change the `14.0` in `_paint_rose` to `6.0` for a finer outline, and the `0.006` in its `drift` to `0.02` for a wash that wanders further from its stroke.
 Change 3 and 2 in `lissajous` to 5 and 4 for a denser knot.
-Change `"TRK4-a"` in `_paint_spirograph` to `"RIV2-a"` for a last piece that does not run so dry.
+Change `"TRK3-a"` in `_paint_spirograph` to `"RIV2-a"` for a line that does not run so dry.

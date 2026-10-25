@@ -4,7 +4,7 @@ A brush is one mark-making tool, in render pixels: a tip of bristles stamped alo
 
 ![The brush grid: eight brush treatments in one brown ink, stroked as a wave at 3, 6 and 12 pixels wide in three rows. The wet treatments stay whole at every width, the dry ones break into flecks as they widen, and the nibs leave a blot where they touch down.](../images/reference/brush-sheet.webp)
 
-*Painted by `examples/brush_sheet.py` (`figure="grid"`), seed 11.* One ink, `MAJ1-c` to `MAJ8-c`, stroked at 3, 6 and 12 pixels, because a stroke 4 pixels wide hides what a treatment does. The labels read the treatment numbers 1 to 8 across the top, the widths 3 px, 6 px and 12 px down the side, and the kind of each treatment under its column: wet, soft, gritty, dry, nib, pen, driest and fine nib.
+*Painted by `examples/brush_sheet.py` (`figure="grid"`), seed 11.* One ink, `MAJ1-c` to `MAJ8-c`, stroked at 3, 6 and 12 pixels, because a stroke 4 pixels wide hides what a treatment does. The labels read the treatment numbers 1 to 8 across the top, the widths 3 px, 6 px and 12 px down the side, and the kind of each treatment under its column: wet, soft, gritty, dry, nib, pen, driest and light nib.
 
 ## Id form
 

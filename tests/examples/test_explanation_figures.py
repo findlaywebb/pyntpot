@@ -13,7 +13,6 @@ from support.examples import run_example
 FIGURES: dict[str, tuple[str, ...]] = {
     "wash_stages": ("mask", "body", "rim", "grain", "overlap", "glaze"),
     "nib_stages": (
-        "line",
         "centreline",
         "angles",
         "ground",

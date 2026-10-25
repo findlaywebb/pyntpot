@@ -30,7 +30,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/tutorial_grids.py` (figure brush). The labels read RIV1-a, MAJ3-b, TRK4-d and MAJ7-e across, and 3 px, 6 px and 12 px down.*
 
-![Two panels, each with a yellow-green disc overlapping a deeper green one; the overlap is a different green in the two panels](images/tutorials/pigments.webp)
+![Two panels, each with a blue disc overlapping a yellow-ochre one; the overlap is a different green in the two panels](images/tutorials/pigments.webp)
 
 *Painted by `examples/pigments.py` (seed 11).*
 
@@ -42,9 +42,9 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/nib_line.py` (seed 11).*
 
-![The name Keswick written twelve times in three rows of four. The columns turn the nib through four angles; the rows thin the line along the nib by none, about half and most. In the top row every stroke is one width; in the bottom row the strokes along the nib fall away to hairlines, and which strokes those are changes with the angle.](images/tutorials/grid-nib.webp)
+![The name Ambleside written six times in two rows of three. The columns turn the nib through three angles; the rows thin the line along the nib by about half and by most. In the top row the strokes keep most of their weight; in the bottom row the strokes along the nib fall away to hairlines, most plainly in the upright stems of the right-hand cell, where the nib is turned to 90 degrees.](images/tutorials/grid-nib.webp)
 
-*Painted by `examples/tutorial_grids.py` (figure nib). The name is Keswick. The labels read -38, 0, 38 and 90 across, and 0, 0.52 and 0.85 down.*
+*Painted by `examples/tutorial_grids.py` (figure nib). The name is Ambleside. The labels read -38, 0 and 90 across, and 0.5 and 0.85 down.*
 
 ![The name Ambleside written by hand in dark ink along a gentle wave, its letters each a little different in size and slant](images/tutorials/lettering.webp)
 
@@ -54,11 +54,11 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/tutorial_grids.py` (figure lettering). The name is Keswick; the nine copies are nine hand seeds.*
 
-![A pale blue wash disc on cream paper, a wet blue brush stroke running across it in a long wave and the name Keswick written by hand over both](images/tutorials/composition.webp)
+![A pale blue wash disc on cream paper with the name Keswick written by hand across its middle, and a wet burnt sienna brush stroke curving under the name and across the disc's foot](images/tutorials/composition.webp)
 
 *Painted by `examples/composition.py` (seed 7).*
 
-![Six small copies of the painting in two rows of three, a blue disc with a wave of blue brushwork and the name Keswick over both. The three columns differ only in the hand's seed, so the name is written three ways. In the top row the name sits straight on the paint; in the bottom row a pale patch of paper shows through the paint behind the letters.](images/tutorials/grid-composition.webp)
+![Six small copies of the painting in two rows of three, a blue disc with the name Keswick centred on it and a wave of blue brushwork under the name. The three columns differ only in the hand's seed, so the name is written three ways. In the top row the name sits straight on the paint; in the bottom row a pale patch of paper shows through the paint behind the letters.](images/tutorials/grid-composition.webp)
 
 *Painted by `examples/tutorial_grids.py` (figure composition). The name is Keswick. The labels read seed 1, seed 2 and seed 3 across, and off and on down.*
 
@@ -80,7 +80,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/curves.py` (seed 5, figure lissajous).*
 
-![A spirograph painted with a brush: a pale blue wash fills its loops, and one long line runs round them, deep blue at the start, then lighter blue, then green and broken where the brush runs dry](images/curves/spirograph.webp)
+![A spirograph painted with a brush: a pale blue wash fills its loops, and one long line runs round them, deep blue at the start, shading through blue to green and breaking up where the brush runs dry; the washes deepen where the loops cross](images/curves/spirograph.webp)
 
 *Painted by `examples/curves.py` (seed 5, figure spirograph).*
 
@@ -100,11 +100,11 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/fern_family.py` (seed 7).*
 
-![A tree with a brown trunk that forks into thinner limbs, ending in a spray of fine dark twigs under washes of green and yellow ochre, with a short ochre stroke of ground at its foot.](images/painting-with-python/tree.webp)
+![A tree with a brown trunk that forks into thinner limbs and fine dark twigs, with washes of green and yellow ochre and flecks of leaf laid over its outer limbs as foliage, and a short ochre stroke of ground at its foot.](images/painting-with-python/tree.webp)
 
 *Painted by `examples/trees.py` (seed 4, figure tree).*
 
-![Nine trees in a three by three grid, each with a brown trunk, fine dark twigs and washes of green and ochre. All nine are one kind of tree, and no two have the same shape, lean or crown.](images/painting-with-python/tree-family.webp)
+![Nine trees in a three by three grid, each with a brown trunk, fine dark twigs and a crown of green and ochre washes, with a margin of paper round every tree. All nine are one kind of tree, and no two have the same shape, lean or crown.](images/painting-with-python/tree-family.webp)
 
 *Painted by `examples/trees.py` (seed 4, figure family).*
 
@@ -158,7 +158,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Paint your own shapes](how-to/paint-your-own-shapes.md)
 
-![A hill-shaped fell washed in pale blue-green with a black pen line along its smooth skyline, and the name Skiddaw lettered by hand along a gentle curve beneath it.](images/how-to/own-shapes.webp)
+![A hill-shaped fell washed in pale blue-green that fades out toward its foot, with a black pen line that swells and thins along its smooth skyline, and the name Skiddaw lettered by hand, centred beneath it on clean paper.](images/how-to/own-shapes.webp)
 
 *Painted by `examples/how_to_own_shapes.py` (seed 5).*
 
@@ -172,7 +172,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Pigments](reference/pigments.md)
 
-![The pigment card: fifteen strips in three rows of five, one for each pigment, each strip a wash that deepens from left to right and lies across a band of black ink, with the pigment's key lettered under it. The staining pigments let the black show through at their deep end; the covering greys and browns veil it.](images/reference/pigment-swatches.webp)
+![The pigment card: fifteen strips in three rows of five, one for each pigment, each strip a wash that deepens from left to right and lies across a narrow bar of grey-brown ink that shows bare past both ends, with the pigment's key lettered under it. The staining pigments let the bar show through at their deep end; the covering greys and browns veil it.](images/reference/pigment-swatches.webp)
 
 *Painted by `examples/pigment_swatches.py` (seed 11).* Each key is lettered under its strip, in the order of the page's table.
 
@@ -180,7 +180,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ![The brush grid: eight brush treatments in one brown ink, stroked as a wave at 3, 6 and 12 pixels wide in three rows. The wet treatments stay whole at every width, the dry ones break into flecks as they widen, and the nibs leave a blot where they touch down.](images/reference/brush-sheet.webp)
 
-*Painted by `examples/brush_sheet.py` (seed 11, figure grid).* The labels read the treatment numbers 1 to 8 across, the widths 3 px, 6 px and 12 px down, and wet, soft, gritty, dry, nib, pen, driest and fine nib under the columns.
+*Painted by `examples/brush_sheet.py` (seed 11, figure grid).* The labels read the treatment numbers 1 to 8 across, the widths 3 px, 6 px and 12 px down, and wet, soft, gritty, dry, nib, pen, driest and light nib under the columns.
 
 ## Explanation
 
@@ -212,23 +212,19 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [The hand and the nib](explanation/the-hand-and-the-nib.md)
 
-![A single gently waving line running across cream paper, drawn with a narrow pen nib.](images/explanation/nib-line.webp)
-
-*Painted by `examples/nib_stages.py` (seed 7, figure line, size 360).*
-
-![The word Keswick written along the line in an even, unmodulated pen line, every stroke the same width.](images/explanation/nib-centreline.webp)
+![The word Keswick written along a faint pencil guide line in an even, unmodulated pen line, every stroke the same width.](images/explanation/nib-centreline.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, figure centreline, size 360).*
 
 ![The word Keswick written twelve times in three rows of four. The columns turn the nib through four angles and the rows thin the line along the nib by none, about half and most. In the top row every stroke is one width. In the bottom row the strokes along the nib fall away to hairlines, and which strokes those are depends on the angle.](images/explanation/nib-angles.webp)
 
-*Painted by `examples/nib_stages.py` (seed 7, figure angles, size 840). The name is Keswick. The labels read -38, 0, 38 and 90 across, and 0, 0.52 and 0.85 down.*
+*Painted by `examples/nib_stages.py` (seed 7, figure angles, size 840). The name is Ambleside. The labels read -38, 0 and 90 across, and 0.5 and 0.85 down.*
 
-![The word Keswick written in dark ink over an irregular patch of deep sap green, with a darker band of pigment at its edge. The ink is legible but low in contrast against the green.](images/explanation/nib-ground.webp)
+![The word Keswick written in dark ink over an irregular patch of deep sap green, with a faint pencil line under the name. The ink is legible but low in contrast against the green.](images/explanation/nib-ground.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, figure ground, size 360).*
 
-![The same word on the same green, with a pale, soft-edged patch of paper showing through the green wash behind the name, so the ink is much clearer.](images/explanation/nib-backing.webp)
+![The same word and pencil line on the same green, with a pale, soft-edged patch of paper showing through the green wash behind the name, so the ink is much clearer.](images/explanation/nib-backing.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, figure backing, size 360).*
 
@@ -298,7 +294,7 @@ The pictures that open the [README](https://github.com/findlaywebb/pyntpot#readm
 
 The README's strip is one thumbnail for each rung of the [tutorials](tutorials/index.md), from the paper to the route map.
 
-![A piece of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](images/gallery/paper.webp)
+![A piece of cream paper with a soft grain, a narrow brown edge that wanders a little, and a few small rust specks of foxing](images/gallery/paper.webp)
 
 *Painted by `examples/paper.py` (seed 11).*
 
@@ -310,7 +306,7 @@ The README's strip is one thumbnail for each rung of the [tutorials](tutorials/i
 
 *Painted by `examples/brush_stroke.py` (seed 11).*
 
-![Two panels of overlapping green discs, the overlap a different green in each](images/gallery/pigments.webp)
+![Two panels, each with a blue disc overlapping a yellow-ochre one, the overlap a different green in each](images/gallery/pigments.webp)
 
 *Painted by `examples/pigments.py` (seed 11).*
 
@@ -322,7 +318,7 @@ The README's strip is one thumbnail for each rung of the [tutorials](tutorials/i
 
 *Painted by `examples/lettering.py` (seed 7).*
 
-![A blue wash disc, a wet brush stroke across it and the name Keswick written over both](images/gallery/composition.webp)
+![A blue wash disc with the name Keswick written by hand across it and a wet sienna brush stroke curving under it](images/gallery/composition.webp)
 
 *Painted by `examples/composition.py` (seed 7).*
 

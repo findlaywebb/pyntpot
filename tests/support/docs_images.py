@@ -319,7 +319,7 @@ IMAGES += (
     *_stages(
         "nib_stages",
         "nib",
-        ("line", "centreline", "ground", "backing", "set-down", "runs-dry"),
+        ("centreline", "ground", "backing", "set-down", "runs-dry"),
         360,
         "webp-lossless",
         "P7.10",
@@ -358,7 +358,7 @@ def _place_card(fixture: str, theme: str | None, margin: float | None, slice_: s
 
 IMAGES += (
     # P7.13: the README's wordmark and hero, the place cards, and the social preview.
-    DocsImage("word.webp", "word", (), None, 480, "page", "webp-lossy", "P7.13"),
+    DocsImage("word.webp", "word", (), None, 480, "page", "webp-lossless", "P7.13"),
     DocsImage(
         "hero.webp",
         "place_card",
