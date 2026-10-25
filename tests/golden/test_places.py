@@ -27,6 +27,7 @@ from support.paths import (
     FIXTURES,
     KESWICK_KEY,
     OXFORD_KEY,
+    SKYE_KEY,
     TROTTERNISH_KEY,
     Y_FENNI_KEY,
     YR_WYDDFA_KEY,
@@ -57,6 +58,21 @@ class Place:
 #: many times a long river is named, and in what order, can shift on a placement near-tie between
 #: platforms (CI placed one "Cherwell" on Oxford where the recording machine placed two).
 PLACES = (
+    Place(
+        "skye",
+        SKYE_KEY,
+        [
+            "Cnoc an t-Sìthean",
+            "Giant Angus MacAskill Museum",
+            "Sligachan",
+            "Snizort",
+            "Staffin Dinosaur Museum",
+            "start",
+            "finish",
+        ],
+        margin_m=18000.0,
+        landcover_margin_m=18000.0,
+    ),
     Place(
         "ambleside",
         AMBLESIDE_KEY,

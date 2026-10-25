@@ -23,6 +23,7 @@ YR_WYDDFA_KEY: str = "353c7a77ae84f4c1"
 OXFORD_KEY: str = "edf326cc49d5cc52"
 Y_FENNI_KEY: str = "31d229011257f9fa"
 AMBLESIDE_KEY: str = "f0a137ce97afcb43"
+SKYE_KEY: str = "ada01f635902a1fd"
 
 #: The directory holding every fixture, Lynmouth's included.
 FIXTURES: Path = _TESTS / "fixtures"

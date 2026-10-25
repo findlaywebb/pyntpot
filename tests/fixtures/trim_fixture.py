@@ -148,7 +148,8 @@ def _outer_area_m2(element: dict[str, Any], cos_lat: float) -> float | None:
     if all(_is_closed(ring) for ring in outers):
         return sum(_ring_area_m2(ring, cos_lat) for ring in outers)
     points = [p for ring in outers for p in ring]
-    lats, lons = [p["lat"] for p in points], [p["lon"] for p in points]
+    lats: list[float] = [p["lat"] for p in points]
+    lons: list[float] = [p["lon"] for p in points]
     return (max(lats) - min(lats)) * _M_PER_DEG * (max(lons) - min(lons)) * _M_PER_DEG * cos_lat
 
 

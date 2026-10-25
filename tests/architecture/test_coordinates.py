@@ -18,6 +18,7 @@ from support.paths import (
     KESWICK_KEY,
     KEY,
     OXFORD_KEY,
+    SKYE_KEY,
     TROTTERNISH_KEY,
     Y_FENNI_KEY,
     YR_WYDDFA_KEY,
@@ -44,6 +45,7 @@ KEYS = {
     "oxford": OXFORD_KEY,
     "y-fenni": Y_FENNI_KEY,
     "ambleside": AMBLESIDE_KEY,
+    "skye": SKYE_KEY,
 }
 
 #: Budgets in bytes on disk: 6 MB for a fixture directory, more for the entries below (ADR 0032).
@@ -54,6 +56,9 @@ BUDGETS = {
     # Land cover on the Lake District fells is dense: 6.57 MB trimmed, unsimplified.
     "ambleside": 7_000_000,
     "yr-wyddfa": 8_000_000,
+    # Skye is simplified and dropped but still over 12 MB; the maintainer ruled not to stop it
+    # for a slight overrun (2026-10-25).
+    "skye": 13_000_000,
 }
 
 
