@@ -727,3 +727,19 @@ code; the goldens are regenerated once after the five parallel engine fixes), RE
 labels on bare paper ("Snizort", "Sligachan" are sea lochs); two museums are the only landmarks named; grey
 foxing at the edge. Gates: prek, `-m "not golden"` and `-m golden --golden-tolerance`; the exact
 27-minute golden run was skipped this time by instruction.
+
+## P7.V12d The SVG drawing, step by step (2026-10-25)
+
+`examples/svg_drawing.py` takes `figure=` (`flat`, `washes`, `ink`, `painting`) and paints one
+picture of `drawings/fell.svg` per call; `vector-drawing.md` now shows the raw SVG (three
+marked blocks, a new `.svg` marker form checked by `test_tutorials.py`, and the page joined
+`_tutorial_pages()`), the drawing flat, the washes, the inks and the painting, each with what
+it adds and changes. Fixes in the drawing and script: each wash is painted around the shapes in
+front of it (a near fell no longer glazes the far one, the tarn is bare paper under water), the
+skyline follows the whole fell from where it leaves the bank, the tarn sits on the fell's
+shoulder with the beck running from it, the wall is a base line with a row of stones, the sun
+is yellow ochre, the trees are sap green, and ink colours come from `PAINTERS_PIGMENTS`
+(indigo, burnt sienna, cerulean). Glazing is Kubelka-Munk. Images moved: `svg-drawing.webp`
+(redrawn); new `svg-flat.webp` (lossless), `svg-washes.webp`, `svg-ink.webp`, all 720 px, 16 to 24 KB.
+Registered under `P7.V12d` (share 150,000). The existing pins other than these four were not
+regenerated here.

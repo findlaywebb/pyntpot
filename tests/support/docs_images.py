@@ -112,6 +112,7 @@ SLICE_SHARE_BYTES: dict[str, int] = {
     "P7.10": 500_000,
     "P7.13": 2_700_000,
     "P7.14": 200_000,
+    "P7.V12d": 150_000,
 }
 
 #: The most all of `docs/images/` may weigh.
@@ -358,5 +359,26 @@ IMAGES += (
     ),
     DocsImage(
         "social-preview.jpg", "social_preview", (), "keswick", 1280, "preview", "jpeg", "P7.13"
+    ),
+)
+
+IMAGES += (
+    # P7.V12d: the SVG drawing a step at a time (the finished painting is P7.6c's entry above).
+    *(
+        DocsImage(
+            f"painting-with-python/svg-{figure}.webp",
+            "svg_drawing",
+            (("figure", figure),),
+            None,
+            720,
+            "page",
+            encoding,
+            "P7.V12d",
+        )
+        for figure, encoding in (
+            ("flat", "webp-lossless"),
+            ("washes", "webp-lossy"),
+            ("ink", "webp-lossy"),
+        )
     ),
 )
