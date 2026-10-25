@@ -447,3 +447,35 @@ P7.V12a removes (the hero and the social preview, painted from Keswick today, mo
 stay). The new Ambleside card adds 43.3 s to `test_places.py`; Oxford and Y Fenni are unchanged in
 cost (51.9 s, 51.5 s); Yr Wyddfa 41.4 s. The golden CI run after the last fixture is dispatched by the
 orchestrating session and not recorded here.
+
+## 2026-10-25 P7.V7 The pen route keeps its legs apart (code; regeneration deferred)
+
+**Change.** `painter/pen.py:paint_route_pen` now separates the route with `separate_strands(canvas.px(route),
+route_pen_width_px * STRAND_GAP_WIDTHS * scale)` before it lays the pen, whatever the ride ink, so the
+pen plate reads base-group fields only. `strands.py` gains `strand_gap_px(style)` (the pen's gap when the
+route pen is on and the ride ink is `"pen"`, else the ride ink's), used by `pipeline.paint` alone. The
+`Style.with_route_ink` and `pipeline.paint` docstrings state the new rule. The "within a pixel" test
+passed on the simplified `layers.route`, so the C1 fallback (separating `basemap.track`) was not needed and
+`plates.py` is untouched. Tests: `tests/unit/maps/painter/test_pen_strands.py` (two inked runs across an
+out-and-back; strands within a pixel of the pen's runs under a pen ride ink; the gap rule; solid and pen
+ride inks paint byte-identical pen plates). The smoke lock's pen hash did not move.
+
+**Attribution** (Lynmouth, `make_golden.py --compare`): `pen.webp` moved, differing fraction 0.000876
+(changes in a box of x 409-1395, y 407-1052 of 1800x1457, where the track doubles back); paper, wash,
+labels-centreline and `map.png` identical (the default ride ink is solid, so the composed card and the
+strands are unchanged); manifest hash unchanged. Labels: none changed (strands unchanged for a solid ride).
+Y Fenni card (720 px, `y-fenni.toml`, solid ride): `map.png` byte-identical before and after; its pen
+plate moved, fraction 0.0059, the doubled legs now drawn as two lines beside each other.
+Images: `engine/v7-lynmouth-pen-before-after.png`, `engine/v7-yfenni-pen-before-after.png`, `engine/yf-before/map.png`,
+`engine/yf-after/map.png` (all under the scratchpad).
+Expected to move in the regeneration slice: `tests/golden/lynmouth/pen.webp`; every card's pen plate in
+`test_places.py` (plates only, composed images identical); docs images only where a pen ride ink is used
+(none today); map styles only if a style sets the ride ink to `"pen"`.
+
+**Draft ADR 0036 section.** The pen route follows the separated strands. The pen plate is a base plate and
+the route inks are in `digest()` only (ADRs 0005, 0027), so the pen separates the doubled-back legs by its
+own `route_pen_width_px * STRAND_GAP_WIDTHS` whatever the ride ink. `pipeline.paint` separates the shown
+route by `strand_gap_px(style)`, the pen's gap when the pen plate is the route shown, so lettering and the
+solid route read the line the pen painted. Moved: the pen plate of every card with a doubled-back track.
+
+Regeneration deferred to the group regeneration slice.
