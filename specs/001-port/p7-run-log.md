@@ -547,3 +547,36 @@ Code and unit tests only; regeneration deferred to the group regeneration slice 
 **Expected to move at regeneration.** Lynmouth golden (`labels-centreline.webp`, `map.png`), the Keswick and Oxford place pins (`test_places.py` expected labels) and their `places/*.webp`, the hero and social preview (Keswick card), the Keswick-derived docs images, Ambleside and Skye cards if their picks change, and the map-styles goldens. Not Y Fenni labels.
 
 **Draft ADR 0036 section (P7.V5).** Landmark ranking. Decision: shops and brands are never offered (`other`); a `tourism=museum` the wider record does not know is a `sight` (tier 2) and a recorded one stays an `attraction`; castles are `building` (tier 1); inside a tier a recorded thing (any of `wikidata`, `wikipedia`, `heritage`, `listed_status`; never `brand:wikidata`) ranks first, so `landmark_rank` is `(tier, not recorded, distance / reach)`. Why: the Keswick card lettered a gift shop as a museum and the Lynmouth card an art and craft centre. Moved: Lynmouth labels (two swapped) and the Keswick and Oxford picks above. Regeneration deferred to the group regeneration slice.
+## P7.V6 The nib's touch-down has no square edge (2026-10-25)
+
+**Change**: `ink/deposit.py pool` cuts its Gaussian at `span = ceil(3 * r)` instead of `int(r * 2)`
+(side midpoint of the span at `exp(-4.5)`, 1.1%, was `exp(-2)`, 13.5%). Test first:
+`test_a_wide_pool_has_faded_to_nothing_at_the_side_of_its_span` (0.135 before, passes after).
+
+**Smoke lock**: the `pen` hash moved to `bb86cd1e...d97`; the `wash` hash did NOT move
+(`c1617293...`), so `tests/golden/smoke/wash.webp` is unchanged and was not regenerated (the
+smoke box's wash brushes never reach a wide pool). `paper` unchanged.
+
+**Attribution** (Lynmouth, `make_golden.py --compare tests/golden/lynmouth`, scratch
+`scratchpad/engine/after-v6`; base of this branch also differs from the committed goldens by
+nothing, the compare below is against the committed ones): paper identical; wash 0.000645 of
+pixels moved; pen 0.000120; labels-centreline 0.001111; map.png 0.000573. Manifest hash unchanged.
+Labels: `labels.txt` identical with and without the change (`engine/before-v6` vs `after-v6`).
+Against the unchanged base the map moves 0.54% of pixels, largest channel delta 17 (faint): the
+blots at stroke starts are slightly wider and softer, with no square edge.
+
+**Benchmark** (`tests/benchmarks/test_ink.py`, min of 3 runs, machine loaded by parallel slices):
+no slowdown; after vs before (ms) stamp 2000 points 12.23 vs 12.80, long stroke dry-track 9.49 vs
+9.81, wet-river 10.57 vs 11.44, starved directional 20.58 vs 26.99, wash 37.7 vs 48.5, wet wash
+55.8 vs 60.2. Well inside 15%.
+
+**Expected to move at regeneration**: `tests/golden/lynmouth/*` (wash, pen, labels-centreline,
+map), the Lynmouth/places/map-styles goldens and docs images (every card that stamps a pen
+start). `test_places.py` expected labels not expected to move.
+
+**Draft ADR 0036 section (P7.V6)**: "The pool fades to nothing at its edge. `pool` cut its
+Gaussian at two radii, leaving a square blot at wide widths (13.5% of the centre at the side
+midpoint). It is cut at `ceil(3 r)` (1.1%). Moves the `pen` smoke hash; the `wash` smoke plate
+does not move. Benchmarks unchanged within noise."
+
+Regeneration deferred to the group regeneration slice.

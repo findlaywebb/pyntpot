@@ -104,7 +104,9 @@ SMOKE_RIVERS = (
 #: neither change touches the card. Then when the finer ink grid was centred on
 #: the plate's pixels (ADR 0025); `paper` again did not move. The lock still
 #: holds: a change that moves these hashes again is a change to what the reader
-#: sees and has to be argued for. The bytes are this machine's. A numpy that
+#: sees and has to be argued for. The `pen` hash moved once more when the nib's touch-down pool
+#: was cut at three radii instead of two (it has no square edge now); `wash` did not move.
+#: The bytes are this machine's. A numpy that
 #: runs the wash on other vector instructions can round a last bit the other way
 #: and move a wash pixel by one level, so the wash plate itself is committed in
 #: `tests/golden/smoke/`, and under `--golden-tolerance` the tests compare the
@@ -112,7 +114,7 @@ SMOKE_RIVERS = (
 #: for byte (ADR 0030).
 SMOKE_SHA = {
     "paper": "014d13332900f01fd6653d9405e933aaec9efe2f17ce78f8fa523b1e6954e93e",
-    "pen": "138f107e493424697401008137990bc4c4152d055fc392a12f5e59ad6cc8c688",
+    "pen": "bb86cd1eb74db17c8ca8b1533d4c48ce1ab0e1f022096806e2dd70dc4c5d3d97",
     "wash": "c1617293c916b15a3d86d54cbd7d5c83ba1c2b18261db07b8b9ba7f973a67272",
 }
 
