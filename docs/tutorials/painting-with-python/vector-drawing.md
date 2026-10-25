@@ -26,61 +26,13 @@ made for this repository and released under its MIT licence. `--figure` picks th
 
 ## The raw SVG
 
-The drawing is a handful of `<path>` elements, listed back to front. The filled shapes
-come first. Each has a `fill` colour and a `d` attribute of path data.
-
-<!-- from examples/drawings/fell.svg -->
-```xml
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
-  <!-- Filled shapes, back to front. The script washes each in the nearest pigment. -->
-  <path id="sun" fill="#e2b04e" stroke="none"
-        d="M 82 115 C 82 99 96 87 110 87 C 126 87 138 99 138 115 C 138 131 126 143 110 143 C 96 143 82 131 82 115 Z"/>
-  <path id="far-fell" fill="#bfd2cd" stroke="none"
-        d="M 40 270 C 90 210 130 160 190 142 C 230 132 260 160 300 175 C 340 190 380 150 430 140 C 455 134 470 148 480 170 L 480 345 L 40 345 Z"/>
-  <path id="main-fell" fill="#a8c286" stroke="none"
-        d="M 150 300 C 200 230 260 150 340 100 C 390 70 430 80 470 130 C 510 180 540 240 570 300 L 570 345 L 330 345 L 150 300 Z"/>
-  <path id="tarn" fill="#9ec4de" stroke="none"
-        d="M 276 238 C 284 227 316 224 336 231 C 344 238 322 246 304 246 C 288 246 270 245 276 238 Z"/>
-  <path id="left-rise" fill="#a8c286" stroke="none"
-        d="M 30 360 L 30 320 C 70 270 140 255 200 280 C 250 300 280 320 330 335 L 330 360 Z"/>
-  <path id="right-field" fill="#cfdfae" stroke="none"
-        d="M 330 360 L 330 335 C 400 320 480 300 570 310 L 570 360 Z"/>
-  <path id="oak-crown" fill="#4f7d36" stroke="none"
-        d="M 106 242 C 106 230 117 220 128 220 C 140 220 150 230 150 242 C 150 254 140 264 128 264 C 117 264 106 254 106 242 Z"/>
-  <path id="hawthorn-crown" fill="#4f7d36" stroke="none"
-        d="M 486 296 C 486 288 492 282 500 282 C 508 282 514 288 514 296 C 514 304 508 310 500 310 C 492 310 486 304 486 296 Z"/>
-```
-
-The strokes follow. Each has a `stroke` colour, a `stroke-width` and a `class` that names
-a pen. The skyline runs along the top of the main fell. The wall is a base line with a
-row of stones set on it.
-
-<!-- from examples/drawings/fell.svg -->
-```xml
-  <path id="skyline" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.6"
-        d="M 171 271 C 217 209 271 143 340 100 C 390 70 430 80 470 130 C 510 180 540 240 570 300"/>
-  <path id="wall" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.4"
-        d="M 62 322 C 105 296 150 286 205 298 C 245 307 275 326 322 342"/>
-```
-
-The wall's stones are one more path of short closed shapes, left out here. The file has
-them. After them come the track, the beck, the two trunks and the birds.
-
-<!-- from examples/drawings/fell.svg -->
-```xml
-  <path id="track" class="track" fill="none" stroke="#7a5a3a" stroke-width="1.8"
-        d="M 336 345 C 360 322 300 304 340 284 C 380 266 322 236 372 206 C 402 188 392 156 412 126"/>
-  <path id="beck" class="beck" fill="none" stroke="#4a7fa8" stroke-width="2"
-        d="M 298 246 C 308 266 288 284 304 304 C 312 314 316 324 322 336"/>
-  <path id="oak-trunk" class="pen" fill="none" stroke="#3a3a46" stroke-width="3"
-        d="M 128 286 L 128 262"/>
-  <path id="hawthorn-trunk" class="pen" fill="none" stroke="#3a3a46" stroke-width="2"
-        d="M 500 324 L 500 310"/>
-  <path id="bird-a" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.5"
-        d="M 215 80 C 222 72 228 74 232 80 C 236 74 242 72 249 80"/>
-  <path id="bird-b" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.2"
-        d="M 270 58 C 275 52 279 54 282 58 C 285 54 290 52 295 58"/>
-```
+Open [`examples/drawings/fell.svg`](https://github.com/findlaywebb/pyntpot/blob/main/examples/drawings/fell.svg)
+alongside this page; it is short. The drawing is a handful of `<path>` elements, listed
+back to front. The filled shapes come first, each with a `fill` colour and a `d`
+attribute of path data. The strokes follow, each with a `stroke` colour, a `stroke-width`
+and a `class` that names a pen: the skyline along the top of the main fell, the wall as a
+base line with a row of stones on it, then the track, the beck, the two trunks and the
+birds.
 
 ## What the script reads
 
