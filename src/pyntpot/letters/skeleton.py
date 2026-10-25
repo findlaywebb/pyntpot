@@ -38,6 +38,10 @@ MAX_NEIGHBOURS = 6
 #: not a junction and not an end.
 PASSING = 2
 
+#: A walk that is back beside the node it set out from has gone round a loop,
+#: rather than stepped along beside it, once it is this many pixels long.
+MIN_LOOP = 3
+
 #: A leftover loop of this many distinct pixels or fewer is staircase speckle.
 SPECKLE = 2
 
@@ -157,12 +161,21 @@ def crossings(p: tuple[int, int], on: set[tuple[int, int]]) -> int:
 
 
 def _step(
-    nbrs: dict[tuple[int, int], list[tuple[int, int]]], prev: tuple[int, int], cur: tuple[int, int]
+    nbrs: dict[tuple[int, int], list[tuple[int, int]]],
+    taken: set[tuple[int, int]],
+    cur: tuple[int, int],
 ) -> tuple[int, int] | None:
-    """The next pixel along, ignoring the one the staircase came from."""
-    back = set(nbrs[prev]) | {prev}
-    ahead = [q for q in nbrs[cur] if q not in back]
-    return ahead[0] if ahead else next((q for q in nbrs[cur] if q != prev), None)
+    """The next pixel along, the one that touches the walk least.
+
+    The pixel to go to is the one that sits beside the pixel the walk is on and
+    nothing else it has passed. The pixel on the inside of a staircase corner
+    touches the one before as well, and stepping onto it leaves the walk in a
+    dead end that doubles back over itself.
+    """
+    ahead = [q for q in nbrs[cur] if q not in taken]
+    if not ahead:
+        return None
+    return min(ahead, key=lambda q: sum(1 for r in nbrs[q] if r in taken and r != cur))
 
 
 def _walk(
@@ -171,40 +184,97 @@ def _walk(
     start: tuple[int, int],
     first: tuple[int, int],
 ) -> list[tuple[int, int]]:
-    """Follow a chain from a node to the next node."""
+    """Follow a chain from a node to the next node.
+
+    A node beside the pixel the walk is on ends the walk there, even when the
+    staircase puts that node next to the pixel before as well: stepping over
+    it is how a chain came to run clean through a junction and be walked a
+    second time from the far side. The node it set out from ends it too, once
+    it has gone round: a bowl on a stem is a loop at the junction, and a walk
+    that carried on past it would draw the stem again.
+    """
     chain = [start, first]
+    taken = {start, first}
     prev, cur = start, first
     while cur not in nodes:
-        nxt = _step(nbrs, prev, cur)
-        if nxt is None or nxt in chain[:-1]:
+        near = [
+            q
+            for q in nbrs[cur]
+            if q in nodes
+            and q != prev
+            and (q not in chain or (q == start and len(chain) > MIN_LOOP))
+        ]
+        nxt = near[0] if near else _step(nbrs, taken, cur)
+        if nxt is None:
             break
         prev, cur = cur, nxt
+        taken.add(cur)
         chain.append(cur)
     return chain
 
 
+def _again(
+    chain: list[tuple[int, int]],
+    seen: set[tuple[int, int]],
+    ends: set[frozenset[tuple[int, int]]],
+) -> bool:
+    """Whether a walk has gone over a stroke an earlier walk already drew.
+
+    A junction's pixel has a neighbour for every pixel of staircase leaving it,
+    so one stroke can be set off along from two of them, and every stroke is
+    walked once from each end. What the repeat has in common with the first
+    walk is the run beyond its first step: the first pixel of a branch may sit
+    beside another branch's, which is why a branch is only a repeat when the
+    rest of it is already drawn, or, with nothing else of it to tell, when it
+    joins the same two nodes as one already drawn.
+    """
+    inner = chain[1:-1]
+    if len(inner) > 1:
+        return _covered(inner[1:], seen) or _covered(inner[:-1], seen)
+    return frozenset((chain[0], chain[-1])) in ends
+
+
+def _covered(run: list[tuple[int, int]], seen: set[tuple[int, int]]) -> bool:
+    """Whether every pixel of a run is a drawn pixel or touches one.
+
+    Touching is enough because a walk back along a stroke takes the other
+    pixel at each corner of the staircase.
+    """
+    return all(p in seen or any(q in seen for q in _ring(p)) for p in run)
+
+
 def _loops(
-    nbrs: dict[tuple[int, int], list[tuple[int, int]]], left: set[tuple[int, int]]
+    nbrs: dict[tuple[int, int], list[tuple[int, int]]],
+    left: set[tuple[int, int]],
+    done: set[tuple[int, int]],
 ) -> list[list[tuple[int, int]]]:
-    """Closed loops with no junction at all, an `o` or an `0`, walked from what is left."""
+    """Closed loops with no junction at all, an `o` or an `0`, walked from what is left.
+
+    `done` is every pixel already in a chain. A leftover that lies wholly
+    beside them is the inner corners of a staircase and is not a loop.
+    """
     out: list[list[tuple[int, int]]] = []
     while left:
+        inside = {p: [q for q in nbrs[p] if q in left] for p in left}
         start = min(left)
-        cur = next((q for q in nbrs[start] if q in left), None)
-        chain, prev = [start], start
-        while cur is not None and cur != start:
+        cur = next(iter(inside[start]), None)
+        chain, taken = [start], {start}
+        while cur is not None:
             chain.append(cur)
-            nxt = _step(nbrs, prev, cur)
-            prev, cur = cur, (nxt if nxt in left or nxt == start else None)
+            taken.add(cur)
+            if len(chain) > MIN_LOOP and start in inside[cur]:
+                break
+            cur = _step(inside, taken, cur)
         chain.append(start)
         # A walk steps over the inner pixel of every staircase corner, so what
         # is left after a loop has been traced is a scatter of single pixels
         # already covered by the line beside them. Emitted, each one is a
         # zero-length stroke, and the nib leaves a blot: that is where the
-        # speckle round every curved letter came from. A leftover of one or
-        # two pixels is dropped; a real component is kept.
-        if len(set(chain)) > SPECKLE:
+        # speckle round every curved letter came from. A leftover of `SPECKLE`
+        # pixels or fewer is dropped; a real component is kept.
+        if len(set(chain)) > SPECKLE and not all(any(q in done for q in nbrs[p]) for p in chain):
             out.append(chain)
+            done.update(chain)
         left -= set(chain)
     return out
 
@@ -223,19 +293,19 @@ def skeleton_chains(skel: np.ndarray) -> list[list[tuple[int, int]]]:
     nbrs = {p: [q for q in _ring(p) if q in on] for p in on}
     cross = {p: crossings(p, on) for p in on}
     nodes = {p for p in on if cross[p] != PASSING}
-    seen: set[tuple[tuple[int, int], tuple[int, int]]] = set()
+    seen: set[tuple[int, int]] = set()
+    ends: set[frozenset[tuple[int, int]]] = set()
     out: list[list[tuple[int, int]]] = []
     for node in sorted(nodes):
         for nb in nbrs[node]:
-            if (node, nb) in seen:
-                continue
             chain = _walk(nbrs, nodes, node, nb)
-            seen.add((node, nb))
-            if len(chain) > 1:
-                seen.add((chain[-1], chain[-2]))
+            if _again(chain, seen, ends):
+                continue
+            seen.update(chain[1:-1])
+            ends.add(frozenset((chain[0], chain[-1])))
             out.append(chain)
     left = on - {p for chain in out for p in chain}
-    out.extend(_loops(nbrs, left))
+    out.extend(_loops(nbrs, left, {p for chain in out for p in chain}))
     return out
 
 

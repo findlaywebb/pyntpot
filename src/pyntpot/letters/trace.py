@@ -54,6 +54,12 @@ FLANK_MIN = 0.40
 #: of the letter.
 FLANK_CAP = 2.2
 
+#: A flank is an arm folded into a stem, which is a short stretch at a junction.
+#: One running further than this many half-widths is the stem's own other side,
+#: the bowl of a `d` or a `p` laid along its stem, and drawing it is the same
+#: ink twice.
+FLANK_LONGEST = 3.0
+
 #: A component of ink whose skeleton comes back empty is a dot. It is drawn as
 #: a small ring of this share of its own inscribed radius, because a nib run
 #: round a tiny circle leaves a dot and a nib asked to draw a single point
@@ -147,7 +153,7 @@ def _flank(pts: list[Pt], img: np.ndarray, half: float, side: float) -> list[Pt]
     # the bowl of every b, q and 6 on the first attempt.
     floor = half * FLANK_MIN * 0.5
     last = max((i for i, v in enumerate(lift) if v > floor), default=0)
-    if last < MIN_APART:
+    if last < MIN_APART or last > half * FLANK_LONGEST:
         return None
     return [
         (x + nx * side * lift[i], y + ny * side * lift[i])

@@ -447,3 +447,42 @@ P7.V12a removes (the hero and the social preview, painted from Keswick today, mo
 stay). The new Ambleside card adds 43.3 s to `test_places.py`; Oxford and Y Fenni are unchanged in
 cost (51.9 s, 51.5 s); Yr Wyddfa 41.4 s. The golden CI run after the last fixture is dispatched by the
 orchestrating session and not recorded here.
+
+## 2026-10-25, P7.V4 The skeleton draws each stroke once (code; regeneration deferred to the group regeneration slice)
+
+**Cause found.** The thinned skeleton was sound (clean one-pixel lines, correct junction counts); the
+fault was the walk that turned it into chains in `letters/skeleton.py`, plus long flanks in
+`letters/trace.py`. `RASTER_EM`, `FLANK_MIN` and the junction merge were not touched. Four faults:
+(1) `_step` skipped any pixel touching the previous one, so a walk stepped over a junction node and
+ran on to the far end: a stroke was drawn through the junction and again from the other side (k, m, n,
+K stems). (2) A junction pixel with a neighbour for each staircase pixel started the same branch twice.
+(3) A walk that came back to its own start node (a bowl on a stem: d, g, a) carried on and drew the stem
+again. (4) A dead-end corner pixel stopped a walk mid-stroke (R's bowl twice), and leftover staircase
+corners became 7-pixel loops. Separately, a flank longer than 3 half-widths is the stem's own other
+side (d, p, B, A), not an arm folded into a stem (M's flanks are 1.5).
+
+**Fix.** `_walk` ends at any node beside it and at its own start node once round a loop; `_step` takes
+the pixel that touches the walk least; `_again` drops a walk whose run is already drawn; `_loops` drops
+leftovers lying wholly beside drawn chains; `trace._flank` drops a flank longer than `FLANK_LONGEST`
+(3.0 half-widths). Test: `tests/unit/letters/test_skeleton_glyphs.py` (pieces, no stroke alongside
+another for more than a stroke width, the o one ring); red before on K k e m n d a g o, green after,
+and every A-Z a-z 0-9 clears the same check.
+
+**Attribution (Lynmouth, `/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/after-p7v4`).** paper, wash, pen: byte-identical. `labels-centreline.webp`
+moved (5.36 percent of pixels past the parity bound), `map.png` moved (1.69 percent). `labels.txt` is
+identical to a run without the change (`/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/before-p7v4`): no label changes. Looked at: every letter is
+drawn once, and the leader lines moved too (the hand's draws are made per stroke, so fewer strokes
+shift every later draw). Crop: `/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/p7v4-lynmouth-labels-before-after.png`. Words with the shipped hand,
+before (left) and after (right): `/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/p7v4-words-64px-before-after.png` and
+`/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/p7v4-words-200px-before-after.png`.
+
+**Expected to move at regeneration:** Lynmouth `labels-centreline.webp` and `map.png`; every lettered
+card in `test_places.py`; the lettered docs images and masters (hero, social preview, word, lettering,
+nib pages, place cards); map styles; the smoke lock only if it letters (not checked here).
+
+**Draft ADR 0036 section (P7.V4).** The centreline skeleton draws each stroke once. The chain walk no
+longer steps over junctions, repeats branches, runs past a loop's own node or dead-ends at a staircase
+corner, and a flank is an arm only when short. No single-line font was needed. The lettered goldens
+and images repaint; labels do not change.
+
+Regeneration deferred to the group regeneration slice.
