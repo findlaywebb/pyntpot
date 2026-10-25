@@ -270,3 +270,24 @@ success; the run on the base commit `573630c` was still in progress, and the com
 between touch only plan and review files): job `golden (ubuntu-latest)` 00:37:22Z to
 00:55:55Z = **18 min 33 s**. `golden (macos-15)` in the same run: 17 min 39 s. The round's
 CI budget is this plus 4 minutes at the P7.V12-group checkpoint.
+
+## P7.V1b Fetch margins as options (2026-10-25)
+
+`Cache` holds `margins: FetchMargins`, read by `key`, `ensure` and `fetch` (public frozen
+dataclass `features_m`, `landcover_m`, defaults `MARGIN_M`, `LANDCOVER_MARGIN_M`;
+validated in `__post_init__`); `landcover_margin_m` joins the canonical
+JSON only when not the default, so the default key (`f173b2f7a20bb9d4`) is byte-identical.
+`FetchMargins` raises `ValueError` naming the value for a margin outside 0 to 20 000 m or a
+land cover margin under the feature margin (`MAX_MARGIN_M` in `cache.py`). `pyntpot map --margin-m` reaches `fetch` and
+`cache.key`, the land cover margin being `max(2600, margin)`. `record_fixture.py` gains
+`--margin-m` and `--landcover-margin-m`. ADR 0040 and its index row; `cli.md` and
+`cache-layout.md` updated; `test_key_inputs_are_named` gains `landcover_margin_m`. Tests
+first: `tests/unit/maps/test_cache_margins.py` (new; recording providers keep the requested
+boxes, no mock). Examples and `tests/support/golden.py` untouched.
+
+Gate: prek green; `-m "not golden"` and `-m golden --golden-tolerance` green; `-m golden`
+exact green with `git status tests/golden docs/images` clean. `Ruled by the coordinator: no `noqa`; the two
+keywords became the one `FetchMargins`, held by `Cache(directory, margins)` so `fetch` keeps its
+signature (exported from `pyntpot.maps`, in the public API test
+and the glossary). The exact golden run was done before this change and not repeated (no
+golden reads a non-default margin).

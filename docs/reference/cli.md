@@ -65,6 +65,13 @@ pyntpot map [-h] -o OUTPUT --cache CACHE --contact CONTACT [--style STYLE] [--no
 - Help text: a TOML theme; the default theme when absent
 - Description: a theme file with one table per style group, read with `Style.from_toml`. See [Style fields](style-fields.md). An unknown key is rejected.
 
+### `--margin-m`
+
+- Argument: `MARGIN_M`, a number of metres
+- Required: no
+- Help text: metres of ground fetched around the track's extent
+- Description: how far beyond the track's bounding box the features and the elevation grid are fetched, 1500 by default. The land cover is fetched over the larger of 2600 and this margin. Each margin is at most 20 000. A margin that differs from the default gives a different cache key, so the payloads are fetched afresh. The card clips every layer to its own box, so ground fetched beyond the card is never painted.
+
 ### `--no-attribution`
 
 - Argument: none

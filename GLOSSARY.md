@@ -40,6 +40,7 @@ add the term here when you coin one.
 | terms | What one name is priced against where it is tried: the card, the dark grid, the boxes already on the map, the roads it is charged for crossing and the weighted route. `maps.lettering.placement_costs.Terms`. |
 | reference | One entry of docs/explanation/references.md: a technique, its key, its canonical source and design input, and where the code implements it. |
 | fetch cache | The directory a fetch keeps its provider payloads in, keyed on the track's box, the margin and the providers' ids, which also holds each key's plates and lettering. `maps.cache.Cache`. |
+| fetch margins | How far beyond a track's extent the features and elevation, and the land cover, are fetched; each 0 to 20 000 m, the land cover at least the features. `maps.cache.FetchMargins`, held by `Cache.margins`. |
 | provider | A source of map data behind the `Features` or `Elevation` protocol; the shipped ones are `maps.providers.overpass.OverpassFeatures` and `maps.providers.opentopodata.OpenTopoData`. |
 | pigment | A colour a wash or a mark lays, named by its key; what a full-strength wash of it transmits, and what it shows over black as a share of that. `ink.pigment.PIGMENTS`, `TRANSPARENCY`. |
 | pigment layer | One layer of the pigment stack `composite` lays: a density, a pigment colour and optionally its transparency. Not the basemap's layers. `ink.pigment.PigmentLayer`. |

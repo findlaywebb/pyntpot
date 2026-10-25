@@ -70,7 +70,9 @@ def fetch(
 
     Args:
         track: The route to map.
-        cache: Where the provider payloads are cached.
+        cache: Where the provider payloads are cached; its margins say how far beyond
+            the track's extent they are fetched. The card clips every layer to its own
+            box, so ground fetched beyond the card is never painted.
         features: The feature and land cover provider.
         elevation: The elevation provider.
         style: The style; its painter fields fit the card, the ribbon and the
