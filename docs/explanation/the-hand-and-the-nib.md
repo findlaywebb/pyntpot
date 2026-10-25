@@ -16,11 +16,10 @@ change one thing at a time with a `for` loop, so you can see what each number do
 
 A setting says what to write and where. Set along a path, the name starts at the path's
 first point and each glyph sits on the tangent of the line beneath it. The hand does not
-choose the line, reverse it or lift the name off it: whoever builds the setting does.
-
-![A single gently waving line running across cream paper, drawn with a narrow pen nib.](../images/explanation/nib-line.webp)
-
-*Painted by `examples/nib_stages.py` (seed 7, `figure="line"`).*
+choose the line, reverse it or lift the name off it: whoever builds the setting does. In
+the three figures that set the name on that line (the centreline, the ground and the
+backing) the line is drawn as a faint pencil guide under the name, so you can see what the
+name was set along.
 
 ## The hand: a skeleton, written a little differently each time
 
@@ -36,7 +35,7 @@ Each letter leans a shade differently in every word, the baseline drifts, and th
 never held at quite the same angle twice. Each of those draws comes from one generator, so
 one seed and one setting write the same marks.
 
-![The word Keswick written along the line in an even, unmodulated pen line, every stroke the same width.](../images/explanation/nib-centreline.webp)
+![The word Keswick written along a faint pencil guide line in an even, unmodulated pen line, every stroke the same width.](../images/explanation/nib-centreline.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, `figure="centreline"`). The text reads "Keswick".*
 
@@ -85,7 +84,7 @@ The nib plate is its own RGBA plate and is laid over the paper normally, by its 
 not multiplied. A multiply can only darken, and a backing needs to lighten. Over a dark
 wash the name sits in the ground rather than on it.
 
-![The word Keswick written in dark ink over an irregular patch of deep sap green, with a darker band of pigment at its edge. The ink is legible but low in contrast against the green.](../images/explanation/nib-ground.webp)
+![The word Keswick written in dark ink over an irregular patch of deep sap green, with a faint pencil line under the name. The ink is legible but low in contrast against the green.](../images/explanation/nib-ground.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, `figure="ground"`; `Setting(wash=False)`). The ground is one wash of sap green from `PAINTERS_PIGMENTS`, laid on an irregular patch.*
 
@@ -94,7 +93,7 @@ machinery with a pooled rim and a granulated body, lifted under the marks that a
 It exists only where the ground is dark enough to need it, so a name on bare paper has none.
 It reads as paint lifted before the name was written.
 
-![The same word on the same green, with a pale, soft-edged patch of paper showing through the green wash behind the name, so the ink is much clearer.](../images/explanation/nib-backing.webp)
+![The same word and pencil line on the same green, with a pale, soft-edged patch of paper showing through the green wash behind the name, so the ink is much clearer.](../images/explanation/nib-backing.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, `figure="backing"`).*
 

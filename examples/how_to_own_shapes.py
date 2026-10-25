@@ -1,11 +1,13 @@
 """How-to: paint a picture from your own outline and your own path.
 
 A hand-drawn outline of a fell, a list of (x, y) points you could have read from anywhere,
-is rasterised into a coverage mask with Pillow's `ImageDraw`. `wash` lays the mask as a
-wash on the paper in the `water` pigment, a pen nib (`brush_from_id`, `stamp`,
-`ink_density`) strokes the outline's edge as a line, and the hand sets "Skiddaw" along a
-path of your own (a `Setting` with a `path`), which `nib_plate` strokes onto a plate laid
-over the painting by its alpha.
+is rasterised into a coverage mask with Pillow's `ImageDraw`, and the mask is faded out over
+its lowest part so the fell has no ruled foot. `wash` lays the mask as a wash on the paper
+in the `water` pigment, a pen nib (`brush_from_id`, `stamp`, `ink_density`) strokes the
+outline's edge as a line that swells and thins (`stamp`'s `wprof`), and the hand sets
+"Skiddaw" along a path of your own (a `Setting` with a `path`, centred below the fell and
+as long as the name is wide), which `nib_plate` strokes onto a plate laid over the
+painting by its alpha.
 
 Public names it uses, all met in the tutorial: from `pyntpot.ink`, `Sheet`, `Canvas`,
 `PaperStyle`, `BrushStyle`, `PIGMENTS`, `brush_from_id`, `composite`, `ink_density`,
@@ -61,10 +63,17 @@ logger = logging.getLogger(__name__)
 W, H = 480, 320
 GRAN_PX = 3.0
 SEED = 5
+#: The hand's seed, chosen so that the name has even spacing.
+HAND_SEED = 2
 NAME = "Skiddaw"
+#: The size the name is set at, in pixels.
+NAME_PX = 38.0
 STEM = "own_shapes"
 #: How many times larger the nib plate is painted than the picture, before it is downsized.
 NIB_SCALE = 2
+
+#: Where the fell's filled foot is, and how many pixels above it the wash fades out over.
+FOOT, FADE = 262, 60
 
 #: A fell's skyline, left to right, as (x, y) points on the canvas. Yours can come from anywhere.
 SKYLINE: tuple[tuple[float, float], ...] = (
@@ -90,17 +99,21 @@ def _smoothed(points: tuple[tuple[float, float], ...], rounds: int = 3) -> np.nd
 
 
 def _outline_mask(skyline: np.ndarray) -> np.ndarray:
-    """Return the skyline closed along the bottom and filled, as a 0 to 1 coverage mask."""
+    """Return the skyline closed along the bottom and filled, as a 0 to 1 coverage mask that fades out over the lowest `FADE` pixels."""
     image = Image.new("L", (W, H), 0)
     corners = [(float(x), float(y)) for x, y in skyline]
-    ImageDraw.Draw(image).polygon([*corners, (corners[-1][0], 275), (corners[0][0], 275)], fill=255)
-    return np.asarray(image, np.float32) / 255
+    ImageDraw.Draw(image).polygon(
+        [*corners, (corners[-1][0], FOOT), (corners[0][0], FOOT)], fill=255
+    )
+    ramp = np.clip((FOOT - np.arange(H)) / FADE, 0.0, 1.0)[:, None]
+    return np.asarray(image, np.float32) / 255 * ramp
 
 
 def _lettering_path() -> tuple[tuple[float, float], ...]:
-    """Return a gentle rise below the fell, in display pixels, for the name to follow."""
-    x = np.linspace(130, 350, 50)
-    y = 302 - 10 * np.sin(np.pi * (x - 130) / 220)
+    """Return a gentle rise below the fell, in display pixels, as long as the name is wide and centred."""
+    width, _ = Hand(FaceStyle(), HandStyle()).measure(NAME, NAME_PX)
+    x = np.linspace(0.5 * (W - width), 0.5 * (W + width), 50)
+    y = 298 - 8 * np.sin(np.pi * (x - x[0]) / width)
     return tuple((float(px), float(py)) for px, py in zip(x, y, strict=True))
 
 
@@ -126,7 +139,8 @@ def main(out_dir: Path) -> Path:
 
     brush, ink_hex = brush_from_id("MAJ6-e", 3.0, 1.0, BrushStyle())
     acc = np.zeros((H, W), np.float32)
-    stamp(acc, skyline, brush, np.random.default_rng(SEED))
+    swell = 0.65 + 0.35 * np.sin(np.linspace(0.0, 4.5 * np.pi, 24) + 0.5)
+    stamp(acc, skyline, brush, np.random.default_rng(SEED), wprof=swell)
     line_density = ink_density(acc, brush, sheet)
     painted = composite(
         [(density, rgb(PIGMENTS["water"])), (line_density, rgb(ink_hex))], paper, PaperStyle()
@@ -135,12 +149,14 @@ def main(out_dir: Path) -> Path:
     face, hand_style = FaceStyle(), HandStyle()
     hand = Hand(face, hand_style)
     marks: list[Mark] = hand.write(
-        Setting(NAME, 38.0, path=_lettering_path()), hand.generator(SEED)
+        Setting(NAME, NAME_PX, path=_lettering_path()), hand.generator(HAND_SEED)
     )
     canvas2 = Canvas(0, 0, NIB_SCALE * W, NIB_SCALE * H, NIB_SCALE * W, NIB_SCALE * H)
     dark2 = np.zeros((NIB_SCALE * H, NIB_SCALE * W), np.float32)
     surface = NibSurface(canvas2, NIB_SCALE, dark2, GRAN_PX * NIB_SCALE)
-    groups = NibGroups(NibStyle(), face, hand_style, BrushStyle(), PaperStyle())
+    groups = NibGroups(
+        NibStyle(), face, hand_style, BrushStyle(pen_pool_radius_frac=0.15), PaperStyle()
+    )
     plate_path = nib_plate(marks, surface, groups, out_dir / f"{STEM}-plate.webp")
     if plate_path is None:
         raise RuntimeError("the hand wrote no marks")

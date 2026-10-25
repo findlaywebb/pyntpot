@@ -95,7 +95,7 @@ STROKE_PX = 4.0
 FIGURES: tuple[str, ...] = ("sheet", "grid")
 #: The grid's width, its widths of stroke, the ink column it strokes and the treatments' kinds.
 GRID_W, GRID_WIDTHS, GRID_INK = 960, (3.0, 6.0, 12.0), "MAJ{row}-c"
-KINDS = ("wet", "soft", "gritty", "dry", "nib", "pen", "driest", "fine nib")
+KINDS = ("wet", "soft", "gritty", "dry", "nib", "pen", "driest", "light nib")
 #: The grid's cell height, left margin, top margin and gap, in pixels.
 GRID_CELL_H, GRID_LEFT, GRID_TOP, GRID_GAP = 84, 74, 44, 8
 #: How many times its size the nib plate is painted before it is brought down.

@@ -25,9 +25,10 @@ the brush, because a brush has a stroke's weight. The rose is cut where it cross
 centre into five petals; each petal is one stroke of a wet brush (`stamp`'s `wprof` swells it
 from nothing at the centre to full width and back to nothing, so there is no knot at the
 centre), over a wash of its own in `quinacridone_rose` at a density of its own. The
-spirograph is one long stroke in three pigments laid end to end, `ultramarine`, `cerulean`
-and `sap_green`, over a pale `cerulean` wash; `wprof` thins it and the density falls along it,
-so the line runs drier as the brush empties.
+spirograph is one long stroke of one brush, cut into short pieces laid end to end, each a
+step along a blend from `ultramarine` through `cerulean` to `sap_green`, over a pale `cerulean`
+wash for each of its loops (so that crossings deepen); `wprof` thins the stroke and the density
+falls along it, so the line runs drier as the brush empties.
 
 Public names it uses: `PIGMENTS`, `PAINTERS_PIGMENTS`, `PAINTERS_TRANSPARENCY`, `BrushStyle`,
 `Canvas`, `PaperStyle`, `Sheet`, `brush_from_id`, `composite`, `ink_density`, `paper_plate`,
@@ -177,25 +178,41 @@ def _paint_rose(
     )
 
 
+def _loops(points: np.ndarray, count: int, first_cut: int) -> list[np.ndarray]:
+    """Return the closed curve's `count` loops, each from one cut to the next, the first cut at `first_cut`."""
+    return np.array_split(np.roll(points[:-1], -first_cut, axis=0), count)
+
+
+def _mixed(t: float) -> tuple[np.ndarray, float]:
+    """Return the colour and transparency of the spirograph's line `t` of the way along: ultramarine, cerulean, then sap green."""
+    keys = ("ultramarine", "cerulean", "sap_green")
+    i = min(int(t * 2), 1)
+    u = t * 2 - i
+    near, far = rgb(PAINTERS_PIGMENTS[keys[i]]), rgb(PAINTERS_PIGMENTS[keys[i + 1]])
+    t0, t1 = PAINTERS_TRANSPARENCY[keys[i]], PAINTERS_TRANSPARENCY[keys[i + 1]]
+    return near + u * (far - near), t0 + u * (t1 - t0)
+
+
 def _paint_spirograph(
     points: np.ndarray, sheet: Sheet, size: int, rng: np.random.Generator
 ) -> list[PigmentLayer]:
-    """Return the spirograph's layers: a pale wash, then one long stroke in three pigments that runs drier."""
-    layers = [(wash(_cover(points, size), sheet, 0.3, 0.3), "cerulean")]
-    thirds = np.array_split(np.arange(len(points)), 3)
-    for i, (idx, key) in enumerate(
-        zip(thirds, ("ultramarine", "cerulean", "sap_green"), strict=True)
-    ):
-        stop = min(idx[-1] + 2, len(points))
-        part = points[idx[0] : stop]
-        brush, _ = brush_from_id(
-            ("RIV2-a", "TRK3-a", "TRK4-a")[i], 6.0 * size / SIZE, 1.0, BrushStyle()
-        )
+    """Return the spirograph's layers: a pale wash for each loop, then one long stroke that changes colour as it runs drier."""
+    layers: list[PigmentLayer] = [
+        (wash(_cover(loop, size), sheet, 0.2, 0.3), rgb(PAINTERS_PIGMENTS["cerulean"]), 0.22)
+        for loop in _loops(points, 9, 222)
+    ]
+    brush, _ = brush_from_id("TRK3-a", 6.0 * size / SIZE, 1.0, BrushStyle())
+    pieces = np.array_split(np.arange(len(points)), 16)
+    for idx in pieces:
+        t0, t1 = idx[0] / len(points), (idx[-1] + 1) / len(points)
+        part = points[idx[0] : min(idx[-1] + 3, len(points))]
         acc = np.zeros((size, size), np.float32)
-        fade = np.linspace(1.0 - i / 3, 1.0 - (i + 1) / 3, 24)
-        stamp(acc, part, brush, rng, wprof=0.45 + 0.55 * fade)
-        layers.append((ink_density(acc, brush, sheet) * (0.55 + 0.45 * fade.mean()), key))
-    return _stack(layers)
+        stamp(acc, part, brush, rng, wprof=np.linspace(1.0 - 0.55 * t0, 1.0 - 0.55 * t1, 24))
+        colour, clear = _mixed((t0 + t1) / 2)
+        layers.append(
+            (ink_density(acc, brush, sheet) * (1.0 - 0.45 * (t0 + t1) / 2), colour, clear)
+        )
+    return layers
 
 
 def main(out_dir: Path, figure: str = "rose", size: int = SIZE) -> Path:

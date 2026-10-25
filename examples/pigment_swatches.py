@@ -1,10 +1,10 @@
 """The pigment card: every pigment key, laid as a graded strip across a bar of ink, for the reference page.
 
 Each key of `PIGMENTS` gets one cell, in the order `PIGMENTS` holds them, five to a row. A cell is
-a strip of the pigment's wash that deepens from left to right, laid across a band of black ink and
-glazed by Kubelka-Munk, with the key lettered beneath it. Over the paper a pigment shows its
-colour; over the ink bar it shows its transparency: a staining pigment lets the black through, and
-a covering one veils it. `wash` turns each strip's mask into a density, `rgb` turns the pigment's
+a strip of the pigment's wash that deepens from left to right, laid across a crisp, narrow bar of mid grey-brown ink that shows bare beyond the strip's two
+ends, and glazed by Kubelka-Munk, with the key lettered beneath it. Over the paper a pigment
+shows its colour; over the ink bar it shows its transparency: a staining pigment lets the bar
+through, and a covering one veils it. `wash` turns each strip's mask into a density, `rgb` turns the pigment's
 hex into a colour, and `composite` stacks the bar and the strips over the paper with
 `PaperStyle(km_glazing=True)`. The hand letters each key at twice its size and the plate is
 brought down with Lanczos.
@@ -59,7 +59,7 @@ COLUMNS = 5
 #: One cell's width and height, in pixels.
 CELL_W, CELL_H = 192, 124
 #: The strip's width and height, and the ink bar's height across its middle, in pixels.
-STRIP_W, STRIP_H, BAR_H = 164, 64, 22
+STRIP_W, STRIP_H, BAR_H = 164, 64, 10
 #: The size of the paper's granulation noise, in pixels.
 GRAN_PX = 6.0
 #: The seed of the paper's noise, the hand and the dither the file is written with.
@@ -68,8 +68,8 @@ SEED = 11
 NIB_SCALE = 2
 #: The size and the ink of a key's lettering, in pixels.
 KEY_PX, KEY_INK = 21.0, "#3a2c20"
-#: The ink bar's colour.
-BAR_HEX = "#1c1814"
+#: The ink bar's colour: a mid grey-brown, where a covering veil reads as a lightening and a stain as a tint.
+BAR_HEX = "#6a625a"
 
 
 def _letter(img: np.ndarray, settings: list[Setting]) -> np.ndarray:
@@ -130,11 +130,11 @@ def main(out_dir: Path) -> Path:
     ramp = np.linspace(0.2, 1.0, STRIP_W, dtype=np.float32)
     for index, (key, hex_colour) in enumerate(PIGMENTS.items()):
         x, y = _cell_origin(index)
-        bar += _mask(w, h, x, y + (STRIP_H - BAR_H) // 2, BAR_H, inset=-6)
+        bar += _mask(w, h, x, y + (STRIP_H - BAR_H) // 2, BAR_H, inset=-8)
         density = wash(_mask(w, h, x, y, STRIP_H), sheet, 1.0, 0.3)
         density[:, x : x + STRIP_W] *= ramp
         layers.append((density, rgb(hex_colour), TRANSPARENCY[key]))
-    ink: PigmentLayer = (wash(np.clip(bar, 0.0, 1.0), sheet, 1.0, 0.0), rgb(BAR_HEX))
+    ink: PigmentLayer = (np.clip(bar, 0.0, 1.0), rgb(BAR_HEX))
     out = composite([ink, *layers], paper, PaperStyle(km_glazing=True))
 
     keys = [

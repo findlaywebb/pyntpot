@@ -2,7 +2,7 @@
 
 A pigment is a colour a wash or a mark lays, named by its key. This page lists every key of `PIGMENTS` and `TRANSPARENCY` from `pyntpot.ink`.
 
-![The pigment card: fifteen strips in three rows of five, one for each pigment, each strip a wash that deepens from left to right and lies across a band of black ink, with the pigment's key lettered under it. The staining pigments let the black show through at their deep end; the covering greys and browns veil it.](../images/reference/pigment-swatches.webp)
+![The pigment card: fifteen strips in three rows of five, one for each pigment, each strip a wash that deepens from left to right and lies across a narrow bar of grey-brown ink that shows bare past both ends, with the pigment's key lettered under it. The staining pigments let the bar show through at their deep end; the covering greys and browns veil it.](../images/reference/pigment-swatches.webp)
 
 *Painted by `examples/pigment_swatches.py`, seed 11.* The strips read left to right, top to bottom, in the order of the table, and each key is lettered under its strip. Every strip lies across a band of black ink and is glazed by Kubelka-Munk: where the band shows through, the pigment stains, and where it is veiled, the pigment covers.
 

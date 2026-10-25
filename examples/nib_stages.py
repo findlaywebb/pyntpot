@@ -7,9 +7,9 @@ else.
 
 The name, in the order the essay builds it:
 
-- `line`: the line the name is set along, drawn with the narrow nib.
 - `centreline`: the hand's marks, stroked by a nib that is one width the whole way round
-  (`NibStyle.label_pen_thin` of 0).
+  (`NibStyle.label_pen_thin` of 0), over a faint pencil guide of the line the name is set
+  along. The guide is under the name in `ground` and `backing` too.
 - `angles`: a grid, not a stage: the same name written with the nib held at four angles
   (`label_pen_angle_deg`) across and thinned by three amounts (`label_pen_thin`) down, so a
   mark thickens across the nib and thins along it, and the thick and thin strokes change places
@@ -76,7 +76,6 @@ logger = logging.getLogger(__name__)
 
 #: The figures, in the order the essay builds them.
 FIGURES: tuple[str, ...] = (
-    "line",
     "centreline",
     "angles",
     "ground",
@@ -99,6 +98,10 @@ GRAN_PX = 3.0
 SEED = 7
 #: The name the hand writes, and its type size in display pixels at the design width.
 NAME, TYPE_PX = "Keswick", 84.0
+#: How much of the pencil guide shows, as a share of the pen's ink.
+GUIDE_SHARE = 0.3
+#: `BrushStyle.pen_pool_radius_frac` for a wide pen: the library's 0.5 pools ink into a grey halo round the word.
+POOL = 0.15
 #: The nib's default slant, in degrees from the page's horizontal, y down.
 DEFAULT_ANGLE = -38.0
 
@@ -132,8 +135,8 @@ def _name(figure: str, canvas: Canvas, sheet: Sheet, paper: np.ndarray, unit: fl
     ground = _ground(sheet, canvas.w, h) if on_ground else np.zeros((h, canvas.w), np.float32)
     if on_ground:
         paper = composite([(ground, rgb(PAINTERS_PIGMENTS["sap_green"]))], paper, PaperStyle())
-    if figure == "line":
-        return _stroke(paper, sheet, canvas, [_line(canvas.w, h)], BrushStyle(), 1.6)
+    guide = _stroke(paper, sheet, canvas, [_line(canvas.w / unit, h / unit)], BrushStyle(), 1.4)
+    paper = (1 - GUIDE_SHARE) * paper + GUIDE_SHARE * guide
     thin = 0.0 if figure == "centreline" else NibStyle().label_pen_thin
     nib = NibStyle(label_size_px=TYPE_PX, label_pen_angle_deg=DEFAULT_ANGLE, label_pen_thin=thin)
     nib = replace(nib, label_pen_width_px=4.6, label_ink="#241c14", label_wash_spread=0.35)
@@ -146,7 +149,7 @@ def _name(figure: str, canvas: Canvas, sheet: Sheet, paper: np.ndarray, unit: fl
     )
     dark2 = np.repeat(np.repeat(ground, NIB_SCALE, axis=0), NIB_SCALE, axis=1)
     surface = NibSurface(big, NIB_SCALE * unit, dark2, GRAN_PX * NIB_SCALE * unit)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
+    groups = NibGroups(nib, face, hand_style, BrushStyle(pen_pool_radius_frac=POOL), PaperStyle())
     return _lay_plate(marks, surface, groups, paper)
 
 
@@ -205,7 +208,7 @@ def _letter(img: np.ndarray, settings: list[Setting], nib: NibStyle, seed: int) 
     marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
     dark = np.zeros((h * NIB_SCALE, w * NIB_SCALE), np.float32)
     surface = NibSurface(big, NIB_SCALE, dark, GRAN_PX * NIB_SCALE * w / GRID_W)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
+    groups = NibGroups(nib, face, hand_style, BrushStyle(pen_pool_radius_frac=POOL), PaperStyle())
     with tempfile.TemporaryDirectory() as scratch:
         written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
         if written is None:
