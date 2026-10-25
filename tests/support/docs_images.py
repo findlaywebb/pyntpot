@@ -113,6 +113,7 @@ SLICE_SHARE_BYTES: dict[str, int] = {
     "P7.13": 2_700_000,
     "P7.14": 200_000,
     "P7.V10": 300_000,
+    "P7.V12d": 150_000,
 }
 
 #: The most all of `docs/images/` may weigh.
@@ -368,4 +369,22 @@ IMAGES += (
 IMAGES += (
     # P7.V10: the Ambleside hero card, in its showcase theme.
     _place_card("ambleside", "examples/themes/ambleside.toml", None, "P7.V10"),
+    # P7.V12d: the SVG drawing a step at a time (the finished painting is P7.6c's entry above).
+    *(
+        DocsImage(
+            f"painting-with-python/svg-{figure}.webp",
+            "svg_drawing",
+            (("figure", figure),),
+            None,
+            720,
+            "page",
+            encoding,
+            "P7.V12d",
+        )
+        for figure, encoding in (
+            ("flat", "webp-lossless"),
+            ("washes", "webp-lossy"),
+            ("ink", "webp-lossy"),
+        )
+    ),
 )

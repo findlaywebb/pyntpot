@@ -80,7 +80,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Vector drawing: a small drawing, its filled shapes washed and its strokes inked](tutorials/painting-with-python/vector-drawing.md)
 
-![A pale sun, a blue-grey far fell and a green main fell stand above two green banks; a tarn sits on the fell, a pen-ruled wall crosses the left bank, and a track and a beck run down towards two small trees and a pair of birds.](images/painting-with-python/svg-drawing.webp)
+![A pale ochre sun, a blue-grey far fell and a green main fell with a pen skyline stand above two green banks; a tarn sits on the fell's shoulder, a pen-ruled dry-stone wall crosses the left bank, and a track and a beck run down beside two dark green trees and a pair of birds.](images/painting-with-python/svg-drawing.webp)
 
 *Painted by `examples/svg_drawing.py` (seed 5).*
 
