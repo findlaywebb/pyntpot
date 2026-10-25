@@ -352,3 +352,11 @@ hashed JSON); `BasemapStyle` defaults and both field-order rows gained the new n
 "no reader" note narrowed). Edits to files other slices own, kept minimal: none of the
 P7.V2 to P7.V7b slices' files beyond `painter/paper.py` (one signature default and the density
 line), which P7.V2 to P7.V7b do not edit as far as their briefs say.
+## P7.V9b Journal notes (2026-10-25)
+
+`Annotations.notes` (at most 6 `JournalNote`s of at most 60 characters, exported from
+`pyntpot.maps`), seated by the new `maps/lettering/notes.py` (`note_labels`, `seat_notes`) before
+`place` runs; `pipeline.letter` passes their boxes on as taken and puts them after the home glyphs
+in `Lettering.labels`. `best_flat` gains an optional `forms` argument (the import-order test bans importing
+`_place_flat`); `placement.py` is untouched: a note has no baseline, so `off_own_feature` already costs it nothing. ADR 0038, glossary "journal note", test first in
+`tests/unit/maps/lettering/test_notes.py`. No golden moved.

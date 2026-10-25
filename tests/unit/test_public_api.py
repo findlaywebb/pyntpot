@@ -66,6 +66,7 @@ MAPS_PUBLIC: tuple[str, ...] = (
     "Cache",
     "FetchError",
     "FetchMargins",
+    "JournalNote",
     "Lettering",
     "OpenTopoData",
     "OverpassFeatures",
