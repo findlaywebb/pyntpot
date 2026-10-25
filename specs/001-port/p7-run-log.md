@@ -1133,3 +1133,20 @@ coded in parallel with one regeneration (ADR 0036); fetch margins as a `FetchMar
 setting on the cache (ADR 0040); Skye's scale-aware drops and 13 MB budget, Ambleside's
 7 MB; the route blend changed from multiply to normal; the hero has its own calmer theme;
 doubled published widths dropped. Tŷ Melin's point is unconfirmed by the maintainer.
+
+## 2026-10-25 Readable attribution (branch p7v-credit, ADR 0041)
+
+The maintainer found the map credit unreadable at the published scale. It was sized in render
+pixels (11 px on a 2x supersampled card, then Lanczos-downsized to about 5 display px) and its
+nib plate was stroked at scale 1. Now `draw_attribution(image, text, style, scale)` sizes the
+type, padding and margin in display pixels: `max(12, 13 * display_width / 720)`, margin 10;
+the plate is stroked at `NibSurface` scale 2 and Lanczos-shrunk; a line wider than 70% of the
+card breaks at the " · " into two right-aligned lines. Tests: `TestReadable` in
+`tests/unit/maps/test_attribution.py`. Checked by eye on the 720 px Ambleside card (one line,
+58% of the width, readable at 100%).
+
+Fifth golden regeneration (ADR 0041): Lynmouth goldens byte-identical and hash equal (the
+fixture composes without the credit), so `GOLDEN_HASH` is unchanged. Every docs image and
+master that carries the credit was repainted: 14 masters moved, all only inside the
+bottom-right corner block (about 2% of a 240 px master); the lossy 720 px docs files re-encode
+wholesale, as ADR 0033 notes. Place pins and map-styles means: see the gates below.
