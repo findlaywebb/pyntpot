@@ -97,6 +97,7 @@ class Harvest:
     wood_holes: list[list[Pt]] = field(default_factory=list)
     park: list[list[Pt]] = field(default_factory=list)
     lakes: list[list[Pt]] = field(default_factory=list)
+    lake_holes: list[list[Pt]] = field(default_factory=list)
     sea_polys: list[list[Pt]] = field(default_factory=list)
     # Every way of one road, and whether any of it earned the road a place.
     ways: dict[tuple[str, str], list[dict[str, Any]]] = field(default_factory=dict)
@@ -273,7 +274,10 @@ def _coastline(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found:
 
 
 def _area(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harvest) -> None:
-    """Collect a wood, a protected area or a lake into its layer."""
+    """Collect a wood, a protected area or a lake into its layer.
+
+    A lake keeps its inner rings, so an island in the water stays dry land.
+    """
     wood_eps = scope.derived["wood_eps_m"]
     if tags.get("landuse") == "forest" or tags.get("natural") == "wood":
         outer, inner = _area_rings(entry, wood_eps, scope)
@@ -285,9 +289,12 @@ def _area(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
         outer, _ = _area_rings(entry, wood_eps * PARK_EPS_FACTOR, scope)
         found.park += outer
     elif tags.get("natural") in ("water", "bay"):
-        outer, _ = _area_rings(entry, scope.derived["river_eps_m"], scope)
-        target = found.sea_polys if tags.get("natural") == "bay" else found.lakes
-        target += outer
+        outer, inner = _area_rings(entry, scope.derived["river_eps_m"], scope)
+        if tags.get("natural") == "bay":
+            found.sea_polys += outer
+        else:
+            found.lakes += outer
+            found.lake_holes += inner
 
 
 def _area_landmark(

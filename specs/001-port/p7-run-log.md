@@ -447,3 +447,44 @@ P7.V12a removes (the hero and the social preview, painted from Keswick today, mo
 stay). The new Ambleside card adds 43.3 s to `test_places.py`; Oxford and Y Fenni are unchanged in
 cost (51.9 s, 51.5 s); Yr Wyddfa 41.4 s. The golden CI run after the last fixture is dispatched by the
 orchestrating session and not recorded here.
+
+## P7.V2 Water areas keep their islands (2026-10-25, code; regeneration deferred to the group regeneration slice)
+
+**Change.** `Harvest.lake_holes` collects the inner rings of a water multipolygon; `osm.py` writes the
+lake fill as `rings_path(lakes, lake_holes)` (holes wound clockwise, the fill is nonzero); the vector
+export reads the same `water_area` path, so it gains the holes with no code change of its own and no
+existing test pinned its rings. In `rivers.py` a point is in water by a nonzero winding sum over all
+rings (`_in_water`), and `_banks_at` takes the nearest crossing of any ring on each ray
+(`_nearest_bank`), holes included. `layers.py` needed no change: `clip_ring` and `simplify` keep each
+ring's winding (pinned by the new painted-mask test). Bays keep ignoring inner rings. Tests first
+(they failed on the old code): the painted lake mask is bare inside an island, a point on an island is
+not in water, a river beside an island measures 150 m (100 m to the lake edge, 50 m to the island), not
+the 400 m of the envelope. ADR 0036 was not written here (the brief defers it to the group regeneration
+slice); its V2 section text is below.
+
+**Attribution.** Lynmouth (`make_golden.py --compare tests/golden/lynmouth`): paper, wash, pen,
+labels-centreline and map.png all identical, differing fraction 0.000000, manifest hash unchanged:
+Lynmouth's payload holds no holed water, so no Lynmouth golden moves. Oxford card (900 px,
+`examples/place_card.py`, before = base `src`, after = this change), saved as
+`/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/v2-oxford-before.png` and `/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/v2-oxford-after.png`: before, the Cherwell is one solid blue blot
+about 600 render px across, beside the route, drawn as a 160 to 190 px "major" river; after, the
+river is its braided channels (a long loop to the north east and several strands past Magdalen and
+below the route), drawn at the width of each channel, with the islands showing as land. Labels: the
+set is the same eight words (Bridge of Sighs, Magdalen Tower, High Street, A4144, A4158, Cherwell,
+Thames, start) but "Cherwell" is now lettered twice, on two strands, in the river's ink rather than
+white-on-blue, and "Thames" moves to the south west bank; "Magdalen Tower" and "High Street" are
+placed to the right of their markers. The Oxford pin in `tests/golden/test_places.py` is expected to
+move (not edited here).
+
+**Goldens expected to move** (not run, not regenerated): `tests/golden/test_places.py` Oxford (image and
+labels); `test_docs_images.py` `places/oxford.webp` (and any docs image painted from the Oxford
+fixture, such as the gallery card and its master); Lynmouth, the other places and the map-styles
+images do not move.
+
+**Draft ADR 0036 section (P7.V2, water areas keep their islands).** A water multipolygon's inner
+rings are islands. The lake fill carries them as holes wound against the outer rings, so the nonzero
+fill leaves them dry; the river-width measure treats a point inside an island as not in water and
+measures a river's banks to the nearest ring edge of any ring, so a channel beside an island is as
+wide as the water it runs in, not as the lake's outer envelope. This moves every card whose payload
+holds a holed water relation (Oxford's Cherwell: 14 inner rings, 41.1 of 49.2 ha) and no other.
+Regeneration deferred to the group regeneration slice.
