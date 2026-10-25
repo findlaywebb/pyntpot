@@ -111,3 +111,83 @@ class TestSimplify:
             {"lat": 51.2302, "lon": -3.8298},
         ]
         assert len(elements[2]["members"][0]["geometry"]) == 2
+
+
+def _ring(lat: float, lon: float, size: float) -> list[dict[str, float]]:
+    """A closed square ring of `size` degrees whose south-west corner is (lat, lon)."""
+    corners = [(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]
+    return [{"lat": lat + size * a, "lon": lon + size * b} for a, b in corners]
+
+
+def _scale_payload() -> dict[str, Any]:
+    """Roads of several classes and closed ways and relations of several sizes."""
+    small, big = 0.0001, 0.01
+    road = [{"lat": 51.23, "lon": -3.83}, {"lat": 51.24, "lon": -3.82}]
+    elements: list[dict[str, Any]] = [
+        {"type": "way", "id": i, "geometry": road, "tags": {"highway": highway}}
+        for i, highway in enumerate(("trunk", "tertiary", "path", "steps", "service"), 1)
+    ]
+    elements += [
+        {"type": "way", "id": 10, "geometry": _ring(51.23, -3.83, small), "tags": {"landuse": "x"}},
+        {"type": "way", "id": 11, "geometry": _ring(51.23, -3.83, big), "tags": {"landuse": "x"}},
+        {
+            "type": "way",
+            "id": 12,
+            "geometry": _ring(51.23, -3.83, small),
+            "tags": {"natural": "water"},
+        },
+        {
+            "type": "way",
+            "id": 13,
+            "geometry": _ring(51.23, -3.83, small),
+            "tags": {"landuse": "x", "name:gd": "Loch"},
+        },
+        {
+            "type": "relation",
+            "id": 14,
+            "members": [{"type": "way", "role": "outer", "geometry": _ring(51.23, -3.83, small)}],
+            "tags": {"type": "multipolygon", "landuse": "x"},
+        },
+        {
+            "type": "relation",
+            "id": 15,
+            "members": [{"type": "way", "role": "outer", "geometry": _ring(51.23, -3.83, big)}],
+            "tags": {"type": "multipolygon", "landuse": "x"},
+        },
+    ]
+    return {"version": 0.6, "elements": elements}
+
+
+class TestScaleDrops:
+    """`--drop-minor-roads` and `--min-area-m2` drop what a coarse card cannot paint."""
+
+    def test_minor_roads_and_paths_go_and_a_trunk_road_stays(self, tmp_path: Path) -> None:
+        """Tertiary, path, steps and service ways are dropped; the trunk road stays."""
+        path = tmp_path / "overpass-x.json"
+        path.write_text(json.dumps(_scale_payload()), encoding="utf-8")
+        assert main(["--drop-minor-roads", str(path)]) == 0
+        ids = [e["id"] for e in json.loads(path.read_text(encoding="utf-8"))["elements"]]
+        assert ids[0] == 1
+        assert not {2, 3, 4, 5} & set(ids)
+        assert {10, 11, 12, 13, 14, 15} <= set(ids)
+
+    def test_small_areas_go_unless_water_or_named(self) -> None:
+        """Below the area limit a plain closed way and relation go; water and named ones stay."""
+        out = trim_payload(_scale_payload(), min_area_m2=1000.0)
+        ids = {e["id"] for e in out["elements"]}
+        assert not {10, 14} & ids
+        assert {1, 2, 11, 12, 13, 15} <= ids
+
+    def test_no_option_keeps_everything(self) -> None:
+        """Without the options the element count is unchanged."""
+        assert len(trim_payload(_scale_payload())["elements"]) == 11
+
+    def test_a_second_run_is_byte_identical(self, tmp_path: Path) -> None:
+        """Trimming a dropped file again with the same options changes nothing."""
+        path = tmp_path / "overpass-x.json"
+        path.write_text(json.dumps(_scale_payload()), encoding="utf-8")
+        args = ["--drop-minor-roads", "--min-area-m2", "1000", str(path)]
+        main(args)
+        first = path.read_bytes()
+        main(args)
+        assert path.read_bytes() == first
