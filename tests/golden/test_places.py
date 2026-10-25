@@ -9,6 +9,7 @@ from PIL import Image
 
 from pyntpot.maps import (
     Cache,
+    FetchMargins,
     OpenTopoData,
     OverpassFeatures,
     Style,
@@ -18,9 +19,11 @@ from pyntpot.maps import (
     letter,
     paint,
 )
+from pyntpot.maps.cache import LANDCOVER_MARGIN_M, MARGIN_M
 
 from support import REPO_ROOT
 from support.paths import (
+    AMBLESIDE_KEY,
     FIXTURES,
     KESWICK_KEY,
     OXFORD_KEY,
@@ -44,6 +47,9 @@ class Place:
     labels: list[str]
     #: A theme file under the repository root, or empty for the default style.
     theme: str = ""
+    #: The fetch margins the fixture was recorded with, in metres.
+    margin_m: float = MARGIN_M
+    landcover_margin_m: float = LANDCOVER_MARGIN_M
 
 
 #: Each place's labels are the names its style (the default unless `theme` is given) places, pinned
@@ -51,6 +57,21 @@ class Place:
 #: many times a long river is named, and in what order, can shift on a placement near-tie between
 #: platforms (CI placed one "Cherwell" on Oxford where the recording machine placed two).
 PLACES = (
+    Place(
+        "ambleside",
+        AMBLESIDE_KEY,
+        [
+            "Ambleside",
+            "Rydal",
+            "Rydal Bridge",
+            "Rydal Road",
+            "A591",
+            "Rothay",
+            "Brathay",
+            "Hope Church",
+            "start",
+        ],
+    ),
     Place(
         "keswick",
         KESWICK_KEY,
@@ -77,8 +98,6 @@ PLACES = (
         "yr-wyddfa",
         YR_WYDDFA_KEY,
         [
-            "Llanberis",
-            "Nant Peris",
             "Afon Arddu",
             "Afon Nant Peris",
             "A4086",
@@ -88,19 +107,20 @@ PLACES = (
             "start",
             "finish",
         ],
+        margin_m=3000.0,
+        landcover_margin_m=3000.0,
     ),
     Place(
         "oxford",
         OXFORD_KEY,
         [
             "Cherwell",
-            "Cherwell",
-            "Holywell Mill Stream",
+            "Thames",
+            "A4144",
             "A4158",
-            "B480",
-            "Tom Tower",
-            "Christ Church",
+            "High Street",
             "Magdalen Tower",
+            "The Bridge of Sighs",
             "start",
         ],
     ),
@@ -111,11 +131,9 @@ PLACES = (
             "Y Fenni",
             "Llan-ffwyst",
             "Afon Wysg",
-            "Afon Wysg",
             "Gavenny River",
             "A40",
-            "B4246",
-            "United Reformed Church",
+            "Abergavenny Baptist Church",
             "Methodist Church",
             "Borough Theatre",
             "start",
@@ -133,7 +151,7 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
     features = OverpassFeatures(CONTACT, ("http://127.0.0.1:9/api/interpreter",), budget=0)
     elevation = OpenTopoData(CONTACT, "http://127.0.0.1:9", budget=0)
     track = Track.from_gpx(cache_dir / "track.gpx")
-    cache = Cache(cache_dir)
+    cache = Cache(cache_dir, FetchMargins(place.margin_m, place.landcover_margin_m))
     style = Style.from_toml(REPO_ROOT / place.theme) if place.theme else Style.default()
     assert cache.key(track, features, elevation) == place.key
     before = sorted(p.name for p in cache_dir.iterdir())
@@ -142,6 +160,13 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
     plates = paint(basemap, style, cache.plates_dir(place.key))
     lettering = letter(plates, basemap, None, style)
     card = compose(plates, lettering, basemap, style)
+
+    if place.margin_m != MARGIN_M:
+        south, west, north, east = track.bounding_box(place.margin_m)
+        (x0, y0), (x1, y1) = basemap.projection(south, west), basemap.projection(north, east)
+        card_x0, card_y0, card_x1, card_y1 = basemap.card.box
+        assert x0 <= card_x0 <= card_x1 <= x1
+        assert y0 <= card_y0 <= card_y1 <= y1
 
     names = {label.name for label in lettering.labels}
     assert names == set(place.labels)

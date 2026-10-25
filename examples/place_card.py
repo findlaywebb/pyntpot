@@ -8,6 +8,10 @@ that `card.display_px` and paints the card at it, so the pixel grid, and with it
 hand's lettering, is set for that width. The track, the cache and the providers are the
 ones `route_map.py` takes, and the four stages are the same.
 
+`margin_m` and `landcover_margin_m` are the fetch margins the place's cache was recorded
+with, in metres (the library's defaults when absent), for a place recorded wider; `place` names
+the place's fixture.
+
 The README's hero is the Keswick card at 1200 pixels. The five place cards of the gallery,
 Keswick, the Quiraing on Trotternish, Yr Wyddfa, Oxford and Y Fenni, are painted at 720.
 Y Fenni takes `examples/themes/y-fenni.toml`, which letters the Welsh name where
@@ -28,6 +32,7 @@ from pathlib import Path
 
 from pyntpot.maps import (
     Cache,
+    FetchMargins,
     OpenTopoData,
     OverpassFeatures,
     Style,
@@ -53,6 +58,9 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
     elevation: OpenTopoData,
     theme: str | None = None,
     size: int = 900,
+    margin_m: float | None = None,
+    landcover_margin_m: float | None = None,
+    place: str | None = None,
 ) -> Path:
     """Paint a place's route map at a display width, in a theme if one is named, and save the card.
 
@@ -65,6 +73,11 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
         theme: A TOML theme file, as a path relative to the repository's top directory;
             `Style.default()` when absent.
         size: The card's display width in pixels.
+        margin_m: How far beyond the track's box the features and elevation are fetched, in
+            metres; the library's default when absent.
+        landcover_margin_m: The same for land cover; the larger of its default and
+            `margin_m` when absent. Both must match what the cache was recorded with, as they are part of its key.
+        place: The name of the place's fixture, kept for the caller; the card does not read it.
 
     Returns:
         The path of the saved card, `out_dir / "map.png"`.
@@ -72,7 +85,12 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
     base = Style.from_toml(REPO_ROOT / theme) if theme else Style.default()
     style = base.model_copy(update={"card": replace(base.card, display_px=size)})
     route = Track.from_gpx(track)
-    cache = Cache(cache_dir)
+    defaults = FetchMargins()
+    features_m = defaults.features_m if margin_m is None else margin_m
+    landcover_m = (
+        max(defaults.landcover_m, features_m) if landcover_margin_m is None else landcover_margin_m
+    )
+    cache = Cache(cache_dir, FetchMargins(features_m, landcover_m))
     basemap = fetch(route, cache, features, elevation, style)
     plates = paint(basemap, style, cache.plates_dir(cache.key(route, features, elevation)))
     lettering = letter(plates, basemap, None, style)
@@ -96,6 +114,9 @@ if __name__ == "__main__":
         "--theme", help="a TOML theme file, relative to the repository's top directory"
     )
     parser.add_argument("--size", type=int, default=900, help="the card's display width in pixels")
+    parser.add_argument("--margin-m", type=float, help="feature and elevation margin, metres")
+    parser.add_argument("--landcover-margin-m", type=float, help="land cover margin, metres")
+    parser.add_argument("--place", help="the name of the place's fixture")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
     main(
@@ -106,4 +127,7 @@ if __name__ == "__main__":
         elevation=OpenTopoData(args.contact),
         theme=args.theme,
         size=args.size,
+        margin_m=args.margin_m,
+        landcover_margin_m=args.landcover_margin_m,
+        place=args.place,
     )

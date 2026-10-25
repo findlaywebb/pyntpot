@@ -19,9 +19,10 @@ FIXTURE_DIR: Path = _TESTS / "fixtures" / "lynmouth"
 #: each fixture's payload files. Each directory beside the Lynmouth one is `FIXTURES / <name>`.
 KESWICK_KEY: str = "f2f4692b66d96eb9"
 TROTTERNISH_KEY: str = "70696067aa04a7f8"
-YR_WYDDFA_KEY: str = "9d5b52c0487d3b95"
-OXFORD_KEY: str = "60d89f40f4793100"
-Y_FENNI_KEY: str = "e634bd2f1a4ded97"
+YR_WYDDFA_KEY: str = "353c7a77ae84f4c1"
+OXFORD_KEY: str = "edf326cc49d5cc52"
+Y_FENNI_KEY: str = "31d229011257f9fa"
+AMBLESIDE_KEY: str = "f0a137ce97afcb43"
 
 #: The directory holding every fixture, Lynmouth's included.
 FIXTURES: Path = _TESTS / "fixtures"
