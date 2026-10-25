@@ -67,19 +67,20 @@ table sets a `style`, and the route is drawn either as a plain `solid` line or a
 stroke, tinted from a plate the pen painted. A pen reads as hand-inked, and which brush
 it uses decides how: a wet brush lays an even line and a dry one breaks up along its length.
 
-![Twelve small copies of the Ambleside card in three rows of four. The columns are the route in maroon, in the default pink, in indigo and in burnt sienna. The top row draws the route as a plain solid line, the middle row as a wet pen line and the bottom row as a dry pen line that thins and breaks.](../images/how-to/route-ink-grid.webp)
+![Six small copies of the Ambleside card, each cropped to the loop, in two rows of three. The columns are the route in maroon, in indigo and in burnt sienna and are lettered so; the rows are a wet pen line and a dry pen line that thins and breaks, lettered wet pen and dry pen.](../images/how-to/route-ink-grid.webp)
 
-*Painted by `examples/how_to_route_ink.py`, `figure="grid"`, in `examples/themes/ambleside.toml`. The rows are a solid line, a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, the default pink `#c22050`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`.*
+*Painted by `examples/how_to_route_ink.py`, `figure="grid"`, in `examples/themes/ambleside.toml`. The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`.*
 
-A `for` loop paints it. The pen's brush is part of what `paint` draws, so the plates are
-painted once for each brush, each set in its own directory, and the twelve cells are twelve
-`compose` calls over them. The colour changes with `with_route_ink` and the treatment by
-replacing the ride ink's `style`:
+Each cell is the card cropped to the loop, which a few `ribbon` fields do, and the route is
+drawn in the theme's `normal` blend: a `multiply` route darkens over a river until every colour
+reads as black. A `for` loop paints the grid. The pen's brush is part of what `paint` draws, so
+the plates are painted once for each brush, each set in its own directory, and the six cells are
+six `compose` calls over them. The colour changes with `with_route_ink`:
 
 <!-- from examples/how_to_route_ink.py -->
 ```python
-    for treatment, brush in ROWS:
-        row = _row_style(small, treatment, brush)
+    for _, brush in ROWS:
+        row = _row_style(small, brush)
         plates = paint(basemap, row, key_dir / brush)
         cells.append(
             [
@@ -90,7 +91,7 @@ replacing the ride ink's `style`:
                     row.with_route_ink(colour=colour),
                     attribution=False,
                 )
-                for colour in COLOURS
+                for _, colour in COLOURS
             ]
         )
 ```

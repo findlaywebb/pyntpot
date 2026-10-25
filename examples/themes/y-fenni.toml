@@ -192,12 +192,12 @@ supersample = 2
 dark_grid = [80, 60]
 
 [ribbon]
-ribbon_k = 7.15
-ribbon_c = 158.0
+ribbon_k = 4.0
+ribbon_c = 60.0
 ribbon_mult = 2.4
-ribbon_min_m = 420.0
+ribbon_min_m = 260.0
 ribbon_max_m = 1250.0
-card_grow_mult = 1.55
+card_grow_mult = 0.9
 card_pad_frac = 0.09
 card_pad_ribbon_frac = 0.55
 card_aspect_min = 1.12
@@ -237,7 +237,7 @@ wood = [0.72, 0.3]
 works = [0.58, 0.22]
 
 [cover.pigments]
-built = "#eaa27c"
+built = "#f1c9a6"
 farmland = "#d4c36e"
 heath = "#c98a5a"
 meadow = "#b5c26e"
@@ -265,7 +265,7 @@ colour = "#7b2335"
 
 [route_inks.run.effect]
 adaptive_pct = 0
-blend = "multiply"
+blend = "normal"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0
@@ -280,7 +280,7 @@ colour = "#7b2335"
 
 [route_inks.ride.effect]
 adaptive_pct = 0
-blend = "multiply"
+blend = "normal"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0
@@ -295,7 +295,7 @@ colour = "#7b2335"
 
 [route_inks.swim.effect]
 adaptive_pct = 0
-blend = "multiply"
+blend = "normal"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0
@@ -310,7 +310,7 @@ colour = "#7b2335"
 
 [route_inks.other.effect]
 adaptive_pct = 0
-blend = "multiply"
+blend = "normal"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0

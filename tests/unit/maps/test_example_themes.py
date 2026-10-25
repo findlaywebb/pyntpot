@@ -15,6 +15,7 @@ THEME_NAMES = (
     "bold",
     "winter",
     "ambleside",
+    "ambleside-hero",
     "skye",
     "yr-wyddfa",
     "oxford",
@@ -53,14 +54,14 @@ class TestShowcaseThemes:
 
     @pytest.mark.parametrize("name", SHOWCASE_NAMES, ids=SHOWCASE_NAMES)
     def test_the_route_is_the_maroon_wet_pen(self, name: str) -> None:
-        """The route is the MAJ1-e pen in maroon, multiplied, with no glow, casing or shadow."""
+        """The route is the MAJ1-e pen in maroon, in the normal blend, with no glow, casing or shadow."""
         style = Style.from_toml(THEMES_DIR / f"{name}.toml")
         ink = style.route_ink()
 
         assert style.route.route_pen_brush == "MAJ1-e"
         assert ink.colour == "#7b2335"
         assert style.nib.label_route_ink == "#7b2335"
-        assert ink.effect["blend"] == "multiply"
+        assert ink.effect["blend"] == "normal"
         assert {ink.effect[key] for key in ("glow_px", "casing_px", "shadow_px")} == {0}
 
     @pytest.mark.parametrize("name", SHOWCASE_NAMES, ids=SHOWCASE_NAMES)
