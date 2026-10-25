@@ -727,3 +727,45 @@ code; the goldens are regenerated once after the five parallel engine fixes), RE
 labels on bare paper ("Snizort", "Sligachan" are sea lochs); two museums are the only landmarks named; grey
 foxing at the edge. Gates: prek, `-m "not golden"` and `-m golden --golden-tolerance`; the exact
 27-minute golden run was skipped this time by instruction.
+
+## P7.V12c Painting with Python: trees, the fern family, brushed curves (2026-10-25)
+
+Deleted `examples/gasket.py`, its image and master, its test cases and its page section.
+New `examples/trees.py` (`figure="tree"` and `"family"`) and `examples/fern_family.py`;
+`examples/curves.py` paints the rose and the spirograph with the brush (the Lissajous figure keeps
+the pen and its old code path, so its image moves only with the engine fixes). `examples/fern.py`
+is untouched.
+
+**Trees.** A limb is a path of 14 points that bends (drawn up when young, sagging when old) and
+splits into two limbs, now and then three, to depth 6; the straightest child carries on its
+parent's stroke, so a stroke is one `stamp` call with `wprof` from the chain's widths and there is
+no step at a joint. Limbs to depth 3 are a wet brush (`RIV2-a`, `BrushStyle(brush_organic,
+stroke_smooth)`), thinner limbs are a nib (`MAJ6-e`, floor width 0.55 px) taking up at the brush's
+end point. The canopy is two `sap_green` washes and one `yellow_ochre` wash over discs at the last
+three depths' tips, then short `RIV1-a` dabs in `sap_green` and a few in `indigo`; the trunk has a
+`perylene_maroon` shade stroke; the ground is a tapering dry `TRK4-d` stroke in `raw_sienna`. Every
+tree is fitted to its cell (80 per cent of the width and the height) before it is painted. Depth 7
+was tried and dropped: at cell size the twigs closed into a dark clot under the glaze.
+**Cell cost.** The family paints nine 240 by 320 cells: about 9 s against about 3 s for the tree
+at 600 by 800, and 4 s for the fern family (nine 300 by 400 cells).
+
+**Fern family.** The fern's own pipeline per cell (counts, `_thicken`, `wash` in `scrub` and `wood`,
+sharper veins, dabs), points and dabs in proportion to the cell's area, with `perturbed` turning the
+frond map 0.5 to 5.5 degrees, scaling it 0.835 to 0.865, moving its rise by 6 per cent and each leaflet
+matrix entry by 6 per cent. The fern family is published 900 px wide, because at 720 px the cells'
+pinnae gaps closed under the wash's fixed 2.4 px blur and the ferns lost the fern's character.
+
+**Curves.** The rose is cut at the centre into five petals; each petal is one `RIV2-a` stroke with a
+sine `wprof` (no knot at the centre), a `quinacridone_rose` wash of its own, out of register by a few
+pixels and deeper toward the centre, and the strokes are `perylene_maroon`. The spirograph is one stroke
+in three pieces, `ultramarine`, `cerulean` and `sap_green`, on a pale `cerulean` wash, the later
+pieces drier brushes (`TRK3-a`, `TRK4-a`) with `wprof` and density falling, so it breaks up at the end.
+
+**Pins.** Added `painting-with-python/tree.webp` (600 px), `tree-family.webp` (720) and
+`fern-family.webp` (900) with their masters, and regenerated `curves/rose.webp` and
+`curves/spirograph.webp`; removed `gasket.webp` and its master; one registry block, `P7.V12c`, share
+600 000 bytes. The images' sizes are 41 KB, 76 KB and 120 KB.
+
+**Not done.** A for-loop grid for the curves page (for example a rose with 3, 5 and 7 petals) is not
+painted; the families are the page's for-loop grids. The fern family keeps the fern's own pigments
+(`wood`, `scrub`), not painter's pigments, to stay one family with `fern.webp`.
