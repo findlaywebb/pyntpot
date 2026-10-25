@@ -229,7 +229,7 @@ today, and pulling them in would collide with P7.V12c.
 **S5. P7.V12a: two Keswick residues the grep cannot see.**
 
 - **The coordinate gate's self-test.** `test_a_pair_split_across_two_boxes_is_caught`
-  (`test_coordinates.py:108-111`) asserts that `"lat 54.60 lon -3.15"` (the Keswick box)
+  (`test_coordinates.py:108-111`) asserts that a latitude and longitude pair inside the Keswick box
   is in a box, and pairs it with Trotternish's longitude. It goes red when the two boxes
   are deleted, and the owner text says "the two entries" only. Name it: it is rewritten
   with Ambleside's and Skye's values.
