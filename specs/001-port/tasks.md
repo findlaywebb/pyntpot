@@ -230,6 +230,7 @@ Not part of the port. Each item becomes its own spec under `specs/` when it is t
 - [ ] A public SVG reader in `ink` (`docs/features/ink-read-svg-drawings.md`)
 - [ ] Themes shipped in the package and chosen by name (`docs/features/maps-named-themes.md`)
 - [ ] A wider command line: theme cloning and checking, reference sheets, lettering, SVG drawings (`docs/features/cli-wider-commands.md`)
+- [ ] Bring the README hero to 5 of 5: small cover patches and the river-start blob (`docs/issues/maps-cover-small-patches-speckle.md`, `docs/issues/maps-river-start-pools-into-a-blob.md`)
 - [ ] Retire Lynmouth as the test place once the API and the goldens are stable, moving the goldens and tests to the focus places (`docs/features/tests-retire-lynmouth.md`)
 
 ## P10. Triage and address the port's issues
