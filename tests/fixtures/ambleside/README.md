@@ -1,8 +1,7 @@
 # Ambleside fixture
 
-A synthetic track for the Loughrigg circuit. Its provider payloads are not yet recorded:
-this directory holds the track only. It will serve the golden place cards
-(`tests/golden/test_places.py`) once recorded.
+A synthetic track for the Loughrigg circuit and the provider payloads cached for it. Used by
+the golden place cards (`tests/golden/test_places.py`).
 
 ## The track
 
@@ -35,15 +34,24 @@ length 5 to 9 km (9.00 km).
 | File | What it is |
 |---|---|
 | `track.gpx` | The generated track. |
+| `overpass-f0a137ce97afcb43.json` | OSM features for the feature box, from Overpass. |
+| `landcover-f0a137ce97afcb43.json` | OSM land cover for the wider land cover box, from Overpass. |
+| `elevation-f0a137ce97afcb43.json` | 80 by 80 SRTM grid over the feature box, from OpenTopoData. |
 
-The payloads (`overpass-<key>.json`, `landcover-<key>.json`, `elevation-<key>.json`) are
-recorded with the default margins by a later step, which also fills in the boxes and sizes below.
+Each payload is named `<kind>-<key>.json`, where the key is the fetch cache key of
+this track with the shipped Overpass and OpenTopoData (`srtm30m`) providers, so a
+cache over a copy of this directory finds every payload and fetches nothing.
 
 ## Source
 
 - **Ways**: fetched from the Overpass mirror
   `https://maps.mail.ru/osm/tools/overpass/api/interpreter` (the usual `overpass-api.de` resets
   connections from the recording environment) by `make_track.py`; ids and versions below.
+- **OSM features and land cover**: the same mirror, two queries; the shipped provider's id is
+  `overpass` whatever its endpoint, so the payloads carry the default key. The land cover query
+  was refused twice with 504 and answered on the third try.
+- **Elevation**: SRTM 30 m (`srtm30m` dataset) via the OpenTopoData public API at
+  `https://api.opentopodata.org/v1/srtm30m`. 64 calls of 100 points.
 - **Contact string sent**: `https://github.com/findlaywebb/pyntpot`.
 - **Fetched**: 2026-10-25.
 
@@ -54,6 +62,13 @@ South, west, north, east, in degrees.
 | Box | South | West | North | East |
 |---|---|---|---|---|
 | Track points lie inside (rounded outward to 0.01) | 54.43 | -3.02 | 54.45 | -2.96 |
+| Features and elevation (track plus 1500 m) | 54.417448 | -3.038709 | 54.459354 | -2.940005 |
+| Land cover (track plus 2600 m) | 54.407497 | -3.055700 | 54.469305 | -2.923014 |
+
+Fetched at the library's default margins (1,500 m for the features and elevation, 2,600 m for land cover); the card box lies inside the features box.
+
+Overpass returns full geometry for every way and relation touching a box, so the two
+Overpass payloads hold coordinates well outside these boxes.
 
 ## Ways
 
@@ -132,9 +147,28 @@ part between two of its node ids, in that direction), found with `--list-ways`:
 | 1513570087 | 2 | residential | - | Vicarage Road |
 | 1513570229 | 1 | residential | - | Vicarage Road |
 
+## Size
+
+The payloads are committed trimmed (`tests/fixtures/trim_fixture.py`: minified, only the fields
+and tags the code reads). The budget is 7,000,000 bytes on disk for the directory (the 6,000,000 bytes of the other walking maps
+would not hold this one: land cover on the fells is dense), enforced by `tests/architecture/test_coordinates.py`.
+
+| File | Bytes | Gzip bytes |
+|---|---|---|
+| `elevation-f0a137ce97afcb43.json` | 45,649 | 10,781 |
+| `landcover-f0a137ce97afcb43.json` | 4,869,967 | 792,667 |
+| `overpass-f0a137ce97afcb43.json` | 1,624,907 | 320,303 |
+| `track.gpx` | 21,855 | 3,402 |
+| **Total, README excluded** | **6,562,378** | **1,127,153** |
+
 ## Licences and attribution
 
 Contains OpenStreetMap data © OpenStreetMap contributors, available under the Open
 Database Licence (openstreetmap.org/copyright).
 
-`track.gpx` is a derivative database of OpenStreetMap and is distributed under the ODbL.
+`track.gpx` and the two Overpass payloads are a derivative database of OpenStreetMap and
+are distributed under the ODbL.
+
+Elevation data: NASA JPL. (2013). *NASA Shuttle Radar Topography Mission Global 1 arc
+second* [Dataset]. NASA Land Processes Distributed Active Archive Center.
+https://doi.org/10.5067/MEASURES/SRTM/SRTMGL1.003
