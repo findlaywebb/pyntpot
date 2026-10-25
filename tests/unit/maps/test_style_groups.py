@@ -42,6 +42,7 @@ PINNED: dict[type, tuple[str, ...]] = {
         "paper_worn",
         "paper_vignette",
         "paper_foxing",
+        "paper_edge",
         "sheet_seed",
         "km_glazing",
         "pigment_transparency",
@@ -247,7 +248,7 @@ PINNED: dict[type, tuple[str, ...]] = {
 #: pinned digest of its default fields: the first 16 hex digits of the SHA-256
 #: of the fields as sorted-key JSON, which tells `0.2` from `0`.
 SOURCED: dict[type, str] = {
-    PaperStyle: "fe2d6474dad3b304",
+    PaperStyle: "b47c9c6b3a8c1505",
     WashStyle: "e160d14a7793f90a",
     BrushStyle: "4160d6cacd208480",
     FaceStyle: "760ec6039a286528",

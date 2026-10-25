@@ -609,3 +609,41 @@ route by `strand_gap_px(style)`, the pen's gap when the pen plate is the route s
 solid route read the line the pen painted. Moved: the pen plate of every card with a doubled-back track.
 
 Regeneration deferred to the group regeneration slice.
+
+## 2026-10-25 P7.V7b The paper's edge and foxing (code; regeneration deferred)
+
+`PaperStyle.paper_edge: Literal["classic", "warm"] = "warm"` (not in `DIGEST_OMITS_AT_DEFAULT`),
+`default.toml` `[paper]` names it. `"classic"` is the old arithmetic (hash pinned from the base,
+`ae150866b4642275`); `"warm"` draws the same two fields in the same order (the generator ends in
+the same state, tested), narrows the vignette to `w * 0.08 * (0.5 + n26)`, darkens the worn
+border and vignette through `PAPER_EDGE_TINT` (#b08a5a-ish), and foxes with the top 0.3%
+(`FOX_SPECK_AREA`) of `sheet.gran` by rank, weighted `0.4 + 0.6 * n120`, tinted `PAPER_FOX_TINT`
+(#9a5a32-ish). Also: `paper_foxing=0.0` in `pigment_swatches`, `brush_sheet`, `wash_stages`,
+`nib_stages` (their `paper_plate` call); `DocsImage.quality` threaded through `_encode`
+(no entry sets it). Docs images not regenerated.
+
+**Pins moved**: default style digests `25ae6fee082ebff5` -> `d7997015c8df9b37`, base
+`e5a5f1b4b3ca2177` -> `d9c56c0811177b0f`, lettering `d15ae2f30e9ca5ce` unchanged; `PaperStyle`
+group digest `fe2d6474dad3b304` -> `b47c9c6b3a8c1505`; smoke `paper` hash -> `e044d9c4...369ce`
+(`wash`, `pen` unchanged, so `tests/golden/smoke/wash.webp` is unchanged).
+`GOLDEN_HASH` in `test_pipeline_fetch_paint.py` (golden-marked) still names the old base digest:
+the regeneration slice sets it to `340a7f6e260ee1e2-d9c56c0811177b0f`.
+
+**Attribution** (Lynmouth, scratch `engine/after-v7b`): paper 0.99999 of pixels moved; wash
+0.000645; pen 0.000120; labels-centreline 0.0777; map.png 0.960. Manifest hash `340a7f6e260ee1e2-d9c56c0811177b0f`
+(base digest only). `labels.txt` identical with and without the change. The interior brightens
+(card centre RGB 0.940/0.905/0.828 -> 0.954/0.919/0.840): the vignette's narrowing; the classic
+smudges are gone; specks added. Job sheet: foxed pixels 0.30%, largest speck 21 render px
+(grain 22.4) = about 10.5 display px, for P7.V13. Pictures: `engine/cmp-lynmouth.png`,
+`engine/cmp-wash.png`, `engine/cmp-fern.png` (before left, after right). The edge browns,
+narrow and uneven; specks are small rust dots.
+
+**Expected to move at regeneration**: all of `tests/golden/lynmouth/*`, places, map styles, every
+docs image and master (the fern included).
+
+**Draft ADR 0036 section (P7.V7b)**: "The paper browns at its edge and foxes in specks. The grey
+vignette and broad grey smudges are replaced, by default, with a narrow warm edge and small rust
+specks (`paper_edge = "warm"`); `"classic"` keeps the old paper. The draws are unchanged, so
+later fields keep their values. Moves every image and the default style's full and base digests."
+
+Regeneration deferred to the group regeneration slice.

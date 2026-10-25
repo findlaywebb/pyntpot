@@ -57,7 +57,7 @@ def main(out_dir: Path) -> Path:
     rows = -(-len(PIGMENTS) // COLUMNS)
     w, h = COLUMNS * CELL, rows * CELL
     sheet = Sheet(h, w, GRAN_PX, SEED)
-    paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(), w)
+    paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
 
     layers: list[PigmentLayer] = [
         (wash(_disc(index, w, h), sheet, 0.8, 0.3), rgb(hex_colour))
