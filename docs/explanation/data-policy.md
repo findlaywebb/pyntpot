@@ -24,7 +24,7 @@ lettered in the style's hand. It joins each source's short credit with a middle 
 line carries the URL because the guidelines ask for it on a static or printed image, where a
 link cannot be followed.
 
-![The Keswick card with its credit lettered small at the bottom right corner, below the foot of the route.](../images/places/keswick.webp)
+![The Ambleside card with its credit lettered small at the bottom right corner, below the foot of the route.](../images/places/ambleside.webp)
 
 *Painted by `examples/place_card.py`. The credit is the small line at the bottom right.*
 

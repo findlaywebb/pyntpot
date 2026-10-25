@@ -25,27 +25,27 @@ network connection for the first run only.
    two, most of it pauses the public servers ask for. The log goes to standard error:
 
    ```text
-   cached overpass-f2f4692b66d96eb9.json, 2816505 bytes
-   cached landcover-f2f4692b66d96eb9.json, 3777758 bytes
+   cached overpass-f173b2f7a20bb9d4.json, 839288 bytes
+   cached landcover-f173b2f7a20bb9d4.json, 1102966 bytes
    elevation 100/6400
    elevation 200/6400
    ...
-   cached elevation-f2f4692b66d96eb9.json, 43998 bytes
+   cached elevation-f173b2f7a20bb9d4.json, 44543 bytes
    wrote out/route.png
    ```
 
    The 16 characters in the file names are the cache key for your route's box, and the byte
-   counts differ for every route; these are the Keswick track's.
+   counts differ for every route. These are the sizes of the Lynmouth track's payloads as the repository stores them, trimmed to what pyntpot reads, so a fresh fetch of the same route reports larger ones.
 
 3. Open `out/route.png`. It is the route map card: the land painted in washes, the pen
-   plates for roads and water, the names lettered by hand, your route in crimson, and the
+   plates for roads and water, the names lettered by hand, your route in pink, and the
    data credit at the bottom right.
 
 4. Run the same command again. The cache holds the payloads and the painted plates, so
    nothing is fetched or repainted and the card is composed in a few seconds:
 
    ```text
-   plates in cache/plates/f2f4692b66d96eb9 are current, nothing repainted
+   plates in cache/plates/f173b2f7a20bb9d4 are current, nothing repainted
    wrote out/route.png
    ```
 
@@ -56,7 +56,7 @@ the duty to credit then falls to you.
 
 ## Result
 
-![The Keswick route map card: a looping route in crimson over washes of green and blue, with rivers, roads and names lettered by hand.](../images/gallery/route-map.webp)
+![The Lynmouth route map card: a pink route over washes of green and blue, with the river, roads and names lettered by hand.](../images/how-to/command-line.webp)
 
 *Painted by `examples/route_map.py`, which makes the same card as the command.*
 

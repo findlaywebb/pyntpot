@@ -10,14 +10,14 @@ online run of the same track, such as the command in
 
 ## Steps
 
-1. Look at what the first run left in the cache directory. For the Keswick track:
+1. Look at what the first run left in the cache directory. For the Ambleside track:
 
    ```text
    cache/
-   ├── overpass-f2f4692b66d96eb9.json
-   ├── landcover-f2f4692b66d96eb9.json
-   ├── elevation-f2f4692b66d96eb9.json
-   └── plates/f2f4692b66d96eb9/
+   ├── overpass-f0a137ce97afcb43.json
+   ├── landcover-f0a137ce97afcb43.json
+   ├── elevation-f0a137ce97afcb43.json
+   └── plates/f0a137ce97afcb43/
        ├── paper.webp
        ├── wash.webp
        ├── pen.webp
@@ -66,7 +66,7 @@ The run logs that the plates are current and writes the card in a few seconds, w
 request sent:
 
 ```text
-plates in cache/plates/f2f4692b66d96eb9 are current, nothing repainted
+plates in cache/plates/f0a137ce97afcb43 are current, nothing repainted
 wrote out/route.png
 ```
 
@@ -89,7 +89,7 @@ wrote out/route.png
   compare it with the file names.
 - `FetchError: a provider could not answer: opentopodata-srtm30m would pass its budget of 0 calls`:
   the same, for the elevation payload.
-- `FetchError: no cached features for key f2f4692b66d96eb9: cache/overpass-f2f4692b66d96eb9.json is missing`:
+- `FetchError: no cached features for key f0a137ce97afcb43: cache/overpass-f0a137ce97afcb43.json is missing`:
   the feature payload was removed or moved while the run was in progress. Run again.
 - The run fetches although you copied the cache: the dataset of your `OpenTopoData` differs
   from the one that fetched (its id is `opentopodata-<dataset>`), or your GPX file is not

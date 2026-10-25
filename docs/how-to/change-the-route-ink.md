@@ -19,7 +19,7 @@ script, or in a theme ([Write a theme](write-a-theme.md)).
    ```
 
    Either argument may be left out to keep the theme's value. The default theme's route is
-   a crimson `#c22050`, 5.4 pixels wide.
+   a pink `#c22050`, 5.4 pixels wide.
 
 2. Pass that one `style` to every stage, where the script passed `Style.default()`:
 
@@ -38,7 +38,7 @@ script, or in a theme ([Write a theme](write-a-theme.md)).
    `paint` logs that it repainted nothing and the run takes seconds:
 
    ```text
-   INFO:pyntpot.maps.pipeline:plates in cache/plates/f2f4692b66d96eb9 are current, nothing repainted
+   INFO:pyntpot.maps.pipeline:plates in cache/plates/f0a137ce97afcb43 are current, nothing repainted
    INFO:__main__:wrote out/route_ink.png
    ```
 
@@ -47,7 +47,7 @@ script, or in a theme ([Write a theme](write-a-theme.md)).
 
 ## Result
 
-![The Keswick route map card with the route drawn in deep violet, a little heavier than the default crimson.](../images/how-to/route-ink.webp)
+![The Ambleside route map card with the route drawn in deep violet, a little heavier than the default pink.](../images/how-to/route-ink.webp)
 
 Painted by `examples/how_to_route_ink.py`, which changes only the route's ink from
 `examples/route_map.py`. Run it the same way, with your track, a cache directory, an output
@@ -57,8 +57,45 @@ directory and a contact:
 uv run python examples/how_to_route_ink.py route.gpx cache/ out/ https://example.org/your-project
 ```
 
-Pick a colour that stands apart from the washes under it. A crimson or a violet reads
+Pick a colour that stands apart from the washes under it. A maroon or a violet reads
 against the greens and the blue of the water; a blue route would be lost among the rivers.
+
+## Try the treatments and the colours
+
+The colour is one thing the ink holds; the treatment is another. The theme's `[route_inks.ride]`
+table sets a `style`, and the route is drawn either as a plain `solid` line or as a `pen`
+stroke, tinted from a plate the pen painted. A pen reads as hand-inked, and which brush
+it uses decides how: a wet brush lays an even line and a dry one breaks up along its length.
+
+![Twelve small copies of the Ambleside card in three rows of four. The columns are the route in maroon, in the default pink, in indigo and in burnt sienna. The top row draws the route as a plain solid line, the middle row as a wet pen line and the bottom row as a dry pen line that thins and breaks.](../images/how-to/route-ink-grid.webp)
+
+*Painted by `examples/how_to_route_ink.py`, `figure="grid"`, in `examples/themes/ambleside.toml`. The rows are a solid line, a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, the default pink `#c22050`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`.*
+
+A `for` loop paints it. The pen's brush is part of what `paint` draws, so the plates are
+painted once for each brush, each set in its own directory, and the twelve cells are twelve
+`compose` calls over them. The colour changes with `with_route_ink` and the treatment by
+replacing the ride ink's `style`:
+
+<!-- from examples/how_to_route_ink.py -->
+```python
+    for treatment, brush in ROWS:
+        row = _row_style(small, treatment, brush)
+        plates = paint(basemap, row, key_dir / brush)
+        cells.append(
+            [
+                compose(
+                    plates,
+                    unlettered,
+                    basemap,
+                    row.with_route_ink(colour=colour),
+                    attribution=False,
+                )
+                for colour in COLOURS
+            ]
+        )
+```
+
+A dotted route is not in the grid: `compose` draws a `dotted` treatment as a solid line today.
 
 ## When it goes wrong
 
