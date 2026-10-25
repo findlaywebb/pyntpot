@@ -6510,6 +6510,8 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
 
 #### P7.V. Revision round 1 (maintainer feedback, 2026-10-24)
 
+Plan reviews 1 to 4 (`reviews/p7v-plan-review-{1,2,3,4}.md`) BLOCKed, every finding addressed; review 5 (`reviews/p7v-plan-review-5.md`) passed.
+
 Fattened at P7.V0 from `p7-research.md` section 10 (the maintainer's feedback round 1
 and the decisions in 10.1 to 10.4) and five agent reports kept in
 `research/p7/critique/`: three image critiques (maps, non-map pictures, reference and
