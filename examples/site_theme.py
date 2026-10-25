@@ -1,10 +1,12 @@
 """The docs site's own chrome, painted and written by the engine it documents.
 
-Three figures, chosen by `figure=`. `"paper"` paints the cream rag the light scheme's page
-sits on: the default paper without its worn border, vignette or foxing, so one picture can
-cover any window. `"rule"` paints one wavering stroke of a wet river brush across white paper,
-the rule under a page title; the site lays it on the page by multiplying, so only the stroke
-shows. `"palette"` writes `pyntpot.css`, the site's stylesheet, with the colours drawn from
+Four figures, chosen by `figure=`. `"paper"` paints the cream rag the light scheme's page
+sits on: the default paper without its worn border, vignette or foxing, made seamless so the
+page repeats it at its own size, whatever the window. `"rule"` paints one wavering, tapering
+stroke of a river brush on pure white, the rule under a page title; the site lays it on the
+page at its own aspect by multiplying, so only the stroke shows. `"header"` paints the band
+behind the site's header: a deep water wash that is darker along its lower edge, where the
+wash pooled, and uneven along its length; the site repeats it sideways. `"palette"` writes `pyntpot.css`, the site's stylesheet, with the colours drawn from
 `PIGMENTS` as CSS custom properties: each pigment as it is, and the pigment glazed four
 times for text and the header on the light scheme. Its contrast is checked by
 `tests/examples/test_site_theme.py`.
@@ -13,18 +15,18 @@ Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `Brus
 `PIGMENTS`, `paper_plate`, `brush_from_id`, `stamp`, `ink_density`, `composite`, `rgb` and
 `save_image`.
 
-`main` writes one file per call. For the two pictures it returns the PNG's path; for
+`main` writes one file per call. For the three pictures it returns the PNG's path; for
 `"palette"` it returns the stylesheet's path, which is text, not an image, and is not in the
 image registry. Every seed is fixed, so one run writes the same files. It paints no map and
 reads no file. Patrick Hand, the face the stylesheet loads for display headings, is the
-vendored font, copied to `docs/assets/` with its licence.
+vendored font, copied to `docs/assets/` with its licence. Body text uses the system serif
+stack, which needs no file.
 
 Run it with `uv run python examples/site_theme.py out/ --figure rule`.
 """
 
 import argparse
 import logging
-from dataclasses import replace
 from pathlib import Path
 from string import Template
 
@@ -48,24 +50,27 @@ from pyntpot.ink import (
 logger = logging.getLogger(__name__)
 
 #: The figures `main` paints or writes.
-FIGURES = ("paper", "rule", "palette")
+FIGURES = ("paper", "rule", "header", "palette")
 #: The picture widths, in pixels, when `size=` is not given.
-WIDTH = {"paper": 960, "rule": 960}
+WIDTH = {"paper": 512, "rule": 1600, "header": 1600}
 #: The size of the paper's granulation noise, in pixels.
 GRAN_PX = 5.0
 #: The seed of the paper's noise, the bristles and the dither the file is written with.
 SEED = 11
-#: The paper's aspect: a window is wider than it is tall.
-PAPER_ASPECT = 9 / 16
 #: The rule's height as a share of its width.
-RULE_ASPECT = 1 / 24
+RULE_ASPECT = 60 / 1600
+#: The header band's height as a share of its width.
+HEADER_ASPECT = 120 / 1600
+#: How many times the water pigment is glazed in the band, at its lightest and its darkest.
+HEADER_GLAZE = (3.5, 5.0)
 #: How many times a pigment is glazed to make the text and header colours of the light scheme.
 GLAZES = 4
 #: How much of the `relief` pigment's colour the dark page and the light scheme's ink keep.
 DARK_SHARE = 0.14
 INK_SHARE = 0.16
-#: The brush id and width of the rule's stroke.
-RULE_BRUSH = "RIV1-a"
+#: The rule's brush id, and its width as a share of the rule's height.
+RULE_BRUSH = "RIV4-a"
+RULE_BRUSH_SHARE = 0.4
 
 STYLESHEET = Template("""\
 /* Written by examples/site_theme.py (figure="palette"); do not edit by hand.
@@ -86,6 +91,8 @@ $pigments
   --pyntpot-ink: $ink;
   --pyntpot-night: $night;
   --pyntpot-display: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  --pyntpot-serif: Charter, "Sitka Text", Cambria, "Iowan Old Style", Georgia, serif;
+  --md-text-font: var(--pyntpot-serif);
 }
 
 [data-md-color-scheme="default"] {
@@ -102,6 +109,7 @@ $pigments
   --md-code-fg-color: var(--pyntpot-ink);
   --pyntpot-paper-image: url("../images/site/paper.webp");
   --pyntpot-rule-image: url("../images/site/rule.webp");
+  --pyntpot-header-image: url("../images/site/header.webp");
 }
 
 [data-md-color-scheme="slate"] {
@@ -118,16 +126,39 @@ $pigments
   --md-code-fg-color: var(--pyntpot-paper);
   --pyntpot-paper-image: none;
   --pyntpot-rule-image: none;
+  --pyntpot-header-image: none;
 }
 
-/* The paper the light scheme's page sits on; the dark scheme has none. */
+/* The paper the light scheme's page sits on, repeated at its own size so the tooth stays
+   crisp at every width; the dark scheme has none. */
 .md-container {
   background-image: var(--pyntpot-paper-image);
-  background-size: cover;
-  background-attachment: fixed;
+  background-size: 512px 512px;
+  background-repeat: repeat;
 }
 
-/* Display headings and the site name: the hand. Body and code keep the theme's faces. */
+/* The header is a painted wash, not a flat bar: the band repeats sideways at its own aspect
+   over the glazed water colour, which shows alone on the dark scheme. */
+.md-header {
+  background-color: var(--md-primary-fg-color);
+  background-image: var(--pyntpot-header-image);
+  background-size: auto 100%;
+  background-repeat: repeat-x;
+}
+
+/* Body text in a book serif; the hand is for the headings, code keeps the theme's monospace.
+   The serif sits a little larger than the theme's sans, which it would otherwise undersize. */
+.md-typeset {
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.md-typeset code,
+.md-typeset pre {
+  font-size: 0.85em;
+}
+
+/* Display headings and the site name: the hand. */
 .md-typeset h1,
 .md-typeset h2,
 .md-header__title .md-ellipsis:first-child {
@@ -145,26 +176,28 @@ $pigments
   font-size: 1.9em;
 }
 
-/* The brush-stroke rule: under a page title and as a thematic break. It multiplies, so only
-   the stroke shows on the paper. The dark scheme has a plain line instead. */
+/* The brush-stroke rule: under a page title and as a thematic break. It keeps its own aspect,
+   starting at the left, and multiplies, so only the stroke shows on the paper. The dark scheme
+   has a plain line instead. */
 .md-typeset h1::after,
 .md-typeset hr {
   content: "";
   display: block;
-  height: 0.9rem;
-  margin: 0.2rem 0 1.2rem;
+  height: 1.5rem;
+  margin: -0.3rem 0 0.8rem;
   border: 0;
-  background: var(--pyntpot-rule-image) left center / 100% 100% no-repeat;
+  background: var(--pyntpot-rule-image) left center / auto 100% no-repeat;
   mix-blend-mode: multiply;
 }
 
 .md-typeset hr {
-  margin: 1.6rem 0;
+  margin: 1.2rem 0;
 }
 
 [data-md-color-scheme="slate"] .md-typeset h1::after,
 [data-md-color-scheme="slate"] .md-typeset hr {
   height: 0;
+  margin: 0.4rem 0 1.2rem;
   border-top: 2px solid var(--pyntpot-water);
   opacity: 0.6;
   mix-blend-mode: normal;
@@ -189,32 +222,75 @@ def _rgba(colour: np.ndarray, alpha: float) -> str:
     return f"rgb({r} {g} {b} / {alpha})"
 
 
-def _paper(*, white: bool = False) -> PaperStyle:
-    """Return the default paper without its worn border, vignette or foxing; white paper for the rule, which the page multiplies."""
-    plain = PaperStyle(paper_worn=0.0, paper_vignette=0.0, paper_foxing=0.0)
-    return replace(plain, paper_hex="#ffffff") if white else plain
+def _paper() -> PaperStyle:
+    """Return the default paper without its worn border, vignette or foxing."""
+    return PaperStyle(paper_worn=0.0, paper_vignette=0.0, paper_foxing=0.0)
+
+
+def _seamless(pixels: np.ndarray) -> np.ndarray:
+    """Return `pixels` made to tile: each axis crossfaded with itself rolled by half, the seam at the weight's zero.
+
+    The weights are a sine and a cosine, so the noise keeps its spread across the blend.
+    """
+    for axis in (0, 1):
+        length = pixels.shape[axis]
+        t = (np.arange(length) + 0.5) / length
+        weight = np.sin(np.pi * t)
+        shape = [1, 1, 1]
+        shape[axis] = length
+        near = np.sin(np.pi / 2 * weight).reshape(shape)
+        far = np.cos(np.pi / 2 * weight).reshape(shape)
+        mean = pixels.mean(axis=axis, keepdims=True)
+        rolled = np.roll(pixels, length // 2, axis=axis)
+        pixels = mean + (pixels - mean) * near + (rolled - mean) * far
+    return np.clip(pixels, 0.0, 1.0)
 
 
 def _paint_paper(width: int) -> np.ndarray:
-    """Paint the page's paper `width` pixels wide."""
-    height = max(1, round(width * PAPER_ASPECT))
-    sheet = Sheet(height, width, GRAN_PX, SEED)
-    return paper_plate(sheet, Canvas(0, 0, width, height, width, height), _paper(), width)
+    """Paint the page's paper `width` pixels square, so that it tiles."""
+    sheet = Sheet(width, width, GRAN_PX, SEED)
+    plate = paper_plate(sheet, Canvas(0, 0, width, width, width, width), _paper(), width)
+    return _seamless(plate)
 
 
 def _paint_rule(width: int) -> np.ndarray:
-    """Paint one wavering stroke of a river brush across paper `width` pixels wide."""
+    """Paint one wavering stroke of a river brush on pure white, touched down and tapering out, `width` pixels wide."""
     height = max(8, round(width * RULE_ASPECT))
     sheet = Sheet(height, width, GRAN_PX, SEED)
-    paper = paper_plate(
-        sheet, Canvas(0, 0, width, height, width, height), _paper(white=True), width
-    )
     x = np.linspace(0.02 * width, 0.98 * width, 240)
     y = height / 2 + 0.16 * height * np.sin(2 * np.pi * 1.5 * x / width)
-    brush, ink_hex = brush_from_id(RULE_BRUSH, 0.3 * height, 1.0, BrushStyle())
+    brush, ink_hex = brush_from_id(RULE_BRUSH, RULE_BRUSH_SHARE * height, 1.0, BrushStyle())
+    t = np.linspace(0.0, 1.0, 64)
+    taper = np.minimum(np.minimum(t / 0.05, (1.0 - t) / 0.4), 1.0) ** 0.7 * 0.8 + 0.2
     acc = np.zeros((height, width), np.float32)
-    stamp(acc, np.column_stack([x, y]), brush, np.random.default_rng(SEED))
-    return composite([(ink_density(acc, brush, sheet), rgb(ink_hex))], paper, _paper(white=True))
+    stamp(acc, np.column_stack([x, y]), brush, np.random.default_rng(SEED), wprof=taper)
+    white = np.ones((height, width, 3))
+    return composite([(ink_density(acc, brush, sheet), rgb(ink_hex))], white, _paper())
+
+
+def _smooth_noise(shape: tuple[int, int], cell: float, rng: np.random.Generator) -> np.ndarray:
+    """Return unit-spread noise of `shape` with features about `cell` pixels across, by low-passing white noise."""
+    spectrum = np.fft.rfft2(rng.standard_normal(shape))
+    fy = np.fft.fftfreq(shape[0])[:, None]
+    fx = np.fft.rfftfreq(shape[1])[None, :]
+    spectrum *= np.exp(-((fx * cell) ** 2 + (fy * cell) ** 2) * 2.0)
+    noise = np.fft.irfft2(spectrum, shape)
+    return noise / noise.std()
+
+
+def _paint_header(width: int) -> np.ndarray:
+    """Paint the header band, `width` pixels wide: a water wash, uneven along its length and pooled along its lower edge."""
+    height = max(8, round(width * HEADER_ASPECT))
+    rng = np.random.default_rng(SEED)
+    low, high = HEADER_GLAZE
+    along = 0.5 + 0.5 * np.tanh(1.4 * _smooth_noise((height, width), 0.12 * width, rng))
+    grain = _smooth_noise((height, width), GRAN_PX, rng)
+    rows = np.linspace(0.0, 1.0, height)[:, None]
+    pool = 0.25 * np.clip((rows - 0.8) / 0.2, 0.0, 1.0) ** 2
+    glaze = low + (high - low) * along + 0.12 * grain + pool
+    sheet = Sheet(height, width, GRAN_PX, SEED)
+    paper = paper_plate(sheet, Canvas(0, 0, width, height, width, height), _paper(), width)
+    return np.clip(paper * rgb(PIGMENTS["water"]) ** glaze[..., None], 0.0, 1.0)
 
 
 def stylesheet() -> str:
@@ -248,11 +324,11 @@ def main(out_dir: Path, figure: str = "paper", size: int | None = None) -> Path:
 
     Args:
         out_dir: The directory the file is written into.
-        figure: `"paper"`, `"rule"` or `"palette"`.
+        figure: `"paper"`, `"rule"`, `"header"` or `"palette"`.
         size: The picture's width in pixels; ignored by `"palette"`.
 
     Returns:
-        The path of `paper.png`, `rule.png` or, for `"palette"`, `pyntpot.css`.
+        The path of `paper.png`, `rule.png`, `header.png` or, for `"palette"`, `pyntpot.css`.
 
     Raises:
         ValueError: When `figure` is not one of `FIGURES`.
@@ -265,7 +341,9 @@ def main(out_dir: Path, figure: str = "paper", size: int | None = None) -> Path:
         path.write_text(stylesheet())
     else:
         width = size or WIDTH[figure]
-        pixels = _paint_paper(width) if figure == "paper" else _paint_rule(width)
+        pixels = {"paper": _paint_paper, "rule": _paint_rule, "header": _paint_header}[figure](
+            width
+        )
         path = out_dir / f"{figure}.png"
         save_image(pixels, path, seed=SEED)
     logger.info("wrote %s", path)

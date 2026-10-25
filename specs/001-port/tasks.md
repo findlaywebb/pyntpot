@@ -187,7 +187,7 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [x] P7.V12d The SVG drawing step by step
 - [x] P7.V12c Painting with Python: trees replace the gasket, a fern family, brushed curves
 - [ ] P7.V13 Critique gate: no published image under 3 of 5
-- [ ] P7.V14 Site theme fixes (`p7-docs-site`)
+- [x] P7.V14 Site theme fixes (`p7-docs-site`)
 - [ ] P7.V15 Hand back
 - [ ] P7.R Release 0.1.0: runbook, publish workflow, metadata, changelog, citation; confirm, tag and publish (the outline's P7.4)
 

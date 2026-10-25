@@ -13,6 +13,10 @@
 
 ::: pyntpot.maps.FetchError
 
+::: pyntpot.maps.FetchMargins
+
+::: pyntpot.maps.JournalNote
+
 ::: pyntpot.maps.Lettering
 
 ::: pyntpot.maps.OpenTopoData

@@ -3,6 +3,7 @@
 import re
 from pathlib import Path
 
+import numpy as np
 import pytest
 from PIL import Image
 
@@ -88,7 +89,7 @@ class TestStylesheet:
 class TestPictures:
     """Each picture figure writes one image and rejects a figure it does not know."""
 
-    @pytest.mark.parametrize("figure", ["paper", "rule"])
+    @pytest.mark.parametrize("figure", ["paper", "rule", "header"])
     def test_a_picture_is_the_only_file_written(self, tmp_path: Path, figure: str) -> None:
         """A picture figure writes one PNG of the width asked."""
         path = run_example("site_theme", tmp_path / figure, figure=figure, size=SMALL)
@@ -97,6 +98,68 @@ class TestPictures:
             assert image.width == SMALL
 
     def test_an_unknown_figure_is_refused(self, tmp_path: Path) -> None:
-        """A figure outside the three raises `ValueError`."""
+        """A figure outside the four raises `ValueError`."""
         with pytest.raises(ValueError, match="figure must be one of"):
             run_example("site_theme", tmp_path, figure="banner")
+
+
+def _pixels(path: Path) -> np.ndarray:
+    """Return an image file as floats in 0 to 1."""
+    with Image.open(path) as image:
+        return np.asarray(image.convert("RGB"), dtype=float) / 255
+
+
+class TestPaintedChrome:
+    """The paper tiles, the rule is a stroke on white that keeps its shape, and the header band is dark enough for its text."""
+
+    def test_the_paper_tiles_without_a_seam(self, tmp_path: Path) -> None:
+        """Across the tile's edge the paper changes no more than it does between two neighbouring columns inside."""
+        paper = _pixels(run_example("site_theme", tmp_path, figure="paper", size=128))
+        assert paper.shape[0] == paper.shape[1]
+        across = np.abs(paper[:, 0] - paper[:, -1]).mean()
+        inside = np.abs(paper[:, 63] - paper[:, 64]).mean()
+        assert across <= 1.5 * inside + 1e-3
+        assert (
+            np.abs(paper[0] - paper[-1]).mean() <= 1.5 * np.abs(paper[63] - paper[64]).mean() + 1e-3
+        )
+
+    def test_the_rule_is_a_stroke_on_pure_white(self, tmp_path: Path) -> None:
+        """The rule's four corners are pure white, so multiplying it leaves only the stroke, and the stroke is on it."""
+        rule = _pixels(run_example("site_theme", tmp_path, figure="rule", size=400))
+        corners = [rule[0, 0], rule[0, -1], rule[-1, 0], rule[-1, -1]]
+        assert all(np.array_equal(corner, np.ones(3)) for corner in corners)
+        assert rule.min() < 0.6
+
+    def test_the_rule_keeps_the_aspect_the_site_shows_it_at(self, tmp_path: Path) -> None:
+        """The rule is far wider than tall, and the stylesheet sizes it by height alone, never stretched to the box."""
+        rule = _pixels(run_example("site_theme", tmp_path, figure="rule", size=400))
+        assert rule.shape[1] / rule.shape[0] > 20
+        css = STYLESHEET.read_text()
+        assert "left center / auto 100% no-repeat" in css
+        assert "100% 100%" not in css
+
+    def test_the_header_band_keeps_the_header_text_readable(self, tmp_path: Path) -> None:
+        """Even the lightest pixels of the header band have a contrast of at least 4.5 against the paper colour."""
+        band = _pixels(run_example("site_theme", tmp_path, figure="header", size=400))
+        paper = _scheme(STYLESHEET.read_text(), SCHEMES[0])["--md-primary-bg-color"]
+        linear = np.where(band <= 0.03928, band / 12.92, ((band + 0.055) / 1.055) ** 2.4)
+        lightest = np.percentile(linear.reshape(-1, 3) @ [0.2126, 0.7152, 0.0722], 99.5)
+        paper_luminance = _luminance(paper)
+        assert (paper_luminance + 0.05) / (lightest + 0.05) >= MIN_CONTRAST
+
+    def test_the_header_band_is_not_a_flat_colour(self, tmp_path: Path) -> None:
+        """The header band varies along its length and is darker at its lower edge than at its upper."""
+        band = _pixels(run_example("site_theme", tmp_path, figure="header", size=400))
+        grey = band.mean(axis=2)
+        assert grey.mean(axis=0).std() > 0.003
+        assert grey[-8:].mean() < grey[:8].mean()
+
+
+class TestFaces:
+    """The body is set in a serif and the hand is kept for headings."""
+
+    def test_the_body_text_is_a_serif_and_the_hand_is_for_headings(self) -> None:
+        """The theme's text font is the serif stack, and only headings and the site name take the hand."""
+        css = STYLESHEET.read_text()
+        assert "--md-text-font: var(--pyntpot-serif);" in css
+        assert css.count("font-family: var(--pyntpot-display);") == 1
