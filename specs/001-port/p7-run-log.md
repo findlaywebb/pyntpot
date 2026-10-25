@@ -1121,3 +1121,15 @@ colleges without a pigment class; long chapel names on Lynmouth; river-start blo
 
 **Images moved:** `hero`, `social-preview`, the five `places/*`, `gallery/route-map`, `how-to/route-ink-grid`,
 and their masters.
+
+## 2026-10-25 P7.V15 hand-back
+
+Round 1 is complete on `p7-docs-release` (PR #28) and `p7-docs-site` (PR #29); the
+golden tolerance run and the fast suite are green on the final head. The critique gate
+ran once: round-2 critiques in `research/p7/critique/round-2/`, one fix-up pass for maps
+and one for pictures and reference. Remaining faults that need the library are filed under
+`docs/issues/`. Deviations from the plan, recorded where they happened: the engine fixes
+coded in parallel with one regeneration (ADR 0036); fetch margins as a `FetchMargins`
+setting on the cache (ADR 0040); Skye's scale-aware drops and 13 MB budget, Ambleside's
+7 MB; the route blend changed from multiply to normal; the hero has its own calmer theme;
+doubled published widths dropped. Tŷ Melin's point is unconfirmed by the maintainer.
