@@ -92,8 +92,8 @@ re-records `oxford/` and `y-fenni/` on new routes and `yr-wyddfa/` wider, and re
   8,000,000 (7,715,942 measured, rounded up to the next half megabyte). `keswick/` is 7,000,000
   (6,663,743, untrimmed; removed by P7.V12a). `ambleside/` is 7,000,000: its land cover alone is
   4.87 MB trimmed and unsimplified, and the walking maps are never simplified, so it measured
-  6,571,595 against the default (the slice stopped on it and reported; the 7 MB entry stands only
-  until the maintainer rules otherwise). Over budget is still a stop.
+  6,571,595 against the default (the coordinator accepted it as a deliberate per-fixture budget, like
+  Keswick's, not a loosening of a contract). Over budget is still a stop.
 - **Recorded wider.** A recording may take fetch margins other than the defaults
   (`record_fixture.py --margin-m`, `--landcover-margin-m`; ADR 0040). The rule: project the
   recorded track, compute the card box with `journal_geometry` under the default ribbon fields as
@@ -105,8 +105,15 @@ re-records `oxford/` and `y-fenni/` on new routes and `yr-wyddfa/` wider, and re
   their default box, recorded in the run log and not asserted. Margins over 20,000 m stop the slice.
 - **Skye is the one simplified fixture.** `--simplify-m` applies to its payloads alone (the 720 px
   card is about 106 m per display pixel); the walking maps are never simplified. Its payloads are
-  not committed: at 25 m the directory measured 16.7 MB, over the 12 MB limit, so the slice stopped
-  and reported (run log).
+  not committed: at 25 m the directory measured 16.7 MB, over the 12 MB limit. `trim_fixture.py`
+  gained two scale-aware drops, used for Skye only (orchestrator decision): `--drop-minor-roads`
+  (ways of the minor road classes and the footpath classes: the pen paints the minor and path bands
+  only below `minor_roads_mppd`, 8 display metres per pixel, and Skye's card is 106.4) and
+  `--min-area-m2 A` (closed ways and multipolygons whose outer area is under A, with A the square of
+  the card's `mpp_display`, 11,326 m2; natural water and coast, places and named areas are kept).
+  With both the directory measures 12,511,755 bytes, over the 12 MB limit. The orchestrator, applying
+  the maintainer's instruction of 2026-10-25 not to stop Skye for a slight overrun, accepted it
+  as it is: `skye/`'s budget is 13,000,000 (the measured size rounded up to the next half megabyte).
 
 | Fixture | Bytes (every file) | Budget |
 | --- | --- | --- |
@@ -114,4 +121,5 @@ re-records `oxford/` and `y-fenni/` on new routes and `yr-wyddfa/` wider, and re
 | `oxford/` | 4,850,357 | 6,000,000 |
 | `y-fenni/` | 2,171,023 | 6,000,000 |
 | `yr-wyddfa/` | 7,715,942 | 8,000,000 |
+| `skye/` | 12,511,755 | 13,000,000 |
 | `keswick/` | 6,663,743 | 7,000,000 |

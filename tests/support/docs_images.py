@@ -319,6 +319,7 @@ IMAGES += (
 _PLACES: tuple[tuple[str, str | None, float | None], ...] = (
     ("keswick", None, None),
     ("trotternish", None, None),
+    ("skye", None, 18000.0),
     ("yr-wyddfa", None, 3000.0),
     ("oxford", None, None),
     ("y-fenni", "examples/themes/y-fenni.toml", None),

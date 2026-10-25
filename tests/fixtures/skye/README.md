@@ -1,8 +1,8 @@
 # Skye fixture
 
-A synthetic track for a one-way tour of the Isle of Skye on public roads. Its provider
-payloads are not yet recorded: this directory holds the track only. It will serve the golden
-place cards (`tests/golden/test_places.py`) once recorded, with a wider fetch margin.
+A synthetic track for a one-way tour of the Isle of Skye on public roads, and the provider
+payloads cached for it, recorded with wider fetch margins. Used by the golden place cards
+(`tests/golden/test_places.py`).
 
 ## The track
 
@@ -49,16 +49,28 @@ route: the A87 passes above the pier road, so Uig is checked at its post office.
 | File | What it is |
 |---|---|
 | `track.gpx` | The generated track. |
+| `overpass-ada01f635902a1fd.json` | OSM features for the feature box, from Overpass. |
+| `landcover-ada01f635902a1fd.json` | OSM land cover for the wider land cover box, from Overpass. |
+| `elevation-ada01f635902a1fd.json` | 80 by 80 SRTM grid over the feature box, from OpenTopoData. |
 
-The payloads (`overpass-<key>.json`, `landcover-<key>.json`, `elevation-<key>.json`) are
-recorded later with the wider margins, simplified by the trim step; the boxes and sizes are
-filled in then.
+Each payload is named `<kind>-<key>.json`, where the key is the fetch cache key of this track
+with the shipped providers and the margins of 18,000 m below, so a cache over a copy of this
+directory built with those margins finds every payload and fetches nothing.
 
 ## Source
 
 - **Ways**: fetched from the Overpass mirror
   `https://maps.mail.ru/osm/tools/overpass/api/interpreter` (the usual `overpass-api.de` resets
   connections from the recording environment) by `make_track.py`; ids and versions below.
+- **OSM features and land cover**: the same mirror, two queries over the margin boxes below. The
+  recorder trimmed them (`trim_fixture.py`: minified, only the fields and tags the code reads), then
+  they were simplified at 25 m (`--simplify-m 25`, a quarter of a display pixel at the card's 106.4
+  metres per pixel) and scale-aware drops were applied: `--drop-minor-roads` (the minor road and
+  footpath classes; the pen paints them only below 8 display metres per pixel) and `--min-area-m2
+  11326` (closed ways and multipolygons under one display pixel squared, except water, coast,
+  places and named areas). Skye alone is simplified and dropped (ADR 0032).
+- **Elevation**: SRTM 30 m (`srtm30m` dataset) via the OpenTopoData public API at
+  `https://api.opentopodata.org/v1/srtm30m`. 64 calls of 100 points.
 - **Contact string sent**: `https://github.com/findlaywebb/pyntpot`.
 - **Fetched**: 2026-10-25.
 
@@ -70,6 +82,13 @@ South, west, north, east, in degrees.
 |---|---|---|---|---|
 | Track points lie inside (rounded outward to 0.01) | 57.06 | -6.78 | 57.69 | -5.74 |
 | `--box` for the `ref=` items | 57.00 | -6.85 | 57.72 | -5.746 |
+| Features and elevation (track plus 18000 m) | 56.901273 | -7.078788 | 57.847557 | -5.445012 |
+| Land cover (track plus 18000 m) | 56.901273 | -7.078788 | 57.847557 | -5.445012 |
+
+Fetched with margins of 18,000 m for the features and elevation and for land cover: the smallest whole kilometre covering the card box's largest overhang beyond the track's box (16,871 m, to the west, from the aspect floor), plus 1 km of headroom. The card box lies inside the features box (`test_places.py` asserts it).
+
+Overpass returns full geometry for every way and relation touching a box, so the two
+Overpass payloads hold coordinates well outside these boxes.
 
 The `--box` east edge, -5.746, sits just west of the Kyleakin roundabout, the Skye Bridge end,
 so the bridge and the mainland A87 beyond it are outside the box.
@@ -377,9 +396,27 @@ fetched.
 | 1492785626 | 2 | secondary | B884 | - |
 | 1492785627 | 2 | secondary | B884 | - |
 
+## Size
+
+The payloads are committed trimmed, simplified and dropped (see Source). The budget is 13,000,000 bytes on disk for the directory (the measured size rounded up to the next half megabyte, by the maintainer's ruling not to stop Skye for a slight overrun of 12 MB),
+enforced by `tests/architecture/test_coordinates.py`.
+
+| File | Bytes | Gzip bytes |
+|---|---|---|
+| `elevation-ada01f635902a1fd.json` | 39,274 | 6,889 |
+| `landcover-ada01f635902a1fd.json` | 3,698,328 | 619,379 |
+| `overpass-ada01f635902a1fd.json` | 8,615,542 | 1,537,408 |
+| `track.gpx` | 134,315 | 22,521 |
+| **Total, README excluded** | **12,487,459** | **2,186,197** |
+
 ## Licences and attribution
 
 Contains OpenStreetMap data © OpenStreetMap contributors, available under the Open
 Database Licence (openstreetmap.org/copyright).
 
-`track.gpx` is a derivative database of OpenStreetMap and is distributed under the ODbL.
+`track.gpx` and the two Overpass payloads are a derivative database of OpenStreetMap and
+are distributed under the ODbL.
+
+Elevation data: NASA JPL. (2013). *NASA Shuttle Radar Topography Mission Global 1 arc
+second* [Dataset]. NASA Land Processes Distributed Active Archive Center.
+https://doi.org/10.5067/MEASURES/SRTM/SRTMGL1.003

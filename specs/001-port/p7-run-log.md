@@ -368,7 +368,7 @@ Gateway Time-out on the first one or two tries; the recorder's own retries carri
 through. Commits, one per fixture: `Record the ambleside fixture`, `... oxford ...`,
 `... y-fenni ...`, `... yr-wyddfa ...`.
 
-**STOP, reported to the coordinator: Skye is over the 12 MB rule, and Ambleside is over 6 MB.**
+**Stops reported to the coordinator: Skye over the 12 MB rule, and Ambleside over 6 MB (both ruled below).**
 
 - **Skye** (margins below): raw 85.7 MB features and 31.4 MB land cover; trimmed 46.3 and 17.8 MB;
   `--simplify-m 15` gives 13.5 and 6.0 MB (19.7 MB the directory); re-trimmed at `--simplify-m 25`,
@@ -381,7 +381,7 @@ through. Commits, one per fixture: `Record the ambleside fixture`, `... oxford .
   scratchpad, `skye-held/`. `skye/` holds the track and README only, as part 1 left it.
 - **Ambleside** at the library's default margins: 6,571,595 bytes the directory (land cover 4.87 MB
   trimmed, features 1.62 MB), over the 6 MB default. `BUDGETS["ambleside"] = 7_000_000` is set so the
-  gates run, with a comment; it is a loosening the coordinator rules on.
+  gates run, with a comment; the coordinator accepted it: a deliberate per-fixture budget for the hero walking map, like Keswick's, not a loosening of a contract.
 
 **Margins** (the margin rule: card box by `journal_geometry` under the default ribbon fields of the
 simplified projected track, the card's largest overhang beyond the track's box, plus 1 km):
@@ -686,3 +686,44 @@ measures a river's banks to the nearest ring edge of any ring, so a channel besi
 wide as the water it runs in, not as the lake's outer envelope. This moves every card whose payload
 holds a holed water relation (Oxford's Cherwell: 14 inner rings, 41.1 of 49.2 ha) and no other.
 Regeneration deferred to the group regeneration slice.
+## P7.V9a Skye, scale-aware drops (2026-10-25)
+
+`trim_fixture.py` gains `--drop-minor-roads` (drops ways whose `highway` is tertiary, unclassified,
+residential, track, service, footway, path, cycleway, pedestrian, bridleway or steps) and
+`--min-area-m2 A` (drops closed ways and multipolygon relations whose outer area is below A, unless
+`natural=water` or `coastline`, a `place` tag or any `name*` tag), tests first in
+`test_trim_fixture.py`. Basis: `painter/pen.py` paints the `lane` and `track` bands only when
+`layers.minor_roads` is true, which is `mpp_display < brush.minor_roads_mppd` (8.0 in the default
+theme and `BrushStyle`); Skye's card is `mpp_display` 106.429, 900 by 804 display px. A = (106.429)²,
+11,326 m2, under one display pixel.
+
+**Sizes** (the held 25 m payloads, then both drops): overpass 11,435,782 -> 8,615,542; landcover
+5,025,596 -> 3,698,328; with the elevation payload, track and README the directory is about
+12.5 MB, **still over the 12 MB limit, so Skye is again not committed** and no more is dropped.
+
+**Biggest contributors after the drops** (bytes of element text, count): features payload: streams
+2.95 MB (15,010 ways), natural=water 1.52 MB (5,297), historic=ruins 1.16 MB (7,609), coastline 0.96 MB
+(2,846), woods 0.59 MB (1,210), forest 0.42 MB (868), a nature reserve 0.31 MB (8 relations), rivers
+0.19 MB (367). Land cover payload: bare rock 0.97 MB (5,274), meadow 0.78 MB (2,121), a nature reserve
+0.34 MB (10), cliffs 0.29 MB (1,627), heath 0.27 MB, residential 0.23 MB, wetland 0.20 MB, scrub 0.19
+MB, scree 0.18 MB.
+
+**Lossless?** The Skye card painted from the 25 m payloads and from the dropped payloads (default
+style, 18,000 m margins, the same plates cache keys): the same seven label names, the card box inside
+the fetched feature box, but not byte-identical: **max pixel difference 57 of 255**, 79,235 of
+2,892,600 pixels differ (2.7 %), 9,519 (0.33 %) by more than 8. The difference is confined to a thin
+band along the route's ribbon, where the dropped sub-pixel cover areas fed the wash's blotches and
+edges; nothing is missing at card scale. Not a pin: no golden holds Skye.
+
+**Ruling and completion (orchestrator, applying the maintainer's 2026-10-25 instruction not to stop
+Skye for a slight overrun).** Skye is accepted as it is, both drops and 25 m: the directory is
+12,511,755 bytes and `BUDGETS["skye"]` is 13,000,000 (measured, rounded up to the next 0.5 MB).
+Committed: the three payloads (key `ada01f635902a1fd`), `KEYS`, `SKYE_KEY`, a `test_places` row with
+`margin_m` and `landcover_margin_m` 18000.0 (card box inside the fetched box, asserted; labels
+Cnoc an t-Sithean, Giant Angus MacAskill Museum, Sligachan, Snizort, Staffin Dinosaur Museum, start,
+finish: 7), a `docs_images._PLACES` row, `places/skye.webp` and its master (pinned against the current
+code; the goldens are regenerated once after the five parallel engine fixes), README. The card looked at
+(900 px): the island is not washed, only its coast and streams are outlined, and the lochs read as
+labels on bare paper ("Snizort", "Sligachan" are sea lochs); two museums are the only landmarks named; grey
+foxing at the edge. Gates: prek, `-m "not golden"` and `-m golden --golden-tolerance`; the exact
+27-minute golden run was skipped this time by instruction.
