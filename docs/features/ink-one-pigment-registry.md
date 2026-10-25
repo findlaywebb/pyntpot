@@ -16,7 +16,9 @@ this). Fifteen lines of an example can be lookups.
 )
 ```
 
-**What the feature would add** (maintainer, 2026-10-25):
+**What the feature would add.** The goal (maintainer, 2026-10-25) is one lookup, an object
+that holds a pigment's information, and inputs that take a base term and work out the rest,
+with overrides. The shape below, and the code after it, are a suggestion, not a requirement:
 
 - One `Pigment` object holding everything a pigment is: its colour, transparency, and room
   for the properties a painter cares about (staining, granulation), and one registry of
