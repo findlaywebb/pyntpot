@@ -416,3 +416,55 @@ The maintainer said the recommendations offered so far are good. Those were:
   card's scale, and the journal notes and one-idea table as first proposed.)
 - Paper: foxing off in the reference and explanation figures, and the paper's edge and
   foxing restyled in the library (warm, narrow, uneven edge; rust specks) in this round.
+
+### 10.4 Orchestrator decisions after plan review 1, 2026-10-25
+
+Settled on `reviews/p7v-plan-review-1.md` and written into the plan's P7.V section as
+prescribed, not options:
+
+- **The fern and the new paper (B1, S6).** The new paper is the default look:
+  `PaperStyle.paper_edge: Literal["classic", "warm"] = "warm"`, not omitted from the
+  digest (the default look changes, so the default digests move and are re-pinned).
+  `"classic"` is today's code path exactly, with the same generator draws, and
+  `examples/fern.py` passes it, so the fern stays byte-identical. Decision 1 now reads
+  "`default.toml`'s settings are unchanged; its paper looks as decision 13 says". The
+  maintainer is asked whether the fern should take the new paper instead; if yes,
+  P7.V7b drops the fern's opt-out.
+- **The paper's draws (S5).** The two existing `sheet.noise` draws stay, in order and at
+  the same scales; the specks come from `sheet.gran`, and the edge is modulated by the
+  existing `noise(26, 2)` field.
+- **Skye (B2, S8).** The route is a one-way island tour on public roads, Kyleakin to
+  Portree by Broadford, Armadale, Sligachan, the Fairy Pools, Carbost, Dunvegan, Neist
+  Point, Uig, Staffin and the Storr (240 to 320 km). Margins are explicit (C1 not
+  taken), sized so the card box lies inside the fetched box; `test_places.py` asserts
+  it for Skye and Yr Wyddfa. `make_track.py` gains `--step-m`. The size estimate is
+  about 10 MB after trimming, at the budget, with a 25 m simplification as the one
+  fallback.
+- **The cache key (B3).** The land-cover margin joins the key only when non-default;
+  the default key stays byte-identical and pinned. The CLI, `place_card.py` and
+  `test_places.py` pass the margins through.
+- **Tags (B4, C2).** `KEPT_TAG_KEYS` is the grep's result (`--include='*.py'`) plus
+  `wikidata`, `wikipedia`, `heritage`, `listed_status`, `shop`, `brand` and
+  `brand:wikidata`; P7.V5 re-records nothing. P7.V1 trims Lynmouth and Yr Wyddfa only;
+  the recorder trims every later recording.
+- **Painter's pigments (B7).** A separate `PAINTERS_PIGMENTS` and
+  `PAINTERS_TRANSPARENCY` table; `PIGMENTS` and everything drawn from it stay
+  byte-identical.
+- **Route effects (B8).** `blend` is read from the existing effect key, `opacity` with a
+  `.get` default of 1.0 and never written into `default.toml`; only
+  `minor_road_classes` and `relief_strength` join `DIGEST_OMITS_AT_DEFAULT`.
+- **Lettering scale (B9).** P7.V11 is cut to the nib plate painted at scale 2 and
+  downsized with Lanczos in every lettered example, lossless for lettering figures,
+  published widths unchanged. Doubling the published widths was dropped: it breaks the
+  size budgets of ADR 0033 and repaints the maps at 1440 and 2400 px.
+- **The docs group (B10).** Fixture references are found by a fixture-reference grep,
+  each Keswick consumer has a named replacement (Ambleside for the hero, gallery, map
+  styles, social preview, first-map rung and route-ink how-to; Lynmouth for the
+  command-line how-to), `gallery.md` is owned section by section, and the README's
+  quick start is left alone.
+- **Journal notes (B11).** No margin band: notes are seated first through `_place_flat`
+  as flat blocks with leaders, their boxes taken before any other name, never dropped.
+- **CI time (S9).** One budget for the round, 4 minutes over the baseline P7.V1 records,
+  with runs recorded after P7.V9a, P7.V7b, P7.V10, P7.V11 and the P7.V12 group.
+- **The tutorial grids (S10).** Every rung of `paint-a-watercolour.md` has a named grid.
+- The other findings (B5, B6, S1 to S4, S7, S11) are applied as the review proposed.

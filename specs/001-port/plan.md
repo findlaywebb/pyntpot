@@ -6511,12 +6511,15 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
 #### P7.V. Revision round 1 (maintainer feedback, 2026-10-24)
 
 Fattened at P7.V0 from `p7-research.md` section 10 (the maintainer's feedback round 1
-and the decisions in 10.1 and 10.2) and five agent reports kept in the session
-scratchpad: three image critiques (maps, non-map pictures, reference and explanation
-figures), one investigation of causes, and one landmark curation. Every measurement
-was taken at `60e4335` (`p7-docs-release`) unless it names another commit. Each slice
-re-measures what its brief names at its own base before it edits, and stops and reports
-if a fact here no longer holds.
+and the decisions in 10.1 to 10.4) and five agent reports kept in
+`research/p7/critique/`: three image critiques (maps, non-map pictures, reference and
+explanation figures), one investigation of causes, and one landmark curation. Revised
+after plan review 1 (`reviews/p7v-plan-review-1.md`, blockers B1 to B11, should-fix S1
+to S11, consider C1 and C2); the orchestrator's decisions on it are `p7-research.md`
+10.4. Every measurement was taken at `60e4335` (`p7-docs-release`; no `src/` change
+since, re-checked at `ef20569`) unless it names another commit. Each slice re-measures
+what its brief names at its own base before it edits, and stops and reports if a fact
+here no longer holds.
 
 **What the round delivers.** The maps become the hero images they should be: each
 showcased map is one idea in its own theme, with a maroon painted route, more landscape,
@@ -6524,25 +6527,32 @@ curated callouts and the library faults the critiques found fixed. The non-map p
 show rather than tell (a `for`-loop grid wherever the prose says something can change),
 the lettering is crisp, the tutorial reads in one rhythm, and the fixtures shrink.
 
-**Decisions this round rests on** (maintainer, 2026-10-24, `p7-research.md` 10.1, 10.2
-and the conversation):
+**Decisions this round rests on** (maintainer, 2026-10-24, `p7-research.md` 10.1 to
+10.3 and the conversation; orchestrator, 10.4):
 
-1. A showcase theme per map; `maps/themes/default.toml` keeps its look (its pink route
-   included). The maroon route is a showcase-theme choice.
+1. A showcase theme per map. `maps/themes/default.toml`'s settings are unchanged (its
+   pink route included); it gains one key, `paper_edge = "warm"`, at the class default,
+   and its paper looks as decision 13 says. The maroon route is a showcase-theme choice.
 2. One idea per showcased map:
 
    | Map | Idea | Fixture | Theme |
    | --- | --- | --- | --- |
    | Ambleside | the hero: a fell walk, the Loughrigg circuit by Loughrigg Terrace and Rydal Water | `ambleside/` (new) | `examples/themes/ambleside.toml` |
-   | Skye | an island road trip with journal notes, the whole island's coast | `skye/` (new; replaces `trotternish/`) | `examples/themes/skye.toml` |
-   | Yr Wyddfa | a mountain ridge, Crib Goch to the summit | `yr-wyddfa/` (kept) | `examples/themes/yr-wyddfa.toml` |
+   | Skye | an island road trip with journal notes, end to end of the island | `skye/` (new; replaces `trotternish/`) | `examples/themes/skye.toml` |
+   | Yr Wyddfa | a mountain ridge, Crib Goch to the summit | `yr-wyddfa/` (kept, re-recorded wider) | `examples/themes/yr-wyddfa.toml` |
    | Oxford | a city walk among colleges and bridges | `oxford/` (re-recorded on a new route) | `examples/themes/oxford.toml` |
    | Y Fenni | a food tour in a Welsh-named market town | `y-fenni/` (re-recorded on a new route) | `examples/themes/y-fenni.toml` (kept, extended) |
 
-   Keswick is no longer a map: `keswick/` is deleted and its docs images move to
-   Ambleside (the hero and gallery) or Lynmouth (the command-line how-to). Keswick stays
-   a lettering word. Lynmouth stays the test place.
-3. The fern image stays byte-identical. A fern family is a separate new image.
+   Keswick is no longer a map: `keswick/` is deleted and every image painted from it
+   moves to Ambleside (the hero, the gallery, the map styles, the social preview, the
+   first-map tutorial, the route-ink how-to) or Lynmouth (the command-line how-to).
+   Keswick stays a lettering word. Lynmouth stays the test place.
+3. The fern image stays byte-identical (`painting-with-python/fern.webp` and its master
+   unchanged, the pin proves it): `examples/fern.py` passes `paper_edge="classic"`,
+   which is today's paper code path exactly. The maintainer is asked in the P7.V0 chat
+   message whether the fern should take the new paper instead; if yes, P7.V7b drops the
+   fern's opt-out and regenerates its image like every other. A fern family is a
+   separate new image.
 4. The gasket is replaced by a family of procedural trees.
 5. Tutorial rhythm, for every tutorial step: the picture, what a painter does, how the
    engine models it, the code, what to notice, then a `for`-loop variation grid.
@@ -6556,17 +6566,26 @@ and the conversation):
    a curated entry with its own coordinates. No town hall on the food tour.
 9. Route style: candidate B, a wet pen (`MAJ1-e`) in maroon, with the doubled-back legs
    kept apart (maintainer, 2026-10-24).
-12. A wider fetch: `fetch` takes the margins as public options, so Skye shows the whole
-    island's coast and Yr Wyddfa a wider view (maintainer, 2026-10-24).
 10. The SVG page shows the raw SVG source, the drawing flat, and each painting step.
 11. Parked, not in this round: a wider command line (`docs/features/cli-wider-commands.md`);
-    readability of the example Python where
-    the API makes it hard (P7.V0 writes `docs/features/examples-read-simply.md` with the
-    cases the critiques found); card supersample 3 (doubles card paint time).
-13. The paper is restyled in the library (P7.V7b): a warm, narrow, uneven edge in
-    place of the grey vignette, and foxing as small rust specks in place of grey
-    smudges; foxing is also off in the reference and explanation figures (P7.V12b)
-    (maintainer, 2026-10-24).
+    readability of the example Python where the API makes it hard
+    (`docs/features/examples-read-simply.md`); card supersample 3 (doubles card paint
+    time); docs images at twice their display width (decision 14).
+12. A wider fetch: `fetch` takes the margins as public options. The card clips every
+    layer to its own box, so ground beyond the card is never painted: Skye shows the
+    island because its route spans the island (Kyleakin to Neist Point, Armadale to
+    Uig), and each margin is sized so the card box lies inside the fetched box
+    (maintainer, 2026-10-24; orchestrator, 10.4).
+13. The paper is restyled in the library (P7.V7b) and the new paper is the default
+    look: a warm, narrow, uneven edge in place of the grey vignette, and foxing as small
+    rust specks in place of grey smudges, behind `PaperStyle.paper_edge = "warm"`;
+    `"classic"` keeps today's paper for the fern (decision 3). Foxing is also off in the
+    reference and explanation figures (P7.V12b) (maintainer, 2026-10-24).
+14. P7.V11 is cut to the cause of the pixelated lettering (the nib plate painted at
+    scale 1): lettered examples paint their nib plate at scale 2 and downsize with
+    Lanczos; published widths are unchanged. Doubling every published width was dropped:
+    it breaks `KIND_BUDGET_BYTES` and the 7 MB total (ADR 0033), and repaints the maps
+    at 1440 and 2400 px (orchestrator, 10.4).
 
 **Branch.** All on `p7-docs-release` (PR #28), landed slice by slice by the
 orchestrating session. The engine slices that move goldens land in sequence and each
@@ -6575,9 +6594,10 @@ and 0025: `make_golden.py --compare` first, the moved images looked at, the labe
 diffed and recorded in the run log). `p7-docs-site` (PR #29) takes P7.V14 and merges
 `p7-docs-release` in after P7.V13. `release-0.1.0` (PR #30) waits for this round.
 
-**ADR numbers.** 0040 `fetch-margins` (P7.V1b), 0036 `fourth-golden-regeneration` (P7.V2 to P7.V7b append to it, one
-section each), 0037 `showcase-style-fields` (P7.V8), 0038 `journal-notes` (P7.V9b),
-0039 `artist-pigments` (P7.V8b). A slice that finds its number taken stops and reports.
+**ADR numbers.** 0040 `fetch-margins` (P7.V1b), 0036 `fourth-golden-regeneration`
+(P7.V2 creates; P7.V3 to P7.V7b append, one section each), 0037 `showcase-style-fields`
+(P7.V8), 0038 `journal-notes` (P7.V9b), 0039 `painters-pigments` (P7.V8b). A slice that
+finds its number taken stops and reports.
 
 **Order and parallelism.**
 
@@ -6592,20 +6612,32 @@ P7.V0 ─ P7.V1 ─ P7.V1b ─ P7.V9a ─ P7.V2 ─ P7.V3 ─ P7.V4 ─ P7.V5 �
      └─ P7.V12d ─┘
 ```
 
-P7.V1b (the fetch margin) lands before P7.V9a, which records with it. P7.V9a (fixtures, network) runs before the engine chain so every golden the chain
-moves is over the final fixture set. P7.V2 to P7.V7b (engine fixes that move goldens)
-run one at a time; each regenerates every pin it moves, the docs-image pins included.
-P7.V8, P7.V8b and P7.V9b are additive (no golden moves) and run in parallel in their
-own worktrees after P7.V7b. P7.V12a to d are the docs group, parallel, in worktrees,
-landed one at a time.
+P7.V1b (the fetch margins) lands before P7.V9a, which records with them. P7.V9a
+(fixtures, network) runs before the engine chain so every golden the chain moves is
+over the final fixture set. P7.V2 to P7.V7b (engine fixes that move goldens) run one at
+a time; each regenerates every pin it moves: the `-m golden` goldens, the expected
+labels in `test_places.py` (rewritten from a run and recorded), and the docs images and
+masters (`make_docs_images.py` for the named entries). P7.V8, P7.V8b and P7.V9b move no
+golden and run in parallel in their own worktrees after P7.V7b. P7.V12a to d are the
+docs group, parallel, in worktrees, landed one at a time.
 
 **Shared files and their merge rules.** As P7's table, plus:
 
 | File | Who adds to it | Rule |
 | --- | --- | --- |
 | `docs/decisions/0036-fourth-golden-regeneration.md` | P7.V2 creates; P7.V3 to P7.V7b append | one section per slice, in order (they are sequential) |
+| `docs/decisions/README.md` (the ADR index) | P7.V1b, P7.V2, P7.V8, P7.V8b, P7.V9b | one row per ADR; on a landing conflict keep both rows |
 | `src/pyntpot/maps/style.py` (`DIGEST_OMITS_AT_DEFAULT`) | P7.V8 only | |
-| `tests/architecture/test_coordinates.py`, `tests/golden/test_places.py` | P7.V9a; P7.V5 and P7.V10 rewrite expected labels; P7.V12a removes two entries | sequential, never two at once |
+| `tests/unit/maps/test_style_groups.py` | P7.V7b (the `PaperStyle` row and pinned digest); P7.V8 (the `BasemapStyle` and `CoverStyle` rows, `BASEMAP_DEFAULTS`, the `CoverStyle` digest) | sequential (P7.V7b lands first) |
+| `docs/reference/style-fields.md` | P7.V7b (the `paper` section); P7.V8 (the `basemap`, `cover` and route-ink sections) | each its own sections |
+| `docs/reference/pigments.md` | P7.V8b (a new "Painter's pigments" section); P7.V12b (the swatch image line and its caption) | each its own section |
+| `docs/reference/cli.md` | P7.V1b only | |
+| `GLOSSARY.md`; `tests/unit/test_public_api.py` | P7.V8b (`painter's pigment`; `PAINTERS_PIGMENTS`, `PAINTERS_TRANSPARENCY`); P7.V9b (`journal note`; `JournalNote`) | one row or line each, keep both |
+| `tests/architecture/test_coordinates.py`, `tests/support/paths.py` | P7.V9a; P7.V12a removes two entries | sequential |
+| `tests/golden/test_places.py` | P7.V9a (fixtures, margins, labels); P7.V2 to P7.V7b (expected labels, when they move); P7.V10 (themes and callouts); P7.V12a (removes two entries) | sequential, never two at once |
+| `tests/support/docs_images.py` (the registry) | P7.V9a (`_PLACES` margins); P7.V10 (`_PLACES` rows); P7.V11 (`word.webp`'s encoding); P7.V12a to d (one block each) | in the parallel group, one block per slice; keep both |
+| `docs/gallery.md` | P7.V12a ("First map", "How-to guides", "Places", "The README"); P7.V12b ("Paint a watercolour", "Reference", "Explanation"); P7.V12c ("Curves", "Fractals"); P7.V12d ("Vector drawing") | each slice its own sections only; keep both |
+| `docs/tutorials/paint-a-watercolour.md` | P7.V11 (the two quoted blocks that hold `NibSurface(`); P7.V12b (the page) | sequential |
 | `examples/themes/*.toml` | P7.V10 only | P7.V12 slices read themes, never edit them; a needed change is reported |
 
 **Gates for every slice.** P7's gates, unchanged. A slice that regenerates goldens
@@ -6613,92 +6645,215 @@ also runs `uv run pytest -m golden` locally (exact) after regenerating, and reco
 in the run log which images moved and why. The image critique (P7.V13) is a gate for
 the round: no published image scores below 3 of 5.
 
+**CI time.** One budget for the round: the golden job (`golden.yml`, its
+`ubuntu-latest` leg) may grow by at most 4 minutes over the round's baseline. A run is
+dispatched with `actions_run_trigger` on `p7-docs-release`; where GitHub refuses a
+dispatch off the default branch (P7's run log), the `pull_request` run the push starts
+on PR #28 stands in. P7.V1 records the run on its base, before its first commit lands,
+as the baseline. Runs are recorded after P7.V9a, P7.V7b, P7.V10, P7.V11 and the P7.V12
+group; one over the budget stops the round and reports. This is the round's only CI
+budget (P7.V11's former "+4 over P7.4" is gone); P7's own 6-minute cap over `a804fe3`
+stays as P7 recorded it.
+
 #### P7.V0. Fatten the round; plan-reviewer pass
 
-This section; the `tasks.md` lines; the decisions recorded in `p7-research.md` 10.3;
-`docs/features/examples-read-simply.md` (parked); the five agent reports copied from the scratchpad into
-`specs/001-port/research/p7/critique/` (maps, pictures, reference, causes, landmarks),
-with coordinates stripped from the landmark note. Leave alone: `src/**`, `tests/**`,
-other `docs/**`. Done when a plan-reviewer round passes; the chat message to the
-maintainer names decision 9 (route B) explicitly.
+This section; the `tasks.md` lines; the decisions recorded in `p7-research.md` 10.3
+and 10.4; `docs/features/examples-read-simply.md` (parked); the five agent reports
+copied from the scratchpad into `specs/001-port/research/p7/critique/` (maps, pictures,
+reference, causes, landmarks), with coordinates stripped from the landmark note. Leave
+alone: `src/**`, `tests/**`, other `docs/**`. Done when a plan-reviewer round passes;
+the chat message to the maintainer names decision 9 (route B) and asks the fern
+question of decision 3.
 
 #### P7.V1. Fixture trimming
 
 - Predecessor: P7.V0.
 - Owner files: `tests/fixtures/trim_fixture.py` (new), `tests/fixtures/record_fixture.py`
-  (calls the trim after `Cache.ensure`), every committed `overpass-*.json` and
-  `landcover-*.json` under `tests/fixtures/{lynmouth,keswick,trotternish,yr-wyddfa,oxford,y-fenni}/`
-  (rewritten in place), `tests/fixtures/test_trim_fixture.py` (new), `p7-run-log.md`,
-  `tasks.md`.
+  (calls the trim after `Cache.ensure`, so every later recording is trimmed),
+  the committed `overpass-*.json` and `landcover-*.json` under
+  `tests/fixtures/{lynmouth,yr-wyddfa}/` only (rewritten in place),
+  `tests/fixtures/test_trim_fixture.py` (new), `p7-run-log.md`, `tasks.md`.
+- Not trimmed here (C2): `keswick/` and `trotternish/` (P7.V12a deletes them),
+  `oxford/` and `y-fenni/` (P7.V9a re-records them, and the recorder trims). Yr Wyddfa
+  is trimmed although P7.V9a re-records it: it proves byte-identity on a second large
+  fixture.
 - `trim_fixture.py PATH...` rewrites each payload: JSON with `separators=(",", ":")`
   and `ensure_ascii=False`, one trailing newline; the top-level `version`,
   `generator` and `osm3s` kept; per element `nodes` and `bounds` dropped (P7.V0
   measured that `src/` reads neither: `grep -rn '"nodes"\|"bounds"' src/pyntpot/maps`
   matches neither on an OSM element); `tags` filtered to the keys in `KEPT_TAG_KEYS`,
   a literal tuple in the script, plus every key starting `name` (Welsh and Gaelic
-  names). `KEPT_TAG_KEYS` is written from `grep -rhoE '"[a-z_:]+"' src/pyntpot/maps |
-  sort -u` intersected with the keys present in the payloads, and the brief records
-  the command and the resulting list in the run log. Option `--simplify-m M`:
-  Douglas-Peucker on every way's and member's `geometry`, tolerance `M` metres
-  (local equirectangular metres at the payload's mean latitude), first and last points
-  kept exactly so ways still join.
+  names). `KEPT_TAG_KEYS` is the result of `grep -rhoE --include='*.py' '"[a-z_:]+"'
+  src/pyntpot/maps | sort -u` intersected with the keys present in the payloads, plus
+  the seven keys P7.V5 ranks on, which `src/` does not name yet: `wikidata`,
+  `wikipedia`, `heritage`, `listed_status`, `shop`, `brand`, `brand:wikidata`. The
+  brief records the command and the resulting tuple in the run log. Option
+  `--simplify-m M`: Douglas-Peucker on every way's and member's `geometry`, tolerance
+  `M` metres (local equirectangular metres at the payload's mean latitude), first and
+  last points kept exactly so ways still join.
 - Test first (`test_trim_fixture.py`, plain, under 2 s, a hand-built three-element
   payload): the output is minified; `nodes` and `bounds` are gone; an unread tag is
-  gone and `name:cy` stays; `--simplify-m` keeps a way's endpoints and drops a
-  collinear midpoint; a second run is byte-identical (idempotent).
+  gone, and `name:cy` and `wikidata` stay; `--simplify-m` keeps a way's endpoints and
+  drops a collinear midpoint; a second run is byte-identical (idempotent).
 - Proof the trim changes no picture: before trimming, `uv run pytest -m golden` exact
   is green; after trimming, the same run is green with no golden file touched (`git
-  status tests/golden` clean). If any golden moves, the key it needed goes into
-  `KEPT_TAG_KEYS` and the run repeats; a moved image is never regenerated in this slice.
-- Leave alone: `src/**`, `tests/golden/**`, `track.gpx` and `elevation-*.json` files.
+  status tests/golden docs/images` clean), and the unit tests that read the Lynmouth
+  payload are green. If anything moves, the key it needed goes into `KEPT_TAG_KEYS` and
+  the run repeats; a moved image is never regenerated in this slice.
+- CI: record the round's baseline run first (see CI time).
+- Leave alone: `src/**`, `tests/golden/**`, `track.gpx` and `elevation-*.json` files,
+  every other fixture directory.
 - Gate: G-here; `-m golden` exact. Commit: `Trim the fixture payloads to what the
-  code reads`. Done: sizes before and after per directory in the run log; the
-  P7.3 budgets lowered in P7.V9a, not here.
+  code reads`. Done: sizes before and after per directory in the run log; the fixture
+  budgets lowered in P7.V9a, not here.
 
 #### P7.V1b. Fetch margins as options
 
 - Predecessor: P7.V1.
 - At `60e4335`: `Cache.ensure` (cache.py:210) fetches features and elevation over the
   module constant `MARGIN_M` (1500 m) and land cover over `LANDCOVER_MARGIN_M` (2600 m);
-  `Cache.key` already hashes a margin, but `ensure` never varies it; `fetch`
-  (pipeline.py:61) takes no margin. No theme or argument can widen the ground fetched.
-- ADR 0040 `fetch-margins`: `fetch(..., margin_m: float = MARGIN_M,
-  landcover_margin_m: float = LANDCOVER_MARGIN_M)` and the same keywords on
-  `Cache.ensure`, passed through to the payload paths and `Cache.key`. At the defaults
-  the key and every payload name are unchanged, so no fixture is renamed and no golden
-  moves. Each margin must be at least 0 and at most 20 000 m, and `landcover_margin_m`
-  at least `margin_m`; otherwise `ValueError` naming the bad value. The card frame is
-  unchanged by the margins (it stays a theme matter, the ribbon fields).
-- Owner files: `src/pyntpot/maps/{cache,pipeline}.py`, `src/pyntpot/maps/cli.py` (a
-  `--margin-m` option, the land-cover margin defaulting to the larger of its default
-  and the given margin), their tests, `tests/fixtures/record_fixture.py` (`--margin-m`,
-  `--landcover-margin-m`), `docs/decisions/0040-fetch-margins.md`, run log, tasks.
-- Test first: default margins give the same key as today (a pinned literal key for the
-  Lynmouth track); a wider margin gives a different key and a wider requested box (read
-  from the providers' request, using the offline recording providers the tests already
-  use, never a mock); bad margins raise.
+  `Cache.key` (cache.py:95-124) hashes `margin_m` only, and `ensure` never varies it;
+  `fetch` (pipeline.py:61) takes no margin. Every consumer builds the key and calls
+  `fetch` with the defaults: `cli.py:76`, `examples/{place_card,map_styles,route_map,how_to_route_ink}.py`,
+  `tests/support/golden.py:53`, `tests/golden/test_places.py:138`.
+- ADR 0040 `fetch-margins`:
+  - `fetch(..., margin_m: float = MARGIN_M, landcover_margin_m: float =
+    LANDCOVER_MARGIN_M)` and the same keywords on `Cache.ensure`, passed through to the
+    payload boxes.
+  - `Cache.key(track, features, elevation, margin_m=MARGIN_M,
+    landcover_margin_m=LANDCOVER_MARGIN_M)`: `"landcover_margin_m"` joins the canonical
+    JSON only when it is not the default (the omit-at-default rule of the digests), so
+    the default key is byte-identical and two recordings that differ only in the land
+    cover margin get different keys. At the defaults no fixture is renamed and no
+    golden moves.
+  - Each margin must be at least 0 and at most 20 000 m, and `landcover_margin_m` at
+    least `margin_m`; otherwise `ValueError` naming the bad value.
+  - The card frame does not depend on the margins (it is the ribbon fields'), and
+    `build_basemap` clips every layer to the card box (`layers.py:286-298`), so ground
+    fetched beyond the card is never painted. Invariant a recording keeps: the card box
+    lies inside the fetched feature box (P7.V9a sizes margins by it; `test_places.py`
+    asserts it). Explicit margins, not a margin derived from the frame (C1 not taken:
+    it would make the payload names depend on the theme's ribbon fields).
+- Consumers: `cli.py` gains `--margin-m` and passes it to both `fetch` and `cache.key`,
+  the land-cover margin being the larger of its default and the given margin. The
+  examples and `tests/support/golden.py` keep the defaults (their fixtures are recorded
+  at the defaults), untouched here. `place_card.py` and `test_places.py` gain margins in
+  P7.V9a.
+- Owner files: `src/pyntpot/maps/{cache,pipeline,cli}.py`, their tests,
+  `docs/reference/cli.md` (the option and its help text, which
+  `test_reference_pages.py` requires), `tests/fixtures/record_fixture.py`
+  (`--margin-m`, `--landcover-margin-m`), `docs/decisions/0040-fetch-margins.md`, the ADR
+  index row, run log, tasks.
+- Test first: default margins give the pinned Lynmouth key (`support.paths.KEY`, a
+  literal); a wider margin gives a different key and a wider requested box (read from
+  the providers' request, using the offline recording providers the tests already use,
+  never a mock); a non-default land-cover margin alone gives a different key; bad
+  margins raise; `--margin-m` reaches the key.
 - Gate: G-here; `-m golden` exact with no golden moved.
 - Commit: `Fetch margins as options`.
 
+#### P7.V9a. Fixtures for the showcase maps (network)
+
+- Predecessor: P7.V1b. Before the engine chain.
+- Owner files: `tests/fixtures/{ambleside,skye}/` (new), `tests/fixtures/{oxford,y-fenni,yr-wyddfa}/`
+  (re-recorded), `tests/fixtures/make_track.py` (a `--step-m` option, default the
+  current `STEP_M` 20.0, `make_track.py:46`), `tests/architecture/test_coordinates.py`
+  (boxes, keys and budgets), `tests/support/paths.py` (keys),
+  `tests/golden/test_places.py` (fixtures, margins, expected labels, the card-box
+  check), `examples/place_card.py` (`margin_m` and `landcover_margin_m` options, passed
+  to both `fetch` and `cache.key`), `tests/support/docs_images.py` (`_PLACES` carries
+  each place's margin options; the Yr Wyddfa row sets them), the images and masters
+  these fixtures paint, regenerated with `make_docs_images.py` for the named entries
+  (`places/{oxford,y-fenni,yr-wyddfa}.webp` and their masters), the fixture READMEs,
+  `docs/decisions/0032-focus-place-fixtures.md` (an amendment section), run log, tasks.
+- Margin rule (Skye and Yr Wyddfa): the slice projects the recorded track, computes
+  the card box with `journal_geometry` under the default ribbon fields (as
+  `layers.py` does), and sets `margin_m` to the smallest whole kilometre that covers
+  the card box's largest overhang beyond the track's box plus 1 km of headroom for
+  P7.V10's theme; `landcover_margin_m` equal to it (at least the default). Recorded in
+  the README and the ADR 0032 amendment. Over 20 km stops and reports. Expected: Skye
+  near 15 to 19 km (the aspect floor `card_aspect_min` 1.12 widens a tall island's card
+  east and west); Yr Wyddfa at least 3 km.
+- Routes (each by `make_track.py --list-ways` then `--ways`, with the checks named):
+  - **Ambleside, the Loughrigg circuit** (5 to 9 km, loop): Ambleside (Bridge House),
+    Rothay Park, Miller Bridge, up to Loughrigg Fell, Loughrigg Terrace above Grasmere,
+    past Rydal Cave, along Rydal Water's south shore to Pelter Bridge, back by the
+    Rothay to Ambleside. Via-node checks at Miller Bridge and Pelter Bridge. Default
+    margins.
+  - **Skye, an island tour** (one way on public roads, 240 to 320 km): from Kyleakin
+    (the Skye Bridge end) by the A87 to Broadford; a spur on the A851 to Armadale and
+    back; the A87 to Sligachan; the A863 and B8009 to the Glen Brittle road, a spur to
+    the Fairy Pools car park and back; the B8009 to Carbost and back to the A863; the
+    A863 to Dunvegan; the B884 spur to Neist Point and back; the A850 and the A87 to
+    Uig; the A855 round by Staffin and the Storr; ending in Portree. The spurs are
+    out-and-back legs, which P7.V7 keeps apart. Via-node checks at Kyleakin, Broadford,
+    Armadale, Sligachan, the Fairy Pools car park, Carbost, Dunvegan, Neist Point, Uig,
+    Staffin and Portree. `make_track.py --step-m 100`. Margins by the rule above. The
+    payloads are trimmed with `--simplify-m 15`. Size: the causes report's whole-island
+    counts are about 78 MB raw, and the review measured 0.13 of raw after trimming and
+    15 m simplification on Yr Wyddfa, so about 10 MB, at the budget: if `skye/` is over
+    10 MB, re-trim at `--simplify-m 25` (both under half a display pixel at the 720 px
+    card; the slice records `mpp_display`); still over stops and reports. If the mirror
+    cannot answer the query, split nothing: stop and report the error and the counts.
+  - **Oxford, the colleges and bridges** (3 to 5 km, loop): Carfax, the High Street,
+    Catte Street past the Radcliffe Camera, Queen's Lane, the High Street out over
+    Magdalen Bridge and back, Rose Lane into Christ Church Meadow, the Broad Walk,
+    through Christ Church's public way if OSM tags one `access` other than `private`,
+    else by the Meadow Buildings and the War Memorial Garden, St Aldate's to Carfax.
+    Via-node checks at the Radcliffe Camera and Magdalen Bridge. Default margins.
+  - **Y Fenni, a food tour** (2 to 4 km, loop): from the castle, past Angel Bakery,
+    Bean & Bread (Lion Street), Rate of Rise (Nevill Street), Shepherd's Ice Cream
+    (Market Street) and Tŷ Melin, back to the castle. Via-node checks at the four OSM
+    stops (ids from `p7-research.md` 10.2's check, recorded in the README, never
+    coordinates in the run log). Tŷ Melin's point: from its public address, placed by
+    the slice on its building's OSM way or its street, recorded in
+    `tests/fixtures/y-fenni/README.md` (exempt from the coordinate gate), and named in
+    the chat message for the maintainer to confirm. Default margins.
+  - **Yr Wyddfa, re-recorded wider** (same track): margins by the rule above, so the
+    card can show Llyn Padarn, the Glyderau's flank and Llyn Cwellyn's side of the
+    massif as far as its card reaches.
+- `test_places.py`: `Place` gains `margin_m` and `landcover_margin_m` (defaults
+  `MARGIN_M` and `LANDCOVER_MARGIN_M`), passed to `cache.key` and `fetch`; for Skye and
+  Yr Wyddfa the test projects the fetched feature box's corners
+  (`track.bounding_box(place.margin_m)`) through `basemap.projection` and asserts
+  `basemap.card.box` lies inside it. For the three default-margin places the run log
+  records whether the card box lies inside the default box (no assertion).
+- Budgets: re-set from the trimmed sizes: each fixture under 6 MB on disk, `skye/` and
+  `yr-wyddfa/` under 10 MB; over budget stops and reports.
+- Goldens: `test_places.py` expected label lists rewritten from the first run (as
+  P7.3 did), recorded in the run log; the three place images regenerated.
+- `keswick/` and `trotternish/` stay until P7.V12a moves the pages off them.
+- CI: record a golden run after the last fixture (see CI time).
+- Commit: one per fixture.
+
 #### P7.V2. Water areas keep their islands
 
-- Predecessor: P7.V1.
+- Predecessor: P7.V9a.
 - Cause (investigation, `research/p7/critique/causes.md` section 1):
-  `osm_elements._area` (osm_elements.py:276-279 at `60e4335`) keeps only the outer
-  rings of a water multipolygon, so the Cherwell's relation (14 inner rings, 41.1 of
-  49.2 ha) fills solid, and `rivers.channel` measures the river's width against the
-  outer envelope (160 to 190 render px, class `major`).
-- Fix: `Harvest` gains `lake_holes` (the inner rings of water areas); `osm.py` builds
-  the lake fill with `rings_path(found.lakes, found.lake_holes)` (the fill is nonzero
-  already, `ink/raster.py:128`); the clip and simplify in `layers.py` keep each ring's
-  winding; `rivers._banks_at` rays to the nearest bank among all water rings, holes
-  included.
-- Owner files: `src/pyntpot/maps/{osm_elements,osm,layers,rivers}.py`, their unit
-  tests, `docs/decisions/0036-fourth-golden-regeneration.md` (new: the process, then
-  this slice's section), the goldens that move, `p7-run-log.md`, `tasks.md`.
+  `osm_elements._area` (the water branch, osm_elements.py:283-286 at `60e4335`) keeps
+  only the outer rings of a water multipolygon, so the Cherwell's relation (14 inner
+  rings, 41.1 of 49.2 ha) fills solid, and `rivers.channel` measures the river's width
+  against the outer envelope (160 to 190 render px, class `major`).
+- Fix:
+  - `Harvest` gains `lake_holes` (the inner rings of water areas); `osm.py` builds the
+    lake fill with `rings_path(found.lakes, found.lake_holes)` (the fill is nonzero
+    already, `ink/raster.py:128`; `rings_path` winds holes clockwise, and
+    `rings.clip_ring` and `simplify` in `layers.py` keep each ring's winding).
+  - In water: after `parse_path` the holes are ordinary rings in `Layers.lakes`, so
+    `rivers._ring_at` (rivers.py:73-78, the first ring that holds the point) would put
+    an island in water. It becomes a nonzero winding test over all rings.
+  - Banks: `rivers._banks_at` takes the nearest crossing of any ring on each ray, holes
+    included.
+  - The vector export reads `water_area` too (`vector_layers.py:226`), so it gains the
+    holes; its test's expected rings move and are rewritten.
+- Owner files: `src/pyntpot/maps/{osm_elements,osm,layers,rivers}.py`, their unit tests,
+  `tests/unit/maps/test_vector_layers.py`, `tests/golden/test_places.py` (expected
+  labels, if they move), `docs/decisions/0036-fourth-golden-regeneration.md` (new: the
+  process, then this slice's section), the ADR index row, the goldens, docs images and
+  masters that move, `p7-run-log.md`, `tasks.md`.
 - Test first: a synthetic water multipolygon with one island: the painted lake mask is
-  bare inside the island; a river measured beside the island gets the channel width,
-  not the envelope's.
+  bare inside the island; a point on the island is not in water; a river measured
+  beside the island gets the channel width, not the envelope's.
 - Golden: `make_golden.py --compare` first; expected to move the Oxford place pin and
   any docs image of Oxford; Lynmouth's moves only if its payload holds holed water (the
   slice reports which). Regenerate, look, record.
@@ -6708,15 +6863,22 @@ maintainer names decision 9 (route B) explicitly.
 #### P7.V3. A leader never crosses a placed label
 
 - Predecessor: P7.V2.
-- Cause: `_place_flat` (placement_flat.py:150-180) costs a candidate's box against
+- Cause: `_place_flat` (placement_flat.py:136-184) costs a candidate's box against
   placed boxes but not its leader segment, so "Lake Road Chapel"'s leader cuts the "K"
-  of "Keswick" and its underline.
-- Fix: a cost `LEADER_CROSS_LABEL_COST` (equal to `ROAD_CROSS_COST`) for each placed
-  box the candidate's leader segment crosses, in `_place_flat`'s scoring.
-- Owner files: `src/pyntpot/maps/lettering/placement_flat.py` and its test, ADR 0036
-  section, moved goldens, run log, tasks.
+  of "Keswick" and its underline. The swap pass re-scores seats on the same ground
+  terms (`_seat_cost` and `_pair_cost`, placement.py:272-306), so without the term
+  there `_swap_seats` can move a label back across.
+- Fix: a cost `LEADER_CROSS_LABEL_COST` (equal to `ROAD_CROSS_COST`, 90) for each
+  placed box the candidate's leader segment crosses, in `_place_flat`'s scoring and in
+  `_seat_cost`.
+- Owner files: `src/pyntpot/maps/lettering/{placement_flat,placement}.py` and their
+  tests, `tests/golden/test_places.py` (expected labels, if they move), ADR 0036
+  section, moved goldens, docs images and masters, run log, tasks. `placement.py` is 380
+  lines at `ef20569`; if the term takes it over 400, the swap pass moves to
+  `placement_swap.py` in the same slice (a split, not a trim).
 - Test first: two labels where the cheapest unpenalised spot for the second puts its
-  leader through the first's box; the placed leader no longer crosses.
+  leader through the first's box; the placed leader no longer crosses, and a swap pass
+  over the pair does not put it back.
 - Golden: `--compare`, regenerate, `--require-labels-equal` is not used (positions
   move); the run log lists every label whose position moved.
 - Commit: `Leaders do not cross placed labels`.
@@ -6730,17 +6892,19 @@ maintainer names decision 9 (route B) explicitly.
   into "cl", and draws o as a double ring.
 - Investigation inside the slice: paint each of `K k e m n d o a g` alone at 64 px with
   the shipped hand, overlay the traced strokes, and find whether the fault is the
-  raster (`RASTER_EM` 128), the junction merge, the pixel-staircase chains or
-  `FLANK_MIN` (0.40). The fix changes the fewest of those that clears every listed
-  glyph; candidates named by the critique: smoothing staircase chains, merging
-  junction nodes closer than a stroke width, `FLANK_MIN` raised, `RASTER_EM` 256.
+  raster (`RASTER_EM` 128, skeleton.py:30), the junction merge, the pixel-staircase
+  chains or `FLANK_MIN` (0.40, trace.py:50). The fix changes the fewest of those that
+  clears every listed glyph; candidates named by the critique: smoothing staircase
+  chains, merging junction nodes closer than a stroke width, `FLANK_MIN` raised,
+  `RASTER_EM` 256.
 - Test first (`tests/letters/test_skeleton_glyphs.py`, plain): for each listed glyph
   the traced strokes form the expected number of connected pieces (K 1, k 1, e 1, m 1,
   n 1, d 1, o 1, a 1, g 1) and no two strokes run parallel within half a stroke width
   for more than a stroke width (the doubled-stem test). Red before the fix on at least
   k, m, n, o.
-- Owner files: `src/pyntpot/letters/{skeleton,trace}.py`, the new test, ADR 0036
-  section, moved goldens (expected: every lettered golden), run log, tasks.
+- Owner files: `src/pyntpot/letters/{skeleton,trace}.py`, the new test,
+  `tests/golden/test_places.py` (expected labels, if they move), ADR 0036 section, moved
+  goldens (expected: every lettered golden), docs images and masters, run log, tasks.
 - Stop: if the fix needs a single-line stroke font instead, stop and report; that is a
   roadmap item, not this slice.
 - Commit: `The skeleton draws each stroke once`.
@@ -6748,249 +6912,408 @@ maintainer names decision 9 (route B) explicitly.
 #### P7.V5. Landmark ranking
 
 - Predecessor: P7.V4.
-- Fix (landmark report, 2(b)): in `candidates/landmark_classes.py`, an element tagged
-  `shop`, `brand` or `brand:wikidata` gets class `other` (never offered); a
-  `tourism=museum` without `wikidata`, `wikipedia`, `heritage` or `listed_status` is
-  class `sight` (tier 2); `historic=castle` is tier 1. In `candidates/landmarks.py`,
-  ranking within a tier is `(tier, not recorded, distance / reach)` where recorded
-  means any of those four keys. `osm_elements.LANDMARK_TAG_KEYS` gains the four keys
-  and `brand`, `brand:wikidata`, `shop`.
-- Owner files: those three modules and their tests, ADR 0036 section, moved goldens
-  (expected: the Keswick and Y Fenni place pins at least), run log, tasks.
+- Fix (landmark report, 2(b)), in `candidates/landmark_classes.classify`, checked in
+  this order after the plaque rule and before `_RULES`:
+  - an element tagged `shop`, `brand` or `brand:wikidata` is class `other` (never
+    offered), whatever else it is tagged;
+  - a `tourism=museum` that is not recorded is class `sight` (tier 2); this check runs
+    before the `attraction` rule, which would otherwise take it through
+    `TOURISM_DESTINATIONS`;
+  - a castle (`historic=castle` or `building=castle`) is class `building` (tier 1,
+    450 m): a rule ahead of `monument` in `_RULES`, since `historic=castle` is in
+    `MONUMENT_HISTORIC` and would otherwise be `monument` (tier 2).
+
+  "Recorded" means any of `wikidata`, `wikipedia`, `heritage`, `listed_status`. In
+  `candidates/landmarks.py`, ranking within a tier is `(tier, not recorded, distance /
+  reach)`. `osm_elements.LANDMARK_TAG_KEYS` gains those four keys and `shop`, `brand`,
+  `brand:wikidata`.
+- The fixtures already hold the seven keys: P7.V1's `KEPT_TAG_KEYS` and the recorder
+  keep them (Lynmouth's payload has `wikidata` 24 times, `wikipedia` 11 and `shop` 2).
+  Nothing is re-recorded or re-trimmed in this slice; the slice confirms with a grep
+  over the payloads and stops and reports if a key is missing.
+- Owner files: `candidates/landmark_classes.py`, `candidates/landmarks.py`,
+  `osm_elements.py` and their tests, `tests/golden/test_places.py` (expected labels),
+  ADR 0036 section, moved goldens (expected: the Keswick and Y Fenni place pins at
+  least), docs images and masters, run log, tasks.
 - Test first: a shop tagged `tourism=museum` is never offered; an unrecorded museum
-  ranks below a recorded church at the same distance; a castle outranks a chapel.
-- `P7.V1`'s `KEPT_TAG_KEYS` gains the new keys and the fixtures are re-trimmed in this
-  slice if the payloads held them before P7.V1 dropped them: P7.V1 keeps every key
-  `src/` names, so this slice first checks with `grep` and, if a key is missing, re-runs
-  `record_fixture.py` for the affected place (network) or stops and reports.
+  ranks below a recorded church at the same distance; a `historic=castle` outranks a
+  chapel; a recorded museum is still `attraction`.
 - Commit: `Landmarks rank shops out and recorded places first`.
 
 #### P7.V6. The nib's touch-down has no square edge
 
 - Predecessor: P7.V5.
-- Cause: `ink/deposit.py pool` cuts its Gaussian at 2 sigma, leaving a square blot at
-  wide widths. Fix: the span is `ceil(3 * r)`.
-- Owner files: `src/pyntpot/ink/deposit.py`, its test, ADR 0036 section, moved goldens,
-  run log, tasks. Also the benchmark budget: re-measure `tests/benchmarks/test_ink.py`
-  and record; a slowdown over 15% stops and reports.
-- Test first: a wide pool's deposit at the corner of its span is below 1% of its
-  centre.
+- Cause: `ink/deposit.py pool` cuts its Gaussian at `span = int(r * 2)`
+  (deposit.py:168), leaving a square blot at wide widths: the corner sits at `exp(-4)`
+  (1.8%) and the side midpoint, where the square edge shows, at `exp(-2)` (13.5%) of
+  the centre. Fix: the span is `ceil(3 * r)`, which puts the side midpoint at
+  `exp(-4.5)` (1.1%).
+- Owner files: `src/pyntpot/ink/deposit.py`, its test, `tests/golden/test_places.py`
+  (expected labels, if they move), ADR 0036 section, moved goldens, docs images and
+  masters, run log, tasks. Also the benchmark budget: re-measure
+  `tests/benchmarks/test_ink.py` and record; a slowdown over 15% stops and reports.
+- Test first: a wide pool's deposit at the side midpoint of its span is below 1.5% of
+  its centre (13.5% before the fix).
 - Commit: `The pool fades to nothing at its edge`.
 
 #### P7.V7. The pen route keeps its legs apart
 
 - Predecessor: P7.V6.
-- Cause: in pen mode `compose.route` lays the pen plate along `layers.route`, not the
-  separated strands, so a route that doubles back merges into one line.
-- Fix: the pen plate is laid along the strands the solid route already uses.
-- Owner files: `src/pyntpot/maps/compose.py`, `src/pyntpot/maps/strands.py` if needed,
-  tests, ADR 0036 section, moved goldens (only cards with `route_pen = true`), run log,
-  tasks.
-- Test first: an out-and-back track painted in pen mode shows two separated lines
-  where the strands separate them.
+- At `60e4335`: the pen route is painted at paint time by
+  `painter/pen.py:paint_route_pen` (pen.py:108-117) along `job.layers.route`, in render
+  pixels, into the `pen` plate; `compose.route` only tints that plate when the ride
+  ink's style is `"pen"` (compose.py:69-75). The strands come later, in
+  `pipeline.paint` after `paint_plates` (pipeline.py:121-127), from `route_px` with a
+  gap of `route_ink().px * STRAND_GAP_WIDTHS`, so they do not exist when the pen plate
+  is drawn. `default.toml` has `route_pen = true` with `MAJ6-e` (`:254-257`), so every
+  card paints a pen plate.
+- Fix: `paint_route_pen` separates the route in render pixels before it lays the pen,
+  `separate_strands(job.canvas.px(route), route_pen_width_px * job.scale *
+  STRAND_GAP_WIDTHS)`, and lays one stroke per strand. `pipeline.paint`'s strands
+  (the solid route and the lettering read them) keep their gap from `route_ink().px`.
+- Owner files: `src/pyntpot/maps/painter/pen.py`, `src/pyntpot/maps/strands.py` (if
+  `separate_strands` needs a render-pixel form), `src/pyntpot/maps/painter/plates.py`
+  (if the job must carry the strands), `src/pyntpot/maps/pipeline.py` (if the gap rule
+  becomes one shared helper), their tests, `tests/golden/test_places.py` (expected
+  labels, if they move), ADR 0036 section, moved goldens, docs images and masters, run
+  log, tasks.
+- Expected moves: Lynmouth's `pen.webp` golden and every card's pen plate; composed
+  images move only where the ride ink's style is `"pen"`.
+- Test first: an out-and-back track painted with `route_pen = true` gives a pen plate
+  with two separated lines where the strands separate them (a column across the legs
+  crosses two inked runs, not one).
 - Commit: `The pen route follows the separated strands`.
 
 #### P7.V7b. The paper's edge and foxing
 
 - Predecessor: P7.V7.
-- At `60e4335`, `ink/paper.paper_plate` (paper.py:41-54): the worn border
-  (`paper_worn`, decay `max(w * 0.012, 8)`) and the vignette (`paper_vignette` 0.05,
-  decay `w * 0.34`) multiply all three channels alike, so the edge greys; foxing
-  (`paper_foxing` 0.09) is `sheet.noise(120.0, 2)` thresholded at 0.80, broad grey
-  smudges at the same places on every sheet of a seed.
-- Fix:
-  - Edge: the vignette's decay narrows to `w * 0.08`, its width modulated by the
-    sheet's low-frequency noise (amplitude half the decay) so it is uneven; the worn
-    border and the vignette darken through a warm tint (`PAPER_EDGE_TINT`, a module
-    constant near raw sienna `#b08a5a`: each channel multiplied by
-    `1 - k * (1 - tint_channel)`), so the edge browns, never greys.
-  - Foxing: small specks from a high-frequency field (`sheet.noise(6.0, 1)`, or the
-    nearest scale the sheet offers), thresholded so about 0.3% of the area is touched,
-    each speck tinted rust (`PAPER_FOX_TINT`, near `#9a5a32`) by the same per-channel
-    rule, strength `paper_foxing`. The style fields and their defaults are unchanged.
-- Owner files: `src/pyntpot/ink/paper.py`, its unit test file at the base, ADR 0036
-  section, every golden that moves (expected: all of them), run log, tasks.
-- Test first: on a plain sheet, red over blue at an edge pixel is greater than at the
-  centre (warm, not grey); the edge darkening is within 2% of the centre's value a
-  tenth of the width in; foxed pixels cover under 1% of the sheet and every connected
-  speck is under 0.2% of the width across; red over blue at a speck exceeds the
-  paper's.
-- Golden: `--compare` first; every image is expected to move; the run log records the
-  largest channel change away from the edge band, which should be foxing only.
+- At `60e4335`, `ink/paper.paper_plate` (paper.py:41-61): the worn border
+  (`paper_worn`, decay `max(w * 0.012, 8)`, modulated by `sheet.noise(26.0, 2)`) and the
+  vignette (`paper_vignette` 0.05, decay `w * 0.34`) multiply all three channels alike,
+  so the edge greys; foxing (`paper_foxing` 0.09) is `sheet.noise(120.0, 2)`
+  thresholded at 0.80, broad grey smudges. Those two `sheet.noise` calls are the only
+  fields it draws from the sheet's generator; later washes draw from the same one
+  (`examples/wash.py:48-52`), and `value_noise` draws in proportion to its lattice, so
+  any new or rescaled draw would change every later field in every example.
+- `PaperStyle` gains `paper_edge: Literal["classic", "warm"] = "warm"` (ADR 0036
+  section). Not in `DIGEST_OMITS_AT_DEFAULT`: the default look changes, so the base and
+  full digests move on purpose (a plate cached under the old paper must miss);
+  `test_style.py`'s three pinned digests and `test_style_groups.py`'s `PaperStyle`
+  row and pinned digest are re-pinned and recorded. `default.toml`'s `[paper]`, which
+  names every paper field, gains `paper_edge = "warm"` after `paper_foxing`. The
+  example themes do not name it and take the default.
+- `"classic"` is today's code path exactly: the same lines, the same two draws in the
+  same order, the same arithmetic.
+- `"warm"`:
+  - Draws: the same two fields, in the same order and at the same scales,
+    `n26 = sheet.noise(26.0, 2)` then `n120 = sheet.noise(120.0, 2)`; no other draw.
+  - Edge: the worn border as today (with `n26`); the vignette's decay narrows to
+    `w * 0.08 * (0.5 + n26)`, so it is uneven by half its decay; the worn border and
+    the vignette darken through a warm tint (`PAPER_EDGE_TINT`, a module constant near
+    raw sienna `#b08a5a`: each channel multiplied by `1 - k * (1 - tint_channel)`), so
+    the edge browns, never greys.
+  - Foxing: specks from the sheet's existing high-frequency field, `sheet.gran` (no
+    draw), where it exceeds `FOX_SPECK_LEVEL` (a module constant the slice sets on the
+    default sheet so about 0.3% of the area is touched, recorded), weighted by
+    `0.4 + 0.6 * n120` so the specks gather as foxing does; each speck tinted rust
+    (`PAPER_FOX_TINT`, near `#9a5a32`) by the same per-channel rule, strength
+    `paper_foxing`. The other style fields and their defaults are unchanged.
+  - `paper.py`'s invariant is updated: it draws two fields from the sheet's generator,
+    in that order, whichever `paper_edge`; `"warm"` also reads `sheet.gran`.
+- `examples/fern.py:135` becomes `PaperStyle(km_glazing=True, paper_foxing=0.03,
+  paper_edge="classic")`, so `painting-with-python/fern.webp` and its master stay
+  byte-identical (the pin proves it). `fractals.md` quotes `MAPS`, `PROBABILITIES`,
+  `fern_points`, `_count` and `_cover` from `fern.py` (`test_tutorials.py`'s
+  `<!-- from -->` sync), not `main`, so the sync stays green. If the maintainer has said
+  the fern takes the new paper (decision 3), this line is left alone and the fern
+  regenerates with the rest.
+- Owner files: `src/pyntpot/ink/{paper,style}.py`, `src/pyntpot/maps/themes/default.toml`
+  (the one key), `examples/fern.py` (the one line), `tests/unit/ink/test_paper.py`,
+  `tests/unit/maps/test_style.py` (the digest pins), `tests/unit/maps/test_style_groups.py`
+  (the `PaperStyle` row and digest), `tests/unit/maps/painter/test_smoke.py` (its pinned
+  hashes), `docs/reference/style-fields.md` (`paper_edge` in the `paper` section),
+  `tests/golden/test_places.py` (expected labels, if they move), ADR 0036 section,
+  every golden, docs image and master that moves (expected: all of them except the
+  fern's), run log, tasks.
+- Test first (`test_paper.py`, small sheets):
+  - `"classic"` reproduces today's plate: the hash of its array on a small seeded sheet
+    equals a literal pinned from the base before the edit;
+  - both edges leave the sheet's generator in the same state (the next `sheet.noise`
+    draw is equal after either);
+  - `"warm"`: red over blue at an edge pixel is greater than at the centre (warm, not
+    grey); the edge darkening is within 2% of the centre's value a tenth of the width
+    in; foxed pixels cover under 1% of the sheet and every connected speck is under
+    0.8% of the width across; red over blue at a speck exceeds the paper's.
+- Golden: `--compare` first; every image except the fern is expected to move. Because
+  the draws are unchanged, away from the edge band (a tenth of the width) the change is
+  the foxing only: the run log records the largest channel change there and confirms it
+  sits on specks.
+- CI: record a golden run (see CI time).
 - Commit: `The paper browns at its edge and foxes in specks`.
 
 #### P7.V8. Showcase style fields
 
 - Predecessor: P7.V7b. Parallel with P7.V8b and P7.V9b.
-- ADR 0037: three style fields, each omitted from its group's digest at its default
-  (`DIGEST_OMITS_AT_DEFAULT`), so no golden moves:
+- ADR 0037:
   - `basemap.minor_road_classes`: the minor highway classes `roads = "all"` keeps;
-    default the current set (`tertiary`, `unclassified`, `residential`, `track`,
-    `service`); read in `osm_elements._road`.
-  - `cover.relief_strength`: multiplies `painter/paper.relief_density`; default 1.0;
-    the 0.40 cap scales with it.
-  - `route_inks.<sport>.effect.blend`: `"normal"` (today) or `"multiply"`, read by
-    `compose.route` for both solid and pen routes; `opacity` (default 1.0) likewise.
+    default the current set, `MINOR_ROADS` (`providers/overpass.py:61`: `tertiary`,
+    `unclassified`, `residential`, `track`, `service`); read in `osm_elements._road`.
+    The fetch query is unchanged.
+  - `cover.relief_strength`: multiplies the relief density of
+    `painter/paper.relief_density` (`clip(0.30 * (1 - shade), 0, 0.40)`, paper.py:47);
+    default 1.0; the 0.40 cap scales with it; passed in by its caller,
+    `painter/relief.py`.
+  - Those two dataclass fields, and only those, join `DIGEST_OMITS_AT_DEFAULT`, so no
+    digest moves.
+  - Route blend: `route_inks.<sport>.effect` is a `dict[str, Any]` and already holds
+    `blend = "normal"` (`default.toml:266,281,296,311`). `compose.route` reads
+    `effect["blend"]`, `"normal"` (today) or `"multiply"`, for both the solid and the
+    pen route, and `effect.get("opacity", 1.0)` likewise. `opacity` is not written into
+    `default.toml` (that would move the pinned `Style.digest()`).
 - Owner files: `src/pyntpot/maps/{style,style_groups,osm_elements,compose}.py`,
-  `src/pyntpot/maps/painter/paper.py`, `src/pyntpot/maps/themes/default.toml` (the
-  fields at their defaults), tests, ADR 0037, run log, tasks.
-- Test first: each field at its default leaves the digest unchanged; a non-default
-  value changes it; `minor_road_classes` without `service` drops a service way;
-  relief strength 2 darkens a slope; multiply over a dark wash is darker than normal.
+  `src/pyntpot/maps/painter/{paper,relief}.py`, `src/pyntpot/maps/themes/default.toml`
+  (the two dataclass fields at their defaults), tests,
+  `tests/unit/maps/test_style_groups.py` (the `BasemapStyle` and `CoverStyle` rows,
+  `BASEMAP_DEFAULTS`, the `CoverStyle` pinned digest, re-pinned and recorded),
+  `docs/reference/style-fields.md` (the two fields, and `blend` and `opacity` under the
+  route inks), ADR 0037, the ADR index row, run log, tasks.
+- Test first: each dataclass field at its default leaves the three style digests
+  unchanged; a non-default value changes them; `minor_road_classes` without `service`
+  drops a service way; relief strength 2 darkens a slope; multiply over a dark wash is
+  darker than normal; opacity 0.5 is lighter than 1.0; an effect table without
+  `opacity` reads 1.0.
 - Gate also: `-m golden` exact with no golden moved.
 - Commit: `Style fields for showcase maps`.
 
-#### P7.V8b. Artist's pigments
+#### P7.V8b. Painter's pigments
 
 - Predecessor: P7.V7b. Parallel.
-- ADR 0039: `ink.PIGMENTS` gains painters' pigments for non-map pieces and routes:
-  ultramarine, cerulean, burnt sienna, raw sienna, yellow ochre, sap green, indigo,
-  perylene maroon, quinacridone rose, Payne's grey; each with a hex and a
-  transparency (`PIGMENT_TRANSPARENCY` or wherever transparency lives at its base),
-  staining and granulating values left at the existing defaults unless the module
-  has fields for them. Names in the glossary. Existing names unchanged.
-- Owner files: `src/pyntpot/ink/pigment.py`, its test, `GLOSSARY.md` rows, ADR 0039,
-  run log, tasks.
-- Test first: every new pigment paints a non-white swatch and its transparency is in
-  [0, 1]; the existing entries are unchanged (pinned literals).
-- Commit: `Painters' pigments`.
-
-#### P7.V9a. Fixtures for the showcase maps (network)
-
-- Predecessor: P7.V1b. Before the engine chain.
-- Owner files: `tests/fixtures/{ambleside,skye}/` (new), `tests/fixtures/{oxford,y-fenni}/`
-  (re-recorded),
-  `tests/architecture/test_coordinates.py` (boxes and budgets), `tests/support/paths.py`,
-  `tests/golden/test_places.py` (fixtures and expected labels), the fixture READMEs,
-  `docs/decisions/0032-focus-place-fixtures.md` (an amendment section), run log, tasks.
-- Routes (each by `make_track.py --list-ways` then `--ways`, with the checks named):
-  - **Ambleside, the Loughrigg circuit** (5 to 9 km, loop): Ambleside (Bridge House),
-    Rothay Park, Miller Bridge, up to Loughrigg Fell, Loughrigg Terrace above Grasmere,
-    past Rydal Cave, along Rydal Water's south shore to Pelter Bridge, back by the
-    Rothay to Ambleside. Via-node checks at Miller Bridge and Pelter Bridge.
-  - **Skye, an island road trip** (one loop on public roads, 150 to 230 km): Portree,
-    the A855 by the Storr to Staffin and round the north to Uig, the A87 and A850 to
-    Dunvegan, the A863 and B8009 to Carbost and the Glen Brittle road, back by the A863
-    and A87 by Sligachan to Portree. Via-node checks at Staffin, Uig, Dunvegan Castle's
-    access road and Sligachan. Resample at 100 m, not 20 m. Recorded with
-    `margin_m=6000` and `landcover_margin_m=6000`, so the coast beyond the roads (the
-    Waternish, Duirinish and Sleat shores, Raasay's facing coast) is in the payload. The payloads are trimmed
-    with `--simplify-m 15` (a quarter of a pixel at the 1200 px card). If the mirror
-    cannot answer the whole-island query, split nothing: stop and report the error
-    and the counts.
-  - **Oxford, the colleges and bridges** (3 to 5 km, loop): Carfax, the High Street,
-    Catte Street past the Radcliffe Camera, Queen's Lane, the High Street out over
-    Magdalen Bridge and back, Rose Lane into Christ Church Meadow, the Broad Walk,
-    through Christ Church's public way if OSM tags one `access` other than `private`,
-    else by the Meadow Buildings and the War Memorial Garden, St Aldate's to Carfax.
-    Via-node checks at the Radcliffe Camera and Magdalen Bridge.
-  - **Y Fenni, a food tour** (2 to 4 km, loop): from the castle, past Angel Bakery,
-    Bean & Bread (Lion Street), Rate of Rise (Nevill Street), Shepherd's Ice Cream
-    (Market Street) and Tŷ Melin, back to the castle. Via-node checks at the four OSM
-    stops (ids from `p7-research.md` 10.2's check, recorded in the README, never
-    coordinates in the run log). Tŷ Melin's point: from its public address, placed by
-    the slice on its building's OSM way or its street, and named in the chat message
-    for the maintainer to confirm before P7.V10 uses it.
-  - **Yr Wyddfa, re-recorded wider** (same track): `margin_m=3000`,
-    `landcover_margin_m=4000`, so the card can show Llyn Padarn, the Glyderau's flank
-    and Llyn Cwellyn's side of the massif.
-- Budgets: re-set from the trimmed sizes: each fixture under 6 MB on disk, `skye/`
-  and `yr-wyddfa/` under 10 MB; over budget stops and reports.
-- Goldens: `test_places.py` expected label lists rewritten from the first run (as
-  P7.3 did), recorded in the run log.
-- `keswick/` and `trotternish/` stay until P7.V12a moves the pages off them.
-- Commit: one per fixture.
+- At the base: `ink.PIGMENTS` is keyed by map role (`farmland`, `wood`, `water`,
+  `relief`, ...), which `cover.pigments` names; `ink.TRANSPARENCY` holds the same keys;
+  `examples/pigment_swatches.py:57,64` lays one swatch per `PIGMENTS` entry;
+  `test_reference_pages.py:197-199` requires every `PIGMENTS` key in `pigments.md`;
+  P7.14's palette CSS is written from `PIGMENTS`.
+- ADR 0039 `painters-pigments`: a separate public table, `PAINTERS_PIGMENTS` (name to
+  hex) with `PAINTERS_TRANSPARENCY` (name to transparency in [0, 1], the same meaning
+  as `TRANSPARENCY`), in `ink/pigment.py`, exported from `pyntpot.ink`. Keys:
+  `ultramarine`, `cerulean`, `burnt_sienna`, `raw_sienna`, `yellow_ochre`, `sap_green`,
+  `indigo`, `perylene_maroon`, `quinacridone_rose`, `paynes_grey`. Glossary term
+  "painter's pigment". `PIGMENTS`, `TRANSPARENCY`, the swatch sheet and its master,
+  their page section and the P7.14 palette CSS stay byte-identical.
+- Owner files: `src/pyntpot/ink/{pigment,__init__}.py`, `tests/unit/ink/test_pigment.py`,
+  `tests/unit/test_public_api.py` (the two names), `tests/architecture/test_reference_pages.py`
+  (a check that every `PAINTERS_PIGMENTS` key is in `pigments.md` as code),
+  `docs/reference/pigments.md` (a new "Painter's pigments" section),
+  `GLOSSARY.md` (one row), ADR 0039, the ADR index row, run log, tasks.
+- Test first: every painter's pigment paints a non-white swatch; the two tables have
+  the same keys; every transparency is in [0, 1]; `PIGMENTS` and `TRANSPARENCY` are
+  unchanged (pinned literals).
+- Gate also: `-m golden` exact with no golden or docs image moved.
+- Commit: `Painter's pigments`.
 
 #### P7.V9b. Journal notes
 
 - Predecessor: P7.V7b. Parallel with P7.V8 and P7.V8b.
-- ADR 0038: `Annotations` gains `notes`, each `{text, lat, lng}`. `letter` places each
-  note as a wrapped flat block (the hand's existing row leading) in the card's margin
-  band, nearest the side its point is on, with a leader to the point; notes are placed
-  before landmarks and never dropped (a note that cannot fit raises `ValueError` naming
-  it). At most 6 notes, each at most 90 characters.
-- Owner files: `src/pyntpot/maps/annotations.py`, the lettering placement module that
-  places flat blocks (named after the slice reads `lettering/`), tests, `GLOSSARY.md`
-  ("journal note"), ADR 0038, run log, tasks.
+- At the base there is no margin band: the card is painted to its edges, and no
+  lettering module defines a region for notes. Notes are placed as flat blocks among
+  the labels instead.
+- ADR 0038 `journal-notes`:
+  - `Annotations` gains `notes: tuple[JournalNote, ...] = ()`; `JournalNote` (new,
+    frozen, `extra="forbid"`, exported from `pyntpot.maps`) has `text`, `lat`, `lng`.
+    At most 6 notes, each at most 60 characters (two lines of the existing wrap);
+    otherwise validation fails naming it.
+  - `letter` seats the notes before any other name, one at a time, through
+    `_place_flat` as flat blocks with leaders (the leader rungs; the hand's existing
+    row leading; the wrap form `wrap_forms` gives, single line first, the most
+    balanced two-line form when one line is wider than a third of the card), each
+    against the notes already seated. Their boxes join the `taken` boxes `place`
+    avoids, so every later name pays the overlap cost against them, and the notes are
+    not in the list `place` orders, dedupes, swaps or drops: no later pass can move or
+    drop a note. A note whose point is off the card, or whose cheapest seat is off the
+    paper, raises `ValueError` naming it. Notes are not counted against `label_max`.
+- Owner files: `src/pyntpot/maps/annotations.py`, `src/pyntpot/maps/__init__.py`
+  (`JournalNote`), `src/pyntpot/maps/lettering/notes.py` (new: notes to labels, and
+  their seating), `src/pyntpot/maps/lettering/pipeline.py` (seats the notes before
+  `place`, passes their boxes as taken, letters them with the rest),
+  `src/pyntpot/maps/lettering/placement_flat.py` (only if a note needs its own branch:
+  no `off_own_feature` term), tests, `tests/unit/test_public_api.py` (the name),
+  `GLOSSARY.md` ("journal note"), ADR 0038, the ADR index row, run log, tasks.
 - Test first (Lynmouth fixture, small size, `golden`-marked if it paints a card): two
-  notes are lettered, each leader ends within 3 px of its point, no note box overlaps
-  another label.
+  notes are lettered; each leader ends within 3 px of its point; no note box overlaps
+  another label's box; a note off the card raises; seven notes fail validation;
+  `Annotations()` without notes letters exactly as before.
+- Gate also: `-m golden` exact with no golden moved.
 - Commit: `Journal notes on a map`.
 
 #### P7.V10. Showcase themes and the curated callouts
 
 - Predecessor: P7.V8, P7.V8b, P7.V9a, P7.V9b.
-- Owner files: `examples/themes/{ambleside,skye,yr-wyddfa,oxford,y-fenni}.toml`
-  (the existing four example themes in P7.7 kept for the map-styles page),
+- Owner files: `examples/themes/{ambleside,skye,yr-wyddfa,oxford}.toml` (new) and
+  `examples/themes/y-fenni.toml` (extended); the four P7.7 themes (`pen-and-ink`,
+  `sepia`, `bold`, `winter`) are kept for the map-styles page.
+  `tests/unit/maps/test_example_themes.py` (`THEME_NAMES` gains the four);
   `examples/places.py` (new: a dict of the curated callouts per place from
-  `research/p7/critique/landmarks.md`, at most `label_max` each, and the Skye journal
-  notes), `examples/place_card.py` (reads them), run log, tasks.
-- Every showcase theme: the route `MAJ1-e` pen, `#7b2335` (or perylene maroon if
-  P7.V8b's hex is within 12 of it in each channel), `blend = "multiply"`, glow, casing
-  and shadow 0, `label_route_ink` the same colour; `ribbon_mult`, `card_grow_mult` and
-  `card_pad_frac` set so painted land covers at least 60% of the card (measured:
-  non-paper pixels over all pixels, recorded); `relief_strength` at least 1.6 for
-  Ambleside, Skye and Yr Wyddfa. Oxford: `roads = "all"` with
+  `research/p7/critique/landmarks.md`, and the Skye journal notes);
+  `examples/place_card.py` (reads them); `tests/golden/test_places.py` (each showcase
+  place with its theme and callouts, read from `examples/places.py` with `runpy`, and
+  its expected labels); `tests/support/docs_images.py` (`_PLACES` gains `ambleside` and
+  `skye` rows, Skye with its margins, and every showcase row carries its theme);
+  `places/{ambleside,skye,yr-wyddfa,oxford,y-fenni}.webp` and their masters, regenerated
+  with `make_docs_images.py` for those entries, with a `"P7.V10"` row in
+  `SLICE_SHARE_BYTES` for the two new ones; run log; tasks.
+- Every showcase theme: the route `MAJ1-e` pen, `#7b2335` (or
+  `PAINTERS_PIGMENTS["perylene_maroon"]` if its hex is within 12 of it in each
+  channel), `blend = "multiply"`, glow, casing and shadow 0, `label_route_ink` the same
+  colour; `ribbon_mult`, `card_grow_mult` and `card_pad_frac` set so painted land covers
+  at least 60% of the card; `relief_strength` at least 1.6 for Ambleside, Skye and Yr
+  Wyddfa. Painted land is a pixel whose RGB differs from the card's own `paper` plate
+  (resized to the card) by more than 2/255 in some channel; measured and recorded. Skye
+  and Yr Wyddfa keep the card box inside the fetched box (`test_places.py` asserts it):
+  a ribbon setting that breaks it is not used. Oxford: `roads = "all"` with
   `minor_road_classes` without `service` and `track`, lanes 1.1 px, a honey built-up
   wash. Each theme differs from the others in palette, so the five read as five ideas.
-- Curated callouts: Ambleside (Bridge House, Rydal Water, Loughrigg Terrace, Rydal
-  Cave); Yr Wyddfa (Crib Goch, Garnedd Ugain, Glaslyn, Llyn Llydaw); Oxford (Radcliffe
-  Camera, Magdalen Bridge, Christ Church, the Bridge of Sighs); Y Fenni (Castell y
-  Fenni, Angel Bakery, Bean & Bread, Rate of Rise, Shepherd's Ice Cream, Tŷ Melin, with
-  `label_max` raised to 6); Skye notes, four days, invented, one line each, e.g.
-  "Tuesday: Dunvegan Castle and the Coral Beaches".
+- Curated callouts, with each theme's `label_max` equal to its callout count
+  (`label_max` defaults to 3, `style_groups.py:233`, and `journal_picks` stops at the
+  cap): Ambleside 4 (Bridge House, Rydal Water, Loughrigg Terrace, Rydal Cave); Yr
+  Wyddfa 4 (Crib Goch, Garnedd Ugain, Glaslyn, Llyn Llydaw); Oxford 4 (Radcliffe Camera,
+  Magdalen Bridge, Christ Church, the Bridge of Sighs); Y Fenni 6 (Castell y Fenni,
+  Angel Bakery, Bean & Bread, Rate of Rise, Shepherd's Ice Cream, Tŷ Melin). A
+  name-only callout with no matching candidate is skipped without a word
+  (`picks.journal_picks`), so a callout carries `lat` and `lng`, inside its fixture's
+  box, wherever `landmarks.md`'s "Payload?" column says No (Glaslyn, Llyn Llydaw), and
+  for Ambleside wherever the recorded `ambleside/` candidates lack it (the slice checks
+  each name against `basemap.candidates`; lakes and Loughrigg Terrace are likely). Tŷ
+  Melin takes the point P7.V9a recorded; if the maintainer has not confirmed it by now,
+  the slice uses it and P7.V15 flags it. Skye: no callouts; four journal notes,
+  invented, one line each, at most 60 characters, e.g. "Tuesday: Dunvegan Castle and
+  the Coral Beaches".
 - Test: `test_places.py` paints each with its theme and callouts and pins the
-  lettered names (sets, as now) including every curated name.
+  lettered names (sets, as now), including every curated name.
+- CI: record a golden run (see CI time).
 - Commit: `Showcase themes and curated callouts`.
 
-#### P7.V11. Docs images at twice the display width, lettering at scale 2
+#### P7.V11. Lettering painted at scale 2
 
 - Predecessor: P7.V10.
-- Every registry entry's published width doubles and the pages set `width=` on the
-  `<img>` to the display width; lettered figures paint their nib plate at
-  `NibSurface` scale 2 and downsize with Lanczos; lettered figures publish lossless.
-  The master pins (ADR 0033 section "Pins across platforms") stay at their 240 px.
-- Owner files: `tests/support/docs_images.py`, `tests/golden/make_docs_images.py`,
-  `examples/{lettering,word,nib_stages,place_card}.py`, the docs pages' `<img>` tags
-  (width attributes only), the regenerated images and masters, run log, tasks.
-- Budget: the golden job may grow by at most 4 minutes over P7.4's baseline; over it
-  stops and reports.
-- Commit: `Publish images at twice their display width`.
+- Cause (causes report, item 4): the lettered examples paint their nib plate at
+  `NibSurface(canvas, 1.0, ...)`, one render pixel per display pixel. The map cards
+  already letter at their render scale (`lettering/pipeline.py:237`), so they are not
+  touched. At the base the examples that construct a `NibSurface` are (by
+  `grep -rn "NibSurface(" examples`): `lettering.py:80`, `word.py:115`,
+  `composition.py:117`, `derwentwater.py:246`, `how_to_own_shapes.py:138`, and
+  `nib_stages.py:128` (at `unit`, 1.0 at its published 360 px).
+- Fix: each of those six paints its nib plate on a canvas `NIB_SCALE` (2) times its
+  own size, with `NibSurface(canvas2, NIB_SCALE * unit, dark2, GRAN_PX * NIB_SCALE *
+  unit)` (the dark ground upsampled to match), downsizes the plate with
+  `Image.Resampling.LANCZOS` to the painting's size, and composites it as today.
+  Published widths are unchanged. Lettered figures publish lossless: `word.webp` goes
+  to `webp-lossless` (the registry's rule for lettering figures); the mixed figures
+  (composition, Derwentwater, own shapes) keep `webp-lossy` per the same rule; the
+  lettering and nib entries are lossless already. A lossless entry over its kind's
+  budget stops and reports (its width may not shrink in this slice).
+- The quoted lines: `paint-a-watercolour.md` quotes the `NibSurface(` lines of
+  `lettering.py` and `composition.py` (`test_tutorials.py`'s sync); this slice updates
+  those two quoted blocks to the new lines and nothing else on the page.
+- Owner files: `examples/{lettering,word,nib_stages,composition,derwentwater,how_to_own_shapes}.py`,
+  their tests in `tests/examples/` where they read a plate's size,
+  `tests/support/docs_images.py` (`word.webp`'s encoding only), the two quoted blocks
+  of `docs/tutorials/paint-a-watercolour.md`, the regenerated images and masters of
+  those scripts' entries (`gallery/{lettering,composition}`,
+  `tutorials/{lettering,composition}`, `word`, `painting-with-python/derwentwater`,
+  `how-to/own-shapes`, `explanation/nib-*`), run log, tasks.
+- Test first: for `lettering.py` at a small size, the nib plate written beside the
+  image is twice the image's width; the image is the published width.
+- CI: record a golden run (see CI time).
+- Commit: `Letter the examples at scale 2`.
 
 #### P7.V12a. Maps pages: the hero, the gallery, map styles, landmarks how-to
 
 - Predecessor: P7.V11. Parallel group.
 - README hero and social preview: Ambleside, with the social preview a full-width map
   crop with the wordmark lettered on it. Gallery: the five showcase maps, each with one
-  line naming its idea. Map styles page: a route-ink grid painted by a `for` loop
-  (four colours by three treatments). How-to "letter your own landmarks": the curated
-  callouts, Tŷ Melin as the custom entry. First-map tutorial and the command-line
-  how-to move off Keswick (Ambleside, Lynmouth). Then `tests/fixtures/{keswick,trotternish}/`
-  are deleted with their boxes, paths constants and `test_places.py` entries; the
-  slice greps for both names under `tests/`, `examples/` and `docs/` first, and any hit
-  outside its owner files stops it.
-- Owner files: `README.md` (images and their captions only), `docs/gallery.md`,
-  `tests/fixtures/{keswick,trotternish}/` (deleted), `tests/architecture/test_coordinates.py`
-  and `tests/support/paths.py` and `tests/golden/test_places.py` (their two entries only),
-  `docs/how-to/*.md` named in the slice, `docs/tutorials/first-map.md`,
-  `examples/{social_preview,map_styles,how_to_*}.py`, registry block, run log, tasks.
+  line naming its idea. Map styles: the four P7.7 themes on the Ambleside card, and a
+  route-ink grid painted by a `for` loop (four colours by three treatments) on the
+  write-a-theme how-to. New how-to "Letter your own landmarks"
+  (`docs/how-to/letter-your-own-landmarks.md`): the curated callouts from
+  `examples/places.py`, Tŷ Melin as the custom entry, showing `places/y-fenni.webp`.
+  The first-map tutorial and the route-ink how-to move to Ambleside; the command-line
+  how-to moves to Lynmouth, with its own image and its counts line rewritten from a
+  run.
+- Every consumer of the Keswick and Trotternish fixtures, with its replacement:
+
+  | Consumer | Replacement |
+  | --- | --- |
+  | `hero.webp` (`place_card`, size 1200) | `ambleside`, theme `examples/themes/ambleside.toml` |
+  | `social-preview.jpg` (`social_preview.py`) | `ambleside` |
+  | `gallery/route-map.webp` | `ambleside` |
+  | `tutorials/route-map.webp` (the first-map tutorial's rung) | `ambleside` |
+  | `how-to/route-ink.webp` (`how_to_route_ink.py`) | `ambleside` |
+  | `map-styles/{pen-and-ink,sepia,bold,winter}.webp`, `tests/golden/test_map_styles.py` | `ambleside` |
+  | `docs/how-to/map-from-the-command-line.md` (today shows `gallery/route-map.webp`) | `lynmouth`: a new `how-to/command-line.webp` (`route_map`, 720, page, lossy) |
+  | `places/keswick.webp`, `places/trotternish.webp` and masters; `_PLACES` rows | deleted; `docs/explanation/data-policy.md`'s image becomes `places/ambleside.webp` |
+  | `tests/golden/test_places.py`, `tests/support/paths.py`, `tests/architecture/test_coordinates.py` entries | deleted |
+
+- Then `tests/fixtures/{keswick,trotternish}/` are deleted. First the slice greps for
+  fixture references, not the word: `grep -rnE 'fixtures/keswick|"keswick"|KESWICK_|fixtures/trotternish|"trotternish"|TROTTERNISH_'
+  --include='*.py' --include='*.md' --include='*.toml' tests examples docs README.md`;
+  any hit outside its owner files stops it. "Keswick" as a lettering word (`test_hand.py`,
+  `nib_stages.py`, the explanation pages) is not a fixture reference.
+- Owner files: `README.md` (the hero image and its caption only), `docs/index.md` (the
+  hero's alt text only), `docs/gallery.md` (its sections, see the shared-files table),
+  `docs/tutorials/first-map.md`, `docs/how-to/{write-a-theme,change-the-route-ink,map-from-the-command-line,work-offline-and-reuse-the-cache,index}.md`,
+  `docs/how-to/letter-your-own-landmarks.md` (new), `docs/explanation/data-policy.md`
+  (the image line and its alt text only), `examples/{social_preview,place_card,map_styles,route_map,how_to_route_ink}.py`
+  (their docstrings and help text naming Keswick; `social_preview.py`'s layout),
+  `tests/golden/test_map_styles.py` and its goldens, `tests/support/docs_images.py`
+  (the entries in the table and one `"P7.V12a"` block with its `SLICE_SHARE_BYTES`
+  row), the images and masters those entries paint or delete,
+  `tests/fixtures/{keswick,trotternish}/` (deleted), the two entries of
+  `tests/architecture/test_coordinates.py`, `tests/support/paths.py` and
+  `tests/golden/test_places.py`, run log, tasks. The nav entry for the new how-to on
+  `p7-docs-site` is P7.V14's.
+- Commit: one per page group; the fixture deletion last.
 
 #### P7.V12b. The watercolour tutorial in one rhythm
 
 - Predecessor: P7.V11. Parallel group.
-- Rewrite `docs/tutorials/watercolour.md` (and its examples) to the rhythm of decision 5;
-  each step ends with a `for`-loop grid (pigments, wash body, brush treatment, nib angle
-  by thinness, hand seeds). The tutorial sync test stays green.
+- Rewrite `docs/tutorials/paint-a-watercolour.md` to the rhythm of decision 5. Each of
+  its seven rungs ends with a `for`-loop grid, painted by `examples/tutorial_grids.py`
+  (new, `figure=` per grid, one registry entry each, `tutorials/grid-<rung>.webp`):
+
+  | Rung | Grid |
+  | --- | --- |
+  | Stretch the paper | `paper_tooth` 0.04, 0.085, 0.16 by `paper_edge` `"classic"`, `"warm"` |
+  | Lay a wash | wash body: three wash strengths by two `sheet_seed`s |
+  | Pull a brush | brush treatment by width (3, 6, 12 px) |
+  | Mix two pigments | four painter's pigments glazed over each other, multiply row against Kubelka-Munk row |
+  | Take up the pen | nib angle (-38, 0, 38, 90) by `pen_thin` (0, 0.52, 0.85) |
+  | Letter a name | a 3 by 3 grid of "Keswick" in nine hand seeds |
+  | Compose the painting | the composition with `km_glazing` off and on, by two seeds |
+
+  The rung scripts (`paper`, `wash`, `brush_stroke`, `pigments`, `nib_line`,
+  `lettering`, `composition`) and their quoted lines are not edited, so the tutorial
+  sync and the README's verbatim quick start (`test_readme.py`, `wash.py`'s `main`)
+  stay green.
 - Reference and explanation figures from the reference critique: the
   pigment-transparency grid (covering over staining, transparency 0.04, 0.2, 0.5, 0.9,
-  multiply row against Kubelka-Munk row) in place of wash-glaze; the nib grid (angle
-  -38, 0, 38, 90 by `pen_thin` 0, 0.52, 0.85) in place of nib-broad and nib-turned;
-  a 3 by 3 grid of "Keswick" in nine hand seeds; a labelled pigment card in place of
-  the pigment sheet; a brush treatment by width grid (3, 6, 12 px) in place of the
-  brush sheet; `paper_foxing` 0 in reference and explanation figures; nib-ground and
-  nib-backing on an irregular pooled wash.
-- Owner files: the tutorial, reference and explanation pages and their scripts, named
-  in the slice's first commit; registry block; run log; tasks.
+  multiply row against Kubelka-Munk row) in place of `explanation/wash-glaze`; the nib
+  grid (as the tutorial's) in place of `nib-broad` and `nib-turned`; the 3 by 3 hand
+  seeds on the hand-and-nib page; a labelled pigment card in place of
+  `reference/pigment-swatches` (the swatches stay one per `PIGMENTS` entry); a brush
+  treatment by width grid in place of `reference/brush-sheet`, a new
+  `figure="grid"` of `brush_sheet.py`, whose id tuple stays so
+  `test_reference_pages.py`'s check holds; `paper_foxing` 0 in every reference and
+  explanation figure; `nib-ground` and `nib-backing` on an irregular pooled wash.
+- Owner files: `docs/tutorials/paint-a-watercolour.md`, `examples/tutorial_grids.py`
+  (new), `docs/reference/pigments.md` (the swatch image line and caption),
+  `docs/reference/brushes.md`, `docs/explanation/how-the-wash-works.md`,
+  `docs/explanation/the-hand-and-the-nib.md`,
+  `examples/{pigment_swatches,brush_sheet,wash_stages,nib_stages}.py`,
+  `tests/examples/{test_explanation_figures,test_ink_examples}.py` (figure lists and
+  the new script), `docs/gallery.md` (its sections), one `"P7.V12b"` registry block
+  with its share, the images and masters it adds, regenerates or removes, run log,
+  tasks.
+- Commit: one per page.
 
 #### P7.V12c. Painting with Python: trees, the fern family, brushes
 
@@ -7001,8 +7324,12 @@ maintainer names decision 9 (route B) explicitly.
   of angle and length. `examples/fern_family.py` (new): nine ferns from slightly
   perturbed fern maps. `examples/fern.py` and its image are not touched (the pin
   proves it). `curves.py`: the rose and the spirograph painted with the brush.
-- Owner files: those scripts, `docs/tutorials/painting-with-python/fractals.md` and
-  `curves.md`, tests, registry block, run log, tasks.
+- Owner files: those scripts, `tests/examples/test_painting_with_python_fractals.py`
+  (the gasket cases out, trees and fern family in), `tests/examples/test_painting_with_python_curves.py`,
+  `docs/tutorials/painting-with-python/{fractals,curves}.md`, the fractals line of
+  `docs/tutorials/painting-with-python/index.md`, `docs/gallery.md` (its sections), one
+  `"P7.V12c"` registry block (the gasket entry removed, the new entries added) with its
+  share, the images and masters it adds, regenerates or removes, run log, tasks.
 
 #### P7.V12d. The SVG drawing, step by step
 
@@ -7014,7 +7341,11 @@ maintainer names decision 9 (route B) explicitly.
   each with one line on what it adds over the flat drawing. `fell.svg` fixed: the near
   fell occludes the far one; the skyline spans the whole fell.
 - Owner files: `examples/svg_drawing.py`, `examples/drawings/fell.svg`, the page,
-  tests, registry block, run log, tasks.
+  `tests/examples/test_painting_with_python_pictures.py` (the SVG cases), the sync test,
+  `docs/gallery.md` (its section), one `"P7.V12d"` registry block with its share, the
+  images and masters, run log, tasks.
+
+After the group lands, the orchestrator records a golden run (see CI time).
 
 #### P7.V13. Critique gate
 
@@ -7030,14 +7361,16 @@ maintainer names decision 9 (route B) explicitly.
 - Predecessor: P7.V13; `p7-docs-release` merged into `p7-docs-site`.
 - The brush rule keeps its aspect ratio and tapers; the paper tiles at native scale; a
   painted header band in place of the flat bar; a serif for body text (self-hosted
-  only if its licence allows; else the system serif stack).
+  only if its licence allows; else the system serif stack); the nav entry for
+  P7.V12a's new how-to.
 - Owner files: `examples/site_theme.py`, `docs/stylesheets/pyntpot.css`,
-  `mkdocs.yml` (fonts only), tests, run log, tasks.
+  `mkdocs.yml` (fonts and that nav entry only), tests, run log, tasks.
 
 #### P7.V15. Hand back
 
 The run log summarises the round; the chat message to the maintainer lists each map
-and figure with a link, every decision taken on the way, and what was parked.
+and figure with a link, every decision taken on the way, what was parked, and anything
+flagged (Tŷ Melin's point if unconfirmed; the fern's paper if unanswered).
 
 #### P7.R. Release 0.1.0 (branch `release-0.1.0`)
 

@@ -164,22 +164,22 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [x] P7.12 Docs gates: link check, `twine check`
 - [x] P7.13 README, wordmark, landing page, gallery and social preview, and the CodSpeed badge (Q13 (1), row `p5-run-log.md:125`) (the outline's P7.1)
 - [ ] P7.14 Docs site, ADR 0034 (`p7-docs-site`; may slip to 0.1.x)
-- [ ] P7.V0 Revision round 1: fatten from the maintainer's feedback and the five agent reports; plan-reviewer pass
-- [ ] P7.V1 Fixture trimming: minified, unread fields and tags dropped, goldens byte-identical
-- [ ] P7.V1b Fetch margins as options, so Skye shows the whole island and Yr Wyddfa a wider view; ADR 0040
-- [ ] P7.V9a Fixtures for the showcase maps: Ambleside (Loughrigg), Skye (island road trip), Oxford (colleges and bridges), Y Fenni (food tour); Yr Wyddfa re-recorded wider
+- [ ] P7.V0 Revision round 1: fatten from the maintainer's feedback and the five agent reports; revised after plan review 1; plan-reviewer pass
+- [ ] P7.V1 Fixture trimming (Lynmouth and Yr Wyddfa; the recorder trims the rest): minified, unread fields and tags dropped, goldens byte-identical; the round's CI baseline
+- [ ] P7.V1b Fetch margins as options, the land-cover margin in the cache key when non-default, `--margin-m` on the CLI; ADR 0040
+- [ ] P7.V9a Fixtures for the showcase maps: Ambleside (Loughrigg), Skye (island tour, Kyleakin to Portree), Oxford (colleges and bridges), Y Fenni (food tour); Yr Wyddfa re-recorded wider; card box inside the fetched box
 - [ ] P7.V2 Water areas keep their islands (the Oxford Cherwell); ADR 0036
 - [ ] P7.V3 A leader never crosses a placed label (the Keswick kink)
 - [ ] P7.V4 The skeleton draws each stroke once (K, k, e, m, n, d, o)
 - [ ] P7.V5 Landmark ranking: shops out, recorded places first, castles top tier
 - [ ] P7.V6 The nib's touch-down has no square edge
 - [ ] P7.V7 The pen route keeps its legs apart
-- [ ] P7.V7b The paper browns at its edge and foxes in rust specks (every image regenerated)
+- [ ] P7.V7b The paper browns at its edge and foxes in rust specks: `paper_edge = "warm"` the default, the fern keeps `"classic"` (every image but the fern regenerated)
 - [ ] P7.V8 Showcase style fields: minor road classes, relief strength, route blend; ADR 0037
-- [ ] P7.V8b Painters' pigments; ADR 0039
-- [ ] P7.V9b Journal notes on a map; ADR 0038
+- [ ] P7.V8b Painter's pigments, a separate `PAINTERS_PIGMENTS` table; ADR 0039
+- [ ] P7.V9b Journal notes on a map, seated first as flat blocks with leaders; ADR 0038
 - [ ] P7.V10 Showcase themes (maroon pen route, more landscape) and curated callouts
-- [ ] P7.V11 Images at twice display width; lettering painted at scale 2
+- [ ] P7.V11 Lettered examples painted at nib scale 2 and downsized with Lanczos; published widths unchanged
 - [ ] P7.V12a Maps pages: Ambleside hero, gallery, route-ink grid, landmarks how-to; retire Keswick and Trotternish fixtures
 - [ ] P7.V12b The watercolour tutorial in one rhythm, with for-loop grids; reference and explanation figures rebuilt
 - [ ] P7.V12c Painting with Python: trees replace the gasket, a fern family, brushed curves
