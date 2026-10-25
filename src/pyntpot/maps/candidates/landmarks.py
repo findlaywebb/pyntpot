@@ -32,6 +32,7 @@ from pyntpot.maps.candidates.landmark_classes import (
     REACH_CAP_M,
     VISIBLE_PER_M,
     height_m,
+    is_recorded,
 )
 from pyntpot.maps.projection import Projection
 
@@ -56,19 +57,25 @@ def landmark_reach(entry: Mapping[str, Any], scale: float = 1.0) -> float:
     return min(max(base, tall), REACH_CAP_M) * scale
 
 
-def landmark_rank(entry: Mapping[str, Any], scale: float = 1.0) -> tuple[int, float]:
-    """What order the candidates are offered in: notability, then comfort.
+def landmark_rank(entry: Mapping[str, Any], scale: float = 1.0) -> tuple[int, bool, float]:
+    """What order the candidates are offered in: notability, record, then comfort.
 
     The first term is the tier, so the things someone on the track navigates by come before
-    the things they pass; the second is how comfortably the thing sits inside its
-    own reach, so within a tier the nearer and the taller both rise.
+    the things they pass; the second is whether the thing is unrecorded, so inside a tier
+    what Wikidata, Wikipedia, a heritage designation or a listing knows comes first; the
+    third is how comfortably the thing sits inside its own reach, so within that the
+    nearer and the taller both rise.
     """
     cls = entry.get("cls") or entry.get("class") or "other"
     tier, _base = LANDMARK_REACH_M.get(cls, LANDMARK_REACH_M["other"])
     d = entry.get("d")
     d = entry.get("distance_m") if d is None else d
     far = UNKNOWN_DISTANCE_M if d is None else float(d)
-    return (tier, far / max(landmark_reach(entry, scale), 1.0))
+    return (
+        tier,
+        not is_recorded(entry.get("tags") or {}),
+        far / max(landmark_reach(entry, scale), 1.0),
+    )
 
 
 def _named_by(
