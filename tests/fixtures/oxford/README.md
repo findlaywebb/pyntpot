@@ -15,6 +15,77 @@ elevation or activity type. It is 2.70 km long, 142 points.
 The track is a derivative of OpenStreetMap data, so `track.gpx` is licensed under the ODbL
 as the payloads are (see Licences).
 
+## The new track (`track.new.gpx`)
+
+`track.new.gpx` is the colleges-and-bridges route that replaces `track.gpx` when the payloads are
+re-recorded for it; until then the payloads above belong to `track.gpx`. A loop of about 4.0 km
+(4.04 km, 209 points) in central Oxford: Carfax, the High Street to Catte Street, north past the
+Radcliffe Camera, New College Lane and Queen's Lane back to the High Street, east over Magdalen
+Bridge and back, Rose Lane into Christ Church Meadow, the Meadow Walk and the Broad Walk, then by the
+Meadow Buildings and the War Memorial Garden footways and Rose Place to St Aldate's and Carfax.
+OpenStreetMap tags no public way through Christ Church itself (every way inside the college is
+`access=private` or `access=no`), so the route does not enter it.
+
+It is built the same way and under the same D16 statement as `track.gpx`: invented along public
+OpenStreetMap ways, resampled every 20 m, no time, elevation or activity type, no home and no
+personal route; ODbL as a derivative of OpenStreetMap. Fetched 2026-10-25 from the same mirror,
+with the same contact string.
+
+Checks the build passed: via `2513320485` (a node of the Radcliffe Camera building, way 4884600)
+within 60 m (20 m); via `12943776076` (the middle node of the Magdalen Bridge deck, way
+39380970) within 15 m (0 m); length 3 to 5 km (4.04 km). The track's box, rounded outward to
+0.01, is the one in the table below.
+
+New-track ways, joined in this order by `make_track.py --ways`:
+
+```
+2988061,1160879772,1160879673:306285529:12154048739,4885405:12154048739:314214911,1675893:314214911:11704190636,244336012:11704190636:2516658024,244336012:2516658024:11704190636,1675893:11704190636:314214911,8078920:314214911:410775005,895264517:410775005:603439,1516686699,1516686700,1304105423,8078923,4713440,126369414,8126433:2361414052:603412,1304105131:603412:9044228867,977420095:9044228867:1260262210,27895984:1260262210:306285523,8125931:306285523:213429,2987960,651722051,394438023,39380970,39380970:330348966:471843078,394438023:471843078:3974478264,651722051:3974478264:455559821,2987960:455559821:441094,2987976,3171321:1642952912:603590,2988126:603590:603571,95826215:603571:1109077577,95826215:1109077577:603571,8125937,24449151:603564:8866091817,958210081:8866091817:603563,958210082:603563:257571181,60860890:257571181:1376685998,931474937:1376685998:8635843274,931474936:8635843274:761862897,60860877:761862897:603562,1408666578:603562:301734774,1408666570:301734774:12945437353,1411611627:12945437353:12139650317,1311480310,1079519510:262805367:9895595687,2988082:9895595687:213435
+```
+
+| Way | Version | `highway` | `ref` | `name` |
+| --- | --- | --- | --- | --- |
+| 2988061 | 61 | tertiary | A420 | High Street |
+| 1160879772 | 7 | tertiary | A420 | High Street |
+| 1160879673 | 11 | tertiary | A420 | High Street |
+| 4885405 | 18 | cycleway | - | Catte Street |
+| 1675893 | 20 | pedestrian | - | Radcliffe Square |
+| 244336012 | 12 | footway | - | - |
+| 8078920 | 25 | pedestrian | - | Catte Street |
+| 895264517 | 4 | residential | - | Catte Street |
+| 1516686699 | 1 | residential | - | New College Lane |
+| 1516686700 | 1 | residential | - | New College Lane |
+| 1304105423 | 4 | residential | - | New College Lane |
+| 8078923 | 35 | residential | - | New College Lane |
+| 4713440 | 18 | residential | - | Queen's Lane |
+| 126369414 | 13 | residential | - | Queen's Lane |
+| 8126433 | 28 | residential | - | Queen's Lane |
+| 1304105131 | 4 | residential | - | Queen's Lane |
+| 977420095 | 10 | tertiary | A420 | High Street |
+| 27895984 | 34 | tertiary | A420 | High Street |
+| 8125931 | 35 | tertiary | A420 | High Street |
+| 2987960 | 46 | tertiary | A420 | High Street |
+| 651722051 | 12 | tertiary | A420 | High Street |
+| 394438023 | 12 | tertiary | A420 | High Street |
+| 39380970 | 41 | tertiary | A420 | High Street |
+| 2987976 | 18 | residential | - | Rose Lane |
+| 3171321 | 18 | footway | - | Christ Church Meadow Walk |
+| 2988126 | 11 | footway | - | - |
+| 95826215 | 4 | footway | - | - |
+| 8125937 | 16 | footway | - | New Walk |
+| 24449151 | 12 | footway | - | Broad Walk |
+| 958210081 | 8 | steps | - | Broad Walk |
+| 958210082 | 4 | footway | - | Broad Walk |
+| 60860890 | 6 | footway | - | - |
+| 931474937 | 8 | steps | - | - |
+| 931474936 | 6 | footway | - | - |
+| 60860877 | 5 | footway | - | - |
+| 1408666578 | 1 | footway | - | - |
+| 1408666570 | 2 | footway | - | - |
+| 1411611627 | 3 | footway | - | - |
+| 1311480310 | 1 | footway | - | - |
+| 1079519510 | 9 | tertiary | A420 | St Aldate's |
+| 2988082 | 61 | tertiary | A420 | St Aldate's |
+
 ## Files
 
 | File | What it is |
