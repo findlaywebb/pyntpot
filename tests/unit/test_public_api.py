@@ -28,6 +28,8 @@ PUBLIC: tuple[str, ...] = (
 )
 
 INK_PUBLIC: tuple[str, ...] = (
+    "PAINTERS_PIGMENTS",
+    "PAINTERS_TRANSPARENCY",
     "PIGMENTS",
     "TRANSPARENCY",
     "Brush",

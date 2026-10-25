@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from pyntpot.ink import PIGMENTS
+from pyntpot.ink import PAINTERS_PIGMENTS, PIGMENTS
 from pyntpot.ink.brush import BRUSH_COLOURS, BRUSH_TREATMENTS
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.cli import build_parser
@@ -197,6 +197,12 @@ class TestPigments:
         """Each key of PIGMENTS is in pigments.md as code."""
         text = _page("pigments.md")
         missing = [key for key in PIGMENTS if f"`{key}`" not in text]
+        assert not missing, f"pigments.md lacks: {missing}"
+
+    def test_every_painters_pigment_is_named(self):
+        """Each key of PAINTERS_PIGMENTS is in pigments.md as code."""
+        text = _page("pigments.md")
+        missing = [key for key in PAINTERS_PIGMENTS if f"`{key}`" not in text]
         assert not missing, f"pigments.md lacks: {missing}"
 
 

@@ -270,3 +270,12 @@ success; the run on the base commit `573630c` was still in progress, and the com
 between touch only plan and review files): job `golden (ubuntu-latest)` 00:37:22Z to
 00:55:55Z = **18 min 33 s**. `golden (macos-15)` in the same run: 17 min 39 s. The round's
 CI budget is this plus 4 minutes at the P7.V12-group checkpoint.
+
+## P7.V8b Painter's pigments (2026-10-25)
+
+Separate tables `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY` in `ink/pigment.py`,
+exported from `pyntpot.ink`; ADR 0039, glossary row, "Painter's pigments" section on
+`pigments.md`, tests (pinned `PIGMENTS` and `TRANSPARENCY` literals, same keys, shares in
+[0, 1], non-white swatch per pigment). No other slice's owner file touched. Gate: prek green;
+`-m "not golden"` 1245 passed, 1 skipped; `-m golden --golden-tolerance` passed;
+`-m golden` exact 85 passed (26 min 8 s); no golden or docs image moved.

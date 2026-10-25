@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 
 from pyntpot.ink.pigment import (
+    PAINTERS_PIGMENTS,
+    PAINTERS_TRANSPARENCY,
     PIGMENTS,
     TRANSPARENCY,
     PigmentLayer,
@@ -74,3 +76,76 @@ def test_a_wash_crossing_another_keeps_its_own_hue_under_glazing():
     # The wood is the top wash, so the crossing should read as wood over water,
     # not as the two colours multiplied into one another.
     assert abs(hue(glazed) - hue(wood)) < abs(hue(mul) - hue(wood)) - 5.0
+
+
+class TestPaintersPigments:
+    """The painter's pigments are a separate table beside the map-role one."""
+
+    def test_the_two_tables_have_the_same_keys(self):
+        """Every painter's pigment names a transparency and no transparency is orphaned."""
+        assert PAINTERS_PIGMENTS.keys() == PAINTERS_TRANSPARENCY.keys()
+
+    def test_the_keys_are_the_ten_painters_pigments(self):
+        """The table holds exactly the ten pigments ADR 0039 names, in that order."""
+        assert list(PAINTERS_PIGMENTS) == [
+            "ultramarine",
+            "cerulean",
+            "burnt_sienna",
+            "raw_sienna",
+            "yellow_ochre",
+            "sap_green",
+            "indigo",
+            "perylene_maroon",
+            "quinacridone_rose",
+            "paynes_grey",
+        ]
+
+    def test_every_transparency_is_a_share(self):
+        """A transparency is a share of what the pigment shows over white, in 0 to 1."""
+        assert all(0.0 <= t <= 1.0 for t in PAINTERS_TRANSPARENCY.values())
+
+    @pytest.mark.parametrize("key", list(PAINTERS_PIGMENTS), ids=list(PAINTERS_PIGMENTS))
+    def test_each_paints_a_dark_swatch(self, key: str):
+        """A full wash of each painter's pigment, glazed over white, gives back its own dark masstone."""
+        pig = rgb(PAINTERS_PIGMENTS[key])
+        thick = np.ones((2, 2), np.float32)
+        out = km_plate([(thick, pig, PAINTERS_TRANSPARENCY[key])], np.ones((2, 2, 3), np.float32))
+        assert out[0, 0] == pytest.approx(pig, abs=2e-3), key
+        assert out[0, 0].mean() < 0.55, key
+
+    def test_the_map_role_tables_are_unchanged(self):
+        """PIGMENTS and TRANSPARENCY keep their pinned values; the new table never touches them."""
+        assert PIGMENTS == {
+            "farmland": "#dfe0b0",
+            "meadow": "#cfdfae",
+            "orchard": "#d5dda2",
+            "scrub": "#c9d5a4",
+            "heath": "#e0cda2",
+            "sand": "#ecdfbe",
+            "rock": "#dcd6c6",
+            "wetland": "#bfd2cd",
+            "built": "#ddd3c3",
+            "works": "#d2cbc0",
+            "wood": "#a8c286",
+            "pale": "#d5e0b4",
+            "water": "#9ec4de",
+            "relief": "#c9bda4",
+            "rim": "#c2ad91",
+        }
+        assert TRANSPARENCY == {
+            "farmland": 0.10,
+            "meadow": 0.09,
+            "orchard": 0.09,
+            "scrub": 0.08,
+            "heath": 0.14,
+            "sand": 0.16,
+            "rock": 0.22,
+            "wetland": 0.08,
+            "built": 0.26,
+            "works": 0.28,
+            "wood": 0.05,
+            "pale": 0.12,
+            "water": 0.04,
+            "relief": 0.30,
+            "rim": 0.18,
+        }
