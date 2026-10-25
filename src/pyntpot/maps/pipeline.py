@@ -166,7 +166,7 @@ def compose(
     else:
         paste_labels(card, lettering.plate_path)
     if attribution:
-        draw_attribution(card, attribution_text(basemap.credits), style)
+        draw_attribution(card, attribution_text(basemap.credits), style, k)
     return card
 
 
