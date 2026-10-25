@@ -17,7 +17,8 @@ add the term here when you coin one.
 | route | The painted line of the track on the map. |
 | basemap | The fetched and projected layers for a bounding box. |
 | lettering | Placed labels and spans plus their painted plate. |
-| annotations | Caller-supplied landmarks, roads, places and span requests. `maps.annotations.Annotations`. |
+| annotations | Caller-supplied landmarks, roads, places span requests and journal notes. `maps.annotations.Annotations`. |
+| journal note | A sentence of the caller's own, at most 60 characters, pinned to a lat/lng on the card: lettered as a flat block with a leader, seated before any other name and never moved or dropped after it; at most 6 a map. `maps.annotations.JournalNote`, seated by `maps.lettering.notes`. |
 | span | The placed stretch of the route with a name and an intent: resolved to a pair of track indices and drawn beside the route. `maps.lettering.label.Span`. |
 | span request | A caller's ask to mark a stretch of the route, each end stated once by point index, kilometre or seconds from the start; lettering resolves it into a span. `maps.annotations.SpanRequest`. |
 | map | The card as drawn so far, with everything painted and lettered on it; the maps side's word, which `ink` and `letters` never use. |

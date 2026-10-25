@@ -89,15 +89,19 @@ NEAR_GAP_COST_PX = 4.0
 WRAP_COST = 26.0
 
 
-def best_flat(lb: Label, terms: Terms, measure_fn: Measure) -> float:
+def best_flat(
+    lb: Label, terms: Terms, measure_fn: Measure, forms: list[list[str]] | None = None
+) -> float:
     """The cheapest horizontal answer over every way the name may be broken.
 
     A second line is charged `WRAP_COST`, so it is taken when it buys a
     materially better position and not when it merely ties. The label is left
-    holding whichever form won, with the block's own box.
+    holding whichever form won, with the block's own box. `forms` offers only
+    those forms instead of every way `wrap_forms` allows, for a caller that has
+    already chosen how the name is broken.
     """
     best: tuple[float, list[str], Any] | None = None
-    for form in wrap_forms(lb.name, lb.kind, lb.tier):
+    for form in forms or wrap_forms(lb.name, lb.kind, lb.tier):
         tw, th = block_size(form, lb.size, measure_fn)
         cost = _place_flat(lb, tw, th, terms, len(form))
         cost += WRAP_COST * (len(form) - 1)

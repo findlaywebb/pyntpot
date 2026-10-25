@@ -1,7 +1,7 @@
 """Route maps: fetching, painting, lettering and composing.
 
-Exports the map types `Track`, `Basemap`, `Style`, `Plates`, `Lettering` and
-`Annotations`, the stages `fetch`, `paint`, `letter` and `compose`, `FetchError`, the
+Exports the map types `Track`, `Basemap`, `Style`, `Plates`, `Lettering`,
+`Annotations` and its `JournalNote`, the stages `fetch`, `paint`, `letter` and `compose`, `FetchError`, the
 fetch cache `Cache` and its `FetchMargins`, the shipped providers `OverpassFeatures` and `OpenTopoData` and the
 errors they raise, `ProviderError` and `ProviderBudgetExceededError`, and two cache
 readers for a caller that chooses or draws for itself: `candidate_export`, what a track
@@ -10,7 +10,7 @@ path data. The provider protocols, the other candidates modules and the command 
 are reached through their own modules, not exported here.
 """
 
-from pyntpot.maps.annotations import Annotations
+from pyntpot.maps.annotations import Annotations, JournalNote
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache, FetchError, FetchMargins
 from pyntpot.maps.candidates.export import candidate_export
@@ -30,6 +30,7 @@ __all__: list[str] = [
     "Cache",
     "FetchError",
     "FetchMargins",
+    "JournalNote",
     "Lettering",
     "OpenTopoData",
     "OverpassFeatures",

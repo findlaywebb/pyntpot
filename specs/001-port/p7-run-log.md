@@ -337,3 +337,12 @@ The old `oxford/track.gpx` and `y-fenni/track.gpx` stay with their payloads; par
 `track.new.gpx` and re-records. `test_coordinates.py` gains the `ambleside` and `skye` boxes
 (each the track's box rounded outward to 0.01); the two new fixtures have no cache key until part 2.
 The Oxford and Y Fenni boxes already hold their new tracks and are unchanged.
+
+## P7.V9b Journal notes (2026-10-25)
+
+`Annotations.notes` (at most 6 `JournalNote`s of at most 60 characters, exported from
+`pyntpot.maps`), seated by the new `maps/lettering/notes.py` (`note_labels`, `seat_notes`) before
+`place` runs; `pipeline.letter` passes their boxes on as taken and puts them after the home glyphs
+in `Lettering.labels`. `best_flat` gains an optional `forms` argument (the import-order test bans importing
+`_place_flat`); `placement.py` is untouched: a note has no baseline, so `off_own_feature` already costs it nothing. ADR 0038, glossary "journal note", test first in
+`tests/unit/maps/lettering/test_notes.py`. No golden moved.
