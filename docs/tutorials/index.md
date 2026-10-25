@@ -1,6 +1,7 @@
 # Tutorials
 
-You learn by painting here. Each page asks you to run a script and look at what it paints, and each builds on the one before. Start with the first, which needs no network and takes about five minutes.
+You learn by painting here. Each page asks you to run a script and look at what it paints.
+Each builds on the one before. Start with the first, which needs no network.
 
 The order is the painter's and the code's: paper and washes in `ink`, lettering in `letters`, then the map in `maps`.
 

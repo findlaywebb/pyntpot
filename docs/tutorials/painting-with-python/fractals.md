@@ -1,14 +1,14 @@
 # Fractals: a fern, a family of ferns and a tree
 
-Two kinds of rule make a plant from nothing. The fern's rule is four affine maps and their
-odds, applied again and again to a point. The tree's rule is a limb that splits into
-shorter limbs, each of which does the same. In both, the rule only says where the paint
-goes: the engine does the painting. This page paints a fern, then nine ferns of one
-species, then a tree, then nine trees of one species.
+Two kinds of rule make a plant from nothing. The fern's rule is four affine maps and
+their odds, applied again and again to a point. The tree's rule is a limb that splits
+into shorter limbs, each of which does the same. In both, the rule only says where the
+paint goes. The engine does the painting. This page paints a fern, then nine ferns of
+one species, then a tree, then nine trees of one species.
 
 ## The fern
 
-![A fern with a thin stem and curling fronds, washed in two greens on cream paper. The fronds are a deeper green and the two lowest leaflets a paler one.](../../images/painting-with-python/fern.webp)
+![A fern with a thin stem and a curled tip, washed in two greens on cream paper. The frond is a deeper green and the two lowest leaflets are paler.](../../images/painting-with-python/fern.webp)
 
 *Painted by `examples/fern.py`, seed 7.*
 
@@ -22,14 +22,14 @@ It writes `out/fern.png` in about two seconds.
 
 ### What a painter does
 
-A painter of a fern lays a pale green over the whole frond first, a deeper one where the
-leaflets crowd, and draws the stem and the veins last with a fine brush.
+A painter lays a pale green over the whole frond first, then a deeper one where the
+leaflets crowd. The stem and the veins come last, drawn with a fine brush.
 
 ### The four maps
 
 A point starts at the origin. Each step chooses one of four affine maps at random and
-applies it. A map is the pair of equations `x' = a x + b y + e` and `y' = c x + d y + f`,
-so it turns, stretches and moves the whole picture at once. Michael Barnsley's four maps do
+applies it. A map is the pair of equations `x' = a x + b y + e` and `y' = c x + d y + f`.
+It turns, stretches and moves the whole picture at once. Michael Barnsley's four maps do
 different jobs:
 
 | Map | Chosen | What it does |
@@ -61,8 +61,8 @@ MAPS = np.array(
 PROBABILITIES = (0.01, 0.85, 0.07, 0.07)
 ```
 
-Because the frond map copies the whole fern, each leaflet on the frond is itself a small
-fern, which is why the picture looks the same at every size. `fern_points` iterates the
+The frond map copies the whole fern, so each leaflet on the frond is itself a small
+fern. That is why the picture looks the same at every size. `fern_points` iterates the
 maps and keeps every point with the map that made it:
 
 <!-- from examples/fern.py -->
@@ -84,8 +84,8 @@ def fern_points(n: int, seed: int) -> np.ndarray:
 ### From points to washes
 
 The script keeps at most 200 000 points. It counts them into a grid the size of the
-canvas, and turns each count into a coverage between 0 and 1. A pixel stops getting
-darker once it is well covered, as a pixel of paint would:
+canvas and turns each count into a coverage between 0 and 1. A pixel stops getting darker
+once it is well covered, as a pixel of paint would:
 
 <!-- from examples/fern.py -->
 
@@ -103,22 +103,23 @@ def _cover(grid: np.ndarray, k: float) -> np.ndarray:
     return (1.0 - np.exp(-k * grid)).astype(np.float32)
 ```
 
-That coverage is the mask of a `wash`. The frond (the points that last took the stem or
-the frond map) is laid in `wood` and the leaflets (the points of the two 7 per cent maps)
-in `scrub`. `composite` with `km_glazing=True` glazes the two greens, so where they meet
-they stay green. A second, sharper count of every point is laid over them in `wood` as the
-veins and the stem, and last, at most 400 sampled points get a short dab of a wet brush.
+That coverage is the mask of a `wash`. The frond is the points that last took the stem
+or the frond map, and it is laid in `wood`. The leaflets are the points of the two 7 per
+cent maps, and they are laid in `scrub`. `composite` with `km_glazing=True` glazes the
+two greens, so where they meet they stay green. A second, sharper count of every point is
+laid over them in `wood` as the veins and the stem. Last, at most 400 sampled points get
+a short dab of a wet brush.
 
 ### What to notice
 
-- The pale holes between the pinnae are where few points land, so the wash thins to bare
-  paper there, and they are part of why the fern reads as pressed and painted.
-- The two lowest leaflets are paler because they are laid in `scrub`, with a lighter
-  wash, and the rest of the frond in `wood`.
+- The pale gaps between the pinnae are where few points land, so the wash thins to bare
+  paper there.
+- The two lowest leaflets are paler because they are laid in `scrub`, and the rest of
+  the frond in `wood`.
 
 ## A family of ferns
 
-![Nine ferns in a three by three grid, each in two greens on cream paper. All nine have the same pale lowest leaflets and curling tip, and no two curl or spread alike.](../../images/painting-with-python/fern-family.webp)
+![Nine ferns in a three by three grid, each in two greens on cream paper. All nine have pale lowest leaflets. Some curl at the tip like the single fern, and others stand straight and pointed.](../../images/painting-with-python/fern-family.webp)
 
 *Painted by `examples/fern_family.py`, seed 7.*
 
@@ -132,16 +133,16 @@ It writes `out/fern-family.png` in about four seconds.
 
 ### What a painter does
 
-A botanical plate shows one species nine times, and the plants are never copies: one
-stands straighter, one curls further, one is lacier. The painter keeps the species and
-lets the plant vary.
+A botanical plate shows one species nine times, and the plants are never copies. One
+stands straighter and one curls further. The painter keeps the species and lets each
+plant vary.
 
 ### How the engine models it
 
 A fern's character is in its four maps, so a family of ferns is the same four maps with
 their numbers moved a little. `perturbed` keeps the stem map, which only draws the stem.
-It turns the frond map by between minus one degree and six, scales it by a few
-per cent, and moves every entry of the two leaflet matrices by up to 6 per cent:
+It turns the frond map by between minus one degree and six and scales it by a few per
+cent. It moves every entry of the two leaflet matrices by up to 6 per cent:
 
 <!-- from examples/fern_family.py -->
 
@@ -175,10 +176,11 @@ def _fit(points: np.ndarray, w: int, h: int) -> np.ndarray:
 
 ### The loop
 
-Each fern is painted in a cell of its own, at the cell's size, with the points and the dabs
-in proportion to the cell's area. The loop paints one cell at a time into the nine-cell
-grid, giving every cell its own seed, which is the only thing that differs between cells.
-`pad`, defined above the loop, is the margin of paper round the grid, 5 per cent of its width:
+Each fern is painted in a cell of its own, at the cell's size, with the points and the
+dabs in proportion to the cell's area. The loop paints one cell at a time into the grid
+and gives every cell its own seed. The seed is the only thing that differs between
+cells. `pad`, defined above the loop, is the margin of paper round the grid, 5 per cent
+of its width:
 
 <!-- from examples/fern_family.py -->
 
@@ -196,10 +198,10 @@ grid, giving every cell its own seed, which is the only thing that differs betwe
 
 ### What to notice
 
-- Every cell uses the single fern's washes, pigments and dabs, so all nine look like the
-  fern above, and only their curl, spread and leaflets differ.
-- Nine seeds are enough to see the range: the frond's turn decides how far the fern curls,
-  and its scale decides how lacy the frond is.
+- Every cell uses the single fern's washes, pigments and dabs. Only the shape of the
+  fern changes, from strongly curled to straight.
+- Nine seeds are enough to see the range. The frond's turn decides how far the fern
+  curls.
 
 ## A tree
 
@@ -213,22 +215,22 @@ Run it with:
 uv run python examples/trees.py out/ --figure tree
 ```
 
-It writes `out/trees-tree.png` in about three seconds.
+It writes `out/trees-tree.png` in under ten seconds.
 
 ### What a painter does
 
-A painter of a tree starts with the trunk, in a wet brush that is wide at the foot and
+A painter starts the tree with the trunk, in a wet brush that is wide at the foot and
 thins as it climbs. At each fork the brush lifts and a new stroke starts from the same
-point. Where the limbs are too thin for a brush, the painter takes up a pen, and draws the
-twigs. The leaves are a few washes of green and ochre over the twigs' ends, with a few
-dabs of a darker green on top.
+point. Where the limbs are too thin for a brush, the painter takes up a pen and draws the
+twigs. The leaves are a few washes of green and ochre over the ends of the twigs, with a
+few dabs of a darker green on top.
 
 ### How the engine models it
 
-A tree is one rule applied to itself. A limb grows along a heading, bending a little, and
-at its tip it splits into two limbs, now and then three. Each child is shorter than its
-parent by `ratio` and turned away from it by `spread` degrees. Young limbs are drawn up
-toward the light and old limbs sag. The numbers of the rule are the fields of `Shape`:
+A tree is one rule applied to itself. A limb grows along a heading, bending a little. At
+its tip it splits into two limbs, and now and then three. Each child is shorter than its
+parent by `ratio` and turned away from it by `spread` degrees. Old limbs sag. The numbers
+of the rule are the fields of `Shape`:
 
 <!-- from examples/trees.py -->
 
@@ -247,9 +249,9 @@ class Shape:
     lean: float = 0.0
 ```
 
-`grow` follows the rule to `DEPTH` splits and returns every limb as a `Limb`: a path of
-points, the splits from the trunk, the width the limb starts at and the width it ends at,
-and the stroke it belongs to:
+`grow` follows the rule to `DEPTH` splits and returns every limb as a `Limb`. A `Limb`
+holds a path of points, the number of splits from the trunk, the width the limb starts
+at and the width it ends at, and the stroke it belongs to:
 
 <!-- from examples/trees.py -->
 
@@ -265,8 +267,8 @@ class Limb:
     stroke: int
 ```
 
-The child nearest to straight carries on its parent's stroke and starts exactly as wide as
-its parent ends, so the widths taper by depth with no step at a joint:
+The child nearest to straight carries on its parent's stroke. It starts exactly as wide
+as its parent ends, so the widths taper by depth with no step at a joint:
 
 <!-- from examples/trees.py -->
 
@@ -315,11 +317,11 @@ def grow(
 
 ### From limbs to strokes
 
-Each stroke is the chain of limbs that carry on from one another, as one path. `stamp` lays
-a brush along the path and its `wprof` argument says how the width changes along it, so
+Each stroke is the chain of limbs that carry on from one another, as one path. `stamp`
+lays a brush along the path. Its `wprof` argument says how the width changes along it, so
 the stroke is wide at the foot and thin at the tip. The trunk and the limbs to depth 3
-are laid with a wet brush of the brush sheet (`RIV2-a`), and the thinner limbs after them
-with a pen (`MAJ6-e`), picking up where the brush left off:
+are laid with a wet brush of the brush sheet (`RIV2-a`). The thinner limbs after them
+are laid with a pen (`MAJ6-e`), picking up where the brush left off:
 
 <!-- from examples/trees.py -->
 
@@ -338,28 +340,28 @@ def _lay(
 ```
 
 The foliage goes over the limbs, as the leaves of a tree in leaf hang in front of its
-branches. The limbs go down first in `burnt_sienna` and the twigs in `perylene_maroon`. Then
-`_crown` marks a lumpy disc at each of the last limbs' tips (each disc's edge swells and
-dips, so the crown is not a ring of bubbles), and `wash` turns the mask into a green wash.
-A second, smaller wash of the same green deepens some tips, and a wash of `yellow_ochre`
-warms a few. `composite` glazes them all by Kubelka-Munk, so the limbs show through the
-foliage and a warm leaf is still a leaf. A few short dabs of a wet brush in `sap_green` and
-`indigo` are laid last, as the leaves.
+branches. The limbs go down first in `burnt_sienna` and the twigs in `perylene_maroon`.
+Then `_crown` marks a lumpy disc at the tip of each of the last limbs. The edge of each
+disc swells and dips, so the crown is not a ring of bubbles. `wash` turns the mask into a
+green wash. A second, smaller wash of the same green deepens some tips, and a wash of
+`yellow_ochre` warms a few. `composite` glazes them all by Kubelka-Munk, so the limbs
+show through the foliage. A few short dabs of a wet brush in `sap_green` and `indigo`
+are laid last, as the leaves.
 
 ### What to notice
 
-- The trunk is a brush stroke with a soft, streaked edge, and the twigs are fine, even
-  lines: the hand-over from brush to pen is where a limb gets thinner than a brush can
-  draw.
-- The foliage stops short of some twigs and runs past others, because it is laid over
-  the limbs' tips and not over the limbs, so the trunk and the first forks read plainly and
-  the twigs show through the leaves.
+- The trunk is a brush stroke with a darker streak on one side, and the twigs are fine,
+  even lines. The hand-over from brush to pen is where a limb gets thinner than a brush
+  can draw.
+- The foliage is laid over the limbs' tips and not over the whole limbs. It stops short
+  of some twigs and runs past others. The trunk and the first forks stand clear of it,
+  and the twigs show through the leaves.
 - A child starts exactly as wide as the limb it carries on from ends, so no joint has a
   step in it.
 
 ## A family of trees
 
-![Nine trees in a three by three grid, each with a brown trunk, fine dark twigs and a crown of green and ochre washes, with a margin of paper round every tree. All nine are one kind of tree, and no two have the same shape, lean or crown.](../../images/painting-with-python/tree-family.webp)
+![Nine trees in a three by three grid, each with a brown trunk, fine dark twigs and a crown of green and ochre washes, with a margin of paper round every tree. All nine are one kind of tree, and each differs a little in shape, lean and crown.](../../images/painting-with-python/tree-family.webp)
 
 *Painted by `examples/trees.py`, seed 4, `figure="family"`.*
 
@@ -369,19 +371,19 @@ Run it with:
 uv run python examples/trees.py out/ --figure family
 ```
 
-It writes `out/trees-family.png` in about nine seconds.
+It writes `out/trees-family.png` in under half a minute.
 
 ### What a painter does
 
-A painter who draws one tree and then draws eight more does not copy it. The kind of tree
-stays, and the angle of each fork, the length of each limb and the lean of the whole tree
+A painter who draws one tree and then eight more does not copy it. The kind of tree
+stays. The angle of each fork, the length of each limb and the lean of the whole tree
 change a little every time.
 
 ### How the engine models it
 
-A family is the same rule with nine seeds. `perturbed` moves `spread`, `ratio` and `droop` by
-a few per cent, leans the tree by a few degrees, and the seed also draws every limb's own
-wander:
+A family is the same rule with nine seeds. `perturbed` moves `spread`, `ratio` and
+`droop` by a few per cent and leans the tree by a few degrees. The seed also draws every
+limb's own wander:
 
 <!-- from examples/trees.py -->
 
@@ -399,8 +401,8 @@ def perturbed(shape: Shape, rng: np.random.Generator) -> Shape:
 ### The loop
 
 Each tree is painted in its own cell at the cell's size, never at the grid's size and
-downsized. The loop gives each cell its own shape, its own paper noise and its own seed, and
-pastes the cell's layers into the grid's. The paper is laid once, under all nine:
+downsized. The loop gives each cell its own shape, its own paper noise and its own seed.
+It pastes the cell's layers into the grid's. The paper is laid once, under all nine:
 
 <!-- from examples/trees.py -->
 
@@ -425,8 +427,8 @@ pastes the cell's layers into the grid's. The paper is laid once, under all nine
 
 - In `fern.py`, change the `1.60` in the second map's row. The frond's rise changes, and
   the fern leans or straightens.
-- In `fern_family.py`, widen the range in `perturbed`'s `rng.uniform(0.5, 5.5)`. The ferns
-  curl further and further apart.
+- In `fern_family.py`, widen the range in `perturbed`'s `rng.uniform(-1.0, 6.0)`. The
+  ferns vary more in how far they curl.
 - In `trees.py`, change `spread` in `Shape` from `31.0` to `45.0`. The crown opens out
   into a wide fan.
 - In `trees.py`, change `LAST_BRUSHED` from `3` to `5`. The brush draws more of the limbs
