@@ -727,3 +727,48 @@ code; the goldens are regenerated once after the five parallel engine fixes), RE
 labels on bare paper ("Snizort", "Sligachan" are sea lochs); two museums are the only landmarks named; grey
 foxing at the edge. Gates: prek, `-m "not golden"` and `-m golden --golden-tolerance`; the exact
 27-minute golden run was skipped this time by instruction.
+
+## 2026-10-25 P7.V7d Sea from closed coastline rings; no landmark at cap zero (code; regeneration in P7.V7c follow-up)
+
+Two capability gaps found by P7.V10. Code and unit tests only; no golden, docs image or master was
+touched.
+
+**Fix 1, the sea.** `sea_from_coast` closed only one open chain, so a card whose coast is closed
+island rings (Skye: the island, Raasay and the islets are closed rings; the mainland is an open chain)
+had no sea and its lochs read as bare paper. It now lives in `maps/sea.py` (split from `cover.py` for
+the line budget, and so `cover.py` keeps the reading of payloads). The sea is the card edge wound
+anticlockwise plus every land region wound clockwise, filled by the nonzero rule `fill_cov` already
+uses; `Layers.sea` keeps its type (`list[list[Pt]]`). Land regions: a closed ring as it stands, and
+open chains joined end to start walking the card edge anticlockwise (so two chains round one strip of
+land, or a mainland cut by several chains, close correctly). Winding verified on the Skye fixture:
+OSM's coast is land on the left, anticlockwise round the islands; painted, the islands and mainland
+read as land and the lochs and open water as sea (picture below). Probes just right of every chain
+guard the convention: if most lie in the land the chains make, all are reversed; if neither way holds,
+no sea. A card with exactly one open chain and no closed ring takes the old single-closure path
+unchanged (same ring, same probes), so no existing card moves for that reason.
+
+**Attribution.** Lynmouth (open chain only): `make_golden.py --compare` against a run of the p7-wip
+base: paper, wash, pen, labels-centreline, map.png all identical (differing fraction 0.000000),
+labels.txt identical, manifest hash identical. (Against the committed `tests/golden/lynmouth` it still
+differs, 0.97 of map.png, from the other engine fixes already in p7-wip, none from this slice.)
+Moved: any card whose coast has a closed ring or two or more open chains. Expected: Skye
+(docs image `places/skye.webp`, its master, `test_places` skye row), and possibly Trotternish and
+Ambleside/Keswick if their fixtures carry islets or lake islands as coastline (not painted here).
+Skye before/after: `scratchpad/engine/v7d-skye-before.png`, `v7d-skye-after.png` (default theme, 720 px,
+18,000 m margins): before, no sea; after, the sea washed round Skye, Raasay, the lochs and the
+mainland shore, the island standing as paper.
+
+**Draft ADR 0036 section (sea from closed rings).** "The sea is the card area outside every land
+region, as one set of rings filled by the nonzero rule: the card edge wound anticlockwise, each land
+region (a closed coastline ring, or open chains joined along the card edge anticlockwise) wound
+clockwise. OSM's land-on-the-left winding is checked by probes, and reversed whole if the data
+disagrees. One open chain alone keeps its single closure ring. `Layers.sea` is unchanged in type; its
+rings may now include the card's own rectangle and holes."
+
+**Fix 2, the cap.** `journal_heuristic` appended a candidate before testing the cap, so
+`lettering.label_max = 0` with no caller landmarks still lettered the first candidate ("Free Church of
+Scotland Kilmuir" on Skye). The test now comes first. `journal_picks` already stopped at zero.
+No card moves except one set to `label_max = 0`. Draft ADR 0036 section: "`label_max` is a hard cap:
+zero letters no landmark, whether from the caller's annotations or the fallback."
+
+Gate: prek and `pytest -m "not golden"` green. Regeneration deferred to the P7.V7c follow-up.
