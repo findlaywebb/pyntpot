@@ -12,6 +12,8 @@ from typing import Any
 import pytest
 
 from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.ink.raster import fill_cov
+from pyntpot.ink.sheet import Canvas
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.layers import (
     MAX_SCALE,
@@ -25,6 +27,7 @@ from pyntpot.maps.layers import (
 from pyntpot.maps.projection import Projection
 from pyntpot.maps.style import Style
 from pyntpot.maps.style_groups import BasemapStyle, CardStyle, RibbonStyle
+from pyntpot.maps.svg_path import parse_path
 from pyntpot.maps.track import Track
 
 from support.paths import FIXTURE_DIR, KEY
@@ -286,3 +289,45 @@ def test_the_real_box_assembles_the_layers_the_painter_needs(
     assert layers.cover_order[-1] == "wood"
     assert {r.band for r in layers.roads} <= {"major", "minor", "path"}
     assert layers.minor_roads is True
+
+
+def _square(south: float, west: float, north: float, east: float) -> list[tuple[float, float]]:
+    """A closed lat/lng ring, five points."""
+    return [(south, west), (south, east), (north, east), (north, west), (south, west)]
+
+
+def _lake_with_island() -> dict[str, Any]:
+    """A water multipolygon: a lake about 550 m across with one island in it."""
+    lake = _square(51.2300, -3.8380, 51.2340, -3.8300)
+    island = _square(51.2315, -3.8350, 51.2325, -3.8330)
+    return {
+        "type": "relation",
+        "id": 7,
+        "tags": {"type": "multipolygon", "natural": "water"},
+        "members": [
+            {
+                "type": "way",
+                "role": "outer",
+                "geometry": [{"lat": a, "lon": b} for a, b in lake],
+            },
+            {
+                "type": "way",
+                "role": "inner",
+                "geometry": [{"lat": a, "lon": b} for a, b in island],
+            },
+        ],
+    }
+
+
+def test_a_lake_keeps_its_island_in_the_painted_mask(tmp_path: Path) -> None:
+    """A water multipolygon with one island paints bare inside the island and wet around it."""
+    data = _layers(_inputs(tmp_path, [_lake_with_island()]))
+    rings = parse_path(data["water_area"]["d"])
+    assert len(rings) == 2
+    xs = [x for ring in rings for x, _ in ring]
+    ys = [y for ring in rings for _, y in ring]
+    box = (min(xs), min(ys), max(xs), max(ys))
+    high = round(100 * (box[3] - box[1]) / (box[2] - box[0]))
+    cov = fill_cov(rings, Canvas(*box, w=100, h=high))
+    assert cov[high // 2, 50] == pytest.approx(0.0), "the island is painted as water"
+    assert cov[5, 5] == pytest.approx(1.0), "the lake around the island is not painted"
