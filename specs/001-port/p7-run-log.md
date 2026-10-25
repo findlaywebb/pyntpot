@@ -473,3 +473,61 @@ pass's `_seat_cost`. It is a price, not a ban: where every seat crosses, the che
 Leaderless names (spans, settlements, rivers, roads, markers) are not charged. Positions of
 leadered labels move on cards where a leader used to cross a label; regeneration is deferred to
 the group slice.
+## 2026-10-25, P7.V4 The skeleton draws each stroke once (code; regeneration deferred to the group regeneration slice)
+
+**Cause found.** The thinned skeleton was sound (clean one-pixel lines, correct junction counts); the
+fault was the walk that turned it into chains in `letters/skeleton.py`, plus long flanks in
+`letters/trace.py`. `RASTER_EM`, `FLANK_MIN` and the junction merge were not touched. Four faults:
+(1) `_step` skipped any pixel touching the previous one, so a walk stepped over a junction node and
+ran on to the far end: a stroke was drawn through the junction and again from the other side (k, m, n,
+K stems). (2) A junction pixel with a neighbour for each staircase pixel started the same branch twice.
+(3) A walk that came back to its own start node (a bowl on a stem: d, g, a) carried on and drew the stem
+again. (4) A dead-end corner pixel stopped a walk mid-stroke (R's bowl twice), and leftover staircase
+corners became 7-pixel loops. Separately, a flank longer than 3 half-widths is the stem's own other
+side (d, p, B, A), not an arm folded into a stem (M's flanks are 1.5).
+
+**Fix.** `_walk` ends at any node beside it and at its own start node once round a loop; `_step` takes
+the pixel that touches the walk least; `_again` drops a walk whose run is already drawn; `_loops` drops
+leftovers lying wholly beside drawn chains; `trace._flank` drops a flank longer than `FLANK_LONGEST`
+(3.0 half-widths). Test: `tests/unit/letters/test_skeleton_glyphs.py` (pieces, no stroke alongside
+another for more than a stroke width, the o one ring); red before on K k e m n d a g o, green after,
+and every A-Z a-z 0-9 clears the same check.
+
+**Attribution (Lynmouth, `/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/after-p7v4`).** paper, wash, pen: byte-identical. `labels-centreline.webp`
+moved (5.36 percent of pixels past the parity bound), `map.png` moved (1.69 percent). `labels.txt` is
+identical to a run without the change (`/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/before-p7v4`): no label changes. Looked at: every letter is
+drawn once, and the leader lines moved too (the hand's draws are made per stroke, so fewer strokes
+shift every later draw). Crop: `/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/p7v4-lynmouth-labels-before-after.png`. Words with the shipped hand,
+before (left) and after (right): `/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/p7v4-words-64px-before-after.png` and
+`/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/p7v4-words-200px-before-after.png`.
+
+**Expected to move at regeneration:** Lynmouth `labels-centreline.webp` and `map.png`; every lettered
+card in `test_places.py`; the lettered docs images and masters (hero, social preview, word, lettering,
+nib pages, place cards); map styles; the smoke lock only if it letters (not checked here).
+
+**Draft ADR 0036 section (P7.V4).** The centreline skeleton draws each stroke once. The chain walk no
+longer steps over junctions, repeats branches, runs past a loop's own node or dead-ends at a staircase
+corner, and a flank is an arm only when short. No single-line font was needed. The lettered goldens
+and images repaint; labels do not change.
+
+Regeneration deferred to the group regeneration slice.
+
+### P7.V4 follow-up (same day): strokes meet at their junctions
+
+The first cut drew each stroke once but the nib showed gaps: d's ascender came away from its stem,
+the a's foot was a stray dot, t's bar and stem looked unjoined. Causes: (1) every stroke ends at a
+junction, and the nib tapers each end, so the stem is thin exactly where it is joined; (2) short
+spurs at a junction that carry straight on from another branch (the top of an n, the foot of a d)
+were pruned; (3) flank stubs started beside the stem, not on it, and several were shorter than the
+pen is wide. Fix: new `letters/junction.py` (`join_through`) makes one stroke of the two arms that
+leave a junction in opposite directions (a crossing joins both pairs; junction pixels within 3 px are
+one junction and a bridge inside one is dropped); `skeleton.prune` keeps a spur that carries on from
+another branch; a flank starts on its stem and is dropped under 2.2 half-widths. Tests added to
+`test_skeleton_glyphs.py` (class `TestJoined`, every letter and figure but D, Q, 3, 8): every
+skeleton pixel is within 0.03 em of a stroke, no stroke is shorter than a stroke width, the glyph is
+one piece, the t is two strokes; red before on d, n, Y, t, y, f, k, K, M, h, R, B. Known, not fixed:
+terminal tails of D, Q, 3 are still pruned as spurs and 8 keeps a 0.047 em bridge.
+Lynmouth re-attribution (`/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/after2-p7v4`): paper, wash, pen identical; `labels-centreline.webp`
+4.92 percent moved; `map.png` 1.62 percent; `labels.txt` identical. Images: `/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/p7v4-words-64px-before-after-v2.png`,
+`/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/p7v4-words-200px-before-after-v2.png`. Draft ADR 0036 addition: strokes that run on through a
+junction are one stroke (`letters/junction.py`).

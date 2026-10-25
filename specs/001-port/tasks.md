@@ -171,6 +171,8 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [ ] P7.V2 Water areas keep their islands (the Oxford Cherwell); ADR 0036
 - [x] P7.V3 A leader never crosses a placed label (the Keswick kink) (code; regeneration deferred)
 - [ ] P7.V4 The skeleton draws each stroke once (K, k, e, m, n, d, o)
+- [ ] P7.V3 A leader never crosses a placed label (the Keswick kink)
+- [x] P7.V4 The skeleton draws each stroke once (K, k, e, m, n, d, o) (code; regeneration deferred)
 - [ ] P7.V5 Landmark ranking: shops out, recorded places first, castles top tier
 - [ ] P7.V6 The nib's touch-down has no square edge
 - [ ] P7.V7 The pen route keeps its legs apart
