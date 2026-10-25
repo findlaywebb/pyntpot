@@ -270,3 +270,42 @@ success; the run on the base commit `573630c` was still in progress, and the com
 between touch only plan and review files): job `golden (ubuntu-latest)` 00:37:22Z to
 00:55:55Z = **18 min 33 s**. `golden (macos-15)` in the same run: 17 min 39 s. The round's
 CI budget is this plus 4 minutes at the P7.V12-group checkpoint.
+
+## P7.V9a part 1: the showcase tracks (2026-10-25)
+
+Part 1 builds the tracks and the `make_track.py` changes. The payloads, margins, budgets,
+`test_places.py` and the docs images are part 2, after P7.V1b.
+
+**`make_track.py`** gains `--step-m` (default the `STEP_M` of 20 m), `ref=REF[:FROM:TO]` items in
+`--ways` (one ordered list with ids) and `--box S,W,N,E` (command line only). A ref's ways chain by
+shared node or a gap of at most 5 m; it fails, naming way ids, on a gap, a fork or a closed way.
+`test_make_track.py` (14 tests, offline, hand-built ways) written first.
+
+**Tracks** (built over the mirror; contact is the repo URL; every via-node and length check passed):
+
+| Fixture | Route | Length | Points | Ways fetched | `--ways` items |
+| --- | --- | --- | --- | --- | --- |
+| `ambleside/track.gpx` | Loughrigg circuit, loop | 9.00 km | 460 | 65 | 70 |
+| `skye/track.gpx` | island tour, one way, `--step-m 100` | 282.98 km | 2,853 | 281 | 246 (8 `ref=`) |
+| `oxford/track.new.gpx` | colleges and bridges, loop | 4.04 km | 209 | 41 | 48 |
+| `y-fenni/track.new.gpx` | food tour, loop | 2.21 km | 120 | 38 | 52 |
+
+- Ambleside: a route through Loughrigg Terrace from Bridge House is about 9.3 km, over the 9 km
+  bound, so the loop starts and ends on Church Street/Compston Road about 140 m from the Bridge
+  House node (README). Passes the Miller Bridge and Pelter Bridge nodes and Rydal Cave.
+- Skye: `ref=` items for `A851`, `A863` and `B884`. `A87` and `B8009` fork and `A850` and `A855`
+  have gaps over 5 m, so those and the unreferenced Glen Brittle and Neist Point roads are listed
+  by way id. All eleven place checks passed (Uig is checked at its post office: the ferry
+  terminal is 416 m below the A87). The `--box` east edge is just west of the Kyleakin
+  roundabout. Whole-island ways are not recorded here: that is part 2.
+- Oxford: no way inside Christ Church is tagged other than `private` or `no`, so the route runs by
+  the Meadow Buildings and War Memorial Garden footways. Radcliffe Camera and Magdalen Bridge
+  nodes checked.
+- Y Fenni: Angel Bakery, Bean & Bread, Rate of Rise, Shepherd's Ice Cream and the Tŷ Melin point
+  checked. Tŷ Melin: its public address (from the bakery's own site) is held in OpenStreetMap as
+  an address node inside a building way; the README records both and the point.
+
+The old `oxford/track.gpx` and `y-fenni/track.gpx` stay with their payloads; part 2 swaps in
+`track.new.gpx` and re-records. `test_coordinates.py` gains the `ambleside` and `skye` boxes
+(each the track's box rounded outward to 0.01); the two new fixtures have no cache key until part 2.
+The Oxford and Y Fenni boxes already hold their new tracks and are unchanged.

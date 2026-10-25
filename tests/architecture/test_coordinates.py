@@ -30,9 +30,12 @@ BOXES = {
     "yr-wyddfa": (53.06, -4.13, 53.11, -4.02),
     "oxford": (51.74, -1.26, 51.76, -1.24),
     "y-fenni": (51.81, -3.03, 51.83, -3.01),
+    "ambleside": (54.43, -3.02, 54.45, -2.96),
+    "skye": (57.06, -6.78, 57.69, -5.74),
 }
 
-#: Each fixture's cache key, which names its payload files.
+#: Each fixture's cache key, which names its payload files. A fixture with a track and no
+#: payloads yet (`ambleside`, `skye`) has no key.
 KEYS = {
     "lynmouth": KEY,
     "keswick": KESWICK_KEY,
@@ -48,11 +51,13 @@ BUDGETS = {"yr-wyddfa": 12_000_000}
 
 
 def _fixture_files(name: str) -> list[str]:
-    """Return the repo-relative paths of a fixture's three payloads and its README."""
+    """Return the repo-relative paths of a fixture's three payloads, if recorded, and its README."""
     base = f"tests/fixtures/{name}"
-    payloads = [
-        f"{base}/{kind}-{KEYS[name]}.json" for kind in ("overpass", "landcover", "elevation")
-    ]
+    payloads = (
+        [f"{base}/{kind}-{KEYS[name]}.json" for kind in ("overpass", "landcover", "elevation")]
+        if name in KEYS
+        else []
+    )
     return [*payloads, f"{base}/README.md"]
 
 
