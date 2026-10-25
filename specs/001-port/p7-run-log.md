@@ -447,3 +447,32 @@ P7.V12a removes (the hero and the social preview, painted from Keswick today, mo
 stay). The new Ambleside card adds 43.3 s to `test_places.py`; Oxford and Y Fenni are unchanged in
 cost (51.9 s, 51.5 s); Yr Wyddfa 41.4 s. The golden CI run after the last fixture is dispatched by the
 orchestrating session and not recorded here.
+
+## P7.V9a Skye, scale-aware drops (2026-10-25)
+
+`trim_fixture.py` gains `--drop-minor-roads` (drops ways whose `highway` is tertiary, unclassified,
+residential, track, service, footway, path, cycleway, pedestrian, bridleway or steps) and
+`--min-area-m2 A` (drops closed ways and multipolygon relations whose outer area is below A, unless
+`natural=water` or `coastline`, a `place` tag or any `name*` tag), tests first in
+`test_trim_fixture.py`. Basis: `painter/pen.py` paints the `lane` and `track` bands only when
+`layers.minor_roads` is true, which is `mpp_display < brush.minor_roads_mppd` (8.0 in the default
+theme and `BrushStyle`); Skye's card is `mpp_display` 106.429, 900 by 804 display px. A = (106.429)²,
+11,326 m2, under one display pixel.
+
+**Sizes** (the held 25 m payloads, then both drops): overpass 11,435,782 -> 8,615,542; landcover
+5,025,596 -> 3,698,328; with the elevation payload, track and README the directory is about
+12.5 MB, **still over the 12 MB limit, so Skye is again not committed** and no more is dropped.
+
+**Biggest contributors after the drops** (bytes of element text, count): features payload: streams
+2.95 MB (15,010 ways), natural=water 1.52 MB (5,297), historic=ruins 1.16 MB (7,609), coastline 0.96 MB
+(2,846), woods 0.59 MB (1,210), forest 0.42 MB (868), a nature reserve 0.31 MB (8 relations), rivers
+0.19 MB (367). Land cover payload: bare rock 0.97 MB (5,274), meadow 0.78 MB (2,121), a nature reserve
+0.34 MB (10), cliffs 0.29 MB (1,627), heath 0.27 MB, residential 0.23 MB, wetland 0.20 MB, scrub 0.19
+MB, scree 0.18 MB.
+
+**Lossless?** The Skye card painted from the 25 m payloads and from the dropped payloads (default
+style, 18,000 m margins, the same plates cache keys): the same seven label names, the card box inside
+the fetched feature box, but not byte-identical: **max pixel difference 57 of 255**, 79,235 of
+2,892,600 pixels differ (2.7 %), 9,519 (0.33 %) by more than 8. The difference is confined to a thin
+band along the route's ribbon, where the dropped sub-pixel cover areas fed the wash's blotches and
+edges; nothing is missing at card scale. Not a pin: no golden holds Skye.

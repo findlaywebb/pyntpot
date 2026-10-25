@@ -105,8 +105,14 @@ re-records `oxford/` and `y-fenni/` on new routes and `yr-wyddfa/` wider, and re
   their default box, recorded in the run log and not asserted. Margins over 20,000 m stop the slice.
 - **Skye is the one simplified fixture.** `--simplify-m` applies to its payloads alone (the 720 px
   card is about 106 m per display pixel); the walking maps are never simplified. Its payloads are
-  not committed: at 25 m the directory measured 16.7 MB, over the 12 MB limit, so the slice stopped
-  and reported (run log).
+  not committed: at 25 m the directory measured 16.7 MB, over the 12 MB limit. `trim_fixture.py`
+  gained two scale-aware drops, used for Skye only (orchestrator decision): `--drop-minor-roads`
+  (ways of the minor road classes and the footpath classes: the pen paints the minor and path bands
+  only below `minor_roads_mppd`, 8 display metres per pixel, and Skye's card is 106.4) and
+  `--min-area-m2 A` (closed ways and multipolygons whose outer area is under A, with A the square of
+  the card's `mpp_display`, 11,326 m2; natural water and coast, places and named areas are kept).
+  With both the directory is still about 12.5 MB, over the limit, so the slice stopped again and
+  reported (run log).
 
 | Fixture | Bytes (every file) | Budget |
 | --- | --- | --- |
