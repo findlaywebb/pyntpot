@@ -22,6 +22,8 @@ from pyntpot.ink.polyline import Pt, meet
 from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.lettering.label import (
     KIND_TRACKING,
+    NO_LEADER,
+    TIER_SPAN,
     WRAP_LEADING,
     Box,
     Label,
@@ -36,13 +38,19 @@ from pyntpot.maps.lettering.placement_costs import (
     Terms,
     box_on_paper,
     darkness,
+    leader_crossings,
     near_route,
     off_own,
     off_own_feature,
     on_road,
     overlap,
 )
-from pyntpot.maps.lettering.placement_flat import LEADER_COST_PX, ROAD_CROSS_COST, best_flat
+from pyntpot.maps.lettering.placement_flat import (
+    LEADER_COST_PX,
+    LEADER_CROSS_LABEL_COST,
+    ROAD_CROSS_COST,
+    best_flat,
+)
 from pyntpot.maps.lettering.placement_lift import TILT_EXEMPT_KINDS
 from pyntpot.maps.lettering.placement_names import dedupe_names
 from pyntpot.maps.lettering.spans import SpanSurroundings, place_spans
@@ -274,9 +282,10 @@ def _seat_cost(lb: Label, ground: Backdrop, others: list[Box]) -> float:
 
     The same ground terms `_place_flat` scored the candidate on, so a swap that
     would drop a name onto the route, into a wood or across a road is refused
-    by the numbers that would have refused it at placement time. The leader is
-    left out because a swap is a trade between two of them and is priced over
-    the pair.
+    by the numbers that would have refused it at placement time. The leader's
+    length is left out because a swap is a trade between two of them and is
+    priced over the pair; a leader drawn through a placed label is in, at
+    `LEADER_CROSS_LABEL_COST` a label.
     """
     box = lb.box
     assert box is not None
@@ -287,6 +296,8 @@ def _seat_cost(lb: Label, ground: Backdrop, others: list[Box]) -> float:
     cost += darkness(box, ground.card, ground.dark) * 150
     cost += on_road(box, ground.roads) * ROAD_CROSS_COST
     cost += off_own_feature(box, lb)
+    if lb.leader is not None and lb.tier != TIER_SPAN and lb.kind not in NO_LEADER:
+        cost += leader_crossings(*lb.leader, others) * LEADER_CROSS_LABEL_COST
     return cost
 
 

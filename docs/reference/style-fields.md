@@ -38,6 +38,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `paper_worn` | number | `0.2` | Strength of the worn border. |
 | `paper_vignette` | number | `0.05` | Strength of the vignette. |
 | `paper_foxing` | number | `0.09` | Strength of the foxing. |
+| `paper_edge` | `"classic"` or `"warm"` | `"warm"` | The look of the edge and the foxing. `"warm"` browns a narrow, uneven edge and flecks the sheet with small rust specks; `"classic"` is the grey vignette and broad grey smudges. |
 | `sheet_seed` | integer | `11` | Seed of the paper's noise fields, so the same box paints the same paper. |
 | `km_glazing` | boolean | `true` | Composite the pigment stack by Kubelka-Munk glazing instead of multiply. |
 | `pigment_transparency` | table | table | Table of pigment key to transparency, as `TRANSPARENCY`. See [Pigments](pigments.md). |
@@ -234,6 +235,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `dither_seed` | integer | `23` | Seed of the wood dabs and the dither. |
 | `land_cover` | boolean | `true` | Paint the cover classes. Off paints the pale single wash. |
 | `relief` | boolean | `true` | Paint the relief from the elevation grid. |
+| `relief_strength` | number | `1.0` | Multiplies the relief's density, and the ceiling the density is held to, so 2 paints the slopes twice as dark. |
 | `cover_cfg` | table | table | Table of cover class to two numbers: how dark a wash of the class goes and how hard its edge pools. |
 | `pigments` | table | table | Table of pigment key to the colour a full-strength wash transmits. See [Pigments](pigments.md). |
 | `pale_base` | number | `0.5` | Density of the pale single wash. |
@@ -275,7 +277,16 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `style` | string | `"solid"` | The route's treatment, such as `solid` or `dotted`. |
 | `px` | number | `5.4` | Width in display pixels. It also sets how far apart the strands of a doubled-back route are drawn. |
 | `colour` | string | `"#c22050"` | Colour as `#rrggbb`. |
-| `effect` | table | table | Table of the treatment's keys: casing, glow, shadow, blend and adaptive percentage. No module reads it: see "Fields with no reader". |
+| `effect` | table | table | Table of the treatment's keys: casing, glow, shadow, blend, opacity and adaptive percentage. The compose step reads `blend` and `opacity`; see below. |
+
+### The route ink's `blend` and `opacity`
+
+Two keys of `effect` are read when the route is drawn on the card, for the solid line and the pen route alike.
+
+| Key | Type | Default | Sets |
+| --- | --- | --- | --- |
+| `blend` | string | `"normal"` | `"normal"` lays the ink over the card; `"multiply"` multiplies it into the card, so the route darkens a wash instead of covering it. Any other value is an error. |
+| `opacity` | number | `1.0` | How much of the ink is laid, from 0 to 1. The default theme does not write it; a table without it reads 1.0. |
 
 ## `lettering`
 
@@ -304,6 +315,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `sea_style` | string | `"fill"` | How the sea is drawn: `fill` or `waves`. |
 | `contour_interval` | number | `50.0` | Contour interval in metres, used when the mode is `contours`. |
 | `roads` | string | `"key"` | Which roads are drawn: `all`, `key` (major plus interacted) or `major`. |
+| `minor_road_classes` | array | `["tertiary", "unclassified", "residential", "track", "service"]` | The minor highway classes `roads = "all"` keeps; a way of another class is dropped. The fetch asks for all of them whatever this says. |
 | `rivers` | string | `"key"` | Which watercourses are drawn: `all`, `key` (rivers plus interacted streams) or `rivers`. |
 | `interaction_m` | number | `60.0` | Metres within which a minor road or a stream counts as touched by the track. |
 | `interaction_run_m` | number | `100.0` | Metres of that contact needed before it counts, unless the track crosses. |
@@ -339,7 +351,7 @@ These painter fields are read by no module. They belong to no group and a theme 
 
 `hillshade_opacity` and `pick_places`, in `basemap`, are fields of the group that no module reads. They are kept for the upstream consumer.
 
-The `effect` table of each `route_inks.<sport>` is the same: it loads and validates, but nothing paints a casing, glow or shadow from it, so setting it changes no card. The gap is recorded in `docs/issues/maps-route-ink-effect-unread.md`.
+The `effect` table of each `route_inks.<sport>` is the same for all its keys but `blend` and `opacity`: it loads and validates, but nothing paints a casing, glow or shadow from it, so setting those changes no card. The gap is recorded in `docs/issues/maps-route-ink-effect-unread.md`.
 
 ## Not style fields
 

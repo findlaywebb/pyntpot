@@ -22,9 +22,9 @@ as the payloads are (see Licences).
 | File | What it is |
 |---|---|
 | `track.gpx` | The generated track. |
-| `overpass-9d5b52c0487d3b95.json` | OSM features for the feature box, from Overpass. |
-| `landcover-9d5b52c0487d3b95.json` | OSM land cover for the wider land cover box, from Overpass. |
-| `elevation-9d5b52c0487d3b95.json` | 80 by 80 SRTM grid over the feature box, from OpenTopoData. |
+| `overpass-353c7a77ae84f4c1.json` | OSM features for the feature box, from Overpass. |
+| `landcover-353c7a77ae84f4c1.json` | OSM land cover for the wider land cover box, from Overpass. |
+| `elevation-353c7a77ae84f4c1.json` | 80 by 80 SRTM grid over the feature box, from OpenTopoData. |
 
 Each payload is named `<kind>-<key>.json`, where the key is the fetch cache key of
 this track with the shipped Overpass and OpenTopoData (`srtm30m`) providers, so a
@@ -41,7 +41,7 @@ cache over a copy of this directory finds every payload and fetches nothing.
 - **Elevation**: SRTM 30 m (`srtm30m` dataset) via the OpenTopoData public API at
   `https://api.opentopodata.org/v1/srtm30m`. 64 calls of 100 points.
 - **Contact string sent**: `https://github.com/findlaywebb/pyntpot`.
-- **Fetched**: 2026-10-24.
+- **Fetched**: 2026-10-25 (re-recorded wider; first fetched 2026-10-24).
 
 ## Bounding boxes
 
@@ -50,8 +50,16 @@ South, west, north, east, in degrees.
 | Box | South | West | North | East |
 |---|---|---|---|---|
 | Track points lie inside (rounded outward to 0.01) | 53.06 | -4.13 | 53.11 | -4.02 |
-| Features and elevation (track plus 1500 m) | 53.054837 | -4.142966 | 53.122321 | -3.998400 |
-| Land cover (track plus 2600 m) | 53.044886 | -4.159419 | 53.132272 | -3.981947 |
+| Features and elevation (track plus 3000 m) | 53.041268 | -4.165402 | 53.135890 | -3.975964 |
+| Land cover (track plus 3000 m) | 53.041268 | -4.165402 | 53.135890 | -3.975964 |
+
+Fetched at 3,000 m for the features and elevation and for land cover (`--margin-m 3000
+--landcover-margin-m 3000` of `record_fixture.py`), wider than the library defaults of
+1,500 m and 2,600 m so the card shows the ground beside the massif as far as it reaches. The
+margin is the smallest whole kilometre that covers the card box's largest overhang beyond the
+track's box (1,957 m, the card box of the default ribbon fields, to the west and south) plus 1 km of
+headroom for a theme. The card box lies inside the features box (`test_places.py` asserts it).
+The payloads are not simplified: the walking maps keep every vertex.
 
 Overpass returns full geometry for every way and relation touching a box, so the two
 Overpass payloads hold coordinates well outside these boxes.
@@ -92,16 +100,17 @@ part between two of its node ids, in that direction):
 
 ## Size
 
-Git stores the payloads compressed and `tests/` is not shipped in a distribution, so the
-budget (2.5 MB) is measured as the gzip size of each file at the default level, summed.
+The payloads are committed trimmed (`tests/fixtures/trim_fixture.py`: minified, only the fields
+and tags the code reads). The budget is 8,000,000 bytes on disk for the directory,
+enforced by `tests/architecture/test_coordinates.py`.
 
 | File | Bytes | Gzip bytes |
 |---|---|---|
-| `elevation-9d5b52c0487d3b95.json` | 48,001 | 12,877 |
-| `landcover-9d5b52c0487d3b95.json` | 6,393,510 | 990,614 |
-| `overpass-9d5b52c0487d3b95.json` | 4,119,750 | 676,922 |
+| `elevation-353c7a77ae84f4c1.json` | 47,961 | 12,903 |
+| `landcover-353c7a77ae84f4c1.json` | 3,915,945 | 710,560 |
+| `overpass-353c7a77ae84f4c1.json` | 3,718,963 | 752,512 |
 | `track.gpx` | 26,825 | 4,168 |
-| **Total, README excluded** | **10,588,086** | **1,684,581** |
+| **Total, README excluded** | **7,709,694** | **1,480,143** |
 
 ## Licences and attribution
 

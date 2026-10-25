@@ -77,6 +77,29 @@ class TestClassify:
         assert classify({"historic": "memorial"}) == "monument"
         assert LANDMARK_CLASSES["plaque"] is False
 
+    def test_a_shop_is_never_offered(self) -> None:
+        """A shop, a brand or a chain is `other` whatever else it is tagged, a museum included."""
+        assert classify({"shop": "gift", "tourism": "museum"}) == "other"
+        assert classify({"brand": "Costa", "amenity": "cafe", "tourism": "attraction"}) == "other"
+        assert classify({"brand:wikidata": "Q1", "building": "church"}) == "other"
+        assert classify({"shop": "gift", "building": "train_station"}) == "other"
+
+    def test_a_museum_the_record_does_not_know_drops_a_tier(self) -> None:
+        """An unrecorded museum is a `sight`; any one record key keeps it an `attraction`."""
+        assert classify({"tourism": "museum"}) == "sight"
+        assert classify({"tourism": "museum", "wikidata": "Q1"}) == "attraction"
+        assert classify({"tourism": "museum", "wikipedia": "en:Keswick Museum"}) == "attraction"
+        assert classify({"tourism": "museum", "heritage": "2"}) == "attraction"
+        assert classify({"tourism": "museum", "listed_status": "Grade II"}) == "attraction"
+        assert classify({"tourism": "zoo"}) == "attraction"
+
+    def test_a_castle_is_a_named_building_not_a_monument(self) -> None:
+        """A castle takes tier one, ahead of the monument rule that `historic=castle` is in."""
+        assert classify({"historic": "castle"}) == "building"
+        assert classify({"building": "castle"}) == "building"
+        assert LANDMARK_REACH_M["building"][0] == 1
+        assert classify({"historic": "tower"}) == "monument"
+
     def test_every_class_it_returns_has_a_reach(self) -> None:
         """`classify` only ever answers with a key of the reach table."""
         answers = {

@@ -164,6 +164,31 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [x] P7.12 Docs gates: link check, `twine check`
 - [x] P7.13 README, wordmark, landing page, gallery and social preview, and the CodSpeed badge (Q13 (1), row `p5-run-log.md:125`) (the outline's P7.1)
 - [ ] P7.14 Docs site, ADR 0034 (`p7-docs-site`; may slip to 0.1.x)
+- [x] P7.V0 Revision round 1: fatten from the maintainer's feedback and the five agent reports; plan reviews 1 to 4 BLOCK, review 5 PASS
+- [x] P7.V1 Fixture trimming (Lynmouth and Yr Wyddfa; the recorder trims the rest): minified, unread fields and tags dropped, goldens byte-identical; the round's CI baseline
+- [x] P7.V1b Fetch margins as options, the land-cover margin in the cache key when non-default, `--margin-m` on the CLI; ADR 0040
+- [x] P7.V3 A leader never crosses a placed label (the Keswick kink) (regenerated in P7.V7c)
+- [x] P7.V4 The skeleton draws each stroke once (K, k, e, m, n, d, o) (regenerated in P7.V7c)
+- [x] P7.V5 Landmark ranking: shops out, recorded places first, castles top tier (regenerated in P7.V7c)
+- [x] P7.V6 The nib's touch-down has no square edge (regenerated in P7.V7c)
+- [x] P7.V7 The pen route keeps its legs apart (regenerated in P7.V7c)
+- [x] P7.V7b The paper browns at its edge and foxes in rust specks: `paper_edge = "warm"` the default (every image regenerated, the fern included) (regenerated in P7.V7c)
+- [x] P7.V2 Water areas keep their islands (the Oxford Cherwell); ADR 0036 (regenerated in P7.V7c)
+- [x] P7.V9a Fixtures for the showcase maps: Ambleside (Loughrigg), Skye (island tour, Kyleakin to Portree), Oxford (colleges and bridges), Y Fenni (food tour); Yr Wyddfa re-recorded wider; card box inside the fetched box; `make_track.py --step-m`, `--box` and `ref=` items
+- [x] P7.V7c Group regeneration of P7.V2 to P7.V7b: Lynmouth goldens, place pins, map-styles means, 55 docs images and masters; ADR 0036; `docs/issues/letters-terminal-tails-pruned.md`
+- [x] P7.V8 Showcase style fields: minor road classes, relief strength, route blend; ADR 0037
+- [x] P7.V8b Painter's pigments, a separate `PAINTERS_PIGMENTS` table; ADR 0039
+- [x] P7.V9b Journal notes on a map, seated first as flat blocks with leaders; ADR 0038
+- [x] P7.V7d Sea from closed coastline rings; no landmark at cap zero (code; regeneration in P7.V7c follow-up)
+- [x] P7.V10 Showcase themes (maroon pen route, more landscape) and curated callouts
+- [x] P7.V11 Lettered examples painted at nib scale 2 and downsized with Lanczos; published widths unchanged
+- [x] P7.V12a Maps pages: Ambleside hero, gallery, route-ink grid (two paints, twelve composes), landmarks how-to; retire Keswick and Trotternish fixtures
+- [x] P7.V12b The watercolour tutorial in one rhythm, with for-loop grids; reference and explanation figures rebuilt
+- [x] P7.V12d The SVG drawing step by step
+- [x] P7.V12c Painting with Python: trees replace the gasket, a fern family, brushed curves
+- [ ] P7.V13 Critique gate: no published image under 3 of 5
+- [ ] P7.V14 Site theme fixes (`p7-docs-site`)
+- [ ] P7.V15 Hand back
 - [ ] P7.R Release 0.1.0: runbook, publish workflow, metadata, changelog, citation; confirm, tag and publish (the outline's P7.4)
 
 ## P8. Upstream migration
@@ -204,6 +229,7 @@ Not part of the port. Each item becomes its own spec under `specs/` when it is t
 
 - [ ] A public SVG reader in `ink` (`docs/features/ink-read-svg-drawings.md`)
 - [ ] Themes shipped in the package and chosen by name (`docs/features/maps-named-themes.md`)
+- [ ] A wider command line: theme cloning and checking, reference sheets, lettering, SVG drawings (`docs/features/cli-wider-commands.md`)
 - [ ] Retire Lynmouth as the test place once the API and the goldens are stable, moving the goldens and tests to the focus places (`docs/features/tests-retire-lynmouth.md`)
 
 ## P10. Triage and address the port's issues

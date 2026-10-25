@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from pyntpot.ink import PIGMENTS
+from pyntpot.ink import PAINTERS_PIGMENTS, PIGMENTS
 from pyntpot.ink.brush import BRUSH_COLOURS, BRUSH_TREATMENTS
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.cli import build_parser
@@ -174,11 +174,10 @@ class TestCacheLayout:
         assert not missing, f"cache-layout.md lacks: {missing}"
 
     def test_key_inputs_are_named(self):
-        """The four inputs the payload key hashes are in cache-layout.md."""
+        """The inputs the payload key hashes are in cache-layout.md."""
         text = _page("cache-layout.md")
-        missing = [
-            name for name in ("box", "margin_m", "features", "elevation") if f"`{name}`" not in text
-        ]
+        names = ("box", "margin_m", "landcover_margin_m", "features", "elevation")
+        missing = [name for name in names if f"`{name}`" not in text]
         assert not missing, f"cache-layout.md lacks: {missing}"
 
 
@@ -199,6 +198,12 @@ class TestPigments:
         """Each key of PIGMENTS is in pigments.md as code."""
         text = _page("pigments.md")
         missing = [key for key in PIGMENTS if f"`{key}`" not in text]
+        assert not missing, f"pigments.md lacks: {missing}"
+
+    def test_every_painters_pigment_is_named(self):
+        """Each key of PAINTERS_PIGMENTS is in pigments.md as code."""
+        text = _page("pigments.md")
+        missing = [key for key in PAINTERS_PIGMENTS if f"`{key}`" not in text]
         assert not missing, f"pigments.md lacks: {missing}"
 
 

@@ -51,7 +51,7 @@ from pyntpot.maps.lettering.pipeline import Lettering
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.providers.base import Elevation, Features
-from pyntpot.maps.strands import STRAND_GAP_WIDTHS, separate_strands
+from pyntpot.maps.strands import separate_strands, strand_gap_px
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 
@@ -70,7 +70,9 @@ def fetch(
 
     Args:
         track: The route to map.
-        cache: Where the provider payloads are cached.
+        cache: Where the provider payloads are cached; its margins say how far beyond
+            the track's extent they are fetched. The card clips every layer to its own
+            box, so ground fetched beyond the card is never painted.
         features: The feature and land cover provider.
         elevation: The elevation provider.
         style: The style; its painter fields fit the card, the ribbon and the
@@ -108,7 +110,8 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
     Args:
         basemap: The basemap to paint.
         style: The style: its painter fields paint, its base digest goes into
-            the hash, and its route ink sets the gap between strands.
+            the hash, and its route ink and route pen width set the gap between
+            strands.
         out_dir: Where the plates and their manifest are written; created when
             missing.
 
@@ -123,8 +126,7 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
         log.info("plates in %s are current, nothing repainted", out_dir)
     card = basemap.card
     route_px = tuple(card.xy(x, y) for x, y in basemap.track)
-    gap_px = style.route_ink().px * STRAND_GAP_WIDTHS
-    strands = tuple(separate_strands(list(route_px), gap_px))
+    strands = tuple(separate_strands(list(route_px), strand_gap_px(style)))
     return dataclasses.replace(plates, route_px=route_px, strands=strands)
 
 

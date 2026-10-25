@@ -82,6 +82,7 @@ MODULES: tuple[str, ...] = (
     "pyntpot.maps.osm_elements",
     "pyntpot.maps.osm",
     "pyntpot.maps.cover",
+    "pyntpot.maps.sea",
     "pyntpot.maps.card_geometry",
     "pyntpot.maps.relief_layers",
     "pyntpot.maps.basemap_strokes",

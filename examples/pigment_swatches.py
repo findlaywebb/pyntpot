@@ -1,13 +1,18 @@
-"""The pigment sheet: every pigment key, laid as one washed disc, for the reference page.
+"""The pigment card: every pigment key, laid as a graded strip across a bar of ink, for the reference page.
 
-Each key of `PIGMENTS` is laid as a small wash on the paper, in the order `PIGMENTS` holds
-them, five to a row. A `wash` of a disc mask gives the density, `rgb` turns the pigment's
-hex into a colour, and `composite` stacks the fifteen discs over the paper with the
-`PaperStyle` defaults, so each disc is the pigment alone over white paper, multiplied.
-The sheet carries no lettering; the page beside it lists the keys in the same order.
+Each key of `PIGMENTS` gets one cell, in the order `PIGMENTS` holds them, five to a row. A cell is
+a strip of the pigment's wash that deepens from left to right, laid across a band of black ink and
+glazed by Kubelka-Munk, with the key lettered beneath it. Over the paper a pigment shows its
+colour; over the ink bar it shows its transparency: a staining pigment lets the black through, and
+a covering one veils it. `wash` turns each strip's mask into a density, `rgb` turns the pigment's
+hex into a colour, and `composite` stacks the bar and the strips over the paper with
+`PaperStyle(km_glazing=True)`. The hand letters each key at twice its size and the plate is
+brought down with Lanczos.
 
-Public names it uses: `Sheet`, `Canvas`, `PaperStyle`, `paper_plate`, `PIGMENTS`, `wash`,
-`rgb`, `composite` and `save_image`, all from `pyntpot.ink`.
+Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `BrushStyle`,
+`paper_plate`, `PIGMENTS`, `TRANSPARENCY`, `wash`, `rgb`, `composite`, `PigmentLayer` and
+`save_image`; from `pyntpot.letters`, `FaceStyle`, `HandStyle`, `Hand`, `Setting`, `Mark`,
+`NibSurface`, `NibStyle`, `NibGroups` and `nib_plate`.
 
 Run it with `uv run python examples/pigment_swatches.py out/`; it writes
 `out/pigment_swatches.png`.
@@ -15,12 +20,16 @@ Run it with `uv run python examples/pigment_swatches.py out/`; it writes
 
 import argparse
 import logging
+import tempfile
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 
 from pyntpot.ink import (
     PIGMENTS,
+    TRANSPARENCY,
+    BrushStyle,
     Canvas,
     PaperStyle,
     PigmentLayer,
@@ -31,47 +40,123 @@ from pyntpot.ink import (
     save_image,
     wash,
 )
+from pyntpot.letters import (
+    FaceStyle,
+    Hand,
+    HandStyle,
+    Mark,
+    NibGroups,
+    NibStyle,
+    NibSurface,
+    Setting,
+    nib_plate,
+)
 
 logger = logging.getLogger(__name__)
 
-#: Discs across a row.
+#: Cells across a row.
 COLUMNS = 5
-#: One swatch cell's side, in pixels.
-CELL = 120
+#: One cell's width and height, in pixels.
+CELL_W, CELL_H = 192, 124
+#: The strip's width and height, and the ink bar's height across its middle, in pixels.
+STRIP_W, STRIP_H, BAR_H = 164, 64, 22
 #: The size of the paper's granulation noise, in pixels.
-GRAN_PX = 8.0
-#: The seed of the paper's noise and of the dither the file is written with.
+GRAN_PX = 6.0
+#: The seed of the paper's noise, the hand and the dither the file is written with.
 SEED = 11
+#: How many times its size the nib plate is painted before it is brought down.
+NIB_SCALE = 2
+#: The size and the ink of a key's lettering, in pixels.
+KEY_PX, KEY_INK = 21.0, "#3a2c20"
+#: The ink bar's colour.
+BAR_HEX = "#1c1814"
 
 
-def _disc(index: int, w: int, h: int) -> np.ndarray:
-    """A disc mask centred in the index'th cell of the sheet."""
+def _letter(img: np.ndarray, settings: list[Setting]) -> np.ndarray:
+    """Letter the settings over `img` with the nib, plate painted at `NIB_SCALE` times and brought down.
+
+    Raises:
+        RuntimeError: When the hand wrote no marks, so there is no plate to lay.
+    """
+    h, w = img.shape[:2]
+    big = Canvas(0, 0, w * NIB_SCALE, h * NIB_SCALE, w * NIB_SCALE, h * NIB_SCALE)
+    face, hand_style = FaceStyle(), HandStyle()
+    hand = Hand(face, hand_style)
+    rng = hand.generator(SEED)
+    marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
+    surface = NibSurface(
+        big, NIB_SCALE, np.zeros((h * NIB_SCALE, w * NIB_SCALE), np.float32), GRAN_PX * NIB_SCALE
+    )
+    groups = NibGroups(
+        NibStyle(label_ink=KEY_INK, label_pen_width_px=1.5),
+        face,
+        hand_style,
+        BrushStyle(),
+        PaperStyle(),
+    )
+    with tempfile.TemporaryDirectory() as scratch:
+        written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
+        if written is None:
+            raise RuntimeError("the hand wrote no marks")
+        with Image.open(written) as plate:
+            small = plate.convert("RGBa").resize((w, h), Image.Resampling.LANCZOS)
+            rgba = np.asarray(small.convert("RGBA"), np.float32) / 255
+    alpha = rgba[..., 3:]
+    return img * (1 - alpha) + rgba[..., :3] * alpha
+
+
+def _cell_origin(index: int) -> tuple[int, int]:
+    """The strip's top-left corner in the index'th cell of the card."""
     row, column = divmod(index, COLUMNS)
-    yy, xx = np.mgrid[0:h, 0:w]
-    cx, cy = (column + 0.5) * CELL, (row + 0.5) * CELL
-    return ((xx - cx) ** 2 + (yy - cy) ** 2 <= (0.36 * CELL) ** 2).astype(np.float32)
+    return column * CELL_W + (CELL_W - STRIP_W) // 2, row * CELL_H + 12
+
+
+def _mask(w: int, h: int, x: int, y: int, strip_h: int, inset: int = 0) -> np.ndarray:
+    """A rectangle mask `w` by `h` pixels: the strip's `strip_h` rows from (`x`, `y`)."""
+    mask = np.zeros((h, w), np.float32)
+    mask[y : y + strip_h, x + inset : x + STRIP_W - inset] = 1.0
+    return mask
 
 
 def main(out_dir: Path) -> Path:
-    """Lay every pigment as a washed disc, write `pigment_swatches.png` into `out_dir` and return its path."""
+    """Lay every pigment as a graded strip over an ink bar, write `pigment_swatches.png` into `out_dir` and return its path."""
     rows = -(-len(PIGMENTS) // COLUMNS)
-    w, h = COLUMNS * CELL, rows * CELL
+    w, h = COLUMNS * CELL_W, rows * CELL_H
     sheet = Sheet(h, w, GRAN_PX, SEED)
-    paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(), w)
+    paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
 
-    layers: list[PigmentLayer] = [
-        (wash(_disc(index, w, h), sheet, 0.8, 0.3), rgb(hex_colour))
-        for index, hex_colour in enumerate(PIGMENTS.values())
+    bar = np.zeros((h, w), np.float32)
+    layers: list[PigmentLayer] = []
+    ramp = np.linspace(0.2, 1.0, STRIP_W, dtype=np.float32)
+    for index, (key, hex_colour) in enumerate(PIGMENTS.items()):
+        x, y = _cell_origin(index)
+        bar += _mask(w, h, x, y + (STRIP_H - BAR_H) // 2, BAR_H, inset=-6)
+        density = wash(_mask(w, h, x, y, STRIP_H), sheet, 1.0, 0.3)
+        density[:, x : x + STRIP_W] *= ramp
+        layers.append((density, rgb(hex_colour), TRANSPARENCY[key]))
+    ink: PigmentLayer = (wash(np.clip(bar, 0.0, 1.0), sheet, 1.0, 0.0), rgb(BAR_HEX))
+    out = composite([ink, *layers], paper, PaperStyle(km_glazing=True))
+
+    keys = [
+        Setting(
+            key,
+            KEY_PX,
+            anchor=(_cell_origin(i)[0] + STRIP_W / 2, _cell_origin(i)[1] + STRIP_H + 28),
+            align="middle",
+            wash=False,
+        )
+        for i, key in enumerate(PIGMENTS)
     ]
-    out = composite(layers, paper, PaperStyle())
     path = out_dir / "pigment_swatches.png"
-    save_image(out, path, seed=SEED)
+    save_image(_letter(out, keys), path, seed=SEED)
     logger.info("wrote %s", path)
     return path
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Lay every pigment as a disc and write a PNG.")
+    parser = argparse.ArgumentParser(
+        description="Lay every pigment as a strip over an ink bar and write a PNG."
+    )
     parser.add_argument("out_dir", type=Path, help="the directory the PNG is written into")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)

@@ -21,7 +21,7 @@ def paint_relief(job: PaintJob, stack: PlateStack) -> None:
         return
     stack.trimmed.append(
         (
-            relief_density(elevation, job.canvas, job.sheet),
+            relief_density(elevation, job.canvas, job.sheet, cover.relief_strength),
             rgb(cover.pigments["relief"]),
             job.transp("relief"),
         )

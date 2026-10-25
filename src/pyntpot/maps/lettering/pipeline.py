@@ -1,7 +1,7 @@
 """The map's third stage: letter painted plates with names and spans.
 
 Key names: `letter`, which picks what a map names, anchors it on the card,
-resolves the caller's span requests onto the route, places every name and span
+seats the caller's journal notes first (`lettering.notes`), resolves the caller's span requests onto the route, places every name and span
 measured by the hand, and strokes them into a label plate beside the plates;
 `Lettering`, what it hands back: the placed labels, the placed spans and the
 label plate's path.
@@ -42,6 +42,7 @@ from pyntpot.maps.annotations import Annotations
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.lettering.label import Label, Span
+from pyntpot.maps.lettering.notes import note_labels, seat_notes
 from pyntpot.maps.lettering.picks import (
     ground_labels,
     home_labels,
@@ -87,7 +88,8 @@ def letter(
             plate is written beside them.
         basemap: The basemap the plates were painted from, for the places, the
             candidates, the named lines, the projection and the track's times.
-        annotations: The caller's landmarks, places and span requests, or
+        annotations: The caller's landmarks, places, span requests and journal
+            notes, or
             `None` to letter the basemap's leading candidates.
         style: The style the card is lettered in.
 
@@ -114,13 +116,21 @@ def letter(
         {"w": dark.w, "h": dark.h, "v": dark.values},
         road_lines(lines, card),
     )
-    placed = home + place(
-        ground + anchored,
-        spans,
-        backdrop,
-        taken,
-        measure,
-        measure_tracked=partial(lettering_marks.box_size, hand),
+    # Notes are seated before any other name; `place` is told their boxes and never sees them.
+    notes, taken = seat_notes(
+        note_labels(annotations, basemap, style.nib.label_size_px), backdrop, taken, measure
+    )
+    placed = (
+        home
+        + notes
+        + place(
+            ground + anchored,
+            spans,
+            backdrop,
+            taken,
+            measure,
+            measure_tracked=partial(lettering_marks.box_size, hand),
+        )
     )
     plate = draw_plate(plates, placed, spans, strands, style)
     return Lettering(tuple(placed), tuple(spans), plate)

@@ -1,9 +1,10 @@
-# Fractals: a fern and a gasket
+# Fractals: a fern, a family of ferns and a tree
 
-Two old pieces of mathematics make good paintings, because each one is a few lines of
-rule that fill a whole picture. In this page you paint a Barnsley fern, whose rule is four
-affine maps and their odds, and an Apollonian gasket, whose rule is Descartes' circle
-theorem. The engine does the painting: the maths only says where the pigment goes.
+Two kinds of rule make a plant from nothing. The fern's rule is four affine maps and their
+odds, applied again and again to a point. The tree's rule is a limb that splits into
+shorter limbs, each of which does the same. In both, the rule only says where the paint
+goes: the engine does the painting. This page paints a fern, then nine ferns of one
+species, then a tree, then nine trees of one species.
 
 ## The fern
 
@@ -18,6 +19,11 @@ uv run python examples/fern.py out/
 ```
 
 It writes `out/fern.png` in about two seconds.
+
+### What a painter does
+
+A painter of a fern lays a pale green over the whole frond first, a deeper one where the
+leaflets crowd, and draws the stem and the veins last with a fine brush.
 
 ### The four maps
 
@@ -103,110 +109,318 @@ in `scrub`. `composite` with `km_glazing=True` glazes the two greens, so where t
 they stay green. A second, sharper count of every point is laid over them in `wood` as the
 veins and the stem, and last, at most 400 sampled points get a short dab of a wet brush.
 
-## The gasket
+### What to notice
 
-![Washed discs packed inside a ringed circle: two large pale blue discs, a large green one and ochre and green ones below, with ever smaller discs filling the gaps and brown beads at the rim. Where two discs overlap, a darker lens shows both pigments.](../../images/painting-with-python/gasket.webp)
+- The pale holes between the pinnae are where few points land, so the wash thins to bare
+  paper there, and they are part of why the fern reads as pressed and painted.
+- The two lowest leaflets are paler because they are laid in `scrub`, with a lighter
+  wash, and the rest of the frond in `wood`.
 
-*Painted by `examples/gasket.py`, seed 11.*
+## A family of ferns
+
+![Nine ferns in a three by three grid, each in two greens on cream paper. All nine have the same pale lowest leaflets and curling tip, and no two curl or spread alike.](../../images/painting-with-python/fern-family.webp)
+
+*Painted by `examples/fern_family.py`, seed 7.*
 
 Run it with:
 
 ```bash
-uv run python examples/gasket.py out/
+uv run python examples/fern_family.py out/
 ```
 
-It writes `out/gasket.png` in about five seconds.
+It writes `out/fern-family.png` in about four seconds.
 
-### Descartes' circle theorem
+### What a painter does
 
-Four circles that each touch the other three are tied together by one rule. Write each
-circle's curvature as `k = 1 / r`, and give the circle that contains the others a
-negative curvature. Then
+A botanical plate shows one species nine times, and the plants are never copies: one
+stands straighter, one curls further, one is lacier. The painter keeps the species and
+lets the plant vary.
 
-```text
-(k1 + k2 + k3 + k4)^2 = 2 (k1^2 + k2^2 + k3^2 + k4^2)
-```
+### How the engine models it
 
-Given three circles, that leaves two possible fourth circles, one on each side of the gap,
-and their curvatures are `k1 + k2 + k3 +/- 2 sqrt(k1 k2 + k2 k3 + k3 k1)`. Add the
-two curvatures and the root cancels, which gives the shortcut the script uses: once one fourth circle
-`k4` is known, the other is `2 (k1 + k2 + k3) - k4`. The same sum works on the centres,
-read as complex numbers, if each is weighted by its curvature (`k z`). The script starts from
-the container, with `k = -1`, and three circles inside it with `k = 2`, `3` and `6`, and
-checks the theorem in its tests.
+A fern's character is in its four maps, so a family of ferns is the same four maps with
+their numbers moved a little. `perturbed` keeps the stem map, which only draws the stem.
+It turns the frond map by between half a degree and five and a half, scales it by a few
+per cent, and moves every entry of the two leaflet matrices by up to 6 per cent:
 
-<!-- from examples/gasket.py -->
+<!-- from examples/fern_family.py -->
 
 ```python
-def _replace(quad: list[Circle], j: int, depth: int) -> Circle:
-    """The circle that takes the place of `quad[j]`: `2 (k1 + k2 + k3) - k4`, for `k` and for `k z`."""
-    others = [c for i, c in enumerate(quad) if i != j]
-    k = 2 * sum(c.curvature for c in others) - quad[j].curvature
-    kz = 2 * sum(c.curvature * c.centre for c in others) - quad[j].curvature * quad[j].centre
-    return Circle(k, complex(kz) / k, depth)
+def perturbed(maps: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """Return the four maps moved a few per cent: the frond turned and scaled, the leaflets' matrices nudged."""
+    out = maps.copy()
+    theta = np.radians(rng.uniform(0.5, 5.5))
+    scale = rng.uniform(0.835, 0.865)
+    out[1, :4] = scale * np.array([np.cos(theta), np.sin(theta), -np.sin(theta), np.cos(theta)])
+    out[1, 5] = maps[1, 5] * rng.uniform(0.94, 1.06)
+    for k in (2, 3):
+        out[k, :4] = maps[k, :4] * rng.uniform(0.94, 1.06, 4)
+    return out
 ```
 
-`gasket_circles` makes four new circles from the first four, one in each gap, then
-a new circle in every gap each of those opens, to recursion depth 5. The count grows by
-about three times at each step, so it keeps at most 300 circles, the largest first.
+Moving the maps moves the fern's extent, so `_fit` measures each fern's points and fits
+them into its cell, foot low and centred.
 
-<!-- from examples/gasket.py -->
+<!-- from examples/fern_family.py -->
 
 ```python
-def gasket_circles(depth: int) -> list[Circle]:
-    """The four seed circles and every circle found by `depth` rounds of Descartes, at most `MAX_CIRCLES`."""
-    seeds = _seed_circles()
-    found = list(seeds)
-    frontier: list[tuple[list[Circle], int]] = [(seeds, -1)]
-    for level in range(1, depth + 1):
-        grown: list[tuple[list[Circle], int]] = []
-        for quad, skip in frontier:
-            for j in range(4):
-                if j == skip:
-                    continue
-                new = _replace(quad, j, level)
-                found.append(new)
-                grown.append(([*quad[:j], new, *quad[j + 1 :]], j))
-        frontier = grown
-    order = sorted(range(len(found)), key=lambda i: (-round(found[i].radius, 9), found[i].depth, i))
-    return [found[i] for i in order[:MAX_CIRCLES]]
+def _fit(points: np.ndarray, w: int, h: int) -> np.ndarray:
+    """Return `points` as pixels in a `(h, w)` cell: the fern centred, its foot low, y up the page."""
+    lo, hi = points[:, :2].min(axis=0), points[:, :2].max(axis=0)
+    k = min(FIT_WIDTH * w / (hi[0] - lo[0]), FIT_HEIGHT * h / (hi[1] - lo[1]))
+    col = w / 2 + k * (points[:, 0] - (lo[0] + hi[0]) / 2)
+    row = h * (0.5 + FIT_HEIGHT / 2) - k * (points[:, 1] - lo[1])
+    return np.column_stack([col, row, points[:, 2]])
 ```
 
-### From circles to washes
+### The loop
 
-Each circle is a `wash` of its own (the smallest are a flat soft disc): a disc, a shade larger than the circle so that
-neighbours overlap, and kept inside the container. A thin brush stroke inked round the container's edge makes the outer circle visible. The washes are grouped by depth into at most six pigment layers, one
-pigment each from `wetland`, `water`, `wood`, `heath`, `scrub` and `rim`, and `composite`
-glazes them by Kubelka-Munk. Where two discs overlap, the lens shows both pigments, as
-two real washes would.
+Each fern is painted in a cell of its own, at the cell's size, with the points and the dabs
+in proportion to the cell's area. The loop paints one cell at a time into the nine-cell
+grid, giving every cell its own seed, which is the only thing that differs between cells:
 
-<!-- from examples/gasket.py -->
+<!-- from examples/fern_family.py -->
 
 ```python
-def gasket_layers(size: int, sheet: Sheet, seed: int) -> list[PigmentLayer]:
-    """Wash every circle of the gasket and group the washes into pigment layers."""
-    centre_px, scale_px = size / 2, 0.40 * size
-    layers = [np.zeros((size, size), np.float32) for _ in range(MAX_LAYERS)]
-    for rank, circle in enumerate(gasket_circles(MAX_DEPTH)):
-        layer = 0 if circle.curvature < 0 else 1 + min(circle.depth, MAX_LAYERS - 2)
-        shade = np.random.default_rng([seed, rank]).uniform(0.2, 0.45)
-        base = 0.3 if circle.curvature < 0 else shade + 0.5 * circle.depth / MAX_DEPTH
-        disc = _disc(circle, size, centre_px, scale_px)
-        small = scale_px * circle.radius < SMALL_PX
-        body = disc * base * 1.3 if small else wash(disc, sheet, base, 0.55)
-        layers[layer] = np.maximum(layers[layer], body)
-    layers[MAX_LAYERS - 1] = np.maximum(
-        layers[MAX_LAYERS - 1], 0.9 * _ring(size, centre_px, scale_px, sheet, seed)
+    for i in range(ACROSS * DOWN):
+        row, col = divmod(i, ACROSS)
+        window = (slice(row * ch, (row + 1) * ch), slice(col * cw, (col + 1) * cw))
+        sheet = Sheet(ch, cw, GRAN_PX * cw / 600, seed + i)
+        for target, density in zip(densities, paint_fern((ch, cw), sheet, seed + i), strict=True):
+            target[window] = density
+```
+
+### What to notice
+
+- Every cell uses the single fern's washes, pigments and dabs, so all nine look like the
+  fern above, and only their curl, spread and leaflets differ.
+- Nine seeds are enough to see the range: the frond's turn decides how far the fern curls,
+  and its scale decides how lacy the frond is.
+
+## A tree
+
+![A tree with a brown trunk that forks into thinner limbs, ending in a spray of fine dark twigs under washes of green and yellow ochre, with a short ochre stroke of ground at its foot.](../../images/painting-with-python/tree.webp)
+
+*Painted by `examples/trees.py`, seed 4, `figure="tree"`.*
+
+Run it with:
+
+```bash
+uv run python examples/trees.py out/ --figure tree
+```
+
+It writes `out/trees-tree.png` in about three seconds.
+
+### What a painter does
+
+A painter of a tree starts with the trunk, in a wet brush that is wide at the foot and
+thins as it climbs. At each fork the brush lifts and a new stroke starts from the same
+point. Where the limbs are too thin for a brush, the painter takes up a pen, and draws the
+twigs. The leaves are a few washes of green and ochre over the twigs' ends, with a few
+dabs of a darker green on top.
+
+### How the engine models it
+
+A tree is one rule applied to itself. A limb grows along a heading, bending a little, and
+at its tip it splits into two limbs, now and then three. Each child is shorter than its
+parent by `ratio` and turned away from it by `spread` degrees. Young limbs are drawn up
+toward the light and old limbs sag. The numbers of the rule are the fields of `Shape`:
+
+<!-- from examples/trees.py -->
+
+```python
+@dataclass(frozen=True)
+class Shape:
+    """The few numbers that make one species of tree, before a seed's own wander."""
+
+    #: How far a child turns from its parent, in degrees.
+    spread: float = 31.0
+    #: A child's length as a share of its parent's.
+    ratio: float = 0.8
+    #: How much an old limb sags toward the ground, in radians over its length.
+    droop: float = 0.3
+    #: How far the whole tree leans, in degrees: the wind.
+    lean: float = 0.0
+```
+
+`grow` follows the rule to `DEPTH` splits and returns every limb as a `Limb`: a path of
+points, the splits from the trunk, the width the limb starts at and the width it ends at,
+and the stroke it belongs to:
+
+<!-- from examples/trees.py -->
+
+```python
+@dataclass(frozen=True)
+class Limb:
+    """One limb: its path, its splits from the trunk, its widths and the stroke it belongs to."""
+
+    path: np.ndarray
+    depth: int
+    w_start: float
+    w_end: float
+    stroke: int
+```
+
+The child nearest to straight carries on its parent's stroke and starts exactly as wide as
+its parent ends, so the widths taper by depth with no step at a joint:
+
+<!-- from examples/trees.py -->
+
+```python
+def grow(
+    start: np.ndarray, length: float, width: float, shape: Shape, rng: np.random.Generator
+) -> list[Limb]:
+    """Grow a tree from `start`: the trunk, then every limb to `DEPTH` splits.
+
+    Args:
+        start: Where the trunk's foot is, in pixels.
+        length: The trunk's length in pixels.
+        width: The trunk's width at its foot in pixels.
+        shape: The species' numbers.
+        rng: The generator the wander, the splits and the lengths are drawn from.
+
+    Returns:
+        Every limb, the trunk first.
+    """
+    limbs: list[Limb] = []
+    strokes = 1
+    todo = [(start, np.radians(shape.lean), length, width, 0, 0)]
+    while todo:
+        foot, heading, ln, w, depth, stroke = todo.pop()
+        path = _path(foot, heading, ln, depth, shape, rng)
+        w_end = w * (0.62 if depth == 0 else 0.78 if depth < LAST_BRUSHED else 0.62)
+        limbs.append(Limb(path, depth, w, w_end, stroke))
+        if depth == DEPTH:
+            continue
+        turn = np.radians(shape.spread) * (0.45 if depth == 0 else 0.8 if depth == 1 else 1.0)
+        three = rng.random() < THREE_ODDS and depth < DEPTH - 2
+        offsets = [-1.3 * turn, 0.1 * turn, 1.2 * turn] if three else [-turn, turn]
+        lead = int(np.argmin(np.abs(offsets)))
+        dx, dy = path[-1] - path[-2]
+        base = float(np.arctan2(dx, -dy))
+        for i, off in enumerate(offsets):
+            kid_len = ln * shape.ratio * rng.uniform(0.75, 1.15)
+            heading_i = base + off * rng.uniform(0.7, 1.3)
+            if i == lead:
+                todo.append((path[-1], heading_i, kid_len, w_end, depth + 1, stroke))
+            else:
+                todo.append((path[-1], heading_i, kid_len, w_end * 0.88, depth + 1, strokes))
+                strokes += 1
+    return limbs
+```
+
+### From limbs to strokes
+
+Each stroke is the chain of limbs that carry on from one another, as one path. `stamp` lays
+a brush along the path and its `wprof` argument says how the width changes along it, so
+the stroke is wide at the foot and thin at the tip. The trunk and the limbs to depth 3
+are laid with a wet brush of the brush sheet (`RIV2-a`), and the thinner limbs after them
+with a pen (`MAJ6-e`), picking up where the brush left off:
+
+<!-- from examples/trees.py -->
+
+```python
+def _lay(
+    acc: np.ndarray, strokes: list[tuple[np.ndarray, np.ndarray]], row: str, floor: float, seed: int
+) -> None:
+    """Stamp each `(path, widths)` into `acc` with a brush of `row` as wide as its stroke starts, tapering by `wprof`."""
+    for i, (path, widths) in enumerate(strokes):
+        width = max(float(widths.max()), floor)
+        brush, _ = brush_from_id(row, width, 1.0, STYLE)
+        along = np.r_[0.0, np.cumsum(np.hypot(*np.diff(path, axis=0).T))]
+        at = np.linspace(0.0, along[-1], 48)
+        wprof = np.maximum(np.interp(at, along, widths), floor) / width
+        stamp(acc, path, brush, np.random.default_rng([seed, i]), wprof=wprof)
+```
+
+The canopy goes under the limbs. `_crown` marks a disc at each of the last limbs' tips, and
+`wash` turns the mask into a green wash. A second, smaller wash of the same green deepens
+some tips, and a wash of `yellow_ochre` warms a few. `composite` glazes them all by
+Kubelka-Munk, so a warm leaf is still a leaf. The limbs go over the washes in
+`burnt_sienna`, the twigs in `perylene_maroon`, and a few short dabs of a wet brush in
+`sap_green` and `indigo` are laid last, as the leaves.
+
+### What to notice
+
+- The trunk is a brush stroke with a soft, streaked edge, and the twigs are fine, even
+  lines: the hand-over from brush to pen is where a limb gets thinner than a brush can
+  draw.
+- The washes stop short of some twigs and run past others, because they are laid over
+  the limbs' tips and not over the limbs.
+- A child starts exactly as wide as the limb it carries on from ends, so no joint has a
+  step in it.
+
+## A family of trees
+
+![Nine trees in a three by three grid, each with a brown trunk, fine dark twigs and washes of green and ochre. All nine are one kind of tree, and no two have the same shape, lean or crown.](../../images/painting-with-python/tree-family.webp)
+
+*Painted by `examples/trees.py`, seed 4, `figure="family"`.*
+
+Run it with:
+
+```bash
+uv run python examples/trees.py out/ --figure family
+```
+
+It writes `out/trees-family.png` in about nine seconds.
+
+### What a painter does
+
+A painter who draws one tree and then draws eight more does not copy it. The kind of tree
+stays, and the angle of each fork, the length of each limb and the lean of the whole tree
+change a little every time.
+
+### How the engine models it
+
+A family is the same rule with nine seeds. `perturbed` moves `spread`, `ratio` and `droop` by
+a few per cent, leans the tree by a few degrees, and the seed also draws every limb's own
+wander:
+
+<!-- from examples/trees.py -->
+
+```python
+def perturbed(shape: Shape, rng: np.random.Generator) -> Shape:
+    """Return `shape` with each number moved by a few per cent, so a seed grows a new tree of one species."""
+    return Shape(
+        spread=shape.spread * rng.uniform(0.85, 1.2),
+        ratio=shape.ratio * rng.uniform(0.95, 1.04),
+        droop=shape.droop * rng.uniform(0.5, 1.6),
+        lean=shape.lean + rng.normal(0.0, 4.0),
     )
-    stack: list[PigmentLayer] = [
-        (density, rgb(PIGMENTS[key]), TRANSPARENCY[key])
-        for density, key in zip(layers, LAYER_PIGMENTS, strict=True)
-    ]
-    return stack
 ```
+
+### The loop
+
+Each tree is painted in its own cell at the cell's size, never at the grid's size and
+downsized. The loop gives each cell its own shape, its own paper noise and its own seed, and
+pastes the cell's layers into the grid's. The paper is laid once, under all nine:
+
+<!-- from examples/trees.py -->
+
+```python
+    for i in range(across * down):
+        rng = np.random.default_rng([seed, i])
+        shape = Shape() if figure == "tree" else perturbed(Shape(), rng)
+        cell_sheet = Sheet(ch, cw, GRAN_PX * cw / REFERENCE, seed + i)
+        row, col = divmod(i, across)
+        window = (slice(row * ch, (row + 1) * ch), slice(col * cw, (col + 1) * cw))
+        for name, density in paint_tree((ch, cw), cell_sheet, shape, seed + i).items():
+            grid[name][window] = density
+```
+
+### What to notice
+
+- `figure="tree"` and `figure="family"` run the same loop: a tree is a grid of one cell,
+  with the unperturbed `Shape`.
+- A cell's seed is `seed + i`, so the same seed always paints the same nine trees.
 
 ## Try changing
 
 - In `fern.py`, change the `1.60` in the second map's row. The frond's rise changes, and
   the fern leans or straightens.
-- In `gasket.py`, change `LAYER_PIGMENTS` to another set of keys from `PIGMENTS`.
+- In `fern_family.py`, widen the range in `perturbed`'s `rng.uniform(0.5, 5.5)`. The ferns
+  curl further and further apart.
+- In `trees.py`, change `spread` in `Shape` from `31.0` to `45.0`. The crown opens out
+  into a wide fan.
+- In `trees.py`, change `LAST_BRUSHED` from `3` to `5`. The brush draws more of the limbs
+  and the pen only the finest twigs.
