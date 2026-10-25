@@ -37,6 +37,24 @@ with overrides. The shape below, and the code after it, are a suggestion, not a 
 )
 ```
 
+**Aliases and plain colour names** (maintainer, 2026-10-25). Each pigment carries a list
+of aliases, so an example can ask for a colour by an ordinary name (`blue`, `green`,
+`brown`) or a painter's name (`ultramarine`, `sap_green`) and reach the same pigment, and
+the map roles become aliases rather than the only names. Today an example that is not a
+map still borrows the map's role names as its colours, which reads oddly, for example:
+
+```python
+SHAPES: dict[str, list[list[Polar]]] = {
+    "water": [_petal(0.12, 0.58, 14.0, 11.0)],
+    "wetland": [_petal(0.20, 0.56, 30.0, 4.5)],
+    "wood": [[(0.60, 30.0), (0.78, 21.0), (0.94, 30.0), (0.78, 39.0)]],
+    "heath": [_disc(0.76, 0.0, 0.07), [(0.11, 30.0), (0.11, 90.0), (0.11, 150.0)]],
+}
+```
+
+where the keys are colours for a kaleidoscope, not land cover. With aliases the same code
+names the colours it means.
+
 **Why it is not a defect.** The tables work and are documented; the cost is in every
 caller, and in a second table pair added this round (ADR 0039) instead of one model.
 
