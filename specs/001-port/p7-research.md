@@ -468,3 +468,9 @@ prescribed, not options:
   with runs recorded after P7.V9a, P7.V7b, P7.V10, P7.V11 and the P7.V12 group.
 - **The tutorial grids (S10).** Every rung of `paint-a-watercolour.md` has a named grid.
 - The other findings (B5, B6, S1 to S4, S7, S11) are applied as the review proposed.
+
+### 10.5 Decisions, 2026-10-25
+
+- The fern takes the new paper; its drawing is unchanged.
+- Skye is not stopped for a slight overrun of its size budget: after the 25 m re-trim,
+  up to 12 MB is accepted and the budget set to the measured size.

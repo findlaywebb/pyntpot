@@ -6547,12 +6547,10 @@ the lettering is crisp, the tutorial reads in one rhythm, and the fixtures shrin
    moves to Ambleside (the hero, the gallery, the map styles, the social preview, the
    first-map tutorial, the route-ink how-to) or Lynmouth (the command-line how-to).
    Keswick stays a lettering word. Lynmouth stays the test place.
-3. The fern image stays byte-identical (`painting-with-python/fern.webp` and its master
-   unchanged, the pin proves it): `examples/fern.py` passes `paper_edge="classic"`,
-   which is today's paper code path exactly. The maintainer is asked in the P7.V0 chat
-   message whether the fern should take the new paper instead; if yes, P7.V7b drops the
-   fern's opt-out and regenerates its image like every other. A fern family is a
-   separate new image.
+3. The fern's drawing is unchanged; it takes the new paper like every other image
+   (maintainer, 2026-10-25), so P7.V7b regenerates `painting-with-python/fern.webp` and
+   its master, and `examples/fern.py` is not edited. A fern family is a separate new
+   image.
 4. The gasket is replaced by a family of procedural trees.
 5. Tutorial rhythm, for every tutorial step: the picture, what a painter does, how the
    engine models it, the code, what to notice, then a `for`-loop variation grid.
@@ -6579,7 +6577,8 @@ the lettering is crisp, the tutorial reads in one rhythm, and the fixtures shrin
 13. The paper is restyled in the library (P7.V7b) and the new paper is the default
     look: a warm, narrow, uneven edge in place of the grey vignette, and foxing as small
     rust specks in place of grey smudges, behind `PaperStyle.paper_edge = "warm"`;
-    `"classic"` keeps today's paper for the fern (decision 3). Foxing is also off in the
+    `"classic"` keeps today's paper for whoever asks for it (the "Stretch the paper"
+    grid shows both). Foxing is also off in the
     reference and explanation figures (P7.V12b) (maintainer, 2026-10-24).
 14. P7.V11 is cut to the cause of the pixelated lettering (the nib plate painted at
     scale 1): lettered examples paint their nib plate at scale 2 and downsize with
@@ -6662,8 +6661,7 @@ and 10.4; `docs/features/examples-read-simply.md` (parked); the five agent repor
 copied from the scratchpad into `specs/001-port/research/p7/critique/` (maps, pictures,
 reference, causes, landmarks), with coordinates stripped from the landmark note. Leave
 alone: `src/**`, `tests/**`, other `docs/**`. Done when a plan-reviewer round passes;
-the chat message to the maintainer names decision 9 (route B) and asks the fern
-question of decision 3.
+the chat message to the maintainer names decision 9 (route B).
 
 #### P7.V1. Fixture trimming
 
@@ -6793,7 +6791,10 @@ question of decision 3.
     counts are about 78 MB raw, and the review measured 0.13 of raw after trimming and
     15 m simplification on Yr Wyddfa, so about 10 MB, at the budget: if `skye/` is over
     10 MB, re-trim at `--simplify-m 25` (both under half a display pixel at the 720 px
-    card; the slice records `mpp_display`); still over stops and reports. If the mirror
+    card; the slice records `mpp_display`). If it is then at most 12 MB, accept it: set
+    `skye/`'s budget to the measured size rounded up to the next 0.5 MB and record it
+    (maintainer, 2026-10-25: do not stop Skye for a slight overrun). Over 12 MB stops
+    and reports. If the mirror
     cannot answer the query, split nothing: stop and report the error and the counts.
   - **Oxford, the colleges and bridges** (3 to 5 km, loop): Carfax, the High Street,
     Catte Street past the Radcliffe Camera, Queen's Lane, the High Street out over
@@ -7020,21 +7021,17 @@ question of decision 3.
     `paper_foxing`. The other style fields and their defaults are unchanged.
   - `paper.py`'s invariant is updated: it draws two fields from the sheet's generator,
     in that order, whichever `paper_edge`; `"warm"` also reads `sheet.gran`.
-- `examples/fern.py:135` becomes `PaperStyle(km_glazing=True, paper_foxing=0.03,
-  paper_edge="classic")`, so `painting-with-python/fern.webp` and its master stay
-  byte-identical (the pin proves it). `fractals.md` quotes `MAPS`, `PROBABILITIES`,
-  `fern_points`, `_count` and `_cover` from `fern.py` (`test_tutorials.py`'s
-  `<!-- from -->` sync), not `main`, so the sync stays green. If the maintainer has said
-  the fern takes the new paper (decision 3), this line is left alone and the fern
-  regenerates with the rest.
+- `examples/fern.py` is not edited; the fern takes the new paper and its image and
+  master regenerate with the rest (decision 3). Its drawing (the points and dabs) is
+  unchanged, so away from the edge band its change is foxing only, as for every image.
 - Owner files: `src/pyntpot/ink/{paper,style}.py`, `src/pyntpot/maps/themes/default.toml`
-  (the one key), `examples/fern.py` (the one line), `tests/unit/ink/test_paper.py`,
+  (the one key), `tests/unit/ink/test_paper.py`,
   `tests/unit/maps/test_style.py` (the digest pins), `tests/unit/maps/test_style_groups.py`
   (the `PaperStyle` row and digest), `tests/unit/maps/painter/test_smoke.py` (its pinned
   hashes), `docs/reference/style-fields.md` (`paper_edge` in the `paper` section),
   `tests/golden/test_places.py` (expected labels, if they move), ADR 0036 section,
-  every golden, docs image and master that moves (expected: all of them except the
-  fern's), run log, tasks.
+  every golden, docs image and master that moves (expected: all of them, the fern's
+  included), run log, tasks.
 - Test first (`test_paper.py`, small sheets):
   - `"classic"` reproduces today's plate: the hash of its array on a small seeded sheet
     equals a literal pinned from the base before the edit;
@@ -7044,7 +7041,7 @@ question of decision 3.
     grey); the edge darkening is within 2% of the centre's value a tenth of the width
     in; foxed pixels cover under 1% of the sheet and every connected speck is under
     0.8% of the width across; red over blue at a speck exceeds the paper's.
-- Golden: `--compare` first; every image except the fern is expected to move. Because
+- Golden: `--compare` first; every image is expected to move. Because
   the draws are unchanged, away from the edge band (a tenth of the width) the change is
   the foxing only: the run log records the largest channel change there and confirms it
   sits on specks.
@@ -7322,8 +7319,8 @@ question of decision 3.
   recursive tree, the trunk brushed and twigs penned, widths tapering by depth; a
   `figure="family"` sheet of nine trees from nine seeds with small random perturbation
   of angle and length. `examples/fern_family.py` (new): nine ferns from slightly
-  perturbed fern maps. `examples/fern.py` and its image are not touched (the pin
-  proves it). `curves.py`: the rose and the spirograph painted with the brush.
+  perturbed fern maps. `examples/fern.py` is not touched; its image is P7.V7b's last
+  regeneration, which this slice's pin keeps. `curves.py`: the rose and the spirograph painted with the brush.
 - Owner files: those scripts, `tests/examples/test_painting_with_python_fractals.py`
   (the gasket cases out, trees and fern family in), `tests/examples/test_painting_with_python_curves.py`,
   `docs/tutorials/painting-with-python/{fractals,curves}.md`, the fractals line of
@@ -7370,7 +7367,7 @@ After the group lands, the orchestrator records a golden run (see CI time).
 
 The run log summarises the round; the chat message to the maintainer lists each map
 and figure with a link, every decision taken on the way, what was parked, and anything
-flagged (Tŷ Melin's point if unconfirmed; the fern's paper if unanswered).
+flagged (Tŷ Melin's point if unconfirmed).
 
 #### P7.R. Release 0.1.0 (branch `release-0.1.0`)
 
