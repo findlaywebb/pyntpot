@@ -13,6 +13,10 @@ brush, so the water layer keeps that brush's reservoir and break texture at any
 width. The coast is chained rather than profiled: it is one line round the land and has
 no width of its own to vary.
 
+The route's plate depends on base-group fields only: the route inks are in `digest()`
+alone, so the pen separates the doubled-back legs of the route by its own width
+(`route_pen_width_px`, whatever the ride ink) and lays that one displaced line.
+
 Every watercourse and road draws from the job's ink generator, in the order laid; the
 route's plate draws from the pen generator. It does not trim anything to the ribbon and
 does not paint the washes.
@@ -29,6 +33,7 @@ from pyntpot.ink.sheet import rgb
 from pyntpot.maps.basemap import Line
 from pyntpot.maps.painter.brushes import plate_brushes
 from pyntpot.maps.painter.job import PaintJob, PlateStack, drawable
+from pyntpot.maps.strands import STRAND_GAP_WIDTHS, separate_strands
 
 #: The road classes the pen lays, each with the band of road it carries.
 _ROAD_BANDS = {"road_major": "major", "lane": "minor", "track": "path"}
@@ -114,7 +119,11 @@ def paint_route_pen(job: PaintJob, stack: PlateStack) -> None:
         route.route_pen_brush, route.route_pen_width_px, job.scale, job.style.brush, "route"
     )
     pad = InkPad(job.shape, brush, job.style.brush)
-    pad.lay([(brush, job.canvas.px(list(job.layers.route)))], job.pen_rng)
+    line = separate_strands(
+        [(float(x), float(y)) for x, y in job.canvas.px(list(job.layers.route))],
+        route.route_pen_width_px * STRAND_GAP_WIDTHS * job.scale,
+    )
+    pad.lay([(brush, np.asarray(line, dtype=np.float64))], job.pen_rng)
     path = job.out_dir / "pen.webp"
     stack.sizes["pen"] = save_alpha(
         pad.read(brush, job.sheet), path, lossless=job.style.paper.plate_lossless
