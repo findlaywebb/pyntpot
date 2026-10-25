@@ -30,8 +30,8 @@ PINNED_LABELS = (
     "A39",
     "B3234",
     "Saint Mary the Virgin",
-    "Hollerday Hill",
-    "Lyn Valley Art and Craft Centre",
+    "Lynton and Exmoor Museum",
+    "Living Waters Lynton United Reformed Church",
     "start",
 )
 

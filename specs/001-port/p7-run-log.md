@@ -727,3 +727,63 @@ code; the goldens are regenerated once after the five parallel engine fixes), RE
 labels on bare paper ("Snizort", "Sligachan" are sea lochs); two museums are the only landmarks named; grey
 foxing at the edge. Gates: prek, `-m "not golden"` and `-m golden --golden-tolerance`; the exact
 27-minute golden run was skipped this time by instruction.
+
+## 2026-10-25 P7.V7c Group regeneration (P7.V2 to P7.V7b)
+
+The one regeneration for the seven engine fixes that were coded in parallel (`engine-brief.md`),
+on `p7v-7c` (= `p7-wip` at `bbd1c6f`, with the Skye fixture). ADR 0036 written
+(`docs/decisions/0036-fourth-golden-regeneration.md`, index row added).
+
+**Lynmouth `--compare` against the committed goldens** (scratch `regen-lynmouth`): paper 0.999990,
+wash 0.000645, pen 0.000887, labels-centreline 0.107045, map 0.970524 of pixels moved; hash
+`340a7f6e260ee1e2-e5a5f1b4b3ca2177` to `340a7f6e260ee1e2-d9c56c0811177b0f`. That is the union of the
+slices' attributions: paper P7.V7b alone; wash P7.V6 (0.000645, equal to its own figure); pen P7.V6
+0.000120 plus P7.V7 0.000876; labels-centreline P7.V4, P7.V5, P7.V6, P7.V7b; map likewise; P7.V2 and
+P7.V3 move nothing on Lynmouth. Nothing unexplained. Labels: `Hollerday Hill` and `Lyn Valley Art
+and Craft Centre` replaced by `Lynton and Exmoor Museum` and `Living Waters Lynton United Reformed
+Church` (P7.V5), the rest equal. Looked at the old and new `map.png` side by side: the paper is
+brighter inside with a narrow, uneven warm brown edge in place of the grey vignette, the pink route
+and ink are unchanged, the Lynton cluster has the two new landmark labels with leaders.
+Regenerated `tests/golden/lynmouth/` in place; a fresh paint compared with it:
+`--require-identical all --require-hash equal`, exit 0, every output identical.
+
+**Smoke lock**: `SMOKE_SHA` (paper `e044d9c4...`, pen `bb86cd1e...`, wash `c1617293...`) already
+matches the merged code, exact and golden-marked tests green; `tests/golden/smoke/wash.webp`
+unchanged, nothing regenerated. **`GOLDEN_HASH`**: re-pinned to `340a7f6e260ee1e2-d9c56c0811177b0f`
+(the P7.V7b measurement, verified: the golden-marked fetch-paint test passes).
+
+**`test_places.py` label changes** (each run on the code after P7.V3, after V4 and V5, after V6, V7
+and V7b, and after V2; every change in a set of names came from P7.V5):
+skye lost `Cnoc an t-Sìthean`, `Giant Angus MacAskill Museum`, `Staffin Dinosaur Museum` and gained
+`Free Church of Scotland Kilmuir`, `Broadford Church of Scotland`, `Kensaleyre Church`; ambleside lost
+`Rydal Bridge`, `Rydal Road`, `Hope Church` and gained `Pelter Bridge`, `Loughrigg Fell`, `St Mary's`;
+keswick lost `Lake Road Chapel`, `The Retro Zone`, `Derwent Bridge` and gained `Theatre by the Lake`,
+`Friar's Crag`, `Derwent Pencil Museum`; oxford lost `High Street` and gained `Tom Tower` (and P7.V2
+makes `Cherwell` lettered twice, the distinct set unchanged); trotternish, yr-wyddfa, y-fenni
+unchanged. P7.V3 moved no set. Positions are not pinned. **`test_map_styles.py`** `MEAN_RGB`
+re-pinned: pen-and-ink 229.9, 224.8, 213.3; sepia 206.0, 177.8, 128.3 (was 176.5, 154.1, 112.8: its
+paper has `paper_vignette = 0.22`, which the narrow edge brightens most); bold 218.9, 219.6, 197.9;
+winter 214.9, 220.5, 224.9.
+
+**Docs images**: all 55 entries and masters repainted (`regen-docs`), fern included; copied into
+`docs/images/` and `tests/golden/docs/`. Budgets: no fallback fired, no entry sets `quality`. Tightest
+files: `gallery/lettering.webp` 56,640 of 60,000 (lossless), `gallery/nib-line.webp` 54,578
+(lossless), `gallery/route-map.webp` 50,290 (lossy); P7.10 436,740 of 500,000; total 1,929,628 of
+7,000,000. `tests/architecture/test_docs_images.py` green.
+
+**Also re-pinned** (found by the tolerance golden run, golden-marked): `PINNED_LABELS` in
+`tests/unit/maps/test_pipeline_letter_compose.py` (the two P7.V5 Lynmouth label swaps, in placement order).
+
+**Filed**: `docs/issues/letters-terminal-tails-pruned.md` (D, Q, 3, 8).
+
+**Looks wrong in the new images (findings, not fixed)**:
+- `docs/images/places/oxford.webp`: "The Bridge of Sighs" ends "Sighc" at 720 px (the last s reads as
+  a c); the braided Cherwell is now several heavy blue strokes, and the Cherwell is lettered twice.
+- `docs/images/hero.webp`: the leader of "Friar's Crag" runs through the words "Friar's Crag"
+  (its own label); the leader and label are the same line at the "g". The warm edge reads well; the
+  rust specks are not visible at display size.
+- `docs/images/places/skye.webp`: the only landmarks are three churches (the museums and the hill
+  left with P7.V5's ranking); "Broadford Church of Scotland" wraps over two lines.
+- `tests/golden/lynmouth/map.png`: "Living Waters Lynton United Reformed Church" is long, its
+  leader crosses the Lynton name area, and "Lynton and Exmoor Museum" sits tight against "start".
+- Sepia theme card is much lighter than before (mean red +29.5).

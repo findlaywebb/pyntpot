@@ -22,10 +22,10 @@ CARD_SIZE = (1800, 1607)
 
 #: Each theme's mean red, green and blue over the whole card, pinned from a paint.
 MEAN_RGB: dict[str, tuple[float, float, float]] = {
-    "pen-and-ink": (223.9, 219.6, 209.1),
-    "sepia": (176.5, 154.1, 112.8),
-    "bold": (215.4, 216.6, 195.8),
-    "winter": (205.5, 211.6, 217.0),
+    "pen-and-ink": (229.9, 224.8, 213.3),
+    "sepia": (206.0, 177.8, 128.3),
+    "bold": (218.9, 219.6, 197.9),
+    "winter": (214.9, 220.5, 224.9),
 }
 
 #: How far a channel's mean may move between operating systems, out of 255.
