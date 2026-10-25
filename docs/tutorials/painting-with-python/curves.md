@@ -1,17 +1,17 @@
 # Curves: a rose and a spirograph in brush, a Lissajous figure in pen
 
-![A five-petalled rose curve painted with a brush: each petal is washed in rose pink, deeper toward the centre, and outlined in one maroon stroke that swells and thins, on cream paper with a wide margin](../../images/curves/rose.webp)
+![A five-petalled rose curve painted with a brush: each petal is washed in rose pink and outlined in a maroon stroke that is thick at the tip and thins towards the centre, on cream paper with a wide margin](../../images/curves/rose.webp)
 
 *Painted by `examples/curves.py` (seed 5, `figure="rose"`).*
 
 A curve is a rule that gives a point on the paper for every value of a number `t`. Step
 `t` in small increments, join the points, and the curve appears. This page paints three
-curves that way. A painter reaches for a brush when a line should have weight and for a
-pen when it should not, so the rose and the spirograph are painted with the brush and the
-Lissajous figure is drawn with the pen. Each is laid over a light wash and scaled to the
-same reach, so that a clear margin of bare paper is left round it.
+curves that way. A painter uses a brush when a line should have weight and a pen when it
+should not. The rose and the spirograph are painted with the brush, and the Lissajous
+figure is drawn with the pen. Each is laid over a light wash and scaled to the same
+reach, which leaves a margin of bare paper round it.
 
-Run any of them with `uv run python examples/curves.py out/ --figure rose`, choosing
+Run any of them with `uv run python examples/curves.py out/ --figure rose`. Choose
 `rose`, `lissajous` or `spirograph`. The script writes `out/curves-<figure>.png`.
 
 ## The three formulas
@@ -45,25 +45,25 @@ def spirograph(t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 ```
 
 - **The rose** is `r = cos(5 a)`. The radius swells and shrinks as the angle turns, and
-  with a factor of 5 the curve makes five petals. `t` runs from 0 to pi, and the angle `a`
-  is `t` turned a little, so that the curve starts at the centre and each petal ends there:
-  the second half of a turn would only draw the same petals again.
+  with a factor of 5 the curve makes five petals. `t` runs from 0 to pi. The angle `a` is
+  `t` turned a little, so that the curve starts at the centre and each petal ends there.
+  The second half of a turn would only draw the same petals again.
 - **The Lissajous figure** is two swings at right angles, `x = sin(3 t + pi / 2)` and
-  `y = sin(2 t)`. It swings across three times for every two it swings down, and the
-  picture is a knot where the path crosses itself.
+  `y = sin(2 t)`. It swings across three times for every two it swings down. The path
+  crosses itself in a knot.
 - **The spirograph** is the path of a pen fixed to a small wheel as the wheel rolls round
-  inside a ring. The wheel has radius `r = 4`, the ring `R = 9`, and the pen sits at
+  inside a ring. The wheel has radius `r = 4` and the ring `R = 9`. The pen sits at
   `d = 6` from the wheel's centre, which is further than the wheel's radius, so the path
-  makes a loop at every turn of the wheel. The pen comes home after four turns, because 9
-  and 4 share no factor.
+  makes a loop at every turn of the wheel. The pen comes home after four turns round the
+  ring, because 9 and 4 share no factor.
 
 ## Scale the curve to the paper
 
 The formulas give numbers between about -1 and 1 for the rose and the Lissajous figure,
 and between about -10 and 10 for the spirograph. One function turns any of them into
-pixels: it divides by the largest value, multiplies by the reach, which is 38% of the
-width of the image, and centres the result. That reach is the margin: the paper left bare
-is 12% of the width on every side.
+pixels. It divides by the largest value, multiplies by the reach, which is 38% of the
+width of the image, and centres the result. The paper left bare is 12% of the width on
+every side.
 
 <!-- from examples/curves.py -->
 
@@ -80,11 +80,12 @@ def _points(figure: str, size: int) -> np.ndarray:
 
 A painter lays the wash first and lets it dry, then paints the line. The wash needs a
 coverage mask: 1 inside the shape and 0 outside. Pillow's `ImageDraw.polygon` fills the
-polygon the curve's points make, and it fills where the outline winds an odd number of
-times round a spot. That is why the middle of the Lissajous figure stays bare paper while its loops carry
-colour. The spirograph is washed one loop at a time instead, and the loops' washes add up where they cross. `wash` turns the mask into
-pigment density on the paper's noise, and `composite` lays that density over the paper in
-the pigment's colour.
+polygon the curve's points make. It fills only where the outline winds an odd number of
+times round a spot. That is why the two lens-shaped areas in the middle of the Lissajous
+figure stay bare paper while the areas beside them carry colour. The spirograph is
+washed one loop at a time instead, and the washes of the loops add up where they cross.
+`wash` turns the mask into pigment density on the paper's noise. `composite` lays that
+density over the paper in the pigment's colour.
 
 <!-- from examples/curves.py -->
 
@@ -98,14 +99,14 @@ def _cover(points: np.ndarray, size: int) -> np.ndarray:
 
 ## Paint the rose with a brush
 
-![A spirograph painted with a brush: a pale blue wash fills its loops, and one long line runs round them, deep blue at the start, shading through blue to green and breaking up where the brush runs dry; the washes deepen where the loops cross](../../images/curves/spirograph.webp)
+![A spirograph painted with a brush: a pale blue wash fills its nine loops, and one long line runs round them, deep blue and thick at the start, shading to green and thinner towards the end; the washes deepen where the loops cross](../../images/curves/spirograph.webp)
 
 *Painted by `examples/curves.py` (seed 5, `figure="spirograph"`).*
 
-A painter does not outline a flower with a pen of one width. Each petal is one stroke of a
-wet brush that starts at the centre with nothing on the paper, swells as it goes out and
-thins to nothing as it comes back. The script cuts the rose where it crosses the centre
-into five petals:
+A painter does not outline a flower with a pen of one width. Each petal is one stroke of
+a wet brush. It starts at the centre with nothing on the paper, swells as it goes out
+and thins as it comes back. The script cuts the rose where it crosses the centre into
+five petals:
 
 <!-- from examples/curves.py -->
 
@@ -121,12 +122,13 @@ def _taper(count: int, floor: float, power: float) -> np.ndarray:
     return np.maximum(np.sin(np.linspace(0.0, np.pi, count)) ** power, floor)
 ```
 
-`stamp` sets the brush's bristles along a petal's points, and its `wprof` argument says how
-the width changes along the stroke. `_taper` gives the swell, so no petal has a blunt end and
-there is no black knot where the five meet. Each petal has a `wash` of its own in
-`quinacridone_rose`, at a density drawn from the generator, a little out of register with its stroke, and
-deeper toward the centre. The strokes are laid in `perylene_maroon`. Both are painter's
-pigments, from `PAINTERS_PIGMENTS`, glazed by Kubelka-Munk with `km_glazing=True`.
+`stamp` sets the brush's bristles along a petal's points. Its `wprof` argument says how
+the width changes along the stroke. `_taper` gives the swell, so the strokes thin where
+the five petals meet and leave no dark knot at the centre. Each petal has a `wash` of its
+own in `quinacridone_rose`. Its density is drawn from the generator, it sits a little out
+of register with its stroke, and it is deeper toward the centre. The strokes are laid in
+`perylene_maroon`. Both are painter's pigments, from `PAINTERS_PIGMENTS`, glazed by
+Kubelka-Munk with `km_glazing=True`.
 
 <!-- from examples/curves.py -->
 
@@ -158,13 +160,13 @@ def _paint_rose(
 
 ## Paint the spirograph with one long stroke
 
-The spirograph is one stroke from start to end, so the painter lets it run dry. Under it
-the script lays a pale `cerulean` wash for each of the nine loops, and where loops cross the
-washes add up, so the crossings deepen. The stroke itself is one brush (`TRK3-a`) cut into
-sixteen short pieces laid end to end, each a step further along a blend from `ultramarine`
-through `cerulean` to `sap_green` (`_mixed`), so the colour changes gradually and not in
-steps. `wprof` thins the width along the stroke and the density falls with it, so the line
-breaks up toward the end, as a brush does as it empties.
+The spirograph is one stroke from start to end, and the brush runs drier as it goes.
+Under the stroke, the script lays a pale `cerulean` wash for each of the nine loops.
+Where loops cross, the washes add up and the crossings deepen. The stroke itself is one
+brush (`TRK3-a`) cut into sixteen short pieces laid end to end. Each piece is a step
+further along a blend from `ultramarine` through `cerulean` to `sap_green` (`_mixed`), so
+the colour changes gradually. `wprof` thins the width along the stroke, and the density
+falls with it, so the line thins and lightens towards the end.
 
 <!-- from examples/curves.py -->
 
@@ -193,15 +195,15 @@ def _paint_spirograph(
 
 ## Draw the Lissajous figure with the pen
 
-![A Lissajous figure in ink, three swings across to two down, crossing itself in a knot, with its enclosed loops washed pale blue](../../images/curves/lissajous.webp)
+![A Lissajous figure in black ink, three swings across to two down, crossing itself in a knot, with some of its enclosed areas washed pale blue-grey](../../images/curves/lissajous.webp)
 
 *Painted by `examples/curves.py` (seed 5, `figure="lissajous"`).*
 
-The Lissajous figure is a technical figure, and the pen keeps it so: the pen is the narrow
-nib of brush `MAJ6-e`, exactly as in the nib line rung. `stamp` sets the nib's bristles along
-the curve's 4000 points into an accumulator, `ink_density` turns the accumulator into ink
-on the paper's tooth, and `composite` lays the ink over the painted paper in the ink
-colour the brush came with.
+The Lissajous figure is a technical figure, and the pen keeps it one. The pen is the
+narrow nib of brush `MAJ6-e`, as in the nib line rung. `stamp` sets the nib's bristles
+along the curve's 4000 points into an accumulator. `ink_density` turns the accumulator
+into ink on the paper's tooth. `composite` lays the ink over the painted paper in the
+ink colour the brush came with.
 
 <!-- from examples/curves.py -->
 
@@ -214,16 +216,17 @@ colour the brush came with.
 
 ## What to notice
 
-- A brush stroke has weight where a pen line does not: the petals swell and the
-  spirograph's line thins, runs dry and breaks.
+- A brush stroke has weight where a pen line does not. The petal outlines swell and thin,
+  and the spirograph's line changes colour and thins towards its end.
 - The wash fills where the curve winds an odd number of times, so the picture shows the
   curve's structure, not just its outline.
-- The brush and the pen differ in one call. Both are `stamp`; the brush id and `wprof`
-  change what it draws.
+- The brush and the pen differ in one call. Both use `stamp`, and the brush id and
+  `wprof` change what it draws.
 - Every seed is fixed, so one run writes the same file again.
 
 ## Try changing
 
-Change the `14.0` in `_paint_rose` to `6.0` for a finer outline, and the `0.006` in its `drift` to `0.02` for a wash that wanders further from its stroke.
+Change the `14.0` in `_paint_rose` to `6.0` for a finer outline. Change the `0.006` in its
+`drift` to `0.02` for a wash that wanders further from its stroke.
 Change 3 and 2 in `lissajous` to 5 and 4 for a denser knot.
 Change `"TRK3-a"` in `_paint_spirograph` to `"RIV2-a"` for a line that does not run so dry.
