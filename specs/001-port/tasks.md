@@ -174,7 +174,7 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [ ] P7.V5 Landmark ranking: shops out, recorded places first, castles top tier
 - [x] P7.V6 The nib's touch-down has no square edge (code; regeneration deferred)
 - [ ] P7.V7 The pen route keeps its legs apart
-- [ ] P7.V7b The paper browns at its edge and foxes in rust specks: `paper_edge = "warm"` the default (every image regenerated, the fern included)
+- [x] P7.V7b The paper browns at its edge and foxes in rust specks: `paper_edge = "warm"` the default (every image regenerated, the fern included) (code; regeneration deferred)
 - [x] P7.V8 Showcase style fields: minor road classes, relief strength, route blend; ADR 0037
 - [x] P7.V8b Painter's pigments, a separate `PAINTERS_PIGMENTS` table; ADR 0039
 - [x] P7.V9b Journal notes on a map, seated first as flat blocks with leaders; ADR 0038

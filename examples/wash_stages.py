@@ -86,7 +86,7 @@ def main(out_dir: Path, figure: str = "rim", size: int = DESIGN_W) -> Path:
     unit = size / DESIGN_W
     gran = (FINE_GRAN_PX if figure in {"grain", "overlap", "glaze"} else SLOW_GRAN_PX) * unit
     sheet = Sheet(h, w, gran, SEED)
-    paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(), w)
+    paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
     pool = POOL if figure != "body" else 0.0
 
     blue = _disc(w, h, 0.5 if figure in {"mask", "body", "rim", "grain"} else 0.4)

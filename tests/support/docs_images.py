@@ -72,6 +72,7 @@ class DocsImage:
         kind: Which size budget the file keeps to.
         encoding: How the file is written.
         slice: The plan slice that registered it, a key of `SLICE_SHARE_BYTES`.
+        quality: The lossy encoders' quality, or `None` for the encoding's own default.
     """
 
     image: str
@@ -82,6 +83,7 @@ class DocsImage:
     kind: Kind
     encoding: Encoding
     slice: str
+    quality: int | None = None
 
 
 def master_path(image: str) -> str:

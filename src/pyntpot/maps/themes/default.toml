@@ -15,6 +15,7 @@ paper_tooth = 0.085
 paper_worn = 0.2
 paper_vignette = 0.05
 paper_foxing = 0.09
+paper_edge = "warm"
 sheet_seed = 11
 km_glazing = true
 km_transparency = 0.06

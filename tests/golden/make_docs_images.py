@@ -53,16 +53,16 @@ def _fixture_options(fixture: str, cache: Path) -> dict[str, object]:
     }
 
 
-def _encode(img: Image.Image, encoding: str) -> bytes:
-    """Return the image's bytes in the named encoding."""
+def _encode(img: Image.Image, encoding: str, quality: int | None = None) -> bytes:
+    """Return the image's bytes in the named encoding; `quality` of `None` is its default."""
     buffer = io.BytesIO()
     match encoding:
         case "webp-lossless":
             img.save(buffer, "WEBP", lossless=True, method=5)
         case "webp-lossy":
-            img.save(buffer, "WEBP", quality=90, method=5)
+            img.save(buffer, "WEBP", quality=90 if quality is None else quality, method=5)
         case "jpeg":
-            img.save(buffer, "JPEG", quality=88)
+            img.save(buffer, "JPEG", quality=88 if quality is None else quality)
         case _:
             raise ValueError(f"unknown encoding {encoding!r}")
     return buffer.getvalue()
@@ -102,7 +102,7 @@ def paint_entry(entry: DocsImage, work: Path) -> tuple[bytes, bytes]:
     written = run_example(entry.stem, work / "out", **options)
     with Image.open(written) as opened:
         img = opened.convert("RGB")
-    return _encode(_downsized(img, entry.width), entry.encoding), _master(img, entry)
+    return _encode(_downsized(img, entry.width), entry.encoding, entry.quality), _master(img, entry)
 
 
 def _write(out: Path, entries: list[DocsImage]) -> None:

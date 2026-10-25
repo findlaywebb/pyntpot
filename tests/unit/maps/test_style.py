@@ -70,8 +70,8 @@ RIDE_INK = RouteInk(
 DOTTED_SPORTS: tuple[str, ...] = ("run", "swim", "other")
 
 #: The default style's three digests, pinned.
-DIGEST = "25ae6fee082ebff5"
-BASE_DIGEST = "e5a5f1b4b3ca2177"
+DIGEST = "d7997015c8df9b37"
+BASE_DIGEST = "d9c56c0811177b0f"
 LETTERING_DIGEST = "d15ae2f30e9ca5ce"
 
 

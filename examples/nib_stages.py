@@ -189,7 +189,7 @@ def main(out_dir: Path, figure: str = "broad", size: int = DESIGN_W) -> Path:
     unit = size / DESIGN_W
     sheet = Sheet(h, w, GRAN_PX * unit, SEED)
     canvas = Canvas(0, 0, w, h, w, h)
-    paper = paper_plate(sheet, canvas, PaperStyle(), w)
+    paper = paper_plate(sheet, canvas, PaperStyle(paper_foxing=0.0), w)
     if figure in {"set-down", "runs-dry"}:
         style = BrushStyle(
             pen_starve=figure == "runs-dry", pen_reservoir=22.0, pen_thin=1.0, ink_dip_mult=1.4

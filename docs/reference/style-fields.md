@@ -38,6 +38,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `paper_worn` | number | `0.2` | Strength of the worn border. |
 | `paper_vignette` | number | `0.05` | Strength of the vignette. |
 | `paper_foxing` | number | `0.09` | Strength of the foxing. |
+| `paper_edge` | `"classic"` or `"warm"` | `"warm"` | The look of the edge and the foxing. `"warm"` browns a narrow, uneven edge and flecks the sheet with small rust specks; `"classic"` is the grey vignette and broad grey smudges. |
 | `sheet_seed` | integer | `11` | Seed of the paper's noise fields, so the same box paints the same paper. |
 | `km_glazing` | boolean | `true` | Composite the pigment stack by Kubelka-Munk glazing instead of multiply. |
 | `pigment_transparency` | table | table | Table of pigment key to transparency, as `TRANSPARENCY`. See [Pigments](pigments.md). |

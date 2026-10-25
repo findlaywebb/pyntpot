@@ -85,7 +85,7 @@ def main(out_dir: Path) -> Path:
     rows = len(BRUSH_IDS) // COLUMNS
     w, h = 2 * MARGIN + COLUMNS * CELL_W, 2 * MARGIN + rows * CELL_H
     sheet = Sheet(h, w, GRAN_PX, SEED)
-    paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(), w)
+    paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
 
     by_ink: dict[str, np.ndarray] = {}
     for index, brush_id in enumerate(BRUSH_IDS):
