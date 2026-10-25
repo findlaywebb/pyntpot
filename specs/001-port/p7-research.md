@@ -497,6 +497,20 @@ After plan review 2 (`reviews/p7v-plan-review-2.md`), also settled:
   reference and explanation figures in P7.V7b. The "Compose the painting" grid is hand
   seed by backing wash.
 
+After plan review 3 (`reviews/p7v-plan-review-3.md`), also settled:
+
+- **The pen plate's gap (B1).** Always `route_pen_width_px * STRAND_GAP_WIDTHS *
+  job.scale`, base-group fields only, so a fed or changed route ink never changes a
+  cached plate (ADRs 0005 and 0027); `strand_gap_px` is used by `pipeline.paint` only.
+- **The paper's golden check (B2).** A unit test (vignette and foxing 0: warm equals
+  classic more than a tenth of the width in) proves the draws unchanged; the goldens'
+  interior change is recorded as the vignette's narrowing, smudges removed and specks
+  added.
+- **Yr Wyddfa (B3).** Never simplified; accepted up to 12 MB; over that stops.
+- **Confirmed assumptions.** The Lynmouth job sheet is built by `PaintJob.begin`;
+  `MAJ3-e` is the dry pen, swapped for `MAJ4-e` if P7.V13 finds it does not read dry.
+- **Pushes (maintainer, 2026-10-25).** Commit locally; push only when a slice lands.
+
 ### 10.5 Decisions, 2026-10-25
 
 - The fern takes the new paper; its drawing is unchanged.
