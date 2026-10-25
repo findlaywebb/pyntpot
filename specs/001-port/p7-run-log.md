@@ -447,3 +447,29 @@ P7.V12a removes (the hero and the social preview, painted from Keswick today, mo
 stay). The new Ambleside card adds 43.3 s to `test_places.py`; Oxford and Y Fenni are unchanged in
 cost (51.9 s, 51.5 s); Yr Wyddfa 41.4 s. The golden CI run after the last fixture is dispatched by the
 orchestrating session and not recorded here.
+
+## 2026-10-25 P7.V3 A leader never crosses a placed label (code; regeneration deferred to the group regeneration slice)
+
+**Change.** `LEADER_CROSS_LABEL_COST` (= `ROAD_CROSS_COST`, 90) per placed box a leader segment
+passes through, charged in `_place_flat` (candidate leader from the anchor to the box's near edge,
+leadered names only: not spans or `NO_LEADER` kinds) and in `placement._seat_cost` (so
+`_swap_seats` cannot put a label back across). New helper `placement_costs.leader_crossings`.
+`placement.py` is 391 lines, so no split. Tests: `test_placement_flat.py` (leader not run through a
+placed label) and `test_placement.py` (swap refused when it would cross a third label); both failed
+before the fix.
+
+**Attribution (Lynmouth, `--compare`).** Nothing moved: paper, wash, pen, labels-centreline and
+map are identical, differing fraction 0.000000 each, manifest hash unchanged. No label changes. The
+fix targets Keswick ("Lake Road Chapel" through "Keswick"), which the Lynmouth card does not show.
+Expected to move: the places card(s) with a leader crossing a placed label (Keswick, any other
+in `test_places.py`), their docs images and masters; map styles and Lynmouth expected unmoved.
+The group regeneration slice should list the places labels whose positions moved.
+
+**Draft ADR 0036 section (P7.V3).** A leader never crosses a placed label. `_place_flat` costed a
+candidate's box against placed boxes but not the line joining it to its mark, so a chapel's leader
+could cut the "K" of "Keswick". A candidate now pays `LEADER_CROSS_LABEL_COST` (90, equal to
+`ROAD_CROSS_COST`) for each placed box its leader passes through, in the flat placer and in the swap
+pass's `_seat_cost`. It is a price, not a ban: where every seat crosses, the cheapest still wins.
+Leaderless names (spans, settlements, rivers, roads, markers) are not charged. Positions of
+leadered labels move on cards where a leader used to cross a label; regeneration is deferred to
+the group slice.

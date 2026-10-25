@@ -311,6 +311,20 @@ def test_a_swap_that_reads_worse_is_refused():
     assert (a.box, b.box) == seats, "a name was swapped off the paper"
 
 
+def test_a_swap_that_runs_a_leader_through_a_placed_label_is_refused():
+    """The swap pass prices a leader across a placed label, so it cannot put one back."""
+    a, b = _leadered("Alpha", 100.0, 100.0), _leadered("Beta", 100.0, 200.0)
+    _seat(a, 300.0, 200.0, 60.0)
+    _seat(b, 300.0, 100.0, 60.0)
+    between = Label(name="Gamma", kind="monument", px=0.0, py=0.0, tier=TIER_LANDMARK, size=14.0)
+    between.box, between.flat = (190.0, 90.0, 210.0, 110.0), True
+    seats = (a.box, b.box)
+    _uncross_leaders(
+        [a, b, between], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), [])
+    )
+    assert (a.box, b.box) == seats, "a swap put a leader through Gamma"
+
+
 def test_a_name_on_its_own_mark_is_never_swapped():
     """A settlement is its place: it has no leader and cannot be moved."""
     a = _leadered("Alpha", 150.0, 150.0)

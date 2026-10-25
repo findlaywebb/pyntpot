@@ -2,7 +2,7 @@
 
 Key names: `_place_flat`, one horizontal name tried on every side of its anchor at every
 rung of the ladder; `best_flat`, the cheapest answer over every way the name may be
-broken; `ROAD_CROSS_COST`, `LEADER_COST_PX`, `SEPARATION_WEIGHT` and `WRAP_COST`, the
+broken; `ROAD_CROSS_COST`, `LEADER_CROSS_LABEL_COST`, `LEADER_COST_PX`, `SEPARATION_WEIGHT` and `WRAP_COST`, the
 prices the answers are weighed in.
 
 It does not set a name along a line, choose the order names are placed in or swap
@@ -28,6 +28,7 @@ from pyntpot.maps.lettering.placement_costs import (
     Terms,
     box_on_paper,
     darkness,
+    leader_crossings,
     near_route,
     off_own_feature,
     on_road,
@@ -43,6 +44,13 @@ from pyntpot.maps.lettering.placement_marks import SPAN_MARK_COST_PX, mark_gap, 
 #: rule: a longer leader is a cheaper thing to spend than a road crossing, and "Braemar Castle" should step left rather than let
 #: "Castle" sit on the tarmac.
 ROAD_CROSS_COST = 90.0
+
+
+#: What a leader drawn through a placed label costs, for each label it crosses.
+#: Equal to a road crossing, and for the same reason: a line cutting through
+#: another name makes both hard to read, but sometimes there is nowhere else,
+#: so it is a price and not a ban.
+LEADER_CROSS_LABEL_COST = ROAD_CROSS_COST
 
 
 #: What a pixel of leader costs, so the two are directly comparable.
@@ -176,6 +184,9 @@ def _place_flat(
                 gap_px = SPAN_MARK_COST_PX if lb.tier == TIER_SPAN else per_px
                 cost += mark_gap(box, lb, dist) * gap_px
                 cost += mark_through(box, lb)
+                if not near_mark:
+                    foot = (cx - ox * tw / 2 if ox else cx, cy)
+                    cost += leader_crossings((ax, ay), foot, terms.boxes) * LEADER_CROSS_LABEL_COST
                 cost -= separation(box, terms.boxes) * SEPARATION_WEIGHT
                 here = (cost, cx, cy, x0, y0, ox, ax, ay)
                 if best is None or cost < best[0]:
