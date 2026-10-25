@@ -82,4 +82,6 @@ def test_solid_and_pen_ride_inks_paint_the_same_pen_plate(tmp_path):
     pen = tiny_job(tmp_path / "pen", _ride_as(Style.default(), "pen"), route=OUT_AND_BACK)
     for job in (solid, pen):
         paint_route_pen(job, PlateStack.blank(job.shape))
-    assert (tmp_path / "solid" / "pen.webp").read_bytes() == (tmp_path / "pen" / "pen.webp").read_bytes()
+    assert (tmp_path / "solid" / "pen.webp").read_bytes() == (
+        tmp_path / "pen" / "pen.webp"
+    ).read_bytes()
