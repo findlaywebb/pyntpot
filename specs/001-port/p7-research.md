@@ -469,6 +469,34 @@ prescribed, not options:
 - **The tutorial grids (S10).** Every rung of `paint-a-watercolour.md` has a named grid.
 - The other findings (B5, B6, S1 to S4, S7, S11) are applied as the review proposed.
 
+After plan review 2 (`reviews/p7v-plan-review-2.md`), also settled:
+
+- **Keswick's fixture budget (B1).** P7.V9a sets `BUDGETS["keswick"] = 7_000_000` for
+  the untrimmed directory; P7.V12a removes it with the fixture.
+- **CI time (B2).** The budget binds only at the P7.V12-group checkpoint; the earlier
+  runs are recorded with an allowance for the Keswick and Trotternish cost P7.V12a
+  removes, never a stop. Grids paint at their published size; the route-ink grid paints
+  once per pen brush (the brush is in the base digest) and composes every cell.
+- **Yr Wyddfa's size (S1).** Skye's rule: re-trim at 25 m if over 10 MB, accept up to
+  12 MB with the budget set to the measured size rounded up to 0.5 MB.
+- **One strand gap (S2).** When the pen draws the route, the lettering's strands use
+  `route_pen_width_px` too, through one helper in `strands.py`.
+- **The route-ink grid (S4).** Solid, wet pen `MAJ1-e` and dry pen `MAJ3-e`, by the
+  maroon, the default pink, indigo and burnt sienna; dotted left out until it renders.
+- **Places data (S6).** Callouts and notes live in `examples/places.toml`, read by
+  `place_card.py` through a new `place` option; notes are seated against the taken
+  boxes too.
+- **Encodings (S7).** `word.webp` stays lossy (a mixed figure); a lettered thumbnail or
+  any regenerated image that would pass its budget falls back to lossy WebP at quality
+  95, recorded.
+- **Skye's painted area (S10).** At least 45% is accepted when 60% is out of reach
+  inside the card-box rule.
+- **Skye's track (S11).** `make_track.py --ref REF` chains a road ref's ways
+  automatically, failing on a gap over 5 m.
+- **Specks (S12).** The threshold is a quantile of `sheet.gran`; foxing goes off in the
+  reference and explanation figures in P7.V7b. The "Compose the painting" grid is hand
+  seed by backing wash.
+
 ### 10.5 Decisions, 2026-10-25
 
 - The fern takes the new paper; its drawing is unchanged.
