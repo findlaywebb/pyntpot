@@ -1,6 +1,7 @@
 """The focus-place fixtures each paint a card from their cache alone, with the names expected."""
 
 import shutil
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -8,6 +9,7 @@ import pytest
 from PIL import Image
 
 from pyntpot.maps import (
+    Annotations,
     Cache,
     FetchMargins,
     OpenTopoData,
@@ -35,6 +37,9 @@ from support.paths import (
 
 pytestmark = pytest.mark.golden
 
+#: The curated callouts and journal notes of the showcase places, one table per fixture directory.
+PLACES_TOML = REPO_ROOT / "examples" / "places.toml"
+
 #: How the providers name the caller; never sent, since no request is made.
 CONTACT = "pyntpot-tests@example.invalid"
 
@@ -53,8 +58,9 @@ class Place:
     landcover_margin_m: float = LANDCOVER_MARGIN_M
 
 
-#: Each place's labels are the names its style (the default unless `theme` is given) places, pinned
-#: from the first painting of the recorded fixture. The test compares the distinct names only: how
+#: Each place's labels are the names its style (the default unless `theme` is given) places, with
+#: the curated callouts and journal notes of `examples/places.toml`, pinned from the painting of the
+#: recorded fixture at the style's own card width. The test compares the distinct names only: how
 #: many times a long river is named, and in what order, can shift on a placement near-tie between
 #: platforms (CI placed one "Cherwell" on Oxford where the recording machine placed two).
 PLACES = (
@@ -62,14 +68,17 @@ PLACES = (
         "skye",
         SKYE_KEY,
         [
+            "Free Church of Scotland Kilmuir",
+            "Monday: over the bridge, then Armadale",
             "Sligachan",
             "Snizort",
-            "Free Church of Scotland Kilmuir",
-            "Broadford Church of Scotland",
-            "Kensaleyre Church",
+            "Thursday: the Storr and a long Staffin lunch",
+            "Tuesday: Dunvegan Castle and the Coral Beaches",
+            "Wednesday: the Fairy Pools in the rain",
             "start",
             "finish",
         ],
+        theme="examples/themes/skye.toml",
         margin_m=18000.0,
         landcover_margin_m=18000.0,
     ),
@@ -77,16 +86,18 @@ PLACES = (
         "ambleside",
         AMBLESIDE_KEY,
         [
-            "Ambleside",
-            "Rydal",
             "A591",
-            "Rothay",
+            "Ambleside",
             "Brathay",
-            "Pelter Bridge",
-            "Loughrigg Fell",
-            "St Mary's",
+            "Bridge House",
+            "Loughrigg Terrace",
+            "Rothay",
+            "Rydal",
+            "Rydal Cave",
+            "Rydal Water",
             "start",
         ],
+        theme="examples/themes/ambleside.toml",
     ),
     Place(
         "keswick",
@@ -114,15 +125,17 @@ PLACES = (
         "yr-wyddfa",
         YR_WYDDFA_KEY,
         [
+            "A4086",
             "Afon Arddu",
             "Afon Nant Peris",
-            "A4086",
-            "Garnedd Ugain",
-            "Yr Wyddfa",
             "Crib Goch",
+            "Garnedd Ugain",
+            "Glaslyn",
+            "Llyn Llydaw",
             "start",
             "finish",
         ],
+        theme="examples/themes/yr-wyddfa.toml",
         margin_m=3000.0,
         landcover_margin_m=3000.0,
     ),
@@ -130,33 +143,49 @@ PLACES = (
         "oxford",
         OXFORD_KEY,
         [
-            "Cherwell",
-            "Thames",
             "A4144",
             "A4158",
-            "Magdalen Tower",
-            "Tom Tower",
+            "Cherwell",
+            "Christ Church",
+            "Magdalen Bridge",
+            "Radcliffe Camera",
+            "Thames",
             "The Bridge of Sighs",
             "start",
         ],
+        theme="examples/themes/oxford.toml",
     ),
     Place(
         "y-fenni",
         Y_FENNI_KEY,
         [
-            "Y Fenni",
-            "Llan-ffwyst",
-            "Afon Wysg",
-            "Gavenny River",
             "A40",
-            "Abergavenny Baptist Church",
-            "Methodist Church",
-            "Borough Theatre",
+            "Afon Wysg",
+            "Angel Bakery",
+            "Bean & Bread",
+            "Castell y Fenni",
+            "Gavenny River",
+            "Llan-ffwyst",
+            "Rate of Rise",
+            "Shepherd's Ice Cream",
+            "Tŷ Melin",
+            "Y Fenni",
             "start",
         ],
         theme="examples/themes/y-fenni.toml",
     ),
 )
+
+
+def curated(directory: str) -> Annotations | None:
+    """The callouts and journal notes `examples/places.toml` holds for a place, or `None` for none."""
+    with PLACES_TOML.open("rb") as handle:
+        entry = tomllib.load(handle).get(directory)
+    if entry is None:
+        return None
+    return Annotations.model_validate(
+        {"landmarks": entry.get("callouts", []), "notes": entry.get("notes", [])}
+    )
 
 
 @pytest.mark.parametrize("place", PLACES, ids=[p.directory for p in PLACES])
@@ -174,7 +203,7 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
 
     basemap = fetch(track, cache, features, elevation, style)
     plates = paint(basemap, style, cache.plates_dir(place.key))
-    lettering = letter(plates, basemap, None, style)
+    lettering = letter(plates, basemap, curated(place.directory), style)
     card = compose(plates, lettering, basemap, style)
 
     if place.margin_m != MARGIN_M:
@@ -186,8 +215,8 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
 
     names = {label.name for label in lettering.labels}
     assert names == set(place.labels)
-    if place.theme:
-        assert "Y Fenni" in names
+    if place.directory == "y-fenni":
+        assert {"Y Fenni", "Tŷ Melin", "Castell y Fenni"} <= names
         assert "Abergavenny" not in names
     assert sorted(p.name for p in cache_dir.iterdir() if p.name != "plates") == before
     card.save(tmp_path / "map.png")

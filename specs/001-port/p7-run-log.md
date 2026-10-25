@@ -831,3 +831,57 @@ No card moves except one set to `label_max = 0`. Draft ADR 0036 section: "`label
 zero letters no landmark, whether from the caller's annotations or the fallback."
 
 Gate: prek and `pytest -m "not golden"` green. Regeneration deferred to the P7.V7c follow-up.
+## P7.V10 Showcase themes and the curated callouts (2026-10-25)
+
+Four themes new (`ambleside`, `skye`, `yr-wyddfa`, `oxford`), `y-fenni` extended; each a copy of the
+current `default.toml` (so it carries `paper_edge`, `relief_strength` and `minor_road_classes`) with
+the changes below. Every theme: route pen `MAJ1-e`, `#7b2335`, `blend = "multiply"`, glow, casing and
+shadow 0, `label_route_ink` the same; the maroon is kept as its hex (`perylene_maroon` is not within 12
+of it). `examples/places.toml` holds each place's callouts (name, `lat`, `lng` from the OSM element) and
+Skye's four journal notes; `examples/place_card.py` reads it for its `place` option; `test_places.py`
+reads it with `tomllib`. Every callout carries its own point: the Ambleside, Wyddfa and Oxford names
+are in the payload as elements (the point is the centre of the element's geometry), Angel Bakery,
+Bean & Bread, Rate of Rise and Shepherd's Ice Cream come from the OSM node API (nodes 12633622904,
+9060360117, 12553434518, 6819447139), Tŷ Melin is the point `y-fenni/README.md` records (node
+5560350617, **not confirmed by the maintainer: P7.V15 flags it**), Castell y Fenni is the centre of
+way 368980598 (OSM names it "Castell Y Fenni"; the lettered name is the plan's "Castell y Fenni").
+`basemap.candidates` was not used to match a lettered name for any callout.
+
+Painted area (the share of the 720 px card whose RGB differs from the card's own paper plate, resized
+to the card, by more than 2/255 in some channel; the route and the lettering count; the card is 1440
+px wide at supersample 2): Ambleside 84.6 %, Skye 71.1 %, Yr Wyddfa 68.4 %, Oxford 75.4 %, Y Fenni
+76.5 %. At the golden test's 900 px: 83.7, 69.4, 67.4, 73.8, 75.2 %.
+
+| Place | Idea and palette | Fields moved from the default |
+| --- | --- | --- |
+| Ambleside | the hero: fells and water fill the frame; green, russet and lake blue | `ribbon_mult` 2.6, `relief_strength` 2.0, route 3.6 px, `label_max` 4, pigments |
+| Skye | the island trip; slate-blue wash, heather and moss patches | `ribbon_mult` 14, `relief_strength` 1.8, `label_max` 0, denser cover classes, pigments |
+| Yr Wyddfa | the ridge; slate violet and bracken russet, deep lake blue | `ribbon_mult` 3.2, `relief_strength` 2.4, route 3.6 px, `label_max` 4, pigments |
+| Oxford | a dense city; honey built-up wash, green quads, blue rivers | `roads = "all"`, `minor_road_classes` tertiary, unclassified, residential, `lane` 1.1 px, `ribbon_mult` 2.4, `label_max` 4 |
+| Y Fenni | the food tour; terracotta, saffron and olive on cream, sage river | `name_tags`, `roads = "all"` as Oxford, `ribbon_mult` 2.4, `label_max` 6, pigments |
+
+Callouts lettered at 720 and at 900 px: all four at Ambleside, Yr Wyddfa (Crib Goch, Garnedd Ugain,
+Glaslyn, Llyn Llydaw) and Oxford (Radcliffe Camera, Magdalen Bridge, Christ Church, The Bridge of
+Sighs), all six at Y Fenni (Tŷ Melin and the castle among them: none dropped); the four Skye notes.
+Nothing was dropped by the placer.
+
+**Capability gaps (not fixed here: `src/` is not this slice's).**
+
+1. *The sea is not washed, so the island cannot be.* `cover.sea_from_coast` closes the one longest
+   coastline chain that enters and leaves the card. Skye's coast is closed island rings and several
+   chains, so `Layers.sea` is empty (`sea ()`), no sea plate is painted, and `ribbon.coast_hard_mask`
+   has nothing to stop the ribbon at. The ribbon wash lies over land and sea alike, and the relief
+   shading (a flat density everywhere, scaled by `relief_strength`) is the one colour both share. The
+   theme can only make that colour the sea's: Skye's `relief` pigment is a slate blue, the coast and the
+   road stand on it, and land shows only where a cover class (heath, rock, wood) is mapped. A field
+   that fills the sea from the elevation grid's zero cells (`sea_rings` already traces them for the
+   vector map), or that builds a sea from closed coast rings, is missing. The 60 % share is met (71 %)
+   because the ribbon is wide, not because the island is washed.
+2. *`label_max = 0` still letters one church on Skye* ("Free Church of Scotland Kilmuir"): it is not a
+   landmark pick the cap governs. A theme cannot turn the ground's own names off without
+   `label_ground = false`, which would drop "Sligachan" and "Snizort" too.
+3. *`lettering.labels` counts the journal notes' text*, so the pin holds the note sentences.
+4. `hillshade_mode = "bands"` changed nothing on Skye's painted card (tried; it is the vector map's
+   relief), so the strong relief is `cover.relief_strength` alone.
+5. Keswick's `test_places` row fails at the base (the landmark ranking now offers other names): it is
+   the regeneration slice's, not changed here.

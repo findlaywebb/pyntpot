@@ -181,6 +181,7 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [x] P7.V9b Journal notes on a map, seated first as flat blocks with leaders; ADR 0038
 - [x] P7.V7d Sea from closed coastline rings; no landmark at cap zero (code; regeneration in P7.V7c follow-up)
 - [ ] P7.V10 Showcase themes (maroon pen route, more landscape) and curated callouts
+- [x] P7.V10 Showcase themes (maroon pen route, more landscape) and curated callouts
 - [ ] P7.V11 Lettered examples painted at nib scale 2 and downsized with Lanczos; published widths unchanged
 - [ ] P7.V12a Maps pages: Ambleside hero, gallery, route-ink grid (two paints, twelve composes), landmarks how-to; retire Keswick and Trotternish fixtures
 - [ ] P7.V12b The watercolour tutorial in one rhythm, with for-loop grids; reference and explanation figures rebuilt

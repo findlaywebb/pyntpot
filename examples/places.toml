@@ -1,0 +1,66 @@
+# The curated callouts of the showcase place cards, one table per place (the name of its
+# fixture directory), read by examples/place_card.py and tests/golden/test_places.py.
+#
+# A callout is a name, lettered exactly as written, with the latitude and longitude of
+# its OpenStreetMap element (a node's own point, or the centre of a way or relation's
+# geometry), so it is lettered even where the element is not among the map's landmark
+# candidates. The callouts are in priority order: the cap on lettered names is the
+# theme's `label_max`, and the placer may still drop one it cannot fit. A journal note is
+# a sentence of the walker's own pinned to a point, at most 60 characters.
+#
+# Tŷ Melin Bakery is not mapped under its own name. Its point is OpenStreetMap node
+# 5560350617, the bakery's address at 54 Frogmore Street (see tests/fixtures/y-fenni/README.md).
+
+[ambleside]
+callouts = [
+    { name = "Bridge House", lat = 54.433168, lng = -2.963484 },
+    { name = "Rydal Water", lat = 54.447436, lng = -2.992923 },
+    { name = "Loughrigg Terrace", lat = 54.442324, lng = -3.015681 },
+    { name = "Rydal Cave", lat = 54.4431789, lng = -2.9965662 },
+]
+
+# --------------------------------------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------------------------
+
+[skye]
+notes = [
+    { text = "Monday: over the bridge, then Armadale", lat = 57.0726, lng = -5.8975 },
+    { text = "Tuesday: Dunvegan Castle and the Coral Beaches", lat = 57.4466, lng = -6.5886 },
+    { text = "Wednesday: the Fairy Pools in the rain", lat = 57.2485, lng = -6.2745 },
+    { text = "Thursday: the Storr and a long Staffin lunch", lat = 57.5071, lng = -6.1812 },
+]
+
+# --------------------------------------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------------------------
+
+[yr-wyddfa]
+callouts = [
+    { name = "Crib Goch", lat = 53.0763169, lng = -4.0545889 },
+    { name = "Garnedd Ugain", lat = 53.0755483, lng = -4.0752052 },
+    { name = "Glaslyn", lat = 53.070894, lng = -4.06585 },
+    { name = "Llyn Llydaw", lat = 53.069694, lng = -4.045264 },
+]
+
+# --------------------------------------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------------------------
+
+[oxford]
+callouts = [
+    { name = "Radcliffe Camera", lat = 51.753461, lng = -1.254001 },
+    { name = "Magdalen Bridge", lat = 51.750908, lng = -1.24568 },
+    { name = "Christ Church", lat = 51.75016, lng = -1.255386 },
+    { name = "The Bridge of Sighs", lat = 51.754478, lng = -1.253782 },
+]
+
+# --------------------------------------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------------------------
+
+[y-fenni]
+callouts = [
+    { name = "Tŷ Melin", lat = 51.8238632, lng = -3.0202249 },
+    { name = "Castell y Fenni", lat = 51.819851, lng = -3.017884 },
+    { name = "Angel Bakery", lat = 51.8213392, lng = -3.0171742 },
+    { name = "Bean & Bread", lat = 51.8231476, lng = -3.0173873 },
+    { name = "Rate of Rise", lat = 51.8222395, lng = -3.0198021 },
+    { name = "Shepherd's Ice Cream", lat = 51.8223946, lng = -3.0177884 },
+]

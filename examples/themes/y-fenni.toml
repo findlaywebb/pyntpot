@@ -1,11 +1,7 @@
-# Y Fenni: the default theme with the map lettering the Welsh name where OpenStreetMap
-# carries one. A copy of default.toml with `name_tags` changed in the basemap table;
-# every other value is the default.
-
-# The default theme: the resolved default style the reference sheets were painted
-# with. One table per style group; a key a group does not have is rejected. Within a
-# group the plain values come first and the mappings follow as subtables. The
-# basemap table holds the effective options the painter draws with.
+# Y Fenni: a food tour through a Welsh-named market town. The map letters the Welsh name where
+# OpenStreetMap carries one, and six stops are called out. Warm terracotta, saffron and olive on
+# cream with a sage river, and a maroon wet pen. A copy of default.toml with `name_tags`, the roads,
+# the ribbon, the cover pigments, the lettering and the route ink changed.
 
 [paper]
 plate_lossless = true
@@ -19,6 +15,7 @@ paper_tooth = 0.085
 paper_worn = 0.2
 paper_vignette = 0.05
 paper_foxing = 0.09
+paper_edge = "warm"
 sheet_seed = 11
 km_glazing = true
 km_transparency = 0.06
@@ -182,7 +179,7 @@ label_wash = true
 label_wash_alpha = 0.5
 label_wash_dark_floor = 0.22
 label_wash_spread = 0.75
-label_route_ink = "#c22050"
+label_route_ink = "#7b2335"
 label_water_ink = "#4a7691"
 label_in_water_ink = "#f8f4e9"
 
@@ -197,7 +194,7 @@ dark_grid = [80, 60]
 [ribbon]
 ribbon_k = 7.15
 ribbon_c = 158.0
-ribbon_mult = 1.0
+ribbon_mult = 2.4
 ribbon_min_m = 420.0
 ribbon_max_m = 1250.0
 card_grow_mult = 1.55
@@ -216,6 +213,7 @@ sea_to_edge = true
 dither_seed = 23
 land_cover = true
 relief = true
+relief_strength = 1.0
 pale_base = 0.5
 pale_pool = 0.16
 wood_texture = 0.75
@@ -226,10 +224,10 @@ dab_spacings = [1.7, 1.0, 0.6]
 dab_strengths = [0.34, 0.36, 0.38]
 
 [cover.cover_cfg]
-built = [0.55, 0.2]
-farmland = [0.52, 0.2]
+built = [0.6, 0.3]
+farmland = [0.8, 0.25]
 heath = [0.6, 0.26]
-meadow = [0.55, 0.22]
+meadow = [0.8, 0.25]
 orchard = [0.55, 0.24]
 rock = [0.52, 0.26]
 sand = [0.5, 0.22]
@@ -239,35 +237,35 @@ wood = [0.72, 0.3]
 works = [0.58, 0.22]
 
 [cover.pigments]
-built = "#ddd3c3"
-farmland = "#dfe0b0"
-heath = "#e0cda2"
-meadow = "#cfdfae"
-orchard = "#d5dda2"
-pale = "#d5e0b4"
-relief = "#c9bda4"
-rim = "#c2ad91"
-rock = "#dcd6c6"
-sand = "#ecdfbe"
-scrub = "#c9d5a4"
-water = "#9ec4de"
-wetland = "#bfd2cd"
-wood = "#a8c286"
-works = "#d2cbc0"
+built = "#eaa27c"
+farmland = "#d4c36e"
+heath = "#c98a5a"
+meadow = "#b5c26e"
+orchard = "#b7a95a"
+pale = "#f0d9ae"
+relief = "#b58a6a"
+rim = "#b0805a"
+rock = "#cdb9a5"
+sand = "#ecd69a"
+scrub = "#9aa05c"
+water = "#6fa3a6"
+wetland = "#93b3a0"
+wood = "#7c8a4a"
+works = "#c79a82"
 
 [route]
 route_pen = true
-route_pen_brush = "MAJ6-e"
-route_pen_width_px = 3.0
+route_pen_brush = "MAJ1-e"
+route_pen_width_px = 3.4
 
 [route_inks.run]
 style = "dotted"
 px = 4.8
-colour = "#c22050"
+colour = "#7b2335"
 
 [route_inks.run.effect]
 adaptive_pct = 0
-blend = "normal"
+blend = "multiply"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0
@@ -278,26 +276,26 @@ shadow_px = 0
 [route_inks.ride]
 style = "solid"
 px = 5.4
-colour = "#c22050"
+colour = "#7b2335"
 
 [route_inks.ride.effect]
 adaptive_pct = 0
-blend = "normal"
+blend = "multiply"
 casing_colour = "cream"
-casing_px = 0.25
-glow_opacity = 0.8
-glow_px = 2.5
+casing_px = 0
+glow_opacity = 0
+glow_px = 0
 shadow_blur_px = 0
 shadow_px = 0
 
 [route_inks.swim]
 style = "dotted"
 px = 4.8
-colour = "#c22050"
+colour = "#7b2335"
 
 [route_inks.swim.effect]
 adaptive_pct = 0
-blend = "normal"
+blend = "multiply"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0
@@ -308,11 +306,11 @@ shadow_px = 0
 [route_inks.other]
 style = "dotted"
 px = 4.8
-colour = "#c22050"
+colour = "#7b2335"
 
 [route_inks.other.effect]
 adaptive_pct = 0
-blend = "normal"
+blend = "multiply"
 casing_colour = "cream"
 casing_px = 0
 glow_opacity = 0
@@ -321,7 +319,7 @@ shadow_blur_px = 0
 shadow_px = 0
 
 [lettering]
-label_max = 3
+label_max = 6
 labels = true
 label_ground = true
 label_geom_tol_px = 8.0
@@ -336,7 +334,8 @@ hachure_min_slope = 0.035
 hachure_max_length_m = 90.0
 sea_style = "fill"
 contour_interval = 50.0
-roads = "key"
+roads = "all"
+minor_road_classes = ["tertiary", "unclassified", "residential"]
 rivers = "key"
 interaction_m = 60.0
 interaction_run_m = 100.0
