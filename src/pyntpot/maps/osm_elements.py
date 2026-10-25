@@ -52,6 +52,13 @@ LANDMARK_TAG_KEYS = (
     "ele",
     "start_date",
     "memorial",
+    "wikidata",
+    "wikipedia",
+    "heritage",
+    "listed_status",
+    "shop",
+    "brand",
+    "brand:wikidata",
 )
 
 #: Fewer points than this is not a line.
