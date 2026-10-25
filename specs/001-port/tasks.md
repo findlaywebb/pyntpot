@@ -165,7 +165,7 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [x] P7.13 README, wordmark, landing page, gallery and social preview, and the CodSpeed badge (Q13 (1), row `p5-run-log.md:125`) (the outline's P7.1)
 - [ ] P7.14 Docs site, ADR 0034 (`p7-docs-site`; may slip to 0.1.x)
 - [x] P7.V0 Revision round 1: fatten from the maintainer's feedback and the five agent reports; plan reviews 1 to 4 BLOCK, review 5 PASS
-- [ ] P7.V1 Fixture trimming (Lynmouth and Yr Wyddfa; the recorder trims the rest): minified, unread fields and tags dropped, goldens byte-identical; the round's CI baseline
+- [x] P7.V1 Fixture trimming (Lynmouth and Yr Wyddfa; the recorder trims the rest): minified, unread fields and tags dropped, goldens byte-identical; the round's CI baseline
 - [ ] P7.V1b Fetch margins as options, the land-cover margin in the cache key when non-default, `--margin-m` on the CLI; ADR 0040
 - [ ] P7.V9a Fixtures for the showcase maps: Ambleside (Loughrigg), Skye (island tour, Kyleakin to Portree), Oxford (colleges and bridges), Y Fenni (food tour); Yr Wyddfa re-recorded wider; card box inside the fetched box; `make_track.py --step-m`, `--box` and `ref=` items
 - [ ] P7.V2 Water areas keep their islands (the Oxford Cherwell); ADR 0036

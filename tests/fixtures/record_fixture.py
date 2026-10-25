@@ -7,9 +7,10 @@ land cover and elevation payloads into `DIR`, one query at a time within each pr
 own budget and back-off. A failed fetch is tried again up to three times, after a wait;
 `ensure` keeps the payloads already written, so a retry carries on where it stopped.
 
-It then checks the three file names equal the default providers' key (the ids the
-shipped providers carry), and logs each payload's size. It does not write the README,
-parse the payloads or choose a track.
+It then trims the feature and land cover payloads with `trim_fixture` (minified, only the
+fields and tags the code reads), checks the three file names equal the default providers'
+key (the ids the shipped providers carry), and logs each payload's size. It does not write
+the README, parse the payloads or choose a track.
 """
 
 import argparse
@@ -19,6 +20,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from fixtures.make_track import MIRROR
+from fixtures.trim_fixture import trim_file
 
 from pyntpot.maps import Cache, FetchError, OpenTopoData, OverpassFeatures, Track
 
@@ -54,6 +56,8 @@ def record(contact: str, fixture: Path) -> str:
     elevation = OpenTopoData(contact)
     cache = Cache(fixture)
     key = _ensure(cache, track, features, elevation)
+    for path in (cache.features_path(key), cache.landcover_path(key)):
+        trim_file(path)
     default = Cache(fixture).key(track, OverpassFeatures(contact), OpenTopoData(contact))
     if key != default:
         raise RuntimeError(f"key {key} differs from the default providers' key {default}")

@@ -224,3 +224,49 @@ Hand for headings only. Fixes at landing: `.gitignore`'s `site/` also ignored
 line is ticked when #29 merges. Maintainer action: enable Pages from Actions. Docstring
 findings: `PIGMENTS`, `TRANSPARENCY` and `PigmentLayer` use `#:` comments, which the
 reference does not show; `stamp`'s source line is plain text.
+
+## P7.V1 Fixture trimming (2026-10-25)
+
+`tests/fixtures/trim_fixture.py` (new) rewrites an Overpass payload as minified JSON
+(`separators=(",", ":")`, `ensure_ascii=False`, one trailing newline), drops each
+element's `nodes` and `bounds`, filters `tags` to `KEPT_TAG_KEYS` plus every key starting
+`name`, and with `--simplify-m M` runs Douglas-Peucker on way and member geometry (ends
+kept exactly). `record_fixture.py` trims the feature and land cover payloads after
+`Cache.ensure`. `test_trim_fixture.py` (5 tests) written first. Lynmouth and Yr Wyddfa
+trimmed in place, without `--simplify-m`; a second run changes nothing.
+
+**Sizes** (`du -sb` per directory, bytes; payload files in brackets):
+
+| Directory | Before | After | overpass | landcover |
+| --- | --- | --- | --- | --- |
+| `lynmouth/` | 3 648 402 | 2 007 944 | 1 456 826 -> 839 288 | 2 125 886 -> 1 102 966 |
+| `yr-wyddfa/` | 10 593 606 | 6 060 891 | 4 119 750 -> 2 450 790 | 6 393 510 -> 3 529 755 |
+
+`elevation-*.json` and `track.gpx` untouched. Fixture budgets are lowered in P7.V9a.
+
+**`KEPT_TAG_KEYS`**, from
+`grep -rhoE --include='*.py' '"[a-z_:]+"' src/pyntpot/maps | sort -u` (403 literals)
+intersected with the tag keys present in the payloads of all seven fixture directories,
+then the seven P7.V5 keys added. `name` and `name:cy` are in the intersection but covered
+by the `name*` prefix rule, so the tuple omits them:
+
+```
+amenity artist_name artwork_type attraction boundary bridge building building:levels
+direction display ele footway garden heath height highway historic industrial landuse
+leisure man_made meadow memorial museum natural note peak place place_of_worship plaque
+ref residential service start_date tourism trees tunnel type water waterway wetland
+wikidata wikipedia heritage listed_status shop brand brand:wikidata
+```
+
+**Proof no picture moved.** Before trimming `uv run pytest -m golden` (exact): 85 passed.
+After: `pytest -m "not golden"` 1230 passed, 1 skipped; `-m golden --golden-tolerance`
+passed; `-m golden` exact 85 passed in 27 min 18 s; `git status tests/golden docs/images`
+clean. No key had to be added to the tuple.
+
+**CI baseline** (the GitHub MCP tools were not available to this session; read through
+`gh run list` and `gh run view`, read only; nothing dispatched). The latest completed
+`golden.yml` run on `p7-docs-release` is 40147407817 (`pull_request`, head `4cbcb7a`,
+success; the run on the base commit `573630c` was still in progress, and the commits
+between touch only plan and review files): job `golden (ubuntu-latest)` 00:37:22Z to
+00:55:55Z = **18 min 33 s**. `golden (macos-15)` in the same run: 17 min 39 s. The round's
+CI budget is this plus 4 minutes at the P7.V12-group checkpoint.
