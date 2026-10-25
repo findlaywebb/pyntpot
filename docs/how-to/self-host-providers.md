@@ -1,18 +1,16 @@
 # Self-host the providers
 
-You want pyntpot to ask your own Overpass and OpenTopoData servers for its data instead of
-the public ones. You might do this for heavy use, for a private network, or to stay clear
-of the public servers' limits.
+Point pyntpot at your own Overpass and OpenTopoData servers instead of the public ones:
+for heavy use, a private network, or to stay clear of the public servers' limits.
 
-This guide covers the two providers pyntpot ships, `OverpassFeatures` and `OpenTopoData`,
-pointed at servers you control. It does not cover writing a provider of your own. The
-`Features` and `Elevation` protocols are not among `pyntpot.maps`'s public names.
-[A caller could write their own data provider](../features/maps-public-provider-protocols.md)
-describes the gap.
+This covers the two providers pyntpot ships, `OverpassFeatures` and `OpenTopoData`.
+Writing a provider of your own is not supported yet, because the `Features` and
+`Elevation` protocols are not public
+([a caller could write their own data provider](../features/maps-public-provider-protocols.md)).
 
-You need the tutorial's first map ([First map](../tutorials/first-map.md)), an Overpass
-server whose database covers your track, and an OpenTopoData server with a dataset loaded
-(the default is `srtm30m`). The services' own documentation covers setting them up.
+**Before you start:** you need an Overpass server whose data covers your track, and an
+OpenTopoData server with a dataset loaded (the default is `srtm30m`). Their own
+documentation covers setting them up.
 
 ## Steps
 

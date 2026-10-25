@@ -1,12 +1,11 @@
 # Paint your own shapes
 
-You have an outline of your own: a polygon you drew, a silhouette or an image's alpha
-channel. You also have a line to set a name along. You want to wash the outline, ink its
-edge and letter the name, with no map involved.
+Wash an outline of your own, ink its edge and letter a name along a line, with no map
+involved. The outline can be a polygon you drew, a silhouette, or an image's alpha channel.
 
-You need the tutorial's seven steps ([Paint a watercolour](../tutorials/paint-a-watercolour.md)).
-This guide does not teach `Sheet`, `wash`, `stamp` or `Hand` again. It shows where your
-shapes go in.
+**Before you start:** work through [Paint a watercolour](../tutorials/paint-a-watercolour.md).
+This guide shows where your own shapes go in; it does not teach `Sheet`, `wash`, `stamp`
+or `Hand` again.
 
 ## Steps
 

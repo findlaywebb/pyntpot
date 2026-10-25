@@ -1,13 +1,12 @@
 # Letter your own landmarks
 
-You want the names on your map to be the ones you choose: the bridge you crossed, the cafe
-you stopped at, a shop the map data does not know by name. You pass `letter` an
-`Annotations` value. It letters your callouts even where the map's own ranking would not
-have picked them.
+Choose the names on your map yourself: the bridge you crossed, the café you stopped at,
+or a shop the map data has no name for. Pass `letter` an `Annotations` value and it
+letters your callouts, even where its own ranking would have picked something else.
 
-You need the tutorial's first map ([First map](../tutorials/first-map.md)) and a script
-that calls `fetch`, `paint`, `letter` and `compose`, such as `examples/route_map.py`. The
-command line has no option for callouts, so set them from a script.
+**Before you start:** you need a script that calls `fetch`, `paint`, `letter` and
+`compose`, such as `examples/route_map.py` from the [First map](../tutorials/first-map.md)
+tutorial. The command line has no option for callouts.
 
 ## Steps
 

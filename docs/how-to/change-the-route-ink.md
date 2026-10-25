@@ -1,13 +1,13 @@
 # Change the route ink
 
-You want the route on your map in another colour or width, and nothing else changed. You
-do not need a whole theme. `Style.with_route_ink` returns a copy of a style with the
-route's ink replaced.
+Change the route's colour or width and leave the rest of the map as it is.
+`Style.with_route_ink` returns a copy of a style with a new route ink, so you do not need
+a whole theme.
 
-You need the tutorial's first map ([First map](../tutorials/first-map.md)) and a script
-that calls `fetch`, `paint`, `letter` and `compose`, such as `examples/route_map.py`. The
-command line has no option for the route ink. Set it from a script, or in a theme
-([Write a theme](write-a-theme.md)).
+**Before you start:** you need a script that calls `fetch`, `paint`, `letter` and
+`compose`, such as `examples/route_map.py` from the [First map](../tutorials/first-map.md)
+tutorial. The command line has no route-ink option, so use a script or a
+[theme](write-a-theme.md).
 
 ## Steps
 

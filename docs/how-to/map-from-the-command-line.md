@@ -1,11 +1,10 @@
 # Map from the command line
 
-You have a GPX file of a walk, ride or run and want a painted map of it as a PNG, without
-writing any Python. `pyntpot map` does that in one command.
+Turn a GPX file of a walk, ride or run into a painted PNG map with one command,
+`pyntpot map`. No Python needed.
 
-You need the tutorial's first map ([First map](../tutorials/first-map.md)), pyntpot
-installed, a GPX file with at least two track points (`trkpt` elements), and a network
-connection for the first run only.
+**Before you start:** install pyntpot, and have a GPX file with at least two track points
+(`trkpt` elements). The first run needs a network connection; later runs do not.
 
 ## Steps
 

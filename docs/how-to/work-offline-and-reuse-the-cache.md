@@ -1,11 +1,10 @@
 # Work offline and reuse the cache
 
-You want to repaint a map without the network: on a train, on another machine, or after
-changing your theme. The fetch cache makes that possible. It holds everything the providers
-sent and everything pyntpot painted from it.
+Repaint a map with no network: on a train, on another machine, or after changing your
+theme. The first run fills a cache with everything the providers sent and everything
+pyntpot painted from it, and later runs read from that.
 
-You need the tutorial's first map ([First map](../tutorials/first-map.md)) and one online
-run of the same track, such as the command in
+**Before you start:** run the track online once, for example with
 [Map from the command line](map-from-the-command-line.md).
 
 ## Steps
