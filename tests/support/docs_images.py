@@ -112,6 +112,7 @@ SLICE_SHARE_BYTES: dict[str, int] = {
     "P7.10": 500_000,
     "P7.13": 2_700_000,
     "P7.14": 200_000,
+    "P7.V10": 300_000,
 }
 
 #: The most all of `docs/images/` may weigh.
@@ -319,11 +320,31 @@ IMAGES += (
 _PLACES: tuple[tuple[str, str | None, float | None], ...] = (
     ("keswick", None, None),
     ("trotternish", None, None),
-    ("skye", None, 18000.0),
-    ("yr-wyddfa", None, 3000.0),
-    ("oxford", None, None),
+    ("skye", "examples/themes/skye.toml", 18000.0),
+    ("yr-wyddfa", "examples/themes/yr-wyddfa.toml", 3000.0),
+    ("oxford", "examples/themes/oxford.toml", None),
     ("y-fenni", "examples/themes/y-fenni.toml", None),
 )
+
+
+def _place_card(fixture: str, theme: str | None, margin: float | None, slice_: str) -> DocsImage:
+    """Return one place card entry: the card at 720 pixels, in its theme, with its curated callouts."""
+    return DocsImage(
+        f"places/{fixture}.webp",
+        "place_card",
+        (
+            ("size", 720),
+            ("place", fixture),
+            *((("theme", theme),) if theme else ()),
+            *((("margin_m", margin), ("landcover_margin_m", margin)) if margin else ()),
+        ),
+        fixture,
+        720,
+        "page",
+        "webp-lossy",
+        slice_,
+    )
+
 
 IMAGES += (
     # P7.13: the README's wordmark and hero, the place cards, and the social preview.
@@ -338,25 +359,13 @@ IMAGES += (
         "webp-lossy",
         "P7.13",
     ),
-    *(
-        DocsImage(
-            f"places/{fixture}.webp",
-            "place_card",
-            (
-                ("size", 720),
-                ("place", fixture),
-                *((("theme", theme),) if theme else ()),
-                *((("margin_m", margin), ("landcover_margin_m", margin)) if margin else ()),
-            ),
-            fixture,
-            720,
-            "page",
-            "webp-lossy",
-            "P7.13",
-        )
-        for fixture, theme, margin in _PLACES
-    ),
+    *(_place_card(fixture, theme, margin, "P7.13") for fixture, theme, margin in _PLACES),
     DocsImage(
         "social-preview.jpg", "social_preview", (), "keswick", 1280, "preview", "jpeg", "P7.13"
     ),
+)
+
+IMAGES += (
+    # P7.V10: the Ambleside hero card, in its showcase theme.
+    _place_card("ambleside", "examples/themes/ambleside.toml", None, "P7.V10"),
 )

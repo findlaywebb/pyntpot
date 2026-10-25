@@ -9,8 +9,10 @@ hand's lettering, is set for that width. The track, the cache and the providers 
 ones `route_map.py` takes, and the four stages are the same.
 
 `margin_m` and `landcover_margin_m` are the fetch margins the place's cache was recorded
-with, in metres (the library's defaults when absent), for a place recorded wider; `place` names
-the place's fixture.
+with, in metres (the library's defaults when absent), for a place recorded wider. `place` names
+the place's fixture: the card letters the curated callouts and journal notes that
+`examples/places.toml` holds for it, read with `tomllib`, and letters none for a place it does
+not list.
 
 The README's hero is the Keswick card at 1200 pixels. The five place cards of the gallery,
 Keswick, the Quiraing on Trotternish, Yr Wyddfa, Oxford and Y Fenni, are painted at 720.
@@ -27,10 +29,12 @@ cache already holds.
 
 import argparse
 import logging
+import tomllib
 from dataclasses import replace
 from pathlib import Path
 
 from pyntpot.maps import (
+    Annotations,
     Cache,
     FetchMargins,
     OpenTopoData,
@@ -47,6 +51,22 @@ log = logging.getLogger(__name__)
 
 #: The repository's top directory, which a theme path is relative to.
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+#: The curated callouts and journal notes, one table per place.
+PLACES_TOML = Path(__file__).resolve().parent / "places.toml"
+
+
+def curated(place: str | None) -> Annotations | None:
+    """The callouts and journal notes `places.toml` holds for a place, or `None` for none."""
+    if place is None:
+        return None
+    with PLACES_TOML.open("rb") as handle:
+        entry = tomllib.load(handle).get(place)
+    if entry is None:
+        return None
+    return Annotations.model_validate(
+        {"landmarks": entry.get("callouts", []), "notes": entry.get("notes", [])}
+    )
 
 
 def main(  # noqa: PLR0913 (the script contract fixes these keywords)
@@ -77,7 +97,8 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
             metres; the library's default when absent.
         landcover_margin_m: The same for land cover; the larger of its default and
             `margin_m` when absent. Both must match what the cache was recorded with, as they are part of its key.
-        place: The name of the place's fixture, kept for the caller; the card does not read it.
+        place: The name of the place's fixture; the card letters the callouts and journal notes
+            `examples/places.toml` holds for it, and none when absent or not listed there.
 
     Returns:
         The path of the saved card, `out_dir / "map.png"`.
@@ -93,7 +114,7 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
     cache = Cache(cache_dir, FetchMargins(features_m, landcover_m))
     basemap = fetch(route, cache, features, elevation, style)
     plates = paint(basemap, style, cache.plates_dir(cache.key(route, features, elevation)))
-    lettering = letter(plates, basemap, None, style)
+    lettering = letter(plates, basemap, curated(place), style)
     card = compose(plates, lettering, basemap, style)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "map.png"
