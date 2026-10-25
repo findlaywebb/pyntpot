@@ -105,11 +105,20 @@ the hex in `PIGMENTS`, and what the pigment shows over black as a share of that,
 farmland is 0.10. `PaperStyle(km_glazing=True)` makes `composite` glaze the layers in
 order.
 
-![The same two discs glazed: where they cross the green is cleaner and lighter than the multiplied one, and each disc still reads through the other.](../images/explanation/wash-glaze.webp)
+Two stains do not show the difference. Both pigments above are stains, and Kubelka-Munk with
+a transparency near 0 is very close to multiply: the same two washes, glazed, come out the
+colour they did multiplied. The difference needs a covering pigment on top.
 
-*Painted by `examples/wash_stages.py` (seed 11, `figure="glaze"`).*
+![Eight pairs of overlapping discs in two rows of four: a blue disc, then a warm sienna disc over it. The top row is multiplied and its four overlaps are the same dark brown. In the bottom row, glazed, the overlap is nearly as dark in the first column and grows lighter and warmer across, until in the last column it is the colour of the sienna alone.](../images/explanation/wash-glaze.webp)
 
-The washes themselves have not changed between these two figures; only the compositing has.
+*Painted by `examples/wash_stages.py` (seed 11, `figure="glaze"`). The labels read 0.04, 0.2, 0.5 and 0.9 across, and multiply and glazed down.*
+
+A blue stain, ultramarine at 0.06, lies under burnt sienna, whose transparency steps from
+0.04 across to 0.9. Each `PigmentLayer` can carry its own transparency as a third member,
+and that is what the figure changes. Multiply ignores the number, so the top row is the same
+picture four times. Glazing reads it: a sienna that is a stain at 0.04 lets the blue
+through, and a sienna that covers at 0.9 hides it. The washes have not changed between the
+rows; only the compositing has.
 
 Source: `kubelka-munk` and `multiply-compositing` in [references](references.md).
 

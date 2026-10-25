@@ -2,9 +2,9 @@
 
 A brush is one mark-making tool, in render pixels: a tip of bristles stamped along a path. The brush sheet is the catalogue of brush cells. This page lists every brush id and what a row and a column of the sheet set. `brush_from_id` from `pyntpot.ink` builds a brush from an id.
 
-![The brush sheet: fourteen rows of eight short wavy strokes, one stroke for each brush id, in the colour of its ink. Treatments 4 and 7 break up as dry brushes; the others lay a continuous line.](../images/reference/brush-sheet.webp)
+![The brush grid: eight brush treatments in one brown ink, stroked as a wave at 3, 6 and 12 pixels wide in three rows. The wet treatments stay whole at every width, the dry ones break into flecks as they widen, and the nibs leave a blot where they touch down.](../images/reference/brush-sheet.webp)
 
-*Painted by `examples/brush_sheet.py`, seed 11.* Every brush is stroked at 4 pixels wide. Each image row is one prefix and colour column from the table below; its eight strokes are treatments 1 to 8, left to right.
+*Painted by `examples/brush_sheet.py` (`figure="grid"`), seed 11.* One ink, `MAJ1-c` to `MAJ8-c`, stroked at 3, 6 and 12 pixels, because a stroke 4 pixels wide hides what a treatment does. The labels read the treatment numbers 1 to 8 across the top, the widths 3 px, 6 px and 12 px down the side, and the kind of each treatment under its column: wet, soft, gritty, dry, nib, pen, driest and fine nib.
 
 ## Id form
 
@@ -44,7 +44,9 @@ The colour column is read from the id's prefix.
 
 ## Ids
 
-| Image row | Prefix | Column | Ink | Ids, treatments 1 to 8 |
+The `sheet` figure of `examples/brush_sheet.py` strokes every id once, a row for each line of this table and the treatments left to right.
+
+| Sheet row | Prefix | Column | Ink | Ids, treatments 1 to 8 |
 | --- | --- | --- | --- | --- |
 | 1 | `RIV` | `a` | #255d80 | `RIV1-a`, `RIV2-a`, `RIV3-a`, `RIV4-a`, `RIV5-a`, `RIV6-a`, `RIV7-a`, `RIV8-a` |
 | 2 | `STR` | `a` | #255d80 | `STR1-a`, `STR2-a`, `STR3-a`, `STR4-a`, `STR5-a`, `STR6-a`, `STR7-a`, `STR8-a` |

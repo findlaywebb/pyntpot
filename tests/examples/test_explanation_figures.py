@@ -1,4 +1,7 @@
-"""The explanation essays' figure scripts each write one image per figure, and each stage differs from the one before."""
+"""The explanation essays' figure scripts each write one image per figure, and each stage differs from the one before.
+
+The grids are figures of their own: they are not compared with the stage before.
+"""
 
 import numpy as np
 import pytest
@@ -12,22 +15,35 @@ FIGURES: dict[str, tuple[str, ...]] = {
     "nib_stages": (
         "line",
         "centreline",
-        "broad",
-        "turned",
+        "angles",
         "ground",
         "backing",
         "set-down",
         "runs-dry",
+        "hands",
     ),
 }
+
+#: The figures that are grids, not stages: each is its own picture, so none is compared with the one before.
+GRIDS: frozenset[tuple[str, str]] = frozenset(
+    {("wash_stages", "glaze"), ("nib_stages", "angles"), ("nib_stages", "hands")}
+)
 
 #: The width the tests paint at, in pixels, so each paint stays fast.
 SMALL = 144
 
+
+def _stage_before(stem: str, figure: str) -> str | None:
+    """Return the nearest stage before `figure` in its script, or `None` for a grid or a first stage."""
+    if (stem, figure) in GRIDS:
+        return None
+    stages = [f for f in FIGURES[stem] if (stem, f) not in GRIDS]
+    index = stages.index(figure)
+    return stages[index - 1] if index else None
+
+
 _CASES = [
-    (stem, figure, FIGURES[stem][i - 1] if i else None)
-    for stem in FIGURES
-    for i, figure in enumerate(FIGURES[stem])
+    (stem, figure, _stage_before(stem, figure)) for stem in FIGURES for figure in FIGURES[stem]
 ]
 _IDS = [f"{stem}-{figure}" for stem, figure, _before in _CASES]
 
@@ -42,7 +58,7 @@ def _pixels(stem: str, figure: str, out_dir) -> np.ndarray:
 
 @pytest.mark.parametrize(("stem", "figure", "before"), _CASES, ids=_IDS)
 def test_the_figure_is_one_image_that_differs_from_the_stage_before(stem, figure, before, tmp_path):
-    """Each figure is the only file its call writes, it has some range of tone, and it is not the previous stage's picture."""
+    """Each figure is the only file its call writes, it has some range of tone, and a stage is not the previous stage's picture."""
     here = tmp_path / "here"
     pixels = _pixels(stem, figure, here)
     assert len(list(here.iterdir())) == 1
