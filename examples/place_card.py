@@ -14,10 +14,10 @@ the place's fixture: the card letters the curated callouts and journal notes tha
 `examples/places.toml` holds for it, read with `tomllib`, and letters none for a place it does
 not list.
 
-The README's hero is the Keswick card at 1200 pixels. The five place cards of the gallery,
-Keswick, the Quiraing on Trotternish, Yr Wyddfa, Oxford and Y Fenni, are painted at 720.
-Y Fenni takes `examples/themes/y-fenni.toml`, which letters the Welsh name where
-OpenStreetMap carries one.
+The README's hero is the Ambleside card at 1200 pixels, in `examples/themes/ambleside.toml`.
+The five place cards of the gallery, Ambleside, Skye, Yr Wyddfa, Oxford and Y Fenni, are
+painted at 720, each in its own theme from `examples/themes/`. Y Fenni takes
+`examples/themes/y-fenni.toml`, which letters the Welsh name where OpenStreetMap carries one.
 
 Run it with a track, a cache directory, an output directory and a contact::
 
