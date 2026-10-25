@@ -34,6 +34,10 @@ RASTER_EM = 128
 MIN_NEIGHBOURS = 2
 MAX_NEIGHBOURS = 6
 
+#: Two branches leaving a junction whose directions are at least this opposed
+#: are one stroke passing through it rather than two meeting in it.
+THROUGH_DOT = -0.72
+
 #: A pixel with this many strokes meeting at it is a stroke passing through,
 #: not a junction and not an end.
 PASSING = 2
@@ -309,8 +313,21 @@ def skeleton_chains(skel: np.ndarray) -> list[list[tuple[int, int]]]:
     return out
 
 
+def _leaves(chain: list[tuple[int, int]], node: tuple[int, int]) -> tuple[float, float]:
+    """The unit direction a chain sets off in from one of its own ends."""
+    run = chain if chain[0] == node else chain[::-1]
+    (r0, c0), (r1, c1) = run[0], run[min(3, len(run) - 1)]
+    d = math.hypot(r1 - r0, c1 - c0) or 1.0
+    return ((r1 - r0) / d, (c1 - c0) / d)
+
+
 def prune(chains: list[list[tuple[int, int]]], limit: float) -> list[list[tuple[int, int]]]:
-    """Drop the short branches thinning grows at joins and at terminals."""
+    """Drop the short branches thinning grows at joins and at terminals.
+
+    A short branch that carries straight on from another branch at its junction
+    is not one of those: it is the end of a stem that runs on past where
+    something joins it, the top of an `n` or the foot of a `d`, and it stays.
+    """
     ends: dict[tuple[int, int], int] = {}
     for chain in chains:
         for p in (chain[0], chain[-1]):
@@ -318,10 +335,29 @@ def prune(chains: list[list[tuple[int, int]]], limit: float) -> list[list[tuple[
     keep = []
     for chain in chains:
         spur = ends.get(chain[0], 0) == 1 or ends.get(chain[-1], 0) == 1
-        if spur and len(chain) < limit and len(chains) > 1:
+        if spur and len(chain) < limit and len(chains) > 1 and not _carries_on(chain, chains, ends):
             continue
         keep.append(chain)
     return keep or chains
+
+
+def _carries_on(
+    chain: list[tuple[int, int]],
+    chains: list[list[tuple[int, int]]],
+    ends: dict[tuple[int, int], int],
+) -> bool:
+    """Whether a spur runs straight on from another branch at its junction."""
+    node = chain[-1] if ends.get(chain[0], 0) == 1 else chain[0]
+    if ends.get(node, 0) < PASSING + 1:
+        return False
+    mine = _leaves(chain, node)
+    for other in chains:
+        if other is chain or node not in (other[0], other[-1]):
+            continue
+        theirs = _leaves(other, node)
+        if mine[0] * theirs[0] + mine[1] * theirs[1] <= THROUGH_DOT:
+            return True
+    return False
 
 
 def components(img: np.ndarray) -> list[list[tuple[int, int]]]:

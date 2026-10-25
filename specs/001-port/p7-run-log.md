@@ -486,3 +486,23 @@ corner, and a flank is an arm only when short. No single-line font was needed. T
 and images repaint; labels do not change.
 
 Regeneration deferred to the group regeneration slice.
+
+### P7.V4 follow-up (same day): strokes meet at their junctions
+
+The first cut drew each stroke once but the nib showed gaps: d's ascender came away from its stem,
+the a's foot was a stray dot, t's bar and stem looked unjoined. Causes: (1) every stroke ends at a
+junction, and the nib tapers each end, so the stem is thin exactly where it is joined; (2) short
+spurs at a junction that carry straight on from another branch (the top of an n, the foot of a d)
+were pruned; (3) flank stubs started beside the stem, not on it, and several were shorter than the
+pen is wide. Fix: new `letters/junction.py` (`join_through`) makes one stroke of the two arms that
+leave a junction in opposite directions (a crossing joins both pairs; junction pixels within 3 px are
+one junction and a bridge inside one is dropped); `skeleton.prune` keeps a spur that carries on from
+another branch; a flank starts on its stem and is dropped under 2.2 half-widths. Tests added to
+`test_skeleton_glyphs.py` (class `TestJoined`, every letter and figure but D, Q, 3, 8): every
+skeleton pixel is within 0.03 em of a stroke, no stroke is shorter than a stroke width, the glyph is
+one piece, the t is two strokes; red before on d, n, Y, t, y, f, k, K, M, h, R, B. Known, not fixed:
+terminal tails of D, Q, 3 are still pruned as spurs and 8 keeps a 0.047 em bridge.
+Lynmouth re-attribution (`/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/after2-p7v4`): paper, wash, pen identical; `labels-centreline.webp`
+4.92 percent moved; `map.png` 1.62 percent; `labels.txt` identical. Images: `/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/p7v4-words-64px-before-after-v2.png`,
+`/tmp/claude-0/-home-user-pyntpot/b5f3e52e-44b7-5bec-868e-9b1bf82d5242/scratchpad/engine/p7v4-words-200px-before-after-v2.png`. Draft ADR 0036 addition: strokes that run on through a
+junction are one stroke (`letters/junction.py`).

@@ -5,9 +5,11 @@ from __future__ import annotations
 import math
 from itertools import pairwise
 
+import numpy as np
 import pytest
 
-from pyntpot.letters.font import OutlineFont, load
+from pyntpot.letters.font import OutlineFont, _Flatten, load
+from pyntpot.letters.skeleton import RASTER_EM, fill, thin
 
 #: How wide the shipped hand's stem is, in em: twice the median half-width the
 #: trace measures on its 128 pixel grid (about five pixels). It sets how close
@@ -26,6 +28,20 @@ PIECES: dict[str, int] = {
     "a": 1,
     "g": 1,
 }
+
+#: The glyphs whose junctions, strokes and ends are checked besides the ones above:
+#: every letter and figure but D, Q, 3 and 8, whose own terminal tails and crossing
+#: bridge are a separate fault.
+JOINED = "ABCEFGHIJKLMNOPRSTUVWXYZabcdefghklmnopqrstuvwxyz01245679"
+
+#: How far, in em, a skeleton pixel may be from the nearest stroke: under this the
+#: stroke is on it, over it a stem end or a branch has been left undrawn.
+REACH_EM = 0.03
+
+#: How far two strokes may lie alongside each other, in em: the arms at a junction
+#: lie side by side for about a stroke width and a half before they part, and a
+#: stem drawn twice lies alongside for its length, three times that and more.
+ALONGSIDE_EM = 1.5 * STROKE_EM
 
 #: The sample spacing along a stroke when it is walked for the parallel check, in em.
 STEP = 0.004
@@ -90,15 +106,63 @@ class TestDrawnOnce:
 
     @pytest.mark.parametrize("ch", list(PIECES), ids=list(PIECES))
     def test_no_two_strokes_run_parallel(self, face: OutlineFont, ch: str) -> None:
-        """No stroke lies along another for more than a stroke width: a stem is drawn once."""
+        """No stroke lies along another for more than a stroke width and a half: a stem is drawn once."""
         samples = [_samples(p) for p in _paths(face, ch)]
         for i, a in enumerate(samples):
             for j, b in enumerate(samples):
                 if i != j:
-                    assert _alongside(a, b) <= STROKE_EM, f"{ch!r}: stroke {i} doubles stroke {j}"
+                    assert _alongside(a, b) <= ALONGSIDE_EM, (
+                        f"{ch!r}: stroke {i} doubles stroke {j}"
+                    )
 
     def test_the_o_is_one_ring(self, face: OutlineFont) -> None:
         """The o is a single closed stroke, with no speck drawn inside its ring."""
         paths = _paths(face, "o")
         assert len(paths) == 1
         assert math.dist(paths[0][0], paths[0][-1]) < STROKE_EM / 4
+
+
+def _skeleton_em(face: OutlineFont, ch: str) -> list[tuple[float, float]]:
+    """One glyph's one pixel skeleton, as points in em."""
+    name = face._name_of(ch)
+    assert name is not None
+    rec = face._pen_cls(face._glyphs)
+    face._glyphs[name].draw(rec)
+    flat = _Flatten()
+    rec.replay(flat)
+    img, ox, oy = fill(flat.contours, face.upem)
+    k = RASTER_EM / face.upem
+    return [
+        ((c + 0.5) / k / face.upem + ox / face.upem, (r + 0.5) / k / face.upem + oy / face.upem)
+        for r, c in zip(*np.nonzero(thin(img)), strict=True)
+    ]
+
+
+class TestJoined:
+    """Strokes meet where the glyph's own ink does, and nothing is left short or loose."""
+
+    @pytest.mark.parametrize("ch", list(JOINED), ids=list(JOINED))
+    def test_every_skeleton_pixel_has_a_stroke_on_it(self, face: OutlineFont, ch: str) -> None:
+        """No junction or stem end is left undrawn: the d keeps its foot, the n its stem top."""
+        drawn = [p for path in _paths(face, ch) for p in _samples(path)]
+        for x, y in _skeleton_em(face, ch):
+            gap = min(math.dist((x, y), q) for q in drawn)
+            assert gap <= REACH_EM, (
+                f"{ch!r}: skeleton at ({x:.3f}, {y:.3f}) is {gap:.3f} em from any stroke"
+            )
+
+    @pytest.mark.parametrize("ch", list(JOINED), ids=list(JOINED))
+    def test_no_stroke_is_shorter_than_a_stroke_width(self, face: OutlineFont, ch: str) -> None:
+        """A stroke shorter than the pen is wide is a dot beside the letter, as the stray one after an a."""
+        for path in _paths(face, ch):
+            length = sum(math.dist(a, b) for a, b in pairwise(path))
+            assert length >= STROKE_EM, f"{ch!r} has a stroke {length:.3f} em long"
+
+    @pytest.mark.parametrize("ch", list(JOINED), ids=list(JOINED))
+    def test_a_stroke_ends_on_another_or_on_a_free_end(self, face: OutlineFont, ch: str) -> None:
+        """The pieces of a letter are one piece: nothing is drawn clear of the rest."""
+        assert _pieces(_paths(face, ch)) == 1
+
+    def test_a_cross_is_a_stem_and_a_bar(self, face: OutlineFont) -> None:
+        """The t is two strokes, each written through the crossing, not four that meet in it."""
+        assert len(_paths(face, "t")) == 2
