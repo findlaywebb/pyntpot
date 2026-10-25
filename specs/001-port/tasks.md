@@ -232,6 +232,7 @@ Not part of the port. Each item becomes its own spec under `specs/` when it is t
 - [ ] A wider command line: theme cloning and checking, reference sheets, lettering, SVG drawings (`docs/features/cli-wider-commands.md`)
 - [ ] Bring the README hero to 5 of 5: small cover patches and the river-start blob (`docs/issues/maps-cover-small-patches-speckle.md`, `docs/issues/maps-river-start-pools-into-a-blob.md`)
 - [ ] A gallery painting every brush id, lettered with its id (`docs/features/docs-brush-id-gallery.md`)
+- [ ] One pigment registry of `Pigment` objects; layers, brushes and themes take a pigment by name and resolve it, with overrides (`docs/features/ink-one-pigment-registry.md`)
 - [ ] Retire Lynmouth as the test place once the API and the goldens are stable, moving the goldens and tests to the focus places (`docs/features/tests-retire-lynmouth.md`)
 
 ## P10. Triage and address the port's issues
