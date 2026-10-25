@@ -20,7 +20,7 @@ Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `Brus
 
 Run it with a track, a cache directory, an output directory and a contact::
 
-    uv run python examples/social_preview.py route.gpx cache/ out/ you@example.org --place ambleside --theme examples/themes/ambleside.toml
+    uv run python examples/social_preview.py route.gpx cache/ out/ you@example.org --place ambleside --theme examples/themes/ambleside-hero.toml
 """
 
 import argparse
@@ -54,11 +54,11 @@ GRAN_PX = 5.0
 #: The seed of the paper, the patch, the hand and the dither the file is written with.
 SEED = 11
 #: How many rows down the painted card the crop starts, as a fraction of the rows it leaves out.
-CROP_AT = 0.42
+CROP_AT = 0.1
 #: The wordmark's type size and the width the hand sets it across, in multiples of the size.
 NAME_PX, NAME_WIDTH = 188.0, 2.75
 #: Where the wordmark's centre sits on the sheet, as fractions of the width and height.
-NAME_AT = (0.47, 0.6)
+NAME_AT = (0.76, 0.26)
 #: The patch of paper behind the wordmark: its half width and half height in pixels, and how
 #: opaque it is at its middle.
 PATCH_HALF = (340.0, 120.0)

@@ -160,7 +160,16 @@ IMAGES: tuple[DocsImage, ...] = (
     _gallery("nib-line", "nib_line", 320, "webp-lossless"),
     _gallery("lettering", "lettering", 360, "webp-lossless"),
     _gallery("composition", "composition", 480, "webp-lossy"),
-    _gallery("route-map", "route_map", 720, "webp-lossy", "ambleside"),
+    DocsImage(
+        "gallery/route-map.webp",
+        "place_card",
+        (("size", 720), ("place", "ambleside"), ("theme", "examples/themes/ambleside.toml")),
+        "ambleside",
+        720,
+        "page",
+        "webp-lossy",
+        "P7.4",
+    ),
     # P7.6a: curves and symmetry.
     DocsImage(
         "curves/rose.webp",
@@ -361,7 +370,7 @@ IMAGES += (
     DocsImage(
         "hero.webp",
         "place_card",
-        (("size", 1200), ("place", "ambleside"), ("theme", "examples/themes/ambleside.toml")),
+        (("size", 1200), ("place", "ambleside"), ("theme", "examples/themes/ambleside-hero.toml")),
         "ambleside",
         1200,
         "hero",
@@ -372,7 +381,7 @@ IMAGES += (
     DocsImage(
         "social-preview.jpg",
         "social_preview",
-        (("place", "ambleside"), ("theme", "examples/themes/ambleside.toml")),
+        (("place", "ambleside"), ("theme", "examples/themes/ambleside-hero.toml")),
         "ambleside",
         1280,
         "preview",

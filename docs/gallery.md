@@ -146,9 +146,9 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/how_to_route_ink.py`.*
 
-![Twelve small copies of the Ambleside card in three rows of four. The columns are the route in maroon, in the default pink, in indigo and in burnt sienna. The top row draws the route as a plain solid line, the middle row as a wet pen line and the bottom row as a dry pen line that thins and breaks.](images/how-to/route-ink-grid.webp)
+![Six small copies of the Ambleside card, each cropped to the loop, in two rows of three. The columns are the route in maroon, in indigo and in burnt sienna and are lettered so; the rows are a wet pen line and a dry pen line that thins and breaks, lettered wet pen and dry pen.](images/how-to/route-ink-grid.webp)
 
-*Painted by `examples/how_to_route_ink.py` (figure grid, theme `examples/themes/ambleside.toml`). The rows are a solid line, a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, the default pink `#c22050`, indigo and burnt sienna.*
+*Painted by `examples/how_to_route_ink.py` (figure grid, theme `examples/themes/ambleside.toml`). The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`. The route is drawn in the normal blend, so it keeps its colour over water.*
 
 ### [Letter your own landmarks](how-to/letter-your-own-landmarks.md)
 
@@ -250,13 +250,13 @@ The five showcase maps, each painted from a recorded fixture by one script, `exa
 
 ### [Ambleside, the Lake District](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/ambleside)
 
-![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes and a maroon route looping from the town out to Loughrigg Terrace, lettered Ambleside, Rydal Water, Loughrigg Terrace, Rydal Cave and Bridge House](images/places/ambleside.webp)
+![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes and a maroon route looping from the town out to Loughrigg Terrace, lettered Ambleside, Grasmere, Rydal Water, Loughrigg Terrace, Loughrigg Fell and Bridge House](images/places/ambleside.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/ambleside.toml`.* The hero: a fell walk. Among the names it letters are Ambleside, Rydal Water, Loughrigg Terrace, Rydal Cave, Bridge House, Rothay and Brathay; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/ambleside.toml`.* The hero: a fell walk. Among the names it letters are Ambleside, Grasmere, Rydal Water, Loughrigg Terrace, Loughrigg Fell, Bridge House, Rothay and Brathay; the list is not complete.
 
 ### [Skye](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/skye)
 
-![A hand-painted map of the Isle of Skye: pale washes of land and sea, a dark route looping across the island, and four journal notes lettered in the hand, one for each day of the trip](images/places/skye.webp)
+![A hand-painted map of the Isle of Skye: pale washes of land and sea, a dark route looping across the island, four journal notes lettered in the hand, one for each day of the trip, and the names Portree and The Cuillin](images/places/skye.webp)
 
 *Painted by `examples/place_card.py` with `examples/themes/skye.toml`.* An island road trip with journal notes: each day of the trip is a sentence of the walker's own pinned to a point, Monday to Thursday.
 
@@ -288,11 +288,11 @@ The pictures that open the [README](https://github.com/findlaywebb/pyntpot#readm
 
 ![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes, the river Rothay in dark blue, and a maroon route looping from Ambleside out to Loughrigg Terrace and back, with the names written by hand](images/hero.webp)
 
-*Painted by `examples/place_card.py` (size 1200, theme `examples/themes/ambleside.toml`, place `ambleside`).*
+*Painted by `examples/place_card.py` (size 1200, theme `examples/themes/ambleside-hero.toml`, place `ambleside`).*
 
 ![A wide crop of the Ambleside map with the word pyntpot lettered large in dark ink over a soft patch of paper in the middle, the maroon route looping round it](images/social-preview.jpg)
 
-*Painted by `examples/social_preview.py` (theme `examples/themes/ambleside.toml`, place `ambleside`). The word is pyntpot.*
+*Painted by `examples/social_preview.py` (theme `examples/themes/ambleside-hero.toml`, place `ambleside`). The word is pyntpot.*
 
 ### The strip of eight
 
@@ -326,6 +326,6 @@ The README's strip is one thumbnail for each rung of the [tutorials](tutorials/i
 
 *Painted by `examples/composition.py` (seed 7).*
 
-![A hand-painted map of Ambleside and Rydal Water with a pink route looping out to Loughrigg Fell](images/gallery/route-map.webp)
+![A hand-painted map of Ambleside and Rydal Water in the showcase theme: tawny fell and green wood washes, two blue lakes and a maroon route looping out to Loughrigg Terrace](images/gallery/route-map.webp)
 
-*Painted by `examples/route_map.py`.*
+*Painted by `examples/place_card.py` in `examples/themes/ambleside.toml`, with the curated callouts of `examples/places.toml`.*
