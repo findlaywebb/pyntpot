@@ -114,6 +114,7 @@ SLICE_SHARE_BYTES: dict[str, int] = {
     "P7.14": 200_000,
     "P7.V10": 300_000,
     "P7.V12d": 150_000,
+    "P7.V12c": 600_000,
 }
 
 #: The most all of `docs/images/` may weigh.
@@ -212,12 +213,9 @@ IMAGES += (
     _rung("lettering", "lettering", 360, "webp-lossless"),
     _rung("composition", "composition", 480, "webp-lossy"),
     _rung("route-map", "route_map", 900, "webp-lossy", "keswick"),
-    # P7.6b: painting with Python, the fern and the gasket.
+    # P7.6b: painting with Python, the fern.
     DocsImage(
         "painting-with-python/fern.webp", "fern", (), None, 600, "page", "webp-lossy", "P7.6b"
-    ),
-    DocsImage(
-        "painting-with-python/gasket.webp", "gasket", (), None, 640, "page", "webp-lossy", "P7.6b"
     ),
     # P7.6c: Painting with Python, pictures.
     DocsImage(
@@ -386,5 +384,35 @@ IMAGES += (
             ("washes", "webp-lossy"),
             ("ink", "webp-lossy"),
         )
+    # P7.V12c: the tree, the tree family and the fern family.
+    DocsImage(
+        "painting-with-python/tree.webp",
+        "trees",
+        (("figure", "tree"),),
+        None,
+        600,
+        "page",
+        "webp-lossy",
+        "P7.V12c",
+    ),
+    DocsImage(
+        "painting-with-python/tree-family.webp",
+        "trees",
+        (("figure", "family"),),
+        None,
+        720,
+        "page",
+        "webp-lossy",
+        "P7.V12c",
+    ),
+    DocsImage(
+        "painting-with-python/fern-family.webp",
+        "fern_family",
+        (),
+        None,
+        900,
+        "page",
+        "webp-lossy",
+        "P7.V12c",
     ),
 )

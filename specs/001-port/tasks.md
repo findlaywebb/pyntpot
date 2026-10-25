@@ -188,6 +188,8 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [ ] P7.V12b The watercolour tutorial in one rhythm, with for-loop grids; reference and explanation figures rebuilt
 - [ ] P7.V12c Painting with Python: trees replace the gasket, a fern family, brushed curves
 - [x] P7.V12d The SVG drawing step by step
+- [x] P7.V12c Painting with Python: trees replace the gasket, a fern family, brushed curves
+- [ ] P7.V12d The SVG drawing step by step
 - [ ] P7.V13 Critique gate: no published image under 3 of 5
 - [ ] P7.V14 Site theme fixes (`p7-docs-site`)
 - [ ] P7.V15 Hand back

@@ -42,9 +42,9 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ## Painting with Python
 
-### [Curves: a rose, a Lissajous figure and a spirograph](tutorials/painting-with-python/curves.md)
+### [Curves: a rose and a spirograph in brush, a Lissajous figure in pen](tutorials/painting-with-python/curves.md)
 
-![A five-petalled rose curve drawn in ink with a pen, its petals washed pale tan, on cream paper with a wide margin](images/curves/rose.webp)
+![A five-petalled rose curve painted with a brush: each petal is washed in rose pink, deeper toward the centre, and outlined in one maroon stroke that swells and thins, on cream paper with a wide margin](images/curves/rose.webp)
 
 *Painted by `examples/curves.py` (seed 5, figure rose).*
 
@@ -52,7 +52,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/curves.py` (seed 5, figure lissajous).*
 
-![A spirograph curve in ink: nine long loops round a small bare centre, with the loops washed pale green](images/curves/spirograph.webp)
+![A spirograph painted with a brush: a pale blue wash fills its loops, and one long line runs round them, deep blue at the start, then lighter blue, then green and broken where the brush runs dry](images/curves/spirograph.webp)
 
 *Painted by `examples/curves.py` (seed 5, figure spirograph).*
 
@@ -62,15 +62,23 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/kaleidoscope.py` (seed 9).*
 
-### [Fractals: a fern and a gasket](tutorials/painting-with-python/fractals.md)
+### [Fractals: a fern, a family of ferns and a tree](tutorials/painting-with-python/fractals.md)
 
 ![A fern with a thin stem and curling fronds, washed in two greens on cream paper. The fronds are a deeper green and the two lowest leaflets a paler one.](images/painting-with-python/fern.webp)
 
 *Painted by `examples/fern.py` (seed 7).*
 
-![Washed discs packed inside a ringed circle: two large pale blue discs, a large green one and ochre and green ones below, with ever smaller discs filling the gaps and brown beads at the rim. Where two discs overlap, a darker lens shows both pigments.](images/painting-with-python/gasket.webp)
+![Nine ferns in a three by three grid, each in two greens on cream paper. All nine have the same pale lowest leaflets and curling tip, and no two curl or spread alike.](images/painting-with-python/fern-family.webp)
 
-*Painted by `examples/gasket.py` (seed 11).*
+*Painted by `examples/fern_family.py` (seed 7).*
+
+![A tree with a brown trunk that forks into thinner limbs, ending in a spray of fine dark twigs under washes of green and yellow ochre, with a short ochre stroke of ground at its foot.](images/painting-with-python/tree.webp)
+
+*Painted by `examples/trees.py` (seed 4, figure tree).*
+
+![Nine trees in a three by three grid, each with a brown trunk, fine dark twigs and washes of green and ochre. All nine are one kind of tree, and no two have the same shape, lean or crown.](images/painting-with-python/tree-family.webp)
+
+*Painted by `examples/trees.py` (seed 4, figure family).*
 
 ### [Pictures: layered hill washes and a lettered Derwentwater](tutorials/painting-with-python/pictures.md)
 
