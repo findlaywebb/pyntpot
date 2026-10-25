@@ -15,11 +15,9 @@ from support import REPO_ROOT
 from support.paths import (
     AMBLESIDE_KEY,
     FIXTURES,
-    KESWICK_KEY,
     KEY,
     OXFORD_KEY,
     SKYE_KEY,
-    TROTTERNISH_KEY,
     Y_FENNI_KEY,
     YR_WYDDFA_KEY,
 )
@@ -27,8 +25,6 @@ from support.paths import (
 #: South, west, north, east degrees of each fixture's box, by directory name.
 BOXES = {
     "lynmouth": (51.19, -3.88, 51.26, -3.80),
-    "keswick": (54.59, -3.17, 54.61, -3.13),
-    "trotternish": (57.62, -6.30, 57.66, -6.27),
     "yr-wyddfa": (53.06, -4.13, 53.11, -4.02),
     "oxford": (51.74, -1.26, 51.76, -1.24),
     "y-fenni": (51.81, -3.03, 51.83, -3.01),
@@ -39,8 +35,6 @@ BOXES = {
 #: Each fixture's cache key, which names its payload files.
 KEYS = {
     "lynmouth": KEY,
-    "keswick": KESWICK_KEY,
-    "trotternish": TROTTERNISH_KEY,
     "yr-wyddfa": YR_WYDDFA_KEY,
     "oxford": OXFORD_KEY,
     "y-fenni": Y_FENNI_KEY,
@@ -51,8 +45,6 @@ KEYS = {
 #: Budgets in bytes on disk: 6 MB for a fixture directory, more for the entries below (ADR 0032).
 BUDGET_BYTES = 6_000_000
 BUDGETS = {
-    # `keswick/` is stored untrimmed; P7.V12a removes it.
-    "keswick": 7_000_000,
     # Land cover on the Lake District fells is dense: 6.57 MB trimmed, unsimplified.
     "ambleside": 7_000_000,
     "yr-wyddfa": 8_000_000,
@@ -123,8 +115,8 @@ def test_coordinates_stay_inside_one_fixture_box() -> None:
 
 def test_a_pair_split_across_two_boxes_is_caught() -> None:
     """A latitude from one fixture's box beside a longitude from another's is out of box."""
-    assert _out_of_box("lat 54.60 lon -3.15") == []
-    assert _out_of_box("lat 54.60 lon -6.28") == [(54.6, -6.28)]
+    assert _out_of_box("lat 54.44 lon -2.98") == []
+    assert _out_of_box("lat 54.44 lon -6.28") == [(54.44, -6.28)]
 
 
 @pytest.mark.parametrize("name", list(BOXES), ids=list(BOXES))

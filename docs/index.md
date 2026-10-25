@@ -1,8 +1,8 @@
 # pyntpot
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](images/hero.webp)
+![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes, the river Rothay in dark blue, and a maroon route looping from Ambleside out to Loughrigg Terrace and back, with the names written by hand](images/hero.webp)
 
-*Painted by `examples/place_card.py` (size 1200).*
+*Painted by `examples/place_card.py` (size 1200, the Ambleside theme).*
 
 pyntpot paints watercolour and pen-and-ink pictures in Python the way a painter works:
 paper first, then washes, brushes, the pen, and the names last. Maps are its first use

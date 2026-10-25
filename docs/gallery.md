@@ -64,7 +64,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [First map](tutorials/first-map.md)
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](images/tutorials/route-map.webp)
+![A hand-painted map of Ambleside and Rydal Water: a ribbon of green and ochre washes round a pink route that loops from Ambleside up Loughrigg Fell and back along Rydal Water, with blue strokes for the rivers Rothay and Brathay, rust-coloured roads and the names written by hand](images/tutorials/route-map.webp)
 
 *Painted by `examples/route_map.py`.*
 
@@ -124,27 +124,37 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Write a theme](how-to/write-a-theme.md)
 
-![A route map of Keswick in near-black ink on pale paper, with grey roads and rivers and a black route.](images/map-styles/pen-and-ink.webp)
+![A route map of Ambleside in near-black ink on pale paper, with grey roads and rivers, no colour washes and a black route.](images/map-styles/pen-and-ink.webp)
 
 *Painted by `examples/map_styles.py` (figure pen-and-ink).*
 
-![A route map of Keswick in faded browns on yellowed, foxed paper with a dark vignette.](images/map-styles/sepia.webp)
+![A route map of Ambleside in faded browns on yellowed, foxed paper with a dark vignette and a rust-brown route.](images/map-styles/sepia.webp)
 
 *Painted by `examples/map_styles.py` (figure sepia).*
 
-![A route map of Keswick in saturated greens, oranges and blues, with a thick magenta route.](images/map-styles/bold.webp)
+![A route map of Ambleside in saturated greens, oranges and blues, with a thick magenta route.](images/map-styles/bold.webp)
 
 *Painted by `examples/map_styles.py` (figure bold).*
 
-![A route map of Keswick in cool greys and blues on pale blue-white paper, with a scarlet route.](images/map-styles/winter.webp)
+![A route map of Ambleside in cool greys and blues on pale blue-white paper, with a scarlet route.](images/map-styles/winter.webp)
 
 *Painted by `examples/map_styles.py` (figure winter).*
 
 ### [Change the route ink](how-to/change-the-route-ink.md)
 
-![The Keswick route map card with the route drawn in deep violet, a little heavier than the default crimson.](images/how-to/route-ink.webp)
+![The Ambleside route map card with the route drawn in deep violet, a little heavier than the default pink.](images/how-to/route-ink.webp)
 
 *Painted by `examples/how_to_route_ink.py`.*
+
+![Twelve small copies of the Ambleside card in three rows of four. The columns are the route in maroon, in the default pink, in indigo and in burnt sienna. The top row draws the route as a plain solid line, the middle row as a wet pen line and the bottom row as a dry pen line that thins and breaks.](images/how-to/route-ink-grid.webp)
+
+*Painted by `examples/how_to_route_ink.py` (figure grid, theme `examples/themes/ambleside.toml`). The rows are a solid line, a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, the default pink `#c22050`, indigo and burnt sienna.*
+
+### [Letter your own landmarks](how-to/letter-your-own-landmarks.md)
+
+![The Y Fenni route map card: a short maroon route winding through the town between a river and a castle, with callouts lettered by hand on leader lines.](images/places/y-fenni.webp)
+
+*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml` and the callouts of `examples/places.toml`. The callouts are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream.*
 
 ### [Paint your own shapes](how-to/paint-your-own-shapes.md)
 
@@ -154,9 +164,9 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Map from the command line](how-to/map-from-the-command-line.md)
 
-![The Keswick route map card: a looping route in crimson over washes of green and blue, with rivers, roads and names lettered by hand.](images/gallery/route-map.webp)
+![The Lynmouth route map card: a pink route over washes of green and blue, with the river, roads and names lettered by hand.](images/how-to/command-line.webp)
 
-*Painted by `examples/route_map.py`.*
+*Painted by `examples/route_map.py`, which makes the same card as the command.*
 
 ## Reference
 
@@ -236,37 +246,37 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ## Places
 
-The five focus places, each painted from a recorded fixture by one script. Every route is invented along public paths: it follows public OpenStreetMap ways, is traced from no recorded activity and marks no home or personal route. Each card links its fixture.
+The five showcase maps, each painted from a recorded fixture by one script, `examples/place_card.py`, in its own theme with its curated callouts. Every route is invented along public paths: it follows public OpenStreetMap ways, is traced from no recorded activity and marks no home or personal route. Each card links its fixture.
 
-### [Keswick and Derwentwater](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/keswick)
+### [Ambleside, the Lake District](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/ambleside)
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes, blue rivers, orange roads and a crimson route through the town; the names include Keswick, Portinscale and Crosthwaite](images/places/keswick.webp)
+![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes and a maroon route looping from the town out to Loughrigg Terrace, lettered Ambleside, Rydal Water, Loughrigg Terrace, Rydal Cave and Bridge House](images/places/ambleside.webp)
 
-*Painted by `examples/place_card.py`.* Among the names it letters are Keswick, Portinscale, Crosthwaite, Derwent Bridge, Lake Road Chapel, Derwent, Greta and A5271; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/ambleside.toml`.* The hero: a fell walk. Among the names it letters are Ambleside, Rydal Water, Loughrigg Terrace, Rydal Cave, Bridge House, Rothay and Brathay; the list is not complete.
 
-### [The Quiraing, Trotternish, Skye](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/trotternish)
+### [Skye](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/skye)
 
-![A hand-painted map of the Quiraing on Skye: a narrow cream and green ribbon of land with a crimson route looping along it, lettered Fir Bhreugach, The Prison and Quiraing South Pinnacle](images/places/trotternish.webp)
+![A hand-painted map of the Isle of Skye: pale washes of land and sea, a dark route looping across the island, and four journal notes lettered in the hand, one for each day of the trip](images/places/skye.webp)
 
-*Painted by `examples/place_card.py`.* Among the names it letters are Fir Bhreugach, Quiraing South Pinnacle, The Prison, Brogaig; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/skye.toml`.* An island road trip with journal notes: each day of the trip is a sentence of the walker's own pinned to a point, Monday to Thursday.
 
 ### [Over Crib Goch to the summit of Yr Wyddfa, Eryri](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/yr-wyddfa)
 
-![A hand-painted map of the route over Crib Goch to Yr Wyddfa: a long pale ribbon of ground with a crimson route along its ridge, lettered Garnedd Ugain, Yr Wyddfa, Crib Goch and Llanberis](images/places/yr-wyddfa.webp)
+![A hand-painted map of the route over Crib Goch to Yr Wyddfa: a long pale ribbon of ground with a dark route along its ridge, lettered Garnedd Ugain, Crib Goch, Glaslyn and Llyn Llydaw](images/places/yr-wyddfa.webp)
 
-*Painted by `examples/place_card.py`.* Among the names it letters are Llanberis, Garnedd Ugain, Yr Wyddfa, Crib Goch; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/yr-wyddfa.toml`.* A mountain ridge: Crib Goch, Garnedd Ugain and the lakes below them. Among the names it letters are Crib Goch, Garnedd Ugain, Glaslyn, Llyn Llydaw and Afon Nant Peris; the list is not complete.
 
 ### [Central Oxford](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/oxford)
 
-![A hand-painted map of central Oxford: pale washes for the city, a dark blue wash for the river Cherwell and a crimson route round Christ Church Meadow, lettered Christ Church, Tom Tower and Magdalen Tower](images/places/oxford.webp)
+![A hand-painted map of central Oxford: washes for the city and the meadows, the rivers Cherwell and Thames as blue strokes and a maroon route round Christ Church Meadow, lettered Radcliffe Camera, Christ Church, Magdalen Bridge and The Bridge of Sighs](images/places/oxford.webp)
 
-*Painted by `examples/place_card.py`.* Among the names it letters are Christ Church, Tom Tower, Magdalen Tower, Cherwell; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/oxford.toml`.* A city of colleges and bridges. Among the names it letters are Radcliffe Camera, Christ Church, Magdalen Bridge, The Bridge of Sighs, Cherwell and Thames; the list is not complete.
 
 ### [Y Fenni](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/y-fenni)
 
-![A hand-painted map of Y Fenni: washes for the town, the blue river Wysg and a crimson route round the castle and the meadows, with the town lettered Y Fenni](images/places/y-fenni.webp)
+![A hand-painted map of Y Fenni: washes for the town, the blue river Wysg and a maroon route winding through the town centre, with callouts lettered Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream](images/places/y-fenni.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml`.* Among the names it letters are Y Fenni, Afon Wysg, Llan-ffwyst, Gavenny River, Borough Theatre and A40; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml`.* A food tour in a Welsh-named market town: the town is lettered Y Fenni where OpenStreetMap carries the Welsh name. Among the names it letters are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise, Shepherd's Ice Cream, Afon Wysg and Llan-ffwyst; the list is not complete.
 
 ## The README
 
@@ -276,13 +286,13 @@ The pictures that open the [README](https://github.com/findlaywebb/pyntpot#readm
 
 *Painted by `examples/word.py`. The word is pyntpot.*
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](images/hero.webp)
+![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes, the river Rothay in dark blue, and a maroon route looping from Ambleside out to Loughrigg Terrace and back, with the names written by hand](images/hero.webp)
 
-*Painted by `examples/place_card.py` (size 1200).*
+*Painted by `examples/place_card.py` (size 1200, theme `examples/themes/ambleside.toml`, place `ambleside`).*
 
-![The Keswick card on the left and the pyntpot wordmark on the right, on one piece of cream paper](images/social-preview.jpg)
+![A wide crop of the Ambleside map with the word pyntpot lettered large in dark ink over a soft patch of paper in the middle, the maroon route looping round it](images/social-preview.jpg)
 
-*Painted by `examples/social_preview.py`. The word is pyntpot.*
+*Painted by `examples/social_preview.py` (theme `examples/themes/ambleside.toml`, place `ambleside`). The word is pyntpot.*
 
 ### The strip of eight
 
@@ -316,6 +326,6 @@ The README's strip is one thumbnail for each rung of the [tutorials](tutorials/i
 
 *Painted by `examples/composition.py` (seed 7).*
 
-![A hand-painted map of Keswick and Derwentwater with a crimson route looping through the town](images/gallery/route-map.webp)
+![A hand-painted map of Ambleside and Rydal Water with a pink route looping out to Loughrigg Fell](images/gallery/route-map.webp)
 
 *Painted by `examples/route_map.py`.*

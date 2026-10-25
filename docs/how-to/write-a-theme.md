@@ -53,12 +53,12 @@ line, is [a feature the package does not have yet](../features/maps-named-themes
 
 The themes in [`examples/themes/`](https://github.com/findlaywebb/pyntpot/tree/main/examples/themes/) are each a copy of the default
 with a few groups changed. [`examples/map_styles.py`](https://github.com/findlaywebb/pyntpot/blob/main/examples/map_styles.py) paints
-the Keswick route in one of them. Read the files beside the pictures to see how little
+the Ambleside route in one of them. Read the files beside the pictures to see how little
 changes between looks.
 
 ### Pen and ink
 
-![A route map of Keswick in near-black ink on pale paper, with grey roads and rivers and a black route.](../images/map-styles/pen-and-ink.webp)
+![A route map of Ambleside in near-black ink on pale paper, with grey roads and rivers, no colour washes and a black route.](../images/map-styles/pen-and-ink.webp)
 
 *Painted by `examples/map_styles.py` with `figure="pen-and-ink"`.*
 
@@ -68,7 +68,7 @@ grey tint. The `[brush.brushes]` table picks grey and black ink for the roads an
 
 ### Sepia
 
-![A route map of Keswick in faded browns on yellowed, foxed paper with a dark vignette.](../images/map-styles/sepia.webp)
+![A route map of Ambleside in faded browns on yellowed, foxed paper with a dark vignette and a rust-brown route.](../images/map-styles/sepia.webp)
 
 *Painted by `examples/map_styles.py` with `figure="sepia"`.*
 
@@ -78,7 +78,7 @@ Every pigment in `[cover.pigments]` is a faded brown or ochre, and the brush ids
 
 ### Bold
 
-![A route map of Keswick in saturated greens, oranges and blues, with a thick magenta route.](../images/map-styles/bold.webp)
+![A route map of Ambleside in saturated greens, oranges and blues, with a thick magenta route.](../images/map-styles/bold.webp)
 
 *Painted by `examples/map_styles.py` with `figure="bold"`.*
 
@@ -88,7 +88,7 @@ makes them denser. `river_mult` widens the rivers, `[nib]` letters larger and he
 
 ### Winter
 
-![A route map of Keswick in cool greys and blues on pale blue-white paper, with a scarlet route.](../images/map-styles/winter.webp)
+![A route map of Ambleside in cool greys and blues on pale blue-white paper, with a scarlet route.](../images/map-styles/winter.webp)
 
 *Painted by `examples/map_styles.py` with `figure="winter"`.*
 

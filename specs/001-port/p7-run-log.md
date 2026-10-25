@@ -1016,3 +1016,40 @@ combination of P7.V11's scale 2 and P7.V12b's sap-green ground). No lossy fallba
 set `quality`; `tests/architecture/test_docs_images.py` (budgets) green.
 
 **Contact sheet** of the five showcase cards: `scratchpad/showcase/contact-final.png`.
+## P7.V12a Maps pages: the hero, the gallery, map styles, landmarks how-to (2026-10-25)
+
+**Hero and preview.** `hero.webp` is the Ambleside card at 1200 px in `examples/themes/ambleside.toml` with its
+curated callouts (`place=ambleside`). `examples/social_preview.py` now paints the Ambleside card at the sheet's
+width (1280), crops 640 rows, lays a ragged patch of paper over the quiet fell inside the route's loop and
+letters "pyntpot" over it with the hand (188 px, nib 1.5 px, plate at scale 2 brought down with Lanczos); it
+takes `theme` and `place` like `place_card.py`. Looked at at full size: the maroon loop, Rydal Water and the
+callouts stay legible round the word. The JPEG is 155,545 bytes (budget 900,000).
+
+**Route-ink grid.** `examples/how_to_route_ink.py` takes `figure` (`violet`, the old picture, or `grid`) and
+`theme`. The grid is three treatments (solid, wet pen `MAJ1-e`, dry pen `MAJ3-e`) by four colours (maroon,
+the default pink, indigo, burnt sienna): two `paint` calls, one per pen brush, in `plates_dir(key) / brush`,
+and twelve `compose` calls over them. Deviation from the plan: the cards are painted at a display width of
+360 px and brought down to the cell's 180 px with Lanczos, because at 180 the brushes (set in display pixels)
+swamp a cell; the route keeps its usual width. Still two paints, and about 12 s for the whole figure. The
+dry row reads as dry, so the `MAJ4-e` fallback is not taken. `how-to/route-ink-grid.webp` is 86 KB; unlettered
+cells carry no attribution.
+
+**Moved to Ambleside / Lynmouth.** `gallery/route-map`, `tutorials/route-map`, `how-to/route-ink` and the four
+`map-styles` are painted over `ambleside`; `how-to/command-line.webp` is new, `route_map` over `lynmouth`.
+`test_map_styles.py` paints the Ambleside card: size (1800, 1281) and four mean colours re-pinned from a paint.
+First map, tutorials index, route-ink, command-line, offline and write-a-theme pages, `data-policy.md`
+(its image is `places/ambleside.webp`), the README (hero, caption, strip alt) and `index.md` follow. The
+command-line page's byte counts are the Lynmouth payloads' stored sizes (trimmed; a first run would report
+more), a line the page says. New how-to `letter-your-own-landmarks.md` shows Oxford's callouts, Tŷ Melin as
+the custom entry and `places/y-fenni.webp`. The gallery's Places section is the five showcase maps, one line
+each. The two stale alt texts the reconcile found: the Oxford "crimson route" (now maroon) and the issue note
+about the old Oxford image (the Cherwell is no longer a blob).
+
+**Retired.** `tests/fixtures/{keswick,trotternish}/`, their place cards and masters, their `_PLACES` rows,
+`KESWICK_KEY`, `TROTTERNISH_KEY`, their `test_places.py` entries and `test_coordinates.py` boxes, keys and
+budget; the coordinate self-test now uses Ambleside's and Skye's values. The fixture grep found no other
+reference. `specs/001-port/reviews/p7v-plan-review-3.md` quoted the old Keswick pair
+and was reworded so that the coordinate gate stays green.
+
+**Registry.** One `"P7.V12a"` block (the grid and the command-line image), share 300,000; the older entries
+moved as the plan names. Pins regenerated and checked exact: the entries named above.

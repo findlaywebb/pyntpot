@@ -116,6 +116,7 @@ SLICE_SHARE_BYTES: dict[str, int] = {
     "P7.V10": 300_000,
     "P7.V12d": 150_000,
     "P7.V12c": 600_000,
+    "P7.V12a": 300_000,
 }
 
 #: The most all of `docs/images/` may weigh.
@@ -159,7 +160,7 @@ IMAGES: tuple[DocsImage, ...] = (
     _gallery("nib-line", "nib_line", 320, "webp-lossless"),
     _gallery("lettering", "lettering", 360, "webp-lossless"),
     _gallery("composition", "composition", 480, "webp-lossy"),
-    _gallery("route-map", "route_map", 720, "webp-lossy", "keswick"),
+    _gallery("route-map", "route_map", 720, "webp-lossy", "ambleside"),
     # P7.6a: curves and symmetry.
     DocsImage(
         "curves/rose.webp",
@@ -213,7 +214,7 @@ IMAGES += (
     _rung("nib-line", "nib_line", 360, "webp-lossless"),
     _rung("lettering", "lettering", 360, "webp-lossless"),
     _rung("composition", "composition", 480, "webp-lossy"),
-    _rung("route-map", "route_map", 900, "webp-lossy", "keswick"),
+    _rung("route-map", "route_map", 900, "webp-lossy", "ambleside"),
     # P7.6b: painting with Python, the fern.
     DocsImage(
         "painting-with-python/fern.webp", "fern", (), None, 600, "page", "webp-lossy", "P7.6b"
@@ -265,7 +266,7 @@ IMAGES += (
         "how-to/route-ink.webp",
         "how_to_route_ink",
         (),
-        "keswick",
+        "ambleside",
         720,
         "page",
         "webp-lossy",
@@ -281,13 +282,13 @@ IMAGES += (
         "webp-lossy",
         "P7.8",
     ),
-    # P7.7: the Keswick card in each example theme.
+    # P7.7: the Ambleside card in each example theme.
     *(
         DocsImage(
             f"map-styles/{name}.webp",
             "map_styles",
             (("figure", name),),
-            "keswick",
+            "ambleside",
             720,
             "page",
             "webp-lossy",
@@ -328,8 +329,6 @@ IMAGES += (
 #: The five focus places the README's gallery shows: fixture, theme, then the fetch margin the
 #: fixture was recorded with in metres (`None` for the library's default).
 _PLACES: tuple[tuple[str, str | None, float | None], ...] = (
-    ("keswick", None, None),
-    ("trotternish", None, None),
     ("skye", "examples/themes/skye.toml", 18000.0),
     ("yr-wyddfa", "examples/themes/yr-wyddfa.toml", 3000.0),
     ("oxford", "examples/themes/oxford.toml", None),
@@ -362,8 +361,8 @@ IMAGES += (
     DocsImage(
         "hero.webp",
         "place_card",
-        (("size", 1200),),
-        "keswick",
+        (("size", 1200), ("place", "ambleside"), ("theme", "examples/themes/ambleside.toml")),
+        "ambleside",
         1200,
         "hero",
         "webp-lossy",
@@ -371,7 +370,14 @@ IMAGES += (
     ),
     *(_place_card(fixture, theme, margin, "P7.13") for fixture, theme, margin in _PLACES),
     DocsImage(
-        "social-preview.jpg", "social_preview", (), "keswick", 1280, "preview", "jpeg", "P7.13"
+        "social-preview.jpg",
+        "social_preview",
+        (("place", "ambleside"), ("theme", "examples/themes/ambleside.toml")),
+        "ambleside",
+        1280,
+        "preview",
+        "jpeg",
+        "P7.13",
     ),
 )
 
@@ -467,5 +473,29 @@ IMAGES += (
             "P7.V12b",
         )
         for figure in ("angles", "hands")
+    ),
+)
+
+IMAGES += (
+    # P7.V12a: the route-ink grid, three treatments by four colours on the Ambleside card, and the command-line how-to's map.
+    DocsImage(
+        "how-to/route-ink-grid.webp",
+        "how_to_route_ink",
+        (("figure", "grid"), ("theme", "examples/themes/ambleside.toml")),
+        "ambleside",
+        720,
+        "page",
+        "webp-lossy",
+        "P7.V12a",
+    ),
+    DocsImage(
+        "how-to/command-line.webp",
+        "route_map",
+        (),
+        "lynmouth",
+        720,
+        "page",
+        "webp-lossy",
+        "P7.V12a",
     ),
 )

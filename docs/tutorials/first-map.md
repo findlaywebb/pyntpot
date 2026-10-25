@@ -1,6 +1,6 @@
 # First map
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](../images/tutorials/route-map.webp)
+![A hand-painted map of Ambleside and Rydal Water: a ribbon of green and ochre washes round a pink route that loops from Ambleside up Loughrigg Fell and back along Rydal Water, with blue strokes for the rivers Rothay and Brathay, rust-coloured roads and the names written by hand](../images/tutorials/route-map.webp)
 
 *Painted by `examples/route_map.py`.*
 
@@ -17,24 +17,24 @@ each name can sit without crossing the route.
 Do [Paint a watercolour](paint-a-watercolour.md) first if you have not, so that the
 names below are familiar.
 
-## Copy the Keswick files
+## Copy the Ambleside files
 
-The first map paints a short loop round Keswick in the Lake District, from files you
+The first map paints a loop from Ambleside in the Lake District, from files you
 already have. They are four, kept in your clone's
-[`tests/fixtures/keswick`](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/keswick)
+[`tests/fixtures/ambleside`](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/ambleside)
 directory:
 
 | File | What it holds |
 | --- | --- |
-| `track.gpx` | The route: a loop through Keswick and out along Derwentwater. It was made for the repository and follows public paths; it records nobody's walk. |
-| `overpass-f2f4692b66d96eb9.json` | The map features round the route, as OpenStreetMap's Overpass service returned them. |
-| `landcover-f2f4692b66d96eb9.json` | The land cover round the route, from the same service. |
-| `elevation-f2f4692b66d96eb9.json` | The heights, as OpenTopoData returned them. |
+| `track.gpx` | The route: a loop of about nine kilometres from Ambleside up Loughrigg Fell, east past Rydal Cave and along Rydal Water, and back beside the Rothay. It was made for the repository and follows public paths; it records nobody's walk. |
+| `overpass-f0a137ce97afcb43.json` | The map features round the route, as OpenStreetMap's Overpass service returned them. |
+| `landcover-f0a137ce97afcb43.json` | The land cover round the route, from the same service. |
+| `elevation-f0a137ce97afcb43.json` | The heights, as OpenTopoData returned them. |
 
-Copy the directory to `keswick` in the top directory of your clone:
+Copy the directory to `ambleside` in the top directory of your clone:
 
 ```console
-$ cp -r tests/fixtures/keswick keswick
+$ cp -r tests/fixtures/ambleside ambleside
 ```
 
 Work on the copy, not on the fixture. The run writes its painted plates into the cache
@@ -51,7 +51,7 @@ Run the script with the track, the directory that holds the cache, a directory t
 into and a contact:
 
 ```console
-$ uv run python examples/route_map.py keswick/track.gpx keswick/ out/ you@example.org
+$ uv run python examples/route_map.py ambleside/track.gpx ambleside/ out/ you@example.org
 INFO:__main__:wrote out/map.png
 ```
 
@@ -113,30 +113,30 @@ Read it as the four stages it is:
 
 ### What to notice
 
-- The land is washed, not filled. The greens and creams are laid as washes with the
-  edge darkening and the grain you met in the second rung, and the lake lies in soft
-  blue at the bottom of the card.
-- The rivers are wet blue brush strokes, the Derwent and the Greta, and the roads are
+- The land is washed, not filled. The greens and ochres are laid as washes with the
+  edge darkening and the grain you met in the second rung, and Rydal Water lies in soft
+  blue at the top of the ribbon.
+- The rivers are wet blue brush strokes, the Rothay and the Brathay, and the roads are
   rust-coloured strokes. They are the brushes you pulled on the third rung, each chosen
   for what it draws.
-- The route is a crimson line, laid last over the washes and the roads, so it reads as the
+- The route is a pink line, laid last over the washes and the roads, so it reads as the
   one thing on the card that was drawn on purpose.
-- The names are in the hand's writing: towns and villages such as "Keswick",
-  "Portinscale" and "Crosthwaite", and buildings such as "Lake Road Chapel". The river names follow the water's
-  curve, "Derwent" and "Greta", and "A5271" runs along its road. Each name is tried in
-  several places and set where it crosses the least.
+- The names are in the hand's writing: "Ambleside" and "Rydal", and places such as "Pelter
+  Bridge", "Loughrigg Fell" and "St Mary's". The river names follow the water's curve,
+  "Rothay" and "Brathay", and "A591" runs along its road. Each name is tried in several
+  places and set where it crosses the least.
 - At the foot, small lettering credits OpenStreetMap, whose data the card is made from.
 
 **Try changing** the command to the one the package installs. It reads the same cache,
 finds the plates already painted, says so and writes the card in a few seconds:
 
 ```console
-$ uv run pyntpot map keswick/track.gpx -o out/keswick.png --cache keswick/ --contact you@example.org
+$ uv run pyntpot map ambleside/track.gpx -o out/ambleside.png --cache ambleside/ --contact you@example.org
 ```
 
 ## Paint your own track
 
-Now a track of your own, a GPX file of a walk or a ride. The Keswick fixture's files are
+Now a track of your own, a GPX file of a walk or a ride. The Ambleside fixture's files are
 a recording; the public services are where yours will come from. Two things change:
 
 - The cache will be empty for your track, so the first run fetches from the public

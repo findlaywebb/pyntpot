@@ -1,4 +1,4 @@
-"""Each example theme paints the Keswick card, and each card has the pinned size and mean colour."""
+"""Each example theme paints the Ambleside card, and each card has the pinned size and mean colour."""
 
 import shutil
 from pathlib import Path
@@ -18,14 +18,14 @@ pytestmark = pytest.mark.golden
 CONTACT = "pyntpot-tests@example.invalid"
 
 #: The card's size in pixels, width then height, which no theme changes.
-CARD_SIZE = (1800, 1607)
+CARD_SIZE = (1800, 1281)
 
 #: Each theme's mean red, green and blue over the whole card, pinned from a paint.
 MEAN_RGB: dict[str, tuple[float, float, float]] = {
-    "pen-and-ink": (229.9, 224.8, 213.3),
-    "sepia": (206.0, 177.8, 128.3),
-    "bold": (218.9, 219.6, 197.9),
-    "winter": (214.9, 220.5, 224.9),
+    "pen-and-ink": (227.9, 222.5, 210.4),
+    "sepia": (199.7, 170.0, 119.4),
+    "bold": (215.1, 210.1, 183.8),
+    "winter": (208.2, 214.5, 219.7),
 }
 
 #: How far a channel's mean may move between operating systems, out of 255.
@@ -33,10 +33,10 @@ MEAN_TOLERANCE = 1.5
 
 
 @pytest.mark.parametrize("theme", list(MEAN_RGB), ids=list(MEAN_RGB))
-def test_the_theme_paints_the_keswick_card(tmp_path: Path, theme: str) -> None:
+def test_the_theme_paints_the_ambleside_card(tmp_path: Path, theme: str) -> None:
     """From the fixture's cache alone, the theme paints a card of the pinned size and mean colour."""
     cache = tmp_path / "cache"
-    shutil.copytree(REPO_ROOT / "tests" / "fixtures" / "keswick", cache)
+    shutil.copytree(REPO_ROOT / "tests" / "fixtures" / "ambleside", cache)
 
     written = run_example(
         "map_styles",
