@@ -336,13 +336,17 @@ def main(out_dir: Path) -> Path:
     hand = Hand(face, hand_style)
     marks: list[Mark] = hand.write(Setting(NAME, 36.0, path=_line()), hand.generator(SEED))
 
-    surface = NibSurface(canvas, 1.0, np.zeros((H, W), np.float32), GRAN_PX)
+    canvas2 = Canvas(0, 0, NIB_SCALE * W, NIB_SCALE * H, NIB_SCALE * W, NIB_SCALE * H)
+    dark2 = np.zeros((NIB_SCALE * H, NIB_SCALE * W), np.float32)
+    surface = NibSurface(canvas2, NIB_SCALE, dark2, GRAN_PX * NIB_SCALE)
     groups = NibGroups(NibStyle(), face, hand_style, BrushStyle(), PaperStyle())
     plate_path = nib_plate(marks, surface, groups, out_dir / f"{STEM}-plate.webp")
     if plate_path is None:
         raise RuntimeError("the hand wrote no marks")
 
-    rgba = np.asarray(Image.open(plate_path).convert("RGBA"), np.float32) / 255
+    with Image.open(plate_path) as big:
+        small = big.convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+    rgba = np.asarray(small, np.float32) / 255
     alpha = rgba[..., 3:]
     out = paper * (1 - alpha) + rgba[..., :3] * alpha
 
@@ -412,13 +416,17 @@ def main(out_dir: Path) -> Path:
     hand = Hand(face, hand_style)
     marks: list[Mark] = hand.write(Setting(NAME, 36.0, path=_line()), hand.generator(SEED))
 
-    surface = NibSurface(canvas, 1.0, np.zeros((H, W), np.float32), GRAN_PX)
+    canvas2 = Canvas(0, 0, NIB_SCALE * W, NIB_SCALE * H, NIB_SCALE * W, NIB_SCALE * H)
+    dark2 = np.zeros((NIB_SCALE * H, NIB_SCALE * W), np.float32)
+    surface = NibSurface(canvas2, NIB_SCALE, dark2, GRAN_PX * NIB_SCALE)
     groups = NibGroups(NibStyle(), face, hand_style, BrushStyle(), PaperStyle())
     plate_path = nib_plate(marks, surface, groups, out_dir / f"{STEM}-plate.webp")
     if plate_path is None:
         raise RuntimeError("the hand wrote no marks")
 
-    rgba = np.asarray(Image.open(plate_path).convert("RGBA"), np.float32) / 255
+    with Image.open(plate_path) as big:
+        small = big.convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+    rgba = np.asarray(small, np.float32) / 255
     alpha = rgba[..., 3:]
     out = paper * (1 - alpha) + rgba[..., :3] * alpha
 
