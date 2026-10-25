@@ -27,24 +27,25 @@ Each is written to its path as soon as its provider call returns.
 
 | File | Holds | Ground covered | Written by |
 | --- | --- | --- | --- |
-| `overpass-<key>.json` | The feature payload. | The track's box plus 1500 m. | The features provider. |
-| `landcover-<key>.json` | The land cover payload. | The track's box plus 2600 m. | The features provider. |
-| `elevation-<key>.json` | The elevation grid, 80 samples a side. | The track's box plus 1500 m. | The elevation provider. |
+| `overpass-<key>.json` | The feature payload. | The track's box plus `margin_m` (1500 m by default). | The features provider. |
+| `landcover-<key>.json` | The land cover payload. | The track's box plus `landcover_margin_m` (2600 m by default). | The features provider. |
+| `elevation-<key>.json` | The elevation grid, 80 samples a side. | The track's box plus `margin_m` (1500 m by default). | The elevation provider. |
 
 `Cache.ensure` fetches in that order and calls a provider only for a file that is missing, unless forced. A failure part-way leaves every earlier payload on disk.
 
 ## The key
 
-The key is the first 16 hex characters of the SHA-256 of the canonical JSON of these four inputs.
+The key is the first 16 hex characters of the SHA-256 of the canonical JSON of these inputs.
 
 | Input | Value |
 | --- | --- |
 | `box` | The track's bounding box with the margin, each number rounded to six decimal places. |
 | `margin_m` | The margin in metres, 1500 by default. |
+| `landcover_margin_m` | The land cover margin in metres. Left out of the JSON while it is 2600, its default, so the default key is unchanged. |
 | `features` | The features provider's id. |
 | `elevation` | The elevation provider's id. |
 
-The key never comes from a caller's own id. Two tracks over the same ground with the same providers share their payloads; a different provider or margin fetches afresh.
+The key never comes from a caller's own id. Two tracks over the same ground with the same providers share their payloads; a different provider or margin fetches afresh. Both margins are one `FetchMargins`, which the `Cache` is made with: each is from 0 to 20 000 m, and the land cover margin is at least `margin_m`.
 
 ## The plates directory
 

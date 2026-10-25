@@ -172,11 +172,10 @@ class TestCacheLayout:
         assert not missing, f"cache-layout.md lacks: {missing}"
 
     def test_key_inputs_are_named(self):
-        """The four inputs the payload key hashes are in cache-layout.md."""
+        """The inputs the payload key hashes are in cache-layout.md."""
         text = _page("cache-layout.md")
-        missing = [
-            name for name in ("box", "margin_m", "features", "elevation") if f"`{name}`" not in text
-        ]
+        names = ("box", "margin_m", "landcover_margin_m", "features", "elevation")
+        missing = [name for name in names if f"`{name}`" not in text]
         assert not missing, f"cache-layout.md lacks: {missing}"
 
 
