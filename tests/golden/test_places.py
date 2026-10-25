@@ -68,7 +68,6 @@ PLACES = (
         "skye",
         SKYE_KEY,
         [
-            "Free Church of Scotland Kilmuir",
             "Monday: over the bridge, then Armadale",
             "Sligachan",
             "Snizort",
@@ -132,6 +131,7 @@ PLACES = (
             "Garnedd Ugain",
             "Glaslyn",
             "Llyn Llydaw",
+            "Yr Wyddfa",
             "start",
             "finish",
         ],

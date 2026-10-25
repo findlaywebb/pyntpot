@@ -193,11 +193,11 @@ dark_grid = [80, 60]
 [ribbon]
 ribbon_k = 7.15
 ribbon_c = 158.0
-ribbon_mult = 3.2
+ribbon_mult = 4.8
 ribbon_min_m = 420.0
 ribbon_max_m = 1250.0
 card_grow_mult = 1.55
-card_pad_frac = 0.09
+card_pad_frac = 0.14
 card_pad_ribbon_frac = 0.55
 card_aspect_min = 1.12
 card_aspect_max = 1.62
@@ -318,7 +318,7 @@ shadow_blur_px = 0
 shadow_px = 0
 
 [lettering]
-label_max = 4
+label_max = 5
 labels = true
 label_ground = true
 label_geom_tol_px = 8.0

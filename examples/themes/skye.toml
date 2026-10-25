@@ -1,7 +1,7 @@
-# Skye: an island road trip. A very wide ribbon takes in the whole island; a slate-blue wash
-# stands for the sea (the card draws the coast but cannot wash the sea itself, see the run log),
-# with heather and moss patches, strong relief and a maroon wet pen for the road. A copy of
-# default.toml with the ribbon, the relief, the cover pigments and the route ink changed.
+# Skye: an island road trip. A very wide ribbon takes in the whole island; the land is washed
+# in warm heather, moss and bracken with strong relief, the sea (washed from the coast rings)
+# in a deep slate blue, and a maroon wet pen carries the road. A copy of default.toml with the
+# ribbon, the relief, the cover pigments and the route ink changed.
 
 [paper]
 plate_lossless = true
@@ -89,7 +89,7 @@ fluid_gran = 0.6
 fluid_seed = 41
 
 [wash.separation_pigments]
-wood = "#6e7f8b"
+wood = "#587a4c"
 
 [brush]
 ink_seed = 91
@@ -213,7 +213,7 @@ sea_to_edge = true
 dither_seed = 23
 land_cover = true
 relief = true
-relief_strength = 1.8
+relief_strength = 3.0
 pale_base = 0.5
 pale_pool = 0.16
 wood_texture = 0.75
@@ -239,24 +239,24 @@ works = [0.58, 0.22]
 [cover.pigments]
 built = "#d2bfa6"
 farmland = "#b9c480"
-heath = "#b98b78"
+heath = "#9a7490"
 meadow = "#a7c077"
 orchard = "#a2b868"
-pale = "#a9c3c9"
-relief = "#6f93a8"
-rim = "#7fa3b6"
-rock = "#a8a39c"
+pale = "#cdc39a"
+relief = "#b59a6c"
+rim = "#c9b58a"
+rock = "#9a948c"
 sand = "#e8d9b0"
-scrub = "#9a9a68"
-water = "#3f7ea8"
+scrub = "#8f9a5c"
+water = "#4f86ad"
 wetland = "#8aa89a"
-wood = "#5f7f55"
+wood = "#587a4c"
 works = "#b9ad9c"
 
 [route]
 route_pen = true
 route_pen_brush = "MAJ1-e"
-route_pen_width_px = 3.4
+route_pen_width_px = 2.2
 
 [route_inks.run]
 style = "dotted"

@@ -89,11 +89,9 @@ FIGURES: tuple[str, ...] = (
 GRID_W = 900
 #: The nib's angles across the `angles` grid, and the thinnings down it.
 ANGLES, THINS = (-38.0, 0.0, 38.0, 90.0), (0.0, 0.52, 0.85)
-#: How many times its size a grid's nib plate is painted before it is brought down.
-NIB_SCALE = 2
 #: The width the figures are designed at, in pixels; the height is five ninths of it.
 DESIGN_W = 360
-#: How many times larger the nib plate is painted than the figure, before it is downsized.
+#: How many times larger the nib plate is painted than the figure or grid, before it is downsized.
 NIB_SCALE = 2
 #: The size of the paper's granulation noise, in pixels at the design width.
 GRAN_PX = 3.0

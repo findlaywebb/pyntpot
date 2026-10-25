@@ -978,3 +978,41 @@ Pins: only my entries were regenerated and pinned (`test_docs_images.py -k` on t
 pass). Other pins are the regeneration slice's. P7.V11 is parallel, not in this base: the new lettered code
 uses the scale-2 pattern itself; `nib_stages.py`'s existing figures still paint at scale 1 and will
 conflict textually with P7.V11 around `_name`.
+
+## P7.V reconcile (2026-10-25)
+
+`p7v-rec` = `p7-wip` with P7.V0 to P7.V11, P7.V7c, P7.V7d and P7.V12b/c/d merged. At the merge, prek
+and `pytest -m "not golden"` were already green: no merge breakage in code or unit tests.
+
+**Fixes.**
+- `examples/nib_stages.py`: P7.V11 and P7.V12b each defined `NIB_SCALE = 2`; one definition now, its
+  comment covering the figures and the grids. Its lettering is at nib scale 2 with Lanczos both ways.
+- `examples/tutorial_grids.py` (P7.V12b) already letters its cells at `NIB_SCALE` 2 with Lanczos
+  downsizing (it carried the pattern itself); nothing to change, no grid image moved.
+
+**Skye retune** (`examples/themes/skye.toml`, 720 px at 18,000 m margins, looked at three times). With
+the sea washed from the coast rings, the theme no longer fakes sea with a slate-blue relief: `relief`
+`#b59a6c`, `rim` `#c9b58a` and `pale` `#cdc39a` are warm land washes, `relief_strength` 3.0 (was 1.8),
+`water` `#4f86ad` is the sea, `heath` `#9a7490`, `rock` `#9a948c`, `wood` `#587a4c`, `scrub` `#8f9a5c`,
+route pen 2.2 px (was 3.4). `ribbon_mult` stays 14: the ribbon takes in the whole island. The island is
+land (washed fawn with moss, heather and rock patches), the sea is blue, the four notes are lettered.
+With the P7.V7d cap fix, `label_max = 0` letters no landmark: "Free Church of Scotland Kilmuir" is gone from
+the pin, as intended (the notes, the ground names "Sligachan" and "Snizort", start and finish remain).
+
+**Yr Wyddfa.** Investigated: the card box lies inside the fetched box (the test's assertion holds) and the
+route is not clipped by the frame. The track's last point (53.108649, -4.12053) projects to about
+(300, 300) px of the 1440 px card, inside it; the route simply ends there, on the hillside above
+Llanberis, as the fixture's track does. The summit label was missing because "Yr Wyddfa" was not a
+callout. Fixed in `examples/places.toml`: first callout `Yr Wyddfa`, the point of OSM node 8755297244
+(the peak, 53.0684857, -4.0762324, from the fixture payload). In `yr-wyddfa.toml`: `label_max` 4 to 5,
+`ribbon_mult` 3.2 to 4.8 and `card_pad_frac` 0.09 to 0.14, so the wash fills the frame round the finish
+instead of ending in a torn edge beside it.
+
+**Pins.** `tests/golden/test_places.py`: skye loses `Free Church of Scotland Kilmuir`; yr-wyddfa gains
+`Yr Wyddfa`; every other place's set unchanged. Regenerated with `make_docs_images.py` (all 68 entries,
+masters too; only five files differ from the committed): `places/skye`, `places/yr-wyddfa`,
+`social-preview.jpg`, `explanation/nib-ground` and `explanation/nib-backing` (the last two: the
+combination of P7.V11's scale 2 and P7.V12b's sap-green ground). No lossy fallback fired and no entry
+set `quality`; `tests/architecture/test_docs_images.py` (budgets) green.
+
+**Contact sheet** of the five showcase cards: `scratchpad/showcase/contact-final.png`.

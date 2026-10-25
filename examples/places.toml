@@ -35,6 +35,7 @@ notes = [
 
 [yr-wyddfa]
 callouts = [
+    { name = "Yr Wyddfa", lat = 53.0684857, lng = -4.0762324 },
     { name = "Crib Goch", lat = 53.0763169, lng = -4.0545889 },
     { name = "Garnedd Ugain", lat = 53.0755483, lng = -4.0752052 },
     { name = "Glaslyn", lat = 53.070894, lng = -4.06585 },
