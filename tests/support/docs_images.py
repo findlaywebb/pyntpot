@@ -312,13 +312,14 @@ IMAGES += (
 )
 
 
-#: The five focus places the README's gallery shows: fixture, theme, then the card's name.
-_PLACES: tuple[tuple[str, str | None], ...] = (
-    ("keswick", None),
-    ("trotternish", None),
-    ("yr-wyddfa", None),
-    ("oxford", None),
-    ("y-fenni", "examples/themes/y-fenni.toml"),
+#: The five focus places the README's gallery shows: fixture, theme, then the fetch margin the
+#: fixture was recorded with in metres (`None` for the library's default).
+_PLACES: tuple[tuple[str, str | None, float | None], ...] = (
+    ("keswick", None, None),
+    ("trotternish", None, None),
+    ("yr-wyddfa", None, 3000.0),
+    ("oxford", None, None),
+    ("y-fenni", "examples/themes/y-fenni.toml", None),
 )
 
 IMAGES += (
@@ -338,14 +339,19 @@ IMAGES += (
         DocsImage(
             f"places/{fixture}.webp",
             "place_card",
-            (("size", 720), *((("theme", theme),) if theme else ())),
+            (
+                ("size", 720),
+                ("place", fixture),
+                *((("theme", theme),) if theme else ()),
+                *((("margin_m", margin), ("landcover_margin_m", margin)) if margin else ()),
+            ),
             fixture,
             720,
             "page",
             "webp-lossy",
             "P7.13",
         )
-        for fixture, theme in _PLACES
+        for fixture, theme, margin in _PLACES
     ),
     DocsImage(
         "social-preview.jpg", "social_preview", (), "keswick", 1280, "preview", "jpeg", "P7.13"

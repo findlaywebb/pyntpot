@@ -337,3 +337,91 @@ The old `oxford/track.gpx` and `y-fenni/track.gpx` stay with their payloads; par
 `track.new.gpx` and re-records. `test_coordinates.py` gains the `ambleside` and `skye` boxes
 (each the track's box rounded outward to 0.01); the two new fixtures have no cache key until part 2.
 The Oxford and Y Fenni boxes already hold their new tracks and are unchanged.
+
+## P7.V9a part 2: the showcase payloads (2026-10-25)
+
+Recorded over the mirror with the repository URL as contact, by `record_fixture.py` (trims after
+`Cache.ensure`). The mirror answered the land cover query (and once the feature query) with 504
+Gateway Time-out on the first one or two tries; the recorder's own retries carried each recording
+through. Commits, one per fixture: `Record the ambleside fixture`, `... oxford ...`,
+`... y-fenni ...`, `... yr-wyddfa ...`.
+
+**STOP, reported to the coordinator: Skye is over the 12 MB rule, and Ambleside is over 6 MB.**
+
+- **Skye** (margins below): raw 85.7 MB features and 31.4 MB land cover; trimmed 46.3 and 17.8 MB;
+  `--simplify-m 15` gives 13.5 and 6.0 MB (19.7 MB the directory); re-trimmed at `--simplify-m 25`,
+  11.4 and 5.0 MB, **16.66 MB the directory, over the 12 MB limit**. The simplification is exhausted:
+  of the 25 m payloads about 12.6 MB is geometry and tags and the rest is structure, over 49,000
+  ways and 450 relations in the features and 16,300 ways in the land cover; fewer vertices would
+  not bring it under 12 MB. At the 720 px card `mpp_display` is 106 m, so 25 m is a quarter of a
+  display pixel. The payloads are not committed; the three trimmed payloads (key `ada01f635902a1fd`,
+  recorded with 18,000 m for both margins) are held outside the repository, in the session
+  scratchpad, `skye-held/`. `skye/` holds the track and README only, as part 1 left it.
+- **Ambleside** at the library's default margins: 6,571,595 bytes the directory (land cover 4.87 MB
+  trimmed, features 1.62 MB), over the 6 MB default. `BUDGETS["ambleside"] = 7_000_000` is set so the
+  gates run, with a comment; it is a loosening the coordinator rules on.
+
+**Margins** (the margin rule: card box by `journal_geometry` under the default ribbon fields of the
+simplified projected track, the card's largest overhang beyond the track's box, plus 1 km):
+
+| Fixture | Card overhang | Margin (features and land cover) | Inside the default box? |
+| --- | --- | --- | --- |
+| `skye/` | 16,871 m (west; the aspect floor widens the card east and west) | 18,000 m | not asserted (no payloads committed) |
+| `yr-wyddfa/` | 1,957 m | 3,000 m | no (default 1,500 m); inside the 3,000 m box, asserted |
+| `ambleside/` | 1,356 m | default (1,500 m; 2,600 m) | yes |
+| `oxford/` | 882 m | default | yes |
+| `y-fenni/` | 882 m | default | yes |
+
+**Sizes** (every file in the directory, bytes; payloads are trimmed; not simplified):
+
+| Fixture | overpass | landcover | elevation | Directory | Budget |
+| --- | --- | --- | --- | --- | --- |
+| `ambleside/` | 1,624,907 | 4,869,967 | 45,650 | 6,571,595 | 7,000,000 (default 6,000,000) |
+| `oxford/` | 2,374,957 | 2,415,634 | 41,901 | 4,850,357 | 6,000,000 |
+| `y-fenni/` | 1,619,950 | 492,997 | 43,797 | 2,171,023 | 6,000,000 |
+| `yr-wyddfa/` | 3,718,963 | 3,915,945 | 47,962 | 7,715,942 | 8,000,000 (was 12,000,000) |
+| `keswick/` | untrimmed | | | 6,663,743 | 7,000,000 (new entry; P7.V12a removes it) |
+
+Keys: ambleside `f0a137ce97afcb43`, oxford `edf326cc49d5cc52`, y-fenni `31d229011257f9fa`, yr-wyddfa
+`353c7a77ae84f4c1`. The default budget is 6 MB (was 10 MB); `trotternish/` (1.1 MB) needs no entry.
+
+**`test_places.py`**: `Place` gains `margin_m` and `landcover_margin_m`, a `Cache` over
+`FetchMargins(...)`; a place with non-default margins asserts the card box lies inside
+`track.bounding_box(margin_m)` projected through `basemap.projection` (Yr Wyddfa only; Skye has no
+row). `place_card.py` gains `margin_m`, `landcover_margin_m` and `place` options (margins build
+`Cache(cache_dir, FetchMargins(...))`; the land cover margin is the larger of its default and
+`margin_m` when absent; `place` is accepted and unused until P7.V10). `docs_images._PLACES` rows carry
+`("place", fixture)` and the Yr Wyddfa row `margin_m` and `landcover_margin_m` 3000.0 (a float: the key
+hashes the number as written, so `3000` and `3000.0` are different keys).
+
+**Expected labels** (first run; distinct names compared as a set):
+
+- `ambleside`: Ambleside, Rydal, Rydal Bridge, Rydal Road, A591, Rothay, Brathay, Hope Church, start (9)
+- `oxford`: Cherwell, Thames, A4144, A4158, High Street, Magdalen Tower, The Bridge of Sighs, start
+  (8; was 8 with Holywell Mill Stream, B480, Tom Tower and Christ Church, now gone with the route)
+- `y-fenni`: Y Fenni, Llan-ffwyst, Afon Wysg, Gavenny River, A40, Abergavenny Baptist Church, Methodist
+  Church, Borough Theatre, start (9; United Reformed Church and B4246 gone)
+- `yr-wyddfa`: Afon Arddu, Afon Nant Peris, A4086, Garnedd Ugain, Yr Wyddfa, Crib Goch, start, finish
+  (8; Llanberis and Nant Peris, lettered before, are no longer placed on the wider card)
+
+**Images moved**: `places/oxford.webp`, `places/y-fenni.webp`, `places/yr-wyddfa.webp` and their three
+masters, regenerated with `make_docs_images.py` (the cards changed because the fixtures did).
+
+**The cards, looked at** (painted at 900 px and viewed; the engine faults are the later slices'):
+Ambleside: Rydal Water is a blue patch cut at the card's left edge and not named; the route reads
+well and the three bridge and church leaders are clean, but no peak (Loughrigg) or Terrace is named
+and the fell is bare ground. Oxford: the Cherwell is one solid blue blot beside the route (P7.V2);
+the Radcliffe Camera, the colleges and Magdalen Bridge are not lettered, `High Street` sits as a
+landmark label (P7.V5, P7.V10). Y Fenni: the 2.2 km loop is tiny and its doubled legs overlap into
+a tangle (P7.V7), and no food-stop is named (P7.V10). Yr Wyddfa: grey foxing smudges at the paper's
+edge (P7.V7b); the ground beyond the ribbon is empty paper, so the widening shows only roads and
+rivers there; a lake is cut by the frame at the lower left and not named.
+
+**CI allowance** (`gh` read-only gave no per-test durations for the baseline run, so measured
+locally, `--durations=0`, exact golden run on this machine): Keswick card in `test_places.py`
+57.6 s and Trotternish 46.1 s (103.7 s); their pins in `test_docs_images.py`
+`places/keswick.webp` 35.4 s and `places/trotternish.webp` 23.6 s (59.0 s); 162.7 s in all, which
+P7.V12a removes (the hero and the social preview, painted from Keswick today, move to Ambleside and
+stay). The new Ambleside card adds 43.3 s to `test_places.py`; Oxford and Y Fenni are unchanged in
+cost (51.9 s, 51.5 s); Yr Wyddfa 41.4 s. The golden CI run after the last fixture is dispatched by the
+orchestrating session and not recorded here.

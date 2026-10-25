@@ -13,6 +13,7 @@ import pytest
 from ._text_scan import scanned_text_files
 from support import REPO_ROOT
 from support.paths import (
+    AMBLESIDE_KEY,
     FIXTURES,
     KESWICK_KEY,
     KEY,
@@ -34,8 +35,7 @@ BOXES = {
     "skye": (57.06, -6.78, 57.69, -5.74),
 }
 
-#: Each fixture's cache key, which names its payload files. A fixture with a track and no
-#: payloads yet (`ambleside`, `skye`) has no key.
+#: Each fixture's cache key, which names its payload files.
 KEYS = {
     "lynmouth": KEY,
     "keswick": KESWICK_KEY,
@@ -43,11 +43,18 @@ KEYS = {
     "yr-wyddfa": YR_WYDDFA_KEY,
     "oxford": OXFORD_KEY,
     "y-fenni": Y_FENNI_KEY,
+    "ambleside": AMBLESIDE_KEY,
 }
 
-#: Budgets in bytes on disk: 10 MB for a fixture directory, 12 MB for `yr-wyddfa/`.
-BUDGET_BYTES = 10_000_000
-BUDGETS = {"yr-wyddfa": 12_000_000}
+#: Budgets in bytes on disk: 6 MB for a fixture directory, more for the entries below (ADR 0032).
+BUDGET_BYTES = 6_000_000
+BUDGETS = {
+    # `keswick/` is stored untrimmed; P7.V12a removes it.
+    "keswick": 7_000_000,
+    # Land cover on the Lake District fells is dense: 6.57 MB trimmed, unsimplified.
+    "ambleside": 7_000_000,
+    "yr-wyddfa": 8_000_000,
+}
 
 
 def _fixture_files(name: str) -> list[str]:
