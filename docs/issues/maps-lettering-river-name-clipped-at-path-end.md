@@ -1,5 +1,7 @@
 # A river name is clipped at the left edge of the Yr Wyddfa card
 
+GitHub issue: [#53](https://github.com/findlaywebb/pyntpot/issues/53)
+
 On `docs/images/places/yr-wyddfa.webp` the river name "Afon Arddu" is clipped at the left
 edge of the card and reads "fon Arddu". The name follows the river's path, and its first
 letter lands outside the picture. Nothing shifts the name along the path, or drops it,

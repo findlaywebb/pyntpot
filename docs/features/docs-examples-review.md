@@ -1,5 +1,7 @@
 # Every example could be reviewed for clarity and code smells
 
+GitHub issue: [#63](https://github.com/findlaywebb/pyntpot/issues/63)
+
 **What exists today.** The examples in `examples/` paint every image in the docs, and the
 tutorials quote them. They were written and critiqued for the pictures they make, and the
 prose round fixed the pages around them, but no pass has read every script as code a

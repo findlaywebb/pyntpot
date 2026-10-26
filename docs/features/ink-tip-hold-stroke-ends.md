@@ -1,5 +1,7 @@
 # A smoothed stroke could keep the way's own ends
 
+GitHub issue: [#75](https://github.com/findlaywebb/pyntpot/issues/75)
+
 **What exists today.** `pyntpot.ink.tip._smooth_path` rounds a path's corners
 with two box passes over the resampled coordinates, edge-padded. Edge padding
 averages each end with its inner neighbours, so on a straight end the first and

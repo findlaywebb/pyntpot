@@ -1,5 +1,7 @@
 # A pen over 2 pixels wide leaves a grey halo round its ink
 
+GitHub issue: [#39](https://github.com/findlaywebb/pyntpot/issues/39)
+
 `pool` in `ink/deposit.py` leaves a blot where a stroke starts. Its Gaussian's radius is
 `max(width * pool_radius_frac, 1.2)` pixels (`BrushStyle.pen_pool_radius_frac`, 0.5 by
 default) and its height `pen_pool_gain` (1.9). The radius grows with the pen, so a pen

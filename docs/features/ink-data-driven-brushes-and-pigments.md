@@ -1,5 +1,7 @@
 # Brushes and pigments could be declared as data
 
+GitHub issue: [#71](https://github.com/findlaywebb/pyntpot/issues/71)
+
 **What exists today.** Brushes are Python dictionaries in `ink/brush.py`
 (`BRUSH_TREATMENTS`, `BRUSH_COLOURS`), and pigments are the `PIGMENTS`,
 `TRANSPARENCY`, `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY` tables in

@@ -1,5 +1,7 @@
 # The docs could show what changing each setting does
 
+GitHub issue: [#67](https://github.com/findlaywebb/pyntpot/issues/67)
+
 **What exists today.** The tutorials name the settings a script takes and some pages show a
 grid (the route inks, the map styles), but most settings are described in words: what
 raising a wash's edge darkening or a brush's dryness does is told, not shown.

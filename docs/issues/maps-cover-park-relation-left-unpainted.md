@@ -1,5 +1,7 @@
 # Christ Church Meadow is left as bare paper
 
+GitHub issue: [#45](https://github.com/findlaywebb/pyntpot/issues/45)
+
 On the Oxford card the largest shape inside the loop, Christ Church Meadow, is unpainted
 cream. The land cover payload holds it as relation 1102976 (`leisure=park`, which
 `maps/cover.py` classes as `meadow`); `polygon_rings` joins its ten outer members into one

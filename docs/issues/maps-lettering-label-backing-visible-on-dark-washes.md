@@ -1,5 +1,7 @@
 # The wash under a name shows as a pale box
 
+GitHub issue: [#49](https://github.com/findlaywebb/pyntpot/issues/49)
+
 `label_wash` lifts the paint under a name so it reads. Where the paint is dark (the grey-mauve
 rock of the Yr Wyddfa card, the wood and fell of the Ambleside card) the lifted area shows as
 a pale lozenge or rectangle behind "Glaslyn", "Llyn Llydaw", "Crib Goch", "A4086" and

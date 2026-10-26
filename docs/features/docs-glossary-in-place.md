@@ -1,5 +1,7 @@
 # The docs could show a term's definition where it is used
 
+GitHub issue: [#65](https://github.com/findlaywebb/pyntpot/issues/65)
+
 **What exists today.** `GLOSSARY.md` holds the canonical terms, and the docs link to it.
 A reader meeting "granulation" or "nib plate" on a page has to follow the link to learn
 what it means.

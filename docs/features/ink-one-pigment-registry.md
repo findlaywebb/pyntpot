@@ -1,5 +1,7 @@
 # One pigment registry, and layers that take a pigment by name
 
+GitHub issue: [#72](https://github.com/findlaywebb/pyntpot/issues/72)
+
 **What exists today.** Colour lives in four parallel tables in `pyntpot.ink`: `PIGMENTS`
 and `TRANSPARENCY`, keyed by map role (`water`, `wood`, `relief`, ...), and
 `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY`, keyed by painter's name (`ultramarine`,

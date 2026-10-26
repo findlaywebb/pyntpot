@@ -1,5 +1,7 @@
 # The gates could run in minutes, not half an hour
 
+GitHub issue: [#81](https://github.com/findlaywebb/pyntpot/issues/81)
+
 **What exists today.** The golden run takes about 20 minutes on the Linux runner and 26 on
 macOS, and the exact local run about 27 minutes on four cores. A map `compose` takes
 about 2.8 s on the CodSpeed benchmark, and mutation testing costs about 5 to 7 s a mutant

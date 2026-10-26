@@ -1,5 +1,7 @@
 # A land callout can be lettered on a lake
 
+GitHub issue: [#50](https://github.com/findlaywebb/pyntpot/issues/50)
+
 A curated callout for a place on land (a cave, a bridge, a hamlet) is placed on the best free
 ground the placer finds, and a water polygon counts as free ground for a name that is not a
 water name. On the Ambleside card at 720 pixels a callout for Rydal Cave was lettered inside
