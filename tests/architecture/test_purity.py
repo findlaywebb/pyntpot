@@ -15,9 +15,6 @@ Non-determinism calls caught:
   - Any ``random.<attr>(...)`` call where ``attr`` is NOT ``Random``.
 Id minting:
   - Any import of ``uuid``.
-Exemptions:
-  - The clock and random bans skip the files listed in
-    ``exemptions/line_budget.txt`` (empty: nothing is exempt).
 Scanning:
   Only production code under ``src/pyntpot`` is scanned (not tests).
 """
@@ -25,12 +22,9 @@ Scanning:
 import ast
 
 from ._ast_checks import CORE_SRC, _violations
-from support.exemptions import read_exemption_lines
 
 _CLOCK_ATTRS = {"now", "utcnow", "today"}
 _TIME_ATTRS = {"time", "monotonic", "time_ns", "monotonic_ns", "perf_counter"}
-
-_EXEMPT = frozenset(read_exemption_lines("line_budget.txt"))
 
 
 def _is_clock_name(node: ast.expr) -> bool:
@@ -56,7 +50,7 @@ def test_reads_no_clock() -> None:
             case _:
                 return False
 
-    assert not _violations(CORE_SRC, is_clock_call, _EXEMPT), (
+    assert not _violations(CORE_SRC, is_clock_call), (
         "package reads the clock — timestamps arrive as arguments"
     )
 
@@ -73,7 +67,7 @@ def test_reads_no_time_module() -> None:
             case _:
                 return False
 
-    assert not _violations(CORE_SRC, is_time_call, _EXEMPT), (
+    assert not _violations(CORE_SRC, is_time_call), (
         "package calls time module — elapsed / wall time must not originate here"
     )
 
@@ -90,7 +84,7 @@ def test_has_no_module_level_randomness() -> None:
             case _:
                 return False
 
-    assert not _violations(CORE_SRC, is_random_call, _EXEMPT), (
+    assert not _violations(CORE_SRC, is_random_call), (
         "package uses module-level randomness — use random.Random(seed) for seeded instances"
     )
 

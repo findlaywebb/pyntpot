@@ -26,7 +26,7 @@ Sequence for `plan.md`. Tick a line when its gate is green and committed.
 - [x] P1.7 Write the parity test, exact and tolerance modes
 - [x] P1.8 Commit the port with its parity fixture
 
-## P2. Scrub personal content and narration
+## P2. Scrub upstream content and narration
 
 - [x] P2.1 Turn the personal-content and coordinate gates on
 - [x] P2.2 Keep the rule, drop the anecdote, per file
@@ -108,7 +108,7 @@ Renumbered after the plan review of `294cc69`; plan.md has the old-to-new table.
 
 ## P5. Property tests, coverage, mutation, benchmarks
 
-Order: P5.0, P5.1, P5.2, P5.3a, P5.4, P5.3c on branch `p5-quality` (one PR). P5.3b (threshold from the first nightly) is superseded by P5.3c: mutation testing is manual and advisory (maintainer, 2026-10-07). Every slice records its numbers and choices in `p5-run-log.md`.
+Order: P5.0, P5.1, P5.2, P5.3a, P5.4, P5.3c on branch `p5-quality` (one PR). P5.3b (threshold from the first nightly) is superseded by P5.3c: mutation testing is manual and advisory (maintainer, 2026-10-07). Every slice records its numbers and choices in the P5 run log.
 
 - [x] P5.0 Fatten P5 into slices; plan-reviewer pass; spec coverage question resolved
 - [x] P5.1 Property tests; times and any `max_examples` cut in the run log
@@ -121,14 +121,14 @@ Order: P5.0, P5.1, P5.2, P5.3a, P5.4, P5.3c on branch `p5-quality` (one PR). P5.
 ### Handoff (2026-10-07)
 
 P5 is complete and merged through PR #7. Every timing and choice is in
-`p5-run-log.md`. Follow-ups outside P5: start the manual Mutation workflow
+the P5 run log. Follow-ups outside P5: start the manual Mutation workflow
 once on `main` to confirm it runs; trim the three duplicate benchmark pairs
 (`docs/issues/duplicate-benchmarks.md`); keep slow end-to-end tests out of
 mutation runs (`docs/issues/slow-tests-in-mutation-runs.md`). The next step is **P6.1**.
 
 ## P6. Docstrings, prose and references
 
-Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, then P6.5a to P6.5e in parallel worktrees, landed one commit each in order a to e, then P6.6, on branch `p6-docs` (one PR). P6 edits docstrings, comments and prose only (AST-neutral check, G-here plus G-self). Every slice records its timings and choices in `p6-run-log.md`.
+Order: P6.0, P6.1, P6.2, P6.3 (two sub-agents in sequence, one commit), P6.4, then P6.5a to P6.5e in parallel worktrees, landed one commit each in order a to e, then P6.6, on branch `p6-docs` (one PR). P6 edits docstrings, comments and prose only (AST-neutral check, G-here plus G-self). Every slice records its timings and choices in the P6 run log.
 
 - [x] P6.0 Fatten P6 into slices; plan-reviewer pass
 - [x] P6.1 References inventory (`p6-inventory.md`), sites by dotted path
@@ -162,7 +162,7 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [x] P7.10 Explanation: how the wash works, the hand and the nib, data policy (parallel group)
 - [x] P7.11 ADRs 0013 to 0021 for the settled decisions (the outline's P7.3)
 - [x] P7.12 Docs gates: link check, `twine check`
-- [x] P7.13 README, wordmark, landing page, gallery and social preview, and the CodSpeed badge (Q13 (1), row `p5-run-log.md:125`) (the outline's P7.1)
+- [x] P7.13 README, wordmark, landing page, gallery and social preview, and the CodSpeed badge (Q13 (1), from the P5 run log) (the outline's P7.1)
 - [x] P7.14 Docs site, ADR 0034 (`p7-docs-site`; merged in #29)
 - [x] P7.V0 Revision round 1: fatten from the maintainer's feedback and the five agent reports; plan reviews 1 to 4 BLOCK, review 5 PASS
 - [x] P7.V1 Fixture trimming (Lynmouth and Yr Wyddfa; the recorder trims the rest): minified, unread fields and tags dropped, goldens byte-identical; the round's CI baseline
@@ -196,7 +196,7 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 Order: after P10 part 1, P11 and P10.R. P8.P widens pyntpot's public API on its own branch `p8-promote` (one PR to `main`, held for the maintainer), then `v0.0.2` is tagged and `main` is merged into `p10-fixes`; the upstream consumes `v0.0.2` on its branch `p8-pyntpot-migration`, one PR held for the maintainer. Each slice runs in its own detached worktree (plan.md, P8, "Order and parallelism"); ticks land in the run-log commit that records each landing. At the hand-off the orchestrating session records "what upstream reads" in `p10-triage.md`; P10 part 2 follows.
 
 - [x] P8.0 Fatten P8 into slices; plan-reviewer pass (rounds 1 and 2 BLOCK, round 3 PASS; revised after the P8.Q answers)
-- [x] P8.Q Maintainer's answers, recorded in `p8-run-log.md`: accept ADR 0006 and re-pin to pyntpot's render; promote the three gaps in pyntpot now, generic; pin `v0.0.2`
+- [x] P8.Q Maintainer's answers, recorded in the P8 run log: accept ADR 0006 and re-pin to pyntpot's render; promote the three gaps in pyntpot now, generic; pin `v0.0.2`
 - [x] P8.P1 ADR 0027: the candidate export, the vector layers and a fed route ink (sequential)
 - [x] P8.P2a Promote the candidate export as `candidate_export(track, cache, key)` (pyntpot parallel group)
 - [x] P8.P2b Promote the vector layers as `vector_layers(track, cache, key, style, places=(), *, origin=None)` and `VectorLayers` (pyntpot parallel group)
@@ -217,10 +217,11 @@ Order: after P10 part 1, P11 and P10.R. P8.P widens pyntpot's public API on its 
 
 Order: after P7.R (the 0.1.0 release, the outline's P7.4), P8, P10 (both parts) and P11.
 
-- [ ] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR 0022 supersedes D16's enforcement clause for the post-port tree (the rule stands)
-- [ ] P9.2 Retire the exemptions mechanism; ADR 0023
-- [ ] P9.3 Delete `make_golden_old.py` and the last `ty` exclude
-- [ ] P9.4 Delete `design-sources.md` once `references.md` covers it
+- [x] P9.0 Plain wording for the places and the upstream, and delete the run logs (maintainer, 2026-10-26)
+- [x] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR 0022 supersedes D16's enforcement clause for the post-port tree (the rule stands)
+- [x] P9.2 Retire the exemptions mechanism; ADR 0023
+- [x] P9.3 Delete `make_golden_old.py` and the last `ty` exclude
+- [x] P9.4 Delete `design-sources.md` once `references.md` covers it
 
 ## Post-port roadmap
 

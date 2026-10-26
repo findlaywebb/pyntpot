@@ -30,9 +30,7 @@ prek run --all-files     # everything the commit hook runs
 ```
 
 The gates are wired into prek + CI. **A red gate is the architecture speaking: fix the
-code, never loosen a contract or budget to get green.** Contract changes are ADRs. The
-one sanctioned relaxation is the exemptions directory
-(`tests/architecture/exemptions/`), which is empty.
+code, never loosen a contract or budget to get green.** Contract changes are ADRs.
 
 ## The boundary rule
 
@@ -46,7 +44,6 @@ import-linter and `tests/architecture/`.
   provider protocols `Features` and `Elevation`, which are settled design.
 - **Soft budget 400 lines/file** (enforced by test). Over budget: **split into multiple
   files** along responsibility lines; never trim, squeeze, or thin docstrings to fit.
-  Files in `exemptions/line_budget.txt` are exempt until they are split.
 - **Module and public-API docstrings are the agent contract**: purpose, key types, what it
   does *not* do, invariants. State designed gaps as capability facts, never spec or
   roadmap numbers (enforced by an architecture test).

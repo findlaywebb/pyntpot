@@ -9,20 +9,20 @@ watercolour and pen-and-ink raster images: paper, washes, brushes, nibs,
 pigment compositing and hand lettering, with route maps from vector
 OpenStreetMap data and elevation as its first application.
 
-The code comes out of the upstream training-analysis repo, from its report
+The code comes out of an upstream project, from its report
 package (`geo.py`, `paint.py`, `labels.py`, `outlinefont.py`, `mapcard.py`,
 small parts of `charts.py` and `style.py`, and the vendored `fonts/`). The
 upstream repo then depends on `pyntpot` and deletes those modules. The map
-for a reference activity, rendered with the upstream default theme, must be
+for a reference track, rendered with the upstream default theme, must be
 pixel-identical before and after the switchover, with attribution off.
 
 Current behaviour: the engine lives in five 800 to 4500 line modules keyed
-by an upstream activity identifier, with personal coordinates, place names
-and training anecdotes in the defaults, fixtures, tests and comments, and
+by an upstream identifier, with upstream-specific data in the defaults,
+fixtures, tests and comments, and
 with no citations for the techniques it implements.
 
 Desired: a versioned package with a small façade, policy-compliant data
-providers, no personal data anywhere in the tree or the git history,
+providers, no upstream data in the tree,
 400-line modules, property tests, a mutation score, benchmarks, a docs tree
 and a bibliography.
 
@@ -38,14 +38,14 @@ and a bibliography.
 | D6 | Public API (P3): `Track`, `Basemap`, `Style`, `Plates`, `Lettering`, `Annotations`, functions `fetch`, `paint`, `letter`, `compose`; engine names `Sheet`, `Brush`, `Canvas` (today's `Plate`), `stamp`, `wash`, `composite`, `Hand`. Everything else is private. `Lettering` and the projection on `Basemap` exist because the upstream SVG page consumes them (D21). |
 | D7 | Pydantic v2 is a runtime dependency, used only at the boundary: `Style` (from TOML), `Track`, `Annotations`. Internals stay numpy arrays and dataclasses. |
 | D8 | Providers are protocols `Features` and `Elevation`. Shipped: `OverpassFeatures`, `OpenTopoData`. A contact string is a required constructor argument. Published limits are enforced by default. `compose` draws attribution unless `attribution=False`. |
-| D9 | Cache keyed by a hash of bounding box, margin and provider id, never by activity ID. Cache directory is always an explicit argument; no cwd-relative module globals. |
+| D9 | Cache keyed by a hash of bounding box, margin and provider id, never by an upstream identifier. Cache directory is always an explicit argument; no cwd-relative module globals. |
 | D10 | Fixture and test geography: Lynmouth, Devon (latitude 51.23, longitude -3.83, to two places). Every **synthetic** coordinate in `src/`, `tests/` and `docs/` lies inside the box 51.19 to 51.26 N, 3.80 to 3.88 W. A test enforces this as an allowlist. The three provider JSON files under `tests/fixtures/lynmouth/` and `tests/golden/lynmouth/plates.json` are exempt by name: Overpass returns full geometry for every way and relation touching the box, so those payloads span degrees. |
 | D11 | The upstream repo consumes a git tag until the first PyPI release, then a PyPI pin. A path source is allowed only in an uncommitted local override. |
 | D12 | Type gate `ty`. Lint `ruff` with the template's rule set. Hooks via `prek`. |
 | D13 | Docs: README with a gallery and `docs/` in Diátaxis layout. No docs site at v0.1. |
 | D14 | Process carried from the template: `specs/NNN-name/`, plan review before code, ADRs in `docs/decisions/`, keep-a-changelog, trusted publishing on tag `v*`. |
 | D15 | No remote exists until P2.9. P0 to P2 are local commits only. At P2.9, after the scrub gate and the tree scan pass, the scrubbed tree is published as one orphan commit to a new public GitHub repo. The local working history is never pushed. |
-| D16 | No personal content crosses over: no home coordinates, no personal place names, no activity identifiers, no training anecdotes, no attributions to a user request. Enforced by a banned-term test, the D10 coordinate allowlist test, a manual capitalised-string pass in P2, and a history scan before the repo goes public. The banned-term list is itself personal content and is never committed: it lives outside the repository at `~/personal/pyntpot-private/banned_terms.txt`, the test reads it from the path set by the `personal_terms_file` pytest ini option, and skips when the file is absent (public CI). |
+| D16 | No upstream data crosses over: tests, examples and docs use public data only. Enforced by a banned-term test, the D10 coordinate allowlist test, a manual pass in P2, and a history scan before the repo goes public. The banned-term list is never committed; the test reads it from the path set by the `personal_terms_file` pytest ini option and skips when the file is absent (public CI). For the post-port tree the banned-term test is superseded by ADR 0022; the rule stands. |
 | D17 | Quality tooling: `hypothesis` property tests, `mutmut` (changed functions on PR, full nightly, golden tests excluded), `pytest-benchmark` locally and `pytest-codspeed` in CI. Superseded in part by ADR 0012 (2026-10-07): mutation testing runs manually, advisory, no nightly or PR job. |
 | D18 | After the port and the scrub (end of P2), run the repo's architecture review pass over the ported code, before the mechanical split. Its output shapes P3 and P4. |
 | D19 | CLI is argparse, stdlib only. One entry point `pyntpot`. |
@@ -59,7 +59,7 @@ and a bibliography.
 | D27 | Architecture round outcome, decided 2026-10-03: all eight candidates in `architecture.md` are accepted (A1 to A8). A7 brings the plate cache under D9. A8 keeps the candidate logic in scope, split out and generalised into a reusable `candidates` facility; the six zero-caller functions are deleted. |
 
 Approaches rejected: painter-only extraction (leaves the policy problem
-upstream and keeps the activity-ID cache); two distributions (doubles
+upstream and keeps its own cache); two distributions (doubles
 release work for one user); rewrite from the digest (no safety net for 16k
 lines of numeric code); layering from the first commit (the lazy import
 graph is cyclic between what would be `ink`, `letters` and `maps`; the plan

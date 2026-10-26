@@ -108,8 +108,8 @@ shape.
      conftest hook marks those tests `skip` with reason "gate off, see
      exemptions". Empty at P0. Free-text notes for P4 go in
      `exemptions/NOTES.md`.
-   - The banned-term list is **not in the repository**: it is personal
-     content. It lives at `~/personal/pyntpot-private/banned_terms.txt`, one
+   - The banned-term list is **not in the repository**. It lives in a
+     private `banned_terms.txt` outside the repository, one
      term or `re:` regex per line, and the test reads the path from the
      `personal_terms_file` pytest ini option (registered in
      `tests/conftest.py`). If the file is absent the test skips with a loud
@@ -117,9 +117,7 @@ shape.
      **case-sensitively on whole words**, so a short road number does not
      match inside a hex string. The test scans `src/`, `tests/`, `docs/`,
      `README.md`, `CHANGELOG.md`, `GLOSSARY.md` and `specs/`, excluding the
-     `exemptions/` directory, `LICENSE`, `CODEOWNERS` and `uv.lock`. The
-     list covers personal names, personal place names, road numbers,
-     upstream product names and identifier patterns. The previous label font stack was removed from the code in P3.12; it is not added to the banned-term list.
+     `exemptions/` directory, `LICENSE`, `CODEOWNERS` and `uv.lock`. The previous label font stack was removed from the code in P3.12; it is not added to the banned-term list.
    - `test_coordinates.py`: every decimal pair that looks like a British
      latitude and longitude (`5\d\.\d{3,}` near `-?[0-9]\.\d{3,}`) in the
      scanned set must fall inside the D10 box. Exempt by name:
@@ -133,8 +131,7 @@ shape.
    - Keep `test_boundaries.py` (env, print, budget), the docstring test and
      `test_testing_discipline.py` (no mocks).
 7. Public-library files: `LICENSE` (MIT, 2026, the maintainer's name; the
-   one permitted use of a personal name, and the banned-term scan does not
-   include `LICENSE`), `LICENSE-FONT` (OFL 1.1 text from the upstream
+   banned-term scan does not include `LICENSE`), `LICENSE-FONT` (OFL 1.1 text from the upstream
    repo's font directory), `CHANGELOG.md` (`Unreleased` only),
    `CONTRIBUTING.md` (gate command, spec flow, no co-authorship trailers,
    CodeQL default setup), `SECURITY.md`, `GLOSSARY.md` (vocabulary table),
@@ -296,7 +293,7 @@ Gate: `uv run prek run --all-files && uv run pytest` green (with the
 exemptions files populated), `uv run pytest -m golden` exact on the machine
 that made the goldens.
 
-### P2. Scrub personal content and narration (one session per file)
+### P2. Scrub the port and its narration (one session per file)
 
 Sessions in this order, each ending in its own commit and an exact parity
 run: `labels.py`, `geo.py`, `paint.py`, `mapcard.py` and `style.py`
@@ -325,12 +322,11 @@ together, `outlinefont.py` and `card.py` together, `tests/unit/test_paint.py`,
 7. After each session: `uv run pytest -m golden` exact. The scrub changes
    no behaviour.
 8. Last session: write `specs/001-port/{spec.md,plan.md,tasks.md}` as a
-   scrubbed copy of the working plan, free of identifiers, personal place
-   names (Lynmouth, Lynton, Countisbury and Devon are the only ones
-   allowed) and personal names. The banned-term test scans `specs/`.
+   scrubbed copy of the working plan; Lynmouth, Lynton, Countisbury and
+   Devon are the only place names it uses. The banned-term test scans `specs/`.
 9. Publish as an orphan commit. The local P0 to P2 history contains the
    unscrubbed port by design and is never pushed.
-   - Tree scan: with both personal-content tests green, run the same
+   - Tree scan: with both scan tests green, run the same
      scanners over the whole tree once more, including `.github/`,
      `pyproject.toml` and `CONTRIBUTING.md`, excluding only
      `exemptions/`, `LICENSE`, `CODEOWNERS` and `uv.lock`. Whole-word,
@@ -342,10 +338,9 @@ together, `outlinefont.py` and `card.py` together, `tests/unit/test_paint.py`,
    - Creating the public repo is outward-facing: state it, get an explicit
      yes, then `gh repo create <owner>/pyntpot --public --source . --push`.
    - Verify on the remote: `git log --format= -p origin/main | grep -nwE -f <(...)`
-     returns nothing. Note `--format=` suppresses the author line, which
-     legitimately carries the maintainer's name.
+     returns nothing. `--format=` suppresses the author line.
 
-Gate: full gate green with both personal-content tests on; parity exact.
+Gate: full gate green with both scan tests on; parity exact.
 
 ### P3 and P4: how to run a slice
 
@@ -1218,7 +1213,7 @@ façade. A3's shape lands with the façade (`letter`); its file split is P4.
   style including `RouteInk` per sport, so `RouteInks` carries all four
   resolved inks, and `Style.route_ink()` (P3.11b) always returns
   `route_inks.ride`, the ink the goldens were painted with. P3 adds no sport
-  selection: no `Style.route.sport`, no `Track.sport`, no `--sport`.
+  selection: no `Style.route.sport` and no `Track.sport`.
   `route_inks` is read only at compose time, so it is in `digest()` but in
   neither `base_digest()` nor `lettering_digest()`: changing an ink repaints
   no plate (A6, A7). The three `PaintStyle` "route plate" fields, which the
@@ -2637,7 +2632,7 @@ coverage 7.16.2, pytest-cov 7.1.0) and the CodSpeed action's current docs.
   P5.1 fails against the current code, stop that property: do not weaken
   it, widen a bound, add `assume` to dodge the counterexample, or mark it
   `xfail`. Record the shrunk counterexample in `docs/issues/<name>.md` and
-  in `specs/001-port/p5-run-log.md`. The fix is its own slice: it touches
+  in the PR description. The fix is its own slice: it touches
   `src/`, runs G-here plus G-self, and may need a golden decision. P5.1
   lands without the failing property, and the issue file names it. This is
   a correctness stop, not a scope choice; the rest of P5 carries on.
@@ -2646,10 +2641,10 @@ coverage 7.16.2, pytest-cov 7.1.0) and the CodSpeed action's current docs.
   slice stops to ask. Each slice measures first, then applies the rule
   written in it: mutation scope and shard count (P5.3a), which benchmarks
   stay and at what `display_px` (P5.4), the coverage thresholds (P5.2) and
-  any `max_examples` cut (P5.1). Each slice's hand-off appends its measured
-  numbers and the choice the rule made to `specs/001-port/p5-run-log.md`,
-  so that file is in every slice's owner files. The final HTML report after
-  P5 is built from that log and states every timing and every choice.
+  any `max_examples` cut (P5.1). Each slice's hand-off records its measured
+  numbers and the choice the rule made in the PR description. The final
+  HTML report after P5 is built from those records and states every timing
+  and every choice.
 - **`maps` is not assumed covered by the goldens.** A golden test guards a
   change that should not move pixels. A visual-refinement change moves
   them on purpose and regenerates the goldens, which then accept whatever
@@ -2763,7 +2758,6 @@ version moves):
   - `CONTRIBUTING.md`: one paragraph on reproducing a property failure. Use
     the printed blob or `--hypothesis-seed`; `--randomly-seed` alone does
     not reproduce one. CI runs derandomised.
-  - `specs/001-port/p5-run-log.md`: the hand-off entry.
 - Leave alone:
   - `src/**`.
   - `tests/unit/**`. The pinned unit tests stay, including
@@ -2980,7 +2974,6 @@ version moves):
       threshold to the new rounded-down figure in the same commit.
       Lowering either needs a superseding ADR.
     - Consequences: plain `uv run pytest` stays coverage-free.
-  - `specs/001-port/p5-run-log.md`: the hand-off entry.
 - Verify the gate bites: `--fail-under=T+1` exits 2 locally whenever the
   figure is below `T + 1`. Quote it in the hand-off.
 - Hand-off: append to the run log the four figures (two packages, two
@@ -3221,7 +3214,6 @@ version moves):
   - `CONTRIBUTING.md`: how to run mutmut locally on one module
     (`uv run mutmut run "pyntpot.ink.polyline*"`), and that it needs
     Linux or macOS.
-  - `specs/001-port/p5-run-log.md`: the hand-off entry.
 - Verify before committing, in this environment:
   1. Check the mutmut name format, data files and test selection:
      - Run `uv run mutmut run "pyntpot.ink.polyline*"`. The stats run
@@ -3350,7 +3342,6 @@ version moves):
     so the coverage figures do not move. No other edit to `checks`.
   - `docs/explanation/performance.md`.
   - `CONTRIBUTING.md`: the local timing command.
-  - `specs/001-port/p5-run-log.md`: the hand-off entry.
 - Leave alone:
   - `ci.yml`'s `Tests` step and coverage gates (P5.2's).
   - `ci.yml` job `prerelease`. It already installs pytest-benchmark, which
@@ -3511,9 +3502,7 @@ slice.** It is kept as the record of the threshold plan that was dropped.
   a fraction (for example 0.71).
 - Owner files: `pyproject.toml` (`[tool.pyntpot.mutation] min_score`, and
   `shards` if the slow-shard rule changed it),
-  `specs/001-port/p5-run-log.md` (the run id, each shard's duration and
-  counts, any re-shard, the score and the threshold), and
-  `docs/decisions/0012-mutation-threshold.md`:
+  and `docs/decisions/0012-mutation-threshold.md`:
   - status becomes **Accepted**;
   - it records the run id, the counts, the score and the threshold, and
     any re-shard with its numbers;
@@ -3896,13 +3885,6 @@ slice.** It is kept as the record of the threshold plan that was dropped.
 
     (One line in the file, as the paragraph it replaces; the quote marks
     are not part of it.)
-  - `specs/001-port/p5-run-log.md`: append one entry,
-    `- <HH:MM> 2026-10-07 P5.3c: mutation testing manual and advisory
-    (maintainer decision).`, with sub-bullets: the measured costs that
-    drove it (nightly about 12 h over 4 shards; PR job 26 min for one
-    function); the files changed; each mode's dry-run result from the gate
-    (count and patterns per shard); the gate result; that P5.3b is
-    superseded and `min_score` is gone.
   - `specs/001-port/tasks.md`: tick P5.3c in the same commit.
 - Leave alone:
   - `tests/mutation/scope.py` and `shard.py` logic, flags and outputs, and
@@ -4148,7 +4130,7 @@ lines.
   output below are under `$SLICE`. Two slices never share a `$SLICE`.
 - **No stop points; a stated rule makes every choice, and the run log
   records it.** Each slice measures first, applies the rules below, and
-  records for `specs/001-port/p6-run-log.md`
+  records for the run log
   its start and end time (BST, `TZ=Europe/London date +%H:%M`), the wall
   time of each gate stage, the counts it names, and every choice as
   `choice: <what> | rule: <rule name> | inputs: <what it read>`. A
@@ -4254,7 +4236,7 @@ lines.
   P6.5e are built in parallel but still land as one commit each, in the
   order a to e (P6.5 parallel rule). Besides
   the slice commits, the orchestrating session makes bookkeeping commits
-  that touch only `specs/001-port/p6-run-log.md` and
+  that touch only the run log and
   `specs/001-port/reviews/**` (`Log P6.0`, `Record P6 plan review 1`); they
   are not slices and tick nothing.
 - **Order:** P6.0 → P6.1 → P6.2 → P6.3 → P6.4 → (P6.5a, P6.5b, P6.5c,
@@ -4616,7 +4598,7 @@ completeness check greps it):
     technique.
   - `maintainer-checked`: final, and allowed only on `Design input` and
     `Read during design` lines, never on a `Canonical source` line. Used
-    when the maintainer checked the page and `p6-run-log.md` holds that
+    when the maintainer checked the page and the P6 run log holds that
     check as a **marker line**: a line that begins, after any indentation,
     with exactly
     `- maintainer-checked: <URL> | <YYYY-MM-DD> | <what was seen>`, where
@@ -4644,7 +4626,7 @@ completeness check greps it):
     wrote them under the 13:24 entry, from the maintainer's check, in
     `6c1e380`. No one waits for the maintainer; P6.3 is still not
     dispatched while
-    `grep -cE '^ *- maintainer-checked: https?://' specs/001-port/p6-run-log.md`
+    `grep -cE '^ *- maintainer-checked: https?://'` over the P6 run log
     prints anything but `2` (it prints `2` at `9474c49`).
   - `not-verified`: not yet final. On a `Canonical source` line: every
     route and every replacement the canonical-source rule yields was tried
@@ -4817,7 +4799,7 @@ mismatch.
 
 - Implements D24, inventory step; predecessor P6.0. Touches no `src/` file.
 - Owner files: `specs/001-port/p6-inventory.md` (new),
-  `specs/001-port/p6-run-log.md`, `docs/issues/*.md` (new files only).
+  `docs/issues/*.md` (new files only).
 - Leave alone: `src/**`, `tests/**`, `design-sources.md`, `references.md`
   (not yet written).
 - First, on the clean starting commit, run G-here and log each stage's wall
@@ -4938,7 +4920,7 @@ mismatch.
   lookup in P6 is P6.3's route 3 for an entry the design record already
   names by author and title.
 - Owner files: `specs/001-port/p6-inventory.md` (the design-input column),
-  `specs/001-port/p6-run-log.md`, `specs/001-port/spec.md` (the open
+  `specs/001-port/spec.md` (the open
   question moves to "Resolved questions": "Design-input sources
   (2026-10-07): recovered in `design-sources.md`; where none was recorded,
   the entry cites the canonical source and says so (D24).").
@@ -5087,7 +5069,7 @@ mismatch.
   docs/explanation/references.md: a technique, its key, its canonical
   source and design input, and where the code implements it.`),
   `specs/001-port/p6-inventory.md` (status column),
-  `specs/001-port/p6-run-log.md`, `docs/issues/*.md` (new files only).
+  `docs/issues/*.md` (new files only).
 - Leave alone: `src/**`, `tests/**`, `design-sources.md`, `README.md`
   (P7 adds its pointer).
 - **The candidate table below is authoritative.** P6.3 fetches each
@@ -5227,7 +5209,7 @@ mismatch.
   # line or count (each entry: one Implemented in, at most one Note), UNREACHABLE and MAINTAINER-CHECKED
   # for those lines; exit 1 if any FAIL
   f="$1"
-  log="${2:-specs/001-port/p6-run-log.md}"
+  log="$2"
   named=$(cat <<'EOF'
   deegan-coffee-ring|Design input|Deegan et al. Coffee-ring drying, named in the design record without a title.
   arxiv-watercolour-drying|Design input|A 2019 arXiv study of watercolour drying patterns, named in the design record without a title.
@@ -5337,7 +5319,7 @@ mismatch.
   # every design-sources URL appears (the P9.4 check, early)
   grep -oE 'https?://[^ )]+' specs/001-port/design-sources.md | while read -r u; do grep -qF "$u" docs/explanation/references.md || echo "missing $u"; done
   # every line under a heading passes refcheck.sh, and every pinned count holds
-  bash "$SCRIPTS/refcheck.sh" docs/explanation/references.md specs/001-port/p6-run-log.md
+  bash "$SCRIPTS/refcheck.sh" docs/explanation/references.md <P6 run log>
   # every entry has exactly one canonical line
   awk '/^## `/{if(k!="" && n!=1) print k, n; k=$2; n=0} /^- Canonical source:/{n++} END{if(k!="" && n!=1) print k, n}' docs/explanation/references.md
   ```
@@ -5421,7 +5403,6 @@ mismatch.
     `"""Reference gate: every reference entry's sites cite its key, and every cited key has an entry."""`.
   - Each `src/` file holding an `Implemented in:` site: one citation line
     per technique in that site's docstring, nothing else.
-  - `specs/001-port/p6-run-log.md`.
 - Leave alone: every other line of `src/**`; `references.md` except an
   `Implemented in:` path P6.4 finds wrong (fix it there and log it); the
   other architecture tests; `exemptions/`.
@@ -5539,7 +5520,7 @@ sub-agents, each in its own detached worktree, as P3's parallel lines do:
    holds no path of the main checkout. The slice owns only its group's
    files under `src/`, plus new `docs/issues/` files with its module slugs
    (fix-now rule). It does not edit `GLOSSARY.md`,
-   `specs/001-port/p6-run-log.md`, `tasks.md` or any other shared file,
+   the run log, `tasks.md` or any other shared file,
    and it never commits. Its hand-off carries, besides the P6.5 hand-off
    list: its run-log entry as ready-to-append text, and its proposed
    `GLOSSARY.md` changes as `term | cell | old text | new text | dotted
@@ -5756,7 +5737,7 @@ Every one of these slices:
   `CONTRIBUTING.md`, `docs/README.md`, `docs/architecture.md`,
   `docs/explanation/**` (including `references.md`: wording of the intro and
   `Note:` lines only, never a source line, a status or a key),
-  `docs/runbooks/**`, `specs/001-port/p6-run-log.md`, `docs/issues/*.md`
+  `docs/runbooks/**`, `docs/issues/*.md`
   (new files only).
 - Leave alone: the files the dash-audit rule excludes (`CLAUDE.md`,
   `BOUNDARIES.md`, `specs/**`, `.claude/**`, `docs/decisions/**`,
@@ -5842,8 +5823,7 @@ every existing golden; its retirement is on the post-port roadmap
 
 **Tracks** (Q-P1: "invented along a public path"; D16). Every new track follows public
 OpenStreetMap ways, chosen by id, joined and resampled by `tests/fixtures/make_track.py`
-(P7.3). None is traced from a recorded activity, none marks a home or a personal route,
-and every README says so. A track resampled from OSM geometry is ODbL-derived data and
+(P7.3). A track resampled from OSM geometry is ODbL-derived data and
 its README licenses it so.
 
 | Directory | Place | Route (the ways P7.3 selects, in order) | Length | Budget |
@@ -5921,7 +5901,6 @@ and P11's rule). P7.4 lands before the fan-out only with a green two-OS golden r
 | `tests/support/docs_images.py` | P7.4 (the dataclass, the budgets, the gallery entries) | P7.5 to P7.10, P7.13, P7.14 | each slice appends one block of entries under a comment naming the slice; the orchestrating session resolves a landing conflict by keeping both blocks |
 | `GLOSSARY.md` | exists | any slice that introduces a term | one row per term, alphabetical; conflict resolved by keeping both rows |
 | `docs/tutorials/index.md`, `docs/tutorials/painting-with-python/index.md`, `docs/how-to/index.md`, `docs/reference/index.md`, `docs/explanation/index.md` | P7.4, as stubs with their final link lists (every page P7.5 to P7.10 will write) | nobody in the group | P7.13 writes their prose; until the group lands, the offline link check (P7.12) excludes `docs/**/index.md` through `lychee.toml`, and P7.13 removes the exclusion |
-| `p7-run-log.md` | P7.1 | every slice | one dated entry per slice, appended |
 | `tasks.md` | exists | every slice | one tick per slice |
 | `pyproject.toml`, `uv.lock`, `.github/workflows/ci.yml` | exist | P7.4, P7.12, P7.14, P7.R only, never two at once (the order guarantees it) | after a merge of `main` or a landing, `uv lock` and commit the lock; never merge `uv.lock` by hand |
 
@@ -5938,7 +5917,7 @@ that adds or changes a golden-marked test also runs `uv run pytest -m golden` lo
 fails). A slice that adds links runs `lychee --offline --config lychee.toml README.md
 docs` once P7.12 has landed (install: `cargo binstall lychee` or the release binary
 named in `lychee.toml`'s header). Each slice ticks its `tasks.md` line in its landing
-commit and appends to `p7-run-log.md`.
+commit and records the slice in its PR description.
 
 **Test markers and CI time.** Every test that paints a fixture card, and every docs-image
 pin, is `@pytest.mark.golden`, as `test_route_map_example.py` is. Every other new test
@@ -6014,8 +5993,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   `tests/golden/lynmouth/{labels-centreline.webp,map.png}`,
   `docs/decisions/0031-third-golden-regeneration.md`, the issue file (deleted in the
   last step, as resolved issues are), new
-  `docs/issues/maps-lettering-flat-boxes-without-tracking.md`, new
-  `specs/001-port/p7-run-log.md`, `tasks.md`.
+  `docs/issues/maps-lettering-flat-boxes-without-tracking.md`, `tasks.md`.
 - Line budget: `placement.py` is 351 lines; if the fixes pass 400, its along-water
   helpers split into `placement_water.py` (an owner file).
 - Leave alone: `Measure` and every call site of it other than `place` and `_place`
@@ -6093,7 +6071,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   to Y Fenni, Monmouth to Trefynwy), `tests/unit/maps/lettering/test_placement.py:53`
   and `test_label.py:79` (Monmouth Castle to Trefynwy Castle, the same fifteen
   characters), `tests/unit/maps/lettering/test_placement_names.py:108 to 129` (Monmouth
-  to Trefynwy throughout, Abergavenny to Machynlleth); `tasks.md`, `p7-run-log.md`.
+  to Trefynwy throughout, Abergavenny to Machynlleth); `tasks.md`.
 - Readings recorded: `spec.md` D26's examples stay as history (the spec records the
   decisions as made); the rivers Dee and Severn keep their English names in the list,
   as rivers that cross into England, and the Wysg, wholly Welsh, takes its Welsh name.
@@ -6128,7 +6106,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   directly, not through a script, so the test can read the placed labels; it pins that
   no request is made, that the card paints, and each fixture's expected label names, a
   literal list per fixture written from the first run and recorded in the run log), `docs/decisions/0032-focus-place-fixtures.md`,
-  `tasks.md`, `p7-run-log.md`.
+  `tasks.md`.
 - `make_track.py`, two modes, `--contact` in both (no `os.environ`). `--list-ways
   S,W,N,E` prints each `highway` way in the box (id, name, `highway`, `sac_scale`), the
   box given on the command line only, never written to a file the coordinate gate
@@ -6138,7 +6116,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   distances and the length. It fetches the ways with a raw `httpx` POST to `MIRROR` sending the shipped provider's
   User-Agent with the contact; chains them by shared end node ids, reversing a way where
   needed; fails if a join gap is over 5 m or a branch is ambiguous; resamples at 20 m;
-  writes GPX with no time, elevation or activity type. The raw response is not
+  writes GPX with latitude and longitude only. The raw response is not
   committed; the way ids and their versions go in the README.
 - Selecting ways: `--list-ways` per place, read by name and `sac_scale` against the
   table's route; the chosen ids are recorded in the README. Checks for every track:
@@ -6201,7 +6179,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   that the placed labels include "Y Fenni" and not "Abergavenny"),
   `docs/decisions/0035-lettering-name-tags.md`,
   `docs/features/maps-prefer-welsh-names.md` (deleted: the feature exists), `GLOSSARY.md`
-  (a row if a term is new), `tasks.md`, `p7-run-log.md`.
+  (a row if a term is new), `tasks.md`.
 - Check before pinning: P7.3's recorded Y Fenni labels include "Abergavenny" (the town
   is lettered at all); if not, stop and report.
 - Leave alone: `tests/golden/lynmouth/**`, `layers.py`, `osm.py`, the lettering group,
@@ -6249,7 +6227,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   in the shared-files table, `.github/workflows/golden.yml` (adds `workflow_dispatch`),
   `.github/workflows/ci.yml` (the prerelease line, if the package stays),
   `docs/decisions/0033-docs-images-and-examples.md`, `pyproject.toml` and `uv.lock`,
-  `tasks.md`, `p7-run-log.md`.
+  `tasks.md`.
 - Encodings: lossless for pen, nib and lettering figures; lossy WebP for washes, swatch
   sheets, mixed figures and maps; JPEG for the social preview only. Over its kind's
   budget, an entry goes lossy if it is a wash, else to a smaller width; still over, the
@@ -6291,7 +6269,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   code block under a `<!-- from examples/<stem>.py -->` marker is a verbatim substring
   of that script; every rung is quoted; every `uv run python examples/...` command
   names an existing script), registry entries (slice `P7.5`, page images of each rung
-  at its own width), `tasks.md`, `p7-run-log.md`.
+  at its own width), `tasks.md`.
 - Each rung section: the picture first; the command and the log line it prints; the
   quoted `main`; "What to notice"; one "Try changing" line. Section titles are studio
   steps: "Stretch the paper", "Lay a wash", "Pull a brush", "Mix two pigments", "Take
@@ -6309,7 +6287,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   `spirograph`, drawn with the pen), `examples/kaleidoscope.py` (one motif washed and
   inked, repeated by mirror and rotation), `docs/tutorials/painting-with-python/{curves,symmetry}.md`,
   `tests/examples/test_painting_with_python_curves.py` (new), registry entries (slice
-  `P7.6a`), `tasks.md`, `p7-run-log.md`.
+  `P7.6a`), `tasks.md`.
 - Script rules: the script contract; fixed seeds; offline; the docs size under 20 s.
 - Test first: one test per figure that `main` writes one image of the given small size
   and that it is not one flat colour; red before the script exists.
@@ -6327,7 +6305,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   glazed by Kubelka-Munk in at most 6 pigment layers),
   `docs/tutorials/painting-with-python/fractals.md`,
   `tests/examples/test_painting_with_python_fractals.py` (new), registry entries (slice
-  `P7.6b`), `tasks.md`, `p7-run-log.md`.
+  `P7.6b`), `tasks.md`.
 - Test first, script rules and leave-alone as P7.6a; gate G-here and the dash gate.
 - Commit: `Paint a fern and an Apollonian gasket`. Done: the named tests green.
 
@@ -6339,7 +6317,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   drawing made for the repo under the repo's MIT licence; filled shapes washed, strokes
   inked; read as ADR 0033 decided), `docs/tutorials/painting-with-python/{pictures,vector-drawing}.md`,
   `tests/examples/test_painting_with_python_pictures.py` (new), registry entries (slice
-  `P7.6c`), `tasks.md`, `p7-run-log.md`.
+  `P7.6c`), `tasks.md`.
 - The vector page says plainly that pyntpot does not read SVG itself, links
   `docs/features/ink-read-svg-drawings.md`, and tells the reader to `pip install
   svgelements` if the package stayed.
@@ -6356,8 +6334,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   default, change a group, load it; "When it goes wrong" keyed on the validation errors
   a reader meets), `tests/unit/maps/test_example_themes.py` (new, not golden: each theme
   loads with `Style.from_toml`), `tests/golden/test_map_styles.py` (new, `golden`: each
-  theme paints the Keswick card), registry entries (slice `P7.7`), `tasks.md`,
-  `p7-run-log.md`.
+  theme paints the Keswick card), registry entries (slice `P7.7`), `tasks.md`.
 - No theme imitates a real map publisher's look. The default theme is unchanged. The
   page links `docs/features/maps-named-themes.md`.
 - Test first: `test_example_themes.py` red before the theme files exist.
@@ -6375,8 +6352,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   repeat of the tutorial); registry entries (slice `P7.8`) for result images, each from
   a new `figure=` of an existing script or a new `examples/how_to_<name>.py`;
   `tests/architecture/test_how_to_commands.py` (new: every `pyntpot` command line in a
-  guide parses with the CLI's own parser, built without running it); `tasks.md`,
-  `p7-run-log.md`.
+  guide parses with the CLI's own parser, built without running it); `tasks.md`.
 - Each guide: titled by its goal, assumes the tutorial, steps then result, and a "When
   it goes wrong" list keyed on what the reader sees.
 - Test first: the command test red against a guide with a misspelt option.
@@ -6396,7 +6372,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   the parser, never from `--help` output; every field of every style group is named in
   `style-fields.md`; every key the cache and the manifest write is named in their
   pages; every `PIGMENTS` key and every brush id appears in its page); registry entries
-  (slice `P7.9`); `tasks.md`, `p7-run-log.md`.
+  (slice `P7.9`); `tasks.md`.
 - The API reference is generated by P7.14; until then `index.md` (P7.13) points to the
   layer packages' docstrings.
 - Test first: each pin red against an empty page.
@@ -6413,7 +6389,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   attribution off moves the duty to the caller; the cache and the exports are
   Derivative Databases if republished; the providers' usage limits; the credit's
   legibility); `tests/examples/test_explanation_figures.py` (new); registry entries
-  (slice `P7.10`); `tasks.md`, `p7-run-log.md`. `performance.md` and `references.md`
+  (slice `P7.10`); `tasks.md`. `performance.md` and `references.md`
   stay.
 - Test first: `test_explanation_figures.py`, one test per `figure=` that `main` writes
   one image at a small size and that it differs from the previous stage's figure; red
@@ -6431,7 +6407,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   earlier ADR already records the decision (0004 covers D8 and D9, 0005 D23, 0007 D7
   and D21, 0010 D2), the new ADR is a short pointer to it. D24 also records the
   references test (plan P6, "This test is a new gate").
-- Owner files: the nine ADRs, `docs/decisions/README.md`, `tasks.md`, `p7-run-log.md`.
+- Owner files: the nine ADRs, `docs/decisions/README.md`, `tasks.md`.
 - Commit: `Record the settled decisions as ADRs 0013 to 0021`. Done: G-here.
 
 #### P7.12. Docs gates
@@ -6442,7 +6418,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   and `uv run twine check --strict dist/*`), `.github/workflows/links.yml` (new: weekly
   online check, advisory), `lychee.toml` (excludes `docs/**/index.md` until P7.13; its
   header names the local install), `pyproject.toml` (`twine` in `dev`), `uv.lock`,
-  `tasks.md`, `p7-run-log.md`.
+  `tasks.md`.
 - Commit: `Check the docs' links and the package description in CI`. Done: the `docs`
   job green on a run dispatched on the branch (GitHub MCP `actions_run_trigger`).
 
@@ -6460,8 +6436,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   `docs/README.md`, the prose of the five index pages, `lychee.toml` (the index exclusion removed),
   `tests/architecture/test_readme.py` (new: the Python quick start is a verbatim excerpt
   of `examples/wash.py`; the order of the README's sections), registry entries (slice
-  `P7.13`), `specs/001-port/p10-triage.md` (Q13's row marked done), `tasks.md`,
-  `p7-run-log.md`.
+  `P7.13`), `specs/001-port/p10-triage.md` (Q13's row marked done), `tasks.md`.
 - README order: the wordmark and the tagline "Hand-drawn watercolour and pen-and-ink
   painting for Python, with route maps."; the hero with a provenance caption; the
   non-map image; the lede "Lay a wash, pull a brush, letter a name."; the badges, in
@@ -6502,7 +6477,7 @@ the before and after and accepted the fix, including "B3234" set flat beside Lyn
   pinned by a test; Patrick Hand by `@font-face` for display headings only),
   `tests/architecture/test_site.py` (new: every public name in the four `__all__`
   appears once in the reference pages), `docs/decisions/0034-docs-site.md`,
-  `tasks.md`, `p7-run-log.md`.
+  `tasks.md`.
 - Leave alone: every page's prose.
 - Maintainer action: enable Pages from Actions in the repo settings.
 - Gate: G-here; the strict build. Commit: `Build the docs site`. Done: PR
@@ -6690,7 +6665,7 @@ the chat message to the maintainer names decision 9 (route B).
   (calls the trim after `Cache.ensure`, so every later recording is trimmed),
   the committed `overpass-*.json` and `landcover-*.json` under
   `tests/fixtures/{lynmouth,yr-wyddfa}/` only (rewritten in place),
-  `tests/fixtures/test_trim_fixture.py` (new), `p7-run-log.md`, `tasks.md`.
+  `tests/fixtures/test_trim_fixture.py` (new), `tasks.md`.
 - Not trimmed here (C2): `keswick/` and `trotternish/` (P7.V12a deletes them),
   `oxford/` and `y-fenni/` (P7.V9a re-records them, and the recorder trims). Yr Wyddfa
   is trimmed although P7.V9a re-records it: it proves byte-identity on a second large
@@ -6763,7 +6738,7 @@ the chat message to the maintainer names decision 9 (route B).
   `landcover_margin_m`, omitted at its default), `tests/architecture/test_reference_pages.py`
   (`test_key_inputs_are_named`'s tuple gains `landcover_margin_m`), `tests/fixtures/record_fixture.py`
   (`--margin-m`, `--landcover-margin-m`), `docs/decisions/0040-fetch-margins.md`, the ADR
-  index row, run log, tasks.
+  index row, tasks.
 - Test first: default margins give the pinned Lynmouth key (`support.paths.KEY`, a
   literal); a wider margin gives a different key and a wider requested box (read from
   the providers' request, using the offline recording providers the tests already use,
@@ -6788,7 +6763,7 @@ the chat message to the maintainer names decision 9 (route B).
   `("place", "<fixture>")` option; the Yr Wyddfa row sets the margins), the images and masters
   these fixtures paint, regenerated with `make_docs_images.py` for the named entries
   (`places/{oxford,y-fenni,yr-wyddfa}.webp` and their masters), the fixture READMEs,
-  `docs/decisions/0032-focus-place-fixtures.md` (an amendment section), run log, tasks.
+  `docs/decisions/0032-focus-place-fixtures.md` (an amendment section), tasks.
 - Margin rule (Skye and Yr Wyddfa): the slice projects the recorded track, computes
   the card box with `journal_geometry` under the default ribbon fields (as
   `layers.py` does), and sets `margin_m` to the smallest whole kilometre that covers
@@ -6903,7 +6878,7 @@ the chat message to the maintainer names decision 9 (route B).
   `tests/unit/maps/test_vector_layers.py`, `tests/golden/test_places.py` (expected
   labels, if they move), `docs/decisions/0036-fourth-golden-regeneration.md` (new: the
   process, then this slice's section), the ADR index row, the goldens, docs images and
-  masters that move, `p7-run-log.md`, `tasks.md`.
+  masters that move, `tasks.md`.
 - Test first: a synthetic water multipolygon with one island: the painted lake mask is
   bare inside the island; a point on the island is not in water; a river measured
   beside the island gets the channel width, not the envelope's.
@@ -6926,7 +6901,7 @@ the chat message to the maintainer names decision 9 (route B).
   `_seat_cost`.
 - Owner files: `src/pyntpot/maps/lettering/{placement_flat,placement}.py` and their
   tests, `tests/golden/test_places.py` (expected labels, if they move), ADR 0036
-  section, moved goldens, docs images and masters, run log, tasks. `placement.py` is 380
+  section, moved goldens, docs images and masters, tasks. `placement.py` is 380
   lines at `ef20569`; if the term takes it over 400, the swap pass moves to
   `placement_swap.py` in the same slice (a split, not a trim).
 - Test first: two labels where the cheapest unpenalised spot for the second puts its
@@ -6957,7 +6932,7 @@ the chat message to the maintainer names decision 9 (route B).
   k, m, n, o.
 - Owner files: `src/pyntpot/letters/{skeleton,trace}.py`, the new test,
   `tests/golden/test_places.py` (expected labels, if they move), ADR 0036 section, moved
-  goldens (expected: every lettered golden), docs images and masters, run log, tasks.
+  goldens (expected: every lettered golden), docs images and masters, tasks.
 - Stop: if the fix needs a single-line stroke font instead, stop and report; that is a
   roadmap item, not this slice.
 - Commit: `The skeleton draws each stroke once`.
@@ -6987,7 +6962,7 @@ the chat message to the maintainer names decision 9 (route B).
 - Owner files: `candidates/landmark_classes.py`, `candidates/landmarks.py`,
   `osm_elements.py` and their tests, `tests/golden/test_places.py` (expected labels),
   ADR 0036 section, moved goldens (expected: the Keswick and Y Fenni place pins at
-  least), docs images and masters, run log, tasks.
+  least), docs images and masters, tasks.
 - Test first: a shop tagged `tourism=museum` is never offered; an unrecorded museum
   ranks below a recorded church at the same distance; a `historic=castle` outranks a
   chapel; a recorded museum is still `attraction`.
@@ -7005,7 +6980,7 @@ the chat message to the maintainer names decision 9 (route B).
   (expected labels, if they move), `tests/unit/maps/painter/test_smoke.py` (the
   `SMOKE_SHA` pen and wash hashes, which move because `stamp.py:287` calls `pool`) and
   `tests/golden/smoke/wash.webp`, ADR 0036 section, moved goldens, docs images and
-  masters, run log, tasks. Also the benchmark budget: re-measure
+  masters, tasks. Also the benchmark budget: re-measure
   `tests/benchmarks/test_ink.py` and record; a slowdown over 15% stops and reports.
 - Test first: a wide pool's deposit at the side midpoint of its span is below 1.5% of
   its centre (13.5% before the fix).
@@ -7048,8 +7023,8 @@ the chat message to the maintainer names decision 9 (route B).
   `src/pyntpot/maps/pipeline.py`, `src/pyntpot/maps/style.py` (the docstring only;
   P7.V7 lands before P7.V8), `src/pyntpot/maps/painter/plates.py` (only under the C1
   fallback), their tests, `tests/golden/test_places.py` (expected
-  labels, if they move), ADR 0036 section, moved goldens, docs images and masters, run
-  log, tasks.
+  labels, if they move), ADR 0036 section, moved goldens, docs images and masters,
+  tasks.
 - Expected moves: Lynmouth's `pen.webp` golden and every card's pen plate; composed
   images move only where the ride ink's style is `"pen"`.
 - Test first: an out-and-back track painted with `route_pen = true` gives a pen plate
@@ -7126,7 +7101,7 @@ the chat message to the maintainer names decision 9 (route B).
   hashes, and the job-sheet speck check), `docs/reference/style-fields.md` (`paper_edge` in the `paper` section),
   `tests/golden/test_places.py` (expected labels, if they move), ADR 0036 section,
   every golden, docs image and master that moves (expected: all of them, the fern's
-  included), run log, tasks.
+  included), tasks.
 - Test first (`test_paper.py`, small sheets):
   - `"classic"` reproduces today's plate: the hash of its array on a small seeded sheet
     equals a literal pinned from the base before the edit;
@@ -7183,7 +7158,7 @@ the chat message to the maintainer names decision 9 (route B).
   `tests/unit/maps/test_style_groups.py` (the `BasemapStyle` and `CoverStyle` rows,
   `BASEMAP_DEFAULTS`, the `CoverStyle` pinned digest, re-pinned and recorded),
   `docs/reference/style-fields.md` (the two fields, and `blend` and `opacity` under the
-  route inks), ADR 0037, the ADR index row, run log, tasks.
+  route inks), ADR 0037, the ADR index row, tasks.
 - Test first: each dataclass field at its default leaves the three style digests
   unchanged; a non-default value changes them; `minor_road_classes` without `service`
   drops a service way; relief strength 2 darkens a slope; multiply over a dark wash is
@@ -7211,7 +7186,7 @@ the chat message to the maintainer names decision 9 (route B).
   `tests/unit/test_public_api.py` (the two names), `tests/architecture/test_reference_pages.py`
   (a check that every `PAINTERS_PIGMENTS` key is in `pigments.md` as code),
   `docs/reference/pigments.md` (a new "Painter's pigments" section),
-  `GLOSSARY.md` (one row), ADR 0039, the ADR index row, run log, tasks.
+  `GLOSSARY.md` (one row), ADR 0039, the ADR index row, tasks.
 - Test first: every painter's pigment paints a non-white swatch; the two tables have
   the same keys; every transparency is in [0, 1]; `PIGMENTS` and `TRANSPARENCY` are
   unchanged (pinned literals).
@@ -7246,7 +7221,7 @@ the chat message to the maintainer names decision 9 (route B).
   `place`, passes their boxes as taken, letters them with the rest),
   `src/pyntpot/maps/lettering/placement_flat.py` (only if a note needs its own branch:
   no `off_own_feature` term), tests, `tests/unit/test_public_api.py` (the name),
-  `GLOSSARY.md` ("journal note"), ADR 0038, the ADR index row, run log, tasks.
+  `GLOSSARY.md` ("journal note"), ADR 0038, the ADR index row, tasks.
 - Test first (Lynmouth fixture, small size, `golden`-marked if it paints a card): two
   notes are lettered; each leader ends within 3 px of its point; no note box overlaps
   another label's box or the home glyph's; a note off the card raises; seven notes fail validation;
@@ -7274,7 +7249,7 @@ the chat message to the maintainer names decision 9 (route B).
   option);
   `places/{ambleside,skye,yr-wyddfa,oxford,y-fenni}.webp` and their masters, regenerated
   with `make_docs_images.py` for those entries, with a `"P7.V10"` row in
-  `SLICE_SHARE_BYTES` for the two new ones; run log; tasks.
+  `SLICE_SHARE_BYTES` for the two new ones; tasks.
 - Every showcase theme: the route `MAJ1-e` pen, `#7b2335` (or
   `PAINTERS_PIGMENTS["perylene_maroon"]` if its hex is within 12 of it in each
   channel), `blend = "multiply"`, glow, casing and shadow 0, `label_route_ink` the same
@@ -7346,7 +7321,7 @@ the chat message to the maintainer names decision 9 (route B).
   of `docs/tutorials/paint-a-watercolour.md`, the regenerated images and masters of
   those scripts' entries (`gallery/{lettering,composition}`,
   `tutorials/{lettering,composition}`, `word`, `painting-with-python/derwentwater`,
-  `how-to/own-shapes`, `explanation/nib-*`), run log, tasks.
+  `how-to/own-shapes`, `explanation/nib-*`), tasks.
 - Test first: `lettering.py` (it has no `size` option, so at its published 360 px):
   the nib plate written beside the image is twice the image's width; the image is the
   published width.
@@ -7425,7 +7400,7 @@ the chat message to the maintainer names decision 9 (route B).
   `BUDGETS["keswick"]`) and its self-test `test_a_pair_split_across_two_boxes_is_caught`
   (`test_coordinates.py:108-111`, which pairs the Keswick box with Trotternish's
   longitude; rewritten with Ambleside's and Skye's values), `tests/support/paths.py` and
-  `tests/golden/test_places.py`, run log, tasks. The nav entry for the new how-to on
+  `tests/golden/test_places.py`, tasks. The nav entry for the new how-to on
   `p7-docs-site` is P7.V14's.
 - Commit: one per page group; the fixture deletion last.
 
@@ -7468,7 +7443,7 @@ the chat message to the maintainer names decision 9 (route B).
   `examples/{pigment_swatches,brush_sheet,wash_stages,nib_stages}.py`,
   `tests/examples/{test_explanation_figures,test_ink_examples}.py` (figure lists and
   the new script), `docs/gallery.md` (its sections), the older registry entries the
-  shared-files row names for it, one `"P7.V12b"` registry block with its share, the images and masters it adds, regenerates or removes, run log,
+  shared-files row names for it, one `"P7.V12b"` registry block with its share, the images and masters it adds, regenerates or removes,
   tasks.
 - Commit: one per page.
 
@@ -7488,7 +7463,7 @@ the chat message to the maintainer names decision 9 (route B).
   `docs/tutorials/painting-with-python/{fractals,curves}.md`, the fractals line of
   `docs/tutorials/painting-with-python/index.md`, `docs/gallery.md` (its sections), one
   `"P7.V12c"` registry block (the new entries) with its share, the older entries the
-  shared-files row names for it, the images and masters it adds, regenerates or removes, run log, tasks.
+  shared-files row names for it, the images and masters it adds, regenerates or removes, tasks.
 
 #### P7.V12d. The SVG drawing, step by step
 
@@ -7509,7 +7484,7 @@ the chat message to the maintainer names decision 9 (route B).
   `tests/architecture/test_tutorials.py` (the `.svg` marker form and the one page added
   to `_tutorial_pages()`; no other P7.V12 slice edits it),
   `docs/gallery.md` (its section), one `"P7.V12d"` registry block with its share, the
-  images and masters, run log, tasks.
+  images and masters, tasks.
 
 After the group lands, the orchestrator records a golden run (see CI time).
 
@@ -7520,7 +7495,7 @@ After the group lands, the orchestrator records a golden run (see CI time).
   the round-1 rubric. An image under 3 of 5 goes back to its slice's owner files as a
   fix-up commit; the critique repeats for that image only, at most twice, then it is
   listed for the maintainer.
-- Owner files: `specs/001-port/research/p7/critique/round-2/*.md`, run log, tasks.
+- Owner files: `specs/001-port/research/p7/critique/round-2/*.md`, tasks.
 
 #### P7.V14. Site theme fixes (`p7-docs-site`)
 
@@ -7530,7 +7505,7 @@ After the group lands, the orchestrator records a golden run (see CI time).
   only if its licence allows; else the system serif stack); the nav entry for
   P7.V12a's new how-to.
 - Owner files: `examples/site_theme.py`, `docs/stylesheets/pyntpot.css`,
-  `mkdocs.yml` (fonts and that nav entry only), tests, run log, tasks.
+  `mkdocs.yml` (fonts and that nav entry only), tests, tasks.
 
 #### P7.V15. Hand back
 
@@ -7555,8 +7530,7 @@ flagged (Tŷ Melin's point if unconfirmed).
   existing ones kept, no licence classifier; `Documentation` and `Changelog` URLs),
   `uv.lock`, `CHANGELOG.md` (0.1.0: a short newcomer summary, breaking changes first,
   compare links), `CITATION.cff` (no `version` field), `.github/ISSUE_TEMPLATE/bug.yml`,
-  `README.md` (image URLs `main` to `v0.1.0`, the only edit), `tasks.md`,
-  `p7-run-log.md`.
+  `README.md` (image URLs `main` to `v0.1.0`, the only edit), `tasks.md`.
 - Never re-run the failed `v0.0.1` and `v0.0.2` publish jobs.
 - Gate: G-here; `uv build` and `twine check --strict dist/*`; `test_docs_images.py`'s
   URL rule accepts `v0.1.0`.
@@ -7575,12 +7549,12 @@ hand-off the orchestrating session records "what upstream reads" in
 `specs/001-port/p10-triage.md` (P10 "Order and parallelism", "P8's
 hand-off").
 
-The upstream training-analysis repo adds `pyntpot` as a dependency (the
+The upstream repo adds `pyntpot` as a dependency (the
 `v0.0.2` git tag), pins the reference render through pyntpot, migrates its
 cache to the new keys, replaces its local copies of the engine and their
 tests with calls to the public API (`Basemap`, `Plates`, `Lettering`,
 `candidate_export`, `vector_layers`, `Style.with_route_ink`; D21), and
-updates its documentation. Verification: the reference activity rendered
+updates its documentation. Verification: the reference input rendered
 through `pyntpot` with `attribution=False` produces a PNG with the pinned
 hash, before anything is deleted, and the migrated command line reproduces
 it byte for byte at the end. pyntpot itself changes only in P8.P; the rest
@@ -7606,27 +7580,14 @@ the orchestrating session's checkout of the upstream repo; `$PYNTPOT` its
 pyntpot checkout; `$SCRATCH` the session scratchpad. Paragraphs that open
 with *(Evidence.)* are for the reviewer; no slice brief carries them.
 
-**No personal details** (maintainer, 2026-10-09). Nothing P8 writes in this
-repository (this plan, `tasks.md`, the run log, triage rows, the hand-off,
-and every P8.P file: the ADR, code, tests, `GLOSSARY.md`, `CHANGELOG.md`)
-names an intervals.icu activity or athlete id, an upstream session file or
-date, a route, a place or a coordinate from the athlete's data, or the
-upstream repo by name ("the upstream training-analysis repo", "the
-reference activity"). Hashes are not personal and may be written anywhere.
-The reference activity is identified only in upstream-side, git-ignored
-files (the reference record, below). Upstream code paths and line numbers
-are fine. Before each P8 commit in this repository the orchestrating session
-greps the staged diff for intervals.icu ids (`git diff --cached | grep -nE
-"\bi[0-9]{6,}\b"`), for the upstream repo's name and for the reference
-session's file name (both held by the session and not spelt here), and
-removes every hit. P8.P's tests use the
+The reference input is identified only in upstream-side, git-ignored
+files (the reference record, below). P8.P's tests use the
 Lynmouth fixture and `CONTRIBUTING.md` place names only, never an upstream
 constant.
 
 **The maintainer's answers (P8.Q, recorded).** P8.Q was asked early, once
 the round-1 review had measured the hash mismatch, and is answered; the
-maintainer's words are in `specs/001-port/p8-run-log.md` (entries from
-"P8.Q (asked early ...)" on). In short:
+maintainer's words are in the P8 run log. In short:
 
 - **Hash: "Accept ADR 0006, re-pin".** The reference for every
   pyntpot-side gate (G-ref, the phase gate, P8.7's precondition) is
@@ -7637,11 +7598,10 @@ maintainer's words are in `specs/001-port/p8-run-log.md` (entries from
   `745936193e2b6a7af4d43063424974311234200f07ab441328c5de224b9475a7`
   (`<old-hash>`), stays recorded with its bisection as the explained,
   accepted difference ("The hash, explained").
-- **G1, G2, G3: promote all three in pyntpot now** (P8.P), generic: "the
-  pyntpot code should of course be generic - not sport map oriented. So it
-  just needs methods to feed in the colour". pyntpot gets no notion of what
-  a track records; every new name takes data the caller supplies. The
-  sport-to-ink table stays upstream.
+- **G1, G2, G3: promote all three in pyntpot now** (P8.P), generic: pyntpot
+  gets methods to feed in the colour and no notion of what a track records;
+  every new name takes data the caller supplies. The table that picks an
+  ink stays upstream.
 - **Two deviations from the run log's wording, by design.** The run log
   records G1 as "public `landmark_export` over a public `Basemap`". The plan
   promotes it as `candidate_export(track, cache, key)` instead, because a
@@ -7673,7 +7633,7 @@ maintainer's words are in `specs/001-port/p8-run-log.md` (entries from
 - What stays upstream (D1, D21): `charts.py` (the SVG page's charts and its
   route map), `render.py`, `schema.py` (`MapPicks` among it), `normalise.py`,
   `facts.py`, `week.py`, `style.py` (`ChartStyle`, upstream's own `RouteInk`,
-  its per-sport route table `_default_route_by_sport` and `route_ink(sport)`,
+  its route ink table and `route_ink`,
   `style.py:51-67`, `:249-266`, which the vector route on the page and now
   the card's ink read), the themes and `static/`, and the tests
   `tests/test_report.py` (103 tests) and `tests/test_week.py` (13).
@@ -7709,7 +7669,7 @@ maintainer's words are in `specs/001-port/p8-run-log.md` (entries from
   `style.json`). pyntpot's `Style.default()` is that theme's resolved
   painting style (D23, P1.1), and none of the five engine modules,
   `charts.py`, `style.py`, the cockpit theme, the fonts or
-  `athlete/places.json` has changed upstream since the port's source commit
+  the upstream places file has changed upstream since the port's source commit
   `ecfa41d` (`git log ecfa41d..e62657f --` over those paths prints nothing).
   The page's vector washes read other basemap options than the painter: the
   cockpit theme's `basemap_*` fields (`generalise` true,
@@ -7766,7 +7726,7 @@ module ("The seam, decided"); `candidate_export`, `vector_layers` and
 | `labels.Label`, `labels.Span` and the three `_journal_*` names, re-exported by `charts.__all__` | `charts.py:41-52`, `:79-83` | `Lettering.labels` and `spans`; the re-exports are dropped | P8.5b |
 | `labels.CHAR_W`, `_text_width`, `_haloed`, `_label_ink`, `_MapLabelPlacer` (the page's own SVG text helpers, never ported, D1) | `charts.py:42-51` and 26 lines in all | moved, unchanged, to a new `analysis/report/svgtext.py` | P8.3b |
 | `schema.MapPicks` as the engine's picks | `__main__.py:180-181`; `charts.route_track`'s `picks` | `Annotations.model_validate(picks.model_dump())` (`routemap.annotations`) for the lettering; `BasemapStyle`'s `pick_landmarks`, `pick_roads`, `pick_places` (`routemap.vector_style`) for the vector washes | P8.3a |
-| `geo.load_places` (`geo.py:1802`, default `athlete/places.json`) | inside `geo.basemap` | `fetch(..., places=...)` and `vector_layers(..., places)` from `routemap.load_places`, upstream's own reader of its own file | P8.3a |
+| `geo.load_places` (`geo.py:1802`, default the upstream places file) | inside `geo.basemap` | `fetch(..., places=...)` and `vector_layers(..., places)` from `routemap.load_places`, upstream's own reader of its own file | P8.3a |
 
 Kept in `charts.py`, though P1 also lifted it: `separate_strands`, its
 helpers and `STRAND_*`. The page draws the bare track itself when nothing
@@ -8013,10 +7973,10 @@ every P8.P slice). Designs, measured at `b69a7a8`:
   rows"); `maps/style_groups.py`'s docstrings stay as they are until then.
 
 *(Evidence.)* G1: the old `geo.landmark_export` and the private
-`landmark_export`, each on the same payloads (the reference activity's
+`landmark_export`, each on the same payloads (the reference input's
 three cached payloads, copied under the key for pyntpot) and the same GPX
 with its elevations, gave JSON identical byte for byte once `id` was
-removed (the old `id` is the activity, the new one the key); the same on
+removed (the old `id` is an upstream identifier, the new one the key); the same on
 the Lynmouth fixture with a synthetic elevation profile
 (`$SCRATCH/p8fix/old_dump.py`, `new_dump.py`: 741 lines, no difference).
 On the reference GPX `geo.read_gpx_elevation` and `Track.from_gpx(...).ele`
@@ -8024,7 +7984,7 @@ both give one elevation per point. G2: the old `geo.basemap` with the
 cockpit theme's `GeoOptions.from_style`, against the private `basemap` with
 `Style.default().basemap` replaced field by field from the same options and
 `clip_margin_m=900` (the private default, which `vector_layers` keeps),
-both on the reference activity's payloads, GPX and places, with no picks,
+both on the reference input's payloads, GPX and places, with no picks,
 gave identical JSON once `id` was removed. On the Lynmouth fixture
 (`$SCRATCH/p8fix2/probe_shape.py`): `pick_landmarks=("Lyndale Bridge",)`
 turns the default style's 34 landmarks into exactly that one, marked
@@ -8042,8 +8002,8 @@ style equal to the default with the same `digest()`; with `#2050c2` and
 4.8 px, `base_digest()` and `lettering_digest()` are unchanged and
 `digest()` moves (`$SCRATCH/p8fix/ink_probe.py`; the defaults are
 `25ae6fee082ebff5`, `e5a5f1b4b3ca2177`, `d15ae2f30e9ca5ce`). The upstream
-ride ink (`style.py:65-67`) is `#c22050` at 5.4 px, so `--sport Ride` feeds
-the default ink and renders `<ref-hash>`.
+ink of the reference render (`style.py:65-67`) is `#c22050` at 5.4 px, so
+the upstream map command feeds the default ink and renders `<ref-hash>`.
 
 **The ADR, decided.** `docs/decisions/0027-candidate-export-vector-layers-and-route-ink.md`,
 amending ADRs 0007 and 0026 (both stay, append-only). The number follows
@@ -8136,15 +8096,15 @@ is ported), while the page's vector washes keep reading the theme's
 value (`ChartStyle`'s default, set by no theme; P8.5a checks both and
 stops if either has moved), so the field is left unread; `--label-route` replaces
 `Style.face` through `Style.model_copy` (`FaceStyle` is public);
-**`map --sport` stays**: the card's ink is `ChartStyle().route_ink(sport)`
-(upstream's own table) fed through `Style.with_route_ink`, the sport from
-`--sport` or, as today, the GPX's `<type>` (`routemap.sport_from_gpx`);
-the athlete's places are passed to `fetch` and `vector_layers` as `places`;
+**`map`'s ink option stays**: the card's ink is `ChartStyle().route_ink(...)`
+(upstream's own table) fed through `Style.with_route_ink`, chosen by the
+option or, as today, by the GPX's `<type>` (`routemap.sport_from_gpx`);
+the upstream places are passed to `fetch` and `vector_layers` as `places`;
 `map --no-labels` passes `Lettering((), (), None)` to `compose`; the new
 `map --no-attribution` mirrors `pyntpot map --no-attribution`, and by
 default the card now carries the credits the old card left off (D8);
 `geo candidates` prints `candidate_export`'s result with `id` set back to
-the activity and each candidate's `x` and `y` removed, as it does today, so
+the upstream identifier and each candidate's `x` and `y` removed, as it does today, so
 the label step reads the same JSON.
 
 *(Evidence.)* A scratch probe in the clone with P8.1 applied
@@ -8171,7 +8131,7 @@ that module's `__all__` (P8.3a's test enforces it for every upstream file).
 Signatures, Google docstrings with the contract (purpose, what it does not
 do: it never fetches or paints unless the function's name says so):
 
-- `PLACES_FILE: Path = REPO_ROOT / "athlete" / "places.json"` (`REPO_ROOT`
+- `PLACES_FILE: Path`, the upstream places file under `REPO_ROOT` (`REPO_ROOT`
   from `analysis.config`); `OFFLINE_CONTACT = "offline read, sends no
   request"`; `ALPHABET_LINES`, `ALPHABET_W`, `ALPHABET_LEAD`,
   `ALPHABET_MARGIN`, moved verbatim from `mapcard.py:196-213` (upstream's
@@ -8183,8 +8143,8 @@ do: it never fetches or paints unless the function's name says so):
 - `load_places(path: Path = PLACES_FILE) -> list[dict[str, Any]]`: the file's
   list, or its `places` list, or `[]` when the file is absent (the contract
   of `geo.load_places`, upstream's reader of its own file).
-- `sport_from_gpx(path: Path, default: str = "Ride") -> str`: moved
-  verbatim from `mapcard.py:51-54` (upstream's own helper).
+- `sport_from_gpx(path: Path, default: str) -> str`: moved verbatim, its
+  default included, from `mapcard.py:51-54` (upstream's own helper).
 - `track_from_streams(lat: list[float] | None, lng: list[float] | None,
   time_s: list[float] | None) -> Track | None`: `None` when either is missing,
   their lengths differ or there are fewer than ten points; `time` set when
@@ -8286,31 +8246,31 @@ payloads under the track's key; nothing here reaches the network." Names:
 - `small_style() -> Style`: `routemap.map_style(display_px=SMALL_DISPLAY_PX)`.
 
 **Cache migration, decided.** A migration, not a re-fetch. Re-fetching costs
-two Overpass queries and 64 OpenTopoData calls per activity (Known facts),
+two Overpass queries and 64 OpenTopoData calls per track (Known facts),
 and the public OpenTopoData limit of 1000 calls a day caps that at 15
-activities a day; the old payloads hold the same data for the same boxes.
+tracks a day; the old payloads hold the same data for the same boxes.
 The cache is git-ignored local state on every machine that ran the old
 `geo fetch`, so the migration ships as an upstream command, `geo
 migrate-cache` (P8.4, module `analysis/report/migrate_cache.py`), run once
 per machine after the PR merges (P8.6 documents it). For each
-`overpass-<activity>.json` under the cache directory (a file whose stem
+`overpass-<id>.json` under the cache directory (a file whose stem
 after `overpass-` is sixteen lowercase hex digits, `re.fullmatch(r"[0-9a-f]{16}", ...)`,
 is a migrated key file and is skipped silently, so no line is printed for
-it) whose activity has a
-GPX at `<raw-dir>/activities/<activity>/route.gpx`, it computes
+it) whose `<id>` has a
+GPX at `<raw-dir>/activities/<id>/route.gpx`, it computes
 `map_source(Track.from_gpx(gpx), cache_dir).key` and copies the three
 payloads (`overpass-`, `landcover-`, `elevation-`) to their key names when
-the key file is missing; it reports one line per activity ("copied",
+the key file is missing; it reports one line per `<id>` ("copied",
 "already migrated", "no GPX, skipped", "incomplete, skipped" when one of the
 three is absent), deletes nothing, and never reaches the network. Old
-`plates/<activity>/` directories are left and never read; the next `paint`
+`plates/<id>/` directories are left and never read; the next `paint`
 paints under the key (about 20 s a box). The verification (P8.2) does the
 same copy into a temporary cache on its own, so it does not depend on P8.4.
 
 *(Evidence.)* The key is the first 16 hex of the SHA-256 of the box (six
 places), the margin and both provider ids (`maps/cache.py:83-112`), and
 pyntpot's box copies the old arithmetic (P3.10). A scratch probe over the
-reference activity's GPX (`$SCRATCH/p8-plan/probe_box.py`) printed: the
+reference input's GPX (`$SCRATCH/p8-plan/probe_box.py`) printed: the
 point counts equal, `geo.read_gpx` and `Track.from_gpx` give equal latitude
 and longitude tuples, the old and new boxes rounded to six places are equal
 at 1500 m and at 2600 m, and the ids are `overpass` and
@@ -8320,27 +8280,27 @@ the old fixture payloads into, and both sides sample 80 per side.
 **The reference, decided.** Recorded before any upstream edit, with the old
 code at the upstream `e62657f`, from the upstream checkout's root, into
 git-ignored files only: `$UPSTREAM/data/p8-reference/reference.md` holds the
-activity, the exact commands, the hashes and the input hashes, and names the
+upstream identifier, the exact commands, the hashes and the input hashes, and names the
 payload passed as `--analysis` (it has no `map` block, so the picks are
 none). Before P8.1 the orchestrating session completes the record with
 copies of every input, each with its sha256 in `reference.md`, under
 `$UPSTREAM/data/p8-reference/`:
 
 - `geo/`: the three old-named payloads (`overpass-`, `landcover-`,
-  `elevation-<activity>.json`);
-- `route.gpx`: the activity's GPX;
-- `places.json`: `athlete/places.json` at `e62657f` (so the parity test
+  `elevation-<id>.json`);
+- `route.gpx`: the reference GPX;
+- `places.json`: the upstream places file at `e62657f` (so the parity test
   never reads the live file, round-1 should-fix);
 - `analysis.yml`: the payload the record names;
-- `snapshot.json`: `normalise <raw-dir> --activity <activity> -o ...` run
+- `snapshot.json`: `normalise <raw-dir> --activity <id> -o ...` run
   with the old code at `e62657f` (for the page check of the phase gate).
 
 The record states, and P8.2 checks, the preconditions the recorded render
 met: theme `cockpit` (the default of the old `paint` and `map`), no
 `--theme`, `--display`, `--label-route` or `--no-labels`, the plates
-painted fresh (the determinism re-run deleted them and repainted), the ride
-ink (`map --sport Ride`), and no attribution (`mapcard.compose` drew none).
-The run log names the record's path and both hashes, never the activity.
+painted fresh (the determinism re-run deleted them and repainted), the ink
+of the upstream map command, and no attribution (`mapcard.compose` drew none).
+The run log names the record's path and both hashes.
 
 **The hash, explained.** At `v0.0.1` the reference inputs render to
 `<ref-hash>`, not `<old-hash>`: differing fraction 0.104309 (0.045766 above
@@ -8374,7 +8334,7 @@ basemap, None, style)`, `compose(..., attribution=False)`,
 `card.save(path, format="PNG")` (the old `cmd_map`'s call,
 `__main__.py:194`), then `hashlib.sha256` of the file. It copies the three
 payloads into a temporary cache under the key first. Its test docstring:
-"The reference activity rendered through pyntpot without the attribution
+"The reference input rendered through pyntpot without the attribution
 is the pinned PNG, byte for byte." The phase gate then proves the migrated
 command line produces the same bytes.
 
@@ -8393,8 +8353,8 @@ The two ids are renamed from the run log's earlier spelling (round-2
 review: pyntpot's files carry no wording about what a track records); the run log records the
 rename. Done cells: the orchestrating session writes the three P8.P rows'
 Done cells in one bookkeeping commit on `p10-fixes`, after it has merged
-`origin/main` into `p10-fixes` at P8.P3 ("Branch and PR"); the run-log
-commit on `p8-plan` that records each landing does not touch
+`origin/main` into `p10-fixes` at P8.P3 ("Branch and PR"); the bookkeeping
+commit on `p8-plan` that ticks each landing does not touch
 `p10-triage.md`.
 
 **Rules for the whole phase.**
@@ -8427,17 +8387,15 @@ commit on `p8-plan` that records each landing does not touch
   Slices whose owner files do not depend on it continue.
 - **Who does what.** The implementer agent edits one worktree (pyntpot for
   P8.P, upstream otherwise), runs the gates and hands off; it never commits
-  or pushes, never edits the other repository or this plan, and never
-  writes to intervals.icu (no P8 step does). The orchestrating session
+  or pushes, and never edits the other repository or this plan. The orchestrating session
   creates each worktree and `$SLICE` (`$SCRATCH/p8/<slice-id>/`), lands each
   slice as one commit with the slice's message and the session's
   attribution trailers, records each landing (commit, gate results,
-  conflicts resolved) in `specs/001-port/p8-run-log.md` on `p8-plan`, and
-  ticks the slice's `tasks.md` line in that run-log commit. P8.P3's tag and
+  conflicts resolved) in the PR description, and
+  ticks the slice's `tasks.md` line in a bookkeeping commit on `p8-plan`. P8.P3's tag and
   P8.H are run by the orchestrating session, P8.H with a read-only agent.
 - **Branch and PR.** The maintainer's standing instruction for this run
-  (2026-10-09), recorded verbatim in `p8-run-log.md` ("Maintainer's
-  standing instructions for this run"): "Stop and ask me: before merging
+  (2026-10-09), recorded verbatim in the P8 run log: "Stop and ask me: before merging
   any PR, in either repo; if the reference hash does not match." The
   session merges no PR itself, and a red G-ref is a stop (below). pyntpot: one branch `p8-promote`, cut from `main` at `90c2fd6`
   after `git fetch`, one PR to `main`, held; CI green on it. After the
@@ -8627,7 +8585,7 @@ P8.0 ─ P8.P1 ─┬─ P8.P2a ─┐
     `analysis/report/README.md`, `data/README.md` (P8.6);
     `analysis/report/style.py` (P8.7, three comments),
     `analysis/report/schema.py` (P8.7, one comment).
-  - `p8-run-log.md`, `tasks.md`, `p10-triage.md`: the orchestrating session
+  - `tasks.md`, `p10-triage.md`: the orchestrating session
     only.
 
 **Phase gate** (the orchestrating session, on the head of
@@ -8638,18 +8596,18 @@ page, with `PHASE=$SCRATCH/p8/phase` and every command prefixed
 scratch copy, never the worktree's `data/`):
 
 1. `$PHASE/data/geo/` holds copies of the record's three old-named
-   payloads and `$PHASE/data/snapshots/activities/<ref-activity>/route.gpx`
-   the record's GPX; `git diff e62657f -- athlete/places.json` is empty at
-   the head (otherwise stop: the places input moved).
-2. `geo migrate-cache` reports "copied"; `paint --activity <ref-activity>`
+   payloads and `$PHASE/data/snapshots/activities/<ref-id>/route.gpx`
+   the record's GPX; `git diff e62657f --` over the upstream places file is
+   empty at the head (otherwise stop: the places input moved).
+2. `geo migrate-cache` reports "copied"; `paint --activity <ref-id>`
    paints; a second `paint` says up to date.
-3. `map --activity <ref-activity> --sport Ride --analysis
-   data/p8-reference/analysis.yml --no-attribution -o $PHASE/map.png` exits
+3. The upstream map command for `<ref-id>`, with `--analysis
+   data/p8-reference/analysis.yml --no-attribution -o $PHASE/map.png`, exits
    0 and `sha256sum $PHASE/map.png` is `<ref-hash>`; `map` without
-   `--no-attribution` and without `--sport` exits 0.
-4. `geo candidates --activity <ref-activity>` exits 0 and prints JSON whose
+   `--no-attribution` and without the ink option exits 0.
+4. `geo candidates --activity <ref-id>` exits 0 and prints JSON whose
    keys are `candidates`, `climbs`, `id`, `points`, `route`, with `id` the
-   activity and no `x` or `y` in any candidate.
+   upstream identifier and no `x` or `y` in any candidate.
 5. `render --snapshot data/p8-reference/snapshot.json --analysis
    data/p8-reference/analysis.yml --theme cockpit -o $PHASE/page.html`
    exits 0 and the file contains `class="route journal"` (the painted map,
@@ -8679,7 +8637,7 @@ and holds it; P8.H follows on that commit.
   numbers table's row 0027, `candidate-export-vector-layers-and-route-ink`,
   P8.P1, under "P3 and P4: how to run a slice"), `specs/001-port/tasks.md`
   (the P8 list). The orchestrating session adds the review outcome to
-  `p8-run-log.md` and, after the commit, files the four rows of "Triage
+  the PR description and, after the commit, files the four rows of "Triage
   rows" on `p10-fixes`.
 - Commit: `Fatten P8 into slices`, on `p8-plan` after the run log's entries.
 
@@ -8921,8 +8879,8 @@ and holds it; P8.H follows on that commit.
 - Leave alone: the engine and its tests, `analysis/**` (no `routemap` yet).
 - Check first: `$UPSTREAM/data/p8-reference/reference.md` lists every input
   with its sha256 and `sha256sum` of each copy matches; it states the
-  preconditions; `git diff e62657f -- athlete/places.json` is empty at the
-  slice's base (otherwise stop: the places input moved).
+  preconditions; `git diff e62657f --` over the upstream places file is
+  empty at the slice's base (otherwise stop: the places input moved).
 - Test first: the test is the verification ("The verification, decided");
   it has no red step, because it proves an existing property. Its first run
   is the check.
@@ -8990,7 +8948,7 @@ and holds it; P8.H follows on that commit.
   docstring.
 - Change: `routemap.py` as "The seam, decided" gives it, module docstring
   with purpose, key names, what it does not do (no fetch or paint unless the
-  name says so, nothing written to intervals.icu) and invariants;
+  name says so) and invariants;
   `offline_map.py` as "The offline test helper, decided" gives it;
   `__init__.py`'s bullet "`routemap`   the painted map through pyntpot:
   track, cache, basemap, plates, lettering and the vector layers".
@@ -9062,17 +9020,17 @@ and holds it; P8.H follows on that commit.
   `paint` paints and a second `paint` says up to date
   (`test_paint_paints_once_and_then_says_up_to_date`); `map
   --no-attribution` writes a PNG, and `map` without plates exits 2 with
-  "run geo fetch then paint" (`test_map_needs_painted_plates`); `map
-  --sport Ride --no-attribution` writes the bytes `routemap.card` writes
-  for `map_style()` (the default ink), and `--sport Run` writes other
+  "run geo fetch then paint" (`test_map_needs_painted_plates`); the
+  upstream map command with `--no-attribution` writes the bytes `routemap.card` writes
+  for `map_style()` (the default ink), and another ink option writes other
   bytes (`test_the_card_takes_the_sports_ink`); `geo fetch` with an empty
   `MAP_CONTACT` (`monkeypatch.setenv`) exits 2, names `.env`, and writes
   nothing (`test_fetch_refuses_without_a_contact`); `geo candidates` over a
   cache holding one named way prints JSON with the five keys, `id` the
-  activity and no `x` or `y` in a candidate
+  upstream identifier and no `x` or `y` in a candidate
   (`test_candidates_print_the_export_offline`); `geo migrate-cache` copies
   the three old-named payloads to the key names, keeps the old files, says
-  "already migrated" the second time and "no GPX, skipped" for an activity
+  "already migrated" the second time and "no GPX, skipped" for an `<id>`
   with no GPX, and prints no line for the key-named files it wrote
   (`test_the_migration_copies_and_never_deletes`); `letters -o`
   writes a PNG (`test_letters_writes_the_alphabet_sheet`).
@@ -9087,7 +9045,7 @@ and holds it; P8.H follows on that commit.
   offline=False), map_style(), load_places(), force=args.force)` and prints
   the key and each payload's path and size; `cmd_geo_candidates` prints
   `routemap.candidates(map_source(track, cache_dir))` (which passes the
-  source's `key` to `candidate_export`) with `id` set to the activity and `x`, `y` popped, no `paint` import; `geo migrate-cache`
+  source's `key` to `candidate_export`) with `id` set to the upstream identifier and `x`, `y` popped, no `paint` import; `geo migrate-cache`
   (new, with `--cache-dir` and `--raw-dir`) calls
   `migrate_cache.migrate(cache_dir, raw_dir)` and prints its lines;
   `cmd_paint` reads the cache offline with `map_style()` (no argument: the
@@ -9103,8 +9061,8 @@ and holds it; P8.H follows on that commit.
   attribution=not args.no_attribution, labels=not args.no_labels)` with
   `format="PNG"`; `cmd_letters` calls `routemap.alphabet_sheet(out,
   map_style(label_route=...))`. Flags dropped as "Decided, and not gaps"
-  lists (`--display` among them); `--sport` kept. The module docstring's
-  usage lines and the "Nothing here talks to intervals.icu" paragraph
+  lists (`--display` among them); the ink option kept. The module docstring's
+  usage lines and its paragraph on the network
   follow (`geo fetch` remains the one subcommand that reaches the network).
   `migrate_cache.py`: `migrate(cache_dir: Path, raw_dir: Path) ->
   list[str]`, as "Cache migration, decided" gives it, with a module
@@ -9146,7 +9104,7 @@ and holds it; P8.H follows on that commit.
   route, of which only the first point was read), never fetching; one
   `try` round `page_track` and `load_vector` catches `OSError`,
   `ValueError` (a GPX time with no zone among them) and `KeyError`, logs a
-  warning naming the activity and the exception, and returns `None`, as
+  warning naming the upstream identifier and the exception, and returns `None`, as
   today.
   `_basemap_svg`, `_basemap_labels`, `_trees` and `_raster_image` read the
   typed fields (`layers.key` for the ids, `layers.sea.path` and
@@ -9245,7 +9203,7 @@ and holds it; P8.H follows on that commit.
     once. Errors: one `try` round
     `page_track` and `routemap.load` catches `OSError`, `ValueError` (a GPX
     time with no zone among them) and `KeyError`,
-    logs a warning naming the activity and the exception (as the old
+    logs a warning naming the upstream identifier and the exception (as the old
     `journal_plates` and `basemap_data` did), and leaves `route_map`
     `None`; `basemap_data` catches the same on its own. So a broken GPX or
     cache degrades the page to the vector washes or the bare track, never
@@ -9302,7 +9260,7 @@ and holds it; P8.H follows on that commit.
   ("A GPX that cannot be read degrades the page to the bare track and
   logs why.": a `route.gpx` whose `<time>` has no zone, written as text;
   `drawn.drawn` is false, `route_track` returns the bare track, and
-  `caplog` holds a warning naming the activity); removed from `tests/test_paint.py` without a
+  `caplog` holds a warning naming the upstream identifier); removed from `tests/test_paint.py` without a
   successor (engine behaviour pyntpot tests, or a branch that no longer
   exists), 9: `:953` (P8.5a owns the no-plates path), `:1133`, `:1165`,
   `:1853`, `:1875`, `:1903`, `:1927`, `:2004`, `:2317`. The rewritten and
@@ -9331,9 +9289,9 @@ and holds it; P8.H follows on that commit.
   fetch` needs `MAP_CONTACT` in `.env`; `geo migrate-cache` once per machine;
   plates under `data/geo/plates/<key>/`, the key printed by `geo fetch` and
   `paint`; `map` carries the attribution, `--no-attribution` only for a
-  check; `--sport` as today, no `--theme` or `--display`; the stale "serif
+  check; the ink option as today, no `--theme` or `--display`; the stale "serif
   on the card" gotcha replaced: the card and the page paste the same label
-  plate for the same sport); the label step unchanged in substance (`geo
+  plate for the same ink); the label step unchanged in substance (`geo
   candidates` prints the same JSON); the no-plates sentence unchanged in
   substance (the vector washes stay). `analysis/README.md`: the module list
   gains `routemap` and `svgtext` and loses `labels`.
@@ -9414,8 +9372,7 @@ and holds it; P8.H follows on that commit.
   `RouteInk.casing`; `CASING_COLOURS` follows `casing`) by the bullet's
   rules, writing each outcome into the row's triage cell, into the run log,
   and into the brief of the slice that acts on it (P10's bullet: "into
-  each row and into the brief"). No line of the section names an activity,
-  a place or the upstream repo.
+  each row and into the brief").
 - Then the run stops; P10 part 2 follows.
 
 ### P9. Post-port cleanup
@@ -9444,14 +9401,22 @@ P5.3 and P7.3, 0024 and 0025 to P10 and 0026 to P11, which may have
 written them already). Before writing, `ls docs/decisions` must show the number
 free; if it is taken, stop and report.
 
+#### P9.0 Plain wording, and delete the run logs
+
+- Asked for by the maintainer on 2026-10-26, before P9.1. Prose about the
+  focus places, the fixtures and the upstream says what a thing is, without
+  listing what it is not. The run logs `specs/001-port/p*-run-log.md` are
+  deleted; references to them name the log without a path.
+- Gate: G-here.
+- Commit: `Use plain wording for the places and the upstream, and delete the run logs`
+
 #### P9.1 Retire the banned-term test
 
 - Implements the maintainer's decision (2026-10-04) to retire the
   banned-term test after the port. ADR 0022 supersedes **only the
   enforcement clause** of D16 (the banned-term test and its
-  `personal_terms_file` option) for the post-port tree. D16's rule, that no
-  personal content crosses over, still stands, and so do its other
-  mechanisms: the D10 coordinate allowlist test stays, and the P2 manual
+  `personal_terms_file` option) for the post-port tree. D16's rule still
+  stands, and so do its other mechanisms: the D10 coordinate allowlist test stays, and the P2 manual
   pass and the pre-publication history scan are done. Predecessors P7.4 and
   P8.
 - Dependencies found. Nothing in P3 to P8 needs the test to exist after P2.9,
@@ -9472,7 +9437,7 @@ free; if it is taken, stop and report.
   `--golden-tolerance` and `--golden-dir` options stay),
   `tests/architecture/_text_scan.py` (module docstring says "banned terms,
   coordinates"; it becomes "coordinates"; `test_coordinates.py` stays its only
-  caller), `BOUNDARIES.md` (the "No personal content" bullet keeps the
+  caller), `BOUNDARIES.md` (the D16 bullet keeps the
   rule and names the coordinate allowlist as its standing test),
   `specs/001-port/spec.md` (append to the end of the D16 row only:
   ` For the post-port tree the banned-term test is superseded by ADR 0022; the rule stands.`;
@@ -9485,12 +9450,12 @@ free; if it is taken, stop and report.
   ADR amends it), and plan.md P0 to P8 text.
 - ADR 0022: `# 0022 — Retire the banned-term test`, `Status: accepted`,
   `## Context` (D16 asked for a banned-term test, a manual pass and a history
-  scan while the port carried personal content; the list is personal and never
+  scan during the port; the list is never
   in the repository, so public CI always skipped the test; the maintainer
   decided on 2026-10-04 to retire the test once the port is published),
   `## Decision` (this ADR supersedes D16's enforcement clause for the
-  banned-term test, for the post-port tree only; D16's rule that no personal
-  content crosses over is unchanged and still binds every contribution;
+  banned-term test, for the post-port tree only; D16's rule
+  is unchanged and still binds every contribution;
   delete the test and the `personal_terms_file` option; the list outside the
   repository stays the maintainer's to keep or delete; the D10 coordinate
   allowlist remains as the standing automated guard), `## Consequences` (a
@@ -9607,7 +9572,7 @@ Key decision already says, or deletes what nothing uses. Out of scope as in
 Fattened at P10.0 from the sketch, using five read-only investigation
 dossiers (one per area) written at `91ff457`; every fact a slice relies on was
 re-checked at `dd19592` (which differs from `91ff457` only by
-`specs/001-port/p10-run-log.md`). Paragraphs that open with *(Evidence.)*
+the P10 run log). Paragraphs that open with *(Evidence.)*
 record how a fact was proved; they are for the reviewer, and no slice brief
 carries them. Line numbers drift, so every site is named by its dotted path
 and the line is only a hint.
@@ -9617,7 +9582,7 @@ filed later, by P7, P8 and P9, up to the moment P10.1 starts; anything filed
 after that is handled under "Later issues" below. Also the issues the port
 recorded outside `docs/issues/`, which P10.1 turns into rows with the source
 named (the seed table in P10.1 lists them): the P5.4 README badge
-(`p5-run-log.md`), the manual Mutation workflow run on `main` (`tasks.md`,
+(the P5 run log), the manual Mutation workflow run on `main` (`tasks.md`,
 the P5 hand-off), the OpenTopoData budget (`spec.md`, Open questions), three
 run-log notes that close, and the findings P10.0's investigation surfaced
 without a file.
@@ -9691,8 +9656,8 @@ constants, `RouteInk.casing` and `pyntpot.ink.polyline.point_to_segment`
   fewer, owner files implicitly include every importer of a renamed or
   deleted name, out-of-scope findings filed in `docs/issues/` (and appended
   as rows, "Later issues"). The implementer agent edits, runs the gates and
-  hands off; it never commits, and never edits `tasks.md`,
-  `p10-triage.md` or `p10-run-log.md`. P10.1, P10.2 and P10.R are not
+  hands off; it never commits, and never edits `tasks.md` or
+  `p10-triage.md`. P10.1, P10.2 and P10.R are not
   given to an implementer: the orchestrating session runs them itself, so
   P10.1 creates `p10-triage.md` and P10.2 writes into it. The orchestrating
   session commits each slice as one commit, and in that same commit deletes
@@ -9760,7 +9725,7 @@ constants, `RouteInk.casing` and `pyntpot.ink.polyline.point_to_segment`
      from `main` after the `p10-fixes` PR merges.
 
   Both part-2 PRs merge before P7.1 starts. Bookkeeping commits that touch
-  only `p10-run-log.md`, `p10-triage.md` (the P8 hand-off record),
+  only `p10-triage.md` (the P8 hand-off record),
   `specs/001-port/reviews/**` and, for the tag record alone, `tasks.md`'s
   P10.R line are not slices; only the tag record ticks anything.
 - **Shared files are sequenced, never edited in parallel**: see "Order and
@@ -9895,7 +9860,7 @@ public API may read (`Label.as_dict` on `Lettering`'s labels,
 are part 1. The private-name renames are part 2 because they follow every
 slice that touches their files. Everything else is part 1. A release
 blocker is part 1 if it cannot change P8's verification render
-(`compose(..., attribution=False)` on the upstream's activity). P10.3a
+(`compose(..., attribution=False)` on the upstream's reference input). P10.3a
 qualifies because `compose` calls `draw_attribution` only when
 `attribution` is true. A release blocker that could change that render
 goes to part 2 and still lands before P7.4.
@@ -10119,7 +10084,7 @@ The shared files that force a sequence (every row in landing order):
 | `pyproject.toml`, `uv.lock` | P10.3b (prek), P10.R (version) |
 | `specs/001-port/spec.md`, `GLOSSARY.md` | P10.9, then P9.1 and P9.2 (after P10) |
 | `tests/architecture/**`, `tests/conftest.py` | owned by P9.1 and P9.2; no P10 slice edits them (the private-name pin goes in `tests/unit/maps/test_import_order.py`) |
-| `tasks.md`, `p10-triage.md`, `p10-run-log.md` | the orchestrating session only, at landing |
+| `tasks.md`, `p10-triage.md` | the orchestrating session only, at landing |
 
 #### P10.0 Fatten P10; plan-reviewer pass
 
@@ -10139,8 +10104,7 @@ The shared files that force a sequence (every row in landing order):
   `src/` or `tests/` file. Run by the orchestrating session, not an
   implementer (it creates `p10-triage.md`).
 - Owner files: `specs/001-port/p10-triage.md` (new),
-  `specs/001-port/p10-run-log.md` (the orchestrating session appends the
-  entry), and the `docs/issues/` files of rows P10.1 closes (deleted).
+  and the `docs/issues/` files of rows P10.1 closes (deleted).
 - Leave alone: `src/**`, `tests/**`, every issue file whose row is not
   `close`.
 - **Re-verify each claim at P10.1's own starting commit**: run the
@@ -10185,7 +10149,7 @@ The shared files that force a sequence (every row in landing order):
   | `maps-lettering-label-as-dict-unused` | maps lettering | dead code | defer (2), "awaiting what upstream reads", until P8's hand-off re-triages it ("P8's hand-off") | no | P10.6 |
   | `maps-lettering-picks-journal-picks-cap` | maps lettering | defect | fix (5) | no | P10.6 |
   | `maps-lettering-sheet-homonym` | maps lettering | naming or prose | decide (3), Q10 | no | P10.9 |
-  | `maps-lettering-span-sides-curve-scale-offset` | maps lettering | defect | defer (2): the sweep needs the four upstream rides the repository does not hold (D16 keeps them out) and a scoring rule it does not record | no | none |
+  | `maps-lettering-span-sides-curve-scale-offset` | maps lettering | defect | defer (2): the sweep needs the four upstream reference tracks the repository does not hold and a scoring rule it does not record | no | none |
   | `maps-lettering-span-sides-freer-side-sign` | maps lettering | defect | fix (5) | no | P10.6 |
   | `maps-lettering-spans-place-spans-rung-order` | maps lettering | defect | decide (3), Q11 | no | P10.6 or close |
   | `maps-lettering-spans-rule-seven-in-tests` | maps lettering | test text | fix (5) | no | P10.9 |
@@ -10202,12 +10166,12 @@ The shared files that force a sequence (every row in landing order):
   | `unlisted-technique-ink-reservoir` | references | references | fix (5) | yes, D24 | P10.3c |
   | `unlisted-technique-pigment-separation` | references | references | fix (5) | yes, D24 | P10.3c |
   | `CONTRIBUTING.md:5` "It is what CI runs": CI never runs prek (P10.0 finding, own row because it does not block the release) | tooling | tooling or process | fix (5) | no | P10.3b |
-  | `p5-run-log.md:125` the README badge | docs | naming or prose | decide (3), Q13: badge or no badge is a presentation choice nothing settles | no | P7.1's brief or close |
+  | the P5 run log: the README badge | docs | naming or prose | decide (3), Q13: badge or no badge is a presentation choice nothing settles | no | P7.1's brief or close |
   | `tasks.md:124` start the manual Mutation workflow once on `main` | tooling | tooling or process | fix (5), an action with no diff | no | the orchestrating session, after P10.1 |
   | `spec.md:121` the OpenTopoData budget "per process" (ADR 0004: per instance) | docs | naming or prose | fix (5) | no | P10.9 |
-  | `p5-run-log.md:73` mutmut records 0.0 durations under forkserver | tooling | tooling or process | close (1): a fact about mutmut 3.8; no repo text claims otherwise | no | none |
-  | `p5-run-log.md:82` mutmut classes SIGKILL as segfault | tooling | tooling or process | close (1): ADR 0012 "Score" records it | no | none |
-  | `p6-run-log.md:54` two design inputs maintainer-checked | references | references | close (1): `references.md` records `maintainer-checked`; every canonical line is verified | no | none |
+  | the P5 run log: mutmut records 0.0 durations under forkserver | tooling | tooling or process | close (1): a fact about mutmut 3.8; no repo text claims otherwise | no | none |
+  | the P5 run log: mutmut classes SIGKILL as segfault | tooling | tooling or process | close (1): ADR 0012 "Score" records it | no | none |
+  | the P6 run log: two design inputs maintainer-checked | references | references | close (1): `references.md` records `maintainer-checked`; every canonical line is verified | no | none |
   | `pyntpot.ink.polyline.point_to_segment` has no caller (P10.0 finding: vulture at 60) | ink | dead code | fix (5) | no | P10.4b |
 
 - Reproductions to run (each row's own if its file gives one): the
@@ -10258,8 +10222,7 @@ The shared files that force a sequence (every row in landing order):
   `p10-triage.md`, re-run at P10.1. The part-1 slices whose rows are all
   `fix` at P10.1 may run while the list is open.
 - Owner files: `specs/001-port/p10-triage.md` (answers, re-triaged
-  outcomes, the mutation row marked done), `specs/001-port/p10-run-log.md`
-  (the maintainer's words verbatim), `specs/001-port/tasks.md` (a slice line
+  outcomes, the mutation row marked done), `specs/001-port/tasks.md` (a slice line
   whose every member an answer removed is struck through with the reason),
   the issue files of rows an answer closes (deleted).
 - **The questions.**
@@ -10411,7 +10374,7 @@ The shared files that force a sequence (every row in landing order):
     already close. (2026-10-21: the maintainer widened the yes to the
     later `fix-golden` row `ink-pad-lay-half-pixel-shift`, accepting its
     drift; P10.11 runs it.)
-  - **Q13 the README badge** (`p5-run-log.md:125`). P5.4 did not adopt the
+  - **Q13 the README badge** (the P5 run log). P5.4 did not adopt the
     CodSpeed badge from PR #6 (closed, not merged) because `README.md` was
     outside its owner files; the README has no badge today, and
     `docs/explanation/performance.md` already links the public dashboard.
@@ -10481,7 +10444,7 @@ The shared files that force a sequence (every row in landing order):
   | Q10 | `maps-lettering-sheet-homonym` | (1) "map", in the issue's scope | | |
   | Q11 | `maps-lettering-spans-place-spans-rung-order` | (2) close | | |
   | Q12 | second regeneration window, if a row becomes `fix-golden` | yes for a row a fix slice's G-self moves | | |
-  | Q13 | `p5-run-log.md:125` the README badge | (1) P7.1 adds it | | |
+  | Q13 | the P5 run log: the README badge | (1) P7.1 adds it | | |
   | Q14 | 0.0.1 on PyPI or tag only | (1) tag only | | |
 
 - Each answer is re-triaged by rules 1, 2, 4 and 5 and written into its
@@ -10665,7 +10628,7 @@ The shared files that force a sequence (every row in landing order):
   Part 1 (no `src` change).
 - Owner files: `tests/benchmarks/test_ink.py`,
   `docs/explanation/performance.md`.
-- Leave alone: P5's text in this plan, `p5-run-log.md`,
+- Leave alone: P5's text in this plan,
   `.github/workflows/codspeed.yml`, `test_stamp_a_2000_point_path` (not a
   duplicate: other plate and path).
 - Check first and after:
@@ -11288,7 +11251,7 @@ clean. About 13% of err(1) is the half-pixel shift of the later row
 
 #### P10.14 Say track and box, not run and ride
 
-- Cut under "Later issues" after P8's hand-off (row `p8-run-log.md:138-139`,
+- Cut under "Later issues" after P8's hand-off (a row of the P8 run log,
   "a run's map", widened to every sport word for a track). Part 2 (cut
   after the `p10-triage` PR merged); docstrings and comments only in `src`,
   so no render can change. It is its own slice, not a member of an
@@ -11407,7 +11370,7 @@ clean. About 13% of err(1) is the half-pixel shift of the later row
     through empty country"; `:36`: "against the ride" becomes "against the
     track".
   - `lettering/placement_flat.py:83`: the comment's opening clause, up to
-    its first comma (it names a personal route), becomes "On one cached
+    its first comma, becomes "On one cached
     track,"; the quoted label and `:84` onwards stay.
   - `lettering/span_sides.py:62`, `:107` and `:267`: the word "rides"
     becomes "tracks".
@@ -11430,7 +11393,7 @@ clean. About 13% of err(1) is the half-pixel shift of the later row
 
 #### P10.15 Pin that a place off the map is dropped
 
-- Cut under "Later issues" after P8's hand-off (row `p8-run-log.md:143-145`,
+- Cut under "Later issues" after P8's hand-off (a row of the P8 run log,
   the out-of-box place filter is untested). Part 2 (cut after the
   `p10-triage` PR merged); tests only. It is a slice of its own, not a
   third member of P10.7, though both are other `maps` and share
@@ -11638,9 +11601,9 @@ clean. About 13% of err(1) is the half-pixel shift of the later row
   publisher, Maintainer actions). If the proxy refuses the push, it becomes
   a Maintainer action ("push `v0.0.1` at `<sha>`"), and P8 waits for it.
 - The record: `p10-fixes` branches from `main` at the tagged commit or
-  later, and its first commit is a bookkeeping commit that appends the tag
-  to `p10-run-log.md` (name, commit, Publish run URL and result) and ticks
-  `tasks.md`'s P10.R line, with the message `Record the v0.0.1 tag`. P8
+  later, and its first commit is a bookkeeping commit that ticks
+  `tasks.md`'s P10.R line (the PR description records the tag's name,
+  commit, Publish run URL and result), with the message `Record the v0.0.1 tag`. P8
   does not start until that commit is pushed.
 - What the push triggers: `publish.yml` (`on: push: tags: ["v*"]`) builds
   with `uv build` and runs `pypa/gh-action-pypi-publish` in the `pypi`
@@ -12287,7 +12250,7 @@ landing on `p10-fixes` before PR #25 merges.
   `ink-pad-lay-half-pixel-shift`: first "Those three changes all make
   sense to do to me", then, shown before, after and difference (x8)
   comparisons of the fix, "Accept it - identical to human eye"
-  (`p10-run-log.md`, the entries of 2026-10-21). The row is `fix-golden`
+  (the P10 run log, the entries of 2026-10-21). The row is `fix-golden`
   with slice P10.11, and it is the window's one step. Its drift past the
   0.005 step bound is accepted in advance as the window's one explained
   exception, as ADR 0006's step 3 was. P10.11 is no longer struck.
@@ -13349,15 +13312,13 @@ sequences, and P7.2 quotes them.
   name, out-of-scope findings filed in `docs/issues/` (and appended as rows to
   `p10-triage.md` by the orchestrating session, P10 "Later issues").
 - **Who does what.** The implementer agent edits, runs the gates and hands
-  off; it never commits, pushes, or edits `tasks.md`, `p10-triage.md` or
-  `specs/001-port/p11-run-log.md`. The orchestrating session creates each
+  off; it never commits, pushes, or edits `tasks.md` or `p10-triage.md`.
+  The orchestrating session creates each
   slice's worktree and `$SLICE`, lands each slice as one commit with the
   slice's message and the attribution trailers the session's system reminder
   gives (P10.3d's rule), ticks the slice's `tasks.md` line in that commit,
   and records each landing (commit, G-here and G-self results, merge
-  conflicts resolved) in `specs/001-port/p11-run-log.md` (created at the
-  start of P11, before P11.0's commit; the orchestrating session owns it and
-  no slice creates it).
+  conflicts resolved) in the PR description.
 - **Branch and PR.** One branch, `p11-public-api`, from `main` at `ff752f6`
   or later, and one PR to `main`, opened after the first landing and merged
   after the last slice and the phase gate. The branch already carries the
@@ -13554,7 +13515,7 @@ P11.0 ─ P11.1 ─┬─ P11.2a ─┐
     (P11.1); `src/pyntpot/letters/__init__.py`
     (P11.3); `src/pyntpot/maps/__init__.py` (P11.4); each `examples/*.py` and
     `tests/examples/test_*.py` (its examples slice).
-  - `tasks.md`, `p10-triage.md`, `p11-run-log.md`: the orchestrating session
+  - `tasks.md`, `p10-triage.md`: the orchestrating session
     only, at landing.
   Every file a slice's owner list names appears above, either as a shared
   file with its rule or as owned by one slice.
@@ -13590,7 +13551,7 @@ green. Then the PR merges and P10.R may start.
   `examples/word.py`), `specs/001-port/tasks.md` (the P11 list),
   `specs/001-port/p10-triage.md` (the `letters-map-ink-key` row's triage
   cell). The orchestrating session adds the review outcome to the
-  existing `p11-run-log.md`.
+  PR description.
 - Commit: `Fatten P11 into slices`, the first plan commit on
   `p11-public-api`, after the orchestrator's bookkeeping commits ("Branch
   and PR").
@@ -13743,7 +13704,7 @@ green. Then the PR merges and P10.R may start.
   file it wrote."); `tests/examples/__init__.py` with its one-line docstring;
   `"examples"` appended to `[tool.ty.src] include` and to `_SCANNED`.
 - The docs that describe what P11.1 changes: in `BOUNDARIES.md`, the
-  personal-content bullet's paths become "`src/`, `tests/`, `docs/`,
+  D16 bullet's paths become "`src/`, `tests/`, `docs/`,
   `examples/` and the root docs"; in `docs/architecture.md`, a paragraph
   after "The boundary is enforced ..." reads, exactly: "The public surface
   is `pyntpot.__all__` and the `__all__` of each layer package (ADR 0026);

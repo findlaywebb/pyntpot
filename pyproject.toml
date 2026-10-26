@@ -197,10 +197,6 @@ unresolved-import = "warn"  # third-party stubs are sometimes missing
 
 [tool.ty.src]
 include = ["src", "tests", "examples"]
-# make_golden_old.py imports the pre-port package from the originating project; it is excluded here because that package is not installable.
-exclude = [
-    "tests/golden/make_golden_old.py",
-]
 
 # ---------------------------------------------------------------------------
 # Dead code (run weekly, warn-level — not a commit gate)
@@ -224,7 +220,6 @@ markers = [
     "golden: slow parity tests",
     "benchmark: performance benchmarks (timed by CodSpeed in CI, --benchmark-enable locally)",
 ]
-personal_terms_file = "~/personal/pyntpot-private/banned_terms.txt"
 
 # ---------------------------------------------------------------------------
 # Coverage — the gate is the CI step in `checks`, see ADR 0011; never set

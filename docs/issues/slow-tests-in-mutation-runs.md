@@ -6,7 +6,7 @@ mutmut runs, for each mutant, every test that covers the mutated function.
 A few whole-pipeline unit tests reach deep into `ink`, so mutants in small
 helpers pay for a full map render.
 
-Evidence (P5.3a, recorded in `specs/001-port/p5-run-log.md` and ADR 0012):
+Evidence (P5.3a, recorded in ADR 0012):
 one changed line in `simplify` gave 72 mutants and took 26 minutes, and the
 measured cost was about 5 s per mutant in `ink` and `letters` and 7 s in
 `maps`, so a full run over `ink` and `letters` is about 12 hours of runner

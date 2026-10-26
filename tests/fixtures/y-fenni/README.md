@@ -14,9 +14,8 @@ Walk and Castle Street back to the castle.
 The track is a derivative of OpenStreetMap data, so `track.gpx` is licensed under the ODbL as the
 payloads are (see Licences).
 
-It is built by `tests/fixtures/make_track.py` under the D16 statement: invented along public
-OpenStreetMap ways, resampled every 20 m, no time, elevation or activity type, no home and no
-personal route; ODbL as a derivative of OpenStreetMap. Fetched 2026-10-25 from the mirror and with the
+`tests/fixtures/make_track.py` builds it from OpenStreetMap ways, resampled every 20 m.
+Fetched 2026-10-25 from the mirror and with the
 contact string named under Source. Its box, rounded outward to 0.01, is 51.82, -3.03, 51.83, -3.01,
 inside the box in the table below.
 

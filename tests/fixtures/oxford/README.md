@@ -16,10 +16,8 @@ OpenStreetMap tags no public way through Christ Church itself (every way inside 
 The track is a derivative of OpenStreetMap data, so `track.gpx` is licensed under the ODbL as the
 payloads are (see Licences).
 
-It is built by `tests/fixtures/make_track.py` under the D16 statement: invented along public
-OpenStreetMap ways, resampled every 20 m, no time, elevation or activity type, no home and no
-personal route; ODbL as a derivative of OpenStreetMap. Fetched 2026-10-25 from the mirror and with the
-contact string named under Source.
+`tests/fixtures/make_track.py` builds it from OpenStreetMap ways, resampled every 20 m.
+Fetched 2026-10-25 from the mirror and with the contact string named under Source.
 
 Checks the build passed: via `2513320485` (a node of the Radcliffe Camera building, way 4884600)
 within 60 m (20 m); via `12943776076` (the middle node of the Magdalen Bridge deck, way

@@ -8,7 +8,6 @@ package is even importable.
 import ast
 
 from ._ast_checks import CORE_SRC, PACKAGES, REPO_ROOT, _source_files, _violations
-from support.exemptions import read_exemption_lines
 
 
 def test_package_has_no_env_access() -> None:
@@ -44,15 +43,12 @@ def test_no_oversized_files() -> None:
 
     The remedy is never to trim or squeeze docstrings to fit: a file over 400 is
     decomposed along responsibility lines into multiple files optimised for
-    agentic discovery (one concept per file). Files listed in
-    exemptions/line_budget.txt are skipped.
+    agentic discovery (one concept per file).
     """
     max_lines = 400
-    exempt = set(read_exemption_lines("line_budget.txt"))
     offenders = [
         f"{path.relative_to(REPO_ROOT)} ({n} lines)"
         for path in _source_files(PACKAGES)
-        if str(path.relative_to(REPO_ROOT)) not in exempt
-        and (n := len(path.read_text().splitlines())) > max_lines
+        if (n := len(path.read_text().splitlines())) > max_lines
     ]
     assert not offenders, f"files over the {max_lines}-line budget: {offenders}"

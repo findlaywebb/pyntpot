@@ -321,9 +321,9 @@ host is allowed or the maintainer records them locally.
 ## 9. Maintainer's answers to Q-P1 to Q-P8, 2026-10-23
 
 - **Q-P1** Maps for: Keswick and Derwentwater (the Lake District), Skye, Eryri around Yr
-  Wyddfa, Oxford, and **Y Fenni** in place of St Ives (the maintainer's choice). Ambleside
-  appears in the lettering and non-map pieces. Each map's track is invented along a
-  public path and marks no home or personal route (D16).
+  Wyddfa, Oxford, and **Y Fenni** in place of St Ives. Ambleside
+  appears in the lettering and non-map pieces. Each map's track follows public
+  paths.
 - **Q-P2** Lynmouth stays the test place for now, slated for retirement at a later point
   of stability (`docs/features/tests-retire-lynmouth.md`, post-port roadmap).
 - **Q-P3** Widen the coordinate gate to one box per place, by ADR.

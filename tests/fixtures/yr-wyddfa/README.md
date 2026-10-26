@@ -7,10 +7,8 @@ place cards (`tests/golden/test_places.py`).
 
 A one-way route of about 11 km over Crib Goch to the summit of Yr Wyddfa, Eryri: Pen-y-Pass, the Pyg Track to Bwlch y Moch, Crib Goch, Bwlch Coch, Crib y Ddysgl (Garnedd Ugain), Bwlch Glas, the summit, then the Llanberis Path to its foot at the public road in Llanberis. Near Bwlch Glas the descent runs close to the ascent; that is expected. The summit is reached by the path steps at its top and the track turns there; the trig point is within 8 m of the track.
 
-The track is invented along public OpenStreetMap ways chosen by id and joined and
-resampled every 20 m by `tests/fixtures/make_track.py`. It is not traced from a
-recorded activity, marks no home and no personal route, and carries no time,
-elevation or activity type. It is 11.10 km long, 566 points.
+`tests/fixtures/make_track.py` builds the track from OpenStreetMap ways chosen by id,
+joined and resampled every 20 m. It is 11.10 km long, 566 points.
 
 Checks passed when the track was built (distances to the OSM nodes): the Pen-y-Pass car park outline node 1385264838, 35 m (limit 150 m); the summit trig point node 1745517169, 8 m (limit 30 m); the node 294193247 where the Llanberis Path meets the public road, 0 m (limit 30 m). Length bound 11 to 13 km.
 

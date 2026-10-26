@@ -13,10 +13,8 @@ end lie about 140 m from the Bridge House node (`Old Bridge House Fudge Shop`, n
 on Compston Road: the whole circuit through the Terrace is 9.3 km from the node itself, and the
 route is held to 9 km by starting on the route, not at the building.
 
-The track is invented along public OpenStreetMap ways chosen by id and joined and
-resampled every 20 m by `tests/fixtures/make_track.py`. It is not traced from a
-recorded activity, marks no home and no personal route, and carries no time,
-elevation or activity type (D16). It is 9.00 km long, 460 points.
+`tests/fixtures/make_track.py` builds the track from OpenStreetMap ways chosen by id,
+joined and resampled every 20 m. It is 9.00 km long, 460 points.
 
 The track is a derivative of OpenStreetMap data, so `track.gpx` is licensed under the ODbL
 (see Licences).

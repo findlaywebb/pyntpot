@@ -233,15 +233,13 @@ title, because the plan contradicted its own voice guide.
 - **P7.13's README order is exactly as prescribed.** The badges match the plan
   character for character.
 
-## Place names and personal content
+## Place names
 
 - Real UK names throughout. Welsh names hold on every Welsh card and page: Y Fenni,
   Afon Wysg, Llan-ffwyst, Yr Wyddfa, Garnedd Ugain, Crib Goch, Eryri.
 - No English forms for Welsh places in reader docs or examples (I grepped for Snowdon,
   Abergavenny, Brecon, Crickhowell, Monmouth, Usk and Llanfoist).
 - Lynmouth names appear nowhere in the reader docs.
-- No personal email address, no home, and no recorded activity. Every fixture README and
-  `gallery.md:203` state that the routes are invented along public paths.
 - The only items to raise with the maintainer are the lettered shop "The Retro Zone"
   (M6) and the English "Gavenny River", which the maintainer has accepted.
 

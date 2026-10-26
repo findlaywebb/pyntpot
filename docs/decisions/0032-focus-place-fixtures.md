@@ -2,14 +2,13 @@
 
 Status: accepted
 
-Amends D10 (the coordinate allowlist) and applies D16 (no personal content) to five new
-fixtures.
+Amends D10 (the coordinate allowlist) for five new fixtures.
 
 ## Context
 
 Lynmouth is the test place behind every golden, and the coordinate gate
-(`tests/architecture/test_coordinates.py`) held one box, Lynmouth's. The maintainer named
-focus places for the docs and the gallery (2026-10-23): Keswick, the Quiraing on
+(`tests/architecture/test_coordinates.py`) held one box, Lynmouth's. The docs and the
+gallery use five focus places: Keswick, the Quiraing on
 Trotternish, Yr Wyddfa by Crib Goch, central Oxford and Y Fenni. Each needs a recorded
 fixture, a track and the three provider payloads, so a card paints from the cache alone.
 Their coordinates lie far outside Lynmouth's box, and a fixture's payloads and README
@@ -24,17 +23,15 @@ carry coordinates by design.
   longitude from another fails.
 - **Exempt files.** Each fixture's three payloads and its README are exempt, because
   Overpass returns whole ways touching a box and the README documents the margin boxes. The
-  gate's own file is exempt too, since it holds the table. The run log, the plan, this ADR
-  and every other file carry no coordinate.
-- **Fixture rules, for every fixture.** The track is generated, never recorded: it follows
-  public OpenStreetMap ways chosen by id and joined and resampled every 20 m by
-  `tests/fixtures/make_track.py`, with no time, elevation or activity type. It marks no
-  home and no personal route (D16). The payloads are recorded by
+  gate's own file is exempt too, since it holds the table. The plan, this ADR and every
+  other file carry no coordinate.
+- **Fixture rules, for every fixture.** The track is generated:
+  `tests/fixtures/make_track.py` builds it from OpenStreetMap ways chosen by id, joined and
+  resampled every 20 m. The payloads are recorded by
   `tests/fixtures/record_fixture.py` through the shipped providers, so their file names
   carry the default providers' cache key. Each README states the source (the Overpass
   mirror used, because `overpass-api.de` resets connections from the recording
-  environment), the date, the boxes, the way ids and versions, the D16 statement, and the
-  licences. `track.gpx` and the two Overpass payloads are ODbL-derived data and the README
+  environment), the date, the boxes, the way ids and versions, and the licences. `track.gpx` and the two Overpass payloads are ODbL-derived data and the README
   licenses them so.
 - **Budget, in bytes on disk.** A fixture directory's files sum to at most 10 MB, and
   `yr-wyddfa/` to at most 12 MB (MB is 1,000,000 bytes). `tests/` is in neither the sdist

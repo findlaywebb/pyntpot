@@ -20,12 +20,11 @@ Hard rules the checks enforce:
 - `pyntpot` imports no `matplotlib`, `pandas`, `jinja2` or `yaml`.
 - `ink` and `letters` import neither `httpx` nor `pydantic`.
 - The package never touches `os.environ` / `os.getenv`: config is injected.
-- No clock reads, no module-level randomness, no `uuid` imports. The exemptions
-  directory (`tests/architecture/exemptions/`) is empty.
+- No clock reads, no module-level randomness, no `uuid` imports.
 - No `print()` anywhere in `src/`; logging only.
 - Soft file budget of 400 lines. A spike signals a god module; split it.
-- No personal content: banned terms and the coordinate allowlist apply to `src/`,
-  `tests/`, `docs/`, `examples/` and the root docs.
+- Public data only (D16). Every coordinate pair in `src/`, `tests/`, `docs/`, `examples/`
+  and the root docs lies inside a fixture's box (`tests/architecture/test_coordinates.py`).
 
 Public surface discipline: each package `__init__.py` exports only what is public, and
 its module docstring states purpose, non-goals and invariants. Keep both current; they are

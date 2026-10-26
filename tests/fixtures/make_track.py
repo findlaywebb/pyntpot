@@ -5,7 +5,7 @@ modes. `--list-ways S,W,N,E` prints every `highway` way in a box (id, name, `hig
 `sac_scale`), so a person can choose; the box is a command-line argument only and is
 never written to a file the coordinate gate scans. `--ways ID,ID,...` fetches those ways,
 joins them in the order given, resamples the line every `--step-m` metres (default 20)
-and writes a GPX file with no time, elevation or activity type. An item is a way id, or
+and writes a GPX file with no times or elevations. An item is a way id, or
 `ID:FROM:TO`, the part of that way between two of its node ids, walked from FROM to TO;
 the same way may appear more than once. An item may also be `ref=REF` or
 `ref=REF:FROM:TO`: every highway way carrying that `ref` inside `--box S,W,N,E` (given on
@@ -26,7 +26,7 @@ The raw response is not kept; the way ids and their versions are logged for the 
 README. Ways are chained where an end of one lies within 5 m of the last end (a shared end node is 0 m), reversing
 a way where needed; a bigger gap, or a way whose two ends both join, fails.
 
-It does not read the environment, or record anything from a person's activity.
+It does not read the environment.
 """
 
 import argparse
@@ -341,7 +341,7 @@ def distance_to_line(node: Point, points: Sequence[Point]) -> float:
 
 
 def write_gpx(path: Path, points: Sequence[Point], name: str) -> None:
-    """Write the points as a GPX track with no time, elevation or activity type."""
+    """Write the points as a GPX track with no times or elevations."""
     rows = "".join(f'      <trkpt lat="{lat:.6f}" lon="{lon:.6f}"/>\n' for lat, lon in points)
     path.write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
