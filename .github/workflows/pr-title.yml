@@ -13,7 +13,7 @@ jobs:
   conventional:
     runs-on: ubuntu-latest
     steps:
-      - name: Title is type(scope): description
+      - name: "Title is type(scope): description"
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
