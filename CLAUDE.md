@@ -86,5 +86,11 @@ One feature = one spec dir = one branch = one PR (`specs/README.md`).
 3. Implement autonomously against the plan, test-first; tick off `tasks.md`.
 4. Review the diff against the plan. **Done = green CI + matches spec.**
 
+**PR titles are Conventional Commits** (ADR 0042), because the squash commit's subject
+drafts the changelog: `type(scope): description`, types `feat fix perf docs refactor test
+build ci chore`, scopes `ink letters maps cli docs tests`, `!` before the colon for a
+breaking change. Other user-visible changes in the same PR go one per line, in the same
+form, under "Changelog" in the PR description. Branch commits are free-form.
+
 Commit working checkpoints before stopping. Out-of-scope discoveries go to the backlog or
 `docs/issues/`, not into the current diff.

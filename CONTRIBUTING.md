@@ -44,9 +44,17 @@ Write `spec.md`, then `plan.md`, and have the plan reviewed before any code. See
 Three skills under `.claude/skills/` are copied from an MIT-licensed upstream; see
 `.claude/skills/THIRD-PARTY-LICENSES.md`.
 
-## Commits
+## Commits and pull request titles
 
-- Imperative, one line.
+- Commits on a branch: imperative, one line. They are squashed away on merge.
+- The pull request title becomes the commit on `main`, so it is a Conventional Commit
+  (ADR 0042): `type(scope): description`, for example
+  `fix(maps): keep a river name inside the card`. Types: `feat`, `fix`, `perf`, `docs`,
+  `refactor`, `test`, `build`, `ci`, `chore`. Scopes: `ink`, `letters`, `maps`, `cli`,
+  `docs`, `tests`. Add `!` before the colon for a breaking change. A CI check enforces it.
+- Any other change a user would notice goes one per line, in the same form, under
+  "Changelog" in the pull request description. The release changelog is drafted from
+  these with git-cliff.
 - A commit made by an agent session ends with the attribution
   trailers its session gives (`Co-Authored-By:`, `Claude-Session:`); no
   other trailers.

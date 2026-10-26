@@ -1,0 +1,27 @@
+name: PR title
+
+# PRs are squash-merged, so the title becomes the commit on main that git-cliff drafts the
+# changelog from (ADR 0042). The title is read from the event, never interpolated into
+# the script.
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  conventional:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Title is type(scope): description
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|perf|docs|refactor|test|build|ci|chore)(\((ink|letters|maps|cli|docs|tests)\))?!?: [^ ].*[^.]$'
+          if printf '%s' "$TITLE" | grep -Eq "$pattern"; then
+            echo "ok: $TITLE"
+          else
+            echo "::error::PR title '$TITLE' is not 'type(scope): description' (ADR 0042)."
+            echo "Types: feat fix perf docs refactor test build ci chore. Scopes: ink letters maps cli docs tests. Add ! before the colon for a breaking change; no full stop at the end."
+            exit 1
+          fi
