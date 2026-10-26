@@ -24,10 +24,3 @@ The public surface is `pyntpot.__all__` and the `__all__` of each layer package 
 a name in no `__all__` is private. `examples/` holds the tutorial scripts, one per rung,
 which import only public names (`tests/architecture/test_examples.py`) and run offline
 under `tests/examples/`.
-
-## Exemptions
-
-`tests/architecture/exemptions/` is the one sanctioned relaxation of the gates: files
-exempt from the line budget and the clock and random bans, and tests switched off by node
-id. Nothing is exempt: `line_budget.txt` and `gates_off.txt` hold their header comment
-only, and `NOTES.md` says so.

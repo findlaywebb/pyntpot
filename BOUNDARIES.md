@@ -20,8 +20,7 @@ Hard rules the checks enforce:
 - `pyntpot` imports no `matplotlib`, `pandas`, `jinja2` or `yaml`.
 - `ink` and `letters` import neither `httpx` nor `pydantic`.
 - The package never touches `os.environ` / `os.getenv`: config is injected.
-- No clock reads, no module-level randomness, no `uuid` imports. The exemptions
-  directory (`tests/architecture/exemptions/`) is empty.
+- No clock reads, no module-level randomness, no `uuid` imports.
 - No `print()` anywhere in `src/`; logging only.
 - Soft file budget of 400 lines. A spike signals a god module; split it.
 - Public data only (D16). Every coordinate pair in `src/`, `tests/`, `docs/`, `examples/`

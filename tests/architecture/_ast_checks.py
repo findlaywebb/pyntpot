@@ -18,11 +18,9 @@ def _source_files(root: Path) -> list[Path]:
     return sorted(p for p in root.rglob("*.py") if "__pycache__" not in p.parts)
 
 
-def _violations(root: Path, predicate, exempt: frozenset[str] = frozenset()) -> list[str]:
+def _violations(root: Path, predicate) -> list[str]:
     found: list[str] = []
     for path in _source_files(root):
-        if str(path.relative_to(REPO_ROOT)) in exempt:
-            continue
         tree = ast.parse(path.read_text(), filename=str(path))
         for node in ast.walk(tree):
             if predicate(node):
