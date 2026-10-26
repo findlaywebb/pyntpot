@@ -64,10 +64,10 @@ def test_every_marked_block_is_a_verbatim_part_of_its_script() -> None:
     assert not drifted, f"quoted code that is not in its script: {drifted}"
 
 
-def test_the_vector_page_quotes_the_drawing_it_reads() -> None:
-    """The vector drawing page quotes `examples/drawings/fell.svg` under its marker."""
-    quoted = {found["svg"] for found in _MARKED_BLOCK.finditer(_text(_VECTOR))}
-    assert "drawings/fell.svg" in quoted
+def test_the_vector_page_links_the_drawing_it_reads() -> None:
+    """The vector drawing page links `examples/drawings/fell.svg`, which exists, instead of quoting it."""
+    assert "examples/drawings/fell.svg" in _text(_VECTOR)
+    assert (EXAMPLES_DIR / "drawings" / "fell.svg").is_file()
 
 
 def test_every_watercolour_rung_is_quoted_on_its_page() -> None:

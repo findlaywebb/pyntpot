@@ -1,26 +1,25 @@
 # First map
 
-![A hand-painted map of Ambleside and Rydal Water: a ribbon of green and ochre washes round a pink route that loops from Ambleside up Loughrigg Fell and back along Rydal Water, with blue strokes for the rivers Rothay and Brathay, rust-coloured roads and the names written by hand](../images/tutorials/route-map.webp)
+![A hand-painted map of Ambleside and Rydal Water: green and ochre washes with a pink route that loops from Ambleside up Loughrigg Fell and back past Rydal Water, blue strokes for the rivers Rothay and Brathay, rust-coloured roads and the names written by hand](../images/tutorials/route-map.webp)
 
 *Painted by `examples/route_map.py`.*
 
-You have painted a paper, a wash, a brush, two pigments, a pen and a hand. This rung
-asks the same of real country. You give the script a GPX track, and it fetches the
-roads, rivers, woods and heights round the route, then lays the paper and washes, pulls
-the brushes, takes up the pen and letters the names, in the order you have just learned.
-The result is a card: one painted picture of one walk.
+You have painted a paper, a wash, a brush, two pigments, a pen and a hand. Now you
+paint real country. You give the script a GPX track. It gets the roads, rivers, woods
+and heights round the route. Then it lays the paper and washes, pulls the brushes, takes
+up the pen and letters the names, in the order you have just learned. The result is a
+card: one painted picture of one walk.
 
-Nothing in the painting is new. What is new is that the shapes now come from
-OpenStreetMap's data and from an elevation grid, and the engine has to decide where
-each name can sit without crossing the route.
+The painting has nothing new in it. The shapes now come from OpenStreetMap data and
+from an elevation grid. The engine also has to decide where each name can sit.
 
 Do [Paint a watercolour](paint-a-watercolour.md) first if you have not, so that the
-names below are familiar.
+terms below are familiar.
 
 ## Copy the Ambleside files
 
-The first map paints a loop from Ambleside in the Lake District, from files you
-already have. They are four, kept in your clone's
+The first map paints a loop from Ambleside in the Lake District, from four files you
+already have. They are in your clone's
 [`tests/fixtures/ambleside`](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/ambleside)
 directory:
 
@@ -38,12 +37,12 @@ $ cp -r tests/fixtures/ambleside ambleside
 ```
 
 Work on the copy, not on the fixture. The run writes its painted plates into the cache
-directory, and a copy keeps them out of the repository's tree.
+directory, and a copy keeps them out of the repository.
 
-Keep the three data files' names exactly as they are. Each name ends in the fetch cache's
-key for this track and these providers, and that is how the cache finds a payload it
-already holds. With all three in the directory, the cache holds everything the first map
-needs, and the script sends no request at all.
+Keep the three data files' names exactly as they are. Each name ends in the cache's key
+for this track and these providers, and that is how the cache finds a payload it already
+holds. With all three in the directory, the cache holds everything the first map needs,
+and the script sends no request.
 
 ## Paint it from the cache
 
@@ -56,10 +55,10 @@ INFO:__main__:wrote out/map.png
 ```
 
 The contact is a placeholder here. The command line asks for one on every run because
-it is what the public servers see when you fetch from them. Nothing has been fetched,
-so nothing is sent. The first run takes a minute or two, because it paints every plate
-of the card. The cache keeps them, in a `plates` directory beside the payloads, and a
-later run reads them instead of painting again.
+the public servers see it when you fetch from them. This run fetches nothing, so nothing
+is sent. The first run takes about a minute, because it paints every plate of the card.
+The cache keeps the plates in a `plates` directory beside the payloads. A later run reads
+them instead of painting again.
 
 Open `out/map.png`. It is the picture at the top of this page. Here is the script's
 `main`:
@@ -100,7 +99,7 @@ def main(
     return path
 ```
 
-Read it as the four stages it is:
+It has four stages:
 
 1. `Track.from_gpx` reads the route.
 2. `fetch` builds the basemap. It asks the cache first, and the providers only for what
@@ -113,18 +112,16 @@ Read it as the four stages it is:
 
 ### What to notice
 
-- The land is washed, not filled. The greens and ochres are laid as washes with the
-  edge darkening and the grain you met in the second rung, and Rydal Water lies in soft
-  blue at the top of the ribbon.
-- The rivers are wet blue brush strokes, the Rothay and the Brathay, and the roads are
-  rust-coloured strokes. They are the brushes you pulled on the third rung, each chosen
-  for what it draws.
-- The route is a pink line, laid last over the washes and the roads, so it reads as the
-  one thing on the card that was drawn on purpose.
-- The names are in the hand's writing: "Ambleside" and "Rydal", and places such as "Pelter
-  Bridge", "Loughrigg Fell" and "St Mary's". The river names follow the water's curve,
-  "Rothay" and "Brathay", and "A591" runs along its road. Each name is tried in several
-  places and set where it crosses the least.
+- The land is washed, not filled. The greens and ochres are washes with the edge
+  darkening and the grain you met in the second rung. Rydal Water is soft blue at the
+  upper left.
+- The rivers, the Rothay and the Brathay, are blue brush strokes. The roads are
+  rust-coloured strokes. These are the brushes you pulled on the third rung.
+- The route is a pink line, laid over the washes and the roads.
+- The names are in the hand's writing: "Ambleside", "Rydal", "Pelter Bridge",
+  "Loughrigg Fell" and "St Mary's". "Rothay" and "Brathay" follow the curve of their
+  rivers. "A591" sits beside its road. Each name goes where placing it costs least, which
+  keeps it clear of the route where it can.
 - At the foot, small lettering credits OpenStreetMap, whose data the card is made from.
 
 **Try changing** the command to the one the package installs. It reads the same cache,
@@ -136,18 +133,18 @@ $ uv run pyntpot map ambleside/track.gpx -o out/ambleside.png --cache ambleside/
 
 ## Paint your own track
 
-Now a track of your own, a GPX file of a walk or a ride. The Ambleside fixture's files are
-a recording; the public services are where yours will come from. Two things change:
+Now use a track of your own, a GPX file of a walk or a ride. The Ambleside files were
+saved from the public services. Yours will come from them. Two things change:
 
-- The cache will be empty for your track, so the first run fetches from the public
-  Overpass and OpenTopoData servers. They are free, shared and rate-limited. The first
-  run therefore takes longer, and the shipped providers keep to the servers' usage
-  limits: one request at a time, a pause when a server says it is busy, and a cap on
-  how many queries one run may send.
-- The contact is no longer a placeholder. It is how the servers' operators reach whoever
-  is sending requests, should they ever need to, so give a way of reaching you that you
-  are content for them to see: a web address for your project, for example. It is sent
-  with every request and is not part of the cache's key.
+- The cache is empty for your track, so the first run fetches from the public Overpass
+  and OpenTopoData servers. They are free, shared and rate-limited, so the first run
+  takes longer. The shipped providers keep to the servers' usage limits: one request at
+  a time, a pause when a server says it is busy, and a cap on how many queries one run
+  may send.
+- The contact is no longer a placeholder. It tells the servers' operators how to reach
+  whoever is sending requests. Give a way of reaching you that you are content for them
+  to see, such as a web address for your project. It is sent with every request and is
+  not part of the cache's key.
 
 With the command the package installs, from the top of the repository:
 
@@ -156,9 +153,10 @@ $ uv run pyntpot map my-walk.gpx -o out/my-walk.png --cache cache/ --contact "yo
 ```
 
 Replace `you@example.org` with your own contact. The command fills `cache/` with the
-payloads your track lacks, paints, letters and writes the card. Run it a second time
-and nothing is fetched. `--style` takes a TOML theme if you would like another look, and
-`--no-attribution` leaves the credit off the card; if you publish the card, leave it on.
+payloads your track lacks, then paints, letters and writes the card. Run it a second
+time and nothing is fetched. `--style` takes a TOML theme for another look.
+`--no-attribution` leaves the credit off the card. If you publish the card, leave the
+credit on.
 
 If you prefer the script, it takes the same pieces in the same order:
 
@@ -166,12 +164,12 @@ If you prefer the script, it takes the same pieces in the same order:
 $ uv run python examples/route_map.py my-walk.gpx cache/ out/ "you@example.org"
 ```
 
-Your track is read from the file you give and not copied anywhere. The two public
-servers see the box your track covers, with a margin, and your contact; they do not
-see the track itself.
+The script reads your track from the file you give and copies it nowhere. The two
+public servers see the box your track covers, with a margin, and your contact. They do
+not see the track itself.
 
 ## Where next
 
-The card you painted is the engine's first application, and every layer of it is one
-you have already used. Open `examples/route_map.py` beside `examples/composition.py`: they
-are the same work at two scales.
+The card is the engine's first application, and every layer of it is one you have
+already used. Open `examples/route_map.py` beside `examples/composition.py`. They are
+the same work at two scales.

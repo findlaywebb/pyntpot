@@ -8,16 +8,16 @@ splits and returns every limb as a path of points with the width it starts at an
 width it ends at. The straightest child carries on its parent's stroke and starts exactly as
 wide as its parent ends, so the widths taper by depth with no step at a joint.
 
-The painting goes the way a watercolourist's does, pale to dark. First a dry stroke of
-ground under the foot, then the canopy: a `wash` of `sap_green` over the tips of the last
-limbs, a second, smaller wash in the same green on some of them for depth, and a wash of
-`yellow_ochre` on a few, all glazed by Kubelka-Munk so a warm leaf is still a leaf. Over the
-washes go the limbs in `burnt_sienna`. The trunk and the first limbs are brushed (the brush
-sheet's row 2) and `stamp`'s `wprof` makes each stroke taper from its start width to its end
-width; the trunk carries a narrower stroke of `perylene_maroon` on its shaded side. Where
-a limb is thinner than a brush can draw, the hand changes to a pen (row 6) and the
-twigs are penned in `perylene_maroon`. Last, a few hundred short dabs of a wet brush
-(row 1) in `sap_green` and `indigo` are laid over the canopy's edge, the leaves.
+The painting goes the way the layers are listed in `LAYERS`. First a dry stroke of ground
+under the foot, then the limbs in `burnt_sienna`. The trunk and the first limbs are brushed
+(the brush sheet's row 2) and `stamp`'s `wprof` makes each stroke taper from its start width
+to its end width; the trunk carries a narrower stroke of `perylene_maroon` on its shaded
+side. Where a limb is thinner than a brush can draw, the hand changes to a pen (row 6) and
+the twigs are penned in `perylene_maroon`. Over the limbs goes the canopy: a `wash` of
+`sap_green` over the tips of the last limbs, a second, smaller wash in the same green on
+some of them for depth, and a wash of `yellow_ochre` on a few, all glazed by Kubelka-Munk
+so a warm leaf is still a leaf. Last, a few hundred short dabs of a wet brush (row 1) in
+`sap_green` and `indigo` are laid over the canopy's edge, the leaves.
 
 `figure="tree"` paints one tree, `figure="family"` paints nine in a grid three trees across.
 A family is the same rule run with nine seeds: each seed moves `spread`, `ratio`, `droop`

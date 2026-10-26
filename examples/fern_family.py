@@ -5,7 +5,7 @@ maps a little and the fern moves a little: a frond map turned a few degrees more
 further, one scaled a per cent smaller makes a shorter, lacier plant, a leaflet map with its
 matrix nudged leans its leaflets over. This script runs that loop nine times, each time
 with a seed of its own. `perturbed` returns the four maps for one seed: the stem map is
-kept (it only draws the stem), the frond map is turned by `0.5` to `5.5` degrees and scaled by
+kept (it only draws the stem), the frond map is turned by `-1` to `6` degrees and scaled by
 a few per cent, and the two leaflet maps have every entry of their matrices moved by up to
 5 per cent. Because the maps change, so does the fern's extent, so `_fit` measures each
 fern's points and fits them into its cell.

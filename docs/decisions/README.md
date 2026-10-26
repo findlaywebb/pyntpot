@@ -45,3 +45,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0038 | Journal notes |
 | 0039 | Painter's pigments |
 | 0040 | Fetch margins (amends 0004 and 0029) |
+| 0041 | Readable attribution: the fifth golden regeneration |
