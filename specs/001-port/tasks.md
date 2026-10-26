@@ -163,7 +163,7 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [x] P7.11 ADRs 0013 to 0021 for the settled decisions (the outline's P7.3)
 - [x] P7.12 Docs gates: link check, `twine check`
 - [x] P7.13 README, wordmark, landing page, gallery and social preview, and the CodSpeed badge (Q13 (1), row `p5-run-log.md:125`) (the outline's P7.1)
-- [ ] P7.14 Docs site, ADR 0034 (`p7-docs-site`; may slip to 0.1.x)
+- [x] P7.14 Docs site, ADR 0034 (`p7-docs-site`; merged in #29)
 - [x] P7.V0 Revision round 1: fatten from the maintainer's feedback and the five agent reports; plan reviews 1 to 4 BLOCK, review 5 PASS
 - [x] P7.V1 Fixture trimming (Lynmouth and Yr Wyddfa; the recorder trims the rest): minified, unread fields and tags dropped, goldens byte-identical; the round's CI baseline
 - [x] P7.V1b Fetch margins as options, the land-cover margin in the cache key when non-default, `--margin-m` on the CLI; ADR 0040
@@ -189,7 +189,7 @@ Order: after P10 part 2 and P10.11. Fattened at P7.0 (plan.md, P7) after the res
 - [x] P7.V13 Critique gate: no published image under 3 of 5
 - [x] P7.V14 Site theme fixes (`p7-docs-site`)
 - [x] P7.V15 Hand back
-- [~] P7.R Release 0.1.0: prepared on `release-0.1.0` (runbook, publish workflow, metadata, changelog, citation); the maintainer actions, the tag and the publish run remain (the outline's P7.4)
+- [x] P7.R Release 0.1.0: runbook, publish workflow, metadata, changelog, citation; merged in #30, tagged `v0.1.0` and published to PyPI on 2026-10-26 (the outline's P7.4)
 
 ## P8. Upstream migration
 
@@ -236,6 +236,12 @@ Not part of the port. Each item becomes its own spec under `specs/` when it is t
 - [ ] A gallery of every pigment, with names, aliases and glazes (`docs/features/docs-pigment-gallery.md`)
 - [ ] A preview card for map styles that holds every feature and awkward interaction (`docs/features/maps-theme-preview-card.md`)
 - [ ] Retire Lynmouth as the test place once the API and the goldens are stable, moving the goldens and tests to the focus places (`docs/features/tests-retire-lynmouth.md`)
+- [ ] Faster painting and gates: the golden run in minutes, not half an hour (`docs/features/tests-fast-gates.md`)
+- [ ] Themes in YAML that declare only their overrides over a base theme (`docs/features/maps-themes-as-overrides.md`)
+- [ ] Brushes and pigments declared as data (`docs/features/ink-data-driven-brushes-and-pigments.md`)
+- [ ] Review every example for clarity and code smells: prose, code or terms (`docs/features/docs-examples-review.md`)
+- [ ] Show a term's glossary definition where the docs use it (`docs/features/docs-glossary-in-place.md`)
+- [ ] Picture grids of what changing each setting does (`docs/features/docs-variable-effect-grids.md`)
 
 ## P10. Triage and address the port's issues
 
