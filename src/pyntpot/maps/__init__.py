@@ -1,8 +1,8 @@
 """Route maps: fetching, painting, lettering and composing.
 
-Exports the map types `Track`, `Basemap`, `Style`, `Plates`, `Lettering` and
-`Annotations`, the stages `fetch`, `paint`, `letter` and `compose`, `FetchError`, the
-fetch cache `Cache`, the shipped providers `OverpassFeatures` and `OpenTopoData` and the
+Exports the map types `Track`, `Basemap`, `Style`, `Plates`, `Lettering`,
+`Annotations` and its `JournalNote`, the stages `fetch`, `paint`, `letter` and `compose`, `FetchError`, the
+fetch cache `Cache` and its `FetchMargins`, the shipped providers `OverpassFeatures` and `OpenTopoData` and the
 errors they raise, `ProviderError` and `ProviderBudgetExceededError`, and two cache
 readers for a caller that chooses or draws for itself: `candidate_export`, what a track
 passes, and `vector_layers`, which builds `VectorLayers`, the basemap's layers as SVG
@@ -10,9 +10,9 @@ path data. The provider protocols, the other candidates modules and the command 
 are reached through their own modules, not exported here.
 """
 
-from pyntpot.maps.annotations import Annotations
+from pyntpot.maps.annotations import Annotations, JournalNote
 from pyntpot.maps.basemap import Basemap
-from pyntpot.maps.cache import Cache, FetchError
+from pyntpot.maps.cache import Cache, FetchError, FetchMargins
 from pyntpot.maps.candidates.export import candidate_export
 from pyntpot.maps.lettering.pipeline import Lettering, letter
 from pyntpot.maps.pipeline import compose, fetch, paint
@@ -29,6 +29,8 @@ __all__: list[str] = [
     "Basemap",
     "Cache",
     "FetchError",
+    "FetchMargins",
+    "JournalNote",
     "Lettering",
     "OpenTopoData",
     "OverpassFeatures",

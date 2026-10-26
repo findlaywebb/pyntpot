@@ -4,7 +4,12 @@ import math
 
 from pyntpot.maps.annotations import Annotations, Landmark
 from pyntpot.maps.basemap import River, Road
-from pyntpot.maps.lettering.picks import home_labels, journal_picks, route_markers
+from pyntpot.maps.lettering.picks import (
+    home_labels,
+    journal_heuristic,
+    journal_picks,
+    route_markers,
+)
 from pyntpot.maps.lettering.picks_lines import named_lines
 from pyntpot.maps.lettering.picks_rivers import pick_rivers
 from pyntpot.maps.lettering.picks_settlements import (
@@ -82,13 +87,13 @@ def test_the_settlements_are_chosen_by_rank_and_by_route_not_by_distance():
         candidates=[
             _place_node("Little Combes", "hamlet", 100.0, 42.0, 4),
             _place_node("Tarns Bridge", "hamlet", 180.0, 44.0, 18),
-            _place_node("Abergavenny", "town", 600.0, 45.0, 3),
-            _place_node("Monmouth", "town", 1100.0, 20.0, 441),
+            _place_node("Y Fenni", "town", 600.0, 45.0, 3),
+            _place_node("Trefynwy", "town", 1100.0, 20.0, 441),
             _place_node("Faraway", "village", 700.0, 60.0, 4000),
         ],
     )
     picked = [label.name for label in pick_settlements(basemap, card, route_px)]
-    assert "Abergavenny" in picked and "Monmouth" in picked
+    assert "Y Fenni" in picked and "Trefynwy" in picked
     assert "Faraway" not in picked, "over 1.5 km off the route is not this track"
     assert len(picked) <= settlement_budget(card.w)
 
@@ -163,6 +168,13 @@ def test_a_cap_of_nought_picks_no_landmark():
     """A cap of nought picks no landmark."""
     picks = Annotations(landmarks=(Landmark(name="Watersmeet", lat=51.22, lng=-3.81),))
     assert journal_picks(picks, label_basemap(), 0) == []
+
+
+def test_a_cap_of_nought_falls_back_to_no_landmark():
+    """With no landmark to place and a cap of nought, the fallback letters none of the candidates."""
+    basemap = label_basemap(candidates=[_named_candidate("Watersmeet", 200.0, 44.0)])
+    assert journal_heuristic(basemap, 0) == []
+    assert [p["name"] for p in journal_heuristic(basemap, 1)] == ["Watersmeet"]
 
 
 def test_the_markers_and_the_home_say_why_in_track_words():

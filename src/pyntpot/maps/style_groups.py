@@ -26,6 +26,8 @@ package.
 from dataclasses import dataclass, field
 from typing import Any
 
+from pyntpot.maps.providers.overpass import MINOR_ROADS
+
 #: The painter fields no module reads, kept by the upstream consumer and left
 #: out of every group.
 CONSUMER_ONLY: tuple[str, ...] = (
@@ -96,6 +98,8 @@ class CoverStyle:
     dither_seed: int = 23
     land_cover: bool = True
     relief: bool = True
+    #: Multiplies the relief's density, and the ceiling it is held to. 1.0 is the quiet relief.
+    relief_strength: float = 1.0
     #: How dark a wash of each class goes, and how hard its edge pools.
     cover_cfg: dict[str, tuple[float, float]] = field(
         default_factory=lambda: {
@@ -181,6 +185,8 @@ class BasemapStyle:
     contour_interval: float = 50.0
     #: `all`, `key` (major plus interacted), or `major`.
     roads: str = "key"
+    #: The minor highway classes `roads = "all"` keeps; the fetch query is unchanged.
+    minor_road_classes: tuple[str, ...] = MINOR_ROADS
     #: `all`, `key` (rivers plus interacted streams), or `rivers`.
     rivers: str = "key"
     #: Metres within which a minor road or a stream counts as touched.
@@ -196,6 +202,10 @@ class BasemapStyle:
     pick_landmarks: tuple[str, ...] = ()
     pick_roads: tuple[str, ...] = ()
     pick_places: tuple[str, ...] = ()
+    #: The OSM tags that name a feature, in order of preference: the map letters the first
+    #: one an element carries, else nothing. `("name:cy", "name")` letters Welsh names
+    #: where OSM has them. The candidate export keeps reading `name`.
+    name_tags: tuple[str, ...] = ("name",)
     #: The generalisation stage, which runs before anything is drawn: the wood,
     #: the parkland and the sea are rasterised, closed, opened, decluttered and
     #: traced back as a few smooth shapes. Off draws the raw OSM outlines.

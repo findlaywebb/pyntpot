@@ -78,10 +78,13 @@ def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list
 def journal_heuristic(basemap: Basemap, cap: int) -> list[dict[str, Any]]:
     """The fallback when no landmark lands: the leading `cap` candidates.
 
-    The candidates come in the basemap's order, most notable first.
+    The candidates come in the basemap's order, most notable first. A cap of nought
+    letters none.
     """
     out = []
     for c in basemap.candidates:
+        if len(out) >= cap:
+            break
         out.append(
             {
                 "name": c["name"],
@@ -91,8 +94,6 @@ def journal_heuristic(basemap: Basemap, cap: int) -> list[dict[str, Any]]:
                 "y": c["y"],
             }
         )
-        if len(out) >= cap:
-            break
     return out
 
 

@@ -12,6 +12,8 @@ base plates read, `lettering_digest` over the groups only the lettering reads, a
 `digest` over every group, the route inks included. Each group digest is the first
 16 hex digits of the SHA-256 of its fields as sorted-key JSON; a combined digest is
 the first 16 hex digits of the SHA-256 of its group digests joined in field order.
+A field named in `DIGEST_OMITS_AT_DEFAULT` is left out of its group's digest while it
+equals its default, so adding such a field moves no digest of a style that keeps it.
 
 `route_ink` hands `paint` and the compose step the route's ink, and the basemap group says what
 the basemap draws. The style paints, letters and fetches nothing itself. The route ink
@@ -64,6 +66,10 @@ BASE_GROUPS: tuple[str, ...] = (
 #: The groups only the lettering reads, in field order.
 LETTERING_GROUPS: tuple[str, ...] = ("face", "nib", "hand", "lettering")
 _DIGEST_HEX = 16
+#: Fields left out of a group digest while they equal their default, so a field added
+#: later moves no digest of a style that leaves it alone: the basemap's `name_tags` and
+#: `minor_road_classes`, and the cover's `relief_strength`.
+DIGEST_OMITS_AT_DEFAULT: tuple[str, ...] = ("name_tags", "minor_road_classes", "relief_strength")
 #: A colour a caller may feed: a `#` and six hexadecimal digits.
 _HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
 
@@ -159,11 +165,12 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         """A copy of the style whose route is inked in this colour and spaced for this width.
 
         Only the colour and the width are fed: the route's treatment and its effect
-        keys stay the theme's. The width sets how far apart `paint` draws the strands
-        of a doubled-back route. The compose step draws the route line at the fed
+        keys stay the theme's. The compose step draws the route line at the fed
         width, except when the treatment is `"pen"` and a pen plate was painted: then
         it tints that plate, whose stroke width is the `route` group's
-        `route_pen_width_px`, so the fed width only respaces the strands. Only
+        `route_pen_width_px`, so the fed width changes nothing drawn. Otherwise the
+        fed width also sets how far apart `paint` draws the strands of a
+        doubled-back route; the pen plate always separates by its own width. Only
         `digest()` moves, never
         `base_digest()` or `lettering_digest()`, so no plate is repainted.
 
@@ -216,7 +223,12 @@ def _check_keys(group: type, value: object, where: str) -> None:
 
 def _group_digest(style: Style, name: str) -> str:
     """Hash one named group's fields as sorted-key JSON."""
-    blob = json.dumps(dataclasses.asdict(getattr(style, name)), sort_keys=True, default=str)
+    group = getattr(style, name)
+    fields = dataclasses.asdict(group)
+    for spec in dataclasses.fields(group):
+        if spec.name in DIGEST_OMITS_AT_DEFAULT and getattr(group, spec.name) == spec.default:
+            del fields[spec.name]
+    blob = json.dumps(fields, sort_keys=True, default=str)
     return hashlib.sha256(blob.encode()).hexdigest()[:_DIGEST_HEX]
 
 

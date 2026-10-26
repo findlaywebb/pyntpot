@@ -10,9 +10,9 @@ from pyntpot.letters.trace import CENTRELINE, OUTLINE
 #: Every string this map actually letters, so the alphabet specimen and the tests
 #: cover the same ground the card does.
 MAP_STRINGS = (
-    "Monmouth",
-    "Monmouth Castle",
-    "Abergavenny",
+    "Trefynwy",
+    "Trefynwy Castle",
+    "Machynlleth",
     "Grasmere",
     "Lyn",
     "Heddon",
@@ -30,7 +30,7 @@ class TestRoutes:
     def test_both_letterform_routes_draw_every_glyph_of_a_name(self, route: str) -> None:
         """Every glyph of a name has an advance and ink on each route, none a stray point."""
         face = load(route=route)
-        for ch in "Abergavenny 12%":
+        for ch in "Machynlleth 12%":
             glyph = face.glyph(ch)
             assert glyph.advance > 0
             assert glyph.ink or ch == " ", f"{ch!r} came back blank on {route}"

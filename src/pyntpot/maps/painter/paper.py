@@ -17,8 +17,14 @@ from pyntpot.ink.sheet import Canvas, Sheet
 from pyntpot.maps.basemap import ElevationPatch
 
 
-def relief_density(grid: ElevationPatch, plate: Canvas, sheet: Sheet) -> np.ndarray:
-    """A quiet shaded relief from the elevation patch, in pigment density."""
+def relief_density(
+    grid: ElevationPatch, plate: Canvas, sheet: Sheet, strength: float = 1.0
+) -> np.ndarray:
+    """A quiet shaded relief from the elevation patch, in pigment density.
+
+    `strength` multiplies the density, and the ceiling the density is held to scales with it;
+    1.0 is the quiet relief the default style paints.
+    """
     n = grid.n
     v = np.asarray(grid.values, F32).reshape(n, n)
     gx = (
@@ -44,7 +50,7 @@ def relief_density(grid: ElevationPatch, plate: Canvas, sheet: Sheet) -> np.ndar
     mpp = 1.0 / plate.scale
     gyd, gxd = np.gradient(z, mpp)
     shade = np.clip((-0.6 * gxd + 0.6 * gyd + 0.55) / 1.2, 0.0, 1.0)
-    dens = np.clip(0.30 * (1.0 - shade), 0.0, 0.40)
+    dens = np.clip(0.30 * strength * (1.0 - shade), 0.0, 0.40 * strength)
     dens *= 1.0 + 0.24 * np.clip((sheet.gran - 0.5) * 2.2, -0.7, 1.0)
     dens *= 1.0 - 0.30 * (sheet.paper - 0.5)
     return np.clip(blur(dens, 2.0), 0.0, 1.0)

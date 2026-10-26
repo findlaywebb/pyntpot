@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A small drawing of a fell, a tarn, a wall and two trees, made for pyntpot and
+     released under the repository's MIT licence. Paths use only M, L, C and Z. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <!-- Filled shapes, back to front. The script washes each in the nearest pigment. -->
+  <path id="sun" fill="#e2b04e" stroke="none"
+        d="M 82 115 C 82 99 96 87 110 87 C 126 87 138 99 138 115 C 138 131 126 143 110 143 C 96 143 82 131 82 115 Z"/>
+  <path id="far-fell" fill="#bfd2cd" stroke="none"
+        d="M 40 270 C 90 210 130 160 190 142 C 230 132 260 160 300 175 C 340 190 380 150 430 140 C 455 134 470 148 480 170 L 480 345 L 40 345 Z"/>
+  <path id="main-fell" fill="#a8c286" stroke="none"
+        d="M 150 300 C 200 230 260 150 340 100 C 390 70 430 80 470 130 C 510 180 540 240 570 300 L 570 345 L 330 345 L 150 300 Z"/>
+  <path id="tarn" fill="#9ec4de" stroke="none"
+        d="M 276 238 C 284 227 316 224 336 231 C 344 238 322 246 304 246 C 288 246 270 245 276 238 Z"/>
+  <path id="left-rise" fill="#a8c286" stroke="none"
+        d="M 30 360 L 30 320 C 70 270 140 255 200 280 C 250 300 280 320 330 335 L 330 360 Z"/>
+  <path id="right-field" fill="#cfdfae" stroke="none"
+        d="M 330 360 L 330 335 C 400 320 480 300 570 310 L 570 360 Z"/>
+  <path id="oak-crown" fill="#4f7d36" stroke="none"
+        d="M 106 242 C 106 230 117 220 128 220 C 140 220 150 230 150 242 C 150 254 140 264 128 264 C 117 264 106 254 106 242 Z"/>
+  <path id="hawthorn-crown" fill="#4f7d36" stroke="none"
+        d="M 486 296 C 486 288 492 282 500 282 C 508 282 514 288 514 296 C 514 304 508 310 500 310 C 492 310 486 304 486 296 Z"/>
+  <!-- Strokes, inked along their points. The class says which pen. The skyline follows the
+       main fell's whole outline; the wall is a row of stones on one line. -->
+  <path id="skyline" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.6"
+        d="M 171 271 C 217 209 271 143 340 100 C 390 70 430 80 470 130 C 510 180 540 240 570 300"/>
+  <path id="wall" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.4"
+        d="M 62 322 C 105 296 150 286 205 298 C 245 307 275 326 322 342"/>
+  <path id="wall-stones" class="pen" fill="none" stroke="#3a3a46" stroke-width="0.6"
+        d="M 64.0 318.6 L 80.4 310.2 L 77.3 301.1 L 58.6 311.3 Z
+           M 81.6 309.0 L 97.3 302.7 L 93.9 294.1 L 78.0 301.2 Z
+           M 98.8 302.6 L 111.6 299.0 L 107.8 289.8 L 94.9 293.8 Z
+           M 112.9 298.3 L 133.2 293.6 L 130.8 283.7 L 109.7 289.3 Z
+           M 133.1 294.1 L 152.9 292.1 L 152.8 282.5 L 132.0 283.5 Z
+           M 153.5 292.3 L 169.6 292.1 L 169.8 282.3 L 153.1 281.7 Z
+           M 171.0 291.8 L 192.6 294.1 L 193.2 284.2 L 171.7 282.2 Z
+           M 192.7 294.6 L 214.0 299.1 L 216.8 288.9 L 194.8 284.5 Z
+           M 215.9 298.9 L 234.2 304.9 L 237.4 295.5 L 218.4 289.3 Z
+           M 234.3 305.8 L 248.0 309.7 L 250.9 300.8 L 238.7 296.8 Z
+           M 249.0 310.0 L 265.9 317.9 L 270.4 309.9 L 252.2 301.5 Z
+           M 267.7 318.8 L 287.1 327.5 L 290.6 318.6 L 271.1 310.2 Z
+           M 288.3 328.1 L 307.1 334.4 L 311.2 326.5 L 292.4 319.2 Z
+           M 307.2 335.0 L 320.1 339.9 L 323.3 330.6 L 311.3 325.9 Z
+           M 59.9 310.4 C 58.3 307.6 75.1 298.6 76.5 301.6
+           M 77.9 300.9 C 75.7 296.2 93.9 288.6 95.7 293.5
+           M 96.9 293.0 C 95.7 289.6 116.1 283.5 117.0 287.0
+           M 117.5 286.9 C 116.7 283.7 136.1 280.2 136.5 283.5
+           M 137.8 283.3 C 137.1 277.7 156.1 276.4 156.2 282.0
+           M 156.7 282.0 C 156.6 276.8 173.3 277.1 173.0 282.4
+           M 174.1 282.4 C 174.3 278.7 190.3 280.4 189.8 284.1
+           M 190.3 284.2 C 190.8 280.8 208.3 284.0 207.6 287.3
+           M 208.5 287.5 C 209.4 283.3 228.2 288.4 226.9 292.6
+           M 227.9 292.9 C 229.0 289.3 248.5 296.3 247.1 299.8
+           M 248.2 300.2 C 249.9 296.0 266.5 302.9 264.7 307.1
+           M 265.7 307.5 C 267.3 303.6 280.3 309.2 278.6 313.0
+           M 279.5 313.5 C 281.1 309.8 299.2 317.4 297.7 321.1
+           M 298.9 321.6 C 300.5 317.7 317.1 324.2 315.7 328.1"/>
+  <path id="track" class="track" fill="none" stroke="#7a5a3a" stroke-width="1.8"
+        d="M 336 345 C 360 322 300 304 340 284 C 380 266 322 236 372 206 C 402 188 392 156 412 126"/>
+  <path id="beck" class="beck" fill="none" stroke="#4a7fa8" stroke-width="2"
+        d="M 298 246 C 308 266 288 284 304 304 C 312 314 316 324 322 336"/>
+  <path id="oak-trunk" class="pen" fill="none" stroke="#3a3a46" stroke-width="3"
+        d="M 128 286 L 128 262"/>
+  <path id="hawthorn-trunk" class="pen" fill="none" stroke="#3a3a46" stroke-width="2"
+        d="M 500 324 L 500 310"/>
+  <path id="bird-a" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.5"
+        d="M 215 80 C 222 72 228 74 232 80 C 236 74 242 72 249 80"/>
+  <path id="bird-b" class="pen" fill="none" stroke="#3a3a46" stroke-width="1.2"
+        d="M 270 58 C 275 52 279 54 282 58 C 285 54 290 52 295 58"/>
+</svg>

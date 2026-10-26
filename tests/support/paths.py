@@ -15,6 +15,17 @@ KEY: str = "f173b2f7a20bb9d4"
 #: The Lynmouth fixture: track and cached provider payloads.
 FIXTURE_DIR: Path = _TESTS / "fixtures" / "lynmouth"
 
+#: The cache keys of the focus-place fixtures with the shipped providers' ids, which name
+#: each fixture's payload files. Each directory beside the Lynmouth one is `FIXTURES / <name>`.
+YR_WYDDFA_KEY: str = "353c7a77ae84f4c1"
+OXFORD_KEY: str = "edf326cc49d5cc52"
+Y_FENNI_KEY: str = "31d229011257f9fa"
+AMBLESIDE_KEY: str = "f0a137ce97afcb43"
+SKYE_KEY: str = "ada01f635902a1fd"
+
+#: The directory holding every fixture, Lynmouth's included.
+FIXTURES: Path = _TESTS / "fixtures"
+
 #: The committed golden outputs for the Lynmouth fixture.
 GOLDEN_DIR: Path = _TESTS / "golden" / "lynmouth"
 

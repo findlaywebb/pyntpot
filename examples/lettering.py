@@ -1,6 +1,6 @@
 """Rung 6 of the tutorial: a name written by hand with a nib, laid over the paper.
 
-The hand sets "Grasmere" along a gentle sine across the middle of a 360 by 240 sheet, the
+The hand sets "Ambleside" along a gentle sine across the middle of a 360 by 240 picture, the
 nib strokes its marks onto one RGBA plate, and the plate is laid over the cream paper the
 normal way, by its alpha.
 
@@ -45,14 +45,16 @@ logger = logging.getLogger(__name__)
 W, H = 360, 240
 GRAN_PX = 3.0
 SEED = 7
-NAME = "Grasmere"
+NAME = "Ambleside"
 STEM = "lettering"
+#: How many times larger the nib plate is painted than the picture, before it is downsized.
+NIB_SCALE = 2
 
 
 def _line() -> tuple[tuple[float, float], ...]:
-    """Return a gentle sine across the middle third of the canvas, in display pixels."""
-    x = np.linspace(W / 3, 2 * W / 3, 40)
-    y = H / 2 + 0.04 * H * np.sin(2 * np.pi * (x - W / 3) / (W / 3))
+    """Return a gentle sine across the middle half of the canvas, in display pixels."""
+    x = np.linspace(W / 4, 3 * W / 4, 60)
+    y = H / 2 + 0.04 * H * np.sin(2 * np.pi * (x - W / 4) / (W / 2))
     return tuple((float(px), float(py)) for px, py in zip(x, y, strict=True))
 
 
@@ -77,13 +79,17 @@ def main(out_dir: Path) -> Path:
     hand = Hand(face, hand_style)
     marks: list[Mark] = hand.write(Setting(NAME, 36.0, path=_line()), hand.generator(SEED))
 
-    surface = NibSurface(canvas, 1.0, np.zeros((H, W), np.float32), GRAN_PX)
+    canvas2 = Canvas(0, 0, NIB_SCALE * W, NIB_SCALE * H, NIB_SCALE * W, NIB_SCALE * H)
+    dark2 = np.zeros((NIB_SCALE * H, NIB_SCALE * W), np.float32)
+    surface = NibSurface(canvas2, NIB_SCALE, dark2, GRAN_PX * NIB_SCALE)
     groups = NibGroups(NibStyle(), face, hand_style, BrushStyle(), PaperStyle())
     plate_path = nib_plate(marks, surface, groups, out_dir / f"{STEM}-plate.webp")
     if plate_path is None:
         raise RuntimeError("the hand wrote no marks")
 
-    rgba = np.asarray(Image.open(plate_path).convert("RGBA"), np.float32) / 255
+    with Image.open(plate_path) as big:
+        small = big.convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+    rgba = np.asarray(small, np.float32) / 255
     alpha = rgba[..., 3:]
     out = paper * (1 - alpha) + rgba[..., :3] * alpha
 
