@@ -26,8 +26,10 @@ then creates the GitHub release with the changelog section as notes and the dist
 
 1. Branch `release-X.Y.Z` from `main`.
 2. Set `version` in `pyproject.toml`; run `uv lock`.
-3. In `CHANGELOG.md`, give the section `## [X.Y.Z] - DATE`, put breaking changes first, and
-   add the compare link at the foot.
+3. Draft the changelog section from the PR titles since the last tag (ADR 0042):
+   `uvx git-cliff@2.14.2 --unreleased --tag vX.Y.Z`. Paste it into `CHANGELOG.md` as
+   `## [X.Y.Z] - DATE`, edit the entries into plain sentences a user reads, keep breaking
+   changes first, and add the compare link at the foot.
 4. Repoint the README's image URLs from the previous tag (or `main`) to `vX.Y.Z`. That is
    the only README edit; PyPI shows the images at the tag, so the page keeps its pictures.
 5. Gate: `uv run prek run --all-files`, `uv run pytest -m "not golden"`,
