@@ -1,6 +1,6 @@
 # 001-port: extract the map painting engine into `pyntpot`
 
-Status: stable, after two plan-review passes. Upstream source commit ecfa41d.
+Status: done. P0 to P11 landed and 0.1.0 is released. Upstream source commit ecfa41d.
 
 ## Goal
 
