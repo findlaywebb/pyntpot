@@ -198,8 +198,7 @@ SHA. Consider a TestPyPI dry run (separate pending publisher, environment `testp
 - **CONTRIBUTING** is written for agent sessions (spec flow, trailers, mutation shards).
   Add a short top section for an outside contributor: open an issue first, how to run
   the gate, that golden pixels are exact locally so a PR that moves pixels needs a
-  stated reason, and the place-name rule. The `personal_terms_file` test skips cleanly
-  when `~/personal/...` is absent (checked), so an outside clone stays green; say so.
+  stated reason, and the place-name rule.
 - **Code of conduct**: for a one-person project it is optional. Contributor Covenant 2.1
   (https://www.contributor-covenant.org/version/2/1/code_of_conduct/) is the norm (httpx,
   rich, attrs, Pydantic use it or a variant) but it requires a named enforcement contact.
@@ -253,7 +252,7 @@ The library code is MIT; the **data it paints is not**. The docs must say who ow
   use.
 - **Docs images are Produced Works too.** The README's route map must carry its drawn
   attribution, and its caption should repeat it. Render it from the Lynmouth fixture
-  (already ODbL-noted) so no personal route appears.
+  (already ODbL-noted).
 - The font's OFL obligations are met by `LICENSE-FONT` in both dists; mention it in the
   README licence section (it is there).
 

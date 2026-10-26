@@ -267,5 +267,5 @@ brush emoji, mascot characters, first-person anecdotes in reference, renaming er
 - Real UK place names from CONTRIBUTING; coordinates inside 51.19 to 51.26 N, 3.80 to
   3.88 W.
 - Docstrings state gaps as capability facts, never spec or roadmap numbers.
-- Images from tested, public-name-only scripts; no personal data (D16).
+- Images from tested, public-name-only scripts.
 - No docs site at v0.1 (D13), so everything must read well on GitHub and PyPI.

@@ -242,7 +242,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ## Places
 
-The five showcase maps, each painted from a recorded fixture by one script, `examples/place_card.py`, in its own theme with its curated callouts. Every route is invented along public paths: it follows public OpenStreetMap ways, is traced from no recorded activity and marks no home or personal route. Each card links its fixture.
+The five showcase maps, each painted from a recorded fixture by one script, `examples/place_card.py`, in its own theme with its curated callouts. Every route follows public OpenStreetMap ways. Each card links its fixture.
 
 ### [Ambleside, the Lake District](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/ambleside)
 

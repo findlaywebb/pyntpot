@@ -19,7 +19,7 @@ multipolygon relations whose outer area is below `A`, unless they are `natural=w
 
 `KEPT_TAG_KEYS` is the string literals of `src/pyntpot/maps` that are tag keys present in
 the payloads, plus the keys the landmark ranking reads that `src/` does not name yet.
-The command and the resulting tuple are in `specs/001-port/p7-run-log.md`.
+The literals come from `grep -rhoE --include='*.py' '"[a-z_:]+"' src/pyntpot/maps | sort -u`.
 
 A second run changes nothing. It does not parse a payload into features, round
 coordinates, or read the environment.

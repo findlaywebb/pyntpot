@@ -14,10 +14,8 @@ the A863 to Dunvegan; a spur on the B884 and Waterstein Road to Neist Point and 
 A850 and the A87 to Uig; the A855 round by Staffin and the Storr to Portree. The spurs are
 out-and-back legs.
 
-The track is invented along public OpenStreetMap ways, joined and resampled every 100 m
-(`make_track.py --step-m 100`) by `tests/fixtures/make_track.py`. It is not traced from a
-recorded activity, marks no home and no personal route, and carries no time, elevation or activity
-type (D16). It is 282.98 km long, 2,853 points.
+`tests/fixtures/make_track.py --step-m 100` builds the track from OpenStreetMap ways,
+joined and resampled every 100 m. It is 282.98 km long, 2,853 points.
 
 The track is a derivative of OpenStreetMap data, so `track.gpx` is licensed under the ODbL
 (see Licences).

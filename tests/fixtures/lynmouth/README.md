@@ -7,7 +7,7 @@ tests and the golden parity test.
 
 | File | What it is |
 |---|---|
-| `track.gpx` | Synthetic 8 km loop of 400 points through Lynmouth and Lynton, Devon. Generated, not recorded. No time, elevation or activity type. |
+| `track.gpx` | Synthetic 8 km loop of 400 points through Lynmouth and Lynton, Devon. Generated. |
 | `overpass-f173b2f7a20bb9d4.json` | OSM features for the feature box, from Overpass. |
 | `landcover-f173b2f7a20bb9d4.json` | OSM land cover for the wider land cover box, from Overpass. |
 | `elevation-f173b2f7a20bb9d4.json` | 80 by 80 SRTM grid over the feature box, from OpenTopoData. |

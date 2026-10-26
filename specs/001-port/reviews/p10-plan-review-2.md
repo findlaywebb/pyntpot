@@ -172,7 +172,7 @@ against a surface without P11's names, which defeats P11's stated reason for the
 
 - **The conflict.** The rule says "a slice is in part 2 if it changes a branch that an upstream call of the public API can take and that can change a rendered PNG". `compose(..., attribution=True)` under a style with `labels=False` is such a branch, so by the rule P10.3a is part 2. Yet the list puts every release blocker in part 1.
 - **Why it matters.** P10.3a is safe for P8 only because P8's hash render passes `attribution=False`, and the plan never says so. A "Later issues" slice classified "by the rule that splits them" (6249-6250) gets no guidance when it is a release blocker.
-- **Fix.** Add one sentence to the rule: "A release blocker is part 1 if it cannot change P8's verification render (`compose(..., attribution=False)` on the upstream's activity). P10.3a qualifies because `compose` calls `draw_attribution` only when `attribution` is true. A release blocker that could change that render goes to part 2 and still lands before P7.4."
+- **Fix.** Add one sentence to the rule: "A release blocker is part 1 if it cannot change P8's verification render (`compose(..., attribution=False)` on the upstream's reference track). P10.3a qualifies because `compose` calls `draw_attribution` only when `attribution` is true. A release blocker that could change that render goes to part 2 and still lands before P7.4."
 
 **S2. The route-constant rules delete `CASING_COLOURS` while keeping `RouteInk.casing`, which reads it** (6330-6340, 6603-6611, against 7197-7198).
 

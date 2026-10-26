@@ -29,4 +29,4 @@ Subfolders:
 - `issues/`: one markdown file per out-of-scope issue found while doing something else.
 - `features/`: one markdown file per candidate feature: behaviour the library does not have
   and could add, recorded so it is not mistaken for a defect.
-- `../specs/001-port/p7-research.md` sections 7 to 9: the maintainer's records (focus places, Welsh names, tracks).
+- `../specs/001-port/p7-research.md` sections 7 to 9: the decisions on focus places, Welsh names and tracks.

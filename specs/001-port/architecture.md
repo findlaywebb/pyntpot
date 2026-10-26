@@ -210,7 +210,7 @@ change stops repainting base plates.
 keys in `paint_hash`, 27 style field names in `labels_hash`, and the label
 rows in `plate_key`. A new field that changes pixels but is missing from a
 list leaves a stale plate on disk. Plates and fetched payloads are still
-found by the caller's key, which in practice was an external activity ID.
+found by the caller's key, which in practice was an external identifier.
 
 **Shape.** One cache module owns the fetch cache and the plate cache. Keys
 derive from the typed inputs and the layer's style group (A6), never from

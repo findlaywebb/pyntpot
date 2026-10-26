@@ -217,8 +217,6 @@ mode contradicts Q-P1.**
     shore path between Keswick and Portinscale, the Quiraing path from the Staffin road
     car park, and in Oxford and Y Fenni a chain of named streets and footways.
   - Keep loop mode for nothing new, or drop it.
-  - The D16 check then reads: "generated from public OSM ways, never traced from a
-    recorded activity".
 
 ### Major
 
@@ -317,7 +315,7 @@ not own.**
   - The non-golden per-script tests call `main` at a small size option and stay under
     2 s each, measured locally.
   - Set a budget for the golden job's growth (for example at most 6 minutes added on
-    `ubuntu-latest`). Record the measured time in `p7-run-log.md` at P7.4, P7.7 and
+    `ubuntu-latest`). Record the measured time in the P7 run log at P7.4, P7.7 and
     P7.13, and stop if the budget is exceeded.
 
 **M4. The hero, the first-map fixture and the social preview are left to the
@@ -450,7 +448,7 @@ at landing.**
   actions appears in `cli.md`, not that the output matches verbatim.
 - **m2. The coordinate boxes (P7.3) need four more rules.**
   - Prescribe "the track's box rounded outward to 0.01°", as Lynmouth's is.
-  - `p7-run-log.md` and `plan.md` are scanned, so neither may carry margin-box
+  - the P7 run log and `plan.md` are scanned, so neither may carry margin-box
     coordinates; only the exempt fixture READMEs can.
   - Pin the per-fixture budget in a test (4 MB, and 6 MB for `yr-wyddfa/`), or the
     budget is a note only.
