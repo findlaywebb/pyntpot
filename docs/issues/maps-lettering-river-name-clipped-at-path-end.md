@@ -5,7 +5,6 @@ edge of the card and reads "fon Arddu". The name follows the river's path, and i
 letter lands outside the picture. Nothing shifts the name along the path, or drops it,
 when part of it would leave the card. The cause was not investigated.
 
-Also seen, and not investigated: the river Cherwell on `docs/images/places/oxford.webp`
-is a large dark blue blob.
-
-Found by the P7 docs review (2026-10-24).
+Found by the P7 docs review (2026-10-24). The review also saw the river Cherwell on
+`docs/images/places/oxford.webp` as a large dark blue blob; the card painted since the
+fourth golden regeneration draws it as a river stroke, so that note no longer stands.

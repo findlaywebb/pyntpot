@@ -25,6 +25,11 @@ def _painted(path):
         return np.asarray(image)
 
 
+def _dark(pixels):
+    """Return how many pixels have every channel under 90, the darkness only a pen lays."""
+    return int((pixels.max(axis=2) < 90).sum())
+
+
 class TestDerwentwater:
     """The Derwentwater view."""
 
@@ -83,6 +88,52 @@ class TestSvgDrawing:
         assert pixels.shape == (SMALL * 2 // 3, SMALL, 3)
         assert (pixels.min(axis=(0, 1)) != pixels.max(axis=(0, 1))).all()
 
+    @pytest.mark.parametrize("figure", ["flat", "washes", "ink", "painting"])
+    def test_each_figure_paints_a_picture_of_the_size_asked(self, tmp_path, figure):
+        """Every figure writes one PNG as wide as `size` and 3:2 high, with colour in it."""
+        pixels = _painted(run_example("svg_drawing", tmp_path, figure=figure, size=SMALL))
+        assert pixels.shape == (SMALL * 2 // 3, SMALL, 3)
+        assert (pixels.min(axis=(0, 1)) != pixels.max(axis=(0, 1))).all()
+
+    def test_the_flat_figure_has_no_paper_and_the_others_do(self, tmp_path):
+        """The flat figure's corner is pure white; every painted figure's corner is warm paper."""
+        corner = np.s_[2:10, 2:10]
+        flat = _painted(run_example("svg_drawing", tmp_path, figure="flat", size=SMALL))
+        assert (flat[corner] == 255).all()
+        for figure in ("washes", "ink", "painting"):
+            painted = _painted(run_example("svg_drawing", tmp_path, figure=figure, size=SMALL))
+            assert painted[corner][..., 2].mean() < painted[corner][..., 0].mean() - 4, figure
+
+    def test_the_washes_carry_no_ink_and_the_ink_no_wash(self, tmp_path):
+        """The washes figure has few dark pixels, the ink figure a pen line of them and no green body, the painting both."""
+        washes = _painted(run_example("svg_drawing", tmp_path, figure="washes", size=SMALL))
+        ink = _painted(run_example("svg_drawing", tmp_path, figure="ink", size=SMALL))
+        painting = _painted(run_example("svg_drawing", tmp_path, figure="painting", size=SMALL))
+        fell = np.s_[SMALL // 3 : SMALL // 2, SMALL // 2 : 2 * SMALL // 3]
+        assert ink[fell].astype(float).mean() > washes[fell].astype(float).mean() + 15
+        assert _dark(washes) * 5 < _dark(ink)
+        assert _dark(ink) > 0
+        assert _dark(painting) > 0
+
+    def test_the_near_fell_hides_the_far_one(self, tmp_path):
+        """Where the main fell lies over the far fell the wash is as green as the main fell elsewhere."""
+        washes = _painted(run_example("svg_drawing", tmp_path, figure="washes", size=480)).astype(
+            float
+        )
+        scale = 0.88 * 480 / 600
+        dx, dy = (480 - 600 * scale) / 2, (320 - 400 * scale) / 2
+
+        def at(x, y):
+            return washes[int(y * scale + dy), int(x * scale + dx)]
+
+        overlap, plain = at(300, 200), at(400, 200)
+        assert abs(overlap - plain).max() < 25
+
+    def test_it_rejects_an_unknown_figure(self, tmp_path):
+        """A figure outside the four is refused rather than painted as something else."""
+        with pytest.raises(ValueError, match="figure"):
+            run_example("svg_drawing", tmp_path, figure="oils", size=SMALL)
+
     def test_it_rejects_a_command_outside_the_subset(self):
         """A path with an arc command is refused rather than half read."""
         namespace = runpy.run_path(str(EXAMPLES_DIR / "svg_drawing.py"), run_name="example_svg")
@@ -101,6 +152,12 @@ class TestPages:
             "(https://github.com/findlaywebb/pyntpot/blob/main/docs/features/ink-read-svg-drawings.md)"
             in text
         )
+
+    def test_the_vector_page_shows_every_step_of_the_drawing(self):
+        """The vector page shows the flat drawing, the washes, the inks and the painting."""
+        text = (PAGES / "vector-drawing.md").read_text()
+        for name in ("svg-flat", "svg-washes", "svg-ink", "svg-drawing"):
+            assert f"../../images/painting-with-python/{name}.webp" in text
 
     @pytest.mark.parametrize("page", ["pictures", "vector-drawing"], ids=["pictures", "vector"])
     def test_each_page_shows_its_registered_image_and_no_dashes(self, page):

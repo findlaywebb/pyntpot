@@ -9,6 +9,10 @@
 
 ::: pyntpot.ink.TRANSPARENCY
 
+::: pyntpot.ink.PAINTERS_PIGMENTS
+
+::: pyntpot.ink.PAINTERS_TRANSPARENCY
+
 ::: pyntpot.ink.Brush
 
 ::: pyntpot.ink.BrushStyle

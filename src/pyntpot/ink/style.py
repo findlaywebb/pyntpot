@@ -15,6 +15,7 @@ package; a group never imports anything outside `ink`.
 """
 
 from dataclasses import dataclass, field
+from typing import Literal
 
 
 @dataclass(frozen=True)
@@ -51,6 +52,10 @@ class PaperStyle:
     paper_worn: float = 0.20
     paper_vignette: float = 0.05
     paper_foxing: float = 0.09
+    #: How the edge and the foxing look. `"warm"` browns a narrow, uneven edge
+    #: and flecks the sheet with small rust specks; `"classic"` is the grey
+    #: vignette and the broad grey smudges the paper used to have.
+    paper_edge: Literal["classic", "warm"] = "warm"
     #: Seeds, so the same box paints the same paper every time.
     sheet_seed: int = 11
     #: Kubelka-Munk glazing in place of multiply for the pigment stack. Multiply

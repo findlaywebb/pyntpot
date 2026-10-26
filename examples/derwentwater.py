@@ -71,6 +71,8 @@ logger = logging.getLogger(__name__)
 #: The seed of the paper, the ridges, the ripples and the nib.
 SEED = 21
 STEM = "derwentwater"
+#: How many times larger the nib plate is painted than the picture, before it is downsized.
+NIB_SCALE = 2
 NAME = "Derwentwater"
 #: Each hill, far to near: the pigment, where its ridge runs (as a share of the height),
 #: how far the ridge swings, the density at its crest and how granulating it is.
@@ -243,12 +245,16 @@ def _name(canvas: Canvas, gran_px: float, plate: Path) -> np.ndarray:
     hand = Hand(face, hand_style)
     setting = Setting(NAME, 0.072 * w, anchor=(w / 2, 0.935 * h), align="middle", ink="#4a4a58")
     marks: list[Mark] = hand.write(setting, hand.generator(SEED))
-    surface = NibSurface(canvas, 1.0, np.zeros((h, w), np.float32), gran_px)
+    canvas2 = Canvas(0, 0, NIB_SCALE * w, NIB_SCALE * h, NIB_SCALE * w, NIB_SCALE * h)
+    dark2 = np.zeros((NIB_SCALE * h, NIB_SCALE * w), np.float32)
+    surface = NibSurface(canvas2, NIB_SCALE, dark2, gran_px * NIB_SCALE)
     groups = NibGroups(NibStyle(), face, hand_style, BrushStyle(), PaperStyle())
     plate_path = nib_plate(marks, surface, groups, plate)
     if plate_path is None:
         raise RuntimeError("the hand wrote no marks")
-    return np.asarray(Image.open(plate_path).convert("RGBA"), np.float32) / 255
+    with Image.open(plate_path) as big:
+        small = big.convert("RGBA").resize((w, h), Image.Resampling.LANCZOS)
+    return np.asarray(small, np.float32) / 255
 
 
 def main(out_dir: Path, size: int = 720) -> Path:

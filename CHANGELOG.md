@@ -3,9 +3,7 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.1.0] - Unreleased
-
-The maintainer sets the date when the release is tagged.
+## [0.1.0] - 2026-10-26
 
 The first release meant for general use. pyntpot paints hand-drawn watercolour and
 pen-and-ink pictures in Python: paper, washes, brushes, nibs, pigments and hand lettering,
@@ -23,6 +21,11 @@ as a site), example themes and place fixtures, and fixes how names are lettered 
   is dropped instead of set flat. A stroke at the card's edge and a mark on a finer ink
   grid also paint differently (see Fixed). Pixels, label positions and `Lettering.labels`
   differ from 0.0.2; the fetch cache keys do not change.
+- The paper browns at its edge and foxes in small rust specks by default
+  (`paper_edge = "warm"`), and letters are stroked once at their junctions, so every
+  painted image differs from 0.0.2 (ADR 0036).
+- The data credit on a map is sized in display pixels: 13 px on a 720 px card, growing with
+  the card and never under 12, and a long credit wraps at its " · " (ADR 0041).
 - `pyntpot.maps.fetch` and `Cache.ensure` raise `FetchError` when a provider cannot
   answer, with the provider's error as its cause. Catch `FetchError`, not the provider's
   error.
@@ -42,8 +45,18 @@ as a site), example themes and place fixtures, and fixes how names are lettered 
   gallery, and a docs site built with MkDocs Material (ADRs 0013 to 0021, 0033, 0034).
 - Example themes (`examples/themes/`: pen-and-ink, sepia, bold, winter, y-fenni) and
   example scripts that paint every image in the docs from `examples/`.
-- Recorded place fixtures for Keswick, Trotternish, Yr Wyddfa, Oxford and Y Fenni, with
+- Recorded place fixtures for Ambleside, Skye, Yr Wyddfa, Oxford and Y Fenni, with
   `make_track.py` and `record_fixture.py` to make more.
+- `pyntpot.maps.FetchMargins` and `Cache(directory, margins=...)`: how far beyond the track
+  the features and land cover are fetched; `pyntpot map --margin-m` (ADR 0040).
+- `pyntpot.maps.JournalNote` and `Annotations.notes`: short notes written on the map at a
+  point, seated before any other name (ADR 0038).
+- Style fields `basemap.minor_road_classes` and `cover.relief_strength`, and a route ink's
+  `blend` and `opacity` effects (ADR 0037).
+- `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY` in `pyntpot.ink`: ten painter's
+  pigments by their tube names (ADR 0039).
+- The sea is painted from closed coastline rings, so an island card has water round it.
+- `draw_attribution` takes the card's render `scale`.
 - A bug report form for issues.
 
 ### Fixed
@@ -59,6 +72,10 @@ as a site), example themes and place fixtures, and fixes how names are lettered 
 - A river or stream tagged `tunnel=no` is drawn instead of dropped.
 - A mark painted on a finer ink grid (`ink_ss` above 1; the default theme's 3) is
   centred on the plate's pixels; it sat a third of a pixel up and left (ADR 0025).
+- Water areas keep their islands.
+- A leader line no longer crosses a name already placed.
+- Landmarks leave shops out and rank recorded places first.
+- The nib's touch-down has no square edge, and the pen route keeps its legs apart.
 
 ## [0.0.2] - 2026-10-09
 

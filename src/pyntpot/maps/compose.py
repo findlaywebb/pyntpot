@@ -14,7 +14,7 @@ stroked.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from PIL import Image, ImageChops, ImageDraw
 
@@ -29,6 +29,8 @@ if TYPE_CHECKING:
 #: magnification the card is read at; higher costs the square of it
 #: in memory for a mark that is already smooth.
 ROUTE_SS = 4
+#: The blends a route ink's effect may name.
+ROUTE_BLENDS = ("normal", "multiply")
 
 
 def _rgb(colour: str) -> tuple[int, int, int]:
@@ -61,7 +63,9 @@ def route(
     """The route, in the route ink, drawn onto the card in place.
 
     The painter's pen plate is white carrying alpha so the page can tint it, so
-    the same plate is tinted here. A style with no pen plate draws the line.
+    the same plate is tinted here. A style with no pen plate draws the line. The ink's
+    effect keys `blend` (`"normal"` or `"multiply"`) and `opacity` (0 to 1, default 1.0)
+    shape both; its other effect keys are not read.
 
     Source: `lanczos` in docs/explanation/references.md.
     """
@@ -71,7 +75,7 @@ def route(
         pen = Image.open(plates.directory / name).convert("RGBA")
         if pen.size != card_img.size:
             pen = pen.resize(card_img.size, Image.Resampling.LANCZOS)
-        card_img.paste(Image.new("RGB", card_img.size, colour), (0, 0), pen.getchannel("A"))
+        _lay(card_img, colour, pen.getchannel("A"), ink.effect)
         return
     # Drawn on a grid `ROUTE_SS` times finer and reduced back, because Pillow's
     # line is hard: at one pixel per pixel a route that runs at any angle but
@@ -86,7 +90,36 @@ def route(
         joint="curve",
     )
     mask = big.resize(card_img.size, Image.Resampling.LANCZOS)
-    card_img.paste(Image.new("RGB", card_img.size, colour), (0, 0), mask)
+    _lay(card_img, colour, mask, ink.effect)
+
+
+def _lay(
+    card_img: Image.Image,
+    colour: tuple[int, int, int],
+    mask: Image.Image,
+    effect: dict[str, Any],
+) -> None:
+    """Lay the route's colour through its mask, as the ink's `blend` and `opacity` say.
+
+    `blend` is `"normal"` (the colour replaces the card where the mask is set) or `"multiply"`
+    (the colour is multiplied into the card there, so a dark wash stays dark under it);
+    `opacity` in [0, 1] scales the mask and reads 1.0 when the effect omits it.
+
+    Raises:
+        ValueError: When `blend` is neither of those or `opacity` is outside [0, 1].
+    """
+    blend = effect.get("blend", "normal")
+    opacity = effect.get("opacity", 1.0)
+    if blend not in ROUTE_BLENDS:
+        raise ValueError(f"route blend {blend!r} is not one of {ROUTE_BLENDS}")
+    if not 0.0 <= opacity <= 1.0:
+        raise ValueError(f"route opacity {opacity!r} is not in [0, 1]")
+    if opacity < 1.0:
+        mask = mask.point(lambda v: round(v * opacity))
+    ink = Image.new("RGB", card_img.size, colour)
+    if blend == "multiply":
+        ink = ImageChops.multiply(card_img, ink)
+    card_img.paste(ink, (0, 0), mask)
 
 
 def paste_labels(card_img: Image.Image, plate: Path) -> None:

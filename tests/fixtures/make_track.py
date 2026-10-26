@@ -4,10 +4,16 @@ Run as `uv run python tests/fixtures/make_track.py --contact CONTACT ...`, in on
 modes. `--list-ways S,W,N,E` prints every `highway` way in a box (id, name, `highway`,
 `sac_scale`), so a person can choose; the box is a command-line argument only and is
 never written to a file the coordinate gate scans. `--ways ID,ID,...` fetches those ways,
-joins them in the order given, resamples the line every 20 m and writes a GPX file
-with no time, elevation or activity type. An item is a way id, or `ID:FROM:TO`, the part
-of that way between two of its node ids, walked from FROM to TO; the same way may appear
-more than once.
+joins them in the order given, resamples the line every `--step-m` metres (default 20)
+and writes a GPX file with no time, elevation or activity type. An item is a way id, or
+`ID:FROM:TO`, the part of that way between two of its node ids, walked from FROM to TO;
+the same way may appear more than once. An item may also be `ref=REF` or
+`ref=REF:FROM:TO`: every highway way carrying that `ref` inside `--box S,W,N,E` (given on
+the command line only, like `--list-ways`' box), chained end to end into one line and cut
+at the named nodes. Refs and ids interleave in one ordered list. A ref's chain fails,
+naming way ids and never coordinates, on a gap over 5 m between consecutive ways, where
+the ways fork (a roundabout, a dual or split carriageway) and on a closed way; the
+stretch's ids are then listed explicitly.
 
 `--ways` takes checks, and fails on any miss: `--start-node ID:M`, `--via-node ID:M`
 (repeatable) and `--end-node ID:M` each require the track to pass within M metres of that
@@ -61,6 +67,9 @@ _EARTH_M = 6_371_000.0
 
 Point = tuple[float, float]
 
+#: One `--ways` item: a way id or a `ref`, then the optional FROM and TO node ids.
+Item = tuple[int | str, int | None, int | None]
+
 
 class TrackError(RuntimeError):
     """Raised when the ways cannot be fetched, joined or checked."""
@@ -108,9 +117,10 @@ def fetch_ways(
     contact: str, way_ids: Sequence[int], node_ids: Sequence[int]
 ) -> tuple[dict[int, dict[str, Any]], dict[int, Point]]:
     """Return the ways by id, with geometry and version, and the checked nodes' points."""
+    if not way_ids and not node_ids:
+        return {}, {}
     agent = OverpassFeatures(contact).user_agent
-    ways = ",".join(str(i) for i in way_ids)
-    parts = f"way(id:{ways});"
+    parts = f"way(id:{','.join(str(i) for i in way_ids)});" if way_ids else ""
     if node_ids:
         parts += f"node(id:{','.join(str(i) for i in node_ids)});"
     query = f"[out:json][timeout:180];({parts});out meta geom;"
@@ -122,6 +132,15 @@ def fetch_ways(
     if missing:
         raise TrackError(f"not returned by the mirror: {missing}")
     return found, nodes
+
+
+def fetch_ref_ways(contact: str, ref: str, box: str) -> list[dict[str, Any]]:
+    """Return the highway ways carrying `ref` in a south,west,north,east box, with geometry."""
+    agent = OverpassFeatures(contact).user_agent
+    query = f'[out:json][timeout:180];way["highway"]["ref"~"(^|;){ref}(;|$)"]({box});out meta geom;'
+    with httpx.Client() as client:
+        elements = _post(client, query, agent)["elements"]
+    return [e for e in elements if e["type"] == "way" and ref in e["tags"]["ref"].split(";")]
 
 
 def _points(way: dict[str, Any]) -> list[Point]:
@@ -197,18 +216,86 @@ def part(way: dict[str, Any], start: int | None, stop: int | None) -> dict[str, 
     return {**way, "geometry": geometry, "nodes": nodes}
 
 
-def parse_items(text: str) -> list[tuple[int, int | None, int | None]]:
-    """Parse `ID,ID:FROM:TO,...` into (way id, from node, to node) triples."""
-    items: list[tuple[int, int | None, int | None]] = []
+def parse_items(text: str) -> list[Item]:
+    """Parse `ID,ID:FROM:TO,ref=REF,ref=REF:FROM:TO,...` into (way id or ref, from, to)."""
+    items: list[Item] = []
     for item in text.split(","):
         way, *nodes = item.split(":")
         if len(nodes) not in (0, 2):
-            raise TrackError(f"bad way item {item!r}: use ID or ID:FROM:TO")
-        if nodes:
-            items.append((int(way), int(nodes[0]), int(nodes[1])))
-        else:
-            items.append((int(way), None, None))
+            raise TrackError(
+                f"bad way item {item!r}: use ID, ID:FROM:TO, ref=REF or ref=REF:FROM:TO"
+            )
+        key: int | str = way[4:] if way.startswith("ref=") else int(way)
+        cut = (int(nodes[0]), int(nodes[1])) if nodes else (None, None)
+        items.append((key, *cut))
     return items
+
+
+def _linked(a: dict[str, Any], b: dict[str, Any], i: int, j: int) -> bool:
+    """Return whether end `i` of way `a` and end `j` of way `b` share a node or lie within the gap."""
+    if a["nodes"][i] == b["nodes"][j]:
+        return True
+    return _metres(_points(a)[i], _points(b)[j]) <= JOIN_GAP_M
+
+
+def chain_ref(ways: Sequence[dict[str, Any]], ref: str) -> dict[str, Any]:
+    """Return one way running through all of a ref's ways, joined end to end.
+
+    Ends join where they share a node or lie within `JOIN_GAP_M`. Raises `TrackError`,
+    naming way ids, on a closed way, a fork (an end joining two or more ways) and a
+    gap (ways left over that join nothing).
+    """
+    if not ways:
+        raise TrackError(f"no highway ways with ref {ref} in the box")
+    closed = [w["id"] for w in ways if w["nodes"][0] == w["nodes"][-1]]
+    if closed:
+        raise TrackError(f"ref {ref}: closed way {closed}: list the stretch's ids explicitly")
+    ends = [(k, i) for k in range(len(ways)) for i in (0, -1)]
+    joins: dict[tuple[int, int], list[tuple[int, int]]] = {
+        (k, i): [(m, j) for m, j in ends if m != k and _linked(ways[k], ways[m], i, j)]
+        for k, i in ends
+    }
+    forks = sorted({ways[k]["id"] for (k, _), found in joins.items() if len(found) > 1})
+    if forks:
+        raise TrackError(f"ref {ref}: fork at ways {forks}: list the stretch's ids explicitly")
+    free = [end for end, found in joins.items() if not found]
+    if len(ways) > 1 and len(free) != 2:
+        raise TrackError(
+            f"ref {ref}: gap over {JOIN_GAP_M:.0f} m among ways {sorted(w['id'] for w in ways)}"
+        )
+    k, i = free[0] if len(ways) > 1 else (0, 0)
+    ordered, seen = [], set()
+    while k not in seen:
+        seen.add(k)
+        points, ids = _points(ways[k]), list(ways[k]["nodes"])
+        if i == -1:
+            points, ids = points[::-1], ids[::-1]
+        ordered.append((ways[k], points, ids))
+        far = (k, -1 if i == 0 else 0)
+        if not joins[far]:
+            break
+        k, i = joins[far][0]
+    if len(seen) != len(ways):
+        gap = sorted(w["id"] for n, w in enumerate(ways) if n not in seen)
+        raise TrackError(f"ref {ref}: gap over {JOIN_GAP_M:.0f} m before ways {gap}")
+    points, nodes = [], []
+    for _, pts, ids in ordered:
+        skip = 1 if nodes and nodes[-1] == ids[0] else 0
+        points += pts[skip:]
+        nodes += ids[skip:]
+    geometry = [{"lat": lat, "lon": lon} for lat, lon in points]
+    return {"id": f"ref {ref}", "version": 0, "nodes": nodes, "geometry": geometry, "tags": {}}
+
+
+def assemble(
+    items: Sequence[Item], found: dict[int, dict[str, Any]], refs: dict[str, list[dict[str, Any]]]
+) -> list[dict[str, Any]]:
+    """Return the items' ways in the order given, each cut to its FROM and TO nodes."""
+    built = []
+    for key, start, stop in items:
+        way = chain_ref(refs[key], key) if isinstance(key, str) else found[key]
+        built.append(part(way, start, stop))
+    return built
 
 
 def resample(points: Sequence[Point], step_m: float = STEP_M) -> list[Point]:
@@ -275,7 +362,11 @@ def _parse(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build a fixture track from OSM ways.")
     parser.add_argument("--contact", required=True, help="how the mirror's operator reaches you")
     parser.add_argument("--list-ways", metavar="S,W,N,E", help="list the highway ways in a box")
-    parser.add_argument("--ways", metavar="ID[:FROM:TO],...", help="ways to join, in order")
+    parser.add_argument(
+        "--ways", metavar="ID[:FROM:TO]|ref=REF[:FROM:TO],...", help="ways to join, in order"
+    )
+    parser.add_argument("--box", metavar="S,W,N,E", help="the box a ref= item searches")
+    parser.add_argument("--step-m", type=float, default=STEP_M, help="metres between points")
     parser.add_argument("--out", type=Path, help="the GPX file to write")
     parser.add_argument("--name", default="Fixture track (synthetic)", help="the GPX track name")
     parser.add_argument("--start-node", metavar="ID:M")
@@ -299,21 +390,26 @@ def _checks(args: argparse.Namespace) -> list[tuple[str, int, float]]:
 def build(args: argparse.Namespace) -> int:
     """Fetch, join, check, resample and write; return 1 when a check misses."""
     items = parse_items(args.ways)
-    way_ids = list(dict.fromkeys(way for way, _, _ in items))
+    way_ids = list(dict.fromkeys(k for k, _, _ in items if isinstance(k, int)))
+    refs = list(dict.fromkeys(k for k, _, _ in items if isinstance(k, str)))
+    if refs and not args.box:
+        raise TrackError("a ref= item needs --box S,W,N,E")
     checks = _checks(args)
     found, nodes = fetch_ways(args.contact, way_ids, [node for _, node, _ in checks])
-    for way_id in way_ids:
-        tags = found[way_id].get("tags", {})
+    by_ref = {ref: fetch_ref_ways(args.contact, ref, args.box) for ref in refs}
+    for way in [*(found[i] for i in way_ids), *(w for ways in by_ref.values() for w in ways)]:
+        tags = way.get("tags", {})
         log.info(
-            "way %d version %d %s %s",
-            way_id,
-            found[way_id]["version"],
+            "way %d version %d %s %s %s",
+            way["id"],
+            way["version"],
             tags.get("highway", "-"),
+            tags.get("ref", "-"),
             tags.get("name", "-"),
         )
     for node_id in nodes:
         log.info("node %d found", node_id)
-    points = resample(chain([part(found[way], a, b) for way, a, b in items]))
+    points = resample(chain(assemble(items, found, by_ref)), args.step_m)
     failed = False
     for label, node_id, limit in checks:
         gap = distance_to_line(nodes[node_id], points)

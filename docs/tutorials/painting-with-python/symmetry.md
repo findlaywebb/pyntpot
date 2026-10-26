@@ -1,20 +1,22 @@
 # Symmetry: one motif, repeated by mirror and rotation
 
-![A twelve-petalled blue rosette with green diamonds and tan discs, drawn in ink inside a ring, like stained glass in watercolour](../../images/curves/kaleidoscope.webp)
+![A twelve-petalled blue rosette with pale green leaves between the petals, green diamonds and tan discs, all outlined in ink inside a ring](../../images/curves/kaleidoscope.webp)
 
 *Painted by `examples/kaleidoscope.py` (seed 9).*
 
-A kaleidoscope draws something small once and repeats it. This page paints a rosette that
-way: a petal, a leaf, a diamond, a disc and a spoke are each listed once, then repeated by
-two moves. The shapes are washed in pigment and the lines are inked with the pen.
+A kaleidoscope draws something small once and repeats it. This page paints a rosette
+that way. A petal, a leaf, a diamond, a disc and a spoke are each listed once, then
+repeated by two moves. The shapes are washed in pigment and the lines are inked with the
+pen.
 
-Run it with `uv run python examples/kaleidoscope.py out/`; it writes `out/kaleidoscope.png`.
+Run it with `uv run python examples/kaleidoscope.py out/`. It writes
+`out/kaleidoscope.png`.
 
 ## The motif
 
 Each point of the motif is a pair: a radius, as a fraction of the figure's reach, and an
-angle in degrees. The wash shapes are listed by pigment, and the inked lines are the
-shapes' outlines plus a spoke.
+angle in degrees. The wash shapes are listed by pigment. The inked lines are the shapes'
+outlines plus the spokes.
 
 <!-- from examples/kaleidoscope.py -->
 ```python
@@ -41,8 +43,8 @@ LINES: list[list[Polar]] = [
 - **Rotation.** Add 60 degrees to every angle, six times round. The pair repeats with
   six-fold symmetry.
 
-Together they make twelve copies of every shape. The code builds the twelve by choosing
-mirror or not, and a turn from 0 to 5, then turning each polar point into a pixel.
+Together they make twelve copies of every shape. The code picks mirror or not, and a
+turn from 0 to 5, then turns each polar point into a pixel.
 
 <!-- from examples/kaleidoscope.py -->
 ```python
@@ -63,8 +65,8 @@ def _copies(shape: list[Polar], size: int) -> list[np.ndarray]:
 ## Wash the shapes
 
 Every copy of every shape of one pigment is filled into one coverage mask, so each wash
-is laid once per pigment, not once per copy. Where a copy overlaps its neighbour, as the
-petals do along the mirror line, the mask is simply 1, and the wash stays even.
+is laid once per pigment, not once per copy. Where two copies overlap, the mask is
+simply 1, and the wash stays even.
 
 <!-- from examples/kaleidoscope.py -->
 ```python
@@ -81,9 +83,9 @@ def _cover(shapes: list[list[Polar]], size: int) -> np.ndarray:
 ## Ink the lines
 
 The copies of each line are stamped with the narrow nib, the way the
-[curves](curves.md) page draws its figures, together with one outer ring at the figure's
-reach. The ring marks the edge of the figure and leaves a clear margin of bare paper
-round it.
+[curves](curves.md) page draws its figures. One outer ring at the figure's reach is
+stamped with them. The ring marks the edge of the figure and leaves a margin of bare
+paper round it.
 
 <!-- from examples/kaleidoscope.py -->
 ```python
@@ -94,13 +96,13 @@ round it.
 
 ## What to notice
 
-- The petals meet along the mirror lines without a seam, because a shape and its mirror
-  image fill the same mask.
+- The blue petals come in mirrored pairs on either side of each horizontal spoke. The
+  pale green leaves sit on the other mirror lines, between the pairs.
 - The wash is laid first and the ink over it, so the lines stay crisp over the colour.
 - Every seed is fixed, so one run writes the same file again.
 
 ## Try changing
 
-Change `FOLD` from 6 to 8 for eight-fold symmetry, and the angles in the motif that
-mention 30 degrees to 22.5 so the diamonds still sit midway between two petals. Move the
-petal's angle from 14 to 5 and watch the mirrored pairs fuse.
+Change `FOLD` from 6 to 8 for eight-fold symmetry. Change the angles in the motif that
+mention 30 degrees to 22.5, so the diamonds still sit midway between two petals. Move
+the petal's angle from 14 to 5, and the mirrored pairs fuse.

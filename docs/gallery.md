@@ -6,45 +6,73 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Paint a watercolour](tutorials/paint-a-watercolour.md)
 
-![A piece of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](images/tutorials/paper.webp)
+![A piece of cream paper with a soft grain, a narrow brown edge that wanders a little, and a few small rust specks of foxing](images/tutorials/paper.webp)
 
 *Painted by `examples/paper.py` (seed 11).*
+
+![Six pieces of paper in two rows of three. The top row has a grey shadow round its edge and the bottom row a narrow warm brown edge. The grain grows stronger from the left column to the right.](images/tutorials/grid-paper.webp)
+
+*Painted by `examples/tutorial_grids.py` (figure paper). The labels read 0.04, 0.085 and 0.16 across, and classic and warm down.*
 
 ![A soft blue disc on cream paper, its edge a little darker than its middle and its body lightly granular](images/tutorials/wash.webp)
 
 *Painted by `examples/wash.py` (seed 11).*
 
+![Six pale blue discs in two rows of three, each on its own piece of paper. The discs deepen from the left column to the right. The two rows differ in the wobble of the edge and in the pattern of the mottle.](images/tutorials/grid-wash.webp)
+
+*Painted by `examples/tutorial_grids.py` (figure wash). The labels read 0.3, 0.6 and 0.9 across, and seed 11 and seed 23 down.*
+
 ![Two strokes on cream paper: a steady, wet blue stroke above a drier olive stroke that breaks into flecks towards its end](images/tutorials/brush-stroke.webp)
 
 *Painted by `examples/brush_stroke.py` (seed 11).*
 
-![Two panels, each with a yellow-green disc overlapping a deeper green one; the overlap is a different green in the two panels](images/tutorials/pigments.webp)
+![Twelve strokes in three rows of four, each a wave across its cell. The columns are a wet blue brush, a grainy brown one, a dry olive one and a scratchy dark one. The rows get wider from the top to the bottom, and the dry brushes break up more as they widen.](images/tutorials/grid-brush.webp)
+
+*Painted by `examples/tutorial_grids.py` (figure brush). The labels read RIV1-a, MAJ3-b, TRK4-d and MAJ7-e across, and 3 px, 6 px and 12 px down.*
+
+![Two panels, each with a blue disc overlapping a yellow-ochre one; the overlap is a different green in the two panels](images/tutorials/pigments.webp)
 
 *Painted by `examples/pigments.py` (seed 11).*
+
+![Eight pairs of overlapping discs in two rows of four. The pairs are blue over ochre, which makes green; rose over blue, which makes violet; ochre over rose, which makes orange; and sienna over blue, which makes a dark grey-brown. The top row is multiplied and the bottom row glazed, so the overlaps in the bottom row are cleaner.](images/tutorials/grid-pigments.webp)
+
+*Painted by `examples/tutorial_grids.py` (figure pigments). The labels read 1 to 4 across, and multiply and glazed down.*
 
 ![A dark ink spiral of three turns drawn with a pen nib on cream paper, its line slightly uneven where the ink meets the grain](images/tutorials/nib-line.webp)
 
 *Painted by `examples/nib_line.py` (seed 11).*
 
+![The name Ambleside written six times in two rows of three. The columns turn the nib through three angles; the rows thin the line along the nib by about half and by most. In the top row the strokes keep most of their weight; in the bottom row the strokes along the nib fall away to hairlines, most plainly in the upright stems of the right-hand cell, where the nib is turned to 90 degrees.](images/tutorials/grid-nib.webp)
+
+*Painted by `examples/tutorial_grids.py` (figure nib). The name is Ambleside. The labels read -38, 0 and 90 across, and 0.5 and 0.85 down.*
+
 ![The name Ambleside written by hand in dark ink along a gentle wave, its letters each a little different in size and slant](images/tutorials/lettering.webp)
 
 *Painted by `examples/lettering.py` (seed 7).*
 
-![A pale blue wash disc on cream paper, a wet blue brush stroke running across it in a long wave and the name Keswick written by hand over both](images/tutorials/composition.webp)
+![The name Keswick written nine times in three rows of three. Every copy is the same word and no two are alike: the letters lean differently, sit at different heights and differ in size.](images/tutorials/grid-lettering.webp)
+
+*Painted by `examples/tutorial_grids.py` (figure lettering). The name is Keswick; the nine copies are nine hand seeds.*
+
+![A pale blue wash disc on cream paper with the name Keswick written by hand across its middle, and a wet burnt sienna brush stroke curving under the name and across the disc's foot](images/tutorials/composition.webp)
 
 *Painted by `examples/composition.py` (seed 7).*
 
+![Six small copies of the painting in two rows of three, a blue disc with the name Keswick centred on it and a wave of blue brushwork under the name. The three columns differ only in the hand's seed, so the name is written three ways. In the top row the name sits straight on the paint; in the bottom row a pale patch of paper shows through the paint behind the letters.](images/tutorials/grid-composition.webp)
+
+*Painted by `examples/tutorial_grids.py` (figure composition). The name is Keswick. The labels read seed 1, seed 2 and seed 3 across, and off and on down.*
+
 ### [First map](tutorials/first-map.md)
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](images/tutorials/route-map.webp)
+![A hand-painted map of Ambleside and Rydal Water: a ribbon of green and ochre washes round a pink route that loops from Ambleside up Loughrigg Fell and back along Rydal Water, with blue strokes for the rivers Rothay and Brathay, rust-coloured roads and the names written by hand](images/tutorials/route-map.webp)
 
 *Painted by `examples/route_map.py`.*
 
 ## Painting with Python
 
-### [Curves: a rose, a Lissajous figure and a spirograph](tutorials/painting-with-python/curves.md)
+### [Curves: a rose and a spirograph in brush, a Lissajous figure in pen](tutorials/painting-with-python/curves.md)
 
-![A five-petalled rose curve drawn in ink with a pen, its petals washed pale tan, on cream paper with a wide margin](images/curves/rose.webp)
+![A five-petalled rose curve painted with a brush: each petal is washed in rose pink, deeper toward the centre, and outlined in one maroon stroke that swells and thins, on cream paper with a wide margin](images/curves/rose.webp)
 
 *Painted by `examples/curves.py` (seed 5, figure rose).*
 
@@ -52,7 +80,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/curves.py` (seed 5, figure lissajous).*
 
-![A spirograph curve in ink: nine long loops round a small bare centre, with the loops washed pale green](images/curves/spirograph.webp)
+![A spirograph painted with a brush: a pale blue wash fills its loops, and one long line runs round them, deep blue at the start, shading through blue to green and breaking up where the brush runs dry; the washes deepen where the loops cross](images/curves/spirograph.webp)
 
 *Painted by `examples/curves.py` (seed 5, figure spirograph).*
 
@@ -62,15 +90,23 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/kaleidoscope.py` (seed 9).*
 
-### [Fractals: a fern and a gasket](tutorials/painting-with-python/fractals.md)
+### [Fractals: a fern, a family of ferns and a tree](tutorials/painting-with-python/fractals.md)
 
 ![A fern with a thin stem and curling fronds, washed in two greens on cream paper. The fronds are a deeper green and the two lowest leaflets a paler one.](images/painting-with-python/fern.webp)
 
 *Painted by `examples/fern.py` (seed 7).*
 
-![Washed discs packed inside a ringed circle: two large pale blue discs, a large green one and ochre and green ones below, with ever smaller discs filling the gaps and brown beads at the rim. Where two discs overlap, a darker lens shows both pigments.](images/painting-with-python/gasket.webp)
+![Nine ferns in a three by three grid, each in two greens on cream paper. All nine have the same pale lowest leaflets and curling tip, and no two curl or spread alike.](images/painting-with-python/fern-family.webp)
 
-*Painted by `examples/gasket.py` (seed 11).*
+*Painted by `examples/fern_family.py` (seed 7).*
+
+![A tree with a brown trunk that forks into thinner limbs and fine dark twigs, with washes of green and yellow ochre and flecks of leaf laid over its outer limbs as foliage, and a short ochre stroke of ground at its foot.](images/painting-with-python/tree.webp)
+
+*Painted by `examples/trees.py` (seed 4, figure tree).*
+
+![Nine trees in a three by three grid, each with a brown trunk, fine dark twigs and a crown of green and ochre washes, with a margin of paper round every tree. All nine are one kind of tree, and no two have the same shape, lean or crown.](images/painting-with-python/tree-family.webp)
+
+*Painted by `examples/trees.py` (seed 4, figure family).*
 
 ### [Pictures: layered hill washes and a lettered Derwentwater](tutorials/painting-with-python/pictures.md)
 
@@ -80,7 +116,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Vector drawing: a small drawing, its filled shapes washed and its strokes inked](tutorials/painting-with-python/vector-drawing.md)
 
-![A pale sun, a blue-grey far fell and a green main fell stand above two green banks; a tarn sits on the fell, a pen-ruled wall crosses the left bank, and a track and a beck run down towards two small trees and a pair of birds.](images/painting-with-python/svg-drawing.webp)
+![A pale ochre sun, a blue-grey far fell and a green main fell with a pen skyline stand above two green banks; a tarn sits on the fell's shoulder, a pen-ruled dry-stone wall crosses the left bank, and a track and a beck run down beside two dark green trees and a pair of birds.](images/painting-with-python/svg-drawing.webp)
 
 *Painted by `examples/svg_drawing.py` (seed 5).*
 
@@ -88,53 +124,63 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Write a theme](how-to/write-a-theme.md)
 
-![A route map of Keswick in near-black ink on pale paper, with grey roads and rivers and a black route.](images/map-styles/pen-and-ink.webp)
+![A route map of Ambleside in near-black ink on pale paper, with grey roads and rivers, no colour washes and a black route.](images/map-styles/pen-and-ink.webp)
 
 *Painted by `examples/map_styles.py` (figure pen-and-ink).*
 
-![A route map of Keswick in faded browns on yellowed, foxed paper with a dark vignette.](images/map-styles/sepia.webp)
+![A route map of Ambleside in faded browns on yellowed, foxed paper with a dark vignette and a rust-brown route.](images/map-styles/sepia.webp)
 
 *Painted by `examples/map_styles.py` (figure sepia).*
 
-![A route map of Keswick in saturated greens, oranges and blues, with a thick magenta route.](images/map-styles/bold.webp)
+![A route map of Ambleside in saturated greens, oranges and blues, with a thick magenta route.](images/map-styles/bold.webp)
 
 *Painted by `examples/map_styles.py` (figure bold).*
 
-![A route map of Keswick in cool greys and blues on pale blue-white paper, with a scarlet route.](images/map-styles/winter.webp)
+![A route map of Ambleside in cool greys and blues on pale blue-white paper, with a scarlet route.](images/map-styles/winter.webp)
 
 *Painted by `examples/map_styles.py` (figure winter).*
 
 ### [Change the route ink](how-to/change-the-route-ink.md)
 
-![The Keswick route map card with the route drawn in deep violet, a little heavier than the default crimson.](images/how-to/route-ink.webp)
+![The Ambleside route map card with the route drawn in deep violet, a little heavier than the default pink.](images/how-to/route-ink.webp)
 
 *Painted by `examples/how_to_route_ink.py`.*
 
+![Six small copies of the Ambleside card, each cropped to the loop, in two rows of three. The columns are the route in maroon, in indigo and in burnt sienna and are lettered so; the rows are a wet pen line and a dry pen line that thins and breaks, lettered wet pen and dry pen.](images/how-to/route-ink-grid.webp)
+
+*Painted by `examples/how_to_route_ink.py` (figure grid, theme `examples/themes/ambleside.toml`). The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`. The route is drawn in the normal blend, so it keeps its colour over water.*
+
+### [Letter your own landmarks](how-to/letter-your-own-landmarks.md)
+
+![The Y Fenni route map card: a short maroon route winding through the town between a river and a castle, with callouts lettered by hand on leader lines.](images/places/y-fenni.webp)
+
+*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml` and the callouts of `examples/places.toml`. The callouts are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream.*
+
 ### [Paint your own shapes](how-to/paint-your-own-shapes.md)
 
-![A hill-shaped fell washed in pale blue-green with a black pen line along its smooth skyline, and the name Skiddaw lettered by hand along a gentle curve beneath it.](images/how-to/own-shapes.webp)
+![A hill-shaped fell washed in pale blue-green that fades out toward its foot, with a black pen line that swells and thins along its smooth skyline, and the name Skiddaw lettered by hand, centred beneath it on clean paper.](images/how-to/own-shapes.webp)
 
 *Painted by `examples/how_to_own_shapes.py` (seed 5).*
 
 ### [Map from the command line](how-to/map-from-the-command-line.md)
 
-![The Keswick route map card: a looping route in crimson over washes of green and blue, with rivers, roads and names lettered by hand.](images/gallery/route-map.webp)
+![The Lynmouth route map card: a pink route over washes of green and blue, with the river, roads and names lettered by hand.](images/how-to/command-line.webp)
 
-*Painted by `examples/route_map.py`.*
+*Painted by `examples/route_map.py`, which makes the same card as the command.*
 
 ## Reference
 
 ### [Pigments](reference/pigments.md)
 
-![Fifteen washed discs, each one pigment laid alone on the paper, in rows of five in the order of the table below.](images/reference/pigment-swatches.webp)
+![The pigment card: fifteen strips in three rows of five, one for each pigment, each strip a wash that deepens from left to right and lies across a narrow bar of grey-brown ink that shows bare past both ends, with the pigment's key lettered under it. The staining pigments let the bar show through at their deep end; the covering greys and browns veil it.](images/reference/pigment-swatches.webp)
 
-*Painted by `examples/pigment_swatches.py` (seed 11).*
+*Painted by `examples/pigment_swatches.py` (seed 11).* Each key is lettered under its strip, in the order of the page's table.
 
 ### [Brushes](reference/brushes.md)
 
-![The brush sheet: fourteen rows of eight short wavy strokes, one stroke for each brush id, in the colour of its ink. Treatments 4 and 7 break up as dry brushes; the others lay a continuous line.](images/reference/brush-sheet.webp)
+![The brush grid: eight brush treatments in one brown ink, stroked as a wave at 3, 6 and 12 pixels wide in three rows. The wet treatments stay whole at every width, the dry ones break into flecks as they widen, and the nibs leave a blot where they touch down.](images/reference/brush-sheet.webp)
 
-*Painted by `examples/brush_sheet.py` (seed 11).*
+*Painted by `examples/brush_sheet.py` (seed 11, figure grid).* The labels read the treatment numbers 1 to 8 across, the widths 3 px, 6 px and 12 px down, and wet, soft, gritty, dry, nib, pen, driest and light nib under the columns.
 
 ## Explanation
 
@@ -160,33 +206,25 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/wash_stages.py` (seed 11, figure overlap, size 480).*
 
-![The same two discs glazed: where they cross the green is cleaner and lighter than the multiplied one, and each disc still reads through the other.](images/explanation/wash-glaze.webp)
+![Eight pairs of overlapping discs in two rows of four: a blue disc, then a warm sienna disc over it. The top row is multiplied and its four overlaps are the same dark brown. In the bottom row, glazed, the overlap is nearly as dark in the first column and grows lighter and warmer across, until in the last column it is the colour of the sienna alone.](images/explanation/wash-glaze.webp)
 
-*Painted by `examples/wash_stages.py` (seed 11, figure glaze, size 480).*
+*Painted by `examples/wash_stages.py` (seed 11, figure glaze, size 800). The labels read 0.04, 0.2, 0.5 and 0.9 across, and multiply and glazed down.*
 
 ### [The hand and the nib](explanation/the-hand-and-the-nib.md)
 
-![A single gently waving line running across cream paper, drawn with a narrow pen nib.](images/explanation/nib-line.webp)
-
-*Painted by `examples/nib_stages.py` (seed 7, figure line, size 360).*
-
-![The word Keswick written along the line in an even, unmodulated pen line, every stroke the same width.](images/explanation/nib-centreline.webp)
+![The word Keswick written along a faint pencil guide line in an even, unmodulated pen line, every stroke the same width.](images/explanation/nib-centreline.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, figure centreline, size 360).*
 
-![The same word with strokes that thicken and thin: strokes that fall to the right are heavy and strokes that rise to the right are light.](images/explanation/nib-broad.webp)
+![The word Keswick written twelve times in three rows of four. The columns turn the nib through four angles and the rows thin the line along the nib by none, about half and most. In the top row every stroke is one width. In the bottom row the strokes along the nib fall away to hairlines, and which strokes those are depends on the angle.](images/explanation/nib-angles.webp)
 
-*Painted by `examples/nib_stages.py` (seed 7, figure broad, size 360).*
+*Painted by `examples/nib_stages.py` (seed 7, figure angles, size 840). The name is Ambleside. The labels read -38, 0 and 90 across, and 0.5 and 0.85 down.*
 
-![The same word written with the nib turned the other way, so the strokes that rise to the right are heavy and the ones that fall to the right are light.](images/explanation/nib-turned.webp)
-
-*Painted by `examples/nib_stages.py` (seed 7, figure turned, size 360).*
-
-![The word Keswick written in dark ink over a dark green wash, legible but low in contrast against the wash.](images/explanation/nib-ground.webp)
+![The word Keswick written in dark ink over an irregular patch of deep sap green, with a faint pencil line under the name. The ink is legible but low in contrast against the green.](images/explanation/nib-ground.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, figure ground, size 360).*
 
-![The same word with a pale, soft-edged patch of paper showing through the green wash behind it, so the ink is much clearer.](images/explanation/nib-backing.webp)
+![The same word and pencil line on the same green, with a pale, soft-edged patch of paper showing through the green wash behind the name, so the ink is much clearer.](images/explanation/nib-backing.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, figure backing, size 360).*
 
@@ -198,39 +236,43 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/nib_stages.py` (seed 7, figure runs-dry, size 360).*
 
+![The word Keswick written nine times in three rows of three, in dark pen lettering. Every copy is the same word and no two are alike: the letters lean differently, sit at different heights and differ in size.](images/explanation/nib-hands.webp)
+
+*Painted by `examples/nib_stages.py` (seed 7, figure hands, size 840). The name is Keswick; the nine copies are nine hand seeds.*
+
 ## Places
 
-The five focus places, each painted from a recorded fixture by one script. Every route is invented along public paths: it follows public OpenStreetMap ways, is traced from no recorded activity and marks no home or personal route. Each card links its fixture.
+The five showcase maps, each painted from a recorded fixture by one script, `examples/place_card.py`, in its own theme with its curated callouts. Every route is invented along public paths: it follows public OpenStreetMap ways, is traced from no recorded activity and marks no home or personal route. Each card links its fixture.
 
-### [Keswick and Derwentwater](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/keswick)
+### [Ambleside, the Lake District](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/ambleside)
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes, blue rivers, orange roads and a crimson route through the town; the names include Keswick, Portinscale and Crosthwaite](images/places/keswick.webp)
+![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes and a maroon route looping from the town out to Loughrigg Terrace, lettered Ambleside, Grasmere, Rydal Water, Loughrigg Terrace, Loughrigg Fell and Bridge House](images/places/ambleside.webp)
 
-*Painted by `examples/place_card.py`.* Among the names it letters are Keswick, Portinscale, Crosthwaite, Derwent Bridge, Lake Road Chapel, Derwent, Greta and A5271; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/ambleside.toml`.* The hero: a fell walk. Among the names it letters are Ambleside, Grasmere, Rydal Water, Loughrigg Terrace, Loughrigg Fell, Bridge House, Rothay and Brathay; the list is not complete.
 
-### [The Quiraing, Trotternish, Skye](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/trotternish)
+### [Skye](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/skye)
 
-![A hand-painted map of the Quiraing on Skye: a narrow cream and green ribbon of land with a crimson route looping along it, lettered Fir Bhreugach, The Prison and Quiraing South Pinnacle](images/places/trotternish.webp)
+![A hand-painted map of the Isle of Skye: pale washes of land and sea, a dark route looping across the island, four journal notes lettered in the hand, one for each day of the trip, and the names Portree and The Cuillin](images/places/skye.webp)
 
-*Painted by `examples/place_card.py`.* Among the names it letters are Fir Bhreugach, Quiraing South Pinnacle, The Prison, Brogaig; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/skye.toml`.* An island road trip with journal notes: each day of the trip is a sentence of the walker's own pinned to a point, Monday to Thursday.
 
 ### [Over Crib Goch to the summit of Yr Wyddfa, Eryri](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/yr-wyddfa)
 
-![A hand-painted map of the route over Crib Goch to Yr Wyddfa: a long pale ribbon of ground with a crimson route along its ridge, lettered Garnedd Ugain, Yr Wyddfa, Crib Goch and Llanberis](images/places/yr-wyddfa.webp)
+![A hand-painted map of the route over Crib Goch to Yr Wyddfa: a long pale ribbon of ground with a dark route along its ridge, lettered Garnedd Ugain, Crib Goch, Glaslyn and Llyn Llydaw](images/places/yr-wyddfa.webp)
 
-*Painted by `examples/place_card.py`.* Among the names it letters are Llanberis, Garnedd Ugain, Yr Wyddfa, Crib Goch; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/yr-wyddfa.toml`.* A mountain ridge: Crib Goch, Garnedd Ugain and the lakes below them. Among the names it letters are Crib Goch, Garnedd Ugain, Glaslyn, Llyn Llydaw and Afon Nant Peris; the list is not complete.
 
 ### [Central Oxford](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/oxford)
 
-![A hand-painted map of central Oxford: pale washes for the city, a dark blue wash for the river Cherwell and a crimson route round Christ Church Meadow, lettered Christ Church, Tom Tower and Magdalen Tower](images/places/oxford.webp)
+![A hand-painted map of central Oxford: washes for the city and the meadows, the rivers Cherwell and Thames as blue strokes and a maroon route round Christ Church Meadow, lettered Radcliffe Camera, Christ Church, Magdalen Bridge and The Bridge of Sighs](images/places/oxford.webp)
 
-*Painted by `examples/place_card.py`.* Among the names it letters are Christ Church, Tom Tower, Magdalen Tower, Cherwell; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/oxford.toml`.* A city of colleges and bridges. Among the names it letters are Radcliffe Camera, Christ Church, Magdalen Bridge, The Bridge of Sighs, Cherwell and Thames; the list is not complete.
 
 ### [Y Fenni](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/y-fenni)
 
-![A hand-painted map of Y Fenni: washes for the town, the blue river Wysg and a crimson route round the castle and the meadows, with the town lettered Y Fenni](images/places/y-fenni.webp)
+![A hand-painted map of Y Fenni: washes for the town, the blue river Wysg and a maroon route winding through the town centre, with callouts lettered Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream](images/places/y-fenni.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml`.* Among the names it letters are Y Fenni, Afon Wysg, Llan-ffwyst, Gavenny River, Borough Theatre and A40; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml`.* A food tour in a Welsh-named market town: the town is lettered Y Fenni where OpenStreetMap carries the Welsh name. Among the names it letters are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise, Shepherd's Ice Cream, Afon Wysg and Llan-ffwyst; the list is not complete.
 
 ## The README
 
@@ -240,19 +282,19 @@ The pictures that open the [README](https://github.com/findlaywebb/pyntpot#readm
 
 *Painted by `examples/word.py`. The word is pyntpot.*
 
-![A hand-painted map of Keswick and Derwentwater: green and cream washes for the land, blue strokes for the rivers Derwent and Greta, orange roads and a crimson route looping through the town, with the names written by hand](images/hero.webp)
+![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes, the river Rothay in dark blue, and a maroon route looping from Ambleside out to Loughrigg Terrace and back, with the names written by hand](images/hero.webp)
 
-*Painted by `examples/place_card.py` (size 1200).*
+*Painted by `examples/place_card.py` (size 1200, theme `examples/themes/ambleside-hero.toml`, place `ambleside`).*
 
-![The Keswick card on the left and the pyntpot wordmark on the right, on one piece of cream paper](images/social-preview.jpg)
+![A wide crop of the Ambleside map with the word pyntpot lettered large in dark ink over a soft patch of paper in the middle, the maroon route looping round it](images/social-preview.jpg)
 
-*Painted by `examples/social_preview.py`. The word is pyntpot.*
+*Painted by `examples/social_preview.py` (theme `examples/themes/ambleside-hero.toml`, place `ambleside`). The word is pyntpot.*
 
 ### The strip of eight
 
 The README's strip is one thumbnail for each rung of the [tutorials](tutorials/index.md), from the paper to the route map.
 
-![A piece of cream paper with a soft grain, a darker worn border and a few pale blotches of foxing](images/gallery/paper.webp)
+![A piece of cream paper with a soft grain, a narrow brown edge that wanders a little, and a few small rust specks of foxing](images/gallery/paper.webp)
 
 *Painted by `examples/paper.py` (seed 11).*
 
@@ -264,7 +306,7 @@ The README's strip is one thumbnail for each rung of the [tutorials](tutorials/i
 
 *Painted by `examples/brush_stroke.py` (seed 11).*
 
-![Two panels of overlapping green discs, the overlap a different green in each](images/gallery/pigments.webp)
+![Two panels, each with a blue disc overlapping a yellow-ochre one, the overlap a different green in each](images/gallery/pigments.webp)
 
 *Painted by `examples/pigments.py` (seed 11).*
 
@@ -276,10 +318,10 @@ The README's strip is one thumbnail for each rung of the [tutorials](tutorials/i
 
 *Painted by `examples/lettering.py` (seed 7).*
 
-![A blue wash disc, a wet brush stroke across it and the name Keswick written over both](images/gallery/composition.webp)
+![A blue wash disc with the name Keswick written by hand across it and a wet sienna brush stroke curving under it](images/gallery/composition.webp)
 
 *Painted by `examples/composition.py` (seed 7).*
 
-![A hand-painted map of Keswick and Derwentwater with a crimson route looping through the town](images/gallery/route-map.webp)
+![A hand-painted map of Ambleside and Rydal Water in the showcase theme: tawny fell and green wood washes, two blue lakes and a maroon route looping out to Loughrigg Terrace](images/gallery/route-map.webp)
 
-*Painted by `examples/route_map.py`.*
+*Painted by `examples/place_card.py` in `examples/themes/ambleside.toml`, with the curated callouts of `examples/places.toml`.*

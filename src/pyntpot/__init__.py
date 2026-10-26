@@ -1,4 +1,4 @@
-"""Hand-drawn watercolour and pen-and-ink painting, with route maps.
+"""Watercolour and ink painting, from a single wash to a hand-painted route map.
 
 Public API: the map types `Track`, `Basemap`, `Style`, `Plates`, `Lettering`
 and `Annotations`; the map functions `fetch`, `paint`, `letter` and `compose`;

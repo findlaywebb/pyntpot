@@ -1,7 +1,9 @@
 """Pigments and compositing: the colours a wash transmits and how a stack of layers is laid.
 
 Key names: `PIGMENTS`, what a full-strength wash of each pigment transmits; `TRANSPARENCY`,
-what each shows over black as a share of what it shows over white; `PigmentLayer`, one layer of
+what each shows over black as a share of what it shows over white; `PAINTERS_PIGMENTS` and
+`PAINTERS_TRANSPARENCY`, the same two for ten tube pigments a painter names, kept apart from the
+map roles; `PigmentLayer`, one layer of
 the stack; `multiply_plate`, the stack as transmission; `km_rt` and `km_plate`, Kubelka-Munk
 glazing; `composite`, the stack over a backing the way `PaperStyle` asks.
 
@@ -59,6 +61,39 @@ TRANSPARENCY = {
     "water": 0.04,
     "relief": 0.30,
     "rim": 0.18,
+}
+
+
+#: Painter's pigments: the same meaning as `PIGMENTS`, keyed by the tube a painter names
+#: rather than by map role. No map style reads this table; it is for whoever paints with
+#: the engine directly. Each colour is what a full-strength wash transmits.
+PAINTERS_PIGMENTS = {
+    "ultramarine": "#2b3d8f",
+    "cerulean": "#2a7ab0",
+    "burnt_sienna": "#8a3b1c",
+    "raw_sienna": "#b8692a",
+    "yellow_ochre": "#c99a3a",
+    "sap_green": "#3f6b2a",
+    "indigo": "#2c3346",
+    "perylene_maroon": "#5a1f27",
+    "quinacridone_rose": "#b8215e",
+    "paynes_grey": "#3b4452",
+}
+
+#: What each painter's pigment shows over black, as a share of what it shows over white,
+#: the same meaning as `TRANSPARENCY`. Ultramarine, cerulean and the sienna earths sit
+#: nearer a covering body; the quinacridone, the maroon and the indigo stain.
+PAINTERS_TRANSPARENCY = {
+    "ultramarine": 0.06,
+    "cerulean": 0.22,
+    "burnt_sienna": 0.20,
+    "raw_sienna": 0.18,
+    "yellow_ochre": 0.24,
+    "sap_green": 0.07,
+    "indigo": 0.05,
+    "perylene_maroon": 0.04,
+    "quinacridone_rose": 0.05,
+    "paynes_grey": 0.10,
 }
 
 

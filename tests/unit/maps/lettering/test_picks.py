@@ -4,7 +4,12 @@ import math
 
 from pyntpot.maps.annotations import Annotations, Landmark
 from pyntpot.maps.basemap import River, Road
-from pyntpot.maps.lettering.picks import home_labels, journal_picks, route_markers
+from pyntpot.maps.lettering.picks import (
+    home_labels,
+    journal_heuristic,
+    journal_picks,
+    route_markers,
+)
 from pyntpot.maps.lettering.picks_lines import named_lines
 from pyntpot.maps.lettering.picks_rivers import pick_rivers
 from pyntpot.maps.lettering.picks_settlements import (
@@ -163,6 +168,13 @@ def test_a_cap_of_nought_picks_no_landmark():
     """A cap of nought picks no landmark."""
     picks = Annotations(landmarks=(Landmark(name="Watersmeet", lat=51.22, lng=-3.81),))
     assert journal_picks(picks, label_basemap(), 0) == []
+
+
+def test_a_cap_of_nought_falls_back_to_no_landmark():
+    """With no landmark to place and a cap of nought, the fallback letters none of the candidates."""
+    basemap = label_basemap(candidates=[_named_candidate("Watersmeet", 200.0, 44.0)])
+    assert journal_heuristic(basemap, 0) == []
+    assert [p["name"] for p in journal_heuristic(basemap, 1)] == ["Watersmeet"]
 
 
 def test_the_markers_and_the_home_say_why_in_track_words():

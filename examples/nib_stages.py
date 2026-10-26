@@ -7,14 +7,17 @@ else.
 
 The name, in the order the essay builds it:
 
-- `line`: the line the name is set along, drawn with the narrow nib.
 - `centreline`: the hand's marks, stroked by a nib that is one width the whole way round
-  (`NibStyle.label_pen_thin` of 0).
-- `broad`: the same marks with the nib as it is by default, held at an angle, so a mark
-  thickens across the nib and thins along it.
-- `turned`: the same marks with the nib held at the other slant (`label_pen_angle_deg`).
-- `ground`: the name written on a dark wash with no backing wash (`Setting.wash` false).
+  (`NibStyle.label_pen_thin` of 0), over a faint pencil guide of the line the name is set
+  along. The guide is under the name in `ground` and `backing` too.
+- `angles`: a grid, not a stage: the same name written with the nib held at four angles
+  (`label_pen_angle_deg`) across and thinned by three amounts (`label_pen_thin`) down, so a
+  mark thickens across the nib and thins along it, and the thick and thin strokes change places
+  as the nib turns. The first row is one width the whole way round.
+- `ground`: the name written on a dark, irregular wash with no backing wash (`Setting.wash`
+  false).
 - `backing`: the same name with the backing wash lifted under it.
+- `hands`: a grid: the same name written by nine hand seeds, three by three.
 
 The ink, a stroke at a time:
 
@@ -23,12 +26,13 @@ The ink, a stroke at a time:
   thins and lightens as it runs down and comes back at the reload.
 
 Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `BrushStyle`,
-`paper_plate`, `wash`, `PIGMENTS`, `rgb`, `composite`, `brush_from_id`, `stamp`,
+`paper_plate`, `wash`, `PAINTERS_PIGMENTS`, `rgb`, `composite`, `brush_from_id`, `stamp`,
 `ink_density` and `save_image`; from `pyntpot.letters`, `FaceStyle`, `HandStyle`, `Hand`,
 `Setting`, `NibSurface`, `NibStyle`, `NibGroups` and `nib_plate`. It introduces none.
 
-Run it with `uv run python examples/nib_stages.py out/ --figure broad`; it writes
-`out/nib-broad.png`. `--size` sets the image's width in pixels, 360 by default.
+Run it with `uv run python examples/nib_stages.py out/ --figure angles`; it writes
+`out/nib-angles.png`. `--size` sets the image's width in pixels, 360 by default; the two
+grids, `angles` and `hands`, are designed at 900 and scale with it.
 """
 
 import argparse
@@ -42,7 +46,7 @@ import numpy as np
 from PIL import Image
 
 from pyntpot.ink import (
-    PIGMENTS,
+    PAINTERS_PIGMENTS,
     BrushStyle,
     Canvas,
     PaperStyle,
@@ -72,25 +76,34 @@ logger = logging.getLogger(__name__)
 
 #: The figures, in the order the essay builds them.
 FIGURES: tuple[str, ...] = (
-    "line",
     "centreline",
-    "broad",
-    "turned",
+    "angles",
     "ground",
     "backing",
     "set-down",
     "runs-dry",
+    "hands",
 )
+#: The grids, `angles` and `hands`: the width they are designed at, in pixels.
+GRID_W = 900
+#: The nib's angles across the `angles` grid, and the thinnings down it.
+ANGLES, THINS = (-38.0, 0.0, 38.0, 90.0), (0.0, 0.52, 0.85)
 #: The width the figures are designed at, in pixels; the height is five ninths of it.
 DESIGN_W = 360
+#: How many times larger the nib plate is painted than the figure or grid, before it is downsized.
+NIB_SCALE = 2
 #: The size of the paper's granulation noise, in pixels at the design width.
 GRAN_PX = 3.0
 #: The seed of the paper's noise, the hand, the nib and the dither the file is written with.
 SEED = 7
 #: The name the hand writes, and its type size in display pixels at the design width.
 NAME, TYPE_PX = "Keswick", 84.0
-#: The nib's two slants, in degrees from the page's horizontal, y down.
-DEFAULT_ANGLE, TURNED_ANGLE = -38.0, 38.0
+#: How much of the pencil guide shows, as a share of the pen's ink.
+GUIDE_SHARE = 0.3
+#: `BrushStyle.pen_pool_radius_frac` for a wide pen: the library's 0.5 pools ink into a grey halo round the word.
+POOL = 0.15
+#: The nib's default slant, in degrees from the page's horizontal, y down.
+DEFAULT_ANGLE = -38.0
 
 
 def _line(w: float, h: float) -> tuple[tuple[float, float], ...]:
@@ -101,10 +114,18 @@ def _line(w: float, h: float) -> tuple[tuple[float, float], ...]:
 
 
 def _ground(sheet: Sheet, w: int, h: int) -> np.ndarray:
-    """The density of a dark wash across the middle band of the figure."""
-    cover = np.zeros((h, w), np.float32)
-    cover[int(0.2 * h) : int(0.82 * h), int(0.06 * w) : int(0.94 * w)] = 1.0
-    return wash(cover, sheet, 1.0, 0.2)
+    """The density of a dark, irregular wash of sap green under the middle of the figure, pooled at its edge."""
+    yy, xx = np.mgrid[0:h, 0:w]
+    dx, dy = (xx - 0.5 * w) / (0.43 * w), (yy - 0.52 * h) / (0.4 * h)
+    angle = np.arctan2(dy, dx)
+    reach = (
+        1.0
+        + 0.1 * np.sin(3 * angle + 1.0)
+        + 0.06 * np.sin(5 * angle + 2.3)
+        + 0.04 * np.sin(8 * angle)
+    )
+    cover = (np.hypot(dx, dy) <= reach).astype(np.float32)
+    return wash(cover, sheet, 1.0, 0.6)
 
 
 def _name(figure: str, canvas: Canvas, sheet: Sheet, paper: np.ndarray, unit: float) -> np.ndarray:
@@ -113,20 +134,22 @@ def _name(figure: str, canvas: Canvas, sheet: Sheet, paper: np.ndarray, unit: fl
     on_ground = figure in {"ground", "backing"}
     ground = _ground(sheet, canvas.w, h) if on_ground else np.zeros((h, canvas.w), np.float32)
     if on_ground:
-        wood = rgb(PIGMENTS["wood"])
-        paper = composite([(ground, wood), (ground, wood)], paper, PaperStyle())
-    if figure == "line":
-        return _stroke(paper, sheet, canvas, [_line(canvas.w, h)], BrushStyle(), 1.6)
-    angle = TURNED_ANGLE if figure == "turned" else DEFAULT_ANGLE
+        paper = composite([(ground, rgb(PAINTERS_PIGMENTS["sap_green"]))], paper, PaperStyle())
+    guide = _stroke(paper, sheet, canvas, [_line(canvas.w / unit, h / unit)], BrushStyle(), 1.4)
+    paper = (1 - GUIDE_SHARE) * paper + GUIDE_SHARE * guide
     thin = 0.0 if figure == "centreline" else NibStyle().label_pen_thin
-    nib = NibStyle(label_size_px=TYPE_PX, label_pen_angle_deg=angle, label_pen_thin=thin)
-    nib = replace(nib, label_pen_width_px=4.6, label_ink="#241c14", label_wash_spread=0.5)
+    nib = NibStyle(label_size_px=TYPE_PX, label_pen_angle_deg=DEFAULT_ANGLE, label_pen_thin=thin)
+    nib = replace(nib, label_pen_width_px=4.6, label_ink="#241c14", label_wash_spread=0.35)
     face, hand_style = FaceStyle(), HandStyle()
     hand = Hand(face, hand_style)
     setting = Setting(NAME, TYPE_PX, path=_line(canvas.w / unit, h / unit), wash=figure != "ground")
     marks = hand.write(setting, hand.generator(SEED))
-    surface = NibSurface(canvas, unit, ground, GRAN_PX * unit)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
+    big = Canvas(
+        0, 0, NIB_SCALE * canvas.w, NIB_SCALE * canvas.h, NIB_SCALE * canvas.w, NIB_SCALE * canvas.h
+    )
+    dark2 = np.repeat(np.repeat(ground, NIB_SCALE, axis=0), NIB_SCALE, axis=1)
+    surface = NibSurface(big, NIB_SCALE * unit, dark2, GRAN_PX * NIB_SCALE * unit)
+    groups = NibGroups(nib, face, hand_style, BrushStyle(pen_pool_radius_frac=POOL), PaperStyle())
     return _lay_plate(marks, surface, groups, paper)
 
 
@@ -139,7 +162,9 @@ def _lay_plate(
         if written is None:
             raise RuntimeError("the hand wrote no marks")
         with Image.open(written) as plate:
-            rgba = np.asarray(plate.convert("RGBA"), np.float32) / 255
+            size = (surface.canvas.w // NIB_SCALE, surface.canvas.h // NIB_SCALE)
+            small = plate.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
+    rgba = np.asarray(small, np.float32) / 255
     alpha = rgba[..., 3:]
     return paper * (1 - alpha) + rgba[..., :3] * alpha
 
@@ -169,13 +194,97 @@ def _pen_line(w: float, h: float) -> tuple[tuple[float, float], ...]:
     return tuple((float(px), float(py)) for px, py in zip(x, y, strict=True))
 
 
-def main(out_dir: Path, figure: str = "broad", size: int = DESIGN_W) -> Path:
+def _letter(img: np.ndarray, settings: list[Setting], nib: NibStyle, seed: int) -> np.ndarray:
+    """Letter the settings over `img`, the plate painted at `NIB_SCALE` times and brought down with Lanczos.
+
+    Raises:
+        RuntimeError: When the hand wrote no marks, so there is no plate to lay.
+    """
+    h, w = img.shape[:2]
+    big = Canvas(0, 0, w * NIB_SCALE, h * NIB_SCALE, w * NIB_SCALE, h * NIB_SCALE)
+    face, hand_style = FaceStyle(), HandStyle()
+    hand = Hand(face, hand_style)
+    rng = hand.generator(seed)
+    marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
+    dark = np.zeros((h * NIB_SCALE, w * NIB_SCALE), np.float32)
+    surface = NibSurface(big, NIB_SCALE, dark, GRAN_PX * NIB_SCALE * w / GRID_W)
+    groups = NibGroups(nib, face, hand_style, BrushStyle(pen_pool_radius_frac=POOL), PaperStyle())
+    with tempfile.TemporaryDirectory() as scratch:
+        written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
+        if written is None:
+            raise RuntimeError("the hand wrote no marks")
+        with Image.open(written) as plate:
+            small = plate.convert("RGBa").resize((w, h), Image.Resampling.LANCZOS)
+            rgba = np.asarray(small.convert("RGBA"), np.float32) / 255
+    alpha = rgba[..., 3:]
+    return img * (1 - alpha) + rgba[..., :3] * alpha
+
+
+def _cells(
+    size: int, cols: int, rows: int, cell_h: int, left: int, top: int
+) -> tuple[list[tuple[int, int, int, int]], int]:
+    """Return a grid's cells row by row as `(x, y, w, h)` and its height, from sizes at `GRID_W`."""
+    unit, gap = size / GRID_W, round(12 * size / GRID_W)
+    left, top, cell_h = round(left * unit), round(top * unit), round(cell_h * unit)
+    cell_w = (size - left - gap * cols) // cols
+    boxes = [
+        (left + c * (cell_w + gap), top + r * (cell_h + gap), cell_w, cell_h)
+        for r in range(rows)
+        for c in range(cols)
+    ]
+    return boxes, top + rows * (cell_h + gap)
+
+
+def _angles_grid(size: int) -> np.ndarray:
+    """Letter the name with the nib at four angles across and three `label_pen_thin`s down, on one sheet."""
+    unit = size / GRID_W
+    boxes, h = _cells(size, len(ANGLES), len(THINS), 108, 110, 54)
+    sheet = Sheet(h, size, GRAN_PX * unit, SEED)
+    out = paper_plate(sheet, Canvas(0, 0, size, h, size, h), PaperStyle(paper_foxing=0.0), size)
+    px = 22.0 * unit
+    for (x, y, w, ch), (thin, angle) in zip(
+        boxes, [(t, a) for t in THINS for a in ANGLES], strict=True
+    ):
+        nib = NibStyle(
+            label_pen_angle_deg=angle,
+            label_pen_thin=thin,
+            label_pen_width_px=3.4 * unit,
+            label_ink="#241c14",
+        )
+        setting = Setting(NAME, 52.0 * unit, anchor=(w / 2, 0.7 * ch), align="middle", wash=False)
+        out[y : y + ch, x : x + w] = _letter(out[y : y + ch, x : x + w], [setting], nib, SEED)
+    labels = [
+        Setting(f"{a:g}", px, anchor=(x + w / 2, 38 * unit), align="middle", wash=False)
+        for a, (x, _, w, _) in zip(ANGLES, boxes, strict=False)
+    ]
+    labels += [
+        Setting(f"{t:g}", px, anchor=(96 * unit, y + ch / 2 + 7 * unit), align="end", wash=False)
+        for t, (_, y, _, ch) in zip(THINS, boxes[:: len(ANGLES)], strict=True)
+    ]
+    return _letter(out, labels, NibStyle(label_ink="#3a2c20", label_pen_width_px=1.6 * unit), SEED)
+
+
+def _hands_grid(size: int) -> np.ndarray:
+    """Letter the name nine times, once for each of nine hand seeds, three by three."""
+    unit = size / GRID_W
+    boxes, h = _cells(size, 3, 3, 104, 12, 12)
+    sheet = Sheet(h, size, GRAN_PX * unit, SEED)
+    out = paper_plate(sheet, Canvas(0, 0, size, h, size, h), PaperStyle(paper_foxing=0.0), size)
+    nib = NibStyle(label_pen_width_px=2.8 * unit, label_ink="#241c14")
+    for seed, (x, y, w, ch) in enumerate(boxes, start=1):
+        setting = Setting(NAME, 68.0 * unit, anchor=(w / 2, 0.7 * ch), align="middle", wash=False)
+        out[y : y + ch, x : x + w] = _letter(out[y : y + ch, x : x + w], [setting], nib, seed)
+    return out
+
+
+def main(out_dir: Path, figure: str = "angles", size: int = DESIGN_W) -> Path:
     """Paint one figure, write it into `out_dir` as `nib-<figure>.png` and return that path.
 
     Args:
         out_dir: The directory the image is written into.
         figure: The figure, one of `FIGURES`.
-        size: The image's width in pixels; its height is five ninths of that.
+        size: The image's width in pixels; its height is five ninths of that, except for the
+            grids, `angles` and `hands`, whose height follows their rows.
 
     Returns:
         The path of the image.
@@ -185,11 +294,16 @@ def main(out_dir: Path, figure: str = "broad", size: int = DESIGN_W) -> Path:
     """
     if figure not in FIGURES:
         raise ValueError(f"no such figure {figure!r}; the figures are {', '.join(FIGURES)}")
+    path = out_dir / f"nib-{figure}.png"
+    if figure in {"angles", "hands"}:
+        save_image(_angles_grid(size) if figure == "angles" else _hands_grid(size), path, seed=SEED)
+        logger.info("wrote %s", path)
+        return path
     w, h = size, size * 5 // 9
     unit = size / DESIGN_W
     sheet = Sheet(h, w, GRAN_PX * unit, SEED)
     canvas = Canvas(0, 0, w, h, w, h)
-    paper = paper_plate(sheet, canvas, PaperStyle(), w)
+    paper = paper_plate(sheet, canvas, PaperStyle(paper_foxing=0.0), w)
     if figure in {"set-down", "runs-dry"}:
         style = BrushStyle(
             pen_starve=figure == "runs-dry", pen_reservoir=22.0, pen_thin=1.0, ink_dip_mult=1.4
@@ -197,7 +311,6 @@ def main(out_dir: Path, figure: str = "broad", size: int = DESIGN_W) -> Path:
         out = _stroke(paper, sheet, canvas, [_pen_line(w / unit, h / unit)], style, 5.0)
     else:
         out = _name(figure, canvas, sheet, paper, unit)
-    path = out_dir / f"nib-{figure}.png"
     save_image(out, path, seed=SEED)
     logger.info("wrote %s", path)
     return path
@@ -206,7 +319,7 @@ def main(out_dir: Path, figure: str = "broad", size: int = DESIGN_W) -> Path:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Paint one nib figure and write a PNG.")
     parser.add_argument("out_dir", type=Path, help="the directory the PNG is written into")
-    parser.add_argument("--figure", choices=FIGURES, default="broad", help="the figure to paint")
+    parser.add_argument("--figure", choices=FIGURES, default="angles", help="the figure to paint")
     parser.add_argument("--size", type=int, default=DESIGN_W, help="the image's width in pixels")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)

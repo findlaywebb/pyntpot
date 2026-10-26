@@ -1,4 +1,9 @@
-"""The brush sheet: every brush id, stroked once, for the reference page.
+"""The brush sheet: every brush id, stroked once, and the treatments by width, for the reference page.
+
+Two figures, selected by `figure=`. `sheet` strokes every id; `grid` strokes one ink's eight
+treatments at three widths, 3, 6 and 12 pixels, with the treatment numbers and their kinds
+lettered, because a stroke four pixels wide hides what a treatment does and a twelve-pixel one
+shows it.
 
 `brush_from_id` reads a brush id such as `MAJ2-a`: a three-letter prefix, a treatment
 row `1` to `8`, a hyphen and an ink colour column. `stamp` lays one stroke of each brush
@@ -11,18 +16,22 @@ are combined before the ink is composited over the paper.
 private to `pyntpot.ink`; `tests/architecture/test_reference_pages.py` checks it against
 those tables.
 
-Public names it uses: `Sheet`, `Canvas`, `PaperStyle`, `paper_plate`, `BrushStyle`,
-`brush_from_id`, `stamp`, `ink_density`, `rgb`, `composite` and `save_image`, all from
-`pyntpot.ink`.
+Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `paper_plate`,
+`BrushStyle`, `brush_from_id`, `stamp`, `ink_density`, `rgb`, `composite` and `save_image`; for
+the grid's lettering, from `pyntpot.letters`, `FaceStyle`, `HandStyle`, `Hand`, `Setting`, `Mark`,
+`NibSurface`, `NibStyle`, `NibGroups` and `nib_plate`.
 
-Run it with `uv run python examples/brush_sheet.py out/`; it writes `out/brush_sheet.png`.
+Run it with `uv run python examples/brush_sheet.py out/ --figure grid`; it writes
+`out/brush_grid.png`. The `sheet` figure writes `out/brush_sheet.png`.
 """
 
 import argparse
 import logging
+import tempfile
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 
 from pyntpot.ink import (
     BrushStyle,
@@ -36,6 +45,17 @@ from pyntpot.ink import (
     rgb,
     save_image,
     stamp,
+)
+from pyntpot.letters import (
+    FaceStyle,
+    Hand,
+    HandStyle,
+    Mark,
+    NibGroups,
+    NibStyle,
+    NibSurface,
+    Setting,
+    nib_plate,
 )
 
 logger = logging.getLogger(__name__)
@@ -71,6 +91,18 @@ SEED = 11
 #: The width every brush is stroked at, in pixels.
 STROKE_PX = 4.0
 
+#: The figures, the sheet of every id and the grid of one ink's treatments by width.
+FIGURES: tuple[str, ...] = ("sheet", "grid")
+#: The grid's width, its widths of stroke, the ink column it strokes and the treatments' kinds.
+GRID_W, GRID_WIDTHS, GRID_INK = 960, (3.0, 6.0, 12.0), "MAJ{row}-c"
+KINDS = ("wet", "soft", "gritty", "dry", "nib", "pen", "driest", "light nib")
+#: The grid's cell height, left margin, top margin and gap, in pixels.
+GRID_CELL_H, GRID_LEFT, GRID_TOP, GRID_GAP = 84, 74, 44, 8
+#: How many times its size the nib plate is painted before it is brought down.
+NIB_SCALE = 2
+#: The size of the grid's labels, in pixels.
+LABEL_PX = 20.0
+
 
 def _cell_line(row: int, column: int) -> np.ndarray:
     """A gentle S-shaped line across one cell of the sheet."""
@@ -80,12 +112,12 @@ def _cell_line(row: int, column: int) -> np.ndarray:
     return np.column_stack([x, y0 + 5.0 * np.sin(2 * np.pi * (x - x0) / (CELL_W - 20))])
 
 
-def main(out_dir: Path) -> Path:
+def _sheet(out_dir: Path) -> Path:
     """Stroke every brush id on the paper, write `brush_sheet.png` into `out_dir` and return its path."""
     rows = len(BRUSH_IDS) // COLUMNS
     w, h = 2 * MARGIN + COLUMNS * CELL_W, 2 * MARGIN + rows * CELL_H
     sheet = Sheet(h, w, GRAN_PX, SEED)
-    paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(), w)
+    paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
 
     by_ink: dict[str, np.ndarray] = {}
     for index, brush_id in enumerate(BRUSH_IDS):
@@ -103,9 +135,104 @@ def main(out_dir: Path) -> Path:
     return path
 
 
+def _letter(img: np.ndarray, settings: list[Setting]) -> np.ndarray:
+    """Letter the settings over `img`, the plate painted at `NIB_SCALE` times and brought down with Lanczos.
+
+    Raises:
+        RuntimeError: When the hand wrote no marks, so there is no plate to lay.
+    """
+    h, w = img.shape[:2]
+    big = Canvas(0, 0, w * NIB_SCALE, h * NIB_SCALE, w * NIB_SCALE, h * NIB_SCALE)
+    face, hand_style = FaceStyle(), HandStyle()
+    hand = Hand(face, hand_style)
+    rng = hand.generator(SEED)
+    marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
+    dark = np.zeros((h * NIB_SCALE, w * NIB_SCALE), np.float32)
+    surface = NibSurface(big, NIB_SCALE, dark, GRAN_PX * NIB_SCALE)
+    nib = NibStyle(label_ink="#3a2c20", label_pen_width_px=1.5)
+    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
+    with tempfile.TemporaryDirectory() as scratch:
+        written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
+        if written is None:
+            raise RuntimeError("the hand wrote no marks")
+        with Image.open(written) as plate:
+            small = plate.convert("RGBa").resize((w, h), Image.Resampling.LANCZOS)
+            rgba = np.asarray(small.convert("RGBA"), np.float32) / 255
+    alpha = rgba[..., 3:]
+    return img * (1 - alpha) + rgba[..., :3] * alpha
+
+
+def _grid(out_dir: Path) -> Path:
+    """Stroke the eight treatments of one ink at three widths, write `brush_grid.png` into `out_dir` and return its path."""
+    cell_w = (GRID_W - GRID_LEFT - MARGIN - GRID_GAP * (COLUMNS - 1)) // COLUMNS
+    h = GRID_TOP + len(GRID_WIDTHS) * (GRID_CELL_H + GRID_GAP) + 34
+    sheet = Sheet(h, GRID_W, GRAN_PX, SEED)
+    paper = paper_plate(
+        sheet, Canvas(0, 0, GRID_W, h, GRID_W, h), PaperStyle(paper_foxing=0.0), GRID_W
+    )
+
+    by_ink: dict[str, np.ndarray] = {}
+    for r, width in enumerate(GRID_WIDTHS):
+        for c in range(COLUMNS):
+            brush, ink_hex = brush_from_id(GRID_INK.format(row=c + 1), width, 1.0, BrushStyle())
+            x0 = GRID_LEFT + c * (cell_w + GRID_GAP) + 8
+            y0 = GRID_TOP + r * (GRID_CELL_H + GRID_GAP) + GRID_CELL_H / 2
+            t = np.linspace(0.0, 1.0, 80)
+            line = np.column_stack(
+                [x0 + t * (cell_w - 16), y0 + 0.28 * GRID_CELL_H * np.sin(2 * np.pi * t)]
+            )
+            acc = np.zeros((h, GRID_W), np.float32)
+            stamp(acc, line, brush, np.random.default_rng(SEED + 8 * r + c))
+            by_ink[ink_hex] = np.maximum(by_ink.get(ink_hex, 0.0), ink_density(acc, brush, sheet))
+    out = composite([(density, rgb(ink)) for ink, density in by_ink.items()], paper, PaperStyle())
+
+    centres = [GRID_LEFT + c * (cell_w + GRID_GAP) + cell_w / 2 for c in range(COLUMNS)]
+    labels = [
+        Setting(str(c + 1), LABEL_PX, anchor=(x, GRID_TOP - 14), align="middle", wash=False)
+        for c, x in enumerate(centres)
+    ]
+    labels += [
+        Setting(KINDS[c], LABEL_PX - 3, anchor=(x, h - 12), align="middle", wash=False)
+        for c, x in enumerate(centres)
+    ]
+    labels += [
+        Setting(
+            f"{width:g} px",
+            LABEL_PX,
+            anchor=(GRID_LEFT - 12, GRID_TOP + r * (GRID_CELL_H + GRID_GAP) + GRID_CELL_H / 2 + 7),
+            align="end",
+            wash=False,
+        )
+        for r, width in enumerate(GRID_WIDTHS)
+    ]
+    path = out_dir / "brush_grid.png"
+    save_image(_letter(out, labels), path, seed=SEED)
+    logger.info("wrote %s", path)
+    return path
+
+
+def main(out_dir: Path, figure: str = "sheet") -> Path:
+    """Paint one figure and return the path of its PNG in `out_dir`.
+
+    Args:
+        out_dir: The directory the image is written into.
+        figure: `sheet`, every id stroked once, or `grid`, one ink's treatments by width.
+
+    Returns:
+        The path of the image, `brush_sheet.png` or `brush_grid.png`.
+
+    Raises:
+        ValueError: When `figure` is not one of `FIGURES`.
+    """
+    if figure not in FIGURES:
+        raise ValueError(f"no such figure {figure!r}; the figures are {', '.join(FIGURES)}")
+    return _sheet(out_dir) if figure == "sheet" else _grid(out_dir)
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Stroke every brush id and write a PNG.")
+    parser = argparse.ArgumentParser(description="Stroke the brush ids and write a PNG.")
     parser.add_argument("out_dir", type=Path, help="the directory the PNG is written into")
+    parser.add_argument("--figure", choices=FIGURES, default="sheet", help="the figure to paint")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
-    main(args.out_dir)
+    main(args.out_dir, args.figure)

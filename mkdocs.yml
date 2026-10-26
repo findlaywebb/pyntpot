@@ -20,6 +20,9 @@ exclude_docs: |
 
 theme:
   name: material
+  # The site sets its own faces in pyntpot.css (a system serif stack and the vendored hand),
+  # so the theme loads no web font.
+  font: false
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -86,6 +89,7 @@ nav:
       - how-to/work-offline-and-reuse-the-cache.md
       - how-to/credit-the-map-data.md
       - how-to/change-the-route-ink.md
+      - how-to/letter-your-own-landmarks.md
       - how-to/paint-your-own-shapes.md
       - how-to/self-host-providers.md
   - Reference:

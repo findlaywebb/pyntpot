@@ -11,9 +11,13 @@ defined here because `ensure` is where the providers are called, and
 `maps.pipeline.fetch` raises it too.
 
 The key is the first 16 hex characters of the `sha256` of the canonical JSON of the
-bounding box (rounded to six decimal places), the margin and both provider ids. It
-never comes from a caller's own id, so two tracks over the same ground with the same
-providers share their payloads, and changing a provider or the margin fetches afresh.
+bounding box (rounded to six decimal places), the margin and both provider ids, and the
+land cover margin when it is not `LANDCOVER_MARGIN_M` (left out at its default, so the
+default key is unchanged). It never comes from a caller's own id, so two tracks over
+the same ground with the same providers share their payloads, and changing a provider
+or either margin fetches afresh. `FetchMargins`, held by the `Cache`, holds the two margins; each is at least 0 and at most `MAX_MARGIN_M`,
+and the land cover margin is at least the feature margin, else `ValueError` when it
+is made.
 The directory is always an explicit argument; nothing is resolved against the working
 directory. Payload file names are `overpass-<key>.json`, `landcover-<key>.json` and
 `elevation-<key>.json`, the names the basemap is built from.
@@ -57,6 +61,9 @@ MARGIN_M = 1500.0
 #: because the painted card is grown by a ribbon radius before it is drawn.
 LANDCOVER_MARGIN_M = 2600.0
 
+#: The widest margin, in metres, either fetch margin may take.
+MAX_MARGIN_M = 20_000.0
+
 #: Samples per side of the elevation grid.
 ELEVATION_SAMPLES = 80
 
@@ -83,44 +90,80 @@ class FetchError(RuntimeError):
 
 
 @dataclass(frozen=True)
+class FetchMargins:
+    """How far beyond a track's extent the payloads are fetched.
+
+    The card clips every layer to its own box, so ground fetched beyond the card is
+    never painted; a recording sizes these so the card box lies inside the fetched box.
+
+    Attributes:
+        features_m: Metres kept around the track's extent for the features and the
+            elevation grid.
+        landcover_m: Metres kept around the track's extent for the land cover; at
+            least `features_m`.
+
+    Raises:
+        ValueError: When made with a margin outside 0 to `MAX_MARGIN_M`, or a land
+            cover margin under the feature margin; the message names the value.
+    """
+
+    features_m: float = MARGIN_M
+    landcover_m: float = LANDCOVER_MARGIN_M
+
+    def __post_init__(self) -> None:
+        """Check both margins."""
+        for value in (self.features_m, self.landcover_m):
+            if not 0.0 <= value <= MAX_MARGIN_M:
+                raise ValueError(f"margin {value} m is outside 0 to {MAX_MARGIN_M:g} m")
+        if self.landcover_m < self.features_m:
+            raise ValueError(
+                f"land cover margin {self.landcover_m} m is under the margin {self.features_m} m"
+            )
+
+
+#: The margins a fetch uses unless told otherwise.
+DEFAULT_MARGINS = FetchMargins()
+
+
+@dataclass(frozen=True)
 class Cache:
     """Provider payloads and painted plates under one explicit directory.
 
     Attributes:
         directory: Where the payloads live; created by `ensure` when missing.
+        margins: How far beyond a track's extent each payload is fetched. The cache is
+            configured for the ground it fetches, so `key` and `ensure` read it here.
     """
 
     directory: Path
+    margins: FetchMargins = DEFAULT_MARGINS
 
     def key(
         self,
         track: Track,
         features: Features,
         elevation: Elevation,
-        margin_m: float = MARGIN_M,
     ) -> str:
-        """Return the key for a track's box, the margin and both providers.
+        """Return the key for a track's box, the cache's margins and both providers.
 
         Args:
             track: The route whose extent is fetched.
             features: The feature and land cover provider.
             elevation: The elevation provider.
-            margin_m: Ground kept around the track's extent, in metres.
 
         Returns:
             The first 16 hex characters of the `sha256` of the canonical JSON.
         """
-        box = track.bounding_box(margin_m)
-        canonical = json.dumps(
-            {
-                "box": [round(value, BOX_PLACES) for value in box],
-                "margin_m": margin_m,
-                "features": features.id,
-                "elevation": elevation.id,
-            },
-            sort_keys=True,
-            separators=(",", ":"),
-        )
+        box = track.bounding_box(self.margins.features_m)
+        inputs: dict[str, object] = {
+            "box": [round(value, BOX_PLACES) for value in box],
+            "margin_m": self.margins.features_m,
+            "features": features.id,
+            "elevation": elevation.id,
+        }
+        if self.margins.landcover_m != LANDCOVER_MARGIN_M:
+            inputs["landcover_margin_m"] = self.margins.landcover_m
+        canonical = json.dumps(inputs, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canonical.encode()).hexdigest()[:KEY_LENGTH]
 
     def features_path(self, key: str) -> Path:
@@ -217,9 +260,9 @@ class Cache:
     ) -> str:
         """Fetch whatever payload is missing for a track and return its key.
 
-        Fetches in a fixed order: features over `MARGIN_M`, then land cover over
-        `LANDCOVER_MARGIN_M`, then an `ELEVATION_SAMPLES` square elevation grid over
-        `MARGIN_M`. Each payload is written to its path as soon as its call returns,
+        Fetches in a fixed order: features over `margins.features_m`, then land cover over
+        `margins.landcover_m`, then an `ELEVATION_SAMPLES` square elevation grid over
+        `margins.features_m`. Each payload is written to its path as soon as its call returns,
         before the next call is made.
 
         Args:
@@ -231,13 +274,13 @@ class Cache:
         Returns:
             The key the payloads are cached under.
 
-        Raises:
             FetchError: When a provider cannot answer, a budget refusal included,
                 raised from the provider's error. The payloads written before the
                 failure stay on disk.
         """
         key = self.key(track, features, elevation)
-        box = track.bounding_box(MARGIN_M)
+        margins = self.margins
+        box = track.bounding_box(margins.features_m)
         self.directory.mkdir(parents=True, exist_ok=True)
         try:
             path = self.features_path(key)
@@ -245,7 +288,7 @@ class Cache:
                 _write(path, features.features(box))
             path = self.landcover_path(key)
             if force or not path.exists():
-                _write(path, features.landcover(track.bounding_box(LANDCOVER_MARGIN_M)))
+                _write(path, features.landcover(track.bounding_box(margins.landcover_m)))
             path = self.elevation_path(key)
             if force or not path.exists():
                 _write(path, elevation.grid(box, ELEVATION_SAMPLES).to_json())

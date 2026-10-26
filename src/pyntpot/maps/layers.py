@@ -38,13 +38,13 @@ from pyntpot.maps.cover import (
     COVER_ORDER,
     coastline_chains,
     cover_rings,
-    sea_from_coast,
     wood_rings,
 )
 from pyntpot.maps.osm import osm_layers
 from pyntpot.maps.projection import track_projection
 from pyntpot.maps.relief_layers import relief_layers
 from pyntpot.maps.rings import clip_ring
+from pyntpot.maps.sea import sea_from_coast
 from pyntpot.maps.style_groups import BasemapStyle
 from pyntpot.maps.svg_path import parse_path
 from pyntpot.maps.track_index import TrackIndex, densify

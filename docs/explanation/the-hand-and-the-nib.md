@@ -8,18 +8,18 @@ writes a `Setting` as a list of `Mark`s, and `nib_plate` strokes the marks onto 
 through the same ink engine that lays a brush's line.
 
 This page follows one name, "Keswick", from the line it is set along to the ink on the paper,
-then follows one pen stroke on its own. Every figure is painted from the same paper seed (7),
-and the hand's seed is fixed, so the figures differ only in the stage.
+then follows one pen stroke on its own. The stage-by-stage figures are painted from the same
+paper seed (7), and the hand's seed is fixed, so they differ only in the stage. The two grids
+change one thing at a time with a `for` loop, so you can see what each number does.
 
 ## The line the name follows
 
 A setting says what to write and where. Set along a path, the name starts at the path's
 first point and each glyph sits on the tangent of the line beneath it. The hand does not
-choose the line, reverse it or lift the name off it: whoever builds the setting does.
-
-![A single gently waving line running across cream paper, drawn with a narrow pen nib.](../images/explanation/nib-line.webp)
-
-*Painted by `examples/nib_stages.py` (seed 7, `figure="line"`).*
+choose the line, reverse it or lift the name off it: whoever builds the setting does. In
+the three figures that set the name on that line (the centreline, the ground and the
+backing) the line is drawn as a faint pencil guide under the name, so you can see what the
+name was set along.
 
 ## The hand: a skeleton, written a little differently each time
 
@@ -35,13 +35,20 @@ Each letter leans a shade differently in every word, the baseline drifts, and th
 never held at quite the same angle twice. Each of those draws comes from one generator, so
 one seed and one setting write the same marks.
 
-![The word Keswick written along the line in an even, unmodulated pen line, every stroke the same width.](../images/explanation/nib-centreline.webp)
+![The word Keswick written along a faint pencil guide line in an even, unmodulated pen line, every stroke the same width.](../images/explanation/nib-centreline.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, `figure="centreline"`). The text reads "Keswick".*
 
 This is the hand's marks stroked by a nib that is one width the whole way round
 (`NibStyle.label_pen_thin` set to 0). It is correct and it reads as plotted. The letters are
 the right shape and the wrong writing.
+
+The hand is what writes it. Write the same name nine times, giving each its own seed, and
+no two copies are alike:
+
+![The word Keswick written nine times in three rows of three, in dark pen lettering. Every copy is the same word and no two are alike: the letters lean differently, sit at different heights and differ in size.](../images/explanation/nib-hands.webp)
+
+*Painted by `examples/nib_stages.py` (seed 7, `figure="hands"`). The name is Keswick; the nine copies are nine hand seeds, 1 to 9, one for each cell.*
 
 Source: `zhang-suen` in [references](references.md).
 
@@ -50,18 +57,19 @@ Source: `zhang-suen` in [references](references.md).
 A broad nib held at one angle draws its full width across itself and almost nothing along
 itself. That one fact is most of what separates a written letter from a plotted one. Along a stroke, a point drawn straight along the nib keeps `1 - label_pen_thin` of the width, a
 point drawn straight across it keeps all of it, and the angles between follow the sine. The
-default angle is 38 degrees anticlockwise from the page's horizontal, and the default
-`label_pen_thin` is 0.52.
+default angle is 38 degrees anticlockwise from the page's horizontal (`label_pen_angle_deg`
+of -38), and the default `label_pen_thin` is 0.52.
 
-![The same word with strokes that thicken and thin: strokes that fall to the right are heavy and strokes that rise to the right are light.](../images/explanation/nib-broad.webp)
+![The word Keswick written twelve times in three rows of four. The columns turn the nib through four angles and the rows thin the line along the nib by none, about half and most. In the top row every stroke is one width. In the bottom row the strokes along the nib fall away to hairlines, and which strokes those are depends on the angle.](../images/explanation/nib-angles.webp)
 
-*Painted by `examples/nib_stages.py` (seed 7, `figure="broad"`).*
+*Painted by `examples/nib_stages.py` (seed 7, `figure="angles"`). The name is Keswick. The labels read -38, 0, 38 and 90 across, the nib's angle in degrees, and 0, 0.52 and 0.85 down, `label_pen_thin`.*
 
-Hold the pen at the other slant and the thick and thin strokes change places.
-
-![The same word written with the nib turned the other way, so the strokes that rise to the right are heavy and the ones that fall to the right are light.](../images/explanation/nib-turned.webp)
-
-*Painted by `examples/nib_stages.py` (seed 7, `figure="turned"`; the nib at 38 degrees clockwise).*
+The top row is the centreline's even stroke again: with `label_pen_thin` at 0 the nib's angle
+has nothing to act on, so the four cells match. Down the rows the thinning grows, and across
+them the nib turns, so the thick and thin strokes change places: at -38 the strokes that
+rise to the right are the thin ones, at 38 the ones that fall to the right, and at 90 the
+upright ones. The figure exaggerates the thinning at its last row so that it shows at this
+size.
 
 The nib's angle is fixed to the page and not to the line. For a name set along a steep line,
 the thick and thin strokes stay where the page puts them, not where the letter would have
@@ -76,16 +84,16 @@ The nib plate is its own RGBA plate and is laid over the paper normally, by its 
 not multiplied. A multiply can only darken, and a backing needs to lighten. Over a dark
 wash the name sits in the ground rather than on it.
 
-![The word Keswick written in dark ink over a dark green wash, legible but low in contrast against the wash.](../images/explanation/nib-ground.webp)
+![The word Keswick written in dark ink over an irregular patch of deep sap green, with a faint pencil line under the name. The ink is legible but low in contrast against the green.](../images/explanation/nib-ground.webp)
 
-*Painted by `examples/nib_stages.py` (seed 7, `figure="ground"`; `Setting(wash=False)`).*
+*Painted by `examples/nib_stages.py` (seed 7, `figure="ground"`; `Setting(wash=False)`). The ground is one wash of sap green from `PAINTERS_PIGMENTS`, laid on an irregular patch.*
 
 A setting can ask for a backing wash: a soft, paper-coloured blot, laid through the wash
 machinery with a pooled rim and a granulated body, lifted under the marks that ask for one.
 It exists only where the ground is dark enough to need it, so a name on bare paper has none.
 It reads as paint lifted before the name was written.
 
-![The same word with a pale, soft-edged patch of paper showing through the green wash behind it, so the ink is much clearer.](../images/explanation/nib-backing.webp)
+![The same word and pencil line on the same green, with a pale, soft-edged patch of paper showing through the green wash behind the name, so the ink is much clearer.](../images/explanation/nib-backing.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, `figure="backing"`).*
 

@@ -2,15 +2,15 @@
 
 A pigment is a colour a wash or a mark lays, named by its key. This page lists every key of `PIGMENTS` and `TRANSPARENCY` from `pyntpot.ink`.
 
-![Fifteen washed discs, each one pigment laid alone on the paper, in rows of five in the order of the table below.](../images/reference/pigment-swatches.webp)
+![The pigment card: fifteen strips in three rows of five, one for each pigment, each strip a wash that deepens from left to right and lies across a narrow bar of grey-brown ink that shows bare past both ends, with the pigment's key lettered under it. The staining pigments let the bar show through at their deep end; the covering greys and browns veil it.](../images/reference/pigment-swatches.webp)
 
-*Painted by `examples/pigment_swatches.py`, seed 11.* The discs read left to right, top to bottom, in the order of the table.
+*Painted by `examples/pigment_swatches.py`, seed 11.* The strips read left to right, top to bottom, in the order of the table, and each key is lettered under its strip. Every strip lies across a band of black ink and is glazed by Kubelka-Munk: where the band shows through, the pigment stains, and where it is veiled, the pigment covers.
 
 ## Entries
 
 `PIGMENTS` maps each key to the colour a full-strength wash of that pigment transmits, as `#rrggbb`. `TRANSPARENCY` maps each key to what the pigment shows over black as a share of what it shows over white. Near 0 is a staining glaze that lets the layer under it through; near 1 is a covering body colour. Only Kubelka-Munk glazing (`PaperStyle.km_glazing`) reads the transparency; multiply ignores it.
 
-| Disc | Key | Colour | Transparency |
+| Strip | Key | Colour | Transparency |
 | --- | --- | --- | --- |
 | 1 | `farmland` | `#dfe0b0` | 0.10 |
 | 2 | `meadow` | `#cfdfae` | 0.09 |
@@ -38,3 +38,20 @@ A pigment is a colour a wash or a mark lays, named by its key. This page lists e
 ## What the table does not hold
 
 An unnamed pigment takes `PaperStyle.km_transparency`. The inks are not pigments: a mark's colour comes from its brush id. See [Brushes](brushes.md).
+
+## Painter's pigments
+
+`PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY` are a second pair of tables beside `PIGMENTS` and `TRANSPARENCY`, keyed by the tube a painter names instead of by map role, with the same meaning: a colour as `#rrggbb`, and a transparency in 0 to 1. No map style reads them; they are for painting with the engine directly, and the pigment card above does not show them.
+
+| Key | Colour | Transparency |
+| --- | --- | --- |
+| `ultramarine` | `#2b3d8f` | 0.06 |
+| `cerulean` | `#2a7ab0` | 0.22 |
+| `burnt_sienna` | `#8a3b1c` | 0.20 |
+| `raw_sienna` | `#b8692a` | 0.18 |
+| `yellow_ochre` | `#c99a3a` | 0.24 |
+| `sap_green` | `#3f6b2a` | 0.07 |
+| `indigo` | `#2c3346` | 0.05 |
+| `perylene_maroon` | `#5a1f27` | 0.04 |
+| `quinacridone_rose` | `#b8215e` | 0.05 |
+| `paynes_grey` | `#3b4452` | 0.10 |

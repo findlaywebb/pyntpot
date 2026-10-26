@@ -7,9 +7,10 @@ land cover and elevation payloads into `DIR`, one query at a time within each pr
 own budget and back-off. A failed fetch is tried again up to three times, after a wait;
 `ensure` keeps the payloads already written, so a retry carries on where it stopped.
 
-It then checks the three file names equal the default providers' key (the ids the
-shipped providers carry), and logs each payload's size. It does not write the README,
-parse the payloads or choose a track.
+It then trims the feature and land cover payloads with `trim_fixture` (minified, only the
+fields and tags the code reads), checks the three file names equal the default providers'
+key for the margins given (`--margin-m`, `--landcover-margin-m`; the ids the shipped providers carry), and logs each payload's size. It does not write
+the README, parse the payloads or choose a track.
 """
 
 import argparse
@@ -19,8 +20,10 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from fixtures.make_track import MIRROR
+from fixtures.trim_fixture import trim_file
 
 from pyntpot.maps import Cache, FetchError, OpenTopoData, OverpassFeatures, Track
+from pyntpot.maps.cache import LANDCOVER_MARGIN_M, MARGIN_M, FetchMargins
 
 log = logging.getLogger("record_fixture")
 
@@ -31,7 +34,12 @@ TRIES = 3
 RETRY_WAIT_S = 30.0
 
 
-def _ensure(cache: Cache, track: Track, features: OverpassFeatures, elevation: OpenTopoData) -> str:
+def _ensure(
+    cache: Cache,
+    track: Track,
+    features: OverpassFeatures,
+    elevation: OpenTopoData,
+) -> str:
     """Run `Cache.ensure` up to `TRIES` times, waiting longer after each failure."""
     for attempt in range(1, TRIES):
         try:
@@ -42,19 +50,27 @@ def _ensure(cache: Cache, track: Track, features: OverpassFeatures, elevation: O
     return cache.ensure(track, features, elevation)
 
 
-def record(contact: str, fixture: Path) -> str:
+def record(
+    contact: str,
+    fixture: Path,
+    margin_m: float = MARGIN_M,
+    landcover_margin_m: float = LANDCOVER_MARGIN_M,
+) -> str:
     """Record the payloads into a fixture directory and return the key.
 
     Raises:
         FetchError: When every try failed.
         RuntimeError: When the key differs from the default providers' key.
     """
+    margins = FetchMargins(margin_m, landcover_margin_m)
     track = Track.from_gpx(fixture / "track.gpx")
     features = OverpassFeatures(contact, (MIRROR,))
     elevation = OpenTopoData(contact)
-    cache = Cache(fixture)
+    cache = Cache(fixture, margins)
     key = _ensure(cache, track, features, elevation)
-    default = Cache(fixture).key(track, OverpassFeatures(contact), OpenTopoData(contact))
+    for path in (cache.features_path(key), cache.landcover_path(key)):
+        trim_file(path)
+    default = cache.key(track, OverpassFeatures(contact), OpenTopoData(contact))
     if key != default:
         raise RuntimeError(f"key {key} differs from the default providers' key {default}")
     for path in (cache.features_path(key), cache.landcover_path(key), cache.elevation_path(key)):
@@ -69,9 +85,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Record a fixture's provider payloads.")
     parser.add_argument("--contact", required=True, help="how the operators reach you")
     parser.add_argument("--fixture", required=True, type=Path, help="the fixture directory")
+    parser.add_argument("--margin-m", type=float, default=MARGIN_M, help="feature margin, metres")
+    parser.add_argument(
+        "--landcover-margin-m",
+        type=float,
+        default=None,
+        help="land cover margin, metres; the larger of its default and --margin-m when absent",
+    )
     args = parser.parse_args(argv)
+    landcover = args.landcover_margin_m
+    if landcover is None:
+        landcover = max(LANDCOVER_MARGIN_M, args.margin_m)
     try:
-        key = record(args.contact, args.fixture)
+        key = record(args.contact, args.fixture, args.margin_m, landcover)
     except (FetchError, RuntimeError):
         log.exception("failed")
         return 1

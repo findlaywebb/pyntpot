@@ -1,7 +1,7 @@
 [project]
 name = "pyntpot"
 version = "0.1.0"
-description = "Hand-drawn watercolour and pen-and-ink painting for Python, with route maps"
+description = "Watercolour and ink painting in Python, from a single wash to a hand-painted route map"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"

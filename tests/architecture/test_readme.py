@@ -15,8 +15,8 @@ from support.examples import EXAMPLES_DIR
 
 _README = (REPO_ROOT / "README.md").read_text()
 
-_TAGLINE = "Hand-drawn watercolour and pen-and-ink painting for Python, with route maps."
-_LEDE = "Lay a wash, pull a brush, letter a name."
+_TAGLINE = "Watercolour and ink painting in Python, from a single wash to a hand-painted route map."
+_LEDE = "Stretch the paper, lay a wash, pull a brush, letter a name."
 _SECTIONS = [
     "What it is",
     "Gallery",

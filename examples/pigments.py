@@ -1,16 +1,17 @@
 """Rung 4 of the tutorial: how two pigments combine where they overlap.
 
-Two washes, `farmland` and `wood`, are laid as overlapping discs. Each is a
-`PigmentLayer`: its density, its colour from `PIGMENTS`, and its `TRANSPARENCY`, what
-the pigment shows over black as a share of what it shows over white. `composite` stacks
+Two washes, `cerulean` and `yellow_ochre`, are laid as overlapping discs. Each is a
+`PigmentLayer`: its density, its colour from `PAINTERS_PIGMENTS`, and its
+`PAINTERS_TRANSPARENCY`, what the pigment shows over black as a share of what it shows
+over white. `composite` stacks
 the layers over the paper the way the `PaperStyle` asks: with `km_glazing=False` it
 multiplies them, and with `km_glazing=True` it glazes them by Kubelka-Munk, which reads
 each layer's transparency. The two results are written side by side, multiply on the
 left and glazing on the right.
 
-Public names it introduces: `PigmentLayer`, `TRANSPARENCY` and `PaperStyle`'s
-`km_glazing`, beside the earlier rungs' `Sheet`, `Canvas`, `paper_plate`, `wash`,
-`PIGMENTS`, `rgb`, `composite` and `save_image`, all from `pyntpot.ink`.
+Public names it introduces: `PigmentLayer`, `PAINTERS_PIGMENTS`, `PAINTERS_TRANSPARENCY` and
+`PaperStyle`'s `km_glazing`, beside the earlier rungs' `Sheet`, `Canvas`, `paper_plate`,
+`wash`, `rgb`, `composite` and `save_image`, all from `pyntpot.ink`.
 
 Run it with `uv run python examples/pigments.py out/`; it writes `out/pigments.png`.
 """
@@ -22,8 +23,8 @@ from pathlib import Path
 import numpy as np
 
 from pyntpot.ink import (
-    PIGMENTS,
-    TRANSPARENCY,
+    PAINTERS_PIGMENTS,
+    PAINTERS_TRANSPARENCY,
     Canvas,
     PaperStyle,
     PigmentLayer,
@@ -58,8 +59,12 @@ def main(out_dir: Path) -> Path:
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
     layers: list[PigmentLayer] = [
-        (wash(_disc(centre_x), sheet, 0.6, 0.3), rgb(PIGMENTS[key]), TRANSPARENCY[key])
-        for key, centre_x in (("farmland", 0.38 * W), ("wood", 0.62 * W))
+        (
+            wash(_disc(centre_x), sheet, 0.6, 0.3),
+            rgb(PAINTERS_PIGMENTS[key]),
+            PAINTERS_TRANSPARENCY[key],
+        )
+        for key, centre_x in (("cerulean", 0.38 * W), ("yellow_ochre", 0.62 * W))
     ]
     multiplied = composite(layers, paper, PaperStyle(km_glazing=False))
     glazed = composite(layers, paper, PaperStyle(km_glazing=True))

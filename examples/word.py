@@ -1,7 +1,7 @@
 """The wordmark: "pyntpot" lettered by the hand on a washed disc, painted with the engine.
 
 The paint pot in the name is a pot of water-blue wash. Two discs are washed on the paper,
-a blue one and a smaller green one that overlaps its lower right, and the two pigments
+a blue one and a smaller green one that overlaps its right edge, and the two pigments
 glaze where they meet. The hand then sets "pyntpot" along a gentle rise across the blue
 disc, the nib strokes its marks onto one RGBA plate, and the plate is laid over the washed
 paper by its alpha. It uses only what the earlier rungs introduced: from `pyntpot.ink`,
@@ -60,8 +60,12 @@ W, H = 640, 360
 GRAN_PX = 5.0
 #: The seed of the paper, the washes, the hand and the dither the file is written with.
 SEED = 7
+#: The hand's seed, chosen from the first thirty for a level baseline.
+HAND_SEED = 11
 NAME = "pyntpot"
 STEM = "word"
+#: How many times larger the nib plate is painted than the picture, before it is downsized.
+NIB_SCALE = 2
 #: The size the name is set at, in pixels.
 NAME_PX = 104.0
 #: How wide the name is set, in multiples of its size, as the hand writes it.
@@ -103,22 +107,28 @@ def main(out_dir: Path) -> Path:
         (wash(_disc(cx, cy, r), sheet, 0.6, 0.3), rgb(PIGMENTS[key]), TRANSPARENCY[key])
         for key, cx, cy, r in (
             ("water", 0.5 * W, 0.5 * H, 0.46 * H),
-            ("wood", 0.7 * W, 0.8 * H, 0.17 * H),
+            ("wood", 0.79 * W, 0.57 * H, 0.17 * H),
         )
     ]
     washed = composite(layers, paper, PaperStyle())
 
     face, hand_style = FaceStyle(), HandStyle()
     hand = Hand(face, hand_style)
-    marks: list[Mark] = hand.write(Setting(NAME, NAME_PX, path=_line()), hand.generator(SEED))
+    marks: list[Mark] = hand.write(Setting(NAME, NAME_PX, path=_line()), hand.generator(HAND_SEED))
 
-    surface = NibSurface(canvas, 1.0, np.zeros((H, W), np.float32), GRAN_PX)
-    groups = NibGroups(NibStyle(), face, hand_style, BrushStyle(), PaperStyle())
+    canvas2 = Canvas(0, 0, NIB_SCALE * W, NIB_SCALE * H, NIB_SCALE * W, NIB_SCALE * H)
+    dark2 = np.zeros((NIB_SCALE * H, NIB_SCALE * W), np.float32)
+    surface = NibSurface(canvas2, NIB_SCALE, dark2, GRAN_PX * NIB_SCALE)
+    groups = NibGroups(
+        NibStyle(), face, hand_style, BrushStyle(pen_pool_radius_frac=0.15), PaperStyle()
+    )
     plate_path = nib_plate(marks, surface, groups, out_dir / f"{STEM}-plate.webp")
     if plate_path is None:
         raise RuntimeError("the hand wrote no marks")
 
-    rgba = np.asarray(Image.open(plate_path).convert("RGBA"), np.float32) / 255
+    with Image.open(plate_path) as big:
+        small = big.convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+    rgba = np.asarray(small, np.float32) / 255
     alpha = rgba[..., 3:]
     out = washed * (1 - alpha) + rgba[..., :3] * alpha
 

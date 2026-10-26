@@ -45,6 +45,8 @@
   --pyntpot-ink: #201e1a;
   --pyntpot-night: #1c1a17;
   --pyntpot-display: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  --pyntpot-serif: Charter, "Sitka Text", Cambria, "Iowan Old Style", Georgia, serif;
+  --md-text-font: var(--pyntpot-serif);
 }
 
 [data-md-color-scheme="default"] {
@@ -61,6 +63,7 @@
   --md-code-fg-color: var(--pyntpot-ink);
   --pyntpot-paper-image: url("../images/site/paper.webp");
   --pyntpot-rule-image: url("../images/site/rule.webp");
+  --pyntpot-header-image: url("../images/site/header.webp");
 }
 
 [data-md-color-scheme="slate"] {
@@ -77,16 +80,39 @@
   --md-code-fg-color: var(--pyntpot-paper);
   --pyntpot-paper-image: none;
   --pyntpot-rule-image: none;
+  --pyntpot-header-image: none;
 }
 
-/* The paper the light scheme's page sits on; the dark scheme has none. */
+/* The paper the light scheme's page sits on, repeated at its own size so the tooth stays
+   crisp at every width; the dark scheme has none. */
 .md-container {
   background-image: var(--pyntpot-paper-image);
-  background-size: cover;
-  background-attachment: fixed;
+  background-size: 512px 512px;
+  background-repeat: repeat;
 }
 
-/* Display headings and the site name: the hand. Body and code keep the theme's faces. */
+/* The header is a painted wash, not a flat bar: the band repeats sideways at its own aspect
+   over the glazed water colour, which shows alone on the dark scheme. */
+.md-header {
+  background-color: var(--md-primary-fg-color);
+  background-image: var(--pyntpot-header-image);
+  background-size: auto 100%;
+  background-repeat: repeat-x;
+}
+
+/* Body text in a book serif; the hand is for the headings, code keeps the theme's monospace.
+   The serif sits a little larger than the theme's sans, which it would otherwise undersize. */
+.md-typeset {
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.md-typeset code,
+.md-typeset pre {
+  font-size: 0.85em;
+}
+
+/* Display headings and the site name: the hand. */
 .md-typeset h1,
 .md-typeset h2,
 .md-header__title .md-ellipsis:first-child {
@@ -104,26 +130,28 @@
   font-size: 1.9em;
 }
 
-/* The brush-stroke rule: under a page title and as a thematic break. It multiplies, so only
-   the stroke shows on the paper. The dark scheme has a plain line instead. */
+/* The brush-stroke rule: under a page title and as a thematic break. It keeps its own aspect,
+   starting at the left, and multiplies, so only the stroke shows on the paper. The dark scheme
+   has a plain line instead. */
 .md-typeset h1::after,
 .md-typeset hr {
   content: "";
   display: block;
-  height: 0.9rem;
-  margin: 0.2rem 0 1.2rem;
+  height: 1.5rem;
+  margin: -0.3rem 0 0.8rem;
   border: 0;
-  background: var(--pyntpot-rule-image) left center / 100% 100% no-repeat;
+  background: var(--pyntpot-rule-image) left center / auto 100% no-repeat;
   mix-blend-mode: multiply;
 }
 
 .md-typeset hr {
-  margin: 1.6rem 0;
+  margin: 1.2rem 0;
 }
 
 [data-md-color-scheme="slate"] .md-typeset h1::after,
 [data-md-color-scheme="slate"] .md-typeset hr {
   height: 0;
+  margin: 0.4rem 0 1.2rem;
   border-top: 2px solid var(--pyntpot-water);
   opacity: 0.6;
   mix-blend-mode: normal;

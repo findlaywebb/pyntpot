@@ -12,6 +12,8 @@ matching accumulator; a brush off the reservoir sharing an accumulator with one 
 as full, and one off the directional break lays half its weight into the break channel.
 """
 
+import math
+
 import numpy as np
 
 from pyntpot.ink.brush import Brush
@@ -161,11 +163,12 @@ def pool(acc: np.ndarray, b: Brush, x: float, y: float) -> None:
     """Leave a blot where the stroke starts.
 
     Tighter and denser than a swelling, so it reads as the first touch rather
-    than a bulge in the line.
+    than a bulge in the line. The Gaussian is cut at three radii, where it has faded to
+    1.1% at the side of the span, so the blot has no square edge.
     """
     h, w = acc.shape
     r = max(b.width * b.pool_radius_frac, 1.2)
-    span = int(r * 2)
+    span = math.ceil(r * 3)
     yy, xx = np.ogrid[-span : span + 1, -span : span + 1]
     blob = np.exp(-(xx * xx + yy * yy) / (2 * r * r)).astype(F32) * b.pool * b.pool_gain
     cy, cx = round(y), round(x)
