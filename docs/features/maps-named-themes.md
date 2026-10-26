@@ -1,5 +1,7 @@
 # Themes could ship inside the package and be chosen by name
 
+GitHub issue: [#77](https://github.com/findlaywebb/pyntpot/issues/77)
+
 **What exists today.** The package ships one theme, `maps/themes/default.toml`,
 which `Style.default()` loads. Any other look is a TOML file the caller writes
 and loads with `Style.from_toml(path)`, which needs every group present.

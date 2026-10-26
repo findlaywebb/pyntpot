@@ -1,5 +1,7 @@
 # A gallery of every pigment
 
+GitHub issue: [#70](https://github.com/findlaywebb/pyntpot/issues/70)
+
 **What exists today.** The pigments are listed in `docs/reference/pigments.md` as tables
 of names, hex values and transparencies, with a pigment card that paints a strip of each
 over a bar. The painter's pigments added this round and the map roles sit in separate

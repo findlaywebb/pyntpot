@@ -1,5 +1,7 @@
 # A pen that runs dry jumps back to full width at each reload
 
+GitHub issue: [#40](https://github.com/findlaywebb/pyntpot/issues/40)
+
 With `BrushStyle.pen_starve` on, `_width` in `ink/stamp.py` thins the nib by
 `1 - exp(-(cumulative pressure * step mod dip_px) / run_px)`. The `mod` resets the spent
 share to zero in one stamp, so the width goes from its thinnest to its fullest between two

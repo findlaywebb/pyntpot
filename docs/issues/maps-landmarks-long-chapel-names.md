@@ -1,5 +1,7 @@
 # The landmark heuristic offers chapels with names forty characters long
 
+GitHub issue: [#47](https://github.com/findlaywebb/pyntpot/issues/47)
+
 With `landmarks = "all"`, the default, the candidates for a callout are ranked by class and
 nearness, and a place of worship ranks beside a museum. On the Lynmouth command-line card
 that offers "Living Waters Lynton United Reformed Church", "Saint Mary the Virgin" and

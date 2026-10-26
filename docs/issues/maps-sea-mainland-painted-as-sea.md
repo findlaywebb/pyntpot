@@ -1,5 +1,7 @@
 # The mainland beside Skye is painted as sea
 
+GitHub issue: [#59](https://github.com/findlaywebb/pyntpot/issues/59)
+
 On the Skye card everything east of Kyle of Lochalsh is the sea's blue, with rivers and
 roads drawn over it, so the Skye Bridge seems to land in the water. `maps/sea.py` fills the
 sea from the coastline rings; the mainland's coastline is cut open by the fetch box, so its

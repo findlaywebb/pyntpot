@@ -1,5 +1,7 @@
 # A leader line is drawn across other names and across the route
 
+GitHub issue: [#51](https://github.com/findlaywebb/pyntpot/issues/51)
+
 The placer in `maps/lettering/` places each callout's name and then draws a leader from the
 name to its point. It checks a name's box against the other names' boxes, but it does not
 check the leader: a leader may run through another name or across the route near its anchor.

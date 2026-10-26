@@ -1,5 +1,7 @@
 # A preview card for map styles
 
+GitHub issue: [#79](https://github.com/findlaywebb/pyntpot/issues/79)
+
 **What exists today.** To see a theme, an author paints a real place card from a recorded
 fixture. A real card shows only what that place holds: Ambleside has no coast, Oxford no
 relief, Skye no dense streets. So a theme can look right on one card and break on

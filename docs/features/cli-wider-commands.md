@@ -1,5 +1,7 @@
 # The command line could reach more of the library
 
+GitHub issue: [#68](https://github.com/findlaywebb/pyntpot/issues/68)
+
 **What exists today.** `pyntpot` has one command, `pyntpot map`, which paints a GPX
 track as a map PNG with the default theme or a theme file. Everything else (painting
 pictures, lettering, swatch and brush sheets, working with themes) is reached from

@@ -1,5 +1,7 @@
 # Minor roads and streams are drawn as short stubs where the route's corridor clips them
 
+GitHub issue: [#56](https://github.com/findlaywebb/pyntpot/issues/56)
+
 Minor roads and streams are clipped to the route's corridor, and a piece that is only a few
 pixels long after the clip is still drawn. On the Ambleside card short brown hair-like
 stubs stick out of the route between Rydal and Ambleside, and short blue dashes of stream

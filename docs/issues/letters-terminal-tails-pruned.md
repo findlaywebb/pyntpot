@@ -1,5 +1,7 @@
 # The skeleton prunes the terminal tails of D, Q and 3, and 8 keeps a bridge
 
+GitHub issue: [#43](https://github.com/findlaywebb/pyntpot/issues/43)
+
 `letters/skeleton.py` prunes short spurs from the thinned glyph before `letters/trace.py`
 turns it into strokes. P7.V4 made every stroke draw once, and strokes that run on through a
 junction one stroke (`letters/junction.py`, `skeleton.prune` keeping a spur that carries on

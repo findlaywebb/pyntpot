@@ -94,3 +94,34 @@ form, under "Changelog" in the PR description. Branch commits are free-form.
 
 Commit working checkpoints before stopping. Out-of-scope discoveries go to the backlog or
 `docs/issues/`, not into the current diff.
+
+## Issues and features: a note and a GitHub issue
+
+Every known defect and candidate feature lives in two places, kept in step:
+
+- **The note** in `docs/issues/` (a defect) or `docs/features/` (a feature), named
+  `<area>-<what>.md`. It holds the detail and stays the source of truth.
+- **The GitHub issue**, same title as the note's heading, a one or two sentence summary and
+  a "Full note:" link to the note on `main`. The note's second line links back:
+  `GitHub issue: [#N](https://github.com/findlaywebb/pyntpot/issues/N)`.
+
+Labels: one type (`bug`, `enhancement`, `documentation`, `chore`, `performance`) and one
+area (`area: ink`, `area: letters`, `area: maps`, `area: docs`, `area: tests`,
+`area: cli`); `port` for the port's remaining work, which also carries its milestone.
+Search the open issues before filing, so nothing is filed twice.
+
+Move the GitHub item along as the work progresses:
+
+1. **Filing.** Write the note and open the issue in the same session; commit the note with
+   its issue link.
+2. **Starting.** Comment on the issue with the branch name, and name the issue in the
+   spec (`specs/NNN-name/spec.md`).
+3. **Landing.** The PR body says `Closes #N` for each issue it fixes, so the merge closes
+   them and the project moves them to done. Delete or rewrite the note in the same PR: a
+   fixed defect's note is deleted; a built feature's note is deleted once the docs describe
+   the feature.
+4. **Dropping.** An issue that will not be done is closed as not planned, with the reason,
+   and its note deleted.
+
+Ticked lines in `specs/*/tasks.md` and the issues must agree: when a task line names an
+issue, ticking it and closing the issue happen together.
