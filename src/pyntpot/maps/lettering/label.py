@@ -56,6 +56,17 @@ NO_LEADER = ("settlement", "river", "road", "marker")
 #: `measure(text, size) -> (width, height)`, both in display pixels.
 Measure = Callable[[str, float], tuple[float, float]]
 
+#: `measure_tracked(text, size, tracking) -> (width, height)`, both in display
+#: pixels, with `tracking` the extra letter spacing in em units. How the placer
+#: asks how long a curved name is once the hand writes it with its kind's
+#: tracking.
+MeasureTracked = Callable[[str, float, float], tuple[float, float]]
+
+#: Extra letter spacing a kind is set with, in em units. Water is set wide
+#: because that is how a printed map has always said "this is a river" without
+#: changing the size, and a road is set slightly wide for the same reason.
+KIND_TRACKING = {"river": 0.24, "road": 0.10, "settlement": 0.05}
+
 #: The kinds whose name is never broken over two lines, which is the shorter
 #: list. A settlement never wraps: a place name is one thing a reader looks up
 #: and breaking it reads as two places. A river, a road and a route marker are

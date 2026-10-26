@@ -114,7 +114,14 @@ def letter(
         {"w": dark.w, "h": dark.h, "v": dark.values},
         road_lines(lines, card),
     )
-    placed = home + place(ground + anchored, spans, backdrop, taken, measure)
+    placed = home + place(
+        ground + anchored,
+        spans,
+        backdrop,
+        taken,
+        measure,
+        measure_tracked=partial(lettering_marks.box_size, hand),
+    )
     plate = draw_plate(plates, placed, spans, strands, style)
     return Lettering(tuple(placed), tuple(spans), plate)
 
