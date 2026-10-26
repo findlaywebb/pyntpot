@@ -14,6 +14,7 @@ from pyntpot.maps.attribution import (
     attribution_size,
     attribution_text,
     draw_attribution,
+    plate_scale,
 )
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.credit import Credit
@@ -157,3 +158,15 @@ class TestDrawn:
         assert box is not None
         assert box[0] >= width * RIGHT_FRACTION
         assert box[1] >= height * (1 - BOTTOM_FRACTION)
+
+
+class TestPlateScale:
+    """The plate is supersampled only as far as the card needs."""
+
+    def test_a_card_at_render_scale_two_or_more_adds_no_plate_scale(self) -> None:
+        """At render scale 2 or 3 the plate is stroked at 1, so a supersampled card pays once."""
+        assert [plate_scale(s) for s in (2.0, 3.0)] == [1, 1]
+
+    def test_a_card_at_render_scale_one_strokes_the_plate_at_two(self) -> None:
+        """A card composed at display size gets a plate stroked at 2 and shrunk, so it stays crisp."""
+        assert plate_scale(1.0) == 2

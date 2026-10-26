@@ -22,8 +22,12 @@ at `NibSurface` scale 1, so the strokes were coarse at that size.
   (x-height about 6 px, which reads at 100 percent; 12 was tried by eye as the least that
   does), growing with the card so a larger card published smaller keeps 13 at the published
   width, and never under 12. The margin is 10 display pixels (was 8 render pixels).
-- **A crisp plate.** The plate is stroked at `NibSurface` scale 2 and shrunk to the block
-  with Lanczos on premultiplied pixels, as the examples do for lettering.
+- **A crisp plate.** The plate is stroked at no less than two render pixels per display
+  pixel and shrunk to the block with Lanczos on premultiplied pixels, as the examples do for
+  lettering. A card already composed at render scale 2 (the default supersample) adds no
+  extra plate scale: an extra 2x there doubled `compose`'s time on the benchmark (3.3 s to
+  5.3 s on CodSpeed) for no visible gain. The larger type still costs some time, about
+  0.8 s on a 720 px card at scale 2, the price of a credit that can be read.
 - **Wrapping.** A line wider than 70 percent of the card is broken into two right-aligned
   lines at the " · " separator nearest its middle, the dot being the break; the type is not
   shrunk under the floor. A line without a separator is not broken. The text is otherwise

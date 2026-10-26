@@ -12,8 +12,8 @@ wide, grows with the card's display width and is never under
 `ATTRIBUTION_MIN_SIZE_PX`; the caller gives the render scale (render pixels per
 display pixel) so the size and the margin survive the downsizing of a supersampled
 card. The line is stroked through the same hand, nib and ink engine as the map's
-names, on a plate the size of the text block painted at twice the card's scale and
-shrunk with Lanczos, and pasted with its alpha. A line wider than
+names, on a plate the size of the text block, stroked at no less than two render pixels
+per display pixel (`plate_scale`) and shrunk with Lanczos, and pasted with its alpha. A line wider than
 `ATTRIBUTION_WIDE_FRACTION` of the card is broken into two right-aligned lines at the
 " · " that joins the credits (the dot is the break); it is never shrunk under the
 floor. It does not choose the credits (the basemap carries them), it does not break a
@@ -73,8 +73,14 @@ _PAD_PX = 4.0
 #: The paper's granulation cell on the attribution plate, in display pixels.
 _GRAN_PX = 6.0
 
-#: The factor the plate is stroked at and shrunk from.
-_PLATE_SCALE = 2
+#: Render pixels per display pixel the plate is stroked at, at least: a card already
+#: painted at this scale or finer needs no extra supersampling of its own.
+_CRISP_SCALE = 2.0
+
+
+def plate_scale(scale: float) -> int:
+    """The factor the plate is stroked at and shrunk from, for a card at `scale` render px per display px."""
+    return max(1, math.ceil(_CRISP_SCALE / scale))
 
 
 def attribution_size(display_width: float) -> float:
@@ -135,13 +141,14 @@ def draw_attribution(image: Image.Image, text: str, style: Style, scale: float =
         marks += lettering_marks.label_marks(
             hand, Label(name=line, kind="landmark", px=x, py=y, tx=x, ty=y, size=size)
         )
-    big = (block[0] * _PLATE_SCALE, block[1] * _PLATE_SCALE)
+    factor = plate_scale(scale)
+    big = (block[0] * factor, block[1] * factor)
     with tempfile.TemporaryDirectory() as work:
         surface = nib.NibSurface(
             Canvas(0.0, 0.0, float(big[0]), float(big[1]), big[0], big[1]),
-            float(_PLATE_SCALE),
+            float(factor),
             dark_array(None, big[1], big[0]),
-            _GRAN_PX * scale * _PLATE_SCALE,
+            _GRAN_PX * scale * factor,
         )
         groups = nib.NibGroups(style.nib, style.face, style.hand, style.brush, style.paper)
         path = nib.nib_plate(marks, surface, groups, Path(work) / "attribution.webp")
