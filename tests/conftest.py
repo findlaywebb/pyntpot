@@ -22,11 +22,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=GOLDEN_DIR,
         help="directory of golden outputs to compare against (default: the committed goldens)",
     )
-    parser.addini(
-        "personal_terms_file",
-        help="path to the private banned-term list kept outside the repository",
-        default="",
-    )
 
 
 @pytest.fixture

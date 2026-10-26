@@ -1,4 +1,4 @@
-"""Shared file walk for the text-level architecture checks (banned terms, coordinates)."""
+"""Shared file walk for the text-level architecture checks (coordinates)."""
 
 from collections.abc import Iterator
 from pathlib import Path

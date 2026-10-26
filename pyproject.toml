@@ -224,7 +224,6 @@ markers = [
     "golden: slow parity tests",
     "benchmark: performance benchmarks (timed by CodSpeed in CI, --benchmark-enable locally)",
 ]
-personal_terms_file = "~/personal/pyntpot-private/banned_terms.txt"
 
 # ---------------------------------------------------------------------------
 # Coverage — the gate is the CI step in `checks`, see ADR 0011; never set

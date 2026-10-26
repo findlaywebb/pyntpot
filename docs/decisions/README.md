@@ -29,6 +29,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0019 | The upstream SVG page consumes public pipeline stages (points to 0007) |
 | 0020 | The default style is the resolved one (points to 0005) |
 | 0021 | Every technique cites its source |
+| 0022 | Retire the banned-term test (supersedes D16's enforcement clause) |
 | 0025 | Second golden regeneration |
 | 0026 | Widen the public API |
 | 0027 | Candidate export, vector layers and route ink |

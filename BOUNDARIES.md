@@ -24,8 +24,8 @@ Hard rules the checks enforce:
   directory (`tests/architecture/exemptions/`) is empty.
 - No `print()` anywhere in `src/`; logging only.
 - Soft file budget of 400 lines. A spike signals a god module; split it.
-- No personal content: banned terms and the coordinate allowlist apply to `src/`,
-  `tests/`, `docs/`, `examples/` and the root docs.
+- Public data only (D16). Every coordinate pair in `src/`, `tests/`, `docs/`, `examples/`
+  and the root docs lies inside a fixture's box (`tests/architecture/test_coordinates.py`).
 
 Public surface discipline: each package `__init__.py` exports only what is public, and
 its module docstring states purpose, non-goals and invariants. Keep both current; they are
