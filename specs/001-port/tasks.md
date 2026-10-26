@@ -221,7 +221,7 @@ Order: after P7.R (the 0.1.0 release, the outline's P7.4), P8, P10 (both parts) 
 - [x] P9.1 Retire the banned-term test and the `personal_terms_file` option; ADR 0022 supersedes D16's enforcement clause for the post-port tree (the rule stands)
 - [x] P9.2 Retire the exemptions mechanism; ADR 0023
 - [x] P9.3 Delete `make_golden_old.py` and the last `ty` exclude
-- [ ] P9.4 Delete `design-sources.md` once `references.md` covers it
+- [x] P9.4 Delete `design-sources.md` once `references.md` covers it
 
 ## Post-port roadmap
 
