@@ -32,7 +32,7 @@ jobs:
       # A failing fresh paint is only inspectable if its pictures outlive the runner.
       - name: Keep the fresh paints
         if: failure()
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: golden-paints-${{ matrix.os }}
           # The painted images only, not the copied fixture caches.
