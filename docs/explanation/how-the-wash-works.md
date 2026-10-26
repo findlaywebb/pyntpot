@@ -138,5 +138,5 @@ public `wash` takes a body and a pool and nothing else, so none has a figure her
   densities already laid, which makes the drying directional. Source: `shallow-water`.
 
 See [references](references.md) for each source, and
-[the feature note](../features/ink-public-wash-options.md) for what exposing them would
+[the feature note](https://github.com/findlaywebb/pyntpot/blob/main/docs/features/ink-public-wash-options.md) for what exposing them would
 take.

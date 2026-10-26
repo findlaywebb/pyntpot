@@ -73,7 +73,7 @@ size.
 
 The nib's angle is fixed to the page and not to the line. For a name set along a steep line,
 the thick and thin strokes stay where the page puts them, not where the letter would have
-put them. [A feature note](../features/letters-nib-follows-writing-line.md) records the
+put them. [A feature note](https://github.com/findlaywebb/pyntpot/blob/main/docs/features/letters-nib-follows-writing-line.md) records the
 alternative.
 
 Source: `nib` in [references](references.md).

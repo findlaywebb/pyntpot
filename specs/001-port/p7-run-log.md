@@ -1054,6 +1054,26 @@ and was reworded so that the coordinate gate stays green.
 **Registry.** One `"P7.V12a"` block (the grid and the command-line image), share 300,000; the older entries
 moved as the plan names. Pins regenerated and checked exact: the entries named above.
 
+## P7.V14 Site theme fixes (2026-10-25)
+
+`p7-wip` merged into `p7-docs-site` with no conflicts first.
+
+**Figures.** `examples/site_theme.py` has a fourth figure, `header`. `paper` is a 512 px square made seamless
+(each axis crossfaded with itself rolled by half, sine and cosine weights), and the page repeats it at
+512 px, no longer `cover` and `fixed`. `rule` is 1600 x 60, brush `RIV4-a` at 0.4 of its height, a touch-down
+and a long taper by `wprof`, painted over a pure-white base so multiplying leaves only the stroke; the CSS
+sizes it `auto 100%`, left, no repeat, never stretched. `header` is 1600 x 120: the water pigment glazed 3.5 to
+5.0 times, uneven along its length, pooled darker along its lower edge, repeated sideways under `.md-header`
+(the dark scheme keeps the flat glaze colour). The test pins the band's lightest pixels at 4.5:1 against the
+cream header text.
+
+**Faces.** Body text uses the system serif stack (`Charter`, `Sitka Text`, `Cambria`, `Iowan Old Style`,
+`Georgia`), not a self-hosted face: a web font needs a download from outside the build and the stack needs no
+licence. `theme.font: false` in `mkdocs.yml` stops Material loading Roboto. Patrick Hand stays on `h1`, `h2`
+and the site name. The nav gains `how-to/letter-your-own-landmarks.md`.
+
+**Registry.** `site/header.webp` under a new `"P7.V14"` share of 100,000; `paper` and `rule` keep their
+`"P7.14"` entries at the new widths. Pins and masters for the three regenerated and checked exact.
 ## P7.V13 pictures fix-up 1 (2026-10-25)
 
 Fix-up commit for the round-2 picture and reference critiques (`critique/round-2/pictures.md`, `reference.md`);

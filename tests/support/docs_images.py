@@ -117,6 +117,7 @@ SLICE_SHARE_BYTES: dict[str, int] = {
     "P7.V12d": 150_000,
     "P7.V12c": 600_000,
     "P7.V12a": 300_000,
+    "P7.V14": 100_000,
 }
 
 #: The most all of `docs/images/` may weigh.
@@ -506,5 +507,44 @@ IMAGES += (
         "page",
         "webp-lossy",
         "P7.V12a",
+    ),
+)
+
+IMAGES += (
+    # P7.14: the docs site's paper and brush-stroke rule.
+    DocsImage(
+        "site/paper.webp",
+        "site_theme",
+        (("figure", "paper"),),
+        None,
+        512,
+        "page",
+        "webp-lossy",
+        "P7.14",
+    ),
+    DocsImage(
+        "site/rule.webp",
+        "site_theme",
+        (("figure", "rule"),),
+        None,
+        1600,
+        "page",
+        "webp-lossy",
+        "P7.14",
+    ),
+)
+
+IMAGES += (
+    # P7.V14: the painted band behind the site's header; the paper and the rule above are
+    # repainted at their new sizes.
+    DocsImage(
+        "site/header.webp",
+        "site_theme",
+        (("figure", "header"),),
+        None,
+        1600,
+        "page",
+        "webp-lossy",
+        "P7.V14",
     ),
 )

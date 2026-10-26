@@ -6,7 +6,7 @@ step the script takes towards a painting. You see what each step adds and what i
 changes.
 
 pyntpot does not read SVG itself. The engine paints masks and point lists. This script
-reads one file with the standard library. [The feature note](../../features/ink-read-svg-drawings.md)
+reads one file with the standard library. [The feature note](https://github.com/findlaywebb/pyntpot/blob/main/docs/features/ink-read-svg-drawings.md)
 says what it would look like for pyntpot to read drawings for you.
 
 ![A pale ochre sun, a blue-grey far fell and a green main fell with a dark pen line along its top. Two green banks lie in front. A tarn sits on the main fell, with a blue beck running down from it and a broken brown track beside the beck. A dry-stone wall crosses the left bank. Two round dark green trees and two birds complete the scene.](../../images/painting-with-python/svg-drawing.webp)

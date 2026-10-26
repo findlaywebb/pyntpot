@@ -49,6 +49,11 @@ dev = [
     "prek>=0.5",
     "twine>=6",
 ]
+# The docs site: the engine and the API reference, pinned (ADR 0034).
+docs = [
+    "mkdocs-material==9.7.7",
+    "mkdocstrings-python==2.0.10",
+]
 
 # ---------------------------------------------------------------------------
 # Boundary contract — dependencies point inward (docs/decisions/0002)

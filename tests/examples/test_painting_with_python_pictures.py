@@ -148,7 +148,10 @@ class TestPages:
         """The vector page states that pyntpot reads no SVG and links the feature note."""
         text = (PAGES / "vector-drawing.md").read_text()
         assert "does not read SVG" in text
-        assert "(../../features/ink-read-svg-drawings.md)" in text
+        assert (
+            "(https://github.com/findlaywebb/pyntpot/blob/main/docs/features/ink-read-svg-drawings.md)"
+            in text
+        )
 
     def test_the_vector_page_shows_every_step_of_the_drawing(self):
         """The vector page shows the flat drawing, the washes, the inks and the painting."""

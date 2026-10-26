@@ -6,7 +6,7 @@ for heavy use, a private network, or to stay clear of the public servers' limits
 This covers the two providers pyntpot ships, `OverpassFeatures` and `OpenTopoData`.
 Writing a provider of your own is not supported yet, because the `Features` and
 `Elevation` protocols are not public
-([a caller could write their own data provider](../features/maps-public-provider-protocols.md)).
+([a caller could write their own data provider](https://github.com/findlaywebb/pyntpot/blob/main/docs/features/maps-public-provider-protocols.md)).
 
 **Before you start:** you need an Overpass server whose data covers your track, and an
 OpenTopoData server with a dataset loaded (the default is `srtm30m`). Their own

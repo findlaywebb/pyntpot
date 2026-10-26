@@ -1,0 +1,47 @@
+name: Docs site
+
+# Builds the docs site strictly on every pull request, so a broken link, a missing page or a
+# docstring the reference cannot render fails the PR. On a push to main it builds again and
+# deploys to GitHub Pages. The maintainer enables Pages with "GitHub Actions" as the source in
+# the repository settings (ADR 0034).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+          version: "0.11.21"
+
+      - name: Build strictly
+        run: uv run --locked --group docs mkdocs build --strict
+
+      - uses: actions/upload-pages-artifact@v5.0.0
+        if: github.event_name != 'pull_request'
+        with:
+          path: site
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5.0.1
