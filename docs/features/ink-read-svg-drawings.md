@@ -1,5 +1,7 @@
 # The engine could read an SVG drawing
 
+GitHub issue: [#74](https://github.com/findlaywebb/pyntpot/issues/74)
+
 **What exists today.** `pyntpot.maps.svg_path.parse_path` reads back only the
 `M` and `L` path data that `path_d` writes, and it is private to `maps`. The
 public `ink` names (`wash`, `stamp`, `Brush`, `paper_plate`, `composite`) take

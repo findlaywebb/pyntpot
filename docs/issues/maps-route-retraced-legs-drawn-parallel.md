@@ -1,5 +1,7 @@
 # A leg the route retraces is drawn as parallel strokes
 
+GitHub issue: [#58](https://github.com/findlaywebb/pyntpot/issues/58)
+
 When a route goes out along a road and comes back along it, `maps/strands.py` spaces the
 strands apart so the two legs do not lie on one another. A route that retraces a leg more
 than twice, or a leg a few metres off the road on the way back, ends as three near-parallel

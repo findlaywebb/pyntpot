@@ -1,5 +1,7 @@
 # Slow end-to-end tests dominate mutation run time
 
+GitHub issue: [#62](https://github.com/findlaywebb/pyntpot/issues/62)
+
 mutmut runs, for each mutant, every test that covers the mutated function.
 A few whole-pipeline unit tests reach deep into `ink`, so mutants in small
 helpers pay for a full map render.

@@ -1,5 +1,7 @@
 # Most of the route ink's `effect` table is read by nothing
 
+GitHub issue: [#57](https://github.com/findlaywebb/pyntpot/issues/57)
+
 `RouteInk.effect` (`src/pyntpot/maps/style_groups.py`) holds casing, glow, shadow, blend
 and adaptive-percentage keys. The route drawer in `maps/compose.py` reads the ink's
 `style`, `colour` and `px`, and from the effect table only `blend` (`normal` or

@@ -1,5 +1,7 @@
 # A river's wet brush pools into a blob where the stroke starts at the card edge
 
+GitHub issue: [#55](https://github.com/findlaywebb/pyntpot/issues/55)
+
 On the Ambleside hero card (`docs/images/hero.webp`) the Brathay enters at the lower left as a
 wide, dark blob with a comma-shaped tail, then continues as a thin line. The river is drawn
 with a wet brush, and where the stroke begins inside the card the brush's pool gain stamps

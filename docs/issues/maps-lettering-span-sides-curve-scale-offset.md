@@ -1,5 +1,7 @@
 # The bend is read at 1.5 cap heights, tuned against an offset that is now 1.2
 
+GitHub issue: [#54](https://github.com/findlaywebb/pyntpot/issues/54)
+
 `pyntpot.maps.lettering.span_sides.SPAN_CURVE_SCALE_CAPS` is 1.5. Its comment
 argued that "the right spacing is the offset the bracket will be drawn at,
 1.7 cap heights" and that 1.5 "is under the offset". The offset is

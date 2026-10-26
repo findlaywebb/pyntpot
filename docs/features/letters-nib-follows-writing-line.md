@@ -1,5 +1,7 @@
 # The nib could turn with the writing line
 
+GitHub issue: [#76](https://github.com/findlaywebb/pyntpot/issues/76)
+
 **What exists today.** The nib's angle is fixed to the page.
 `pyntpot.letters.nib._pen_profile` takes each segment's direction as
 `arctan2(dy, dx)` in render pixels and compares it with

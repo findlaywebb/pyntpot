@@ -1,5 +1,7 @@
 # Names are lettered under a river's stroke, a road, or a lake blob
 
+GitHub issue: [#52](https://github.com/findlaywebb/pyntpot/issues/52)
+
 Three placements overlap something that hides part of the name:
 
 - A river name written along the water ("Cherwell" on the Oxford card) can sit on its own

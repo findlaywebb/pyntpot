@@ -1,5 +1,7 @@
 # Small land-cover patches speckle a card seen at thumbnail size
 
+GitHub issue: [#46](https://github.com/findlaywebb/pyntpot/issues/46)
+
 On the Ambleside hero card (`docs/images/hero.webp`) the woods, meadows and scrub are
 painted as many small patches in contrasting greens over the tawny fell. At full size
 they read as texture; at thumbnail size (about 400 px wide, as the README and gallery show

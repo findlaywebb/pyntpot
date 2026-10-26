@@ -1,5 +1,7 @@
 # A gallery of every brush id
 
+GitHub issue: [#69](https://github.com/findlaywebb/pyntpot/issues/69)
+
 **What exists today.** A brush id names one cell of the brush sheet: a three-letter prefix
 and a colour column (`BRUSH_COLOURS`: `RIV`, `STR`, `LAN` with one column each, `MAJ` with
 five, `TRK` with six) and a treatment row (`BRUSH_TREATMENTS`, rows 1 to 8, of which 5, 6

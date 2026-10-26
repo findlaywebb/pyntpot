@@ -1,5 +1,7 @@
 # Colleges and other education land have no pigment class
 
+GitHub issue: [#44](https://github.com/findlaywebb/pyntpot/issues/44)
+
 `maps/cover.py` maps a fixed list of OpenStreetMap tags to pigment classes, and
 `landuse=education` and `amenity=university` are not on it. On the Oxford card the historic
 core, whose land is mostly colleges, is cream paper with the green of the quads while the

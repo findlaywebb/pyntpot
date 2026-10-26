@@ -1,5 +1,7 @@
 # The tests could move off Lynmouth
 
+GitHub issue: [#82](https://github.com/findlaywebb/pyntpot/issues/82)
+
 **What exists today.** Lynmouth, Devon is the one test place (D10): the
 recorded provider payloads, the track, every golden and every map test read
 `tests/fixtures/lynmouth/`. The docs focus on other places (the Lake District,

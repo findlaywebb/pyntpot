@@ -1,5 +1,7 @@
 # Flat boxes are reserved without the tracking the name is drawn with
 
+GitHub issue: [#48](https://github.com/findlaywebb/pyntpot/issues/48)
+
 The placer reserves a flat name's box from `measure_fn`, which is `box_size` called with no
 tracking, while the hand draws the name with its kind's `KIND_TRACKING` (0.05 em for a
 settlement, 0.10 em for a road, 0.24 em for a river). The flat candidates in

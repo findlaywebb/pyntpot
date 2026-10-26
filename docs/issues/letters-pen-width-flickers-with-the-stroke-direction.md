@@ -1,5 +1,7 @@
 # A broad nib's width flickers where a stroke is nearly along the nib
 
+GitHub issue: [#42](https://github.com/findlaywebb/pyntpot/issues/42)
+
 `_pen_profile` in `letters/nib.py` sets the width along each stroke from the angle between
 the stroke's local direction and the nib, scaled by `label_pen_thin`. The direction is read
 from the stroke's own points, which come from a thinned skeleton and change direction a

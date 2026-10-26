@@ -1,5 +1,7 @@
 # The wash options could be public
 
+GitHub issue: [#73](https://github.com/findlaywebb/pyntpot/issues/73)
+
 **What exists today.** `pyntpot.ink.wash.wash` takes a mask, a sheet, a body density, a pool
 density and an optional `WashOptions`. The options carry the edge's width, the grain's
 strength, the shared wet area and its bleed, the flow rim, granulation that follows the
