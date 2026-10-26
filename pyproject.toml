@@ -1,16 +1,32 @@
 [project]
 name = "pyntpot"
-version = "0.0.2"
+version = "0.1.0"
 description = "Watercolour and ink painting in Python, from a single wash to a hand-painted route map"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"
 license-files = ["LICENSE", "LICENSE-FONT"]
 authors = [{ name = "Findlay Webb" }]
-keywords = ["watercolour", "pen-and-ink", "painting", "maps", "gpx", "raster"]
+keywords = [
+    "watercolour",
+    "watercolor",
+    "pen-and-ink",
+    "hand-drawn",
+    "hand-lettering",
+    "generative-art",
+    "painting",
+    "maps",
+    "gpx",
+    "openstreetmap",
+    "raster",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Artistic Software",
     "Topic :: Multimedia :: Graphics",
+    "Topic :: Scientific/Engineering :: GIS",
     "Typing :: Typed",
 ]
 dependencies = [
@@ -27,6 +43,8 @@ pyntpot = "pyntpot.maps.cli:main"
 [project.urls]
 Homepage = "https://github.com/findlaywebb/pyntpot"
 Repository = "https://github.com/findlaywebb/pyntpot"
+Documentation = "https://findlaywebb.github.io/pyntpot/"
+Changelog = "https://github.com/findlaywebb/pyntpot/blob/main/CHANGELOG.md"
 Issues = "https://github.com/findlaywebb/pyntpot/issues"
 
 [build-system]

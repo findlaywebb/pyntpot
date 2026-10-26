@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use pyntpot, please cite it as below."
+title: "pyntpot"
+abstract: "Hand-drawn watercolour and pen-and-ink painting for Python, with route maps"
+type: software
+license: MIT
+authors:
+  - family-names: Webb
+    given-names: Findlay
+repository-code: "https://github.com/findlaywebb/pyntpot"
+url: "https://findlaywebb.github.io/pyntpot/"
+keywords:
+  - watercolour
+  - pen-and-ink
+  - hand-drawn
+  - generative art
+  - maps
