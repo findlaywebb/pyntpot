@@ -15,7 +15,7 @@ Each line follows `plan.md`; step numbers are its test plan's.
 - [x] Step 2: coverage gates under xdist equal the serial percentages.
 - [x] Step 3: golden tolerance timing `-n auto --dist loadgroup`, with RSS logged per process
       (controller and each worker) and cgroup `memory.peak`; apply the macOS rule.
-- [ ] Step 4: golden exact `-n auto --dist loadgroup` as a separate pass/fail.
+- [x] Step 4: golden exact `-n auto --dist loadgroup` as a separate pass/fail.
 - [x] Step 5: the six grouped modules `-n 4 --dist loadgroup -vv --durations=0
       --durations-min=10`: one `[gwN]` and one setup of 40 s or more per module.
 - [x] Step 6: `-p no:xdist --co` collects the marked modules.
@@ -28,6 +28,6 @@ Each line follows `plan.md`; step numbers are its test plan's.
       loadgroup`. Benchmark smoke, `prerelease` and `codspeed.yml` unchanged.
 - [x] Docs: `CONTRIBUTING.md` paragraph, `CLAUDE.md` toolchain line,
       `docs/features/tests-fast-gates.md` times.
-- [ ] Fresh-context diff review against the plan; triage.
+- [x] Fresh-context diff review against the plan; triage.
 - [ ] Step 10: PR (title `ci(tests): run the test and golden gates in parallel`), CI green
       on both golden runners, times recorded in the PR body.
