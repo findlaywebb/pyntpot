@@ -89,6 +89,7 @@ class TestDeleted:
 
 
 @pytest.mark.golden
+@pytest.mark.xdist_group("test_pipeline_letter_compose")
 class TestLetter:
     """`letter` places the pinned names along the strands and resolves spans on them."""
 
@@ -118,6 +119,7 @@ class TestLetter:
 
 
 @pytest.mark.golden
+@pytest.mark.xdist_group("test_pipeline_letter_compose")
 class TestCompose:
     """`compose` lays the painted, lettered plates into the golden card."""
 

@@ -108,3 +108,53 @@ pytest-randomly 5.0.0, pytest-codspeed 5.0.3).
 - **No shared writes outside `tmp_path`:** checked `tests/golden`, `tests/unit/maps`, `tests/examples`.
 - **Artifacts:** `--basetemp` becomes `…/pytest/popen-gwN/…`, which the artifact glob `**` still matches.
 - **Grouping is worth it:** about 306 s of setup, repeated on up to 3 extra workers.
+
+---
+
+# Round 2
+
+**Verdict: BLOCK.** One finding, and the fix is mechanical. `plan.md` now takes all eight
+round-1 findings correctly. `tasks.md` was not updated to match, and it still tells the
+agent to do the exact thing that finding 1 removed.
+
+Checked again this round:
+
+- With the `xdist_group` marker registered in the ini and xdist loaded, `--strict-markers`
+  and `--strict-config` raise no error. With `-p no:xdist` the module collects and passes.
+  With `-n 2 --dist loadgroup` the test runs as `…::test_one@g` on one worker.
+- With xdist installed and no `--dist`, `--benchmark-enable` exits 0 and prints the timing
+  table.
+- `--durations` setup and call lines are passed back from workers, so test-plan step 5 can
+  show a single paint per module.
+- In `golden.yml`, `include: [{os: macos-15, workers: 2}]` adds a key to the existing
+  macos-15 entry. `matrix.workers || 'auto'` then gives `auto` on Ubuntu.
+
+## BLOCKING
+
+1. **`specs/002-parallel-gates/tasks.md` contradicts the revised plan.** The workflow says
+   to implement while ticking off `tasks.md`, so the agent will follow it line by line.
+   As it stands it says:
+   - "`pytest-xdist` in the dev group, `uv lock`, **`--dist loadgroup` in `addopts`**". This
+     brings back round-1 finding 1.
+   - "`ci.yml` (`checks -n auto`, **prerelease install**)". The plan now leaves `prerelease`
+     alone, and `-n auto` lacks `--dist loadgroup`.
+   - Local checks include a "**mutmut clean run**". The plan dropped it.
+   - It also leaves things out: registering the marker, `publish.yml`, the
+     `--benchmark-enable` check, the `-p no:xdist` collection check, the `-vv --durations`
+     paint-once check, and separate tolerance-timing and exact runs.
+
+   **Fix:** rewrite the unticked lines so they follow plan §Files to touch and test-plan
+   steps 1 to 10, in the plan's order:
+   1. dependency and marker registration;
+   2. group marks;
+   3. local checks 1 to 9;
+   4. `ci.yml` checks, `golden.yml` and `publish.yml`;
+   5. docs;
+   6. review;
+   7. PR.
+
+## Non-blocking note
+
+- Test-plan step 3 records only the RSS **sum** and `memory.peak`. The macOS rule needs the
+  controller's RSS and the **largest single worker** peak. Have the `ps` sampler log RSS for
+  each PID so that the rule's inputs are recorded rather than inferred.

@@ -99,8 +99,8 @@ Timings run with nothing else on the machine, and "after" uses the same flags as
 2. Coverage under xdist: the CI test command with `--cov`, then both `coverage report`
    gates pass; compare their percentages with a serial `--cov` run (equal to two decimals).
 3. Golden timing: `uv run pytest -m golden --golden-tolerance -n auto --dist loadgroup`
-   passes; record wall time, and peak memory as the larger of a `ps` RSS sum sampled every
-   second and the cgroup's `memory.peak` (if `/sys/fs/cgroup/memory.peak` exists, read it
+   passes; record wall time, and peak memory: the controller's and each worker's RSS from
+   `ps` every second (their peaks and the peak of their sum) and the cgroup's `memory.peak` (if `/sys/fs/cgroup/memory.peak` exists, read it
    before and after).
 4. Golden exact, as a separate pass/fail: `uv run pytest -m golden -n auto --dist
    loadgroup`. An exact failure that also fails serially on `main` goes to `docs/issues/`
