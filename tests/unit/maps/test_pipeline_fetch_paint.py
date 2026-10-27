@@ -173,6 +173,7 @@ class TestFetch:
 
 
 @pytest.mark.golden
+@pytest.mark.xdist_group("test_pipeline_fetch_paint")
 class TestPaint:
     """`paint` writes the three plates once, with the route on the card beside them."""
 

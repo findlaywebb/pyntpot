@@ -59,6 +59,7 @@ dev = [
     "pytest-cov>=7.1",
     "pytest-benchmark>=5.3",
     "pytest-codspeed>=5.0",
+    "pytest-xdist>=3.8",
     "mutmut>=3.8",
     "import-linter>=2.11",
     "ruff>=0.15",
@@ -219,6 +220,7 @@ xfail_strict = true
 markers = [
     "golden: slow parity tests",
     "benchmark: performance benchmarks (timed by CodSpeed in CI, --benchmark-enable locally)",
+    "xdist_group(name): run these tests on one pytest-xdist worker (a shared module paint)",
 ]
 
 # ---------------------------------------------------------------------------

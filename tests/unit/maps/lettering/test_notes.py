@@ -89,6 +89,7 @@ class TestValidation:
 
 
 @pytest.mark.golden
+@pytest.mark.xdist_group("test_notes")
 class TestLettering:
     """`letter` seats notes before any other name and never moves them."""
 

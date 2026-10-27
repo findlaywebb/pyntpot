@@ -32,11 +32,11 @@ jobs:
         run: uv run prek run --all-files
 
       - name: Tests
-        run: uv run pytest -m "not golden and not benchmark"
+        run: uv run pytest -m "not golden and not benchmark" -n auto --dist loadgroup
 
       # Never the exact goldens on a runner (ADR 0030).
       - name: Goldens
-        run: uv run pytest -m golden --golden-tolerance
+        run: uv run pytest -m golden --golden-tolerance -n auto --dist loadgroup
 
       - name: Build
         run: uv build

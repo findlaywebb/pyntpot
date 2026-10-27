@@ -148,6 +148,7 @@ class TestReadable:
 
 
 @pytest.mark.golden
+@pytest.mark.xdist_group("test_attribution")
 class TestDrawn:
     """The attribution changes the bottom right of the card and nothing else."""
 

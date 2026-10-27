@@ -7,7 +7,8 @@ import pytest
 
 from support.golden import OUTPUTS, differing_fraction, paint_fixture
 
-pytestmark = pytest.mark.golden
+#: The module fixture paints once, so its tests share one xdist worker.
+pytestmark = [pytest.mark.golden, pytest.mark.xdist_group("test_parity")]
 
 MAX_DIFFERING_FRACTION = 0.005
 MAX_CHANNEL_DELTA = 2

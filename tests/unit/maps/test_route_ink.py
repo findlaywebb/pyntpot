@@ -65,6 +65,7 @@ def _fed_coloured_pixels(card: Image.Image) -> int:
 
 
 @pytest.mark.golden
+@pytest.mark.xdist_group("test_route_ink")
 class TestFedRouteInk:
     """The fed colour draws the card's route and the fed width spaces its strands."""
 
@@ -141,6 +142,7 @@ def _brightness(card: Image.Image) -> float:
 
 
 @pytest.mark.golden
+@pytest.mark.xdist_group("test_route_ink")
 class TestRouteBlendAndOpacity:
     """The route ink's `blend` and `opacity` effect keys reach the card."""
 
