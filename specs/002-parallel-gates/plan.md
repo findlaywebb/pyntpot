@@ -75,6 +75,8 @@ No boundary or public-API change, so no ADR.
 - `docs/features/tests-fast-gates.md` — "What exists today" gains the measured before and
   after times; the note stays, since 003 is still open.
 - `specs/002-parallel-gates/tasks.md` — ticked as the work lands.
+- `specs/003-painter-hot-paths/spec.md` — new: the profile behind it was taken for this
+  spec, so it lands here as a docs-only file, named on the PR's Changelog.
 
 ## Files to leave alone
 
@@ -99,8 +101,8 @@ Timings run with nothing else on the machine, and "after" uses the same flags as
 2. Coverage under xdist: the CI test command with `--cov`, then both `coverage report`
    gates pass; compare their percentages with a serial `--cov` run (equal to two decimals).
 3. Golden timing: `uv run pytest -m golden --golden-tolerance -n auto --dist loadgroup`
-   passes; record wall time, and peak memory: the controller's and each worker's RSS from
-   `ps` every second (their peaks and the peak of their sum) and the cgroup's `memory.peak` (if `/sys/fs/cgroup/memory.peak` exists, read it
+   passes; record wall time, and peak memory: the controller's and each worker's RSS
+   from `ps` every second (their peaks and the peak of their sum) and the cgroup's `memory.peak` (if `/sys/fs/cgroup/memory.peak` exists, read it
    before and after).
 4. Golden exact, as a separate pass/fail: `uv run pytest -m golden -n auto --dist
    loadgroup`. An exact failure that also fails serially on `main` goes to `docs/issues/`
@@ -150,4 +152,8 @@ workflows → docs. No concurrent work, so no worktrees.
 - No hard time budget: the maintainer's call (2026-10-27).
 - No matrix sharding of the golden job yet: measured parallel time decides whether it is
   worth a follow-up.
-- Plan review round 1 (BLOCK, 8 findings) is in `review.md`; all eight are taken.
+- Plan review is in `review.md`: round 1 (BLOCK, 8 findings, all taken), round 2 (BLOCK on
+  a stale `tasks.md`, rewritten; per-process RSS logging taken), round 3.
+- The macOS check keeps its name: the job sets `name: golden (${{ matrix.os }})`, since the
+  `include` key would otherwise rename it `golden (macos-15, 2)` and a required check on
+  the old name would never report (diff review, 2026-10-27).

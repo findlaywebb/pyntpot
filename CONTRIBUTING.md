@@ -14,7 +14,7 @@ Plain `uv run pytest` runs one test at a time, so a failure reads in order and a
 uv run pytest -n auto --dist loadgroup
 ```
 
-`--dist loadgroup` keeps the tests of a module that paints a whole map once on one worker, so the map is painted once; such a test's ID prints with a `@<group>` suffix, which you drop to rerun it. To reproduce a parallel failure, rerun it serially (without `-n` and `--dist`) with the `--randomly-seed=N` the run printed.
+`--dist loadgroup` keeps the tests of a module that paints a whole map once on one worker, so the map is painted once; such a test's ID prints with a `@<group>` suffix, which you drop to rerun it. To reproduce a parallel failure, rerun it serially (without `-n` and `--dist`) with the `--randomly-seed=N` the run printed; if it passes serially, the failure depends on which tests shared a worker, which is coupled state to fix.
 
 A red gate means fix the code. Never loosen a contract or a budget to get green. Changing
 a contract is an ADR in `docs/decisions/`.

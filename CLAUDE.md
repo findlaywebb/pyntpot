@@ -23,7 +23,7 @@ commit gate).
 ```bash
 uv sync                  # one venv
 uv run pytest            # all tests (tests/)
-uv run pytest -n auto --dist loadgroup   # the same, on every core
+uv run pytest -n auto --dist loadgroup  # in parallel
 uv run ruff check .      # lint        (ruff format . to format)
 uv run ty check          # types
 uv run lint-imports      # boundary contract
