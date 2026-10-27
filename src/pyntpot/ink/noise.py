@@ -39,13 +39,16 @@ def value_noise(h: int, w: int, cell: float, rng: np.random.Generator) -> np.nda
     fx = xs - x0
     fy = (fy * fy * (3 - 2 * fy))[:, None]
     fx = fx * fx * (3 - 2 * fx)
-    a = g[y0][:, x0]
-    b = g[y0][:, x0 + 1]
-    c = g[y0 + 1][:, x0]
-    d = g[y0 + 1][:, x0 + 1]
-    top = a + (b - a) * fx
-    bot = c + (d - c) * fx
-    return top + (bot - top) * fy
+    # Interpolate across each lattice row once, then gather rows: pixel row i reads
+    # lattice rows y0[i] and y0[i] + 1, so the per-pixel float operations are the
+    # same ones the four-corner form does, only not repeated per pixel row.
+    left = g[:, x0]
+    across = left + (g[:, x0 + 1] - left) * fx
+    rise = across[1:] - across[:-1]
+    out = rise[y0]
+    out *= fy
+    out += across[y0]
+    return out
 
 
 def fbm(h: int, w: int, cell: float, octaves: int, rng: np.random.Generator) -> np.ndarray:
@@ -56,7 +59,9 @@ def fbm(h: int, w: int, cell: float, octaves: int, rng: np.random.Generator) -> 
     out = np.zeros((h, w), F32)
     amp, total = 1.0, 0.0
     for i in range(octaves):
-        out += amp * value_noise(h, w, cell / (2**i), rng)
+        octave = value_noise(h, w, cell / (2**i), rng)
+        octave *= amp
+        out += octave
         total += amp
         amp *= 0.5
     out /= total
@@ -97,10 +102,13 @@ def _value_noise_at(
     fy = (vs - v0f).astype(F32)
     fx = fx * fx * (3 - 2 * fx)
     fy = fy * fy * (3 - 2 * fy)
-    a = g[iy, ix]
-    b = g[iy, ix + 1]
-    c = g[iy + 1, ix]
-    d = g[iy + 1, ix + 1]
+    flat = g.ravel()
+    k = iy * gw + ix
+    a = flat.take(k)
+    b = flat.take(k + 1)
+    k += gw
+    c = flat.take(k)
+    d = flat.take(k + 1)
     top = a + (b - a) * fx
     bot = c + (d - c) * fx
     return top + (bot - top) * fy
