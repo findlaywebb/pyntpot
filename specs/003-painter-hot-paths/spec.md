@@ -34,8 +34,15 @@ separate golden-marked unit tests.
       2026-10-27).
 - [ ] The CodSpeed `paint` benchmark falls, and no benchmark regresses by more than
       CodSpeed's own threshold.
-- [ ] A property or unit test pins each rewritten function against its old behaviour on
-      fixed inputs (pinned literals, not the old code run beside the new).
+- [ ] Each rewrite is proven bit-identical to the old code on the inputs a real Lynmouth paint
+      passes it, with the evidence in the PR; the exact local golden run is the standing
+      check that it stays so.
+- [ ] Each rewrite that relies on an invariant (a pixel with no ink or paint is left
+      exactly as it was; a cached field is the one a fresh build makes) has a unit or
+      property test of that invariant. No new pinned hash: pinned hashes already differ
+      across platforms (#86).
+- [ ] When the work lands, the measurements move into `docs/explanation/performance.md`,
+      `docs/features/tests-fast-gates.md` is deleted and #81 is closed.
 
 ## Out of scope
 
