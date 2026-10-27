@@ -51,7 +51,7 @@ jobs:
       # Tolerance mode: the smoke box's exact bytes are pinned on the machine that made them, and a
       # runner's numpy may round the wash a last bit differently (ADR 0030).
       - name: Tests
-        run: uv run pytest -m "not golden and not benchmark" --cov --golden-tolerance
+        run: uv run pytest -m "not golden and not benchmark" --cov --golden-tolerance -n auto --dist loadgroup
 
       - name: Coverage gate (ink, letters)
         run: uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fail-under=95 --precision=2

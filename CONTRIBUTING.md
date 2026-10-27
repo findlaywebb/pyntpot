@@ -8,6 +8,14 @@ Run this before every commit. It is what CI runs.
 uv sync && uv run prek run --all-files && uv run pytest
 ```
 
+Plain `uv run pytest` runs one test at a time, so a failure reads in order and a debugger works. To run on every core, as CI does:
+
+```bash
+uv run pytest -n auto --dist loadgroup
+```
+
+`--dist loadgroup` keeps the tests of a module that paints a whole map once on one worker, so the map is painted once; such a test's ID prints with a `@<group>` suffix, which you drop to rerun it. To reproduce a parallel failure, rerun it serially (without `-n` and `--dist`) with the `--randomly-seed=N` the run printed.
+
 A red gate means fix the code. Never loosen a contract or a budget to get green. Changing
 a contract is an ADR in `docs/decisions/`.
 
