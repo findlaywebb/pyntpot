@@ -221,4 +221,4 @@ notes → diff review → PR. No concurrent work.
 - R6 raises on non-finite coordinates, as the old code did by accident; R7 keeps the old
   path for non-contiguous accumulators.
 - Plan review round 1: BLOCK (4 blocking, 6 should-fix); round 2: BLOCK (1 blocking, 4
-  should-fix). All taken.
+  should-fix); round 3: PASS. All taken.

@@ -285,3 +285,31 @@ threshold. Write it as follows:
 - **Bookkeeping:** RSS in gate 4; three new notes with issues; per-gate budgets rejected
   with a reason.
 - **`tasks.md`:** follows the plan's order line for line.
+
+---
+
+# Round 3
+
+**Verdict: PASS.** All five round-2 items are applied as prescribed, in `plan.md` and
+`tasks.md` alike (commit `ddcb73e`).
+
+1. **SIMD check.** The plan now uses
+   `NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"`, which reports
+   `found: ['X86_V3']`. It compares the two trees with each other rather than with the
+   pins, and it states the pass condition: byte-identical pen, labels, `map.png` and label
+   list, and paper and wash equal as decoded pixels. I ran exactly this comparison in
+   round 2, and it passes on the patched tree.
+2. **Re-pin command.** `PYTHONPATH=tests uv run python tests/golden/make_golden.py
+   tests/golden/lynmouth` now appears in both files.
+3. **R3 threshold.** The floor is now 2²⁰ (1,048,576 cells). That is above the 512² ink
+   benchmarks (2¹⁸) and the about 900 × 728 `paint` benchmark plate (655k cells), so both
+   keep the old path. The Lynmouth plate (2.6M cells) still takes the row loop, including
+   under the 2²¹ fallback.
+4. **Callgrind gate.** There is now one script per benchmark callable, run on the
+   reference tree and on the branch, with the per-call cost taken as N calls minus 0
+   calls. The benchmark → rewrite map is corrected.
+5. **R1 guard test.** It now uses `dry = 1.2` with paper below the threshold, so the gate
+   is `1 - dry < 0`, and asserts `np.signbit` is True outside the patch. That is the
+   full-grid result; I confirmed in round 1 that `np.clip` keeps the -0.
+
+No new findings. The plan can be carried out as written.

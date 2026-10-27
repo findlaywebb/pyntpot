@@ -3,7 +3,7 @@
 Each line follows `plan.md`. After every rewrite: its equivalence script, the fast suite and
 the exact golden run (plan, Gates 1).
 
-- [ ] Plan passes the plan-reviewer gate (`review.md`).
+- [x] Plan passes the plan-reviewer gate (`review.md`: BLOCK, BLOCK, PASS in round 3).
 - [ ] Reference tree: `git worktree add $SCRATCH/main-ref origin/main`; the area scripts
       edited to load old modules from it; each passes against itself (old == old).
 - [ ] Baseline before any rewrite: `cProfile` and peak RSS of `paint_fixture` and the Skye
