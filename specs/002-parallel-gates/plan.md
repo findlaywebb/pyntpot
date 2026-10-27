@@ -153,7 +153,7 @@ workflows → docs. No concurrent work, so no worktrees.
 - No matrix sharding of the golden job yet: measured parallel time decides whether it is
   worth a follow-up.
 - Plan review is in `review.md`: round 1 (BLOCK, 8 findings, all taken), round 2 (BLOCK on
-  a stale `tasks.md`, rewritten; per-process RSS logging taken), round 3.
+  a stale `tasks.md`, rewritten; per-process RSS logging taken), round 3 (PASS).
 - The macOS check keeps its name: the job sets `name: golden (${{ matrix.os }})`, since the
   `include` key would otherwise rename it `golden (macos-15, 2)` and a required check on
   the old name would never report (diff review, 2026-10-27).

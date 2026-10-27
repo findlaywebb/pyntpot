@@ -4,7 +4,7 @@ Each line follows `plan.md`; step numbers are its test plan's.
 
 - [x] Measure the serial baseline: local fast, local golden, CI `checks`, CI golden (spec).
 - [x] Profile one Lynmouth paint; record the hot paths in `specs/003-painter-hot-paths/spec.md`.
-- [x] Plan passes the plan-reviewer gate (rounds 1 and 2 in `review.md`).
+- [x] Plan passes the plan-reviewer gate (rounds 1 to 3 in `review.md`; PASS in round 3).
 - [x] Comment on #81 with the branch name.
 - [x] `pyproject.toml`: `pytest-xdist>=3.8` in the dev group and the `xdist_group` marker
       registered in `markers`; `addopts` unchanged; `uv lock`.

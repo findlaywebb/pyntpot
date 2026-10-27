@@ -158,3 +158,30 @@ Checked again this round:
 - Test-plan step 3 records only the RSS **sum** and `memory.peak`. The macOS rule needs the
   controller's RSS and the **largest single worker** peak. Have the `ps` sampler log RSS for
   each PID so that the rule's inputs are recorded rather than inferred.
+
+---
+
+# Round 3
+
+**Verdict: PASS.**
+
+- **Round-2 blocker resolved.** `tasks.md` now follows `plan.md` line by line:
+  - `--dist` stays out of `addopts`, and the marker is registered.
+  - `prerelease`, `codspeed.yml` and the benchmark smoke step stay unchanged.
+  - `publish.yml` runs in parallel.
+  - Test-plan steps 1–10 each have their own task line.
+  - The stale mutmut and prerelease-install lines are gone.
+- **Round-2 note taken.** Test-plan step 3 now logs RSS for the controller and each worker
+  (each one's peak and the peak of their sum), plus `memory.peak`. Those are the inputs the
+  macOS rule uses.
+- **New decision checked.** The plan pins the golden job's name to
+  `name: golden (${{ matrix.os }})`, so a matrix `include` does not rename a required check.
+  This is sound.
+
+Housekeeping, not blocking:
+
+- The "plan passes the plan-reviewer gate" line was ticked before the gate passed. It is
+  true now; add "and 3" to its round list.
+- Step 4 (exact golden) is still open. Its rule in the plan stands:
+  - a failure that also fails serially on `main` → `docs/issues/` plus a GitHub issue;
+  - one that passes serially blocks this change.
