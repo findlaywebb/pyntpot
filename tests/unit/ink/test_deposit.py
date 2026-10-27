@@ -50,3 +50,42 @@ def test_a_wide_pool_has_faded_to_nothing_at_the_side_of_its_span() -> None:
     reach = int(np.count_nonzero(row)) // 2
     assert reach > 0
     assert row[100 - reach] < 0.015 * row[100]
+
+
+class TestTheFlatIndex:
+    """On a non-square plate the flat index lands each share where the row and column pair does."""
+
+    @staticmethod
+    def _deposit(contiguous: bool) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+        """Lay a scatter of samples into fresh 5 by 9 accumulators, or into transposed views."""
+
+        def plate() -> np.ndarray:
+            return np.zeros((5, 9), np.float32) if contiguous else np.zeros((9, 5), np.float32).T
+
+        acc, aux = plate(), {"res": plate(), "tooth": plate()}
+        rng = np.random.default_rng(3)
+        px = rng.uniform(-1.0, 9.5, (4, 6))
+        py = rng.uniform(-1.0, 5.5, (4, 6))
+        wgt = rng.random((4, 6), dtype=np.float32)
+        deposit(acc, aux, (px, py), wgt, wgt * np.float32(0.5), wgt * np.float32(0.25))
+        return acc, aux
+
+    def test_a_view_that_is_not_contiguous_lays_the_same_bits(self) -> None:
+        """A caller's transposed view takes the pair and lays exactly what a plain plate does."""
+        assert not self._deposit(contiguous=False)[0].flags.c_contiguous
+        flat_acc, flat_aux = self._deposit(contiguous=True)
+        pair_acc, pair_aux = self._deposit(contiguous=False)
+        assert np.array_equal(flat_acc, pair_acc)
+        for name in ("res", "tooth"):
+            assert np.array_equal(flat_aux[name], pair_aux[name]), name
+
+    def test_one_sample_lands_on_its_four_pixels_of_a_non_square_plate(self) -> None:
+        """A sample at (7.25, 3.5) on a 5 by 9 plate shares itself among rows 3, 4 and columns 7, 8."""
+        acc = np.zeros((5, 9), np.float32)
+        aux = {"res": np.zeros((5, 9), np.float32), "tooth": np.zeros((5, 9), np.float32)}
+        ones = np.ones((1, 1), np.float32)
+        deposit(acc, aux, (np.array([[7.25]]), np.array([[3.5]])), ones, ones, ones)
+        want = np.zeros((5, 9), np.float32)
+        want[3:5, 7:9] = [[0.375, 0.125], [0.375, 0.125]]
+        for laid in (acc, aux["res"], aux["tooth"]):
+            assert np.array_equal(laid, want)

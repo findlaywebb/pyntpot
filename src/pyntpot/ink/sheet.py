@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import numpy.typing as npt
+from PIL import Image
 
 from pyntpot.ink.noise import F32, fbm, fbm_aniso
 
@@ -77,7 +78,11 @@ class Canvas:
 
 @dataclass
 class Sheet:
-    """The paper's own noise fields, shared by every wash and every mark."""
+    """The paper's own noise fields, shared by every wash and every mark.
+
+    The fields are made once, in `__post_init__`, and are not edited in place after it:
+    the paper carried up to an ink pad's finer grid is kept per grid on that promise.
+    """
 
     h: int
     w: int
@@ -114,6 +119,28 @@ class Sheet:
             )
             self.paper = np.clip((1.0 - self.fibre) * self.paper + self.fibre * grain, 0, 1)
         self._rng = rng
+        #: The paper each grid's carried-up copy was made from, and the copies.
+        self._grown: tuple[np.ndarray, dict[tuple[int, int], np.ndarray]] = (self.paper, {})
+
+    def _paper_on(self, h: int, w: int) -> np.ndarray:
+        """The paper field carried up to a finer `(h, w)` grid, bilinear, made once per grid.
+
+        Every ink pad painted on the same finer grid reads the same carried-up
+        field, so it is kept rather than resampled per pad. It is a read-only
+        copy, kept true by the sheet's fields not being edited in place; a
+        `paper` replaced by another array is grown afresh.
+        """
+        source, grown = self._grown
+        if source is not self.paper:
+            self._grown = source, grown = self.paper, {}
+        got = grown.get((h, w))
+        if got is None:
+            img = Image.fromarray(np.asarray(self.paper, F32), "F")
+            img = img.resize((w, h), Image.Resampling.BILINEAR)
+            got = np.asarray(img, F32)
+            got.flags.writeable = False
+            grown[(h, w)] = got
+        return got
 
     def pits(self, gamma: float) -> np.ndarray:
         """How readily pigment settles, from the paper's own height.

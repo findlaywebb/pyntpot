@@ -3,8 +3,10 @@
 import math
 
 import numpy as np
+import pytest
 
-from pyntpot.ink.raster import deform_ring, deform_rings
+from pyntpot.ink.raster import deform_ring, deform_rings, fill_cov
+from pyntpot.ink.sheet import Canvas
 
 
 def ring_of(n: int = 96, r: float = 200.0) -> list[tuple[float, float]]:
@@ -53,3 +55,31 @@ def test_the_deformation_is_the_same_ring_from_the_same_seed():
     a = deform_ring(ring_of(), (np.random.default_rng(9), 0.26, 4, 0.55, 16.0, 0.5))
     b = deform_ring(ring_of(), (np.random.default_rng(9), 0.26, 4, 0.55, 16.0, 0.5))
     assert np.array_equal(a, b)
+
+
+class TestFillCoverage:
+    """Coverage by the winding rule, on whole rings at once."""
+
+    @staticmethod
+    def _canvas() -> Canvas:
+        """A 40 by 30 pixel canvas over a 40 by 30 metre card, so a metre is a pixel."""
+        return Canvas(0.0, 0.0, 40.0, 30.0, 40, 30)
+
+    def test_a_ring_and_its_reversal_cover_the_same_pixels(self):
+        """The winding rule fills by nonzero winding, so the direction of a lone ring does not matter."""
+        ring = [(5.3, 4.1), (31.7, 6.2), (27.4, 22.9), (9.8, 18.6)]
+        canvas = self._canvas()
+        forward = fill_cov([ring], canvas, ss=3)
+        assert forward.max() == 1.0
+        assert np.array_equal(forward, fill_cov([ring[::-1]], canvas, ss=3))
+
+    def test_a_ring_wholly_off_the_canvas_covers_nothing(self):
+        """Rows and columns are clipped before the cast, so a far ring adds no crossing."""
+        far = [(5e6, 5e6), (5e6 + 10, 5e6), (5e6 + 10, 5e6 + 10)]
+        assert not fill_cov([far], self._canvas()).any()
+
+    @pytest.mark.parametrize("bad", [math.nan, math.inf], ids=["nan", "inf"])
+    def test_a_coordinate_that_is_not_finite_raises(self, bad: float):
+        """A NaN or infinite point is refused before any crossing is counted."""
+        with pytest.raises(ValueError, match="not finite"):
+            fill_cov([[(1.0, 1.0), (bad, 2.0), (3.0, 9.0)]], self._canvas())

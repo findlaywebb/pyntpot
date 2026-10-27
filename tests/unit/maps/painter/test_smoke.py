@@ -112,6 +112,8 @@ SMOKE_RIVERS = (
 #: holds: a change that moves these hashes again is a change to what the reader
 #: sees and has to be argued for. The `pen` hash moved once more when the nib's touch-down pool
 #: was cut at three radii instead of two (it has no square edge now); `wash` did not move.
+#: The `paper` and `wash` bytes moved once more, and their pixels did not, when lossless
+#: plates went to WebP method 1 (ADR 0043).
 #: The bytes are this machine's. A numpy that
 #: runs the wash on other vector instructions can round a last bit the other way
 #: and move a wash pixel by one level, so the wash plate itself is committed in
@@ -119,9 +121,9 @@ SMOKE_RIVERS = (
 #: wash with it within the golden pixel bound instead; paper and pen stay byte
 #: for byte (ADR 0030).
 SMOKE_SHA = {
-    "paper": "e044d9c486ce23a875e7fa58bec0262db782553603b1e7e28d70574e749369ce",
+    "paper": "35c84fb0d3806aa995f699c638b3479b6db64fa3c4a74999e58ce792517379d8",
     "pen": "bb86cd1eb74db17c8ca8b1533d4c48ce1ab0e1f022096806e2dd70dc4c5d3d97",
-    "wash": "c1617293c916b15a3d86d54cbd7d5c83ba1c2b18261db07b8b9ba7f973a67272",
+    "wash": "5daa211adf178351a1c7f6a6211deffa18093d0f62dbdf49d8a41ec2e6401bf1",
 }
 
 
