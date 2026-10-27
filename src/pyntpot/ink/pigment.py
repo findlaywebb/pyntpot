@@ -152,13 +152,16 @@ def km_rt(dens: np.ndarray, pig: np.ndarray, transparency: float) -> tuple[np.nd
     s = (1.0 / b) * 0.5 * np.log((z + 1.0) / (z - 1.0))
     # a, b and S are three numbers a channel; only the thickness is a plate, so
     # the hyperbolics run in float32 and the plate stays half the size.
-    x = np.clip(dens, 0.0, 1.0).astype(F32)[..., None]
-    bsx = np.clip((b * s).astype(F32)[None, None, :] * x, 0.0, 40.0)
+    x = np.clip(dens, 0.0, 1.0).astype(F32, copy=False)[..., None]
+    bsx = (b * s).astype(F32) * x
+    np.clip(bsx, 0.0, 40.0, out=bsx)
     sh, ch = np.sinh(bsx), np.cosh(bsx)
-    af = a.astype(F32)[None, None, :]
-    bf = b.astype(F32)[None, None, :]
-    c = np.maximum(af * sh + bf * ch, F32(1e-9))
-    return sh / c, bf / c
+    bf = b.astype(F32)
+    c = a.astype(F32) * sh
+    c += np.multiply(bf, ch, out=ch)
+    np.maximum(c, F32(1e-9), out=c)
+    np.divide(sh, c, out=sh)
+    return sh, np.divide(bf, c, out=c)
 
 
 def km_plate(
@@ -180,15 +183,29 @@ def km_plate(
     Returns:
         The glazed plate, in 0 to 1.
     """
-    out = base.astype(F32, copy=True)
+    out = base.astype(F32, order="C", copy=True)
+    pixels = out.reshape(-1, 3)
     for layer in layers:
         dens, pig = layer[0], layer[1]
-        if dens is None or not dens.any():
+        if dens is None:
+            continue
+        # A pixel with no density is left exactly as it was (r is 0, tr is 1),
+        # so only the painted pixels are glazed.
+        painted = np.flatnonzero(dens)
+        if painted.size == 0:
             continue
         t = float(layer[2]) if len(layer) == _WITH_TRANSPARENCY else transparency
-        r, tr = km_rt(dens, pig, t)
-        out = r + tr * tr * out / np.maximum(1.0 - r * out, 1e-6)
-    return np.clip(out, 0.0, 1.0)
+        r, tr = km_rt(dens.ravel()[painted], pig, t)
+        under = pixels[painted]
+        glazed = np.multiply(tr, tr, out=tr)
+        glazed *= under
+        np.multiply(r, under, out=under)
+        np.subtract(1.0, under, out=under)
+        np.maximum(under, 1e-6, out=under)
+        glazed /= under
+        glazed += r
+        pixels[painted] = glazed
+    return np.clip(out, 0.0, 1.0, out=out)
 
 
 def composite(layers: list[PigmentLayer], base: np.ndarray, style: PaperStyle) -> np.ndarray:

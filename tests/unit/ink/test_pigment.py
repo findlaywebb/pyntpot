@@ -11,6 +11,7 @@ from pyntpot.ink.pigment import (
     PigmentLayer,
     composite,
     km_plate,
+    km_rt,
     multiply_plate,
 )
 from pyntpot.ink.sheet import rgb
@@ -149,3 +150,32 @@ class TestPaintersPigments:
             "relief": 0.30,
             "rim": 0.18,
         }
+
+
+class TestGlazingSkipsWhatIsNotPainted:
+    """Glazing works only on painted pixels, so a pixel with no density keeps its exact bits."""
+
+    @staticmethod
+    def _base(h: int, w: int) -> np.ndarray:
+        """A backing with every pixel different, so a moved bit shows."""
+        return np.random.default_rng(7).random((h, w, 3), dtype=np.float32)
+
+    def test_a_layer_of_no_density_leaves_the_base_bit_for_bit(self):
+        """Zero density glazes to r = 0 and tr = 1 exactly, so the base comes back unchanged."""
+        base = self._base(9, 13)
+        out = km_plate([(np.zeros((9, 13), np.float32), rgb(PIGMENTS["wood"]), 0.05)], base)
+        assert np.array_equal(out, np.clip(base, 0.0, 1.0))
+
+    def test_a_patch_moves_only_its_own_pixels(self):
+        """Outside a painted patch the base is untouched; inside it is the full-plate formula."""
+        base = self._base(9, 13)
+        dens = np.zeros((9, 13), np.float32)
+        dens[2:5, 3:8] = np.linspace(0.1, 0.9, 15, dtype=np.float32).reshape(3, 5)
+        pig = rgb(PIGMENTS["water"])
+        out = km_plate([(dens, pig, 0.04)], base)
+
+        r, tr = km_rt(dens, pig, 0.04)
+        want = np.clip(r + tr * tr * base / np.maximum(1.0 - r * base, 1e-6), 0.0, 1.0)
+        painted = dens > 0
+        assert np.array_equal(out[~painted], np.clip(base, 0.0, 1.0)[~painted])
+        assert np.array_equal(out[painted], want[painted])
