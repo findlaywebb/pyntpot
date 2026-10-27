@@ -29,5 +29,5 @@ Each line follows `plan.md`; step numbers are its test plan's.
 - [x] Docs: `CONTRIBUTING.md` paragraph, `CLAUDE.md` toolchain line,
       `docs/features/tests-fast-gates.md` times.
 - [x] Fresh-context diff review against the plan; triage.
-- [ ] Step 10: PR (title `ci(tests): run the test and golden gates in parallel`), CI green
+- [x] Step 10: PR (title `ci(tests): run the test and golden gates in parallel`), CI green
       on both golden runners, times recorded in the PR body.

@@ -14,23 +14,23 @@ selection passed all 1578 tests, in random order, in 50 seconds.
 
 ## Acceptance criteria
 
-- [ ] `pytest-xdist` is a dev dependency, locked in `uv.lock`.
-- [ ] Plain `uv run pytest` stays serial, so a local failure reads as it does today;
+- [x] `pytest-xdist` is a dev dependency, locked in `uv.lock`.
+- [x] Plain `uv run pytest` stays serial, so a local failure reads as it does today;
       parallelism is asked for with `-n`.
-- [ ] The CI `checks` job runs its test step with `-n auto`, coverage still collected and
+- [x] The CI `checks` job runs its test step with `-n auto`, coverage still collected and
       both coverage gates unchanged.
-- [ ] The golden workflow runs `-n auto` on both runners and passes on both.
-- [ ] A module that paints a whole map in a module-scoped fixture (the Lynmouth parity
+- [x] The golden workflow runs `-n auto` on both runners and passes on both.
+- [x] A module that paints a whole map in a module-scoped fixture (the Lynmouth parity
       paint and five golden-marked unit modules) paints it once per run, not once per
       worker.
-- [ ] Benchmarks and the CodSpeed workflow stay serial: timing parallel workers measures
+- [x] Benchmarks and the CodSpeed workflow stay serial: timing parallel workers measures
       contention, not code.
-- [ ] Peak memory per golden runner stays inside the runner's memory; if `-n auto`
+- [x] Peak memory per golden runner stays inside the runner's memory; if `-n auto`
       exceeds it on macOS, that runner uses a fixed lower `-n`, stated in the workflow.
-- [ ] Before and after run times (local fast, local golden, CI `checks`, CI golden on each
+- [x] Before and after run times (local fast, local golden, CI `checks`, CI golden on each
       OS) are recorded in the PR description and in `docs/features/tests-fast-gates.md`.
-- [ ] `CONTRIBUTING.md` and `CLAUDE.md`'s toolchain block name the parallel command.
-- [ ] Every pin stays exact: no golden, docs image or master is regenerated.
+- [x] `CONTRIBUTING.md` and `CLAUDE.md`'s toolchain block name the parallel command.
+- [x] Every pin stays exact: no golden, docs image or master is regenerated.
 
 ## Out of scope
 

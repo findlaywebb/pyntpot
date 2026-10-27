@@ -19,6 +19,15 @@ after (2026-10-27):
 | The same with `--cov` | 2 min 47 s | 54 s |
 | Golden (`-m golden --golden-tolerance`) | 31 min 38 s | 8 min 6 s |
 
+On the GitHub runners, job wall time on `main` (8b5253e) against the change (#89):
+
+| Job | Serial | Parallel |
+|---|---|---|
+| `checks` (3.13) | 3 min 9 s | 1 min 56 s |
+| `checks` (3.14) | 2 min 43 s | 1 min 39 s |
+| `golden` (ubuntu-latest, 4 workers) | 19 min 38 s | 8 min 5 s |
+| `golden` (macos-15, 2 workers) | 25 min 15 s | 16 min 34 s |
+
 A golden worker peaks near 3 GB on the largest paints (2.92 GB measured; 6.19 GB for all
 four workers together), so the macOS runner (3 cores, 7 GB) runs two workers. What remains is the painting itself: `specs/003-painter-hot-paths/`.
 
