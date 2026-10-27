@@ -189,6 +189,8 @@ def km_plate(
         dens, pig = layer[0], layer[1]
         if dens is None:
             continue
+        if dens.shape != out.shape[:-1]:
+            raise ValueError(f"a layer of shape {dens.shape} on a base of {out.shape}")
         # A pixel with no density is left exactly as it was (r is 0, tr is 1),
         # so only the painted pixels are glazed.
         painted = np.flatnonzero(dens)

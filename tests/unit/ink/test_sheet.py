@@ -43,3 +43,12 @@ class TestPaperOnAFinerGrid:
         assert twice.shape == (60, 80)
         assert thrice.shape == (90, 120)
         assert np.array_equal(twice, self._grown(sheet, 60, 80))
+
+    def test_a_replaced_paper_is_grown_afresh(self):
+        """A sheet given another paper array grows that one, not the copy kept from the first."""
+        sheet = Sheet(30, 40, gran_px=6.0, seed=4)
+        first = sheet._paper_on(60, 80)
+        sheet.paper = np.zeros_like(sheet.paper)
+        again = sheet._paper_on(60, 80)
+        assert again is not first
+        assert not again.any()

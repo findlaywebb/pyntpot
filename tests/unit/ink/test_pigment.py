@@ -179,3 +179,9 @@ class TestGlazingSkipsWhatIsNotPainted:
         painted = dens > 0
         assert np.array_equal(out[~painted], np.clip(base, 0.0, 1.0)[~painted])
         assert np.array_equal(out[painted], want[painted])
+
+    def test_a_layer_of_another_shape_is_refused(self):
+        """A density that does not cover the base's pixels one for one raises rather than glazing others."""
+        base = self._base(9, 13)
+        with pytest.raises(ValueError, match="shape"):
+            km_plate([(np.ones((13, 9), np.float32), rgb(PIGMENTS["wood"]), 0.05)], base)

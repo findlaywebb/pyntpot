@@ -27,6 +27,10 @@ _BLUR_FLOOR = 0.4
 #: but cost more instructions on a small field, so they start where a map plate does.
 _ROW_SUM_MIN_CELLS = 2**20
 
+#: The shortest side the row adds take: they loop in Python once per column, so a thin
+#: strip of many cells stays with `cumsum`.
+_ROW_SUM_MIN_SIDE = 64
+
 #: The rank of a field the row adds take.
 _PLANE = 2
 
@@ -202,7 +206,8 @@ def _box_transposed(a: np.ndarray, r: int) -> np.ndarray:
 def blur(a: np.ndarray, sigma: float) -> np.ndarray:
     """Three box passes, which is a Gaussian to the eye and much cheaper.
 
-    A 2D field of `_ROW_SUM_MIN_CELLS` cells or more runs each pass as row adds down a
+    A 2D field of `_ROW_SUM_MIN_CELLS` cells or more, with no side under
+    `_ROW_SUM_MIN_SIDE`, runs each pass as row adds down a
     transposed buffer (`_box_transposed`), six passes alternating the axes; a smaller
     one, or one of other rank, runs `cumsum` passes (`_box1`). Both make the same
     sequential float32 sums, so they give the same field bit for bit: the row adds are
@@ -213,7 +218,7 @@ def blur(a: np.ndarray, sigma: float) -> np.ndarray:
     if sigma <= _BLUR_FLOOR:
         return a.astype(F32, copy=False)
     r = max(1, round(sigma * 0.95))
-    if a.ndim == _PLANE and a.size >= _ROW_SUM_MIN_CELLS:
+    if a.ndim == _PLANE and a.size >= _ROW_SUM_MIN_CELLS and min(a.shape) >= _ROW_SUM_MIN_SIDE:
         out = a.astype(F32, copy=False)
         for _ in range(6):
             out = _box_transposed(out, r)

@@ -25,23 +25,23 @@ separate golden-marked unit tests.
 
 ## Acceptance criteria
 
-- [ ] A profile of the Lynmouth paint and of one place card, before and after, is
+- [x] A profile of the Lynmouth paint and of one place card, before and after, is
       recorded in `docs/features/tests-fast-gates.md`.
-- [ ] Every speed-up keeps every decoded pixel exact: the goldens, plates, docs images and
+- [x] Every speed-up keeps every decoded pixel exact: the goldens, plates, docs images and
       masters are unchanged as pixels, checked by the exact local golden run.
-- [ ] A change that alters file bytes but not pixels (the WebP effort setting) is allowed,
+- [x] A change that alters file bytes but not pixels (the WebP effort setting) is allowed,
       under an ADR, with the plate bytes re-pinned once in the same PR (maintainer,
       2026-10-27).
-- [ ] The CodSpeed `paint` benchmark falls, and no benchmark regresses by more than
+- [x] The CodSpeed `paint` benchmark falls, and no benchmark regresses by more than
       CodSpeed's own threshold.
-- [ ] Each rewrite is proven bit-identical to the old code on the inputs a real Lynmouth paint
+- [x] Each rewrite is proven bit-identical to the old code on the inputs a real Lynmouth paint
       passes it, with the evidence in the PR; the exact local golden run is the standing
       check that it stays so.
-- [ ] Each rewrite that relies on an invariant (a pixel with no ink or paint is left
+- [x] Each rewrite that relies on an invariant (a pixel with no ink or paint is left
       exactly as it was; a cached field is the one a fresh build makes) has a unit or
       property test of that invariant. No new pinned hash: pinned hashes already differ
       across platforms (#86).
-- [ ] When the work lands, the measurements move into `docs/explanation/performance.md`,
+- [x] When the work lands, the measurements move into `docs/explanation/performance.md`,
       `docs/features/tests-fast-gates.md` is deleted and #81 is closed.
 
 ## Out of scope
