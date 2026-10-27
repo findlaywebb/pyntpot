@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import numpy.typing as npt
+from PIL import Image
 
 from pyntpot.ink.noise import F32, fbm, fbm_aniso
 
@@ -114,6 +115,24 @@ class Sheet:
             )
             self.paper = np.clip((1.0 - self.fibre) * self.paper + self.fibre * grain, 0, 1)
         self._rng = rng
+        self._grown: dict[tuple[int, int], np.ndarray] = {}
+
+    def _paper_on(self, h: int, w: int) -> np.ndarray:
+        """The paper field carried up to a finer `(h, w)` grid, bilinear, made once per grid.
+
+        Every ink pad painted on the same finer grid reads the same carried-up
+        field, so it is kept rather than resampled per pad. It is a copy: the
+        sheet's `paper` is not changed after it is built, which is what keeps
+        the copy true.
+        """
+        got = self._grown.get((h, w))
+        if got is None:
+            img = Image.fromarray(np.asarray(self.paper, F32), "F")
+            img = img.resize((w, h), Image.Resampling.BILINEAR)
+            got = np.asarray(img, F32)
+            got.flags.writeable = False
+            self._grown[(h, w)] = got
+        return got
 
     def pits(self, gamma: float) -> np.ndarray:
         """How readily pigment settles, from the paper's own height.
