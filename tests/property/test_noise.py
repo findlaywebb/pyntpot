@@ -8,7 +8,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hnp
 
-from pyntpot.ink.noise import blur, chamfer_distance, value_noise
+from pyntpot.ink.noise import _box_transposed, blur, chamfer_distance, value_noise
 
 from support.properties import UNTIMED
 
@@ -181,3 +181,52 @@ class TestValueNoise:
             np.ascontiguousarray(got).view(np.uint8), np.ascontiguousarray(want).view(np.uint8)
         )
         assert rng.bit_generator.state == twin.bit_generator.state
+
+
+def _cumsum_box(a: np.ndarray, r: int, axis: int) -> np.ndarray:
+    """One edge-padded box pass by `np.pad` and `np.cumsum`: the reference both blur paths must match."""
+    a = np.moveaxis(a, axis, -1)
+    n = a.shape[-1]
+    padded = np.pad(a, [(0, 0)] * (a.ndim - 1) + [(r + 1, r)], mode="edge")
+    sums = np.cumsum(padded, axis=-1, dtype=np.float32)
+    return np.moveaxis((sums[..., 2 * r + 1 :] - sums[..., :n]) / np.float32(2 * r + 1), -1, axis)
+
+
+def _cumsum_blur(a: np.ndarray, r: int) -> np.ndarray:
+    """Three rounds of the reference pass, along axis 1 then axis 0."""
+    out = a.astype(np.float32, copy=True)
+    for _ in range(3):
+        out = _cumsum_box(_cumsum_box(out, r, 1), r, 0)
+    return out
+
+
+def _bits(a: np.ndarray) -> np.ndarray:
+    """An array's bytes, so that -0.0 and 0.0 differ."""
+    return np.ascontiguousarray(a).view(np.uint8)
+
+
+class TestBlurPaths:
+    """The row-add path and the `cumsum` path make the same sums, so the same field."""
+
+    FIELDS = st.tuples(st.integers(1, 64), st.integers(1, 64)).flatmap(
+        lambda shape: hnp.arrays(np.float32, shape, elements=st.floats(-4, 4, width=32))
+    )
+
+    @UNTIMED
+    @given(a=FIELDS, r=st.integers(1, 9))
+    def test_one_row_add_pass_is_the_cumsum_pass_transposed(self, a: np.ndarray, r: int) -> None:
+        """A pass along axis 1 by row adds equals the reference pass, handed back transposed."""
+        assert np.array_equal(_bits(_box_transposed(a, r)), _bits(_cumsum_box(a, r, 1).T))
+
+    @UNTIMED
+    @given(a=FIELDS, r=st.integers(1, 9))
+    def test_both_blur_paths_are_the_reference_blur(self, a: np.ndarray, r: int) -> None:
+        """Six row-add passes, and `blur`'s own small-field path, equal three reference rounds."""
+        want = _bits(_cumsum_blur(a, r))
+        out = a
+        for _ in range(6):
+            out = _box_transposed(out, r)
+        assert np.array_equal(_bits(out), want)
+        sigma = r / 0.95
+        assert max(1, round(sigma * 0.95)) == r
+        assert np.array_equal(_bits(blur(a, sigma)), want)

@@ -58,6 +58,7 @@ class TestTheFlatIndex:
     @staticmethod
     def _deposit(contiguous: bool) -> tuple[np.ndarray, dict[str, np.ndarray]]:
         """Lay a scatter of samples into fresh 5 by 9 accumulators, or into transposed views."""
+
         def plate() -> np.ndarray:
             return np.zeros((5, 9), np.float32) if contiguous else np.zeros((9, 5), np.float32).T
 
