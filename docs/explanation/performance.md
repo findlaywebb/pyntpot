@@ -98,6 +98,18 @@ Job wall time on GitHub's runners, serial on `main` at `8b5253e` and with xdist 
 | `golden` (ubuntu-latest, 4 workers) | 19 min 38 s | 8 min 5 s |
 | `golden` (macos-15, 2 workers) | 25 min 15 s | 16 min 34 s |
 
+After the painter change (`specs/003-painter-hot-paths/`, #93), on the same runners:
+
+| Job | Parallel, before the painter change | After it |
+| --- | --- | --- |
+| `checks` (3.13) | 1 min 56 s | 1 min 46 s |
+| `checks` (3.14) | 1 min 39 s | 59 s |
+| `golden` (ubuntu-latest, 4 workers) | 8 min 5 s | 3 min 10 s |
+| `golden` (macos-15, 2 workers) | 16 min 34 s | 6 min 27 s |
+
+CodSpeed on #93: `paint` 41.1 s to 24.8 s (simulation), seven benchmarks faster and none
+slower.
+
 A golden worker peaked near 3 GB before the painter change, so the macOS runner (3 cores,
 7 GB) runs two workers; #91 asks whether three now fit.
 

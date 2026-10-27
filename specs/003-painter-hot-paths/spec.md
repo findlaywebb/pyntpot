@@ -26,7 +26,7 @@ separate golden-marked unit tests.
 ## Acceptance criteria
 
 - [x] A profile of the Lynmouth paint and of one place card, before and after, is
-      recorded in `docs/features/tests-fast-gates.md`.
+      recorded in `docs/explanation/performance.md`.
 - [x] Every speed-up keeps every decoded pixel exact: the goldens, plates, docs images and
       masters are unchanged as pixels, checked by the exact local golden run.
 - [x] A change that alters file bytes but not pixels (the WebP effort setting) is allowed,

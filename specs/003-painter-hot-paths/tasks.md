@@ -34,5 +34,5 @@ the exact golden run (plan, Gates 1).
       three new notes, each with its GitHub issue and the issue link on its second line.
 - [x] `prek run --all-files`, `ruff`, `ty`, `lint-imports`.
 - [x] Fresh-context diff review against the plan; triage (no blocking; nits 1, 3, 4 fixed, 2 in the PR, 5 after CI).
-- [ ] PR `perf(ink): paint without the work on empty pixels` with `Closes #81`, the
+- [x] PR `perf(ink): paint without the work on empty pixels` with `Closes #81`, the
       evidence and the measurements; CI green including both golden runners; CodSpeed.
