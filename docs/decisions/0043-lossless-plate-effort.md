@@ -40,8 +40,9 @@ checked to decode equal to the image it replaced.
 
 ## Consequences
 
-- A paint writes its opaque plates in under half the time, and the files are 0.2 to 1.6 %
-  smaller.
+- A paint writes its opaque plates in under half the time. At map size the files are 0.2 to
+  1.6 % smaller (Lynmouth paper 1,432,228 to 1,409,538 bytes, wash 1,073,764 to 1,071,772);
+  a very small plate can grow (the 120-pixel smoke box's wash, 8,662 to 9,502 bytes).
 - A plate written by an earlier version and one written now hold the same pixels in
   different bytes, so a cache comparing plate bytes across versions sees a change; the
   manifest's hash, which hashes the layers and style, does not change.
