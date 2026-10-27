@@ -36,9 +36,11 @@ of `HEAD`: the Lynmouth `paint_fixture` fell from 55.8 s to 22.1 s and its peak 
   18.7M → 39.3M instructions and one `wash()` at 86.7M → 166.2M). So `blur` keeps today's
   path for fields of fewer than `_ROW_SUM_MIN_CELLS` cells and uses the row loop at or
   above it. Set it by measurement (task list): the wall-time crossover on 2-D float32 fields
-  from 256² to 1800×1457, rounded up to a power of two, and never below 2¹⁹ (every ink
-  benchmark field is 512² and every maps benchmark paints at 450 px, so they keep the old
-  path). If no crossover exists below 1800×1457, use 2²¹. Both paths are bit-identical, and
+  from 256² to 1800×1457, rounded up to a power of two, and never below 2²⁰. Every ink
+  benchmark field is 512² (2¹⁸) and the maps `paint` benchmark's plate, at 450 px with
+  `supersample = 2`, is about 900 × 728 (655k cells), so both keep the old path; the
+  Lynmouth plate (2.6M cells) takes the row loop. If no crossover exists below 1800×1457,
+  use 2²¹. Both paths are bit-identical, and
   a property test says so.
 - **R6 non-finite coordinates.** The old code raised `ValueError` (NaN) or `OverflowError`
   (inf) from `math.ceil`; the vectorised code would warn on an invalid cast or clip
@@ -73,7 +75,8 @@ differ, and a cross-call cache is module state); the `fetch` loops (0.3 s of wal
   encoder effort for speed at identical pixels; RGBA plates stay at method 4 because any
   other method changes the RGB stored under alpha 0; which pins moved, once.
 - Re-pinned (W1 only): `tests/golden/lynmouth/paper.webp`, `wash.webp`, `plates.json`
-  (only its `sizes` and `bytes` may change), by `uv run python tests/golden/make_golden.py`;
+  (only its `sizes` and `bytes` may change), by
+  `PYTHONPATH=tests uv run python tests/golden/make_golden.py tests/golden/lynmouth`;
   `tests/golden/smoke/wash.webp` and `SMOKE_SHA["paper"]`, `SMOKE_SHA["wash"]` in
   `tests/unit/maps/painter/test_smoke.py`, from the smoke box painted by the snippet in the
   task list. Any other failing pin is a defect in a rewrite, never a re-pin.
@@ -119,10 +122,18 @@ generator state equal after each call where one is drawn.
 
 R5 and R1 rely on an element-wise ufunc giving the same value for an element wherever it
 sits in an array. CI's goldens are tolerance-only, so the one check off this machine's
-AVX-512 path is local: run the R5 and R1 equivalence scripts and
-`tests/golden/test_parity.py` once more under `NPY_DISABLE_CPU_FEATURES="AVX512F AVX512CD
-AVX512_SKX AVX512_CLX AVX512_CNL AVX512_ICL AVX512_SPR"` (numpy then dispatches AVX2), old
-and new both under it. Recorded in the PR.
+AVX-512 path is local, under `NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"`
+(numpy then reports `found: ['X86_V3']`, AVX2). The committed pins are not the reference
+there (on AVX2 `main` itself differs from them, ADR 0030); the reference tree is:
+
+- paint the fixture from each tree into its own directory:
+  `PYTHONPATH=<tree>/src:<tree>/tests uv run python <tree>/tests/golden/make_golden.py <out>`;
+- `pen.webp`, `labels-centreline.webp`, `map.png` and the label list are byte-identical
+  between the two; `paper.webp` and `wash.webp` decode `np.array_equal` (their bytes differ
+  by W1 alone);
+- the R1 and R5 equivalence scripts pass under the same setting.
+
+Recorded in the PR.
 
 ### The W1 re-pin
 
@@ -136,9 +147,10 @@ After `make_golden.py` rewrites the Lynmouth goldens and the smoke box is repain
 
 - R1 (`test_pad.py`): with bleed off and no tooth aux, an accumulator laid in a patch gives
   density `+0.0` outside it (value and `np.signbit` false), and inside equals the same
-  expressions evaluated by the test itself; a brush with `dry > 1` and paper above its
-  threshold gives a non-zero gate outside the patch's saturate term, asserted on the value
-  the full-grid path makes.
+  expressions evaluated by the test itself. The guard: with `dry = 1.2`, bleed off, no
+  tooth aux and paper low enough that the gate's clip gives 0 (so the gate is
+  `1 - dry < 0`), the density outside the patch is `-0.0` (`np.signbit` true), which is
+  the full-grid result the guard keeps.
 - R2 (`test_sheet.py`): `_paper_on(h, w)` returns the same object twice, is read-only,
   equals a test-local Pillow bilinear grow of `paper`, and a second shape gets its own
   entry. (New behaviour, so it is written with R2, not before it.)
@@ -166,12 +178,14 @@ After `make_golden.py` rewrites the Lynmouth goldens and the smoke box is repain
    loadgroup -m "not golden and not benchmark"` green; exact golden `uv run pytest -m
    golden -n auto --dist loadgroup` green (after W1, once re-pinned).
 2. `prek run --all-files`, `ruff`, `ty`, `lint-imports`.
-3. Instruction counts, local: `valgrind --tool=callgrind` over each ink benchmark's
-   callable and `paint` at the benchmark's `DISPLAY_PX`, old tree against new (the review's
-   `$SCRATCH/review/cg.py` and `cgw.py`); no benchmark may count more instructions than
-   the old by more than 5 %. Benchmark → rewrite map: sheet → R3, R4; distance transform →
-   none; stamps → R7; washes → R3, R4, R6; compositing → R5; letters → R1, R2 (nib plate);
-   maps `paint` → all; `fetch` → none.
+3. Instruction counts, local: one script per benchmark callable (built as
+   `tests/benchmarks/` builds it), run under `valgrind --tool=callgrind` once with
+   `PYTHONPATH=$SCRATCH/main-ref/src` and once with the branch's `src`; the per-call cost
+   is the total for N calls minus the total for 0 calls. No benchmark may count more
+   instructions than the old by more than 5 %. Benchmark → rewrite map: sheet → R4 (via
+   `fbm`, no blur); distance transform → none; stamps → R7; washes → R3, R4;
+   compositing → R5; letters → R1, R2, R3 (the nib wash blurs); maps `paint` → all;
+   `fetch` → none.
 4. Before and after: `cProfile` and peak RSS of `paint_fixture` and of the Skye card; wall
    time of the local golden run; `uv run pytest -m benchmark --benchmark-enable`.
 5. CI: every check green; CodSpeed `paint` falls and no benchmark regresses past its
@@ -206,4 +220,5 @@ notes → diff review → PR. No concurrent work.
   the largest single saving at map sizes, and the old path stays where it is cheaper.
 - R6 raises on non-finite coordinates, as the old code did by accident; R7 keeps the old
   path for non-contiguous accumulators.
-- Plan review round 1: BLOCK (4 blocking, 6 should-fix), all taken in this revision.
+- Plan review round 1: BLOCK (4 blocking, 6 should-fix); round 2: BLOCK (1 blocking, 4
+  should-fix). All taken.

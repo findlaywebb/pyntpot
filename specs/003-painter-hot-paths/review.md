@@ -191,3 +191,97 @@ here (1688 → 925 MB) suggests it is a win; put it in the docs table.
 - The re-pinned smoke paper SHA must also match on macOS CI (ADR 0030 keeps paper exact
   in tolerance mode). Method 5 is platform-stable today; say what to do if method 1 is
   not.
+
+---
+
+# Round 2
+
+**Verdict: BLOCK, on one item that is a two-line fix.** Every round-1 blocker and
+should-fix item has been taken properly. What remains is mostly about whether the
+verification steps can actually be run as written. I checked the new claims against the
+code and against runs on the patched copy from round 1.
+
+## [BLOCKING]
+
+**1. The SIMD check uses feature names that leave AVX-512 on, and it relies on a test that
+fails on the old code too.**
+
+The flags first. With numpy 2.5.2 and the plan's list
+(`AVX512F AVX512CD AVX512_SKX AVX512_CLX AVX512_CNL AVX512_ICL AVX512_SPR`), numpy still
+reports `found: ['X86_V3', 'X86_V4']`. Only ICL and SPR are switched off, and the X86_V4
+(AVX-512) dispatch stays, so the run tests nothing new. The setting that does select AVX2
+is `NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"`, which reports
+`found: ['X86_V3']`.
+
+Now the test. Under that correct setting, the **old** code (`main`) fails the exact
+`test_parity.py`: `wash.webp`, `labels-centreline.webp` and `map.png` all differ from the
+pins, as ADR 0030 records for wash. So "run `test_parity.py` under the flag, old and new
+both under it" cannot pass.
+
+*Fix (replace the "SIMD caveat" paragraph and its task line):*
+- Under `NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"`, paint the fixture from
+  the reference tree and from the branch:
+  `PYTHONPATH=<tree>/src:<tree>/tests uv run python tests/golden/make_golden.py <out>`,
+  once for each tree.
+- Compare the two output directories, not the committed pins. `pen.webp`,
+  `labels-centreline.webp`, `map.png` and the labels must be byte-identical. `paper.webp`
+  and `wash.webp` must decode `np.array_equal`; their bytes differ by W1 alone.
+- Run the R1 and R5 equivalence scripts under the same setting.
+
+I ran this comparison on the round-1 patched copy. It passes: every output is
+pixel-identical, the three non-W1 outputs are byte-identical, and the labels are equal.
+
+## [SHOULD-FIX]
+
+**2. The re-pin command will not run as written.** `make_golden.py` needs a positional
+`OUT` and imports `golden.test_parity`, so it needs `tests` on the path. The `pythonpath`
+setting in `pyproject.toml` applies only under pytest. Write it out:
+`PYTHONPATH=tests uv run python tests/golden/make_golden.py tests/golden/lynmouth`.
+Fix both the plan and `tasks.md`.
+
+**3. The R3 threshold rests on a false statement.** The plan says "every maps benchmark
+paints at 450 px, so they keep the old path". But `class_style` keeps `supersample = 2`,
+so the `paint` benchmark renders at about 900 × 728, which is 655k cells and above 2¹⁹.
+Its plate-size blurs take the row loop. Gate 3 still covers this, because `paint` is
+measured as a whole and R1 dominates. But the sentence should be corrected so the
+threshold decision isn't made on a wrong premise. Either state that `paint` exercises the
+row loop, or set the floor above the benchmark plate, for example 2²⁰. The Lynmouth plate
+at 2.6M cells stays above the fallback of 2²¹ either way.
+
+**4. The callgrind gate points at scripts that measure the wrong code.** `cg.py` and
+`cgw.py` in `$SCRATCH/review/` time my own scratch reimplementation of R3 (`layout.new_blur`,
+no threshold), monkeypatched into `wash`. They do not run the branch. Prescribe instead:
+one script per benchmark callable, run under `valgrind --tool=callgrind` once with
+`PYTHONPATH` set to the reference tree and once to the branch. Take the per-call cost as
+the total for N calls minus the total for 0 calls, as round 1 did.
+
+The benchmark → rewrite map also needs corrections:
+- washes touch R3 and R4, not R6 (`fill_cov` is called from `maps`);
+- letters also touch R3, because the nib wash blurs;
+- the sheet benchmark touches R3 only through `fbm`, which does not blur.
+
+**5. The R1 `dry > 1` test still does not test what the guard protects.** "Paper above its
+threshold gives a non-zero gate outside the patch" cannot be seen from outside: there the
+saturate term is 0, so the density is ±0 whatever the gate is. The only observable
+difference between the paths is the sign of zero, and that needs paper **below** the
+threshold. Write it as follows:
+- paper low enough that the clip gives 0, so the gate is `1 - dry < 0`;
+- `dry = 1.2`, bleed off, no tooth aux;
+- assert `np.signbit` is True outside the patch, which is the full-grid result.
+
+## Verified and accepted
+
+- **Diff table and `-p` levels:** match what applies cleanly.
+- **`_paper_on`:** private, so no API ADR is needed.
+- **R7 fallback:** the 2-D `add.at` path on a non-contiguous `acc` or aux.
+- **R6 finite check:** raises `ValueError` on NaN or inf coordinates.
+- **New tests:**
+  - R3 Hypothesis oracle;
+  - R4 test-local four-gather oracle with a generator-state check;
+  - R7 non-square test with `res` and `tooth`;
+  - W1 relies on the existing `test_a_webp_is_written_lossless`.
+- **W1 re-pin checks:** `git show HEAD:` decodes, the `diff --stat` allow-list, and
+  parsed-JSON `sizes`/`bytes` only.
+- **Bookkeeping:** RSS in gate 4; three new notes with issues; per-gate budgets rejected
+  with a reason.
+- **`tasks.md`:** follows the plan's order line for line.
