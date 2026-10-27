@@ -22,9 +22,10 @@ F32 = np.float32
 #: Below this blur width the field is returned as it is: it would not move a pixel.
 _BLUR_FLOOR = 0.4
 
-#: The cells from which `blur` sums by row adds rather than `cumsum`: the size above
-#: which the row adds were faster, measured on 2D float32 fields.
-_ROW_SUM_MIN_CELLS = 2**21
+#: The cells from which `blur` sums by row adds rather than `cumsum`. The row adds were
+#: faster in wall time at every size measured (256 by 256 to 1800 by 1457, 2026-10-27),
+#: but cost more instructions on a small field, so they start where a map plate does.
+_ROW_SUM_MIN_CELLS = 2**20
 
 #: The rank of a field the row adds take.
 _PLANE = 2
