@@ -84,30 +84,30 @@ SPAN_CURVE_MIN_COHERENCE = 0.62
 #: exactly the answer to "how near a tie does the free-paper choice have to be
 #: before the bend gets to decide it".
 #:
-#: Picked by measuring the margins, not by taste. Over the same 187 stretches,
-#: the margin the free-paper rule wins by has a median of 0.042 and a ninetieth
-#: percentile of 0.122. At 0.08 a fully committed bend overrules about four
-#: margins in five and loses to the darkest fifth, which is the side that is
-#: off the paper, under a wash or already carrying names; a half-strength bend,
-#: which is a stretch turning about 50 degrees, overrules only about half.
-#: That is the shape wanted: the outside of the curve **where there is one**,
-#: and not otherwise.
+#: Picked by measuring the margins, not by taste. Over 187 stretches from the
+#: four cached tracks, the margin the free-paper rule wins by has a median of
+#: 0.042 and a ninetieth percentile of 0.122. At 0.08 a fully committed bend
+#: overrules about four margins in five and loses to the darkest fifth, which
+#: is the side that is off the paper, under a wash or already carrying names; a
+#: half-strength bend, which is a stretch turning about 50 degrees, overrules
+#: only about half. That is the shape wanted: the outside of the curve **where
+#: there is one**, and not otherwise.
 SPAN_CURVE_WEIGHT = 0.08
 
-#: At what scale the bend is read, as a multiple of the cap height. The single
-#: most important number here, and the one the outside-of-the-bend rule
-#: lives or dies on.
+#: At what scale the bend is read, as a multiple of the cap height.
 #:
 #: The route in display pixels is sampled about a pixel apart, and per-vertex turn
 #: at that spacing is mostly the sampling, so the stretch is resampled before
 #: it is measured. **The right spacing is near the offset the bracket will be
 #: drawn at** (`SPAN_OFFSET_CAPS`), because contraction is what an offset line
-#: does at its own offset: a bend the offset can see is a bend that squeezes it. Read
-#: coarser, the measure answers a different question and stops predicting
-#: anything. Over 187 stretches from the four cached tracks, the share of the
-#: decisive cases the outside gets right is 89% read at 1.5 caps, 79% at 2,
-#: 60% at 3 and 46% at 4, which is a coin toss. 1.5 is where the sweep peaks;
-#: the trend either side of it is the argument.
+#: does at its own offset: a bend the offset can see is a bend that squeezes it.
+#:
+#: Measured on the Ambleside, Skye and Y Fenni fixture tracks, in 176 overlapping
+#: stretches 16 cap heights long taken every 2 (about 22 independent), with the
+#: mark drawn at `SPAN_OFFSET_CAPS`: of the stretches where both sides draw a mark
+#: and one keeps more than a quarter more of its own mark once cleared of the
+#: route, the outside is the better mark on 1 of 4 (25%) read at 1.5. 4 stretches
+#: are too few to compare scales, so 1.5 stands.
 SPAN_CURVE_SCALE_CAPS = 1.5
 
 

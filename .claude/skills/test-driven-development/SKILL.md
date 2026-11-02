@@ -32,6 +32,18 @@ Makes the failing test the first artifact of every task: the check exists *befor
 
 Commit on green at each working checkpoint.
 
+## After the last task: mutation-test the change
+
+Green tests prove the code runs, not that the tests would notice it breaking. Once the
+implementation is done and the suite is green, run mutmut on the changed functions
+(the command is in CONTRIBUTING.md, "Mutation testing"). Each surviving mutant is a change
+to the code no test catches: write a focused test that fails against it (RED against the
+mutant, GREEN against the real code), or, if the mutant changes no behaviour, record it as
+equivalent with the reason in the PR description. A `no tests` mutant means no `ink`,
+`letters` or property test reaches the function at all (only `maps` tests call it): give
+it a focused test. Never weaken the code to kill a mutant.
+The score is advisory (ADR 0012); the survivors are the point.
+
 ## Wrote code before the test?
 
 Stop adding to it. Write the test now, watch it fail against a reverted/disabled version of the change, then bring the code back under it. The point isn't ceremony — it's that the test must demonstrably *catch* the absence of the behaviour once. If the test can't be made to fail, it isn't guarding anything.

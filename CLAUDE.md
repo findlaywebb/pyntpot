@@ -82,7 +82,11 @@ One feature = one spec dir = one branch = one PR (`specs/README.md`).
    (fresh context, sceptical staff engineer) reviews it and **blocks** until it passes; no
    human checkpoint.
 3. Implement autonomously against the plan, test-first; tick off `tasks.md`.
-4. Review the diff against the plan. **Done = green CI + matches spec.**
+4. **Mutation-test the changed functions** once the suite is green (CONTRIBUTING.md,
+   "Mutation testing"): kill each survivor with a focused test, or name it as equivalent in
+   the PR description with the reason. Advisory, no threshold (ADR 0012), but never skipped
+   when the diff changes `ink` or `letters` functions.
+5. Review the diff against the plan. **Done = green CI + matches spec.**
 
 **PR titles are Conventional Commits** (ADR 0042), because the squash commit's subject
 drafts the changelog: `type(scope): description`, types `feat fix perf docs refactor test

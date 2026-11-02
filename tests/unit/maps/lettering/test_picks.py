@@ -85,16 +85,16 @@ def test_the_settlements_are_chosen_by_rank_and_by_route_not_by_distance():
     """A distance sort spends every slot inside one town. This one does not."""
     basemap, card, route_px = _labelled_card(
         candidates=[
-            _place_node("Little Combes", "hamlet", 100.0, 42.0, 4),
-            _place_node("Tarns Bridge", "hamlet", 180.0, 44.0, 18),
+            _place_node("Bassenthwaite", "hamlet", 100.0, 42.0, 4),
+            _place_node("Stonethwaite", "hamlet", 180.0, 44.0, 18),
             _place_node("Y Fenni", "town", 600.0, 45.0, 3),
             _place_node("Trefynwy", "town", 1100.0, 20.0, 441),
-            _place_node("Faraway", "village", 700.0, 60.0, 4000),
+            _place_node("Keswick", "village", 700.0, 60.0, 4000),
         ],
     )
     picked = [label.name for label in pick_settlements(basemap, card, route_px)]
     assert "Y Fenni" in picked and "Trefynwy" in picked
-    assert "Faraway" not in picked, "over 1.5 km off the route is not this track"
+    assert "Keswick" not in picked, "over 1.5 km off the route is not this track"
     assert len(picked) <= settlement_budget(card.w)
 
 
