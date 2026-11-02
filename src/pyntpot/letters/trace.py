@@ -218,7 +218,7 @@ def _flanks(
             for t in (p, q):
                 cross = dirs[t][0] * dirs[k][1] - dirs[t][1] * dirs[k][0]
                 got = _flank(arms[t], ink, half, 1.0 if cross > 0 else -1.0)
-                if got:
+                if got is not None:
                     out.append(got)
     return out
 

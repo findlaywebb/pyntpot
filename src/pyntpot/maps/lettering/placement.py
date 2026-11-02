@@ -197,7 +197,7 @@ def _place(
         if lb.baseline and len(lb.name) >= MIN_CURVED_CHARS:
             tw, th = measure_tracked(lb.name, lb.size, KIND_TRACKING.get(lb.kind, 0.0))
             along = place_along(lb, tw, th, terms, repeats.get(lb.name, []))
-        if along is None and lb.kind == "river" and repeats.get(lb.name):
+        if along is None and lb.kind == "river" and lb.name in repeats:
             # The second name of a river that has no water left is dropped: set
             # flat beside its first it would be a second, unrelated river.
             continue

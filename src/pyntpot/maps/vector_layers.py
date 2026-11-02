@@ -272,7 +272,7 @@ def _band(entry: Mapping[str, Any]) -> HillshadeBand:
 
 def _image(entry: Mapping[str, Any] | None) -> HillshadeImage | None:
     """The hillshade image from its plain-data entry, or `None` when there is none."""
-    if not entry:
+    if entry is None or len(entry) == 0:
         return None
     return HillshadeImage(
         href=entry["href"],

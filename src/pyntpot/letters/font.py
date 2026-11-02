@@ -317,4 +317,4 @@ def load(path: str | None = None, route: str = CENTRELINE) -> OutlineFont:
     Returns:
         The face.
     """
-    return OutlineFont(Path(path) if path else DEFAULT_FONT, route)
+    return OutlineFont(Path(path) if path is not None and path != "" else DEFAULT_FONT, route)

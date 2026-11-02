@@ -1,6 +1,6 @@
 """The Overpass provider's requests, usage limits and query templates."""
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from importlib.metadata import version
 from urllib.parse import parse_qs
@@ -19,7 +19,7 @@ LYNMOUTH = BoundingBox(51.2, -3.86, 51.24, -3.82)
 
 
 @contextmanager
-def _client() -> Iterator[httpx.Client]:
+def _client() -> Generator[httpx.Client]:
     """Yield a client that ignores proxy settings, so it reaches the loopback server."""
     with httpx.Client(trust_env=False) as client:
         yield client
@@ -31,7 +31,7 @@ def _sent_query(request: Request) -> str:
 
 
 @contextmanager
-def _servers(*scripts: list[tuple[int, str]]) -> Iterator[list[Server]]:
+def _servers(*scripts: list[tuple[int, str]]) -> Generator[list[Server]]:
     """Run one scripted server per script, all shut down on exit."""
     with ExitStack() as stack:
         yield [stack.enter_context(serve(script)) for script in scripts]

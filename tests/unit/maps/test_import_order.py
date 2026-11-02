@@ -156,7 +156,7 @@ def _base(node: ast.ImportFrom, module: str, path: Path) -> str:
     package = module if path.name == "__init__.py" else module.rpartition(".")[0]
     for _ in range(node.level - 1):
         package = package.rpartition(".")[0]
-    return f"{package}.{node.module}" if node.module else package
+    return f"{package}.{node.module}" if node.module is not None else package
 
 
 def _targets(node: ast.Import | ast.ImportFrom, module: str, path: Path) -> list[str]:
@@ -245,7 +245,7 @@ def _from_imports(
         if isinstance(node, ast.Import):
             for alias in node.names:
                 local = alias.asname or alias.name.partition(".")[0]
-                bound[local] = alias.name if alias.asname else local
+                bound[local] = alias.name if alias.asname is not None else local
         elif isinstance(node, ast.ImportFrom):
             base = _base(node, module, path)
             for alias in node.names:

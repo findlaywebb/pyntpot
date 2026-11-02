@@ -80,7 +80,7 @@ def track_projection(
     """
     proj = Projection(lat0=sum(lat) / len(lat), lat_ref=lat[0], lng_ref=lng[0])
     raw = [proj(a, b) for a, b in zip(lat, lng, strict=True)]
-    if route:
+    if route is not None and len(route) > 0:
         proj.x0 = raw[0][0] - route[0][0]
         proj.y0 = raw[0][1] - route[0][1]
     else:

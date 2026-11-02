@@ -113,7 +113,7 @@ class TestWindow:
         width = hand.measure("Heddon", 14.0)[0]
         gentle = _flat(kind="river", name="Heddon", flat=False, baseline=COURSE, px=200.0)
         tight = _flat(kind="river", name="Heddon", flat=False, baseline=hairpin, px=100.0)
-        assert baseline(gentle, width)
+        assert baseline(gentle, width) is not None
         assert baseline(tight, width) is None
 
     def test_a_window_is_never_upside_down(self) -> None:

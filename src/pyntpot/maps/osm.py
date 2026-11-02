@@ -61,7 +61,7 @@ def _kept_roads(found: Harvest) -> list[dict[str, Any]]:
     """The ways of every road that earned a place, counting the ways of the rest as dropped."""
     roads: list[dict[str, Any]] = []
     for road, entries in found.ways.items():
-        if found.road_keep.get(road):
+        if found.road_keep.get(road, False):
             roads += entries
         else:
             found.counts["road_dropped"] += len(entries)

@@ -354,8 +354,8 @@ def _place_card(fixture: str, theme: str | None, margin: float | None, slice_: s
         (
             ("size", 720),
             ("place", fixture),
-            *((("theme", theme),) if theme else ()),
-            *((("margin_m", margin), ("landcover_margin_m", margin)) if margin else ()),
+            *((("theme", theme),) if theme is not None else ()),
+            *((("margin_m", margin), ("landcover_margin_m", margin)) if margin is not None else ()),
         ),
         fixture,
         720,

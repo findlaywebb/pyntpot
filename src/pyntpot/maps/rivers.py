@@ -268,7 +268,7 @@ def major_rivers(
         if not name:
             continue
         found = measured_width_m(lines, rings)
-        if found:
+        if found is not None and found != 0.0:
             widths[name] = found
     if widths:
         widest = max(widths.values())

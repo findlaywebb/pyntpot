@@ -116,7 +116,9 @@ NIB_SCALE = 2
 
 def _base(theme: str | None) -> Style:
     """The theme file's style, relative to the repository's top directory, or `Style.default()`."""
-    return Style.from_toml(REPO_ROOT / theme) if theme else Style.default()
+    return (
+        Style.from_toml(REPO_ROOT / theme) if theme is not None and theme != "" else Style.default()
+    )
 
 
 def _violet(
