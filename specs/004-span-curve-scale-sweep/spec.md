@@ -90,8 +90,10 @@ The geometry of the offset and the chords is in both and cancels. What is left i
 much of its own mark the side keeps once `_longest_clear` has cut it back to its longest
 run clear of the route, which trims the ends. Folds cut out on the inside of a bend
 (`_drop_folds`, `_forward_only`) happen in both drawings and do not lower it. `kept` is
-not clamped; `clear_of` can push a line as well as cut it, so a value a little over 1 is
-recorded as measured.
+not clamped; `clear_of` can push a line as well as cut it, so a value up to 1.25 is
+recorded as measured. Above 1.25 it is not a push but an ambiguous foot (a foot landing on
+another limb of the stretch): no clearance pass makes a mark keep a quarter more than it
+had, and the pushes measured stayed within 1.124.
 
 Each stretch falls into exactly one **case**, checked in this order:
 
@@ -99,7 +101,7 @@ Each stretch falls into exactly one **case**, checked in this order:
 |---|---|---|
 | `no-outside` | `o = 0` | no; counted |
 | `empty-mark` | either side's drawn mark has fewer than two points: the vote can only go to the drawn side | no; counted |
-| `reversed-feet` | either side's unclipped coverage is ≤ 0, or its drawn coverage is < 0: the foot is ambiguous (a narrow bend puts the nearest segment on the far limb) | no; counted |
+| `ambiguous-feet` | either side's unclipped coverage is ≤ 0, its drawn coverage is < 0, or its kept share is > 1.25: a foot is ambiguous (a narrow bend puts the nearest segment on the far limb) | no; counted |
 | `even` | kept shares within the ratio below | no; counted |
 | `decisive` | one kept share more than 1.25 times the other | yes |
 
@@ -128,7 +130,7 @@ On the current code: offset 1.2 caps, the shipped `_convex_side`, `bend_strength
 | scale | `k`, in cap heights |
 | voted | stretches the bend votes on |
 | empty-mark | voted stretches excluded because a side drew no mark |
-| reversed-feet | voted stretches excluded for ambiguous feet |
+| ambiguous-feet | voted stretches excluded for ambiguous feet |
 | even | voted stretches whose kept shares are within the ratio |
 | decisive | voted, decisive stretches: `n` |
 | right | of those, how many the outside is right on |
@@ -142,8 +144,8 @@ of the pool is Skye's (the probe put 27 of 35 decisive stretches there).
 
 The expected outcome, stated before the sweep: **1.5 is kept.** The probe in plan review
 round 2 counted 176 stretches over the three fixtures and 35 coverage-decisive ones before
-the voting filter (Ambleside 4, Skye 27, Y Fenni 4). With the kept-share metric that pool
-is smaller still (7 of the 35 stop being decisive once geometry is normalised). At about
+the voting filter (Ambleside 4, Skye 27, Y Fenni 4). Under the kept-share metric the pool
+before voting is 32 (7 of the 35 drop out and 4 come in; plan review round 3). At about
 25 independent stretches the data cannot separate scales a tenth of a cap apart, and
 rule 1 below (`n` under 30) is the likely case. #54 closes on that recorded result.
 

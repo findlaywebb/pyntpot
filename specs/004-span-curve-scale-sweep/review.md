@@ -55,3 +55,17 @@ All four findings are taken as given:
    "`N_all` overlapping stretches ... (about `N_all / 8` independent)" and prescribes the
    `N = 0` wording.
 4. `sweep.md` gets one line on the decisive pool's split by fixture (mostly Skye).
+
+## Round 3: PASS
+
+1. [SHOULD-FIX, before scoring] Over-large kept share is ambiguous feet, not caught by the case list. On fixtures, side-values above 1: 1.0, 1.002, 1.008, 1.021, 1.124, 1.755; clamping to 1 flips 0 cases. The 1.755 (Skye) is ambiguous feet: unclipped mark 116 px with feet at 96 and 224 (start foot on another limb); drawn mark 77 px with feet at 0 and 224. The 1.124 is a genuine push (drawn 174 vs unclipped 178 px; end foot 199 → 224). Fix: add "or either side's kept share > 1.25" to the reversed-feet condition in the spec table and in kept_share in the plan; rename the case `ambiguous-feet`. No clearance pass can make a mark keep a quarter more than it had; pushes stayed within 1.124. Reuse the 1.25 literal, no new constant. Add a T2 case: drawn feet spanning > 1.25× the unclipped coverage → None. In the spec change "a value a little over 1 is recorded as measured" to "up to 1.25".
+2. [CONSIDER] Give T3 the literals. Span over arc(90.0, r=100.0) (indices 0–59); continue the route from (200, 50) to (240, 50), then to (240, y), then west to (170, y), sampled every 2 px. Inside variant y = 72: kept +1 = 1.0, −1 = 0.502, decisive, o = +1, outside right (y = 70 also works, −1 = 0.631). Outside variant y = 40: kept +1 = 0.605, −1 = 1.0, decisive, o = +1, outside wrong (y = 37 also works, +1 = 0.683). Returning only to x = 190 leaves both even, so the strand must run back past the mark's end. o stays +1 throughout. Still pin both kept shares from your own run. Isolated arcs at r = 12, 14, 16, 20, 60 all give kept shares 1.0/1.0 → even (arc(120, r=16) confirmed).
+3. [CONSIDER] Spec wording: under kept share the decisive pool before voting is 32 (7 drop out, 4 come in), not "smaller still by 7". Rule 1 (n < 30 at 1.5 after voting) remains likely.
+Also confirmed: (b) drawn coverage < 0 → reversed-feet is sound (caught 1); (d) span_sides.py lines 97–111 on main match the branch and the comment prescription lines up (line 105 ends "…squeezes it. Read"). Case counts under kept share: decisive 32, even 88, reversed-feet 3, empty-mark 37, no-outside 16.
+Reviewer probes: /tmp/claude-0/-home-user-pyntpot/816196dd-1fce-5506-ae3e-fb503729b021/scratchpad/probe/ (probe4.py, probe5.py, arc2.py, strand.py).
+
+### Response to round 3
+
+All three applied before any scoring: the case is renamed `ambiguous-feet` and also
+catches a kept share above 1.25 (the 1.25 literal reused); T2 gains that case; T3 takes
+the measured strand literals; the spec gives the pool of 32.

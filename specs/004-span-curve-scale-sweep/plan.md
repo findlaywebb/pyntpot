@@ -49,19 +49,20 @@ Imports: the standard library; `pyntpot.maps` (`Cache`, `FetchMargins`, `OpenTop
   **signed** `(s_last - s_first) / length(sub)`, not clamped; may be negative; 0.0 for a
   mark under two points or a zero-length `sub`.
 - `kept_share(drawn, unclipped, sub) -> float | None`: `coverage(drawn, sub) /
-  coverage(unclipped, sub)`; `None` (the `reversed-feet` case) when the unclipped coverage
-  is ≤ 0 or the drawn coverage is < 0. Not clamped.
+  coverage(unclipped, sub)`; `None` (the `ambiguous-feet` case) when the unclipped coverage
+  is ≤ 0, the drawn coverage is < 0, or the share is > `CLEARLY_BETTER_RATIO` (1.25, the
+  same literal; no new constant). Not clamped below that.
 - `decisive(a: float, b: float) -> int`: the two sides' kept shares (`a` for side +1, `b`
   for side -1); returns +1 or -1 for the better side when `hi > CLEARLY_BETTER_RATIO * lo`,
   else 0. `lo = 0, hi > 0` is decisive; both 0 is not.
 - `Verdict` (frozen dataclass): `case: str` (one of `no-outside`, `empty-mark`,
-  `reversed-feet`, `even`, `decisive`, checked in the spec's order), `outside: int`,
+  `ambiguous-feet`, `even`, `decisive`, checked in the spec's order), `outside: int`,
   `better: int` (0 unless `case == "decisive"`), with a `right` property.
 - `judge(span, route_px, cap_px) -> Verdict`: `_convex_side` for the outside and the two
   drawn marks; each side drawn again with `span_line(route_px, i0, i1, side,
   cap_px * SPAN_OFFSET_CAPS, clear_px=0.0)` for the unclipped mark; then the spec's cases
   on `kept_share`. `_mark_broken` is not used: a drawn mark is always clear.
-- `ScaleRow` (frozen dataclass: `scale, voted, empty_mark, reversed_feet, even,
+- `ScaleRow` (frozen dataclass: `scale, voted, empty_mark, ambiguous_feet, even,
   decisive, right`) with a `percent_right` property (`None` when `decisive == 0`), and
   `sweep(cases, cap_px, scales) -> list[ScaleRow]`, where a case is
   `(sub, verdict)` with `sub = route_px[i0 : i1 + 1]`. The verdict is computed once per
@@ -140,21 +141,23 @@ only.
   offset has coverage 1.0; one over its middle half has 0.5; a mark drawn backwards (last
   point before the first along the stretch) has coverage -0.5, negative; a one-point mark
   has 0.0. `kept_share` of the middle-half mark over the full one is 0.5; with the
-  backwards mark as `unclipped`, or as `drawn`, it is `None`.
+  backwards mark as `unclipped`, or as `drawn`, it is `None`; with drawn feet spanning
+  more than 1.25 times the unclipped coverage (full mark over the middle-half one, 2.0),
+  it is `None`.
 - **T3 judge and decisive**:
   - `decisive(0.8, 0.64)` is 0 (ratio exactly 1.25; 0.64 * 1.25 is 0.8 in floating
     point, checked) and `decisive(0.8, 0.63)` is +1; `decisive(0.0, 0.5)` is -1;
     `decisive(0.0, 0.0)` is 0;
-  - **a real cut-back, inside variant**: `arc(90.0, r=100.0)` plus a later strand of the
-    same route (the route continues, turns and comes back) passing within clearance of
-    the **inside** mark near its end, so `_longest_clear` trims that side only. The span
-    covers the arc's indices; the strand is outside the span but in `route_px`. Case
-    `decisive`, and the outside right. The strand's exact geometry (where it passes, how
-    near) is found by measuring under the shipped `span_line` and pinned as literals in
-    the test, with both kept shares pinned (`pytest.approx`, `rel=1e-9`);
-  - **a real cut-back, outside variant**: the same arc with the strand passing the
-    **outside** mark instead. Case `decisive`, and the outside wrong (`right` is False).
-    Measured and pinned the same way;
+  - **a real cut-back, inside variant**: `arc(90.0, r=100.0)` (indices 0 to 59, the
+    span), then the route continues from (200, 50) to (240, 50), down to (240, y) and
+    west to (170, y), sampled every 2 px, so the strand runs back past the mark's end
+    and `_longest_clear` trims one side only. With y = 72 the strand passes the
+    **inside** mark: case `decisive`, `o = +1`, outside right (round 3 measured kept
+    +1 = 1.0, −1 = 0.502). Both kept shares pinned from this branch's own run
+    (`pytest.approx`, `rel=1e-9`);
+  - **a real cut-back, outside variant**: the same route with y = 40, so the strand passes
+    the **outside** mark: case `decisive`, `o = +1`, outside wrong (`right` is False;
+    round 3 measured +1 = 0.605, −1 = 1.0). Pinned the same way;
   - **an isolated tight arc** (`arc(120.0, r=16.0)`, alone in `route_px`): case `even`
     under the kept-share metric, though raw coverage would make it decisive with the
     inside better. The regression test for review round 2, finding 1; both kept shares

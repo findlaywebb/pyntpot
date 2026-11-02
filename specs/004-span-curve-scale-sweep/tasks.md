@@ -10,7 +10,9 @@ Each line follows `plan.md`. Issue: #54.
       rebuilt on a real cut-back (inside and outside variants) plus an isolated tight arc
       pinned `even`, comment edit prescribed line by line, Skye line in `sweep.md`;
       committed before any scoring.
-- [ ] Plan passes the plan-reviewer gate (`review.md` records the rounds).
+- [x] Plan passes the plan-reviewer gate: round 3 PASS (`review.md`); findings 1 to 3
+      applied (`ambiguous-feet` with kept share > 1.25, T3 literals, pool of 32) before
+      any scoring.
 - [ ] T1 to T4 tests in `tests/fixtures/test_sweep_span_scale.py`, red.
 - [ ] `tests/fixtures/sweep_span_scale.py`: `stretches`, `coverage`, `kept_share`,
       `decisive`, `judge`, `sweep`, `decide`; T1 to T4 green.
