@@ -24,7 +24,7 @@ from pyntpot.maps.style_groups import (
     CoverStyle,
     LetteringPolicy,
     RibbonStyle,
-    RouteInks,
+    RouteInk,
     RouteStyle,
 )
 
@@ -241,7 +241,7 @@ PINNED: dict[type, tuple[str, ...]] = {
         "label_geom_tol_px",
         "home_glyph",
     ),
-    RouteInks: ("run", "ride", "swim", "other"),
+    RouteInk: ("style", "px", "colour", "blend", "opacity"),
 }
 
 #: The groups that were copied from the flat painter style, each with the

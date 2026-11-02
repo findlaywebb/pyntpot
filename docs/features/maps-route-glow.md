@@ -1,6 +1,6 @@
 # The route could be drawn with a glow
 
-GitHub issue: (pending)
+GitHub issue: [#105](https://github.com/findlaywebb/pyntpot/issues/105)
 
 **What exists today.** The compose step lays the route ink through its mask with a `blend`
 and an `opacity` (`pyntpot.maps.compose.route`). Nothing softens the ground round the route,

@@ -15,7 +15,7 @@ no width of its own to vary.
 
 The route's plate depends on base-group fields only: the route inks are in `digest()`
 alone, so the pen separates the doubled-back legs of the route by its own width
-(`route_pen_width_px`, whatever the ride ink) and lays that one displaced line.
+(`route_pen_width_px`, whatever the route ink) and lays that one displaced line.
 
 Every watercourse and road draws from the job's ink generator, in the order laid; the
 route's plate draws from the pen generator. It does not trim anything to the ribbon and

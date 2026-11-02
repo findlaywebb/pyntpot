@@ -64,11 +64,29 @@ The full `digest()` moves (the route ink group's JSON changes); `base_digest` an
   in the digest table), `docs/how-to/write-a-theme.md`, `docs/how-to/change-the-route-ink.md`,
   `GLOSSARY.md` (route ink entry: `Style.route_ink` is a field),
   `docs/features/maps-themes-as-overrides.md` (snippet key), `docs/decisions/0045-one-route-ink.md`
-  (new), `docs/decisions/README.md` index if it lists ADRs.
+  (new), `docs/decisions/README.md` (add row 0045, amends 0005, 0026, 0027 and 0037).
 - Issues: delete `docs/issues/maps-route-ink-effect-unread.md` and
   `docs/issues/maps-style-route-inks-one-read.md`; add
   `docs/features/maps-route-casing.md`, `maps-route-glow.md`, `maps-route-shadow.md`, each
   with its GitHub issue (labels `enhancement`, `area: maps`).
+
+Call sites the plan-reviewer listed, all repointed to the field: `test_style.py`
+`TestEngineAdapters` (folded into the pinned-ink test) and `TestFedRouteInk` (compare
+`blend` and `opacity`, not `effect`); `test_route_ink.py:113,132,158`;
+`test_pen_strands.py:72,76`; `examples/how_to_route_ink.py:146-150,199`; the unused `Any`
+import in `style_groups.py` and `RouteInk` import in `test_reference_pages.py`; "ride ink"
+wording in `painter/pen.py` and `strands.py`.
+
+The reference row for `style` says what the compose step does: `"pen"` tints the pen plate
+when one was painted, any other value (`"solid"` in every theme) draws the line. It does not
+promise `dotted`.
+
+The overrides note's snippet becomes `route_ink:` / `  colour: "#7b2335"`.
+
+Rejection tests pin `match=`: an old theme fails on `route_inks` (pydantic extra input); a
+`[route_ink]` naming `casing_px` fails on `casing_px` (`_check_keys`'s `ValueError`, wrapped).
+
+Before filing the three feature issues, search the open issues for casing, glow and shadow.
 
 ## Files to leave alone
 

@@ -1,20 +1,22 @@
-"""The map's own style groups, the route inks and the fields no painter reads.
+"""The map's own style groups, the route ink and the fields no painter reads.
 
 Key types: `CardStyle` (the card's size and the dark grid),
 `RibbonStyle` (the trimmed extent of the painted ground and the card's
 frame), `CoverStyle` (land cover and the wood), `RouteStyle` (the route's
 own painted plate), `BasemapStyle` (what the basemap draws and how much of
-it), `LetteringPolicy` (which names a map letters), `RouteInk` (one sport's route
-treatment) and `RouteInks` (one `RouteInk` per sport). `CONSUMER_ONLY` names the
+it), `LetteringPolicy` (which names a map letters) and `RouteInk` (how the route is
+drawn on the card). `CONSUMER_ONLY` names the
 painter fields that no module reads and so belong to no group.
 
 Base groups feed the base plates; `LetteringPolicy` feeds only the lettering;
-`RouteInks` is read only when the route is placed and drawn (`paint` takes the
-strand gap from its width), so changing an ink repaints no plate. The defaults are the source classes' own defaults, not a
-resolved theme: the effective basemap options and the resolved inks are
-theme values. `RouteInks` has no defaults, because no class carries one.
+`RouteInk` is read only when the route is placed and drawn (`paint` takes the
+strand gap from its width), so changing the ink repaints no plate. The defaults
+are the source classes' own defaults, not a resolved theme: the effective
+basemap options and the resolved ink are theme values. `RouteInk`'s treatment,
+width and colour have no defaults, because no class carries one.
 
-It paints, letters and fetches nothing. Two `BasemapStyle` fields,
+It paints, letters and fetches nothing. The route ink knows nothing of what a
+track records, and holds no casing, glow or shadow: the compose step draws none. Two `BasemapStyle` fields,
 `hillshade_opacity` and `pick_places`, have no reader and are kept for the
 upstream consumer. The basemap's clip margin is derived from the card per
 render and is not a style field.
@@ -24,7 +26,6 @@ package.
 """
 
 from dataclasses import dataclass, field
-from typing import Any
 
 from pyntpot.maps.providers.overpass import MINOR_ROADS
 
@@ -254,23 +255,21 @@ class LetteringPolicy:
 
 @dataclass(frozen=True)
 class RouteInk:
-    """One sport's route treatment: its style, width, colour and effect keys."""
+    """How the route is drawn on the card: its treatment, width, colour, blend and opacity.
 
+    Only `paint` (the strand gap, from `px`) and the compose step read it.
+    """
+
+    #: `"pen"` tints the painted pen plate when one was painted; any other value
+    #: (every theme says `"solid"`) draws the line.
     style: str
+    #: Width in display pixels; it also sets how far apart the strands of a
+    #: doubled-back route are drawn.
     px: float
+    #: Colour as `#rrggbb`.
     colour: str
-    effect: dict[str, Any]
-
-
-@dataclass(frozen=True)
-class RouteInks:
-    """One resolved route ink per sport; only `paint` and `compose` read it."""
-
-    #: The ink a run is drawn in.
-    run: RouteInk
-    #: The ink a ride is drawn in.
-    ride: RouteInk
-    #: The ink a swim is drawn in.
-    swim: RouteInk
-    #: The ink any other sport is drawn in.
-    other: RouteInk
+    #: `"normal"` lays the ink over the card; `"multiply"` multiplies it in, so a
+    #: dark wash stays dark under it. The compose step rejects any other value.
+    blend: str = "normal"
+    #: How much of the ink is laid, from 0 to 1.
+    opacity: float = 1.0

@@ -1,6 +1,6 @@
 # The route could cast a shadow
 
-GitHub issue: (pending)
+GitHub issue: [#106](https://github.com/findlaywebb/pyntpot/issues/106)
 
 **What exists today.** The compose step lays the route ink through its mask with a `blend`
 and an `opacity` (`pyntpot.maps.compose.route`). The route lies flat on the card; nothing

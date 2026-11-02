@@ -22,8 +22,8 @@ MID_COLUMN = 60
 
 def _ride_as(style: Style, ink_style: str) -> Style:
     """The style with its ride ink drawn in this treatment."""
-    ride = dataclasses.replace(style.route_inks.ride, style=ink_style)
-    return style.model_copy(update={"route_inks": dataclasses.replace(style.route_inks, ride=ride)})
+    ink = dataclasses.replace(style.route_ink, style=ink_style)
+    return style.model_copy(update={"route_ink": ink})
 
 
 def _runs(alpha: np.ndarray) -> list[float]:
@@ -69,11 +69,11 @@ def test_a_pen_ride_ink_draws_strands_on_the_pens_line(tmp_path):
 def test_the_pen_ride_gap_is_the_pens_and_the_solid_ride_gap_is_the_inks():
     """The strand gap follows the pen's width for a pen ride ink and the ink's for any other."""
     style = Style.default()
-    assert strand_gap_px(style) == style.route_ink().px * STRAND_GAP_WIDTHS
+    assert strand_gap_px(style) == style.route_ink.px * STRAND_GAP_WIDTHS
     pen = _ride_as(style, "pen")
     assert strand_gap_px(pen) == style.route.route_pen_width_px * STRAND_GAP_WIDTHS
     no_pen = pen.model_copy(update={"route": dataclasses.replace(pen.route, route_pen=False)})
-    assert strand_gap_px(no_pen) == style.route_ink().px * STRAND_GAP_WIDTHS
+    assert strand_gap_px(no_pen) == style.route_ink.px * STRAND_GAP_WIDTHS
 
 
 def test_solid_and_pen_ride_inks_paint_the_same_pen_plate(tmp_path):

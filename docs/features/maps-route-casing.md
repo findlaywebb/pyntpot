@@ -1,6 +1,6 @@
 # The route could be drawn with a casing
 
-GitHub issue: (pending)
+GitHub issue: [#104](https://github.com/findlaywebb/pyntpot/issues/104)
 
 **What exists today.** The compose step lays the route ink through its mask with a `blend`
 and an `opacity` (`pyntpot.maps.compose.route`). Nothing draws a band of another colour

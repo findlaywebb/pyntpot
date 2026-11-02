@@ -18,28 +18,28 @@ feature note and GitHub issue for each dropped effect so it can be added back pr
 
 ## Acceptance criteria
 
-- [ ] A theme has one `[route_ink]` table with the keys `style`, `px`, `colour`, `blend`
+- [x] A theme has one `[route_ink]` table with the keys `style`, `px`, `colour`, `blend`
       and `opacity`; `blend` defaults to `"normal"` and `opacity` to 1.0.
-- [ ] `Style.route_ink` is a field holding one `RouteInk`; `Style.route_inks`,
+- [x] `Style.route_ink` is a field holding one `RouteInk`; `Style.route_inks`,
       `RouteInks` and the `route_ink()` method are gone. `with_route_ink` keeps its
       signature and behaviour.
-- [ ] A theme naming `route_inks`, an `effect` table, or any casing, glow, shadow or
+- [x] A theme naming `route_inks`, an `effect` table, or any casing, glow, shadow or
       adaptive key is rejected at load, like any unknown key.
-- [ ] The compose step reads `blend` and `opacity` from the ink's own fields, with the same
+- [x] The compose step reads `blend` and `opacity` from the ink's own fields, with the same
       checks and the same pixels as before.
-- [ ] The packaged default theme and the ten example themes are rewritten to the new
+- [x] The packaged default theme and the ten example themes are rewritten to the new
       table, each keeping its old `ride` ink's `style`, `px`, `colour` and `blend`.
-- [ ] No pixel moves: every golden, plate and docs image passes unchanged. Only the pinned
+- [x] No pixel moves: every golden, plate and docs image passes unchanged. Only the pinned
       `Style.digest()` literal moves, re-pinned once; `base_digest` and
       `lettering_digest` do not move.
-- [ ] A new ADR records the theme-format and public-attribute change, amending ADRs 0005,
+- [x] A new ADR records the theme-format and public-attribute change, amending ADRs 0005,
       0026, 0027 and 0037.
-- [ ] Reference and how-to docs describe the one ink and its five keys; the "Fields with no
+- [x] Reference and how-to docs describe the one ink and its five keys; the "Fields with no
       reader" paragraph about `effect` is gone.
-- [ ] One feature note in `docs/features/` and one GitHub issue each for a route casing, a
+- [x] One feature note in `docs/features/` and one GitHub issue each for a route casing, a
       route glow and a route shadow, recording the values the themes held when the keys
       were dropped.
-- [ ] The notes `docs/issues/maps-route-ink-effect-unread.md` and
+- [x] The notes `docs/issues/maps-route-ink-effect-unread.md` and
       `docs/issues/maps-style-route-inks-one-read.md` are deleted; the PR closes #57 and #60.
 
 ## Out of scope
