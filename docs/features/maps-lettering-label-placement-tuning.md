@@ -61,31 +61,32 @@ placement quality, tuning facilities, and a tool to place names by hand.
   lake always crosses some shore, so the price has to allow its own water or move its pin
   to the shore.
 - **Take the backing wash off pins and leaders** (`wash=False` in `_furniture`). No band
-  across a lake; a leader over a dark wash reads less well. An ADR amending 0008, and a
-  golden regeneration.
+  across a lake; a leader over a dark wash reads less well. Decided: both the leaders and
+  the pins. It still needs an ADR amending 0008, and a golden regeneration.
 - **Look past pure greed.** After the greedy pass, a repair pass reseats the worst-priced
   names against everything else on the card, or a small search re-tries the few names
   near each one that moved. One tier's change then settles locally instead of cascading;
-  it costs time per card, and a repair needs a bound so it terminates.
+  it costs time per card, and a repair needs a bound so it terminates. Decided: behind a
+  switch.
 - **#52's two cases**: offset a name set along water clear of its stroke and price the water
   for it, and scale the road cost by how many roads the style draws.
 
 *Tuning facilities*:
 
 - **One home for the weights.** Every placement price in one frozen value, injected (not
-  `os.environ`), with the shipped numbers as its defaults; either a `placement` field of
-  `LetteringPolicy` (`style_groups.py:233`, a theme's `[lettering]` table), so a theme can
-  tune it and a change re-letters without repainting (`lettering_digest`), or a value the
-  placer takes that no theme sees.
+  `os.environ`), with the shipped numbers as its defaults. Decided: a theme can tune it,
+  in its `[lettering]` table (`LetteringPolicy`, `style_groups.py:233`), so a change
+  re-letters without repainting (`lettering_digest`).
 - **A placement report.** Per name: the seat chosen, the next few seats tried, and each
   one's cost broken down by term (route, overlap, dark grid, road, water, leader, wrap,
   separation, pull). As data, and as a debug overlay on the card drawing each name's box,
   its runners-up and its leader.
 - **A before-and-after compare** for the docs images and goldens: given two lettering
-  results for one card, side-by-side crops round every name whose seat moved.
+  results for one card, side-by-side crops round every name whose seat moved. Decided: a
+  command.
 - **Quality metrics on the focus places**: crossed leaders, names on water, mean and
-  longest leader, wraps, names dropped. Reported per place on every run; the hard ones
-  gated as `test_places.py` gates crossings and lakes today.
+  longest leader, wraps, names dropped. Reported per place on every run; some gated as
+  `test_places.py` gates crossings and lakes today (which ones is open).
 
 *An interactive label placement tool* (maintainer, 2026-11-02: "I also want to mock up
 label placing tool that lets you drag, click, type. I plan to add more features to this
@@ -118,12 +119,15 @@ the cheapest the constants allow, and the fixes for #48, #52 and #53 traded one 
 another within those prices. What is missing is better prices and the means to tune them.
 
 **Possible shape.** The tuning facilities first, because they make the rest measurable: the
-weights gathered into one value with the shipped numbers (pixels must not move), the
-report, the metrics and the compare. The tool after the report, on the same data. Then
-the quality changes one at a time, each with its metrics before and after on the five
-focus places. Outcomes an eventual spec could adopt:
+weights gathered into one value in the theme's `[lettering]` table with the shipped
+numbers (pixels must not move), the report, the metrics and the compare command. The tool
+after the report, on the same data. Then the quality changes one at a time, each with its
+metrics before and after on the five focus places: the repair pass behind its switch, and
+the backing wash off leaders and pins under its own ADR. Outcomes an eventual spec could
+adopt:
 
-- Every placement price lives in one typed value; the placer reads no other constant.
+- Every placement price lives in one typed value a theme can set; the placer reads no
+  other constant.
 - A test letters a card with two weight sets and the report shows the cost of every term
   for every name.
 - On the focus places no leader crosses another, the route or a lake; no flat name sits on
@@ -138,13 +142,17 @@ Not in it: what is named (the picks), the hand's lettering and the nib, where a 
 bracket is drawn (`place_spans`), and the backing wash's own shape (#49). Related: #50 and
 #51, which this would likely close or narrow.
 
+**Decided** (maintainer, 2026-11-02):
+
+- Placement weights are tunable by a theme, in its `[lettering]` table: yes.
+- The backing wash comes off the furniture: leaders and pins both. Needs an ADR amending
+  0008.
+- The slower repair pass: behind a switch.
+- The before-and-after compare: a command.
+
 **Open questions.**
 
-1. Should the weights be a theme's to tune, or the placer's alone?
-2. Should the backing wash leave the leaders only, or the pins too?
-3. Is a slower repair pass acceptable on every card, or only behind a switch?
-4. Which metrics are gates, and which are only reported?
-5. Should the compare tool be a test support helper, an example script, or a command?
-6. What form does the placement tool take (a local web page, a desktop app, a notebook
+1. Which metrics are gates, and which are only reported?
+2. What form does the placement tool take (a local web page, a desktop app, a notebook
    widget), and where does it live against the layers? Do its overrides belong in the
    theme's TOML, or in a file per card (beside the caller's annotations)?
