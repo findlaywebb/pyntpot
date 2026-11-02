@@ -72,6 +72,16 @@ class TestPaintCover:
         assert stack.label[60, 60] == 0  # the lake's pixel, cut out of the meadow
         assert stack.label[1, 1] == 0
 
+    def test_a_ring_wound_against_the_one_around_it_cuts_no_hole(self, tmp_path):
+        """A lawn surveyed the other way round inside its park is labelled with the park's class."""
+        park = square(20.0, 20.0, 300.0, 220.0)
+        lawn = tuple(reversed(square(100.0, 80.0, 220.0, 160.0)))
+        job = tiny_job(tmp_path, cover={"meadow": (park, lawn)}, cover_order=("meadow",))
+        stack = PlateStack.blank(job.shape)
+        paint_cover(job, stack)
+        assert stack.label[60, 80] == 1  # the lawn's centre, (160, 120) m
+        assert stack.label[60, 30] == 1  # the park outside the lawn
+
     def test_the_wood_is_found_and_washed(self, tmp_path):
         """The wood mask is the wood's label, and every class lays at least one layer."""
         _, stack = _painted(tmp_path)

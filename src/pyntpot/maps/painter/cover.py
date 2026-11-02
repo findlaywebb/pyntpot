@@ -24,6 +24,7 @@ from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import WashStyle
 from pyntpot.ink.wash import WashOptions, separated, wash
 from pyntpot.maps.painter.job import INSIDE, PaintJob, PlateStack, drawable
+from pyntpot.maps.rings import orient
 
 #: A wet field's reach is never narrower than this many pixels.
 _WET_BACK_FLOOR = 4.0
@@ -82,12 +83,19 @@ def cover_order(job: PaintJob) -> list[str]:
 
 
 def _label(job: PaintJob, stack: PlateStack, order: list[str]) -> None:
-    """One class index per pixel, with the water cut out so no pigment lies on it."""
+    """One class index per pixel, with the water cut out so no pigment lies on it.
+
+    A class is the union of its rings. They come wound as they were surveyed, so each
+    is wound anticlockwise before the nonzero fill; otherwise a ring inside another and
+    wound against it, such as a lawn inside its park, would cut a hole in the class.
+    They are wound after the deform, which keeps its draws in the surveyed order.
+    """
     deform = _deform(job)
     for i, cls in enumerate(order, 1):
         rings = drawable(job.layers.cover[cls])
         if rings:
-            stack.label[fill_cov(deform_rings(rings, deform), job.canvas) > INSIDE] = i
+            wound = [orient(r) for r in deform_rings(rings, deform)]
+            stack.label[fill_cov(wound, job.canvas) > INSIDE] = i
     stack.label[stack.water] = 0
 
 
