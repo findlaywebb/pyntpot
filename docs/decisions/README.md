@@ -51,3 +51,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0042 | Conventional PR titles drive the changelog |
 | 0043 | Lossless plate effort: faster opaque plates, same pixels |
 | 0044 | No pre-release Python job (amends D4) |
+| 0045 | The classic paper lock is tolerant too (applies 0030) |

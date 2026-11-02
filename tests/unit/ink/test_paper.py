@@ -9,6 +9,8 @@ from pyntpot.ink import Canvas, Sheet
 from pyntpot.ink.paper import paper_plate
 from pyntpot.ink.style import PaperStyle
 
+from support.paths import CLASSIC_PLATE
+
 
 def _paper(style: PaperStyle, display_px: int = 90) -> np.ndarray:
     """The paper plate of a 90 by 60 canvas, painted on a fresh sheet."""
@@ -38,7 +40,22 @@ class TestPaperPlate:
 
 #: The sha-256 (first 16 hex digits) of the classic plate's float32 bytes on `_paper`'s sheet,
 #: read from the code before the warm edge existed.
+#:
+#: The bytes are this machine's. A numpy that runs the plate's float32 maths on other vector
+#: instructions, or on another platform's maths library, can round a last bit the other way,
+#: so the plate itself is committed as `CLASSIC_PLATE`, and under `--golden-tolerance` the
+#: test compares with it within `CLASSIC_PLATE_ATOL` instead (ADR 0045).
 CLASSIC_PLATE_SHA = "ae150866b4642275"
+
+#: How far a value of the classic plate may sit from the committed one in tolerance mode.
+#: Measured CPU drift is one float32 ulp (6e-8); the bound leaves room for another platform's
+#: `exp` and is still 1/400 of an 8-bit level, far below any change to the paint.
+CLASSIC_PLATE_ATOL = 1e-5
+
+
+def _sha(plate: np.ndarray) -> str:
+    """The first 16 hex digits of the sha-256 of a plate's bytes."""
+    return hashlib.sha256(np.ascontiguousarray(plate).tobytes()).hexdigest()[:16]
 
 
 def _classic() -> PaperStyle:
@@ -77,12 +94,20 @@ def _speck_extents(mask: np.ndarray) -> list[int]:
 class TestClassicEdge:
     """`paper_edge="classic"` is the paper as it was."""
 
-    def test_the_classic_plate_is_the_pinned_one(self):
-        """The classic plate on a small seeded sheet hashes to the literal read before the edit."""
+    def test_the_classic_plate_is_the_pinned_one(self, golden_tolerance):
+        """The classic plate is the one pinned before the edit, byte for byte unless tolerant."""
         plate = _paper(_classic())
-        assert hashlib.sha256(np.ascontiguousarray(plate).tobytes()).hexdigest()[:16] == (
-            CLASSIC_PLATE_SHA
-        )
+        if not golden_tolerance:
+            assert _sha(plate) == CLASSIC_PLATE_SHA
+            return
+        drift = float(np.abs(plate - np.load(CLASSIC_PLATE)).max())
+        assert drift <= CLASSIC_PLATE_ATOL, f"classic plate drifts by {drift:.2e}"
+
+    def test_the_committed_classic_plate_is_the_pinned_bytes(self):
+        """The plate another machine compares with is the one `CLASSIC_PLATE_SHA` pins."""
+        committed = np.load(CLASSIC_PLATE)
+        assert committed.dtype == np.float32
+        assert _sha(committed) == CLASSIC_PLATE_SHA
 
     def test_both_edges_leave_the_generator_in_the_same_state(self):
         """After either edge the sheet's next noise draw is the same field."""
