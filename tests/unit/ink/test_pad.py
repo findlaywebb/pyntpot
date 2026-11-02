@@ -8,7 +8,7 @@ import pytest
 from pyntpot.ink.brush import brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.chains import chain_lines
-from pyntpot.ink.pad import InkPad
+from pyntpot.ink.pad import InkPad, ink_density
 from pyntpot.ink.sheet import Sheet
 
 #: The classes whose repeat was worth measuring, with the brush and width the
@@ -218,3 +218,48 @@ def test_a_finer_grid_lays_the_same_weight_of_ink():
         two = float(padded(brush_id, width_px, over, ink_ss=2).sum())
         assert two == pytest.approx(one, rel=0.2), brush_id
         assert two < one  # a sharper mark spreads less, and is honest about it
+
+
+class TestDensityOnlyWhereLaid:
+    """`ink_density` works out only the laid pixels, so the rest are exactly what the full grid gives."""
+
+    H, W = 12, 20
+
+    def _laid(self) -> np.ndarray:
+        """An accumulator laid in one patch and empty elsewhere."""
+        acc = np.zeros((self.H, self.W), np.float32)
+        acc[3:7, 5:14] = np.linspace(0.05, 2.5, 36, dtype=np.float32).reshape(4, 9)
+        return acc
+
+    @staticmethod
+    def _full_grid(acc: np.ndarray, pap: np.ndarray, dry: float, thr: float) -> np.ndarray:
+        """The saturate-and-gate expressions over every pixel, with no tooth or reservoir."""
+        gate = 1.0 - dry * (1.0 - np.clip((pap - thr) * 5.5 + 0.5, 0, 1))
+        return np.clip((1.0 - np.exp(-acc)) * gate, 0.0, 1.0)
+
+    def _density(self, dry: float, pap: np.ndarray) -> tuple[np.ndarray, float]:
+        """The density `ink_density` gives with bleed off, and the brush's threshold."""
+        brush, _ = brush_from_id("MAJ6-e", 3.0, 2.0, BrushStyle(), "route")
+        brush = replace(brush, dry=dry)
+        sheet = Sheet(self.H, self.W, gran_px=9.0, seed=11)
+        return ink_density(self._laid(), brush, sheet, None, pap, bleed=False), brush.thr
+
+    def test_an_unlaid_pixel_is_plus_zero_and_a_laid_one_is_the_full_grid_value(self):
+        """Outside the patch the density is +0.0; inside it is the full-grid expression, bit for bit."""
+        pap = np.random.default_rng(4).random((self.H, self.W), dtype=np.float32)
+        got, thr = self._density(0.4, pap)
+        want = self._full_grid(self._laid(), pap, 0.4, thr)
+        laid = self._laid() != 0
+        assert np.all(got[~laid] == 0.0)
+        assert not np.signbit(got[~laid]).any()
+        assert np.array_equal(got[laid], want[laid])
+
+    def test_a_brush_drier_than_one_keeps_the_negative_zeros_of_the_full_grid(self):
+        """A gate below 0 turns the unlaid zeros to -0.0, so such a brush is worked out everywhere."""
+        pap = np.zeros((self.H, self.W), np.float32)
+        got, thr = self._density(1.2, pap)
+        laid = self._laid() != 0
+        assert np.signbit(got[~laid]).all()
+        assert np.array_equal(
+            got.view(np.uint32), self._full_grid(self._laid(), pap, 1.2, thr).view(np.uint32)
+        )
