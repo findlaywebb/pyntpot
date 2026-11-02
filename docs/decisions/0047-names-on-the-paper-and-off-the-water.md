@@ -1,4 +1,4 @@
-# 0046 — Names on the paper and off the water: the seventh golden regeneration
+# 0047 — Names on the paper and off the water: the seventh golden regeneration
 
 Status: accepted
 

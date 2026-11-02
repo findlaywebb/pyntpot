@@ -2,7 +2,7 @@
 
 GitHub issue: [#75](https://github.com/findlaywebb/pyntpot/issues/75)
 
-**What exists today.** `pyntpot.ink.tip._smooth_path` rounds a path's corners
+**What exists today.** `pyntpot.ink.tip.smooth_path` rounds a path's corners
 with two box passes over the resampled coordinates, edge-padded. Edge padding
 averages each end with its inner neighbours, so on a straight end the first and
 last samples move inward along the path, by about four tenths of the smoothing
@@ -12,7 +12,7 @@ the start moves from 0.0 to 1.41 px and the end from 19.6 to 18.19 px. The
 smoothing runs for every stroke of a brush with `stroke_smooth` on, which the
 default theme sets, so every pen and label stroke on the golden card passes
 through it, and the goldens (`pen.webp`, `labels-centreline.webp`, `map.png`)
-pin the drawn-in ends. The docstrings of `_smooth_path` and of `pyntpot.ink.tip`
+pin the drawn-in ends. The docstrings of `smooth_path` and of `pyntpot.ink.tip`
 say what the code does.
 
 **What the feature would add.** A style switch, off by default, that puts a

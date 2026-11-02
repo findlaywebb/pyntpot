@@ -36,7 +36,10 @@ questions.
    checkpoint.)
 5. **Write `tasks.md`**: dependency-ordered checklist. Implement test-first on a feature
    branch (the `test-driven-development` skill), ticking tasks off; commit working
-   checkpoints. Review your own diff in two ordered passes: **spec/plan compliance first**
+   checkpoints. Once the suite is green, **mutation-test the changed functions**
+   (CONTRIBUTING.md, "Mutation testing"; advisory, ADR 0012): kill each survivor with a
+   focused test or record it as equivalent, with the reason, for the PR description. Review
+   your own diff in two ordered passes: **spec/plan compliance first**
    (does the diff do what `spec.md`/`plan.md` say, and nothing they exclude?), **quality
    second**.
 6. **Fresh-context gates before the PR**: a fresh-context diff review **against the plan**,

@@ -12,9 +12,8 @@ their overrides, merged over the base when loaded:
 
 ```yaml
 extends: default
-route_inks:
-  hike:
-    pigment: perylene_maroon
+route_ink:
+  colour: "#7b2335"
 cover:
   relief_strength: 0.6
 ```

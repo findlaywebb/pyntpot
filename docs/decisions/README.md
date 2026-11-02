@@ -14,7 +14,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0004 | Provider protocols, usage limits and the fetch cache key |
 | 0005 | Style groups |
 | 0006 | Golden regeneration |
-| 0007 | Public API |
+| 0007 | Public API (its "re-exported from `_port` until the split" sentence is history: the engine names now come from `ink` and `letters`, see 0010) |
 | 0008 | Hand writes settings |
 | 0009 | Candidates |
 | 0010 | Layers contract and the end of the port package |
@@ -52,4 +52,5 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0043 | Lossless plate effort: faster opaque plates, same pixels |
 | 0044 | No pre-release Python job (amends D4) |
 | 0045 | Cover rings fill as a union: the sixth golden regeneration |
-| 0046 | Names on the paper and off the water: the seventh golden regeneration |
+| 0046 | One route ink (amends 0005, 0026, 0027 and 0037) |
+| 0047 | Names on the paper and off the water: the seventh golden regeneration |

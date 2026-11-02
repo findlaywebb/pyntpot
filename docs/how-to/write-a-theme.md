@@ -32,7 +32,7 @@ from the command line ([the feature is not built](https://github.com/findlaywebb
     paper_hex = "#e6cf9f"
     ```
 
-    The route's colour is in the `[route_inks.ride]` table. The colours of the washes are in
+    The route's colour is in the `[route_ink]` table. The colours of the washes are in
     `[cover.pigments]`. Colours are `#rrggbb` strings.
 
 3. Load it, and paint with it instead of `Style.default()`:
@@ -64,7 +64,7 @@ changed.
 
 The colour washes are off. `land_cover` is false in `[cover]`, so the land takes pale grey
 tints. The `[brush.brushes]` table picks other brushes for the roads and rivers, `[brush]`
-thins the rivers, and `[route_inks.ride]` makes the route black.
+thins the rivers, and `[route_ink]` makes the route black.
 
 ### Sepia
 
@@ -84,7 +84,7 @@ Every pigment in `[cover.pigments]` is a faded brown or ochre. The brush ids in
 
 The pigments in `[cover.pigments]` are saturated, and `[paper.pigment_transparency]` is
 lower, so they lay down denser. `river_mult` in `[brush]` widens the rivers. `[nib]`
-letters larger and heavier. `[route_inks.ride]` makes the route magenta and 8 pixels wide.
+letters larger and heavier. `[route_ink]` makes the route magenta and 8 pixels wide.
 
 ### Winter
 

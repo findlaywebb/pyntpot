@@ -62,7 +62,7 @@ the greens and the blue water. A blue route would be lost among the rivers.
 
 ## Try the treatments and the colours
 
-The ink also has a treatment. The theme's `[route_inks.ride]` table sets a `style`. The
+The ink also has a treatment. The theme's `[route_ink]` table sets a `style`. The
 route is drawn either as a plain `solid` line or as a `pen` stroke, tinted from a plate
 the pen painted. The pen's brush changes the line: a wet brush lays a heavy, even line,
 and a dry one lays a thinner, paler line.
@@ -96,7 +96,7 @@ them, and `with_route_ink` sets the colour:
         )
 ```
 
-There is no dotted route in the grid. `compose` draws a `dotted` treatment as a solid line.
+Only `pen` changes how the route is drawn: any other treatment is a solid line.
 
 ## When it goes wrong
 

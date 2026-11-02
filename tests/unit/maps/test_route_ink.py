@@ -110,7 +110,7 @@ class TestFedRouteInk:
 
     def test_a_fed_width_draws_a_wider_line_for_a_non_pen_ink(self, painted: Painted) -> None:
         """For an ink that is not the pen, a wider fed width covers more of the card in its colour."""
-        assert painted.style.route_ink().style != "pen"
+        assert painted.style.route_ink.style != "pen"
         thin_style = painted.style.with_route_ink(colour=FED_COLOUR, width_px=THIN_WIDTH_PX)
         wide_style = painted.style.with_route_ink(colour=FED_COLOUR, width_px=WIDE_WIDTH_PX)
         thin = compose(painted.plates, UNLETTERED, painted.basemap, thin_style, attribution=False)
@@ -126,11 +126,12 @@ DARK_INK = "#401018"
 DARK_WASH = (60, 60, 60)
 
 
-def _routed(painted: Painted, background: tuple[int, int, int], **effect: object) -> Image.Image:
-    """The route drawn in a dark ink over a flat card, with the effect keys given."""
+def _routed(
+    painted: Painted, background: tuple[int, int, int], **changes: str | float
+) -> Image.Image:
+    """The route drawn in a dark ink over a flat card, with the ink's fields changed as given."""
     style = painted.style.with_route_ink(colour=DARK_INK)
-    ink = style.route_ink()
-    ink = dataclasses.replace(ink, effect={**ink.effect, **effect})
+    ink = dataclasses.replace(style.route_ink, **changes)
     card = Image.new("RGB", painted.plates.card.display, background)
     compose_route(card, painted.plates, list(painted.plates.route_px), ink, 1.0)
     return card
@@ -144,7 +145,7 @@ def _brightness(card: Image.Image) -> float:
 @pytest.mark.golden
 @pytest.mark.xdist_group("test_route_ink")
 class TestRouteBlendAndOpacity:
-    """The route ink's `blend` and `opacity` effect keys reach the card."""
+    """The route ink's `blend` and `opacity` reach the card."""
 
     def test_multiply_over_a_dark_wash_is_darker_than_normal(self, painted: Painted) -> None:
         """A multiply route over a dark wash darkens it where a normal route would lighten it."""
@@ -155,8 +156,8 @@ class TestRouteBlendAndOpacity:
     def test_a_pen_route_multiplies_too(self, painted: Painted) -> None:
         """A route drawn from the pen plate honours multiply as the solid route does."""
         style = painted.style.with_route_ink(colour="#c8d0ff")
-        ink = dataclasses.replace(style.route_ink(), style="pen")
-        multiplied = dataclasses.replace(ink, effect={**ink.effect, "blend": "multiply"})
+        ink = dataclasses.replace(style.route_ink, style="pen")
+        multiplied = dataclasses.replace(ink, blend="multiply")
         normal = Image.new("RGB", painted.plates.card.display, DARK_WASH)
         darker = normal.copy()
         compose_route(normal, painted.plates, list(painted.plates.route_px), ink, 1.0)
@@ -169,8 +170,8 @@ class TestRouteBlendAndOpacity:
         half = _routed(painted, PALE, opacity=0.5)
         assert _brightness(half) > _brightness(full)
 
-    def test_an_effect_without_opacity_reads_one(self, painted: Painted) -> None:
-        """An effect table with no `opacity` draws exactly as one that says 1.0."""
+    def test_a_theme_without_opacity_reads_one(self, painted: Painted) -> None:
+        """The theme's ink, which writes no `opacity`, draws exactly as one that says 1.0."""
         absent = _routed(painted, PALE)
         stated = _routed(painted, PALE, opacity=1.0)
         assert ImageChops.difference(absent, stated).getbbox() is None

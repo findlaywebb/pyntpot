@@ -19,7 +19,7 @@ from pyntpot.maps.cache import Cache
 from pyntpot.maps.cli import build_parser
 from pyntpot.maps.plates import Manifest
 from pyntpot.maps.style import Style
-from pyntpot.maps.style_groups import CONSUMER_ONLY, RouteInk
+from pyntpot.maps.style_groups import CONSUMER_ONLY
 
 from support import REPO_ROOT
 
@@ -63,12 +63,11 @@ def _cli_facts() -> list[str]:
 
 
 def _style_fields() -> dict[str, list[str]]:
-    """Return the field names of each style group, by group name, route inks included."""
+    """Return the field names of each style group, by group name."""
     groups: dict[str, list[str]] = {}
     for name, info in Style.model_fields.items():
         assert dataclasses.is_dataclass(info.annotation)
         groups[name] = [spec.name for spec in dataclasses.fields(info.annotation)]
-    groups["route_inks.<sport>"] = [spec.name for spec in dataclasses.fields(RouteInk)]
     return groups
 
 
