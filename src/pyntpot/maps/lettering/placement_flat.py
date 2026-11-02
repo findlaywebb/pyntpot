@@ -1,19 +1,26 @@
 """Setting a name flat beside its anchor, on the cheapest rung, broken over lines when that pays.
 
 Key names: `_place_flat`, one horizontal name tried on every side of its anchor at every
-rung of the ladder; `best_flat`, the cheapest answer over every way the name may be
+rung of the ladder; `course_anchors`, the points a flat river name may be seated beside
+along its own course; `best_flat`, the cheapest answer over every way the name may be
 broken; `ROAD_CROSS_COST`, `LEADER_CROSS_LABEL_COST`, `LEADER_COST_PX`, `SEPARATION_WEIGHT` and `WRAP_COST`, the
 prices the answers are weighed in.
 
 It does not set a name along a line, choose the order names are placed in or swap
 leaders afterwards, and it draws nothing.
 
+Each position is priced on the water under it and its backing wash too (`water_cost`),
+except for a name written on the water.
+
 Invariants: a position on the paper always beats one off it, and the label is left
 holding the form and the position that won.
 """
 
+import math
 from typing import Any
 
+from pyntpot.ink.polyline import Pt, cumulative_length
+from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import (
     NO_LEADER,
     TIER_SPAN,
@@ -24,6 +31,7 @@ from pyntpot.maps.lettering.label import (
     wrap_forms,
 )
 from pyntpot.maps.lettering.placement_costs import (
+    EDGE_PX,
     ROUTE_REACH_PX,
     Terms,
     box_on_paper,
@@ -36,6 +44,11 @@ from pyntpot.maps.lettering.placement_costs import (
     separation,
 )
 from pyntpot.maps.lettering.placement_marks import SPAN_MARK_COST_PX, mark_gap, mark_through
+from pyntpot.maps.lettering.placement_water import water_cost
+from pyntpot.maps.lettering.placement_window import on_line
+
+#: The fewest points that make a line.
+_FEWEST_FOR_A_LINE = 2
 
 #: What a name laid across a road costs. Not a constraint: sometimes there is
 #: nowhere else, and a name that vanished would be worse than one that crosses
@@ -80,6 +93,25 @@ NEAR_RUNGS = (7.0, 12.0, 20.0, 30.0)
 
 
 NEAR_GAP_COST_PX = 4.0
+
+
+#: What a pixel of travel away from where a name started costs, set along its
+#: line or flat beside a point further along its course. Light, because the
+#: freedom to slide along the whole feature is the point; not zero, because with
+#: the separation reward and nothing pulling back, two names of one river both
+#: run to opposite corners of the card and neither ends up where the river is
+#: worth naming.
+ANCHOR_PULL = 0.22
+
+
+#: The kinds whose flat name may be seated beside any point of its own course,
+#: not only beside its anchor, and how many points along it are tried. A river
+#: that could not be written along its water still has the whole of its water
+#: to be named beside; its anchor may sit in a lake or between two streams with
+#: no dry paper within a rung of it.
+COURSE_KINDS = ("river",)
+
+COURSE_ANCHORS = 12
 
 
 #: What a second line costs, so it is taken only when it buys a materially
@@ -163,7 +195,8 @@ def _place_flat(
     per_px = NEAR_GAP_COST_PX if near_mark else LEADER_COST_PX
     best = None
     on_paper = None
-    for ax, ay in lb.anchors or [(lb.px, lb.py)]:
+    for ax, ay in lb.anchors or course_anchors(lb, terms.card):
+        pull = 0.0 if lb.anchors else math.dist((ax, ay), (lb.px, lb.py)) * ANCHOR_PULL
         for ox, oy in offs:
             for dist in rungs:
                 cx = ax + ox * (dist + tw / 2 if ox else 0)
@@ -172,7 +205,7 @@ def _place_flat(
                     cx = ax
                 x0, y0 = cx - tw / 2, cy - th / 2
                 box = (x0, y0, x0 + tw, y0 + th)
-                cost = 0.0
+                cost = pull
                 inside = box_on_paper(box, terms.card)
                 if not inside:
                     cost += 400
@@ -180,6 +213,8 @@ def _place_flat(
                 cost += overlap(box, terms.boxes)
                 cost += darkness(box, terms.card, terms.dark) * 150
                 cost += on_road(box, terms.roads) * ROAD_CROSS_COST
+                if not lb.in_water:
+                    cost += water_cost(box, terms.water, lb.size)
                 cost += off_own_feature(box, lb)
                 gap_px = SPAN_MARK_COST_PX if lb.tier == TIER_SPAN else per_px
                 cost += mark_gap(box, lb, dist) * gap_px
@@ -197,3 +232,21 @@ def _place_flat(
     assert chosen is not None
     _seat_block(lb, chosen, tw, th, nlines)
     return chosen[0]
+
+
+def course_anchors(lb: Label, card: Card) -> list[Pt]:
+    """Where a flat name may be seated: beside its anchor, and along its course for a river.
+
+    The anchor comes first. For a kind in `COURSE_KINDS` with a line of its own,
+    `COURSE_ANCHORS` more points follow, spread evenly along that line, each on
+    the paper; `ANCHOR_PULL` prices the travel to them.
+    """
+    out: list[Pt] = [(lb.px, lb.py)]
+    if lb.kind not in COURSE_KINDS or len(lb.baseline) < _FEWEST_FOR_A_LINE:
+        return out
+    cum = cumulative_length(lb.baseline)
+    for k in range(COURSE_ANCHORS):
+        (x, y), _theta = on_line(lb.baseline, cum, cum[-1] * (k + 0.5) / COURSE_ANCHORS)
+        if EDGE_PX < x < card.w - EDGE_PX and EDGE_PX < y < card.h - EDGE_PX:
+            out.append((x, y))
+    return out

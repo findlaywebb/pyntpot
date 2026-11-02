@@ -37,8 +37,9 @@ add the term here when you coin one.
 | setting | One request to the hand: a text at a size, set along a line or flat beside an anchor, with its slant, tracking, ink and backing-wash flag. The outcome of placement, not an input to it. `letters.setting.Setting`. |
 | mark | One stroke the hand or a caller's furniture (the maps side's, for one) produces for the nib to run along, in display pixels, with its role, ink, size and pen tilt. `letters.setting.Mark`. |
 | candidate | One ranked annotation option for a track: a named road, a climb, a settlement or a landmark, with its rank within its kind, where it is, and the row the export writes. `maps.candidates.candidate.Candidate`. |
-| backdrop | What every name on the card is priced against: the card, the route in display pixels, the dark grid and the named road centrelines. `maps.lettering.placement_costs.Backdrop`. |
-| terms | What one name is priced against where it is tried: the card, the dark grid, the boxes already on the map, the roads it is charged for crossing and the weighted route. `maps.lettering.placement_costs.Terms`. |
+| backdrop | What every name on the card is priced against: the card, the route in display pixels, the dark grid, the named road centrelines and the water. `maps.lettering.placement_costs.Backdrop`. |
+| terms | What one name is priced against where it is tried: the card, the dark grid, the boxes already on the map, the roads it is charged for crossing, the weighted route and the water. `maps.lettering.placement_costs.Terms`. |
+| water | The lakes and watercourse strokes a flat name and its backing wash keep off, in display pixels. `maps.lettering.placement_water.Water`. |
 | reference | One entry of docs/explanation/references.md: a technique, its key, its canonical source and design input, and where the code implements it. |
 | fetch cache | The directory a fetch keeps its provider payloads in, keyed on the track's box, the margin and the providers' ids, which also holds each key's plates and lettering. `maps.cache.Cache`. |
 | fetch margins | How far beyond a track's extent the features and elevation, and the land cover, are fetched; each 0 to 20 000 m, the land cover at least the features. `maps.cache.FetchMargins`, held by `Cache.margins`. |
