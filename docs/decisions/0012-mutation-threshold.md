@@ -24,7 +24,10 @@ Maintainer decision, 2026-10-07: mutation testing runs manually through `mutatio
 (`workflow_dispatch` only; modes `changed`, `pattern`, `all`), and its score is
 advisory: reported in the run summary with the survivor count, never compared with a
 threshold. No nightly, no PR job, no `min_score`, no ratchet. When to run it: after
-writing tests for a module, before a release, and when a test feels weak.
+writing tests for a module, before a release, and when a test feels weak; and an agent
+runs it locally on the changed functions after every implementation that changes `ink`
+or `letters` functions, killing each survivor with a test or naming it as equivalent in
+the PR description.
 
 ### Configuration
 
@@ -193,3 +196,9 @@ Before the change, 33 tests reached `x_deform_line` for 9.2 test-seconds, 8.1 of
 `maps` pipeline test killed now survives. The "before" figures are already about a quarter
 of the 2026-10-07 ones, after the painter's hot-path work; `shards` stays 4 until a full
 run's shard times correct it.
+
+2026-11-02: maintainer decision, agents run mutation testing on the changed functions
+after implementing, as a workflow step (`CLAUDE.md`, the `new-feature` and
+`test-driven-development` skills, the pull-request template). It stays local and advisory:
+no CI job, no threshold. At the per-mutant cost measured above, a changed function's
+mutants take minutes, not the hours that made it occasional.
