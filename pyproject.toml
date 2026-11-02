@@ -259,7 +259,7 @@ show_missing = true
 source_paths = ["src/"]
 only_mutate = ["src/pyntpot/ink/*", "src/pyntpot/letters/*"]
 pytest_add_cli_args = ["--hypothesis-profile=ci", "--golden-tolerance"]
-pytest_add_cli_args_test_selection = ["tests/unit", "tests/property", "-m", "not golden"]
+pytest_add_cli_args_test_selection = ["tests/unit/ink", "tests/unit/letters", "tests/property", "-m", "not golden"]
 process_isolation = "forkserver"
 
 # The shard count of the mutation workflow's "all" mode (set from measured timings; ADR 0012).

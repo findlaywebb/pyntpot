@@ -31,11 +31,23 @@ uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fai
 uv run coverage report --include="src/pyntpot/maps/*" --fail-under=92 --precision=2
 ```
 
-Mutation testing (ADR 0012) is manual and advisory: no pull-request or scheduled job runs it, and its score has no threshold. Run it after writing tests for a module, before a release, or when a test feels weak. On GitHub, open Actions → Mutation → Run workflow, pick the branch, and choose a mode: `changed` (the default) tests the functions the branch changed against `base` (default `main`); `pattern` tests the space-separated mutmut patterns in `pattern`, such as `pyntpot.ink.polyline*`; `all` tests the whole scope in `[tool.pyntpot.mutation] shards` parallel shards, about 12 hours of runner time. The run's summary shows the score and the survivor count, and each shard's artifact holds its stats and surviving mutants. Locally, pass mutmut a pattern; it needs Linux or macOS, because it forks. Results land in `mutants/`, which git ignores, and `uv run mutmut results` lists them.
+Mutation testing (ADR 0012) is advisory: no pull-request or scheduled job runs it, and its score has no threshold. Agents run it locally on the changed functions after every implementation that changes `ink` or `letters` functions, once the suite is green; anyone may also run it after writing tests for a module, before a release, or when a test feels weak. On GitHub, open Actions → Mutation → Run workflow, pick the branch, and choose a mode: `changed` (the default) tests the functions the branch changed against `base` (default `main`); `pattern` tests the space-separated mutmut patterns in `pattern`, such as `pyntpot.ink.polyline*`; `all` tests the whole scope in `[tool.pyntpot.mutation] shards` parallel shards, about 12 hours of runner time. The run's summary shows the score and the survivor count, and each shard's artifact holds its stats and surviving mutants. Locally, pass mutmut a pattern; it needs Linux or macOS, because it forks. Results land in `mutants/`, which git ignores, and `uv run mutmut results` lists them.
 
 ```bash
 uv run mutmut run "pyntpot.ink.polyline*"
 ```
+
+To test the functions the branch changed, as the workflow's `changed` mode does (Linux: `prlimit` caps each process's memory, so a runaway mutant cannot take the machine down; on macOS drop `prlimit --as=3500000000 --` and use `xargs <"$patterns"`):
+
+```bash
+patterns=$(mktemp)
+uv run python tests/mutation/scope.py --base origin/main --out "$patterns"
+xargs -r -a "$patterns" prlimit --as=3500000000 -- uv run mutmut run
+uv run mutmut results | grep -v 'not checked'   # survivors and untested mutants
+uv run mutmut show <mutant-name>                # one mutant's diff
+```
+
+`no tests` means no test in the mutation selection reaches the function, typically one only `maps` tests call: write a focused `ink` or `letters` test for it. For each survivor, write a focused test that fails against the mutant, or, when the mutant changes no behaviour (an equivalent mutant), list it in the PR description with the reason. An empty pattern list means the branch changed no function in scope, and there is nothing to run.
 
 Benchmarks live in `tests/benchmarks`; a plain `uv run pytest` calls each once, untimed, as a smoke test. `docs/explanation/performance.md` says what they measure. To time them locally:
 
