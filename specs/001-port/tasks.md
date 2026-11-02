@@ -237,7 +237,7 @@ Not part of the port. Each item becomes its own spec under `specs/` when it is t
 - [ ] A gallery of every pigment, with names, aliases and glazes (`docs/features/docs-pigment-gallery.md`)
 - [ ] A preview card for map styles that holds every feature and awkward interaction (`docs/features/maps-theme-preview-card.md`)
 - [ ] Retire Lynmouth as the test place once the API and the goldens are stable, moving the goldens and tests to the focus places (`docs/features/tests-retire-lynmouth.md`)
-- [ ] Faster painting and gates: the golden run in minutes, not half an hour (`docs/features/tests-fast-gates.md`)
+- [x] Faster painting and gates: the golden run in minutes, not half an hour (#81: `specs/002-parallel-gates/`, `specs/003-painter-hot-paths/`)
 - [ ] Themes in YAML that declare only their overrides over a base theme (`docs/features/maps-themes-as-overrides.md`)
 - [ ] Brushes and pigments declared as data (`docs/features/ink-data-driven-brushes-and-pigments.md`)
 - [ ] Review every example for clarity and code smells: prose, code or terms (`docs/features/docs-examples-review.md`)

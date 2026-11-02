@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.21"
           enable-cache: true
@@ -26,7 +26,7 @@ jobs:
 
       - run: uv sync --locked
 
-      - uses: CodSpeedHQ/action@v5.4.0
+      - uses: CodSpeedHQ/action@v5.6.0
         with:
           mode: simulation
           run: uv run pytest tests/benchmarks --codspeed

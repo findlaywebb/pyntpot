@@ -3,8 +3,7 @@
 Key names: `InkPad`, one class's accumulator on the plate's grid or a finer one, with `lay` to
 stamp strokes into it and `read` to get density back; `ink_density`, which turns an
 accumulator into ink by saturating, gating on the paper and bleeding the edge; `_bleed`, the
-mark's soft edge; `_grow` and `_reduce`, carrying a field up to a finer grid and a plane
-back down.
+mark's soft edge; `_reduce`, carrying a plane back down to the plate's grid.
 
 It builds no brush and draws no bristle: strokes go through `pyntpot.ink.stamp`. It reads the
 `BrushStyle` for the grid and the joining only.
@@ -66,6 +65,24 @@ def ink_density(
     if not acc.any():
         return np.zeros_like(acc)
     pap = sheet.paper if paper is None else paper
+    # Where nothing was laid the density is 1 - exp(0) = 0, and 0 times a gate
+    # of 0 or more is +0, so only the laid pixels are worked out. A brush drier
+    # than 1 can gate below 0 and turn those zeros to -0: it is worked out
+    # everywhere, so the bits are the same either way.
+    laid = acc != 0 if b.dry <= 1.0 else np.ones(acc.shape, bool)
+    sub = None if aux is None else {name: v[laid] for name, v in aux.items()}
+    out = _gated(acc[laid], pap[laid], b, sub)
+    dens = np.zeros(acc.shape, out.dtype)
+    dens[laid] = out
+    if bleed:
+        dens = _bleed(dens, b)
+    return np.clip(dens, 0.0, 1.0, out=dens)
+
+
+def _gated(
+    acc: np.ndarray, pap: np.ndarray, b: Brush, aux: dict[str, np.ndarray] | None
+) -> np.ndarray:
+    """The saturated deposit times the paper gate, element by element, before any clip."""
     dens = 1.0 - np.exp(-acc)
     if aux is None:
         gate = 1.0 - b.dry * (1.0 - np.clip((pap - b.thr) * 5.5 + 0.5, 0, 1))
@@ -96,10 +113,7 @@ def ink_density(
             thr = np.minimum(b.thr + 0.20 * spent, 0.72)
             dry = np.minimum(b.dry * (0.85 + 0.5 * spent), 1.0)
         gate = 1.0 - dry * (1.0 - np.clip((tooth - thr) * slope + 0.5, 0, 1))
-    dens = dens * gate
-    if bleed:
-        dens = _bleed(dens, b)
-    return np.clip(dens, 0.0, 1.0)
+    return dens * gate
 
 
 def _bleed(dens: np.ndarray, b: Brush) -> np.ndarray:
@@ -107,12 +121,6 @@ def _bleed(dens: np.ndarray, b: Brush) -> np.ndarray:
     if b.bleed <= _MIN_BLEED_PX:
         return dens
     return np.clip(np.maximum(dens, blur(dens, b.bleed) * 1.35), 0, 1)
-
-
-def _grow(a: np.ndarray, h: int, w: int) -> np.ndarray:
-    """One smooth field carried up to a finer grid, bilinear."""
-    img = Image.fromarray(np.asarray(a, F32), "F").resize((w, h), Image.Resampling.BILINEAR)
-    return np.asarray(img, F32)
 
 
 def _reduce(a: np.ndarray, h: int, w: int) -> np.ndarray:
@@ -247,6 +255,6 @@ class InkPad:
         """
         if self.ss == 1:
             return ink_density(self.acc, b, sheet, self.aux)
-        paper = _grow(sheet.paper, *self.acc.shape)
+        paper = sheet._paper_on(*self.acc.shape)
         dens = ink_density(self.acc, self._at(b), sheet, self.aux, paper, bleed=False)
         return _bleed(_reduce(dens, self.h, self.w), b)

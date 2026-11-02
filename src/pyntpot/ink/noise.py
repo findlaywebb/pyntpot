@@ -22,6 +22,18 @@ F32 = np.float32
 #: Below this blur width the field is returned as it is: it would not move a pixel.
 _BLUR_FLOOR = 0.4
 
+#: The cells from which `blur` sums by row adds rather than `cumsum`. The row adds were
+#: faster in wall time at every size measured (256 by 256 to 1800 by 1457, 2026-10-27),
+#: but cost more instructions on a small field, so they start where a map plate does.
+_ROW_SUM_MIN_CELLS = 2**20
+
+#: The shortest side the row adds take: they loop in Python once per column, so a thin
+#: strip of many cells stays with `cumsum`.
+_ROW_SUM_MIN_SIDE = 64
+
+#: The rank of a field the row adds take.
+_PLANE = 2
+
 
 def value_noise(h: int, w: int, cell: float, rng: np.random.Generator) -> np.ndarray:
     """Smooth value noise on a grid of `cell` pixels.
@@ -39,13 +51,16 @@ def value_noise(h: int, w: int, cell: float, rng: np.random.Generator) -> np.nda
     fx = xs - x0
     fy = (fy * fy * (3 - 2 * fy))[:, None]
     fx = fx * fx * (3 - 2 * fx)
-    a = g[y0][:, x0]
-    b = g[y0][:, x0 + 1]
-    c = g[y0 + 1][:, x0]
-    d = g[y0 + 1][:, x0 + 1]
-    top = a + (b - a) * fx
-    bot = c + (d - c) * fx
-    return top + (bot - top) * fy
+    # Interpolate across each lattice row once, then gather rows: pixel row i reads
+    # lattice rows y0[i] and y0[i] + 1, so the per-pixel float operations are the
+    # same ones the four-corner form does, only not repeated per pixel row.
+    left = g[:, x0]
+    across = left + (g[:, x0 + 1] - left) * fx
+    rise = across[1:] - across[:-1]
+    out = rise[y0]
+    out *= fy
+    out += across[y0]
+    return out
 
 
 def fbm(h: int, w: int, cell: float, octaves: int, rng: np.random.Generator) -> np.ndarray:
@@ -56,7 +71,9 @@ def fbm(h: int, w: int, cell: float, octaves: int, rng: np.random.Generator) -> 
     out = np.zeros((h, w), F32)
     amp, total = 1.0, 0.0
     for i in range(octaves):
-        out += amp * value_noise(h, w, cell / (2**i), rng)
+        octave = value_noise(h, w, cell / (2**i), rng)
+        octave *= amp
+        out += octave
         total += amp
         amp *= 0.5
     out /= total
@@ -97,10 +114,13 @@ def _value_noise_at(
     fy = (vs - v0f).astype(F32)
     fx = fx * fx * (3 - 2 * fx)
     fy = fy * fy * (3 - 2 * fy)
-    a = g[iy, ix]
-    b = g[iy, ix + 1]
-    c = g[iy + 1, ix]
-    d = g[iy + 1, ix + 1]
+    flat = g.ravel()
+    k = iy * gw + ix
+    a = flat.take(k)
+    b = flat.take(k + 1)
+    k += gw
+    c = flat.take(k)
+    d = flat.take(k + 1)
     top = a + (b - a) * fx
     bot = c + (d - c) * fx
     return top + (bot - top) * fy
@@ -163,14 +183,46 @@ def _box1(a: np.ndarray, r: int, axis: int) -> np.ndarray:
     return np.moveaxis(out, -1, axis)
 
 
+def _box_transposed(a: np.ndarray, r: int) -> np.ndarray:
+    """One box pass along axis 1 of a 2D `float32` field, returned transposed.
+
+    Edge padding, a running sum and the difference of its ends over `2r + 1`
+    samples. The running sum goes down the rows of a transposed buffer, one
+    contiguous row add at a time, which is the same sequential float32 sum a
+    `cumsum` along the row makes, without its strided or per-row cost.
+    """
+    h, w = a.shape
+    cs = np.empty((w + 2 * r + 1, h), F32)
+    cs[: r + 1] = a[:, :1].T
+    cs[r + 1 : r + 1 + w] = a.T
+    cs[r + 1 + w :] = a[:, -1:].T
+    for i in range(1, cs.shape[0]):
+        np.add(cs[i - 1], cs[i], out=cs[i])
+    out = np.subtract(cs[2 * r + 1 :], cs[:w])
+    np.divide(out, F32(2 * r + 1), out=out)
+    return out
+
+
 def blur(a: np.ndarray, sigma: float) -> np.ndarray:
     """Three box passes, which is a Gaussian to the eye and much cheaper.
+
+    A 2D field of `_ROW_SUM_MIN_CELLS` cells or more, with no side under
+    `_ROW_SUM_MIN_SIDE`, runs each pass as row adds down a
+    transposed buffer (`_box_transposed`), six passes alternating the axes; a smaller
+    one, or one of other rank, runs `cumsum` passes (`_box1`). Both make the same
+    sequential float32 sums, so they give the same field bit for bit: the row adds are
+    faster on a large plate, the `cumsum` passes on a small one.
 
     Source: `box-blur` in docs/explanation/references.md.
     """
     if sigma <= _BLUR_FLOOR:
         return a.astype(F32, copy=False)
     r = max(1, round(sigma * 0.95))
+    if a.ndim == _PLANE and a.size >= _ROW_SUM_MIN_CELLS and min(a.shape) >= _ROW_SUM_MIN_SIDE:
+        out = a.astype(F32, copy=False)
+        for _ in range(6):
+            out = _box_transposed(out, r)
+        return out
     out = a.astype(F32, copy=True)
     for _ in range(3):
         out = _box1(out, r, 1)
