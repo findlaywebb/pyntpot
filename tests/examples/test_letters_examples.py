@@ -35,3 +35,11 @@ def test_the_lettering_plate_carries_alpha_only_near_the_name(tmp_path):
     corners = (alpha[0, 0], alpha[0, -1], alpha[-1, 0], alpha[-1, -1])
     assert all(value == 0 for value in corners)
     assert alpha.max() == 255
+
+
+@pytest.mark.parametrize("stem", list(SIZES), ids=list(SIZES))
+def test_the_nib_plate_is_painted_at_twice_the_image_size(stem, tmp_path):
+    """The nib plate written beside the image is twice the image's size, so the lettering is downsized."""
+    path = run_example(stem, tmp_path)
+    with Image.open(path) as image, Image.open(path.with_name(f"{stem}-plate.webp")) as plate:
+        assert plate.size == (2 * image.size[0], 2 * image.size[1])

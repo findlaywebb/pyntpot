@@ -13,7 +13,6 @@ water is drawn at its own width.
 """
 
 from pyntpot.ink.polyline import Pt, eased, length, normal_at
-from pyntpot.maps.rings import point_in_ring
 from pyntpot.maps.track_index import densify
 
 #: The fewest points that make a ring a water area.
@@ -70,12 +69,39 @@ def _ray_to_ring(p: Pt, d: Pt, ring: list[Pt]) -> float | None:
     return best
 
 
-def _ring_at(p: Pt, boxed: list[tuple[list[Pt], tuple[float, ...]]]) -> list[Pt] | None:
-    """The mapped water area this point falls inside, or None."""
+def _winding(p: Pt, ring: list[Pt]) -> int:
+    """How many times the ring winds around the point, counter-clockwise positive."""
+    turns = 0
+    for a, b in zip(ring, ring[1:] + ring[:1], strict=False):
+        side = (b[0] - a[0]) * (p[1] - a[1]) - (p[0] - a[0]) * (b[1] - a[1])
+        if a[1] <= p[1] < b[1] and side > 0:
+            turns += 1
+        elif b[1] <= p[1] < a[1] and side < 0:
+            turns -= 1
+    return turns
+
+
+def _in_water(p: Pt, boxed: list[tuple[list[Pt], tuple[float, ...]]]) -> bool:
+    """Whether this point is in mapped water: nonzero winding over every ring.
+
+    The rings of a lake wind one way round its shore and the other round each
+    island, the way the painter fills them, so a point on an island sums to zero.
+    """
+    total = 0
     for ring, (x0, y0, x1, y1) in boxed:
-        if x0 <= p[0] <= x1 and y0 <= p[1] <= y1 and point_in_ring(p[0], p[1], ring):
-            return ring
-    return None
+        if x0 <= p[0] <= x1 and y0 <= p[1] <= y1:
+            total += _winding(p, ring)
+    return total != 0
+
+
+def _nearest_bank(p: Pt, d: Pt, boxed: list[tuple[list[Pt], tuple[float, ...]]]) -> float | None:
+    """Distance from `p` along `d` to the first bank ahead, over every ring, holes included."""
+    best: float | None = None
+    for ring, _box in boxed:
+        t = _ray_to_ring(p, d, ring)
+        if t is not None and (best is None or t < best):
+            best = t
+    return best
 
 
 def _banks_at(
@@ -84,13 +110,13 @@ def _banks_at(
     """The width of the water at `p` and the sideways shift to its middle.
 
     The width is None where `p` is not in mapped water. Where only one bank is
-    found the width is twice it and the shift is zero.
+    found the width is twice it and the shift is zero. A bank is the nearest
+    crossing of any ring, so the shore of an island is a bank.
     """
-    ring = _ring_at(p, boxed) if boxed else None
-    if ring is None:
+    if not boxed or not _in_water(p, boxed):
         return None, 0.0
-    left = _ray_to_ring(p, n, ring)
-    right = _ray_to_ring(p, (-n[0], -n[1]), ring)
+    left = _nearest_bank(p, n, boxed)
+    right = _nearest_bank(p, (-n[0], -n[1]), boxed)
     if left is not None and right is not None:
         return left + right, (left - right) / 2
     one = left if left is not None else right

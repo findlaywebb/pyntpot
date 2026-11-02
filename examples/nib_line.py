@@ -1,4 +1,4 @@
-"""Rung 4 of the tutorial: a pen nib's line, drawn as a spiral.
+"""Rung 5 of the tutorial: a pen nib's line, drawn as a spiral.
 
 A nib is a brush too: row 6 of the brush sheet is a pen, so `brush_from_id("MAJ6-e",
 ...)` gives a narrow nib that sets ink down where it touches and nowhere else. The

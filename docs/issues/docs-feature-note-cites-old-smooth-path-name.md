@@ -1,5 +1,7 @@
 # A feature note still cites the tip's path smoother by its underscore name
 
+GitHub issue: [#38](https://github.com/findlaywebb/pyntpot/issues/38)
+
 Area: docs.
 
 `pyntpot.ink.tip._smooth_path` is now `pyntpot.ink.tip.smooth_path`: `ink.stamp`

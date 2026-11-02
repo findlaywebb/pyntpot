@@ -3,7 +3,7 @@
 Reviewed: `specs/001-port/plan.md`, section `### P6. Docstrings, prose and
 references` (lines 3952 to 5646), branch `p6-docs` at `6c1e380`. Read against
 `reviews/p6-plan-review-3.md`, `git diff f6698e4 6c1e380 -- specs/001-port/plan.md
-specs/001-port/tasks.md`, `spec.md`, `design-sources.md`, `p6-run-log.md` and
+specs/001-port/tasks.md`, `spec.md`, `design-sources.md`, the P6 run log and
 the repository.
 
 These decisions are settled and are not re-opened here: the run-log decisions

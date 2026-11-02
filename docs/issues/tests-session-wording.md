@@ -1,5 +1,7 @@
 # Three test lines still say "session"
 
+GitHub issue: [#66](https://github.com/findlaywebb/pyntpot/issues/66)
+
 Area: tests (`maps`).
 
 pyntpot's prose says track, box and map, not sport or activity words. P10.14 and

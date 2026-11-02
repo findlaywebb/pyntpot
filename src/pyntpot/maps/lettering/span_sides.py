@@ -61,7 +61,7 @@ SPAN_CURVE_SIDE: bool = True
 #: somewhere and starts reading as a bend. It is also where the sweep settles:
 #: over the four cached tracks, 25 degrees moves 33 stretches for 24 better and
 #: 8 worse, 35 moves 32 for 24 and 7, and 45 and 60 both drop a win to save
-#: nothing. The A591 climb on the Dovedale card turns 11 degrees over its
+#: nothing. One A591 climb on a cached track turns 11 degrees over its
 #: whole extent and gets no vote: a span on a straight stretch staying where
 #: the free paper put it is the threshold working, not the term failing.
 SPAN_CURVE_MIN_TURN_DEG = 35.0

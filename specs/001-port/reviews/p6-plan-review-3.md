@@ -5,7 +5,7 @@ references` (lines 3952 to 5263), branch `p6-docs`. The plan is at `6d5f27f`;
 HEAD is `f3fd835`, which only appends the maintainer's 14:40 note to the run
 log. Read against `reviews/p6-plan-review-2.md`,
 `git diff 31c1d26 6d5f27f -- specs/001-port/plan.md`, `spec.md`,
-`design-sources.md`, `p6-run-log.md` and the repository.
+`design-sources.md`, the P6 run log and the repository.
 
 These maintainer decisions are settled and not re-opened:
 

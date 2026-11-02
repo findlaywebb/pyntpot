@@ -122,6 +122,8 @@ def pick_rivers(
         # water so the placer starts them in different halves; each is then free
         # to move anywhere along the whole line from there, and the repeat guard
         # in `place` keeps them from converging on the same window.
+        # A repeat that finds no window left on the water is dropped by the
+        # placer, not set flat: the first name keeps its flat fallback.
         run = length(line)
         twice = run >= MAJOR_RIVER_TWICE_FRAC * max(card.w, card.h)
         times = MAJOR_RIVER_LABELS if rank == 0 and twice else 1

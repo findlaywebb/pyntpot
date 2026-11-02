@@ -28,6 +28,8 @@ PUBLIC: tuple[str, ...] = (
 )
 
 INK_PUBLIC: tuple[str, ...] = (
+    "PAINTERS_PIGMENTS",
+    "PAINTERS_TRANSPARENCY",
     "PIGMENTS",
     "TRANSPARENCY",
     "Brush",
@@ -63,6 +65,8 @@ MAPS_PUBLIC: tuple[str, ...] = (
     "Basemap",
     "Cache",
     "FetchError",
+    "FetchMargins",
+    "JournalNote",
     "Lettering",
     "OpenTopoData",
     "OverpassFeatures",

@@ -175,7 +175,7 @@ def osm_layers(
         "wood": fills["wood"],
         "trees": fills["trees"],
         "park": fills["park"],
-        "water_area": {"d": rings_path(found.lakes), "n": len(found.lakes)},
+        "water_area": {"d": rings_path(found.lakes, found.lake_holes), "n": len(found.lakes)},
         "sea_osm": {"d": rings_path(found.sea_polys), "n": len(found.sea_polys)},
         "coastline": found.coast,
         "roads": roads,

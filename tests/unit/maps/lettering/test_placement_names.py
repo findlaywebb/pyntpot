@@ -105,19 +105,19 @@ def test_two_names_for_one_place_keep_the_shorter_more_general_one():
 
 def test_a_town_and_a_monument_in_it_are_two_places_and_both_letter():
     """The string relationship alone is not enough, and neither is the distance."""
-    # Monmouth and Monmouth War Memorial stand in the same word relationship as
+    # Trefynwy and Trefynwy War Memorial stand in the same word relationship as
     # High Cup Nick and its chimney. What tells them apart is 485 m against five.
-    town = _named("Monmouth", "settlement", TIER_SETTLEMENT, 294, 592)
+    town = _named("Trefynwy", "settlement", TIER_SETTLEMENT, 294, 592)
     memorial = _named(
-        "Monmouth War Memorial", "monument", TIER_LANDMARK, 294 + NEAR_DUPLICATE_M * 2.0, 592
+        "Trefynwy War Memorial", "monument", TIER_LANDMARK, 294 + NEAR_DUPLICATE_M * 2.0, 592
     )
     kept = dedupe_names([town, memorial], map_card())
     assert len(kept) == 2, "far enough apart to be a town and a thing in it"
     # And near enough, they are one place again.
     close = _named(
-        "Monmouth War Memorial", "monument", TIER_LANDMARK, 294 + NEAR_DUPLICATE_M * 0.1, 592
+        "Trefynwy War Memorial", "monument", TIER_LANDMARK, 294 + NEAR_DUPLICATE_M * 0.1, 592
     )
-    assert [label.name for label in dedupe_names([town, close], map_card())] == ["Monmouth"]
+    assert [label.name for label in dedupe_names([town, close], map_card())] == ["Trefynwy"]
 
 
 def test_a_shared_word_is_not_a_shared_place():
@@ -125,8 +125,8 @@ def test_a_shared_word_is_not_a_shared_place():
     assert _one_place("High Cup Nick", "High Cup Nick Cairn")
     assert _one_place("Grasmere", "Upper Grasmere"), "a qualifier is stripped"
     assert not _one_place("High Cup Nick", "High Cup Nicks")
-    assert not _one_place("Abergavenny", "Lyn Valley Walk")
-    assert not _one_place("Monmouth", "Monmouth Castle Field Museum")
+    assert not _one_place("Machynlleth", "Lyn Valley Walk")
+    assert not _one_place("Trefynwy", "Trefynwy Castle Field Museum")
 
 
 def test_a_span_name_is_never_deduped():

@@ -1,5 +1,7 @@
 # Shared random generators amplify sub-pixel changes
 
+GitHub issue: [#61](https://github.com/findlaywebb/pyntpot/issues/61)
+
 The painter and the lettering draw from random generators shared down a sequence of
 independent items: one generator deforms every cover ring in `deform_ring`, one
 `bloom_rng` places the blooms of every cover class, the lake and the sea in `bloom`, and

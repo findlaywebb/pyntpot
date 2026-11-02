@@ -52,6 +52,13 @@ LANDMARK_TAG_KEYS = (
     "ele",
     "start_date",
     "memorial",
+    "wikidata",
+    "wikipedia",
+    "heritage",
+    "listed_status",
+    "shop",
+    "brand",
+    "brand:wikidata",
 )
 
 #: Fewer points than this is not a line.
@@ -97,6 +104,7 @@ class Harvest:
     wood_holes: list[list[Pt]] = field(default_factory=list)
     park: list[list[Pt]] = field(default_factory=list)
     lakes: list[list[Pt]] = field(default_factory=list)
+    lake_holes: list[list[Pt]] = field(default_factory=list)
     sea_polys: list[list[Pt]] = field(default_factory=list)
     # Every way of one road, and whether any of it earned the road a place.
     ways: dict[tuple[str, str], list[dict[str, Any]]] = field(default_factory=dict)
@@ -154,6 +162,14 @@ def _inside(x: float, y: float, clip: Clip) -> bool:
     return xmin <= x <= xmax and ymin <= y <= ymax
 
 
+def _name(tags: dict[str, Any], name_tags: tuple[str, ...]) -> str:
+    """The first of the style's name tags the element carries and fills, else empty."""
+    for key in name_tags:
+        if tags.get(key):
+            return str(tags[key])
+    return ""
+
+
 def _candidate(name: str, tags: dict[str, Any], at: Pt, index: TrackIndex) -> dict[str, Any]:
     """One landmark candidate at a point, with how far off the track it sits."""
     x, y = at
@@ -183,7 +199,7 @@ def _road(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
     options = scope.options
     within = scope.derived["interaction_m"]
     run_m = scope.derived["interaction_run_m"]
-    name = tags.get("name", "")
+    name = _name(tags, options.name_tags)
     highway = tags["highway"]
     major = highway in MAJOR_ROADS
     ref = str(tags.get("ref") or "")
@@ -213,7 +229,11 @@ def _road(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
             }
         )
         if road not in found.road_keep:
-            found.road_keep[road] = options.roads == "all" or major or name in options.pick_roads
+            found.road_keep[road] = (
+                (options.roads == "all" and highway in options.minor_road_classes)
+                or major
+                or name in options.pick_roads
+            )
         if not found.road_keep[road] and options.roads == "key":
             found.road_keep[road] = scope.index.interacts(piece, within, run_m)
 
@@ -223,7 +243,7 @@ def _waterway(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: 
     options = scope.options
     within = scope.derived["interaction_m"]
     run_m = scope.derived["interaction_run_m"]
-    name = tags.get("name", "")
+    name = _name(tags, options.name_tags)
     waterway = tags["waterway"]
     buried = tags.get("tunnel") not in (None, "", "no")
     for piece in clip_line(_geom(entry, scope.proj), scope.clip):
@@ -257,11 +277,14 @@ def _coastline(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found:
     for piece in clip_line(_geom(entry, scope.proj), scope.clip):
         line = _soften(piece, eps, scope.options)
         if len(line) >= MIN_LINE_POINTS:
-            found.coast.append({"n": tags.get("name", ""), "d": path_d(line)})
+            found.coast.append({"n": _name(tags, scope.options.name_tags), "d": path_d(line)})
 
 
 def _area(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harvest) -> None:
-    """Collect a wood, a protected area or a lake into its layer."""
+    """Collect a wood, a protected area or a lake into its layer.
+
+    A lake keeps its inner rings, so an island in the water stays dry land.
+    """
     wood_eps = scope.derived["wood_eps_m"]
     if tags.get("landuse") == "forest" or tags.get("natural") == "wood":
         outer, inner = _area_rings(entry, wood_eps, scope)
@@ -273,9 +296,12 @@ def _area(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
         outer, _ = _area_rings(entry, wood_eps * PARK_EPS_FACTOR, scope)
         found.park += outer
     elif tags.get("natural") in ("water", "bay"):
-        outer, _ = _area_rings(entry, scope.derived["river_eps_m"], scope)
-        target = found.sea_polys if tags.get("natural") == "bay" else found.lakes
-        target += outer
+        outer, inner = _area_rings(entry, scope.derived["river_eps_m"], scope)
+        if tags.get("natural") == "bay":
+            found.sea_polys += outer
+        else:
+            found.lakes += outer
+            found.lake_holes += inner
 
 
 def _area_landmark(
@@ -294,13 +320,14 @@ def _area_landmark(
     cx = sum(p[0] for p in pts) / len(pts)
     cy = sum(p[1] for p in pts) / len(pts)
     if _inside(cx, cy, scope.clip):
-        found.candidates.append(_candidate(tags.get("name", ""), tags, (cx, cy), scope.index))
+        name = _name(tags, scope.options.name_tags)
+        found.candidates.append(_candidate(name, tags, (cx, cy), scope.index))
 
 
 def sort_element(entry: dict[str, Any], scope: Scope, found: Harvest) -> None:
     """Sort one payload element into the layer it belongs to."""
     tags = entry.get("tags") or {}
-    name = tags.get("name", "")
+    name = _name(tags, scope.options.name_tags)
     if entry.get("type") == "node":
         x, y = scope.proj(entry["lat"], entry["lon"])
         if _inside(x, y, scope.clip):

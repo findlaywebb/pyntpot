@@ -126,6 +126,11 @@ def on_road(box: Box, roads: list[list[Pt]]) -> float:
     return 1.0 if _crossings(box, roads) else 0.0
 
 
+def leader_crossings(start: Pt, end: Pt, boxes: list[Box]) -> float:
+    """How many placed boxes a leader segment passes through, as a count."""
+    return float(sum(seg_in_box(start, end, *box) for box in boxes))
+
+
 def overlap(box: Box, boxes: list[Box]) -> float:
     """Total area a box shares with what is already placed."""
     x0, y0, x1, y1 = box

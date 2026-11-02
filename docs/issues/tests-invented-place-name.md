@@ -1,5 +1,7 @@
 # A lettering test names a place that does not exist
 
+GitHub issue: [#64](https://github.com/findlaywebb/pyntpot/issues/64)
+
 Area: tests (`maps` lettering).
 
 `tests/unit/maps/lettering/test_picks.py` builds a candidate village called

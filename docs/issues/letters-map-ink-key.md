@@ -1,5 +1,7 @@
 # The letters layer keys an ink as "map"
 
+GitHub issue: [#41](https://github.com/findlaywebb/pyntpot/issues/41)
+
 `pyntpot.letters.nib` (three sites) and `pyntpot.letters.setting` (two sites) use the
 string `"map"` as an ink key. It names the default label ink: `_ink_colour` in
 `letters/nib.py` resolves `"map"` to `NibStyle.label_ink` ("The ink the lettering is

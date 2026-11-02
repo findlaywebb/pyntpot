@@ -25,7 +25,7 @@ from support.paths import FIXTURE_DIR, KEY
 from support.providers import OSM_CREDIT, SRTM_CREDIT, FixtureElevation, FixtureFeatures
 
 #: The base hash of the regenerated golden `plates.json`.
-GOLDEN_HASH = "340a7f6e260ee1e2-e5a5f1b4b3ca2177"
+GOLDEN_HASH = "340a7f6e260ee1e2-d9c56c0811177b0f"
 
 #: The first three points of the drawn route, taken once from the compose step.
 FIRST_STRANDS = (
@@ -173,6 +173,7 @@ class TestFetch:
 
 
 @pytest.mark.golden
+@pytest.mark.xdist_group("test_pipeline_fetch_paint")
 class TestPaint:
     """`paint` writes the three plates once, with the route on the card beside them."""
 

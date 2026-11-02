@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 
+from pyntpot.maps.candidates.landmark_classes import classify
 from pyntpot.maps.candidates.landmarks import (
     landmark_rank,
     landmark_reach,
@@ -124,11 +125,44 @@ class TestReachAndRank:
     def test_the_rank_is_tier_then_comfort_and_a_missing_distance_is_last(self) -> None:
         """A tier one thing outranks tier two, and no distance ranks beyond any."""
         hill = landmark_rank({"cls": "summit", "d": 600.0})
-        assert hill == (1, 0.1)
-        assert landmark_rank({"cls": "monument", "d": 0.0}) == (2, 0.0)
+        assert hill == (1, True, 0.1)
+        assert landmark_rank({"cls": "monument", "d": 0.0}) == (2, True, 0.0)
         assert (
-            landmark_rank({"cls": "monument"})[1] > landmark_rank({"cls": "monument", "d": 1e6})[1]
+            landmark_rank({"cls": "monument"})[2] > landmark_rank({"cls": "monument", "d": 1e6})[2]
         )
+
+    def test_a_recorded_thing_ranks_before_an_unrecorded_one_in_its_tier(self) -> None:
+        """At the same distance a church with a `wikidata` tag outranks one without."""
+        plain = {"cls": "worship", "d": 100.0, "tags": {}}
+        for key in ("wikidata", "wikipedia", "heritage", "listed_status"):
+            recorded = {"cls": "worship", "d": 100.0, "tags": {key: "x"}}
+            assert landmark_rank(recorded) < landmark_rank(plain)
+        chain = {"cls": "worship", "d": 100.0, "tags": {"brand:wikidata": "Q1"}}
+        assert landmark_rank(chain) == landmark_rank(plain)
+
+    def test_recorded_does_not_beat_a_higher_tier(self) -> None:
+        """The record only orders inside a tier: a plain tower outranks a recorded statue."""
+        tower = {"cls": "tower", "d": 100.0, "tags": {}}
+        statue = {"cls": "sculpture", "d": 10.0, "tags": {"wikidata": "Q1"}}
+        assert landmark_rank(tower) < landmark_rank(statue)
+
+    def test_an_unrecorded_museum_ranks_below_a_recorded_church(self) -> None:
+        """Classified from tags, a bare museum is a lower tier than a recorded church beside it."""
+        museum_tags = {"tourism": "museum"}
+        church_tags = {"building": "church", "wikidata": "Q1"}
+        museum = {"cls": classify(museum_tags), "d": 50.0, "tags": museum_tags}
+        church = {"cls": classify(church_tags), "d": 50.0, "tags": church_tags}
+        assert landmark_rank(church) < landmark_rank(museum)
+
+    def test_a_castle_is_ranked_with_the_chapels_not_below_them(self) -> None:
+        """A `historic=castle` shares the chapel's tier, so a recorded castle outranks a chapel."""
+        castle_tags = {"historic": "castle", "wikidata": "Q1"}
+        chapel_tags = {"building": "chapel"}
+        castle = {"cls": classify(castle_tags), "d": 100.0, "tags": castle_tags}
+        chapel = {"cls": classify(chapel_tags), "d": 100.0, "tags": chapel_tags}
+        assert landmark_rank(castle) < landmark_rank(chapel)
+        ruin = {"cls": classify({"historic": "ruins"}), "d": 0.0, "tags": {}}
+        assert landmark_rank(castle)[0] < landmark_rank(ruin)[0]
 
 
 class TestRankLandmarks:

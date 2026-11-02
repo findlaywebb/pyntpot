@@ -1,0 +1,23 @@
+name: Links
+
+# Weekly online check of README.md and docs/. Advisory: a dead external link opens no
+# red build, it shows in this workflow's run. The offline check gates CI (ci.yml, `docs`).
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: lycheeverse/lychee-action@v2.9.0
+        with:
+          args: --config lychee.toml README.md docs
+          fail: true

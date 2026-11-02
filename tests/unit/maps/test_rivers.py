@@ -4,6 +4,7 @@ from itertools import pairwise
 
 import pytest
 
+from pyntpot.maps.rings import orient
 from pyntpot.maps.rivers import channel, major_rivers, measured_width_m, painted_width_px
 
 
@@ -105,3 +106,28 @@ def test_the_longest_run_still_wins_where_nothing_is_mapped_as_an_area():
     major, widths = major_rivers(pieces, [], 0.65)
     assert major == {"Tay"}
     assert widths == {}
+
+
+def _island_lake() -> list[list[tuple[float, float]]]:
+    """A lake 1000 m by 400 m with a 100 m island at its middle, wound as the painter fills it."""
+    lake = [(-100.0, -200.0), (2100.0, -200.0), (2100.0, 200.0), (-100.0, 200.0)]
+    island = [(900.0, -50.0), (1000.0, -50.0), (1000.0, 50.0), (900.0, 50.0)]
+    return [orient(lake, counter_clockwise=True), orient(island, counter_clockwise=False)]
+
+
+def test_a_point_on_an_island_is_not_in_water():
+    """A sample on the island has no water width; one beside it does."""
+    rings = _island_lake()
+    pts, widths = channel([(0.0, 0.0), (2000.0, 0.0)], rings)
+    on_island = [w for (x, _y), w in zip(pts, widths, strict=True) if 910.0 < x < 990.0]
+    assert on_island
+    assert all(w is None for w in on_island)
+    assert any(w is not None for w in widths)
+
+
+def test_a_river_beside_an_island_is_measured_to_the_island():
+    """The island's shore is a bank: 100 m to the lake's edge and 50 m to the island, not 400 m."""
+    _pts, widths = channel([(900.0, 100.0), (1000.0, 100.0)], _island_lake())
+    got = [w for w in widths if w is not None]
+    assert got
+    assert all(w == pytest.approx(150.0, abs=2.0) for w in got)

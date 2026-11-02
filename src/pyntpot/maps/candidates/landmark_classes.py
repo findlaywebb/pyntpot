@@ -1,6 +1,7 @@
 """What a set of OSM tags means as a landmark: its class, its tier and its reach.
 
-Key names: `classify`, the landmark class one tag set belongs to; `height_m`,
+Key names: `classify`, the landmark class one tag set belongs to; `is_recorded`,
+whether the wider record knows a thing; `height_m`,
 how tall OSM says a thing is; `LANDMARK_CLASSES`, whether the heuristic keeps a
 class; `LANDMARK_REACH_M`, each class's tier and how far off the route it is
 still worth naming; `OFFERED_CLASSES`, the classes a named area is offered for.
@@ -23,6 +24,14 @@ from pyntpot.maps.providers.overpass import (
     MANMADE_LANDMARKS,
     TOURISM_LANDMARKS,
 )
+
+#: The tags that say the wider record knows a thing: a Wikidata item, a Wikipedia
+#: article, a heritage designation or a listing. `brand:wikidata` is not one, so
+#: a chain gains nothing from it.
+RECORD_KEYS = ("wikidata", "wikipedia", "heritage", "listed_status")
+
+#: The tags that make a thing a shop or a chain, and so never a landmark.
+SHOP_KEYS = ("shop", "brand", "brand:wikidata")
 
 #: `historic` values that are a monument someone put there on purpose. The rest
 #: of the tag's range is a site rather than a marker: a colliery, a station and
@@ -148,6 +157,7 @@ _RULES: tuple[tuple[str, tuple[tuple[str, tuple[str, ...] | None], ...]], ...] =
         "tower",
         (("man_made", ("tower", "water_tower", "chimney", "mast")), ("building", ("tower",))),
     ),
+    ("building", (("historic", ("castle",)), ("building", ("castle",)))),
     (
         "monument",
         (("historic", MONUMENT_HISTORIC), ("man_made", ("obelisk", "monument", "lighthouse"))),
@@ -186,6 +196,11 @@ def _passes(tags: Mapping[str, str], key: str, values: tuple[str, ...] | None) -
     return bool(value) if values is None else value in values
 
 
+def is_recorded(tags: Mapping[str, str]) -> bool:
+    """Whether the wider record (Wikidata, Wikipedia, heritage, listing) knows this thing."""
+    return any(tags.get(key) for key in RECORD_KEYS)
+
+
 def classify(tags: Mapping[str, str]) -> str:
     """The landmark class one OSM tag set belongs to.
 
@@ -193,9 +208,18 @@ def classify(tags: Mapping[str, str]) -> str:
     with the name of the building it is screwed to, so it would otherwise arrive
     as a monument. After that the first matching class wins, from `sculpture`
     down to `place`, and a tag set that matches none is `other`.
+
+    Then, before the rules: a shop, a brand or a chain is `other` whatever else
+    it is tagged (a gift shop can tag itself a museum), and a `tourism=museum`
+    that the record does not know is a `sight`, not an `attraction`. A castle
+    is a `building`, tried ahead of the monument rule its `historic` value is in.
     """
     if tags.get("historic") == "memorial" and tags.get("memorial") in PLAQUE_MEMORIAL:
         return "plaque"
+    if any(tags.get(key) for key in SHOP_KEYS):
+        return "other"
+    if tags.get("tourism") == "museum" and not is_recorded(tags):
+        return "sight"
     for cls, tests in _RULES:
         if any(_passes(tags, key, values) for key, values in tests):
             return cls

@@ -14,6 +14,7 @@ from pyntpot.maps.cache import (
     LANDCOVER_MARGIN_M,
     MARGIN_M,
     Cache,
+    FetchMargins,
 )
 from pyntpot.maps.credit import Credit
 from pyntpot.maps.providers.base import (
@@ -196,7 +197,8 @@ class TestKey:
         margin_m: float,
     ) -> None:
         """Changing the margin or either provider id gives a different key."""
-        changed = Cache(tmp_path).key(track, features(), elevation(), margin_m)
+        cache = Cache(tmp_path, FetchMargins(margin_m, max(margin_m, LANDCOVER_MARGIN_M)))
+        changed = cache.key(track, features(), elevation())
         assert changed != LYNMOUTH_KEY
 
 
