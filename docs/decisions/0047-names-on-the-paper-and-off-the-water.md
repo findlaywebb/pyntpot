@@ -41,6 +41,13 @@ the landmarks after it other seats.
   five-point pond grazing one serif of "Crib Goch" sent the name a long leader away and
   across Llyn Llydaw's. The swap pass prices a seat on the same terms, so a swap cannot put
   a name back on a lake. A name written on the water is not priced.
+- **The water is priced in arrays.** `Water` holds every lake edge and stroke segment as
+  arrays, and a grid of the display pixels some segment's reach box covers, both built once
+  a card; a box's sample points are tested together, and only those in a covered cell are
+  measured against the strokes. Measured point by point in Python, as first written, it
+  made `letter` 25 times slower on the benchmark (40.8 s against 1.6 s); the arrays give
+  the same shares to the bit on the pinned cases and the same seats on every card, at
+  2.05 s against main's 1.56 s on the same machine.
 - **A river's flat name may sit beside any point of its course** (`COURSE_KINDS`,
   `COURSE_ANCHORS` = 12 points on the paper, plus its anchor), paying `ANCHOR_PULL` a pixel
   of travel, the pull a curved name already paid; the constant moves from `placement_along`
