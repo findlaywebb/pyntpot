@@ -42,7 +42,7 @@ def test_a_name_is_never_set_along_a_line_that_turns_too_far():
     ]
     gentle = Label(name="Heddon", kind="river", px=200.0, py=100.0, size=14.0, baseline=straight)
     tight = Label(name="Heddon", kind="river", px=100.0, py=100.0, size=14.0, baseline=hairpin)
-    assert baseline(gentle, hand.font.measure("Heddon", 14.0)[0])
+    assert baseline(gentle, hand.font.measure("Heddon", 14.0)[0]) is not None
     assert baseline(tight, hand.font.measure("Heddon", 14.0)[0]) is None
 
 

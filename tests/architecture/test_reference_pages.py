@@ -50,11 +50,15 @@ def _cli_facts() -> list[str]:
     for parser in _parsers(build_parser()):
         for action in parser._actions:
             facts.extend(action.option_strings or [action.dest])
-            if action.help:
+            if action.help is not None and action.help != "":
                 facts.append(action.help)
             if isinstance(action, argparse._SubParsersAction):
                 facts.extend(action.choices)
-                facts.extend(choice.help for choice in action._choices_actions if choice.help)
+                facts.extend(
+                    choice.help
+                    for choice in action._choices_actions
+                    if choice.help is not None and choice.help != ""
+                )
     return facts
 
 

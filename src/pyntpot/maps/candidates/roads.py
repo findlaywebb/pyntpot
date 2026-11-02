@@ -135,7 +135,7 @@ def _road_run(
     i, last = a, a
     while i <= b:
         hit = _road_at(roads, grid, line[i])
-        if hit:
+        if hit is not None and hit != "":
             metres[hit] = metres.get(hit, 0.0) + (dist[i] - dist[last])
             if not order or order[-1] != hit:
                 order.append(hit)

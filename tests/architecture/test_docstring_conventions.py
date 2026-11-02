@@ -38,7 +38,7 @@ def _docstring_violations() -> list[str]:
             ):
                 continue
             doc = ast.get_docstring(node)
-            if doc and _SPEC_NUMBER.search(doc):
+            if doc is not None and _SPEC_NUMBER.search(doc):
                 lineno = getattr(node, "lineno", "?")
                 found.append(f"{path.relative_to(REPO_ROOT)}:{lineno}")
     return found

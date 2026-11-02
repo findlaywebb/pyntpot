@@ -326,7 +326,7 @@ def _on_line_cost(line: list[Pt], lines: list[list[Pt]] | None, cap_px: float) -
     of them, so a mark that crosses a river pays almost nothing and a mark
     drawn down the middle of one pays a share of its whole length.
     """
-    if not lines or len(line) < _FEWEST_FOR_A_SEGMENT:
+    if lines is None or len(lines) == 0 or len(line) < _FEWEST_FOR_A_SEGMENT:
         return 0.0
     run = length(line)
     if run <= 0.0:
@@ -349,7 +349,7 @@ def _feature_cost(line: list[Pt], avoid: list[tuple[float, float, float, float]]
     the route rule, which is a constraint, is enforced in `span_line`, and this
     is the preference that sits beside it.
     """
-    if not avoid or len(line) < _FEWEST_FOR_A_SEGMENT:
+    if avoid is None or len(avoid) == 0 or len(line) < _FEWEST_FOR_A_SEGMENT:
         return 0.0
     run = length(line)
     if run <= 0.0:

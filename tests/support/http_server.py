@@ -8,7 +8,7 @@ network beyond the loopback interface.
 """
 
 import threading
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -71,7 +71,7 @@ def _handler(
 
 
 @contextmanager
-def serve(responses: Sequence[tuple[int, str]]) -> Iterator[Server]:
+def serve(responses: Sequence[tuple[int, str]]) -> Generator[Server]:
     """Run a scripted server for the duration of the block, then shut it down and join it.
 
     Args:

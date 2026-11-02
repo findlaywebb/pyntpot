@@ -45,7 +45,7 @@ def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list
             break
         if isinstance(entry, str):
             found = by_name.get(entry)
-            if not found:
+            if found is None:
                 continue
             out.append(
                 {
@@ -66,7 +66,7 @@ def journal_picks(picks: Annotations | None, basemap: Basemap, cap: int) -> list
         }
         if lat is None or lng is None:
             found = by_name.get(name)
-            if not found:
+            if found is None:
                 continue
             item["x"], item["y"] = found["x"], found["y"]
         else:

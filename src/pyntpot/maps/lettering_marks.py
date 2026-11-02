@@ -199,7 +199,7 @@ def _setting(lb: Label, base: list[Pt] | None, track: float) -> Setting:
         slant = SPAN_EFFORT_SLANT
     ink = _ink(lb)
     wash = not lb.in_water
-    if base:
+    if base is not None:
         walk = tuple(offset_line(base, lift_baseline(lb, lb.lift)))
         return Setting(lb.name, lb.size, path=walk, slant=slant, tracking=track, ink=ink, wash=wash)
     return Setting(

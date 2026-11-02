@@ -281,7 +281,7 @@ def separated(
         One layer, or the light one and then the heavy one over it.
     """
     hex2 = style.separation_pigments.get(key) if style.pigment_separation else None
-    if not hex2:
+    if hex2 is None or hex2 == "":
         return [(dens, pig, transparency)]
     share = float(np.clip(style.separation_share, 0.0, 0.9))
     heavy = dens * sheet.pits(style.separation_gamma)

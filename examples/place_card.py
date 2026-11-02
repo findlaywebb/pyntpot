@@ -104,7 +104,9 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
     Returns:
         The path of the saved card, `out_dir / "map.png"`.
     """
-    base = Style.from_toml(REPO_ROOT / theme) if theme else Style.default()
+    base = (
+        Style.from_toml(REPO_ROOT / theme) if theme is not None and theme != "" else Style.default()
+    )
     style = base.model_copy(update={"card": replace(base.card, display_px=size)})
     route = Track.from_gpx(track)
     defaults = FetchMargins()
