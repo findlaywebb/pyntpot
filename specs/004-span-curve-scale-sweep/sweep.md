@@ -105,8 +105,12 @@ apart.
 
 Recorded, not acted on: wherever a scale has decisive stretches, the outside is the
 better mark on fewer than half of them at the 16- and 24-cap lengths (0 to 33%), and on
-20 to 100%, mostly near half, at 10 caps. With counts this small that is no evidence for any scale. It does
-raise the question of whether the bend's vote helps at all, which is the
+20 to 100%, mostly near half, at 10 caps. With counts this small that is no evidence for
+any scale. It does raise the question of whether the bend's vote helps at all, which is the
 `SPAN_CURVE_SIDE` and `SPAN_CURVE_WEIGHT` follow-up, not this spec. The pool is 31
 decisive stretches before the vote, 77% of them Skye's; plan review round 3's probe
 counted 32.
+
+In the sweep tables `voted` is more than the sum of the case columns, because the
+`no-outside` case (both sides empty, so `_convex_side` returns 0) has no column: at 1.5,
+35 voted against 5 + 3 + 17 + 4 = 29.

@@ -69,3 +69,21 @@ Reviewer probes: /tmp/claude-0/-home-user-pyntpot/816196dd-1fce-5506-ae3e-fb5037
 All three applied before any scoring: the case is renamed `ambiguous-feet` and also
 catches a kept share above 1.25 (the 1.25 literal reused); T2 gains that case; T3 takes
 the measured strand literals; the spec gives the pool of 32.
+
+## Diff review: ready
+
+Rule before results confirmed, scoring correct, comment matches `sweep.md`. Nits:
+
+1. `span_sides.py`: re-wrap the `SPAN_CURVE_WEIGHT` comment to its neighbours' width.
+   Done.
+2. Wrap `sweep_span_scale.py` line 3 and `test_sweep_span_scale.py` line 1 under 100.
+   Done.
+3. `plan.md`: record the two deviations in `decide()` (the
+   `abs(best.scale - current) > MULTIPLE_TOL` guard; `multiple` only filled on a change).
+   Done.
+4. `sweep.md`: say why `voted` exceeds the sum of the columns (no column for
+   `no-outside`; at 1.5, 35 against 29). Done, in the reading, below the tool's output.
+5. A `no-outside` column in `_table`. Skipped: it would need `sweep.md` regenerated.
+6. `tasks.md`: trim the hedges on ticked lines; wrap the overlong line in `sweep.md`'s
+   reading. Done.
+7. Move `assert 0.64 * 1.25 == 0.8` into its own test with a one-line docstring. Done.

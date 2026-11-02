@@ -1,7 +1,7 @@
 """Sweep the scale a span's bend is read at, over sliding stretches of the fixture tracks.
 
-Run as `PYTHONPATH=tests uv run python tests/fixtures/sweep_span_scale.py --out PATH`. For each of the
-Ambleside, Skye and Y Fenni fixtures it projects the committed track as the golden place
+Run as `PYTHONPATH=tests uv run python tests/fixtures/sweep_span_scale.py --out PATH`.
+For each of the Ambleside, Skye and Y Fenni fixtures it projects the committed track as the golden place
 cards do (from a copy of the fixture, with a request budget of 0), cuts it into sliding
 stretches by arc length, and judges each stretch once: which side is the outside of its
 bend, and whether one side's mark keeps more than a quarter more of itself once cleared of

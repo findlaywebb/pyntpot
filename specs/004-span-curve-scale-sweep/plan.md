@@ -76,7 +76,9 @@ Imports: the standard library; `pyntpot.maps` (`Cache`, `FetchMargins`, `OpenTop
   `decide(rows, length_caps, step_caps, current=1.5, n_min=30) -> Decision`: the spec's
   decision rule. Ties on `round(percent_right, 1)`. `n_eff = n * step_caps / length_caps`.
   `multiple` is `m` when `abs(scale / SPAN_OFFSET_CAPS - m) < MULTIPLE_TOL` for `m` a
-  multiple of 0.5, else `None`.
+  multiple of 0.5, else `None`. As built, two deviations: `changed` also needs
+  `abs(best.scale - current) > MULTIPLE_TOL` (the best being 1.5 itself is no change), and
+  `multiple` is filled only when the value changes.
 - `FIXTURES`: `(directory, theme, FetchMargins)` for the three boxes, from
   `tests/golden/test_places.py`: Skye `FetchMargins(18000.0, 18000.0)`, Ambleside and
   Y Fenni `FetchMargins(MARGIN_M, LANDCOVER_MARGIN_M)`; themes

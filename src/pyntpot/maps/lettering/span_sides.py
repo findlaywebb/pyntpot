@@ -86,12 +86,12 @@ SPAN_CURVE_MIN_COHERENCE = 0.62
 #:
 #: Picked by measuring the margins, not by taste. Over 187 stretches from the
 #: four cached tracks, the margin the free-paper rule wins by has a median of
-#: 0.042 and a ninetieth percentile of 0.122. At 0.08 a fully committed bend overrules about four
-#: margins in five and loses to the darkest fifth, which is the side that is
-#: off the paper, under a wash or already carrying names; a half-strength bend,
-#: which is a stretch turning about 50 degrees, overrules only about half.
-#: That is the shape wanted: the outside of the curve **where there is one**,
-#: and not otherwise.
+#: 0.042 and a ninetieth percentile of 0.122. At 0.08 a fully committed bend
+#: overrules about four margins in five and loses to the darkest fifth, which
+#: is the side that is off the paper, under a wash or already carrying names; a
+#: half-strength bend, which is a stretch turning about 50 degrees, overrules
+#: only about half. That is the shape wanted: the outside of the curve **where
+#: there is one**, and not otherwise.
 SPAN_CURVE_WEIGHT = 0.08
 
 #: At what scale the bend is read, as a multiple of the cap height.

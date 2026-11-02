@@ -1,4 +1,4 @@
-"""Tests for `span_sweep_score` and `sweep_span_scale`: the sliding stretches, the kept share and the decision rule."""
+"""Tests for `span_sweep_score` and `sweep_span_scale`: stretches, kept share and the decision."""
 
 import math
 
@@ -200,8 +200,11 @@ class TestDecisive:
     )
     def test_decisive_only_past_a_quarter_better(self, a, b, side):
         """A side is better only when it keeps more than 1.25 times the other."""
-        assert 0.64 * 1.25 == 0.8
         assert decisive(a, b) == side
+
+    def test_the_exact_ratio_case_is_exact_in_floating_point(self):
+        """0.64 times 1.25 is exactly 0.8, so the exactly-the-ratio case sits on the line."""
+        assert 0.64 * 1.25 == 0.8
 
 
 class TestSweep:
