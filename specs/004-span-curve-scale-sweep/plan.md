@@ -30,8 +30,12 @@ Order (the commit history must show the rule first):
 
 ## The tool: `tests/fixtures/sweep_span_scale.py`
 
-Pure functions first, CLI last; at most 400 lines (split along generator/scorer vs CLI if
-it grows past it, never trimmed).
+Pure functions first, CLI last; at most 400 lines a file. As written it came to 423, so it
+is split along the line this plan named: the generator, scorer, `sweep` and `decide` (and
+their constants) in `tests/fixtures/span_sweep_score.py`, and `FIXTURES`, `fixture_route`,
+the markdown report and `main` in `tests/fixtures/sweep_span_scale.py`, which imports the
+first as `fixtures.span_sweep_score` and so is run with `PYTHONPATH=tests` (as
+`make_golden.py` is).
 
 Imports: the standard library; `pyntpot.maps` (`Cache`, `FetchMargins`, `OpenTopoData`,
 `OverpassFeatures`, `Style`, `Track`, `fetch`); `pyntpot.maps.cache` (`MARGIN_M`,
@@ -95,7 +99,8 @@ shares are written.
   (new, the tool's output, committed as written, including one line on how much of the
   decisive pool is Skye's); `review.md` (new, the plan-review rounds,
   as `specs/003-*/review.md` does).
-- `tests/fixtures/sweep_span_scale.py` (new): the tool.
+- `tests/fixtures/sweep_span_scale.py` and `tests/fixtures/span_sweep_score.py` (new): the
+  tool, split as above.
 - `tests/fixtures/test_sweep_span_scale.py` (new): its tests.
 - `src/pyntpot/maps/lettering/span_sides.py`: `SPAN_CURVE_SCALE_CAPS` value (expected:
   kept) and its comment, edited exactly as the spec's "The comment, pre-written" says
@@ -196,7 +201,7 @@ only.
 ## Verification
 
 - The sweep is run once, after the spec commit, with
-  `uv run python tests/fixtures/sweep_span_scale.py --out specs/004-span-curve-scale-sweep/sweep.md`.
+  `PYTHONPATH=tests uv run python tests/fixtures/sweep_span_scale.py --out specs/004-span-curve-scale-sweep/sweep.md`.
   `sweep.md` is committed as the tool wrote it, then annotated below a rule line with
   the decision.
 - Gates: `uv run pytest -n auto --dist loadgroup`, `uv run ruff check .`,

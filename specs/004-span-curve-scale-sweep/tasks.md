@@ -13,12 +13,13 @@ Each line follows `plan.md`. Issue: #54.
 - [x] Plan passes the plan-reviewer gate: round 3 PASS (`review.md`); findings 1 to 3
       applied (`ambiguous-feet` with kept share > 1.25, T3 literals, pool of 32) before
       any scoring.
-- [ ] T1 to T4 tests in `tests/fixtures/test_sweep_span_scale.py`, red.
-- [ ] `tests/fixtures/sweep_span_scale.py`: `stretches`, `coverage`, `kept_share`,
+- [x] T1 to T4 tests in `tests/fixtures/test_sweep_span_scale.py`, red.
+- [x] `tests/fixtures/span_sweep_score.py` (split out of `sweep_span_scale.py` at 423
+      lines): `stretches`, `coverage`, `kept_share`,
       `decisive`, `judge`, `sweep`, `decide`; T1 to T4 green.
-- [ ] `fixture_route` and `main`; T5 (Y Fenni stretch count, golden-marked) pinned.
-- [ ] `wc -l tests/fixtures/sweep_span_scale.py tests/fixtures/test_sweep_span_scale.py`:
-      each at most 400 (the budget test scans `src` only).
+- [x] `fixture_route` and `main`; T5 (43) (Y Fenni stretch count, golden-marked) pinned.
+- [x] `wc -l` on `span_sweep_score.py` (266), `sweep_span_scale.py` (196) and
+      `test_sweep_span_scale.py` (274): each at most 400 (the budget test scans `src` only).
 - [ ] Sweep run once; `sweep.md` written by the tool and committed.
 - [ ] Decision rule applied; `SPAN_CURVE_SCALE_CAPS` set or kept (expected: kept); comment
       edited as the spec prescribes (lines kept, two sentences and the old sweep deleted,
