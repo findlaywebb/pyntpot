@@ -48,7 +48,7 @@ Changelog = "https://github.com/findlaywebb/pyntpot/blob/main/CHANGELOG.md"
 Issues = "https://github.com/findlaywebb/pyntpot/issues"
 
 [build-system]
-requires = ["uv_build>=0.8,<0.13"]
+requires = ["uv_build>=0.8,<0.14"]
 build-backend = "uv_build"
 
 [dependency-groups]
