@@ -6,16 +6,21 @@ Each line follows `plan.md`. Issue: #54.
       and decision rule, committed before any stretch is scored.
 - [x] Plan review round 1: BLOCK (`review.md`); spec, plan and tasks amended for findings
       1 to 8, finding 9 listed as out-of-scope follow-ups; committed before any scoring.
+- [x] Plan review round 2: BLOCK (`review.md`); kept share replaces raw coverage, T3
+      rebuilt on a real cut-back (inside and outside variants) plus an isolated tight arc
+      pinned `even`, comment edit prescribed line by line, Skye line in `sweep.md`;
+      committed before any scoring.
 - [ ] Plan passes the plan-reviewer gate (`review.md` records the rounds).
 - [ ] T1 to T4 tests in `tests/fixtures/test_sweep_span_scale.py`, red.
-- [ ] `tests/fixtures/sweep_span_scale.py`: `stretches`, `coverage`, `decisive`, `judge`,
-      `sweep`, `decide`; T1 to T4 green.
+- [ ] `tests/fixtures/sweep_span_scale.py`: `stretches`, `coverage`, `kept_share`,
+      `decisive`, `judge`, `sweep`, `decide`; T1 to T4 green.
 - [ ] `fixture_route` and `main`; T5 (Y Fenni stretch count, golden-marked) pinned.
 - [ ] `wc -l tests/fixtures/sweep_span_scale.py tests/fixtures/test_sweep_span_scale.py`:
       each at most 400 (the budget test scans `src` only).
 - [ ] Sweep run once; `sweep.md` written by the tool and committed.
 - [ ] Decision rule applied; `SPAN_CURVE_SCALE_CAPS` set or kept (expected: kept); comment
-      in the spec's pre-written form; the "same 187 stretches" wording in
+      edited as the spec prescribes (lines kept, two sentences and the old sweep deleted,
+      the form added with `N_all`, `N`, `R`, `P` filled); the "same 187 stretches" wording in
       `SPAN_CURVE_WEIGHT` fixed.
 - [ ] T6 pinned behaviour test, or the reason none applies recorded here.
 - [ ] Span unit tests and `uv run pytest -m golden` reviewed; goldens unchanged (or

@@ -63,37 +63,53 @@ rung 0: offset `cap_px * SPAN_OFFSET_CAPS`, clearance `cap_px * SPAN_CLEAR_CAPS`
 `span_line` ends in `clear_of`, which returns a line clear of the route or an empty list.
 So a drawn mark is never "not clear": a mark is either drawn or empty. And when one side's
 mark is empty, `_convex_side` returns the drawn side as the outside, so scoring such a
-stretch would score the outside right by construction. Hence each stretch falls into
-exactly one **case**, checked in this order:
+stretch would score the outside right by construction.
+
+**Coverage** of a mark is how much of the stretch it spans. Drop a foot from the mark's
+first point and from its last point onto the stretch (segments, not vertices), and take
+each foot's arc-length position along the stretch. Coverage is `(s_last − s_first)`
+divided by the stretch's arc length: **signed**, not absolute, and not clamped.
+
+Coverage alone is biased by geometry, so it is not the quality either. `shape_curve`
+simplifies the stretch into chords, so the end of the offset line sits on the end chord's
+normal, tilted by half the chord angle. On the outside the end lands back inside the
+stretch and coverage falls below 1; on the inside it lands past the stretch end and
+reaches 1. On isolated arcs at cap 14, clear of everything, the outside covers 0.958
+against the inside's 1.0 at r = 60, 0.82 against 1.0 at r = 20, and 0.42 to 0.80 against
+1.0 at r ≤ 16 (plan review round 2). Raw mark length is biased the other way: an offset
+line is longer on the outside of a bend by about `2 · offset · turn`.
+
+**Kept share** is the quality measured. For each side, draw the mark twice with the
+shipped `span_line` at the rung-0 offset: as `place_spans` draws it (clearance
+`cap_px * SPAN_CLEAR_CAPS`), and with `clear_px=0.0`, where `clear_of` returns the line
+untouched (no segment gap is below 0). Then
+
+    kept = coverage(drawn) / coverage(unclipped)
+
+The geometry of the offset and the chords is in both and cancels. What is left is how
+much of its own mark the side keeps once `_longest_clear` has cut it back to its longest
+run clear of the route, which trims the ends. Folds cut out on the inside of a bend
+(`_drop_folds`, `_forward_only`) happen in both drawings and do not lower it. `kept` is
+not clamped; `clear_of` can push a line as well as cut it, so a value a little over 1 is
+recorded as measured.
+
+Each stretch falls into exactly one **case**, checked in this order:
 
 | case | when | scored? |
 |---|---|---|
 | `no-outside` | `o = 0` | no; counted |
-| `empty-mark` | either side's mark has fewer than two points: the vote can only go to the drawn side | no; counted |
-| `reversed-feet` | either side's coverage is negative (below) | no; counted |
-| `even` | coverages within the ratio below | no; counted |
-| `decisive` | one coverage more than 1.25 times the other | yes |
+| `empty-mark` | either side's drawn mark has fewer than two points: the vote can only go to the drawn side | no; counted |
+| `reversed-feet` | either side's unclipped coverage is ≤ 0, or its drawn coverage is < 0: the foot is ambiguous (a narrow bend puts the nearest segment on the far limb) | no; counted |
+| `even` | kept shares within the ratio below | no; counted |
+| `decisive` | one kept share more than 1.25 times the other | yes |
 
-**Coverage** is how much of the stretch a drawn mark spans. Drop a foot from the mark's
-first point and from its last point onto the stretch (segments, not vertices), and take
-each foot's arc-length position along the stretch. Coverage is `(s_last − s_first)`
-divided by the stretch's arc length: **signed**, not absolute. A negative value means the
-feet came back in the wrong order, which happens where a narrow bend puts the nearest
-segment on the far limb; the foot is then ambiguous, so the stretch is the
-`reversed-feet` case and is excluded. Coverage is lowered when `clear_of`'s
-`_longest_clear` cuts the mark back to its longest clear run, which trims the ends. Folds
-cut out on the inside of a bend (`_drop_folds`, `_forward_only`) keep the ends and do not
-lower it. Raw mark length is **not** the metric: an offset line is longer on the outside
-of a bend by geometry alone (about `2 · offset · turn`), so a length comparison would score
-the outside right by construction. The foot of each end cancels that bulge.
-
-**Decisive** is the coverage ratio and nothing else: with `hi` and `lo` the two sides'
-coverages, the stretch is decisive exactly when `hi > 1.25 * lo`. So `lo = 0` with
+**Decisive** is the kept-share ratio and nothing else: with `hi` and `lo` the two sides'
+kept shares, the stretch is decisive exactly when `hi > 1.25 * lo`. So `lo = 0` with
 `hi > 0` is decisive, and both 0 is not. 1.25 is a quarter better, the same "clearly
 better" ratio `spans.SPAN_SIDE_SWAP_MARGIN` uses to move a mark; it is a literal here so
 that tuning that constant later does not move this rule. The **better** mark is the one
-with the higher coverage. The **outside is right** when `o` is the better side. The ground
-truth is this measured quality, never judgement by eye.
+with the higher kept share. The **outside is right** when `o` is the better side. The
+ground truth is this measured quality, never judgement by eye.
 
 The free-paper side and its darkness margin are not part of the score. The scale only
 decides whether, and how strongly, the bend votes (`bend_strength > 0`). The question the
@@ -113,19 +129,23 @@ On the current code: offset 1.2 caps, the shipped `_convex_side`, `bend_strength
 | voted | stretches the bend votes on |
 | empty-mark | voted stretches excluded because a side drew no mark |
 | reversed-feet | voted stretches excluded for ambiguous feet |
+| even | voted stretches whose kept shares are within the ratio |
 | decisive | voted, decisive stretches: `n` |
 | right | of those, how many the outside is right on |
 | % right | `100 · right / n`, to one decimal; blank when `n = 0` |
 
 The table goes in `specs/004-span-curve-scale-sweep/sweep.md`, with the per-fixture count
-of stretches in each case and the secondary-length tables.
+of stretches in each case and the secondary-length tables, and one line saying how much
+of the pool is Skye's (the probe put 27 of 35 decisive stretches there).
 
 ## The decision rule
 
-The expected outcome, stated before the sweep: **1.5 is kept.** The probe in the plan
-review counted 176 stretches over the three fixtures and 37 coverage-decisive ones before
-the voting filter. At about 25 independent stretches the data cannot separate scales a
-tenth of a cap apart. #54 closes on that recorded result.
+The expected outcome, stated before the sweep: **1.5 is kept.** The probe in plan review
+round 2 counted 176 stretches over the three fixtures and 35 coverage-decisive ones before
+the voting filter (Ambleside 4, Skye 27, Y Fenni 4). With the kept-share metric that pool
+is smaller still (7 of the 35 stop being decisive once geometry is normalised). At about
+25 independent stretches the data cannot separate scales a tenth of a cap apart, and
+rule 1 below (`n` under 30) is the likely case. #54 closes on that recorded result.
 
 1. If `n` at 1.5 is 0 or below 30, 1.5 is kept, its `n` is recorded, and no comparison is
    made.
@@ -144,19 +164,32 @@ tenth of a cap apart. #54 closes on that recorded result.
 
 ### The comment, pre-written
 
-When 1.5 is kept (the expected case), `SPAN_CURVE_SCALE_CAPS`'s comment keeps its
-argument for reading near the offset and replaces the old sweep with this form, the
-blanks filled from `sweep.md`:
+`SPAN_CURVE_SCALE_CAPS`'s comment in `span_sides.py` is edited as follows (line numbers
+as on `main` at the spec commit):
 
-> Measured on the Ambleside, Skye and Y Fenni fixture tracks, in stretches 16 cap heights
-> long taken every 2, with the mark drawn at `SPAN_OFFSET_CAPS`: of the stretches where
-> both sides draw a mark and one covers more than a quarter more of its stretch than the
-> other, the outside is the better mark on `R` of `N` (`P`%) read at 1.5. Scales from
-> 0.6 to 2.5 could not be told apart on that data, so 1.5 stands.
+- **Kept:** line 97 up to "cap height" ("At what scale the bend is read, as a multiple of
+  the cap height."), and lines 101 to 105 through "a bend that squeezes it" (the
+  resampling argument and "The right spacing is near the offset the bracket will be drawn
+  at").
+- **Deleted:** "The single most important number here, and the one the
+  outside-of-the-bend rule lives or dies on." and "Read coarser, the measure answers a
+  different question and stops predicting anything.", which the result would contradict;
+  and everything from "Over 187 stretches" to "the argument".
+- **Added**, after the kept lines, this form, the blanks filled from `sweep.md`:
 
-When `N` is below 30, the last sentence becomes "`N` stretches are too few to compare
-scales, so 1.5 stands." If the rule changes the value, the comment states the same
-measurement at the new scale and the interval that separated it from 1.5.
+> Measured on the Ambleside, Skye and Y Fenni fixture tracks, in `N_all` overlapping
+> stretches 16 cap heights long taken every 2 (about `N_all / 8` independent), with the
+> mark drawn at `SPAN_OFFSET_CAPS`: of the stretches where both sides draw a mark and one
+> keeps more than a quarter more of its own mark once cleared of the route, the outside is
+> the better mark on `R` of `N` (`P`%) read at 1.5. Scales from 0.6 to 2.5 could not be
+> told apart on that data, so 1.5 stands.
+
+`N_all` is the number of stretches; `N` is `n` at 1.5. When `N` is below 30 (and above 0),
+the last sentence becomes "`N` stretches are too few to compare scales, so 1.5 stands."
+When `N` is 0, the clause from "of the stretches" becomes "no stretch read at 1.5 had both
+sides draw a mark with one keeping more than a quarter more of it than the other, so the
+data cannot compare scales and 1.5 stands." If the rule changes the value, the comment
+states the same measurement at the new scale and the interval that separated it from 1.5.
 
 ## Acceptance criteria
 

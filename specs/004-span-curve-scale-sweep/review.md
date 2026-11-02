@@ -19,3 +19,39 @@ The user chose option (a) of finding 2: fix the plan, run the small sweep, expec
 1.5, and close #54 on that outcome. Findings 1 to 8 are addressed in `spec.md`, `plan.md`
 and `tasks.md`. Finding 9 is listed as out-of-scope follow-ups in `spec.md`; the
 coordinator files the notes and issues.
+
+## Round 2: BLOCK
+
+1. [BLOCKING] Coverage favours the inside by construction; the spec's "The foot of each end cancels that bulge" is false. shape_curve simplifies the stretch into chords, so the offset line's end sits on the end chord's normal, not the route's normal, tilted by half the chord angle. Outside: the end lands back inside the stretch, coverage < 1. Inside: lands past the stretch end and clamps to exactly 1.0. Isolated arcs (cap 14), clear of everything: outside 0.958 vs inside 1.0 at r=60; 0.82 vs 1.0 at r=20; 0.42–0.80 vs 1.0 at r≤16 (decisive with inside "better"). Fixtures with span_line(..., clear_px=0.0): 8 stretches decisive on geometry alone; of 35 coverage-decisive, 7 stop being decisive once geometry is normalised. Mirror image of the length bias; would push down P%. Fix (amend spec before any scoring): per side, coverage = drawn-mark coverage ÷ coverage of the same side drawn with clear_px=0.0 (with 0.0, clear_of returns the line untouched since seg_gap < 0 is never true). This "kept share" isolates the _longest_clear cut-back. If unclipped coverage ≤ 0 → reversed-feet. Reword the comment's "covers more than a quarter more of its stretch" to "keeps more than a quarter more of its own mark once cleared of the route". Record the correction of round-1 finding 3 in review.md.
+2. [BLOCKING] T3's arc test fails as written. At r≈20 the arc is even (0.827 vs 1.0, ratio 1.21); at r≤16 decisive with the outside wrong. The fallback only handles an empty inside mark. Under fix 1 an isolated arc has no cut-back on either side, so it will be even. Fix: build the decisive case from a real cut-back: arc(90, r=100) plus a later strand of the same route passing within clearance of one side's mark near its end, so _longest_clear trims that side. Strand inside: decisive, outside right. Strand outside: decisive, outside wrong. Measure and pin the exact strand; drop the hand-built Verdict fallback. Add an isolated tight arc pinned as even under the normalised metric (regression test for 1).
+3. [SHOULD-FIX] The pre-written comment doesn't say which old sentences go. Two survivors would contradict the result: "The single most important number here, and the one the outside-of-the-bend rule lives or dies on." and "Read coarser, the measure answers a different question and stops predicting anything." Fix: keep span_sides.py lines 97–98 up to "cap height" and lines 101–105 through "a bend that squeezes it"; delete both sentences above and everything from "Over 187 stretches" to "the argument". Add "N overlapping stretches, about N/8 independent". Prescribe the N = 0 wording. The rest of the form is a capability fact with no spec/roadmap number: good.
+4. [CONSIDER] Decisive pool before voting is 35 under the round-2 case order: Ambleside 4, Skye 27, Y Fenni 4. Rule 1's "below 30" case is likely. Add one line in sweep.md that the result is mostly Skye.
+Checks out: case order sound (both empty → _convex_side 0 → no-outside); clearance doesn't move the outside on all 35 decisive stretches; mouth-mark stretches negligible (1 decisive); float claims hold (0.64*1.25 == 0.8; 0.8 > 1.25*0.63; 15/10 == 1.5; 1.8/1.2 within 1e-9); decide() fully prescribed; rest of round 1 fine.
+Reviewer probe scripts (reusable for geometry, not scoring): /tmp/claude-0/-home-user-pyntpot/816196dd-1fce-5506-ae3e-fb503729b021/scratchpad/probe/ (probe2.py case counts, arc.py arc search, probe3.py clearance-off asymmetry).
+
+### Correction to round 1, finding 3
+
+Round 1 found coverage not biased towards the outside, because the feet of the two ends
+cancel the offset bulge. Round 2 shows that is false the other way: coverage is biased
+towards the inside, since `shape_curve`'s chords tilt the offset line's ends. Round 1's
+other points under finding 3 stand (folds keep the ends; `_longest_clear` is what trims
+them; signed coverage). The bias is corrected by the kept share in round 2's fix 1.
+
+### Response to round 2
+
+All four findings are taken as given:
+
+1. `spec.md`'s scoring rule now measures the **kept share**: each side's drawn coverage
+   divided by the coverage of the same side drawn with `clear_px=0.0`. Unclipped coverage
+   ≤ 0, or drawn coverage < 0, is `reversed-feet`. "The foot of each end cancels that
+   bulge" is gone, replaced by the measured inside bias. The comment form says "keeps
+   more than a quarter more of its own mark once cleared of the route".
+2. T3 is built from a real cut-back: `arc(90, r=100)` plus a later strand of the same
+   route near the inside mark's end (decisive, outside right) and near the outside mark's
+   end (decisive, outside wrong), measured and pinned. The hand-built `Verdict` fallback is
+   dropped. An isolated tight arc is pinned `even`.
+3. The comment edit names the kept lines (97 up to "cap height", 101 to 105 through "a
+   bend that squeezes it"), the two deleted sentences and the deleted tail. It adds
+   "`N_all` overlapping stretches ... (about `N_all / 8` independent)" and prescribes the
+   `N = 0` wording.
+4. `sweep.md` gets one line on the decisive pool's split by fixture (mostly Skye).
