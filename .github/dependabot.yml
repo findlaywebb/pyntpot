@@ -1,10 +1,16 @@
 version: 2
 updates:
+  # The prefixes make each pull request title a Conventional Commit (ADR 0042), which the
+  # PR title check requires; no scope, since "deps" is not one of the allowed scopes.
   - package-ecosystem: uv
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: build
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: ci
