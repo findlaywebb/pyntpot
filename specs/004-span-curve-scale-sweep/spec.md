@@ -195,25 +195,25 @@ states the same measurement at the new scale and the interval that separated it 
 
 ## Acceptance criteria
 
-- [ ] This spec, with the generator, scoring rule, sweep and decision rule, is committed
+- [x] This spec, with the generator, scoring rule, sweep and decision rule, is committed
       before any stretch is scored at any scale.
-- [ ] The sweep tool lives under `tests/fixtures/`. It imports only `pyntpot` and the
+- [x] The sweep tool lives under `tests/fixtures/`. It imports only `pyntpot` and the
       standard library, logs and never prints, reads no environment, and writes no
       coordinate. Its stretch generator and scorer have unit tests on small, deterministic,
       real objects (no mocks). The tool and its test are each at most 400 lines.
-- [ ] `sweep.md` holds the full table (all 20 scales), the per-fixture case counts, the
+- [x] `sweep.md` holds the full table (all 20 scales), the per-fixture case counts, the
       secondary lengths and the decision-rule arithmetic.
-- [ ] `SPAN_CURVE_SCALE_CAPS` is set by the decision rule (expected: kept at 1.5). Its
+- [x] `SPAN_CURVE_SCALE_CAPS` is set by the decision rule (expected: kept at 1.5). Its
       comment takes the pre-written form as a capability fact, with no spec number and no
       89%/79% figures.
-- [ ] If the value changes, a test pins a behaviour the new scale has and the old did not,
+- [x] If the value changes, a test pins a behaviour the new scale has and the old did not,
       when a meaningful one exists (not a restatement of the literal).
-- [ ] The span tests in `tests/unit/maps/lettering/` and every golden are reviewed. No
+- [x] The span tests in `tests/unit/maps/lettering/` and every golden are reviewed. No
       golden card carries a span today, so none is expected to move. Any that does is
       regenerated only by the documented process, with the diff explained.
-- [ ] `docs/issues/maps-lettering-span-sides-curve-scale-offset.md` is deleted, and no file
+- [x] `docs/issues/maps-lettering-span-sides-curve-scale-offset.md` is deleted, and no file
       outside `specs/001-port/` (history) refers to it. #54 closes with the PR.
-- [ ] Gates green: `uv run pytest -n auto --dist loadgroup`, `uv run ruff check .`,
+- [x] Gates green: `uv run pytest -n auto --dist loadgroup`, `uv run ruff check .`,
       `uv run ruff format --check .`, `uv run ty check`, `uv run lint-imports`,
       `prek run --all-files`.
 
