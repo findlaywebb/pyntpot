@@ -40,7 +40,7 @@ LNGS = [-3.8400 + 0.00040 * i for i in range(60)]
 BESIDE = [(LATS[i] + 0.00030, LNGS[i]) for i in range(5, 32)]
 
 #: The same shape, 660 m off: near enough to be on the map, far enough that
-#: the session never met it.
+#: the track never met it.
 AWAY = [(LATS[i] + 0.00600, LNGS[i]) for i in range(5, 32)]
 
 #: The fixture box's own pinned layer figures.
@@ -92,7 +92,7 @@ def _road_names(tmp_path: Path, roads: str) -> set[str]:
 
 
 def test_major_roads_are_drawn_wherever_they_are(tmp_path: Path) -> None:
-    """Trunk, primary and secondary are on the map whatever the session did."""
+    """Trunk, primary and secondary are on the map whatever the track did."""
     assert "A road far away" in _road_names(tmp_path, "key")
     assert "A road far away" in _road_names(tmp_path, "major")
 

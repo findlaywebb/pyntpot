@@ -29,7 +29,7 @@ def test_interaction_needs_a_run_not_a_moment():
 
 
 def test_a_crossing_counts_even_though_it_is_brief():
-    """A lane the track crossed is part of the session however short the contact."""
+    """A lane the track crossed is part of the track however short the contact."""
     _proj, pts = track_projection(LATS, LNGS)
     index = TrackIndex(pts)
     x, y = pts[20]

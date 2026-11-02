@@ -14,7 +14,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0004 | Provider protocols, usage limits and the fetch cache key |
 | 0005 | Style groups |
 | 0006 | Golden regeneration |
-| 0007 | Public API |
+| 0007 | Public API (its "re-exported from `_port` until the split" sentence is history: the engine names now come from `ink` and `letters`, see 0010) |
 | 0008 | Hand writes settings |
 | 0009 | Candidates |
 | 0010 | Layers contract and the end of the port package |
