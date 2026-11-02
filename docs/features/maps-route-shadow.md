@@ -9,7 +9,7 @@ offsets a darker copy of it.
 **What the feature would add.** A shadow: a darkened, blurred copy of the route's mask,
 offset by a distance, drawn under the route so the line seems to sit above the paper.
 
-**History.** Until ADR 0045 the theme's route ink carried `shadow_px` and `shadow_blur_px` in
+**History.** Until ADR 0046 the theme's route ink carried `shadow_px` and `shadow_blur_px` in
 a free `effect` table that nothing read. Every theme set both to 0, so no theme has asked
 for a shadow yet.
 

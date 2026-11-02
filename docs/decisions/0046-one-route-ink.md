@@ -1,4 +1,4 @@
-# 0045 — One route ink (amends 0005, 0026, 0027 and 0037)
+# 0046 — One route ink (amends 0005, 0026, 0027 and 0037)
 
 Status: accepted
 

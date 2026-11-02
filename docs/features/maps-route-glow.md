@@ -9,7 +9,7 @@ so on a dark or busy wash the line has no halo to lift it.
 **What the feature would add.** A glow: a soft, blurred band round the route, lighter than
 the ground, at a given width and opacity, drawn under the route.
 
-**History.** Until ADR 0045 the theme's route ink carried `glow_px` and `glow_opacity` in a
+**History.** Until ADR 0046 the theme's route ink carried `glow_px` and `glow_opacity` in a
 free `effect` table that nothing read. The default, `sepia` and `winter` themes set
 `glow_px = 2.5` and `glow_opacity = 0.8` on the ink that was drawn; the others set 0. The
 P7 critique (`specs/001-port/research/p7/critique/maps.md`) read the default's route as

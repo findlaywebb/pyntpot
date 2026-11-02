@@ -3,7 +3,7 @@
 ## Approach
 
 Maps layer only (`src/pyntpot/maps/`); no boundary change, so the import-linter contracts
-are untouched. The theme format and a public attribute of `Style` change, so ADR 0045
+are untouched. The theme format and a public attribute of `Style` change, so ADR 0046
 records it.
 
 `RouteInk` becomes a flat frozen dataclass:
@@ -63,8 +63,8 @@ The full `digest()` moves (the route ink group's JSON changes); `base_digest` an
   the per-sport paragraph and the effect "no reader" paragraph; `route_inks` → `route_ink`
   in the digest table), `docs/how-to/write-a-theme.md`, `docs/how-to/change-the-route-ink.md`,
   `GLOSSARY.md` (route ink entry: `Style.route_ink` is a field),
-  `docs/features/maps-themes-as-overrides.md` (snippet key), `docs/decisions/0045-one-route-ink.md`
-  (new), `docs/decisions/README.md` (add row 0045, amends 0005, 0026, 0027 and 0037).
+  `docs/features/maps-themes-as-overrides.md` (snippet key), `docs/decisions/0046-one-route-ink.md`
+  (new), `docs/decisions/README.md` (add row 0046, amends 0005, 0026, 0027 and 0037).
 - Issues: delete `docs/issues/maps-route-ink-effect-unread.md` and
   `docs/issues/maps-style-route-inks-one-read.md`; add
   `docs/features/maps-route-casing.md`, `maps-route-glow.md`, `maps-route-shadow.md`, each
@@ -90,7 +90,7 @@ Before filing the three feature issues, search the open issues for casing, glow 
 
 ## Files to leave alone
 
-- `docs/decisions/0005`, `0026`, `0027`, `0037` — accepted ADRs are history; 0045 amends them.
+- `docs/decisions/0005`, `0026`, `0027`, `0037` — accepted ADRs are history; 0046 amends them.
 - `specs/001-port/**` — historical research and reviews mention `route_inks`; not living docs.
 - `CHANGELOG.md` — drafted from the squash subject and the PR's Changelog lines at release.
 - `src/pyntpot/letters/**` — `label_route_ink` is a different concept (lettering ink).
@@ -130,5 +130,5 @@ Single track (A): code + themes + tests, then docs + notes. No concurrency, no w
   unread keys accumulate. A future casing/glow/shadow joins as typed fields too.
 - **`route_ink` field replaces the `route_ink()` method**: the glossary's one name for the
   concept; a field and a method cannot share it. Breaking for callers of `route_ink()` and
-  `route_inks`, recorded in ADR 0045 and the PR title's `!`.
+  `route_inks`, recorded in ADR 0046 and the PR title's `!`.
 - PR title: `fix(maps)!: one route ink, holding only the keys the compose step reads`.

@@ -11,7 +11,7 @@ it from the ground.
 and width, drawn before the route itself so the route sits inside it. A cream casing reads
 as the paper showing through either side of the ink.
 
-**History.** Until ADR 0045 the theme's route ink carried `casing_colour` and `casing_px` in a
+**History.** Until ADR 0046 the theme's route ink carried `casing_colour` and `casing_px` in a
 free `effect` table that nothing read. The themes held, on the ink that was drawn:
 `casing_colour = "cream"` everywhere, and `casing_px = 0.25` in the default, `sepia` and
 `winter` themes, `1.2` in `bold`, `1.6` in `pen-and-ink`, `0` elsewhere. Those values were
