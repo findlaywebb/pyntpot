@@ -1,5 +1,7 @@
 # The style holds four named route inks and reads one
 
+GitHub issue: [#60](https://github.com/findlaywebb/pyntpot/issues/60)
+
 The theme's `route_inks` table and `pyntpot.maps.style_groups.RouteInks` hold four
 named route inks, each named for something a track records, while `Style.route_ink()`
 reads one of them and nothing reads the other three. `RouteInk`'s and `RouteInks`'

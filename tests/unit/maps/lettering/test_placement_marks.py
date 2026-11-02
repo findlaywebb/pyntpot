@@ -6,8 +6,8 @@ from pyntpot.maps.lettering.label import TIER_SPAN, Label
 from pyntpot.maps.lettering.placement_marks import (
     SPAN_INBOARD_COST,
     SPAN_MARK_THROUGH_COST,
-    _mark_gap,
-    _mark_through,
+    mark_gap,
+    mark_through,
 )
 
 
@@ -31,10 +31,10 @@ def test_a_span_name_is_charged_for_every_corner_of_its_block():
     )
     beside = (108.0, 62.0, 194.0, 93.0)  # a two-line block over the middle
     off_end = (188.0, 72.0, 349.0, 88.0)  # one line, off the far end
-    assert _mark_gap(off_end, span, 7.0) > _mark_gap(beside, span, 7.0)
+    assert mark_gap(off_end, span, 7.0) > mark_gap(beside, span, 7.0)
     # And the rung the old measure would have reported is the same for both,
     # which is exactly why it could not tell them apart.
-    assert _mark_gap(off_end, Label(name="x"), 7.0) == 7.0
+    assert mark_gap(off_end, Label(name="x"), 7.0) == 7.0
 
 
 def test_a_span_name_sits_outboard_of_its_bracket_and_never_across_it():
@@ -58,9 +58,9 @@ def test_a_span_name_sits_outboard_of_its_bracket_and_never_across_it():
     outboard = (110.0, 60.0, 190.0, 90.0)
     across = (110.0, 88.0, 190.0, 118.0)
     inboard = (110.0, 110.0, 190.0, 140.0)
-    assert _mark_through(outboard, span) == 0.0
-    assert _mark_through(across, span) >= SPAN_MARK_THROUGH_COST
-    assert _mark_through(inboard, span) == pytest.approx(SPAN_INBOARD_COST)
+    assert mark_through(outboard, span) == 0.0
+    assert mark_through(across, span) >= SPAN_MARK_THROUGH_COST
+    assert mark_through(inboard, span) == pytest.approx(SPAN_INBOARD_COST)
     # Nothing that is not a span pays either: a river has its own rules.
     river = Label(name="Lyn", kind="river")
-    assert _mark_through(across, river) == 0.0
+    assert mark_through(across, river) == 0.0

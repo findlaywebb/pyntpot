@@ -5,7 +5,8 @@ is handed and builds the track's `Basemap` from the cached payloads; `paint`,
 which paints a basemap's plates into a directory, or hands back the plates
 already there when their manifest carries the current hash; `compose`, which
 lays the painted plates, the route and the label plate into one raster card;
-`FetchError`, raised when the cached features are gone once the fetch has run.
+`FetchError` (from `maps.cache`), raised when a provider cannot answer or the cached features are gone
+once the fetch has run.
 The stage between `paint` and `compose` is `maps.lettering.pipeline.letter`.
 
 `fetch` takes the style, because the card, the ribbon and the watercourse widths
@@ -26,6 +27,7 @@ resolves no path against the working directory: the cache and the plates
 directory are always arguments.
 
 Invariants: `fetch` calls a provider only for a payload missing from the cache;
+a `ProviderError` from either provider reaches `fetch`'s caller as `FetchError`;
 `paint` writes nothing when the plates in its directory carry the hash of the
 basemap and the style's base groups, and every plate they name is on disk; the
 returned `Plates.route_px` and `Plates.strands` each have one point per point
@@ -42,22 +44,18 @@ from PIL import Image
 
 from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
-from pyntpot.maps.cache import Cache
-from pyntpot.maps.compose import _paste_labels, _plates, _route
+from pyntpot.maps.cache import Cache, FetchError
+from pyntpot.maps.compose import painted_map, paste_labels, route
 from pyntpot.maps.layers import BasemapInputs, build_basemap
 from pyntpot.maps.lettering.pipeline import Lettering
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.providers.base import Elevation, Features
-from pyntpot.maps.strands import STRAND_GAP_WIDTHS, separate_strands
+from pyntpot.maps.strands import separate_strands, strand_gap_px
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 
 log = logging.getLogger(__name__)
-
-
-class FetchError(RuntimeError):
-    """The cached features for a track were missing once the fetch had run."""
 
 
 def fetch(
@@ -72,7 +70,9 @@ def fetch(
 
     Args:
         track: The route to map.
-        cache: Where the provider payloads are cached.
+        cache: Where the provider payloads are cached; its margins say how far beyond
+            the track's extent they are fetched. The card clips every layer to its own
+            box, so ground fetched beyond the card is never painted.
         features: The feature and land cover provider.
         elevation: The elevation provider.
         style: The style; its painter fields fit the card, the ribbon and the
@@ -84,8 +84,10 @@ def fetch(
         The basemap, carrying the track's times and both providers' credits.
 
     Raises:
-        FetchError: When the features payload is missing after the fetch, as
-            when the cache directory was changed underneath it.
+        FetchError: When a provider cannot answer, a budget refusal included,
+            raised from the provider's error; or when the features payload is
+            missing after the fetch, as when the cache directory was changed
+            underneath it.
     """
     key = cache.ensure(track, features, elevation)
     inputs = BasemapInputs(key, track, cache, [dict(place) for place in places])
@@ -108,7 +110,8 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
     Args:
         basemap: The basemap to paint.
         style: The style: its painter fields paint, its base digest goes into
-            the hash, and its route ink sets the gap between strands.
+            the hash, and its route ink and route pen width set the gap between
+            strands.
         out_dir: Where the plates and their manifest are written; created when
             missing.
 
@@ -123,8 +126,7 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
         log.info("plates in %s are current, nothing repainted", out_dir)
     card = basemap.card
     route_px = tuple(card.xy(x, y) for x, y in basemap.track)
-    gap_px = style.route_ink().px * STRAND_GAP_WIDTHS
-    strands = tuple(separate_strands(list(route_px), gap_px))
+    strands = tuple(separate_strands(list(route_px), strand_gap_px(style)))
     return dataclasses.replace(plates, route_px=route_px, strands=strands)
 
 
@@ -156,15 +158,15 @@ def compose(
     Returns:
         The card, at the size of the paper plate.
     """
-    card = _plates(plates)
+    card = painted_map(plates)
     k = card.width / max(plates.card.display[0], 1)
-    _route(card, plates, list(plates.strands), style.route_ink(), k)
+    route(card, plates, list(plates.strands), style.route_ink(), k)
     if lettering.plate_path is None:
         log.info("no label plate for %s, the card has no lettering", plates.directory)
     else:
-        _paste_labels(card, lettering.plate_path)
+        paste_labels(card, lettering.plate_path)
     if attribution:
-        draw_attribution(card, attribution_text(basemap.credits), style)
+        draw_attribution(card, attribution_text(basemap.credits), style, k)
     return card
 
 

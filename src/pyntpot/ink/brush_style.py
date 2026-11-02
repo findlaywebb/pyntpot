@@ -31,7 +31,7 @@ class BrushStyle:
     #: Watercourse width in display pixels: coefficient and exponent on the box
     #: in kilometres, then a floor and a ceiling. The exponents are negative, so
     #: a line grows in metres as the box grows but shrinks on screen, which is
-    #: what keeps a river prominent on a ride and a brook modest on it.
+    #: what keeps a river prominent on a big box and a brook modest on it.
     river_curve: dict[str, tuple[float, float, float, float]] = field(
         default_factory=lambda: {
             "major": (14.2, -0.20, 4.0, 12.0),

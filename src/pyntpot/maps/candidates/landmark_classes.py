@@ -1,6 +1,7 @@
 """What a set of OSM tags means as a landmark: its class, its tier and its reach.
 
-Key names: `classify`, the landmark class one tag set belongs to; `height_m`,
+Key names: `classify`, the landmark class one tag set belongs to; `is_recorded`,
+whether the wider record knows a thing; `height_m`,
 how tall OSM says a thing is; `LANDMARK_CLASSES`, whether the heuristic keeps a
 class; `LANDMARK_REACH_M`, each class's tier and how far off the route it is
 still worth naming; `OFFERED_CLASSES`, the classes a named area is offered for.
@@ -24,9 +25,17 @@ from pyntpot.maps.providers.overpass import (
     TOURISM_LANDMARKS,
 )
 
+#: The tags that say the wider record knows a thing: a Wikidata item, a Wikipedia
+#: article, a heritage designation or a listing. `brand:wikidata` is not one, so
+#: a chain gains nothing from it.
+RECORD_KEYS = ("wikidata", "wikipedia", "heritage", "listed_status")
+
+#: The tags that make a thing a shop or a chain, and so never a landmark.
+SHOP_KEYS = ("shop", "brand", "brand:wikidata")
+
 #: `historic` values that are a monument someone put there on purpose. The rest
 #: of the tag's range is a site rather than a marker: a colliery, a station and
-#: an earthwork are all history, but none of them is a thing to run past and see.
+#: an earthwork are all history, but none of them is a thing to pass and see.
 MONUMENT_HISTORIC = (
     "monument",
     "memorial",
@@ -73,7 +82,7 @@ LANDMARK_CLASSES: dict[str, bool] = {
 #: eight metres away is not notable at all. One radius for everything made the
 #: first half impossible and the second half inevitable.
 #:
-#: The tier is what a runner would pick out first, not what OSM thinks is
+#: The tier is what someone on the track would pick out first, not what OSM thinks is
 #: important: a hill, a tower, a spire, a named building and a bridge are the
 #: things you navigate by, a monument or a statue is something you pass, and a
 #: ruin or a plaque is something you would have to stop and read.
@@ -124,7 +133,7 @@ LANDMARK_RADIUS_M = 300.0
 #: dome at about 6.5 km, and the card's own box
 #: cuts anything the reader could not see on the map anyway.
 VISIBLE_PER_M = 60.0
-#: Past this, height stops buying reach. Nothing on a session's card is further
+#: Past this, height stops buying reach. Nothing on a track's card is further
 #: off than this and still the thing a person would name.
 REACH_CAP_M = 8000.0
 
@@ -148,6 +157,7 @@ _RULES: tuple[tuple[str, tuple[tuple[str, tuple[str, ...] | None], ...]], ...] =
         "tower",
         (("man_made", ("tower", "water_tower", "chimney", "mast")), ("building", ("tower",))),
     ),
+    ("building", (("historic", ("castle",)), ("building", ("castle",)))),
     (
         "monument",
         (("historic", MONUMENT_HISTORIC), ("man_made", ("obelisk", "monument", "lighthouse"))),
@@ -186,6 +196,11 @@ def _passes(tags: Mapping[str, str], key: str, values: tuple[str, ...] | None) -
     return bool(value) if values is None else value in values
 
 
+def is_recorded(tags: Mapping[str, str]) -> bool:
+    """Whether the wider record (Wikidata, Wikipedia, heritage, listing) knows this thing."""
+    return any(tags.get(key) for key in RECORD_KEYS)
+
+
 def classify(tags: Mapping[str, str]) -> str:
     """The landmark class one OSM tag set belongs to.
 
@@ -193,9 +208,18 @@ def classify(tags: Mapping[str, str]) -> str:
     with the name of the building it is screwed to, so it would otherwise arrive
     as a monument. After that the first matching class wins, from `sculpture`
     down to `place`, and a tag set that matches none is `other`.
+
+    Then, before the rules: a shop, a brand or a chain is `other` whatever else
+    it is tagged (a gift shop can tag itself a museum), and a `tourism=museum`
+    that the record does not know is a `sight`, not an `attraction`. A castle
+    is a `building`, tried ahead of the monument rule its `historic` value is in.
     """
     if tags.get("historic") == "memorial" and tags.get("memorial") in PLAQUE_MEMORIAL:
         return "plaque"
+    if any(tags.get(key) for key in SHOP_KEYS):
+        return "other"
+    if tags.get("tourism") == "museum" and not is_recorded(tags):
+        return "sight"
     for cls, tests in _RULES:
         if any(_passes(tags, key, values) for key, values in tests):
             return cls

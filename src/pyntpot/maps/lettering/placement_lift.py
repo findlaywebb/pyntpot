@@ -1,8 +1,8 @@
 """How far a name is lifted off its line, how it tilts, and the boxes a curved name takes.
 
 Key names: `lift_px`, `lift_baseline` and `lift_middle`, the lift of a name off its
-line in pixels; `_offset_line`, a line moved sideways; `_curved_boxes`, the rectangles
-that stand for the ribbon a curved name covers; `_tilt` and `_tilt_max`, how far a
+line in pixels; `offset_line`, a line moved sideways; `curved_boxes`, the rectangles
+that stand for the ribbon a curved name covers; `line_tilt` and `tilt_max`, how far a
 line leans.
 
 It does not choose a window of a line or a position for a name, and it draws nothing.
@@ -16,7 +16,7 @@ import math
 
 from pyntpot.ink.polyline import Pt, cumulative_length
 from pyntpot.maps.lettering.label import Box, Label
-from pyntpot.maps.lettering.placement_window import _on_line
+from pyntpot.maps.lettering.placement_window import on_line
 
 #: The fewest points that make a segment.
 _FEWEST_FOR_A_SEGMENT = 2
@@ -50,7 +50,7 @@ MAX_LOCAL_TILT_DEG = 58.0
 TILT_EXEMPT_KINDS = ("river",)
 
 
-def _reading(window: list[Pt]) -> list[Pt]:
+def reading(window: list[Pt]) -> list[Pt]:
     """The window turned so the name reads the more legible way along it.
 
     A run whose text would go right to left is written along the same line the
@@ -163,7 +163,7 @@ def lift_middle(lb: Label, side: float) -> float:
     return lift_baseline(lb, side) + lb.size * (INK_ASCENT_CAPS - INK_DESCENT_CAPS) / 2
 
 
-def _offset_line(line: list[Pt], lift: float) -> list[Pt]:
+def offset_line(line: list[Pt], lift: float) -> list[Pt]:
     """A polyline pushed off itself by `lift`, on the normal at each point.
 
     Signed: positive is the upper side in display pixels, where y runs down. This
@@ -182,7 +182,7 @@ def _offset_line(line: list[Pt], lift: float) -> list[Pt]:
     return out
 
 
-def _curved_boxes(window: list[Pt], lb: Label, th: float, side: float | None = None) -> list[Box]:
+def curved_boxes(window: list[Pt], lb: Label, th: float, side: float | None = None) -> list[Box]:
     """One small box every few characters of a name set along a line.
 
     A curved name's real extent is a ribbon, and the placer works in rectangles,
@@ -197,21 +197,21 @@ def _curved_boxes(window: list[Pt], lb: Label, th: float, side: float | None = N
     Returns:
         The boxes, in order along the window.
     """
-    walk = _offset_line(window, lift_middle(lb, lb.lift if side is None else side))
+    walk = offset_line(window, lift_middle(lb, lb.lift if side is None else side))
     cum = cumulative_length(walk)
     total = cum[-1] or 1.0
     step = max(th * 0.9, 6.0)
     out: list[Box] = []
     at = 0.0
     while at < total:
-        (cx, cy), _theta = _on_line(walk, cum, min(at + step / 2, total))
+        (cx, cy), _theta = on_line(walk, cum, min(at + step / 2, total))
         half = step / 2 + 1.0
         out.append((cx - half, cy - th / 2, cx + half, cy + th / 2))
         at += step
     return out
 
 
-def _tilt(line: list[Pt]) -> float:
+def line_tilt(line: list[Pt]) -> float:
     """How far a run leaves the horizontal, in degrees, ignoring its direction.
 
     A name set down the map is read by tilting the head, which is a worse
@@ -223,7 +223,7 @@ def _tilt(line: list[Pt]) -> float:
     return min(ang, 180.0 - ang)
 
 
-def _tilt_max(line: list[Pt]) -> float:
+def tilt_max(line: list[Pt]) -> float:
     """The steepest single piece of a run, which is what one glyph sits on."""
     worst = 0.0
     for a, b in itertools.pairwise(line):

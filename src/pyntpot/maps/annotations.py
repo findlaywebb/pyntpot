@@ -1,7 +1,8 @@
 """What a caller asks a map to letter: landmarks, places and spans.
 
-Key types: `Annotations`, the caller's whole request; `Landmark`, one named
-thing to letter, at its own coordinates or looked up among the basemap's
+Key types: `Annotations`, the caller's whole request; `JournalNote`, one
+sentence of the walker's own, pinned to a point; `Landmark`, one named thing to
+letter, at its own coordinates or looked up among the basemap's
 candidates; `SpanRequest`, one stretch of the route to mark, stated by point
 index, by kilometre or by seconds from the start.
 
@@ -12,12 +13,19 @@ places it. `Annotations.roads` is accepted and not read: no road is lettered by
 a caller's name, the roads lettered are the ones the lettering picks itself.
 
 Invariants: every value here is immutable and rejects unknown fields; a span
-request states exactly one start and exactly one end.
+request states exactly one start and exactly one end; a map carries at most
+`MAX_NOTES` journal notes, each of at most `MAX_NOTE_CHARS` characters.
 """
 
-from typing import Self
+from typing import Annotated, Self
 
 import pydantic
+
+#: The most journal notes a map carries.
+MAX_NOTES = 6
+
+#: The longest a journal note's text may be: two lines of the existing wrap.
+MAX_NOTE_CHARS = 60
 
 
 class Landmark(pydantic.BaseModel, frozen=True, extra="forbid"):
@@ -37,6 +45,20 @@ class Landmark(pydantic.BaseModel, frozen=True, extra="forbid"):
     why: str = ""
     lat: float | None = None
     lng: float | None = None
+
+
+class JournalNote(pydantic.BaseModel, frozen=True, extra="forbid"):
+    """One sentence of the walker's own, pinned to a point on the map.
+
+    Attributes:
+        text: What the note says, at most `MAX_NOTE_CHARS` characters.
+        lat: The latitude of the point it is about, in degrees.
+        lng: The longitude of the point it is about, in degrees.
+    """
+
+    text: Annotated[str, pydantic.Field(max_length=MAX_NOTE_CHARS)]
+    lat: float
+    lng: float
 
 
 class SpanRequest(pydantic.BaseModel, frozen=True, extra="forbid"):
@@ -93,9 +115,13 @@ class Annotations(pydantic.BaseModel, frozen=True, extra="forbid"):
         roads: Accepted and not read: road names are never taken from a
             caller.
         spans: The stretches of the route to mark, best first.
+        notes: The journal notes to letter, at most `MAX_NOTES`. They are
+            seated before any other name and are never moved or dropped
+            after, and they do not count against the style's label cap.
     """
 
     landmarks: tuple[Landmark | str, ...] = ()
     places: tuple[str, ...] = ()
     roads: tuple[str, ...] = ()
     spans: tuple[SpanRequest, ...] = ()
+    notes: Annotated[tuple[JournalNote, ...], pydantic.Field(max_length=MAX_NOTES)] = ()

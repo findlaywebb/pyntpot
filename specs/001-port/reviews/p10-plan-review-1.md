@@ -4,7 +4,7 @@ Reviewed: `specs/001-port/plan.md`, section `### P10. Triage and address the
 port's issues` (lines 5998 to 7138), and the P10 list in `specs/001-port/tasks.md`
 (lines 163 to 187), branch `p10-triage` at `177a9f5`. I read them against
 `CLAUDE.md`, "P3 and P4: how to run a slice" (line 350), `spec.md`, the issue files,
-`p10-run-log.md`, the five dossiers, and the code at `177a9f5`. The P6 reviews set
+the P10 run log, the five dossiers, and the code at `177a9f5`. The P6 reviews set
 the register.
 
 Probes were run on 2026-10-07, read-only, with scratch scripts in the session

@@ -1,6 +1,6 @@
 """The relief and water layers one elevation grid can carry.
 
-Key names: `_relief_layers`, which reads a cached elevation grid and returns the
+Key names: `relief_layers`, which reads a cached elevation grid and returns the
 hillshade bands or raster, the contours, the hachures, the sea and its waves, in card
 metres; `_sea_path`, the sea as one wash with a lighter dry-brush edge pulled in from it.
 
@@ -155,7 +155,7 @@ def _hachure_strokes(
     )
 
 
-def _relief_layers(
+def relief_layers(
     path: Path,
     proj: Projection,
     clip: Clip,

@@ -37,3 +37,6 @@ mutants/
 # benchmarks
 .benchmarks/
 .codspeed/
+
+# The built docs site (mkdocs build)
+/site/

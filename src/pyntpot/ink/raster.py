@@ -12,7 +12,6 @@ Invariants: `fill_cov` returns `float32` in 0 to 1 at the canvas's own size; `de
 with no settings returns the rings it was given, unchanged.
 """
 
-import math
 from typing import Any
 
 import numpy as np
@@ -29,26 +28,29 @@ _POINT_DIMS = 2
 _MAX_RING_POINTS = 24000
 
 
-def _edge(acc: np.ndarray, x0: float, y0: float, x1: float, y1: float) -> None:
-    """Add one polygon edge's winding contribution to a scanline accumulator.
+def _crossings(xs: np.ndarray, ys: np.ndarray, hs: int, ws: int) -> tuple[np.ndarray, np.ndarray]:
+    """Every scanline crossing of one ring's edges, as flat accumulator cells and windings.
 
     The accumulator is `(hs, ws + 2)`: the rows, and the columns plus two of margin.
+    Each edge runs from a point to the next, the last back to the first, and is
+    taken upward, with its winding negated when it ran downward; a level edge
+    crosses no row. Per edge the arithmetic is the scalar form's, element for
+    element, so the crossings land on the same cells.
     """
-    hs, ws = acc.shape[0], acc.shape[1] - 2
-    if y0 == y1:
-        return
-    d = 1
-    if y1 < y0:
-        x0, y0, x1, y1 = x1, y1, x0, y0
-        d = -1
-    r0 = max(math.ceil(y0 - 0.5), 0)
-    r1 = min(math.ceil(y1 - 0.5), hs)
-    if r1 <= r0:
-        return
-    rr = np.arange(r0, r1)
-    xx = x0 + (rr + 0.5 - y0) * (x1 - x0) / (y1 - y0)
+    x1, y1 = np.roll(xs, -1), np.roll(ys, -1)
+    down = y1 < ys
+    lo_x, lo_y = np.where(down, x1, xs), np.where(down, y1, ys)
+    hi_x, hi_y = np.where(down, xs, x1), np.where(down, ys, y1)
+    # Clipped at both ends before the cast, so a ring far off the canvas cannot
+    # overflow it; an edge left with no rows is skipped either way.
+    r0 = np.clip(np.ceil(lo_y - 0.5), 0, hs).astype(np.intp)
+    r1 = np.clip(np.ceil(hi_y - 0.5), 0, hs).astype(np.intp)
+    rows = np.where((ys != y1) & (r1 > r0), r1 - r0, 0)
+    e = np.repeat(np.arange(len(rows)), rows)
+    rr = np.arange(len(e)) - (np.cumsum(rows) - rows)[e] + r0[e]
+    xx = lo_x[e] + (rr + 0.5 - lo_y[e]) * (hi_x - lo_x)[e] / (hi_y - lo_y)[e]
     cc = np.clip(np.ceil(xx - 0.5).astype(np.int32), 0, ws + 1)
-    np.add.at(acc, (rr, cc), d)
+    return rr * (ws + 2) + cc, np.where(down, -1, 1).astype(np.int16)[e]
 
 
 #: What one class's outlines are deformed by: the generator, the first round's
@@ -130,18 +132,29 @@ def fill_cov(rings: list[list[Pt]], canvas: Canvas, ss: int = 2) -> np.ndarray:
 
     Filled by the nonzero winding rule, so a ring wound against the one around
     it cuts a hole and two rings wound the same way fill as one.
+
+    Raises:
+        ValueError: When a ring has a coordinate that is not finite.
     """
     hs, ws = canvas.h * ss, canvas.w * ss
     acc = np.zeros((hs, ws + 2), np.int16)
+    acc_flat = acc.reshape(-1, copy=False)
     for ring in rings:
         if len(ring) < _MIN_RING:
             continue
         p = canvas.px(ring) * ss
-        xs, ys = p[:, 0], p[:, 1]
-        for a, b, c, d in zip(xs, ys, np.roll(xs, -1), np.roll(ys, -1), strict=True):
-            _edge(acc, a, b, c, d)
-    inside = np.cumsum(acc, axis=1, dtype=np.int32)[:, :ws] != 0
-    return inside.reshape(canvas.h, ss, canvas.w, ss).mean(axis=(1, 3), dtype=F32)
+        if not np.isfinite(p).all():
+            raise ValueError(f"a ring has a coordinate that is not finite: {ring[:3]}...")
+        # Integer windings, so the order they are added in cannot change the sum.
+        np.add.at(acc_flat, *_crossings(p[:, 0], p[:, 1], hs, ws))
+    inside = (np.cumsum(acc, axis=1, dtype=np.int32)[:, :ws] != 0).view(np.uint8)
+    # The supersamples counted in integers and divided once: what `mean` gives,
+    # bit for bit, since a count of at most `ss * ss` is exact in float32.
+    count = np.zeros((canvas.h, canvas.w), np.uint16)
+    for dy in range(ss):
+        for dx in range(ss):
+            count += inside[dy::ss, dx::ss]
+    return count.astype(F32) / F32(ss * ss)
 
 
 def stroke_mask(lines: list[list[Pt]], canvas: Canvas, width_px: float) -> np.ndarray:

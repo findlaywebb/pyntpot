@@ -8,7 +8,8 @@ is derived and nothing can go wrong with it; the letter reads as drawn round
 rather than written. The two are different enough to be two answers rather than
 one answer and its fallback.
 
-Where thinning merges two strokes into one mass, `_flanks` gives the arm back
+Where a junction has a stroke running straight on through it, `letters.junction`
+joins the two into one stroke. Where thinning merges two strokes into one mass, `_flanks` gives the arm back
 off the width of the ink, and `_dots` draws a blob thinning ate whole as a small
 ring. Paths come back in em units with y up. This module does not open fonts
 and does not choose a route; `letters.font` does.
@@ -16,19 +17,22 @@ and does not choose a route; `letters.font` does.
 
 from __future__ import annotations
 
+import itertools
 import math
 
 import numpy as np
 
 from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.polyline import Pt, normals
+from pyntpot.letters.junction import JUNCTION_ARMS, join_through, leaving
 from pyntpot.letters.skeleton import (
     RASTER_EM,
-    _chains,
-    _components,
-    _crossings,
-    _fill,
-    _prune,
+    THROUGH_DOT,
+    components,
+    crossings,
+    fill,
+    prune,
+    skeleton_chains,
     thin,
 )
 
@@ -40,10 +44,6 @@ OUTLINE = "outline"
 #: thinning artefact rather than a stroke, and is pruned.
 SPUR_EM = 0.075
 
-#: Two branches leaving a junction whose directions are at least this opposed
-#: are one stroke passing through it rather than two meeting in it.
-THROUGH_DOT = -0.72
-
 #: A flank is only drawn where the ink on that side of a through-stroke stands
 #: this much further out than the stroke's own half-width, in half-widths. Under
 #: it the two strokes are the same line and drawing both says nothing.
@@ -53,6 +53,16 @@ FLANK_MIN = 0.40
 #: runs the length of a stem rather than across a stroke cannot throw one out
 #: of the letter.
 FLANK_CAP = 2.2
+
+#: A flank is an arm folded into a stem, which is a short stretch at a junction.
+#: One running further than this many half-widths is the stem's own other side,
+#: the bowl of a `d` or a `p` laid along its stem, and drawing it is the same
+#: ink twice.
+FLANK_LONGEST = 3.0
+
+#: A flank shorter than this many half-widths is a blot at the junction and no arm:
+#: it is left out, and the stroke it would have joined is drawn once.
+FLANK_SHORTEST = 2.2
 
 #: A component of ink whose skeleton comes back empty is a dot. It is drawn as
 #: a small ring of this share of its own inscribed radius, because a nib run
@@ -65,9 +75,6 @@ MIN_RUN = 4
 
 #: A flank must stand apart from its stroke for at least this many points.
 MIN_APART = 3
-
-#: A junction of at least this many arms can have a stroke passing through it.
-JUNCTION_ARMS = 3
 
 #: A chain of fewer points than this is not a stroke.
 MIN_STROKE = 2
@@ -147,12 +154,17 @@ def _flank(pts: list[Pt], img: np.ndarray, half: float, side: float) -> list[Pt]
     # the bowl of every b, q and 6 on the first attempt.
     floor = half * FLANK_MIN * 0.5
     last = max((i for i, v in enumerate(lift) if v > floor), default=0)
-    if last < MIN_APART:
+    if last < MIN_APART or last > half * FLANK_LONGEST:
         return None
-    return [
+    # It starts on the through-stroke, at the junction, so the arm is joined to
+    # the stem it leaves and not a stub beside it.
+    arm = [pts[0]] + [
         (x + nx * side * lift[i], y + ny * side * lift[i])
         for i, ((x, y), (nx, ny)) in enumerate(zip(pts[: last + 1], norms[: last + 1], strict=True))
     ]
+    if sum(math.dist(a, b) for a, b in itertools.pairwise(arm)) < half * FLANK_SHORTEST:
+        return None
+    return arm
 
 
 def _arms(
@@ -192,7 +204,7 @@ def _flanks(
     for arms in _arms(kept).values():
         if len(arms) < JUNCTION_ARMS:
             continue
-        dirs = [_leaving(a) for a in arms]
+        dirs = [leaving(a) for a in arms]
         pair = max(
             ((i, j) for i in range(len(arms)) for j in range(i + 1, len(arms))),
             key=lambda ij: -(dirs[ij[0]][0] * dirs[ij[1]][0] + dirs[ij[0]][1] * dirs[ij[1]][1]),
@@ -219,13 +231,6 @@ def _from(node: tuple[int, int], run: list[Pt]) -> list[Pt]:
     return run[::-1]
 
 
-def _leaving(run: list[Pt]) -> Pt:
-    """The unit direction a run sets off in from its own first point."""
-    a, b = run[0], run[min(3, len(run) - 1)]
-    d = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
-    return ((b[0] - a[0]) / d, (b[1] - a[1]) / d)
-
-
 def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> list[list[Pt]]:
     """A ring for every blob of ink the thinning ate whole.
 
@@ -236,7 +241,7 @@ def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> li
     leaves no mark at all.
     """
     out: list[list[Pt]] = []
-    for blob in _components(img):
+    for blob in components(img):
         if any(p in drawn for p in blob):
             continue
         rows = [r for r, _c in blob]
@@ -253,7 +258,7 @@ def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> li
     return out
 
 
-def _centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
+def centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     """One glyph's skeleton, in em units with y up.
 
     The free ends are pushed back out along their own direction by the
@@ -263,7 +268,7 @@ def _centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     two strokes that made them, and a blob the thinning ate whole comes back as
     a dot.
     """
-    img, ox, oy = _fill(contours, upem)
+    img, ox, oy = fill(contours, upem)
     skel = thin(img)
     # Distance from an inked pixel to the nearest blank one, which at a
     # terminal is half the stroke's own width: exactly what thinning ate.
@@ -271,18 +276,16 @@ def _centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     k = upem / RASTER_EM
     half = _half_width(skel, reach) if skel.any() else 1.0
     on = {(int(r), int(c)) for r, c in zip(*np.nonzero(skel), strict=True)}
-    free = {p for p in on if _crossings(p, on) <= 1}
-    runs: list[list[Pt]] = []
+    free = {p for p in on if crossings(p, on) <= 1}
     drawn: set[tuple[int, int]] = set()
     kept: list[tuple[list[tuple[int, int]], list[Pt]]] = []
-    for chain in _prune(_chains(skel), SPUR_EM * RASTER_EM):
+    for chain in prune(skeleton_chains(skel), SPUR_EM * RASTER_EM):
         pts = [(c + 0.5, r + 0.5) for r, c in chain]
         if len(pts) < MIN_STROKE:
             continue
         drawn.update(chain)
-        run = _extend(pts, chain, reach, free)
-        runs.append(run)
-        kept.append((chain, run))
+        kept.append((chain, _extend(pts, chain, reach, free)))
+    runs = join_through(kept)
     runs.extend(_flanks(kept, img > 0, half))
     runs.extend(_dots(img, reach, drawn))
     return [[((x * k + ox) / upem, (y * k + oy) / upem) for x, y in run] for run in runs]

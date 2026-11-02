@@ -26,11 +26,11 @@ from pyntpot.maps.lettering.placement import MIN_CURVED_CHARS
 from pyntpot.maps.lettering.placement_window import (
     MAX_BOW_FRAC,
     MAX_TURN_DEG,
-    _bow,
-    _turning,
-    _window,
+    line_bow,
+    line_window,
+    turning,
 )
-from pyntpot.maps.lettering.span_line import _resample
+from pyntpot.maps.lettering.span_line import resample
 
 #: How much longer than the name a window is cut, so the last letter is not
 #: clipped at the window's end.
@@ -53,7 +53,7 @@ def baseline(lb: Label, width: float) -> list[Pt] | None:
     if lb.flat or not lb.baseline or len(lb.name) < MIN_CURVED_CHARS:
         return None
     want = width * _WINDOW_SLACK
-    line = _resample(lb.baseline, max(want / 24.0, 2.0))
+    line = resample(lb.baseline, max(want / 24.0, 2.0))
     if length(line) < want:
         return None
     at = _best_window(line, want, (lb.px, lb.py))
@@ -70,14 +70,14 @@ def _best_window(line: list[Pt], want: float, near: Pt) -> list[Pt] | None:
     at: list[Pt] | None = None
     step = max(len(line) // 40, 1)
     for i in range(0, len(line), step):
-        window = _window(line, i, want)
+        window = line_window(line, i, want)
         if window is None:
             break
-        turn = _turning(window)
+        turn = turning(window)
         if turn > MAX_TURN_DEG:
             continue
         chord = math.dist(window[0], window[-1]) or 1.0
-        if _bow(window) / chord > MAX_BOW_FRAC:
+        if line_bow(window) / chord > MAX_BOW_FRAC:
             continue
         cost = math.dist(window[len(window) // 2], near) + turn * 1.5
         if best is None or cost < best:

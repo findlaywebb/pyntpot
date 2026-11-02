@@ -4,20 +4,28 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 # Exact golden comparison is the local gate only: a CI runner's OS or BLAS build is not
 # guaranteed to match the machine the goldens were made on, bit for bit.
 jobs:
   golden:
+    # Kept to the OS alone, so the matrix's `workers` key does not rename the checks.
+    name: golden (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-15]
+        # A worker peaks near 3 GB on the biggest paints; macos-15 has 3 cores and 7 GB, so it
+        # runs two workers rather than one per core.
+        include:
+          - os: macos-15
+            workers: 2
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           version: "0.11.21"
@@ -26,4 +34,16 @@ jobs:
         run: uv sync --locked
 
       - name: Golden parity (tolerance)
-        run: uv run pytest -m golden --golden-tolerance
+        run: uv run pytest -m golden --golden-tolerance -n ${{ matrix.workers || 'auto' }} --dist loadgroup --basetemp=${{ runner.temp }}/pytest
+
+      # A failing fresh paint is only inspectable if its pictures outlive the runner.
+      - name: Keep the fresh paints
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: golden-paints-${{ matrix.os }}
+          # The painted images only, not the copied fixture caches.
+          path: |
+            ${{ runner.temp }}/pytest/**/*.png
+            ${{ runner.temp }}/pytest/**/*.webp
+          retention-days: 7

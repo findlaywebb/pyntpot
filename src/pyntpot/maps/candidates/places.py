@@ -1,12 +1,12 @@
 """Places: the settlements a route ran past, and the grounding of climbs in them.
 
 Key names: `rank_places`, every settlement the route came near, in the order it
-passed them; `ground_climbs`, which gives each climb the language a rider would
+passed them; `ground_climbs`, which gives each climb the language someone on the track would
 use for it; `place_view`, one settlement as the label step reads it.
 
 A settlement is a `city`, `town`, `village`, `hamlet` or `suburb` node with a
-name that the route came within `NEAR_ROUTE_M` of. This is the vocabulary a
-rider uses for a climb: out of one village, up to the next. A straight-line
+name that the route came within `NEAR_ROUTE_M` of. This is the vocabulary
+someone on the track uses for a climb: out of one village, up to the next. A straight-line
 nearest place is not that, and picking one is how a climb gets named after
 somewhere the route never went.
 
@@ -179,7 +179,7 @@ def ground_climbs(
     track: Track,
     line: Line,
 ) -> list[Candidate]:
-    """Give every climb the language a rider would use for it.
+    """Give every climb the language someone on the track would use for it.
 
     Four grounds, in the order they are worth having: where the route was before
     the climb and where it got to after it (`from`, `through`, `to`), the roads

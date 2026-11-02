@@ -12,6 +12,8 @@ matching accumulator; a brush off the reservoir sharing an accumulator with one 
 as full, and one off the directional break lays half its weight into the break channel.
 """
 
+import math
+
 import numpy as np
 
 from pyntpot.ink.brush import Brush
@@ -130,7 +132,7 @@ def deposit(
     """Deposit the weights bilinearly.
 
     Rounding to the nearest pixel instead would put steps and stair-edges in
-    the mark. A sample off the accumulator lands on its nearest edge pixel.
+    the mark. A corner that falls off the accumulator is dropped.
     """
     h, w = acc.shape
     px, py = pos
@@ -140,29 +142,43 @@ def deposit(
     ay = (py - fy0).astype(F32)
     ix0 = fx0.astype(np.int32)
     iy0 = fy0.astype(np.int32)
+    # One flat index into flat views, because `np.add.at` with a flat index is several
+    # times faster than with a row and column pair; it adds the same values in the same
+    # order either way. An accumulator that is not C-contiguous at the plate's shape (a
+    # caller's own view) has no flat view, so then the pair is used.
+    targets = [acc]
+    if aux is not None and wgt_r is not None:
+        targets.append(aux["res"])
+    if aux is not None and wgt_t is not None:
+        targets.append(aux["tooth"])
+    flat = all(t.flags.c_contiguous and t.shape == (h, w) for t in targets)
+    views = [t.reshape(-1) for t in targets] if flat else targets
+    weights = [wgt] + [g for g in (wgt_r, wgt_t) if g is not None and aux is not None]
     for dy in (0, 1):
         wy = ay if dy else (1.0 - ay)
         iy = np.clip(iy0 + dy, 0, h - 1)
+        row = iy.astype(np.intp) * w
         for dx in (0, 1):
             wx = ax if dx else (1.0 - ax)
             ix = np.clip(ix0 + dx, 0, w - 1)
-            at = (iy.ravel(), ix.ravel())
-            np.add.at(acc, at, (wgt * wx * wy).ravel())
-            if aux is not None and wgt_r is not None:
-                np.add.at(aux["res"], at, (wgt_r * wx * wy).ravel())
-            if aux is not None and wgt_t is not None:
-                np.add.at(aux["tooth"], at, (wgt_t * wx * wy).ravel())
+            # The clipped indices keep `np.add.at` in range; the mask, multiplied
+            # last so an on-grid corner deposits the same bits, drops the weight.
+            keep = (iy0 + dy >= 0) & (iy0 + dy < h) & (ix0 + dx >= 0) & (ix0 + dx < w)
+            at = (row + ix).ravel() if flat else (iy.ravel(), ix.ravel())
+            for view, g in zip(views, weights, strict=True):
+                np.add.at(view, at, (g * wx * wy * keep).ravel())
 
 
 def pool(acc: np.ndarray, b: Brush, x: float, y: float) -> None:
     """Leave a blot where the stroke starts.
 
     Tighter and denser than a swelling, so it reads as the first touch rather
-    than a bulge in the line.
+    than a bulge in the line. The Gaussian is cut at three radii, where it has faded to
+    1.1% at the side of the span, so the blot has no square edge.
     """
     h, w = acc.shape
     r = max(b.width * b.pool_radius_frac, 1.2)
-    span = int(r * 2)
+    span = math.ceil(r * 3)
     yy, xx = np.ogrid[-span : span + 1, -span : span + 1]
     blob = np.exp(-(xx * xx + yy * yy) / (2 * r * r)).astype(F32) * b.pool * b.pool_gain
     cy, cx = round(y), round(x)

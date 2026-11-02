@@ -43,7 +43,10 @@ def save_webp(img: Image.Image, path: Path, quality: int = 74, *, lossless: bool
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     if lossless:
-        img.save(path, format="WEBP", lossless=True, method=5)
+        # Lossless effort, not fidelity: an opaque plate decodes to the same pixels at
+        # every method and quality. Method 1 at quality 40 writes a map's paper and wash
+        # plates in under half the time method 5 took, and a little smaller (ADR 0043).
+        img.save(path, format="WEBP", lossless=True, method=1, quality=40)
     else:
         img.save(path, format="WEBP", quality=quality, method=5)
     return path.stat().st_size

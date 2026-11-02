@@ -133,7 +133,7 @@ class TestRankClimbs:
         assert detail["start_lat"] > 51.225 + 4e-4 * 10, "the pin is still down on the valley floor"
 
     def test_climbs_come_in_the_order_ridden_and_are_ranked_by_metres_gained(self) -> None:
-        """A short climb then a long one: ridden order is kept, rank one is the bigger gain."""
+        """A short climb then a long one: the track's order is kept, rank one is the bigger gain."""
         ele = (
             [100.0 + 4.0 * i for i in range(20)]
             + [180.0 - 4.0 * i for i in range(20)]

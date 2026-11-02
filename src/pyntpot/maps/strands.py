@@ -2,7 +2,7 @@
 
 Key names: `separate_strands`, the route in display pixels with each doubled-back
 stretch pushed apart; `STRAND_GAP_WIDTHS`, the gap as a multiple of the route's
-stroke width.
+stroke width; `strand_gap_px`, the gap `pipeline.paint` separates the shown route by.
 
 It does not draw the route or choose its weight. Invariants: a route with no
 stretch that comes back within the gap of itself is returned unchanged, and the
@@ -13,8 +13,12 @@ from __future__ import annotations
 
 import math
 from itertools import pairwise
+from typing import TYPE_CHECKING
 
 from pyntpot.ink.polyline import ease_along, tangent_at
+
+if TYPE_CHECKING:
+    from pyntpot.maps.style import Style
 
 #: How far apart the two strands of one route are drawn where the track came
 #: back along its own path, as a multiple of the route's own stroke width. A
@@ -36,6 +40,22 @@ STRAND_MIN_ARC = 10.0
 STRAND_EASE_WIDTHS = 3.0
 #: The fewest points a route needs before it can double back on itself.
 MIN_STRAND_POINTS = 4
+
+
+def strand_gap_px(style: Style) -> float:
+    """The gap, in display pixels, between the strands of the route the card shows.
+
+    When the style paints the route pen and its ride ink is the `"pen"` treatment,
+    the route shown is the pen plate, which the painter separated by the pen's own
+    width, so this is `route_pen_width_px * STRAND_GAP_WIDTHS`. Otherwise the route
+    is drawn in the ride ink's own width and this is `route_ink().px *
+    STRAND_GAP_WIDTHS`. Only `pipeline.paint` reads it: the pen plate itself reads
+    base-group fields only.
+    """
+    ink = style.route_ink()
+    if style.route.route_pen and ink.style == "pen":
+        return style.route.route_pen_width_px * STRAND_GAP_WIDTHS
+    return ink.px * STRAND_GAP_WIDTHS
 
 
 def separate_strands(

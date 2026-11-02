@@ -44,3 +44,16 @@ def test_relief_switched_off_lays_nothing(tmp_path):
     stack = PlateStack.blank(job.shape)
     paint_relief(job, stack)
     assert stack.trimmed == []
+
+
+def test_the_covers_relief_strength_reaches_the_laid_density(tmp_path):
+    """A cover relief strength of 2 lays a denser relief layer than the default."""
+    plain = tiny_job(tmp_path, tiny_style(), elevation=_slope())
+    strong = tiny_job(tmp_path, tiny_style(cover={"relief_strength": 2.0}), elevation=_slope())
+    stacks = (PlateStack.blank(plain.shape), PlateStack.blank(strong.shape))
+    paint_relief(plain, stacks[0])
+    paint_relief(strong, stacks[1])
+    plain_density, strong_density = stacks[0].trimmed[0][0], stacks[1].trimmed[0][0]
+    assert plain_density is not None
+    assert strong_density is not None
+    assert strong_density.mean() > 1.5 * plain_density.mean()

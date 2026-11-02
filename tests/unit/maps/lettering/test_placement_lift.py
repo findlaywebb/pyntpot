@@ -8,10 +8,10 @@ from pyntpot.maps.lettering.placement_lift import (
     INK_DESCENT_CAPS,
     LIFT_CAPS,
     LIFT_FEATURE_FRAC,
-    _reading,
     lift_baseline,
     lift_middle,
     lift_px,
+    reading,
 )
 
 from support.basemaps import label_basemap, river_label
@@ -20,10 +20,10 @@ from support.basemaps import label_basemap, river_label
 def test_a_name_on_a_line_that_runs_upwards_is_turned_to_read_downwards():
     """Turning a window round is not rejecting it, which is the whole rule."""
     up = [(100.0, float(y)) for y in range(300, 100, -5)]
-    assert _reading(up)[-1][1] > _reading(up)[0][1]
+    assert reading(up)[-1][1] > reading(up)[0][1]
     leftwards = [(float(x), 100.0) for x in range(300, 100, -5)]
-    assert _reading(leftwards)[-1][0] > _reading(leftwards)[0][0]
-    assert len(_reading(up)) == len(up), "a window was dropped, not turned"
+    assert reading(leftwards)[-1][0] > reading(leftwards)[0][0]
+    assert len(reading(up)) == len(up), "a window was dropped, not turned"
 
 
 def test_a_river_name_is_lifted_clear_of_the_water_it_names():

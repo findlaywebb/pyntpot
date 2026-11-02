@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   checks:
@@ -15,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           version: "0.11.21"
@@ -47,8 +48,10 @@ jobs:
       - name: Boundaries (import-linter)
         run: uv run lint-imports
 
+      # Tolerance mode: the smoke box's exact bytes are pinned on the machine that made them, and a
+      # runner's numpy may round the wash a last bit differently (ADR 0030).
       - name: Tests
-        run: uv run pytest -m "not golden and not benchmark" --cov
+        run: uv run pytest -m "not golden and not benchmark" --cov --golden-tolerance -n auto --dist loadgroup
 
       - name: Coverage gate (ink, letters)
         run: uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fail-under=95 --precision=2
@@ -59,13 +62,40 @@ jobs:
       - name: Benchmarks (smoke)
         run: uv run pytest -m benchmark
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+          version: "0.11.21"
+          python-version: "3.13"
+
+      - name: Sync
+        run: uv sync --locked
+
+      # Offline: relative links and fragments only; the weekly links.yml checks the web.
+      - name: Links (lychee, offline)
+        uses: lycheeverse/lychee-action@v2.9.0
+        with:
+          args: --offline --config lychee.toml README.md docs
+          fail: true
+
+      - name: Build
+        run: uv build
+
+      - name: Package description (twine)
+        run: uv run twine check --strict dist/*
+
   prerelease:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.32"
           python-version: "3.15"
@@ -76,4 +106,4 @@ jobs:
           uv pip install pytest hypothesis pytest-randomly pytest-benchmark
 
       - name: Tests
-        run: uv run --no-sync pytest -m "not golden"
+        run: uv run --no-sync pytest -m "not golden" --golden-tolerance

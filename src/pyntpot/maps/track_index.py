@@ -1,7 +1,7 @@
 """A grid index over the track, for asking how near a feature ran to it.
 
 Key names: `TrackIndex`, which answers the distance from a point to the track and
-whether a line ran alongside the track or crossed it; `_densify`, a polyline
+whether a line ran alongside the track or crossed it; `densify`, a polyline
 resampled to a maximum point spacing.
 
 A road is on the map because the track met it, not because it exists, so the minor
@@ -71,7 +71,7 @@ class TrackIndex:
         Returns:
             Whether the track ran alongside the feature or crossed it.
         """
-        dense = _densify(line, step_m=20.0)
+        dense = densify(line, step_m=20.0)
         near = [self.distance(x, y, cap_m=within_m + 1) <= within_m for x, y in dense]
         if not any(near):
             return False
@@ -98,7 +98,7 @@ class TrackIndex:
         return False
 
 
-def _densify(line: list[Pt], step_m: float) -> list[Pt]:
+def densify(line: list[Pt], step_m: float) -> list[Pt]:
     """A polyline resampled so no two points are more than `step_m` apart."""
     out: list[Pt] = []
     for a, b in pairwise(line):

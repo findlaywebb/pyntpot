@@ -76,7 +76,7 @@ def test_a_long_span_name_breaks_over_two_lines_and_reserves_the_block():
 
 def test_a_settlement_name_is_never_broken():
     """A place name is one thing a reader looks up; two lines read as two places."""
-    assert wrap_forms("Monmouth Castle", "settlement") == [["Monmouth Castle"]]
+    assert wrap_forms("Trefynwy Castle", "settlement") == [["Trefynwy Castle"]]
     assert wrap_forms("Lyn Valley Road", "road") == [["Lyn Valley Road"]]
     assert wrap_forms("Heddon", "span") == [["Heddon"]], "nothing to break at"
     # A span carries its own vocabulary as its kind, so every one of them has

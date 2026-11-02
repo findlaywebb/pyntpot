@@ -27,12 +27,11 @@ PINNED_LABELS = (
     "Lynton",
     "Barbrook",
     "East Lyn",
-    "East Lyn",
     "A39",
     "B3234",
     "Saint Mary the Virgin",
-    "Hollerday Hill",
-    "Lyn Valley Art and Craft Centre",
+    "Lynton and Exmoor Museum",
+    "Living Waters Lynton United Reformed Church",
     "start",
 )
 
@@ -90,6 +89,7 @@ class TestDeleted:
 
 
 @pytest.mark.golden
+@pytest.mark.xdist_group("test_pipeline_letter_compose")
 class TestLetter:
     """`letter` places the pinned names along the strands and resolves spans on them."""
 
@@ -119,6 +119,7 @@ class TestLetter:
 
 
 @pytest.mark.golden
+@pytest.mark.xdist_group("test_pipeline_letter_compose")
 class TestCompose:
     """`compose` lays the painted, lettered plates into the golden card."""
 

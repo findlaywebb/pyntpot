@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from pyntpot.letters.font import OutlineFont, _Flatten, load
-from pyntpot.letters.skeleton import RASTER_EM, _components, _crossings, _fill, thin
+from pyntpot.letters.skeleton import RASTER_EM, components, crossings, fill, thin
 
 #: What each letter's own skeleton is made of: how many free ends it has, how
 #: many junctions, and how many separate pieces of ink the glyph is drawn from.
@@ -100,7 +100,7 @@ def _bitmaps(face: OutlineFont, ch: str) -> tuple[np.ndarray, np.ndarray, float,
     face._glyphs[name].draw(rec)
     flat = _Flatten()
     rec.replay(flat)
-    img, ox, oy = _fill(flat.contours, face.upem)
+    img, ox, oy = fill(flat.contours, face.upem)
     return img, thin(img), ox, oy
 
 
@@ -141,11 +141,11 @@ class TestSkeleton:
         """Free ends, junctions and separate pieces of ink match the pinned shape of the letter."""
         img, skel, _ox, _oy = _bitmaps(face, ch)
         on = {(int(r), int(c)) for r, c in zip(*np.nonzero(skel), strict=True)}
-        cross = {p: _crossings(p, on) for p in on}
+        cross = {p: crossings(p, on) for p in on}
         got = (
             sum(1 for p in on if cross[p] == 1),
             sum(1 for p in on if cross[p] >= 3),
-            len(_components(img)),
+            len(components(img)),
         )
         assert got == GLYPH_TOPOLOGY[ch]
 
@@ -154,7 +154,7 @@ class TestSkeleton:
         """A blob of ink with no stroke through it is a letter missing a part."""
         img, _skel, ox, oy = _bitmaps(face, ch)
         drawn = [p for path in _raster(face, ch, ox, oy) for p in path]
-        for blob in _components(img):
+        for blob in components(img):
             rows = [r for r, _c in blob]
             cols = [c for _r, c in blob]
             near = any(

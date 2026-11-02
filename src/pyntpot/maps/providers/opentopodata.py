@@ -9,8 +9,9 @@ The public server's published limits are enforced by default: 100 locations a ca
 call a second (a fixed pause through the injected `sleep`, no clock is read) and at most
 `budget` calls, 1000 by default, per provider instance. The call that would pass the
 budget raises `ProviderBudgetExceededError` before any request is made. A reply whose
-status is not `OK`, or that is not the expected JSON, raises `ProviderError`. The
-count is per instance: nothing is shared between instances or processes.
+status is not `OK`, or that is not the expected JSON, raises `ProviderError`. Both
+errors are public through `pyntpot.maps`. The count is per instance: nothing is shared
+between instances or processes.
 
 The `contact` string is required and goes into the User-Agent as
 `pyntpot/<version> (<contact>)`; an empty one raises `ValueError`. The constructor makes

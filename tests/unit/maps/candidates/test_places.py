@@ -99,7 +99,7 @@ def test_a_place_view_keeps_only_the_keys_asked_for() -> None:
 
 
 class TestGroundClimbs:
-    """Climbs given the language a rider would use for them."""
+    """Climbs given the language someone on the track would use for them."""
 
     def test_a_climb_gains_its_grounds_beside_its_own_row(self, lynmouth: Lynmouth) -> None:
         """The first synthetic climb is out of Lynmouth, through two places, up to Barbrook."""

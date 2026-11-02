@@ -19,7 +19,7 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 - Canonical source: W3C (2024). Compositing and Blending Level 1. W3C Candidate Recommendation Draft, 21 March 2024. https://www.w3.org/TR/compositing-1/ [verified: page 200, title and w3c-state W3C Candidate Recommendation Draft, updated 2024-03-21; 2026-10-07]
 - Design input: Watson, Z. (Stamen Design) (2012). Watercolor Process. https://stamen.com/watercolor-process-3dd5135861fe/ [verified: page 200 with its pinned words, published 2012-03-26; 2026-10-07]
 - Design input: Osman (osmanyy.com) (2025). Risograph.css. https://osmanyy.com/projects/risograph-css/ [verified: page 200 with its pinned words, published 2025-07-03; 2026-10-07]
-- Implemented in: `pyntpot.ink.pigment.multiply_plate`, `pyntpot.ink.pigment.composite`, `pyntpot.maps.compose._plates`
+- Implemented in: `pyntpot.ink.pigment.multiply_plate`, `pyntpot.ink.pigment.composite`, `pyntpot.maps.compose.painted_map`
 
 ## `zhang-suen` Zhang-Suen thinning
 
@@ -56,20 +56,20 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 
 - Canonical source: Duchon, C. E. (1979). Lanczos Filtering in One and Two Dimensions. *Journal of Applied Meteorology* 18(8), 1016-1022. https://doi.org/10.1175/1520-0450(1979)018<1016:LFIOAT>2.0.CO;2 [verified-via-index: Crossref record, publisher page 403; 2026-10-07]
 - Design input: original design reading not recorded; the canonical source stands in.
-- Implemented in: `pyntpot.ink.pad._reduce`, `pyntpot.maps.compose._plates`, `pyntpot.maps.compose._route`, `pyntpot.maps.compose._paste_labels`
+- Implemented in: `pyntpot.ink.pad._reduce`, `pyntpot.maps.compose.painted_map`, `pyntpot.maps.compose.route`, `pyntpot.maps.compose.paste_labels`
 - Note: the filter is applied through Pillow: each site resizes with `Image.Resampling.LANCZOS` and computes no window of its own.
 
 ## `value-noise` value noise
 
 - Canonical source: Lewis, J. P. (1989). Algorithms for solid noise synthesis. *ACM SIGGRAPH Computer Graphics* 23(3), 263-270. https://doi.org/10.1145/74334.74360 [verified-via-index: Crossref record, publisher page 403 challenge; 2026-10-07]
 - Design input: original design reading not recorded; the canonical source stands in.
-- Implemented in: `pyntpot.ink.noise.value_noise`, `pyntpot.ink.noise._value_noise_at`, `pyntpot.ink.tip._fbm1`
+- Implemented in: `pyntpot.ink.noise.value_noise`, `pyntpot.ink.noise._value_noise_at`, `pyntpot.ink.tip.fbm1`
 
 ## `fbm` fractional Brownian motion
 
 - Canonical source: Mandelbrot, B. B.; Van Ness, J. W. (1968). Fractional Brownian Motions, Fractional Noises and Applications. *SIAM Review* 10(4), 422-437. https://doi.org/10.1137/1010093 [verified-via-index: Crossref record, publisher page 403 challenge; 2026-10-07]
 - Design input: original design reading not recorded; the canonical source stands in.
-- Implemented in: `pyntpot.ink.noise.fbm`, `pyntpot.ink.noise.fbm_aniso`, `pyntpot.ink.tip._fbm1`
+- Implemented in: `pyntpot.ink.noise.fbm`, `pyntpot.ink.noise.fbm_aniso`, `pyntpot.ink.tip.fbm1`
 
 ## `chamfer-distance` chamfer distance transform
 

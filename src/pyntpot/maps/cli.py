@@ -4,7 +4,7 @@ Key names: `main`, the entry point `pyntpot` runs; `build_parser`, the argparse
 parser it reads.
 
 `pyntpot map TRACK.gpx -o OUT.png --cache DIR --contact STR [--style FILE]
-[--no-attribution]` reads the track, fills the cache directory for any payload it
+[--margin-m M] [--no-attribution]` reads the track, fills the cache directory for any payload it
 lacks from Overpass and OpenTopoData (identified by `--contact`), paints the plates
 into the cache's plates directory for the track's key, letters the card with no
 annotations and composes the PNG. A cache that already holds the payloads sends no
@@ -25,7 +25,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from pyntpot.maps import pipeline
-from pyntpot.maps.cache import Cache
+from pyntpot.maps.cache import LANDCOVER_MARGIN_M, MARGIN_M, Cache, FetchMargins
 from pyntpot.maps.lettering.pipeline import letter
 from pyntpot.maps.providers.opentopodata import OpenTopoData
 from pyntpot.maps.providers.overpass import OverpassFeatures
@@ -50,6 +50,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     route.add_argument("--style", type=Path, help="a TOML theme; the default theme when absent")
     route.add_argument(
+        "--margin-m",
+        type=float,
+        default=MARGIN_M,
+        help="metres of ground fetched around the track's extent",
+    )
+    route.add_argument(
         "--no-attribution", action="store_true", help="leave the data attribution off the map"
     )
     return parser
@@ -69,11 +75,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     track = Track.from_gpx(args.track)
     style = Style.from_toml(args.style) if args.style else Style.default()
-    cache = Cache(args.cache)
+    margins = FetchMargins(args.margin_m, max(LANDCOVER_MARGIN_M, args.margin_m))
+    cache = Cache(args.cache, margins)
     features = OverpassFeatures(args.contact)
     elevation = OpenTopoData(args.contact)
     basemap = pipeline.fetch(track, cache, features, elevation, style)
-    plates = pipeline.paint(basemap, style, cache.plates_dir(cache.key(track, features, elevation)))
+    key = cache.key(track, features, elevation)
+    plates = pipeline.paint(basemap, style, cache.plates_dir(key))
     lettering = letter(plates, basemap, None, style)
     image = pipeline.compose(plates, lettering, basemap, style, attribution=not args.no_attribution)
     args.output.parent.mkdir(parents=True, exist_ok=True)

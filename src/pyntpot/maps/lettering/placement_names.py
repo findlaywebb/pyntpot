@@ -1,6 +1,6 @@
 """One name, once: dropping a label that repeats another's name or place.
 
-Key names: `dedupe_names`, the labels that survive when two name one place; `_stem`,
+Key names: `dedupe_names`, the labels that survive when two name one place; `name_stem`,
 `_words` and `_one_place`, how two names are judged to be the same place;
 `NAME_FAMILY` and `NAME_ALLOWANCE`, how many of a family one card keeps.
 
@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 #: The qualifiers a pair of settlements is split by. Upper and Lower Swell
-#: are one place to the person riding through them, and are called by their
+#: are one place to the person passing through them, and are called by their
 #: stem.
 QUALIFIERS = (
     "Upper",
@@ -39,7 +39,7 @@ QUALIFIERS = (
 )
 
 
-def _stem(name: str) -> str:
+def name_stem(name: str) -> str:
     """A settlement name without its leading qualifier."""
     return re.sub(rf"^({'|'.join(QUALIFIERS)})\s+", "", str(name)).strip()
 
@@ -81,7 +81,7 @@ NAME_ALLOWANCE_DEFAULT = 1
 #: metres. Stated in metres and not in pixels because "basically the same
 #: place" is a fact about the ground rather than about the map: High Cup Nick
 #: and High Cup Nick Cairn are five metres apart and are one headland, which
-#: is a pixel on that card and would be a fifth of a pixel on a ride's, and
+#: is a pixel on that card and would be a fifth of a pixel on a big box's, and
 #: neither number says anything a rule can be built on.
 NEAR_DUPLICATE_M = 150.0
 
@@ -97,7 +97,7 @@ NEAR_DUPLICATE_EXTRA_WORDS = 2
 
 def _words(name: str) -> list[str]:
     """A name as comparable words: case folded, unpunctuated, unqualified."""
-    plain = re.sub(r"[^\w\s]", " ", _stem(str(name)))
+    plain = re.sub(r"[^\w\s]", " ", name_stem(str(name)))
     return plain.casefold().split()
 
 
@@ -136,7 +136,7 @@ def dedupe_names(labels: list[Label], card: Card) -> list[Label]:
     over the chimney standing on it.
 
     A span is never deduped. Its name is the caller's prose about a stretch
-    of the session rather than a name for somewhere, and two stretches may
+    of the track rather than a name for somewhere, and two stretches may
     fairly be called the same thing.
 
     Args:

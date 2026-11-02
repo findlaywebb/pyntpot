@@ -17,9 +17,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from pyntpot.ink.polyline import Pt, simplify, smooth
-from pyntpot.maps.contours import _ring_is_wet, marching_squares
-from pyntpot.maps.masks import _spread, declutter, rasterise
-from pyntpot.maps.relief_strokes import _jitter
+from pyntpot.maps.contours import marching_squares, ring_is_wet
+from pyntpot.maps.masks import declutter, rasterise, spread
+from pyntpot.maps.relief_strokes import jitter
 from pyntpot.maps.rings import orient, signed_area
 
 #: The fewest points a traced loop needs to be a ring at all.
@@ -95,7 +95,7 @@ def trace_mask(
     for ring in marching_squares(padded, 0.5):
         if len(ring) < LOOP_MIN_POINTS:
             continue
-        wet = _ring_is_wet(ring, padded, 0.5)
+        wet = ring_is_wet(ring, padded, 0.5)
         metres = [(xmin + (col - 1) * cell, ymin + (row - 1) * cell) for col, row in ring]
         metres = smooth(simplify(metres, eps), passes=passes, closed=True)
         metres = simplify(metres, eps * 0.3)
@@ -107,8 +107,8 @@ def trace_mask(
 def _closed_opened(mask: list[bytearray], grid: Generalisation) -> list[bytearray]:
     """The mask closed, then opened, then cleared of specks and pinholes."""
     morph = grid.morph_cells
-    mask = _spread(_spread(mask, morph, grow=True), morph, grow=False)
-    mask = _spread(_spread(mask, morph, grow=False), morph, grow=True)
+    mask = spread(spread(mask, morph, grow=True), morph, grow=False)
+    mask = spread(spread(mask, morph, grow=False), morph, grow=True)
     return declutter(mask, _min_cells(grid))
 
 
@@ -203,14 +203,14 @@ def scatter(
     """
     if spacing_m <= 0:
         return []
-    inner = _spread(mask, 1, grow=False)
+    inner = spread(mask, 1, grow=False)
     xmin, ymin, xmax, ymax = clip
     out: list[Pt] = []
     cols = int((xmax - xmin) / spacing_m) + 1
     rows = int((ymax - ymin) / spacing_m) + 1
     for j in range(rows):
         for i in range(cols):
-            jx, jy = _jitter(i, j, salt)
+            jx, jy = jitter(i, j, salt)
             x = xmin + (i + 0.5 + jx * 0.9) * spacing_m
             y = ymin + (j + 0.5 + jy * 0.9) * spacing_m
             c, r = int((x - xmin) / cell), int((y - ymin) / cell)
@@ -254,7 +254,7 @@ def generalise_layer(
         return out
 
     inset = max(1, finish.inset_cells)
-    inner_mask = declutter(_spread(mask, inset, grow=False), _min_cells(grid))
+    inner_mask = declutter(spread(mask, inset, grow=False), _min_cells(grid))
     return {
         "outer": traced(mask, finish.seed),
         "inner": traced(inner_mask, finish.seed + 5) if finish.inset_cells > 0 else [],

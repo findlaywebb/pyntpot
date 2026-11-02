@@ -4,11 +4,14 @@ import numpy as np
 import pytest
 
 from pyntpot.ink.pigment import (
+    PAINTERS_PIGMENTS,
+    PAINTERS_TRANSPARENCY,
     PIGMENTS,
     TRANSPARENCY,
     PigmentLayer,
     composite,
     km_plate,
+    km_rt,
     multiply_plate,
 )
 from pyntpot.ink.sheet import rgb
@@ -74,3 +77,111 @@ def test_a_wash_crossing_another_keeps_its_own_hue_under_glazing():
     # The wood is the top wash, so the crossing should read as wood over water,
     # not as the two colours multiplied into one another.
     assert abs(hue(glazed) - hue(wood)) < abs(hue(mul) - hue(wood)) - 5.0
+
+
+class TestPaintersPigments:
+    """The painter's pigments are a separate table beside the map-role one."""
+
+    def test_the_two_tables_have_the_same_keys(self):
+        """Every painter's pigment names a transparency and no transparency is orphaned."""
+        assert PAINTERS_PIGMENTS.keys() == PAINTERS_TRANSPARENCY.keys()
+
+    def test_the_keys_are_the_ten_painters_pigments(self):
+        """The table holds exactly the ten pigments ADR 0039 names, in that order."""
+        assert list(PAINTERS_PIGMENTS) == [
+            "ultramarine",
+            "cerulean",
+            "burnt_sienna",
+            "raw_sienna",
+            "yellow_ochre",
+            "sap_green",
+            "indigo",
+            "perylene_maroon",
+            "quinacridone_rose",
+            "paynes_grey",
+        ]
+
+    def test_every_transparency_is_a_share(self):
+        """A transparency is a share of what the pigment shows over white, in 0 to 1."""
+        assert all(0.0 <= t <= 1.0 for t in PAINTERS_TRANSPARENCY.values())
+
+    @pytest.mark.parametrize("key", list(PAINTERS_PIGMENTS), ids=list(PAINTERS_PIGMENTS))
+    def test_each_paints_a_dark_swatch(self, key: str):
+        """A full wash of each painter's pigment, glazed over white, gives back its own dark masstone."""
+        pig = rgb(PAINTERS_PIGMENTS[key])
+        thick = np.ones((2, 2), np.float32)
+        out = km_plate([(thick, pig, PAINTERS_TRANSPARENCY[key])], np.ones((2, 2, 3), np.float32))
+        assert out[0, 0] == pytest.approx(pig, abs=2e-3), key
+        assert out[0, 0].mean() < 0.55, key
+
+    def test_the_map_role_tables_are_unchanged(self):
+        """PIGMENTS and TRANSPARENCY keep their pinned values; the new table never touches them."""
+        assert PIGMENTS == {
+            "farmland": "#dfe0b0",
+            "meadow": "#cfdfae",
+            "orchard": "#d5dda2",
+            "scrub": "#c9d5a4",
+            "heath": "#e0cda2",
+            "sand": "#ecdfbe",
+            "rock": "#dcd6c6",
+            "wetland": "#bfd2cd",
+            "built": "#ddd3c3",
+            "works": "#d2cbc0",
+            "wood": "#a8c286",
+            "pale": "#d5e0b4",
+            "water": "#9ec4de",
+            "relief": "#c9bda4",
+            "rim": "#c2ad91",
+        }
+        assert TRANSPARENCY == {
+            "farmland": 0.10,
+            "meadow": 0.09,
+            "orchard": 0.09,
+            "scrub": 0.08,
+            "heath": 0.14,
+            "sand": 0.16,
+            "rock": 0.22,
+            "wetland": 0.08,
+            "built": 0.26,
+            "works": 0.28,
+            "wood": 0.05,
+            "pale": 0.12,
+            "water": 0.04,
+            "relief": 0.30,
+            "rim": 0.18,
+        }
+
+
+class TestGlazingSkipsWhatIsNotPainted:
+    """Glazing works only on painted pixels, so a pixel with no density keeps its exact bits."""
+
+    @staticmethod
+    def _base(h: int, w: int) -> np.ndarray:
+        """A backing with every pixel different, so a moved bit shows."""
+        return np.random.default_rng(7).random((h, w, 3), dtype=np.float32)
+
+    def test_a_layer_of_no_density_leaves_the_base_bit_for_bit(self):
+        """Zero density glazes to r = 0 and tr = 1 exactly, so the base comes back unchanged."""
+        base = self._base(9, 13)
+        out = km_plate([(np.zeros((9, 13), np.float32), rgb(PIGMENTS["wood"]), 0.05)], base)
+        assert np.array_equal(out, np.clip(base, 0.0, 1.0))
+
+    def test_a_patch_moves_only_its_own_pixels(self):
+        """Outside a painted patch the base is untouched; inside it is the full-plate formula."""
+        base = self._base(9, 13)
+        dens = np.zeros((9, 13), np.float32)
+        dens[2:5, 3:8] = np.linspace(0.1, 0.9, 15, dtype=np.float32).reshape(3, 5)
+        pig = rgb(PIGMENTS["water"])
+        out = km_plate([(dens, pig, 0.04)], base)
+
+        r, tr = km_rt(dens, pig, 0.04)
+        want = np.clip(r + tr * tr * base / np.maximum(1.0 - r * base, 1e-6), 0.0, 1.0)
+        painted = dens > 0
+        assert np.array_equal(out[~painted], np.clip(base, 0.0, 1.0)[~painted])
+        assert np.array_equal(out[painted], want[painted])
+
+    def test_a_layer_of_another_shape_is_refused(self):
+        """A density that does not cover the base's pixels one for one raises rather than glazing others."""
+        base = self._base(9, 13)
+        with pytest.raises(ValueError, match="shape"):
+            km_plate([(np.ones((13, 9), np.float32), rgb(PIGMENTS["wood"]), 0.05)], base)

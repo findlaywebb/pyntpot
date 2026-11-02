@@ -21,7 +21,7 @@ import numpy as np
 from pyntpot.ink.polyline import Pt
 from pyntpot.letters.hand import Hand
 from pyntpot.maps.lettering.label import Label
-from pyntpot.maps.lettering.span_line import _resample
+from pyntpot.maps.lettering.span_line import resample
 
 #: How many segments the quadratic of a leader is cut into.
 _LEADER_STEPS = 12
@@ -65,7 +65,7 @@ def underline(hand: Hand, lb: Label, width: float, rng: np.random.Generator) -> 
     y0 = lb.ty + lb.size * 0.22
     rise = lb.size * (0.05 + abs(float(rng.normal(0.0, 0.04))))
     line = [(x0 - lb.size * 0.06, y0), (x0 + width + lb.size * 0.1, y0 - rise)]
-    return hand.stroke(_resample(line, max(width / 10.0, 3.0)), rng, 0.45)
+    return hand.stroke(resample(line, max(width / 10.0, 3.0)), rng, 0.45)
 
 
 def _quad_at(quad: list[Pt], t: float) -> Pt:

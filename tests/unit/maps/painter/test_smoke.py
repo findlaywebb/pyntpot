@@ -5,13 +5,21 @@ Everything here paints a box a few dozen pixels across, so the suite stays fast.
 
 import dataclasses
 import hashlib
+import shutil
+from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pytest
+from golden.test_parity import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION
 from PIL import Image
 
-from pyntpot.ink.sheet import rgb
+from pyntpot.ink.paper import paper_plate
+from pyntpot.ink.sheet import Sheet, rgb
+from pyntpot.maps import Cache, Track, fetch
 from pyntpot.maps.basemap import Basemap, Line, River, Road
+from pyntpot.maps.painter.job import PaintJob
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.style import Style
 
@@ -22,6 +30,9 @@ from support.basemaps import (
     tiny_style,
     with_fields,
 )
+from support.golden import differing_fraction
+from support.paths import FIXTURE_DIR, SMOKE_DIR
+from support.providers import FixtureElevation, FixtureFeatures
 
 
 def read(style: Style, name: str) -> Any:
@@ -96,13 +107,23 @@ SMOKE_RIVERS = (
 #: bristle drift stopped being drawn independently per bristle: the tip was
 #: folding over itself and landing as filaments with bare paper between them,
 #: which shows as streaking. `paper` has not moved either time, because
-#: neither change touches the card. The lock still holds: a change that moves
-#: these hashes again is a change to what the reader sees and has to be argued
-#: for.
+#: neither change touches the card. Then when the finer ink grid was centred on
+#: the plate's pixels (ADR 0025); `paper` again did not move. The lock still
+#: holds: a change that moves these hashes again is a change to what the reader
+#: sees and has to be argued for. The `pen` hash moved once more when the nib's touch-down pool
+#: was cut at three radii instead of two (it has no square edge now); `wash` did not move.
+#: The `paper` and `wash` bytes moved once more, and their pixels did not, when lossless
+#: plates went to WebP method 1 (ADR 0043).
+#: The bytes are this machine's. A numpy that
+#: runs the wash on other vector instructions can round a last bit the other way
+#: and move a wash pixel by one level, so the wash plate itself is committed in
+#: `tests/golden/smoke/`, and under `--golden-tolerance` the tests compare the
+#: wash with it within the golden pixel bound instead; paper and pen stay byte
+#: for byte (ADR 0030).
 SMOKE_SHA = {
-    "paper": "014d13332900f01fd6653d9405e933aaec9efe2f17ce78f8fa523b1e6954e93e",
-    "pen": "33614c92d30798b8ce823c5c1473115f46f7277ffe4b3345dc31f626c8fa03a6",
-    "wash": "c45a643c36a9459cbefc748dce925222d410f537dede660db283284eea702c03",
+    "paper": "35c84fb0d3806aa995f699c638b3479b6db64fa3c4a74999e58ce792517379d8",
+    "pen": "bb86cd1eb74db17c8ca8b1533d4c48ce1ab0e1f022096806e2dd70dc4c5d3d97",
+    "wash": "5daa211adf178351a1c7f6a6211deffa18093d0f62dbdf49d8a41ec2e6401bf1",
 }
 
 
@@ -112,15 +133,34 @@ def smoke_box(**over: object) -> tuple[Style, Basemap]:
     return style, tiny_basemap(style=style, roads=SMOKE_ROADS, rivers=SMOKE_RIVERS)
 
 
-def test_the_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
-    """The whole point of the flags: the same seed still writes the same bytes."""
+def assert_the_approved_plates(out: Path, files: Mapping[str, str], tolerant: bool) -> None:
+    """Assert the smoke box's plates in `out` are the approved ones.
+
+    Byte for byte by default. In tolerance mode `paper` and `pen` stay byte for byte, and
+    `wash`, the one plate whose last bit depends on the CPU's vector instructions, is
+    compared with its committed copy in `SMOKE_DIR` within the golden pixel bound.
+    """
+    got = {name: hashlib.sha256((out / fn).read_bytes()).hexdigest() for name, fn in files.items()}
+    if not tolerant:
+        assert got == SMOKE_SHA
+        return
+    exact = {name: sha for name, sha in got.items() if name != "wash"}
+    assert exact == {name: sha for name, sha in SMOKE_SHA.items() if name != "wash"}
+    fraction = differing_fraction(out / files["wash"], SMOKE_DIR / "wash.webp", MAX_CHANNEL_DELTA)
+    assert fraction <= MAX_DIFFERING_FRACTION, f"wash: {fraction:.4%} of pixels differ"
+
+
+def test_the_committed_wash_plate_is_the_approved_bytes():
+    """The wash plate another machine compares with is the one `SMOKE_SHA` pins."""
+    got = hashlib.sha256((SMOKE_DIR / "wash.webp").read_bytes()).hexdigest()
+    assert got == SMOKE_SHA["wash"]
+
+
+def test_the_flags_off_still_paint_the_plates_that_were_approved(tmp_path, golden_tolerance):
+    """The whole point of the flags: the same seed still writes the approved plates."""
     style, basemap = smoke_box()
     manifest = paint_plates(basemap, style, tmp_path).manifest
-    got = {
-        name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
-        for name, fn in manifest.files.items()
-    }
-    assert got == SMOKE_SHA
+    assert_the_approved_plates(tmp_path, manifest.files, golden_tolerance)
 
 
 def test_every_flag_on_together_still_paints_the_box(tmp_path):
@@ -238,15 +278,11 @@ def test_every_phase_two_wash_option_is_off_by_default():
     assert not read(style, "fluid_pass")
 
 
-def test_the_wash_flags_off_still_paint_the_plates_that_were_approved(tmp_path):
-    """Three more fields on the style, and the same seed writes the same bytes."""
+def test_the_wash_flags_off_still_paint_the_plates_that_were_approved(tmp_path, golden_tolerance):
+    """Three more fields on the style, and the same seed writes the approved plates."""
     style, basemap = smoke_box()
     manifest = paint_plates(basemap, style, tmp_path).manifest
-    got = {
-        name: hashlib.sha256((tmp_path / fn).read_bytes()).hexdigest()
-        for name, fn in manifest.files.items()
-    }
-    assert got == SMOKE_SHA
+    assert_the_approved_plates(tmp_path, manifest.files, golden_tolerance)
 
 
 def test_each_wash_flag_moves_the_plate_and_none_of_them_moves_the_card(tmp_path):
@@ -308,3 +344,53 @@ def test_the_style_decides_how_the_plates_are_written(tmp_path):
 
     with Image.open(tmp_path / "clean" / clean.manifest.files["wash"]) as got:
         assert got.size == basemap.card.render
+
+
+# ------------------------------------------------------------- the foxing on a card's sheet
+
+
+@pytest.fixture(scope="module")
+def job(tmp_path_factory: pytest.TempPathFactory) -> PaintJob:
+    """The Lynmouth card's paint job (a 1800 by 1457 render-pixel sheet), built once."""
+    work = tmp_path_factory.mktemp("lynmouth")
+    shutil.copytree(FIXTURE_DIR, work, dirs_exist_ok=True)
+    style = Style.default()
+    track = Track.from_gpx(work / "track.gpx")
+    basemap = fetch(track, Cache(work), FixtureFeatures(), FixtureElevation(), style)
+    return PaintJob.begin(basemap, style, work / "plates")
+
+
+def speck_extents(mask: np.ndarray) -> list[int]:
+    """The longer side of each 4-connected component's bounding box in `mask`."""
+    seen = np.zeros_like(mask)
+    extents = []
+    for start in zip(*np.nonzero(mask), strict=True):
+        if seen[start]:
+            continue
+        seen[start] = True
+        stack, found = [start], [start]
+        while stack:
+            y, x = stack.pop()
+            for ny, nx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+                inside = 0 <= ny < mask.shape[0] and 0 <= nx < mask.shape[1]
+                if inside and mask[ny, nx] and not seen[ny, nx]:
+                    seen[ny, nx] = True
+                    stack.append((ny, nx))
+                    found.append((ny, nx))
+        ys, xs = zip(*found, strict=True)
+        extents.append(int(max(max(ys) - min(ys), max(xs) - min(xs))) + 1)
+    return extents
+
+
+def test_the_foxing_on_a_card_sheet_is_a_few_small_specks(job):
+    """On the Lynmouth card's sheet foxed pixels are under 1% and each speck is at most twice the grain."""
+    style, canvas, grain = job.style.paper, job.canvas, job.sheet.gran_px
+
+    def plate(**over: float) -> np.ndarray:
+        sheet = Sheet(canvas.h, canvas.w, grain, style.sheet_seed)
+        return paper_plate(sheet, canvas, dataclasses.replace(style, **over), canvas.w)
+
+    hit = np.abs(plate() - plate(paper_foxing=0.0)).max(axis=2) > 0
+    largest = max(speck_extents(hit))
+    assert 0.0 < hit.mean() < 0.01
+    assert largest <= 2 * grain, f"largest speck {largest} px, grain {grain}"

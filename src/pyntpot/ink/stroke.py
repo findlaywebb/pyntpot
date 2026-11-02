@@ -1,6 +1,6 @@
 """The stages of one stroke: the plain records `stamp` passes between its steps.
 
-Key types: `Trace`, the path resampled evenly with its normals; `Mark`, the pressure and
+Key types: `Trace`, the path resampled evenly with its normals; `StrokeProfile`, the pressure and
 width along it and how far a nib has run down; `Tip`, the logical bristles and the fields
 drawn per bristle; `Sampled`, the tip sampled across at sub-pixel spacing; `Lay`, all of
 those with each sample's sideways offset, which is everything the weights and the deposit
@@ -28,7 +28,7 @@ class Trace:
 
 
 @dataclass(frozen=True)
-class Mark:
+class StrokeProfile:
     """Pressure and width along a stroke, and how far a nib has run down."""
 
     press: np.ndarray
@@ -73,7 +73,7 @@ class Lay:
     """Everything one stroke's weights and deposits are read from."""
 
     tr: Trace
-    ink: Mark
+    ink: StrokeProfile
     tip: Tip
     smp: Sampled
     off: np.ndarray

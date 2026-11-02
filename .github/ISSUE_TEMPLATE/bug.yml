@@ -1,0 +1,46 @@
+name: Bug report
+description: Something pyntpot did not do as you expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: ran
+    attributes:
+      label: What you ran
+      description: The smallest script or command that shows it.
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: got
+    attributes:
+      label: What you got
+      description: The error, or a description or attachment of the picture.
+    validations:
+      required: true
+  - type: input
+    id: pyntpot-version
+    attributes:
+      label: pyntpot version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      placeholder: "3.13.1"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Ubuntu 24.04"
+    validations:
+      required: true
