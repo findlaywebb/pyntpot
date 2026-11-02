@@ -258,65 +258,11 @@ route_pen = true
 route_pen_brush = "MAJ1-e"
 route_pen_width_px = 3.4
 
-[route_inks.run]
-style = "dotted"
-px = 4.8
-colour = "#7b2335"
-
-[route_inks.run.effect]
-adaptive_pct = 0
-blend = "normal"
-casing_colour = "cream"
-casing_px = 0
-glow_opacity = 0
-glow_px = 0
-shadow_blur_px = 0
-shadow_px = 0
-
-[route_inks.ride]
+[route_ink]
 style = "solid"
 px = 5.4
 colour = "#7b2335"
-
-[route_inks.ride.effect]
-adaptive_pct = 0
 blend = "normal"
-casing_colour = "cream"
-casing_px = 0
-glow_opacity = 0
-glow_px = 0
-shadow_blur_px = 0
-shadow_px = 0
-
-[route_inks.swim]
-style = "dotted"
-px = 4.8
-colour = "#7b2335"
-
-[route_inks.swim.effect]
-adaptive_pct = 0
-blend = "normal"
-casing_colour = "cream"
-casing_px = 0
-glow_opacity = 0
-glow_px = 0
-shadow_blur_px = 0
-shadow_px = 0
-
-[route_inks.other]
-style = "dotted"
-px = 4.8
-colour = "#7b2335"
-
-[route_inks.other.effect]
-adaptive_pct = 0
-blend = "normal"
-casing_colour = "cream"
-casing_px = 0
-glow_opacity = 0
-glow_px = 0
-shadow_blur_px = 0
-shadow_px = 0
 
 [lettering]
 label_max = 6

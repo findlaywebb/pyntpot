@@ -160,7 +160,7 @@ def compose(
     """
     card = painted_map(plates)
     k = card.width / max(plates.card.display[0], 1)
-    route(card, plates, list(plates.strands), style.route_ink(), k)
+    route(card, plates, list(plates.strands), style.route_ink, k)
     if lettering.plate_path is None:
         log.info("no label plate for %s, the card has no lettering", plates.directory)
     else:

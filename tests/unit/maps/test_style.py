@@ -50,27 +50,10 @@ RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
 )
 
 #: The route ink the reference sheets were painted with, pinned.
-RIDE_INK = RouteInk(
-    colour="#c22050",
-    px=5.4,
-    style="solid",
-    effect={
-        "adaptive_pct": 0.0,
-        "blend": "normal",
-        "casing_colour": "cream",
-        "casing_px": 0.25,
-        "glow_opacity": 0.8,
-        "glow_px": 2.5,
-        "shadow_blur_px": 0.0,
-        "shadow_px": 0.0,
-    },
-)
-
-#: The other sports' route inks share one dotted ink, pinned without its effect.
-DOTTED_SPORTS: tuple[str, ...] = ("run", "swim", "other")
+ROUTE_INK = RouteInk(colour="#c22050", px=5.4, style="solid", blend="normal", opacity=1.0)
 
 #: The default style's three digests, pinned.
-DIGEST = "d7997015c8df9b37"
+DIGEST = "1b08804a7f30026b"
 BASE_DIGEST = "d9c56c0811177b0f"
 LETTERING_DIGEST = "d15ae2f30e9ca5ce"
 
@@ -98,15 +81,9 @@ class TestDefaultIsResolved:
         assert got == value
         assert type(got) is type(value)
 
-    def test_ride_ink_is_pinned(self) -> None:
-        """The ride ink equals its pinned resolved value."""
-        assert Style.default().route_inks.ride == RIDE_INK
-
-    @pytest.mark.parametrize("sport", DOTTED_SPORTS, ids=DOTTED_SPORTS)
-    def test_other_inks_are_the_dotted_ink(self, sport: str) -> None:
-        """Every other sport's ink is the resolved dotted ink in the same colour."""
-        ink = getattr(Style.default().route_inks, sport)
-        assert (ink.colour, ink.px, ink.style) == ("#c22050", 4.8, "dotted")
+    def test_route_ink_is_pinned(self) -> None:
+        """The route ink equals its pinned resolved value, `opacity` read as 1.0 when absent."""
+        assert Style.default().route_ink == ROUTE_INK
 
     def test_basemap_is_the_effective_options(self) -> None:
         """The basemap group equals the options the basemap is drawn with, field by field."""
@@ -125,14 +102,6 @@ class TestDefaultIsResolved:
         assert got.keys() == expected.keys()
         for name, value in got.items():
             assert value == expected[name], name
-
-
-class TestEngineAdapters:
-    """The route ink handed to the compose step."""
-
-    def test_route_ink_is_the_ride_ink(self) -> None:
-        """`route_ink()` is the resolved ride ink the reference sheets were painted with."""
-        assert Style.default().route_ink() == RIDE_INK
 
 
 class TestThemeIsStrict:
@@ -160,6 +129,26 @@ class TestThemeIsStrict:
         with pytest.raises(pydantic.ValidationError, match="stile"):
             Style.from_toml(theme)
 
+    def test_an_effect_key_in_the_route_ink_is_rejected(self, tmp_path: Path) -> None:
+        """A casing key, which nothing paints, is rejected inside `[route_ink]`."""
+        theme = _theme_with(tmp_path, 'blend = "normal"', 'blend = "normal"\ncasing_px = 0.25')
+        with pytest.raises(pydantic.ValidationError, match="casing_px"):
+            Style.from_toml(theme)
+
+    def test_an_effect_table_in_the_route_ink_is_rejected(self, tmp_path: Path) -> None:
+        """The old free `effect` table is rejected inside `[route_ink]`."""
+        theme = _theme_with(
+            tmp_path, "[lettering]\n", '[route_ink.effect]\nblend = "normal"\n\n[lettering]\n'
+        )
+        with pytest.raises(pydantic.ValidationError, match="effect"):
+            Style.from_toml(theme)
+
+    def test_the_four_sport_inks_are_rejected(self, tmp_path: Path) -> None:
+        """A theme in the old format, with a `[route_inks.ride]` table, is rejected."""
+        theme = _theme_with(tmp_path, "[route_ink]\n", "[route_inks.ride]\n")
+        with pytest.raises(pydantic.ValidationError, match="route_inks"):
+            Style.from_toml(theme)
+
 
 class TestDigests:
     """The three digests and what moves them."""
@@ -174,12 +163,10 @@ class TestDigests:
         )
 
     def test_route_ink_change_moves_only_the_full_digest(self) -> None:
-        """Changing a route ink moves `digest()` and leaves the base and lettering digests."""
+        """Changing the route ink moves `digest()` and leaves the base and lettering digests."""
         style = Style.default()
-        inks = dataclasses.replace(
-            style.route_inks, run=dataclasses.replace(style.route_inks.run, px=6.0)
-        )
-        changed = style.model_copy(update={"route_inks": inks})
+        ink = dataclasses.replace(style.route_ink, px=6.0)
+        changed = style.model_copy(update={"route_ink": ink})
         assert changed.base_digest() == style.base_digest()
         assert changed.lettering_digest() == style.lettering_digest()
         assert changed.digest() != style.digest()
@@ -243,12 +230,12 @@ class TestFedRouteInk:
     """`with_route_ink` feeds the route's colour and width and keeps the rest of the style."""
 
     def test_a_fed_ink_sets_the_colour_and_width(self) -> None:
-        """A fed colour and width reach `route_ink()`; its treatment and effect stay the theme's."""
+        """A fed colour and width reach `route_ink`; its treatment, blend and opacity stay the theme's."""
         style = Style.default()
-        ink = style.with_route_ink(colour="#2050c2", width_px=4.8).route_ink()
+        ink = style.with_route_ink(colour="#2050c2", width_px=4.8).route_ink
         assert (ink.colour, ink.px) == ("#2050c2", 4.8)
-        assert ink.style == style.route_ink().style
-        assert ink.effect == style.route_ink().effect
+        theme = style.route_ink
+        assert (ink.style, ink.blend, ink.opacity) == (theme.style, theme.blend, theme.opacity)
 
     def test_feeding_nothing_keeps_the_style(self) -> None:
         """Feeding nothing, or the default ink's own colour and width, gives an equal style."""
