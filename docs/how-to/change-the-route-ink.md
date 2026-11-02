@@ -96,7 +96,7 @@ them, and `with_route_ink` sets the colour:
         )
 ```
 
-There is no dotted route in the grid. `compose` draws a `dotted` treatment as a solid line.
+Only `pen` changes how the route is drawn: any other treatment is a solid line.
 
 ## When it goes wrong
 

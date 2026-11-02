@@ -13,7 +13,7 @@ brush, so the water layer keeps that brush's reservoir and break texture at any
 width. The coast is chained rather than profiled: it is one line round the land and has
 no width of its own to vary.
 
-The route's plate depends on base-group fields only: the route inks are in `digest()`
+The route's plate depends on base-group fields only: the route ink is in `digest()`
 alone, so the pen separates the doubled-back legs of the route by its own width
 (`route_pen_width_px`, whatever the route ink) and lays that one displaced line.
 

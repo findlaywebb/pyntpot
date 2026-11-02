@@ -4,9 +4,9 @@ Key types: `CardStyle` (the card's size and the dark grid),
 `RibbonStyle` (the trimmed extent of the painted ground and the card's
 frame), `CoverStyle` (land cover and the wood), `RouteStyle` (the route's
 own painted plate), `BasemapStyle` (what the basemap draws and how much of
-it), `LetteringPolicy` (which names a map letters) and `RouteInk` (how the route is
-drawn on the card). `CONSUMER_ONLY` names the
-painter fields that no module reads and so belong to no group.
+it), `LetteringPolicy` (which names a map letters) and `RouteInk` (how the
+route is drawn on the card). `CONSUMER_ONLY` names the painter fields that no
+module reads and so belong to no group.
 
 Base groups feed the base plates; `LetteringPolicy` feeds only the lettering;
 `RouteInk` is read only when the route is placed and drawn (`paint` takes the
@@ -16,9 +16,9 @@ basemap options and the resolved ink are theme values. `RouteInk`'s treatment,
 width and colour have no defaults, because no class carries one.
 
 It paints, letters and fetches nothing. The route ink knows nothing of what a
-track records, and holds no casing, glow or shadow: the compose step draws none. Two `BasemapStyle` fields,
-`hillshade_opacity` and `pick_places`, have no reader and are kept for the
-upstream consumer. The basemap's clip margin is derived from the card per
+track records, and holds no casing, glow or shadow: the compose step draws
+none. Two `BasemapStyle` fields, `hillshade_opacity` and `pick_places`, have
+no reader and are kept for the upstream consumer. The basemap's clip margin is derived from the card per
 render and is not a style field.
 
 Invariants: every field belongs to exactly one style group across the

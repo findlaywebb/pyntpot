@@ -135,6 +135,14 @@ class TestThemeIsStrict:
         with pytest.raises(pydantic.ValidationError, match="casing_px"):
             Style.from_toml(theme)
 
+    def test_an_effect_table_in_the_route_ink_is_rejected(self, tmp_path: Path) -> None:
+        """The old free `effect` table is rejected inside `[route_ink]`."""
+        theme = _theme_with(
+            tmp_path, "[lettering]\n", '[route_ink.effect]\nblend = "normal"\n\n[lettering]\n'
+        )
+        with pytest.raises(pydantic.ValidationError, match="effect"):
+            Style.from_toml(theme)
+
     def test_the_four_sport_inks_are_rejected(self, tmp_path: Path) -> None:
         """A theme in the old format, with a `[route_inks.ride]` table, is rejected."""
         theme = _theme_with(tmp_path, "[route_ink]\n", "[route_inks.ride]\n")
