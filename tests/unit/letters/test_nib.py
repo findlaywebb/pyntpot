@@ -10,7 +10,7 @@ from PIL import Image
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.sheet import Canvas
 from pyntpot.ink.style import PaperStyle
-from pyntpot.letters.nib import NibSurface, nib_plate
+from pyntpot.letters.nib import NibSurface, _backing_wash, _sheet, nib_plate
 from pyntpot.letters.setting import Mark
 from pyntpot.letters.style import FaceStyle, HandStyle, NibGroups, NibStyle
 
@@ -54,7 +54,8 @@ class TestPlate:
         alpha = np.asarray(Image.open(two).getchannel("A"))
         assert one.exists()
         assert alpha[20:72, 8:72].max() > 0
-        assert alpha[:, 96:].max() == 0
+        # The ink ends near x 70 and the lift fades to nothing a reach (30 px) past it.
+        assert alpha[:, 100:].max() == 0
         # The wash leaves faint alpha everywhere; the ink itself is solid only near the
         # doubled positions, never above row 16, where the halved ones would sit.
         assert alpha[:16].max() < 128, "the marks were shrunk, not enlarged, by the scale"
@@ -222,3 +223,114 @@ class TestCounters:
             alpha = np.asarray(Image.open(written).getchannel("A"), np.float32) / 255.0
             worst = max(worst, float(alpha[core].mean()))
         assert worst < 0.4, f"the bowl's middle is {worst:.2f} inked: the counter closed"
+
+
+class TestBackingWash:
+    """The lift under a name fades out from its ink, with no flat body and no edge of its own."""
+
+    #: Where the name's ink lies on the 200 by 120 surface: one line of "Llyn Llydaw".
+    INK = (slice(52, 68), slice(40, 160))
+
+    def _lift(self) -> tuple[np.ndarray, float]:
+        """The backing wash's alpha under one line of ink on dark paint, and its reach in pixels."""
+        surface = NibSurface(
+            Canvas(0.0, 0.0, 200.0, 120.0, 200, 120), 1.0, np.full((120, 200), 0.8, np.float32), 6.0
+        )
+        cover = np.zeros((120, 200), np.float32)
+        cover[self.INK] = 1.0
+        _rgb, alpha = _backing_wash(cover, surface, _sheet(surface, GROUPS.paper), GROUPS)
+        nib = GROUPS.nib
+        return alpha, nib.label_wash_spread * nib.label_size_px
+
+    def test_the_lift_is_strongest_at_the_ink(self) -> None:
+        """Half a reach above the ink the lift is under half what it is beside the letters."""
+        alpha, reach = self._lift()
+        beside = float(alpha[50, 60:140].mean())
+        half_out = float(alpha[52 - round(reach / 2), 60:140].mean())
+        assert beside > 0.0
+        assert half_out < beside / 2, "the lift has a flat body round the name"
+
+    def test_the_lift_has_no_edge(self) -> None:
+        """Walking out from the ink the lift never steps by more than a small share of its peak."""
+        alpha, _reach = self._lift()
+        column = alpha[:52, 60:140].mean(axis=1)
+        steps = np.abs(np.diff(column))
+        assert float(steps.max()) < 0.1 * float(column.max()), "the lift ends in an edge"
+
+    def test_the_lift_is_gone_two_reaches_out(self) -> None:
+        """Nothing of the lift is left two reaches from the ink."""
+        alpha, reach = self._lift()
+        assert float(alpha[: 52 - round(2 * reach), :].max()) < 0.01
+
+    def test_the_lift_peaks_as_strong_as_the_box_did(self) -> None:
+        """The peak lift above the ink is the old box's (0.3365 here) to within five per cent."""
+        alpha, _reach = self._lift()
+        peak = float(alpha[:52, 60:140].mean(axis=1).max())
+        assert peak == pytest.approx(0.3365, rel=0.05), "the name reads fainter than it did"
+
+    def test_the_lift_is_the_pinned_one(self) -> None:
+        """Its strength beside the letters, its grain there and its whole weight, pinned."""
+        alpha, _reach = self._lift()
+        assert float(alpha[50, 60:140].mean()) == pytest.approx(0.301806, rel=1e-3)
+        assert float(alpha[50, 60:140].std()) == pytest.approx(0.017055, rel=1e-2)
+        assert float(alpha.sum()) == pytest.approx(1376.555, rel=1e-3)
+
+
+#: Mark layouts on the 96 by 72 card: a block of three lines, one long diagonal, and two
+#: short words apart, so the reach is crossed from inside a block, a corner and a gap.
+LAYOUTS = {
+    "block": [
+        [(8.0, 12.0 + 10 * i), (24.0, 14.0 + 10 * i), (40.0, 12.0 + 10 * i)] for i in range(3)
+    ],
+    "diagonal": [[(10.0, 10.0), (40.0, 30.0), (70.0, 50.0)]],
+    "two-words": [[(10.0, 20.0), (26.0, 22.0)], [(56.0, 50.0), (80.0, 48.0)]],
+}
+
+#: How far past the reach the feather's blur may carry its last level, in reaches. The
+#: blur is a third of the reach wide, so its tail runs a pixel or two over; the floor
+#: ends it inside a fifth of a reach on the darkest ground (17.2 px of 18 here). A floor
+#: left unscaled by the lift's gain carries it to 18.4 px, past this.
+TAIL = 0.2
+
+
+def _distance_to(mask: np.ndarray) -> np.ndarray:
+    """The Euclidean distance of every pixel to the nearest true pixel of `mask`."""
+    ys, xs = np.nonzero(mask)
+    gy, gx = np.mgrid[0 : mask.shape[0], 0 : mask.shape[1]]
+    squared = (gy[..., None] - ys) ** 2 + (gx[..., None] - xs) ** 2
+    return np.sqrt(squared.min(axis=-1).astype(np.float64))
+
+
+class TestNoStrayAlpha:
+    """The plate leaves the paper bare once the backing wash has faded out past its reach."""
+
+    @pytest.mark.parametrize("layout", list(LAYOUTS), ids=list(LAYOUTS))
+    @pytest.mark.parametrize(
+        ("hand_seed", "sheet_seed"),
+        [(17, 11), (3, 5), (40, 29)],
+        ids=["default", "seeds-3-5", "seeds-40-29"],
+    )
+    @pytest.mark.parametrize("dark", [0.35, 1.0], ids=["middling-ground", "darkest-ground"])
+    def test_no_alpha_level_past_the_fade(
+        self, tmp_path: Path, layout: str, hand_seed: int, sheet_seed: int, dark: float
+    ) -> None:
+        """No pixel further than a reach and its blur's tail from the ink has plate alpha."""
+        surface = NibSurface(
+            Canvas(0.0, 0.0, 96.0, 72.0, 96, 72), 1.0, np.full((72, 96), dark, np.float32), 6.0
+        )
+        marks = [Mark(line, size=14.0) for line in LAYOUTS[layout]]
+        paper = PaperStyle(sheet_seed=sheet_seed)
+        hand = HandStyle(hand_seed)
+        bare = NibGroups(NibStyle(label_wash=False), FaceStyle(), hand, BrushStyle(), paper)
+        washed = NibGroups(NibStyle(), FaceStyle(), hand, BrushStyle(), paper)
+        ink_path = nib_plate(marks, surface, bare, tmp_path / "ink.webp")
+        plate_path = nib_plate(marks, surface, washed, tmp_path / "plate.webp")
+        assert ink_path is not None
+        assert plate_path is not None
+        ink = np.asarray(Image.open(ink_path).getchannel("A")) > 0.12 * 255
+        assert ink.any()
+        alpha = np.asarray(Image.open(plate_path).getchannel("A"))
+        nib = NibStyle()
+        reach = nib.label_wash_spread * nib.label_size_px
+        stray = alpha[_distance_to(ink) > reach * (1.0 + TAIL)]
+        assert int(stray.max()) == 0, f"{int((stray > 0).sum())} pixels past the fade carry alpha"

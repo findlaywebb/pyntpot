@@ -108,7 +108,9 @@ def _ink_box(display_width: int, text: str, scale: int = 2) -> tuple[int, int, i
     blank = Image.new("RGB", (display_width * scale, 300 * scale), "white")
     image = blank.copy()
     draw_attribution(image, text, Style.default(), float(scale))
-    box = ImageChops.difference(image, blank).getbbox()
+    # Past two levels, so the backing wash's faint fade round the letters is not the ink.
+    changed = ImageChops.difference(image, blank).convert("L").point(lambda v: 255 if v > 2 else 0)
+    box = changed.getbbox()
     assert box is not None
     return box
 

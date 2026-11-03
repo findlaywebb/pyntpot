@@ -98,12 +98,13 @@ wash the name sits in the ground rather than on it.
 
 *Painted by `examples/nib_stages.py` (seed 7, `figure="ground"`; `Setting(wash=False)`). The ground is one wash of sap green from `PAINTERS_PIGMENTS`, laid on an irregular patch.*
 
-A setting can ask for a backing wash: a soft, paper-coloured blot, laid through the wash
-machinery with a pooled rim and a granulated body, lifted under the marks that ask for one.
-It exists only where the ground is dark enough to need it, so a name on bare paper has none.
-It reads as paint lifted before the name was written.
+A setting can ask for a backing wash: a soft, paper-coloured lift with a granulated body,
+strongest at the letters and fading out from them, with no flat body and no rim, under the
+marks that ask for one. It exists only where the ground is dark enough to need it, so a name
+on bare paper has none. It reads as paint lifted round the letters before they were
+written, not as a pale patch behind them.
 
-![The same word and pencil line on the same green, with a pale, soft-edged patch of paper showing through the green wash behind the name, so the ink is much clearer.](../images/explanation/nib-backing.webp)
+![The same word and pencil line on the same green, with the green lifted towards the paper's colour close round the letters and fading out from them, so the ink reads clearly with no pale patch behind it.](../images/explanation/nib-backing.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, `figure="backing"`).*
 
