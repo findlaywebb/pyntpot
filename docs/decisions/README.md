@@ -58,3 +58,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0051 | The classic paper lock is tolerant too (applies 0030) |
 | 0052 | Golden diff images in the PR body (amends 0006 and 0036) |
 | 0059 | The organic drift is rescaled about its own mean: a golden regeneration |
+| 0065 | A name set along water keeps its letters off it: a golden regeneration |
