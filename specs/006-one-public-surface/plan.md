@@ -50,13 +50,16 @@ Text a lane moves verbatim (a `#:` comment becoming an `Attributes:` entry) keep
 words; S9 rewrites it by Appendix A. The check any slice can run on its own lines:
 
 ```bash
-git diff origin/main -U0 -- '*.py' '*.md' | grep '^+' \
+git diff "$slice_base" -U0 -- '*.py' '*.md' ':!specs' ':!docs/decisions' | grep '^+' \
   | grep -i -F -e 'label plate' -e callout -e 'raster card' -e 'recorded route' \
       -e 'centreline route' -e 'outline route'
 ```
 
-It finds nothing a slice wrote itself (moved `#:` text excepted, named in the slice's
-report).
+`$slice_base` is the commit the slice branched from (S3's commit for S4 to S7, the
+previous slice's commit for a serial slice), not `origin/main`. `specs/` and
+`docs/decisions/` are excluded because this branch's own spec, plan and ADR 0068 quote
+every retired word (Appendix A, spec "No retired word"). It finds nothing a slice wrote
+itself (moved `#:` text excepted, named in the slice's report).
 
 Two facts shape the order:
 
@@ -147,7 +150,10 @@ would take one past 400, the slice splits it. Never trim text to fit.
 
 Serial in the main worktree: S0, S1, S2, S3. Then S4, S5, S6 and S7 in parallel, each in
 its own worktree branched from S3's commit. Merge order: S5, S4, S7, S6 (largest last;
-each rebases on the previous). Then serial: S8, S9, S10, S11.
+each rebases on the previous). Then serial: S8, S9, S10, S11. An expected, trivial
+rebase conflict: S4's last insertion (`separated`, near `stamp`/`wash`) and S5's
+`"Align"` (first in `LETTERS_PUBLIC`) sit a few lines apart in
+`tests/unit/test_public_api.py`; keep both.
 
 The standard gate, unless a slice says otherwise:
 
@@ -720,7 +726,10 @@ Decisions:
     its order, with `key.casefold() == wanted` or `wanted in osm_names[key]`. A road all
     of whose pieces `named_lines` simplifies below two points, or that falls under two
     points on the card's pixel grid, is not in `pieces`: it counts as not drawn, and its
-    name raises below. `named_roads`' docstring says so. Rules:
+    name raises below. `named_roads`' docstring says so, and says that a named road's
+    label sits on its longest run over named and numbered pieces together, so naming a
+    road the card would pick anyway can move where its number sits (B3234 on Lynmouth:
+    the 358.9 px run, not the picked 173.4 px one). Rules:
     - **Label text** is the key: the road's number when it has one, its name otherwise,
       even when the match was by OSM name (`"Lynbridge Road"` letters `B3234`).
     - **Duplicates:** a key is lettered once, at the position of the first listed name
@@ -787,8 +796,12 @@ A82) and real streets they carry, checked against the Ambleside OSM fixture
 `ref=A591` (trunk), and Old Lake Road is a residential street with no `ref`, so the
 unnumbered minor road is Old Lake Road. The Lynmouth tests use only names the fixture's
 basemap draws (measured: `B3234` 173 px, `A39` 792 px, `Lydiate Lane` a `minor` road on
-the `path` band at 123 px, `B3223` 83 px against a 89.6 px minimum, `Lynbridge Road` an
-OSM name on a `B3234` piece).
+the `path` band at 123 px, `Lee Road` a drawn Lynton street whose longest run is 70.0 px
+against a 89.6 px minimum, `Lynbridge Road` an OSM name on a `B3234` piece). These
+lengths are the joined runs `named_roads` measures, over `roads` and `numbered` together:
+`B3223` has an unnamed numbered piece on the fixture, so its run is 274.2 px (83.3 px
+over its named pieces alone) and it is long enough to letter; it is the positive proof
+that the `numbered` key matters, never the too-short example.
 
 - `tests/unit/maps/lettering/test_picks_roads.py`, built like the existing tests
   (`hung_card`, `label_basemap`, synthetic `lines` dicts), in a `TestNamedRoads` class:
@@ -796,7 +809,10 @@ OSM name on a `B3234` piece).
     route; `named_roads` takes no route at all);
   - `test_a_named_minor_road_is_lettered` (`{"n": "Old Lake Road", "c": "minor", "r": ""}`,
     named `"Old Lake Road"`: one label `Old Lake Road`; and `pick_roads` on the same lines
-    letters nothing, which pins that the pick path still skips minor roads);
+    letters nothing, which pins that the pick path still skips minor roads. So that the
+    class filter is the only reason `pick_roads` skips it, Old Lake Road's line lies
+    beside the route (within `ROAD_ON_ROUTE_PX`, 40 px) and runs longer than
+    `road_min_px`, and the route pixels are passed to `pick_roads`);
   - `test_a_road_is_matched_by_number_ignoring_case` (`"a591"` matches ref `A591`);
   - `test_a_road_matched_by_its_name_is_lettered_by_its_number`
     (`{"n": "Rydal Road", "r": "A591"}`, named `"rydal road"`: one label, text `A591`);
@@ -845,13 +861,20 @@ OSM name on a `B3234` piece).
     `Lydiate Lane`, whose baseline is at least `road_min_px` long (a unit-level call; it
     writes nothing).
   - `test_a_named_road_too_short_on_the_card_falls_back_to_the_picked_roads`:
-    `roads=("B3223",)` raises nothing, logs `B3223` at INFO, and the road labels equal
-    the pinned picked roads `["A39", "B3234"]`.
+    `roads=("Lee Road",)` raises nothing, logs `Lee Road` at INFO, and the road labels
+    equal the pinned picked roads `["A39", "B3234"]`.
+  - `test_a_numbered_road_lettered_only_through_its_unnamed_pieces`: `roads=("B3223",)`
+    letters `B3223` as the only road (the picker never letters it; its run reaches the
+    minimum only with the `numbered` pieces).
   `PINNED_LABELS` and the golden card test stay as they are and must pass unchanged.
 - `tests/unit/maps/lettering/test_ground.py` (new, **not** golden, so S10's mutation
   selection runs it; every `letter` test is golden and `-m "not golden"` drops it). It
   calls `_ground(basemap, lines, strands, annotations, style)` directly on
-  `tiny_basemap(tiny_style())` with synthetic `lines` dicts in that basemap's card metres
+  `tiny_basemap(class_style(display_px=320, supersample=1))`, not `tiny_style()`: that
+  card is 80×50 display px, shorter than `road_min_px` (89.6 px), so no road on it could be
+  lettered, and `tiny_style(display_px=...)` raises a duplicate-keyword `TypeError`. On the
+  320 px card the picked `A591` lies beside the route and the named `A66` lies more than
+  `ROAD_ON_ROUTE_PX` from it, both inside the card. Synthetic `lines` dicts in that basemap's card metres
   (built like `test_picks_roads.py`'s, `{"roads": [...], "rivers": [], "coast": [],
   "crossings": [], "numbered": []}`) and `strands` along the basemap's route, in a
   `TestGround` class. Expected label names are pinned literals, never recomputed through
@@ -986,8 +1009,9 @@ of 006's scope ("Files to leave alone"), so the key cannot change here.
      `maps/lettering/__init__.py:7-8`).
   3. In `src/`, `git diff` of S9's commit touches no line outside a docstring or comment
      except N24; every Appendix A row's new string is present (found by `git grep -F` in
-     its file, or, for a row S9 rewrapped, N1 and R9 among them, read in place and listed
-     in the report).
+     its file, or, for a row S9 or an earlier lane moved or rewrapped, read in place and
+     listed in the report: N1 and R9 (S9 rewrapped), and N19, C3, C8 and R6, `#:` field
+     comments S4, S5 and S6 moved into `Attributes:` entries, whose `#:` prefix is gone).
 
 ### S10 — Mutation testing (serial, local only)
 
@@ -1007,7 +1031,7 @@ The expected list, from the "Approach" list of body changes:
 | Function | mutmut pattern | Why |
 | --- | --- | --- |
 | `ink.washing.wash` | `pyntpot.ink.washing.x_wash*` | reads `Flow` by name |
-| `ink.bloom.bloom` | `pyntpot.ink.bloom.x_bloom*` | reads `Blooms` by name |
+| `ink.bloom.bloom` | `pyntpot.ink.bloom.x_bloom__mutmut_*` | reads `Blooms` by name (not `x_bloom*`, which also matches the unchanged `bloom_radius`) |
 | `maps.lettering.picks_roads.named_roads` | `pyntpot.maps.lettering.picks_roads.x_named_roads*` | new |
 | `maps.lettering.picks_roads._road_pieces` | `pyntpot.maps.lettering.picks_roads.x__road_pieces*` | new, extracted |
 | `maps.lettering.picks_roads.pick_roads` | `pyntpot.maps.lettering.picks_roads.x_pick_roads*` | now calls `_road_pieces` |
@@ -1487,5 +1511,33 @@ Consider items:
   docstring says so (S7).
 - One dict: `osm_names` is filled only where `pieces` is appended, and `named_roads`
   iterates `pieces` (S7).
+
+Skipped: none.
+
+## Response to review 3
+
+Blocker:
+
+- B1, `B3223` is not too short: correct. With `numbered` its run is 274.2 px. The
+  too-short example is now `Lee Road` (70.0 px against 89.6 px; falls back to
+  `["A39", "B3234"]`) in S7's Lynmouth measurements, its `letter` test and spec
+  acceptance. `B3223` stays as a new positive test (`roads=("B3223",)` letters `B3223`),
+  the one real-data proof that `numbered` matters, and the measurements say why.
+
+Should fix, all adopted:
+
+1. The retired-word self-check diffs against the slice's base commit and excludes
+   `specs` and `docs/decisions` (Approach).
+2. `test_ground.py` uses `tiny_basemap(class_style(display_px=320, supersample=1))`, and
+   the plan says why `tiny_style()` cannot letter a road (S7).
+3. The bloom pattern is `pyntpot.ink.bloom.x_bloom__mutmut_*`, so `bloom_radius` is not
+   selected (S10).
+4. S9 done criterion 3 reads in place every row a lane moved or rewrapped, naming N19,
+   C3, C8 and R6.
+5. `test_a_named_minor_road_is_lettered` prescribes Old Lake Road beside the route,
+   longer than `road_min_px`, with route pixels passed to `pick_roads` (S7).
+
+Consider items, both adopted: `named_roads`' docstring notes that naming a road can move
+its label (S7); the expected `test_public_api.py` rebase conflict is named under Slices.
 
 Skipped: none.

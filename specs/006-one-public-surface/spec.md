@@ -99,8 +99,9 @@ Field docs:
       `letter` on the Lynmouth fixture: `Annotations()` letters `PINNED_LABELS`;
       `roads=("B3234",)` letters `B3234` as the only road, replacing both picked roads
       (`A39` and `B3234`); `roads=("Lynbridge Road",)` letters `B3234`; the minor
-      `Lydiate Lane` can be named; `roads=("B3223",)` is too short and keeps the picked
-      roads; `roads=("A591",)` raises and writes no plate.
+      `Lydiate Lane` can be named; `roads=("Lee Road",)` is too short and keeps the
+      picked roads; `roads=("B3223",)` letters `B3223` through its unnamed numbered
+      pieces; `roads=("A591",)` raises and writes no plate.
 - [ ] With `roads` empty, output is byte-identical: every golden, plate hash and docs
       image passes unchanged on the pinning machine (`uv run pytest -n auto --dist
       loadgroup`).
