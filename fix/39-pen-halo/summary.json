@@ -1,0 +1,1808 @@
+{
+  "before": "origin/main",
+  "after": "working tree",
+  "channel_delta": 2,
+  "max_differing_fraction": 0.005,
+  "files": [
+    {
+      "path": "docs/images/curves/kaleidoscope.webp",
+      "status": "changed",
+      "width": 640,
+      "height": 640,
+      "changed_fraction": 0.10132568359375,
+      "over_bound": true,
+      "max_delta": 145,
+      "box": [
+        0,
+        62,
+        640,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/curves/kaleidoscope.webp.diff.png",
+      "crop_image": "docs/images/curves/kaleidoscope.webp.crop.png"
+    },
+    {
+      "path": "docs/images/curves/lissajous.webp",
+      "status": "changed",
+      "width": 640,
+      "height": 640,
+      "changed_fraction": 0.0116748046875,
+      "over_bound": true,
+      "max_delta": 48,
+      "box": [
+        0,
+        312,
+        640,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/curves/lissajous.webp.diff.png",
+      "crop_image": "docs/images/curves/lissajous.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-angles.webp",
+      "status": "changed",
+      "width": 840,
+      "height": 386,
+      "changed_fraction": 0.014825437947199606,
+      "over_bound": true,
+      "max_delta": 65,
+      "box": [
+        62,
+        26,
+        810,
+        348
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-angles.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-angles.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-backing.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.0045138888888888885,
+      "over_bound": false,
+      "max_delta": 30,
+      "box": [
+        32,
+        51,
+        276,
+        132
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-backing.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-backing.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-centreline.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.0025694444444444445,
+      "over_bound": false,
+      "max_delta": 30,
+      "box": [
+        32,
+        51,
+        269,
+        113
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/explanation/nib-centreline.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-centreline.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-ground.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.001388888888888889,
+      "over_bound": false,
+      "max_delta": 30,
+      "box": [
+        32,
+        53,
+        268,
+        112
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/explanation/nib-ground.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-ground.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-hands.webp",
+      "status": "changed",
+      "width": 840,
+      "height": 335,
+      "changed_fraction": 0.014644633972992182,
+      "over_bound": true,
+      "max_delta": 72,
+      "box": [
+        57,
+        38,
+        785,
+        299
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-hands.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-hands.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-runs-dry.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.003,
+      "over_bound": false,
+      "max_delta": 134,
+      "box": [
+        21,
+        91,
+        39,
+        109
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/explanation/nib-runs-dry.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-runs-dry.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-set-down.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.0029861111111111113,
+      "over_bound": false,
+      "max_delta": 134,
+      "box": [
+        21,
+        91,
+        39,
+        109
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/explanation/nib-set-down.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-set-down.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/wash-glaze.webp",
+      "status": "changed",
+      "width": 800,
+      "height": 350,
+      "changed_fraction": 0.15939285714285714,
+      "over_bound": true,
+      "max_delta": 35,
+      "box": [
+        0,
+        0,
+        800,
+        350
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/wash-glaze.webp.diff.png",
+      "crop_image": "docs/images/explanation/wash-glaze.webp.crop.png"
+    },
+    {
+      "path": "docs/images/gallery/composition.webp",
+      "status": "changed",
+      "width": 480,
+      "height": 320,
+      "changed_fraction": 0.032109375,
+      "over_bound": true,
+      "max_delta": 17,
+      "box": [
+        19,
+        112,
+        480,
+        320
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/gallery/composition.webp.diff.png",
+      "crop_image": "docs/images/gallery/composition.webp.crop.png"
+    },
+    {
+      "path": "docs/images/gallery/lettering.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 240,
+      "changed_fraction": 0.0036342592592592594,
+      "over_bound": false,
+      "max_delta": 40,
+      "box": [
+        89,
+        95,
+        218,
+        129
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/gallery/lettering.webp.diff.png",
+      "crop_image": "docs/images/gallery/lettering.webp.crop.png"
+    },
+    {
+      "path": "docs/images/gallery/nib-line.webp",
+      "status": "changed",
+      "width": 320,
+      "height": 213,
+      "changed_fraction": 0.0012030516431924883,
+      "over_bound": false,
+      "max_delta": 95,
+      "box": [
+        164,
+        102,
+        175,
+        112
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/gallery/nib-line.webp.diff.png",
+      "crop_image": "docs/images/gallery/nib-line.webp.crop.png"
+    },
+    {
+      "path": "docs/images/gallery/route-map.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.16632486979166666,
+      "over_bound": true,
+      "max_delta": 23,
+      "box": [
+        0,
+        48,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/gallery/route-map.webp.diff.png",
+      "crop_image": "docs/images/gallery/route-map.webp.crop.png"
+    },
+    {
+      "path": "docs/images/hero.webp",
+      "status": "changed",
+      "width": 1200,
+      "height": 854,
+      "changed_fraction": 0.1418871975019516,
+      "over_bound": true,
+      "max_delta": 159,
+      "box": [
+        0,
+        24,
+        1200,
+        854
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/hero.webp.diff.png",
+      "crop_image": "docs/images/hero.webp.crop.png"
+    },
+    {
+      "path": "docs/images/how-to/command-line.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 583,
+      "changed_fraction": 0.1075138174194778,
+      "over_bound": true,
+      "max_delta": 101,
+      "box": [
+        0,
+        124,
+        720,
+        583
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/how-to/command-line.webp.diff.png",
+      "crop_image": "docs/images/how-to/command-line.webp.crop.png"
+    },
+    {
+      "path": "docs/images/how-to/own-shapes.webp",
+      "status": "changed",
+      "width": 480,
+      "height": 320,
+      "changed_fraction": 0.03265625,
+      "over_bound": true,
+      "max_delta": 100,
+      "box": [
+        3,
+        160,
+        480,
+        320
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/how-to/own-shapes.webp.diff.png",
+      "crop_image": "docs/images/how-to/own-shapes.webp.crop.png"
+    },
+    {
+      "path": "docs/images/how-to/route-ink-grid.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 306,
+      "changed_fraction": 0.19527505446623095,
+      "over_bound": true,
+      "max_delta": 39,
+      "box": [
+        0,
+        12,
+        720,
+        306
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/how-to/route-ink-grid.webp.diff.png",
+      "crop_image": "docs/images/how-to/route-ink-grid.webp.crop.png"
+    },
+    {
+      "path": "docs/images/how-to/route-ink.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.0992702907986111,
+      "over_bound": true,
+      "max_delta": 90,
+      "box": [
+        0,
+        112,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/how-to/route-ink.webp.diff.png",
+      "crop_image": "docs/images/how-to/route-ink.webp.crop.png"
+    },
+    {
+      "path": "docs/images/map-styles/bold.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.12147894965277778,
+      "over_bound": true,
+      "max_delta": 77,
+      "box": [
+        12,
+        112,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/map-styles/bold.webp.diff.png",
+      "crop_image": "docs/images/map-styles/bold.webp.crop.png"
+    },
+    {
+      "path": "docs/images/map-styles/pen-and-ink.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.06941731770833333,
+      "over_bound": true,
+      "max_delta": 30,
+      "box": [
+        0,
+        120,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/map-styles/pen-and-ink.webp.diff.png",
+      "crop_image": "docs/images/map-styles/pen-and-ink.webp.crop.png"
+    },
+    {
+      "path": "docs/images/map-styles/sepia.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.10897081163194444,
+      "over_bound": true,
+      "max_delta": 65,
+      "box": [
+        0,
+        104,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/map-styles/sepia.webp.diff.png",
+      "crop_image": "docs/images/map-styles/sepia.webp.crop.png"
+    },
+    {
+      "path": "docs/images/map-styles/winter.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.1055636935763889,
+      "over_bound": true,
+      "max_delta": 25,
+      "box": [
+        8,
+        112,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/map-styles/winter.webp.diff.png",
+      "crop_image": "docs/images/map-styles/winter.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/derwentwater.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 480,
+      "changed_fraction": 0.07324652777777778,
+      "over_bound": true,
+      "max_delta": 65,
+      "box": [
+        0,
+        194,
+        720,
+        480
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/derwentwater.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/derwentwater.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/svg-drawing.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 480,
+      "changed_fraction": 0.05144965277777778,
+      "over_bound": true,
+      "max_delta": 105,
+      "box": [
+        3,
+        4,
+        720,
+        480
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/svg-drawing.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/svg-drawing.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/svg-ink.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 480,
+      "changed_fraction": 0.028825231481481483,
+      "over_bound": true,
+      "max_delta": 106,
+      "box": [
+        10,
+        80,
+        720,
+        480
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/svg-ink.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/svg-ink.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/tree-family.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 960,
+      "changed_fraction": 0.138125,
+      "over_bound": true,
+      "max_delta": 49,
+      "box": [
+        0,
+        109,
+        720,
+        960
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/tree-family.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/tree-family.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/tree.webp",
+      "status": "changed",
+      "width": 600,
+      "height": 800,
+      "changed_fraction": 0.09228125,
+      "over_bound": true,
+      "max_delta": 67,
+      "box": [
+        0,
+        176,
+        600,
+        800
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/tree.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/tree.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/ambleside.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.16632486979166666,
+      "over_bound": true,
+      "max_delta": 23,
+      "box": [
+        0,
+        48,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/ambleside.webp.diff.png",
+      "crop_image": "docs/images/places/ambleside.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/oxford.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 643,
+      "changed_fraction": 0.2809465180577156,
+      "over_bound": true,
+      "max_delta": 104,
+      "box": [
+        0,
+        0,
+        720,
+        643
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/oxford.webp.diff.png",
+      "crop_image": "docs/images/places/oxford.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/skye.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 643,
+      "changed_fraction": 0.19209434940383618,
+      "over_bound": true,
+      "max_delta": 28,
+      "box": [
+        0,
+        144,
+        720,
+        643
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/skye.webp.diff.png",
+      "crop_image": "docs/images/places/skye.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/y-fenni.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 643,
+      "changed_fraction": 0.21074390876101606,
+      "over_bound": true,
+      "max_delta": 113,
+      "box": [
+        0,
+        7,
+        720,
+        643
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/y-fenni.webp.diff.png",
+      "crop_image": "docs/images/places/y-fenni.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/yr-wyddfa.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 582,
+      "changed_fraction": 0.1106409889270714,
+      "over_bound": true,
+      "max_delta": 18,
+      "box": [
+        0,
+        116,
+        720,
+        582
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/yr-wyddfa.webp.diff.png",
+      "crop_image": "docs/images/places/yr-wyddfa.webp.crop.png"
+    },
+    {
+      "path": "docs/images/reference/brush-sheet.webp",
+      "status": "changed",
+      "width": 960,
+      "height": 354,
+      "changed_fraction": 0.0722251647834275,
+      "over_bound": true,
+      "max_delta": 177,
+      "box": [
+        20,
+        11,
+        960,
+        354
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/reference/brush-sheet.webp.diff.png",
+      "crop_image": "docs/images/reference/brush-sheet.webp.crop.png"
+    },
+    {
+      "path": "docs/images/reference/pigment-swatches.webp",
+      "status": "changed",
+      "width": 960,
+      "height": 372,
+      "changed_fraction": 0.12161738351254481,
+      "over_bound": true,
+      "max_delta": 45,
+      "box": [
+        0,
+        0,
+        960,
+        372
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/reference/pigment-swatches.webp.diff.png",
+      "crop_image": "docs/images/reference/pigment-swatches.webp.crop.png"
+    },
+    {
+      "path": "docs/images/social-preview.jpg",
+      "status": "changed",
+      "width": 1280,
+      "height": 640,
+      "changed_fraction": 0.0371923828125,
+      "over_bound": true,
+      "max_delta": 90,
+      "box": [
+        16,
+        4,
+        1267,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/social-preview.jpg.diff.png",
+      "crop_image": "docs/images/social-preview.jpg.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/composition.webp",
+      "status": "changed",
+      "width": 480,
+      "height": 320,
+      "changed_fraction": 0.032109375,
+      "over_bound": true,
+      "max_delta": 17,
+      "box": [
+        19,
+        112,
+        480,
+        320
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/composition.webp.diff.png",
+      "crop_image": "docs/images/tutorials/composition.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-brush.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 328,
+      "changed_fraction": 0.04813262195121951,
+      "over_bound": true,
+      "max_delta": 38,
+      "box": [
+        0,
+        16,
+        720,
+        328
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-brush.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-brush.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-composition.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 374,
+      "changed_fraction": 0.10032308377896614,
+      "over_bound": true,
+      "max_delta": 28,
+      "box": [
+        36,
+        16,
+        720,
+        374
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-composition.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-composition.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-lettering.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 344,
+      "changed_fraction": 0.005281007751937985,
+      "over_bound": true,
+      "max_delta": 42,
+      "box": [
+        49,
+        46,
+        673,
+        304
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-lettering.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-lettering.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-nib.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 274,
+      "changed_fraction": 0.00583941605839416,
+      "over_bound": true,
+      "max_delta": 31,
+      "box": [
+        51,
+        23,
+        698,
+        231
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-nib.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-nib.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-paper.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 374,
+      "changed_fraction": 0.07183600713012478,
+      "over_bound": true,
+      "max_delta": 32,
+      "box": [
+        8,
+        18,
+        720,
+        374
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-paper.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-paper.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-pigments.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 374,
+      "changed_fraction": 0.21524435531788472,
+      "over_bound": true,
+      "max_delta": 32,
+      "box": [
+        0,
+        0,
+        720,
+        374
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-pigments.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-pigments.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-wash.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 374,
+      "changed_fraction": 0.051132650029708855,
+      "over_bound": true,
+      "max_delta": 26,
+      "box": [
+        19,
+        20,
+        720,
+        371
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-wash.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-wash.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/lettering.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 240,
+      "changed_fraction": 0.0036342592592592594,
+      "over_bound": false,
+      "max_delta": 40,
+      "box": [
+        89,
+        95,
+        218,
+        129
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/tutorials/lettering.webp.diff.png",
+      "crop_image": "docs/images/tutorials/lettering.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/nib-line.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 240,
+      "changed_fraction": 0.0011689814814814816,
+      "over_bound": false,
+      "max_delta": 96,
+      "box": [
+        184,
+        114,
+        197,
+        126
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/tutorials/nib-line.webp.diff.png",
+      "crop_image": "docs/images/tutorials/nib-line.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/route-map.webp",
+      "status": "changed",
+      "width": 900,
+      "height": 640,
+      "changed_fraction": 0.08516666666666667,
+      "over_bound": true,
+      "max_delta": 90,
+      "box": [
+        0,
+        144,
+        900,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/route-map.webp.diff.png",
+      "crop_image": "docs/images/tutorials/route-map.webp.crop.png"
+    },
+    {
+      "path": "docs/images/word.webp",
+      "status": "changed",
+      "width": 480,
+      "height": 270,
+      "changed_fraction": 0.0008256172839506173,
+      "over_bound": false,
+      "max_delta": 23,
+      "box": [
+        136,
+        116,
+        343,
+        191
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/word.webp.diff.png",
+      "crop_image": "docs/images/word.webp.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/curves/kaleidoscope.png",
+      "status": "changed",
+      "width": 240,
+      "height": 240,
+      "changed_fraction": 0.009756944444444445,
+      "over_bound": true,
+      "max_delta": 124,
+      "box": [
+        36,
+        47,
+        218,
+        193
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/curves/kaleidoscope.png.diff.png",
+      "crop_image": "tests/golden/docs/curves/kaleidoscope.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/curves/lissajous.png",
+      "status": "changed",
+      "width": 240,
+      "height": 240,
+      "changed_fraction": 0.0003125,
+      "over_bound": false,
+      "max_delta": 42,
+      "box": [
+        209,
+        118,
+        214,
+        122
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/curves/lissajous.png.diff.png",
+      "crop_image": "tests/golden/docs/curves/lissajous.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-angles.png",
+      "status": "changed",
+      "width": 240,
+      "height": 110,
+      "changed_fraction": 0.01765151515151515,
+      "over_bound": true,
+      "max_delta": 32,
+      "box": [
+        35,
+        24,
+        232,
+        99
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-angles.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-angles.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-backing.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.004511278195488722,
+      "over_bound": false,
+      "max_delta": 27,
+      "box": [
+        21,
+        35,
+        183,
+        88
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-backing.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-backing.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-centreline.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.002662907268170426,
+      "over_bound": false,
+      "max_delta": 27,
+      "box": [
+        21,
+        35,
+        179,
+        75
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/explanation/nib-centreline.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-centreline.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-ground.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.0016604010025062657,
+      "over_bound": false,
+      "max_delta": 27,
+      "box": [
+        21,
+        35,
+        178,
+        75
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/explanation/nib-ground.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-ground.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-hands.png",
+      "status": "changed",
+      "width": 240,
+      "height": 96,
+      "changed_fraction": 0.019227430555555557,
+      "over_bound": true,
+      "max_delta": 34,
+      "box": [
+        16,
+        12,
+        224,
+        86
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-hands.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-hands.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-runs-dry.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.0031641604010025064,
+      "over_bound": false,
+      "max_delta": 135,
+      "box": [
+        14,
+        61,
+        26,
+        73
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/explanation/nib-runs-dry.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-runs-dry.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-set-down.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.0031641604010025064,
+      "over_bound": false,
+      "max_delta": 135,
+      "box": [
+        14,
+        61,
+        26,
+        73
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/explanation/nib-set-down.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-set-down.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/wash-glaze.png",
+      "status": "changed",
+      "width": 240,
+      "height": 105,
+      "changed_fraction": 0.0035714285714285713,
+      "over_bound": false,
+      "max_delta": 13,
+      "box": [
+        10,
+        9,
+        216,
+        85
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/wash-glaze.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/wash-glaze.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/gallery/composition.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.000234375,
+      "over_bound": false,
+      "max_delta": 4,
+      "box": [
+        98,
+        67,
+        143,
+        72
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/gallery/composition.png.diff.png",
+      "crop_image": "tests/golden/docs/gallery/composition.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/gallery/lettering.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.0037760416666666667,
+      "over_bound": false,
+      "max_delta": 34,
+      "box": [
+        60,
+        64,
+        145,
+        86
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/gallery/lettering.png.diff.png",
+      "crop_image": "tests/golden/docs/gallery/lettering.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/gallery/nib-line.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.0012760416666666666,
+      "over_bound": false,
+      "max_delta": 94,
+      "box": [
+        123,
+        76,
+        131,
+        84
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/gallery/nib-line.png.diff.png",
+      "crop_image": "tests/golden/docs/gallery/nib-line.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/gallery/route-map.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.0037280701754385964,
+      "over_bound": false,
+      "max_delta": 9,
+      "box": [
+        12,
+        20,
+        231,
+        166
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/gallery/route-map.png.diff.png",
+      "crop_image": "tests/golden/docs/gallery/route-map.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/hero.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.003557504873294347,
+      "over_bound": false,
+      "max_delta": 159,
+      "box": [
+        0,
+        119,
+        220,
+        171
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/hero.png.diff.png",
+      "crop_image": "tests/golden/docs/hero.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/how-to/command-line.png",
+      "status": "changed",
+      "width": 240,
+      "height": 194,
+      "changed_fraction": 0.00625,
+      "over_bound": true,
+      "max_delta": 50,
+      "box": [
+        20,
+        44,
+        234,
+        191
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/how-to/command-line.png.diff.png",
+      "crop_image": "tests/golden/docs/how-to/command-line.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/how-to/own-shapes.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.0008072916666666667,
+      "over_bound": false,
+      "max_delta": 88,
+      "box": [
+        17,
+        122,
+        136,
+        147
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/how-to/own-shapes.png.diff.png",
+      "crop_image": "tests/golden/docs/how-to/own-shapes.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/how-to/route-ink-grid.png",
+      "status": "changed",
+      "width": 240,
+      "height": 102,
+      "changed_fraction": 0.006699346405228758,
+      "over_bound": true,
+      "max_delta": 16,
+      "box": [
+        12,
+        5,
+        220,
+        83
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/how-to/route-ink-grid.png.diff.png",
+      "crop_image": "tests/golden/docs/how-to/route-ink-grid.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/how-to/route-ink.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.004239766081871345,
+      "over_bound": false,
+      "max_delta": 28,
+      "box": [
+        27,
+        38,
+        234,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/how-to/route-ink.png.diff.png",
+      "crop_image": "tests/golden/docs/how-to/route-ink.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/map-styles/bold.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.008674463937621833,
+      "over_bound": true,
+      "max_delta": 20,
+      "box": [
+        5,
+        39,
+        234,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/map-styles/bold.png.diff.png",
+      "crop_image": "tests/golden/docs/map-styles/bold.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/map-styles/pen-and-ink.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.006944444444444444,
+      "over_bound": true,
+      "max_delta": 9,
+      "box": [
+        27,
+        42,
+        234,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/map-styles/pen-and-ink.png.diff.png",
+      "crop_image": "tests/golden/docs/map-styles/pen-and-ink.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/map-styles/sepia.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.0024366471734892786,
+      "over_bound": false,
+      "max_delta": 21,
+      "box": [
+        30,
+        39,
+        234,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/map-styles/sepia.png.diff.png",
+      "crop_image": "tests/golden/docs/map-styles/sepia.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/map-styles/winter.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.005726120857699805,
+      "over_bound": true,
+      "max_delta": 9,
+      "box": [
+        27,
+        39,
+        234,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/map-styles/winter.png.diff.png",
+      "crop_image": "tests/golden/docs/map-styles/winter.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/derwentwater.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.0027083333333333334,
+      "over_bound": false,
+      "max_delta": 39,
+      "box": [
+        78,
+        141,
+        160,
+        151
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/painting-with-python/derwentwater.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/derwentwater.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/svg-drawing.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.005338541666666667,
+      "over_bound": true,
+      "max_delta": 87,
+      "box": [
+        33,
+        28,
+        192,
+        130
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/painting-with-python/svg-drawing.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/svg-drawing.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/svg-ink.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.006119791666666667,
+      "over_bound": true,
+      "max_delta": 88,
+      "box": [
+        33,
+        28,
+        193,
+        130
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/painting-with-python/svg-ink.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/svg-ink.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/tree-family.png",
+      "status": "changed",
+      "width": 240,
+      "height": 320,
+      "changed_fraction": 0.011041666666666667,
+      "over_bound": true,
+      "max_delta": 36,
+      "box": [
+        18,
+        38,
+        225,
+        285
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/painting-with-python/tree-family.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/tree-family.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/tree.png",
+      "status": "changed",
+      "width": 240,
+      "height": 320,
+      "changed_fraction": 0.0042578125,
+      "over_bound": false,
+      "max_delta": 65,
+      "box": [
+        50,
+        94,
+        191,
+        173
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/painting-with-python/tree.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/tree.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/ambleside.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.0037280701754385964,
+      "over_bound": false,
+      "max_delta": 9,
+      "box": [
+        12,
+        20,
+        231,
+        166
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/places/ambleside.png.diff.png",
+      "crop_image": "tests/golden/docs/places/ambleside.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/oxford.png",
+      "status": "changed",
+      "width": 240,
+      "height": 214,
+      "changed_fraction": 0.01804906542056075,
+      "over_bound": true,
+      "max_delta": 51,
+      "box": [
+        7,
+        0,
+        240,
+        214
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/places/oxford.png.diff.png",
+      "crop_image": "tests/golden/docs/places/oxford.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/skye.png",
+      "status": "changed",
+      "width": 240,
+      "height": 214,
+      "changed_fraction": 0.00625,
+      "over_bound": true,
+      "max_delta": 8,
+      "box": [
+        40,
+        52,
+        218,
+        210
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/places/skye.png.diff.png",
+      "crop_image": "tests/golden/docs/places/skye.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/y-fenni.png",
+      "status": "changed",
+      "width": 240,
+      "height": 214,
+      "changed_fraction": 0.01688084112149533,
+      "over_bound": true,
+      "max_delta": 78,
+      "box": [
+        4,
+        2,
+        237,
+        213
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/places/y-fenni.png.diff.png",
+      "crop_image": "tests/golden/docs/places/y-fenni.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/yr-wyddfa.png",
+      "status": "changed",
+      "width": 240,
+      "height": 194,
+      "changed_fraction": 0.002061855670103093,
+      "over_bound": false,
+      "max_delta": 7,
+      "box": [
+        26,
+        67,
+        231,
+        189
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/places/yr-wyddfa.png.diff.png",
+      "crop_image": "tests/golden/docs/places/yr-wyddfa.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/reference/brush-sheet.png",
+      "status": "changed",
+      "width": 240,
+      "height": 88,
+      "changed_fraction": 0.018797348484848486,
+      "over_bound": true,
+      "max_delta": 174,
+      "box": [
+        7,
+        5,
+        227,
+        87
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/reference/brush-sheet.png.diff.png",
+      "crop_image": "tests/golden/docs/reference/brush-sheet.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/reference/pigment-swatches.png",
+      "status": "changed",
+      "width": 240,
+      "height": 93,
+      "changed_fraction": 0.010483870967741936,
+      "over_bound": true,
+      "max_delta": 16,
+      "box": [
+        15,
+        23,
+        222,
+        91
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/reference/pigment-swatches.png.diff.png",
+      "crop_image": "tests/golden/docs/reference/pigment-swatches.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/social-preview.png",
+      "status": "changed",
+      "width": 240,
+      "height": 120,
+      "changed_fraction": 0.019965277777777776,
+      "over_bound": true,
+      "max_delta": 77,
+      "box": [
+        133,
+        18,
+        232,
+        116
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/social-preview.png.diff.png",
+      "crop_image": "tests/golden/docs/social-preview.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/composition.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.000234375,
+      "over_bound": false,
+      "max_delta": 4,
+      "box": [
+        98,
+        67,
+        143,
+        72
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/tutorials/composition.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/composition.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-brush.png",
+      "status": "changed",
+      "width": 240,
+      "height": 109,
+      "changed_fraction": 0.005733944954128441,
+      "over_bound": true,
+      "max_delta": 19,
+      "box": [
+        14,
+        7,
+        222,
+        97
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-brush.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-brush.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-composition.png",
+      "status": "changed",
+      "width": 240,
+      "height": 125,
+      "changed_fraction": 0.0027,
+      "over_bound": false,
+      "max_delta": 13,
+      "box": [
+        19,
+        8,
+        210,
+        98
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-composition.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-composition.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-lettering.png",
+      "status": "changed",
+      "width": 240,
+      "height": 115,
+      "changed_fraction": 0.007608695652173913,
+      "over_bound": true,
+      "max_delta": 17,
+      "box": [
+        16,
+        19,
+        224,
+        102
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-lettering.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-lettering.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-nib.png",
+      "status": "changed",
+      "width": 240,
+      "height": 91,
+      "changed_fraction": 0.008516483516483516,
+      "over_bound": true,
+      "max_delta": 16,
+      "box": [
+        17,
+        8,
+        233,
+        77
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-nib.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-nib.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-paper.png",
+      "status": "changed",
+      "width": 240,
+      "height": 125,
+      "changed_fraction": 0.0024666666666666665,
+      "over_bound": false,
+      "max_delta": 11,
+      "box": [
+        11,
+        8,
+        206,
+        99
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-paper.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-paper.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-pigments.png",
+      "status": "changed",
+      "width": 240,
+      "height": 125,
+      "changed_fraction": 0.0026333333333333334,
+      "over_bound": false,
+      "max_delta": 20,
+      "box": [
+        5,
+        8,
+        213,
+        100
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-pigments.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-pigments.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-wash.png",
+      "status": "changed",
+      "width": 240,
+      "height": 125,
+      "changed_fraction": 0.0018666666666666666,
+      "over_bound": false,
+      "max_delta": 12,
+      "box": [
+        7,
+        8,
+        207,
+        98
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-wash.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-wash.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/lettering.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.0037760416666666667,
+      "over_bound": false,
+      "max_delta": 34,
+      "box": [
+        60,
+        64,
+        145,
+        86
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/tutorials/lettering.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/lettering.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/nib-line.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.0012760416666666666,
+      "over_bound": false,
+      "max_delta": 94,
+      "box": [
+        123,
+        76,
+        131,
+        84
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/tutorials/nib-line.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/nib-line.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/route-map.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.0044103313840155945,
+      "over_bound": false,
+      "max_delta": 30,
+      "box": [
+        27,
+        38,
+        234,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/route-map.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/route-map.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/word.png",
+      "status": "changed",
+      "width": 240,
+      "height": 135,
+      "changed_fraction": 0.000925925925925926,
+      "over_bound": false,
+      "max_delta": 11,
+      "box": [
+        68,
+        58,
+        171,
+        96
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/word.png.diff.png",
+      "crop_image": "tests/golden/docs/word.png.crop.png"
+    },
+    {
+      "path": "tests/golden/lynmouth/labels-centreline.webp",
+      "status": "changed",
+      "width": 1800,
+      "height": 1457,
+      "changed_fraction": 0.004465415999389918,
+      "over_bound": false,
+      "max_delta": 243,
+      "box": [
+        140,
+        313,
+        1432,
+        1108
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/lynmouth/labels-centreline.webp.diff.png",
+      "crop_image": "tests/golden/lynmouth/labels-centreline.webp.crop.png"
+    },
+    {
+      "path": "tests/golden/lynmouth/map.png",
+      "status": "changed",
+      "width": 1800,
+      "height": 1457,
+      "changed_fraction": 0.002876153435522001,
+      "over_bound": false,
+      "max_delta": 120,
+      "box": [
+        151,
+        327,
+        1432,
+        1106
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/lynmouth/map.png.diff.png",
+      "crop_image": "tests/golden/lynmouth/map.png.crop.png"
+    },
+    {
+      "path": "tests/golden/lynmouth/pen.webp",
+      "status": "changed",
+      "width": 1800,
+      "height": 1457,
+      "changed_fraction": 0.0001487073896133608,
+      "over_bound": false,
+      "max_delta": 255,
+      "box": [
+        924,
+        447,
+        947,
+        470
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/lynmouth/pen.webp.diff.png",
+      "crop_image": "tests/golden/lynmouth/pen.webp.crop.png"
+    },
+    {
+      "path": "tests/golden/lynmouth/wash.webp",
+      "status": "changed",
+      "width": 1800,
+      "height": 1457,
+      "changed_fraction": 0.0008098833218943034,
+      "over_bound": false,
+      "max_delta": 145,
+      "box": [
+        329,
+        403,
+        1324,
+        1046
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/lynmouth/wash.webp.diff.png",
+      "crop_image": "tests/golden/lynmouth/wash.webp.crop.png"
+    }
+  ]
+}
