@@ -58,20 +58,20 @@ The key never comes from a caller's own id. Two tracks over the same ground with
 | `pen.webp` | The route's alpha plate, tinted at compose time. Written only when the style's `route_pen` is on. |
 | `plates.json` | The manifest. See [The manifest](manifest.md). |
 
-## The label plate
+## The nib plate
 
-The lettering stage writes a label plate beside the base plates when there is something to letter and a hand to letter it with. The file name carries the route the hand writes, `centreline` or `outline`.
+The lettering stage writes a nib plate beside the base plates when there is something to letter and a hand to letter it with. The file name carries the trace the hand writes, `centreline` or `outline`.
 
 | File | Holds |
 | --- | --- |
-| `labels-centreline.webp`, `labels-outline.webp` | The label plate for that route. |
+| `labels-centreline.webp`, `labels-outline.webp` | The nib plate for that trace. |
 | `labels-centreline.json`, `labels-outline.json` | A sidecar with the keys below. |
 
 | Sidecar key | Holds |
 | --- | --- |
-| `key` | The label plate's key: the first 16 hex characters of the SHA-256 of the canonical JSON of the base hash, the style's lettering digest and every mark, with each float rounded to three decimals. |
+| `key` | The nib plate's key: the first 16 hex characters of the SHA-256 of the canonical JSON of the base hash, the style's lettering digest and every mark, with each float rounded to three decimals. |
 | `face` | The name of the face the hand opened. |
-| `route` | The route the hand wrote, `centreline` or `outline`. |
+| `route` | The trace the hand wrote, `centreline` or `outline`. |
 
 A plate whose sidecar `key` does not match is lettered again, never reused.
 
