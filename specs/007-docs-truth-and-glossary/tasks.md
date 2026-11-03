@@ -71,9 +71,9 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 
 ## S6 — The wash essay (#176)
 
-- [ ] Red: `tests/docs/test_docs_signatures.py`.
-- [ ] Line 32 signature; the four behaviours stated truly with no export claim or module path; feature-note link gone.
-- [ ] Gate and strict build green.
+- [x] Red: `tests/docs/test_docs_signatures.py`.
+- [x] Line 32 signature; the four behaviours stated truly with no export claim or module path; feature-note link gone.
+- [x] Gate and strict build green.
 
 ## S7 — Integration
 
