@@ -56,66 +56,67 @@ limit, the order of the chains and the carry-on rule).
 
 ## Golden regeneration
 
-Process as ADR 0036, with the review images of ADR 0052, on top of ADR 0059's regeneration
-(the organic drift rescaled about its mean), which landed on `main` first. The tolerance bound is not
-changed, no gate is loosened and the hash input does not change; the manifest hash does not
-move (`340a7f6e260ee1e2-d9c56c0811177b0f`).
+Process as ADR 0036, with the review images of ADR 0052, on top of `main` after ADR 0049's
+regeneration (a generator per item) and the regenerations that landed with and after it
+(ADRs 0050, 0053, 0055, 0059, 0060 and 0061). The tolerance bound is not changed, no gate is
+loosened and the hash input does not change; the manifest hash does not move
+(`3976d23ae248ca86-d9c56c0811177b0f`).
 
-### Lynmouth compare, against `main`'s goldens (ADR 0059's)
+### Lynmouth compare, against `main`'s goldens
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
 wash.webp: identical yes, differing fraction 0.000000
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.020464
-map.png: identical no, differing fraction 0.014066
-manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
+labels-centreline.webp: identical no, differing fraction 0.007885
+map.png: identical no, differing fraction 0.004791
+manifest hash: 3976d23ae248ca86-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
 ```
 
 Only the lettering moves. Placement measures a name by the face's advances, not its
 strokes, so `labels.txt` is unchanged and every name keeps its seat; `PINNED_LABELS` is
-unchanged and `GOLDEN_HASH` is not re-pinned. The plate moves more than the glyphs that
-changed would explain because the letters' strokes draw from the plate's one generator
-(issue #61): a glyph with a stroke more or fewer shifts every draw after it, so the
-leaders and pins drawn after the first changed glyph take another wander. The place pins
-(`tests/golden/test_places.py`), the map-styles means and the smoke lock pass unchanged on
-the regenerated goldens, so none is re-pinned.
+unchanged and `GOLDEN_HASH` is not re-pinned. With a generator per item, a glyph that
+changes moves its own strokes and the marks that share its item's draws: on Lynmouth that
+is the `3`s of "B3234" and the leader that joins the upper "Lynton" to its pin, which is
+drawn on another line. The place pins (`tests/golden/test_places.py`), the map-styles means
+and the smoke lock pass unchanged on the regenerated goldens, so none is re-pinned.
 
 ### Docs images
 
-Every docs image and master was repainted on top of ADR 0059's. The 24 that letter a name or
-caption containing a changed glyph, or a mark drawn after one, moved; every other entry is
-byte-identical. Master differing fractions against main's masters:
+Every docs image and master was repainted on top of `main`. All 25 entries moved, most by
+less than 0.003 of their master; the sheets and grids, where lettering is a large part of
+the picture, move most. Master differing fractions against `main`'s masters:
 
 | Image | Master | Image | Master |
 |---|---|---|---|
-| `places/skye.webp` | 0.030569 | `reference/brush-sheet.webp` | 0.023911 |
-| `how-to/command-line.webp` | 0.021435 | `places/oxford.webp` | 0.019276 |
-| `tutorials/grid-brush.webp` | 0.017164 | `places/y-fenni.webp` | 0.016219 |
-| `places/yr-wyddfa.webp` | 0.015249 | `tutorials/grid-nib.webp` | 0.011859 |
-| `tutorials/grid-wash.webp` | 0.011033 | `tutorials/grid-pigments.webp` | 0.010767 |
-| `explanation/nib-angles.webp` | 0.009886 | `tutorials/grid-paper.webp` | 0.008667 |
-| `map-styles/bold.webp` | 0.005385 | `map-styles/pen-and-ink.webp` | 0.005044 |
-| `how-to/route-ink.webp` | 0.004362 | `tutorials/route-map.webp` | 0.004313 |
-| `map-styles/winter.webp` | 0.004191 | `gallery/route-map.webp` | 0.004094 |
-| `places/ambleside.webp` | 0.004094 | `map-styles/sepia.webp` | 0.003509 |
-| `tutorials/grid-composition.webp` | 0.003033 | `painting-with-python/derwentwater.webp` | 0.002422 |
-| `social-preview.jpg` | 0.000937 | `hero.webp` | 0.000536 |
-Looked at side by side with `main` (the review images in the pull request): the names keep
-their seats on every card. Where a name has a `D`, `Q`, `3`, `8`, `X` or `R` the letter is
-written whole (the `D`'s stem reaches the foot of the letter, the `8` has no stub across
-its waist), a pixel or two of difference at map size; the leaders and pin rings after it on
-the same plate are redrawn with a slightly different wander, a few display pixels at most.
-The paint under the names is unchanged.
+| `reference/glyph-sheet.webp` | 0.107456 | `reference/brush-sheet.webp` | 0.023106 |
+| `tutorials/grid-brush.webp` | 0.017737 | `tutorials/grid-nib.webp` | 0.011905 |
+| `tutorials/grid-wash.webp` | 0.010667 | `tutorials/grid-pigments.webp` | 0.010633 |
+| `explanation/nib-angles.webp` | 0.009773 | `tutorials/grid-paper.webp` | 0.008733 |
+| `how-to/command-line.webp` | 0.007496 | `places/y-fenni.webp` | 0.004926 |
+| `tutorials/grid-composition.webp` | 0.002800 | `painting-with-python/derwentwater.webp` | 0.002031 |
+| `map-styles/bold.webp` | 0.001072 | `gallery/route-map.webp` | 0.001023 |
+| `places/ambleside.webp` | 0.001023 | `places/yr-wyddfa.webp` | 0.000945 |
+| `map-styles/pen-and-ink.webp` | 0.000877 | `places/oxford.webp` | 0.000818 |
+| `hero.webp` | 0.000804 | `how-to/route-ink.webp` | 0.000731 |
+| `tutorials/route-map.webp` | 0.000731 | `map-styles/winter.webp` | 0.000658 |
+| `places/skye.webp` | 0.000643 | `map-styles/sepia.webp` | 0.000585 |
+| `social-preview.jpg` | 0.000174 | | |
 
-One pin ring still paints near solid: the pin of "Lynton and Exmoor Museum" on Lynmouth (its
-middle, within half the ring's radius, is 0.75 inked against 0.38 on `main`; the measure is
-`TestCounters`'). It is not this change's geometry: the pin's points are the same ring on
-both sides, and only the generator state the plate strokes it with differs, because the `x`
-of "Exmoor" is now two strokes, not three. It is the pin ring's own margin: a ring of 2.8
-display pixels at a pin weight of 1.275 pixels leaves a hole of about 2.2 pixels, and the
-bristle jitter closes it on about three seeds in ten when the ring is stroked alone (none
-with the jitter at zero). It is not fixed here.
+The lossy docs images move further than their masters (up to 0.27 of `grid-pigments`'
+pixels by 3 to 10 levels) because the encoder re-segments a whole image when a few blocks
+change; the masters are the measure.
+
+Looked at side by side with `main` (the review images in the pull request): the names keep
+their seats on every card. On the glyph sheet the `D` reaches the foot of its stem, the `Q`
+keeps its tail, the `3` its tongue, the `8` is written through its waist, `X` and `x` are
+two crossing strokes and `#` closes its crossings; other glyphs that share a changed
+glyph's draws (most of the lower-case and figure rows) keep their shapes and take a
+slightly different wander. The paint under the names is unchanged.
+
+The pin of "Lynton and Exmoor Museum" on Lynmouth stays open: its middle, within half the
+ring's radius, is 0.358 inked against 0.277 on `main` (`TestCounters`' measure, filled above
+0.4).
 
 ## Consequences
 
