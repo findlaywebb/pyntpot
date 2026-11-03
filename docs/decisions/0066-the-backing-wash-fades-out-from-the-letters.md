@@ -26,6 +26,10 @@ of its peak.
   distance falloff squared, `(1 - near / reach)²`, blurred by a third of the reach as before,
   with no `* 1.6` plateau; under `_FEATHER_FLOOR` (0.02) it is nothing, so the blur's tail
   leaves no stray alpha out on the paper.
+- **Its peak is as strong as the old box's.** The alpha is `label_wash_alpha` times
+  `_LIFT_GAIN` (1.57): the squared fall-off holds less of the wash at the letters than the
+  plateau did, and the gain gives that back at the peak without giving back the plateau or
+  the rim.
 - **The wash gives it grain, not an edge.** `wash` is laid over everything within
   `_GRAIN_REACH` (2.5) reaches of the ink, where the feather is already nothing, with no
   pool, and its density is multiplied by the feather: the granulated body on the paper's own
@@ -34,22 +38,37 @@ of its peak.
   `label_wash_spread` and every style field, the colour, and which marks ask for the wash
   (the furniture still does; taking it off is the placement tuning feature's, #113).
 
-The lift is weaker than it was between and round the letters (about 0.21 alpha beside them
-against 0.33), so a name on dark paint reads with its own ink more than with a pale patch;
-the maintainer's review is the check that it still reads.
+Without the gain the lift was weaker than it had been round the letters (about 0.21 alpha
+beside them against 0.33), and the names read with less contrast than on `main`. The
+maintainer compared four variants of the lift on the Yr Wyddfa card and chose the stronger
+peak (variant A): the same reach and the same squared curve, with the peak raised by 1.57.
+Contrast of the two lake names against the paint round them, and the steepest step at the
+wash's edge (the gradient, times 1000):
+
+| Lift | "Llyn Llydaw" | "Glaslyn" | Max wash-edge gradient ×1000 |
+|---|---|---|---|
+| `main` (the box) | 0.323 | 0.350 | 22 |
+| Squared fall-off, no gain | 0.290 | 0.320 | |
+| Variant A, gain 1.57 (chosen) | 0.317 | 0.347 | 9.3 |
+
+Variant A gives back nearly all of `main`'s contrast while its edge is under half as steep
+as the box's, so it shows no box and no rim.
 
 Pinned by `tests/unit/letters/test_nib.py::TestBackingWash`, on one line of ink over dark
 paint: half a reach out the lift is under half its strength beside the letters (fails on
 the old plateau), no step outwards is more than a tenth of the peak (fails on the old edge),
-nothing is left two reaches out, and its strength, grain and weight are pinned literals.
+nothing is left two reaches out, the peak above the ink is the old box's (0.3365 there) to
+within five per cent (fails without the gain), and its strength, grain and weight are
+pinned literals.
 
 ### Mutation testing
 
-`pyntpot.letters.nib.x__backing_wash*`, 107 mutants: 88 killed, 19 survived, named in the
-PR description. Fifteen are equivalent: clip bounds that cannot bind (the feather, the gate
-and the alpha are multiplied into an alpha clipped at zero, and none can pass one), a
-comparison at an exact float, a dtype, and the wash's pool, whose rim lies where the feather
-is zero. Four are a test gap left open: the reach at a scale other than one and its 2 px
+`pyntpot.letters.nib.x__backing_wash*`, 108 mutants with the gain: 89 killed (the gain's
+own mutant among them), 19 survived, named in the PR description. Fifteen are equivalent:
+clip bounds that cannot bind (the feather, the gate and the alpha are multiplied into an
+alpha clipped at zero, and none can pass one; the alpha stays under `label_wash_alpha`
+times the gain, 0.785), a comparison at an exact float, a dtype, and the wash's pool, whose
+rim lies where the feather is zero. Four are a test gap left open: the reach at a scale other than one and its 2 px
 floor, and `gran_gamma`, which the unit test's default `PaperStyle` (fibre off) never reads.
 
 ## Golden regeneration

@@ -72,6 +72,11 @@ _GRAIN_REACH = 2.5
 #: one level in the alpha far out on the paper.
 _FEATHER_FLOOR = 0.02
 
+#: The lift's peak over `label_wash_alpha`. The squared fall-off holds less of the wash
+#: at the letters than the old plateau did, so without it a name reads fainter than it
+#: did under the box; this brings the peak back to the box's, with no plateau or rim.
+_LIFT_GAIN = 1.57
+
 
 @dataclass(frozen=True, eq=False)
 class NibSurface:
@@ -202,7 +207,7 @@ def _backing_wash(
     dens = dens * feather
     floor = nib.label_wash_dark_floor
     gate = np.clip((surface.dark - floor) / max(1.0 - floor, 1e-3), 0.0, 1.0)
-    alpha = np.clip(dens * gate * nib.label_wash_alpha, 0.0, 1.0)
+    alpha = np.clip(dens * gate * nib.label_wash_alpha * _LIFT_GAIN, 0.0, 1.0)
     return np.broadcast_to(rgb(paper.paper_hex), (*cover.shape, 3)).copy(), alpha
 
 

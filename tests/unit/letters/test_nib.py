@@ -54,7 +54,8 @@ class TestPlate:
         alpha = np.asarray(Image.open(two).getchannel("A"))
         assert one.exists()
         assert alpha[20:72, 8:72].max() > 0
-        assert alpha[:, 96:].max() == 0
+        # The ink ends near x 70 and the lift fades to nothing a reach (30 px) past it.
+        assert alpha[:, 100:].max() == 0
         # The wash leaves faint alpha everywhere; the ink itself is solid only near the
         # doubled positions, never above row 16, where the halved ones would sit.
         assert alpha[:16].max() < 128, "the marks were shrunk, not enlarged, by the scale"
@@ -238,9 +239,15 @@ class TestBackingWash:
         alpha, reach = self._lift()
         assert float(alpha[: 52 - round(2 * reach), :].max()) < 0.01
 
+    def test_the_lift_peaks_as_strong_as_the_box_did(self) -> None:
+        """The peak lift above the ink is the old box's (0.3365 here) to within five per cent."""
+        alpha, _reach = self._lift()
+        peak = float(alpha[:52, 60:140].mean(axis=1).max())
+        assert peak == pytest.approx(0.3365, rel=0.05), "the name reads fainter than it did"
+
     def test_the_lift_is_the_pinned_one(self) -> None:
         """Its strength beside the letters, its grain there and its whole weight, pinned."""
         alpha, _reach = self._lift()
-        assert float(alpha[50, 60:140].mean()) == pytest.approx(0.193397, rel=1e-3)
-        assert float(alpha[50, 60:140].std()) == pytest.approx(0.010929, rel=1e-2)
-        assert float(alpha.sum()) == pytest.approx(891.583, rel=1e-3)
+        assert float(alpha[50, 60:140].mean()) == pytest.approx(0.303634, rel=1e-3)
+        assert float(alpha[50, 60:140].std()) == pytest.approx(0.017158, rel=1e-2)
+        assert float(alpha.sum()) == pytest.approx(1399.786, rel=1e-3)
