@@ -81,7 +81,16 @@ changes land (`WashOptions`, `WashStyle`, `separated` and `fluid_modulate` expor
 after 006 lands**.
 
 Files both plans name, and where each edit went (checked by grepping both plans' owned
-lists and the files themselves):
+lists and the files themselves). This plan is reconciled against 006's plan at **`a7d664d`**
+(`/home/user/pyntpot`, branch `feat/006-one-public-surface`); an earlier copy is not the
+reference. 006's plan may still move, so S8 step 1 reruns the check against 006's merged
+diff on `main`.
+
+**Who owns retired words in code and tests.** 006's S9 owns every retired-word edit under
+`src/**` and `tests/**`: docstrings, comments, test names and locals. 007 changes a line
+under `tests/` only where the `examples/places.toml` key rename (`callouts` to
+`landmarks`) strictly requires it: the two `"callouts"` key strings 006 leaves because
+`examples/` is outside its scope.
 
 | File | 006 edits | 007 edit | Resolution |
 | --- | --- | --- | --- |
@@ -90,13 +99,16 @@ lists and the files themselves):
 | `GLOSSARY.md` | S8: "brush sheet", "style group", "vector layers" rows | S1 restructure | S1 keeps those three rows' meaning as on `main`; S8 resolves the conflict and writes 006's three facts in the new format. |
 | `docs/features/docs-missing-how-tos.md`, `docs/features/docs-examples-housekeeping.md` | S8: fact and path edits (lines 38 to 45; line 22) | S7: repoint the mention of the deleted `docs-tutorials-lead-on.md`; the #174 paragraph | Both moved to S8. |
 | `docs/issues/docs-style-fields-imports-and-reference-checks.md` (#163) | none (006 leaves it alone; its S8 grep over `docs/issues` would see `LetteringPolicy` in it) | S7 deletes it | Kept in S7. If 006 lands first, the note is still there for its grep; 006's plan names the note as session A's, so the deletion here settles it. |
-| `tests/unit/maps/test_example_themes.py` | under S6's `tests/unit/maps/**` glob, but no edit (it names no renamed class, alias or module) | S5: the `callouts` key at line 70 | Kept in S5; the diffs do not meet. |
+| `tests/unit/maps/test_example_themes.py` | S9: docstrings `:53`, `:68`; test renamed at `:67` to `test_the_label_cap_is_the_landmark_count`; local `callouts` to `landmarks` at `:70`, `:73` | S5: the key string `"callouts"` to `"landmarks"` at `:70` only | Both change line 70: S8 step 1 resolves the expected conflict. |
+| `tests/golden/test_places.py` | S9: comments `:45`, `:51`, `:89`, docstring `:188` | S5: the key string at `:194` only | 006's wording and 007's key; S8 step 1 resolves any hunk. |
+| `tests/support/docs_images.py` | S9: the `_place_card` docstring `:351` | none in S5; S8: the module docstring `:40` (the moved `test_docs_images.py` path) | S5 drops the file; S8's edit is after 006, on a line 006 does not touch. |
+| `tests/architecture/test_reference_pages.py:168`, `tests/unit/maps/lettering/test_draw_plate.py`, `test_placement_water.py`, `tests/unit/maps/test_cache.py`, `test_pipeline_letter_compose.py`, `test_route_ink.py` | S9: every retired word in their docstrings, and the `test_placement_water.py:89` test name | S8 moves `test_reference_pages.py` and renames its `test_label_plate_…` test (006's S9 grep does not match the underscore form); nothing else | S8 does not repeat 006's edits; S8 step 9 expects them done. |
 | `docs/how-to/self-host-providers.md`, `docs/how-to/letter-your-own-landmarks.md`, `docs/explanation/how-the-wash-works.md`, `docs/reference/style-fields.md`, `docs/architecture.md` | none (006 hands them over) | S5, S6, S2 pre-006; the handed sentences | Pre-006 slices write only both-sides wording; the handed sentences are S8's. |
 
 No other file is in both plans: `examples/**` (006 leaves it alone), `mkdocs.yml`,
 `CONTRIBUTING.md`, `README.md`, `.pre-commit-config.yaml`, `docs/README.md`,
-`docs/index.md`, `docs/gallery.md`, the other reference and explanation pages this plan
-names, `tests/golden/test_places.py` and `tests/support/docs_images.py` are 007's alone.
+`docs/index.md`, `docs/gallery.md` and the other reference and explanation pages this plan
+names are 007's alone.
 
 ### S0 — Scaffold and site shape (serial, first)
 
@@ -144,7 +156,11 @@ Steps:
    - `resolve_dotted(path: str) -> object`: imports the longest importable module prefix
      of a dotted `pyntpot.…` path, then `getattr` on each remaining part; raises
      `LookupError` naming the path when a part is missing. The one resolver for S1's
-     "In the code" check, S2's dotted-path test and S8 step 6.
+     "In the code" check, S2's dotted-path test and S8 step 6. Module first is deliberate:
+     `pyntpot.ink.wash`, `pyntpot.maps.compose` and `pyntpot.maps.vector_layers` resolve
+     to the modules that shadow the exported functions of the same name (#164), and a
+     helper test pins that `resolve_dotted("pyntpot.ink.wash")` returns a module, so that
+     nobody "fixes" it to prefer the package attribute.
 4. Write `tests/docs/test_nav.py`:
    - `test_every_section_index_lists_its_pages_in_nav_order`: for each nav section whose
      first entry is an `index.md`, the section's pages are the entries whose
@@ -246,11 +262,16 @@ sheet tables of `ink/brush.py` (006 renames the first four to `ink/washing.py`,
 `ink/stamping.py`, `maps/compose_steps.py` and `maps/vector_layer_build.py`, and moves the
 tables to `ink/brush_sheet.py`; neither old nor new path resolves on both sides).
 `pyntpot.ink.wash`, `pyntpot.maps.compose` and `pyntpot.maps.vector_layers` are fine
-because they resolve to the exported functions either way. A cell never names `Pt`,
+because they resolve on both sides: `resolve_dotted` imports the longest module prefix,
+so at the base each resolves to the module that shadows the function (#164), and after
+006 renames the modules each resolves to the exported function. Either way it resolves,
+and S8 step 6 skips modules. A cell never names `Pt`,
 `Anchor`, `LetteringPolicy` or `RouteInk`. The private paths to names ADR 0068 exports
 (`pyntpot.maps.card.Card`, `pyntpot.maps.plates.Manifest` and the rest) still resolve
-after 006; S8 swaps them for the exported names. The Meaning column holds no dotted code
-path; existing rows move theirs to "In the code".
+after 006; S8 swaps them for the exported names. The Meaning column holds no module path
+(`pyntpot.…`, `ink.x.Y`); existing rows move theirs to "In the code". Attribute references
+stay in Meaning as the spec writes them (`Style.route_ink`, `Style.with_route_ink`,
+`PaperStyle.km_glazing`, `PaperStyle.paper_foxing`, `Setting.wash`).
 
 Three rows are also edited by 006's S8: "brush sheet", "style group" and "vector
 layers". S1 keeps their Meaning as it is on `main`, minus the dotted path moved to "In
@@ -553,7 +574,9 @@ Owned files: `docs/gallery.md`, `docs/index.md`, `docs/explanation/data-policy.m
 `tests/docs/test_gallery.py` (new), `tests/docs/test_captions.py` (new).
 
 A caption is the `*Painted by `examples/<stem>.py`...*` paragraph that follows an image
-`![...](.../images/<path>)` after one blank line, on any site page.
+`![...](.../images/<path>)` after one blank line, on any site page. The paragraph runs to
+its blank line, past the closing `*`: `brushes.md:7` puts "The labels read" outside the
+italics, so the label check reads the whole paragraph.
 
 Steps:
 
@@ -566,7 +589,9 @@ Steps:
      Ambleside theme") and `docs/explanation/data-policy.md` (`places/ambleside.webp`).
      With two registry entries for one image, one matching entry suffices.
    - `test_every_label_list_in_a_caption_is_a_tuple_of_its_script`: in the sentence after
-     "The labels read" (up to its full stop), each clause ending in the word `across` or
+     "The labels read", which ends at the first `.` followed by whitespace, `*` or the end
+     of the line (so the `.` of `0.52` does not end it; a naive split would check one
+     clause of the corrected nib caption instead of two), each clause ending in the word `across` or
      `down` runs from the sentence start or the previous `across`/`down` to that word.
      When a clause holds two or more numbers and no `to` range ("1 to 8"), its numbers in
      order, compared as floats, must equal the numeric elements, in order, of one tuple
@@ -719,27 +744,29 @@ Done: tests green; the 9 pages each end in `Next:`; no example's code changed.
 
 Owned files: everything under `docs/how-to/`, `docs/explanation/the-hand-and-the-nib.md`,
 `examples/places.toml`, `examples/place_card.py`, `examples/social_preview.py`
-(docstrings only), `tests/golden/test_places.py`, `tests/unit/maps/test_example_themes.py`,
-`tests/support/docs_images.py` (the `_place_card` docstring only).
+(docstrings only), and in two test files the key string only:
+`tests/golden/test_places.py:194` and `tests/unit/maps/test_example_themes.py:70`.
 
-None of these is in 006's plan except by glob: 006's S6 owns `tests/unit/maps/**`, but
-`test_example_themes.py` names no class, alias or module 006 renames and no style group
-built positionally, so 006 has no edit there. Edit only line 70 and the test's own
-docstring and comment in that file. `examples/**` is untouched by 006. In
-`docs/how-to/`, leave `self-host-providers.md` lines 7 to 9 (the provider protocols) and
-the import sentence of `letter-your-own-landmarks.md` to S8: they become true or false
-with 006.
+006's S9 rewords the comments, docstrings, test name and local around those two lines
+(overlap table), so S5 changes the `"callouts"` string literal on each line to
+`"landmarks"` and nothing else in either file: not the comments, not the docstrings, not
+the test name `test_the_label_cap_is_the_callout_count`, not the local `callouts`. Not
+`tests/support/docs_images.py`: 006's S9 writes the same "curated landmarks" in its
+`_place_card` docstring. `examples/**` is untouched by 006. In `docs/how-to/`, leave
+`self-host-providers.md` lines 7 to 9 (the provider protocols) to S8: they become true
+with 006. S5 adds no sentence about importing `Landmark`; S8 step 7 adds it.
 
 Steps:
 
 1. Red: in `tests/golden/test_places.py:194` and `tests/unit/maps/test_example_themes.py:70`,
-   read the key `landmarks` instead of `callouts`, and say "landmarks" in their comments
-   and docstrings. `uv run pytest tests/unit/maps/test_example_themes.py tests/golden/test_places.py --golden-tolerance -q`
+   change the string `"callouts"` to `"landmarks"`; the lines become
+   `{"landmarks": entry.get("landmarks", []), "notes": entry.get("notes", [])}` and
+   `callouts = tomllib.load(handle)[name].get("landmarks", [])`. `uv run pytest tests/unit/maps/test_example_themes.py tests/golden/test_places.py --golden-tolerance -q`
    fails (the file still says `callouts`).
 2. Green: `examples/places.toml`, each `callouts = [` to `landmarks = [` and the header
    comment says landmark; `examples/place_card.py:69` reads `entry.get("landmarks", [])`,
-   and its docstrings and comments, `examples/social_preview.py`'s docstrings and the
-   `_place_card` docstring say landmarks. The pinned label positions in `test_places.py`
+   and its docstrings and comments and `examples/social_preview.py`'s docstrings say
+   landmarks. The pinned label positions in `test_places.py`
    do not move: the key's name is not read by the painter.
 3. How-to prose: `letter-your-own-landmarks.md` says "landmark" for every "callout" and its
    code reads `landmarks = [...]` and `Annotations.model_validate({"landmarks": landmarks})`;
@@ -752,7 +779,8 @@ Steps:
 4. Gate: `uv run pytest tests/docs tests/unit/maps/test_example_themes.py tests/examples -q`
    and `uv run pytest tests/golden/test_places.py --golden-tolerance -q`, strict build.
 
-Done: tests green; no `callout` left in `docs/how-to/` or `examples/`; no golden moved.
+Done: tests green; no `callout` left in `docs/how-to/` or `examples/`; no golden moved;
+`git diff --stat -- tests` shows exactly the two test files, one changed line each.
 
 ### S6 — The wash essay (#176), parallel
 
@@ -813,25 +841,48 @@ Steps:
    spaces matching any whitespace run, after backticks are removed. It must pass on
    arrival if S1 to S6 swept correctly; any failure is fixed in the file it names (the
    integrator owns those fixes now that the parallel slices are merged).
-1a. Write `tests/docs/test_docs_commands.py`, over every site page and `README.md`, on
-   the code of fenced `bash`, `console`, `shell`, `sh` and `text` blocks (via
-   `fenced_blocks`), one command per line after joining `\` continuations and dropping a
-   leading `$ ` and a leading `uv run `:
-   - `test_every_pyntpot_command_parses`: each line starting `pyntpot ` is split with
+1a. Write `tests/docs/test_docs_commands.py`, over every site page and `README.md`. It
+   reads commands from two sources:
+   - the code of fenced `bash`, `console`, `shell`, `sh` and `text` blocks (via
+     `fenced_blocks`), one command per line after joining `\` continuations and dropping
+     a leading `$ ` and a leading `uv run `;
+   - every backticked inline span in `prose()` that starts `uv run python examples/`,
+     with `uv run ` dropped. Today that is `curves.md:14`
+     (`uv run python examples/curves.py out/ --figure rose`) and `symmetry.md:12`
+     (`uv run python examples/kaleidoscope.py out/`), which give their commands in prose.
+     Inline spans that start `pyntpot ` are not read: on site pages they are the
+     command's name (`pyntpot map`), an error message and `pyntpot map --help`, none of
+     them a command to parse.
+
+   The extractor is a pure function of a page's text in the test module itself,
+   `commands(text) -> list[Command]`
+   (`Command`: `line: int`, `text: str`), with helper tests on inline strings: a `\`
+   continued line joined, a command in an indented fence, an inline example span read,
+   and an output line in a `text` block (a line not starting `pyntpot ` or
+   `python examples/`) yielding nothing. S7 reads `text` blocks on purpose; the old
+   how-to test treated them as output.
+   - `test_every_pyntpot_command_parses`: each command starting `pyntpot ` is split with
      `shlex` and `pyntpot.maps.cli.build_parser().parse_args(...)` accepts the rest
      (argparse's exit is caught as a failure naming the page and line). The usage lines of
-     `cli.md`'s synopsis start `pyntpot [` or `pyntpot map [` and are skipped by that
-     shape. This covers the tutorial commands `first-map.md:131` and `:152`, which the
+     `cli.md`'s synopsis are skipped by the regex `^pyntpot (map )?\[`, and only by it.
+     A helper test shows a misspelt option (`--margn-m`) is rejected. A non-vacuity
+     assertion: `docs/how-to/map-from-the-command-line.md` yields at least one command.
+     This covers the tutorial commands `first-map.md:131` and `:152`, which the
      how-to-only `tests/architecture/test_how_to_commands.py` never reads.
-   - `test_every_example_command_names_a_script_and_its_options`: each line starting
-     `python examples/<path>.py` names a file that exists, and every token starting `-`
-     is an option string of one of that script's `add_argument` calls, read from its AST
+   - `test_every_example_command_names_a_script_and_its_options`: each command starting
+     `python examples/<path>.py`, fenced or inline, names a file that exists, and every
+     token starting `-` is an option string of one of that script's `add_argument` calls, read from its AST
      (the script is never run). This checks S4's new
      `place_card.py … --theme … --place ambleside --size 720` command beyond the script's
-     existence.
-   Prototyped in the plan's fix round: 23 commands (7 `pyntpot`, 16 example scripts,
-   README's continued command included) all pass today, so the test passes on arrival
-   unless S4 or S5 wrote a wrong command; a red is fixed on the page.
+     existence. It takes over the job of
+     `tests/architecture/test_tutorials.py::test_every_run_command_names_an_existing_script`
+     (every tutorial run command names an existing script), which reads inline commands
+     too; S8 step 2 deletes that test once this one is green. A non-vacuity assertion:
+     the two inline spans above are among the commands read.
+   Review 2 counted the fenced commands at the base: 7 `pyntpot` lines (2 of them the
+   skipped usage lines) and 18 example commands, README's continued command included, all
+   passing; with the two inline spans the test passes on arrival unless S4 or S5 wrote a
+   wrong command; a red is fixed on the page.
 1b. Review the remaining `\bcards?\b` on site pages: list each occurrence
    (`grep -rnwE 'cards?' docs --include=*.md` minus excluded paths) in the PR description,
    and check each against the glossary's definition of card (the frame, not the
@@ -882,16 +933,29 @@ intro sentence), `docs/explanation/how-the-wash-works.md` (the two S6 passages),
 `docs/how-to/letter-your-own-landmarks.md` (one sentence), `docs/architecture.md`
 (lines 23 to 24), `GLOSSARY.md` and the two generated files,
 `docs/features/docs-missing-how-tos.md` and `docs/features/docs-examples-housekeeping.md`
-(the lines below only), `examples/brush_sheet.py` (one docstring sentence), and the test
-docstrings in step 9.
+(the lines below only), `examples/brush_sheet.py` (one docstring sentence),
+`tests/support/docs_images.py` (the module docstring's `test_docs_images.py` path, line 40
+at `529753f`; after 006, which edits only line 351 of that file), and, under `tests/`, any
+line step 9's red names that 006's S9 missed.
 
 Steps:
 
-1. **Rebase** on `main` with 006 merged. The one expected conflict is `GLOSSARY.md`
-   (006's S8 edited three rows of the old format that S1 rewrote): resolve it by taking
-   this branch's file whole, then apply 006's three facts in step 6. Any other conflict
-   means a file both plans edit that the overlap table under "Slices" missed: stop and
-   report it. Then run `uv run pytest tests/docs tests/architecture -q` and
+1. **Rebase** on `main` with 006 merged. Expected conflicts, and their resolutions:
+   - `GLOSSARY.md` (006's S8 edited three rows of the old format that S1 rewrote): take
+     this branch's file whole, then apply 006's three facts in step 6.
+   - `tests/unit/maps/test_example_themes.py:70`: 006 renamed the local, S5 changed the
+     key. Resolve to
+     `landmarks = tomllib.load(handle)[name].get("landmarks", [])`, keeping 006's version
+     of every other line (`:53`, `:67`, `:68`, `:73`).
+   - `tests/golden/test_places.py`: S5's `:194` is five lines from 006's `:188`
+     docstring, so git may or may not report a hunk. Any hunk resolves to 006's wording
+     with 007's key: `{"landmarks": entry.get("landmarks", []), "notes": entry.get("notes", [])}`.
+
+   After resolving, `git grep -n -i callout -- 'tests/*.py'` finds nothing outside
+   `tests/docs/` and `tests/support/glossary.py`. Any other conflict means a file both
+   plans edit that the overlap table under "Slices" missed: stop and report it. Then rerun
+   the overlap check against 006's merged diff:
+   `git diff --name-only <merge-base>..main` against this plan's "Files to touch". Then run `uv run pytest tests/docs tests/architecture -q` and
    `grep -rnE 'pyntpot\.ink\.(wash|stamp)\.|pyntpot\.maps\.(compose|vector_layers)\.|\bPt\b|\bAnchor\b|LetteringPolicy|RouteInk\b' docs README.md GLOSSARY.md examples`
    outside `docs/features`, `docs/issues`, `docs/decisions`, the three API reference pages
    and `references.md`. Expected red, and nothing else: `TestStyleFieldTables`'s
@@ -905,12 +969,17 @@ Steps:
    they are (they import from `support`, not from `tests.architecture`). Then, in
    `tests/docs/test_tutorials.py`, delete `test_every_marked_block_is_a_verbatim_part_of_its_script`
    and its `_tutorial_pages` helper, which `test_tutorial_quotes.py` subsumes over all
-   nine pages, and change `test_the_first_map_quotes_the_route_map_script`'s docstring to
+   nine pages. Delete `test_every_run_command_names_an_existing_script` with them: it is
+   the helper's other caller, and S7's `test_docs_commands.py` covers its job over every
+   site page, inline commands included (run `tests/docs/test_docs_commands.py` first and
+   see it green). Remove any import or constant (`_COMMAND`, `EXAMPLES_DIR`) the deletions
+   leave unused, so ruff stays clean. Change `test_the_first_map_quotes_the_route_map_script`'s docstring to
    "the first map's script" (not "the eighth rung"). In
    `tests/docs/test_reference_pages.py`, `test_label_plate_files_and_sidecar_keys_are_named`
-   becomes `test_nib_plate_files_and_sidecar_keys_are_named` and its docstring (line 168
-   at `03cf136`) says "Both nib plates". `examples/brush_sheet.py:16`'s docstring names
-   `tests/docs/test_reference_pages.py`. The same reason ("they check prose, not
+   becomes `test_nib_plate_files_and_sidecar_keys_are_named`; its docstring already says
+   "Both nib plates" (006's S9). `examples/brush_sheet.py:16`'s docstring names
+   `tests/docs/test_reference_pages.py`, and `tests/support/docs_images.py:40`'s module
+   docstring names `tests/docs/test_docs_images.py`. The same reason ("they check prose, not
    architecture") moves two more, unchanged: `git mv` `test_readme.py` and
    `test_docs_images.py` to `tests/docs/` (both import only from `support`). Delete
    `tests/architecture/test_how_to_commands.py`: S7's `test_docs_commands.py` parses
@@ -920,8 +989,9 @@ Steps:
    against `references.md`'s keys, a code-side contract, and 006 edits it. Done when
    `tests/architecture/` holds none of the four moved or deleted files,
    `grep -rnE "architecture/test_(tutorials|reference_pages|readme|docs_images|how_to_commands)"`
-   outside `specs/` and `docs/issues/` finds nothing (repoint any docstring or note that
-   names them), and the moved files pass under the `docs-tests` hook.
+   outside `specs/`, `docs/issues/` and `docs/decisions/` finds nothing (repoint any
+   docstring or note that names them; ADR 0033's mention stays, accepted ADRs are
+   history), and the moved files pass under the `docs-tests` hook.
 3. **Repoint this suite's imports** to 006's modules: `tests/docs/test_reference_values.py`
    imports `BRUSH_TREATMENTS`, `BRUSH_COLOURS` and `PEN_ROWS` from
    `pyntpot.ink.brush_sheet`, as the moved `test_reference_pages.py` does. Green before
@@ -1017,15 +1087,14 @@ Steps:
 9. **Retired words beyond the docs.** Red: extend
    `test_no_page_or_example_uses_a_retired_word` to `src/**/*.py` and to
    `tests/**/*.py` minus `tests/docs/` and `tests/support/glossary.py` (which quote
-   retired words as data). It fails on test text 006 leaves (at `03cf136`, find each by
-   its string): `tests/unit/maps/test_route_ink.py:27` and `test_cache.py:206`,
-   `test_pipeline_letter_compose.py:102`, `lettering/test_draw_plate.py:1` ("label
-   plate" to "nib plate"); `lettering/test_draw_plate.py:48` ("An outline route" to "An
-   outline trace"); `lettering/test_placement_water.py:89`, `:90`, `:93` ("callout" to
-   "landmark", the test's name included). Fix those: they are tests, free once 006 has
-   merged. A failure under `src/` is a line 006's S9 missed from the spec's list: do not
-   edit `src/`; report the lines to the orchestrator for a 006 follow-up, and commit the
-   `src/` half of the extension only once it is green.
+   retired words as data). It should pass on arrival: 006's S9 (plan `a7d664d`) reworded
+   every retired word under `src/` and `tests/`, and step 1's resolution changed the last
+   `"callouts"` key strings. Run the extension and watch it pass; there is no red to
+   hunt. Prove it is not vacuous by adding "label plate" to one test docstring, watching
+   the test fail naming that line, and reverting. A real failure is a line 006's S9
+   missed: under `tests/`, fix it here and list it in the PR; under `src/`, do not edit
+   it, report the lines to the orchestrator for a 006 follow-up, and commit the `src/`
+   half of the extension only once it is green.
 10. Gates: `uv run pytest -n auto --dist loadgroup --golden-tolerance`,
     `prek run --all-files`, the strict build. Tick S8 in `tasks.md`, then mark the PR
     ready.
@@ -1057,17 +1126,18 @@ Before 006 merges (S0 to S7): `GLOSSARY.md`; `mkdocs.yml`; `.pre-commit-config.y
 `docs/explanation/performance.md` moved to `docs/runbooks/performance.md`;
 `examples/route_map.py` (docstrings), `examples/places.toml`, `examples/place_card.py`,
 `examples/social_preview.py` (docstrings); `tests/support/site_pages.py` and
-`tests/support/glossary.py` (new); `tests/support/docs_images.py` (one docstring);
+`tests/support/glossary.py` (new);
 `tests/docs/` (new package, new files only);
-`tests/golden/test_places.py`, `tests/unit/maps/test_example_themes.py` (the key);
-the notes S7 deletes and files.
+`tests/golden/test_places.py:194` and `tests/unit/maps/test_example_themes.py:70` (the
+key string only); the notes S7 deletes and files.
 
 After 006 merges (S8): `tests/architecture/test_tutorials.py`,
 `test_reference_pages.py`, `test_readme.py` and `test_docs_images.py` moved to
 `tests/docs/`; `tests/architecture/test_how_to_commands.py` deleted; `docs/architecture.md` (one sentence);
 `docs/features/docs-missing-how-tos.md` and `docs-examples-housekeeping.md` (one line
-each, and the #174 paragraph); `examples/brush_sheet.py` (one docstring sentence); the
-test docstrings and one test name listed in S8 step 9; and second edits to
+each, and the #174 paragraph); `examples/brush_sheet.py` (one docstring sentence);
+`tests/support/docs_images.py` (the module docstring's test path); the rebase
+resolutions of S8 step 1; any `tests/` line 006's S9 missed; and second edits to
 `GLOSSARY.md`, `style-fields.md`, `how-the-wash-works.md`, `self-host-providers.md` and
 `letter-your-own-landmarks.md`.
 
@@ -1103,9 +1173,9 @@ test docstrings and one test name listed in S8 step 9; and second edits to
 
 - **Every-use underline.** `abbr` marks every occurrence, not the first; only distinctive
   forms get a tooltip, and the everyday-word list guards it.
-- **Concurrent edits with 006.** No pre-006 slice edits a file 006's plan edits (the
-  overlap table under "Slices"); the one textual conflict, `GLOSSARY.md`, is resolved in
-  S8 step 1 by taking this branch's file and re-applying 006's three facts. 006's plan is
+- **Concurrent edits with 006.** Pre-006 slices edit a file 006's plan also edits only
+  where the overlap table says so: `GLOSSARY.md` and S5's two key strings. S8 step 1
+  names each expected conflict and its resolution. 006's plan is
   being rewritten in its own fix round while this one is reviewed, so S8 reruns the
   overlap grep against the merged 006 on `main` (its actual diff), not against any
   version of 006's plan.
@@ -1114,8 +1184,8 @@ test docstrings and one test name listed in S8 step 9; and second edits to
   rename), S8's exact lines change with it; the S8 tests (the required `, from` part, the
   exported-name glossary check, the repository-link check) are generic and follow the
   code.
-- **006's S9 misses a line.** S8 step 9 catches it under `src/`; the fix goes back to 006's
-  owner, not into this diff.
+- **006's S9 misses a line.** S8 step 9 catches it: under `tests/` S8 fixes it, under
+  `src/` the fix goes back to 006's owner, not into this diff.
 - **Hidden drift in quoted blocks** on curves, symmetry and fractals, unchecked until
   now: fixed by copying the script's text into the page, never the reverse.
 - **Snippets path**: `auto_append` resolves from the working directory, so the build runs
@@ -1165,3 +1235,55 @@ Should-fixes:
 - Consider items, all adopted: S7 lists and reviews every remaining `card`; S1 guards
   against `’` on site pages; "seven" non-index tutorial pages (plan and tasks); S8 reruns
   the overlap grep against the merged 006, not its plan.
+
+## Response to review 2
+
+Every finding was checked against the worktree at `529753f` and 006's plan at `a7d664d`
+before the plan changed. None was wrong.
+
+Blockers, all fixed:
+
+1. **006's S9 edits S5's test lines.** Confirmed: 006's S9 (plan.md:948-975 at `a7d664d`)
+   rewords `test_places.py:45, 51, 89, 188`, `docs_images.py:351`,
+   `test_example_themes.py:53, 67, 68, 70, 73`, `test_reference_pages.py:168` and every
+   test line S8 step 9 listed, and leaves only the two `"callouts"` key strings. Per the
+   orchestrator's decision, 006's S9 owns every retired-word edit under `src/**` and
+   `tests/**`. S5 now changes only those two key strings and drops `docs_images.py`. The
+   overlap table has rows for `test_example_themes.py`, `test_places.py`,
+   `docs_images.py` and the S9 test files, and states the pin to `a7d664d`. S8 step 1
+   names the `test_example_themes.py:70` conflict and its exact resolution, and the
+   possible `test_places.py` hunk. S8 step 2 keeps the test rename (006's grep does not
+   match `label_plate`) and drops the `:168` docstring edit. S8 step 9 expects green on
+   arrival, with a non-vacuity check, and fixes a `tests/` miss itself.
+2. **The step 2 grep and ADR 0033.** Confirmed: `docs/decisions/0033-docs-images-and-examples.md:21`
+   and `tests/support/docs_images.py:40` both match. The grep now excludes
+   `docs/decisions/`, and S8 owns `docs_images.py`'s module docstring (line 40). That is
+   after 006, which touches only line 351 of that file.
+3. **`_tutorial_pages` has a second caller.** Confirmed: `test_tutorials.py:97`. S8 step
+   2 also deletes `test_every_run_command_names_an_existing_script`, after S7's commands
+   test is green, and the constants that leaves unused. S7's test now reads inline spans
+   in prose that start `uv run python examples/` (`curves.md:14`, `symmetry.md:12`).
+   - **Narrower than the review's fix:** inline spans that start `pyntpot ` are not read.
+     On site pages they are `pyntpot map` (three times), an error message and
+     `pyntpot map --help`. None parses as a command (`--help` exits, `map` alone lacks
+     the required arguments), so reading them would make the test red at once.
+
+Suggestions:
+
+1. **Adopted.** The label sentence ends at a `.` followed by whitespace, `*` or the end
+   of the line. The caption is the whole paragraph, past the closing `*` (confirmed at
+   `brushes.md:7` and `gallery.md:183`).
+2. **Adopted.** S7's extractor is a pure `commands(text)` with helper tests: a continued
+   line, an indented fence, an inline span, an output line in a `text` block. The
+   misspelt-option rejection and a non-vacuity assertion on
+   `map-from-the-command-line.md` are carried over too. The usage-line skip is the regex
+   `^pyntpot (map )?\[`.
+3. **Adopted.** Confirmed: at `529753f` all three names resolve to modules. The S1
+   sentence is corrected, and S0 adds a helper test pinning `resolve_dotted("pyntpot.ink.wash")`
+   to a module.
+4. **Adopted.** Confirmed: `letter-your-own-landmarks.md` has no import sentence. S5 now
+   says it adds none, and S8 step 7 adds it (spec and tasks reworded to match).
+5. **Adopted.** Meaning holds no module path (`pyntpot.…`, `ink.x.Y`); the spec's
+   attribute references stay.
+
+Skipped: none.
