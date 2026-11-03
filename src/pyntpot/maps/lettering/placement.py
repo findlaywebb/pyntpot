@@ -161,7 +161,13 @@ def _place(
     for lb in labels:
         mine = route_for(lb, route_px, thin)
         terms = Terms(
-            ground.card, ground.dark, boxes, off_own(ground.roads, lb), mine, ground.water
+            ground.card,
+            ground.dark,
+            boxes,
+            off_own(ground.roads, lb),
+            mine,
+            ground.water,
+            ground.segments,
         )
         # Flat or curved, the hand writes a name with its kind's tracking.
         measure_kind = kind_measure(measure_tracked, lb.kind)

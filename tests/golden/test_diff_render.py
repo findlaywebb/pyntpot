@@ -1,15 +1,21 @@
 """Tests for the golden review images: the heat map's colours, shrinking, and the review images' sizes."""
 
 import numpy as np
+import pytest
 from golden.diff_measure import measure
 from golden.diff_render import (
     CELL,
+    CROP_MAX_FACTOR,
+    CROP_TARGET,
     GUTTER,
     LABEL_HEIGHT,
     SCALE_TOP,
     block_max,
+    crop_cells,
     crop_image,
     diff_image,
+    enlarge,
+    enlarge_factor,
     heat_colours,
     heat_map,
     shrink_factor,
@@ -94,12 +100,91 @@ class TestReviewImages:
         assert found is not None
         assert diff_image(before, after, found, None).mode == "RGB"
 
-    def test_the_crop_image_shows_the_box_at_one_to_one(self) -> None:
-        """The crop cells hold the box's pixels unshrunk: the after cell is the after crop."""
+    def test_the_crop_image_shows_the_box_enlarged(self) -> None:
+        """The after cell holds the 4-pixel box enlarged 8 times, each pixel an 8-square block."""
         before, after = _pair(64, 48)
         drawn = np.asarray(
             crop_image(before, after, channel_delta(before, after), (30, 22, 34, 26))
         )
-        # Cells are as wide as the widest, the unshrunk 64-pixel locator; "after" is the second.
-        left, top = GUTTER + 64 + GUTTER, GUTTER + LABEL_HEIGHT
-        assert np.array_equal(drawn[top : top + 4, left : left + 4], after[22:26, 30:34])
+        # The first column is the 32-pixel enlarged crops; "after" heads the second column.
+        left, top = GUTTER + 32 + GUTTER, GUTTER + LABEL_HEIGHT
+        expected = after[22:26, 30:34].repeat(8, axis=0).repeat(8, axis=1)
+        assert np.array_equal(drawn[top : top + 32, left : left + 32], expected)
+
+
+class TestCropEnlarging:
+    """A small crop is enlarged by a whole factor to read on a phone; a large one stays 1:1."""
+
+    @pytest.mark.parametrize(
+        ("size", "factor"),
+        [
+            ((50, 30), 8),
+            ((4, 4), CROP_MAX_FACTOR),
+            ((30, 120), 3),
+            ((100, 60), 4),
+            ((180, 90), 2),
+            ((90, 40), 4),
+            ((CROP_TARGET, 20), 1),
+            ((CROP_TARGET, CROP_TARGET), 1),
+            ((600, 1200), 1),
+        ],
+        ids=[
+            "docs-master-crop",
+            "tiny-capped",
+            "tall",
+            "rounds-up",
+            "exact-half",
+            "exact-quarter",
+            "target-wide",
+            "target-square",
+            "large",
+        ],
+    )
+    def test_the_factor_is_the_smallest_that_reaches_the_target(
+        self, size: tuple[int, int], factor: int
+    ) -> None:
+        """The factor is the smallest whole one taking the longer side to the target, capped."""
+        assert enlarge_factor(*size) == factor
+
+    def test_enlarging_makes_each_pixel_a_square_block(self) -> None:
+        """Nearest-neighbour by 5 turns every source pixel into an exact 5 by 5 block."""
+        rng = np.random.default_rng(7)
+        pixels = rng.integers(0, 256, size=(3, 4, 3), dtype=np.uint8)
+        enlarged = np.asarray(enlarge(Image.fromarray(pixels, "RGB"), 5))
+        assert enlarged.shape == (15, 20, 3)
+        assert np.array_equal(enlarged, pixels.repeat(5, axis=0).repeat(5, axis=1))
+
+    def test_a_small_crop_is_labelled_with_its_scale(self) -> None:
+        """A 50 by 30 box of a 240-pixel image shows at 8:1, 400 by 240, the locator unscaled."""
+        before, after = _pair(240, 180)
+        cells = crop_cells(before, after, channel_delta(before, after), (100, 70, 150, 100))
+        assert [label for label, _ in cells] == [
+            "before, 8:1",
+            "after, 8:1",
+            "difference, 8:1",
+            "where: 100,70 to 150,100",
+        ]
+        assert [img.size for _, img in cells] == [(400, 240)] * 3 + [(240, 180)]
+
+    def test_a_large_crop_stays_at_one_to_one(self) -> None:
+        """A target-sized box of an 1800-pixel image is not enlarged and says 1:1."""
+        before, after = _pair(1800, 1200)
+        box = (700, 400, 700 + CROP_TARGET, 400 + CROP_TARGET)
+        cells = crop_cells(before, after, channel_delta(before, after), box)
+        assert [label for label, _ in cells][:3] == ["before, 1:1", "after, 1:1", "difference, 1:1"]
+        assert cells[1][1].size == (CROP_TARGET, CROP_TARGET)
+
+    @pytest.mark.parametrize(
+        "box",
+        [(100, 70, 146, 116), (0, 0, 4, 4), (10, 5, 189, 100), (0, 0, 240, 180)],
+        ids=["just-under-a-factor", "tiny", "just-under-half-target", "whole-image"],
+    )
+    def test_the_crop_image_stays_bounded(self, box: tuple[int, int, int, int]) -> None:
+        """Every crop image is at most two enlarged crops wide and tall, with no slack round them."""
+        before, after = _pair(240, 180)
+        cells = crop_cells(before, after, channel_delta(before, after), box)
+        drawn = crop_image(before, after, channel_delta(before, after), box)
+        crop_w, crop_h = cells[0][1].size
+        assert max(crop_w, crop_h) < 2 * CROP_TARGET
+        assert drawn.width == 3 * GUTTER + crop_w + max(crop_w, 240)
+        assert drawn.height == 3 * GUTTER + 2 * LABEL_HEIGHT + crop_h + max(crop_h, 180)

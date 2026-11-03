@@ -21,6 +21,7 @@ from pyntpot.maps.lettering.placement_costs import (
     box_on_paper,
     darkness,
     leader_crossings,
+    leader_route_crossings,
     near_route,
     off_own_feature,
     on_road,
@@ -30,6 +31,7 @@ from pyntpot.maps.lettering.placement_costs import (
 from pyntpot.maps.lettering.placement_flat import (
     LEADER_COST_PX,
     LEADER_CROSS_LABEL_COST,
+    LEADER_CROSS_ROUTE_COST,
     ROAD_CROSS_COST,
 )
 from pyntpot.maps.lettering.placement_water import water_cost
@@ -95,7 +97,8 @@ def _seat_cost(lb: Label, ground: Backdrop, others: list[Box]) -> float:
     included. The leader's
     length is left out because a swap is a trade between two of them and is
     priced over the pair; a leader drawn through a placed label is in, at
-    `LEADER_CROSS_LABEL_COST` a label.
+    `LEADER_CROSS_LABEL_COST` a label, and one drawn across the route, at
+    `LEADER_CROSS_ROUTE_COST` a crossing.
     """
     box = lb.box
     assert box is not None
@@ -110,6 +113,7 @@ def _seat_cost(lb: Label, ground: Backdrop, others: list[Box]) -> float:
         cost += water_cost(box, ground.water, lb.size)
     if lb.leader is not None and lb.tier != TIER_SPAN and lb.kind not in NO_LEADER:
         cost += leader_crossings(*lb.leader, others) * LEADER_CROSS_LABEL_COST
+        cost += leader_route_crossings(*lb.leader, ground.segments) * LEADER_CROSS_ROUTE_COST
     return cost
 
 

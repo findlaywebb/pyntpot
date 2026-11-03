@@ -2,7 +2,14 @@
 
 from pyntpot.maps.lettering.label import TIER_ROAD, Label
 from pyntpot.maps.lettering.picks_lines import road_lines
-from pyntpot.maps.lettering.placement_costs import off_own, off_own_feature, on_road
+from pyntpot.maps.lettering.placement_costs import (
+    LEADER_ROUTE_SLACK_PX,
+    RouteSegments,
+    leader_route_crossings,
+    off_own,
+    off_own_feature,
+    on_road,
+)
 
 from support.basemaps import hung_card, river_label
 
@@ -54,3 +61,41 @@ def test_an_unnamed_lane_and_a_watercourse_both_cost_a_name_that_crosses_them():
     assert len(lines) == 3, "the lanes and the water are not in the crossing cost"
     for y in (10.0, 60.0, 120.0):
         assert on_road((100.0, y - 4, 200.0, y + 4), lines) == 1.0
+
+
+class TestLeaderRouteCrossings:
+    """A leader is counted for each time it crosses the route past its own pin."""
+
+    #: The track running north to south down x 200, doubling back down x 260.
+    ROUTE = ((200.0, 0.0), (200.0, 300.0), (260.0, 300.0), (260.0, 0.0))
+
+    def test_a_leader_kept_to_its_pins_side_crosses_nothing(self):
+        """Castell y Fenni's pin west of the track, its name further west."""
+        segments = RouteSegments.of(list(self.ROUTE))
+        assert leader_route_crossings((195.0, 150.0), (120.0, 120.0), segments) == 0.0
+
+    def test_a_leader_across_the_track_beside_its_pin_is_counted(self):
+        """Bean & Bread's pin five pixels west of the track, its name to the east."""
+        segments = RouteSegments.of(list(self.ROUTE))
+        assert leader_route_crossings((195.0, 150.0), (230.0, 120.0), segments) == 1.0
+
+    def test_a_leader_through_a_route_point_is_counted_once(self):
+        """The track as a run of points: a leader through one of them crosses it once."""
+        segments = RouteSegments.of([(200.0, float(y)) for y in range(0, 301, 5)])
+        assert leader_route_crossings((195.0, 150.0), (230.0, 150.0), segments) == 1.0
+
+    def test_each_strand_crossed_is_counted(self):
+        """A leader over both strands of a doubled-back route crosses it twice."""
+        segments = RouteSegments.of(list(self.ROUTE))
+        assert leader_route_crossings((195.0, 150.0), (300.0, 150.0), segments) == 2.0
+
+    def test_the_track_through_the_pin_is_not_counted(self):
+        """Crib Goch's pin sits on the track, so its leader leaves from the line."""
+        segments = RouteSegments.of(list(self.ROUTE))
+        on_pin = 200.0 - LEADER_ROUTE_SLACK_PX / 2
+        assert leader_route_crossings((on_pin, 150.0), (240.0, 150.0), segments) == 0.0
+
+    def test_no_route_prices_nothing(self):
+        """A card with fewer than two route points has no segment to cross."""
+        empty = RouteSegments.of([(200.0, 150.0)])
+        assert leader_route_crossings((150.0, 150.0), (250.0, 150.0), empty) == 0.0
