@@ -46,6 +46,24 @@ def test_the_pen_sets_down_where_it_touches_and_nowhere_else():
     assert marks[0][:, 60:160].sum() == pytest.approx(marks[1][:, 60:160].sum(), rel=1e-4)
 
 
+@pytest.mark.parametrize(
+    "start",
+    [(0.0, 20.0), (199.0, 20.0), (60.0, 0.0), (60.0, 39.0), (-6.0, 20.0)],
+    ids=["left", "right", "top", "bottom", "beyond"],
+)
+def test_a_stroke_that_enters_at_the_edge_is_not_set_down(start: tuple[float, float]) -> None:
+    """A stroke starting on or off the plate's edge carries no set-down ink and no blot."""
+    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, BrushStyle(), "lane")
+    line = np.array([start, (100.0, 20.0)])
+    marks = []
+    for brush in (tuned, replace(tuned, load=0.0, pool=0.0)):
+        acc = np.zeros((40, 200), np.float32)
+        stamp(acc, line, brush, np.random.default_rng(5))
+        marks.append(acc)
+    assert marks[0].any()
+    assert np.array_equal(marks[0], marks[1])
+
+
 def test_two_strokes_crossing_never_double():
     """Saturation is what stops a crossing reaching twice the black."""
     sheet = Sheet(60, 60, gran_px=6.0, seed=2)
