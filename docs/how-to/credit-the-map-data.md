@@ -1,7 +1,7 @@
 # Credit the map data
 
 Every map pyntpot paints is built from OpenStreetMap data and NASA elevation data, and
-both ask to be credited when you share the map. pyntpot writes the credit onto the card
+both ask to be credited when you share the map. pyntpot writes the credit onto the map
 for you, at the bottom right. Most of the time you only need to leave it there and check
 it can be read.
 
@@ -39,7 +39,7 @@ and its [guideline for maps and other produced works](https://osmfoundation.org/
    as "Map data from OpenStreetMap".
 
 4. To build the credit in code, read it from the basemap. Each credit has the full `text`,
-   a link in `url`, and the `short` line drawn on the card:
+   a link in `url`, and the `short` line drawn on the map:
 
    ```python
    for credit in basemap.credits:
@@ -58,7 +58,7 @@ and its [guideline for maps and other produced works](https://osmfoundation.org/
 
 ## Result
 
-Every copy of the map you share carries the credit, either on the card or beside it, with
+Every copy of the map you share carries the credit, either on the map or beside it, with
 the `openstreetmap.org/copyright` address.
 
 ## When it goes wrong
@@ -66,7 +66,7 @@ the `openstreetmap.org/copyright` address.
 - **No credit at the bottom right.** It was turned off with `--no-attribution` or
   `attribution=False`. Follow step 3.
 - **The credit is there but too small to read.** The image was scaled down. Follow step 2.
-- **You run your own elevation server with different data, and the card still says "NASA
+- **You run your own elevation server with different data, and the map still says "NASA
   SRTM".** The credit comes from the provider, not the data it serves. Turn the credit off
   and write your own, covering OpenStreetMap and your elevation source
   ([Self-host the providers](self-host-providers.md)).

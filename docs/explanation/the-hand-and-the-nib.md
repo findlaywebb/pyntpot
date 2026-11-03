@@ -29,8 +29,8 @@ follow by thinning its filled shape to a one pixel skeleton, walking the skeleto
 chains and pruning the spurs that thinning grows. A short branch that leaves its junction's
 own ink is kept, because it is a stroke ending (the tail of a D, the tongue of a 3), and two
 forks a short bridge apart are one crossing, so an 8 or an X is written through its waist
-rather than with a stub across it. That is the `centreline` route; the
-`outline` route draws round the contour instead, and the two are different letters, not a
+rather than with a stub across it. That is the `centreline` trace; the
+`outline` trace draws round the contour instead, and the two are different letters, not a
 choice and a fallback.
 
 What the hand adds is what a font cannot say, because a font is the same shape every time.

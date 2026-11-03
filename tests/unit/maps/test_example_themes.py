@@ -67,7 +67,7 @@ class TestShowcaseThemes:
     def test_the_label_cap_is_the_callout_count(self, name: str) -> None:
         """`label_max` equals the number of callouts `examples/places.toml` holds for the place."""
         with (REPO_ROOT / "examples" / "places.toml").open("rb") as handle:
-            callouts = tomllib.load(handle)[name].get("callouts", [])
+            callouts = tomllib.load(handle)[name].get("landmarks", [])
         style = Style.from_toml(THEMES_DIR / f"{name}.toml")
 
         assert style.lettering.label_max == len(callouts)
