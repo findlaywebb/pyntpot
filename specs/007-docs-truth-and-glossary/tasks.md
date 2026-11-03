@@ -62,12 +62,12 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 
 ## S5 — Terminology sweep
 
-- [ ] Red: places tests read the `landmarks` key (the two `"callouts"` key strings only; 006's S9 owns their comments, docstrings, test name and local).
-- [ ] `examples/places.toml` key, `place_card.py` and `social_preview.py` docstrings and comments say landmarks; `tests/support/docs_images.py` untouched.
-- [ ] How-to pages: landmark, route ink style, map for the picture, track.
-- [ ] The hand and the nib: centreline trace.
-- [ ] `self-host-providers.md` protocols sentence left for S8; no sentence about importing `Landmark` (S8 adds it).
-- [ ] Gate, places golden test and strict build green; no golden moved.
+- [x] Red: places tests read the `landmarks` key (the two `"callouts"` key strings only; 006's S9 owns their comments, docstrings, test name and local).
+- [x] `examples/places.toml` key, `place_card.py` and `social_preview.py` docstrings and comments say landmarks; `tests/support/docs_images.py` untouched.
+- [x] How-to pages: landmark, route ink style, map for the picture, track.
+- [x] The hand and the nib: centreline trace.
+- [x] `self-host-providers.md` protocols sentence left for S8; no sentence about importing `Landmark` (S8 adds it).
+- [x] Gate, places golden test and strict build green; no golden moved.
 
 ## S6 — The wash essay (#176)
 

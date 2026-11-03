@@ -191,7 +191,7 @@ def curated(directory: str) -> Annotations | None:
     if entry is None:
         return None
     return Annotations.model_validate(
-        {"landmarks": entry.get("callouts", []), "notes": entry.get("notes", [])}
+        {"landmarks": entry.get("landmarks", []), "notes": entry.get("notes", [])}
     )
 
 

@@ -1,10 +1,10 @@
-# The curated callouts of the showcase place cards, one table per place (the name of its
+# The curated landmarks of the showcase place cards, one table per place (the name of its
 # fixture directory), read by examples/place_card.py and tests/golden/test_places.py.
 #
-# A callout is a name, lettered exactly as written, with the latitude and longitude of
+# A landmark is a name, lettered exactly as written, with the latitude and longitude of
 # its OpenStreetMap element (a node's own point, or the centre of a way or relation's
 # geometry), so it is lettered even where the element is not among the map's landmark
-# candidates. The callouts are in priority order: the cap on lettered names is the
+# candidates. The landmarks are in priority order: the cap on lettered names is the
 # theme's `label_max`, and the placer may still drop one it cannot fit. A journal note is
 # a sentence of the walker's own pinned to a point, at most 60 characters.
 #
@@ -12,7 +12,7 @@
 # 5560350617, the bakery's address at 54 Frogmore Street (see tests/fixtures/y-fenni/README.md).
 
 [ambleside]
-callouts = [
+landmarks = [
     { name = "Bridge House", lat = 54.433168, lng = -2.963484 },
     { name = "Rydal Water", lat = 54.447436, lng = -2.992923 },
     { name = "Loughrigg Terrace", lat = 54.442324, lng = -3.015681 },
@@ -24,7 +24,7 @@ callouts = [
 # --------------------------------------------------------------------------------------------------------------------------------
 
 [skye]
-callouts = [
+landmarks = [
     { name = "Portree", lat = 57.413053, lng = -6.194446 },
     { name = "The Cuillin", lat = 57.22, lng = -6.23 },
 ]
@@ -39,7 +39,7 @@ notes = [
 # --------------------------------------------------------------------------------------------------------------------------------
 
 [yr-wyddfa]
-callouts = [
+landmarks = [
     { name = "Yr Wyddfa", lat = 53.0684857, lng = -4.0762324 },
     { name = "Crib Goch", lat = 53.0763169, lng = -4.0545889 },
     { name = "Garnedd Ugain", lat = 53.0755483, lng = -4.0752052 },
@@ -51,7 +51,7 @@ callouts = [
 # --------------------------------------------------------------------------------------------------------------------------------
 
 [oxford]
-callouts = [
+landmarks = [
     { name = "Radcliffe Camera", lat = 51.753461, lng = -1.254001 },
     { name = "Magdalen Bridge", lat = 51.750908, lng = -1.24568 },
     { name = "Christ Church", lat = 51.75016, lng = -1.255386 },
@@ -62,7 +62,7 @@ callouts = [
 # --------------------------------------------------------------------------------------------------------------------------------
 
 [y-fenni]
-callouts = [
+landmarks = [
     { name = "Tŷ Melin", lat = 51.8238632, lng = -3.0202249 },
     { name = "Castell y Fenni", lat = 51.819851, lng = -3.017884 },
     { name = "Angel Bakery", lat = 51.8213392, lng = -3.0171742 },

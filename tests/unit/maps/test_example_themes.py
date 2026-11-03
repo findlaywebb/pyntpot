@@ -67,7 +67,7 @@ class TestShowcaseThemes:
     def test_the_label_cap_is_the_landmark_count(self, name: str) -> None:
         """`label_max` equals the number of landmarks `examples/places.toml` holds for the place."""
         with (REPO_ROOT / "examples" / "places.toml").open("rb") as handle:
-            landmarks = tomllib.load(handle)[name].get("callouts", [])
+            landmarks = tomllib.load(handle)[name].get("landmarks", [])
         style = Style.from_toml(THEMES_DIR / f"{name}.toml")
 
         assert style.lettering.label_max == len(landmarks)

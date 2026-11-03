@@ -2,7 +2,7 @@
 
 GitHub shows a repository's social preview at 1280 by 640 pixels, and wants it under 1 MB.
 This script paints that sheet. It paints the Ambleside card at the sheet's width
-(`place_card.py`, in its showcase theme, with the curated callouts), crops the sheet's
+(`place_card.py`, in its showcase theme, with the curated landmarks), crops the sheet's
 height from it, lays a soft, ragged patch of the cream paper over the crop where the map is
 quietest, and letters "pyntpot" there with the hand, over a plain line of its own, the nib
 plate painted at twice its size and brought down with Lanczos. The map is painted by running
@@ -141,7 +141,7 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
         features: The map feature and land cover provider.
         elevation: The elevation provider.
         theme: A TOML theme file for the card, as `place_card.py` takes it.
-        place: The place's fixture name, for the card's curated callouts, as `place_card.py` takes it.
+        place: The place's fixture name, for the card's curated landmarks, as `place_card.py` takes it.
 
     Returns:
         The path of the saved preview, `out_dir / "social-preview.png"`.

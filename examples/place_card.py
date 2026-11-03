@@ -10,7 +10,7 @@ ones `route_map.py` takes, and the four stages are the same.
 
 `margin_m` and `landcover_margin_m` are the fetch margins the place's cache was recorded
 with, in metres (the library's defaults when absent), for a place recorded wider. `place` names
-the place's fixture: the card letters the curated callouts and journal notes that
+the place's fixture: the card letters the curated landmarks and journal notes that
 `examples/places.toml` holds for it, read with `tomllib`, and letters none for a place it does
 not list.
 
@@ -53,12 +53,12 @@ log = logging.getLogger(__name__)
 #: The repository's top directory, which a theme path is relative to.
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-#: The curated callouts and journal notes, one table per place.
+#: The curated landmarks and journal notes, one table per place.
 PLACES_TOML = Path(__file__).resolve().parent / "places.toml"
 
 
 def curated(place: str | None) -> Annotations | None:
-    """The callouts and journal notes `places.toml` holds for a place, or `None` for none."""
+    """The landmarks and journal notes `places.toml` holds for a place, or `None` for none."""
     if place is None:
         return None
     with PLACES_TOML.open("rb") as handle:
@@ -66,7 +66,7 @@ def curated(place: str | None) -> Annotations | None:
     if entry is None:
         return None
     return Annotations.model_validate(
-        {"landmarks": entry.get("callouts", []), "notes": entry.get("notes", [])}
+        {"landmarks": entry.get("landmarks", []), "notes": entry.get("notes", [])}
     )
 
 
@@ -98,7 +98,7 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
             metres; the library's default when absent.
         landcover_margin_m: The same for land cover; the larger of its default and
             `margin_m` when absent. Both must match what the cache was recorded with, as they are part of its key.
-        place: The name of the place's fixture; the card letters the callouts and journal notes
+        place: The name of the place's fixture; the card letters the landmarks and journal notes
             `examples/places.toml` holds for it, and none when absent or not listed there.
 
     Returns:
