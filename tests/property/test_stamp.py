@@ -28,8 +28,8 @@ LENGTH = st.floats(0, 2.0, exclude_min=True, allow_nan=False, allow_infinity=Fal
 #: Pen widths in display pixels, from a hairline to a heavy route pen.
 PEN_WIDTHS = st.floats(1.0, 8.0, allow_nan=False, allow_infinity=False)
 #: How far past the stroke's own ink the blot may reach: the nib's zero-weight samples at the
-#: very start and the bilinear splat's one pixel.
-BLOT_SLACK_PX = 2.0
+#: very start, the bilinear splat's one pixel, and the pixel `ink_cover` grows the nib's cover by.
+BLOT_SLACK_PX = 3.0
 
 
 @st.composite
@@ -91,7 +91,7 @@ class TestStamp:
     def test_a_pen_s_set_down_blot_stays_on_its_own_stroke(
         self, path: np.ndarray, width: float, seed: int
     ) -> None:
-        """A nib's set-down blot lays no ink more than 2 px past the stroke's own ink, at any width."""
+        """A nib's set-down blot lays no ink more than 3 px past the stroke's own ink, at any width."""
         pen, _ = brush_from_id("MAJ6-e", width, 2.0, BrushStyle())
         assert pen.pool > 0
         with_blot, without = _canvas(), _canvas()

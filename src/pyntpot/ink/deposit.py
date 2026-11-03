@@ -2,7 +2,8 @@
 
 Key names: `weights`, the ink each sample deposits; `channels`, those weights for the ink, the
 reservoir and the break-texture accumulators; `deposit`, the bilinear splat into them; `pool`,
-the blot where a nib touches down, laid only on the paper the nib covers (`nib_cover`).
+the blot where a nib touches down, laid only on the stroke's own ink (`ink_cover`, from
+`nib_cover`).
 
 It draws no random numbers and builds no path: it reads the `Lay` that `pyntpot.ink.stamp`
 has laid out. It does not saturate or gate the accumulator (`pyntpot.ink.pad`).
@@ -23,6 +24,10 @@ from pyntpot.ink.stroke import Lay
 #: Fewest samples across a tip for the strip of tip each one stands on.
 _MIN_STRIP = 2
 _TAU = 6.283
+#: The share of a pixel the nib's cover, grown by a pixel, must reach for the set-down
+#: blot to lie there whole: a nib a pixel wide splits itself between two rows of pixels,
+#: and the bilinear splat gives the rows either side a share too.
+_FULL_COVER = 0.125
 
 
 def weights(lay: Lay, lane: np.ndarray, b: Brush) -> np.ndarray:
@@ -170,15 +175,15 @@ def deposit(
 
 
 def pool(acc: np.ndarray, b: Brush, lay: Lay, pos: tuple[np.ndarray, np.ndarray]) -> None:
-    """Leave a blot where the stroke starts, on the paper the nib itself covers.
+    """Leave a blot where the stroke starts, on the paper the stroke's own ink covers.
 
     Tighter and denser than a swelling, so it reads as the first touch rather
     than a bulge in the line. The Gaussian is cut at three radii, where it has faded to
     1.1% at the side of the span, so the blot has no square edge. Its radius grows
-    with the pen, so on its own it would reach past a pen wider than about two
-    pixels and ring the ink with grey; it is laid in proportion to the nib's own
-    cover of each pixel (`nib_cover`), so it darkens the start of the stroke and
-    none of the paper round it.
+    with the pen, and it has a floor of 1.2 px, so on its own it would reach past
+    the nib and ring the ink with grey; it is laid only on the stroke's own ink
+    (`ink_cover`), so it darkens the start of the stroke and none of the paper
+    round it.
 
     Args:
         acc: The accumulator, added to in place.
@@ -194,22 +199,50 @@ def pool(acc: np.ndarray, b: Brush, lay: Lay, pos: tuple[np.ndarray, np.ndarray]
     x0, x1 = max(cx - span, 0), min(cx + span + 1, w)
     if y1 <= y0 or x1 <= x0:
         return
-    yy, xx = np.ogrid[y0 - cy : y1 - cy, x0 - cx : x1 - cx]
+    yy = np.arange(y0 - cy, y1 - cy)[:, None]
+    xx = np.arange(x0 - cx, x1 - cx)[None, :]
     blob = np.exp(-(xx * xx + yy * yy) / (2 * r * r)).astype(F32) * b.pool * b.pool_gain
-    acc[y0:y1, x0:x1] += blob * nib_cover(lay, pos, (y0, y1, x0, x1))
+    acc[y0:y1, x0:x1] += blob * ink_cover(nib_cover(lay, pos, (y0, y1, x0, x1)))
+
+
+def ink_cover(cover: np.ndarray) -> np.ndarray:
+    """The paper the stroke's own ink lies on, from 0 to 1, given the nib's cover.
+
+    The ink reaches a pixel past the nib, by the bilinear splat and the bleed, and
+    a nib a pixel or two wide covers no pixel whole: laid on the nib's cover alone,
+    such a pen's blot would keep a tenth to a fifth of its ink and little of its
+    dark centre. So the cover is grown by a pixel each way (the most of it in each 3 by 3
+    neighbourhood), and a pixel with `_FULL_COVER` of that or more takes the blot
+    whole; the rest take their share in proportion, and a pixel more than a pixel
+    from the nib's path takes nothing.
+
+    Args:
+        cover: The nib's cover of the window, from `nib_cover`.
+
+    Returns:
+        The share of the blot each pixel takes, the window's shape.
+    """
+    c = np.pad(cover, 1)
+    rows = np.maximum(np.maximum(c[:-2], c[1:-1]), c[2:])
+    grown = np.maximum(np.maximum(rows[:, :-2], rows[:, 1:-1]), rows[:, 2:])
+    return np.minimum(grown * F32(1.0 / _FULL_COVER), F32(1.0))
 
 
 def nib_cover(
     lay: Lay, pos: tuple[np.ndarray, np.ndarray], box: tuple[int, int, int, int]
 ) -> np.ndarray:
-    """How much of each pixel in `box` the nib passes over, from 0 to 1.
+    """How much of each pixel in `box` the nib passes over as it sets down, from 0 to 1.
 
     Each sample stands for the patch of paper between it and its neighbours,
     one stamp spacing along the stroke and one sample spacing across the tip,
     and is splatted as `deposit` lays ink, so a pixel the tip sweeps whole reads
     1, one it grazes a share, and one it never reaches 0. It reads the samples'
     positions, not their weights: the stroke's very start, where the pressure is
-    still zero, is under the nib all the same.
+    still zero, is under the nib all the same. It counts only the set-down: the
+    stamps no further along the path than the box reaches from the start, plus
+    the tip's widest offset. Those are all the stamps that can reach the box on
+    a path that does not turn back on itself, and a stroke that comes back over
+    its own start later does not add to the cover.
 
     Args:
         lay: The stroke as laid out.
@@ -220,11 +253,26 @@ def nib_cover(
         The cover, the window's shape.
     """
     y0, y1, x0, x1 = box
-    px, py = pos
+    sx, sy = float(lay.tr.x[0]), float(lay.tr.y[0])
+    # Slicing first is what keeps the cover cheap on a long stroke: the mask and
+    # the splat then read the set-down's samples alone.
+    reach = math.hypot(max(sx - x0 + 1, x1 - sx), max(sy - y0 + 1, y1 - sy))
+    n = int(np.searchsorted(lay.tr.t, reach + float(np.abs(lay.off).max()), side="right"))
+    px, py = pos[0][:n], pos[1][:n]
     along = lay.tr.total / max(len(lay.tr.t) - 1, 1)
-    across = lay.ink.width / max(lay.smp.m_hi - 1, 1)
-    patch = np.broadcast_to((along * across).astype(F32)[:, None], px.shape)
+    across = lay.ink.width[:n] / max(lay.smp.m_hi - 1, 1)
     near = (px > x0 - 1) & (px < x1) & (py > y0 - 1) & (py < y1)
-    cover = np.zeros((y1 - y0, x1 - x0), F32)
-    deposit(cover, None, (px[near] - x0, py[near] - y0), patch[near], None, None)
-    return np.minimum(cover, F32(1.0))
+    # The bilinear splat of `deposit`, on the box with a pixel's margin all round,
+    # so that every corner of a sample the mask keeps lands on it and none is
+    # dropped or clipped: one `bincount` then lays all four corners at once.
+    qx, qy, g = px[near] - (x0 - 1), py[near] - (y0 - 1), (along * across)[near.nonzero()[0]]
+    fx, fy = np.floor(qx), np.floor(qy)
+    ax, ay = qx - fx, qy - fy
+    wide = x1 - x0 + 2
+    at = fy.astype(np.intp) * wide + fx.astype(np.intp)
+    corners = np.concatenate((at, at + 1, at + wide, at + wide + 1))
+    shares = np.concatenate(
+        (g * (1 - ax) * (1 - ay), g * ax * (1 - ay), g * (1 - ax) * ay, g * ax * ay)
+    )
+    cover = np.bincount(corners, shares, minlength=(y1 - y0 + 2) * wide).reshape(-1, wide)
+    return np.minimum(cover[1:-1, 1:-1], 1.0).astype(F32)
