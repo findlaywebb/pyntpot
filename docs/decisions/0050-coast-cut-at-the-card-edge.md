@@ -61,10 +61,10 @@ input does not change.
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
-wash.webp: identical no, differing fraction 0.131084
+wash.webp: identical no, differing fraction 0.130470
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.014197
-map.png: identical no, differing fraction 0.127123
+labels-centreline.webp: identical no, differing fraction 0.013320
+map.png: identical no, differing fraction 0.126473
 manifest hash: 3976d23ae248ca86-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
 ```
 
@@ -88,8 +88,8 @@ committed ones. Two entries moved, and only they; the other 136 files are byte-i
 
 | Image | Image fraction | Master fraction |
 |---|---|---|
-| `places/skye.webp` | 0.740999 | 0.555004 |
-| `how-to/command-line.webp` | 0.258791 | 0.146843 |
+| `places/skye.webp` | 0.742399 | 0.552979 |
+| `how-to/command-line.webp` | 0.261411 | 0.145232 |
 
 `places/skye.webp` is the fix: the mainland from Plockton and Kyle of Lochalsh south to
 Knoydart, and Applecross in the north east, are land, with their cover, rivers and roads on
