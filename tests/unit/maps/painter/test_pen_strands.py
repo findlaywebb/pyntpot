@@ -20,10 +20,10 @@ OUT_AND_BACK = tuple(OUT + OUT[::-1])
 MID_COLUMN = 60
 
 
-def _ride_as(style: Style, ink_style: str) -> Style:
-    """The style with its ride ink drawn in this treatment."""
-    ride = dataclasses.replace(style.route_inks.ride, style=ink_style)
-    return style.model_copy(update={"route_inks": dataclasses.replace(style.route_inks, ride=ride)})
+def _inked_as(style: Style, ink_style: str) -> Style:
+    """The style with its route ink drawn in this treatment."""
+    ink = dataclasses.replace(style.route_ink, style=ink_style)
+    return style.model_copy(update={"route_ink": ink})
 
 
 def _runs(alpha: np.ndarray) -> list[float]:
@@ -53,9 +53,9 @@ def test_an_out_and_back_gives_a_pen_plate_with_two_lines(tmp_path):
     assert len(_pen_column(tmp_path)) == 2
 
 
-def test_a_pen_ride_ink_draws_strands_on_the_pens_line(tmp_path):
-    """With a pen ride ink, each strand passes within a pixel of an inked run's centre."""
-    style = _ride_as(Style.default(), "pen")
+def test_a_pen_route_ink_draws_strands_on_the_pens_line(tmp_path):
+    """With a pen route ink, each strand passes within a pixel of an inked run's centre."""
+    style = _inked_as(Style.default(), "pen")
     job = tiny_job(tmp_path / "job", style, route=OUT_AND_BACK)
     plates = paint(job.basemap, style, tmp_path / "plates")
     k = job.scale
@@ -66,20 +66,20 @@ def test_a_pen_ride_ink_draws_strands_on_the_pens_line(tmp_path):
         assert min(abs(row - r) for r in runs) <= 1.0
 
 
-def test_the_pen_ride_gap_is_the_pens_and_the_solid_ride_gap_is_the_inks():
-    """The strand gap follows the pen's width for a pen ride ink and the ink's for any other."""
+def test_the_pen_gap_is_the_pens_and_the_solid_gap_is_the_inks():
+    """The strand gap follows the pen's width for a pen route ink and the ink's for any other."""
     style = Style.default()
-    assert strand_gap_px(style) == style.route_ink().px * STRAND_GAP_WIDTHS
-    pen = _ride_as(style, "pen")
+    assert strand_gap_px(style) == style.route_ink.px * STRAND_GAP_WIDTHS
+    pen = _inked_as(style, "pen")
     assert strand_gap_px(pen) == style.route.route_pen_width_px * STRAND_GAP_WIDTHS
     no_pen = pen.model_copy(update={"route": dataclasses.replace(pen.route, route_pen=False)})
-    assert strand_gap_px(no_pen) == style.route_ink().px * STRAND_GAP_WIDTHS
+    assert strand_gap_px(no_pen) == style.route_ink.px * STRAND_GAP_WIDTHS
 
 
-def test_solid_and_pen_ride_inks_paint_the_same_pen_plate(tmp_path):
-    """The ride ink is not a base field: two styles with the same base groups paint one pen plate."""
-    solid = tiny_job(tmp_path / "solid", _ride_as(Style.default(), "solid"), route=OUT_AND_BACK)
-    pen = tiny_job(tmp_path / "pen", _ride_as(Style.default(), "pen"), route=OUT_AND_BACK)
+def test_solid_and_pen_route_inks_paint_the_same_pen_plate(tmp_path):
+    """The route ink is not a base field: two styles with the same base groups paint one pen plate."""
+    solid = tiny_job(tmp_path / "solid", _inked_as(Style.default(), "solid"), route=OUT_AND_BACK)
+    pen = tiny_job(tmp_path / "pen", _inked_as(Style.default(), "pen"), route=OUT_AND_BACK)
     for job in (solid, pen):
         paint_route_pen(job, PlateStack.blank(job.shape))
     assert (tmp_path / "solid" / "pen.webp").read_bytes() == (

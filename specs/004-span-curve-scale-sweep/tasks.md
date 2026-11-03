@@ -1,0 +1,41 @@
+# 004 — tasks
+
+Each line follows `plan.md`. Issue: #54.
+
+- [x] Branch `fix/54-span-curve-scale`; `spec.md` with the generator, scoring rule, sweep
+      and decision rule, committed before any stretch is scored.
+- [x] Plan review round 1: BLOCK (`review.md`); spec, plan and tasks amended for findings
+      1 to 8, finding 9 listed as out-of-scope follow-ups; committed before any scoring.
+- [x] Plan review round 2: BLOCK (`review.md`); kept share replaces raw coverage, T3
+      rebuilt on a real cut-back (inside and outside variants) plus an isolated tight arc
+      pinned `even`, comment edit prescribed line by line, Skye line in `sweep.md`;
+      committed before any scoring.
+- [x] Plan passes the plan-reviewer gate: round 3 PASS (`review.md`); findings 1 to 3
+      applied (`ambiguous-feet` with kept share > 1.25, T3 literals, pool of 32) before
+      any scoring.
+- [x] T1 to T4 tests in `tests/fixtures/test_sweep_span_scale.py`, red.
+- [x] `tests/fixtures/span_sweep_score.py` (split out of `sweep_span_scale.py` at 423
+      lines): `stretches`, `coverage`, `kept_share`,
+      `decisive`, `judge`, `sweep`, `decide`; T1 to T4 green.
+- [x] `fixture_route` and `main`; T5 (43) (Y Fenni stretch count, golden-marked) pinned.
+- [x] `wc -l` on `span_sweep_score.py` (266), `sweep_span_scale.py` (196) and
+      `test_sweep_span_scale.py` (274): each at most 400 (the budget test scans `src` only).
+- [x] Sweep run once (about 2 min 40 s); `sweep.md` written by the tool and committed.
+- [x] Decision rule applied (rule 1: `n` = 4 at 1.5); `SPAN_CURVE_SCALE_CAPS` kept at 1.5;
+      comment edited as the spec prescribes (lines kept, two sentences and the old sweep
+      deleted, the form added with `N_all`, `N`, `R`, `P` filled); the "same 187
+      stretches" wording in `SPAN_CURVE_WEIGHT` fixed.
+- [x] T6: not added. The value did not move, so there is no new behaviour to pin; the
+      existing span tests pin the 1.5 behaviour unchanged.
+- [x] Span unit tests and `uv run pytest -m golden` reviewed; goldens unchanged.
+- [x] `docs/issues/maps-lettering-span-sides-curve-scale-offset.md` deleted; no live
+      reference left.
+- [x] Gates: pytest (parallel, golden included: 1756 passed), ruff check, ruff format
+      --check, ty, lint-imports, prek run --all-files.
+- [x] Fresh-context diff review against the plan: ready (`review.md`); nits 1 to 4, 6
+      and 7 applied, 5 skipped (it would need a regenerated `sweep.md`).
+- [x] Follow-ups handed to the coordinator (spec, "Out of scope"): the unreachable
+      broken-outside refusal in `curved_side`; the other `SPAN_CURVE_*` constants citing
+      the lost sweep; the 10-cap length above scale 2.0; and, from `sweep.md`, the outside
+      being the better mark on under half the decisive stretches at most scales.
+- [ ] PR (by the maintainer) `fix(maps): ...` with `Closes #54`.

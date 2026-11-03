@@ -24,14 +24,23 @@ Maintainer decision, 2026-10-07: mutation testing runs manually through `mutatio
 (`workflow_dispatch` only; modes `changed`, `pattern`, `all`), and its score is
 advisory: reported in the run summary with the survivor count, never compared with a
 threshold. No nightly, no PR job, no `min_score`, no ratchet. When to run it: after
-writing tests for a module, before a release, and when a test feels weak.
+writing tests for a module, before a release, and when a test feels weak; and an agent
+runs it locally on the changed functions after every implementation that changes `ink`
+or `letters` functions, killing each survivor with a test or naming it as equivalent in
+the PR description.
 
 ### Configuration
 
 `[tool.mutmut]` in `pyproject.toml`:
 
 - `only_mutate` is the one statement of the scope; the helper scripts read it.
-- The test selection is `tests/unit` and `tests/property`, without golden tests. mutmut
+- The test selection is the `tests/unit` directories that mirror the `only_mutate`
+  packages (`tests/unit/ink` and `tests/unit/letters`) and `tests/property`, without golden
+  tests. `tests/mutation/test_selection.py` holds the unit directories to the `only_mutate`
+  packages. `tests/unit/maps` is left out because its pipeline tests reach deep into `ink`
+  and `letters` and cost every mutant there a map render; a mutant only they killed shows as
+  a survivor, which marks code the focused tests do not check. They also read
+  `examples/themes/`, which mutmut does not copy, so their stats pass fails. mutmut
   runs pytest inside `mutants/`, where `support.REPO_ROOT` is the mutated tree, so
   `tests/architecture` would scan trampolined source: the line budget fails on every
   mutated file, and the injected `mutmut` import and `# type: ignore` lines break other
@@ -156,9 +165,8 @@ shard times correct `N`.
   surviving mutant in them: `tests/unit/maps/test_cli.py::TestMap::test_a_full_cache_makes_no_request`
   takes 72 s and reaches most of `ink.polyline`. A mutant that makes a function loop
   runs to mutmut's wall bound, `(estimated test time + 1) * 15` seconds, about 20
-  minutes for such a function. The figures above carry both costs. Excluding slow
-  end-to-end tests from the mutation test selection is a possible later improvement, not
-  done here.
+  minutes for such a function. The figures above carry both costs; the narrowed test
+  selection (History, 2026-11-02) removes them from the samples measured.
 - It amends ADR 0001's consequence "run mutation testing in CI"; ADR 0001 itself is not
   edited.
 
@@ -169,3 +177,28 @@ P5.3c in this form instead.
 
 2026-10-08 (P10.12): the run settings gain the address-space cap after a runaway mutant
 killed the runner in run 37689849941.
+
+2026-11-02 (#62): the test selection narrows from all of `tests/unit` to the unit
+directories that mirror the `only_mutate` packages. Measured the same way as the table
+above, on a 4-core machine, before and after the change; "before" also ignores
+`tests/unit/maps/test_example_themes.py`, whose missing `examples/themes/` fails the stats
+pass inside `mutants/`.
+
+| Sample | Before: wall (s), tested, score | After: wall (s), tested, score |
+| --- | --- | --- |
+| cold run of `pyntpot.ink.polyline.x_simplify__mutmut_1` | 186 | 36 |
+| `pyntpot.ink.polyline.x_deform_line*` | 158, 130, 0.7538 | 67, 130, 0.7462 |
+| `pyntpot.letters.hand.xǁHandǁ_flat*` | 88, 95, 0.7579 | 22, 95, 0.7579 |
+
+Seconds per mutant fall from 1.22 to 0.52 for `ink` and from 0.93 to 0.23 for `letters`.
+Before the change, 33 tests reached `x_deform_line` for 9.2 test-seconds, 8.1 of them in
+`tests/unit/maps`; after it, 12 tests for 1.2 s. One `x_deform_line` mutant that only a
+`maps` pipeline test killed now survives. The "before" figures are already about a quarter
+of the 2026-10-07 ones, after the painter's hot-path work; `shards` stays 4 until a full
+run's shard times correct it.
+
+2026-11-02: maintainer decision, agents run mutation testing on the changed functions
+after implementing, as a workflow step (`CLAUDE.md`, the `new-feature` and
+`test-driven-development` skills, the pull-request template). It stays local and advisory:
+no CI job, no threshold. At the per-mutant cost measured above, a changed function's
+mutants take minutes, not the hours that made it occasional.

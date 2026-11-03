@@ -44,7 +44,7 @@ class TestPaperPlate:
 #: The bytes are this machine's. A numpy that runs the plate's float32 maths on other vector
 #: instructions, or on another platform's maths library, can round a last bit the other way,
 #: so the plate itself is committed as `CLASSIC_PLATE`, and under `--golden-tolerance` the
-#: test compares with it within `CLASSIC_PLATE_ATOL` instead (ADR 0045).
+#: test compares with it within `CLASSIC_PLATE_ATOL` instead (ADR 0051).
 CLASSIC_PLATE_SHA = "ae150866b4642275"
 
 #: How far a value of the classic plate may sit from the committed one in tolerance mode.

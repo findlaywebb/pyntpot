@@ -20,3 +20,5 @@ fix(maps): a note no longer hides the home glyph -->
 - [ ] `uv run ty check`
 - [ ] `uv run lint-imports`
 - [ ] `uv run pytest --cov`
+- [ ] Mutation run on the changed `ink`/`letters` functions (CONTRIBUTING.md): score, and each
+      surviving mutant either killed by a new test or listed here as equivalent

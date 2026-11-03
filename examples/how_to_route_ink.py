@@ -143,11 +143,11 @@ def _violet(
 
 def _row_style(small: Style, brush: str) -> Style:
     """The style of one row: the card at cell size, a wet pen with the row's brush."""
-    ride = dataclasses.replace(small.route_inks.ride, style="pen")
+    ink = dataclasses.replace(small.route_ink, style="pen")
     return small.model_copy(
         update={
             "route": dataclasses.replace(small.route, route_pen_brush=brush),
-            "route_inks": dataclasses.replace(small.route_inks, ride=ride),
+            "route_ink": ink,
         }
     )
 
@@ -196,7 +196,7 @@ def _grid(
             "ribbon": dataclasses.replace(base.ribbon, **CROP),
         }
     )
-    ink = small.route_ink()
+    ink = small.route_ink
     small = small.with_route_ink(width_px=ink.px * CELL_ROUTE_SCALE)
     small = small.model_copy(
         update={

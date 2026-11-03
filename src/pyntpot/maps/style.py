@@ -2,26 +2,26 @@
 
 Key type: `Style`, a frozen pydantic model holding one value of each style group:
 `paper`, `wash` and `brush` (ink), `face`, `nib` and `hand` (letters), `card`,
-`ribbon`, `cover`, `route`, `route_inks`, `lettering` and `basemap` (maps).
+`ribbon`, `cover`, `route`, `route_ink`, `lettering` and `basemap` (maps).
 `Style.from_toml` reads a theme file; `Style.default` reads the packaged default
 theme, which is the resolved default style the reference sheets were painted with,
 not the groups' dataclass defaults.
 
 Three digests key what a style change repaints: `base_digest` over the groups the
 base plates read, `lettering_digest` over the groups only the lettering reads, and
-`digest` over every group, the route inks included. Each group digest is the first
+`digest` over every group, the route ink included. Each group digest is the first
 16 hex digits of the SHA-256 of its fields as sorted-key JSON; a combined digest is
 the first 16 hex digits of the SHA-256 of its group digests joined in field order.
 A field named in `DIGEST_OMITS_AT_DEFAULT` is left out of its group's digest while it
 equals its default, so adding such a field moves no digest of a style that keeps it.
 
-`route_ink` hands `paint` and the compose step the route's ink, and the basemap group says what
-the basemap draws. The style paints, letters and fetches nothing itself. The route ink
+`route_ink` holds the route's ink for `paint` and the compose step, and the basemap group
+says what the basemap draws. The style paints, letters and fetches nothing itself. The route ink
 is the theme's, unless a caller feeds its colour and width with `with_route_ink`; the
 style knows nothing of what a track records.
 
 Invariants: a theme naming an unknown key, at the top level, inside a group or
-inside a route ink, is rejected; a style never changes once built; changing a route
+inside the route ink, is rejected; a style never changes once built; changing the route
 ink moves `digest` and neither of the other two.
 """
 
@@ -48,7 +48,6 @@ from pyntpot.maps.style_groups import (
     LetteringPolicy,
     RibbonStyle,
     RouteInk,
-    RouteInks,
     RouteStyle,
 )
 
@@ -88,8 +87,7 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         ribbon: The trimmed extent of the painted ground and the card around it.
         cover: Land cover and the wood.
         route: The route's own painted plate.
-        route_inks: The theme's named route inks, of which `route_ink()` reads
-            one, read only when the route is placed and drawn.
+        route_ink: The route's ink, read only when the route is placed and drawn.
         lettering: Which names a map letters, and how many.
         basemap: What the basemap draws, and how much of it.
     """
@@ -104,7 +102,7 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
     ribbon: RibbonStyle
     cover: CoverStyle
     route: RouteStyle
-    route_inks: RouteInks
+    route_ink: RouteInk
     lettering: LetteringPolicy
     basemap: BasemapStyle
 
@@ -157,15 +155,11 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         """A short hash of the groups only the lettering reads."""
         return _combined(self, LETTERING_GROUPS)
 
-    def route_ink(self) -> RouteInk:
-        """The route's ink: the theme's, with any colour and width `with_route_ink` fed in."""
-        return self.route_inks.ride
-
     def with_route_ink(self, *, colour: str | None = None, width_px: float | None = None) -> Self:
         """A copy of the style whose route is inked in this colour and spaced for this width.
 
-        Only the colour and the width are fed: the route's treatment and its effect
-        keys stay the theme's. The compose step draws the route line at the fed
+        Only the colour and the width are fed: the route's treatment, blend and
+        opacity stay the theme's. The compose step draws the route line at the fed
         width, except when the treatment is `"pen"` and a pen plate was painted: then
         it tints that plate, whose stroke width is the `route` group's
         `route_pen_width_px`, so the fed width changes nothing drawn. Otherwise the
@@ -183,7 +177,7 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
                 and equal digests.
 
         Returns:
-            A copy whose `route_ink()` has the fed colour and width; with neither
+            A copy whose `route_ink` has the fed colour and width; with neither
             fed, a copy equal to this style.
 
         Raises:
@@ -196,14 +190,13 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
             isinstance(width_px, bool) or not math.isfinite(width_px) or width_px <= 0
         ):
             raise ValueError(f"route width {width_px!r} px is not a finite number above zero")
-        ink = self.route_ink()
+        ink = self.route_ink
         fed = dataclasses.replace(
             ink,
             colour=ink.colour if colour is None else colour.lower(),
             px=ink.px if width_px is None else float(width_px),
         )
-        inks = dataclasses.replace(self.route_inks, ride=fed)
-        return self.model_copy(update={"route_inks": inks})
+        return self.model_copy(update={"route_ink": fed})
 
 
 def _check_keys(group: type, value: object, where: str) -> None:

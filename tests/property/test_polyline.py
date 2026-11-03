@@ -1,11 +1,12 @@
-"""Properties of `simplify`: ends kept, a subsequence, idempotent, within tolerance."""
+"""Properties of `simplify` (ends kept, a subsequence, idempotent, within tolerance) and `normal_at`."""
 
 import math
 
+import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from pyntpot.ink.polyline import Pt, simplify
+from pyntpot.ink.polyline import Pt, normal_at, simplify
 
 from support.properties import UNTIMED
 
@@ -69,3 +70,29 @@ class TestSimplify:
                 continue
             nxt = next(j for j in range(i + 1, len(points)) if id(points[j]) in kept)
             assert _gap(p, points[previous], points[nxt]) <= eps + 1e-9
+
+
+GRID = st.integers(-50, 50).map(float)
+GRID_POINTS = st.lists(st.tuples(GRID, GRID), min_size=1, max_size=12)
+
+
+class TestNormalAt:
+    """`normal_at` is a unit vector left of, and square to, its neighbours' chord."""
+
+    @UNTIMED
+    @given(points=GRID_POINTS, data=st.data())
+    def test_the_normal_is_unit_and_left_of_the_chord(
+        self, points: list[Pt], data: st.DataObject
+    ) -> None:
+        """Off a degenerate run the normal is unit length, square to the chord and on its left; on one it is (0, 1)."""
+        i = data.draw(st.integers(0, len(points) - 1))
+        a = points[max(i - 1, 0)]
+        b = points[min(i + 1, len(points) - 1)]
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        nx, ny = normal_at(points, i)
+        if a == b:
+            assert (nx, ny) == (0.0, 1.0)
+            return
+        assert math.hypot(nx, ny) == pytest.approx(1.0)
+        assert nx * dx + ny * dy == pytest.approx(0.0, abs=1e-9)
+        assert dx * ny - dy * nx > 0

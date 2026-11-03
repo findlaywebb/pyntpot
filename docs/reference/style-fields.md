@@ -8,7 +8,7 @@ The style is every style group a map is painted, lettered and composed with, as 
 - Type is the TOML type: boolean, integer, number, string, array or table.
 - Default is the value in the packaged default theme, which `Style.default()` reads. It is the resolved default style, not the dataclass default; the two differ for some fields.
 - A table or an array of tables is shown as `table`. Its keys and values are in `src/pyntpot/maps/themes/default.toml`.
-- A theme names every group. A key a group does not have is rejected, at the top level, inside a group and inside a route ink, as is a missing group or a value of the wrong type.
+- A theme names every group. A key a group does not have is rejected, at the top level, inside a group and inside the route ink, as is a missing group or a value of the wrong type.
 - Sizes and widths in `_px` fields are in display pixels unless the description says render pixels. Fields ending `_m` are in metres.
 
 ## Which groups feed what
@@ -17,9 +17,9 @@ The style is every style group a map is painted, lettered and composed with, as 
 | --- | --- |
 | `base_digest` (the base plates) | `paper`, `wash`, `brush`, `card`, `ribbon`, `cover`, `route`, `basemap` |
 | `lettering_digest` (the lettering only) | `face`, `nib`, `hand`, `lettering` |
-| `digest` (every group) | all thirteen, `route_inks` included |
+| `digest` (every group) | all thirteen, `route_ink` included |
 
-A change to a group moves the digests it feeds, and only those plates are painted again. `route_inks` is read only when the route is placed and drawn, so changing a route ink moves `digest` alone.
+A change to a group moves the digests it feeds, and only those plates are painted again. `route_ink` is read only when the route is placed and drawn, so changing the route ink moves `digest` alone.
 
 ## `paper`
 
@@ -257,36 +257,19 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `route_pen_brush` | string | `"MAJ6-e"` | Brush id of the nib the route plate is painted with. |
 | `route_pen_width_px` | number | `3.0` | Width of the route plate's stroke, in display pixels. |
 
-## `route_inks`
+## `route_ink`
 
-`RouteInks`, from `pyntpot.maps`. One route ink for each sport. It is read only when the route is placed and drawn, so changing an ink paints no plate again. Each of the four is a table with the keys of a route ink, listed after this group.
-
-| Field | Type | Default | Sets |
-| --- | --- | --- | --- |
-| `run` | table | table | The ink a run is drawn in: a table with the keys of a route ink. |
-| `ride` | table | table | The ink a ride is drawn in. `route_ink()` reads this one. |
-| `swim` | table | table | The ink a swim is drawn in. |
-| `other` | table | table | The ink any other sport is drawn in. |
-
-## `route_inks.<sport>`
-
-`RouteInk`, from `pyntpot.maps`. One sport's route treatment. These keys sit in each of the tables `route_inks.run`, `route_inks.ride`, `route_inks.swim` and `route_inks.other`.
+`RouteInk`, from `pyntpot.maps`. How the route is drawn on the card. It is read only when the route is placed and drawn, so changing it paints no plate again. `Style.with_route_ink` feeds its colour and width.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
-| `style` | string | `"solid"` | The route's treatment, such as `solid` or `dotted`. |
+| `style` | string | `"solid"` | The route's treatment. `"pen"` tints the pen plate when the `route` group painted one; any other value draws the line. |
 | `px` | number | `5.4` | Width in display pixels. It also sets how far apart the strands of a doubled-back route are drawn. |
 | `colour` | string | `"#c22050"` | Colour as `#rrggbb`. |
-| `effect` | table | table | Table of the treatment's keys: casing, glow, shadow, blend, opacity and adaptive percentage. The compose step reads `blend` and `opacity`; see below. |
-
-### The route ink's `blend` and `opacity`
-
-Two keys of `effect` are read when the route is drawn on the card, for the solid line and the pen route alike.
-
-| Key | Type | Default | Sets |
-| --- | --- | --- | --- |
-| `blend` | string | `"normal"` | `"normal"` lays the ink over the card; `"multiply"` multiplies it into the card, so the route darkens a wash instead of covering it. Any other value is an error. |
+| `blend` | string | `"normal"` | `"normal"` lays the ink over the card; `"multiply"` multiplies it into the card, so the route darkens a wash instead of covering it. Any other value is an error when the route is drawn. |
 | `opacity` | number | `1.0` | How much of the ink is laid, from 0 to 1. The default theme does not write it; a table without it reads 1.0. |
+
+The compose step draws no casing, glow or shadow round the route.
 
 ## `lettering`
 
@@ -336,8 +319,6 @@ Two keys of `effect` are read when the route is drawn on the card, for the solid
 | `tree_spacing_m` | number | `450.0` | Metres between tree glyphs inside a wood. 0 scatters none. |
 | `all_variants` | boolean | `false` | Build every relief variant rather than the one the mode asks for. |
 
-The defaults shown for `route_inks.<sport>` are the `ride` ink's. The other three differ: `run`, `swim` and `other` take `style = "dotted"` and `px = 4.8`, and `ride` takes `style = "solid"` and `px = 5.4`; all four take `colour = "#c22050"`.
-
 ## Painter fields in no group
 
 These painter fields are read by no module. They belong to no group and a theme may not name them. They are kept for the upstream consumer.
@@ -350,8 +331,6 @@ These painter fields are read by no module. They belong to no group and a theme 
 ## Fields with no reader
 
 `hillshade_opacity` and `pick_places`, in `basemap`, are fields of the group that no module reads. They are kept for the upstream consumer.
-
-The `effect` table of each `route_inks.<sport>` is the same for all its keys but `blend` and `opacity`: it loads and validates, but nothing paints a casing, glow or shadow from it, so setting those changes no card. The gap is recorded in `docs/issues/maps-route-ink-effect-unread.md`.
 
 ## Not style fields
 

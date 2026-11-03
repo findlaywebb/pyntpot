@@ -45,14 +45,14 @@ MIN_STRAND_POINTS = 4
 def strand_gap_px(style: Style) -> float:
     """The gap, in display pixels, between the strands of the route the card shows.
 
-    When the style paints the route pen and its ride ink is the `"pen"` treatment,
+    When the style paints the route pen and its route ink is the `"pen"` treatment,
     the route shown is the pen plate, which the painter separated by the pen's own
     width, so this is `route_pen_width_px * STRAND_GAP_WIDTHS`. Otherwise the route
-    is drawn in the ride ink's own width and this is `route_ink().px *
+    is drawn in the route ink's own width and this is `route_ink.px *
     STRAND_GAP_WIDTHS`. Only `pipeline.paint` reads it: the pen plate itself reads
     base-group fields only.
     """
-    ink = style.route_ink()
+    ink = style.route_ink
     if style.route.route_pen and ink.style == "pen":
         return style.route.route_pen_width_px * STRAND_GAP_WIDTHS
     return ink.px * STRAND_GAP_WIDTHS

@@ -1,4 +1,4 @@
-# 0045 — The classic paper lock is tolerant too
+# 0051 — The classic paper lock is tolerant too
 
 Status: accepted
 
