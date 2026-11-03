@@ -236,6 +236,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `land_cover` | boolean | `true` | Paint the cover classes. Off paints the pale single wash. |
 | `relief` | boolean | `true` | Paint the relief from the elevation grid. |
 | `relief_strength` | number | `1.0` | Multiplies the relief's density, and the ceiling the density is held to, so 2 paints the slopes twice as dark. |
+| `min_patch_px` | number | `0.0` | Display pixels below which a painted cover patch takes the class of its largest painted neighbour; a patch nothing painted touches, such as an island's wood, is kept. Zero keeps every patch. |
 | `cover_cfg` | table | table | Table of cover class to two numbers: how dark a wash of the class goes and how hard its edge pools. |
 | `pigments` | table | table | Table of pigment key to the colour a full-strength wash transmits. See [Pigments](pigments.md). |
 | `pale_base` | number | `0.5` | Density of the pale single wash. |
@@ -264,7 +265,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
 | `style` | string | `"solid"` | The route's treatment. `"pen"` tints the pen plate when the `route` group painted one; any other value draws the line. |
-| `px` | number | `5.4` | Width in display pixels. It also sets how far apart the strands of a doubled-back route are drawn. |
+| `px` | number | `5.4` | Width in display pixels. It also sets how near two passes of a retraced route have to come to be drawn as one stroke. |
 | `colour` | string | `"#c22050"` | Colour as `#rrggbb`. |
 | `blend` | string | `"normal"` | `"normal"` lays the ink over the card; `"multiply"` multiplies it into the card, so the route darkens a wash instead of covering it. Any other value is an error when the route is drawn. |
 | `opacity` | number | `1.0` | How much of the ink is laid, from 0 to 1. The default theme does not write it; a table without it reads 1.0. |

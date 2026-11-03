@@ -190,8 +190,9 @@ class TestDigests:
         assert (style.digest(), style.base_digest()) == (DIGEST, BASE_DIGEST)
 
     def test_a_default_showcase_field_leaves_every_digest(self) -> None:
-        """`minor_road_classes` and `relief_strength` at their defaults leave the three pins."""
+        """`minor_road_classes`, `relief_strength` and `min_patch_px` at their defaults leave the pins."""
         style = Style.default()
+        assert style.cover.min_patch_px == CoverStyle().min_patch_px == 0.0
         assert style.basemap.minor_road_classes == BasemapStyle().minor_road_classes
         assert style.cover.relief_strength == CoverStyle().relief_strength == 1.0
         assert (style.digest(), style.base_digest(), style.lettering_digest()) == (

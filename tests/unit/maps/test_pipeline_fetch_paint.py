@@ -25,14 +25,15 @@ from support.paths import FIXTURE_DIR, KEY
 from support.providers import OSM_CREDIT, SRTM_CREDIT, FixtureElevation, FixtureFeatures
 
 #: The base hash of the regenerated golden `plates.json`; its first half moved with ADR 0062,
-#: when the card's rivers were cut at the card's edge.
-GOLDEN_HASH = "818ec1260e9283d7-d9c56c0811177b0f"
+#: when the card's rivers were cut at the card's edge, and with ADR 0058, when streams were
+#: kept whole and short loose strokes dropped.
+GOLDEN_HASH = "90193bbb26f681bf-d9c56c0811177b0f"
 
 #: The first three points of the drawn route, taken once from the compose step.
 FIRST_STRANDS = (
-    (468.60535507679316, 229.12410015961044),
-    (465.4753605571534, 229.95207657256395),
-    (462.40319129045776, 231.02797742619708),
+    (468.83826232262174, 230.07720613491287),
+    (465.7273034215539, 230.82761680276627),
+    (462.6976136283987, 231.82571027280628),
 )
 
 
@@ -131,7 +132,7 @@ class TestFetch:
 
     def test_the_basemap_carries_the_pinned_roads(self, fetched: Fetched) -> None:
         """The fetched basemap holds the fixture box's pinned number of roads."""
-        assert len(fetched.basemap.layers.roads) == 39
+        assert len(fetched.basemap.layers.roads) == 35
 
     def test_the_basemap_carries_both_credits(self, fetched: Fetched) -> None:
         """The basemap's credits are the feature and the elevation provider's, in that order."""

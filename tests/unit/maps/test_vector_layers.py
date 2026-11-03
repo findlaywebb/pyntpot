@@ -13,7 +13,7 @@ from pyntpot.maps import Cache, Style, Track, VectorLayers, vector_layers
 from support.paths import FIXTURE_DIR, KEY
 
 #: The fixture box's own pinned figures in the default style.
-FIXTURE_ROADS = 82
+FIXTURE_ROADS = 85
 FIXTURE_RIVERS = 9
 FIXTURE_COASTLINE = 4
 FIXTURE_LANDMARKS = 32

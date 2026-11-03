@@ -60,7 +60,11 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0051 | The classic paper lock is tolerant too (applies 0030) |
 | 0052 | Golden diff images in the PR body (amends 0006 and 0036) |
 | 0053 | Education land is built ground: a golden regeneration |
+| 0054 | Small cover patches fold into their neighbours: a golden regeneration |
 | 0055 | A nib width that does not flicker: a golden regeneration |
+| 0056 | Terminal tails kept and crossings written through: a golden regeneration |
+| 0057 | One stroke for a retraced leg: a golden regeneration (amends 0007 and 0036) |
+| 0058 | Whole streams and no stubs: a golden regeneration |
 | 0059 | The organic drift is rescaled about its own mean: a golden regeneration |
 | 0060 | The pen's set-down blot stays on its stroke: a golden regeneration |
 | 0061 | A reloaded nib swells back: a golden regeneration |
@@ -69,3 +73,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0064 | A leader is priced for crossing the route: a golden regeneration |
 | 0065 | A name set along water keeps its letters off it: a golden regeneration |
 | 0066 | The backing wash fades out from the letters: a golden regeneration |
+| 0067 | A leader's pin is an open ring facing its leader: a golden regeneration |

@@ -234,7 +234,7 @@ def draw_plate(
     root = plates.directory
     stem = f"labels-{hand.route}"
     path, side = root / f"{stem}.webp", root / f"{stem}.json"
-    marks = lettering_marks.marks(hand, placed, spans)
+    marks = lettering_marks.marks(hand, placed, spans, style.nib)
     if not marks:
         return None
     key = Cache.lettering_key(marks, plates.hash, style)

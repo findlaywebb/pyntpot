@@ -6,8 +6,11 @@ to; `Harvest`, the layers collected so far; `Scope`, what every element is read 
 tidying the road, river and coast layers share; `LANDMARK_TAG_KEYS`, the tags a
 landmark candidate carries forward.
 
-A road is kept or dropped per road, not per way, and a watercourse's underground length
-is gathered by name so the layer above can drop a buried one whole. It does not read
+A road and a stream are kept or dropped per road and per watercourse, not per way:
+a named one is gathered by its name (or a road's number), and an unnamed way files its
+two ends (`Harvest.road_ends`, `Harvest.stream_ends`) so the layer above can join it to
+the way it carries on as. A watercourse's underground length is gathered by name so the
+layer above can drop a buried one whole. It does not read
 the payload file, generalise the filled layers, or choose which landmarks the map
 labels. Invariants: everything is cut to the clip box; elements are sorted in payload
 order, so the order of every list is the payload's.
@@ -73,6 +76,9 @@ DISTANCE_CAP_M = 3000.0
 #: Metres within which two chains of one polygon's members are joined.
 JOIN_TOL_M = 1.0
 
+#: Decimal places of a metre a way's end is keyed at: the centimetre.
+END_DIGITS = 2
+
 #: A coastline is simplified at this share of the river tolerance.
 COAST_EPS_SHARE = 0.6
 
@@ -109,7 +115,14 @@ class Harvest:
     # Every way of one road, and whether any of it earned the road a place.
     ways: dict[tuple[str, str], list[dict[str, Any]]] = field(default_factory=dict)
     road_keep: dict[tuple[str, str], bool] = field(default_factory=dict)
+    # Each unnamed road's ends, by highway and point, so a way can be joined to
+    # the way it carries on as.
+    road_ends: dict[tuple[str, Pt], list[tuple[str, str]]] = field(default_factory=dict)
     rivers: list[dict[str, Any]] = field(default_factory=list)
+    # Whether any of each watercourse earned it a place, and each unnamed one's
+    # ends, by waterway and point.
+    stream_keep: dict[str, bool] = field(default_factory=dict)
+    stream_ends: dict[tuple[str, Pt], list[str]] = field(default_factory=dict)
     # Metres of each watercourse OSM tags as underground, against its whole run.
     under: dict[str, float] = field(default_factory=dict)
     overall: dict[str, float] = field(default_factory=dict)
@@ -194,6 +207,18 @@ def _area_rings(entry: dict[str, Any], eps: float, scope: Scope) -> Rings:
     )
 
 
+def _ends(entry: dict[str, Any], kind: str, proj: Projection) -> list[tuple[str, Pt]]:
+    """A way's two ends as it was mapped, before any clip, filed under its kind.
+
+    Two ways OSM joins share the node at the join, so its projected point is the
+    same float pair in both; rounding to the centimetre only steadies the key.
+    """
+    pts = _geom(entry, proj)
+    if len(pts) < MIN_LINE_POINTS:
+        return []
+    return [(kind, (round(x, END_DIGITS), round(y, END_DIGITS))) for x, y in (pts[0], pts[-1])]
+
+
 def _road(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harvest) -> None:
     """File the pieces of one way under its road, and decide whether the road is kept."""
     options = scope.options
@@ -209,9 +234,13 @@ def _road(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
     # next block along, so every side street would come off the route
     # as a stub and the map would read as a comb. A road the track ran
     # along or across is on the card for as long as the card holds it.
-    # A way with neither a number nor a name has no road to belong to,
-    # so it is decided on its own.
+    # A way with neither a number nor a name has no name to be gathered by,
+    # so it files its ends, and the layer above joins it to the way it carries
+    # on as: an unnamed lane is cut wherever a tag changes, too.
     road = (ref or name or f"~{entry.get('id')}", highway)
+    if not (ref or name):
+        for end in _ends(entry, highway, scope.proj):
+            found.road_ends.setdefault(end, []).append(road)
     for piece in clip_line(_geom(entry, scope.proj), scope.clip):
         line = _soften(piece, scope.derived["road_eps_m"], options)
         if len(line) < MIN_LINE_POINTS:
@@ -239,23 +268,32 @@ def _road(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harv
 
 
 def _waterway(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: Harvest) -> None:
-    """Collect the pieces of a river, always kept, or of a stream the options keep."""
+    """Collect the pieces of a river, always kept, or of a stream the options keep.
+
+    Kept or dropped per *watercourse*, not per way, as a road is: a brook the
+    track crossed is on the card for as long as the card holds it, rather than
+    for the one way OSM cut it into that the track met, which stopped dead on
+    the land a few pixels from the route. A named one is gathered by its name;
+    an unnamed one files its ends, for the layer above to join it to the way it
+    carries on as.
+    """
     options = scope.options
     within = scope.derived["interaction_m"]
     run_m = scope.derived["interaction_run_m"]
     name = _name(tags, options.name_tags)
     waterway = tags["waterway"]
     buried = tags.get("tunnel") not in (None, "", "no")
+    key = name or f"~{entry.get('id')}"
+    if not name:
+        for end in _ends(entry, waterway, scope.proj):
+            found.stream_ends.setdefault(end, []).append(key)
     for piece in clip_line(_geom(entry, scope.proj), scope.clip):
-        river = waterway == "river"
-        keep = (
-            options.rivers == "all"
-            or river
-            or (options.rivers == "key" and scope.index.interacts(piece, within, run_m))
-        )
-        if not keep:
-            found.counts["stream_dropped"] += 1
-            continue
+        if not found.stream_keep.get(key, False):
+            found.stream_keep[key] = (
+                options.rivers == "all"
+                or waterway == "river"
+                or (options.rivers == "key" and scope.index.interacts(piece, within, run_m))
+            )
         line = _soften(piece, scope.derived["river_eps_m"], options)
         if len(line) < MIN_LINE_POINTS:
             continue
@@ -263,11 +301,15 @@ def _waterway(entry: dict[str, Any], tags: dict[str, Any], scope: Scope, found: 
         # by name so the question is asked of the river and not of each
         # way. A river passing under one bridge is not a buried river.
         run = length(line)
-        key = name or f"~{entry.get('id')}"
         found.under[key] = found.under.get(key, 0.0) + (run if buried else 0.0)
         found.overall[key] = found.overall.get(key, 0.0) + run
         found.rivers.append(
-            {"c": "river" if river else "stream", "n": name, "k": key, "d": path_d(line)}
+            {
+                "c": "river" if waterway == "river" else "stream",
+                "n": name,
+                "k": key,
+                "d": path_d(line),
+            }
         )
 
 

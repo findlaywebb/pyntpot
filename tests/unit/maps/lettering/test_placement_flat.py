@@ -6,6 +6,7 @@ import pytest
 
 from pyntpot.ink.polyline import Pt
 from pyntpot.letters.hand import Hand
+from pyntpot.letters.style import NibStyle
 from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import (
     TIER_RIVER,
@@ -125,7 +126,7 @@ def test_a_tracked_name_set_flat_near_the_edge_is_written_inside_the_paper(
     assert got == [river]
     assert river.box is not None
     _assert_on_paper(river, hand, card)
-    xs = [x for mark in label_marks(hand, river) for x, _y in mark.pts]
+    xs = [x for mark in label_marks(hand, river, NibStyle()) for x, _y in mark.pts]
     assert river.box[0] <= min(xs)
     assert max(xs) <= river.box[2]
 
@@ -144,7 +145,7 @@ def test_a_river_name_on_water_running_off_the_card_slides_along_it_onto_the_pap
 
 def _assert_on_paper(name: Label, hand: Hand, card: Card) -> None:
     """Every point the hand writes for a placed name lies inside the card's torn margin."""
-    marks = label_marks(hand, name)
+    marks = label_marks(hand, name, NibStyle())
     xs = [x for mark in marks for x, _y in mark.pts]
     ys = [y for mark in marks for _x, y in mark.pts]
     assert xs

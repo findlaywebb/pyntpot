@@ -42,8 +42,8 @@ tutorial. The command line has no route-ink option, so use a script or a
    INFO:__main__:wrote out/route_ink.png
    ```
 
-   No plate is painted from the route ink. `paint` reads the width only to space the
-   strands of a route that doubles back, and `compose` draws the route over the plates.
+   No plate is painted from the route ink. `paint` reads the width only to decide how
+   near two passes of a retraced route have to come to be drawn as one stroke, and `compose` draws the route over the plates.
 
 ## Result
 
@@ -109,8 +109,8 @@ Only `pen` changes how the route is drawn: any other treatment is a solid line.
   instead of the copy `with_route_ink` returned. Pass the copy to every stage.
 - The width changed nothing you can see: the route ink is a `pen` treatment. It tints the
   painted pen plate, and that plate's stroke width is the `route` group's
-  `route_pen_width_px`. The width you pass then only sets how far apart the strands of a
-  route that doubles back are drawn. The default theme's route is `solid`, so there the
+  `route_pen_width_px`. The width you pass then only sets how near two passes of a
+  retraced route have to come to be drawn as one stroke. The default theme's route is `solid`, so there the
   width is the line's width.
 - The picture repainted everything: you changed something besides the ink, such as a group
   of your theme. Only a change to the route ink leaves the plates current.

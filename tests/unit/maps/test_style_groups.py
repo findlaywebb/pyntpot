@@ -191,6 +191,7 @@ PINNED: dict[type, tuple[str, ...]] = {
         "land_cover",
         "relief",
         "relief_strength",
+        "min_patch_px",
         "cover_cfg",
         "pigments",
         "pale_base",
@@ -256,7 +257,7 @@ SOURCED: dict[type, str] = {
     NibStyle: "76aa066043386bcf",
     CardStyle: "5e73ba4b178084f2",
     RibbonStyle: "6c8fdf4184013394",
-    CoverStyle: "a128e6b0e70f5c23",
+    CoverStyle: "8ff38fcbad0d7a6f",
     RouteStyle: "e7af799eb721f445",
     LetteringPolicy: "252f33e095df0b01",
 }

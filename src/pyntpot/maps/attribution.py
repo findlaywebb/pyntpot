@@ -139,7 +139,9 @@ def draw_attribution(image: Image.Image, text: str, style: Style, scale: float =
         x = pad + width - line_w
         y = pad + size + lead * i
         marks += lettering_marks.label_marks(
-            hand, Label(name=line, kind="landmark", px=x, py=y, tx=x, ty=y, size=size)
+            hand,
+            Label(name=line, kind="landmark", px=x, py=y, tx=x, ty=y, size=size),
+            style.nib,
         )
     factor = plate_scale(scale)
     big = (block[0] * factor, block[1] * factor)
