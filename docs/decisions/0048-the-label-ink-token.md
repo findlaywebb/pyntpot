@@ -1,7 +1,8 @@
 # 0048 — The label ink token (amends 0008 and 0026)
 
-Status: provisional, pending the maintainer's review (ADR 0026 says this rename stops for
-the maintainer; the pull request is that stop).
+Status: accepted
+
+The maintainer approved this rename (the stop ADR 0026 requires) on 2026-11-03.
 
 ## Context
 
