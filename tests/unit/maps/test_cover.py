@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from pyntpot.maps.cache import Cache
-from pyntpot.maps.cover import cover_rings
+from pyntpot.maps.cover import COVER_ORDER, PAINTED_AS, cover_rings
 from pyntpot.maps.projection import track_projection
 
 #: A short synthetic track inside the Lynmouth box.
@@ -58,18 +58,25 @@ def _square(tags: dict[str, str]) -> dict[str, object]:
 @pytest.mark.parametrize(
     ("tags", "expected"),
     [
-        ({"landuse": "education"}, ["built"]),
-        ({"amenity": "university"}, ["built"]),
-        ({"amenity": "college"}, ["built"]),
+        ({"landuse": "education"}, ["campus"]),
+        ({"amenity": "university"}, ["campus"]),
+        ({"amenity": "college"}, ["campus"]),
         ({"amenity": "university", "leisure": "garden"}, ["meadow"]),
     ],
     ids=["education-land", "university", "college", "college-garden-stays-meadow"],
 )
-def test_education_land_is_painted_as_built_ground(
+def test_education_land_is_campus_ground(
     tmp_path: Path, tags: dict[str, str], expected: list[str]
 ) -> None:
-    """Colleges and schools carry the built ground's pigment; a garden tag on one still wins."""
+    """Colleges and schools are campus ground; a garden tag on one still wins."""
     (tmp_path / "landcover-iEDU.json").write_text(json.dumps({"elements": [_square(tags)]}))
     proj, _ = track_projection(LATS, LNGS)
     clip = (-9000.0, -9000.0, 9000.0, 9000.0)
     assert list(cover_rings("iEDU", proj, clip, 2.0, Cache(tmp_path))) == expected
+
+
+def test_campus_is_washed_as_built_and_labelled_below_the_greens() -> None:
+    """Campus takes the built ground's pigment, and a meadow is labelled over it."""
+    assert PAINTED_AS["campus"] == "built"
+    assert COVER_ORDER.index("campus") < COVER_ORDER.index("meadow")
+    assert COVER_ORDER.index("meadow") < COVER_ORDER.index("built")

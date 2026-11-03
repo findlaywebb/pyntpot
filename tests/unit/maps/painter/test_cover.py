@@ -100,6 +100,25 @@ class TestPaintCover:
         assert not stack.wood_mask.any()
         assert stack.label.any()
 
+    def test_a_campus_is_one_wash_with_the_town_and_a_quad_keeps_its_green(self, tmp_path):
+        """A meadow inside a campus is labelled meadow, and campus and built make one wash."""
+        campus = square(20.0, 20.0, 150.0, 200.0)
+        quad = square(60.0, 60.0, 110.0, 160.0)
+        town = square(160.0, 20.0, 300.0, 200.0)
+        cover = {"campus": (campus,), "meadow": (quad,), "built": (town,)}
+        order = ("campus", "meadow", "built")
+        lone = tiny_job(
+            tmp_path, cover={"meadow": (quad,), "built": (town,)}, cover_order=order[1:]
+        )
+        job = tiny_job(tmp_path, cover=cover, cover_order=order)
+        stack = PlateStack.blank(job.shape)
+        paint_cover(job, stack)
+        lone_stack = PlateStack.blank(lone.shape)
+        paint_cover(lone, lone_stack)
+        assert stack.label[55, 42] == 2  # the quad's centre, (85, 110) m
+        assert stack.label[30, 20] == 1 and stack.label[30, 120] == 3
+        assert len(stack.trimmed) == len(lone_stack.trimmed)
+
     def test_cover_off_lays_the_one_pale_wash_and_labels_nothing(self, tmp_path):
         """The pale wash replaces the classes, and nothing is labelled."""
         style = tiny_style(cover={"land_cover": False})
