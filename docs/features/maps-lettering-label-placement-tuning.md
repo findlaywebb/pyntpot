@@ -37,8 +37,9 @@ up to:
 - **Nothing says why a name went where it did.** Tuning means editing a constant,
   repainting and comparing by eye; the before-and-after crops for #53 were cut by hand
   with PIL in a scratchpad.
-- #52 stays open for "Cherwell" written along its own stroke and "Magdalen Bridge" set
-  across dense roads on Oxford.
+- #52 stays open for "Magdalen Bridge" set across dense roads on Oxford; "Cherwell" written
+  over its own channels was fixed by pricing the water under a name set along a line
+  (ADR 0065).
 
 `tests/golden/test_places.py:212` now asserts, for every focus place, that no two leaders
 cross and that no flat name sits on a lake. Nothing measures how long the leaders are, how
@@ -68,8 +69,11 @@ placement quality, tuning facilities, and a tool to place names by hand.
   near each one that moved. One tier's change then settles locally instead of cascading;
   it costs time per card, and a repair needs a bound so it terminates. Decided: behind a
   switch.
-- **#52's two cases**: offset a name set along water clear of its stroke and price the water
-  for it, and scale the road cost by how many roads the style draws.
+- **#52's remaining case**: price a seat by how many roads lie under it, not only whether
+  one does. Tried in ADR 0065's window (the first road in full, each further one at half,
+  three at most): every seat within `LEADER_RUNGS` of "Magdalen Bridge" lies across three
+  streets or on the water, so it moved no name there and only shifted names elsewhere; it
+  needs seats further out (a longer leader) to pay.
 
 *Tuning facilities*:
 

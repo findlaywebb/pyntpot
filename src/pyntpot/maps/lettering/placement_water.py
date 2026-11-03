@@ -3,12 +3,15 @@
 Key names: `Water`, the lake rings and the watercourse strokes in display pixels, with
 the box each covers; `water_from`, which builds it from a basemap; `on_water`, the share
 of a name's box, grown by the reach of its backing wash, that lies on water;
-`water_cost`, what that share and the water under the letters cost; `WATER_COST`,
+`water_cost`, what that share and the water under the letters cost; `ink_on_water` and
+`along_water_cost`, the share of points along a curved name's ink that lie on water, and
+what it costs; `WATER_COST`,
 `WATER_UNDER_COST` and `UNDER_FULL_SHARE`, the prices; `WASH_REACH_EM`, how far round a name its
 backing wash reaches.
 
 It does not choose a position and does not move a box. It prices water for a name set
-flat; a name written on the water, or set along its own line, is not priced here.
+flat, and under the letters of a name set along its line; a name written on the water
+is not priced here.
 
 Invariants: `on_water` is a share between 0 and 1; an empty `Water` prices nothing; a
 lake is read by the even-odd rule over its rings, so an island in a lake is dry.
@@ -238,6 +241,42 @@ def water_cost(box: Box, water: Water, size: float) -> float:
     ink = (box[0] + inset, box[1], box[2] - inset, box[3])
     under = on_water(ink, water, 0.0)
     return share * WATER_COST + WATER_UNDER_COST * min(under / UNDER_FULL_SHARE, 1.0)
+
+
+def ink_on_water(points: list[Pt], water: Water) -> float:
+    """The share of points, sampled over a name's ink, that lie on a lake or under a stroke.
+
+    A name set along a line covers a ribbon, not a box, so its ink is sampled as
+    points along that ribbon and each is tested where it is; a box round a bend
+    would claim water the letters never touch.
+    """
+    if not points or (not water.lakes and not water.strokes):
+        return 0.0
+    xs = np.array([x for x, _y in points], float)
+    ys = np.array([y for _x, y in points], float)
+    near = (float(xs.min()), float(ys.min()), float(xs.max()), float(ys.max()))
+    if not water.maybe_wet(near):
+        return 0.0
+    wet = _in_lake(xs, ys, water.edges, _meets(water.lake_boxes, near))
+    strokes = _meets(water.stroke_boxes, near)
+    if strokes.any():
+        rest = water.near_stroke(xs, ys) & ~wet
+        if rest.any():
+            wet[rest] = _on_stroke(xs[rest], ys[rest], water.segments, strokes, near)
+    return float(np.count_nonzero(wet)) / xs.size
+
+
+def along_water_cost(points: list[Pt], water: Water) -> float:
+    """What water under the letters of a name set along a line costs it.
+
+    `WATER_UNDER_COST`, in full once `UNDER_FULL_SHARE` of the ink lies on
+    water, as for a flat name's letters. Its own stroke counts too: the name is
+    lifted clear of it, so where the ink still meets it the line bends under
+    the letters, and that is the first letter painted over. No wash term: a
+    name set beside its own water always has its backing wash reach over it.
+    """
+    under = ink_on_water(points, water)
+    return WATER_UNDER_COST * min(under / UNDER_FULL_SHARE, 1.0)
 
 
 def on_water(box: Box, water: Water, size: float) -> float:

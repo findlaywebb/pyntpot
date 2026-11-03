@@ -66,3 +66,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0061 | A reloaded nib swells back: a golden regeneration |
 | 0063 | Long landmark names rank last: a golden regeneration |
 | 0064 | A leader is priced for crossing the route: a golden regeneration |
+| 0065 | A name set along water keeps its letters off it: a golden regeneration |
