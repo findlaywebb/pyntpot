@@ -98,8 +98,9 @@ window) and sample count (2 to 90, odd and even); turning the nib by up to 0.01 
 stroke of up to five straight pieces moves no sample by more than `thin` times the turn;
 turning a pixel staircase moves no sample by more than `thin` times the turn; a pixel
 staircase at any angle to the nib keeps within 0.12 of its straight line's width at thin
-0.85, sample to sample and against the true width; starting a closed ring one vertex on
-shifts its widths and changes none. And by `tests/unit/letters/test_pen_profile.py`: a
+0.85, sample to sample and against the true width, under a 12 px window, and within 0.3
+under the 5.46 px window a 52 px glyph has under the default nib; starting a closed ring
+one vertex on shifts its widths and changes none. And by `tests/unit/letters/test_pen_profile.py`: a
 straight stroke keeps the exact sine law; an L climbs through the widths between, pinned,
 unchanged from the first version; a ±45 degree V under a flat nib keeps its legs' 0.751 at
 every sample at 24, 25, 60 and 61 samples and with its point off centre (the first version
@@ -109,7 +110,10 @@ at most `thin` times a 1.6e-4 rad turn of the nib (0.29 before), climbs into the
 pinned widths with no step, and is untouched (0.1873) more than half a window before the
 kink and under 0.3 to 1 px before it (0.487 before); a ring shorter than the tent is cut at
 every lap of its vertices, pinned; a ring's first and last widths agree; the sample count;
-"Keswick" at the issue's settings, three seeds, its window from `nib_brushes`, has no zigzag.
+"Keswick" at the issue's settings, three seeds, its window from `nib_brushes`, has no zigzag;
+nor do Keswick, Ambleside, Aberystwyth and Machynlleth at 14, 20, 30 and 52 px under the
+default nib's own narrower window at thin 0.85; a window under a quarter pixel is read as
+a quarter pixel.
 `tests/benchmarks/test_letters.py::test_the_nib_widths_of_a_name` times the profile along
 every glyph stroke of a long name, which no other benchmark runs.
 
@@ -205,7 +209,23 @@ The first version's `_spread` and `_leg`, and with them their mutants, are gone.
 ## Consequences
 
 - A glyph's width along a stroke is a continuous function of its direction and of the nib's
-  angle; a staircase near the nib's angle reads as one width.
+  angle. A staircase reads as one width only where the window spans enough steps for their
+  turns to cancel. Over 20,000 random staircases at thin 0.85 (heading, nib and length 40 to
+  160 px as the property draws them), every one keeps within 0.12 of its straight line's
+  width (sample to sample and against the true width; 0.10 at the worst) under a 12 px
+  window. Under the 5.46 px window of a 52 px glyph at the default nib (a 1.47 px one at
+  14 px), 5.7 % step by more than 0.12 between samples and 8.7 % by either measure, 0.24 at
+  the worst found; under 3.4 px, 31 % and 38 %, 0.33 at the worst. So the 0.12 bound is a
+  property of a wide nib, not of every nib, and at the production window what holds is the
+  looser 0.3 and, on written names, no zigzag of wide, thin, wide.
+- The width depends on where the stroke's vertices fall as well as on where the samples
+  do, since the floor is read at every vertex a tent reaches: a collinear point added to a
+  stroke can move a sample by up to 0.15, and the density of a skeleton's vertices moves a
+  bowl's thinnest point by about 0.07.
+- A window narrower than a quarter render pixel is read as a quarter pixel
+  (`_MIN_WINDOW_PX`), so a vanishing window cannot ask for samples without bound; no glyph
+  brush is that narrow (`brush_from_id` makes none under 0.4 display px, at least 0.4
+  render px at a whole supersample), so nothing painted moves.
 - A stroke of two straight legs is nowhere thinner than its narrower leg, however the
   samples fall; the floor costs no truncated reach and no gate.
 - A floor reaches as far as a sample's tent does (15/16 of a window either side), not half a

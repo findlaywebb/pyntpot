@@ -59,18 +59,18 @@ class TestPenProfile:
     @pytest.mark.parametrize("seed", [1, 7, 11], ids=["seed-1", "seed-7", "seed-11"])
     def test_keswick_on_an_upright_nib_has_no_saw_tooth(self, seed: int) -> None:
         """Keswick at 52 px, nib at 90 degrees and thin 0.85, never zigzags wide, thin, wide along a stroke."""
-        hand = Hand(FaceStyle(), HandStyle())
-        marks = hand.write(Setting("Keswick", 52.0, anchor=(10.0, 80.0)), hand.generator(seed))
         nib = NibStyle(label_pen_angle_deg=90.0, label_pen_thin=0.85, label_pen_width_px=3.4)
-        window = nib_brushes(nib, FaceStyle(), BrushStyle(), 2.0)("glyph", 52.0).width
-        zigzags = 0
-        for mark in marks:
-            pts = np.asarray(mark.pts) * 2.0
-            step = np.diff(pen_profile(pts, math.radians(90.0) + mark.pen, 0.85, window))
-            big = np.abs(step) > 0.05
-            turn = step[:-1] * step[1:] < 0
-            zigzags += int(np.sum(turn[:-1] & turn[1:] & big[:-2] & big[1:-1] & big[2:]))
-        assert zigzags == 0
+        assert _zigzags("Keswick", 52.0, nib, seed) == 0
+
+    @pytest.mark.parametrize("size", [14.0, 20.0, 30.0, 52.0], ids=["14px", "20px", "30px", "52px"])
+    @pytest.mark.parametrize(
+        "name",
+        ["Keswick", "Ambleside", "Aberystwyth", "Machynlleth"],
+        ids=["keswick", "ambleside", "aberystwyth", "machynlleth"],
+    )
+    def test_a_name_at_the_default_nib_width_has_no_saw_tooth(self, name: str, size: float) -> None:
+        """A real name at 14 to 52 px, under the default nib's own narrow window at thin 0.85, never zigzags."""
+        assert _zigzags(name, size, NibStyle(label_pen_thin=0.85), 7) == 0
 
     def test_a_short_corner_turns_through_the_pinned_widths(self) -> None:
         """An L of two 10 px legs under an 8 px tent climbs from 0.15 to 1.0 by the pinned widths."""
@@ -88,6 +88,14 @@ class TestPenProfile:
         prof = pen_profile(np.array([(0.0, 0.0), (1e-6, 0.0)]), 0.0, 0.85, 8.0)
         assert prof.dtype == np.float32
         assert prof.tolist() == [1.0, 1.0]
+
+    @pytest.mark.parametrize("window", [0.0, 1e-9, 0.1], ids=["none", "1e-9", "tenth-px"])
+    def test_a_window_narrower_than_a_quarter_pixel_is_read_as_one(self, window: float) -> None:
+        """A window under a quarter pixel, or none, gives the quarter pixel's 481 samples, not unbounded ones."""
+        pts = np.array([(0.0, 0.0), (40.0, 0.0), (40.0, 20.0)])
+        prof = pen_profile(pts, 0.3, 0.85, window)
+        assert len(prof) == 481
+        assert prof.tolist() == pen_profile(pts, 0.3, 0.85, 0.25).tolist()
 
     def test_a_vee_along_the_nib_keeps_its_legs_width_at_the_point(self) -> None:
         """A V whose legs are 45 degrees either side of a flat nib keeps the legs' 0.751 at the point, not 0.15."""
@@ -145,6 +153,22 @@ class TestPenProfile:
         prof = pen_profile(np.array([start, right, left, apex, start]), 0.0, 0.85, 8.0, 61)
         assert prof[0] == pytest.approx(0.15 + 0.85 * math.sin(math.pi / 4), abs=1e-5)
         assert prof[-1] == pytest.approx(prof[0], abs=1e-6)
+
+
+def _zigzags(name: str, size: float, nib: NibStyle, seed: int) -> int:
+    """How often `name` at `size` px, under `nib` at a render scale of 2, steps wide, thin, wide along a stroke."""
+    hand = Hand(FaceStyle(), HandStyle())
+    marks = hand.write(Setting(name, size, anchor=(10.0, 80.0)), hand.generator(seed))
+    window = nib_brushes(nib, FaceStyle(), BrushStyle(), 2.0)("glyph", size).width
+    angle = math.radians(nib.label_pen_angle_deg)
+    zigzags = 0
+    for mark in marks:
+        pts = np.asarray(mark.pts) * 2.0
+        step = np.diff(pen_profile(pts, angle + mark.pen, nib.label_pen_thin, window))
+        big = np.abs(step) > 0.05
+        turn = step[:-1] * step[1:] < 0
+        zigzags += int(np.sum(turn[:-1] & turn[1:] & big[:-2] & big[1:-1] & big[2:]))
+    return zigzags
 
 
 def _hairline_kink() -> np.ndarray:

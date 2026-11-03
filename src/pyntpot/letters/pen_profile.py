@@ -7,9 +7,17 @@ A broad nib held at a fixed angle draws its full width across itself and almost
 nothing along itself, so a glyph's width follows the angle between the stroke
 and the nib: `1 - thin` along it, all of it across, the sine between. The
 direction is the stroke's own, smoothed along it over the nib's width, so a
-pixel staircase reads as one width and a gentle turn moves the width through
-the angles between. Where the smoothed direction cuts across a sharp corner,
-the corner is read from its legs instead (`pen_profile` says how).
+gentle turn moves the width through the angles between, and a pixel staircase
+ripples about its straight line's width by less the wider the nib is. At thin
+0.85, a 12 render px window holds a staircase within 0.12 of its straight
+line's width, sample to sample and against the true width; the 5.46 px window
+of a 52 px glyph under the default nib holds it within 0.3 (about 0.24 at the
+worst found), and within 0.12 on about nine staircases in ten; a 3.4 px window
+on about six in ten. A narrower window does not hold a staircase to one width:
+the ripple is a step's own turn, read over too few steps to cancel. Written
+names at their own windows (14 to 52 px) still draw no zigzag of wide, thin,
+wide. Where the smoothed direction cuts across a sharp corner, the corner is
+read from its legs instead (`pen_profile` says how).
 
 It does not stroke, colour or place anything, and it reads no style: the nib's
 angle, how much it thins and its width arrive as numbers. The nib's angle is
@@ -48,6 +56,11 @@ _STROKE_ENDS = 2
 
 #: A stroke shorter than this, in render pixels, has no direction to take a width from.
 _MIN_LENGTH_PX = 1e-6
+
+#: The narrowest window, in render pixels, a stroke's direction is averaged over. A
+#: narrower one reads a pixel staircase step by step all the same, and would ask for
+#: samples without bound (two per window), so it is read as this.
+_MIN_WINDOW_PX = 0.25
 
 
 def pen_profile(
@@ -107,7 +120,8 @@ def pen_profile(
             render pixels with y down.
         thin: How much of the width a stroke drawn straight along the nib loses.
         window: How much of the stroke, in render pixels, its direction is
-            averaged over; the nib's own width.
+            averaged over; the nib's own width. A window narrower than
+            `_MIN_WINDOW_PX` (a quarter pixel), or none, is read as that.
         samples: The fewest points the profile is sampled at.
 
     Returns:
@@ -120,7 +134,7 @@ def pen_profile(
     total = float(cum[-1])
     if total <= _MIN_LENGTH_PX:
         return np.ones(_STROKE_ENDS, F32)
-    width = max(window, _MIN_LENGTH_PX)
+    width = max(window, _MIN_WINDOW_PX)
     at = np.linspace(0.0, total, max(samples, math.ceil(2.0 * total / width) + 1))
     # A tent is a box of boxes: one box a window wide at each of `_TENT_TAPS`
     # points spread over a window round the sample.

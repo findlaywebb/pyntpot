@@ -25,6 +25,11 @@ TURNS = st.floats(-0.3, 0.3, allow_nan=False, allow_infinity=False)
 #: The window the direction is averaged over, in render pixels: a broad nib's width.
 WINDOW = 12.0
 
+#: The window a 52 px glyph is written with under the default nib at a render scale of 2
+#: (`nib_brushes`' glyph brush width), in render pixels: narrower than `WINDOW`, so a
+#: staircase ripples further about its width.
+PRODUCTION_WINDOW = 5.46
+
 #: A V's leg, in render pixels: longer than the window, so each half window at the point is one leg.
 LEG = 30.0
 
@@ -116,6 +121,19 @@ class TestPenProfile:
         inner = prof[2:-2]
         assert np.abs(np.diff(prof)).max() <= 0.12
         assert np.abs(inner - true).max() <= 0.12
+
+    @UNTIMED
+    @given(heading=ANGLES, nib=ANGLES, length=LENGTHS)
+    def test_a_stepped_straight_stroke_holds_near_its_width_at_the_production_window(
+        self, heading: float, nib: float, length: int
+    ) -> None:
+        """At a 52 px glyph's own window a pixel staircase keeps within 0.3 of its width, sample to sample and against the true width."""
+        thin = 0.85
+        prof = pen_profile(_staircase(heading, length), nib, thin, PRODUCTION_WINDOW)
+        true = (1.0 - thin) + thin * abs(math.sin(heading - nib))
+        inner = prof[2:-2]
+        assert np.abs(np.diff(prof)).max() <= 0.3
+        assert np.abs(inner - true).max() <= 0.3
 
     @UNTIMED
     @given(
