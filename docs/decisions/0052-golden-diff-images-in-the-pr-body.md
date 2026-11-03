@@ -51,7 +51,8 @@ pixels past the channel bound, or every changed pixel when none is past it.
 ### Links that render
 
 The repository is public, so the block links `raw.githubusercontent.com` files, which
-GitHub renders inline for any reader. Each link names the `pr-assets` commit, not the branch: a PR body keeps showing the review images
+GitHub renders inline for any reader. (Amended 2026-11-03: the links are now `<img>` tags on
+`github.com/…/raw/`; see the amendment below.) Each link names the `pr-assets` commit, not the branch: a PR body keeps showing the review images
 it was written with after a later publish replaces them, and no cache serves an old review image
 at a moved branch's URL. `pr-assets` is an orphan branch that holds review images only, so it
 never merges and adds no history to `main`; each PR's review images sit under its branch name.
@@ -95,3 +96,20 @@ else in the tests changes, and a passing run draws nothing.
 - `pr-assets` grows with every published PR. Its review images are a few hundred kilobytes per
   image; a branch that has merged may have its directory deleted from `pr-assets` in a
   later commit, which leaves its old links working, since they name earlier commits.
+
+## Amendment: `<img>` tags on github.com raw links (2026-11-03)
+
+The block no longer uses Markdown image syntax or `raw.githubusercontent.com` links. Posted
+through the GitHub MCP tools, `![alt](https://raw.githubusercontent.com/...)` came out mangled
+and the images stopped rendering, and long URLs were mangled even in other forms. Each review
+image is now an HTML tag on its own line, with a blank line either side:
+
+```
+<img src="https://github.com/findlaywebb/pyntpot/raw/<12-char sha>/<path>" alt="..." width="720">
+```
+
+The `github.com/<owner>/<repo>/raw/` host redirects to the raw-file host, so the images still
+render, and the `pr-assets` commit is shortened to 12 characters to keep the URL short. The
+link still names a commit, never a branch, so everything above about stable links holds. The
+diff image's width is a parameter (`--width`, default 720); the crop image has no width, so it
+stays at 1:1.

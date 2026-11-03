@@ -169,3 +169,56 @@ class TestMarks:
         """Turning a mark's backing wash off changes what is written under it."""
         washed = _plate([Mark(STROKE)], tmp_path / "a.webp")
         assert _plate([Mark(STROKE, wash=False)], tmp_path / "b.webp") != washed
+
+    def test_a_washed_mark_beside_an_unwashed_one_keeps_its_own_wash(self, tmp_path: Path) -> None:
+        """In one ink, the washed mark's wash is laid as when every mark is washed.
+
+        The washed marks are laid again on their own pad for the wash, from the same
+        label seed, so the wash under them matches the all-washed plate there, and the
+        unwashed mark far off reads as when no mark is washed.
+        """
+        top = [(8.0, 8.0), (30.0, 10.0), (52.0, 8.0)]
+        low = [(8.0, 120.0), (30.0, 122.0), (52.0, 120.0)]
+        surface = _surface(64, 140, 1.0)
+
+        def alpha(marks: list[Mark], name: str) -> np.ndarray:
+            written = nib_plate(marks, surface, GROUPS, tmp_path / name)
+            assert written is not None
+            return np.asarray(Image.open(written).convert("RGBA"), np.int16)[..., 3]
+
+        mixed = alpha([Mark(top), Mark(low, wash=False)], "mixed.webp")
+        washed = alpha([Mark(top), Mark(low)], "washed.webp")
+        bare = alpha([Mark(top, wash=False), Mark(low, wash=False)], "bare.webp")
+        assert not np.array_equal(washed[:40], bare[:40]), "the wash shows under the top mark"
+        assert int(np.abs(mixed[:40] - washed[:40]).max()) <= 1
+        assert int(np.abs(mixed[90:] - bare[90:]).max()) <= 1
+
+
+#: The brush the map paints its labels with: organic, so the bristles drift on a lattice.
+ORGANIC = BrushStyle(brush_organic=True, pen_starve=True, stroke_smooth=True)
+
+
+def _bowl(cx: float, cy: float, rx: float, ry: float) -> list[tuple[float, float]]:
+    """A closed oval of 124 points, an "o" as the hand writes it, starting at its foot."""
+    turns = np.linspace(0.0, 2.0 * math.pi, 124)
+    return [(cx + rx * math.sin(a), cy + ry * math.cos(a)) for a in turns]
+
+
+class TestCounters:
+    """A small closed letter keeps its counter open, whatever the label seed draws."""
+
+    def test_a_small_o_keeps_an_open_counter_across_seeds(self, tmp_path: Path) -> None:
+        """A 20 px "o" at scale 2 leaves the middle of its bowl near bare for 400 label seeds."""
+        rx, ry = 2.64, 3.72
+        surface = _surface(64, 64, 2.0)
+        mark = Mark(_bowl(16.0, 16.0, rx, ry), size=20.0, pen=-0.09, wash=False)
+        yy, xx = np.mgrid[0:64, 0:64] + 0.5
+        core = ((xx - 32.0) / (2.0 * rx)) ** 2 + ((yy - 32.0) / (2.0 * ry)) ** 2 < 0.25
+        worst = 0.0
+        for seed in range(400):
+            groups = NibGroups(NibStyle(), FaceStyle(), HandStyle(seed), ORGANIC, PaperStyle())
+            written = nib_plate([mark], surface, groups, tmp_path / "o.webp")
+            assert written is not None
+            alpha = np.asarray(Image.open(written).getchannel("A"), np.float32) / 255.0
+            worst = max(worst, float(alpha[core].mean()))
+        assert worst < 0.4, f"the bowl's middle is {worst:.2f} inked: the counter closed"

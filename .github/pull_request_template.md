@@ -13,7 +13,8 @@ fix(maps): a note no longer hides the home glyph -->
 
 <!-- Delete this section unless the PR moves a golden or a docs image (ADR 0052). Paste the
 block `tests/golden/publish_diffs.py --push` prints, after `diff_images.py --ref origin/main`
-(CONTRIBUTING.md, "Golden and docs images"). -->
+(CONTRIBUTING.md, "Golden and docs images") unchanged: its `<img>` tags are the form that
+survives posting. -->
 
 ## Spec
 

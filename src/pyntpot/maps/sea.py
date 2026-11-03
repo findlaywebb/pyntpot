@@ -11,7 +11,8 @@ joined end to start walking the card edge anticlockwise, which closes each landm
 card cuts through, however many chains it takes. Where the winding is wrong in the
 payload the chains are reversed whole, decided by probes just off the coast.
 
-It does not fetch or clip a coast (see `cover.coastline_chains`) and does not paint. A
+It does not fetch or cut a coast at the card edge (see `cover.coastline_chains`, which
+ends every open chain on the edge) and does not paint. A
 card with one open chain and no closed ring keeps the single closure ring round the sea
 side that the painters have always had. A chain that neither closes nor reaches the card
 edge at both ends is left out.
@@ -25,8 +26,10 @@ from pyntpot.ink.polyline import Pt, length
 from pyntpot.maps.cover import JOIN_TOL_M, RING_POINTS_OVER, Clip
 from pyntpot.maps.rings import point_in_ring
 
-#: A chain end this close to the card edge, in metres, was clipped by it.
-EDGE_GAP_M = 30.0
+#: A chain end this close to the card edge, in metres, is on it. `cover.coastline_chains`
+#: cuts the coast where it crosses the edge, so a clipped end is on the edge to rounding;
+#: an end further in is a coast the survey left broken, not one the card cut.
+EDGE_GAP_M = 1.0
 
 #: How far off the coast the sea probes are set, in metres, and into how many steps
 #: along the chain they are spread.

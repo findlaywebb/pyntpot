@@ -9,7 +9,9 @@ It reads no style and writes no file. Geometry arrives in the canvas's metres an
 as pixels or as deformed metres.
 
 Invariants: `fill_cov` returns `float32` in 0 to 1 at the canvas's own size; `deform_rings`
-with no settings returns the rings it was given, unchanged.
+with no settings returns the rings it was given, unchanged; a ring's deformation is a pure
+function of the ring and the settings, because each ring draws from a generator keyed by
+its own points (`ink.keyed`), so deforming one ring differently moves no other ring.
 """
 
 from typing import Any
@@ -17,6 +19,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
+from pyntpot.ink.keyed import keyed_rng, line_key
 from pyntpot.ink.noise import F32, chamfer_distance
 from pyntpot.ink.polyline import Pt
 from pyntpot.ink.sheet import Canvas
@@ -26,6 +29,8 @@ _MIN_RING = 3
 _POINT_DIMS = 2
 #: Deformation stops doubling a ring that has grown past this many points.
 _MAX_RING_POINTS = 24000
+#: A ring is named for its generator by its points rounded to this many metres.
+_RING_KEY_M = 1.0
 
 
 def _crossings(xs: np.ndarray, ys: np.ndarray, hs: int, ws: int) -> tuple[np.ndarray, np.ndarray]:
@@ -53,11 +58,11 @@ def _crossings(xs: np.ndarray, ys: np.ndarray, hs: int, ws: int) -> tuple[np.nda
     return rr * (ws + 2) + cc, np.where(down, -1, 1).astype(np.int16)[e]
 
 
-#: What one class's outlines are deformed by: the generator, the first round's
-#: variance as a share of a segment, the rounds, what each round hands its
-#: children, the ceiling on one displacement and the segment length to stop at,
-#: both in the rings' own metres.
-Deform = tuple[np.random.Generator, float, int, float, float, float]
+#: What one class's outlines are deformed by: the seed each ring's generator is
+#: keyed from, the first round's variance as a share of a segment, the rounds, what
+#: each round hands its children, the ceiling on one displacement and the segment
+#: length to stop at, both in the rings' own metres.
+Deform = tuple[int, float, int, float, float, float]
 
 
 def deform_ring(ring: npt.ArrayLike, deform: Deform) -> np.ndarray:
@@ -71,12 +76,16 @@ def deform_ring(ring: npt.ArrayLike, deform: Deform) -> np.ndarray:
     which is what the blurred-mask edge already does; per-segment variance is
     what makes one stretch of a wood loose and the next stretch tight.
 
+    The displacements are drawn from the ring's own generator, keyed by the seed and
+    the ring's points rounded to the metre (`ink.keyed.line_key`), so the result is the
+    same whichever rings are deformed before it.
+
     Source: `midpoint-displacement` in docs/explanation/references.md.
 
     Args:
         ring: The outline, in the rings' own metre coordinates.
-        deform: The settings, in `Deform`'s order: the generator the displacements
-            are drawn from; the first round's variance, as a share of a segment's
+        deform: The settings, in `Deform`'s order: the seed the ring's generator is
+            keyed from; the first round's variance, as a share of a segment's
             length; how many rounds, each doubling the point count; what each round
             hands its children, before the randomisation; the largest one
             displacement may be, in metres; and the median segment length below
@@ -85,10 +94,11 @@ def deform_ring(ring: npt.ArrayLike, deform: Deform) -> np.ndarray:
     Returns:
         The deformed ring, `(n, 2)`.
     """
-    rng, amount, depth, decay, cap, min_seg = deform
+    seed, amount, depth, decay, cap, min_seg = deform
     p = np.asarray(ring, dtype=np.float64)
     if p.ndim != _POINT_DIMS or len(p) < _MIN_RING:
         return p
+    rng = keyed_rng(seed, *line_key(p, _RING_KEY_M))
     var = np.full(len(p), max(amount, 0.0))
     for _ in range(max(int(depth), 0)):
         n = len(p)

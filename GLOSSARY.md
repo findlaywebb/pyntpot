@@ -5,6 +5,7 @@ add the term here when you coin one.
 | Term | Meaning |
 |---|---|
 | sheet | The paper's noise fields, seeded; never the map. `ink.sheet.Sheet`. |
+| keyed generator | A random generator of one item's own, seeded from a style seed and words naming the item (its points, its wash's name, its position), never from its place in a sequence. `ink.keyed.keyed_rng`. |
 | canvas | A world-unit box and the pixel grid it paints to. `ink.sheet.Canvas`. |
 | plate | One painted raster layer: paper, wash, pen, labels; the painter writes each to disk. |
 | plates | The set of plates plus its manifest for one render. `maps.plates.Plates`, with its manifest `plates.json`. |

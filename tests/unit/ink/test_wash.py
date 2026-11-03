@@ -107,7 +107,7 @@ def test_a_bloom_lifts_the_centre_and_deposits_it_at_the_front():
         sheet,
         0.52,
         0.20,
-        WashOptions(rim_px=7.0, blooms=(np.random.default_rng(3), 3, 0.17, 0.45, 0.45)),
+        WashOptions(rim_px=7.0, blooms=(3, 6, 0.17, 0.45, 0.45)),
     )
     assert blown[core].std() > flat[core].std() * 1.5
     assert blown[core].min() < flat[core].min() - 0.1, "a lighter centre"
@@ -118,7 +118,7 @@ def test_a_bloom_lifts_the_centre_and_deposits_it_at_the_front():
         sheet,
         0.52,
         0.20,
-        WashOptions(rim_px=7.0, blooms=(np.random.default_rng(3), 3, 0.17, 0.45, 0.45)),
+        WashOptions(rim_px=7.0, blooms=(3, 6, 0.17, 0.45, 0.45)),
     )
     assert np.array_equal(blown, again)
 

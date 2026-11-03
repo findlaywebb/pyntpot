@@ -71,12 +71,12 @@ def _water_pad(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[PigmentL
         for line in _lines_of(job, r.line):
             water_lines.append((brush, line))
             profiles.append(np.asarray(prof, F32) if prof else None)
-    pad.lay(water_lines, job.ink_rng, profiles=profiles)
+    pad.lay(water_lines, job.style.brush.ink_seed, profiles=profiles)
     coast_lines = [
         (br["coast"][0], line) for coast in layers.coastline for line in _lines_of(job, coast)
     ]
     if coast_lines:
-        pad.lay(coast_lines, job.ink_rng)
+        pad.lay(coast_lines, job.style.brush.ink_seed)
     if not pad.any():
         return []
     return [(pad.read(br["major"][0], job.sheet), rgb(br["major"][1]))]
@@ -97,7 +97,7 @@ def _road_pads(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[PigmentL
                 if r.band == band
                 for line in _lines_of(job, r.line)
             ],
-            job.ink_rng,
+            job.style.brush.ink_seed,
         )
         if pad.any():
             out.append((pad.read(br[key][0], job.sheet), rgb(br[key][1])))
@@ -123,7 +123,7 @@ def paint_route_pen(job: PaintJob, stack: PlateStack) -> None:
         [(float(x), float(y)) for x, y in job.canvas.px(list(job.layers.route))],
         route.route_pen_width_px * STRAND_MERGE_WIDTHS * job.scale,
     )
-    pad.lay([(brush, np.asarray(line, dtype=np.float64))], job.pen_rng)
+    pad.lay([(brush, np.asarray(line, dtype=np.float64))], job.pen_seed)
     path = job.out_dir / "pen.webp"
     stack.sizes["pen"] = save_alpha(
         pad.read(brush, job.sheet), path, lossless=job.style.paper.plate_lossless
