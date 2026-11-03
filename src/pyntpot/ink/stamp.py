@@ -92,8 +92,9 @@ def _width(tr: Trace, b: Brush, press: np.ndarray, wprof: np.ndarray | None) -> 
         )
     spent = None
     if b.pen_starve:
-        # A nib does not break, it runs down: the line thins over a long run and
-        # comes back full at the reload. The thinning is put on the width rather
+        # A nib does not break, it runs down: the line thins over a long run and,
+        # at the reload, the spent share eases back over two nib widths
+        # (`_REFILL_WIDTHS`). The thinning is put on the width rather
         # than on the pressure because a pen's ink is saturated long before the
         # accumulator is, so darkness alone would not show.
         spent = _nib_spent(np.cumsum(press) * b.step, b)
@@ -318,4 +319,4 @@ def stamp(
     py = tr.y[:, None] + tr.ny[:, None] * lay.off
     deposit(acc, aux, (px, py), wgt, wgt_r, wgt_t)
     if b.pool > 0:
-        pool(acc, b, float(tr.x[0]), float(tr.y[0]))
+        pool(acc, b, lay, (px, py), wgt)

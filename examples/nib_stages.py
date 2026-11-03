@@ -100,8 +100,6 @@ SEED = 7
 NAME, TYPE_PX = "Keswick", 84.0
 #: How much of the pencil guide shows, as a share of the pen's ink.
 GUIDE_SHARE = 0.3
-#: `BrushStyle.pen_pool_radius_frac` for a wide pen: the library's 0.5 pools ink into a grey halo round the word.
-POOL = 0.15
 #: The nib's default slant, in degrees from the page's horizontal, y down.
 DEFAULT_ANGLE = -38.0
 
@@ -149,7 +147,7 @@ def _name(figure: str, canvas: Canvas, sheet: Sheet, paper: np.ndarray, unit: fl
     )
     dark2 = np.repeat(np.repeat(ground, NIB_SCALE, axis=0), NIB_SCALE, axis=1)
     surface = NibSurface(big, NIB_SCALE * unit, dark2, GRAN_PX * NIB_SCALE * unit)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(pen_pool_radius_frac=POOL), PaperStyle())
+    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
     return _lay_plate(marks, surface, groups, paper)
 
 
@@ -208,7 +206,7 @@ def _letter(img: np.ndarray, settings: list[Setting], nib: NibStyle, seed: int) 
     marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
     dark = np.zeros((h * NIB_SCALE, w * NIB_SCALE), np.float32)
     surface = NibSurface(big, NIB_SCALE, dark, GRAN_PX * NIB_SCALE * w / GRID_W)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(pen_pool_radius_frac=POOL), PaperStyle())
+    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
     with tempfile.TemporaryDirectory() as scratch:
         written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
         if written is None:
