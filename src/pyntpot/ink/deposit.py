@@ -3,7 +3,7 @@
 Key names: `weights`, the ink each sample deposits; `channels`, those weights for the ink, the
 reservoir and the break-texture accumulators; `deposit`, the bilinear splat into them; `pool`,
 the blot where a nib touches down, laid only where the stroke's set-down lays ink
-(`blot_share`, from `nib_cover`; a thin nib's grown by a pixel, `ink_cover`).
+(`blot_share`, from `nib_cover`; a thin nib's grown by up to a pixel, `ink_cover`).
 
 It draws no random numbers and builds no path: it reads the `Lay` that `pyntpot.ink.stamp`
 has laid out. It does not saturate or gate the accumulator (`pyntpot.ink.pad`).
@@ -28,10 +28,17 @@ _TAU = 6.283
 #: blot to lie there whole: a nib a pixel wide splits itself between two rows of pixels,
 #: and the bilinear splat gives the rows either side a share too.
 _FULL_COVER = 0.125
-#: A nib narrower than this, in render pixels, has its cover grown by a pixel for the blot:
-#: on its inked paper alone its blot would keep about two thirds of its ink. A nib this wide
-#: or wider is not grown, so its blot lies on no paper its ink does not reach.
-_GROW_BELOW_PX = 3.0
+#: The widths, in render pixels, across which a nib's cover for the blot stops being grown by
+#: a pixel: at or under the first it is grown whole (on its inked paper alone such a nib's
+#: blot would keep about two thirds of its ink), at or over the second not at all, so its
+#: blot lies on no paper its ink does not reach, and between them the grown band's share
+#: fades (`_GROW_FADE_POWER`), so the blot's ink has no step in width.
+_GROW_FADE_PX = (2.5, 3.5)
+#: The power the grown band's weight falls by across `_GROW_FADE_PX`, from 1 to 0. The band
+#: holds more ink the wider the nib, so a weight falling in a straight line, or eased at both
+#: ends, takes it away faster than the nib's own cover adds ink and the blot's ink dips
+#: (by 0.06 and 0.12 on a `MAJ6-e` pen); falling as the 1.5 power, it does not.
+_GROW_FADE_POWER = 1.5
 
 
 def weights(lay: Lay, lane: np.ndarray, b: Brush) -> np.ndarray:
@@ -189,9 +196,9 @@ def pool(
     with the pen, and it has a floor of 1.2 px, so on its own it would reach past
     the nib and ring the ink with grey; it is laid only where the samples that
     carry ink pass (`blot_share`), so it darkens the start of the stroke and,
-    on a nib 3 render px wide or wider, none of the paper round it. A thinner
-    nib's share is grown by a pixel, which reaches at most a pixel and a half
-    past its ink.
+    on a nib 3.5 render px wide or wider, none of the paper round it. A thinner
+    nib's share is grown by a pixel, in full at 2.5 px and under and fading to
+    nothing at 3.5 px, which reaches at most a pixel and a half past its ink.
 
     Args:
         acc: The accumulator, added to in place.
@@ -219,11 +226,16 @@ def pool(
 def blot_share(cover: np.ndarray, width: float) -> np.ndarray:
     """The share of the blot each pixel takes, from 0 to 1, given the nib's cover.
 
-    A nib under `_GROW_BELOW_PX` wide takes `ink_cover`, its cover grown by a
-    pixel, which reaches at most a pixel and a half past its ink. A wider one is
-    not grown: a pixel covered `_FULL_COVER` or more takes the blot whole, one
-    covered less a share in proportion, and one its inked samples do not reach
-    nothing, so its blot lies only on paper its own ink lies on.
+    On its own cover, a pixel covered `_FULL_COVER` or more takes the blot whole,
+    one covered less a share in proportion, and one its inked samples do not
+    reach nothing. A nib 2.5 render px wide or thinner (`_GROW_FADE_PX`) takes
+    `ink_cover` instead, its cover grown by a pixel, which reaches at most a
+    pixel and a half past its ink; a nib 3.5 px wide or wider takes its own
+    cover alone, so its blot lies only on paper its own ink lies on. Between
+    them the share is the own cover's plus the grown band's times a weight that
+    falls from 1 to 0 (`_GROW_FADE_POWER`), so the blot's ink is continuous and
+    does not fall as the nib widens, and a nib under 3.5 px keeps a faint rim a
+    pixel wide.
 
     Args:
         cover: The nib's cover of the window, from `nib_cover`.
@@ -232,9 +244,12 @@ def blot_share(cover: np.ndarray, width: float) -> np.ndarray:
     Returns:
         The share, the window's shape.
     """
-    if width < _GROW_BELOW_PX:
-        return ink_cover(cover)
-    return np.minimum(cover * F32(1.0 / _FULL_COVER), F32(1.0))
+    own = np.minimum(cover * F32(1.0 / _FULL_COVER), F32(1.0))
+    lo, hi = _GROW_FADE_PX
+    fade = min(max((hi - width) / (hi - lo), 0.0), 1.0) ** _GROW_FADE_POWER
+    if fade == 0.0:
+        return own
+    return own + F32(fade) * (ink_cover(cover) - own)
 
 
 def ink_cover(cover: np.ndarray) -> np.ndarray:

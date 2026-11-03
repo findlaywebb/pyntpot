@@ -160,23 +160,28 @@ class TestTheFlatIndex:
             assert np.array_equal(laid, want)
 
 
-def straight_lay(squeeze: float = 1.0) -> tuple[Lay, tuple[np.ndarray, np.ndarray]]:
-    """A 10 px stroke along y 20 from x 5, 2 px wide, sampled every half pixel both ways.
+def straight_lay(
+    squeeze: float = 1.0, m: int = 5, width: float = 2.0, slope: float = 0.0, n: int = 21
+) -> tuple[Lay, tuple[np.ndarray, np.ndarray]]:
+    """A stroke from (5, 20) or (5, 5), `width` px wide, its `n` stamps half a pixel apart.
 
-    Each of its 21 stamps by 5 samples stands for a quarter of a pixel. A `squeeze` of 2 lands
-    the samples across half the width, so the paper under them is passed over twice.
+    By default it is 10 px along y 20, 5 samples across, and each of its 21 stamps by 5
+    samples stands for a quarter of a pixel. A `squeeze` of 2 lands the samples across half
+    the width, so the paper under them is passed over twice. A `slope` of 1 runs it from
+    (5, 5) at 45 degrees, down and to the right.
     """
-    n, m = 21, 5
-    t = np.linspace(0.0, 10.0, n).astype(np.float32)
-    u = np.linspace(-1.0, 1.0, m).astype(np.float32)
-    one, flat = np.ones(n, np.float32), np.zeros(n, np.float32)
-    tr = Trace(5.0 + t, np.full(n, 20.0, np.float32), flat, one, t, 10.0)
-    ink = StrokeProfile(one, np.full(n, 2.0, np.float32), None)
+    t = np.linspace(0.0, (n - 1) / 2, n).astype(np.float32)
+    u = np.linspace(-width / 2, width / 2, m).astype(np.float32)
+    along = np.float32(1.0 / math.hypot(1.0, slope))
+    one = np.ones(n, np.float32)
+    x, y = 5.0 + t * along, (20.0 if slope == 0.0 else 5.0) + t * along * slope
+    tr = Trace(x, y, -one * along * slope, one * along, t, float(t[-1]))
+    ink = StrokeProfile(one, np.full(n, width, np.float32), None)
     tip = Tip(m, u, np.ones(m), np.zeros((2, m)), np.zeros(m), np.ones(m), None, None, None, None)
-    smp = Sampled(m, u, *(np.ones(m, np.float32),) * 5, None, np.ones(m, np.float32), 2.0)
+    smp = Sampled(m, u, *(np.ones(m, np.float32),) * 5, None, np.ones(m, np.float32), width)
     off = np.broadcast_to(u[None, :], (n, m)).astype(np.float32)
-    px = tr.x[:, None] + 0.0 * off
-    py = tr.y[:, None] + off / squeeze
+    px = tr.x[:, None] + tr.nx[:, None] * off
+    py = tr.y[:, None] + tr.ny[:, None] * off / squeeze
     return Lay(tr, ink, tip, smp, off), (px, py)
 
 
@@ -208,6 +213,20 @@ class TestNibCover:
         assert not cover[:, : 5 - 2].any()
         assert not cover[:, 15 - 2 + 1 :].any()
 
+    def test_a_nib_two_samples_across_holds_the_paper_they_stand_for(self) -> None:
+        """A 0.5 px nib sampled twice across, each sample half a pixel by half: 42 patches, 10.5 pixels."""
+        lay, pos = straight_lay(m=2, width=0.5)
+        cover = nib_cover(lay, pos, all_live(pos), (15, 25, 2, 20))
+        assert float(cover.max()) < 1.0
+        assert float(cover.sum()) == pytest.approx(10.5)
+
+    def test_a_diagonal_set_down_covers_the_window_s_far_corner(self) -> None:
+        """A stroke at 45 degrees from a 10 px window's corner is counted to the far corner, 14 px on."""
+        lay, pos = straight_lay(slope=1.0, n=41)
+        cover = nib_cover(lay, pos, all_live(pos), (5, 15, 5, 15))
+        assert float(cover[13 - 5, 13 - 5]) > 0.9
+        assert float(cover[14 - 5, 14 - 5]) > 0.9
+
     def test_a_pixel_passed_over_twice_is_covered_once(self) -> None:
         """Cover is a share of the pixel, so paper the samples pass over twice reads 1, not 2."""
         lay, pos = straight_lay(squeeze=2.0)
@@ -219,21 +238,38 @@ class TestNibCover:
 class TestBlotShare:
     """The share of the blot each pixel takes: a thin nib's cover grown, a wide one's not."""
 
-    def test_a_nib_3_px_wide_is_not_grown(self) -> None:
-        """At 3 render px one pixel covered an eighth takes the blot whole, and its neighbours nothing."""
+    def test_a_nib_3_5_px_wide_is_not_grown(self) -> None:
+        """At 3.5 render px one pixel covered an eighth takes the blot whole, and its neighbours nothing."""
         cover = np.zeros((6, 7), dtype=np.float32)
         cover[2, 4] = 0.125
         expected = np.zeros((6, 7), dtype=np.float32)
         expected[2, 4] = 1.0
-        assert np.array_equal(blot_share(cover, 3.0), expected)
+        assert np.array_equal(blot_share(cover, 3.5), expected)
 
-    def test_a_nib_under_3_px_wide_is_grown_by_a_pixel(self) -> None:
-        """Just under 3 render px, one pixel covered a sixteenth gives its 3 by 3 block half."""
+    def test_a_nib_2_5_px_wide_is_grown_by_a_pixel(self) -> None:
+        """At 2.5 render px, one pixel covered a sixteenth gives its 3 by 3 block half."""
         cover = np.zeros((6, 7), dtype=np.float32)
         cover[2, 4] = 0.0625
         expected = np.zeros((6, 7), dtype=np.float32)
         expected[1:4, 3:6] = 0.5
-        assert np.array_equal(blot_share(cover, 2.99), expected)
+        assert np.array_equal(blot_share(cover, 2.5), expected)
+
+    @pytest.mark.parametrize(
+        ("width", "rim"),
+        [(2.75, 0.649519), (3.0, 0.353553), (3.25, 0.125)],
+        ids=["2.75px", "3px", "3.25px"],
+    )
+    def test_the_grown_rim_fades_as_the_1_5_power_from_2_5_to_3_5_px(
+        self, width: float, rim: float
+    ) -> None:
+        """Between 2.5 and 3.5 render px a whole pixel's neighbours take ((3.5 - width) / 1) ** 1.5, it all."""
+        cover = np.zeros((6, 7), dtype=np.float32)
+        cover[2, 4] = 1.0
+        share = blot_share(cover, width)
+        assert share[2, 4] == 1.0
+        assert share[1:4, 3:6].sum() - 1.0 == pytest.approx(8 * rim, abs=1e-5)
+        np.testing.assert_allclose(share[1, 3], rim, atol=1e-6)
+        assert not share[:, :3].any() and not share[4:].any()
 
     def test_a_wide_nib_s_share_is_at_most_whole(self) -> None:
         """At 12 render px a pixel covered half or whole takes the blot once, not more."""

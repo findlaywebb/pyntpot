@@ -92,23 +92,39 @@ def test_a_start_at_zero_pressure_that_turns_back_lays_no_blot_off_its_ink():
     assert not blot[marks[1] == 0].any()
 
 
-def test_a_wide_pen_s_blot_lays_no_ink_on_paper_its_stroke_does_not():
-    """A 12 render px pen's blot adds ink only to pixels the same stroke without it inks."""
-    blot = blot_ink(6.0, np.stack([np.linspace(30, 100, 60), np.full(60, 30.3)], axis=1), (80, 140))
-    pen, _ = brush_from_id("MAJ6-e", 6.0, 2.0, BrushStyle())
-    bare = np.zeros((80, 140), np.float32)
+@pytest.mark.parametrize(
+    ("width", "least"),
+    [(1.75, 10.0), (2.0, 15.0), (6.0, 100.0)],
+    ids=["3.5px", "4px", "12px"],
+)
+def test_a_pen_3_5_px_or_wider_lays_no_blot_on_paper_its_stroke_does_not(
+    width: float, least: float
+) -> None:
+    """A pen 3.5, 4 or 12 render px wide adds blot ink only to pixels the same stroke without it inks."""
     line = np.stack([np.linspace(30, 100, 60), np.full(60, 30.3)], axis=1)
+    pen, _ = brush_from_id("MAJ6-e", width, 2.0, BrushStyle())
+    bare = np.zeros((80, 140), np.float32)
     stamp(bare, line, replace(pen, pool=0.0), np.random.default_rng(9))
-    assert blot.sum() > 100
+    blot = blot_ink(width, line, (80, 140))
+    assert blot.sum() > least
     assert not blot[bare == 0].any()
 
 
+#: The least share of `THIN_BLOT_INK_BEFORE` a pen 1 to 2 render px wide keeps, at any
+#: sub-pixel offset of its line: 0.760 at worst (1 px, the line 0.73 px below a pixel's
+#: centre, measured in 0.01 px steps), with a margin.
+THIN_BLOT_FLOOR = 0.74
+
+
+@pytest.mark.parametrize(
+    "dy", [0.0, 0.3, 0.5, 0.73, 0.9], ids=["y0", "y0.3", "y0.5", "y0.73", "y0.9"]
+)
 @pytest.mark.parametrize("width", [0.5, 0.75, 1.0], ids=["1px", "1.5px", "2px"])
-def test_a_thin_pen_s_start_keeps_most_of_its_blot(width: float) -> None:
-    """A pen 1 to 2 render px wide still lays 80% to 100% of the ink its blot laid before."""
-    line = np.stack([np.linspace(30, 100, 60), np.full(60, 30.3)], axis=1)
+def test_a_thin_pen_s_start_keeps_most_of_its_blot(width: float, dy: float) -> None:
+    """A pen 1 to 2 render px wide lays 74% to 100% of the ink its blot laid before, at any sub-pixel offset."""
+    line = np.stack([np.linspace(30, 100, 60), np.full(60, 30.0 + dy)], axis=1)
     laid = float(blot_ink(width, line, (60, 120)).sum())
-    assert 0.8 * THIN_BLOT_INK_BEFORE < laid <= THIN_BLOT_INK_BEFORE
+    assert THIN_BLOT_FLOOR * THIN_BLOT_INK_BEFORE < laid <= THIN_BLOT_INK_BEFORE
 
 
 def test_a_stroke_from_far_off_the_plate_in_one_axis_lays_no_blot():
@@ -125,6 +141,16 @@ def test_a_stroke_that_comes_back_over_its_start_does_not_widen_the_blot():
     """A loop that returns along the line behind its start leaves no blot there: it counts the set-down only."""
     loop = np.array(
         [(60.0, 30.0), (90.0, 30.0), (90.0, 45.0), (40.0, 45.0), (40.0, 30.0), (60.0, 30.0)]
+    )
+    blot = blot_ink(1.3, loop, (60, 120))
+    assert blot[28:33, 61:65].sum() > 0
+    assert not blot[28:33, 50:59].any()
+
+
+def test_a_tight_loop_back_over_its_start_does_not_widen_the_blot():
+    """A loop 8 px across that is back behind its start 44 px on leaves no blot there."""
+    loop = np.array(
+        [(60.0, 30.0), (68.0, 30.0), (68.0, 38.0), (52.0, 38.0), (52.0, 30.0), (60.0, 30.0)]
     )
     blot = blot_ink(1.3, loop, (60, 120))
     assert blot[28:33, 61:65].sum() > 0
