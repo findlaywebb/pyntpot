@@ -189,10 +189,16 @@ def test_a_nib_comes_back_at_the_reload():
     assert cols[3000:8000].max() >= cols[200:800].max() * 0.95
 
 
-def test_a_reloaded_nib_swells_back_rather_than_stepping():
-    """At a reload the line regains under 60% of what its run lost within one nib width."""
+def dry_run(pen_starve: bool = True) -> tuple[np.ndarray, Brush]:
+    """The ink across a 660 px line drawn with a nib that runs dry fast, column by column.
+
+    The issue's repro: a 5 px `MAJ6-e` nib with a 22-width reservoir, thinning to nothing
+    when empty and dipped every 1.4 reservoirs, so the line passes three reloads. With
+    `pen_starve` off the same nib never runs down. Smoothed over three columns, and cut to
+    the stroke's middle, clear of its set-down and lift.
+    """
     style = replace(
-        BrushStyle(), pen_starve=True, pen_reservoir=22.0, pen_thin=1.0, ink_dip_mult=1.4
+        BrushStyle(), pen_starve=pen_starve, pen_reservoir=22.0, pen_thin=1.0, ink_dip_mult=1.4
     )
     pen, _ = brush_from_id("MAJ6-e", 5.0, 1.0, style)
     h, length = 40, 700
@@ -200,12 +206,36 @@ def test_a_reloaded_nib_swells_back_rather_than_stepping():
     acc = np.zeros((h, length), np.float32)
     stamp(acc, pts, pen, np.random.default_rng(3))
     ink = ink_density(acc, pen, Sheet(h, length, gran_px=6.0, seed=1)).sum(axis=0)
-    along = np.convolve(ink, np.ones(3) / 3, mode="same")[40:640]
-    width = round(pen.width)
-    rise = float((along[width:] - along[:-width]).max())
-    lost = float(along.max() - along.min())
-    assert lost > 2.0  # the run does thin the line
-    assert rise < 0.6 * lost
+    return np.convolve(ink, np.ones(3) / 3, mode="same")[40:640], pen
+
+
+class TestTheReload:
+    """A nib that runs dry swells back at each dip, neither stepping up nor dropping out."""
+
+    def test_a_reloaded_nib_swells_back_rather_than_stepping(self) -> None:
+        """At a reload the line regains under 60% of what its run lost within one nib width."""
+        along, pen = dry_run()
+        width = round(pen.width)
+        rise = float((along[width:] - along[:-width]).max())
+        lost = float(along.max() - along.min())
+        assert lost > 2.0  # the run does thin the line
+        assert rise < 0.6 * lost
+
+    def test_a_reload_never_drops_the_line(self) -> None:
+        """No nib width loses a quarter of what a run loses, and the line keeps 40% of its peak."""
+        along, pen = dry_run()
+        width = round(pen.width)
+        fall = float((along[:-width] - along[width:]).max())
+        lost = float(along.max() - along.min())
+        assert fall < lost / 4
+        assert float(along.min()) > 0.4 * float(along.max())
+
+    def test_a_nib_that_runs_dry_is_never_wider_than_a_full_one(self) -> None:
+        """Running down only ever takes ink away: the dry nib's line is nowhere darker than the full nib's."""
+        dry, _ = dry_run()
+        full, _ = dry_run(pen_starve=False)
+        assert np.all(dry <= full + 0.05)
+        assert float(dry.sum()) < 0.8 * float(full.sum())
 
 
 def tip_across(
