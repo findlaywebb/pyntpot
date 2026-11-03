@@ -23,7 +23,7 @@ pages carry deep-path directives to work round it.
 
 The fields of the public style groups, `Brush`, `Sheet` and the rest are documented in
 `#:` and trailing comments. griffe reads neither, so the reference shows the class prose
-and no text for about 200 fields.
+and no text for about 340 fields.
 
 `Annotations.roads` is validated and then read by nothing.
 
@@ -112,8 +112,15 @@ name per concept keeps one.
 No type stays opaque. Every candidate (`Layers`, `Projection`, `Label`, `Span`) is held
 by an attribute 0007 fixes because the upstream SVG page reads it, so none can leave a
 public signature. The rule puts them in `__all__`, and their members become public with
-them under 0026's member rule. `Label` and `Span` stay mutable dataclasses, because the
-placer fills them in.
+them under 0026's member rule.
+
+`Label` and `Span` become keyword-only and stay mutable, because the placer fills them in:
+it writes their fields in place at about thirty sites in `placement.py`,
+`placement_flat.py`, `placement_leaders.py` and `spans.py`. Rewriting the placer to build
+new records is behaviour work, outside a change to the surface. A `Label` or `Span` that
+`letter` hands back is a finished value, and **writing to one is unsupported**. So
+returning frozen records later is not a breaking change, and their fields are a read-only
+contract from now on.
 
 ### Members (amends 0026)
 
@@ -173,22 +180,41 @@ current names, which describe what they return and do.
   construction.
 - **Option records.** `WashOptions`, `Flow` and `Blooms` are frozen and keyword-only for
   the same reason.
-- **Naming convention.** A style group's class is `<Group>Style`. A record of one call's
-  settings is `<Call>Options`. The glossary's "style group" row records the convention.
-- **Records the pipeline returns.** `Basemap`, `Plates`, `Lettering` and the types they
-  hold are values. Adding a field with a default is additive. Removing or renaming a
-  field needs an ADR.
+- **Naming convention.** A style group's class is `<Group>Style`. The settings record a
+  public function takes as an argument is `<Call>Options` (`wash(..., options:
+  WashOptions)`). A record nested inside one is named for what it sets: `Flow` (the flow
+  rim) and `Blooms` (`bloom` is not public, so no `BloomOptions` is implied). The
+  glossary's "style group" row records the convention.
+- **Field names of the option records.** `Flow`'s fields `exp`, `ref_frac` and `frac`
+  are the suffixes of `WashStyle.flow_rim_exp`, `flow_rim_ref_frac` and `flow_rim_frac`
+  and the names of `flow_edge`'s parameters. `Blooms`' `radius_frac`, `lift` and `warp`
+  are the suffixes of `WashStyle.bloom_radius_frac`, `bloom_lift` and `bloom_warp`, with
+  `seed` and `count`. The `WashStyle` names are theme keys and digest inputs, so the
+  records follow them, and a reader maps one onto the other by name.
+- **Records the pipeline returns.** Every dataclass record this ADR makes public is
+  `@dataclass(frozen=True, kw_only=True)`: `Card`, `Credit`, `Manifest`, `DarkGrid`,
+  `Layers`, `River`, `Road`, `ElevationPatch`, `ElevationGrid`, `VectorArea`,
+  `VectorLine`, `HillshadeBand`, `HillshadeImage` and `Projection` (which was mutable;
+  `track_projection` now builds it once). Publishing a positional or mutable record would
+  freeze its field order or its mutability into the contract. For these, adding a field
+  with a default is additive wherever it goes. `Label` and `Span` are keyword-only and
+  mutable (above). `BoundingBox` is a `NamedTuple`: it is a tuple, and its field order is
+  its contract. `Basemap`, `Plates`, `Lettering` and `VectorLayers` were public before
+  this ADR and keep their construction; a field added to one goes at the end. For every
+  record, removing or renaming a field needs an ADR.
 
 ### Field documentation (#169)
 
 Every public field is documented in its class docstring's Google-style `Attributes:`
 section. A public field is a field or annotated attribute, not starting with `_`, of a
 class named in some `__all__`; pydantic's `model_config` and `ClassVar`s are not fields.
-There is one entry per field, in field order, each with non-empty text, and no entry
-names something the class does not have. A property is documented by its own docstring
-and is not listed. A `#:` block shared by several fields is split, one entry each.
-Neither a `#:` comment nor a trailing comment is field documentation, and none stays
-inside a public class body.
+An attribute assigned in `__init__` is a field. There is one entry per field, in field
+order (griffe's member order: the class body, then `__init__` assignments, each in source
+order), each with non-empty text, and no entry names something the class does not have.
+A property is documented by its own docstring and is not listed. A `#:` block shared by
+several fields is split, one entry each. Neither a `#:` comment nor a trailing comment is
+field documentation, and no comment stays in a public class body outside its methods,
+except a tool pragma (`# type:`, `# noqa`, `# pragma`).
 
 This is the convention `Basemap`, `Plates` and `Annotations` already use. griffe parses
 the section and fills each entry's type from the field's annotation. mkdocstrings renders
@@ -205,17 +231,30 @@ object. `mkdocs.yml` needs no new option.
 ### `Annotations.roads` (#161)
 
 `roads` does what its name says. When a caller names roads, the roads lettered are
-exactly the named ones the basemap draws, each set along its own tarmac. A road matches
-when its number (`road_ref`) or its OSM name equals a listed string, compared with
-`str.casefold`. A named road is lettered whether or not the track was on it, and the road
-budget does not apply. The shortest run a number can be set along still applies. Named
-roads replace the roads the lettering would pick itself, the way `Annotations.landmarks`
-replaces the landmark heuristic. Caller annotations are not switched off by the theme,
-so named roads are lettered even when `LetteringStyle.label_ground` is false. A listed
-name that matches no drawn road is logged at INFO and lettered nowhere.
+exactly the named ones the basemap draws, each set along its own tarmac. Every road the
+basemap draws can be named, whatever its class: `major`, `minor` (the lanes and the path
+band alike), and a numbered road whose pieces carry no name. A road matches when its
+number (`road_ref`) or any of its pieces' OSM names equals a listed string, compared with
+`str.casefold`. It is lettered by its number when it has one, as a picked road is, even
+when the caller named it by its street name. A road listed twice, or matched by number
+and by name, is lettered once, at its first place in the list; labels come in the
+caller's order. A named road is lettered whether or not the track was on it, and the road
+budget does not apply. The shortest run a number can be set along still applies: a named
+road too short on this card is logged at INFO and not lettered. Named roads replace the
+roads the lettering would pick itself, the way `Annotations.landmarks` replaces the
+landmark heuristic, and as there, when none of them can be set the picked roads come back.
+Caller annotations are not switched off by the theme, so named roads are lettered even
+when `LetteringStyle.label_ground` is false.
+
+A listed name that matches no road the basemap draws is an error: `letter` raises
+`ValueError` naming every such name. A caller annotation that cannot be honoured is a
+caller error, as a journal note off the card already is, and lettering nothing in silence
+is the defect this section fixes. The check runs before any name is placed, so no label
+plate is written. When the style letters nothing, `letter` returns before the check.
 
 A road the basemap does not draw cannot be lettered: `fetch` keeps minor roads by the
-theme's `[basemap] pick_roads`, not by annotations. An empty `roads` (the default, and
+theme's `[basemap] pick_roads`, not by annotations, so a caller names such a road there
+too. An empty `roads` (the default, and
 the value every golden uses) takes the unchanged code path, so no pinned image moves.
 The golden suite is the proof. Removing the field was rejected: wiring it costs one
 function, and the how-to on picking roads (#173) needs it.
@@ -225,8 +264,14 @@ function, and the how-to on picking roads (#173) needs it.
 - `tests/architecture/test_public_signatures.py`: the rule above, read with griffe.
   `griffelib` joins the `dev` dependency group so the test reads the code the same way the
   reference renders it, statically, through `TYPE_CHECKING` imports and quoted
-  annotations. The allowlist is exact names, not module prefixes, so a new third-party
-  type in a signature is a decision someone makes on purpose.
+  annotations. It walks transitively: every object a public signature reaches is itself
+  walked by the same rule. A type alias, whose value is walked, is a module attribute
+  annotated `TypeAlias`, a PEP 695 `type` statement, or an unannotated value that is a
+  subscript, a `|` union or a name resolving to a class; any other constant contributes
+  only its annotation. A reached `pyntpot` name the test cannot resolve fails it. A name
+  counts as public only when the layer that defines it exports it. The allowlist is exact
+  names, not module prefixes, so a new third-party type in a signature is a decision
+  someone makes on purpose.
 - `tests/architecture/test_field_docs.py`: the field documentation rule above.
 - `tests/architecture/test_site.py` gains two checks: no package binds a name equal to one
   of its submodules, and every name directive is exactly `::: pyntpot.<layer>.<name>`.

@@ -19,8 +19,8 @@ objects no list exports, and those name 8 more. A caller cannot import the
 `Landmark` an `Annotations` holds, the `WashOptions` `wash` takes, or the `Features`
 protocol `fetch` expects. The reference shows each as a dead name. Four public functions
 shadow their own modules, so the package attribute is the function and the reference
-needs deep-path directives. About 200 public fields are documented in `#:` comments that
-the reference never renders. `Annotations.roads` is accepted and read by nothing.
+needs deep-path directives. About 340 public fields are documented in `#:` or trailing
+comments that the reference never renders. `Annotations.roads` is accepted and read by nothing.
 
 ## Acceptance criteria
 
@@ -59,6 +59,12 @@ The surface:
       names; `wash` and `bloom` read them by name.
 - [ ] `LetteringPolicy` is `LetteringStyle` and `RouteInk` is `RouteInkStyle`; every
       style group and `WashOptions` is `@dataclass(frozen=True, kw_only=True)`.
+- [ ] Every newly public dataclass record (`Card`, `Credit`, `Manifest`, `DarkGrid`,
+      `Layers`, `River`, `Road`, `ElevationPatch`, `ElevationGrid`, `VectorArea`,
+      `VectorLine`, `HillshadeBand`, `HillshadeImage`, `Projection`) is
+      `@dataclass(frozen=True, kw_only=True)`; `Label` and `Span` are keyword-only and
+      their docstrings say writing to a returned one is unsupported. Tests prove each
+      rejects positional construction and each frozen one rejects assignment.
       `Style.digest()`, `base_digest()` and `lettering_digest()` pinned literals do not
       move.
 - [ ] A test proves `OverpassFeatures` satisfies `Features` and `OpenTopoData` satisfies
@@ -83,21 +89,30 @@ Field docs:
 `Annotations.roads`:
 
 - [ ] A road named in `Annotations.roads` (by number or OSM name, case-folded) that the
-      basemap draws is lettered along its tarmac, whether or not the track was on it and
-      whatever `label_ground` says. Named roads replace the picked roads. A name that
-      matches no drawn road is logged at INFO. Tested on synthetic lines (`A591`, `A66`,
-      `A9`) and through `letter` on the Lynmouth fixture: `roads=("B3234",)` letters
-      `B3234` and not the `A39` the picker would choose, and `roads=("A591",)` letters
-      no road and logs `A591`.
+      basemap draws, of any class (major, minor, path band, or numbered with no name), is
+      lettered along its tarmac by its number when it has one, whether or not the track
+      was on it and whatever `label_ground` says. A road named twice is lettered once, at
+      its first place. Named roads replace the picked roads; when none can be set (too
+      short on the card, logged at INFO), the picked roads come back. A name that matches
+      no drawn road raises `ValueError` naming it, before any plate is written. Tested on
+      synthetic lines (`A591`/Rydal Road, `A66`, `A82`, `A9`, Lake Road) and through
+      `letter` on the Lynmouth fixture: `Annotations()` letters `PINNED_LABELS`;
+      `roads=("B3234",)` letters `B3234` as the only road, replacing both picked roads
+      (`A39` and `B3234`); `roads=("Lynbridge Road",)` letters `B3234`; the minor
+      `Lydiate Lane` can be named; `roads=("B3223",)` is too short and keeps the picked
+      roads; `roads=("A591",)` raises and writes no plate.
 - [ ] With `roads` empty, output is byte-identical: every golden, plate hash and docs
       image passes unchanged on the pinning machine (`uv run pytest -n auto --dist
       loadgroup`).
 
 Process:
 
-- [ ] Mutation testing runs on the changed `ink` and `letters` functions; every survivor
-      is killed by a focused test or named as equivalent, with the reason, in the PR
-      description.
+- [ ] Mutation testing runs locally on the functions whose behaviour this diff changes
+      (plan.md S10: the table plus the normalised-diff rule; verbatim moves and pure
+      renames excluded): `ink.washing.wash` and `ink.bloom.bloom` through the repo
+      config, and the changed `maps` functions through a throwaway config. Every survivor
+      in them is killed by a focused test or named as equivalent, with the reason, in the
+      PR description.
 - [ ] The notes for #168, #73, #78, #169, #164 and #161 are deleted; notes that cite
       them or the old module paths are updated; the PR body says `Closes #168`,
       `Closes #73`, `Closes #78`, `Closes #169`, `Closes #164`, `Closes #161`.
@@ -115,14 +130,14 @@ feat(ink)!: one public surface: every type a public signature names is exported
 Under "Changelog" in the PR description:
 
 ```
-feat(maps): export every type a maps signature names: Landmark, SpanRequest, Card, Credit, Manifest, DarkGrid, BoundingBox, Layers, River, Road, ElevationPatch, Line, Projection, Label, Span, MAX_NOTES, MAX_NOTE_CHARS, VectorArea, VectorLine, HillshadeBand, HillshadeImage and ElevationGrid
+feat(maps): export every type a maps signature names, the records frozen and keyword-only: Landmark, SpanRequest, Card, Credit, Manifest, DarkGrid, BoundingBox, Layers, River, Road, ElevationPatch, Line, Projection, Label, Span, MAX_NOTES, MAX_NOTE_CHARS, VectorArea, VectorLine, HillshadeBand, HillshadeImage and ElevationGrid
 feat(maps): export the seven map style groups, keyword-only, with LetteringPolicy renamed LetteringStyle and RouteInk renamed RouteInkStyle
 feat(maps): export the Features and Elevation provider protocols for a caller's own data source
 feat(ink): export WashOptions, Flow, Blooms, WashStyle, separated, fluid_modulate, Point and Box
 feat(letters): export Align
 feat(ink)!: PaperStyle and BrushStyle are keyword-only
 feat(letters)!: FaceStyle, HandStyle and NibStyle are keyword-only
-feat(maps): Annotations.roads letters the roads it names
+feat(maps): Annotations.roads letters the roads it names, of any class, and raises ValueError for a name no drawn road carries
 fix(maps): public functions no longer shadow their modules, now ink.stamping, ink.washing, maps.compose_steps and maps.vector_layer_build
 docs(ink): every public field and constant has text in the API reference
 ```
@@ -140,8 +155,9 @@ plan:
   `Box`. One name per concept says they should be `Box`.
 - `docs-reference-sections.md`: group each API reference page into sections that mirror
   the package docstring's task groups. `pyntpot.maps` grows from 21 to 52 names.
-- `maps-lettering-frozen-records.md`: `Label` and `Span` are public and mutable, because
-  the placer fills them in. Return frozen copies from `letter`.
+- `maps-lettering-frozen-records.md`: `Label` and `Span` are public, keyword-only and
+  mutable, because the placer fills them in place. Writing to a returned one is already
+  unsupported (ADR 0068), so returning frozen records from `letter` breaks no caller.
 - `maps-typed-features-payload.md`: a `Features` provider must return Overpass JSON text.
   A typed payload would let a non-OSM source plug in without faking Overpass.
 - `docs-defaults-render-as-values.md`: a parameter default that names a private
