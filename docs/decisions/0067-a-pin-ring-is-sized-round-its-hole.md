@@ -42,17 +42,37 @@ Two fixes were weighed:
   pixels; `nib_brushes` now reads it, so the brush and the ring are sized from one number.
   `maps.lettering_marks.marks` and `label_marks` take the `NibStyle` (the pipeline and the
   attribution pass `style.nib`) and pass the `pin` width to `pin`.
+- **The leader starts at the ring's outer edge.** `leader(hand, lb, rng, pen_px)` reads its
+  two ends from the label and starts its curve a hole and a whole pen out from the pin's
+  centre (`max(size * PIN_HOLE_SIZE_FRAC, PIN_HOLE_MIN_PX) + pen_px`) along the line to the
+  name, so it touches the ring and lays no ink in its hole. It used to start 2 px past the
+  centre, on the far side, so a stub of it crossed the hole: with the larger ring alone, a
+  pin stroked with its leader still had a worst core of 0.75 to 0.87 over 400 seeds, and 86%
+  to 97% of seeds above 0.4, so the pins on a map read as dots. The leader is given the same
+  pin pen the ring is, and one shorter than the ring's outer radius starts where it ends.
 - Not changed: the pin's weight, brush and jitter, its hand wander (0.2), its 14 sides, the
-  leader, and every other mark's width (`nib_brushes` computes the same float as before).
+  leader's bend, pen and wander, and every other mark's width (`nib_brushes` computes the
+  same float as before).
 
 Pinned by `tests/unit/maps/test_lettering_furniture.py`: a pin at the shipped size, weight
 and brush keeps a core below 0.4 over 400 seeds (0.67 before the fix, 0.29 after); the ring
 starts at the pinned radius for 11, 20 and 40 px names; a wider pen draws a wider ring round
-the same hole. `TestMarkWidth` in `tests/unit/letters/test_nib.py` pins `mark_width_px` and
-the brush widths `nib_brushes` makes from it.
+the same hole; a pin stroked with its leader, the leader leaving at a different angle each
+seed, keeps a core below 0.4 over 400 seeds at 11, 14, 20 and 23 px; the leader starts at the
+ring's pinned outer radius for 11, 20 and 40 px names; a label with no leader is refused.
+`TestMarkWidth` in `tests/unit/letters/test_nib.py` pins `mark_width_px` and the brush widths
+`nib_brushes` makes from it.
 
-Over 400 seeds the worst core is now 0.29 at every size tried (11, 14, 20 and 23 px), and no
-seed reaches 0.4.
+Over 400 seeds, with the leader stroked beside the ring, the worst core is now:
+
+| Size | Before (ring alone fixed) | After (leader at the edge) |
+|---|---|---|
+| 11 px | 0.77 (87% of seeds above 0.4) | 0.29 (none) |
+| 14 px | 0.78 (92%) | 0.29 (none) |
+| 20 px | 0.87 (97%) | 0.29 (none) |
+| 23 px | 0.75 (86%) | 0.26 (none) |
+
+The ring alone keeps the 0.29 it had: the leader adds no ink to the hole.
 
 ## Golden regeneration
 
@@ -61,14 +81,17 @@ tolerance bound is not changed, no gate is loosened and the hash input does not 
 manifest hash does not move
 (`340a7f6e260ee1e2-d9c56c0811177b0f`), so `GOLDEN_HASH` is not re-pinned.
 
-### Lynmouth compare, against the committed goldens
+### Lynmouth compare
+
+Run first against the goldens committed with the larger ring alone, then measured against
+`main`'s:
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
 wash.webp: identical yes, differing fraction 0.000000
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.024290
-map.png: identical no, differing fraction 0.016321
+labels-centreline.webp: identical no, differing fraction 0.015106 (0.022929 against main)
+map.png: identical no, differing fraction 0.009913 (0.015313 against main)
 manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
 ```
 
@@ -76,8 +99,10 @@ Only the lettering moves. A larger ring is a longer stroke, so the hand's wander
 nib's bristles take more draws from their generators and every mark after a pin is drawn
 from a different state (issue #61): the leaders bend another way and the strokes of later
 names are redrawn, which is why the differing fraction is wider than the pins themselves.
-`PINNED_LABELS` is unchanged: no name moves seat. The "Lynton and Exmoor Museum" pin and
-the others round Lynton are open rings.
+Starting the leader at the ring's edge changes no draw count, but it moves every leader's
+start, so the leaders are redrawn again. `PINNED_LABELS` is unchanged: no name moves seat.
+The "Lynton and Exmoor Museum" pin and the others round Lynton are open rings with no stub
+of leader inside them.
 
 ### Docs images
 
@@ -87,27 +112,26 @@ Master differing fractions against `main`'s masters:
 
 | Image | Master | Image | Master |
 |---|---|---|---|
-| `places/skye.webp` | 0.051694 | `gallery/route-map.webp` | 0.039620 |
-| `places/ambleside.webp` | 0.039620 | `places/y-fenni.webp` | 0.034385 |
-| `places/oxford.webp` | 0.024202 | `how-to/command-line.webp` | 0.023948 |
-| `places/yr-wyddfa.webp` | 0.021220 | `map-styles/bold.webp` | 0.020029 |
-| `map-styles/sepia.webp` | 0.018981 | `tutorials/route-map.webp` | 0.018129 |
-| `how-to/route-ink.webp` | 0.018104 | `map-styles/winter.webp` | 0.017812 |
-| `social-preview.jpg` | 0.015139 | `map-styles/pen-and-ink.webp` | 0.014766 |
-| `hero.webp` | 0.014133 | | |
+| `places/skye.webp` | 0.051694 | `gallery/route-map.webp` | 0.035307 |
+| `places/ambleside.webp` | 0.035307 | `places/y-fenni.webp` | 0.033061 |
+| `places/oxford.webp` | 0.023559 | `how-to/command-line.webp` | 0.022680 |
+| `places/yr-wyddfa.webp` | 0.020318 | `map-styles/bold.webp` | 0.019298 |
+| `map-styles/sepia.webp` | 0.018908 | `tutorials/route-map.webp` | 0.018324 |
+| `how-to/route-ink.webp` | 0.018250 | `map-styles/winter.webp` | 0.018007 |
+| `social-preview.jpg` | 0.015625 | `hero.webp` | 0.014985 |
+| `map-styles/pen-and-ink.webp` | 0.014230 | | |
 
-Looked at side by side with `main`: every pin is an open ring, a little larger, and no name
-moves. The leaders take other bends and the lettering's texture is redrawn, for the reason
-above.
+Looked at side by side with `main`: every pin is an open ring, a little larger, its leader
+leaving from its outer edge, and no name moves. The leaders take other bends and the
+lettering's texture is redrawn, for the reasons above.
 
 ## Consequences
 
 - A pin ring keeps an open hole whatever the seed, at any type size and for any pen the nib
   style sets, because the hole is sized first and the pen added outside it.
 - A pin is about a quarter wider at the shipped size, and more on a small name.
-- The leader still starts 2 px past the pin's centre (`leader`'s over-run), so on the map
-  a short stub of it crosses the hole, as it did before. That stub is the leader's, drawn
-  by design, and it is not what closed a ring; this decision leaves it as it is.
+- A leader meets its pin at the ring's outer edge and no longer over-runs into it, so the
+  ring's hole is bare paper on the map as well as in the unit test.
 - `lettering_marks.marks` and `label_marks` take the nib style; a caller that letters names
   passes the one it will stroke them with.
 - A further regeneration needs its own ADR.
