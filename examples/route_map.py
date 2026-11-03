@@ -1,17 +1,17 @@
-"""Rung 8 of the tutorial: a route map, the engine's first application.
+"""The first map's script: a route map, the engine's first application.
 
 The earlier rungs paint with the primitives directly; this one runs the four map
-stages over a GPX track. `Track.from_gpx` reads the route, `Cache` keeps the
+stages over a GPX track. `Track.from_gpx` reads the track, `Cache` keeps the
 provider payloads and the painted plates under one directory, `fetch` builds the
 basemap from what `OverpassFeatures` (the map features and land cover) and
 `OpenTopoData` (the elevation) return, `paint` lays the paper, washes and pen
 plates in the `Style.default()` look, `letter` places and writes the names, and
-`compose` stacks them into one card, which is saved as `map.png`.
+`compose` stacks them into one map, which is saved as `map.png`.
 
 The first run with a track fetches from the public Overpass and OpenTopoData
 servers, within their usage limits; `contact` (an email address, say) is sent
 with each request so that their operators can reach the caller. A later run with
-the same track reads the cache and fetches nothing. The card carries the
+the same track reads the cache and fetches nothing. The map carries the
 attribution `compose` draws by default, the credit the map data's licences ask
 for.
 
@@ -50,17 +50,17 @@ def main(
     features: OverpassFeatures,
     elevation: OpenTopoData,
 ) -> Path:
-    """Fetch what the cache lacks for a track, paint, letter and compose it, and save the card.
+    """Fetch what the cache lacks for a track, paint, letter and compose it, and save the map.
 
     Args:
         out_dir: Where `map.png` is written; created when missing.
-        track: The GPX file of the route.
+        track: The GPX file of the track.
         cache_dir: The fetch cache: provider payloads, and the plates painted from them.
         features: The map feature and land cover provider.
         elevation: The elevation provider.
 
     Returns:
-        The path of the saved card, `out_dir / "map.png"`.
+        The path of the saved map, `out_dir / "map.png"`.
     """
     route = Track.from_gpx(track)
     cache = Cache(cache_dir)

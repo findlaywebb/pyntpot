@@ -25,12 +25,13 @@ A ridge is a line, not a shape. The script draws each one from a few seeded sine
 broad fells, plus some fast, small ones for the crags. The mask is the ground below the
 line, down to the shore:
 
+<!-- from examples/derwentwater.py -->
 ```python
-cover = ((yy >= ridge[None, :]) & (yy < shore + 2) & inside).astype(np.float32)
-dens = wash(cover, sheet, crest, 0.25)
+        cover = ((yy >= ridge[None, :]) & (yy < shore + 2) & scene.inside).astype(np.float32)
+        dens = wash(cover, scene.sheet, crest, 0.25)
 ```
 
-`inside` is the picture less its side margins, so no wash reaches the left or right edge.
+`scene.inside` is the picture less its side margins, so no wash reaches the left or right edge.
 `crest` is the density of the flat body of the wash. `0.25` is the extra pigment that
 pools at its edge.
 
@@ -43,6 +44,7 @@ Nothing darkens a hill by hand.
 
 Two touches finish each hill. The density fades towards its foot, where mist lies:
 
+<!-- from examples/derwentwater.py -->
 ```python
 mist = 0.62 + 0.38 * np.exp(-np.clip(yy - ridge[None, :], 0, None) / (0.14 * h))
 ```
@@ -65,9 +67,10 @@ pigment. The tree crowns, the island and both shores, are reflected the same way
 
 ## The name
 
-The last step is the lettering rung again. A `Hand` writes "Derwentwater" at a `Setting`
-centred on the bottom margin. `nib_plate` strokes its marks onto an RGBA plate, and the
-plate is laid over the painting by its alpha. It is composited normally, not multiplied,
+The last step is [Letter a name](../paint-a-watercolour.md#letter-a-name) again. A
+`Hand` writes "Derwentwater" at a `Setting` centred on the bottom margin. `nib_plate`
+strokes its marks onto an RGBA plate, and the plate is laid over the painting by its
+alpha. It is composited normally, not multiplied,
 so the ink stays dark whatever lies beneath.
 
 ## Try it
@@ -77,4 +80,11 @@ so the ink stays dark whatever lies beneath.
 - Change `SEED`, and the ridges, ripples and paper all change with it.
 - Set `MARGIN` to `0.0`, and the washes reach the left and right edges.
 
-The next page, [Vector drawing](vector-drawing.md), paints a picture someone else drew.
+## Where next
+
+- [Paint your own shapes](../../how-to/paint-your-own-shapes.md) turns a mask of your own
+  into a wash.
+- [How the wash works](../../explanation/how-the-wash-works.md) explains the flat body,
+  the pooled edge and the granulation each hill is laid with.
+
+Next: [Vector drawing](vector-drawing.md), a picture someone else drew, washed and inked.

@@ -106,3 +106,10 @@ paper round it.
 Change `FOLD` from 6 to 8 for eight-fold symmetry. Change the angles in the motif that
 mention 30 degrees to 22.5, so the diamonds still sit midway between two petals. Move
 the petal's angle from 14 to 5, and the mirrored pairs fuse.
+
+## Where next
+
+- [How the wash works](../../explanation/how-the-wash-works.md) explains why each washed
+  shape is darker at its edge than in its middle.
+
+Next: [Fractals](fractals.md), a Barnsley fern, a family of ferns and a recursive tree.
