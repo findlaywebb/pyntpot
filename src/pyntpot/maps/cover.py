@@ -7,7 +7,8 @@ tag-to-pigment table and the painting order. The sea made from the coast is in `
 
 It does not fetch payloads, project a track, or paint anything: it reads the files the
 cache already holds and returns rings in card metres. Invariants: a missing payload
-is an empty result, never an error; the coast keeps its own vertices; a class later in
+is an empty result, never an error; the coast keeps its own vertices and an open chain
+ends on the card edge; a class later in
 `COVER_ORDER` is painted over an earlier one, so a plate carries one class per pixel.
 """
 
@@ -19,9 +20,9 @@ import math
 from typing import TYPE_CHECKING
 
 from pyntpot.ink.chains import join_chains
-from pyntpot.ink.polyline import Pt, clip_line, simplify
+from pyntpot.ink.polyline import Pt, simplify
 from pyntpot.maps.osm_elements import polygon_rings
-from pyntpot.maps.rings import clip_ring
+from pyntpot.maps.rings import clip_ring, cut_line
 
 if TYPE_CHECKING:
     from pyntpot.maps.cache import Cache
@@ -163,12 +164,14 @@ def coastline_chains(
     cache: Cache,
     min_length_m: float = MIN_COAST_M,
 ) -> list[list[Pt]]:
-    """Coastline ways as surveyed: clipped, joined, and never smoothed.
+    """Coastline ways as surveyed: cut at the card edge, joined, and never smoothed.
 
     The coast is the one line on the map a reader would notice being wrong,
     so it keeps its own vertices. Offshore rocks come back as their own
     little rings and are ink specks at plate size, so only chains of real coast
-    are kept.
+    are kept. A way is cut where it crosses the card edge, not at its last vertex
+    inside, so an open chain ends on the edge however far apart the survey's vertices
+    are, and `sea.sea_from_coast` can close the land along the edge.
     """
     path = cache.features_path(key)
     if not path.exists():
@@ -178,6 +181,6 @@ def coastline_chains(
         if (entry.get("tags") or {}).get("natural") != "coastline":
             continue
         pts = [proj(g["lat"], g["lon"]) for g in entry.get("geometry", []) if g]
-        ways += [p for p in clip_line(pts, clip) if len(p) > 1]
+        ways += cut_line(pts, clip)
     joined = [c for c in join_chains(ways, tol=JOIN_TOL_M) if len(c) > RING_POINTS_OVER]
     return [c for c in joined if _chain_length(c) > min_length_m]
