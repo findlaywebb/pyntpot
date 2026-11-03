@@ -4,6 +4,7 @@ import math
 
 import pytest
 
+from pyntpot.letters.style import NibStyle
 from pyntpot.maps.lettering.label import (
     MAX_LINES,
     SPAN_EFFORT,
@@ -119,8 +120,8 @@ def test_the_hand_writes_both_lines_of_a_wrapped_name():
         flat=True,
         lines=["the long climb", "out of Aviemore"],
     )
-    marks_one = [m for m in label_marks(hand, one) if m.role == "glyph"]
-    marks_two = [m for m in label_marks(hand, two) if m.role == "glyph"]
+    marks_one = [m for m in label_marks(hand, one, NibStyle()) if m.role == "glyph"]
+    marks_two = [m for m in label_marks(hand, two, NibStyle()) if m.role == "glyph"]
     assert marks_one and marks_two
     wide_one = max(x for m in marks_one for x, _y in m.pts) - min(
         x for m in marks_one for x, _y in m.pts

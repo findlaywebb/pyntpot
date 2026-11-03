@@ -8,7 +8,7 @@ import pytest
 
 from pyntpot.ink.brush import BRUSH_COLOURS
 from pyntpot.letters.hand import Hand
-from pyntpot.letters.style import FaceStyle, HandStyle
+from pyntpot.letters.style import FaceStyle, HandStyle, NibStyle
 from pyntpot.maps import lettering_marks
 from pyntpot.maps.lettering.label import Label, Span
 from pyntpot.maps.lettering_window import baseline
@@ -39,7 +39,9 @@ class TestFurniture:
 
     def test_a_label_with_a_leader_yields_one_leader_and_one_pin(self, hand: Hand) -> None:
         """A pinned landmark takes exactly one pin and one leader beside its glyphs."""
-        marks = lettering_marks.label_marks(hand, _flat(leader=((120.0, 90.0), (150.0, 72.0))))
+        marks = lettering_marks.label_marks(
+            hand, _flat(leader=((120.0, 90.0), (150.0, 72.0))), NibStyle()
+        )
         roles = [m.role for m in marks]
         assert roles.count("leader") == 1
         assert roles.count("pin") == 1
@@ -49,20 +51,20 @@ class TestFurniture:
     def test_a_kind_that_is_its_own_place_takes_no_leader(self, hand: Hand, kind: str) -> None:
         """A river, settlement, road or marker never takes a pin or a leader."""
         marks = lettering_marks.label_marks(
-            hand, _flat(kind=kind, size=14.0, leader=((120.0, 90.0), (150.0, 72.0)))
+            hand, _flat(kind=kind, size=14.0, leader=((120.0, 90.0), (150.0, 72.0))), NibStyle()
         )
         assert not {"pin", "leader"} & {m.role for m in marks}
 
     def test_a_town_at_full_size_is_underlined(self, hand: Hand) -> None:
         """A settlement at the default size takes one underline, a smaller one none."""
-        big = lettering_marks.label_marks(hand, _flat(kind="settlement", size=20.0))
-        small = lettering_marks.label_marks(hand, _flat(kind="settlement", size=14.0))
+        big = lettering_marks.label_marks(hand, _flat(kind="settlement", size=20.0), NibStyle())
+        small = lettering_marks.label_marks(hand, _flat(kind="settlement", size=14.0), NibStyle())
         assert [m.role for m in big].count("underline") == 1
         assert "underline" not in {m.role for m in small}
 
     def test_a_home_takes_its_house(self, hand: Hand) -> None:
         """A home label draws its house as one extra mark."""
-        marks = lettering_marks.label_marks(hand, _flat(kind="home", size=14.0))
+        marks = lettering_marks.label_marks(hand, _flat(kind="home", size=14.0), NibStyle())
         assert [m.role for m in marks].count("span") == 1
 
 
@@ -72,15 +74,17 @@ class TestTranslation:
     def test_a_river_is_set_wide_and_in_water_ink(self, hand: Hand) -> None:
         """A river beside its water leans, is tracked wide and written in the water ink."""
         river = _flat(kind="river", name="Lyn", flat=False, baseline=COURSE, size=14.0)
-        marks = lettering_marks.label_marks(hand, river)
+        marks = lettering_marks.label_marks(hand, river, NibStyle())
         assert {m.ink for m in marks} == {"water"}
-        wide = lettering_marks.label_marks(hand, _flat(kind="landmark", name="Lyn"))
+        wide = lettering_marks.label_marks(hand, _flat(kind="landmark", name="Lyn"), NibStyle())
         assert wide
 
     def test_the_same_label_writes_the_same_marks(self, hand: Hand) -> None:
         """A label's marks are the same twice, as its generator is seeded by what names it."""
         label = _flat(leader=((120.0, 90.0), (150.0, 72.0)))
-        assert lettering_marks.label_marks(hand, label) == lettering_marks.label_marks(hand, label)
+        assert lettering_marks.label_marks(hand, label, NibStyle()) == lettering_marks.label_marks(
+            hand, label, NibStyle()
+        )
 
     def test_a_span_writes_its_line_and_ticks(self, hand: Hand) -> None:
         """A span draws one line mark and one tick mark a tick, in its intent's ink."""
@@ -161,7 +165,7 @@ def test_the_in_water_ink_beats_a_dark_one_on_the_river():
 def test_a_name_on_the_water_asks_for_no_backing_wash():
     """A pale blob on a river reads as a hole in the water."""
     hand = open_hand()
-    wet = lettering_marks.label_marks(hand, river_label(40.0))
-    dry = lettering_marks.label_marks(hand, river_label(11.0))
+    wet = lettering_marks.label_marks(hand, river_label(40.0), NibStyle())
+    dry = lettering_marks.label_marks(hand, river_label(11.0), NibStyle())
     assert wet and not any(m.wash for m in wet)
     assert dry and all(m.wash for m in dry)
