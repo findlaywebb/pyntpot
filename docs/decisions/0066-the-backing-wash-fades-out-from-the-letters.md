@@ -82,9 +82,9 @@ gate is loosened and the hash input does not change.
 paper.webp: identical yes, differing fraction 0.000000
 wash.webp: identical yes, differing fraction 0.000000
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.060331
-map.png: identical no, differing fraction 0.023906
-manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
+labels-centreline.webp: identical no, differing fraction 0.058664
+map.png: identical no, differing fraction 0.012675
+manifest hash: 3976d23ae248ca86-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
 ```
 
 Only the label plate and the map move, round every name; no name moves and `PINNED_LABELS`
@@ -92,29 +92,29 @@ and `GOLDEN_HASH` are unchanged. The goldens were regenerated with `make_golden.
 
 ### Docs images
 
-Every docs image was repainted with `repaint.py` on top of ADR 0055's images; the sixteen that letter a map or show the
+Every docs image was repainted with `repaint.py` on top of `main`'s images after ADR 0049 (a generator per item, #124); the sixteen that letter a map or show the
 backing wash moved, and only they (`map-styles/pen-and-ink.webp` lays no wash):
 
 | Image | Image changed | Master changed |
 |---|---|---|
-| `places/skye.webp` | 0.400402 | 0.110495 |
-| `places/yr-wyddfa.webp` | 0.294977 | 0.079811 |
-| `explanation/nib-backing.webp` | 0.288514 | 0.290320 |
-| `places/ambleside.webp` | 0.268159 | 0.094834 |
-| `gallery/route-map.webp` | 0.268159 | 0.094834 |
-| `places/oxford.webp` | 0.222926 | 0.062052 |
-| `places/y-fenni.webp` | 0.198611 | 0.057886 |
-| `hero.webp` | 0.149214 | 0.033967 |
-| `map-styles/sepia.webp` | 0.135018 | 0.026438 |
-| `map-styles/bold.webp` | 0.123947 | 0.024927 |
-| `how-to/command-line.webp` | 0.119273 | 0.024613 |
-| `map-styles/winter.webp` | 0.106673 | 0.013134 |
-| `how-to/route-ink.webp` | 0.104167 | 0.013231 |
-| `tutorials/route-map.webp` | 0.096667 | 0.013231 |
-| `tutorials/grid-composition.webp` | 0.069716 | 0.038500 |
-| `social-preview.jpg` | 0.038619 | 0.027465 |
+| `explanation/nib-backing.webp` | 0.286125 | 0.286591 |
+| `places/y-fenni.webp` | 0.266865 | 0.041160 |
+| `places/ambleside.webp` | 0.265503 | 0.079898 |
+| `gallery/route-map.webp` | 0.265503 | 0.079898 |
+| `places/skye.webp` | 0.259556 | 0.088843 |
+| `places/oxford.webp` | 0.213606 | 0.053368 |
+| `places/yr-wyddfa.webp` | 0.185109 | 0.065314 |
+| `map-styles/sepia.webp` | 0.172168 | 0.020370 |
+| `map-styles/bold.webp` | 0.142917 | 0.024342 |
+| `hero.webp` | 0.141558 | 0.027047 |
+| `how-to/command-line.webp` | 0.114339 | 0.012650 |
+| `tutorials/route-map.webp` | 0.112722 | 0.009284 |
+| `how-to/route-ink.webp` | 0.111884 | 0.009211 |
+| `map-styles/winter.webp` | 0.096848 | 0.010161 |
+| `tutorials/grid-composition.webp` | 0.067068 | 0.038267 |
+| `social-preview.jpg` | 0.035526 | 0.022222 |
 
-The largest channel change in a docs image is 77, under the letters. Looked at side by side with `main`: on
+The largest channel change in a docs image is 68, under the letters. Looked at side by side with `main`: on
 Yr Wyddfa the pale lozenges behind "Llyn Llydaw" and "Glaslyn", the bands along their
 leaders and the patches round "A4086" and "Crib Goch" are gone, and the paint shows up to the
 letters; the same on every card, most on Skye's dark sea. `explanation/nib-backing.webp` now
