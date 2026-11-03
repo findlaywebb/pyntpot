@@ -5,8 +5,8 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 
 | File | Size | Changed | Max delta | Box | Extent |
 |---|---|---|---|---|---|
-| `docs/images/curves/kaleidoscope.webp` | 640x640 | 0.104949 (over 0.005) | 138 | 0,53 to 640,640 | widespread |
-| `docs/images/curves/lissajous.webp` | 640x640 | 0.010618 (over 0.005) | 41 | 0,312 to 640,640 | widespread |
+| `docs/images/curves/kaleidoscope.webp` | 640x640 | 0.098030 (over 0.005) | 102 | 0,53 to 640,640 | widespread |
+| `docs/images/curves/lissajous.webp` | 640x640 | 0.011943 (over 0.005) | 42 | 72,312 to 640,640 | widespread |
 | `docs/images/explanation/nib-angles.webp` | 840x386 | 0.018132 (over 0.005) | 64 | 62,27 to 810,348 | widespread |
 | `docs/images/explanation/nib-backing.webp` | 360x200 | 0.004319 | 16 | 32,51 to 276,133 | widespread |
 | `docs/images/explanation/nib-centreline.webp` | 360x200 | 0.002806 | 26 | 32,50 to 269,113 | local |
@@ -17,11 +17,11 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 | `docs/images/explanation/wash-glaze.webp` | 800x350 | 0.049914 (over 0.005) | 33 | 0,7 to 800,350 | widespread |
 | `docs/images/gallery/composition.webp` | 480x320 | 0.027539 (over 0.005) | 13 | 19,112 to 480,320 | widespread |
 | `docs/images/gallery/lettering.webp` | 360x240 | 0.003542 | 39 | 89,95 to 218,129 | local |
-| `docs/images/gallery/nib-line.webp` | 320x213 | 0.001203 | 92 | 164,102 to 175,112 | local |
+| `docs/images/gallery/nib-line.webp` | 320x213 | 0.001159 | 68 | 164,102 to 175,112 | local |
 | `docs/images/gallery/route-map.webp` | 720x512 | 0.186575 (over 0.005) | 24 | 0,32 to 720,512 | widespread |
 | `docs/images/hero.webp` | 1200x854 | 0.138321 (over 0.005) | 160 | 0,24 to 1200,854 | widespread |
 | `docs/images/how-to/command-line.webp` | 720x583 | 0.104274 (over 0.005) | 100 | 0,117 to 720,583 | widespread |
-| `docs/images/how-to/own-shapes.webp` | 480x320 | 0.006081 (over 0.005) | 96 | 3,3 to 477,320 | widespread |
+| `docs/images/how-to/own-shapes.webp` | 480x320 | 0.034993 (over 0.005) | 69 | 3,3 to 480,320 | widespread |
 | `docs/images/how-to/route-ink-grid.webp` | 720x306 | 0.208283 (over 0.005) | 36 | 0,12 to 720,306 | widespread |
 | `docs/images/how-to/route-ink.webp` | 720x512 | 0.126967 (over 0.005) | 84 | 0,0 to 720,512 | widespread |
 | `docs/images/map-styles/bold.webp` | 720x512 | 0.199596 (over 0.005) | 78 | 0,32 to 720,512 | widespread |
@@ -31,14 +31,14 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 | `docs/images/painting-with-python/derwentwater.webp` | 720x480 | 0.127358 (over 0.005) | 75 | 0,0 to 720,480 | widespread |
 | `docs/images/painting-with-python/svg-drawing.webp` | 720x480 | 0.049722 (over 0.005) | 48 | 3,4 to 720,480 | widespread |
 | `docs/images/painting-with-python/svg-ink.webp` | 720x480 | 0.027428 (over 0.005) | 52 | 10,82 to 699,480 | widespread |
-| `docs/images/painting-with-python/tree-family.webp` | 720x960 | 0.125652 (over 0.005) | 35 | 0,112 to 720,960 | widespread |
-| `docs/images/painting-with-python/tree.webp` | 600x800 | 0.088079 (over 0.005) | 64 | 0,198 to 600,800 | widespread |
+| `docs/images/painting-with-python/tree-family.webp` | 720x960 | 0.124402 (over 0.005) | 38 | 0,112 to 720,960 | widespread |
+| `docs/images/painting-with-python/tree.webp` | 600x800 | 0.090215 (over 0.005) | 65 | 0,198 to 600,800 | widespread |
 | `docs/images/places/ambleside.webp` | 720x512 | 0.186575 (over 0.005) | 24 | 0,32 to 720,512 | widespread |
 | `docs/images/places/oxford.webp` | 720x643 | 0.281679 (over 0.005) | 100 | 0,0 to 720,643 | widespread |
 | `docs/images/places/skye.webp` | 720x643 | 0.194034 (over 0.005) | 26 | 0,144 to 720,643 | widespread |
 | `docs/images/places/y-fenni.webp` | 720x643 | 0.209269 (over 0.005) | 113 | 0,8 to 720,643 | widespread |
 | `docs/images/places/yr-wyddfa.webp` | 720x582 | 0.112689 (over 0.005) | 24 | 0,111 to 720,582 | widespread |
-| `docs/images/reference/brush-sheet.webp` | 960x354 | 0.116269 (over 0.005) | 177 | 0,8 to 960,354 | widespread |
+| `docs/images/reference/brush-sheet.webp` | 960x354 | 0.114554 (over 0.005) | 177 | 0,8 to 960,354 | widespread |
 | `docs/images/reference/pigment-swatches.webp` | 960x372 | 0.048317 (over 0.005) | 49 | 0,45 to 960,372 | widespread |
 | `docs/images/social-preview.jpg` | 1280x640 | 0.036896 (over 0.005) | 91 | 16,4 to 1267,640 | widespread |
 | `docs/images/tutorials/composition.webp` | 480x320 | 0.027539 (over 0.005) | 13 | 19,112 to 480,320 | widespread |
@@ -50,11 +50,11 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 | `docs/images/tutorials/grid-pigments.webp` | 720x374 | 0.205678 (over 0.005) | 42 | 0,0 to 720,374 | widespread |
 | `docs/images/tutorials/grid-wash.webp` | 720x374 | 0.060484 (over 0.005) | 31 | 20,20 to 720,374 | widespread |
 | `docs/images/tutorials/lettering.webp` | 360x240 | 0.003542 | 39 | 89,95 to 218,129 | local |
-| `docs/images/tutorials/nib-line.webp` | 360x240 | 0.001123 | 91 | 184,114 to 197,126 | local |
+| `docs/images/tutorials/nib-line.webp` | 360x240 | 0.001100 | 68 | 184,114 to 197,126 | local |
 | `docs/images/tutorials/route-map.webp` | 900x640 | 0.089851 (over 0.005) | 89 | 0,111 to 900,640 | widespread |
 | `docs/images/word.webp` | 480x270 | 0.001073 | 22 | 136,115 to 343,191 | local |
-| `tests/golden/docs/curves/kaleidoscope.png` | 240x240 | 0.009635 (over 0.005) | 115 | 37,47 to 219,193 | widespread |
-| `tests/golden/docs/curves/lissajous.png` | 240x240 | 0.000295 | 38 | 209,118 to 214,122 | local |
+| `tests/golden/docs/curves/kaleidoscope.png` | 240x240 | 0.008872 (over 0.005) | 83 | 37,47 to 218,193 | widespread |
+| `tests/golden/docs/curves/lissajous.png` | 240x240 | 0.000295 | 37 | 209,118 to 214,122 | local |
 | `tests/golden/docs/explanation/nib-angles.png` | 240x110 | 0.022727 (over 0.005) | 32 | 35,24 to 232,99 | widespread |
 | `tests/golden/docs/explanation/nib-backing.png` | 240x133 | 0.004167 | 14 | 21,34 to 183,89 | widespread |
 | `tests/golden/docs/explanation/nib-centreline.png` | 240x133 | 0.003008 | 24 | 21,33 to 179,75 | local |
@@ -65,11 +65,11 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 | `tests/golden/docs/explanation/wash-glaze.png` | 240x105 | 0.003651 | 12 | 10,9 to 216,85 | widespread |
 | `tests/golden/docs/gallery/composition.png` | 240x160 | 0.000130 | 4 | 98,67 to 131,72 | local |
 | `tests/golden/docs/gallery/lettering.png` | 240x160 | 0.003776 | 35 | 59,63 to 145,86 | local |
-| `tests/golden/docs/gallery/nib-line.png` | 240x160 | 0.001302 | 90 | 123,76 to 131,84 | local |
+| `tests/golden/docs/gallery/nib-line.png` | 240x160 | 0.001224 | 67 | 123,76 to 131,84 | local |
 | `tests/golden/docs/gallery/route-map.png` | 240x171 | 0.003606 | 8 | 12,20 to 231,166 | widespread |
 | `tests/golden/docs/hero.png` | 240x171 | 0.003533 | 159 | 0,119 to 201,171 | widespread |
 | `tests/golden/docs/how-to/command-line.png` | 240x194 | 0.006057 (over 0.005) | 50 | 20,44 to 234,191 | widespread |
-| `tests/golden/docs/how-to/own-shapes.png` | 240x160 | 0.000703 | 85 | 17,122 to 121,145 | local |
+| `tests/golden/docs/how-to/own-shapes.png` | 240x160 | 0.000677 | 63 | 17,122 to 121,145 | local |
 | `tests/golden/docs/how-to/route-ink-grid.png` | 240x102 | 0.006577 (over 0.005) | 16 | 12,5 to 220,83 | widespread |
 | `tests/golden/docs/how-to/route-ink.png` | 240x171 | 0.004118 | 28 | 27,39 to 234,168 | widespread |
 | `tests/golden/docs/map-styles/bold.png` | 240x171 | 0.008480 (over 0.005) | 20 | 5,39 to 234,168 | widespread |
@@ -79,14 +79,14 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 | `tests/golden/docs/painting-with-python/derwentwater.png` | 240x160 | 0.002656 | 38 | 79,141 to 160,151 | local |
 | `tests/golden/docs/painting-with-python/svg-drawing.png` | 240x160 | 0.003724 | 33 | 33,28 to 192,130 | widespread |
 | `tests/golden/docs/painting-with-python/svg-ink.png` | 240x160 | 0.004531 | 33 | 33,28 to 192,130 | widespread |
-| `tests/golden/docs/painting-with-python/tree-family.png` | 240x320 | 0.004505 | 28 | 20,39 to 225,285 | widespread |
-| `tests/golden/docs/painting-with-python/tree.png` | 240x320 | 0.003164 | 63 | 55,104 to 172,164 | local |
+| `tests/golden/docs/painting-with-python/tree-family.png` | 240x320 | 0.004687 | 26 | 20,39 to 225,285 | widespread |
+| `tests/golden/docs/painting-with-python/tree.png` | 240x320 | 0.003229 | 63 | 55,104 to 172,164 | local |
 | `tests/golden/docs/places/ambleside.png` | 240x171 | 0.003606 | 8 | 12,20 to 231,166 | widespread |
 | `tests/golden/docs/places/oxford.png` | 240x214 | 0.017543 (over 0.005) | 50 | 7,0 to 240,214 | widespread |
 | `tests/golden/docs/places/skye.png` | 240x214 | 0.005938 (over 0.005) | 8 | 40,52 to 220,209 | widespread |
 | `tests/golden/docs/places/y-fenni.png` | 240x214 | 0.016491 (over 0.005) | 77 | 4,2 to 237,213 | widespread |
 | `tests/golden/docs/places/yr-wyddfa.png` | 240x194 | 0.002040 | 7 | 19,45 to 231,189 | widespread |
-| `tests/golden/docs/reference/brush-sheet.png` | 240x88 | 0.018229 (over 0.005) | 173 | 6,5 to 227,87 | widespread |
+| `tests/golden/docs/reference/brush-sheet.png` | 240x88 | 0.017945 (over 0.005) | 173 | 6,5 to 227,87 | widespread |
 | `tests/golden/docs/reference/pigment-swatches.png` | 240x93 | 0.010305 (over 0.005) | 16 | 15,23 to 222,91 | widespread |
 | `tests/golden/docs/social-preview.png` | 240x120 | 0.019965 (over 0.005) | 77 | 133,18 to 232,116 | widespread |
 | `tests/golden/docs/tutorials/composition.png` | 240x160 | 0.000130 | 4 | 98,67 to 131,72 | local |
@@ -98,7 +98,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 | `tests/golden/docs/tutorials/grid-pigments.png` | 240x125 | 0.002533 | 19 | 5,8 to 213,100 | widespread |
 | `tests/golden/docs/tutorials/grid-wash.png` | 240x125 | 0.001833 | 12 | 7,8 to 207,98 | widespread |
 | `tests/golden/docs/tutorials/lettering.png` | 240x160 | 0.003776 | 35 | 59,63 to 145,86 | local |
-| `tests/golden/docs/tutorials/nib-line.png` | 240x160 | 0.001302 | 90 | 123,76 to 131,84 | local |
+| `tests/golden/docs/tutorials/nib-line.png` | 240x160 | 0.001224 | 67 | 123,76 to 131,84 | local |
 | `tests/golden/docs/tutorials/route-map.png` | 240x171 | 0.004264 | 30 | 27,39 to 234,168 | widespread |
 | `tests/golden/docs/word.png` | 240x135 | 0.001111 | 11 | 68,58 to 171,96 | local |
 | `tests/golden/lynmouth/labels-centreline.webp` | 1800x1457 | 0.004179 | 243 | 144,316 to 1432,1108 | widespread |
@@ -107,7 +107,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 | `tests/golden/lynmouth/wash.webp` | 1800x1457 | 0.000803 | 145 | 329,403 to 1324,1046 | local |
 
 <details>
-<summary><code>docs/images/curves/kaleidoscope.webp</code>: widespread, 0.104949</summary>
+<summary><code>docs/images/curves/kaleidoscope.webp</code>: widespread, 0.098030</summary>
 
 ![docs/images/curves/kaleidoscope.webp: before, after and difference](docs/images/curves/kaleidoscope.webp.diff.png)
 
@@ -116,7 +116,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>docs/images/curves/lissajous.webp</code>: widespread, 0.010618</summary>
+<summary><code>docs/images/curves/lissajous.webp</code>: widespread, 0.011943</summary>
 
 ![docs/images/curves/lissajous.webp: before, after and difference](docs/images/curves/lissajous.webp.diff.png)
 
@@ -215,7 +215,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>docs/images/gallery/nib-line.webp</code>: local, 0.001203</summary>
+<summary><code>docs/images/gallery/nib-line.webp</code>: local, 0.001159</summary>
 
 ![docs/images/gallery/nib-line.webp: before, after and difference](docs/images/gallery/nib-line.webp.diff.png)
 
@@ -251,7 +251,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>docs/images/how-to/own-shapes.webp</code>: widespread, 0.006081</summary>
+<summary><code>docs/images/how-to/own-shapes.webp</code>: widespread, 0.034993</summary>
 
 ![docs/images/how-to/own-shapes.webp: before, after and difference](docs/images/how-to/own-shapes.webp.diff.png)
 
@@ -341,7 +341,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>docs/images/painting-with-python/tree-family.webp</code>: widespread, 0.125652</summary>
+<summary><code>docs/images/painting-with-python/tree-family.webp</code>: widespread, 0.124402</summary>
 
 ![docs/images/painting-with-python/tree-family.webp: before, after and difference](docs/images/painting-with-python/tree-family.webp.diff.png)
 
@@ -350,7 +350,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>docs/images/painting-with-python/tree.webp</code>: widespread, 0.088079</summary>
+<summary><code>docs/images/painting-with-python/tree.webp</code>: widespread, 0.090215</summary>
 
 ![docs/images/painting-with-python/tree.webp: before, after and difference](docs/images/painting-with-python/tree.webp.diff.png)
 
@@ -404,7 +404,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>docs/images/reference/brush-sheet.webp</code>: widespread, 0.116269</summary>
+<summary><code>docs/images/reference/brush-sheet.webp</code>: widespread, 0.114554</summary>
 
 ![docs/images/reference/brush-sheet.webp: before, after and difference](docs/images/reference/brush-sheet.webp.diff.png)
 
@@ -512,7 +512,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>docs/images/tutorials/nib-line.webp</code>: local, 0.001123</summary>
+<summary><code>docs/images/tutorials/nib-line.webp</code>: local, 0.001100</summary>
 
 ![docs/images/tutorials/nib-line.webp: before, after and difference](docs/images/tutorials/nib-line.webp.diff.png)
 
@@ -539,7 +539,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>tests/golden/docs/curves/kaleidoscope.png</code>: widespread, 0.009635</summary>
+<summary><code>tests/golden/docs/curves/kaleidoscope.png</code>: widespread, 0.008872</summary>
 
 ![tests/golden/docs/curves/kaleidoscope.png: before, after and difference](tests/golden/docs/curves/kaleidoscope.png.diff.png)
 
@@ -647,7 +647,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>tests/golden/docs/gallery/nib-line.png</code>: local, 0.001302</summary>
+<summary><code>tests/golden/docs/gallery/nib-line.png</code>: local, 0.001224</summary>
 
 ![tests/golden/docs/gallery/nib-line.png: before, after and difference](tests/golden/docs/gallery/nib-line.png.diff.png)
 
@@ -683,7 +683,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>tests/golden/docs/how-to/own-shapes.png</code>: local, 0.000703</summary>
+<summary><code>tests/golden/docs/how-to/own-shapes.png</code>: local, 0.000677</summary>
 
 ![tests/golden/docs/how-to/own-shapes.png: before, after and difference](tests/golden/docs/how-to/own-shapes.png.diff.png)
 
@@ -773,7 +773,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>tests/golden/docs/painting-with-python/tree-family.png</code>: widespread, 0.004505</summary>
+<summary><code>tests/golden/docs/painting-with-python/tree-family.png</code>: widespread, 0.004687</summary>
 
 ![tests/golden/docs/painting-with-python/tree-family.png: before, after and difference](tests/golden/docs/painting-with-python/tree-family.png.diff.png)
 
@@ -782,7 +782,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>tests/golden/docs/painting-with-python/tree.png</code>: local, 0.003164</summary>
+<summary><code>tests/golden/docs/painting-with-python/tree.png</code>: local, 0.003229</summary>
 
 ![tests/golden/docs/painting-with-python/tree.png: before, after and difference](tests/golden/docs/painting-with-python/tree.png.diff.png)
 
@@ -836,7 +836,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>tests/golden/docs/reference/brush-sheet.png</code>: widespread, 0.018229</summary>
+<summary><code>tests/golden/docs/reference/brush-sheet.png</code>: widespread, 0.017945</summary>
 
 ![tests/golden/docs/reference/brush-sheet.png: before, after and difference](tests/golden/docs/reference/brush-sheet.png.diff.png)
 
@@ -944,7 +944,7 @@ Changed counts the pixels past channel delta 2; the parity gate bounds it at 0.0
 </details>
 
 <details>
-<summary><code>tests/golden/docs/tutorials/nib-line.png</code>: local, 0.001302</summary>
+<summary><code>tests/golden/docs/tutorials/nib-line.png</code>: local, 0.001224</summary>
 
 ![tests/golden/docs/tutorials/nib-line.png: before, after and difference](tests/golden/docs/tutorials/nib-line.png.diff.png)
 
