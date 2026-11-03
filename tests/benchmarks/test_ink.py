@@ -13,9 +13,9 @@ from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, PigmentLayer, composite
 from pyntpot.ink.raster import deform_rings, fill_cov
 from pyntpot.ink.sheet import Canvas, Sheet, rgb
-from pyntpot.ink.stamp import stamp
+from pyntpot.ink.stamping import stamp
 from pyntpot.ink.style import PaperStyle
-from pyntpot.ink.wash import WashOptions, wash
+from pyntpot.ink.washing import WashOptions, wash
 
 pytestmark = pytest.mark.benchmark
 

@@ -13,8 +13,8 @@ from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.pad import InkPad
 from pyntpot.ink.raster import deform_rings
 from pyntpot.ink.sheet import Sheet
-from pyntpot.ink.stamp import stamp
-from pyntpot.ink.wash import WashOptions, wash
+from pyntpot.ink.stamping import stamp
+from pyntpot.ink.washing import WashOptions, wash
 
 #: `deform_rings` settings with the displacement on: seed, amount, rounds, decay, cap, stop.
 DEFORM = (9, 0.26, 4, 0.55, 16.0, 0.5)

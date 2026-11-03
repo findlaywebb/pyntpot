@@ -41,7 +41,7 @@ from pyntpot.ink.noise import F32, blur, chamfer_distance
 from pyntpot.ink.pad import InkPad
 from pyntpot.ink.sheet import Canvas, Sheet, rgb
 from pyntpot.ink.style import PaperStyle
-from pyntpot.ink.wash import WashOptions, wash
+from pyntpot.ink.washing import WashOptions, wash
 from pyntpot.letters.pen_profile import pen_profile
 from pyntpot.letters.setting import Mark
 from pyntpot.letters.style import FaceStyle, NibGroups, NibStyle

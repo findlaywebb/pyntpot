@@ -37,7 +37,7 @@
 
 ::: pyntpot.maps.candidate_export
 
-::: pyntpot.maps.pipeline.compose
+::: pyntpot.maps.compose
 
 ::: pyntpot.maps.fetch
 
@@ -45,4 +45,4 @@
 
 ::: pyntpot.maps.paint
 
-::: pyntpot.maps.vector_layers.vector_layers
+::: pyntpot.maps.vector_layers

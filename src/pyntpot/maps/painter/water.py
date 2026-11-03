@@ -25,7 +25,7 @@ from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.raster import fill_cov
 from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import WashStyle
-from pyntpot.ink.wash import WashOptions, wash
+from pyntpot.ink.washing import WashOptions, wash
 from pyntpot.maps.painter.job import INSIDE, PaintJob, PlateStack, drawable
 
 #: The radius of the blur the sea's distance field is smoothed by before its gradient.

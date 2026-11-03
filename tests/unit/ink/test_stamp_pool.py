@@ -13,7 +13,7 @@ from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.pad import ink_density
 from pyntpot.ink.sheet import Sheet
-from pyntpot.ink.stamp import stamp
+from pyntpot.ink.stamping import stamp
 
 #: The ink the set-down blot of a `MAJ6-e` pen 1 to 2 render px wide laid before it was kept
 #: on its stroke: its whole Gaussian, of radius 1.2 px (the floor) cut at 4 px, times pool

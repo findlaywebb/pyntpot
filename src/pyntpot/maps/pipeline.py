@@ -46,7 +46,7 @@ from PIL import Image
 from pyntpot.maps.attribution import attribution_text, draw_attribution
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache, FetchError
-from pyntpot.maps.compose import painted_map, paste_labels, route
+from pyntpot.maps.compose_steps import painted_map, paste_labels, route
 from pyntpot.maps.layers import BasemapInputs, build_basemap
 from pyntpot.maps.lettering.pipeline import Lettering
 from pyntpot.maps.painter.plates import paint_plates

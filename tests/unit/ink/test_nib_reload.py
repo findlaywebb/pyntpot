@@ -9,7 +9,7 @@ from pyntpot.ink.brush import Brush, brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.pad import ink_density
 from pyntpot.ink.sheet import Sheet
-from pyntpot.ink.stamp import _nib_spent, stamp
+from pyntpot.ink.stamping import _nib_spent, stamp
 
 #: Just either side of a dip, in pressure-weighted render pixels.
 EPSILON = 1e-6

@@ -15,7 +15,7 @@ import pytest
 from pyntpot.ink.brush import brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.deposit import blot_share, deposit, ink_cover, nib_cover
-from pyntpot.ink.stamp import stamp
+from pyntpot.ink.stamping import stamp
 from pyntpot.ink.stroke import Lay, Sampled, StrokeProfile, Tip, Trace
 
 

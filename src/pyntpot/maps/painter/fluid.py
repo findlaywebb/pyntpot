@@ -13,7 +13,7 @@ or when nothing has been laid, and it does not touch the sea, which is never tri
 import numpy as np
 
 from pyntpot.ink.noise import F32
-from pyntpot.ink.wash import fluid_modulate
+from pyntpot.ink.washing import fluid_modulate
 from pyntpot.maps.painter.job import PaintJob, PlateStack
 
 

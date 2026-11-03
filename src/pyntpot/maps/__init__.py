@@ -22,7 +22,7 @@ from pyntpot.maps.providers.opentopodata import OpenTopoData
 from pyntpot.maps.providers.overpass import OverpassFeatures
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
-from pyntpot.maps.vector_layers import VectorLayers, vector_layers
+from pyntpot.maps.vector_layer_build import VectorLayers, vector_layers
 
 __all__: list[str] = [
     "Annotations",

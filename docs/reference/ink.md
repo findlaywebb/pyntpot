@@ -37,6 +37,6 @@
 
 ::: pyntpot.ink.save_image
 
-::: pyntpot.ink.stamp.stamp
+::: pyntpot.ink.stamp
 
-::: pyntpot.ink.wash.wash
+::: pyntpot.ink.wash

@@ -26,9 +26,9 @@ from pyntpot.ink.pigment import (
     composite,
 )
 from pyntpot.ink.sheet import Canvas, Sheet, rgb
-from pyntpot.ink.stamp import stamp
+from pyntpot.ink.stamping import stamp
 from pyntpot.ink.style import PaperStyle
-from pyntpot.ink.wash import wash
+from pyntpot.ink.washing import wash
 
 __all__: list[str] = [
     "PAINTERS_PIGMENTS",

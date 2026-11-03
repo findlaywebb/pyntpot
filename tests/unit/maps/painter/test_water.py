@@ -8,7 +8,7 @@ import numpy as np
 from pyntpot.ink.noise import blur, chamfer_distance
 from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.style import WashStyle
-from pyntpot.ink.wash import WashOptions, wash
+from pyntpot.ink.washing import WashOptions, wash
 from pyntpot.maps.painter.job import PlateStack
 from pyntpot.maps.painter.water import coast_run, paint_lakes, paint_water, sea_layer, sea_patches
 

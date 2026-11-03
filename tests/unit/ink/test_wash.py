@@ -7,7 +7,7 @@ from pyntpot.ink.noise import blur, chamfer_distance, smoothstep
 from pyntpot.ink.pigment import PIGMENTS, PigmentLayer
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.style import WashStyle
-from pyntpot.ink.wash import WashOptions, flow_edge, fluid_modulate, separated, wash
+from pyntpot.ink.washing import WashOptions, flow_edge, fluid_modulate, separated, wash
 
 from support.washes import fluid_fields, two_squares
 

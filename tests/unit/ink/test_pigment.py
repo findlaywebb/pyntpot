@@ -16,7 +16,7 @@ from pyntpot.ink.pigment import (
 )
 from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import PaperStyle
-from pyntpot.ink.wash import wash
+from pyntpot.ink.washing import wash
 
 from support.washes import two_squares
 

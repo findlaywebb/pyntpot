@@ -5,7 +5,7 @@ radius, held on quarter-octave steps; `highest`, the indices of the highest lots
 stable descending sort's head gives them. Key type: `Blooms`, what one wash's blooms are
 laid by.
 
-It lays blooms only: the wash they are laid in is `ink.wash`, which calls `bloom`. It reads
+It lays blooms only: the wash they are laid in is `ink.washing`, which calls `bloom`. It reads
 no style and writes no file.
 
 Invariants: a bloom's seat, size and warp are pure functions of the wash's seed, the

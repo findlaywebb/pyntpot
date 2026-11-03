@@ -5,7 +5,7 @@ reservoir and the break-texture accumulators; `deposit`, the bilinear splat into
 the blot where a nib touches down, laid only where the stroke's set-down lays ink
 (`blot_share`, from `nib_cover`; a thin nib's grown by up to a pixel, `ink_cover`).
 
-It draws no random numbers and builds no path: it reads the `Lay` that `pyntpot.ink.stamp`
+It draws no random numbers and builds no path: it reads the `Lay` that `pyntpot.ink.stamping`
 has laid out. It does not saturate or gate the accumulator (`pyntpot.ink.pad`).
 
 Invariants: the reservoir and break channels exist only when the caller's `aux` carries the
