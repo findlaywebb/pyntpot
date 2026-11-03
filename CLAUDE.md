@@ -70,8 +70,9 @@ import-linter and `tests/architecture/`.
   randomised (`pytest-randomly`): an order-dependent failure means coupled state, so fix
   the coupling, never the order. Reproduce with the printed seed.
 - **Golden values are pinned literals**, never recomputed by the code under test on both
-  sides. Golden parity is exact locally; CI uses `--golden-tolerance`. Hypothesis
-  properties cover algorithmic invariants. `parametrize` carries `ids=`.
+  sides. Golden parity and the pinned plate hashes are exact on the pinning machine; CI
+  and any other machine use `--golden-tolerance`. Hypothesis properties cover
+  algorithmic invariants. `parametrize` carries `ids=`.
 
 ## Workflow
 
