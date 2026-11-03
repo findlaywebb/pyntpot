@@ -54,3 +54,45 @@ def test_a_line_that_only_touches_or_misses_the_box_has_no_piece() -> None:
     assert cut_line([(-5.0, 15.0), (5.0, 15.0)], BOX) == []
     assert cut_line([(-5.0, 5.0), (0.0, 0.0), (-5.0, -5.0)], BOX) == []
     assert cut_line([(1.0, 1.0)], BOX) == []
+
+
+def test_a_line_that_starts_wholly_outside_is_cut_where_it_comes_in() -> None:
+    """A first segment that misses the box is skipped, not the end of the line."""
+    assert cut_line([(-10.0, 5.0), (-5.0, 5.0), (5.0, 5.0)], BOX) == [[(0.0, 5.0), (5.0, 5.0)]]
+
+
+def test_a_two_point_piece_before_another_is_kept() -> None:
+    """A line that crosses a corner and comes back gives both its pieces, the first of two points."""
+    line = [(5.0, -5.0), (5.0, 5.0), (15.0, 5.0), (15.0, 8.0), (5.0, 8.0)]
+    assert cut_line(line, BOX) == [
+        [(5.0, 0.0), (5.0, 5.0), (10.0, 5.0)],
+        [(10.0, 8.0), (5.0, 8.0)],
+    ]
+    assert cut_line([(5.0, -5.0), (5.0, 15.0), (8.0, 15.0), (8.0, 5.0)], BOX) == [
+        [(5.0, 0.0), (5.0, 10.0)],
+        [(8.0, 10.0), (8.0, 5.0)],
+    ]
+
+
+def test_a_box_off_the_origin_cuts_on_its_own_edges() -> None:
+    """In a box from (2, 3) to (12, 13) a line through it is cut at x 2 and y 3."""
+    box = (2.0, 3.0, 12.0, 13.0)
+    assert cut_line([(-4.0, 8.0), (8.0, 8.0)], box) == [[(2.0, 8.0), (8.0, 8.0)]]
+    assert cut_line([(8.0, -4.0), (8.0, 8.0)], box) == [[(8.0, 3.0), (8.0, 8.0)]]
+    (west,) = cut_line([(-4.0, 2.0), (8.0, 14.0)], box)
+    assert west[0] == pytest.approx((2.0, 8.0))
+    (south,) = cut_line([(0.0, -3.0), (12.0, 9.0)], box)
+    assert south[0] == pytest.approx((6.0, 3.0))
+
+
+def test_a_line_along_or_just_inside_an_edge_is_kept() -> None:
+    """A segment lying on the box's edge, or half a unit inside it, is inside."""
+    assert cut_line([(0.0, 2.0), (0.0, 8.0)], BOX) == [[(0.0, 2.0), (0.0, 8.0)]]
+    assert cut_line([(0.5, 2.0), (0.5, 8.0)], BOX) == [[(0.5, 2.0), (0.5, 8.0)]]
+
+
+def test_a_short_segment_is_cut_like_a_long_one() -> None:
+    """A segment under a unit long is kept inside and cut where it crosses an edge."""
+    assert cut_line([(5.0, 5.0), (5.5, 5.0)], BOX) == [[(5.0, 5.0), (5.5, 5.0)]]
+    (piece,) = cut_line([(9.8, 5.0), (10.3, 5.0)], BOX)
+    assert piece == [(9.8, 5.0), (10.0, 5.0)]

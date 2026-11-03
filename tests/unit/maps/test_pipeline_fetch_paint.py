@@ -24,8 +24,9 @@ from support.basemaps import tiny_basemap, tiny_style
 from support.paths import FIXTURE_DIR, KEY
 from support.providers import OSM_CREDIT, SRTM_CREDIT, FixtureElevation, FixtureFeatures
 
-#: The base hash of the regenerated golden `plates.json`.
-GOLDEN_HASH = "340a7f6e260ee1e2-d9c56c0811177b0f"
+#: The base hash of the regenerated golden `plates.json`; its first half moved with ADR 0062,
+#: when the card's rivers were cut at the card's edge.
+GOLDEN_HASH = "eb86b256459e2f0f-d9c56c0811177b0f"
 
 #: The first three points of the drawn route, taken once from the compose step.
 FIRST_STRANDS = (
