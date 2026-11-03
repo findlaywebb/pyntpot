@@ -1,0 +1,80 @@
+{
+  "before": "/tmp/claude-0/-home-user-pyntpot/1d79c270-6236-5bf4-82b6-e519237905dd/scratchpad/g46/before",
+  "after": "/tmp/claude-0/-home-user-pyntpot/1d79c270-6236-5bf4-82b6-e519237905dd/scratchpad/g46/after",
+  "channel_delta": 2,
+  "max_differing_fraction": 0.005,
+  "files": [
+    {
+      "path": "docs/images/hero.webp",
+      "status": "changed",
+      "width": 1200,
+      "height": 854,
+      "changed_fraction": 0.3891198282591725,
+      "over_bound": true,
+      "max_delta": 95,
+      "box": [
+        0,
+        0,
+        1200,
+        854
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/hero.webp.diff.png",
+      "crop_image": "docs/images/hero.webp.crop.png"
+    },
+    {
+      "path": "docs/images/social-preview.jpg",
+      "status": "changed",
+      "width": 1280,
+      "height": 640,
+      "changed_fraction": 0.272315673828125,
+      "over_bound": true,
+      "max_delta": 93,
+      "box": [
+        0,
+        0,
+        1280,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/social-preview.jpg.diff.png",
+      "crop_image": "docs/images/social-preview.jpg.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/hero.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.235453216374269,
+      "over_bound": true,
+      "max_delta": 92,
+      "box": [
+        0,
+        0,
+        240,
+        171
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/hero.png.diff.png",
+      "crop_image": "tests/golden/docs/hero.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/social-preview.png",
+      "status": "changed",
+      "width": 240,
+      "height": 120,
+      "changed_fraction": 0.2046875,
+      "over_bound": true,
+      "max_delta": 97,
+      "box": [
+        0,
+        0,
+        240,
+        120
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/social-preview.png.diff.png",
+      "crop_image": "tests/golden/docs/social-preview.png.crop.png"
+    }
+  ]
+}
