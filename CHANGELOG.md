@@ -3,6 +3,67 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - 2026-11-03
+
+Mostly fixes from the round of map critiques after 0.1.0: names keep off the water and the
+route, rivers and coasts run cleanly to the card edge, retraced legs and small cover
+patches no longer clutter a map, and painting is about twice as fast. Every painted image
+differs from 0.1.0.
+
+### Breaking changes
+
+- Every painted image differs from 0.1.0. Each ring, stroke and bloom draws from a random
+  generator of its own, keyed to what it paints, so changing one mark no longer moves the
+  others; the map fixes below move pixels and label positions too.
+- A route has one ink. `Style.route_inks` and the `route_ink()` method are replaced by the
+  field `Style.route_ink`, which holds only the keys the compose step reads. A theme that
+  names a route casing, glow, shadow or an `effect` table is rejected when it loads.
+- The default ink token "map" is renamed "label". A caller's "map" token still paints in the
+  label ink.
+- A retraced leg of the route is drawn as one stroke, not two lines side by side (ADR 0057).
+  `strand_gap_px` is now `strand_merge_px`, and `separate_strands` is now `merge_strands`.
+
+### Added
+
+- A theme's `[cover] min_patch_px` folds cover patches smaller than it into their largest
+  painted neighbour, so a map is not speckled with slivers of wood and field (ADR 0054).
+- A leader's pin is an open ring facing its leader, so the ring and its line read as one
+  mark rather than a dot with a line attached (ADR 0067).
+
+### Changed
+
+- Painting skips the work on empty pixels: the Lynmouth card paints in 22 s instead of 56 s
+  and peaks at 926 MB instead of 1688 MB, with the same pixels.
+- Opaque lossless plates are written at WebP method 1: the same pixels, slightly smaller
+  files at map size (ADR 0043).
+
+### Fixed
+
+- Names keep off the water. A flat name is measured with its kind's letter spacing, a river
+  or road name with no room on the paper is dropped, and flat names, the leader swap and
+  names set along a river are all priced for the water under their letters.
+- A leader is priced for crossing the route past its pin, so leaders no longer cut across
+  the route.
+- A landmark name too long to letter ranks after the names that fit.
+- The backing wash behind a name fades out from the letters, with no pale box round it.
+- The letters D, Q and 3 keep their tails, and 8 is written through its waist.
+- A glyph's width no longer flickers along a name, because the nib's direction is smoothed.
+- A reloaded nib swells back instead of stepping, and a pen lays its set-down blot only on
+  its own stroke. A thin pen keeps its blot, fading out as the pen widens past 2.5 px.
+- An organic brush's drift no longer shifts a short stroke sideways, so a small "o" keeps
+  its counter open.
+- Blooms spread over a wash instead of sitting along its rim.
+- Rivers run to the card edge without a blot where they come in, and a stroke that enters
+  at the plate's edge is not set down with a load and a blot.
+- The coast is cut where it crosses the card edge, so a mainland whose coast points are far
+  apart (beside Skye) is land, not sea.
+- Each land cover class is filled as the union of its rings, so an inner ring wound against
+  its outer one (Christ Church Meadow) no longer cuts a hole.
+- Colleges and other education land are painted as built ground, with their quads and
+  gardens kept green.
+- Streams are kept whole, unnamed ways that continue each other are joined before being kept
+  or dropped, and short loose strokes are dropped (ADR 0058).
+
 ## [0.1.0] - 2026-10-26
 
 The first release meant for general use. pyntpot paints hand-drawn watercolour and
@@ -98,6 +159,7 @@ A second pre-release candidate for the upstream consumer's migration: the candid
 A pre-release candidate for the upstream consumer's migration (P8 of the port plan). Not
 for general use; 0.1.0 is the first release.
 
+[0.2.0]: https://github.com/findlaywebb/pyntpot/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/findlaywebb/pyntpot/compare/v0.0.2...v0.1.0
 [0.0.2]: https://github.com/findlaywebb/pyntpot/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/findlaywebb/pyntpot/releases/tag/v0.0.1
