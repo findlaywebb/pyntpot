@@ -1,6 +1,6 @@
 {
-  "before": "/tmp/claude-0/-home-user-pyntpot/1d79c270-6236-5bf4-82b6-e519237905dd/scratchpad/g46/before",
-  "after": "/tmp/claude-0/-home-user-pyntpot/1d79c270-6236-5bf4-82b6-e519237905dd/scratchpad/g46/after",
+  "before": "origin/main",
+  "after": "working tree",
   "channel_delta": 2,
   "max_differing_fraction": 0.005,
   "files": [
@@ -9,9 +9,9 @@
       "status": "changed",
       "width": 1200,
       "height": 854,
-      "changed_fraction": 0.3891198282591725,
+      "changed_fraction": 0.34587529274004686,
       "over_bound": true,
-      "max_delta": 95,
+      "max_delta": 91,
       "box": [
         0,
         0,
@@ -27,9 +27,9 @@
       "status": "changed",
       "width": 1280,
       "height": 640,
-      "changed_fraction": 0.272315673828125,
+      "changed_fraction": 0.202947998046875,
       "over_bound": true,
-      "max_delta": 93,
+      "max_delta": 95,
       "box": [
         0,
         0,
@@ -45,9 +45,9 @@
       "status": "changed",
       "width": 240,
       "height": 171,
-      "changed_fraction": 0.235453216374269,
+      "changed_fraction": 0.18118908382066276,
       "over_bound": true,
-      "max_delta": 92,
+      "max_delta": 97,
       "box": [
         0,
         0,
@@ -63,9 +63,9 @@
       "status": "changed",
       "width": 240,
       "height": 120,
-      "changed_fraction": 0.2046875,
+      "changed_fraction": 0.13545138888888889,
       "over_bound": true,
-      "max_delta": 97,
+      "max_delta": 96,
       "box": [
         0,
         0,
