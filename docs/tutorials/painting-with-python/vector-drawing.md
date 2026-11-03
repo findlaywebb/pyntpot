@@ -73,7 +73,8 @@ is the drawing you are about to paint.
 *Painted by `examples/svg_drawing.py`, figure washes.*
 
 A filled path is a mask. The script draws its points with Pillow's `ImageDraw.polygon`
-onto a greyscale image and hands that array to `wash`, as the rungs handed it a disc. The
+onto a greyscale image and hands that array to `wash`, as
+[Lay a wash](../paint-a-watercolour.md#lay-a-wash) handed it a disc. The
 `fill` colour picks the pigment. The script takes the nearest colour in `PIGMENTS` and
 `PAINTERS_PIGMENTS`, so `#bfd2cd` is `wetland`, `#9ec4de` is `water` and `#4f7d36` is
 `sap_green`.
@@ -117,3 +118,12 @@ paper. The lines sit on the pigment.
 - Change a `fill` to `#dcd6c6` and the shape takes `rock`.
 - Change the oak's `fill` to `#2b3d8f` and it takes `ultramarine`, which makes a blue tree.
 - Give a stroke a new `class` and add a pen to `PENS`.
+
+## Where next
+
+- [Paint your own shapes](../../how-to/paint-your-own-shapes.md) turns shapes of your own
+  into washes and ink.
+- [Pigments](../../reference/pigments.md) lists the keys of `PIGMENTS`, one of the two tables a
+  `fill` colour is matched against.
+
+Next: [the how-to guides](../../how-to/index.md), each one task done with the engine.

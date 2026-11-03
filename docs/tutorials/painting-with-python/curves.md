@@ -200,7 +200,8 @@ def _paint_spirograph(
 *Painted by `examples/curves.py` (seed 5, `figure="lissajous"`).*
 
 The Lissajous figure is a technical figure, and the pen keeps it one. The pen is the
-narrow nib of brush `MAJ6-e`, as in the nib line rung. `stamp` sets the nib's bristles
+narrow nib of brush `MAJ6-e`, as in
+[Take up the pen](../paint-a-watercolour.md#take-up-the-pen). `stamp` sets the nib's bristles
 along the curve's 4000 points into an accumulator. `ink_density` turns the accumulator
 into ink on the paper's tooth. `composite` lays the ink over the painted paper in the
 ink colour the brush came with.
@@ -230,3 +231,12 @@ Change the `14.0` in `_paint_rose` to `6.0` for a finer outline. Change the `0.0
 `drift` to `0.02` for a wash that wanders further from its stroke.
 Change 3 and 2 in `lissajous` to 5 and 4 for a denser knot.
 Change `"TRK3-a"` in `_paint_spirograph` to `"RIV2-a"` for a line that does not run so dry.
+
+## Where next
+
+- [The hand and the nib](../../explanation/the-hand-and-the-nib.md) explains the nib the
+  Lissajous figure is drawn with.
+- [Brushes](../../reference/brushes.md) lists every brush id, such as `MAJ6-e` and
+  `TRK3-a`, that `brush_from_id` takes.
+
+Next: [Symmetry](symmetry.md), one motif washed and inked, then repeated by mirror and rotation.

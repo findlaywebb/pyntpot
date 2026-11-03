@@ -6,9 +6,9 @@
 
 You have painted a paper, a wash, a brush, two pigments, a pen and a hand. Now you
 paint real country. You give the script a GPX track. It gets the roads, rivers, woods
-and heights round the route. Then it lays the paper and washes, pulls the brushes, takes
+and heights round the track. Then it lays the paper and washes, pulls the brushes, takes
 up the pen and letters the names, in the order you have just learned. The result is a
-card: one painted picture of one walk.
+map: one painted picture of one walk.
 
 The painting has nothing new in it. The shapes now come from OpenStreetMap data and
 from an elevation grid. The engine also has to decide where each name can sit.
@@ -25,9 +25,9 @@ directory:
 
 | File | What it holds |
 | --- | --- |
-| `track.gpx` | The route: a loop of about nine kilometres from Ambleside up Loughrigg Fell, east past Rydal Cave and along Rydal Water, and back beside the Rothay. It was made for the repository and follows public paths; it records nobody's walk. |
-| `overpass-f0a137ce97afcb43.json` | The map features round the route, as OpenStreetMap's Overpass service returned them. |
-| `landcover-f0a137ce97afcb43.json` | The land cover round the route, from the same service. |
+| `track.gpx` | The track: a loop of about nine kilometres from Ambleside up Loughrigg Fell, east past Rydal Cave and along Rydal Water, and back beside the Rothay. It was made for the repository and follows public paths; it records nobody's walk. |
+| `overpass-f0a137ce97afcb43.json` | The map features round the track, as OpenStreetMap's Overpass service returned them. |
+| `landcover-f0a137ce97afcb43.json` | The land cover round the track, from the same service. |
 | `elevation-f0a137ce97afcb43.json` | The heights, as OpenTopoData returned them. |
 
 Copy the directory to `ambleside` in the top directory of your clone:
@@ -56,7 +56,7 @@ INFO:__main__:wrote out/map.png
 
 The contact is a placeholder here. The command line asks for one on every run because
 the public servers see it when you fetch from them. This run fetches nothing, so nothing
-is sent. The first run takes about a minute, because it paints every plate of the card.
+is sent. The first run takes about a minute, because it paints every plate of the map.
 The cache keeps the plates in a `plates` directory beside the payloads. A later run reads
 them instead of painting again.
 
@@ -73,17 +73,17 @@ def main(
     features: OverpassFeatures,
     elevation: OpenTopoData,
 ) -> Path:
-    """Fetch what the cache lacks for a track, paint, letter and compose it, and save the card.
+    """Fetch what the cache lacks for a track, paint, letter and compose it, and save the map.
 
     Args:
         out_dir: Where `map.png` is written; created when missing.
-        track: The GPX file of the route.
+        track: The GPX file of the track.
         cache_dir: The fetch cache: provider payloads, and the plates painted from them.
         features: The map feature and land cover provider.
         elevation: The elevation provider.
 
     Returns:
-        The path of the saved card, `out_dir / "map.png"`.
+        The path of the saved map, `out_dir / "map.png"`.
     """
     route = Track.from_gpx(track)
     cache = Cache(cache_dir)
@@ -101,13 +101,13 @@ def main(
 
 It has four stages:
 
-1. `Track.from_gpx` reads the route.
+1. `Track.from_gpx` reads the track.
 2. `fetch` builds the basemap. It asks the cache first, and the providers only for what
    the cache lacks: `OverpassFeatures` for the features and land cover, `OpenTopoData`
    for the elevation.
 3. `paint` lays the paper, the washes and the pen plates in the `Style.default()` look.
    `letter` places the names and writes them with the hand.
-4. `compose` stacks the plates and the lettering into one card, with the credit the data's
+4. `compose` stacks the plates and the lettering into one map, with the credit the data's
    licences ask for drawn at its foot.
 
 ### What to notice
@@ -122,10 +122,10 @@ It has four stages:
   "Loughrigg Fell" and "St Mary's". "Rothay" and "Brathay" follow the curve of their
   rivers. "A591" sits beside its road. Each name goes where placing it costs least, which
   keeps it clear of the route where it can.
-- At the foot, small lettering credits OpenStreetMap, whose data the card is made from.
+- At the foot, small lettering credits OpenStreetMap, whose data the map is made from.
 
 **Try changing** the command to the one the package installs. It reads the same cache,
-finds the plates already painted, says so and writes the card in a few seconds:
+finds the plates already painted, says so and writes the map in a few seconds:
 
 ```console
 $ uv run pyntpot map ambleside/track.gpx -o out/ambleside.png --cache ambleside/ --contact you@example.org
@@ -153,9 +153,9 @@ $ uv run pyntpot map my-walk.gpx -o out/my-walk.png --cache cache/ --contact "yo
 ```
 
 Replace `you@example.org` with your own contact. The command fills `cache/` with the
-payloads your track lacks, then paints, letters and writes the card. Run it a second
+payloads your track lacks, then paints, letters and writes the map. Run it a second
 time and nothing is fetched. `--style` takes a TOML theme for another look.
-`--no-attribution` leaves the credit off the card. If you publish the card, leave the
+`--no-attribution` leaves the credit off the map. If you publish the map, leave the
 credit on.
 
 If you prefer the script, it takes the same pieces in the same order:
@@ -168,8 +168,41 @@ The script reads your track from the file you give and copies it nowhere. The tw
 public servers see the box your track covers, with a margin, and your contact. They do
 not see the track itself.
 
+## Paint it in the Ambleside theme
+
+The map above is in the `Style.default()` look. A theme gives it another, and a place
+gives it its landmarks. From the top of the repository:
+
+```console
+$ uv run python examples/place_card.py ambleside/track.gpx ambleside/ out/ you@example.org --theme examples/themes/ambleside.toml --place ambleside --size 720
+```
+
+The theme, `examples/themes/ambleside.toml`, sets the look: the paper, the washes, the
+brushes, the route ink and the hand. `--place ambleside` letters the landmarks
+`examples/places.toml` holds for Ambleside, such as Loughrigg Terrace and Bridge House,
+as well as the names the lettering picks itself. The map looks like the picture below.
+The README's picture is the same map at 1200 pixels wide, in
+`examples/themes/ambleside-hero.toml`.
+
+![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes and a maroon route looping from the town out to Loughrigg Terrace, lettered Ambleside, Grasmere, Rydal Water, Loughrigg Terrace, Loughrigg Fell and Bridge House](../images/places/ambleside.webp)
+
+*Painted by `examples/place_card.py` in `examples/themes/ambleside.toml`, with the landmarks of `examples/places.toml`.*
+
 ## Where next
 
-The card is the engine's first application, and every layer of it is one you have
+The map is the engine's first application, and every layer of it is one you have
 already used. Open `examples/route_map.py` beside `examples/composition.py`. They are
 the same work at two scales.
+
+- [Write a theme](../how-to/write-a-theme.md) to give the map a look of your own.
+- [Letter your own landmarks](../how-to/letter-your-own-landmarks.md) to name the fells,
+  bridges and bakeries on your walk.
+- [Change the route ink](../how-to/change-the-route-ink.md) to draw the route in another
+  pen or colour.
+- [Work offline and reuse the cache](../how-to/work-offline-and-reuse-the-cache.md) to
+  paint again without fetching.
+- [Map from the command line](../how-to/map-from-the-command-line.md) for every option
+  `pyntpot map` takes.
+- [Style fields](../reference/style-fields.md) lists every field a theme can set.
+
+Next: [Painting with Python](painting-with-python/index.md), pictures made with the same engine that are not maps.
