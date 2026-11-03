@@ -169,3 +169,33 @@ class TestMarks:
         """Turning a mark's backing wash off changes what is written under it."""
         washed = _plate([Mark(STROKE)], tmp_path / "a.webp")
         assert _plate([Mark(STROKE, wash=False)], tmp_path / "b.webp") != washed
+
+
+#: The brush the map paints its labels with: organic, so the bristles drift on a lattice.
+ORGANIC = BrushStyle(brush_organic=True, pen_starve=True, stroke_smooth=True)
+
+
+def _bowl(cx: float, cy: float, rx: float, ry: float) -> list[tuple[float, float]]:
+    """A closed oval of 124 points, an "o" as the hand writes it, starting at its foot."""
+    turns = np.linspace(0.0, 2.0 * math.pi, 124)
+    return [(cx + rx * math.sin(a), cy + ry * math.cos(a)) for a in turns]
+
+
+class TestCounters:
+    """A small closed letter keeps its counter open, whatever the label seed draws."""
+
+    def test_a_small_o_keeps_an_open_counter_across_seeds(self, tmp_path: Path) -> None:
+        """A 20 px "o" at scale 2 leaves the middle of its bowl near bare for 400 label seeds."""
+        rx, ry = 2.64, 3.72
+        surface = _surface(64, 64, 2.0)
+        mark = Mark(_bowl(16.0, 16.0, rx, ry), size=20.0, pen=-0.09, wash=False)
+        yy, xx = np.mgrid[0:64, 0:64] + 0.5
+        core = ((xx - 32.0) / (2.0 * rx)) ** 2 + ((yy - 32.0) / (2.0 * ry)) ** 2 < 0.25
+        worst = 0.0
+        for seed in range(400):
+            groups = NibGroups(NibStyle(), FaceStyle(), HandStyle(seed), ORGANIC, PaperStyle())
+            written = nib_plate([mark], surface, groups, tmp_path / "o.webp")
+            assert written is not None
+            alpha = np.asarray(Image.open(written).getchannel("A"), np.float32) / 255.0
+            worst = max(worst, float(alpha[core].mean()))
+        assert worst < 0.4, f"the bowl's middle is {worst:.2f} inked: the counter closed"
