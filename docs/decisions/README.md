@@ -63,4 +63,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0059 | The organic drift is rescaled about its own mean: a golden regeneration |
 | 0060 | The pen's set-down blot stays on its stroke: a golden regeneration |
 | 0061 | A reloaded nib swells back: a golden regeneration |
-| 0067 | A pin ring is sized round its hole: a golden regeneration |
+| 0067 | A leader's pin is an open ring facing its leader: a golden regeneration |

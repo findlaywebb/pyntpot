@@ -91,8 +91,8 @@ def mark_width_px(nib: NibStyle, role: str, size: float, *, outline: bool = Fals
 
     A glyph takes the lettering pen and every other role the leader pen, each
     scaled from the style's type size to the mark's and weighted by its role's
-    `MARK_WEIGHT`. A caller drawing furniture round a hole (a pin's ring) reads
-    the width here, so the hole is sized from the pen that will draw it.
+    `MARK_WEIGHT`. A caller sizing furniture from the pens that draw it (the
+    gap a leader passes through in its pin's ring) reads the widths here.
 
     Args:
         nib: The nib style, for the pens and the type size they are set at.

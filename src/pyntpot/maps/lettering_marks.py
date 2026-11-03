@@ -43,7 +43,14 @@ from pyntpot.maps.lettering.label import (
     Span,
 )
 from pyntpot.maps.lettering.placement_lift import lift_baseline, offset_line
-from pyntpot.maps.lettering_furniture import leader, pin, underline
+from pyntpot.maps.lettering_furniture import (
+    leader,
+    leader_angle,
+    pin,
+    pin_gap_px,
+    pin_radius,
+    underline,
+)
 from pyntpot.maps.lettering_window import baseline
 from pyntpot.maps.style import Style
 
@@ -113,8 +120,8 @@ def marks(hand: Hand, placed: Sequence[Label], spans: Sequence[Span], nib: NibSt
         hand: The hand that writes and wanders every mark.
         placed: The placed labels, in the order they claimed their boxes.
         spans: The placed spans, whose lines and ticks are drawn too.
-        nib: The nib the marks will be stroked with, for the pen width a pin's
-            ring is sized round.
+        nib: The nib the marks will be stroked with, for the pen widths a
+            pin's gap is sized from.
 
     Returns:
         The marks, spans first, in the order they are laid down.
@@ -158,7 +165,7 @@ def label_marks(hand: Hand, lb: Label, nib: NibStyle) -> list[Mark]:
 
     `lb.lift` is which side of its own baseline a curved name sits on: above it
     for a river or a road, outboard of the route for a span. `nib` is the nib
-    the marks will be stroked with: a pin's ring is sized round its pen.
+    the marks will be stroked with: a pin's gap is sized from its pens.
     """
     rng = hand.generator(_crc(lb.name, round(lb.px, 1), round(lb.py, 1)))
     track = KIND_TRACKING.get(lb.kind, 0.0)
@@ -228,10 +235,18 @@ def _furniture(
     A span never takes a leader. Its name sits in clear paper beside its own
     bracket, and a connector between two marks a reader can already see belong
     together is one more line on a card that has enough.
+
+    The leader is drawn first, so the pin's ring opens where the wandered
+    leader reaches it: the gap faces the leader and is as wide as `pin_gap_px`
+    gives for the nib's `leader` and `pin` pens at the name's size.
     """
-    if not lb.leader or lb.kind in NO_LEADER or lb.tier == TIER_SPAN:
+    ends = lb.leader
+    if not ends or lb.kind in NO_LEADER or lb.tier == TIER_SPAN:
         return []
-    ring_px = mark_width_px(nib, "pin", lb.size)
-    ring = Mark(pts=pin(hand, lb, rng, ring_px), role="pin", ink=ink, size=lb.size)
-    line = Mark(pts=leader(hand, lb, rng, ring_px), role="leader", ink=ink, size=lb.size)
-    return [ring, line]
+    line = leader(hand, ends, rng)
+    gap = pin_gap_px(mark_width_px(nib, "leader", lb.size), mark_width_px(nib, "pin", lb.size))
+    ring = pin(hand, lb, rng, gap_at=leader_angle(line, (lb.px, lb.py), pin_radius(lb)), gap_px=gap)
+    return [
+        Mark(pts=ring, role="pin", ink=ink, size=lb.size),
+        Mark(pts=line, role="leader", ink=ink, size=lb.size),
+    ]

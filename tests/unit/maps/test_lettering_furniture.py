@@ -1,20 +1,30 @@
-"""Tests for the furniture beside a name: a pin ring keeps its hole whatever the seed draws."""
+"""Tests for the furniture beside a name: a leader's pin is an open ring facing its leader."""
 
+import itertools
 import math
-from pathlib import Path
 
 import numpy as np
 import pytest
-from PIL import Image
 
-from pyntpot.ink.sheet import Canvas
+from pyntpot.ink.polyline import Pt
 from pyntpot.letters.hand import Hand
-from pyntpot.letters.nib import NibSurface, mark_width_px, nib_plate
-from pyntpot.letters.setting import Mark
-from pyntpot.letters.style import HandStyle, NibGroups
+from pyntpot.letters.nib import mark_width_px
+from pyntpot.maps import lettering_marks
 from pyntpot.maps.lettering.label import Label
-from pyntpot.maps.lettering_furniture import PIN_HOLE_MIN_PX, leader, pin
+from pyntpot.maps.lettering_furniture import (
+    leader,
+    leader_angle,
+    pin,
+    pin_gap_px,
+    pin_radius,
+)
 from pyntpot.maps.style import Style
+
+#: The Lynton and Exmoor Museum's pin, in display pixels on a card.
+MUSEUM = (412.0, 268.0)
+
+#: How many directions round the pin a leader is sent in.
+TURNS = 72
 
 
 @pytest.fixture(scope="module")
@@ -23,123 +33,167 @@ def style() -> Style:
     return Style.default()
 
 
-class TestPinRing:
-    """A pin is a ring the leader points at, never a filled dot."""
+@pytest.fixture(scope="module")
+def hand(style: Style) -> Hand:
+    """The default style's hand, opened once: it is never changed."""
+    return Hand(style.face, style.hand)
 
-    def test_a_pin_ring_keeps_an_open_hole_across_seeds(self, style: Style, tmp_path: Path) -> None:
-        """A pin at the shipped type size, weight and brush stays near bare inside for 400 seeds."""
-        hand = Hand(style.face, style.hand)
-        size = style.nib.label_size_px
-        side = 48
-        surface = NibSurface(
-            Canvas(0.0, 0.0, side, side, side, side),
-            2.0,
-            np.full((side, side), 0.35, np.float32),
-            6.0,
-        )
-        pen = mark_width_px(style.nib, "pin", size)
-        label = Label("Lynton and Exmoor Museum", px=12.0, py=12.0, size=size)
-        yy, xx = np.mgrid[0:side, 0:side] + 0.5
-        worst = 0.0
-        for seed in range(400):
-            pts = pin(hand, label, np.random.default_rng(seed), pen)
-            xs = [x for x, _y in pts]
-            radius = (max(xs) - min(xs)) / 2.0 * surface.scale
-            core = (xx - 24.0) ** 2 + (yy - 24.0) ** 2 < (radius / 2.0) ** 2
-            groups = NibGroups(style.nib, style.face, HandStyle(seed), style.brush, style.paper)
-            mark = Mark(pts, role="pin", size=size, wash=False)
-            written = nib_plate([mark], surface, groups, tmp_path / "pin.webp")
-            assert written is not None
-            alpha = np.asarray(Image.open(written).getchannel("A"), np.float32) / 255.0
-            worst = max(worst, float(alpha[core].mean()))
-        assert worst < 0.4, f"the ring's middle is {worst:.2f} inked: the pin closed into a dot"
 
-    @pytest.mark.parametrize(
-        ("size", "radius"),
-        [(11.0, 3.150625), (20.0, 3.4375), (40.0, 6.875)],
-        ids=["small-on-the-floor", "shipped", "large-from-the-size"],
-    )
-    def test_the_ring_sits_half_its_pen_outside_its_hole(
-        self, style: Style, size: float, radius: float
+def _pinned(turn: float, size: float = 20.0, run: float = 40.0) -> Label:
+    """The museum's label, its leader running `run` px from the pin in direction `turn`."""
+    px, py = MUSEUM
+    name = (px + run * math.cos(turn), py + run * math.sin(turn))
+    return Label("Lynton and Exmoor Museum", px=px, py=py, size=size, leader=(MUSEUM, name))
+
+
+def _furniture(hand: Hand, style: Style, label: Label) -> tuple[list[Pt], list[Pt]]:
+    """The pin's and the leader's points as `label_marks` draws them for the default nib."""
+    marks = lettering_marks.label_marks(hand, label, style.nib)
+    ring = [m.pts for m in marks if m.role == "pin"]
+    line = [m.pts for m in marks if m.role == "leader"]
+    assert len(ring) == len(line) == 1
+    return ring[0], line[0]
+
+
+def _gap_bisector(ring: list[Pt]) -> float:
+    """The direction from the pin's centre to the middle of the chord across its gap."""
+    (x0, y0), (x1, y1) = ring[0], ring[-1]
+    return math.atan2((y0 + y1) / 2 - MUSEUM[1], (x0 + x1) / 2 - MUSEUM[0])
+
+
+def _turn_apart(a: float, b: float) -> float:
+    """The smallest angle between two directions, in radians."""
+    return abs((a - b + math.pi) % math.tau - math.pi)
+
+
+def _segment_gap(p: Pt, a: Pt, b: Pt) -> float:
+    """The distance from a point to a segment."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / ((dx * dx + dy * dy) or 1.0)
+    t = min(max(t, 0.0), 1.0)
+    return math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy)
+
+
+def _clearance(line: list[Pt], ring: list[Pt]) -> float:
+    """The closest the leader's centreline comes to the arc's, checked both ways."""
+    one = min(_segment_gap(p, a, b) for p in line for a, b in itertools.pairwise(ring))
+    two = min(_segment_gap(p, a, b) for p in ring for a, b in itertools.pairwise(line))
+    return min(one, two)
+
+
+class TestOpenPin:
+    """A leader's pin is a ring with a gap, turned so the leader comes in through it."""
+
+    @pytest.mark.parametrize("size", [11.0, 20.0, 40.0], ids=["small", "shipped", "large"])
+    def test_the_gap_faces_the_leader_at_every_angle(
+        self, hand: Hand, style: Style, size: float
     ) -> None:
-        """The ring starts, where the wander leaves it, at the pinned radius for its size and pen."""
-        hand = Hand(style.face, style.hand)
-        pen = mark_width_px(style.nib, "pin", size)
-        label = Label("Lynton and Exmoor Museum", px=0.0, py=0.0, size=size)
-        pts = pin(hand, label, np.random.default_rng(0), pen)
-        assert pts[0] == pytest.approx((radius, 0.0))
-        assert pts[0][0] - pen / 2.0 >= PIN_HOLE_MIN_PX
+        """Over 72 leader directions the gap is centred where the leader leaves the ring, near its name's direction."""
+        for i in range(TURNS):
+            turn = i * math.tau / TURNS - math.pi
+            ring, line = _furniture(hand, style, _pinned(turn, size))
+            crossing = leader_angle(line, MUSEUM, pin_radius(_pinned(turn, size)))
+            assert _turn_apart(_gap_bisector(ring), crossing) < 1e-6
+            assert _turn_apart(_gap_bisector(ring), turn) < math.radians(20.0)
 
-    def test_a_wider_pen_draws_a_wider_ring_round_the_same_hole(self, style: Style) -> None:
-        """Doubling the pen moves the ring out by half the extra width, keeping the hole."""
-        hand = Hand(style.face, style.hand)
-        label = Label("Lynton and Exmoor Museum", px=0.0, py=0.0, size=20.0)
-        thin = pin(hand, label, np.random.default_rng(3), 1.0)
-        thick = pin(hand, label, np.random.default_rng(3), 2.0)
-        assert thick != thin
-        assert max(x for x, _y in thick) > max(x for x, _y in thin)
-
-
-class TestLeaderAtThePin:
-    """A leader meets its pin at the ring's outer edge and never crosses the hole."""
-
-    @pytest.mark.parametrize("size", [11.0, 14.0, 20.0, 23.0], ids=["11px", "14px", "20px", "23px"])
-    def test_a_pin_with_its_leader_keeps_an_open_hole_across_seeds(
-        self, style: Style, tmp_path: Path, size: float
+    @pytest.mark.parametrize("size", [11.0, 20.0, 40.0], ids=["small", "shipped", "large"])
+    def test_the_leader_passes_through_the_gap_clear_of_the_arc(
+        self, hand: Hand, style: Style, size: float
     ) -> None:
-        """A pin and its leader, stroked together, stay near bare inside the ring for 400 seeds."""
-        hand = Hand(style.face, style.hand)
-        side = 48
-        surface = NibSurface(
-            Canvas(0.0, 0.0, side, side, side, side),
-            2.0,
-            np.full((side, side), 0.35, np.float32),
-            6.0,
-        )
-        pen = mark_width_px(style.nib, "pin", size)
-        yy, xx = np.mgrid[0:side, 0:side] + 0.5
-        worst = 0.0
-        for seed in range(400):
-            turn = seed * 2.4
-            ends = ((12.0, 12.0), (12.0 + 10.0 * math.cos(turn), 12.0 + 10.0 * math.sin(turn)))
-            label = Label("Lynton and Exmoor Museum", px=12.0, py=12.0, size=size, leader=ends)
-            rng = np.random.default_rng(seed)
-            ring = pin(hand, label, rng, pen)
-            line = leader(hand, label, rng, pen)
-            xs = [x for x, _y in ring]
-            radius = (max(xs) - min(xs)) / 2.0 * surface.scale
-            core = (xx - 24.0) ** 2 + (yy - 24.0) ** 2 < (radius / 2.0) ** 2
-            groups = NibGroups(style.nib, style.face, HandStyle(seed), style.brush, style.paper)
-            pair = [
-                Mark(ring, role="pin", size=size, wash=False),
-                Mark(line, role="leader", size=size, wash=False),
-            ]
-            written = nib_plate(pair, surface, groups, tmp_path / "pin.webp")
-            assert written is not None
-            alpha = np.asarray(Image.open(written).getchannel("A"), np.float32) / 255.0
-            worst = max(worst, float(alpha[core].mean()))
-        assert worst < 0.4, f"the ring's middle is {worst:.2f} inked: the leader filled the pin"
+        """Over 72 directions the leader's ink and the arc's ink never touch, with a bristle's 0.55 px jitter spare."""
+        leader_px = mark_width_px(style.nib, "leader", size)
+        ring_px = mark_width_px(style.nib, "pin", size)
+        touch = (leader_px + ring_px) / 2 + 0.55
+        worst = math.inf
+        for i in range(TURNS):
+            ring, line = _furniture(hand, style, _pinned(i * math.tau / TURNS, size))
+            worst = min(worst, _clearance(line, ring))
+        assert worst > touch, f"the leader comes {worst:.2f} px from the arc"
 
-    @pytest.mark.parametrize(
-        ("size", "start"),
-        [(11.0, 3.50125), (20.0, 4.075), (40.0, 8.15)],
-        ids=["small-on-the-floor", "shipped", "large-from-the-size"],
-    )
-    def test_the_leader_starts_at_the_rings_outer_edge(
-        self, style: Style, size: float, start: float
-    ) -> None:
-        """Before the wander, the leader leaves the pin's centre a hole and a whole pen away."""
-        hand = Hand(style.face, style.hand)
-        pen = mark_width_px(style.nib, "pin", size)
-        ends = ((0.0, 0.0), (30.0, 0.0))
-        label = Label("Lynton and Exmoor Museum", px=0.0, py=0.0, size=size, leader=ends)
-        pts = leader(hand, label, np.random.default_rng(0), pen)
-        assert pts[0] == pytest.approx((start, 0.0))
-        assert pts[-1] == pytest.approx((30.0, 0.0))
+    def test_the_leader_runs_from_the_pins_centre_to_the_name(self, hand: Hand) -> None:
+        """The leader starts on the ring's centre, inside it, and ends on its name."""
+        label = _pinned(0.0)
+        assert label.leader is not None
+        line = leader(hand, label.leader, np.random.default_rng(0))
+        assert line[0] == pytest.approx(MUSEUM)
+        assert line[-1] == pytest.approx((452.0, 268.0))
 
-    def test_a_label_without_a_leader_is_refused(self, style: Style) -> None:
-        """Asking for the leader of a name that has none is an error, not a stroke from nowhere."""
-        hand = Hand(style.face, style.hand)
-        label = Label("Lynton and Exmoor Museum", px=0.0, py=0.0, size=20.0)
-        with pytest.raises(ValueError, match="no leader"):
-            leader(hand, label, np.random.default_rng(0), 1.0)
+    def test_the_gap_is_the_leaders_pen_two_ring_pens_and_the_bristles(self, style: Style) -> None:
+        """At the shipped size the gap is 0.612 + 2 x 1.275 + 1.1 px across."""
+        leader_px = mark_width_px(style.nib, "leader", 20.0)
+        ring_px = mark_width_px(style.nib, "pin", 20.0)
+        assert pin_gap_px(leader_px, ring_px) == pytest.approx(4.262)
+
+    def test_the_arcs_ends_are_the_gap_apart(self, hand: Hand) -> None:
+        """The wander keeps the arc's ends, so the chord across the gap is the width asked for."""
+        ring = pin(hand, _pinned(1.0), np.random.default_rng(5), gap_at=1.0, gap_px=3.162)
+        (x0, y0), (x1, y1) = ring[0], ring[-1]
+        assert math.hypot(x1 - x0, y1 - y0) == pytest.approx(3.162)
+
+    def test_an_open_ring_is_pinned(self, hand: Hand) -> None:
+        """An east-facing gap at the shipped size starts and ends the arc at the pinned points."""
+        ring = pin(hand, _pinned(0.0), np.random.default_rng(0), gap_at=0.0, gap_px=3.162)
+        assert len(ring) == 12
+        assert ring[0] == pytest.approx((414.3109390, 269.581))
+        assert ring[-1] == pytest.approx((414.3109390, 266.419))
+
+    def test_a_gap_wider_than_the_ring_leaves_half_of_it(self, hand: Hand) -> None:
+        """A gap wider than the ring's diameter opens it to a half circle, not past it."""
+        ring = pin(hand, _pinned(0.0), np.random.default_rng(0), gap_at=0.0, gap_px=50.0)
+        assert ring[0] == pytest.approx((MUSEUM[0], MUSEUM[1] + 2.8))
+        assert ring[-1] == pytest.approx((MUSEUM[0], MUSEUM[1] - 2.8))
+
+
+class TestClosedPin:
+    """A pin given no gap is the closed ring of fourteen sides."""
+
+    def test_a_pin_without_a_gap_closes(self, hand: Hand) -> None:
+        """With no gap direction the ring ends where it starts, after fourteen sides."""
+        ring = pin(hand, _pinned(0.0), np.random.default_rng(0))
+        assert len(ring) == 15
+        assert ring[0] == pytest.approx(ring[-1])
+        assert ring[0] == pytest.approx((414.8, 268.0))
+
+    def test_a_gap_of_no_width_closes(self, hand: Hand) -> None:
+        """A gap direction with no width draws the same closed ring as no gap at all."""
+        label = _pinned(0.0)
+        shut = pin(hand, label, np.random.default_rng(2))
+        assert pin(hand, label, np.random.default_rng(2), gap_at=1.0, gap_px=0.0) == shut
+
+    def test_a_name_without_a_leader_takes_no_pin(self, hand: Hand, style: Style) -> None:
+        """A label with no leader draws neither a ring nor a leader beside its name."""
+        px, py = MUSEUM
+        label = Label("Lynton and Exmoor Museum", px=px, py=py, size=20.0)
+        marks = lettering_marks.label_marks(hand, label, style.nib)
+        assert not {"pin", "leader"} & {m.role for m in marks}
+
+
+class TestDeterminism:
+    """The same pinned label draws the same pin and leader."""
+
+    def test_the_same_label_draws_the_same_pin_and_leader(self, hand: Hand, style: Style) -> None:
+        """Two draws of one label give identical rings and leaders."""
+        label = _pinned(2.0)
+        assert _furniture(hand, style, label) == _furniture(hand, style, label)
+
+    def test_a_pin_from_the_same_seed_is_the_same(self, hand: Hand) -> None:
+        """One seed and one gap give the same arc twice."""
+        label = _pinned(0.5)
+        one = pin(hand, label, np.random.default_rng(9), gap_at=0.5, gap_px=3.0)
+        two = pin(hand, label, np.random.default_rng(9), gap_at=0.5, gap_px=3.0)
+        assert one == two
+
+    def test_the_pin_and_leader_marks_are_pinned(self, hand: Hand, style: Style) -> None:
+        """The pin and leader marks for a north-east leader keep their pinned ends."""
+        marks = [
+            m
+            for m in lettering_marks.label_marks(hand, _pinned(-math.pi / 4), style.nib)
+            if m.role in {"pin", "leader"}
+        ]
+        assert [m.role for m in marks] == ["pin", "leader"]
+        ring, line = marks[0].pts, marks[1].pts
+        assert len(ring) == 11
+        assert ring[0] == pytest.approx((414.6939553, 268.7632856))
+        assert ring[-1] == pytest.approx((412.3267592, 265.2191317))
+        assert line[0] == pytest.approx(MUSEUM)
+        assert line[-1] == pytest.approx((440.2842712, 239.7157288))
