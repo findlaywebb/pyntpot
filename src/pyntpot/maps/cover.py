@@ -3,11 +3,13 @@
 Key names: `cover_rings`, the land cover polygons by pigment class, clipped to the card
 and simplified; `wood_rings`, the woods of the feature payload; `coastline_chains`, the
 coast as surveyed, joined and never smoothed; `COVER_TAGS` and `COVER_ORDER`, the
-tag-to-pigment table and the painting order. The sea made from the coast is in `sea`.
+tag-to-pigment table and the painting order; `PAINTED_AS`, the classes washed in
+another class's pigment. The sea made from the coast is in `sea`.
 
 It does not fetch payloads, project a track, or paint anything: it reads the files the
 cache already holds and returns rings in card metres. Invariants: a missing payload
-is an empty result, never an error; the coast keeps its own vertices; a class later in
+is an empty result, never an error; the coast keeps its own vertices and an open chain
+ends on the card edge; a class later in
 `COVER_ORDER` is painted over an earlier one, so a plate carries one class per pixel.
 """
 
@@ -19,9 +21,9 @@ import math
 from typing import TYPE_CHECKING
 
 from pyntpot.ink.chains import join_chains
-from pyntpot.ink.polyline import Pt, clip_line, simplify
+from pyntpot.ink.polyline import Pt, simplify
 from pyntpot.maps.osm_elements import polygon_rings
-from pyntpot.maps.rings import clip_ring
+from pyntpot.maps.rings import clip_ring, cut_line
 
 if TYPE_CHECKING:
     from pyntpot.maps.cache import Cache
@@ -41,7 +43,10 @@ JOIN_TOL_M = 2.0
 MIN_COAST_M = 300.0
 
 #: OSM tag to pigment class. An element that matches on more than one key takes
-#: the class of the last of `landuse`, `natural` and `leisure` that matches.
+#: the class of the last of `amenity`, `landuse`, `natural` and `leisure` that matches,
+#: so a college's own garden or meadow keeps its green. Education land (schools,
+#: colleges, universities) is `campus`: washed as `built`, but labelled below the greens,
+#: so a quad or college meadow inside it keeps its own colour.
 COVER_TAGS: tuple[tuple[str, str, str], ...] = (
     ("landuse", "farmland", "farmland"),
     ("landuse", "farmyard", "built"),
@@ -72,6 +77,9 @@ COVER_TAGS: tuple[tuple[str, str, str], ...] = (
     ("landuse", "commercial", "built"),
     ("landuse", "retail", "built"),
     ("landuse", "cemetery", "built"),
+    ("landuse", "education", "campus"),
+    ("amenity", "university", "campus"),
+    ("amenity", "college", "campus"),
     ("landuse", "industrial", "works"),
     ("landuse", "quarry", "works"),
     ("landuse", "greenhouse_horticulture", "works"),
@@ -82,6 +90,7 @@ COVER_TAGS: tuple[tuple[str, str, str], ...] = (
 #: Painting order, low to high. A later class replaces an earlier one where they
 #: overlap, so the plate carries one class per pixel and no two land pigments stack.
 COVER_ORDER: tuple[str, ...] = (
+    "campus",
     "farmland",
     "meadow",
     "orchard",
@@ -94,6 +103,11 @@ COVER_ORDER: tuple[str, ...] = (
     "works",
     "wood",
 )
+
+#: A class labelled at its own place in `COVER_ORDER` but washed as another, in that
+#: class's pigment and as one wash with it. Education land is the town's ground, yet a
+#: green inside it is painted over it, where a green inside the town is painted under.
+PAINTED_AS: dict[str, str] = {"campus": "built"}
 
 
 def cover_rings(
@@ -120,7 +134,7 @@ def cover_rings(
     for entry in payload.get("elements", []):
         tags = entry.get("tags") or {}
         cls = None
-        for tag_key in ("landuse", "natural", "leisure"):
+        for tag_key in ("amenity", "landuse", "natural", "leisure"):
             if tag_key in tags:
                 cls = lookup.get((tag_key, tags[tag_key]), cls)
         if cls is None:
@@ -163,12 +177,14 @@ def coastline_chains(
     cache: Cache,
     min_length_m: float = MIN_COAST_M,
 ) -> list[list[Pt]]:
-    """Coastline ways as surveyed: clipped, joined, and never smoothed.
+    """Coastline ways as surveyed: cut at the card edge, joined, and never smoothed.
 
     The coast is the one line on the map a reader would notice being wrong,
     so it keeps its own vertices. Offshore rocks come back as their own
     little rings and are ink specks at plate size, so only chains of real coast
-    are kept.
+    are kept. A way is cut where it crosses the card edge, not at its last vertex
+    inside, so an open chain ends on the edge however far apart the survey's vertices
+    are, and `sea.sea_from_coast` can close the land along the edge.
     """
     path = cache.features_path(key)
     if not path.exists():
@@ -178,6 +194,6 @@ def coastline_chains(
         if (entry.get("tags") or {}).get("natural") != "coastline":
             continue
         pts = [proj(g["lat"], g["lon"]) for g in entry.get("geometry", []) if g]
-        ways += [p for p in clip_line(pts, clip) if len(p) > 1]
+        ways += cut_line(pts, clip)
     joined = [c for c in join_chains(ways, tol=JOIN_TOL_M) if len(c) > RING_POINTS_OVER]
     return [c for c in joined if _chain_length(c) > min_length_m]

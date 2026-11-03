@@ -1,5 +1,6 @@
 """The focus-place fixtures each paint a card from their cache alone, with the names expected."""
 
+import json
 import shutil
 import tomllib
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from PIL import Image
 from pyntpot.ink.polyline import meet
 from pyntpot.maps import (
     Annotations,
+    Basemap,
     Cache,
     FetchMargins,
     OpenTopoData,
@@ -26,6 +28,7 @@ from pyntpot.maps.cache import LANDCOVER_MARGIN_M, MARGIN_M
 from pyntpot.maps.lettering.label import NO_LEADER, Label
 from pyntpot.maps.lettering.placement_costs import RouteSegments, leader_route_crossings
 from pyntpot.maps.lettering.placement_water import Water, on_water, water_from
+from pyntpot.maps.rings import point_in_ring, signed_area
 
 from support import REPO_ROOT
 from support.paths import (
@@ -52,6 +55,13 @@ HEMMED_LEADERS = {
     "skye": {"Thursday: the Storr and a long Staffin lunch"},
     "y-fenni": {"Bean & Bread", "Shepherd's Ice Cream"},
 }
+
+#: Villages either side of Kyle Akin that the Skye card paints as land: Kyleakin on Skye,
+#: the rest on the mainland. Each is found by name among the payload's OSM place nodes.
+SKYE_LAND = ("Kyle of Lochalsh", "Kyleakin", "Balmacara", "Plockton", "Dornie")
+
+#: The loch whose OSM line, run down its water from Dornie to Kyle Akin, the card paints as sea.
+SKYE_LOCH = "Loch Alsh"
 
 #: How the providers name the caller; never sent, since no request is made.
 CONTACT = "pyntpot-tests@example.invalid"
@@ -217,6 +227,8 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
         and leader_route_crossings(*lb.leader, RouteSegments.of(list(plates.strands)))
     }
     assert crossing == HEMMED_LEADERS.get(place.directory, set()), "a leader crosses the route"
+    if place.directory == "skye":
+        _assert_skye_sea(basemap, cache_dir / f"overpass-{place.key}.json")
     if place.directory == "y-fenni":
         assert {"Y Fenni", "Tŷ Melin", "Castell y Fenni"} <= names
         assert "Abergavenny" not in names
@@ -224,6 +236,44 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
     card.save(tmp_path / "map.png")
     with Image.open(tmp_path / "map.png") as saved:
         assert saved.mode == "RGB"
+
+
+def _assert_skye_sea(basemap: Basemap, payload: Path) -> None:
+    """Both shores of Kyle Akin are land on the Skye card and the water between them is sea.
+
+    The mainland's coast crosses the card's east edge; cut short of it, its land was sea.
+    The places are read from the fixture's own OSM payload by name, so no coordinate is
+    written here: the villages' place nodes, the vertices of Loch Alsh's line, and the
+    point halfway between Kyleakin and Kyle of Lochalsh, in the narrows.
+    """
+    elements = json.loads(payload.read_text())["elements"]
+    villages = {
+        e["tags"]["name"]: (e["lat"], e["lon"])
+        for e in elements
+        if e["type"] == "node" and (e.get("tags") or {}).get("name") in SKYE_LAND
+    }
+    loch = next(
+        e["geometry"]
+        for e in elements
+        if e["type"] == "way" and (e.get("tags") or {}).get("name") == SKYE_LOCH
+    )
+    sea = [list(ring) for ring in basemap.layers.sea]
+
+    def is_sea(lat: float, lng: float) -> bool:
+        """Whether the sea rings, filled by the nonzero rule, cover a place."""
+        x, y = basemap.projection(lat, lng)
+        winding = sum(
+            1 if signed_area(ring) > 0 else -1 for ring in sea if point_in_ring(x, y, ring)
+        )
+        return winding != 0
+
+    assert set(villages) == set(SKYE_LAND)
+    for name, (lat, lng) in villages.items():
+        assert not is_sea(lat, lng), f"{name} is painted as sea"
+    for k, vertex in enumerate(loch):
+        assert is_sea(vertex["lat"], vertex["lon"]), f"{SKYE_LOCH} vertex {k} is painted as land"
+    (lat_a, lng_a), (lat_b, lng_b) = villages["Kyleakin"], villages["Kyle of Lochalsh"]
+    assert is_sea((lat_a + lat_b) / 2, (lng_a + lng_b) / 2), "Kyle Akin is painted as land"
 
 
 def _assert_clear(labels: list[Label], water: Water) -> None:

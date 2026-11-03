@@ -10,10 +10,14 @@ tip's with `<pr-branch>/` replaced by a copy of `OUT`, and, only with `--push`, 
 table and each image's review images, ready to paste into the PR body. Without `--push` it
 is a dry run: the same commit is built but not pushed, so its links do not resolve yet.
 
-Links are `raw.githubusercontent.com` URLs (the repository is public) naming the
-`pr-assets` commit, not the branch, so a PR body keeps showing the review images it was
-written with after a later publish, and no cache serves an older one. The owner and
-repository come from the remote's configured URL.
+Links are `github.com/<owner>/<repo>/raw/<commit>/...` URLs (the repository is public,
+and GitHub redirects them to its raw-file host) naming the `pr-assets` commit, shortened to
+`SHORT_SHA` characters, not the branch, so a PR body keeps showing the review images it was
+written with after a later publish, and no cache serves an older one. The host and the short
+commit keep each URL short: the GitHub MCP tools mangled longer ones, and Markdown image
+syntax, when they posted a PR body, so each image is an `<img>` tag (`--width`, default
+`DIFF_WIDTH`, sizes the diff images). The owner and repository come from the remote's
+configured URL.
 
 Invariants: the working tree, the index, the checked-out branch and every local branch
 are never touched; no local `pr-assets` branch is made, only the remote-tracking ref the
@@ -37,7 +41,7 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import quote
 
 from golden.diff_images import SUMMARY_JSON
-from golden.diff_report import Summary, markdown
+from golden.diff_report import DIFF_WIDTH, Summary, markdown
 
 from support import REPO_ROOT
 from support.git_commands import git
@@ -49,6 +53,9 @@ ASSETS_BRANCH = "pr-assets"
 
 #: The Markdown block written beside the review images.
 PR_BODY = "pr-body.md"
+
+#: How many characters of the `pr-assets` commit a link names.
+SHORT_SHA = 12
 
 #: How many times a publish builds and pushes before a remote that keeps moving stops it.
 PUSH_ATTEMPTS = 3
@@ -81,18 +88,19 @@ def github_slug(remote_url: str) -> str:
 
 
 def asset_url(slug: str, commit: str, path: str) -> str:
-    """Return the `raw.githubusercontent.com` link to one file of a `pr-assets` commit.
+    """Return the `github.com/<slug>/raw/` link to one file of a `pr-assets` commit.
 
     Args:
         slug: The repository, as `owner/repo`.
-        commit: The `pr-assets` commit holding the file.
+        commit: The `pr-assets` commit holding the file; the link names its first
+            `SHORT_SHA` characters.
         path: The file's path in that commit, with `/` separators; each segment is quoted.
 
     Returns:
         The URL.
     """
     quoted = "/".join(quote(part) for part in PurePosixPath(path).parts)
-    return f"https://raw.githubusercontent.com/{slug}/{commit}/{quoted}"
+    return f"https://github.com/{slug}/raw/{commit[:SHORT_SHA]}/{quoted}"
 
 
 def assets_dir(pr_branch: str) -> str:
@@ -224,9 +232,12 @@ def commit_assets(
     raise PublishError(f"{remote}'s {ASSETS_BRANCH} moved before each of {attempts} pushes")
 
 
-def pr_body(summary: Summary, slug: str, commit: str, target: str) -> str:
-    """Return the PR body's Markdown block for review images committed at `commit` under `target`."""
-    return markdown(summary, lambda path: asset_url(slug, commit, f"{target}/{path}"))
+def pr_body(summary: Summary, slug: str, commit: str, target: str, width: int = DIFF_WIDTH) -> str:
+    """Return the PR body's Markdown block for review images committed at `commit` under `target`.
+
+    Each diff image is shown `width` pixels wide; each crop image at its natural size.
+    """
+    return markdown(summary, lambda path: asset_url(slug, commit, f"{target}/{path}"), width)
 
 
 def _parse(argv: list[str] | None) -> argparse.Namespace:
@@ -235,6 +246,12 @@ def _parse(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("out", type=Path, metavar="OUT", help="a diff_images.py output directory")
     parser.add_argument("--pr-branch", default=None, help="the PR branch (default: checked out)")
     parser.add_argument("--remote", default="origin", help="the remote (default: origin)")
+    parser.add_argument(
+        "--width",
+        type=int,
+        default=DIFF_WIDTH,
+        help=f"diff image width in the PR body, in pixels (default: {DIFF_WIDTH})",
+    )
     parser.add_argument("--push", action="store_true", help=f"push {ASSETS_BRANCH} to the remote")
     parser.add_argument("--repo", type=Path, default=REPO_ROOT, help=argparse.SUPPRESS)
     return parser.parse_args(argv)
@@ -256,7 +273,8 @@ def main(argv: list[str] | None = None) -> int:
         detail = exc.stderr if isinstance(exc, subprocess.CalledProcessError) else exc
         logger.error("not published: %s", detail)  # noqa: TRY400 (the reason is the whole message)
         return 2
-    body = pr_body(Summary.from_json(summary_path.read_text()), slug, commit, assets_dir(pr_branch))
+    summary = Summary.from_json(summary_path.read_text())
+    body = pr_body(summary, slug, commit, assets_dir(pr_branch), args.width)
     (args.out / PR_BODY).write_text(body)
     if args.push:
         logger.info(
