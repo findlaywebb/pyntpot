@@ -78,6 +78,20 @@ def test_a_wide_pen_leaves_no_grey_ring_round_its_ink(
     assert float((dens[0] - dens[1])[ring].mean()) < BAND_BOUNDS[band]
 
 
+def test_a_start_at_zero_pressure_that_turns_back_lays_no_blot_off_its_ink():
+    """A 10 render px pen that sets down, barely moves and turns back lays its blot on its own ink only."""
+    path = np.array([(3.0, 7.0), (3.0, 7.1875), (2.0, 2.0)])
+    pen, _ = brush_from_id("MAJ6-e", 5.0, 2.0, BrushStyle())
+    marks = []
+    for brush in (pen, replace(pen, pool=0.0)):
+        acc = np.zeros((60, 220), np.float32)
+        stamp(acc, path, brush, np.random.default_rng(0))
+        marks.append(acc)
+    blot = marks[0] - marks[1]
+    assert blot.any()
+    assert not blot[marks[1] == 0].any()
+
+
 def test_a_wide_pen_s_blot_lays_no_ink_on_paper_its_stroke_does_not():
     """A 12 render px pen's blot adds ink only to pixels the same stroke without it inks."""
     blot = blot_ink(6.0, np.stack([np.linspace(30, 100, 60), np.full(60, 30.3)], axis=1), (80, 140))

@@ -235,6 +235,11 @@ class TestBlotShare:
         expected[1:4, 3:6] = 0.5
         assert np.array_equal(blot_share(cover, 2.99), expected)
 
+    def test_a_wide_nib_s_share_is_at_most_whole(self) -> None:
+        """At 12 render px a pixel covered half or whole takes the blot once, not more."""
+        cover = np.array([[0.5, 1.0]], dtype=np.float32)
+        assert np.array_equal(blot_share(cover, 12.0), np.ones((1, 2), dtype=np.float32))
+
     def test_a_wide_nib_s_share_is_in_proportion_under_an_eighth(self) -> None:
         """At 12 render px a pixel covered a sixteenth takes half the blot."""
         cover = np.full((2, 2), 0.0625, dtype=np.float32)
