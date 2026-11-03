@@ -39,14 +39,14 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 
 ## S3 — Gallery and captions (#162)
 
-- [ ] Red: `tests/docs/test_captions.py` (script, figure and theme, label lists equal a tuple of the script, names).
-- [ ] Red: `tests/docs/test_gallery.py` (every registered image shown, nav order).
-- [ ] Nib-angles caption corrected (#162).
-- [ ] Gallery's "Map from the command line" moved to after "Write a theme" (nav order).
-- [ ] Three vector-drawing stages and the glyph sheet added to the gallery.
-- [ ] Landing-page and data-policy captions name their themes.
-- [ ] Landmark and map wording in the three files.
-- [ ] Gate and strict build green.
+- [x] Red: `tests/docs/test_captions.py` (script, figure and theme, label lists equal a tuple of the script, names).
+- [x] Red: `tests/docs/test_gallery.py` (every registered image shown, nav order).
+- [x] Nib-angles caption corrected (#162).
+- [x] Gallery's "Map from the command line" moved to after "Write a theme" (nav order).
+- [x] Three vector-drawing stages and the glyph sheet added to the gallery.
+- [x] Landing-page and data-policy captions name their themes.
+- [x] Landmark and map wording in the three files.
+- [x] Gate and strict build green.
 
 ## S4 — Tutorials (#172)
 
