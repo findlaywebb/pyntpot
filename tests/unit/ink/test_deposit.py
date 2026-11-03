@@ -14,7 +14,7 @@ import pytest
 
 from pyntpot.ink.brush import brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.deposit import deposit, nib_cover
+from pyntpot.ink.deposit import deposit, ink_cover, nib_cover
 from pyntpot.ink.stamp import stamp
 from pyntpot.ink.stroke import Lay, Sampled, StrokeProfile, Tip, Trace
 
@@ -199,3 +199,22 @@ class TestNibCover:
         cover = nib_cover(lay, pos, (15, 25, 2, 20))
         assert float(cover.max()) == 1.0
         assert cover[20 - 15, 10 - 2] == 1.0
+
+
+class TestInkCover:
+    """The paper the stroke's own ink lies on: the nib's cover grown by a pixel."""
+
+    @pytest.mark.parametrize(
+        ("share", "laid"),
+        [(0.0625, 0.5), (0.125, 1.0), (1.0, 1.0)],
+        ids=["sixteenth", "eighth", "whole"],
+    )
+    def test_one_covered_pixel_lays_on_its_3_by_3_neighbourhood(
+        self, share: float, laid: float
+    ) -> None:
+        """A pixel covered by `share` gives its 3 by 3 block `share` times 8, at most 1, and nothing else."""
+        cover = np.zeros((6, 7), dtype=np.float32)
+        cover[2, 4] = share
+        expected = np.zeros((6, 7), dtype=np.float32)
+        expected[1:4, 3:6] = laid
+        assert np.array_equal(ink_cover(cover), expected)
