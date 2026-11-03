@@ -7,14 +7,16 @@ lies on its own stroke.
 
 import dataclasses
 import math
+from collections.abc import Callable
 
 import numpy as np
 import pytest
 
 from pyntpot.ink.brush import brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.deposit import deposit
+from pyntpot.ink.deposit import deposit, nib_cover
 from pyntpot.ink.stamp import stamp
+from pyntpot.ink.stroke import Lay, Sampled, StrokeProfile, Tip, Trace
 
 
 def one_sample(x: float, y: float) -> tuple[np.ndarray, dict[str, np.ndarray]]:
@@ -43,40 +45,72 @@ def test_a_sample_half_off_the_edge_keeps_only_its_share_on_the_plate() -> None:
     assert acc.sum() == 0.5
 
 
-def wide_blot() -> tuple[np.ndarray, int, int]:
-    """A 60 px pen's set-down blot alone, on a stroke heading right from (20, 100).
+def blot(path: list[tuple[float, float]], width: float = 60.0) -> np.ndarray:
+    """A pen's set-down blot alone: the stroke with its pool less the same stroke without.
 
-    Returns:
-        The blot (the stroke with its pool less the same stroke without), the start's column
-        and the blot's span in pixels.
+    The pen is `width` render pixels wide with a pool and gain of one, on a 201 by 221 plate.
     """
     brush, _ = brush_from_id("MAJ1-e", 3.0, 2.0, BrushStyle())
-    brush = dataclasses.replace(brush, width=60.0, pool=1.0, pool_gain=1.0)
-    path = np.array([[20.0, 100.0], [200.0, 100.0]])
+    brush = dataclasses.replace(brush, width=width, pool=1.0, pool_gain=1.0)
     marks = []
     for b in (brush, dataclasses.replace(brush, pool=0.0)):
         acc = np.zeros((201, 221), dtype=np.float32)
-        stamp(acc, path, b, np.random.default_rng(1))
+        stamp(acc, np.array(path), b, np.random.default_rng(1))
         marks.append(acc)
-    return marks[0] - marks[1], 20, math.ceil(60.0 * brush.pool_radius_frac * 3)
+    return marks[0] - marks[1]
 
 
-def test_a_wide_pool_has_faded_to_nothing_at_the_end_of_its_span() -> None:
-    """Along its own stroke a wide pool's deposit at the end of its span is under 1.5% of its centre."""
-    blot, start, span = wide_blot()
-    row = blot[100]
-    assert row[start] > 0
-    assert 0 < row[start + span] < 0.015 * row[start]
-    assert not row[start + span + 1 :].any()
+#: A 60 px pen's blot reaches three radii, half its width each.
+SPAN = math.ceil(60.0 * 0.5 * 3)
+
+
+@pytest.mark.parametrize(
+    ("path", "along"),
+    [
+        ([(20.3, 100.0), (200.0, 100.0)], lambda m: m[100, 20:]),
+        ([(110.0, 20.3), (110.0, 200.0)], lambda m: m[20:, 110]),
+    ],
+    ids=["right", "down"],
+)
+def test_a_wide_pool_has_faded_to_nothing_at_the_end_of_its_span(
+    path: list[tuple[float, float]], along: Callable[[np.ndarray], np.ndarray]
+) -> None:
+    """Along its own stroke a wide pool, centred on the rounded start, fades under 1.5% of its peak at its span's end."""
+    line = along(blot(path))
+    assert line[0] > 0
+    assert 0 < line[SPAN] < 0.015 * line.max()
+    assert not line[SPAN + 1 :].any()
+
+
+@pytest.mark.parametrize(
+    ("path", "edge"),
+    [
+        ([(60.3, 100.0), (0.0, 100.0)], lambda m: m[100, 0]),
+        ([(110.0, 60.3), (110.0, 0.0)], lambda m: m[0, 110]),
+    ],
+    ids=["left", "up"],
+)
+def test_a_wide_pool_reaches_the_plate_s_first_row_and_column(
+    path: list[tuple[float, float]], edge: Callable[[np.ndarray], np.ndarray]
+) -> None:
+    """A blot whose span runs off the plate still lays its share on the plate's edge pixel."""
+    assert edge(blot(path)) > 0
+
+
+def test_a_narrow_pool_keeps_its_floor_radius() -> None:
+    """A 1 px pen's blot has the 1.2 px floor radius: it reaches 4 px along its stroke and no further."""
+    line = blot([(20.0, 100.0), (200.0, 100.0)], width=1.0)[100, 20:]
+    assert line[4] > 0
+    assert not line[5:].any()
 
 
 def test_a_wide_pool_lays_nothing_beside_its_stroke() -> None:
     """A wide pool reaches 90 px but lays nothing past the 60 px pen's own edge."""
-    blot, start, span = wide_blot()
-    beside = np.ones(blot.shape, dtype=bool)
+    laid = blot([(20.0, 100.0), (200.0, 100.0)])
+    beside = np.ones(laid.shape, dtype=bool)
     beside[60:141] = False
-    assert blot[60:141, start : start + span].any()
-    assert not blot[beside].any()
+    assert laid[60:141, 20 : 20 + SPAN].any()
+    assert not laid[beside].any()
 
 
 class TestTheFlatIndex:
@@ -116,3 +150,44 @@ class TestTheFlatIndex:
         want[3:5, 7:9] = [[0.375, 0.125], [0.375, 0.125]]
         for laid in (acc, aux["res"], aux["tooth"]):
             assert np.array_equal(laid, want)
+
+
+def straight_lay(squeeze: float = 1.0) -> tuple[Lay, tuple[np.ndarray, np.ndarray]]:
+    """A 10 px stroke along y 20 from x 5, 2 px wide, sampled every half pixel both ways.
+
+    Each of its 21 stamps by 5 samples stands for a quarter of a pixel. A `squeeze` of 2 lands
+    the samples across half the width, so the paper under them is passed over twice.
+    """
+    n, m = 21, 5
+    t = np.linspace(0.0, 10.0, n).astype(np.float32)
+    u = np.linspace(-1.0, 1.0, m).astype(np.float32)
+    one, flat = np.ones(n, np.float32), np.zeros(n, np.float32)
+    tr = Trace(5.0 + t, np.full(n, 20.0, np.float32), flat, one, t, 10.0)
+    ink = StrokeProfile(one, np.full(n, 2.0, np.float32), None)
+    tip = Tip(m, u, np.ones(m), np.zeros((2, m)), np.zeros(m), np.ones(m), None, None, None, None)
+    smp = Sampled(m, u, *(np.ones(m, np.float32),) * 5, None, np.ones(m, np.float32), 2.0)
+    off = np.broadcast_to(u[None, :], (n, m)).astype(np.float32)
+    px = tr.x[:, None] + 0.0 * off
+    py = tr.y[:, None] + off / squeeze
+    return Lay(tr, ink, tip, smp, off), (px, py)
+
+
+class TestNibCover:
+    """How much of each pixel the nib passes over: each sample its own patch of paper."""
+
+    def test_the_cover_holds_the_paper_the_samples_stand_for(self) -> None:
+        """A stroke of 105 quarter-pixel patches covers 26.25 pixels, one in its middle, none before it."""
+        lay, pos = straight_lay()
+        cover = nib_cover(lay, pos, (15, 25, 2, 20))
+        assert float(cover.sum()) == pytest.approx(26.25)
+        assert cover[20 - 15, 10 - 2] == pytest.approx(1.0)
+        assert cover[:, 5 - 2].any()
+        assert not cover[:, : 5 - 2].any()
+        assert not cover[:, 15 - 2 + 1 :].any()
+
+    def test_a_pixel_passed_over_twice_is_covered_once(self) -> None:
+        """Cover is a share of the pixel, so paper the samples pass over twice reads 1, not 2."""
+        lay, pos = straight_lay(squeeze=2.0)
+        cover = nib_cover(lay, pos, (15, 25, 2, 20))
+        assert float(cover.max()) == 1.0
+        assert cover[20 - 15, 10 - 2] == 1.0
