@@ -31,8 +31,8 @@ reach the land cover classes.
   white holes in the water. Paper and water are never painted. One pass: a small patch whose
   largest neighbour is another small one takes that patch's class as it was.
 - **It takes no draw from the deform generator**, so no outline moves. The washes see the
-  new labels, and their blooms are drawn from the shared generator per class (issue #61),
-  so the blooms of the hero move as a whole.
+  new labels, and each class's blooms are keyed by its name (ADR 0049) but counted and
+  placed from its own area, so a class that gains or loses a patch moves its blooms.
 - **The hero theme sets 400** (`examples/themes/ambleside-hero.toml`): a patch under about
   20 by 20 display pixels on the 1,200 px hero, 7 by 7 at the README's 400 px.
 - The search is on horizontal runs with a union-find, not a pixel flood, so it is a
@@ -51,14 +51,16 @@ map-styles means and every docs image but the two painted in the hero theme are 
 
 | Image | Image differing fraction | Master differing fraction |
 |---|---|---|
-| `hero.webp` | 0.389120 | 0.235453 |
-| `social-preview.jpg` | 0.272316 | 0.204688 |
+| `hero.webp` | 0.345875 | 0.181189 |
+| `social-preview.jpg` | 0.202948 | 0.135451 |
 
 Looked at side by side with `main`, full size and 400 px wide: the small light-green flecks
 on Loughrigg Fell, round Rydal and along the card's torn edge are gone into the fell's
 tawny or the wood round them, and the thumbnail is a little calmer. The larger patches,
 the lakes and their islands, the lettering, the roads and the route are where they were.
-Most of the differing fraction is the blooms moving (above), not new shapes. The hero is
+Painted on `main` after ADR 0049, the folded flecks are the strong differences; most of
+the rest of the fraction is a faint shift of wash tone across the card (the wet field reads
+the new labels) and a few blooms of the classes that changed, not new shapes. The hero is
 calmer, not calm: the patches above the floor still alternate greens over the fell, and a
 higher floor or a narrower palette is the theme's next move.
 
