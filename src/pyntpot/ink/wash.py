@@ -1,8 +1,8 @@
 """One wash: the density a coverage mask becomes, and how it is split and modulated.
 
 Key functions: `wash`, one pigment's density from a coverage mask, with an edge pooled
-by a rim or a flow term, bleeding into a shared wet area and optionally bloomed;
-`flow_edge`, the rim as an outward flow decaying inward; `bloom`, backruns laid in place;
+by a rim or a flow term, bleeding into a shared wet area and optionally bloomed
+(`ink.bloom`); `flow_edge`, the rim as an outward flow decaying inward;
 `separated`, one wash as one pigment or the two it is mixed from; `fluid_modulate`, a
 stack of washes modulated by one coarse shallow-water pass (`ink.shallow_water`).
 
@@ -13,26 +13,22 @@ caller that sets none of them gets no bleed, flow rim, pit granulation or blooms
 `fluid_modulate` changes the densities in place and returns the same layers.
 """
 
-import math
 from dataclasses import dataclass
 
 import numpy as np
 from PIL import Image
 
-from pyntpot.ink.noise import F32, blur, chamfer_distance, fbm
+from pyntpot.ink.bloom import Blooms, bloom
+from pyntpot.ink.noise import F32, blur, chamfer_distance
 from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.shallow_water import shallow_water
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.style import WashStyle
 
-#: Alpha above this counts as inside the wash, and above the second as thick enough to bloom.
+#: Alpha above this counts as inside the wash.
 _INSIDE = 0.5
-_THICK = 0.6
-#: A wash smaller than this many pixels has no rim, and one with fewer thick pixels no bloom.
+#: A wash smaller than this many pixels has no rim.
 _MIN_AREA = 4
-_MIN_BLOOM_PIXELS = 64
-#: A bloom's box must be at least this many pixels on a side.
-_MIN_BOX = 5
 #: A rim whose peak is below this is left unscaled.
 _RIM_PEAK = 1e-5
 #: A bleed narrower than this many pixels is not made.
@@ -42,11 +38,6 @@ _NO_PIGMENT = 1e-9
 #: A coarse cell wetter than this is wet.
 _WET_FLOOR = 0.05
 
-
-#: What blooms are laid by: the generator, how many, the radius as a share of
-#: the root of the wash's area, how much pigment the front lifts out of the
-#: centre and how far the fbm warps the front off a circle.
-Blooms = tuple[np.random.Generator, int, float, float, float]
 
 #: The settings that take the rim from `flow_edge`: how fast the width grows with area, the
 #: reference area as a share of the canvas and the decay length as a share of the
@@ -87,58 +78,6 @@ def flow_edge(
     d = chamfer_distance(~inside)
     rim = np.exp(-d / F32(width)) * a * (0.6 + 0.8 * sheet.coarse)
     return np.clip(rim, 0.0, 1.0)
-
-
-def bloom(dens: np.ndarray, a: np.ndarray, sheet: Sheet, blooms: Blooms) -> None:
-    """Backruns, as a re-wet event with no solver. Modifies `dens` in place.
-
-    A backrun is a second front of liquid pushing already-deposited pigment out
-    ahead of it: the centre goes lighter than the wash around it and the front
-    dries as a dark crenellated ridge. Seeded where the wash is thick, grown
-    outward, and warped off a circle by fractal noise, which is what makes the
-    ridge read as a cauliflower rather than a halo. Cropped to the bloom's own
-    box, so the cost does not scale with the plate.
-
-    Source: `backruns` in docs/explanation/references.md.
-
-    Args:
-        dens: The wash's density, changed in place.
-        a: The wash's alpha, so a bloom stops at the wash's edge.
-        sheet: The paper's noise fields.
-        blooms: The settings, in `Blooms`' order: the generator the seeds and the
-            warp are drawn from; how many blooms to lay; the radius as a share of
-            the root of the wash's area; how much pigment the front takes out of the
-            centre; and how far the fbm pushes the front off a circle.
-    """
-    rng, count, radius_frac, lift, warp = blooms
-    inside = np.flatnonzero((a > _THICK).ravel())
-    if count < 1 or inside.size < _MIN_BLOOM_PIXELS:
-        return
-    h, w = dens.shape
-    radius = float(np.clip(radius_frac * math.sqrt(inside.size), 5.0, 0.22 * min(h, w)))
-    flat = dens.ravel()
-    for _ in range(int(count)):
-        # Seeded toward the thick: a handful of candidates, the densest wins.
-        cand = rng.choice(inside, size=min(24, inside.size), replace=False)
-        cy, cx = divmod(int(cand[int(np.argmax(flat[cand]))]), w)
-        r = radius * float(rng.uniform(0.7, 1.3))
-        span = int(r * 1.9) + 3
-        y0, y1 = max(cy - span, 0), min(cy + span + 1, h)
-        x0, x1 = max(cx - span, 0), min(cx + span + 1, w)
-        if y1 - y0 < _MIN_BOX or x1 - x0 < _MIN_BOX:
-            continue
-        bh, bw = y1 - y0, x1 - x0
-        yy = (np.arange(y0, y1, dtype=F32) - cy)[:, None]
-        xx = (np.arange(x0, x1, dtype=F32) - cx)[None, :]
-        d = np.hypot(yy, xx) + warp * (fbm(bh, bw, r * 0.55, 3, rng) - 0.5) * r
-        front = np.exp(-(((d - r) / F32(max(r * 0.09, 1.6))) ** 2))
-        box_a = a[y0:y1, x0:x1]
-        box = dens[y0:y1, x0:x1]
-        core = (d < r) * box_a
-        held = float(box[core > _INSIDE].mean()) if (core > _INSIDE).any() else 0.0
-        box *= 1.0 - lift * core
-        box += held * lift * 1.5 * front * box_a
-        np.clip(box, 0.0, 1.0, out=box)
 
 
 @dataclass(frozen=True, eq=False)

@@ -118,6 +118,7 @@ SLICE_SHARE_BYTES: dict[str, int] = {
     "P7.V12c": 600_000,
     "P7.V12a": 300_000,
     "P7.V14": 100_000,
+    "glyph-sheet": 250_000,
 }
 
 #: The most all of `docs/images/` may weigh.
@@ -546,5 +547,19 @@ IMAGES += (
         "page",
         "webp-lossy",
         "P7.V14",
+    ),
+)
+
+IMAGES += (
+    # glyph-sheet: every printable ASCII glyph of the hand, in cells and as small running lines.
+    DocsImage(
+        "reference/glyph-sheet.webp",
+        "glyph_sheet",
+        (),
+        None,
+        720,
+        "page",
+        "webp-lossless",
+        "glyph-sheet",
     ),
 )

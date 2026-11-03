@@ -44,9 +44,9 @@ still pick it.
 
 ## Golden regeneration
 
-Process as ADR 0036, on top of `main` at 4fed836 (PR #129). The tolerance bound is not
+Process as ADR 0036, on top of `main` at 1873a6d (PR #151, after the keyed generators of PR #124). The tolerance bound is not
 changed, no gate is loosened and the hash input does not change; the manifest hash does not
-move (`340a7f6e260ee1e2-d9c56c0811177b0f`), so `GOLDEN_HASH` is not re-pinned.
+move (`3976d23ae248ca86-d9c56c0811177b0f`), so `GOLDEN_HASH` is not re-pinned.
 
 ### Lynmouth compare, against the committed goldens
 
@@ -54,9 +54,9 @@ move (`340a7f6e260ee1e2-d9c56c0811177b0f`), so `GOLDEN_HASH` is not re-pinned.
 paper.webp: identical yes, differing fraction 0.000000
 wash.webp: identical yes, differing fraction 0.000000
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.054836
-map.png: identical no, differing fraction 0.029916
-manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
+labels-centreline.webp: identical no, differing fraction 0.054307
+map.png: identical no, differing fraction 0.029841
+manifest hash: 3976d23ae248ca86-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
 ```
 
 Only the lettering moves. `PINNED_LABELS` loses "Living Waters Lynton United Reformed
@@ -70,7 +70,7 @@ landmarks are curated in `examples/places.toml`, is pixel-identical.
 
 | Image | Master | Image |
 |---|---|---|
-| `how-to/command-line.webp` | 0.037973 | 0.128507 |
+| `how-to/command-line.webp` | 0.037414 | 0.121172 |
 
 The WebP's fraction is widespread because the lossy encode shifts with the content; the
 lossless master's change is local to the names. The place pins, the map-styles means and

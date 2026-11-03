@@ -1,0 +1,218 @@
+"""The broad nib's width along a glyph stroke, read from its smoothed direction against the nib."""
+
+import math
+
+import numpy as np
+import pytest
+
+from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.letters.hand import Hand
+from pyntpot.letters.nib import nib_brushes
+from pyntpot.letters.pen_profile import pen_profile
+from pyntpot.letters.setting import Setting
+from pyntpot.letters.style import FaceStyle, HandStyle, NibStyle
+
+
+class TestPenProfile:
+    """A glyph stroke's width follows its smoothed direction against the nib."""
+
+    @pytest.mark.parametrize(
+        ("heading", "nib", "width"),
+        [
+            (0.0, math.pi / 2, 1.0),
+            (0.0, 0.0, 0.15),
+            (math.pi / 6, 0.0, 0.575),
+            (math.pi, 0.0, 0.15),
+        ],
+        ids=["across", "along", "thirty-degrees", "reversed-along"],
+    )
+    def test_a_straight_stroke_keeps_the_sine_of_its_angle(
+        self, heading: float, nib: float, width: float
+    ) -> None:
+        """A straight stroke keeps `1 - thin` along the nib, all of it across, and the sine between, everywhere."""
+        pts = np.array([(0.0, 0.0), (60.0 * math.cos(heading), 60.0 * math.sin(heading))])
+        prof = pen_profile(pts, nib, 0.85, 8.0)
+        assert np.allclose(prof, width, atol=1e-6)
+
+    def test_the_samples_are_never_more_than_half_a_window_apart(self) -> None:
+        """A stroke 120 px long under an 8 px window is sampled at 31 points, not the fewest 24."""
+        pts = np.array([(0.0, 0.0), (120.0, 0.0)])
+        assert len(pen_profile(pts, 0.0, 0.5, 8.0)) == 31
+        assert len(pen_profile(pts, 0.0, 0.5, 80.0)) == 24
+
+    def test_a_short_or_degenerate_stroke_has_full_width(self) -> None:
+        """A one-point stroke, or one of no length, keeps its full width at both ends."""
+        for pts in (np.array([(3.0, 4.0)]), np.array([(3.0, 4.0), (3.0, 4.0)])):
+            prof = pen_profile(pts, 0.0, 0.85, 8.0)
+            assert prof.dtype == np.float32
+            assert prof.tolist() == [1.0, 1.0]
+
+    def test_a_corner_is_smoothed_over_the_window(self) -> None:
+        """Where a stroke turns from along the nib to across it, the width climbs through the angles between."""
+        pts = np.array([(0.0, 0.0), (40.0, 0.0), (40.0, 40.0)])
+        prof = pen_profile(pts, 0.0, 0.85, 8.0)
+        assert prof[0] == pytest.approx(0.15, abs=1e-6)
+        assert prof[-1] == pytest.approx(1.0, abs=1e-6)
+        assert np.all(np.diff(prof) >= -1e-6)
+        assert np.abs(np.diff(prof)).max() < 0.5
+
+    @pytest.mark.parametrize("seed", [1, 7, 11], ids=["seed-1", "seed-7", "seed-11"])
+    def test_keswick_on_an_upright_nib_has_no_saw_tooth(self, seed: int) -> None:
+        """Keswick at 52 px, nib at 90 degrees and thin 0.85, never zigzags wide, thin, wide along a stroke."""
+        nib = NibStyle(label_pen_angle_deg=90.0, label_pen_thin=0.85, label_pen_width_px=3.4)
+        assert _zigzags("Keswick", 52.0, nib, seed) == 0
+
+    @pytest.mark.parametrize("size", [14.0, 20.0, 30.0, 52.0], ids=["14px", "20px", "30px", "52px"])
+    @pytest.mark.parametrize(
+        "name",
+        ["Keswick", "Ambleside", "Aberystwyth", "Machynlleth"],
+        ids=["keswick", "ambleside", "aberystwyth", "machynlleth"],
+    )
+    def test_a_name_at_the_default_nib_width_has_no_saw_tooth(self, name: str, size: float) -> None:
+        """A real name at 14 to 52 px, under the default nib's own narrow window at thin 0.85, never zigzags."""
+        assert _zigzags(name, size, NibStyle(label_pen_thin=0.85), 7) == 0
+
+    def test_a_short_corner_turns_through_the_pinned_widths(self) -> None:
+        """An L of two 10 px legs under an 8 px tent climbs from 0.15 to 1.0 by the pinned widths."""
+        pts = np.array([(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)])
+        prof = pen_profile(pts, 0.0, 0.85, 8.0)
+        pinned = [
+            0.15, 0.15, 0.15, 0.1519, 0.1657, 0.1918, 0.2293, 0.2803, 0.3484, 0.4382, 0.5523, 0.6826,
+            0.8125, 0.8988, 0.9496, 0.9765, 0.99, 0.9963, 0.999, 0.9999, 1.0, 1.0, 1.0, 1.0,
+        ]  # fmt: skip
+        assert prof.dtype == np.float32
+        assert prof.tolist() == pytest.approx(pinned, abs=1e-4)
+
+    def test_a_stroke_as_short_as_the_least_length_has_full_width(self) -> None:
+        """A stroke exactly the least length long has no direction, so it keeps its full width."""
+        prof = pen_profile(np.array([(0.0, 0.0), (1e-6, 0.0)]), 0.0, 0.85, 8.0)
+        assert prof.dtype == np.float32
+        assert prof.tolist() == [1.0, 1.0]
+
+    @pytest.mark.parametrize("window", [0.0, 1e-9, 0.1], ids=["none", "1e-9", "tenth-px"])
+    def test_a_window_narrower_than_a_quarter_pixel_is_read_as_one(self, window: float) -> None:
+        """A window under a quarter pixel, or none, gives the quarter pixel's 481 samples, not unbounded ones."""
+        pts = np.array([(0.0, 0.0), (40.0, 0.0), (40.0, 20.0)])
+        prof = pen_profile(pts, 0.3, 0.85, window)
+        assert len(prof) == 481
+        assert prof.tolist() == pen_profile(pts, 0.3, 0.85, 0.25).tolist()
+
+    def test_a_vee_along_the_nib_keeps_its_legs_width_at_the_point(self) -> None:
+        """A V whose legs are 45 degrees either side of a flat nib keeps the legs' 0.751 at the point, not 0.15."""
+        pts = np.array([(-30.0, -30.0), (0.0, 0.0), (30.0, -30.0)])
+        prof = pen_profile(pts, 0.0, 0.85, 8.0, 25)
+        legs = 0.15 + 0.85 * math.sin(math.pi / 4)
+        assert prof[12] == pytest.approx(legs, abs=1e-4)
+        assert prof.min() >= legs - 0.005
+
+    def test_a_closed_ring_runs_on_round_its_seam(self) -> None:
+        """A twelve-sided ring's widths repeat every half turn, its first and last the same 0.962."""
+        turn = np.linspace(0.0, 2.0 * math.pi, 13)
+        pts = np.stack([20.0 * np.cos(turn), 20.0 * np.sin(turn)], axis=1)
+        pts[-1] = pts[0]
+        prof = pen_profile(pts, 0.3, 0.85, 8.0)
+        assert len(prof) == 33
+        assert prof[0] == pytest.approx(0.962, abs=1e-3)
+        assert prof[-1] == pytest.approx(prof[0], abs=1e-6)
+        assert np.allclose(prof[:16], prof[16:32], atol=1e-5)
+
+    @pytest.mark.parametrize(
+        ("samples", "second"),
+        [(24, 30.0), (25, 30.0), (60, 30.0), (61, 30.0), (24, 47.0), (61, 47.0)],
+        ids=["24", "25", "60", "61", "off-centre-24", "off-centre-61"],
+    )
+    def test_a_vee_is_never_thinner_than_its_legs_wherever_the_samples_fall(
+        self, samples: int, second: float
+    ) -> None:
+        """A V 45 degrees either side of a flat nib keeps its legs' 0.751 at every sample, its point on one or not."""
+        side = second / math.sqrt(2.0)
+        pts = np.array(
+            [(-30.0 / math.sqrt(2.0), -30.0 / math.sqrt(2.0)), (0.0, 0.0), (side, -side)]
+        )
+        prof = pen_profile(pts, 0.0, 0.85, 8.0, samples)
+        assert prof.min() == pytest.approx(0.15 + 0.85 * math.sin(math.pi / 4), abs=1e-5)
+
+    def test_a_closed_triangle_is_floored_both_ways_round(self) -> None:
+        """A closed triangle walked from its apex reads the same both ways round from it, its seam included."""
+        turn = math.radians(30.0)
+        apex, right, left = (
+            (0.0, 0.0),
+            (40.0 * math.sin(turn), -34.641),
+            (-40.0 * math.sin(turn), -34.641),
+        )
+        prof = pen_profile(np.array([apex, right, left, apex]), math.pi / 2, 0.85, 8.0, 61)
+        assert prof[0] == prof[-1] == pytest.approx(1.0, abs=1e-6)
+        assert prof[20] == pytest.approx(0.575, abs=1e-4)
+        assert prof.tolist() == pytest.approx(prof[::-1].tolist(), abs=1e-5)
+
+    def test_a_closed_vee_started_past_its_point_ends_where_it_starts(self) -> None:
+        """A closed V started 3.5 px past its point reads its legs' 0.751 at both ends, across the seam."""
+        side = 30.0 * math.sin(math.pi / 4)
+        apex, right, left = (0.0, 0.0), (side, -side), (-side, -side)
+        start = (side * 3.5 / 30.0, -side * 3.5 / 30.0)
+        prof = pen_profile(np.array([start, right, left, apex, start]), 0.0, 0.85, 8.0, 61)
+        assert prof[0] == pytest.approx(0.15 + 0.85 * math.sin(math.pi / 4), abs=1e-5)
+        assert prof[-1] == pytest.approx(prof[0], abs=1e-6)
+
+
+def _zigzags(name: str, size: float, nib: NibStyle, seed: int) -> int:
+    """How often `name` at `size` px, under `nib` at a render scale of 2, steps wide, thin, wide along a stroke."""
+    hand = Hand(FaceStyle(), HandStyle())
+    marks = hand.write(Setting(name, size, anchor=(10.0, 80.0)), hand.generator(seed))
+    window = nib_brushes(nib, FaceStyle(), BrushStyle(), 2.0)("glyph", size).width
+    angle = math.radians(nib.label_pen_angle_deg)
+    zigzags = 0
+    for mark in marks:
+        pts = np.asarray(mark.pts) * 2.0
+        step = np.diff(pen_profile(pts, angle + mark.pen, nib.label_pen_thin, window))
+        big = np.abs(step) > 0.05
+        turn = step[:-1] * step[1:] < 0
+        zigzags += int(np.sum(turn[:-1] & turn[1:] & big[:-2] & big[1:-1] & big[2:]))
+    return zigzags
+
+
+def _hairline_kink() -> np.ndarray:
+    """A 20 px hairline along a flat nib, a 2 px kink up at 60 degrees, then 20 px down at 60 degrees."""
+    turn = math.radians(60.0)
+    kink = (2.0 * math.cos(turn), -2.0 * math.sin(turn))
+    out = (kink[0] + 20.0 * math.cos(turn), kink[1] + 20.0 * math.sin(turn))
+    return np.array([(-20.0, 0.0), (0.0, 0.0), kink, out])
+
+
+class TestHairlineKink:
+    """A hairline meeting a short kink, where a floor gated on a pinch switched on at full strength."""
+
+    #: A nib angle where the old gate sat on its edge: a turn of 1.6e-4 rad moved a sample 0.29.
+    NIB = -0.04385
+
+    def test_turning_the_nib_a_little_moves_the_width_a_little(self) -> None:
+        """Turning the nib by 1.6e-4 rad moves no sample by more than `thin` times that, where a gate jumped 0.29."""
+        nudge = 1.6e-4
+        here = pen_profile(_hairline_kink(), self.NIB, 0.85, 8.0)
+        turned = pen_profile(_hairline_kink(), self.NIB + nudge, 0.85, 8.0)
+        assert np.abs(turned - here).max() <= 0.85 * nudge + 1e-6
+
+    def test_the_width_climbs_into_the_kink(self) -> None:
+        """At the default 24 samples the hairline climbs into the kink by the pinned widths, with no step."""
+        prof = pen_profile(_hairline_kink(), self.NIB, 0.85, 8.0)
+        pinned = [0.1873] * 9 + [0.2, 0.2665, 0.3731, 0.4834, 0.7112]
+        assert prof[:14].tolist() == pytest.approx(pinned, abs=1e-4)
+
+    def test_the_hairline_is_not_thickened_past_half_a_window_from_the_kink(self) -> None:
+        """The 0.187 hairline is untouched more than 4 px before the kink and climbs under 0.3 to 1 px, where a spread floor read 0.49."""
+        samples = 421
+        prof = pen_profile(_hairline_kink(), self.NIB, 0.85, 8.0, samples)
+        along = np.linspace(0.0, 42.0, samples)
+        assert prof[along < 20.0 - 4.0].max() == pytest.approx(0.1873, abs=1e-4)
+        assert prof[along < 20.0 - 1.0].max() <= 0.3
+
+
+class TestSmallRing:
+    """A closed stroke shorter than the tent, which reaches round it more than once."""
+
+    def test_a_ring_shorter_than_the_tent_is_cut_at_every_lap_of_its_vertices(self) -> None:
+        """A 1.3 px sliver of a ring under an 8 px window, which reaches round it three times either way, reads its pinned widths."""
+        pts = np.array([(0.0, 0.2), (-0.3, -0.2), (-0.5, -0.2), (0.0, 0.2)])
+        prof = pen_profile(pts, -2.25, 0.85, 8.0, 9)
+        pinned = [0.9802, 0.9574, 0.9388, 0.8579, 0.6266, 0.7371, 0.988, 0.9672, 0.9802]
+        assert prof.tolist() == pytest.approx(pinned, abs=1e-4)
