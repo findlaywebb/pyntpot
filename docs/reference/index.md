@@ -8,7 +8,7 @@ These pages list what pyntpot has, and nothing else. For how to use it, see the 
 - [The manifest: every key it records](manifest.md)
 - [Pigments: the swatch sheet and every pigment key](pigments.md)
 - [Brushes: the brush sheet and every brush id](brushes.md)
-- [Glossary: a pointer to the glossary](glossary.md)
+- [Glossary: every term the docs use, and what it means](glossary.md)
 - [API, `pyntpot`: the top-level package and its version](pyntpot.md)
 - [API, `ink`: paper, washes, brushes and pigment](ink.md)
 - [API, `letters`: the hand, the nib and the glyph sheet](letters.md)

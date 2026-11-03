@@ -40,6 +40,7 @@ theme:
     - navigation.indexes
     - navigation.top
     - content.code.copy
+    - content.tooltips
 
 extra_css:
   - stylesheets/pyntpot.css
@@ -50,6 +51,12 @@ markdown_extensions:
       permalink: false
   - pymdownx.highlight
   - pymdownx.superfences
+  # The glossary's tooltips: every page gets the generated abbreviations appended, and
+  # abbr underlines each Tooltip form with its meaning.
+  - abbr
+  - pymdownx.snippets:
+      auto_append: [docs/includes/abbreviations.md]
+      check_paths: true
 
 plugins:
   - search
