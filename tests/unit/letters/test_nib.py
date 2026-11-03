@@ -10,8 +10,9 @@ from PIL import Image
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.sheet import Canvas
 from pyntpot.ink.style import PaperStyle
-from pyntpot.letters.nib import NibSurface, nib_plate
-from pyntpot.letters.setting import Mark
+from pyntpot.letters.hand import Hand
+from pyntpot.letters.nib import NibSurface, _pen_profile, nib_plate
+from pyntpot.letters.setting import Mark, Setting
 from pyntpot.letters.style import FaceStyle, HandStyle, NibGroups, NibStyle
 
 GROUPS = NibGroups(NibStyle(), FaceStyle(), HandStyle(), BrushStyle(), PaperStyle())
@@ -169,3 +170,60 @@ class TestMarks:
         """Turning a mark's backing wash off changes what is written under it."""
         washed = _plate([Mark(STROKE)], tmp_path / "a.webp")
         assert _plate([Mark(STROKE, wash=False)], tmp_path / "b.webp") != washed
+
+
+class TestPenProfile:
+    """A glyph stroke's width follows its smoothed direction against the nib."""
+
+    @pytest.mark.parametrize(
+        ("heading", "nib", "width"),
+        [
+            (0.0, math.pi / 2, 1.0),
+            (0.0, 0.0, 0.15),
+            (math.pi / 6, 0.0, 0.575),
+            (math.pi, 0.0, 0.15),
+        ],
+        ids=["across", "along", "thirty-degrees", "reversed-along"],
+    )
+    def test_a_straight_stroke_keeps_the_sine_of_its_angle(
+        self, heading: float, nib: float, width: float
+    ) -> None:
+        """A straight stroke keeps `1 - thin` along the nib, all of it across, and the sine between, everywhere."""
+        pts = np.array([(0.0, 0.0), (60.0 * math.cos(heading), 60.0 * math.sin(heading))])
+        prof = _pen_profile(pts, nib, 0.85, 8.0)
+        assert np.allclose(prof, width, atol=1e-6)
+
+    def test_the_samples_are_never_more_than_half_a_window_apart(self) -> None:
+        """A stroke 120 px long under an 8 px window is sampled at 31 points, not the fewest 24."""
+        pts = np.array([(0.0, 0.0), (120.0, 0.0)])
+        assert len(_pen_profile(pts, 0.0, 0.5, 8.0)) == 31
+        assert len(_pen_profile(pts, 0.0, 0.5, 80.0)) == 24
+
+    def test_a_short_or_degenerate_stroke_has_full_width(self) -> None:
+        """A one-point stroke, or one of no length, keeps its full width at both ends."""
+        for pts in (np.array([(3.0, 4.0)]), np.array([(3.0, 4.0), (3.0, 4.0)])):
+            assert _pen_profile(pts, 0.0, 0.85, 8.0).tolist() == [1.0, 1.0]
+
+    def test_a_corner_is_smoothed_over_the_window(self) -> None:
+        """Where a stroke turns from along the nib to across it, the width climbs through the angles between."""
+        pts = np.array([(0.0, 0.0), (40.0, 0.0), (40.0, 40.0)])
+        prof = _pen_profile(pts, 0.0, 0.85, 8.0)
+        assert prof[0] == pytest.approx(0.15, abs=1e-6)
+        assert prof[-1] == pytest.approx(1.0, abs=1e-6)
+        assert np.all(np.diff(prof) >= -1e-6)
+        assert np.abs(np.diff(prof)).max() < 0.5
+
+    @pytest.mark.parametrize("seed", [1, 7, 11], ids=["seed-1", "seed-7", "seed-11"])
+    def test_keswick_on_an_upright_nib_has_no_saw_tooth(self, seed: int) -> None:
+        """Keswick at 52 px, nib at 90 degrees and thin 0.85, never zigzags wide, thin, wide along a stroke."""
+        hand = Hand(FaceStyle(), HandStyle())
+        marks = hand.write(Setting("Keswick", 52.0, anchor=(10.0, 80.0)), hand.generator(seed))
+        window = 3.4 * 52.0 / NibStyle().label_size_px * 2.0
+        zigzags = 0
+        for mark in marks:
+            pts = np.asarray(mark.pts) * 2.0
+            step = np.diff(_pen_profile(pts, math.radians(90.0) + mark.pen, 0.85, window))
+            big = np.abs(step) > 0.05
+            turn = step[:-1] * step[1:] < 0
+            zigzags += int(np.sum(turn[:-1] & turn[1:] & big[:-2] & big[1:-1] & big[2:]))
+        assert zigzags == 0
