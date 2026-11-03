@@ -229,10 +229,9 @@ def _furniture(
     bracket, and a connector between two marks a reader can already see belong
     together is one more line on a card that has enough.
     """
-    ends = lb.leader
-    if not ends or lb.kind in NO_LEADER or lb.tier == TIER_SPAN:
+    if not lb.leader or lb.kind in NO_LEADER or lb.tier == TIER_SPAN:
         return []
     ring_px = mark_width_px(nib, "pin", lb.size)
     ring = Mark(pts=pin(hand, lb, rng, ring_px), role="pin", ink=ink, size=lb.size)
-    line = Mark(pts=leader(hand, ends, rng), role="leader", ink=ink, size=lb.size)
+    line = Mark(pts=leader(hand, lb, rng, ring_px), role="leader", ink=ink, size=lb.size)
     return [ring, line]

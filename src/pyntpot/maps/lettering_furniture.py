@@ -1,8 +1,8 @@
 """The furniture drawn beside a name: its pin, its leader and a town's underline.
 
 Key names: `pin`, the ring a leader points at, sized round its hole;
-`leader`, the curve from the pin to the name; `underline`, the rule under a
-town's name. Each returns the points of one stroke, wandered by `Hand.stroke`
+`leader`, the curve from the pin's outer edge to the name; `underline`, the rule
+under a town's name. Each returns the points of one stroke, wandered by `Hand.stroke`
 from the generator the name's glyphs were written with.
 
 It draws nothing into a plate and it decides nothing about which label takes
@@ -13,7 +13,8 @@ Invariants: the draws a stroke takes from the generator before it is wandered
 (a leader's bend, an underline's rise) come first, in the order the pin, the
 leader and the underline are called, so the same label draws the same strokes;
 a pin's hole, the paper inside its ink, is at least `PIN_HOLE_MIN_PX` in radius
-for the pen width it is given.
+for the pen width it is given, and a leader starts at the ring's outer edge, so
+none of its ink is laid in the hole.
 """
 
 import math
@@ -57,7 +58,7 @@ def pin(hand: Hand, lb: Label, rng: np.random.Generator, pen_px: float) -> list[
     Returns:
         The wandered ring, in display pixels.
     """
-    r = max(lb.size * PIN_HOLE_SIZE_FRAC, PIN_HOLE_MIN_PX) + pen_px / 2
+    r = _hole_px(lb) + pen_px / 2
     ring = [
         (lb.px + r * math.cos(a * math.tau / 14), lb.py + r * math.sin(a * math.tau / 14))
         for a in range(15)
@@ -65,17 +66,36 @@ def pin(hand: Hand, lb: Label, rng: np.random.Generator, pen_px: float) -> list[
     return hand.stroke(ring, rng, 0.2)
 
 
-def leader(hand: Hand, ends: tuple[Pt, Pt], rng: np.random.Generator) -> list[Pt]:
+def leader(hand: Hand, lb: Label, rng: np.random.Generator, pen_px: float) -> list[Pt]:
     """A curve from the pin to the name, bent a different way each time.
 
     A leader exists only to disambiguate a pin, so it is the quietest mark on
-    the map and it never leaves at the same angle twice. It over-runs the pin
-    very slightly, because a real pen does not stop on the dot.
+    the map and it never leaves at the same angle twice. It starts on the
+    ring's outer edge, a hole and a whole pen out from the pin's centre towards
+    the name, so it touches the ring and lays no ink in its hole; a leader
+    shorter than that starts where it ends.
+
+    Args:
+        hand: The hand that wanders the leader.
+        lb: The label, for its leader's two ends (the pin's centre, then the
+            name's end) and its type size.
+        rng: The generator the bend and the wander are drawn from.
+        pen_px: The width the pin's ring is drawn at, in display pixels, as
+            `pin` is given it.
+
+    Returns:
+        The wandered leader, in display pixels.
+
+    Raises:
+        ValueError: When the label has no leader.
     """
-    (ax, ay), (bx, by) = ends
+    if lb.leader is None:
+        raise ValueError(f"{lb.name!r} has no leader to draw")
+    (px, py), (bx, by) = lb.leader
+    run = math.hypot(bx - px, by - py) or 1.0
+    out = min(_hole_px(lb) + pen_px, run) / run
+    ax, ay = px + (bx - px) * out, py + (by - py) * out
     run = math.hypot(bx - ax, by - ay) or 1.0
-    over = 2.0 / run
-    ax, ay = ax - (bx - ax) * over, ay - (by - ay) * over
     bend = float(rng.normal(0.0, 0.15)) * run
     mx, my = (ax + bx) / 2, (ay + by) / 2
     nx, ny = -(by - ay) / run, (bx - ax) / run
@@ -94,6 +114,11 @@ def underline(hand: Hand, lb: Label, width: float, rng: np.random.Generator) -> 
     rise = lb.size * (0.05 + abs(float(rng.normal(0.0, 0.04))))
     line = [(x0 - lb.size * 0.06, y0), (x0 + width + lb.size * 0.1, y0 - rise)]
     return hand.stroke(resample(line, max(width / 10.0, 3.0)), rng, 0.45)
+
+
+def _hole_px(lb: Label) -> float:
+    """The radius of the paper inside a label's pin ring, in display pixels."""
+    return max(lb.size * PIN_HOLE_SIZE_FRAC, PIN_HOLE_MIN_PX)
 
 
 def _quad_at(quad: list[Pt], t: float) -> Pt:
