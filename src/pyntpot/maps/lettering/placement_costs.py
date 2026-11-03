@@ -2,7 +2,9 @@
 
 Key names: `_crossings`, `on_road`, `overlap`, `separation`, `darkness`, `box_on_paper`
 and `near_route`, which price one box against the roads, the other names, the painted
-plates and the route; `off_own` and `off_own_feature`, which leave a name's own line
+plates and the route; `leader_crossings` and `leader_route_crossings`, which count what a
+leader segment cuts: the placed boxes, and the route (`RouteSegments`) past the pin it
+leaves (`LEADER_ROUTE_SLACK_PX`); `off_own` and `off_own_feature`, which leave a name's own line
 out of the roads it keeps off; `_is_own_feature`; `route_for`, the route a name keeps
 off, its span's own stretch at `SPAN_OWN_ROUTE_FRAC`.
 
@@ -15,7 +17,10 @@ paper, which `box_on_paper` answers for the caller.
 import itertools
 import math
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Any
+
+import numpy as np
 
 from pyntpot.ink.polyline import Pt, foot_on
 from pyntpot.maps.card import Card
@@ -61,6 +66,39 @@ OWN_FEATURE_SLACK_PX = 6.0
 OWN_FEATURE_COST_PX = 3.0
 
 
+#: How near its anchor a leader may meet the route without it counting as a
+#: crossing, in display pixels: the pin's ring (`lettering_furniture.pin`, never
+#: under 2.2 px) and half the route's pen. A pin set on the track has the track
+#: through its ring, and a leader leaving it touches the track there whichever
+#: way it goes; past this the leader has crossed the route.
+LEADER_ROUTE_SLACK_PX = 4.0
+
+
+#: Below this a cross product is zero: the two segments run parallel.
+_PARALLEL = 1e-12
+
+
+@dataclass(frozen=True, eq=False)
+class RouteSegments:
+    """The drawn route as arrays of segment ends, so a leader is priced against all of it at once.
+
+    Attributes:
+        starts: Each segment's first point, `(n, 2)` display pixels.
+        ends: Each segment's last point, `(n, 2)`.
+    """
+
+    starts: np.ndarray = field(default_factory=lambda: np.zeros((0, 2)))
+    ends: np.ndarray = field(default_factory=lambda: np.zeros((0, 2)))
+
+    @classmethod
+    def of(cls, route_px: list[Pt]) -> "RouteSegments":
+        """The segments of a polyline; none for fewer than two points."""
+        if len(route_px) < _FEWEST_FOR_A_SEGMENT:
+            return cls()
+        pts = np.asarray(route_px, dtype=float)
+        return cls(pts[:-1], pts[1:])
+
+
 @dataclass(frozen=True)
 class Backdrop:
     """What every name on the card is priced against: the map, the route and the roads.
@@ -86,6 +124,11 @@ class Backdrop:
         """The route, thinned, which is what a name is priced against."""
         return self.route_px[::_ROUTE_THINNING] or self.route_px
 
+    @cached_property
+    def segments(self) -> RouteSegments:
+        """The whole route, unthinned, as segments, which is what a leader is priced against."""
+        return RouteSegments.of(self.route_px)
+
 
 @dataclass(frozen=True)
 class Terms:
@@ -99,6 +142,7 @@ class Terms:
             already removed.
         route: The route in weighted parts, for the route cost.
         water: The lakes and watercourse strokes, for the water cost.
+        segments: The whole route as segments, for what a leader crossing it costs.
     """
 
     card: Card
@@ -107,6 +151,7 @@ class Terms:
     roads: list[list[Pt]]
     route: list[tuple[list[Pt], float]]
     water: Water = field(default_factory=Water)
+    segments: RouteSegments = field(default_factory=RouteSegments)
 
 
 def _crossings(box: Box, roads: list[list[Pt]]) -> int:
@@ -136,6 +181,34 @@ def on_road(box: Box, roads: list[list[Pt]]) -> float:
 def leader_crossings(start: Pt, end: Pt, boxes: list[Box]) -> float:
     """How many placed boxes a leader segment passes through, as a count."""
     return float(sum(seg_in_box(start, end, *box) for box in boxes))
+
+
+def leader_route_crossings(start: Pt, end: Pt, segments: RouteSegments) -> float:
+    """How many times a leader from its pin at `start` crosses the route, as a count.
+
+    A crossing within `LEADER_ROUTE_SLACK_PX` of the pin is not counted: that is
+    the pin sitting on the track, which the leader cannot help. Every crossing
+    past it is a line drawn over the route, which a reader follows to the wrong
+    side of the track or mistakes for a turn off it.
+    """
+    if not len(segments.starts):
+        return 0.0
+    a = np.asarray(start, dtype=float)
+    r = np.asarray(end, dtype=float) - a
+    run = math.hypot(r[0], r[1])
+    if run <= LEADER_ROUTE_SLACK_PX:
+        return 0.0
+    s = segments.ends - segments.starts
+    ca = segments.starts - a
+    den = r[0] * s[:, 1] - r[1] * s[:, 0]
+    live = np.abs(den) >= _PARALLEL
+    den = np.where(live, den, 1.0)
+    t = (ca[:, 0] * s[:, 1] - ca[:, 1] * s[:, 0]) / den
+    u = (ca[:, 0] * r[1] - ca[:, 1] * r[0]) / den
+    # Half open along the route, so a leader through a vertex meets one of its two
+    # segments: closed at both ends it would count twice, open at both, not at all.
+    cut = live & (t > LEADER_ROUTE_SLACK_PX / run) & (t < 1.0) & (u >= 0.0) & (u < 1.0)
+    return float(np.count_nonzero(cut))
 
 
 def overlap(box: Box, boxes: list[Box]) -> float:
