@@ -1,11 +1,12 @@
 # 007 — tasks
 
 Slices and their files are in `plan.md`. S1 to S6 run in parallel after S0; S7 after them;
-S8 after feature 006 has merged.
+S8 after feature 006 has merged. No slice edits `src/`; nothing under
+`tests/architecture/` moves or changes before S8. The PR stays a draft until S8.
 
 ## S0 — Scaffold and site shape
 
-- [ ] Move `test_tutorials.py` and `test_reference_pages.py` from `tests/architecture/` to `tests/docs/`.
+- [ ] `tests/docs/` package created; nothing under `tests/architecture/` touched (the two docs tests move in S8).
 - [ ] Red: `tests/docs/test_site_pages.py` for the helper API.
 - [ ] `tests/support/site_pages.py`: pages, exclusions, nav, fenced blocks, prose, links, resolve.
 - [ ] Red: `tests/docs/test_nav.py` (section index order, performance log off the site, anchors validated).
@@ -21,14 +22,16 @@ S8 after feature 006 has merged.
 - [ ] `GLOSSARY.md` in three sections with every row of the plan's table and the spec's Meanings; six retired words.
 - [ ] Generated `docs/reference/glossary.md` and `docs/includes/abbreviations.md`.
 - [ ] `mkdocs.yml`: `abbr`, `pymdownx.snippets` auto_append, `content.tooltips`.
-- [ ] Glossary pointer test removed; reference index line; `CONTRIBUTING.md` glossary paragraph.
+- [ ] Generated page carries the GitHub link the existing pointer test checks (test file untouched); reference index line; `CONTRIBUTING.md` glossary paragraph.
+- [ ] "brush sheet", "style group" and "vector layers" rows keep `main`'s meaning (006's facts wait for S8).
 - [ ] Strict build green; tooltips render and none inside code.
 
 ## S2 — Reference truth (#163)
 
 - [ ] Red: `tests/docs/test_docs_imports.py` (imports, from claims, dotted paths).
 - [ ] Red: `tests/docs/test_reference_values.py` (style-field rows, synopsis, pigments, brushes).
-- [ ] Style-field group lines in the B-neutral form; reading-the-tables bullet; route ink `style` row; nib plate.
+- [ ] Style-field group lines true on both sides of 006 (package only where exported today; `RouteInk`, `LetteringPolicy` as the code has them); reading-the-tables bullet; route ink `style` row; nib plate.
+- [ ] Brush tables imported from `pyntpot.ink.brush` (S8 repoints).
 - [ ] `cli.md` synopsis equals the parser's usage.
 - [ ] Cache layout: nib plate, trace; manifest, pigments, brushes: map for the picture.
 - [ ] Gate and strict build green.
@@ -45,7 +48,7 @@ S8 after feature 006 has merged.
 
 ## S4 — Tutorials (#172)
 
-- [ ] Red: every tutorial page's marked blocks verbatim; every python block marked.
+- [ ] Red: `tests/docs/test_tutorial_quotes.py` (every tutorial page's marked blocks verbatim; every python block marked); `tests/architecture/test_tutorials.py` untouched and green.
 - [ ] Red: `tests/docs/test_tutorial_paths.py` (Next lines, lead-on links).
 - [ ] `pictures.md` blocks marked and verbatim; any drift on curves, symmetry, fractals fixed in the page.
 - [ ] `Next:` line on all nine pages.
@@ -61,26 +64,32 @@ S8 after feature 006 has merged.
 - [ ] `examples/places.toml` key, `place_card.py`, docstrings and comments say landmarks.
 - [ ] How-to pages: landmark, route ink style, map for the picture, track.
 - [ ] The hand and the nib: centreline trace.
+- [ ] `self-host-providers.md` protocols sentence and the landmarks how-to's import sentence left for S8.
 - [ ] Gate, places golden test and strict build green; no golden moved.
 
-## S6 — The wash essay (#TBD)
+## S6 — The wash essay (#176)
 
 - [ ] Red: `tests/docs/test_docs_signatures.py`.
-- [ ] Line 32 signature; the four behaviours stated truly; feature-note link gone.
+- [ ] Line 32 signature; the four behaviours stated truly with no export claim or module path; feature-note link gone.
 - [ ] Gate and strict build green.
 
 ## S7 — Integration
 
 - [ ] `tests/docs/test_retired_words.py` green over pages, README and examples.
-- [ ] Notes for #162, #163, #65, #172 and the wash defect deleted; links to them repointed.
-- [ ] Out-of-scope notes and issues filed; #174 note extended and commented.
+- [ ] Notes for #162, #163, #65, #172 and #176 deleted; links to them repointed, except in `docs-missing-how-tos.md` and `docs-examples-housekeeping.md` (S8).
+- [ ] Out-of-scope notes and issues filed (the #174 paragraph and comment are S8's).
 - [ ] Full suite, `prek run --all-files` and strict build green; no golden moved.
-- [ ] Diff reviewed against the plan; PR opened closing #65, #162, #163, #172 and the wash issue.
+- [ ] Diff reviewed against the plan; draft PR opened closing #65, #162, #163, #172 and #176.
 
 ## S8 — After feature 006
 
-- [ ] Rebase on `main` with 006; docs tests read what changed.
-- [ ] Group lines name the exporting package and new dataclass names.
-- [ ] Wash essay names `WashOptions`'s package if exported.
-- [ ] Glossary cells use 006's exported names; files regenerated.
-- [ ] Retired-word scan covers `src/`, green.
+- [ ] Rebase on `main` with 006; `GLOSSARY.md` conflict resolved; only the expected reds (route ink and lettering group lines).
+- [ ] `test_tutorials.py` and `test_reference_pages.py` moved to `tests/docs/`; subsumed verbatim test dropped; "eighth rung" and "label plate" docstrings fixed; `examples/brush_sheet.py` docstring repointed.
+- [ ] `test_reference_values.py` imports the brush tables from `pyntpot.ink.brush_sheet`.
+- [ ] Red: group line requires `, from` an exporting package (#163). Green: `WashStyle` from `pyntpot.ink`, seven map groups from `pyntpot.maps`, `RouteInkStyle`, `LetteringStyle`; bullet and keyword-only sentence.
+- [ ] Wash essay (#176): `WashOptions`, `separated`, `fluid_modulate` from `pyntpot.ink`; from-claim test shown to guard them.
+- [ ] Red: glossary cells name the exported name where there is one. Green: cells swapped; 006's three rows in the new format; files regenerated.
+- [ ] Red: repository links name files on the branch. Green: `self-host-providers.md` protocols; landmarks how-to names `Landmark`; `docs/architecture.md` states ADR 0068's rule.
+- [ ] `docs-missing-how-tos.md` and `docs-examples-housekeeping.md` drop the lead-on note; #174 paragraph and comment.
+- [ ] Red: retired-word scan over `src/` and `tests/`. Green: test docstrings and one test name fixed; any `src/` miss reported to 006, not edited.
+- [ ] Full gates green; PR marked ready.
