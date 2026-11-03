@@ -17,7 +17,10 @@ reach the land cover classes.
 - **A floor in display pixels.** `CoverStyle.min_patch_px` (theme key `[cover]
   min_patch_px`) is the smallest painted cover patch kept as it is, in display pixels, so
   one value means the same on a 720 px place card and a 1,800 px plate. Zero, the default,
-  keeps every patch, so the default theme and every other theme paint as before.
+  keeps every patch, so the default theme and every other theme paint as before. Like
+  `relief_strength`, it is left out of the style digests while it is at its default
+  (`DIGEST_OMITS_AT_DEFAULT`), so the manifest hash and `GOLDEN_HASH` do not move; only
+  `CoverStyle`'s pinned field table and defaults digest are re-pinned.
 - **Patches are measured as painted.** `maps.painter.patches` finds the four-connected
   patches of the label raster (one class per pixel) after `_label` has deformed, filled and
   cut the water out, so the floor sees the patches the card shows, not the surveyed
