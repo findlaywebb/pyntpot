@@ -64,15 +64,15 @@ does, so the manifest hash moves in its input half.
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
-wash.webp: identical no, differing fraction 0.009010
+wash.webp: identical no, differing fraction 0.002739
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.003065
-map.png: identical no, differing fraction 0.008483
-manifest hash: 643c61991c4a08ce-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
+labels-centreline.webp: identical no, differing fraction 0.002312
+map.png: identical no, differing fraction 0.002795
+manifest hash: f151b40adc3d7ccd-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
 ```
 
 `PINNED_LABELS` is unchanged. `GOLDEN_HASH` is re-pinned to
-`643c61991c4a08ce-d9c56c0811177b0f`. The Lynmouth box's road strokes go from 39 to 35
+`f151b40adc3d7ccd-d9c56c0811177b0f`. The Lynmouth box's road strokes go from 39 to 35
 (`test_basemap.py`, `test_pipeline_fetch_paint.py`) and its vector roads from 82 to 85, the
 unnamed ways now kept with the way they carry on from (`FIXTURE_ROADS` in
 `test_vector_layers.py`). The map-styles means (`tests/golden/test_map_styles.py`) move by
@@ -87,19 +87,20 @@ and only they; every other entry is byte-identical. Master differing fractions a
 
 | Image | Master | Image | Master |
 |---|---|---|---|
-| `places/oxford.webp` | 0.321379 | `places/skye.webp` | 0.290790 |
-| `places/y-fenni.webp` | 0.195775 | `how-to/route-ink-grid.webp` | 0.164420 |
-| `map-styles/bold.webp` | 0.141886 | `tutorials/route-map.webp` | 0.133650 |
-| `places/yr-wyddfa.webp` | 0.132882 | `how-to/route-ink.webp` | 0.132481 |
-| `map-styles/winter.webp` | 0.129215 | `gallery/route-map.webp` | 0.121199 |
-| `places/ambleside.webp` | 0.121199 | `map-styles/sepia.webp` | 0.120054 |
-| `map-styles/pen-and-ink.webp` | 0.109795 | `hero.webp` | 0.082432 |
-| `social-preview.jpg` | 0.065000 | `how-to/command-line.webp` | 0.016903 |
+| `places/skye.webp` | 0.105315 | `places/yr-wyddfa.webp` | 0.071821 |
+| `places/oxford.webp` | 0.071593 | `how-to/route-ink-grid.webp` | 0.041953 |
+| `tutorials/route-map.webp` | 0.028558 | `how-to/route-ink.webp` | 0.027948 |
+| `map-styles/bold.webp` | 0.027217 | `map-styles/winter.webp` | 0.026876 |
+| `gallery/route-map.webp` | 0.025073 | `places/ambleside.webp` | 0.025073 |
+| `map-styles/sepia.webp` | 0.025049 | `places/y-fenni.webp` | 0.022936 |
+| `map-styles/pen-and-ink.webp` | 0.022880 | `social-preview.jpg` | 0.022708 |
+| `hero.webp` | 0.018494 | `how-to/command-line.webp` | 0.005455 |
 
-The fractions are large because the roads and watercourses draw from one generator in the
-order laid: a stroke dropped or added changes the brush texture of every stroke laid after
-it, so nearly every road and stream on a card is repainted with the same line and new
-texture. The strokes added or dropped, counted on each fixture (road strokes, then river
+Each road and watercourse draws from a generator keyed by its own geometry (ADR 0049), so a
+stroke dropped or added repaints only itself, and a chain joined by `carried_on` or drawn
+whole is a new stroke with a new key; the rest of the card keeps its texture. The masters
+move where strokes were dropped, added or joined, and on Skye where the names move (below).
+The strokes added or dropped, counted on each fixture (road strokes, then river
 strokes, `main` to this change): Ambleside 44 to 35 and 18 to 31, Skye 39 to 39 and 308 to
 368, Yr Wyddfa 19 to 17 and 23 to 25, Oxford 376 to 284 and 32 to 34, Y Fenni 140 to 128
 and 2 to 3.
