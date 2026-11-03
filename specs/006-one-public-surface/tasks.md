@@ -10,8 +10,10 @@
       directives and `references.md` paths repointed; green (#164).
 - [ ] S2: `Pt` to `Point`, one `Box`, `Anchor` folded into `Align`, alias docstrings.
 - [ ] S3: `griffelib` in `dev`; `test_public_signatures.py` (transitive walk, alias rule,
-      fail closed, `ALLOWED` from the first run) and `test_field_docs.py` with self-tests
-      and the per-lane pending ratchet; architecture tests green.
+      `layer_of`, strings fail closed, `ALLOWED` the reviewed 30-name literal) and
+      `test_field_docs.py` with self-tests and the per-lane pending ratchet; the run
+      reproduces plan.md's expected 38 violations (6/1/31/0) and 30 external names, or S3
+      stops and reports; architecture tests green.
 - [ ] S4 (parallel): ink lane: `Flow`/`Blooms` records, keyword-only ink groups and
       `WashOptions`, eight ink exports, ink field docs, `ink.md`; `_pending_ink.py`
       empty (#73).
@@ -22,15 +24,19 @@
       keyword-only (`Projection` frozen, `Label`/`Span` keyword-only), maps field docs,
       `maps.md`, protocol conformance test; `_pending_maps.py` empty (#78).
 - [ ] S7 (parallel): `Annotations.roads` letters the roads it names, every class and
-      numbered-only roads; unmatched names raise `ValueError`; goldens unchanged;
-      `_pending_roads.py` empty (#161).
+      numbered-only roads; unmatched names raise `ValueError`; non-golden
+      `test_ground.py` covers `_ground`; goldens unchanged; `_pending_roads.py` empty
+      (#161).
 - [ ] Merge S5, S4, S7, S6; standard gate green after each.
 - [ ] S8: ratchet deleted, gates absolute; `GLOSSARY.md` three rows, `BOUNDARIES.md`;
       six notes deleted, citing notes repointed; seven follow-up notes and issues filed
       (#168, #169).
-- [ ] S9: docstring terminology sweep per `specs/007-docs-truth-and-glossary/spec.md`.
+- [ ] S9: docstring terminology sweep: every row of plan.md Appendix A (007 at
+      `529753f`), the N24 log message, the test docstrings; no retired word left in
+      `src/**/*.py` or `tests/**/*.py` but the two `"callouts"` key lines.
 - [ ] S10: local mutation run on the behaviour-changed functions (plan.md S10 table and
-      rule; maps rows in a throwaway config); survivors killed or named.
+      rule; the seven maps patterns in a throwaway worktree config, re-run from each new
+      `HEAD` until every survivor is killed or named).
 - [ ] S11: final review against plan and spec; all gates and the strict docs build green;
       PR body drafted with Changelog, `Closes #168 #73 #78 #169 #164 #161`, mutation
       equivalents and the session A handoff.

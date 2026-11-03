@@ -119,8 +119,9 @@ it writes their fields in place at about thirty sites in `placement.py`,
 `placement_flat.py`, `placement_leaders.py` and `spans.py`. Rewriting the placer to build
 new records is behaviour work, outside a change to the surface. A `Label` or `Span` that
 `letter` hands back is a finished value, and **writing to one is unsupported**. So
-returning frozen records later is not a breaking change, and their fields are a read-only
-contract from now on.
+returning frozen records later is not a breaking change, and their fields are read-only
+for a caller from now on. Which of their fields stay is settled with the frozen records
+(see "Records the pipeline returns").
 
 ### Members (amends 0026)
 
@@ -191,17 +192,25 @@ current names, which describe what they return and do.
   are the suffixes of `WashStyle.bloom_radius_frac`, `bloom_lift` and `bloom_warp`, with
   `seed` and `count`. The `WashStyle` names are theme keys and digest inputs, so the
   records follow them, and a reader maps one onto the other by name.
-- **Records the pipeline returns.** Every dataclass record this ADR makes public is
-  `@dataclass(frozen=True, kw_only=True)`: `Card`, `Credit`, `Manifest`, `DarkGrid`,
+- **Records the pipeline returns.** Every dataclass record this ADR makes public, except
+  `Label` and `Span`, is `@dataclass(frozen=True, kw_only=True)`: `Card`, `Credit`, `Manifest`, `DarkGrid`,
   `Layers`, `River`, `Road`, `ElevationPatch`, `ElevationGrid`, `VectorArea`,
   `VectorLine`, `HillshadeBand`, `HillshadeImage` and `Projection` (which was mutable;
-  `track_projection` now builds it once). Publishing a positional or mutable record would
+  `track_projection` now builds it without the origin shift, projects through it, and
+  replaces it once with the shift, so no `Projection` is assigned to after it is
+  built). Publishing a positional or mutable record would
   freeze its field order or its mutability into the contract. For these, adding a field
   with a default is additive wherever it goes. `Label` and `Span` are keyword-only and
   mutable (above). `BoundingBox` is a `NamedTuple`: it is a tuple, and its field order is
   its contract. `Basemap`, `Plates`, `Lettering` and `VectorLayers` were public before
   this ADR and keep their construction; a field added to one goes at the end. For every
-  record, removing or renaming a field needs an ADR.
+  record, removing or renaming a field needs an ADR, with one exception. The fields of
+  `Label` and `Span` that are the placer's working state (`Label.window`, `flat`,
+  `anchors`, `mark`, `span_range`, `in_water`, `tx`, `ty` and `lift`; `Span.rank`,
+  `offset_px` and `side`) may be removed or renamed without an ADR until the frozen
+  records land (`maps-lettering-frozen-records`, filed with this ADR). That follow-up
+  separates the record `letter` returns from the placer's working state and settles
+  which fields stay; once it lands, the rule holds for every field.
 
 ### Field documentation (#169)
 
@@ -249,7 +258,7 @@ when `LetteringStyle.label_ground` is false.
 A listed name that matches no road the basemap draws is an error: `letter` raises
 `ValueError` naming every such name. A caller annotation that cannot be honoured is a
 caller error, as a journal note off the card already is, and lettering nothing in silence
-is the defect this section fixes. The check runs before any name is placed, so no label
+is the defect this section fixes. The check runs before any name is placed, so no nib
 plate is written. When the style letters nothing, `letter` returns before the check.
 
 A road the basemap does not draw cannot be lettered: `fetch` keeps minor roads by the
@@ -269,7 +278,10 @@ function, and the how-to on picking roads (#173) needs it.
   annotated `TypeAlias`, a PEP 695 `type` statement, or an unannotated value that is a
   subscript, a `|` union or a name resolving to a class; any other constant contributes
   only its annotation. A reached `pyntpot` name the test cannot resolve fails it. A name
-  counts as public only when the layer that defines it exports it. The allowlist is exact
+  counts as public only when the layer that defines it exports it; the façade's
+  re-exports in `pyntpot.__all__` neither make a name public nor count against it. A
+  string left in an annotation outside `Literal[...]`, or a `Raises:` entry that does not
+  parse to a name, fails the test rather than being skipped. The allowlist is exact
   names, not module prefixes, so a new third-party type in a signature is a decision
   someone makes on purpose.
 - `tests/architecture/test_field_docs.py`: the field documentation rule above.

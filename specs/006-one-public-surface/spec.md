@@ -95,7 +95,7 @@ Field docs:
       its first place. Named roads replace the picked roads; when none can be set (too
       short on the card, logged at INFO), the picked roads come back. A name that matches
       no drawn road raises `ValueError` naming it, before any plate is written. Tested on
-      synthetic lines (`A591`/Rydal Road, `A66`, `A82`, `A9`, Lake Road) and through
+      synthetic lines (`A591`/Rydal Road, `A66`, `A82`, `A9`, Old Lake Road) and through
       `letter` on the Lynmouth fixture: `Annotations()` letters `PINNED_LABELS`;
       `roads=("B3234",)` letters `B3234` as the only road, replacing both picked roads
       (`A39` and `B3234`); `roads=("Lynbridge Road",)` letters `B3234`; the minor
@@ -113,6 +113,12 @@ Process:
       config, and the changed `maps` functions through a throwaway config. Every survivor
       in them is killed by a focused test or named as equivalent, with the reason, in the
       PR description.
+- [ ] No retired word of feature 007's glossary (label plate, callout, raster card,
+      recorded route, centreline route, outline route) is left in `src/**/*.py` or
+      `tests/**/*.py`, on one line or wrapped over two, except the two lines that read
+      the `"callouts"` key of `examples/places.toml`; every row of plan.md Appendix A is
+      applied. The one string literal this changes is the log message at
+      `maps/pipeline.py:167`.
 - [ ] The notes for #168, #73, #78, #169, #164 and #161 are deleted; notes that cite
       them or the old module paths are updated; the PR body says `Closes #168`,
       `Closes #73`, `Closes #78`, `Closes #169`, `Closes #164`, `Closes #161`.
@@ -157,7 +163,11 @@ plan:
   the package docstring's task groups. `pyntpot.maps` grows from 21 to 52 names.
 - `maps-lettering-frozen-records.md`: `Label` and `Span` are public, keyword-only and
   mutable, because the placer fills them in place. Writing to a returned one is already
-  unsupported (ADR 0068), so returning frozen records from `letter` breaks no caller.
+  unsupported (ADR 0068), so returning frozen records from `letter` breaks no caller. The
+  note also covers separating the returned record from the placer's working state
+  (`Label.window`, `flat`, `anchors`, `mark`, `span_range`, `in_water`, `tx`, `ty`,
+  `lift`; `Span.rank`, `offset_px`, `side`), which ADR 0068 leaves changeable without an
+  ADR until then.
 - `maps-typed-features-payload.md`: a `Features` provider must return Overpass JSON text.
   A typed payload would let a non-OSM source plug in without faking Overpass.
 - `docs-defaults-render-as-values.md`: a parameter default that names a private

@@ -11,10 +11,52 @@ change in exactly these places, and nowhere else:
   place of tuple positions (same values);
 - `maps.painter.job.PaintJob.flow` and `.bloom` build those records in place of tuples
   (same values);
-- `maps.projection.track_projection` computes the origin shift before it builds the now
-  frozen `Projection`, in place of assigning it afterwards (same arithmetic);
+- `maps.projection.track_projection` builds the now frozen `Projection` without the
+  origin shift, projects through it, then replaces it once with the shift, in place of
+  assigning the shift afterwards (same arithmetic; S6);
 - the named roads path in `maps.lettering` (`picks_roads`, `picks_lines`, `pipeline`),
   taken only when `Annotations.roads` is set.
+
+These body edits change no behaviour and are listed so S11's diff-against-plan check
+expects them:
+
+- S1 and S2: import lines, and the identifier renames `Pt` to `Point` and `Anchor` to
+  `Align` inside annotations and bodies (`placement_costs.py` and the rest the replace
+  touches);
+- S6: `Credit(...)` built by keyword in `maps/providers/opentopodata.py:59` and
+  `maps/providers/overpass.py:193`, and the `LetteringPolicy`/`RouteInk` renames in
+  `maps/style.py` and `maps/compose_steps.py`;
+- S9: the one log message N24 at `maps/pipeline.py:167` (Appendix A), its only string
+  literal.
+
+### Retired words
+
+Every slice that writes prose (S4, S5, S6, S7, S8, S9, S10: docstrings, comments, test
+names and docstrings, notes) writes none of these words, in any case, in any new or
+rewritten line. They are the "Retired words" of feature 007's glossary (Appendix A,
+provenance there), and 007 extends its retired-word test to `src/**/*.py` and
+`tests/**/*.py` once 006 lands, so a hit 006 leaves turns 007 red:
+
+| Retired | Say instead |
+| --- | --- |
+| label plate | nib plate |
+| callout | landmark |
+| raster card | map |
+| recorded route | track |
+| centreline route | centreline trace |
+| outline route | outline trace |
+
+Text a lane moves verbatim (a `#:` comment becoming an `Attributes:` entry) keeps its old
+words; S9 rewrites it by Appendix A. The check any slice can run on its own lines:
+
+```bash
+git diff origin/main -U0 -- '*.py' '*.md' | grep '^+' \
+  | grep -i -F -e 'label plate' -e callout -e 'raster card' -e 'recorded route' \
+      -e 'centreline route' -e 'outline route'
+```
+
+It finds nothing a slice wrote itself (moved `#:` text excepted, named in the slice's
+report).
 
 Two facts shape the order:
 
@@ -243,17 +285,25 @@ Mechanical, no behaviour:
 - `tests/architecture/_public_surface.py` (a helper module, like `_ast_checks.py`):
   - `load(search_path: Path, package: str) -> griffe.Module`:
     `griffe.load(package, search_paths=[search_path], docstring_parser="google", resolve_aliases=True)`.
-  - `public_objects(package, layers) -> dict[str, str]`: each `__all__` name of each layer
-    module, resolved through aliases to the defining object, mapped canonical path to the
-    exporting layer (`"pyntpot.ink"`). A name is public only when the exporting layer is
-    the layer its canonical path lives under (ADR 0068: "exported from the `__all__` of
-    the layer package that defines it"); a name exported only from another layer's
-    `__all__` is reported as a violation of its own.
+  - `layer_of(path: str) -> str`: the longest of `pyntpot.ink`, `pyntpot.letters` and
+    `pyntpot.maps` that is a dotted prefix of `path`, else `pyntpot`.
+  - `public_objects(package, layers) -> set[str]`: the canonical paths `p` (each `__all__`
+    name of each layer module, resolved through aliases to the defining object) such
+    that `layer_of(p)`'s own `__all__` exports `p`'s name. This is ADR 0068's "exported
+    from the `__all__` of the layer package that defines it". The façade's
+    re-exports (`pyntpot.__all__` names `Hand`, `Style`, `wash` and fourteen more, all
+    defined in a layer) are ignored by this check: they neither make a name public nor
+    count against it. A name a layer exports whose `layer_of` is another layer is reported
+    as a violation of its own.
   - `names_in(expr) -> set[str]`: the canonical paths of every `ExprName` and of every
     whole `ExprAttribute` chain (not its left parts), through subscripts, unions,
     `Optional[...]`, calls inside `Annotated` and quoted forward references at any depth
-    (`list["_Private"]` included). String constants that are not forward references, and
-    `None` (griffe keeps it as the plain string `'None'`), are skipped.
+    (`list["_Private"]` included). `None` (griffe keeps it as the plain string `'None'`)
+    is skipped. **Strings fail closed:** a string constant is skipped only as a direct
+    argument of a `Literal[...]` subscript. Any other string still left in an annotation
+    after forward references are parsed is a violation, never skipped, and so is a
+    `Raises:` entry whose annotation griffe did not parse into an `ExprName` or
+    `ExprAttribute` (today all 27 entries parse).
   - **What a public object contributes** (ADR 0068, "The rule"):
     - a function or method: its parameter annotations and return annotation (defaults
       excluded); its docstring's `Raises:` entries;
@@ -274,18 +324,23 @@ Mechanical, no behaviour:
     rules, once. That is the ADR's "32 objects, and those name 8 more", found on the
     first run rather than lane by lane.
   - **Fail closed.** A reached path under `pyntpot.` that does not resolve to a loaded
-    griffe object is a violation, never skipped. An alias griffe cannot resolve is the
-    same.
-  - `ALLOWED: frozenset[str]`: exactly the external (not `pyntpot.`) canonical paths the
-    first transitive run on S3's tree reaches, each listed by name, with a one-line comment
-    group per source (builtins, `collections.abc`, `typing`, `pathlib`, `json`, `numpy`,
-    `httpx`, `pydantic`, `tomllib`). No hand-written guesses: an entry no run reaches is
-    not added. Because the walk is transitive, the external names reached do not change
-    when a lane exports a private name, so `ALLOWED` is complete from S3 and **no lane
-    edits `_public_surface.py`**. No lane in this plan reaches a new external name or
-    stops reaching one (S4's `Flow` and `Blooms` reach `float` and `int`, already
-    reached); if `test_every_allowed_name_is_reached` or the unknown-name test goes red in
-    a lane, the lane stops and reports to the orchestrator.
+    griffe object is a violation, never skipped. An alias whose target is under
+    `pyntpot.` and that griffe cannot resolve is the same. An alias to an external target
+    (numpy, httpx, ...) is never resolved, because only `pyntpot` is loaded: its target
+    path is the external name, checked against `ALLOWED`.
+  - `ALLOWED: frozenset[str]`: a committed, reviewed literal, exactly the 30 names under
+    "Expected values" below, typed in from this plan (not pasted from a run), with a
+    one-line comment group per source: builtins, `collections.abc`, `httpx`, `json`,
+    `numpy`, `pathlib`, `PIL`, `pydantic`, `tomllib`, `typing`. `PIL.Image.Image` (the
+    return of `compose`, reached once S1 stops `maps.compose` shadowing it) and
+    `typing.Self` are expected; neither is a walker error. The two-way tests fail on an
+    external name reached but not listed and on a listed name no longer reached. Because
+    the walk is transitive, the external names reached do not change when a lane exports
+    a private name, so `ALLOWED` is complete from S3 and **no lane edits
+    `_public_surface.py`**. No lane in this plan reaches a new external name or stops
+    reaching one (S4's `Flow` and `Blooms` reach `float` and `int`, already reached); if
+    `test_every_allowed_name_is_reached` or the unknown-name test goes red in a lane, the
+    lane stops and reports to the orchestrator.
   - `field_doc_violations(cls) -> list[str]` and `attribute_doc_violations(attr) -> list[str]`
     for the field rule (ADR 0068, "Field documentation"):
     - **Which classes and attributes.** A class or module attribute is checked when it is
@@ -327,7 +382,11 @@ Mechanical, no behaviour:
     `test_a_private_name_reached_through_a_private_one_is_reached` (transitive),
     `test_an_unresolved_package_name_is_reported` (fail closed),
     `test_a_parameter_default_is_not_reached`,
-    `test_an_allowed_third_party_name_is_not_reported`.
+    `test_an_allowed_third_party_name_is_not_reported`,
+    `test_a_facade_reexport_does_not_make_a_name_public` (a name only `pyntpot.__all__`
+    exports is still a violation),
+    `test_a_literal_string_is_not_reached`,
+    `test_a_string_outside_a_literal_is_reported` (fail closed).
   - `test_no_public_signature_names_a_private_name`: the violations (reached canonical
     paths that are neither public nor `ALLOWED`) minus the pending set are empty. The
     message lists each violation with its `where`.
@@ -347,7 +406,9 @@ Mechanical, no behaviour:
   empty) and `test_every_pending_field_docs_entry_still_violates`.
 - The pending sets live in four files. Each defines `SIGNATURES: frozenset[str]`
   (private canonical paths) and `FIELD_DOCS: frozenset[str]` (checked object canonical
-  paths), filled from the first run by these rules:
+  paths). `SIGNATURES` is typed in from "Expected values" below; `FIELD_DOCS` is filled
+  from the first run and checked against the expected counts there. The files split by
+  these rules:
   - `tests/architecture/_pending_ink.py`: paths under `pyntpot.ink.`;
   - `tests/architecture/_pending_letters.py`: paths under `pyntpot.letters.` and the
     top-level `pyntpot.__version__`;
@@ -357,13 +418,55 @@ Mechanical, no behaviour:
   The module-scoped fixture loading `pyntpot` once is allowed (an immutable parsed
   object).
 
+**Expected values.** An independent probe (review 2, griffe 2.4.1 on a copy of `src` with
+the S1 renames and S2's aliases applied by hand) measured the post-S2 tree. These are
+pinned; the gate's first run must reproduce them, not define them.
+
+- **Signature violations: 38**, which is ADR 0068's 40 minus `separated` and
+  `fluid_modulate` (exported for #73, reached by no signature). `LetteringPolicy` and
+  `RouteInk` carry their old names here because S6 renames them later.
+  - `_pending_ink.SIGNATURES`, 6: `pyntpot.ink.polyline.Point`,
+    `pyntpot.ink.polyline.Box`, `pyntpot.ink.style.WashStyle`,
+    `pyntpot.ink.washing.WashOptions`, `pyntpot.ink.washing.Flow`,
+    `pyntpot.ink.bloom.Blooms`.
+  - `_pending_letters.SIGNATURES`, 1: `pyntpot.letters.setting.Align`.
+  - `_pending_maps.SIGNATURES`, 31 (ADR 0068's table):
+    `pyntpot.maps.providers.base.{Features,Elevation,ElevationGrid}`;
+    `pyntpot.maps.track.BoundingBox`; `pyntpot.maps.credit.Credit`;
+    `pyntpot.maps.card.Card`; `pyntpot.maps.plates.{Manifest,DarkGrid}`;
+    `pyntpot.maps.basemap.{Layers,River,Road,ElevationPatch,Line}`;
+    `pyntpot.maps.projection.Projection`; `pyntpot.maps.lettering.label.{Label,Span}`;
+    `pyntpot.maps.annotations.{Landmark,SpanRequest,MAX_NOTES,MAX_NOTE_CHARS}`;
+    `pyntpot.maps.vector_layer_build.{VectorArea,VectorLine,HillshadeBand,HillshadeImage}`;
+    `pyntpot.maps.style_groups.{CardStyle,RibbonStyle,CoverStyle,RouteStyle,BasemapStyle,LetteringPolicy,RouteInk}`.
+  - `_pending_roads.SIGNATURES`: empty.
+- **External names: 30.** `KeyError`, `RuntimeError`, `ValueError`, `bool`, `dict`,
+  `float`, `int`, `list`, `str`, `tuple`; `collections.abc.Callable`,
+  `collections.abc.Mapping`, `collections.abc.Sequence`; `httpx.Client`;
+  `json.JSONDecodeError`; `numpy.ndarray`, `numpy.random.Generator`,
+  `numpy.typing.ArrayLike`; `pathlib.Path`; `PIL.Image.Image`; `pydantic.BaseModel`,
+  `pydantic.Field`, `pydantic.ValidationError`; `tomllib.TOMLDecodeError`;
+  `typing.Annotated`, `typing.Any`, `typing.Literal`, `typing.NamedTuple`,
+  `typing.Protocol`, `typing.Self`.
+- **Missing field entries**, counted as fields (not as `FIELD_DOCS` objects): about ink
+  186, letters 38, maps 115 (the plan's own probe). A lane total that differs from its
+  figure by more than 10 is a difference.
+
+**Any difference stops the slice.** If the walker reaches a signature violation or an
+external name not listed above, misses one listed above, or a field count is out of
+range, S3 reports the difference and its `where` strings to the orchestrator and commits
+nothing. It never edits `ALLOWED`, a pending set or the walker to match the run: the
+plan's lists are corrected only after the orchestrator decides which side is wrong.
+
 - Owned (nine files): `pyproject.toml`, `uv.lock`, `tests/architecture/_public_surface.py`,
   `tests/architecture/test_public_signatures.py`, `tests/architecture/test_field_docs.py`
   and the four `tests/architecture/_pending_*.py`.
 - Gate: `uv run pytest tests/architecture` + `uv run ruff check tests` + `uv run ty check`.
-  Done: every self-test passes, the real tests pass with the pending sets, `ALLOWED`
-  equals the external set reached, and the pending sets name nothing that does not
-  violate.
+  Done: every self-test passes; `ALLOWED` is the 30 names above and the run reaches
+  exactly those; the union of the four `SIGNATURES` sets is the 38 above, partitioned
+  6/1/31/0 as listed, and the run's violations are exactly that union; the field counts
+  are within range; the real tests pass with the pending sets; and the pending sets name
+  nothing that does not violate.
 
 ### S4 — Lane: ink (#73, #168, #169; parallel)
 
@@ -421,8 +524,14 @@ Test first:
   pinned values do not change: that is the proof that no pixel moves.
 - `tests/unit/maps/painter/test_job.py` lines 51 and 62-63 read `big.count`,
   `wood.seed`, `again.seed`, `lake.seed` in place of `[1]` and `[0]`.
+- `tests/unit/maps/painter/test_job.py::test_the_flow_option_carries_the_wash_styles_rim_settings`
+  (new; no test reads `PaintJob.flow` today, and as a property it gets no mutants in S10):
+  with a style whose `flow_rim_exp`, `flow_rim_ref_frac` and `flow_rim_frac` are three
+  distinct values, `job.flow == Flow(exp=..., ref_frac=..., frac=...)` with those values
+  as literals; with `flow_rim` false, `job.flow is None`.
 
 Empty `_pending_ink.py` of every entry as it goes green (the ratchet fails until you do).
+Retired words (Approach) apply to every line this lane writes.
 
 - Owned: `src/pyntpot/ink/{__init__,washing,bloom,style,brush,brush_style,sheet,pigment}.py`
   and any other `ink` module `test_field_docs.py` reports for a checked class;
@@ -449,6 +558,7 @@ Decisions:
   `Attributes:` sections. `#:` and trailing comments go.
 - `pyntpot.__version__` gets an attribute docstring in `src/pyntpot/__init__.py`.
 - `docs/reference/letters.md`: a directive for `Align`, in alphabetical order.
+- Retired words (Approach) apply to every line this lane writes.
 
 Test first:
 
@@ -485,11 +595,17 @@ Decisions:
   `tests/unit/maps/painter/test_smoke.py:86-88,93-94`; `tests/unit/maps/test_basemap.py:79,84`;
   `tests/unit/maps/test_lettering_furniture.py:46,181` (`Label`). Every `Label(` and
   `Span(` in `src` is already by keyword, so S7's files need no edit for this.
-- `maps/projection.py` `track_projection`: compute `x0` and `y0` first (the same two
-  branches, the same expressions as lines 84-88 today), then build
-  `Projection(lat0=..., lat_ref=..., lng_ref=..., x0=..., y0=...)` once. Nothing else
-  assigns a `Projection` field (`git grep -n -E '\.(x0|y0|lat0|lat_ref|lng_ref|ky)\s*=' -- '*.py'`
-  finds only those four lines).
+- `maps/projection.py` `track_projection`: the raw points need a projection before `x0`
+  and `y0` exist (`raw = [proj(a, b) ...]`, line 83), so it cannot be built once. It
+  becomes, in order: `base = Projection(lat0=..., lat_ref=..., lng_ref=...)` (the same
+  three expressions as line 82); `raw = [base(a, b) for a, b in zip(lat, lng, strict=True)]`;
+  the two unchanged branches computing local `x0` and `y0` (the expressions of lines
+  84-88); `proj = dataclasses.replace(base, x0=x0, y0=y0)`; and the return as today,
+  subtracting `proj.x0` and `proj.y0`. Bit-identical: `raw` is computed with `x0 = y0 =
+  0.0` today too, and `- 0.0` changes no float. No `Projection` is assigned to after it
+  is built. Nothing else assigns a `Projection` field
+  (`git grep -n -E '\.(x0|y0|lat0|lat_ref|lng_ref|ky)\s*=' -- '*.py'` finds only those
+  four lines).
 - `pyntpot.maps.__all__` adds the 31 names: `BasemapStyle`, `BoundingBox`, `Card`,
   `CardStyle`, `CoverStyle`, `Credit`, `DarkGrid`, `Elevation`, `ElevationGrid`,
   `ElevationPatch`, `Features`, `HillshadeBand`, `HillshadeImage`, `Label`, `Landmark`,
@@ -521,6 +637,8 @@ Decisions:
   provider returns Overpass JSON text, `id` enters the cache key, and failures are
   `ProviderError`s.
 - `docs/reference/maps.md`: one directive per new name, in the page's order.
+- Retired words (Approach) apply to every line this lane writes, `Label`'s and `Span`'s
+  new class docstring text included.
 
 Test first:
 
@@ -544,8 +662,9 @@ Test first:
   `src/pyntpot/maps/providers/{base,overpass,opentopodata}.py`,
   `src/pyntpot/maps/lettering/label.py`, `tests/support/providers.py`,
   `tests/property/test_projection.py`, `tests/unit/maps/**` **except**
-  `tests/unit/maps/painter/test_job.py` (S4), `tests/unit/maps/lettering/test_picks_roads.py`
-  and `tests/unit/maps/test_pipeline_letter_compose.py` (S7);
+  `tests/unit/maps/painter/test_job.py` (S4), `tests/unit/maps/lettering/test_picks_roads.py`,
+  `tests/unit/maps/lettering/test_ground.py` and
+  `tests/unit/maps/test_pipeline_letter_compose.py` (S7);
   `tests/architecture/_pending_maps.py`, `tests/unit/test_public_api.py` (the
   `MAPS_PUBLIC` tuple only), `docs/reference/maps.md`.
 - Gate: standard + mkdocs strict. Done: `_pending_maps.py` is empty, no digest literal
@@ -584,8 +703,10 @@ Decisions:
     returning `(pieces, widths, osm_names)`. Per entry: `name = str(entry.get("n") or "")`;
     `key = road_ref(entry.get("r")) or name`; skip when `not key` or when `classes` is not
     `None` and `entry.get("c") not in classes`; the line, `pieces` and `widths` exactly as
-    today; `osm_names.setdefault(key, set())`, adding `name.casefold()` when `name` is
-    non-empty. Dict insertion order is first appearance, as today.
+    today, inside today's `if len(line) > 1:`; and, inside that same branch only,
+    `osm_names.setdefault(key, set())`, adding `name.casefold()` when `name` is
+    non-empty. So every key of `osm_names` is a key of `pieces` and `widths`. Dict
+    insertion order is first appearance, as today.
   - `pick_roads` calls `_road_pieces(basemap, lines.get("roads") or [], card, frozenset({"major", "medium"}))`
     and ignores `osm_names`. Every entry under `roads` carries a name (`picks_lines`
     invariant), so `not key` skips exactly what `not name` skipped: its result and the
@@ -595,8 +716,11 @@ Decisions:
   - Add `named_roads(basemap: Basemap, lines: NamedLines, card: Card, names: tuple[str, ...]) -> list[Label]`.
     It calls `_road_pieces(basemap, (lines.get("roads") or []) + (lines.get("numbered") or []), card, None)`:
     **every road class** the basemap draws, named or numbered. Then, for each listed name
-    in order, `wanted = name.casefold()`, the matching keys are those with
-    `key.casefold() == wanted` or `wanted in osm_names[key]`, in dict order. Rules:
+    in order, `wanted = name.casefold()`, the matching keys are the keys of `pieces`, in
+    its order, with `key.casefold() == wanted` or `wanted in osm_names[key]`. A road all
+    of whose pieces `named_lines` simplifies below two points, or that falls under two
+    points on the card's pixel grid, is not in `pieces`: it counts as not drawn, and its
+    name raises below. `named_roads`' docstring says so. Rules:
     - **Label text** is the key: the road's number when it has one, its name otherwise,
       even when the match was by OSM name (`"Lynbridge Road"` letters `B3234`).
     - **Duplicates:** a key is lettered once, at the position of the first listed name
@@ -608,12 +732,12 @@ Decisions:
       `"road %s is too short on this card to letter"`. It is not an error: the road is
       drawn, and whether its number fits depends on the card's size.
     - **Unmatched:** after the loop, if any listed names matched no key, raise
-      `ValueError(f"no road the card draws is numbered or named {joined}")`, where
+      `ValueError(f"no road the map draws is numbered or named {joined}")`, where
       `joined` is `", ".join(repr(n) for n in unmatched)` in listed order. Why an error
       and not a log: a caller annotation that cannot be honoured is a caller error,
       which is the journal notes' precedent (`notes.py:51`, a note off the card raises);
       silently lettering nothing is the defect #161 records; and `_ground` runs before
-      `place` and `draw_plate`, so the error leaves no label plate written. It breaks no
+      `place` and `draw_plate`, so the error leaves no nib plate written. It breaks no
       invariant: when the style letters nothing, `letter` returns before `_ground`, so
       nothing is checked (unchanged).
     - Each label is built as `pick_roads` builds one: `name=key`, `kind="road"`,
@@ -658,8 +782,10 @@ Decisions:
 
 Test first. Synthetic tests use card metres on `hung_card` (no coordinates, so no
 fixture box applies) and real UK names from CONTRIBUTING.md ("Roads": A591, A66, A9,
-A82) and real streets they carry (the A591 is Rydal Road through Ambleside; Lake Road is
-Ambleside's unnumbered minor road). The Lynmouth tests use only names the fixture's
+A82) and real streets they carry, checked against the Ambleside OSM fixture
+(`tests/fixtures/ambleside/overpass-*.json`): Rydal Road and Lake Road both carry
+`ref=A591` (trunk), and Old Lake Road is a residential street with no `ref`, so the
+unnumbered minor road is Old Lake Road. The Lynmouth tests use only names the fixture's
 basemap draws (measured: `B3234` 173 px, `A39` 792 px, `Lydiate Lane` a `minor` road on
 the `path` band at 123 px, `B3223` 83 px against a 89.6 px minimum, `Lynbridge Road` an
 OSM name on a `B3234` piece).
@@ -668,8 +794,8 @@ OSM name on a `B3234` piece).
   (`hung_card`, `label_basemap`, synthetic `lines` dicts), in a `TestNamedRoads` class:
   - `test_a_named_road_is_lettered_though_the_track_was_never_on_it` (`A66` 200 px off any
     route; `named_roads` takes no route at all);
-  - `test_a_named_minor_road_is_lettered` (`{"n": "Lake Road", "c": "minor", "r": ""}`,
-    named `"Lake Road"`: one label `Lake Road`; and `pick_roads` on the same lines
+  - `test_a_named_minor_road_is_lettered` (`{"n": "Old Lake Road", "c": "minor", "r": ""}`,
+    named `"Old Lake Road"`: one label `Old Lake Road`; and `pick_roads` on the same lines
     letters nothing, which pins that the pick path still skips minor roads);
   - `test_a_road_is_matched_by_number_ignoring_case` (`"a591"` matches ref `A591`);
   - `test_a_road_matched_by_its_name_is_lettered_by_its_number`
@@ -703,12 +829,17 @@ OSM name on a `B3234` piece).
     `B3234`, `PINNED_LABELS` lines 29-30) are replaced;
   - `test_a_road_named_by_its_street_is_lettered_by_its_number`:
     `roads=("Lynbridge Road",)` gives road labels `["B3234"]`;
-  - `test_an_unknown_named_road_raises_and_writes_no_plate`: `roads=("A591",)` raises
-    `ValueError` matching `'A591'`, and the copied plates directory holds no
-    `labels-*.webp` it did not hold before;
-  - `test_named_roads_are_lettered_when_the_style_letters_no_ground`: a style with
-    `label_ground` false and `roads=("B3234",)`: the placed labels include `B3234` and no
-    settlement, river or route marker.
+  - `test_an_unknown_named_road_raises_and_writes_no_plate`: snapshot the copied plates
+    directory as `{p.name: p.stat().st_mtime_ns for p in copy.iterdir()}` before the call;
+    `roads=("A591",)` raises `ValueError` matching `'A591'`; the snapshot taken after is
+    equal. (The copy may already hold `labels-<route>.webp` when the module's `lettered`
+    fixture ran first, so "no new file" would pass for an implementation that rewrites
+    the plate and then raises; an unchanged mtime map does not.)
+  - `test_named_roads_are_lettered_when_the_style_letters_no_ground`: the style is
+    `style.model_copy(update={"lettering": dataclasses.replace(style.lettering, label_ground=False)})`,
+    so the test names neither `LetteringPolicy` nor `LetteringStyle` (S6 renames the class
+    in parallel and merges last), with `roads=("B3234",)`: the placed labels include
+    `B3234` and no settlement, river or route marker.
   - `test_a_named_minor_road_is_set_along_its_lane`: on the fixture's own basemap and
     `named_lines`, `named_roads(..., ("Lydiate Lane",))` returns one label, text
     `Lydiate Lane`, whose baseline is at least `road_min_px` long (a unit-level call; it
@@ -717,9 +848,32 @@ OSM name on a `B3234` piece).
     `roads=("B3223",)` raises nothing, logs `B3223` at INFO, and the road labels equal
     the pinned picked roads `["A39", "B3234"]`.
   `PINNED_LABELS` and the golden card test stay as they are and must pass unchanged.
+- `tests/unit/maps/lettering/test_ground.py` (new, **not** golden, so S10's mutation
+  selection runs it; every `letter` test is golden and `-m "not golden"` drops it). It
+  calls `_ground(basemap, lines, strands, annotations, style)` directly on
+  `tiny_basemap(tiny_style())` with synthetic `lines` dicts in that basemap's card metres
+  (built like `test_picks_roads.py`'s, `{"roads": [...], "rivers": [], "coast": [],
+  "crossings": [], "numbered": []}`) and `strands` along the basemap's route, in a
+  `TestGround` class. Expected label names are pinned literals, never recomputed through
+  `pick_roads` or `ground_labels`:
+  - `test_without_named_roads_the_ground_is_todays` (`annotations=None` and
+    `Annotations()` give the same pinned list, the picked road `A591` beside the route
+    among it);
+  - `test_named_roads_replace_the_picked_ones` (`Annotations(roads=("A66",))`, `A66` far
+    from the route: the `kind == "road"` names are `["A66"]`);
+  - `test_named_roads_are_all_there_is_when_the_style_letters_no_ground` (the
+    `model_copy` style above: `roads=("A66",)` gives exactly `["A66"]`, and no names gives
+    `[]`);
+  - `test_named_roads_too_short_bring_back_the_picked_ones` (a named road shorter than
+    `road_min_px`: the road names equal the pinned picked list);
+  - `test_an_unmatched_named_road_raises` (`roads=("A9",)` with no `A9` in `lines`:
+    `ValueError` matching `'A9'`).
+- Retired words (Approach) apply to every line this lane writes: no test name or
+  docstring says "label plate" (say "nib plate").
 
 - Owned: `src/pyntpot/maps/lettering/{picks_roads,picks_lines,pipeline}.py`,
   `tests/unit/maps/lettering/test_picks_roads.py`,
+  `tests/unit/maps/lettering/test_ground.py` (new),
   `tests/unit/maps/test_pipeline_letter_compose.py`,
   `tests/architecture/_pending_roads.py`.
 - Gate: standard. Done: the new tests pass, `PINNED_LABELS` and every golden pass
@@ -760,8 +914,12 @@ OSM name on a `B3234` piece).
   `docs/features/` with its GitHub issue (CLAUDE.md, "Issues and features"), searching
   the open issues first. `maps-lettering-frozen-records.md` says `Label` and `Span` are
   keyword-only, mutable while the placer fills them, and that writing to a returned one is
-  unsupported, so freezing them is not a breaking change. If the session cannot reach
+  unsupported, so freezing them is not a breaking change. It also scopes separating the returned record
+  from the placer's working state (the fields ADR 0068 names under "Records the pipeline
+  returns"), which may change without an ADR until it lands. If the session cannot reach
   GitHub, commit the notes without issue links and list them for the orchestrator.
+- Retired words (Approach) apply to every line S8 writes: the three `GLOSSARY.md` rows,
+  `BOUNDARIES.md`, the edited notes and the seven new notes and issues.
 - Owned: the files above. Gate: standard + mkdocs strict. Done: no `_pending` file, the
   absolute gates pass, and the word search (Approach, "Searches") for each of
   `LetteringPolicy`, `RouteInk`, `Pt` and `Anchor`, plus the old-module search, find
@@ -772,15 +930,64 @@ OSM name on a `B3234` piece).
 
 ### S9 — Docstring terminology sweep (serial)
 
-The word list is "per `specs/007-docs-truth-and-glossary/spec.md`, Canonical terms
-section"; the orchestrator hands it over. Known candidates: the 22 uses of "label plate",
-`Track` described as a "recorded route", `compose` returning a "raster card", and
-`Canvas` as the "card's metre box". Docstrings and comments under `src/pyntpot` only. No
-code, no identifiers, no behaviour.
+Execute every row of Appendix A ("Docstring changes for 006's S9", copied verbatim from
+feature 007's spec at `529753f`): N1 to N24, T1 to T3, M1 to M4, C1 to C8, R1 to R12, L1
+and S1 to S5, 58 lines in 21 files. Find each row by its old string, which is unique in
+its file; line numbers in the appendix are at `cb75c7b` and have moved (S0 splits, S1's
+`maps/compose.py` is now `maps/compose_steps.py`, S4 to S6 moved `#:` comments into
+`Attributes:` entries or attribute docstrings). Where a lane moved the text, apply the
+same new wording where it now sits (C3 is an attribute docstring after S4, so its new
+text has no `#:`). Rewrap within the docstring any line the new text pushes past 100.
+S4 and S5 of the appendix read `RouteInkStyle`, after S6's rename.
 
-- Owned: `src/pyntpot/**` (docstrings and comments only).
-- Gate: standard. Done: every listed non-canonical term is gone from `src/` docstrings,
-  and `git diff` touches no line outside a docstring or comment.
+**The one literal.** N24 rewords the log message at `maps/pipeline.py:167`
+(`"no label plate for %s, the card has no lettering"` becomes
+`"no nib plate for %s, the map has no lettering"`). The orchestrator approved it; no test
+reads it. It is the only string literal, and the only line outside a docstring or comment,
+that S9 changes in `src/`.
+
+**Tests.** The same retired words in `tests/**/*.py` docstrings and comments are reworded
+with the same replacements (Approach, "Retired words"). In tests only, S9 may also rename
+a test function or a local variable that carries one, since neither is API. The lines on
+today's tree, found by the grep below (line numbers at `943cb32`; find by string):
+
+- `tests/architecture/test_reference_pages.py:168` ("Both label plates" becomes "Both
+  nib plates");
+- `tests/golden/test_places.py:45,51,89` (comments) and `:188` (docstring): "callouts"
+  becomes "landmarks";
+- `tests/support/docs_images.py:351`: "curated callouts" becomes "curated landmarks";
+- `tests/unit/maps/lettering/test_draw_plate.py:1` ("label plate" becomes "nib plate")
+  and `:48` ("An outline route" becomes "An outline trace");
+- `tests/unit/maps/lettering/test_placement_water.py:89` (rename to
+  `test_a_land_landmark_whose_cheapest_seat_is_on_a_lake_is_lettered_off_it`), `:90` and
+  `:93` (docstrings, "callout" becomes "landmark");
+- `tests/unit/maps/test_cache.py:206`,
+  `tests/unit/maps/test_pipeline_letter_compose.py:102`,
+  `tests/unit/maps/test_route_ink.py:27`: "label plate" becomes "nib plate";
+- `tests/unit/maps/test_example_themes.py:53` and `:68` (docstrings, "callouts" becomes
+  "landmarks"), `:67` (rename to `test_the_label_cap_is_the_landmark_count`), `:70` and
+  `:73` (the local `callouts` becomes `landmarks`).
+
+Two hits stay, both the key `"callouts"` that `examples/places.toml` defines and the test
+reads: `tests/golden/test_places.py:194` (`entry.get("callouts", [])`) and
+`tests/unit/maps/test_example_themes.py:70` (`.get("callouts", [])`). `examples/` is out
+of 006's scope ("Files to leave alone"), so the key cannot change here.
+
+- Owned: `src/pyntpot/**/*.py` (docstrings, comments and the N24 literal only) and
+  `tests/**/*.py` (docstrings, comments, and test function and local names that carry a
+  retired word).
+- Gate: standard. Done, all three:
+  1. `git grep -n -i -F -e 'label plate' -e callout -e 'raster card' -e 'recorded route' -e 'centreline route' -e 'outline route' -- 'src/*.py' 'tests/*.py'`
+     finds exactly the two `"callouts"` key lines above, and S9's report lists each with
+     that reason. Any other hit fails the criterion.
+  2. The wrapped forms are gone too (N7 and N10 split "label plate" over two lines):
+     `rg -n -i -U --type py 'label\s*\n\s*(#:?\s*)?plate|raster\s*\n\s*(#:?\s*)?card|recorded\s*\n\s*(#:?\s*)?route|(centreline|outline)\s*\n\s*(#:?\s*)?route' src tests`
+     finds nothing (today it finds exactly `maps/lettering/pipeline.py:88-89` and
+     `maps/lettering/__init__.py:7-8`).
+  3. In `src/`, `git diff` of S9's commit touches no line outside a docstring or comment
+     except N24; every Appendix A row's new string is present (found by `git grep -F` in
+     its file, or, for a row S9 rewrapped, N1 and R9 among them, read in place and listed
+     in the report).
 
 ### S10 — Mutation testing (serial, local only)
 
@@ -789,8 +996,10 @@ It runs locally; nothing is pushed and the Actions workflow is not used.
 
 **Scope: functions whose behaviour changed in this diff.** Verbatim moves (S0), pure
 renames (`Pt` to `Point`, `Anchor` to `Align`, the four module renames), docstring and
-comment edits (S4, S5, S6, S9) and declaration-only changes (`frozen`, `kw_only`, a
-dataclass replacing a tuple alias) are excluded. Survivors that predate this branch in a
+comment edits (S4, S5, S6, S9), S9's N24 log text in `maps.pipeline.compose` (a message
+no test reads; a string mutant there is equivalent by construction), and
+declaration-only changes (`frozen`, `kw_only`, a dataclass replacing a tuple alias) are
+excluded. Survivors that predate this branch in a
 function whose behaviour did not change are out of scope.
 
 The expected list, from the "Approach" list of body changes:
@@ -799,13 +1008,21 @@ The expected list, from the "Approach" list of body changes:
 | --- | --- | --- |
 | `ink.washing.wash` | `pyntpot.ink.washing.x_wash*` | reads `Flow` by name |
 | `ink.bloom.bloom` | `pyntpot.ink.bloom.x_bloom*` | reads `Blooms` by name |
-| `maps.lettering.picks_roads.named_roads` | (maps, see below) | new |
-| `maps.lettering.picks_roads._road_pieces` | (maps) | new, extracted |
-| `maps.lettering.picks_roads.pick_roads` | (maps) | now calls `_road_pieces` |
-| `maps.lettering.picks_lines.named_lines` | (maps) | files `numbered` |
-| `maps.lettering.pipeline._ground` | (maps) | named roads wiring |
-| `maps.projection.track_projection` | (maps) | builds a frozen `Projection` |
-| `maps.painter.job.PaintJob.flow`, `.bloom` | (maps) | build records |
+| `maps.lettering.picks_roads.named_roads` | `pyntpot.maps.lettering.picks_roads.x_named_roads*` | new |
+| `maps.lettering.picks_roads._road_pieces` | `pyntpot.maps.lettering.picks_roads.x__road_pieces*` | new, extracted |
+| `maps.lettering.picks_roads.pick_roads` | `pyntpot.maps.lettering.picks_roads.x_pick_roads*` | now calls `_road_pieces` |
+| `maps.lettering.picks_lines.named_lines` | `pyntpot.maps.lettering.picks_lines.x_named_lines*` | files `numbered` |
+| `maps.lettering.pipeline._ground` | `pyntpot.maps.lettering.pipeline.x__ground*` | named roads wiring |
+| `maps.projection.track_projection` | `pyntpot.maps.projection.x_track_projection*` | builds a frozen `Projection` |
+| `maps.painter.job.PaintJob.bloom` | `pyntpot.maps.painter.job.xǁPaintJobǁbloom*` | builds a `Blooms` |
+
+`PaintJob.flow` is dropped from the run: it is a `@property`, and mutmut 3.8 makes no
+mutants under any decorator but a lone `staticmethod` or `classmethod`
+(`tests/mutation/scope.py`, `is_mutated`). Turning it into a method only to mutate it
+would change every caller for no behaviour. Its one change (a keyword `Flow(...)` in
+place of a tuple) is pinned instead by S4's non-golden
+`test_the_flow_option_carries_the_wash_styles_rim_settings`, which fails if a field is
+swapped or dropped.
 
 The rule that checks the list (a throwaway script in the scratchpad, not committed):
 
@@ -832,27 +1049,47 @@ uv run mutmut results | grep -v 'not checked'
 
 The maps rows are outside `[tool.mutmut] only_mutate` (`pyproject.toml:260`, ink and
 letters) and its test selection (no `tests/unit/maps`). They are run in a throwaway
-worktree (`git worktree add` in the scratchpad from `HEAD`) whose `pyproject.toml` alone
-is edited, never committed: `only_mutate` set to the four files
-(`src/pyntpot/maps/lettering/{picks_roads,picks_lines,pipeline}.py`,
-`src/pyntpot/maps/projection.py`, `src/pyntpot/maps/painter/job.py`) and the selection
-adding `tests/unit/maps/lettering/test_picks_roads.py`,
-`tests/unit/maps/lettering/test_picks.py`, `tests/unit/maps/painter/test_job.py` and the
-projection tests, still `-m "not golden"`. Patterns for those functions only. The worktree
-is removed afterwards. The committed mutation config does not change.
+worktree whose `pyproject.toml` alone is edited, never committed:
 
-For each survivor in a run-list function, write a focused test (`tests/unit/ink`,
-`tests/unit/letters`, `tests/property`, or for the maps rows the S7/S4/S6 test files)
-that kills it, or record it as equivalent with the reason in a list S11 puts in the PR
-description. A `no tests` function gets a focused test. Time cap: four hours of mutmut
-wall time; if it is reached, S10 reports the unrun patterns to the orchestrator instead of
-widening anything.
+- `only_mutate` set to the five files `src/pyntpot/maps/lettering/picks_roads.py`,
+  `src/pyntpot/maps/lettering/picks_lines.py`, `src/pyntpot/maps/lettering/pipeline.py`,
+  `src/pyntpot/maps/projection.py` and `src/pyntpot/maps/painter/job.py`;
+- `pytest_add_cli_args_test_selection` set to `tests/unit/maps/lettering/test_picks_roads.py`,
+  `tests/unit/maps/lettering/test_picks.py`, `tests/unit/maps/lettering/test_ground.py`
+  (S7's, the only non-golden test of `_ground`), `tests/unit/maps/painter/test_job.py`,
+  `tests/unit/maps/test_projection.py`, `tests/property/test_projection.py`, `-m`,
+  `not golden`;
+- the run takes the seven maps patterns of the table only.
+
+**The loop**, for the `ink`/`letters` run and the maps run alike. Tests are written in the
+main worktree, never in the throwaway one (it is deleted, and a worktree made before a
+test does not hold it):
+
+1. Create the throwaway worktree from the current `HEAD`:
+   `git worktree add --detach "$scratch/mut-maps" HEAD`, then edit its `pyproject.toml` as
+   above. (The `ink`/`letters` run uses the main worktree and the committed config.)
+2. Run the patterns; record every survivor and every `no tests` result per function.
+3. In the main worktree, for each survivor write a focused test that kills it (in the
+   files under "Owned" below), or name it equivalent with a one-line reason. A `no tests`
+   function gets a focused test. Run the standard gate and commit.
+4. Remove the throwaway worktree (`git worktree remove --force`), recreate it from the
+   new `HEAD` (step 1) and re-run only the patterns that had survivors.
+5. Repeat 3 and 4 until every survivor is killed or named equivalent with its reason.
+
+S11 puts the equivalent list in the PR description. Time cap: four hours of mutmut wall
+time across all rounds; if it is reached, S10 reports the unrun or unfinished patterns
+to the orchestrator instead of widening anything. The committed mutation config never
+changes.
 
 - Owned: `tests/unit/ink/**`, `tests/unit/letters/**`, `tests/property/**`,
-  `tests/unit/maps/lettering/test_picks_roads.py`, `tests/unit/maps/painter/test_job.py`,
-  `tests/unit/maps/test_projection*.py`.
-- Gate: the tests it adds pass, and the standard gate. Done: every run-list function has
-  been run, and every survivor in one is killed or named as equivalent.
+  `tests/unit/maps/lettering/test_picks_roads.py`,
+  `tests/unit/maps/lettering/test_ground.py`, `tests/unit/maps/painter/test_job.py`,
+  `tests/unit/maps/test_projection.py`.
+- Retired words (Approach) apply to every test name, docstring and comment S10 writes.
+- Gate: the tests it adds pass, and the standard gate. Done: every run-list function
+  (the `ink`/`letters` rule's list and the seven maps patterns) has been run, the last
+  round's re-run shows no survivor that is not named equivalent with a reason, and
+  every `no tests` function has a focused test.
 
 ### S11 — Final review (serial, fresh context)
 
@@ -990,3 +1227,265 @@ Should-fixes:
   sets (ADR 0068, "Naming convention").
 - Skipped: the `@overload` and PEP 695 type-parameter extensions to the gate (none in
   `src` today; the gate fails closed on what it cannot resolve).
+
+## Appendix A — feature 007's word list for S9 (verbatim)
+
+Provenance: copied without edits from feature 007's spec, at commit `529753f` on branch
+`origin/docs/007-docs-truth-and-glossary` (the latest there when this plan was revised):
+
+```bash
+git fetch origin docs/007-docs-truth-and-glossary
+git show 529753f:specs/007-docs-truth-and-glossary/spec.md
+```
+
+A.1 is the paragraph under 007's "Canonical terms" table (its lines 210 to 212). A.2 is the
+whole subsection "Docstring changes for 006's S9" (its lines 214 to 380); only its heading
+line is relabelled A.2, and the body below it is byte-for-byte 007's lines 216 to 380. "This plan" inside the quoted text means 007's plan;
+007's "S4"/"S5" rows of the "style" table are its row labels, not this plan's slices. If
+007 changes these rows after `529753f`, this appendix stays the contract until the
+orchestrator re-copies it.
+
+### A.1 Retired words
+
+Retired words, the glossary's "Retired words" table: label plate (say nib plate), callout
+(landmark), raster card (map), recorded route (track), centreline route (centreline
+trace), outline route (outline trace).
+
+### A.2 Docstring changes for 006's S9
+
+The exact strings 006's slice S9 changes, for 006 to execute; 007 changes none of them.
+Line numbers are at `cb75c7b` (`src/` is unchanged through `03cf136`, this plan's base).
+006's earlier slices move lines (the S0 splits, the S4 to S6 field docs) and rename
+`maps/compose.py` to `maps/compose_steps.py`, so S9 finds each change by its old string,
+which is unique in its file. Where a lane has already moved a `#:` comment into an
+`Attributes:` entry or an attribute docstring, the change applies to the text where it now
+sits, with the same new wording. A line the new text pushes past 100 characters is
+rewrapped within its docstring. Every change is inside a docstring or a comment except N24,
+a log message (no test reads it), which S9 changes as its one string literal.
+
+Totals: 58 lines in 21 files (N 26, T 3, M 4 of which 2 are N lines, C 9, R 12, L 1, S 5).
+After S9, `grep -rniE 'label plate|label$|raster card|recorded route|centreline route|outline route|callout' src/pyntpot`
+finds nothing but unrelated lines that end in "label" (`span_ends.py:127`,
+`picks_lines.py:91`, `label.py:145` at `cb75c7b`).
+
+nib plate, replacing "label plate": 25 uses in 26 lines of 8 files.
+
+```text
+N1  ink/io.py:123                  The label plate is composited normally rather than multiplied, so it needs
+                                -> A plate with its own alpha, such as the nib plate, is composited normally rather than multiplied, so it needs   (rewrap the paragraph)
+N2  maps/lettering_marks.py:83     #: the map's own ink on the label plate, so the card and the page get the same
+                                -> #: the map's own ink on the nib plate, so the card and the page get the same
+N3  maps/lettering/pipeline.py:5   measured by the hand, and strokes them into a label plate beside the plates;
+                                -> measured by the hand, and strokes them into a nib plate beside the plates;
+N4  maps/lettering/pipeline.py:7   label plate's path.
+                                -> nib plate's path.
+N5  maps/lettering/pipeline.py:73  plate_path: The label plate, or `None` when nothing was stroked.
+                                -> plate_path: The nib plate, or `None` when nothing was stroked.
+N6  maps/lettering/pipeline.py:84  """Place a map's names and spans and stroke them into a label plate.
+                                -> """Place a map's names and spans and stroke them into a nib plate.
+N7  maps/lettering/pipeline.py:88-89  against, their darkness keeps names on light ground, and the label / plate is written beside them.
+                                -> against, their darkness keeps names on light ground, and the nib / plate is written beside them.
+N8  maps/lettering/pipeline.py:98  The placed labels and spans and the label plate; empty, with no plate,
+                                -> The placed labels and spans and the nib plate; empty, with no plate,
+N9  maps/lettering/pipeline.py:217 plates: The painted plates, beside which the label plate is written.
+                                -> plates: The painted plates, beside which the nib plate is written.
+N10 maps/lettering/__init__.py:7-8 ... and `pipeline` (the `letter` stage and the label / plate it strokes).
+                                -> ... and `pipeline` (the `letter` stage and the nib / plate it strokes).
+N11 maps/compose.py:1 (compose_steps.py)  """The raster card's drawing steps: the painted map, the route and the label plate.
+                                -> """The map's drawing steps: the painting, the route and the nib plate.   (also M1)
+N12 maps/compose.py:7              the route ink, and `paste_labels` pastes the label plate over both. The
+                                -> the route ink, and `paste_labels` pastes the nib plate over both. The
+N13 maps/compose.py:11             painter made, a route already in display pixels and a label plate already
+                                -> painter made, a route already in display pixels and a nib plate already
+N14 maps/compose.py:125            """The label plate, over the painting, at the card's own size.
+                                -> """The nib plate, over the painting, at the card's own size.
+N15 maps/cache.py:7                digest), and `Cache.lettering_key`, the key of the label plate (the marks the nib
+                                -> digest), and `Cache.lettering_key`, the key of the nib plate (the marks the nib
+N16 maps/cache.py:25               The label plate's key is derived from the marks themselves, every float rounded to
+                                -> The nib plate's key is derived from the marks themselves, every float rounded to
+N17 maps/cache.py:228              """Return the key a label plate is cached under.
+                                -> """Return the key a nib plate is cached under.
+N18 maps/cache.py:232              base_hash: The hash of the base plates the label plate is drawn against.
+                                -> base_hash: The hash of the base plates the nib plate is drawn against.
+N19 maps/style_groups.py:245       #: no labels or spans and draws no label plate. The attribution follows
+                                -> #: no labels or spans and draws no nib plate. The attribution follows
+N20 maps/pipeline.py:7             lays the painted plates, the route and the label plate into one raster card;
+                                -> lays the painted plates, the route and the nib plate into one map;   (also M3)
+N21 maps/pipeline.py:21            pastes the label plate over it when the lettering has one; with no label plate
+                                -> pastes the nib plate over it when the lettering has one; with no nib plate
+N22 maps/pipeline.py:147           ink is a pen), the label plate is pasted over both when there is one, and
+                                -> ink is a pen), the nib plate is pasted over both when there is one, and
+N23 maps/pipeline.py:152           lettering: The lettering; its label plate, when set, is pasted over the
+                                -> lettering: The lettering; its nib plate, when set, is pasted over the
+N24 maps/pipeline.py:167           log.info("no label plate for %s, the card has no lettering", plates.directory)
+                                -> log.info("no nib plate for %s, the map has no lettering", plates.directory)   (log message)
+```
+
+track, replacing "route" for the recorded path: 3 lines in 2 files.
+
+```text
+T1  maps/track.py:1                """A recorded route as plain data: where it went, and optionally how high and when.
+                                -> """A recorded GPS track as plain data: where it went, and optionally how high and when.
+T2  maps/track.py:40               """A recorded route.
+                                -> """A recorded GPS track.
+T3  maps/pipeline.py:73            track: The route to map.
+                                -> track: The track to map.
+```
+
+map, replacing "raster card": 4 lines in 2 files.
+
+```text
+M1  maps/compose.py:1              (N11)
+M2  maps/compose.py:5              plates into a single raster card instead, so the picture can be handed over
+                                -> plates into a single map instead, so the picture can be handed over
+M3  maps/pipeline.py:7             (N20)
+M4  maps/pipeline.py:143           """Compose painted, lettered plates into one raster card.
+                                -> """Compose painted, lettered plates into one map.
+```
+
+card, which `ink` never says: 9 lines in 4 files.
+
+```text
+C1  ink/sheet.py:4                 mark; `Canvas`, a box in the card's metres and the pixel grid it is painted on, which
+                                -> mark; `Canvas`, a box in world units and the pixel grid it is painted on, which
+C2  ink/sheet.py:6                 is the card's own cream.
+                                -> is the paper's own cream.
+C3  ink/sheet.py:23                #: The card's own cream, before anything is laid on it.
+                                -> The paper's own cream, before anything is laid on it.   (an attribute docstring after 006 S4)
+C4  ink/sheet.py:47                """The card's metre box and the pixel grid it is painted on."""
+                                -> """A world-unit box and the pixel grid it is painted on."""   (the summary line, once S4 adds Attributes:)
+C5  ink/sheet.py:65                pts: Points in the card's metres, `(n, 2)`.
+                                -> pts: Points in world units, `(n, 2)`.
+C6  ink/cut.py:4-5                 ... so a line that runs off a card / is drawn up to the card's edge.
+                                -> ... so a line that runs off a canvas / is drawn up to the canvas's edge.   (2 lines)
+C7  ink/io.py:131                  the card a reader looks at closest.
+                                -> the painting a reader looks at closest.
+C8  ink/style.py:182               #: the dry share of the card moves 0.148 to 0.140, so the land's outer
+                                -> #: the dry share of the painting moves 0.148 to 0.140, so the land's outer
+```
+
+trace, replacing "route" for centreline or outline: 12 lines in 8 files.
+
+```text
+R1  letters/trace.py:1             """Strokes from a glyph: the centreline route and the outline route.
+                                -> """Strokes from a glyph: the centreline trace and the outline trace.
+R2  letters/trace.py:15            and does not choose a route; `letters.font` does.
+                                -> and does not choose a trace; `letters.font` does.
+R3  letters/font.py:6              How a glyph becomes strokes is `letters.trace`; this module chooses the route
+                                -> How a glyph becomes strokes is `letters.trace`; this module chooses the trace
+R4  letters/font.py:311            """A face, the vendored one by default, opened once a path and route and kept.
+                                -> """A face, the vendored one by default, opened once a path and trace and kept.
+R5  letters/nib.py:116             outline: True when the glyph pen is narrowed for an outline route; it
+                                -> outline: True when the glyph pen is narrowed for an outline trace; it
+R6  letters/style.py:74            #: The outline route draws two strokes where the centreline draws one, a
+                                -> #: The outline trace draws two strokes where the centreline draws one, a
+R7  letters/skeleton.py:58         contours the outline route draws.
+                                -> contours the outline trace draws.
+R8  letters/hand.py:54             route: `centreline` or `outline`; the face style's when not given.
+                                -> route: The trace, `centreline` or `outline`; the face style's when not given.
+R9  letters/font.py:200            route: `CENTRELINE` to thin the glyph to a written skeleton, `OUTLINE`
+                                -> route: The trace, `CENTRELINE` to thin the glyph to a written skeleton, `OUTLINE`   (rewrap the entry)
+R10 letters/font.py:315            route: `CENTRELINE` or `OUTLINE`.
+                                -> route: The trace, `CENTRELINE` or `OUTLINE`.
+R11 maps/lettering_marks.py:96     route: `centreline` or `outline`; the style's when not given.
+                                -> route: The trace, `centreline` or `outline`; the style's when not given.
+R12 maps/lettering/pipeline.py:223 route: `centreline` or `outline`; the style's when not given.
+                                -> route: The trace, `centreline` or `outline`; the style's when not given.
+```
+
+`letters/nib.py:135` ("the route's own set-down") and `letters/style.py:95` ("the route's
+own colour") mean the painted route and stay.
+
+landmark, replacing "callout": 1 line in 1 file.
+
+```text
+L1  maps/lettering_furniture.py:87 the leader and the ring read as one mark, a callout drawn in one go. A gap
+                                -> the leader and the ring read as one mark, drawn in one go. A gap
+```
+
+style, replacing "treatment" for the route ink's `style`: 5 lines in 3 files. S4 and S5
+read the class name after 006's S6 rename.
+
+```text
+S1  maps/strands.py:56             When the style paints the route pen and its route ink is the `"pen"` treatment,
+                                -> When the style paints the route pen and its route ink is the `"pen"` style,
+S2  maps/style.py:166              Only the colour and the width are fed: the route's treatment, blend and
+                                -> Only the colour and the width are fed: the route's style, blend and
+S3  maps/style.py:168              width, except when the treatment is `"pen"` and a pen plate was painted: then
+                                -> width, except when the style is `"pen"` and a pen plate was painted: then
+S4  maps/style_groups.py:15        basemap options and the resolved ink are theme values. `RouteInkStyle`'s treatment,
+                                -> basemap options and the resolved ink are theme values. `RouteInkStyle`'s style,
+S5  maps/style_groups.py:261       """How the route is drawn on the card: its treatment, width, colour, blend and opacity.
+                                -> """How the route is drawn on the map: its style, width, colour, blend and opacity.
+```
+
+## Response to review 2
+
+Every finding was checked against the code at `943cb32` (the review was at `5eff1dd`;
+`src/` is unchanged between them for these files). All three blockers hold and are fixed.
+
+- **B1 (S9 word list).** Confirmed: no `specs/007-*` in this tree, "Canonical terms" is
+  the glossary table and not the executable list, and the old S9 done criterion forbade
+  N24. Fixed by making the plan self-contained: Appendix A copies 007's retired-words
+  paragraph and its whole "Docstring changes for 006's S9" subsection verbatim from
+  `529753f` (the latest commit on `origin/docs/007-docs-truth-and-glossary`; checked by
+  `diff` against `git show`). S9 executes the appendix; N24 is carved out by name as its
+  one literal (orchestrator-approved). S9's done is the exact-word `git grep` over
+  `src/*.py` and `tests/*.py`, plus an `rg -U` check for the two wrapped rows (N7, N10),
+  which a line grep misses. Today's tree has 32 `src` hits, every one an appendix row,
+  and 20 `tests` hits, each assigned in S9; the two left are the `"callouts"` key of
+  `examples/places.toml`, which 006 does not edit. The retired-word table is in Approach
+  and named in S4, S5, S6, S7, S8 and S10. The plan's own "leaves no label plate written"
+  is now "nib plate", the "known candidates" sentence is gone, and the `ValueError`
+  message says "the map draws". Not adopted: 007's `label$` grep, which matches
+  unrelated lines; the `rg -U` check covers the wraps exactly.
+- **B2 (S3 self-referential).** Confirmed. The review's probe results are pinned under
+  S3 "Expected values": 38 signature names (ink 6, letters 1, maps 31 with canonical
+  paths, roads 0) and the 30 external names. `ALLOWED` is a committed literal typed from
+  the plan. Any difference stops S3 for an orchestrator decision, and nothing is edited
+  to match. The source groups now include `PIL` and `typing.Self`. Field counts are
+  checked to within 10 of ink 186, letters 38, maps 115. I checked the 31 maps paths'
+  defining modules against `src`; S3 runs before S6, so they carry `LetteringPolicy` and
+  `RouteInk`.
+- **B3 (S10 maps rows).** Confirmed: `PaintJob.flow` is a `@property`
+  (`job.py:136-142`), `is_mutated` rejects it, and `_ground` has no caller outside
+  `letter`. `PaintJob.flow` is dropped from the run, with the reason given. S4 adds a
+  non-golden `test_job.py` test that pins its `Flow` fields, so the change is still
+  covered. S7 owns a new non-golden `tests/unit/maps/lettering/test_ground.py` with five
+  focused tests, and it is in the throwaway selection and S10's owned files. The seven
+  patterns are written out, "five files" is listed by name, and the
+  mutate/kill/recreate/re-run loop is spelled out with tests written in the main
+  worktree.
+
+Should-fixes, all adopted:
+
+1. Projection: S6 now builds `base`, projects through it, then calls
+   `dataclasses.replace(base, x0=..., y0=...)`. The ADR says "no `Projection` is assigned
+   to after it is built". Checked that `x0`/`y0` default to `0.0`, so it is bit-identical.
+2. S7's no-plate test compares a `st_mtime_ns` map of the copied directory taken before
+   and after the call.
+3. S7 builds the no-ground style with `model_copy` and `dataclasses.replace`. The same
+   pattern is used in `test_ground.py`.
+4. S3 defines `layer_of` and ignores façade re-exports (a self-test checks this).
+   Unresolved aliases fail closed only under `pyntpot.`.
+5. ADR: "except `Label` and `Span`". The twelve placement-state fields (checked against
+   `label.py`) may change without an ADR until `maps-lettering-frozen-records` lands, and
+   that follow-up covers separating the returned record from the placer's working state.
+   This is mirrored in spec.md's follow-up list and S8.
+6. Approach lists the behaviour-neutral body edits (S1/S2 renames, S6's `Credit`
+   rewrites and class renames, S9's N24).
+7. Strings are skipped only inside `Literal[...]`. Any other leftover string, or an
+   unparsed `Raises:` entry, is a violation. Two self-tests check this.
+
+Consider items:
+
+- Lake Road: the review's doubt is correct, and its alternative is wrong too. In the
+  Ambleside OSM fixture, Lake Road, Rydal Road and Wansfell Road all carry `ref=A591`.
+  Old Lake Road is residential with no `ref`, so the synthetic minor road is now Old
+  Lake Road (plan S7, spec).
+- A drawn road that `named_lines` drops counts as not drawn, raises, and `named_roads`'
+  docstring says so (S7).
+- One dict: `osm_names` is filled only where `pieces` is appended, and `named_roads`
+  iterates `pieces` (S7).
+
+Skipped: none.
