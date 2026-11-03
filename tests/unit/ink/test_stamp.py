@@ -189,6 +189,25 @@ def test_a_nib_comes_back_at_the_reload():
     assert cols[3000:8000].max() >= cols[200:800].max() * 0.95
 
 
+def test_a_reloaded_nib_swells_back_rather_than_stepping():
+    """At a reload the line regains under 60% of what its run lost within one nib width."""
+    style = replace(
+        BrushStyle(), pen_starve=True, pen_reservoir=22.0, pen_thin=1.0, ink_dip_mult=1.4
+    )
+    pen, _ = brush_from_id("MAJ6-e", 5.0, 1.0, style)
+    h, length = 40, 700
+    pts = np.stack([np.linspace(20.0, length - 20.0, 500), np.full(500, h / 2)], axis=1)
+    acc = np.zeros((h, length), np.float32)
+    stamp(acc, pts, pen, np.random.default_rng(3))
+    ink = ink_density(acc, pen, Sheet(h, length, gran_px=6.0, seed=1)).sum(axis=0)
+    along = np.convolve(ink, np.ones(3) / 3, mode="same")[40:640]
+    width = round(pen.width)
+    rise = float((along[width:] - along[:-width]).max())
+    lost = float(along.max() - along.min())
+    assert lost > 2.0  # the run does thin the line
+    assert rise < 0.6 * lost
+
+
 def tip_across(
     brush_id: str,
     width_px: float,
