@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pytest
-from golden.test_parity import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION
 
 from pyntpot.maps import pipeline
 from pyntpot.maps.annotations import Annotations, SpanRequest
@@ -18,7 +17,7 @@ from pyntpot.maps.plates import Plates
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 
-from support.golden import differing_fraction
+from support.golden import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION, differing_fraction
 from support.paths import FIXTURE_DIR, KEY
 from support.providers import FixtureElevation, FixtureFeatures
 

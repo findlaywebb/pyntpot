@@ -9,7 +9,9 @@ It builds no brush and draws no bristle: strokes go through `pyntpot.ink.stamp`.
 `BrushStyle` for the grid and the joining only.
 
 Invariants: at a supersample of 1 the pad is the plate's own accumulator and every brush
-is stamped unscaled; the density is clipped to 0 to 1.
+is stamped unscaled; the density is clipped to 0 to 1; a stroke's bristles depend only on
+the seed and the stroke (`ink.keyed`), never on the other strokes laid with it, save that
+a stroke repeating an earlier one's key is told apart by its count.
 """
 
 import numpy as np
@@ -18,12 +20,15 @@ from PIL import Image
 from pyntpot.ink.brush import Brush, ink_aux, scaled_brush
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.chains import chain_lines
+from pyntpot.ink.keyed import keyed_rng, line_key
 from pyntpot.ink.noise import F32, blur
 from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.stamp import stamp
 
 #: Blur radius, in render pixels, at or under which a mark has no soft edge to wick.
 _MIN_BLEED_PX = 0.4
+#: A stroke is named for its generator by its points rounded to this many render pixels.
+_KEY_GRID_PX = 1.0
 
 
 def ink_density(
@@ -187,57 +192,56 @@ class InkPad:
     def lay(
         self,
         items: list[tuple[Brush, np.ndarray]],
-        rng: np.random.Generator,
+        seed: int,
         profiles: list[np.ndarray | None] | None = None,
     ) -> None:
-        """Stamp a class's strokes.
+        """Stamp a class's strokes, each from a generator of its own.
 
         With joining off the strokes are stamped in the order they arrive, one
         polyline at a time. With it on
         they are grouped by brush, in first-seen order, and the ways in each
         group are chained end to end first.
 
+        Each stroke's bristle pattern is drawn from a generator keyed by the seed
+        and the stroke's own points, rounded to the render pixel
+        (`ink.keyed.line_key`), plus how many strokes with the same key came before
+        it in this call. So a stroke that changes, or draws more or less, moves no
+        other stroke, and the same strokes laid again lay the same bristles.
+
         Args:
             items: Brush and polyline per stroke, in render pixels.
-            rng: The generator the bristle patterns are drawn from.
+            seed: The seed every stroke's generator is keyed from.
             profiles: A width profile per stroke, or None per stroke that wants
                 none. Chaining is skipped when they are given: two strokes
                 joined end to end are one stroke and their two profiles are
                 not, and lettering does not want its glyphs chained anyway.
         """
+        strokes: list[tuple[Brush, np.ndarray, np.ndarray | None]]
         if profiles is not None:
-            for (b, line), prof in zip(items, profiles, strict=True):
-                stamp(
-                    self.acc,
-                    self._on_grid(line),
-                    self._at(b),
-                    rng,
-                    aux=self.aux,
-                    wprof=prof,
-                )
-            return
-        if self.tol <= 0:
+            strokes = [(b, line, prof) for (b, line), prof in zip(items, profiles, strict=True)]
+        elif self.tol <= 0:
+            strokes = [(b, line, None) for b, line in items]
+        else:
+            groups: dict[int, tuple[Brush, list[np.ndarray]]] = {}
             for b, line in items:
-                stamp(
-                    self.acc,
-                    self._on_grid(line),
-                    self._at(b),
-                    rng,
-                    aux=self.aux,
-                )
-            return
-        groups: dict[int, tuple[Brush, list[np.ndarray]]] = {}
-        for b, line in items:
-            groups.setdefault(id(b), (b, []))[1].append(line)
-        for b, lines in groups.values():
-            for line in chain_lines(lines, self.tol):
-                stamp(
-                    self.acc,
-                    self._on_grid(line),
-                    self._at(b),
-                    rng,
-                    aux=self.aux,
-                )
+                groups.setdefault(id(b), (b, []))[1].append(line)
+            strokes = [
+                (b, line, None)
+                for b, lines in groups.values()
+                for line in chain_lines(lines, self.tol)
+            ]
+        seen: dict[tuple[int, int], int] = {}
+        for b, line, prof in strokes:
+            key = line_key(line, _KEY_GRID_PX)
+            nth = seen[key] = seen.get(key, -1) + 1
+            stamp(
+                self.acc,
+                self._on_grid(line),
+                self._at(b),
+                keyed_rng(seed, *key, nth),
+                aux=self.aux,
+                wprof=prof,
+            )
 
     def any(self) -> bool:
         """Whether anything was laid down."""

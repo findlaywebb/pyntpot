@@ -14,7 +14,9 @@ outer silhouette of the land sits outside it and keeps the edge it should have.
 A class in `PAINTED_AS` is labelled at its own place in the order but washed with the
 class it is painted as, at that class's place, so its pixels and that class's are one
 wash in one pigment. It does not paint the wood's texture or dabs, the relief or the
-sea. Each wash draws its blooms from the job's shared generator, in class order.
+sea. Each wash keys its blooms by its class (`PaintJob.bloom`) and each ring its
+deformation by its own points, so neither depends on the classes or rings painted
+before it.
 """
 
 import numpy as np
@@ -70,7 +72,7 @@ def _deform(job: PaintJob) -> Deform | None:
         return None
     floor_m, mult = wash_style.silhouette_deform_max_m
     return (
-        job.deform_rng,
+        wash_style.silhouette_deform_seed,
         wash_style.silhouette_deform_amount,
         int(wash_style.silhouette_deform_depth),
         wash_style.silhouette_deform_decay,
@@ -91,7 +93,7 @@ def _label(job: PaintJob, stack: PlateStack, order: list[str]) -> None:
     A class is the union of its rings. They come wound as they were surveyed, so each
     is wound anticlockwise before the nonzero fill; otherwise a ring inside another and
     wound against it, such as a lawn inside its park, would cut a hole in the class.
-    They are wound after the deform, which keeps its draws in the surveyed order.
+    They are wound after the deform, so a ring is keyed by its points as surveyed.
     """
     deform = _deform(job)
     for i, cls in enumerate(order, 1):
@@ -138,7 +140,7 @@ def _class_washes(job: PaintJob, stack: PlateStack, order: list[str]) -> list[Pi
             rim_drop=style.wash.wet_rim_drop,
             gran_gamma=job.gran_gamma,
             flow=job.flow,
-            blooms=job.bloom(cov),
+            blooms=job.bloom(cov, cls),
         )
         layers.extend(
             separated(
@@ -161,7 +163,7 @@ def _pale_wash(job: PaintJob, stack: PlateStack) -> PigmentLayer:
         rim_px=max(6.0, 120.0 / job.mpp),
         gran_gamma=job.gran_gamma,
         flow=job.flow,
-        blooms=job.bloom(pale),
+        blooms=job.bloom(pale, "pale"),
     )
     return (
         wash(pale, job.sheet, cover.pale_base, cover.pale_pool, options),
