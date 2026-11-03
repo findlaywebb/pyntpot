@@ -271,6 +271,66 @@ class TestBackingWash:
     def test_the_lift_is_the_pinned_one(self) -> None:
         """Its strength beside the letters, its grain there and its whole weight, pinned."""
         alpha, _reach = self._lift()
-        assert float(alpha[50, 60:140].mean()) == pytest.approx(0.303634, rel=1e-3)
-        assert float(alpha[50, 60:140].std()) == pytest.approx(0.017158, rel=1e-2)
-        assert float(alpha.sum()) == pytest.approx(1399.786, rel=1e-3)
+        assert float(alpha[50, 60:140].mean()) == pytest.approx(0.301806, rel=1e-3)
+        assert float(alpha[50, 60:140].std()) == pytest.approx(0.017055, rel=1e-2)
+        assert float(alpha.sum()) == pytest.approx(1376.555, rel=1e-3)
+
+
+#: Mark layouts on the 96 by 72 card: a block of three lines, one long diagonal, and two
+#: short words apart, so the reach is crossed from inside a block, a corner and a gap.
+LAYOUTS = {
+    "block": [
+        [(8.0, 12.0 + 10 * i), (24.0, 14.0 + 10 * i), (40.0, 12.0 + 10 * i)] for i in range(3)
+    ],
+    "diagonal": [[(10.0, 10.0), (40.0, 30.0), (70.0, 50.0)]],
+    "two-words": [[(10.0, 20.0), (26.0, 22.0)], [(56.0, 50.0), (80.0, 48.0)]],
+}
+
+#: How far past the reach the feather's blur may carry its last level, in reaches. The
+#: blur is a third of the reach wide, so its tail runs a pixel or two over; the floor
+#: ends it inside a fifth of a reach on the darkest ground (17.2 px of 18 here). A floor
+#: left unscaled by the lift's gain carries it to 18.4 px, past this.
+TAIL = 0.2
+
+
+def _distance_to(mask: np.ndarray) -> np.ndarray:
+    """The Euclidean distance of every pixel to the nearest true pixel of `mask`."""
+    ys, xs = np.nonzero(mask)
+    gy, gx = np.mgrid[0 : mask.shape[0], 0 : mask.shape[1]]
+    squared = (gy[..., None] - ys) ** 2 + (gx[..., None] - xs) ** 2
+    return np.sqrt(squared.min(axis=-1).astype(np.float64))
+
+
+class TestNoStrayAlpha:
+    """The plate leaves the paper bare once the backing wash has faded out past its reach."""
+
+    @pytest.mark.parametrize("layout", list(LAYOUTS), ids=list(LAYOUTS))
+    @pytest.mark.parametrize(
+        ("hand_seed", "sheet_seed"),
+        [(17, 11), (3, 5), (40, 29)],
+        ids=["default", "seeds-3-5", "seeds-40-29"],
+    )
+    @pytest.mark.parametrize("dark", [0.35, 1.0], ids=["middling-ground", "darkest-ground"])
+    def test_no_alpha_level_past_the_fade(
+        self, tmp_path: Path, layout: str, hand_seed: int, sheet_seed: int, dark: float
+    ) -> None:
+        """No pixel further than a reach and its blur's tail from the ink has plate alpha."""
+        surface = NibSurface(
+            Canvas(0.0, 0.0, 96.0, 72.0, 96, 72), 1.0, np.full((72, 96), dark, np.float32), 6.0
+        )
+        marks = [Mark(line, size=14.0) for line in LAYOUTS[layout]]
+        paper = PaperStyle(sheet_seed=sheet_seed)
+        hand = HandStyle(hand_seed)
+        bare = NibGroups(NibStyle(label_wash=False), FaceStyle(), hand, BrushStyle(), paper)
+        washed = NibGroups(NibStyle(), FaceStyle(), hand, BrushStyle(), paper)
+        ink_path = nib_plate(marks, surface, bare, tmp_path / "ink.webp")
+        plate_path = nib_plate(marks, surface, washed, tmp_path / "plate.webp")
+        assert ink_path is not None
+        assert plate_path is not None
+        ink = np.asarray(Image.open(ink_path).getchannel("A")) > 0.12 * 255
+        assert ink.any()
+        alpha = np.asarray(Image.open(plate_path).getchannel("A"))
+        nib = NibStyle()
+        reach = nib.label_wash_spread * nib.label_size_px
+        stray = alpha[_distance_to(ink) > reach * (1.0 + TAIL)]
+        assert int(stray.max()) == 0, f"{int((stray > 0).sum())} pixels past the fade carry alpha"

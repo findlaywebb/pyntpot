@@ -71,7 +71,9 @@ _COVERED = 0.12
 _GRAIN_REACH = 2.5
 
 #: Under this the feather is nothing: the blur's tail would otherwise leave a lift of
-#: one level in the alpha far out on the paper.
+#: one level in the alpha far out on the paper. It is in the units of the lift before
+#: `_LIFT_GAIN`; the feather cuts at it times the gain, so the gain raises the peak
+#: without carrying the tail further out.
 _FEATHER_FLOOR = 0.02
 
 #: The lift's peak over `label_wash_alpha`. The squared fall-off holds less of the wash
@@ -195,7 +197,8 @@ def _backing_wash(
     # Squared, so the lift is strongest at the letters and falls away from them with
     # no flat body between: a plateau round a word block is what read as a pale box.
     soft = blur(np.clip(1.0 - near / reach, 0.0, 1.0) ** 2, reach * 0.35)
-    feather = np.clip((soft - _FEATHER_FLOOR) / (1.0 - _FEATHER_FLOOR), 0.0, 1.0)
+    cut = _FEATHER_FLOOR * _LIFT_GAIN
+    feather = np.clip((soft - cut) / (1.0 - cut), 0.0, 1.0)
     # The wash gives the lift its grain, laid over a field reaching past every pixel
     # the feather touches, so its own thresholded, pooled edge falls where the feather
     # is already nothing; the lift's edge is the feather's, fading out from the ink.
