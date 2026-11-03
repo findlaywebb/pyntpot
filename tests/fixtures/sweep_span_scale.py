@@ -54,7 +54,7 @@ from pyntpot.maps import (
 from pyntpot.maps.cache import LANDCOVER_MARGIN_M, MARGIN_M
 from pyntpot.maps.lettering.label import Span
 from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS
-from pyntpot.maps.strands import separate_strands, strand_gap_px
+from pyntpot.maps.strands import merge_strands, strand_merge_px
 
 log = logging.getLogger("sweep_span_scale")
 
@@ -80,7 +80,7 @@ def fixture_route(directory: str, theme: str, margins: FetchMargins) -> list[Pt]
         track = Track.from_gpx(cache_dir / "track.gpx")
         basemap = fetch(track, Cache(cache_dir, margins), features, elevation, style)
     route = [basemap.card.xy(x, y) for x, y in basemap.track]
-    return separate_strands(route, strand_gap_px(style))
+    return merge_strands(route, strand_merge_px(style))
 
 
 def _judged(

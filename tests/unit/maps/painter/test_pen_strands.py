@@ -1,4 +1,4 @@
-"""The pen route keeps the legs of a doubled-back track apart, on the line the strands draw."""
+"""The pen route draws a retraced leg as one line, the line the strands draw."""
 
 import dataclasses
 
@@ -8,7 +8,7 @@ from PIL import Image
 from pyntpot.maps import paint
 from pyntpot.maps.painter.job import PlateStack
 from pyntpot.maps.painter.pen import paint_route_pen
-from pyntpot.maps.strands import STRAND_GAP_WIDTHS, strand_gap_px
+from pyntpot.maps.strands import STRAND_MERGE_WIDTHS, strand_merge_px
 from pyntpot.maps.style import Style
 
 from .jobs import tiny_job
@@ -46,34 +46,34 @@ def _pen_column(directory, column: int = MID_COLUMN) -> list[float]:
     return _runs(alpha[:, column].astype(float))
 
 
-def test_an_out_and_back_gives_a_pen_plate_with_two_lines(tmp_path):
-    """A column across both legs of an out-and-back crosses two inked runs, not one."""
+def test_an_out_and_back_gives_a_pen_plate_with_one_line(tmp_path):
+    """A column across both legs of an out-and-back crosses one inked run, not two."""
     job = tiny_job(tmp_path, route=OUT_AND_BACK)
     paint_route_pen(job, PlateStack.blank(job.shape))
-    assert len(_pen_column(tmp_path)) == 2
+    assert len(_pen_column(tmp_path)) == 1
 
 
 def test_a_pen_route_ink_draws_strands_on_the_pens_line(tmp_path):
-    """With a pen route ink, each strand passes within a pixel of an inked run's centre."""
+    """With a pen route ink, both passes run within a pixel of the one inked run's centre."""
     style = _inked_as(Style.default(), "pen")
     job = tiny_job(tmp_path / "job", style, route=OUT_AND_BACK)
     plates = paint(job.basemap, style, tmp_path / "plates")
     k = job.scale
     rows = sorted(y * k for x, y in plates.strands if abs(x * k - MID_COLUMN) <= 1.0)
     runs = _pen_column(tmp_path / "plates")
-    assert len(runs) == 2
+    assert len(runs) == 1
     for row in (rows[0], rows[-1]):
         assert min(abs(row - r) for r in runs) <= 1.0
 
 
-def test_the_pen_gap_is_the_pens_and_the_solid_gap_is_the_inks():
-    """The strand gap follows the pen's width for a pen route ink and the ink's for any other."""
+def test_the_pen_reach_is_the_pens_and_the_solid_reach_is_the_inks():
+    """The merge reach follows the pen's width for a pen route ink and the ink's for any other."""
     style = Style.default()
-    assert strand_gap_px(style) == style.route_ink.px * STRAND_GAP_WIDTHS
+    assert strand_merge_px(style) == style.route_ink.px * STRAND_MERGE_WIDTHS
     pen = _inked_as(style, "pen")
-    assert strand_gap_px(pen) == style.route.route_pen_width_px * STRAND_GAP_WIDTHS
+    assert strand_merge_px(pen) == style.route.route_pen_width_px * STRAND_MERGE_WIDTHS
     no_pen = pen.model_copy(update={"route": dataclasses.replace(pen.route, route_pen=False)})
-    assert strand_gap_px(no_pen) == style.route_ink.px * STRAND_GAP_WIDTHS
+    assert strand_merge_px(no_pen) == style.route_ink.px * STRAND_MERGE_WIDTHS
 
 
 def test_solid_and_pen_route_inks_paint_the_same_pen_plate(tmp_path):

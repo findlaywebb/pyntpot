@@ -2,7 +2,7 @@
 
 Key types: `Plates`, the directory a map's plates were written to together
 with their `Manifest` and the route in display pixels, both as recorded and
-with its doubled-back stretches pulled apart into strands; `Manifest`, the
+with each stretch it runs more than once merged into one line; `Manifest`, the
 plates' sidecar record (`plates.json`): the base hash, the files written, the
 card they were painted on and the measurements later stages read; `DarkGrid`, the painter's coarse grid of how
 dark the painted map is; `dark_array`, which turns a `DarkGrid` into the
@@ -192,8 +192,8 @@ class Plates:
         route_px: The basemap's track placed on the card, in display pixels,
             point for point as recorded; empty when the plates were not handed
             a track.
-        strands: The drawn route: `route_px` with each doubled-back stretch
-            pulled apart into two strands a channel of paper apart, one
+        strands: The drawn route: `route_px` with each stretch it runs more
+            than once pulled onto one line, so a retraced leg is one stroke, one
             polyline of the same length; empty with `route_px`.
     """
 
