@@ -61,6 +61,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0052 | Golden diff images in the PR body (amends 0006 and 0036) |
 | 0053 | Education land is built ground: a golden regeneration |
 | 0055 | A nib width that does not flicker: a golden regeneration |
+| 0056 | Terminal tails kept and crossings written through: a golden regeneration |
 | 0059 | The organic drift is rescaled about its own mean: a golden regeneration |
 | 0060 | The pen's set-down blot stays on its stroke: a golden regeneration |
 | 0061 | A reloaded nib swells back: a golden regeneration |
