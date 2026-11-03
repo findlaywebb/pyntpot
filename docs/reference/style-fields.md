@@ -267,7 +267,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `style` | string | `"solid"` | How the route is drawn: `"pen"` tints the pen plate when the `route` group painted one; any other value draws a solid line. |
 | `px` | number | `5.4` | Width in display pixels. It also sets how near two passes of a retraced route have to come to be drawn as one stroke. |
 | `colour` | string | `"#c22050"` | Colour as `#rrggbb`. |
-| `blend` | string | `"normal"` | `"normal"` lays the ink over the card; `"multiply"` multiplies it into the card, so the route darkens a wash instead of covering it. Any other value is an error when the route is drawn. |
+| `blend` | string | `"normal"` | `"normal"` lays the ink over the map; `"multiply"` multiplies it into the map, so the route darkens a wash instead of covering it. Any other value is an error when the route is drawn. |
 | `opacity` | number | `1.0` | How much of the ink is laid, from 0 to 1. The default theme does not write it; a table without it reads 1.0. |
 
 The compose step draws no casing, glow or shadow round the route.
