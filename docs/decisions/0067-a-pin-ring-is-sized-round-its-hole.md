@@ -56,8 +56,9 @@ seed reaches 0.4.
 
 ## Golden regeneration
 
-Process as ADRs 0036 and 0052. The tolerance bound is not changed, no gate is loosened and
-the hash input does not change; the manifest hash does not move
+Process as ADRs 0036 and 0052, run on `main` with ADR 0055's nib width merged. The
+tolerance bound is not changed, no gate is loosened and the hash input does not change; the
+manifest hash does not move
 (`340a7f6e260ee1e2-d9c56c0811177b0f`), so `GOLDEN_HASH` is not re-pinned.
 
 ### Lynmouth compare, against the committed goldens
@@ -66,8 +67,8 @@ the hash input does not change; the manifest hash does not move
 paper.webp: identical yes, differing fraction 0.000000
 wash.webp: identical yes, differing fraction 0.000000
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.024313
-map.png: identical no, differing fraction 0.016347
+labels-centreline.webp: identical no, differing fraction 0.024290
+map.png: identical no, differing fraction 0.016321
 manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
 ```
 
@@ -86,14 +87,14 @@ Master differing fractions against `main`'s masters:
 
 | Image | Master | Image | Master |
 |---|---|---|---|
-| `places/skye.webp` | 0.052044 | `gallery/route-map.webp` | 0.039839 |
-| `places/ambleside.webp` | 0.039839 | `places/y-fenni.webp` | 0.034677 |
-| `places/oxford.webp` | 0.024299 | `how-to/command-line.webp` | 0.024034 |
-| `places/yr-wyddfa.webp` | 0.021456 | `map-styles/bold.webp` | 0.019907 |
-| `map-styles/sepia.webp` | 0.018835 | `tutorials/route-map.webp` | 0.017958 |
-| `how-to/route-ink.webp` | 0.017909 | `map-styles/winter.webp` | 0.017690 |
-| `social-preview.jpg` | 0.015278 | `map-styles/pen-and-ink.webp` | 0.014717 |
-| `hero.webp` | 0.013865 | | |
+| `places/skye.webp` | 0.051694 | `gallery/route-map.webp` | 0.039620 |
+| `places/ambleside.webp` | 0.039620 | `places/y-fenni.webp` | 0.034385 |
+| `places/oxford.webp` | 0.024202 | `how-to/command-line.webp` | 0.023948 |
+| `places/yr-wyddfa.webp` | 0.021220 | `map-styles/bold.webp` | 0.020029 |
+| `map-styles/sepia.webp` | 0.018981 | `tutorials/route-map.webp` | 0.018129 |
+| `how-to/route-ink.webp` | 0.018104 | `map-styles/winter.webp` | 0.017812 |
+| `social-preview.jpg` | 0.015139 | `map-styles/pen-and-ink.webp` | 0.014766 |
+| `hero.webp` | 0.014133 | | |
 
 Looked at side by side with `main`: every pin is an open ring, a little larger, and no name
 moves. The leaders take other bends and the lettering's texture is redrawn, for the reason
