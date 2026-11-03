@@ -23,7 +23,6 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from golden.test_parity import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION
 from PIL import Image
 
 from pyntpot.maps import OpenTopoData, OverpassFeatures
@@ -31,7 +30,7 @@ from pyntpot.maps import OpenTopoData, OverpassFeatures
 from support import REPO_ROOT
 from support.docs_images import IMAGES, MASTER_WIDTH, DocsImage, master_path
 from support.examples import run_example
-from support.golden import differing_fraction
+from support.golden import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION, differing_fraction
 
 logger = logging.getLogger("make_docs_images")
 

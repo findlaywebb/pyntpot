@@ -5,9 +5,10 @@ types: `Box`, a pixel rectangle `(left, top, right, bottom)` with exclusive righ
 bottom edges, as Pillow's `crop` takes it; `Measurement`, one changed image's numbers.
 
 A pixel's delta is its largest absolute channel difference, over RGB, or RGBA when the image
-has alpha, as the parity gate measures it (`support.golden.differing_fraction`). The changed
-fraction counts the pixels whose delta exceeds the channel bound (`MAX_CHANNEL_DELTA`, 2),
-so it is the number `test_parity.py` holds to `MAX_DIFFERING_FRACTION`. The box spans the
+has alpha: the parity gate's own measurement, `support.golden.decode` and
+`support.golden.channel_delta`, which callers decode with and this module measures with. The
+changed fraction counts the pixels whose delta exceeds the channel bound (`MAX_CHANNEL_DELTA`,
+2), so it is the number `test_parity.py` holds to `MAX_DIFFERING_FRACTION`. The box spans the
 pixels past the channel bound, or every changed pixel when none is past it. An image is
 `local` when its box covers at most `LOCAL_BOX_AREA` of the image, else `widespread`; one
 stray pixel far from the rest makes an image widespread, which is what a reviewer should see.
@@ -18,13 +19,12 @@ everywhere, as in the parity gate. It does not draw anything (`diff_render.py` d
 not decide pass or fail: the gate is `test_parity.py`.
 """
 
-import io
 from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
-from golden.test_parity import MAX_CHANNEL_DELTA
-from PIL import Image
+
+from support.golden import MAX_CHANNEL_DELTA, channel_delta
 
 #: A pixel rectangle: left, top, right and bottom, the right and bottom edges exclusive.
 Box = tuple[int, int, int, int]
@@ -69,18 +69,6 @@ class Measurement:
         return self.max_delta is None
 
 
-def decode(data: bytes) -> np.ndarray:
-    """Decode an encoded image to an `(height, width, bands)` array, keeping alpha when it has any."""
-    with Image.open(io.BytesIO(data)) as img:
-        return np.asarray(img.convert("RGBA" if "A" in img.getbands() else "RGB"))
-
-
-def channel_delta(before: np.ndarray, after: np.ndarray) -> np.ndarray:
-    """Return each pixel's largest absolute channel difference, as an `(height, width)` uint8 array."""
-    wide = np.abs(before.astype(np.int16) - after.astype(np.int16))
-    return wide.max(axis=-1).astype(np.uint8)
-
-
 def bounding_box(mask: np.ndarray) -> Box | None:
     """Return the box round a mask's set pixels, or `None` when none is set."""
     rows = np.flatnonzero(mask.any(axis=1))
@@ -99,32 +87,44 @@ def padded(box: Box, pad: int, width: int, height: int) -> Box:
 def densest_window(mask: np.ndarray, window_width: int, window_height: int) -> Box:
     """Return the `window_width` by `window_height` box holding the most set pixels of `mask`.
 
-    The window is clipped to the mask's size. Of equally dense windows, the topmost, then the
-    leftmost, wins. It reads a summed-area table, so it costs one pass over the mask.
+    The window is clipped to the mask's size. Of equally dense windows, the one nearest the
+    middle of them all wins, so a cluster narrower than the window sits in its centre, not
+    against an edge. It reads a summed-area table, so it costs one pass over the mask.
     """
     height, width = int(mask.shape[0]), int(mask.shape[1])
     w, h = min(window_width, width), min(window_height, height)
     table = np.zeros((height + 1, width + 1), dtype=np.int64)
     table[1:, 1:] = mask.astype(np.int64).cumsum(axis=0).cumsum(axis=1)
     sums = table[h:, w:] - table[:-h, w:] - table[h:, :-w] + table[:-h, :-w]
-    top, left = np.unravel_index(int(np.argmax(sums)), sums.shape)
+    tied = np.argwhere(sums == sums.max())
+    middle = tied.mean(axis=0)
+    top, left = tied[int(np.argmin(((tied - middle) ** 2).sum(axis=1)))]
     return int(left), int(top), int(left) + w, int(top) + h
 
 
 def crop_box(mask: np.ndarray, pad: int = CROP_PAD, limit: int = CROP_LIMIT) -> Box | None:
     """Return the box a 1:1 crop of the most-changed region shows, or `None` when nothing changed.
 
-    The crop is the changed pixels' box grown by `pad`. Where that is longer than `limit` on
-    a side, the crop is the `limit`-long window, on that side, holding the most changed pixels.
+    The crop is the changed pixels' box grown by `pad`, so centred on the change. Where that
+    is longer than `limit` on a side, the crop on that side is the `limit`-long stretch
+    holding the most changed pixels (`densest_window`); a side within `limit` keeps its
+    padded span, so its pad stays on both edges.
     """
     box = bounding_box(mask)
     if box is None:
         return None
     height, width = mask.shape
     left, top, right, bottom = padded(box, pad, width, height)
-    if right - left <= limit and bottom - top <= limit:
+    wide, tall = right - left > limit, bottom - top > limit
+    if not (wide or tall):
         return left, top, right, bottom
-    return densest_window(mask, min(right - left, limit), min(bottom - top, limit))
+    # A side within the limit is fixed to its padded span; one over it slides over the image.
+    x0, x1 = (0, width) if wide else (left, right)
+    y0, y1 = (0, height) if tall else (top, bottom)
+    w_left, w_top, w_right, w_bottom = densest_window(
+        mask[y0:y1, x0:x1], min(right - left, limit), min(bottom - top, limit)
+    )
+    return x0 + w_left, y0 + w_top, x0 + w_right, y0 + w_bottom
 
 
 def changed_mask(delta: np.ndarray, channel_bound: int = MAX_CHANNEL_DELTA) -> np.ndarray:

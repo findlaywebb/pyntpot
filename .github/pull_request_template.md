@@ -11,7 +11,7 @@ fix(maps): a note no longer hides the home glyph -->
 
 ## Golden and docs images
 
-<!-- Delete this section unless the PR moves a golden or a docs image (ADR 0048). Paste the
+<!-- Delete this section unless the PR moves a golden or a docs image (ADR 0052). Paste the
 block `tests/golden/publish_diffs.py --push` prints, after `diff_images.py --ref origin/main`
 (CONTRIBUTING.md, "Golden and docs images"). -->
 

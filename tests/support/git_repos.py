@@ -1,19 +1,15 @@
-"""A throwaway git repository for tests of the tooling that runs git.
+"""Throwaway git repositories for tests of the tooling that runs git.
 
-`scratch_repo` makes one with a committed identity and no signing, so commits made in it
-(by a test, or by the tool under test in a worktree of it) never read the user's git
-identity or keys. `git` runs one command in it. It does not reach a network: a remote URL
-set on the repository is never fetched unless a test asks.
+`scratch_repo` makes a working repository with a set identity and no signing, so commits
+made in it (by a test, or by the tool under test in a worktree of it) never read the user's
+git identity or keys. `bare_remote` makes a bare repository in a test's temporary directory
+to stand in for `origin`, so a push really happens and lands nowhere else. Commands run
+through `support.git_commands.git`. Nothing here reaches a network.
 """
 
-import subprocess
 from pathlib import Path
 
-
-def git(repo: Path, *args: str) -> str:
-    """Run one git command in `repo` and return its stripped output."""
-    done = subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, check=True)
-    return done.stdout.strip()
+from support.git_commands import git
 
 
 def scratch_repo(root: Path) -> Path:
@@ -35,3 +31,16 @@ def commit_all(repo: Path, message: str) -> str:
     git(repo, "add", "--all")
     git(repo, "commit", "--quiet", "-m", message)
     return git(repo, "rev-parse", "HEAD")
+
+
+def bare_remote(root: Path) -> Path:
+    """Make an empty bare repository at `root` that refuses non-fast-forward pushes; return it.
+
+    It stands in for `origin`. Refusing non-fast-forward updates and deletions makes any
+    force-push to it fail, so a test that pushes through it proves none was made.
+    """
+    root.mkdir(parents=True, exist_ok=True)
+    git(root, "init", "--quiet", "--bare", "--initial-branch=main")
+    git(root, "config", "receive.denyNonFastForwards", "true")
+    git(root, "config", "receive.denyDeletes", "true")
+    return root

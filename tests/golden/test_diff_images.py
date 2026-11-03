@@ -20,6 +20,7 @@ from golden.diff_report import Summary
 from PIL import Image
 
 from support.git_repos import commit_all, scratch_repo
+from support.golden import MAX_DIFFERING_FRACTION
 
 
 def _save(path: Path, value: int = 90, *, spot: tuple[int, int] | None = None, **options) -> None:
@@ -30,6 +31,12 @@ def _save(path: Path, value: int = 90, *, spot: tuple[int, int] | None = None, *
         pixels[y : y + 3, x : x + 3] = 250
     path.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(pixels, "RGB").save(path, **options)
+
+
+def _dir(path: Path) -> Path:
+    """Make a directory and return it."""
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def _trees(tmp_path: Path) -> tuple[Path, Path]:
@@ -81,7 +88,7 @@ class TestTrees:
         assert Summary.from_json((out / SUMMARY_JSON).read_text()) == summary
         text = (out / SUMMARY_MD).read_text()
         assert "](docs/images/moved.webp.diff.png)" in text
-        assert "| `tests/golden/docs/new.png` | added |" in text
+        assert "| `tests/golden/docs/new.png` | | added |" in text
 
     def test_min_fraction_leaves_out_small_changes(self, tmp_path: Path) -> None:
         """A 9 of 1200 pixel change is left out at a bound of 0.01, review images and all."""
@@ -90,6 +97,37 @@ class TestTrees:
         summary = run(out, images_under(after), TreeSide(before), TreeSide(after), 0.01)
         assert [diff.status for diff in summary.files] == ["added"]
         assert not list(out.rglob("*.diff.png"))
+
+    @pytest.mark.parametrize(
+        ("bound", "kept"),
+        [(0.0075, ["added"]), (0.0074, ["changed", "added"])],
+        ids=["at-the-bound", "just-under"],
+    )
+    def test_min_fraction_leaves_out_a_change_exactly_at_the_bound(
+        self, tmp_path: Path, bound: float, kept: list[str]
+    ) -> None:
+        """A 9 of 1200 pixel change (0.0075) is left out at 0.0075, as the gate passes it, and kept under."""
+        before, after = _trees(tmp_path)
+        summary = run(
+            tmp_path / "out", images_under(after), TreeSide(before), TreeSide(after), bound
+        )
+        assert [diff.status for diff in summary.files] == kept
+
+    def test_min_fraction_alone_is_the_parity_bound(self, tmp_path: Path) -> None:
+        """Bare `--min-fraction` drops 6 of 1200 changed pixels (the 0.005 bound) and keeps 7."""
+        before, after = tmp_path / "before", tmp_path / "after"
+        flat = np.full((30, 40, 3), 90, dtype=np.uint8)
+        for name, changed in (("at.png", 6), ("over.png", 7)):
+            Image.fromarray(flat, "RGB").save(_dir(before) / name)
+            moved = flat.copy()
+            moved[0, :changed] = 250
+            Image.fromarray(moved, "RGB").save(_dir(after) / name)
+        out = tmp_path / "out"
+        args = [str(out), "--before", str(before), "--after", str(after), "--min-fraction"]
+        assert main(args) == 0
+        summary = Summary.from_json((out / SUMMARY_JSON).read_text())
+        assert MAX_DIFFERING_FRACTION == 6 / 1200
+        assert [diff.path for diff in summary.files] == ["over.png"]
 
     def test_an_earlier_run_is_replaced_but_other_files_are_kept_safe(self, tmp_path: Path) -> None:
         """A second run empties its own earlier output; a directory of other files is refused."""

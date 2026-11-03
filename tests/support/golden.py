@@ -1,11 +1,20 @@
-"""Paint the Lynmouth fixture and measure how far two images differ.
+"""Paint the Lynmouth fixture, and measure how far two images differ.
 
 The one place golden tooling reaches the painter: `test_parity.py` and
 `make_golden.py` both paint through `paint_fixture`, so they paint the same
-way. It does not compare against goldens or decide pass and fail; callers
-hold the bounds.
+way. It is also the one measurement every golden comparison shares: `decode`
+reads an image as the gate does (RGB, or RGBA when it has alpha), `channel_delta`
+is each pixel's largest absolute channel difference, and `differing_fraction` is
+the share of pixels past a channel bound. The golden diff tooling
+(`golden/diff_measure.py`) measures with the same two functions, so its numbers
+are the gate's.
+
+The bounds the parity gate holds (ADR 0030) live here, `MAX_CHANNEL_DELTA` and
+`MAX_DIFFERING_FRACTION`, for the gates and the tooling to share. It does not
+compare against goldens or decide pass and fail; callers apply the bounds.
 """
 
+import io
 import shutil
 from pathlib import Path
 
@@ -17,6 +26,12 @@ from pyntpot.maps.cache import Cache
 
 from support.paths import FIXTURE_DIR
 from support.providers import FixtureElevation, FixtureFeatures
+
+#: A pixel differs when its largest channel difference exceeds this (ADR 0030).
+MAX_CHANNEL_DELTA = 2
+
+#: The tolerance gate passes an image when at most this share of its pixels differ (ADR 0030).
+MAX_DIFFERING_FRACTION = 0.005
 
 #: The painted plates, in painting order; the last is lettered by the compose step.
 PLATES: tuple[str, ...] = ("paper.webp", "wash.webp", "pen.webp", "labels-centreline.webp")
@@ -72,19 +87,27 @@ def _require_fresh(paths: list[Path], since_ns: int) -> None:
         raise RuntimeError(f"not repainted: {stale}")
 
 
-def _pixels(path: Path) -> np.ndarray:
-    """Decode an image to an array, keeping alpha when it has any."""
-    with Image.open(path) as img:
+def decode(data: bytes) -> np.ndarray:
+    """Decode an encoded image to an `(height, width, bands)` array, keeping alpha when it has any."""
+    with Image.open(io.BytesIO(data)) as img:
         return np.asarray(img.convert("RGBA" if "A" in img.getbands() else "RGB"))
 
 
-def differing_fraction(got: Path, want: Path, channel_delta: int) -> float:
-    """Return the fraction of pixels whose largest channel difference exceeds `channel_delta`.
+def channel_delta(before: np.ndarray, after: np.ndarray) -> np.ndarray:
+    """Return each pixel's largest absolute channel difference, as an `(height, width)` uint8 array.
+
+    The two arrays must share one shape, as `decode` returns them.
+    """
+    wide = np.abs(before.astype(np.int16) - after.astype(np.int16))
+    return wide.max(axis=-1).astype(np.uint8)
+
+
+def differing_fraction(got: Path, want: Path, channel_bound: int) -> float:
+    """Return the fraction of pixels whose largest channel difference exceeds `channel_bound`.
 
     Two images of different shapes or band counts differ everywhere: the result is 1.0.
     """
-    a, b = _pixels(got), _pixels(want)
+    a, b = decode(got.read_bytes()), decode(want.read_bytes())
     if a.shape != b.shape:
         return 1.0
-    delta = np.abs(a.astype(np.int16) - b.astype(np.int16)).max(axis=-1)
-    return float((delta > channel_delta).mean())
+    return float((channel_delta(a, b) > channel_bound).mean())

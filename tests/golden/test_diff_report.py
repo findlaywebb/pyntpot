@@ -81,13 +81,14 @@ class TestMarkdown:
                     "| 0,0 to 240,171 | widespread |"
                 ),
             ),
-            (FileDiff("a.png", "added"), "| `a.png` | added | | | | |"),
+            (FileDiff("a.png", "added"), "| `a.png` | | added | | | |"),
+            (FileDiff("r.png", "removed"), "| `r.png` | | removed | | | |"),
             (
                 FileDiff("m.png", "changed", RESIZED),
                 "| `m.png` | 50x30 | 1.000000 (size differs) | | | widespread |",
             ),
         ],
-        ids=["local", "over-bound", "added", "resized"],
+        ids=["local", "over-bound", "added", "removed", "resized"],
     )
     def test_each_row(self, diff: FileDiff, row: str) -> None:
         """A row gives the size, the changed fraction (flagged past the bound), max delta, box, extent."""

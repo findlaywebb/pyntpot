@@ -20,7 +20,8 @@ from dataclasses import dataclass
 from typing import Literal
 
 from golden.diff_measure import Measurement
-from golden.test_parity import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION
+
+from support.golden import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION
 
 Status = Literal["changed", "added", "removed"]
 _STATUSES: tuple[Status, ...] = ("changed", "added", "removed")
@@ -126,10 +127,10 @@ def _file_diff(record: dict[str, object]) -> FileDiff:
 
 
 def table_row(diff: FileDiff) -> str:
-    """Return one image's Markdown table row."""
+    """Return one image's Markdown table row; an added or removed image's status fills Changed."""
     found = diff.measurement
     if found is None:
-        return f"| `{diff.path}` | {diff.status} | | | | |"
+        return f"| `{diff.path}` | | {diff.status} | | | |"
     if found.shape_differs:
         return f"| `{diff.path}` | {found.width}x{found.height} | 1.000000 (size differs) | | | widespread |"
     fraction = f"{found.changed_fraction:.6f}"

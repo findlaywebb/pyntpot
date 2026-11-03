@@ -53,4 +53,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0044 | No pre-release Python job (amends D4) |
 | 0045 | Cover rings fill as a union: the sixth golden regeneration |
 | 0046 | One route ink (amends 0005, 0026, 0027 and 0037) |
-| 0048 | Golden diff images in the PR body (amends 0006 and 0036) |
+| 0052 | Golden diff images in the PR body (amends 0006 and 0036) |

@@ -11,7 +11,7 @@ phone-width PR body:
 - `crop_image`: the same three at 1:1 over the crop box, and a locator, the whole later
   image shrunk with the crop box outlined.
 
-The heat map colours each pixel by its delta (`diff_measure.channel_delta`): blue at or
+The heat map colours each pixel by its delta (`support.golden.channel_delta`): blue at or
 under the channel bound, then red through orange to yellow at `SCALE_TOP`, white at 255. An
 unchanged pixel shows the later image dimmed to grey, so the change reads in place. Shrinking
 the heat map keeps each block's largest delta, so a one-pixel change stays visible at any
@@ -24,8 +24,9 @@ import math
 
 import numpy as np
 from golden.diff_measure import Box, Measurement
-from golden.test_parity import MAX_CHANNEL_DELTA
 from PIL import Image, ImageDraw, ImageFont
+
+from support.golden import MAX_CHANNEL_DELTA
 
 #: The side, in pixels, a shrunk diff image cell fits within.
 CELL = 480

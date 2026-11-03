@@ -12,7 +12,6 @@ from typing import Any
 
 import numpy as np
 import pytest
-from golden.test_parity import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION
 from PIL import Image
 
 from pyntpot.ink.paper import paper_plate
@@ -30,7 +29,7 @@ from support.basemaps import (
     tiny_style,
     with_fields,
 )
-from support.golden import differing_fraction
+from support.golden import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION, differing_fraction
 from support.paths import FIXTURE_DIR, SMOKE_DIR
 from support.providers import FixtureElevation, FixtureFeatures
 

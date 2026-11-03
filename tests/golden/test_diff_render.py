@@ -1,7 +1,7 @@
 """Tests for the golden diff images: the heat map's colours, shrinking, and the review images' sizes."""
 
 import numpy as np
-from golden.diff_measure import channel_delta, measure
+from golden.diff_measure import measure
 from golden.diff_render import (
     CELL,
     GUTTER,
@@ -16,6 +16,8 @@ from golden.diff_render import (
     viewable,
 )
 from PIL import Image
+
+from support.golden import channel_delta
 
 
 def _pair(width: int, height: int) -> tuple[np.ndarray, np.ndarray]:

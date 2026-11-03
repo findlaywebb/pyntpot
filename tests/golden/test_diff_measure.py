@@ -7,15 +7,15 @@ import pytest
 from golden.diff_measure import (
     bounding_box,
     changed_mask,
-    channel_delta,
     crop_box,
-    decode,
     densest_window,
     extent,
     measure,
     padded,
 )
 from PIL import Image
+
+from support.golden import channel_delta, decode
 
 
 def _flat(width: int, height: int, value: int = 100, bands: int = 3) -> np.ndarray:
@@ -118,6 +118,12 @@ class TestBoxes:
         mask[20:23, 30:34] = True
         assert densest_window(mask, 4, 3) == (30, 20, 34, 23)
 
+    def test_of_equally_dense_windows_the_middle_one_wins(self) -> None:
+        """A cluster narrower than the window sits in its centre, not against an edge."""
+        mask = np.zeros((1, 100), dtype=bool)
+        mask[0, 40:50] = True
+        assert densest_window(mask, 30, 1) == (30, 0, 60, 1)
+
     def test_the_densest_window_is_clipped_to_the_mask(self) -> None:
         """A window larger than the mask is the whole mask."""
         mask = np.ones((3, 5), dtype=bool)
@@ -138,6 +144,22 @@ class TestBoxes:
         assert (right - left, bottom - top) == (30, 14)
         assert left <= 150
         assert right >= 170
+
+    def test_a_side_within_the_limit_keeps_its_pad_on_both_edges(self) -> None:
+        """A change over the limit across but not down is padded equally above and below."""
+        mask = np.zeros((100, 400), dtype=bool)
+        mask[40:50, 10:390] = True
+        left, top, right, bottom = crop_box(mask, pad=8, limit=60) or (0, 0, 0, 0)
+        assert (top, bottom) == (32, 58)
+        assert right - left == 60
+
+    def test_a_side_over_the_limit_centres_its_densest_stretch(self) -> None:
+        """A dense block with a stray pixel far off is cropped with the block in the middle."""
+        mask = np.zeros((40, 600), dtype=bool)
+        mask[10:20, 200:240] = True
+        mask[15, 590] = True
+        box = crop_box(mask, pad=4, limit=120)
+        assert box == (160, 6, 280, 24)
 
     def test_nothing_changed_has_no_crop(self) -> None:
         """An empty mask crops nothing."""

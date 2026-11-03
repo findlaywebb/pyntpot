@@ -1,4 +1,4 @@
-# 0048 — Golden diff images in the PR body (amends 0006 and 0036)
+# 0052 — Golden diff images in the PR body (amends 0006 and 0036)
 
 Status: accepted
 
@@ -28,9 +28,10 @@ Test tooling beside `make_golden.py`, in `tests/golden/`, outside the package: n
   pixels) and a 1:1 crop image of the most-changed region (the changed pixels' box padded by
   16 pixels, or its densest 360-pixel window, with a locator), then `summary.json` and
   `summary.md`. An image whose bytes differ but whose pixels do not is skipped.
-- `publish_diffs.py OUT [--push]` commits `OUT` to `<pr-branch>/` on the orphan branch
-  `pr-assets`, through a temporary `git worktree`, and writes the Markdown block for the PR
-  body (`OUT/pr-body.md`).
+- `publish_diffs.py OUT [--push]` fetches the remote's `pr-assets`, builds one commit on its
+  tip (a parentless one when the remote has none yet) with `<pr-branch>/` replaced by `OUT`,
+  in a detached temporary `git worktree`, pushes it with `--push`, and writes the Markdown
+  block for the PR body (`OUT/pr-body.md`).
 - `repaint.py OUT [NAME ...]` repaints the Lynmouth goldens and the docs images into a
   scratch tree laid out as the repository is, logs `make_golden.py`'s compare, and runs
   `diff_images.py` against the working tree.
@@ -38,7 +39,9 @@ Test tooling beside `make_golden.py`, in `tests/golden/`, outside the package: n
   summary modules the commands share, tested with real tiny images
   (`tests/golden/test_diff_*.py`, not golden-marked, so they run in every gate).
 
-The numbers are the parity gate's. A pixel's delta is its largest channel difference over
+The numbers are the parity gate's, measured by the gate's own code: `support/golden.py`
+holds `decode`, `channel_delta`, `MAX_CHANNEL_DELTA` and `MAX_DIFFERING_FRACTION`, and the
+parity pins, the make scripts and the diff tooling all import them from there. A pixel's delta is its largest channel difference over
 RGB, or RGBA where the image has alpha; the changed fraction counts the pixels past
 `MAX_CHANNEL_DELTA` (2), the number ADR 0030's bound (`MAX_DIFFERING_FRACTION`, 0.005)
 holds. The summary flags a fraction past that bound, and marks an image `local` when the
@@ -48,14 +51,18 @@ pixels past the channel bound, or every changed pixel when none is past it.
 ### Links that render
 
 The repository is public, so the block links `raw.githubusercontent.com` files, which
-GitHub renders inline for any reader; `--url-form blob` writes
-`github.com/<owner>/<repo>/blob/<commit>/<path>?raw=true` links for a private repository.
-Each link names the `pr-assets` commit, not the branch: a PR body keeps showing the review images
+GitHub renders inline for any reader. Each link names the `pr-assets` commit, not the branch: a PR body keeps showing the review images
 it was written with after a later publish replaces them, and no cache serves an old review image
 at a moved branch's URL. `pr-assets` is an orphan branch that holds review images only, so it
 never merges and adds no history to `main`; each PR's review images sit under its branch name.
-The publish never touches the working tree, the index or the checked-out branch, and it
-pushes only when given `--push`.
+The publish never touches the working tree, the index or any local branch: no local
+`pr-assets` branch exists, so there is no local state to fall behind or diverge. Every
+publish builds on the tip it has just fetched and pushes `HEAD:refs/heads/pr-assets` as a
+fast-forward, never forced. A push refused because another publish landed first fetches the
+new tip and rebuilds, a bounded number of times (`PUSH_ATTEMPTS`, 3), then fails with an
+error; a push refused with the tip unmoved fails at once with git's reason. Without
+`--push` it is a dry run: the commit is built the same way but not pushed, and the log says
+the links are not live yet.
 
 ### The rule
 
@@ -70,11 +77,14 @@ first compare, `repaint.py` (or `diff_images.py` on the compare's output) draws 
 ### CI
 
 On a failure the golden workflow also runs `diff_images.py` over the fresh paints against
-the checkout, leaving out changes within the parity bound (`--min-fraction 0.005`), and
-uploads the review images as `golden-diffs-<os>` beside the fresh paints. The parity and docs pin
-tests copy their paints into `fresh` trees at the repository paths so the step can pair
-each paint with its committed image; nothing else in the tests changes, and a passing run
-draws nothing.
+the checkout, leaving out changes within the parity bound (bare `--min-fraction`, which
+takes `MAX_DIFFERING_FRACTION`, so a change exactly at the bound is left out as the gate's
+`<=` passes it), and uploads the review images as `golden-diffs-<os>` beside the fresh
+paints. The parity and docs pin tests copy what they gate into `fresh` trees at the
+repository paths so the step can pair each paint with its committed image: under
+`--golden-tolerance` that is the Lynmouth outputs and the docs masters, never the lossy docs
+files, whose re-encoding noise passes the bound and which that mode does not gate. Nothing
+else in the tests changes, and a passing run draws nothing.
 
 ## Consequences
 

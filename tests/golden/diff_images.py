@@ -11,17 +11,18 @@ With `--before` and `--after`, the two directories share one layout, and each im
 ref, read with `git show`, and the later side is the working tree, or `--after-ref`; the
 images compared are those git lists as differing under `docs/images` and `tests/golden`,
 untracked ones included when the later side is the working tree. Images are PNG, WebP and
-JPEG files.
+JPEG files (JPEG for the registered social preview, `docs/images/social-preview.jpg`).
 
 For each image whose pixels differ it writes, under `OUT` at the image's own path, a
 diff image (`<path>.diff.png`: before, after, the heat map and a key, shrunk to fit a
 phone-width PR body) and a 1:1 crop image of the most-changed region (`<path>.crop.png`),
 then `summary.json` and `summary.md` (a table of every image that differs, and the
 review images). `--min-fraction F` leaves out the review images and rows of changed images
-whose changed fraction is at most `F` (CI passes the parity bound, so only failures are
-drawn). An image
-whose pixels are equal is skipped, whatever its bytes. `OUT` must be absent, empty, or an
-earlier run's output (it holds `summary.json`), which is replaced.
+whose changed fraction is at most `F`, as the parity gate passes a fraction at most its
+bound; `--min-fraction` alone takes that bound, `MAX_DIFFERING_FRACTION`, so CI draws only
+the images that failed. An image whose pixels are equal is skipped, whatever its bytes.
+`OUT` must be absent, empty, or an earlier run's output (it holds `summary.json`), which is
+replaced.
 
 Exit codes: 0 when the review images were written, whatever changed (the gate is
 `test_parity.py`); 2 for a bad command line, a bad ref or an `OUT` that is not safe to
@@ -35,12 +36,14 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from golden.diff_measure import changed_mask, channel_delta, crop_box, decode, measure
+from golden.diff_measure import changed_mask, crop_box, measure
 from golden.diff_render import crop_image, diff_image
 from golden.diff_report import FileDiff, Summary, markdown
 from PIL import Image
 
 from support import REPO_ROOT
+from support.git_commands import git_lines, is_commit
+from support.golden import MAX_DIFFERING_FRACTION, channel_delta, decode
 
 logger = logging.getLogger("diff_images")
 
@@ -111,12 +114,6 @@ def images_under(root: Path) -> list[str]:
     return sorted(path for path in found if is_image(path))
 
 
-def _git_lines(repo: Path, *args: str) -> list[str]:
-    """Run one git command in `repo` and return its non-empty output lines."""
-    done = subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, check=True)
-    return [line for line in done.stdout.splitlines() if line]
-
-
 def changed_paths(repo: Path, ref: str, after_ref: str | None) -> list[str]:
     """Return the images under `IMAGE_ROOTS` that differ between `ref` and the later side.
 
@@ -124,10 +121,10 @@ def changed_paths(repo: Path, ref: str, after_ref: str | None) -> list[str]:
     is `None`.
     """
     refs = [ref] if after_ref is None else [ref, after_ref]
-    paths = set(_git_lines(repo, "diff", "--name-only", "--no-renames", *refs, "--", *IMAGE_ROOTS))
+    paths = set(git_lines(repo, "diff", "--name-only", "--no-renames", *refs, "--", *IMAGE_ROOTS))
     if after_ref is None:
         paths |= set(
-            _git_lines(repo, "ls-files", "--others", "--exclude-standard", "--", *IMAGE_ROOTS)
+            git_lines(repo, "ls-files", "--others", "--exclude-standard", "--", *IMAGE_ROOTS)
         )
     return sorted(path for path in paths if is_image(path))
 
@@ -236,7 +233,13 @@ def _parse(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--after-ref", metavar="REF", help="the later side, a git ref")
     parser.add_argument("--repo", type=Path, default=REPO_ROOT, help=argparse.SUPPRESS)
     parser.add_argument(
-        "--min-fraction", type=float, default=None, metavar="F", help="leave out changes up to F"
+        "--min-fraction",
+        type=float,
+        nargs="?",
+        const=MAX_DIFFERING_FRACTION,
+        default=None,
+        metavar="F",
+        help=f"leave out changes up to F (alone: the parity bound, {MAX_DIFFERING_FRACTION})",
     )
     args = parser.parse_args(argv)
     by_dirs = args.before is not None and args.after is not None and args.ref is None
@@ -244,17 +247,6 @@ def _parse(argv: list[str] | None) -> argparse.Namespace:
     if not (by_dirs or by_ref) or (args.after_ref is not None and not by_ref):
         parser.error("give --before DIR --after DIR, or --ref REF [--after-ref REF]")
     return args
-
-
-def _ref_ok(repo: Path, ref: str) -> bool:
-    """Return whether `ref` names a commit in `repo`."""
-    done = subprocess.run(
-        ["git", "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"],
-        cwd=repo,
-        capture_output=True,
-        check=False,
-    )
-    return done.returncode == 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -267,7 +259,7 @@ def main(argv: list[str] | None = None) -> int:
         paths = images_under(args.after)
     else:
         for ref in (args.ref, args.after_ref):
-            if ref is not None and not _ref_ok(args.repo, ref):
+            if ref is not None and not is_commit(args.repo, ref):
                 logger.error("not a commit: %s", ref)
                 return 2
         before = RefSide(args.repo, args.ref)

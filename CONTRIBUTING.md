@@ -74,13 +74,13 @@ PYTHONPATH=tests uv run python tests/golden/diff_images.py /tmp/diffs --before O
 
 For each image whose pixels differ it writes `<path>.diff.png` (before, after, a heat map of the difference and a key) and `<path>.crop.png` (the most-changed region at 1:1, with a locator), and `summary.json` and `summary.md`: per image, the size, the fraction of pixels past channel delta 2 (flagged past the 0.5% parity bound), the largest delta, the changed box, and whether the change is local or widespread. It never fails on what moved; the parity tests are the gate.
 
-**A PR that moves a golden or docs image shows the review images in its body** (ADR 0048). Publish them to the orphan branch `pr-assets`, under your branch's name, and paste the block it prints (also written to `/tmp/diffs/pr-body.md`) under "Golden and docs images" in the PR description:
+**A PR that moves a golden or docs image shows the review images in its body** (ADR 0052). Publish them to the orphan branch `pr-assets`, under your branch's name, and paste the block it prints (also written to `/tmp/diffs/pr-body.md`) under "Golden and docs images" in the PR description:
 
 ```bash
 PYTHONPATH=tests uv run python tests/golden/publish_diffs.py /tmp/diffs --push
 ```
 
-It commits in a temporary worktree, so your branch, index and working tree are untouched, and it pushes only with `--push`. The links name the `pr-assets` commit, so republishing after another change leaves an earlier PR comment's images as they were; paste the new block. When the golden workflow fails on CI, its `golden-diffs-<os>` artifact holds the same review images for every paint past the bound, beside the fresh paints.
+It builds one commit on the fetched tip of `origin`'s `pr-assets` in a temporary worktree and pushes it as a fast-forward, so your branches, index and working tree are untouched and no local `pr-assets` branch is made. Without `--push` it is a dry run: the same block is written, but its links are not live until a publish with `--push`. If someone else publishes at the same moment, it fetches their tip and rebuilds on it, three times at most. The links name the `pr-assets` commit, so republishing after another change leaves an earlier PR comment's images as they were; paste the new block. When the golden workflow fails on CI, its `golden-diffs-<os>` artifact holds the same review images for every paint past the bound, beside the fresh paints.
 
 ## Spec flow
 

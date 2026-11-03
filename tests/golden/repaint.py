@@ -12,7 +12,7 @@ both manifest hashes), the docs images in `docs/images/` and their masters in
 `tests/golden/docs/` (by `make_docs_images.py`). Then it runs `diff_images.py` with the working
 tree as the earlier side and `OUT/tree` as the later, writing the review images and the
 summary to `OUT/diffs/`, which `publish_diffs.py` takes. This is the first step of a golden
-regeneration (ADR 0048): what moved, and by how much, before anything is committed.
+regeneration (ADR 0052): what moved, and by how much, before anything is committed.
 
 It does not write into the repository: committing a regeneration is `make_golden.py` and
 `make_docs_images.py` run on the committed directories. Exit code: 0 when painted and
