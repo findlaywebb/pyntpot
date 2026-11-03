@@ -19,7 +19,8 @@ once, untimed, as a smoke test (`--benchmark-disable` is in `addopts`).
 - `test_letters.py`: the hand writing a long name along a line, and a two-row block
   from an anchor, each warm; and a fresh hand tracing every glyph from the face by
   the centreline and the outline route. Cold and warm are kept apart because tracing
-  is paid once per glyph.
+  is paid once per glyph. And the broad nib's width profile along every glyph stroke
+  of that long name, which the hand does not run (the nib plate does).
 - `test_maps.py`: one benchmark per pipeline stage over the offline Lynmouth fixture
   (`fetch`, `paint`, `letter`, `compose`), so a slowdown names its stage. `paint`
   writes into a fresh directory each round, because `paint` skips work when the
