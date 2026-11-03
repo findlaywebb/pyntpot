@@ -12,8 +12,11 @@ It does not turn an accumulator into density (`pyntpot.ink.pad`) and builds no b
 
 Invariants: the generator is drawn from in a fixed order (phase, pressure lattice, wander
 lattice, the tip; the lattices only for an organic brush), so one seed gives one stroke; a
-path shorter than 2.5 pixels stamps nothing.
+path shorter than 2.5 pixels stamps nothing; a path that starts on or beyond the
+accumulator's edge (`_enters`) is not set down: it carries no set-down load and no blot.
 """
+
+from dataclasses import replace
 
 import numpy as np
 
@@ -57,6 +60,18 @@ def _trace(pts: np.ndarray, b: Brush) -> Trace | None:
     ln[ln < _MIN_NORMAL] = 1.0
     nx, ny = (-ty / ln).astype(F32), (tx / ln).astype(F32)
     return Trace(x, y, nx, ny, t, total)
+
+
+def _enters(pts: np.ndarray, shape: tuple[int, ...], b: Brush) -> bool:
+    """Whether a path starts on or beyond the accumulator's edge, within one plate pixel.
+
+    Such a stroke came in from off the paper, cut where it crosses the edge: the nib
+    was set down beyond it, so its set-down ink and blot are not on this paper.
+    """
+    h, w = shape[0], shape[1]
+    x, y = float(pts[0][0]), float(pts[0][1])
+    edge = b.unit
+    return x < edge or y < edge or x > w - 1 - edge or y > h - 1 - edge
 
 
 def _pressure(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> np.ndarray:
@@ -279,6 +294,8 @@ def stamp(
     tr = _trace(pts, b)
     if tr is None:
         return
+    if _enters(pts, acc.shape, b):
+        b = replace(b, load=0.0, pool=0.0)
     ph = float(rng.random()) * _TAU
     ink = _width(tr, b, _pressure(tr, b, ph, rng), wprof)
     tr = _wobble(tr, b, ph, rng)

@@ -1,5 +1,7 @@
-"""Properties of `simplify` (ends kept, a subsequence, idempotent, within tolerance), `normal_at`
-and `cut_line` (inside the box, cut on its edge).
+"""Properties of `simplify`, `normal_at` and `cut_line`.
+
+`simplify` keeps the ends, returns a subsequence, settles and stays within tolerance;
+`cut_line` keeps every piece in the box and cuts a piece's open ends on its edge.
 """
 
 import math
