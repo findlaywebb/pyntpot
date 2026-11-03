@@ -71,6 +71,10 @@ directory built with those margins finds every payload and fetches nothing.
   `https://api.opentopodata.org/v1/srtm30m`. 64 calls of 100 points.
 - **Contact string sent**: `https://github.com/findlaywebb/pyntpot`.
 - **Fetched**: 2026-10-25.
+- **Education land, added to the land cover payload**: fetched 2026-11-03 from the same mirror
+  when the land cover query gained `landuse=education` and `amenity=university|college`
+  (ADR 0053): those four query lines alone over the land cover box, trimmed as the rest of the
+  payload was, and appended after its elements; nothing already there changed.
 
 ## Bounding boxes
 
@@ -402,10 +406,10 @@ enforced by `tests/architecture/test_coordinates.py`.
 | File | Bytes | Gzip bytes |
 |---|---|---|
 | `elevation-ada01f635902a1fd.json` | 39,274 | 6,889 |
-| `landcover-ada01f635902a1fd.json` | 3,698,328 | 619,379 |
+| `landcover-ada01f635902a1fd.json` | 3,700,300 | 619,947 |
 | `overpass-ada01f635902a1fd.json` | 8,615,542 | 1,537,408 |
 | `track.gpx` | 134,315 | 22,521 |
-| **Total, README excluded** | **12,487,459** | **2,186,197** |
+| **Total, README excluded** | **12,489,431** | **2,186,765** |
 
 ## Licences and attribution
 
