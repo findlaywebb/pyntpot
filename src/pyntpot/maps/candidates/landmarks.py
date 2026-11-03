@@ -66,9 +66,7 @@ def landmark_reach(entry: Mapping[str, Any], scale: float = 1.0) -> float:
     return min(max(base, tall), REACH_CAP_M) * scale
 
 
-def landmark_rank(
-    entry: Mapping[str, Any], scale: float = 1.0
-) -> tuple[bool, int, bool, float]:
+def landmark_rank(entry: Mapping[str, Any], scale: float = 1.0) -> tuple[bool, int, bool, float]:
     """What order the candidates are offered in: length, notability, record, then comfort.
 
     The first term is whether the name (`n` or `name`) is longer than
