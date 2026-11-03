@@ -41,7 +41,9 @@ JOIN_TOL_M = 2.0
 MIN_COAST_M = 300.0
 
 #: OSM tag to pigment class. An element that matches on more than one key takes
-#: the class of the last of `landuse`, `natural` and `leisure` that matches.
+#: the class of the last of `amenity`, `landuse`, `natural` and `leisure` that matches,
+#: so a college's own garden or meadow keeps its green. Education land (schools,
+#: colleges, universities) is `built`: it is the town's ground, painted as the town is.
 COVER_TAGS: tuple[tuple[str, str, str], ...] = (
     ("landuse", "farmland", "farmland"),
     ("landuse", "farmyard", "built"),
@@ -72,6 +74,9 @@ COVER_TAGS: tuple[tuple[str, str, str], ...] = (
     ("landuse", "commercial", "built"),
     ("landuse", "retail", "built"),
     ("landuse", "cemetery", "built"),
+    ("landuse", "education", "built"),
+    ("amenity", "university", "built"),
+    ("amenity", "college", "built"),
     ("landuse", "industrial", "works"),
     ("landuse", "quarry", "works"),
     ("landuse", "greenhouse_horticulture", "works"),
@@ -120,7 +125,7 @@ def cover_rings(
     for entry in payload.get("elements", []):
         tags = entry.get("tags") or {}
         cls = None
-        for tag_key in ("landuse", "natural", "leisure"):
+        for tag_key in ("amenity", "landuse", "natural", "leisure"):
             if tag_key in tags:
                 cls = lookup.get((tag_key, tags[tag_key]), cls)
         if cls is None:
