@@ -202,7 +202,9 @@ class TestPenProfile:
     def test_a_short_or_degenerate_stroke_has_full_width(self) -> None:
         """A one-point stroke, or one of no length, keeps its full width at both ends."""
         for pts in (np.array([(3.0, 4.0)]), np.array([(3.0, 4.0), (3.0, 4.0)])):
-            assert _pen_profile(pts, 0.0, 0.85, 8.0).tolist() == [1.0, 1.0]
+            prof = _pen_profile(pts, 0.0, 0.85, 8.0)
+            assert prof.dtype == np.float32
+            assert prof.tolist() == [1.0, 1.0]
 
     def test_a_corner_is_smoothed_over_the_window(self) -> None:
         """Where a stroke turns from along the nib to across it, the width climbs through the angles between."""
@@ -227,3 +229,20 @@ class TestPenProfile:
             turn = step[:-1] * step[1:] < 0
             zigzags += int(np.sum(turn[:-1] & turn[1:] & big[:-2] & big[1:-1] & big[2:]))
         assert zigzags == 0
+
+    def test_a_short_corner_turns_through_the_pinned_widths(self) -> None:
+        """An L of two 10 px legs under an 8 px tent climbs from 0.15 to 1.0 by the pinned widths."""
+        pts = np.array([(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)])
+        prof = _pen_profile(pts, 0.0, 0.85, 8.0)
+        pinned = [
+            0.15, 0.15, 0.15, 0.1519, 0.1657, 0.1918, 0.2293, 0.2803, 0.3484, 0.4382, 0.5523, 0.6826,
+            0.8125, 0.8988, 0.9496, 0.9765, 0.99, 0.9963, 0.999, 0.9999, 1.0, 1.0, 1.0, 1.0,
+        ]  # fmt: skip
+        assert prof.dtype == np.float32
+        assert prof.tolist() == pytest.approx(pinned, abs=1e-4)
+
+    def test_a_stroke_as_short_as_the_least_length_has_full_width(self) -> None:
+        """A stroke exactly the least length long has no direction, so it keeps its full width."""
+        prof = _pen_profile(np.array([(0.0, 0.0), (1e-6, 0.0)]), 0.0, 0.85, 8.0)
+        assert prof.dtype == np.float32
+        assert prof.tolist() == [1.0, 1.0]

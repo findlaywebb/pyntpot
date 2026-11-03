@@ -3,8 +3,8 @@
 GitHub issue: [#76](https://github.com/findlaywebb/pyntpot/issues/76)
 
 **What exists today.** The nib's angle is fixed to the page.
-`pyntpot.letters.nib._pen_profile` takes each segment's direction as
-`arctan2(dy, dx)` in render pixels and compares it with
+`pyntpot.letters.nib._pen_profile` takes the stroke's direction, smoothed along
+it over the nib's width, in render pixels and compares it with
 `radians(NibStyle.label_pen_angle_deg) + mark.pen`; both angles are measured from
 the page's horizontal (y down). For a flat block the writing line is the page's
 horizontal, so nothing turns. For a name set along a path
