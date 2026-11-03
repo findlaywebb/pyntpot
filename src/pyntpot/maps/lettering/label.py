@@ -3,8 +3,9 @@
 Key types: `Label`, one name with its anchor, kind, tier, size and the box or window the
 placer gave it; `Span`, one effort or climb with the line drawn beside the route, its
 end ticks and its name; `Anchor`, `Box` and `Measure`; the `TIER_*` order in which names
-claim their boxes; `wrap_forms` and `block_size`, which break a long name over lines and
-size the block it takes; `feature_px`, the painted width of a feature in display pixels.
+claim their boxes; `kind_measure`, a name's size as its kind's tracking sets it;
+`wrap_forms` and `block_size`, which break a long name over lines and size the block it
+takes; `feature_px`, the painted width of a feature in display pixels.
 
 It places nothing and draws nothing, and it knows no hand: a caller supplies the
 `Measure`, `measure(text, size) -> (width, height)` in display pixels.
@@ -53,6 +54,11 @@ TIER_MARKER = 70
 #: The kinds whose name sits on its own mark, so a leader would only decorate.
 NO_LEADER = ("settlement", "river", "road", "marker")
 
+#: The kinds whose name is dropped when no seat for it, along its line or flat,
+#: is on the paper. The water and the tarmac still read without their name; a
+#: place, a marker or a name the caller asked for keeps its fallback.
+OFF_PAPER_DROPPED_KINDS = ("river", "road")
+
 #: `measure(text, size) -> (width, height)`, both in display pixels.
 Measure = Callable[[str, float], tuple[float, float]]
 
@@ -66,6 +72,23 @@ MeasureTracked = Callable[[str, float, float], tuple[float, float]]
 #: because that is how a printed map has always said "this is a river" without
 #: changing the size, and a road is set slightly wide for the same reason.
 KIND_TRACKING = {"river": 0.24, "road": 0.10, "settlement": 0.05}
+
+
+def kind_measure(measure_tracked: MeasureTracked, kind: str) -> Measure:
+    """How wide and tall a name of one kind is as the hand writes it: with its kind's tracking.
+
+    The hand writes every name with its kind's `KIND_TRACKING`, set flat or along a line,
+    so a flat name's box is measured the same way; measured without it, a river's spaced
+    letters run past the box the placer kept on the paper.
+    """
+    tracking = KIND_TRACKING.get(kind, 0.0)
+
+    def measure(text: str, size: float) -> tuple[float, float]:
+        """The name's width and height with the kind's tracking."""
+        return measure_tracked(text, size, tracking)
+
+    return measure
+
 
 #: The kinds whose name is never broken over two lines, which is the shorter
 #: list. A settlement never wraps: a place name is one thing a reader looks up

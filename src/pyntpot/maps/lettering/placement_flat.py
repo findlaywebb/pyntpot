@@ -1,30 +1,40 @@
 """Setting a name flat beside its anchor, on the cheapest rung, broken over lines when that pays.
 
 Key names: `_place_flat`, one horizontal name tried on every side of its anchor at every
-rung of the ladder; `best_flat`, the cheapest answer over every way the name may be
+rung of the ladder; `course_anchors`, the points a flat river name may be seated beside
+along its own course; `best_flat`, the cheapest answer over every way the name may be
 broken; `ROAD_CROSS_COST`, `LEADER_CROSS_LABEL_COST`, `LEADER_COST_PX`, `SEPARATION_WEIGHT` and `WRAP_COST`, the
 prices the answers are weighed in.
 
 It does not set a name along a line, choose the order names are placed in or swap
 leaders afterwards, and it draws nothing.
 
+Each position is priced on the water under it and its backing wash too (`water_cost`),
+except for a name written on the water.
+
 Invariants: a position on the paper always beats one off it, and the label is left
 holding the form and the position that won.
 """
 
+import math
 from typing import Any
 
+from pyntpot.ink.polyline import Pt, cumulative_length
+from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import (
     NO_LEADER,
     TIER_SPAN,
     WRAP_LEADING,
+    Box,
     Label,
     Measure,
     block_size,
     wrap_forms,
 )
 from pyntpot.maps.lettering.placement_costs import (
+    EDGE_PX,
     ROUTE_REACH_PX,
+    SEPARATION_CAP_PX,
     Terms,
     box_on_paper,
     darkness,
@@ -36,6 +46,11 @@ from pyntpot.maps.lettering.placement_costs import (
     separation,
 )
 from pyntpot.maps.lettering.placement_marks import SPAN_MARK_COST_PX, mark_gap, mark_through
+from pyntpot.maps.lettering.placement_water import water_cost
+from pyntpot.maps.lettering.placement_window import on_line
+
+#: The fewest points that make a line.
+_FEWEST_FOR_A_LINE = 2
 
 #: What a name laid across a road costs. Not a constraint: sometimes there is
 #: nowhere else, and a name that vanished would be worse than one that crosses
@@ -80,6 +95,25 @@ NEAR_RUNGS = (7.0, 12.0, 20.0, 30.0)
 
 
 NEAR_GAP_COST_PX = 4.0
+
+
+#: What a pixel of travel away from where a name started costs, set along its
+#: line or flat beside a point further along its course. Light, because the
+#: freedom to slide along the whole feature is the point; not zero, because with
+#: the separation reward and nothing pulling back, two names of one river both
+#: run to opposite corners of the card and neither ends up where the river is
+#: worth naming.
+ANCHOR_PULL = 0.22
+
+
+#: The kinds whose flat name may be seated beside any point of its own course,
+#: not only beside its anchor, and how many points along it are tried. A river
+#: that could not be written along its water still has the whole of its water
+#: to be named beside; its anchor may sit in a lake or between two streams with
+#: no dry paper within a rung of it.
+COURSE_KINDS = ("river",)
+
+COURSE_ANCHORS = 12
 
 
 #: What a second line costs, so it is taken only when it buys a materially
@@ -161,9 +195,11 @@ def _place_flat(
     near_mark = lb.tier == TIER_SPAN or lb.kind in NO_LEADER
     rungs = NEAR_RUNGS if near_mark else LEADER_RUNGS
     per_px = NEAR_GAP_COST_PX if near_mark else LEADER_COST_PX
+    gap_px = SPAN_MARK_COST_PX if lb.tier == TIER_SPAN else per_px
     best = None
     on_paper = None
-    for ax, ay in lb.anchors or [(lb.px, lb.py)]:
+    for ax, ay in lb.anchors or course_anchors(lb, terms.card):
+        pull = 0.0 if lb.anchors else math.dist((ax, ay), (lb.px, lb.py)) * ANCHOR_PULL
         for ox, oy in offs:
             for dist in rungs:
                 cx = ax + ox * (dist + tw / 2 if ox else 0)
@@ -172,22 +208,14 @@ def _place_flat(
                     cx = ax
                 x0, y0 = cx - tw / 2, cy - th / 2
                 box = (x0, y0, x0 + tw, y0 + th)
-                cost = 0.0
                 inside = box_on_paper(box, terms.card)
-                if not inside:
-                    cost += 400
-                cost += near_route(box, terms.route, max(ROUTE_REACH_PX, lb.size))
-                cost += overlap(box, terms.boxes)
-                cost += darkness(box, terms.card, terms.dark) * 150
-                cost += on_road(box, terms.roads) * ROAD_CROSS_COST
-                cost += off_own_feature(box, lb)
-                gap_px = SPAN_MARK_COST_PX if lb.tier == TIER_SPAN else per_px
-                cost += mark_gap(box, lb, dist) * gap_px
-                cost += mark_through(box, lb)
-                if not near_mark:
-                    foot = (cx - ox * tw / 2 if ox else cx, cy)
-                    cost += leader_crossings((ax, ay), foot, terms.boxes) * LEADER_CROSS_LABEL_COST
-                cost -= separation(box, terms.boxes) * SEPARATION_WEIGHT
+                # The bar a seat has to get under to change the answer: the cheapest
+                # seat so far, and the cheapest on the paper while this one is on it.
+                bar = _bar(best, on_paper, inside=inside)
+                foot = (cx - ox * tw / 2 if ox else cx, cy)
+                cost = _seat_cost(lb, box, terms, (pull, inside, dist, gap_px, (ax, ay), foot), bar)
+                if cost is None:
+                    continue
                 here = (cost, cx, cy, x0, y0, ox, ax, ay)
                 if best is None or cost < best[0]:
                     best = here
@@ -197,3 +225,90 @@ def _place_flat(
     assert chosen is not None
     _seat_block(lb, chosen, tw, th, nlines)
     return chosen[0]
+
+
+#: The most the separation reward can take off a seat's cost: what lets a seat be
+#: given up before all of it is priced.
+_SEPARATION_MAX = SEPARATION_CAP_PX * SEPARATION_WEIGHT
+
+
+def _bar(best: tuple[Any, ...] | None, on_paper: tuple[Any, ...] | None, *, inside: bool) -> float:
+    """The cost a seat has to come in under to change the answer, or infinity.
+
+    A seat changes the answer only by beating the cheapest seat so far, or, when
+    it is on the paper, the cheapest one on the paper; the higher of the two
+    that applies is the bar.
+    """
+    if best is None:
+        return math.inf
+    if not inside:
+        return float(best[0])
+    return math.inf if on_paper is None else float(max(best[0], on_paper[0]))
+
+
+def _seat_cost(
+    lb: Label, box: Box, terms: Terms, seat: tuple[float, bool, float, float, Pt, Pt], bar: float
+) -> float | None:
+    """What one candidate seat costs, or None once it cannot come in under `bar`.
+
+    Every term but the separation reward is never negative, so a running total
+    less the most that reward can take off is a floor on the final cost; the
+    dear terms are priced only while that floor is still under the bar. The
+    terms are added in one fixed order whether or not the seat is given up, so
+    a seat that is priced in full costs exactly what it always did.
+
+    Args:
+        lb: The label.
+        box: The seat's box.
+        terms: What the seat is priced against.
+        seat: The travel from the label's anchor, whether the box is on the
+            paper, the rung, what a pixel of gap costs, the anchor tried and
+            where its leader meets the block.
+        bar: What the seat has to come in under.
+    """
+    pull, inside, dist, gap_px, anchor, foot = seat
+    cost = pull if inside else pull + 400
+
+    def hopeless() -> bool:
+        """Whether the seat can no longer come in under the bar."""
+        return cost - _SEPARATION_MAX >= bar
+
+    if hopeless():
+        return None
+    cost += near_route(box, terms.route, max(ROUTE_REACH_PX, lb.size))
+    cost += overlap(box, terms.boxes)
+    cost += darkness(box, terms.card, terms.dark) * 150
+    cost += on_road(box, terms.roads) * ROAD_CROSS_COST
+    if hopeless():
+        return None
+    if not lb.in_water:
+        cost += water_cost(box, terms.water, lb.size)
+    if hopeless():
+        return None
+    cost += off_own_feature(box, lb)
+    cost += mark_gap(box, lb, dist) * gap_px
+    cost += mark_through(box, lb)
+    if lb.tier != TIER_SPAN and lb.kind not in NO_LEADER:
+        if hopeless():
+            return None
+        cost += leader_crossings(anchor, foot, terms.boxes) * LEADER_CROSS_LABEL_COST
+    cost -= separation(box, terms.boxes) * SEPARATION_WEIGHT
+    return cost
+
+
+def course_anchors(lb: Label, card: Card) -> list[Pt]:
+    """Where a flat name may be seated: beside its anchor, and along its course for a river.
+
+    The anchor comes first. For a kind in `COURSE_KINDS` with a line of its own,
+    `COURSE_ANCHORS` more points follow, spread evenly along that line, each on
+    the paper; `ANCHOR_PULL` prices the travel to them.
+    """
+    out: list[Pt] = [(lb.px, lb.py)]
+    if lb.kind not in COURSE_KINDS or len(lb.baseline) < _FEWEST_FOR_A_LINE:
+        return out
+    cum = cumulative_length(lb.baseline)
+    for k in range(COURSE_ANCHORS):
+        (x, y), _theta = on_line(lb.baseline, cum, cum[-1] * (k + 0.5) / COURSE_ANCHORS)
+        if EDGE_PX < x < card.w - EDGE_PX and EDGE_PX < y < card.h - EDGE_PX:
+            out.append((x, y))
+    return out

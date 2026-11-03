@@ -3,7 +3,8 @@
 Key names: `_crossings`, `on_road`, `overlap`, `separation`, `darkness`, `box_on_paper`
 and `near_route`, which price one box against the roads, the other names, the painted
 plates and the route; `off_own` and `off_own_feature`, which leave a name's own line
-out of the roads it keeps off; `_is_own_feature`.
+out of the roads it keeps off; `_is_own_feature`; `route_for`, the route a name keeps
+off, its span's own stretch at `SPAN_OWN_ROUTE_FRAC`.
 
 It does not choose a position and does not move a box; a caller adds these prices up.
 
@@ -19,6 +20,7 @@ from typing import Any
 from pyntpot.ink.polyline import Pt, foot_on
 from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import NO_LEADER, Box, Label
+from pyntpot.maps.lettering.placement_water import Water
 from pyntpot.maps.lettering.span_clear import seg_in_box
 
 #: The fewest points that make a segment.
@@ -69,12 +71,15 @@ class Backdrop:
         dark: The painter's dark grid, `{"w", "h", "v"}`.
         roads: Named road centrelines in display pixels. A name laid across one is
             costed, never forbidden.
+        water: The lakes and watercourse strokes a flat name and its backing
+            wash keep off.
     """
 
     card: Card
     route_px: list[Pt]
     dark: dict[str, Any]
     roads: list[list[Pt]] = field(default_factory=list)
+    water: Water = field(default_factory=Water)
 
     @property
     def thin(self) -> list[Pt]:
@@ -93,6 +98,7 @@ class Terms:
         roads: The lines the name is charged for crossing, its own feature
             already removed.
         route: The route in weighted parts, for the route cost.
+        water: The lakes and watercourse strokes, for the water cost.
     """
 
     card: Card
@@ -100,6 +106,7 @@ class Terms:
     boxes: list[Box]
     roads: list[list[Pt]]
     route: list[tuple[list[Pt], float]]
+    water: Water = field(default_factory=Water)
 
 
 def _crossings(box: Box, roads: list[list[Pt]]) -> int:
@@ -288,3 +295,30 @@ def near_route(
         if near < reach:
             worst = max(worst, ROUTE_ON_COST * (1.0 - near / reach) * counts)
     return worst
+
+
+#: What a span's own stretch of route counts for, against every other part of
+#: the track. A quarter: enough to break a tie between two windows on the same
+#: bracket, not enough to send the name away from the bracket altogether.
+SPAN_OWN_ROUTE_FRAC = 0.25
+
+
+def route_for(lb: Label, route_px: list[Pt], thin: list[Pt]) -> list[tuple[list[Pt], float]]:
+    """The route this label keeps off, and how much each part of it counts.
+
+    A span's bracket is drawn beside its own extent, so its name is near that
+    stretch by design, and charging the full price there would rule out the one
+    position the span is meant to take. It is not free either: given two windows
+    on the same bracket, the one that does not have the track running through
+    the middle of the word is the better one, and at a quarter weight the placer
+    can say so without the answer being decided by it.
+    """
+    if lb.span_range is None:
+        return [(thin, 1.0)]
+    i0, i1 = lb.span_range
+    own = [p for j, p in enumerate(thin) if i0 <= j * 3 <= i1]
+    rest = [p for j, p in enumerate(thin) if not (i0 <= j * 3 <= i1)]
+    out: list[tuple[list[Pt], float]] = [(rest, 1.0)] if rest else []
+    if own:
+        out.append((own, SPAN_OWN_ROUTE_FRAC))
+    return out or [(thin, 1.0)]

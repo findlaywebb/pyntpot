@@ -72,7 +72,7 @@ class Setting:
     align: Align = "start"
     slant: float = 0.0
     tracking: float = 0.0
-    ink: str = "map"
+    ink: str = "label"
     lines: tuple[str, ...] = ()
     wash: bool = True
 
@@ -103,7 +103,7 @@ class Mark:
 
     pts: list[Pt]
     role: str = "glyph"
-    ink: str = "map"
+    ink: str = "label"
     size: float = DEFAULT_LINE_PX
     pen: float = 0.0
     #: Whether the backing wash is lifted under this mark. A name written on

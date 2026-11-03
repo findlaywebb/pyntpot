@@ -239,7 +239,7 @@ def _items(marks: Sequence[Mark], groups: NibGroups, scale: float) -> dict[str, 
     nib = groups.nib
     brush = nib_brushes(nib, groups.face, groups.brush, scale)
     angle = math.radians(nib.label_pen_angle_deg)
-    inks = {"map", "route", "water", "in_water"}
+    inks = {"label", "route", "water", "in_water"}
     found: dict[str, list[Item]] = {}
     for mark in marks:
         pts = np.asarray(mark.pts, np.float64) * scale
@@ -256,7 +256,7 @@ def _items(marks: Sequence[Mark], groups: NibGroups, scale: float) -> dict[str, 
         # in a colour nobody chose.
         key = str(mark.ink)
         if key not in inks:
-            key = key if _HEX.fullmatch(key) else "map"
+            key = key if _HEX.fullmatch(key) else "label"
         found.setdefault(key, []).append((brush(mark.role, mark.size), pts, prof, bool(mark.wash)))
     return found
 
@@ -264,7 +264,7 @@ def _items(marks: Sequence[Mark], groups: NibGroups, scale: float) -> dict[str, 
 def _ink_colour(key: str, nib: NibStyle) -> str:
     """The colour an ink token names, or the colour itself."""
     named = {
-        "map": nib.label_ink,
+        "label": nib.label_ink,
         "route": nib.label_route_ink,
         "water": nib.label_water_ink,
         "in_water": nib.label_in_water_ink,

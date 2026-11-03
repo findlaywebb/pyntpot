@@ -73,7 +73,9 @@ def seat_notes(
     """
     boxes = list(taken)
     for lb in notes:
-        terms = Terms(ground.card, ground.dark, boxes, ground.roads, [(ground.thin, 1.0)])
+        terms = Terms(
+            ground.card, ground.dark, boxes, ground.roads, [(ground.thin, 1.0)], ground.water
+        )
         best_flat(lb, terms, measure_fn, [_form(lb, ground.card.w, measure_fn)])
         if lb.box is None or not box_on_paper(lb.box, ground.card):
             raise ValueError(f"journal note {lb.name!r} has no seat on the paper")
