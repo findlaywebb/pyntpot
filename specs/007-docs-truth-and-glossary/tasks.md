@@ -50,15 +50,15 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 
 ## S4 — Tutorials (#172)
 
-- [ ] Red: `tests/docs/test_tutorial_quotes.py` (every tutorial page's marked blocks verbatim; every python block marked); `tests/architecture/test_tutorials.py` untouched and green.
-- [ ] Red: `tests/docs/test_tutorial_paths.py` (Next lines, lead-on links).
-- [ ] `pictures.md` blocks marked and verbatim (`scene.inside`, `scene.sheet`, 8-space indent, prose says `scene.inside`); any drift on curves, symmetry, fractals fixed in the page.
-- [ ] `Next:` line on all nine pages.
-- [ ] Lead-on links on the seven non-index pages; rung references link their rungs.
-- [ ] Ambleside in the watercolour tutorial's Where next; "seven rungs"; README line 40.
-- [ ] First map's "Paint it in the Ambleside theme" section with the registered image.
-- [ ] `examples/route_map.py` docstrings and the quoted block in step.
-- [ ] Gate and strict build green.
+- [x] Red: `tests/docs/test_tutorial_quotes.py` (every tutorial page's marked blocks verbatim; every python block marked); `tests/architecture/test_tutorials.py` untouched and green.
+- [x] Red: `tests/docs/test_tutorial_paths.py` (Next lines, lead-on links).
+- [x] `pictures.md` blocks marked and verbatim (`scene.inside`, `scene.sheet`, 8-space indent, prose says `scene.inside`); any drift on curves, symmetry, fractals fixed in the page.
+- [x] `Next:` line on all nine pages.
+- [x] Lead-on links on the seven non-index pages; rung references link their rungs.
+- [x] Ambleside in the watercolour tutorial's Where next; "seven rungs"; README line 40.
+- [x] First map's "Paint it in the Ambleside theme" section with the registered image.
+- [x] `examples/route_map.py` docstrings and the quoted block in step.
+- [x] Gate and strict build green.
 
 ## S5 — Terminology sweep
 

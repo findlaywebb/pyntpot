@@ -5,6 +5,8 @@ Each builds on the one before. Start with the first, which needs no network.
 
 The order is the painter's and the code's: paper and washes in `ink`, lettering in `letters`, then the map in `maps`.
 
-- [Paint a watercolour: stretch the paper, lay a wash and compose the painting, in seven steps](paint-a-watercolour.md)
+- [Paint a watercolour: stretch the paper, lay a wash and compose the painting, in seven rungs](paint-a-watercolour.md)
 - [First map: paint a route map from the Ambleside track, then from your own](first-map.md)
 - [Painting with Python: pictures made with the engine that are not maps](painting-with-python/index.md)
+
+Next: [Paint a watercolour](paint-a-watercolour.md), paper, washes, brushes, pigments, a pen and a hand, laid into one painting.

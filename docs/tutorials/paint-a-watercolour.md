@@ -6,7 +6,7 @@ write a name by hand and put it all together in one painting. The engine makes e
 mark, and you can read how in the script.
 
 The order is the painter's, and it is the code's too. You stretch paper and lay washes
-with `ink`. You letter with `letters`, which is built on `ink`. The route work comes
+with `ink`. You letter with `letters`, which is built on `ink`. The map work comes
 last, in `maps`, which is built on both. Each rung uses only what the earlier rungs
 taught you.
 
@@ -707,4 +707,16 @@ Try changing `seeds` to `(4, 5, 6)`, and the name is written three other ways.
 
 You have painted each layer: paper, wash, brush, pigment, pen and hand. Next you put
 them to work on real country. In [First map](first-map.md) you paint a route round
-Keswick from recorded data, with no network, and then from a track of your own.
+Ambleside from recorded data, with no network, and then from a track of your own.
+
+Each layer has a page of its own beyond the tutorials:
+
+- [Brushes](../reference/brushes.md) lists every brush on the brush sheet, by id.
+- [Pigments](../reference/pigments.md) lists every key of `PIGMENTS`, the pigments you
+  mixed.
+- [How the wash works](../explanation/how-the-wash-works.md) explains the body, the pool
+  and the granulation of a wash.
+- [The hand and the nib](../explanation/the-hand-and-the-nib.md) explains how the hand
+  writes a name and the nib strokes it.
+
+Next: [First map](first-map.md), a route map of Ambleside from recorded data.
