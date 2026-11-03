@@ -86,7 +86,48 @@ runs into the ring by intent.
 Process as ADRs 0036 and 0052, run on `main` with #124, #128 and #145 merged. The
 tolerance bound is not changed, no gate is loosened and the hash input does not change.
 
-GOLDENS
+The manifest hash does not move (`3976d23ae248ca86-d9c56c0811177b0f`), so `GOLDEN_HASH` is
+not re-pinned, and `PINNED_LABELS` is unchanged: no name moves seat.
+
+### Lynmouth compare
+
+`repaint.py` against `main`'s goldens:
+
+```
+paper.webp: identical yes, differing fraction 0.000000
+wash.webp: identical yes, differing fraction 0.000000
+pen.webp: identical yes, differing fraction 0.000000
+labels-centreline.webp: identical no, differing fraction 0.004404
+map.png: identical no, differing fraction 0.002841
+manifest hash: 3976d23ae248ca86-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
+```
+
+Only the pins and their leaders move. With the keyed generators of #124 the change stays on
+the pinned names' furniture: each ring opens towards its leader, and each leader takes a
+different bend because it now draws first from the label's generator. The glyphs are not
+redrawn.
+
+### Docs images
+
+Every docs image and master was repainted with `make_docs_images.py`. The 15 that letter a
+pinned name moved, with their masters, and only they; every other entry is byte-identical.
+Master differing fractions against `main`'s masters:
+
+| Image | Master | Image | Master |
+|---|---|---|---|
+| `places/skye.webp` | 0.006698 | `places/y-fenni.webp` | 0.006620 |
+| `places/oxford.webp` | 0.006484 | `places/ambleside.webp` | 0.006165 |
+| `gallery/route-map.webp` | 0.006165 | `how-to/command-line.webp` | 0.005326 |
+| `places/yr-wyddfa.webp` | 0.005219 | `map-styles/bold.webp` | 0.003119 |
+| `tutorials/route-map.webp` | 0.002973 | `how-to/route-ink.webp` | 0.002924 |
+| `map-styles/winter.webp` | 0.002851 | `hero.webp` | 0.002680 |
+| `social-preview.jpg` | 0.002535 | `map-styles/sepia.webp` | 0.002388 |
+| `map-styles/pen-and-ink.webp` | 0.002315 | | |
+
+The encoded images differ more widely (up to 0.15 of their pixels past delta 2) only because
+a lossy WebP re-encodes every block of a changed image; their largest deltas are on the pins
+and leaders. Looked at side by side with `main` at 1:1: every pin is a ring of the old size
+open towards its leader, which runs into its middle, and no name moves.
 
 ## Consequences
 
