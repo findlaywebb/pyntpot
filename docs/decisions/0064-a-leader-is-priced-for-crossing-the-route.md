@@ -58,7 +58,7 @@ wash.webp: identical yes, differing fraction 0.000000
 pen.webp: identical yes, differing fraction 0.000000
 labels-centreline.webp: identical yes, differing fraction 0.000000
 map.png: identical yes, differing fraction 0.000000
-manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
+manifest hash: 3976d23ae248ca86-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
 ```
 
 No Lynmouth leader crosses the route, so nothing moves; `PINNED_LABELS` and `GOLDEN_HASH`
@@ -70,8 +70,8 @@ Every docs image was repainted with `repaint.py`; two moved, and only they:
 
 | Image | Image changed | Master changed |
 |---|---|---|
-| `places/oxford.webp` | 0.238284 | 0.056231 |
-| `places/y-fenni.webp` | 0.181720 | 0.058664 |
+| `places/oxford.webp` | 0.231679 | 0.057321 |
+| `places/y-fenni.webp` | 0.144280 | 0.047839 |
 
 The image fractions are mostly lossy re-encoding round the moved names; the names are the
 part past 32. Looked at side by side with `main`: on Oxford "Christ Church" leaves the seat
