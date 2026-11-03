@@ -1,16 +1,19 @@
 """The two values that cross the painter's phases: the job and the plate stack.
 
 Key types: `PaintJob`, what one painting is made from (the basemap, the style, the
-paper sheet, the plate's canvas, the output directory and the seeded random
-generators the phases share), and `PlateStack`, the mutable accumulator of the
+paper sheet, the plate's canvas, the output directory and the one seeded generator
+the phases share), and `PlateStack`, the mutable accumulator of the
 arrays one phase writes and a later one reads, plus the files written and their
 sizes. `drawable` turns basemap lines into the point lists the painter fills and
 strokes.
 
-The generators are shared on purpose: the phases draw from them in one fixed
-order, so a generator's state at any point of a painting is the same on every
-run. `PaintJob.begin` builds them from
-the style's seeds; a generator a style switches off is `None` or never drawn from.
+Only the dither generator is shared: the wood and the plates draw from it in one
+fixed order and a fixed amount for a given card, so its state at any point of a
+painting is the same on every run. Everything laid item by item draws from a
+generator keyed by the item instead (`ink.keyed`): each cover ring by its points, each
+stroke by its points, each wash's blooms by the wash's name (`PaintJob.bloom`) and
+their centres. So a change to one item, such as a coast moved by a sub-pixel, moves only
+that item's pixels.
 
 `PaintJob` also states the options every wash on the plate is laid with (the
 granulation, the flow rim, the rim width and the bloom of one wash), because they
@@ -30,6 +33,7 @@ from typing import Self
 
 import numpy as np
 
+from pyntpot.ink.keyed import keyed_rng
 from pyntpot.ink.noise import F32
 from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.sheet import Canvas, Sheet
@@ -57,7 +61,7 @@ def drawable(lines: tuple[Line, ...]) -> list[list[Pt]]:
 
 @dataclass(frozen=True)
 class PaintJob:
-    """One painting: what is painted, how, and the generators its phases share.
+    """One painting: what is painted, how, and the generator its phases share.
 
     Attributes:
         basemap: The basemap being painted.
@@ -65,11 +69,7 @@ class PaintJob:
         sheet: The paper's noise fields at the plate's size.
         canvas: The plate's pixel grid over the card's box.
         out_dir: Where the plates are written.
-        bloom_rng: Places the blooms of every wash in turn; `None` when blooms are off.
-        deform_rng: Deforms every cover ring in turn.
         dither_rng: Drives the wood's textures and dabs, then the plates' dither.
-        ink_rng: Lays every watercourse and road in turn.
-        pen_rng: Lays the route's pen plate.
     """
 
     basemap: Basemap
@@ -77,15 +77,11 @@ class PaintJob:
     sheet: Sheet
     canvas: Canvas
     out_dir: Path
-    bloom_rng: np.random.Generator | None
-    deform_rng: np.random.Generator
     dither_rng: np.random.Generator
-    ink_rng: np.random.Generator
-    pen_rng: np.random.Generator
 
     @classmethod
     def begin(cls, basemap: Basemap, style: Style, out_dir: Path) -> Self:
-        """Build the job for one painting: the canvas, the sheet and the seeded generators."""
+        """Build the job for one painting: the canvas, the sheet and the dither generator."""
         card = basemap.card
         cx0, cy0, cx1, cy1 = card.box
         rw, rh = card.render
@@ -100,18 +96,13 @@ class PaintJob:
             fibre_angle=paper.paper_fibre_angle,
             fibre_cell=max(paper.paper_fibre_cell_px * rw / 1800.0, 1.6),
         )
-        wash = style.wash
         return cls(
             basemap=basemap,
             style=style,
             sheet=sheet,
             canvas=Canvas(cx0, cy0, cx1, cy1, rw, rh),
             out_dir=out_dir,
-            bloom_rng=np.random.default_rng(wash.bloom_seed) if wash.blooms else None,
-            deform_rng=np.random.default_rng(wash.silhouette_deform_seed),
             dither_rng=np.random.default_rng(style.cover.dither_seed),
-            ink_rng=np.random.default_rng(style.brush.ink_seed),
-            pen_rng=np.random.default_rng(style.brush.ink_seed + 1),
         )
 
     @property
@@ -160,16 +151,27 @@ class PaintJob:
         paper = self.style.paper
         return float(paper.pigment_transparency.get(key, paper.km_transparency))
 
-    def bloom(self, cov: np.ndarray) -> Blooms | None:
+    @property
+    def pen_seed(self) -> int:
+        """The seed the route's pen strokes are keyed from, apart from the plate's ink."""
+        return self.style.brush.ink_seed + 1
+
+    def bloom(self, cov: np.ndarray, name: str) -> Blooms | None:
         """The bloom argument for one wash, sized against its own area.
 
         `bloom_strength` scales the lift, which is the one number the whole
         bloom is built from: the centre gives up that share of its pigment and
-        the ridge is laid from what the centre gave up. `None` when blooms are
-        off, or when the wash is too small for the count to reach one.
+        the ridge is laid from what the centre gave up. The wash's seed is keyed
+        from `bloom_seed` and the wash's name, so no two washes share their
+        blooms' draws. `None` when blooms are off, or when the wash is too small
+        for the count to reach one.
+
+        Args:
+            cov: The wash's coverage.
+            name: What the wash is: its cover class, `lake`, `sea` or `pale`.
         """
         wash = self.style.wash
-        if self.bloom_rng is None or wash.bloom_density <= 0:
+        if not wash.blooms or wash.bloom_density <= 0:
             return None
         area = float((cov > INSIDE).sum())
         n = int(
@@ -182,7 +184,8 @@ class PaintJob:
         lift = wash.bloom_lift * max(wash.bloom_strength, 0.0)
         if not n:
             return None
-        return (self.bloom_rng, n, wash.bloom_radius_frac, lift, wash.bloom_warp)
+        seed = int(keyed_rng(wash.bloom_seed, name).integers(1 << 62))
+        return (seed, n, wash.bloom_radius_frac, lift, wash.bloom_warp)
 
 
 @dataclass

@@ -114,6 +114,8 @@ SMOKE_RIVERS = (
 #: was cut at three radii instead of two (it has no square edge now); `wash` did not move.
 #: The `paper` and `wash` bytes moved once more, and their pixels did not, when lossless
 #: plates went to WebP method 1 (ADR 0043).
+#: `pen` and `wash` moved once more when every ring and stroke took a generator of its
+#: own (ADR 0048); `paper` did not move.
 #: The bytes are this machine's. A numpy that
 #: runs the wash on other vector instructions can round a last bit the other way
 #: and move a wash pixel by one level, so the wash plate itself is committed in
@@ -122,8 +124,8 @@ SMOKE_RIVERS = (
 #: for byte (ADR 0030).
 SMOKE_SHA = {
     "paper": "35c84fb0d3806aa995f699c638b3479b6db64fa3c4a74999e58ce792517379d8",
-    "pen": "bb86cd1eb74db17c8ca8b1533d4c48ce1ab0e1f022096806e2dd70dc4c5d3d97",
-    "wash": "5daa211adf178351a1c7f6a6211deffa18093d0f62dbdf49d8a41ec2e6401bf1",
+    "pen": "a55144ee7f8d28d5c1f13cf81b02f5e0ec5e476d46628149ca741811a4a51fab",
+    "wash": "056a201288fe7b0fa71b09fa489eb3f398fa6e61c5ecc1535730ad5f9368dd3a",
 }
 
 

@@ -19,6 +19,7 @@ from dataclasses import dataclass
 import numpy as np
 from PIL import Image
 
+from pyntpot.ink.keyed import keyed_rng, uniform_at
 from pyntpot.ink.noise import F32, blur, chamfer_distance, fbm
 from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.shallow_water import shallow_water
@@ -43,10 +44,10 @@ _NO_PIGMENT = 1e-9
 _WET_FLOOR = 0.05
 
 
-#: What blooms are laid by: the generator, how many, the radius as a share of
-#: the root of the wash's area, how much pigment the front lifts out of the
+#: What blooms are laid by: the wash's own seed, how many, the radius as a share
+#: of the root of the wash's area, how much pigment the front lifts out of the
 #: centre and how far the fbm warps the front off a circle.
-Blooms = tuple[np.random.Generator, int, float, float, float]
+Blooms = tuple[int, int, float, float, float]
 
 #: The settings that take the rim from `flow_edge`: how fast the width grows with area, the
 #: reference area as a share of the canvas and the decay length as a share of the
@@ -99,28 +100,43 @@ def bloom(dens: np.ndarray, a: np.ndarray, sheet: Sheet, blooms: Blooms) -> None
     ridge read as a cauliflower rather than a halo. Cropped to the bloom's own
     box, so the cost does not scale with the plate.
 
+    Placement is local. Every thick pixel draws one lot from its own position
+    (`ink.keyed.uniform_at`), raised to one over its density, and the `count`
+    highest lots are the centres. Weighted by the density itself and no more
+    steeply: the pooled rim is denser than any of the body, and a steeper weight
+    lets it take every bloom, so they crowd the coast. Each bloom then draws its
+    size and its warp from a generator keyed by its centre. So an edge that moves
+    elsewhere on the plate moves no bloom, where drawing candidates by their rank
+    among the thick pixels moved every one.
+
     Source: `backruns` in docs/explanation/references.md.
 
     Args:
         dens: The wash's density, changed in place.
         a: The wash's alpha, so a bloom stops at the wash's edge.
         sheet: The paper's noise fields.
-        blooms: The settings, in `Blooms`' order: the generator the seeds and the
-            warp are drawn from; how many blooms to lay; the radius as a share of
-            the root of the wash's area; how much pigment the front takes out of the
-            centre; and how far the fbm pushes the front off a circle.
+        blooms: The settings, in `Blooms`' order: the wash's own seed, which the
+            lots and each bloom's generator are keyed from; how many blooms to lay;
+            the radius as a share of the root of the wash's area; how much pigment
+            the front takes out of the centre; and how far the fbm pushes the front
+            off a circle.
     """
-    rng, count, radius_frac, lift, warp = blooms
+    seed, count, radius_frac, lift, warp = blooms
     inside = np.flatnonzero((a > _THICK).ravel())
     if count < 1 or inside.size < _MIN_BLOOM_PIXELS:
         return
     h, w = dens.shape
-    radius = float(np.clip(radius_frac * math.sqrt(inside.size), 5.0, 0.22 * min(h, w)))
+    # Rounded to the pixel, so an edge that moves a pixel elsewhere does not resize
+    # every bloom and, through its box, redraw every bloom's warp.
+    radius = float(round(np.clip(radius_frac * math.sqrt(inside.size), 5.0, 0.22 * min(h, w))))
     flat = dens.ravel()
-    for _ in range(int(count)):
-        # Seeded toward the thick: a handful of candidates, the densest wins.
-        cand = rng.choice(inside, size=min(24, inside.size), replace=False)
-        cy, cx = divmod(int(cand[int(np.argmax(flat[cand]))]), w)
+    # Seeded toward the thick: a lot per pixel, weighted by its density, the
+    # highest win (Efraimidis and Spirakis' weighted sampling).
+    weight = np.maximum(flat[inside].astype(np.float64), 1e-6)
+    lots = np.log(uniform_at(seed, inside)) / weight
+    for at in inside[np.argsort(-lots, kind="stable")[: int(count)]]:
+        cy, cx = divmod(int(at), w)
+        rng = keyed_rng(seed, cy, cx)
         r = radius * float(rng.uniform(0.7, 1.3))
         span = int(r * 1.9) + 3
         y0, y1 = max(cy - span, 0), min(cy + span + 1, h)

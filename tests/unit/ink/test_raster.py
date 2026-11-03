@@ -24,7 +24,7 @@ def test_an_outline_given_no_deform_is_the_outline_it_was():
 def test_the_deformed_outline_wobbles_at_more_than_one_scale():
     """One frequency everywhere is what the blurred-mask edge already does."""
     ring = np.asarray(ring_of(), float)
-    out = deform_ring(ring, (np.random.default_rng(5), 0.26, 4, 0.55, 16.0, 0.5))
+    out = deform_ring(ring, (5, 0.26, 4, 0.55, 16.0, 0.5))
     assert len(out) == len(ring) * 16
     rad = np.hypot(out[:, 0], out[:, 1]) - 200.0
     # Split the deviation into what a long smoothing keeps and what it removes.
@@ -43,7 +43,7 @@ def test_the_deformed_outline_wobbles_at_more_than_one_scale():
 def test_no_one_displacement_runs_away_with_a_long_segment():
     """A field boundary drawn as two points must not be thrown across the canvas."""
     box = [(0.0, 0.0), (4000.0, 0.0), (4000.0, 3000.0), (0.0, 3000.0)]
-    out = deform_ring(box, (np.random.default_rng(2), 0.26, 4, 0.55, 16.0, 0.5))
+    out = deform_ring(box, (2, 0.26, 4, 0.55, 16.0, 0.5))
     # Every point stays within the cap of the straight edge it came off, give or
     # take the caps the earlier rounds already spent.
     assert float(np.abs(out[:, 1]).min()) < 1e-9
@@ -52,8 +52,8 @@ def test_no_one_displacement_runs_away_with_a_long_segment():
 
 def test_the_deformation_is_the_same_ring_from_the_same_seed():
     """Everything in the painter has to come back the same from its seed."""
-    a = deform_ring(ring_of(), (np.random.default_rng(9), 0.26, 4, 0.55, 16.0, 0.5))
-    b = deform_ring(ring_of(), (np.random.default_rng(9), 0.26, 4, 0.55, 16.0, 0.5))
+    a = deform_ring(ring_of(), (9, 0.26, 4, 0.55, 16.0, 0.5))
+    b = deform_ring(ring_of(), (9, 0.26, 4, 0.55, 16.0, 0.5))
     assert np.array_equal(a, b)
 
 
