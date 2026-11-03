@@ -48,20 +48,45 @@ def test_the_pen_sets_down_where_it_touches_and_nowhere_else():
     assert marks[0][:, 60:160].sum() == pytest.approx(marks[1][:, 60:160].sum(), rel=1e-4)
 
 
-def test_a_wide_pen_leaves_no_grey_ring_round_its_ink():
-    """A 2.6 px pen's set-down blot adds nothing to the paper 3 to 8 px out from its ink."""
-    sheet = Sheet(60, 120, gran_px=6.0, seed=4)
-    pen, _ = brush_from_id("MAJ6-e", 2.6, 2.0, BrushStyle())
+#: The most the blot may add, on average, to a band of paper beside a wide pen's ink, as density.
+#: 1 to 2 px out it is the bleed of the darker start, which wicks a pixel or two past the
+#: ink (0.0021 at 5 render px, 0.0070 at 12, where the Gaussian laid round the start added
+#: 0.038 and 0.133); 3 to 8 px out it is nothing.
+BAND_BOUNDS = {(1.0, 2.0): 0.01, (3.0, 8.0): 1e-4}
+
+
+@pytest.mark.parametrize(
+    ("width", "band"),
+    [(2.6, (1.0, 2.0)), (2.6, (3.0, 8.0)), (6.0, (1.0, 2.0)), (6.0, (3.0, 8.0))],
+    ids=["5px-1to2", "5px-3to8", "12px-1to2", "12px-3to8"],
+)
+def test_a_wide_pen_leaves_no_grey_ring_round_its_ink(
+    width: float, band: tuple[float, float]
+) -> None:
+    """A pen 5 or 12 render px wide adds under 0.01 of density 1 to 2 px out from its ink, and nothing 3 to 8 px out."""
+    sheet = Sheet(80, 140, gran_px=6.0, seed=4)
+    pen, _ = brush_from_id("MAJ6-e", width, 2.0, BrushStyle())
     line = np.stack([np.linspace(30, 100, 60), np.full(60, 30.0)], axis=1)
     dens = []
     for brush in (pen, replace(pen, pool=0.0)):
-        acc = np.zeros((60, 120), np.float32)
+        acc = np.zeros((80, 140), np.float32)
         stamp(acc, line, brush, np.random.default_rng(9))
         dens.append(ink_density(acc, brush, sheet))
     away = chamfer_distance(dens[1] > 0.05)
-    ring = (away >= 3.0) & (away <= 8.0)
-    assert ring.sum() > 500
-    assert float((dens[0] - dens[1])[ring].mean()) < 1e-4
+    ring = (away >= band[0]) & (away <= band[1])
+    assert ring.sum() > 300
+    assert float((dens[0] - dens[1])[ring].mean()) < BAND_BOUNDS[band]
+
+
+def test_a_wide_pen_s_blot_lays_no_ink_on_paper_its_stroke_does_not():
+    """A 12 render px pen's blot adds ink only to pixels the same stroke without it inks."""
+    blot = blot_ink(6.0, np.stack([np.linspace(30, 100, 60), np.full(60, 30.3)], axis=1), (80, 140))
+    pen, _ = brush_from_id("MAJ6-e", 6.0, 2.0, BrushStyle())
+    bare = np.zeros((80, 140), np.float32)
+    line = np.stack([np.linspace(30, 100, 60), np.full(60, 30.3)], axis=1)
+    stamp(bare, line, replace(pen, pool=0.0), np.random.default_rng(9))
+    assert blot.sum() > 100
+    assert not blot[bare == 0].any()
 
 
 @pytest.mark.parametrize("width", [0.5, 0.75, 1.0], ids=["1px", "1.5px", "2px"])

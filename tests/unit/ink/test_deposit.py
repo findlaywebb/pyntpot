@@ -14,7 +14,7 @@ import pytest
 
 from pyntpot.ink.brush import brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.deposit import deposit, ink_cover, nib_cover
+from pyntpot.ink.deposit import blot_share, deposit, ink_cover, nib_cover
 from pyntpot.ink.stamp import stamp
 from pyntpot.ink.stroke import Lay, Sampled, StrokeProfile, Tip, Trace
 
@@ -180,13 +180,28 @@ def straight_lay(squeeze: float = 1.0) -> tuple[Lay, tuple[np.ndarray, np.ndarra
     return Lay(tr, ink, tip, smp, off), (px, py)
 
 
+def all_live(pos: tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    """Every sample laying ink, in the samples' shape."""
+    return np.ones(pos[0].shape, dtype=bool)
+
+
 class TestNibCover:
     """How much of each pixel the nib passes over: each sample its own patch of paper."""
+
+    def test_a_sample_that_lays_no_ink_covers_nothing(self) -> None:
+        """The first five stamps laying no ink, the cover starts at the sixth, 2.5 px in."""
+        lay, pos = straight_lay()
+        live = all_live(pos)
+        live[:5] = False
+        cover = nib_cover(lay, pos, live, (15, 25, 2, 20))
+        assert float(cover.sum()) == pytest.approx(26.25 - 5 * 5 * 0.25)
+        assert not cover[:, : 7 - 2].any()
+        assert cover[:, 7 - 2].any()
 
     def test_the_cover_holds_the_paper_the_samples_stand_for(self) -> None:
         """A stroke of 105 quarter-pixel patches covers 26.25 pixels, one in its middle, none before it."""
         lay, pos = straight_lay()
-        cover = nib_cover(lay, pos, (15, 25, 2, 20))
+        cover = nib_cover(lay, pos, all_live(pos), (15, 25, 2, 20))
         assert float(cover.sum()) == pytest.approx(26.25)
         assert cover[20 - 15, 10 - 2] == pytest.approx(1.0)
         assert cover[:, 5 - 2].any()
@@ -196,9 +211,34 @@ class TestNibCover:
     def test_a_pixel_passed_over_twice_is_covered_once(self) -> None:
         """Cover is a share of the pixel, so paper the samples pass over twice reads 1, not 2."""
         lay, pos = straight_lay(squeeze=2.0)
-        cover = nib_cover(lay, pos, (15, 25, 2, 20))
+        cover = nib_cover(lay, pos, all_live(pos), (15, 25, 2, 20))
         assert float(cover.max()) == 1.0
         assert cover[20 - 15, 10 - 2] == 1.0
+
+
+class TestBlotShare:
+    """The share of the blot each pixel takes: a thin nib's cover grown, a wide one's not."""
+
+    def test_a_nib_3_px_wide_is_not_grown(self) -> None:
+        """At 3 render px one pixel covered an eighth takes the blot whole, and its neighbours nothing."""
+        cover = np.zeros((6, 7), dtype=np.float32)
+        cover[2, 4] = 0.125
+        expected = np.zeros((6, 7), dtype=np.float32)
+        expected[2, 4] = 1.0
+        assert np.array_equal(blot_share(cover, 3.0), expected)
+
+    def test_a_nib_under_3_px_wide_is_grown_by_a_pixel(self) -> None:
+        """Just under 3 render px, one pixel covered a sixteenth gives its 3 by 3 block half."""
+        cover = np.zeros((6, 7), dtype=np.float32)
+        cover[2, 4] = 0.0625
+        expected = np.zeros((6, 7), dtype=np.float32)
+        expected[1:4, 3:6] = 0.5
+        assert np.array_equal(blot_share(cover, 2.99), expected)
+
+    def test_a_wide_nib_s_share_is_in_proportion_under_an_eighth(self) -> None:
+        """At 12 render px a pixel covered a sixteenth takes half the blot."""
+        cover = np.full((2, 2), 0.0625, dtype=np.float32)
+        assert np.array_equal(blot_share(cover, 12.0), np.full((2, 2), 0.5, dtype=np.float32))
 
 
 class TestInkCover:

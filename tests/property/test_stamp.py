@@ -9,7 +9,7 @@ import math
 from dataclasses import replace
 
 import numpy as np
-from hypothesis import given
+from hypothesis import example, given
 from hypothesis import strategies as st
 
 from pyntpot.ink.brush import brush_from_id
@@ -92,6 +92,9 @@ class TestStamp:
 
     @UNTIMED
     @given(path=PATHS, width=PEN_WIDTHS, seed=SEEDS)
+    # A start laid at zero pressure, then a turn back: the cover once counted the inkless
+    # samples there and the blot reached 3.41 px past the ink.
+    @example(path=np.array([(3.0, 7.0), (3.0, 7.1875), (2.0, 2.0)]), width=5.0, seed=0)
     def test_a_pen_s_set_down_blot_stays_on_its_own_stroke(
         self, path: np.ndarray, width: float, seed: int
     ) -> None:
