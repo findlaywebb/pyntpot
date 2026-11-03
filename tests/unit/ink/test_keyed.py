@@ -6,13 +6,13 @@ import numpy as np
 
 from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.keyed import keyed_rng, line_key, uniform_at
+from pyntpot.ink.keyed import keyed_rng, line_key, ring_key, uniform_at
 from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.pad import InkPad
 from pyntpot.ink.raster import deform_rings
 from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.stamp import stamp
-from pyntpot.ink.wash import bloom
+from pyntpot.ink.wash import WashOptions, bloom, wash
 
 #: `deform_rings` settings with the displacement on: seed, amount, rounds, decay, cap, stop.
 DEFORM = (9, 0.26, 4, 0.55, 16.0, 0.5)
@@ -72,6 +72,59 @@ class TestKeys:
         assert abs(float(whole.mean()) - 0.5) < 0.02
 
 
+class TestRingKeys:
+    """What names a closed ring: its centroid and root area, not where it starts."""
+
+    def test_a_ring_is_named_by_what_it_encloses(self):
+        """Closing it, starting it elsewhere or resampling an edge keeps the key."""
+        square = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]
+        key = ring_key(square, 1.0)
+        assert key == (1159970523152480690, 3068994725590552575)
+        assert ring_key([*square, square[0]], 1.0) == key
+        assert ring_key(square[2:] + square[:2], 1.0) == key
+        assert ring_key([square[0], (5.0, 0.0), *square[1:]], 1.0) == key
+
+    def test_a_ring_that_moves_or_grows_is_renamed(self):
+        """A shift of a cell, a larger ring or the other winding each change the key."""
+        ring = np.array(circle(40.0, 30.0, 25.0))
+        key = ring_key(ring, 1.0)
+        assert ring_key(ring + np.array([3.0, 0.0]), 1.0) != key
+        assert ring_key(ring + np.array([0.0, 3.0]), 1.0) != key
+        assert ring_key((ring - 40.0) * 1.2 + 40.0, 1.0) != key
+        assert ring_key(ring[::-1], 1.0) != key
+        assert ring_key(ring + 0.01, 1.0) == key
+
+    def test_a_ring_with_no_area_is_named_by_its_mean(self):
+        """Points on one line have no centroid, so the mean names them; nothing is (0, 0)."""
+        flat = [(0.0, 5.0), (4.0, 5.0), (8.0, 5.0)]
+        assert ring_key(flat, 1.0) == ring_key([(4.0, 5.0), (8.0, 5.0), (0.0, 5.0)], 1.0)
+        assert ring_key(flat, 1.0) != ring_key([(0.0, 9.0), (4.0, 9.0), (8.0, 9.0)], 1.0)
+        assert ring_key(np.zeros((0, 2)), 1.0) == (0, 0)
+
+    def test_a_small_nudge_renames_a_ring_less_often_than_its_points_would(self):
+        """Points nudged by under 0.05 m rename far fewer rings than `line_key` would."""
+        rng = np.random.default_rng(0)
+        by_ring = by_line = 0
+        for _ in range(400):
+            n = int(rng.integers(8, 300))
+            angle = np.sort(rng.uniform(0.0, 2 * math.pi, n))
+            radius = rng.uniform(20.0, 800.0) * (1 + 0.3 * rng.uniform(-1, 1, n))
+            ring = np.stack(
+                [
+                    rng.uniform(-5e3, 5e3) + radius * np.cos(angle),
+                    rng.uniform(-5e3, 5e3) + radius * np.sin(angle),
+                ],
+                axis=1,
+            )
+            ring = np.vstack([ring, ring[:1]])
+            nudged = ring + rng.uniform(-0.05, 0.05, ring.shape)
+            nudged[-1] = nudged[0]
+            by_ring += ring_key(ring, 1.0) != ring_key(nudged, 1.0)
+            by_line += line_key(ring, 1.0) != line_key(nudged, 1.0)
+        assert by_ring < 30
+        assert by_ring * 4 < by_line
+
+
 class TestDecoupled:
     """A change to one item moves only that item's pixels."""
 
@@ -117,6 +170,32 @@ class TestDecoupled:
         far = chamfer_distance(trimmed != a) > 60
         assert not np.array_equal(before, flat), "the blooms were laid"
         assert np.array_equal(before[far], after[far])
+
+    def test_a_wash_trimmed_far_off_keeps_its_blooms_with_the_flow_rim_on(self):
+        """Through `wash` with the flow rim, a trimmed far edge leaves the far blooms as laid.
+
+        The flow rim's width follows the wash's area and its peak is normalised, so the
+        trim moves the density everywhere by a last bit and the bloom radius by a share
+        of a pixel. Neither may move a bloom: the blooms' own change far off stays below
+        a thousandth, where a resized or reseated bloom differs by tenths.
+        """
+        h, w = 300, 460
+        sheet = Sheet(h, w, gran_px=8.0, seed=5)
+        cover = np.zeros((h, w), np.float32)
+        cover[30:270, 30:430] = 1.0
+        trimmed = cover.copy()
+        trimmed[30:270, 426:430] = 0.0
+
+        def lay(c: np.ndarray, blooms: tuple[int, int, float, float, float] | None):
+            options = WashOptions(flow=(0.125, 0.02, 0.38), blooms=blooms)
+            return wash(c, sheet, 0.52, 0.20, options)
+
+        blooms = (3, 6, 0.17, 0.45, 0.45)
+        before = lay(cover, blooms) - lay(cover, None)
+        after = lay(trimmed, blooms) - lay(trimmed, None)
+        far = chamfer_distance(trimmed != cover) > 80
+        assert float(np.abs(before[far]).max()) > 0.3, "the blooms were laid far off"
+        assert float(np.abs(before[far] - after[far]).max()) < 1e-3
 
 
 class TestPadStreams:

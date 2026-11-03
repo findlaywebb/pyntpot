@@ -42,6 +42,8 @@ _BLEED_FLOOR = 0.4
 _NO_PIGMENT = 1e-9
 #: A coarse cell wetter than this is wet.
 _WET_FLOOR = 0.05
+#: A bloom's base radius is held on this many steps per doubling (`bloom_radius`).
+_RADIUS_STEPS = 4
 
 
 #: What blooms are laid by: the wash's own seed, how many, the radius as a share
@@ -88,6 +90,30 @@ def flow_edge(
     d = chamfer_distance(~inside)
     rim = np.exp(-d / F32(width)) * a * (0.6 + 0.8 * sheet.coarse)
     return np.clip(rim, 0.0, 1.0)
+
+
+def bloom_radius(radius_frac: float, area: int) -> float:
+    """A wash's base bloom radius, held on a step of a quarter of an octave.
+
+    The radius follows the root of the wash's area, and an edge that moves a pixel
+    anywhere changes the area. Held to the nearest of the steps `2 ** (k / 4)`, the
+    radius moves only when the area crosses a step. Each step is a fifth of the radius,
+    where a pixel is a fiftieth to a two-hundredth of one, so a one-pixel edge move
+    resizes the blooms a fifth to a seventeenth as often as rounding to the pixel did.
+    The step's error is at most a tenth of the radius, inside the 0.7 to 1.3 each bloom
+    already draws its own size from, so it does not show.
+
+    Args:
+        radius_frac: The radius as a share of the root of the area.
+        area: The wash's thick pixels.
+
+    Returns:
+        The base radius in pixels, before the plate's bounds; 0 for no area.
+    """
+    raw = radius_frac * math.sqrt(max(area, 0))
+    if raw <= 0:
+        return 0.0
+    return float(2.0 ** (round(_RADIUS_STEPS * math.log2(raw)) / _RADIUS_STEPS))
 
 
 def highest(lots: np.ndarray, k: int) -> np.ndarray:
@@ -155,9 +181,7 @@ def bloom(dens: np.ndarray, a: np.ndarray, sheet: Sheet, blooms: Blooms) -> None
     if count < 1 or inside.size < _MIN_BLOOM_PIXELS:
         return
     h, w = dens.shape
-    # Rounded to the pixel, so an edge that moves a pixel elsewhere does not resize
-    # every bloom and, through its box, redraw every bloom's warp.
-    radius = float(round(np.clip(radius_frac * math.sqrt(inside.size), 5.0, 0.22 * min(h, w))))
+    radius = float(np.clip(bloom_radius(radius_frac, inside.size), 5.0, 0.22 * min(h, w)))
     flat = dens.ravel()
     # Seeded toward the thick: a lot per pixel, weighted by its density, the
     # highest win (Efraimidis and Spirakis' weighted sampling).

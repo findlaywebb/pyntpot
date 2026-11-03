@@ -22,22 +22,30 @@ def test_an_outline_given_no_deform_is_the_outline_it_was():
 
 
 def test_the_deformed_outline_wobbles_at_more_than_one_scale():
-    """One frequency everywhere is what the blurred-mask edge already does."""
+    """One frequency everywhere is what the blurred-mask edge already does.
+
+    Measured over eight seeds and read at the median, so the bars describe the
+    deformation rather than one seed's draws.
+    """
     ring = np.asarray(ring_of(), float)
-    out = deform_ring(ring, (5, 0.26, 4, 0.55, 16.0, 0.5))
-    assert len(out) == len(ring) * 16
-    rad = np.hypot(out[:, 0], out[:, 1]) - 200.0
-    # Split the deviation into what a long smoothing keeps and what it removes.
-    k = np.ones(33) / 33.0
-    coarse = np.convolve(np.concatenate([rad[-16:], rad, rad[:16]]), k, "same")[16:-16]
-    fine = rad - coarse
-    assert coarse.std() > 1.0, "no wobble the eye reads as a lobe"
-    assert fine.std() > 0.3, "no wobble at the scale of a brush edge"
-    # Neither scale swamps the other: that mixture is the whole point of it.
-    assert 0.15 < fine.std() / coarse.std() < 6.0
-    # And it is a deformation, not a new shape: the ring keeps its place.
-    assert abs(float(out[:, 0].mean())) < 12.0
-    assert abs(float(np.hypot(out[:, 0], out[:, 1]).mean()) - 200.0) < 12.0
+    coarse_std, fine_std = [], []
+    for seed in range(8):
+        out = deform_ring(ring, (seed, 0.26, 4, 0.55, 16.0, 0.5))
+        assert len(out) == len(ring) * 16
+        rad = np.hypot(out[:, 0], out[:, 1]) - 200.0
+        # Split the deviation into what a long smoothing keeps and what it removes.
+        k = np.ones(33) / 33.0
+        coarse = np.convolve(np.concatenate([rad[-16:], rad, rad[:16]]), k, "same")[16:-16]
+        fine = rad - coarse
+        coarse_std.append(float(coarse.std()))
+        fine_std.append(float(fine.std()))
+        # Neither scale swamps the other: that mixture is the whole point of it.
+        assert 0.15 < fine_std[-1] / coarse_std[-1] < 6.0
+        # And it is a deformation, not a new shape: the ring keeps its place.
+        assert abs(float(out[:, 0].mean())) < 12.0
+        assert abs(float(np.hypot(out[:, 0], out[:, 1]).mean()) - 200.0) < 12.0
+    assert float(np.median(coarse_std)) > 1.0, "no wobble the eye reads as a lobe"
+    assert float(np.median(fine_std)) > 0.3, "no wobble at the scale of a brush edge"
 
 
 def test_no_one_displacement_runs_away_with_a_long_segment():

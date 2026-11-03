@@ -2,6 +2,7 @@
 
 Key functions: `keyed_rng`, the generator for one item, from a seed and the words that
 name the item; `line_key`, those words for a polyline, read from its own points;
+`ring_key`, those words for a closed ring, read from its centroid and area;
 `uniform_at`, one uniform draw per index of a field, a pure function of the seed and the
 index.
 
@@ -18,11 +19,14 @@ It draws nothing itself beyond `uniform_at`, and it reads no style.
 Invariants: the same seed and the same words give the same stream on every run and every
 platform (the words are hashed with BLAKE2b, not Python's salted `hash`); `line_key` reads a
 line only through its points rounded to the grid it is given, so two lines that round the
-same are the same key, however finely it is sampled; `uniform_at` is in the open interval
+same are the same key, however finely it is sampled; `ring_key` reads a ring only through
+its centroid and root area rounded to the grid, so it does not depend on where the ring
+starts; `uniform_at` is in the open interval
 0 to 1.
 """
 
 import hashlib
+import math
 
 import numpy as np
 import numpy.typing as npt
@@ -35,6 +39,8 @@ _MIX_1 = np.uint64(0xBF58476D1CE4E5B9)
 _MIX_2 = np.uint64(0x94D049BB133111EB)
 #: The top 53 bits of a word make a double; this is one step of them.
 _ULP = 2.0**-53
+#: A ring whose area is below this share of its extent squared has none to centre on.
+_NO_AREA = 1e-9
 
 
 def _word(part: int | str) -> int:
@@ -81,6 +87,40 @@ def line_key(pts: npt.ArrayLike, grid: float) -> tuple[int, int]:
     run = np.concatenate([[0.0], np.cumsum(np.hypot(*np.diff(p, axis=0).T))])
     half = [np.interp(run[-1] / 2, run, p[:, k]) for k in (0, 1)]
     words = np.rint(np.concatenate([p[0], p[-1], half]) / max(grid, 1e-12)).astype("<i8")
+    digest = hashlib.blake2b(words.tobytes(), digest_size=16).digest()
+    return (int.from_bytes(digest[:8], "little"), int.from_bytes(digest[8:], "little"))
+
+
+def ring_key(ring: npt.ArrayLike, grid: float) -> tuple[int, int]:
+    """The words that name a closed ring, from what it encloses rather than where it starts.
+
+    A ring is named by its centroid and the root of its signed area, each rounded to
+    `grid`. Both are sums over every edge, so a nudge to its points moves them by a
+    small share of the nudge, where a single point moves by all of it: a ring whose
+    points shift by under a twentieth of the grid keeps its key far more often than
+    `line_key` would, which reads its start point, whose ends coincide. Neither depends
+    on where the ring starts or how finely it is sampled. A ring with no area (its
+    points on one line) is named by the mean of its points and a root area of 0.
+
+    Args:
+        ring: The ring, `(n, 2)`, closed or not: the last point joins the first.
+        grid: The cell the centroid and the root area are rounded to, in the ring's units.
+
+    Returns:
+        Two 64-bit words.
+    """
+    p = np.asarray(ring, dtype=np.float64).reshape(-1, 2)
+    if not len(p):
+        return (0, 0)
+    q = np.roll(p, -1, axis=0)
+    cross = p[:, 0] * q[:, 1] - q[:, 0] * p[:, 1]
+    area = float(cross.sum()) / 2.0
+    if abs(area) > _NO_AREA * max(float(np.ptp(p, axis=0).max()), 1.0) ** 2:
+        centre = ((p + q) * cross[:, None]).sum(axis=0) / (6.0 * area)
+    else:
+        centre, area = p.mean(axis=0), 0.0
+    root = math.copysign(math.sqrt(abs(area)), area)
+    words = np.rint(np.array([*centre, root]) / max(grid, 1e-12)).astype("<i8")
     digest = hashlib.blake2b(words.tobytes(), digest_size=16).digest()
     return (int.from_bytes(digest[:8], "little"), int.from_bytes(digest[8:], "little"))
 
