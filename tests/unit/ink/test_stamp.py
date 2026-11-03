@@ -348,3 +348,28 @@ def test_a_corner_is_rounded_to_the_brush_rather_than_stamped_through():
     # It rounds the corner; it does not shorten the road or thin it.
     assert on.sum() == pytest.approx(off.sum(), rel=0.06)
     assert on[58:63, 25:75].sum() == pytest.approx(off[58:63, 25:75].sum(), rel=0.05)
+
+
+def test_a_short_ring_is_not_shifted_off_its_path_by_the_shared_drift():
+    """On a stroke shorter than a drift cell, the drift's mean stays a drift, not a shift.
+
+    Smoothing the drift across the tip and rescaling it to its old spread blew up the
+    part every bristle shares, which on a short stroke is nearly a constant: the whole
+    ring moved in or out along its normal by up to three times the drift's own reach, and
+    a small letter's bowl closed. Across many seeds the ink's mean radius stays within it.
+    """
+    brush, _ = brush_from_id("MAJ2-a", 2.0, 2.0, BrushStyle(brush_organic=True), "road_major")
+    assert brush.organic and brush.coherence > 0
+    rx, ry = 5.3, 7.4
+    turns = np.linspace(0.0, 2.0 * np.pi, 124)
+    ring = np.stack([20.0 + rx * np.sin(turns), 20.0 + ry * np.cos(turns)], axis=1)
+    yy, xx = np.mgrid[0:40, 0:40]
+    # Each pixel's distance outside the ring, in pixels, near enough for an oval this round.
+    outside = (np.hypot((xx - 20.0) / rx, (yy - 20.0) / ry) - 1.0) * (rx + ry) / 2.0
+    shifts = []
+    for seed in range(300):
+        acc = np.zeros((40, 40), np.float32)
+        stamp(acc, ring, brush, np.random.default_rng(seed))
+        shifts.append(float((acc * outside).sum() / acc.sum()))
+    worst = max(shifts, key=abs)
+    assert abs(worst) < brush.jitter * 1.6, f"a ring moved {worst:.2f} px off its path"

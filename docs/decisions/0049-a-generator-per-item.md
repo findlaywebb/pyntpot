@@ -138,10 +138,10 @@ tolerance bound is not changed, no gate is loosened and the hash input does not 
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
-wash.webp: identical no, differing fraction 0.374142
-pen.webp: identical no, differing fraction 0.010426
-labels-centreline.webp: identical no, differing fraction 0.047833
-map.png: identical no, differing fraction 0.362043
+wash.webp: identical no, differing fraction 0.374052
+pen.webp: identical no, differing fraction 0.010388
+labels-centreline.webp: identical no, differing fraction 0.046841
+map.png: identical no, differing fraction 0.361626
 manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
 ```
 
@@ -153,11 +153,10 @@ draws nothing from the painter's generators. Looked at side by side, the change 
 texture only: the cover outlines wobble differently, the roads, rivers and route lay other
 bristles, and the sea's blooms sit in other places, spread through the water rather than
 along the coast. The composition, the colours and every label's seat are as they were.
-One glyph reads differently: the "o" of "Reformed" in "Living Waters Lynton United
-Reformed Church" is laid with its counter filled, so it reads as a dot. It did so in this
-branch's first cut too, so it comes from the stroke's new keyed draws, not from this
-round's changes; the other "o"s on the card are open. It is the nib's own variation landing
-badly on one small closed glyph, and is left for its own issue rather than tuned away here.
+The first cut laid the "o" of "Reformed" in "Living Waters Lynton United Reformed Church"
+with its counter filled, so it read as a dot; the drift fix below opens it again. Against
+the cut before that fix the wash moves 0.013018, the pen 0.007080, the labels-centreline
+plate 0.015006 and the map 0.019663, with the same labels in the same order.
 The smoke lock does not move in this round (the smoke box lays no blooms or deformed
 cover); its `pen` and `wash` and the committed `tests/golden/smoke/wash.webp` were
 re-pinned by the first cut, and `paper` does not move.
@@ -165,7 +164,7 @@ re-pinned by the first cut, and `paper` does not move.
 ### Docs images
 
 Every docs image and master was repainted with `make_docs_images.py` on the merged tree and
-compared with main's (ADR 0048's) images and masters. 38 of the 70 masters moved, with
+compared with main's (ADR 0048's) images and masters. 40 of the 70 masters moved, with
 their images: every image that paints a wash with blooms or deformed cover, or lays strokes
 through an `InkPad` (map cards, lettering, brush and nib figures); the rest, painted without
 the pad or the painter, are byte-identical. The compare exits 1, as a regeneration that
@@ -174,22 +173,23 @@ the new goldens. Master differing fractions against main's masters:
 
 | Master | Fraction | Master | Fraction |
 |---|---|---|---|
-| `places/skye.png` | 0.684151 | `places/y-fenni.png` | 0.582262 |
-| `places/oxford.png` | 0.566375 | `places/ambleside.png` | 0.449391 |
-| `gallery/route-map.png` | 0.449391 | `hero.png` | 0.443981 |
-| `social-preview.png` | 0.432292 | `how-to/command-line.png` | 0.396070 |
-| `how-to/route-ink-grid.png` | 0.353717 | `map-styles/bold.png` | 0.297856 |
-| `places/yr-wyddfa.png` | 0.278093 | `tutorials/route-map.png` | 0.259113 |
-| `how-to/route-ink.png` | 0.257261 | `map-styles/winter.png` | 0.254995 |
-| `map-styles/sepia.png` | 0.244128 | `map-styles/pen-and-ink.png` | 0.213791 |
+| `places/skye.png` | 0.681562 | `places/y-fenni.png` | 0.580841 |
+| `places/oxford.png` | 0.563396 | `gallery/route-map.png` | 0.447222 |
+| `places/ambleside.png` | 0.447222 | `hero.png` | 0.442422 |
+| `social-preview.png` | 0.431944 | `how-to/command-line.png` | 0.395060 |
+| `how-to/route-ink-grid.png` | 0.351389 | `map-styles/bold.png` | 0.296832 |
+| `places/yr-wyddfa.png` | 0.277448 | `tutorials/route-map.png` | 0.256408 |
+| `how-to/route-ink.png` | 0.254703 | `map-styles/winter.png` | 0.252729 |
+| `map-styles/sepia.png` | 0.242812 | `map-styles/pen-and-ink.png` | 0.212865 |
 | `explanation/nib-hands.png` | 0.134071 | `tutorials/grid-nib.png` | 0.129075 |
 | `tutorials/grid-lettering.png` | 0.124855 | `explanation/nib-angles.png` | 0.109811 |
-| `explanation/nib-backing.png` | 0.060338 | `explanation/nib-centreline.png` | 0.056610 |
+| `painting-with-python/tree-family.png` | 0.065052 | `explanation/nib-backing.png` | 0.060338 |
+| `painting-with-python/tree.png` | 0.058854 | `explanation/nib-centreline.png` | 0.056610 |
 | `tutorials/grid-composition.png` | 0.035367 | `explanation/nib-ground.png` | 0.031924 |
 | `word.png` | 0.029414 | `reference/pigment-swatches.png` | 0.024014 |
-| `tutorials/lettering.png` | 0.022344 | `gallery/lettering.png` | 0.022344 |
+| `gallery/lettering.png` | 0.022344 | `tutorials/lettering.png` | 0.022344 |
 | `tutorials/grid-brush.png` | 0.017508 | `reference/brush-sheet.png` | 0.015625 |
-| `tutorials/composition.png` | 0.013776 | `gallery/composition.png` | 0.013776 |
+| `gallery/composition.png` | 0.013776 | `tutorials/composition.png` | 0.013776 |
 | `painting-with-python/derwentwater.png` | 0.012839 | `how-to/own-shapes.png` | 0.012292 |
 | `explanation/wash-glaze.png` | 0.011667 | `tutorials/grid-paper.png` | 0.009367 |
 | `tutorials/grid-wash.png` | 0.008467 | `tutorials/grid-pigments.png` | 0.008133 |
@@ -198,6 +198,40 @@ Looked at side by side with main's masters (Skye, Y Fenni, Oxford, the Lynmouth 
 change is random texture. The sea's blooms and the cover's wobble sit in other places and
 the strokes lay other bristles; the composition, the colours and every label's seat are as
 they were. No label moved seat.
+
+### The drift's shared mean is no longer rescaled
+
+The filled "o" was not the keying. Each stroke draws from the same distribution whether its
+generator is shared or keyed; the keyed draw for that glyph landed in a tail that main's
+draws can reach as well. The tail is in `ink.stamp._organic_fields`: on an organic brush
+with coherence, the bristles' lattice drift is smoothed across the tip and rescaled to the
+spread it had. A stroke shorter than the drift's coarsest cell (584 pad pixels for the
+label brush, against 130 along that "o") has a field nearly constant along it, so the
+spread is mostly the bristles' differences; smoothing removes those and the rescale, about
+zero, multiplied the part every bristle shares several times over, past the field's own
+range of 1.6 (to 4.5 on that glyph). That part is a constant offset along the stroke's normal: on an open stroke a shift of
+the line, on a closed one a change of radius. The "o" took a shift of 8.1 pad pixels
+inward and its bowl closed.
+
+Over 2000 seeds on that glyph's own stroke, the mean sideways shift was 0.58 pad pixels at
+the median and over 6 for 12 seeds with the shared generator (4 of 500 keyed); 16 of 2000
+label seeds filled its counter on the nib plate. Across every closed glyph the docs images
+and the Lynmouth card letter (518 counters), main's shared stream filled none (its closest
+left 0.52 of the bowl's core bare) and the keyed draws filled one, this "o" (the Lynmouth
+card is lettered twice, in its golden and in `how-to/command-line`). So it is one draw of
+an existing variation, not a change the keying made more likely, and the variation is the
+fault: the rescale now acts about the stroke's own mean, which smoothing leaves where it
+was. The median shift falls to 0.18, the largest over 2000 seeds to 1.9, no seed fills the
+counter, and every counter on the cards keeps at least 0.64 of its core bare. A long
+stroke's mean is near zero already, so its wander is as it was.
+
+Pinned by `tests/unit/letters/test_nib.py::TestCounters` (a 20 px "o" at scale 2 keeps its
+core under 0.4 inked for 400 label seeds; 0.81 before) and
+`tests/unit/ink/test_stamp.py::test_a_short_ring_is_not_shifted_off_its_path_by_the_shared_drift`
+(a small ring's ink stays within the drift's reach of its path over 300 seeds; 3.34 pixels
+before, against a bound of 1.76). Only organic brushes move: the nib figures painted with
+the default brush style are byte-identical to the first cut, and the two tree figures,
+painted with organic brushes, move for the first time in this round.
 
 ## Consequences
 
