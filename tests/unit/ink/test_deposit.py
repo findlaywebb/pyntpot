@@ -45,13 +45,15 @@ def test_a_sample_half_off_the_edge_keeps_only_its_share_on_the_plate() -> None:
     assert acc.sum() == 0.5
 
 
-def blot(path: list[tuple[float, float]], width: float = 60.0) -> np.ndarray:
+def blot(
+    path: list[tuple[float, float]], width: float = 60.0, pool: float = 1.0, gain: float = 1.0
+) -> np.ndarray:
     """A pen's set-down blot alone: the stroke with its pool less the same stroke without.
 
-    The pen is `width` render pixels wide with a pool and gain of one, on a 201 by 221 plate.
+    The pen is `width` render pixels wide with the given pool and gain, on a 201 by 221 plate.
     """
     brush, _ = brush_from_id("MAJ1-e", 3.0, 2.0, BrushStyle())
-    brush = dataclasses.replace(brush, width=width, pool=1.0, pool_gain=1.0)
+    brush = dataclasses.replace(brush, width=width, pool=pool, pool_gain=gain)
     marks = []
     for b in (brush, dataclasses.replace(brush, pool=0.0)):
         acc = np.zeros((201, 221), dtype=np.float32)
@@ -95,6 +97,12 @@ def test_a_wide_pool_reaches_the_plate_s_first_row_and_column(
 ) -> None:
     """A blot whose span runs off the plate still lays its share on the plate's edge pixel."""
     assert edge(blot(path)) > 0
+
+
+def test_the_blot_is_as_dark_as_its_pool_times_its_gain() -> None:
+    """A pool of 2 at a gain of 3 lays six times the blot a pool and gain of 1 lay."""
+    path = [(20.0, 100.0), (200.0, 100.0)]
+    np.testing.assert_allclose(blot(path, pool=2.0, gain=3.0), 6.0 * blot(path), atol=1e-5)
 
 
 def test_a_narrow_pool_keeps_its_floor_radius() -> None:

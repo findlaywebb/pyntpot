@@ -34,15 +34,27 @@ same blot is the soft round blob where the Brathay starts at the lower left of t
 Pinned by `tests/property/test_stamp.py` (at any pen width from 1 to 8 display pixels, on any
 path, the blot lays no ink more than 2 px past the stroke's own ink),
 `tests/unit/ink/test_stamp.py` (a 2.6 px pen adds nothing to the paper 3 to 8 px from its
-ink) and `tests/unit/ink/test_deposit.py` (along its own stroke a wide blot still fades to
-under 1.5% at the end of its span and stops there; beside the stroke it lays nothing).
+ink) and `tests/unit/ink/test_deposit.py` (along its own stroke, in each direction, a wide blot still
+fades to under 1.5% of its peak at the end of its span and stops there, reaches the plate's
+first row and column, keeps its 1.2 px floor radius and scales with pool times gain; beside
+the stroke it lays nothing; `nib_cover` holds the paper its samples stand for and caps a
+pixel passed over twice at 1).
 
 ### Mutation testing
 
-`mutmut` over `ink.deposit.pool`, `ink.deposit.nib_cover` and `ink.stamp.stamp`: see the
-results below.
+Run on `ink.deposit.pool`, `ink.deposit.nib_cover` and `ink.stamp.stamp`: 261 mutants, 240
+killed, 21 survived. Each survivor changes no behaviour:
 
-MUTATION_RESULTS
+- `pool` 48, 49, 50: the early return for an empty window is a shortcut; with it weakened
+  the slices are empty and add nothing. 59: the Gaussian in float64 rather than float32,
+  which changes the last bit and nothing a test or eye can see.
+- `nib_cover` 11 and 20: the floor of 1 on `len(t) - 1` and `m_hi - 1` raised to 2; a
+  stamped stroke has at least three stamps and more than two samples across, so the floor
+  never binds. 26, 42, 44: the patch or the cover in float64. 28 to 39: the `near` mask, an
+  optimisation that skips samples outside the window; `deposit` drops those corners itself,
+  so loosening, tightening by a pixel, or dropping the mask lays the same cover.
+- `stamp` 8: the pressure's random phase drawn over a narrower range is still a random
+  phase. 112: `pool >= 0` calls `pool` for a zero pool, which adds zero.
 
 ## Golden regeneration
 
@@ -55,10 +67,10 @@ no gate is loosened and the hash input does not change; the manifest hash does n
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
-wash.webp: identical no, differing fraction 0.000812
-pen.webp: identical no, differing fraction 0.000150
-labels-centreline.webp: identical no, differing fraction 0.005178
-map.png: identical no, differing fraction 0.002939
+wash.webp: identical no, differing fraction 0.000810
+pen.webp: identical no, differing fraction 0.000149
+labels-centreline.webp: identical no, differing fraction 0.004465
+map.png: identical no, differing fraction 0.002876
 manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
 ```
 
@@ -69,17 +81,18 @@ and "Church" are fully transparent pixels whose colour channels changed, which n
 
 ### Docs images
 
-Every docs image and master was repainted with `make_docs_images.py`. The 48 that draw a
+Every docs image and master was repainted with `make_docs_images.py`, on top of ADR 0059's
+images (main at `4fed836`). The 48 that draw a
 pooled pen or nib stroke moved (20 of their masters past the 0.005 parity fraction, all with
 the change at stroke starts); the other 22 are byte-identical. The largest master fractions:
 
 | Master | Fraction | Max delta | Master | Fraction | Max delta |
 |---|---|---|---|---|---|
 | `social-preview.png` | 0.019965 | 77 | `explanation/nib-hands.png` | 0.019227 | 34 |
-| `reference/brush-sheet.png` | 0.018797 | 174 | `places/oxford.png` | 0.018575 | 55 |
-| `places/y-fenni.png` | 0.017679 | 78 | `explanation/nib-angles.png` | 0.017652 | 32 |
-| `painting-with-python/tree-family.png` | 0.011302 | 36 | `reference/pigment-swatches.png` | 0.010484 | 16 |
-| `curves/kaleidoscope.png` | 0.009757 | 124 | `map-styles/bold.png` | 0.008723 | 20 |
+| `reference/brush-sheet.png` | 0.018797 | 174 | `places/oxford.png` | 0.018049 | 51 |
+| `places/y-fenni.png` | 0.016881 | 78 | `explanation/nib-angles.png` | 0.017652 | 32 |
+| `painting-with-python/tree-family.png` | 0.011042 | 36 | `reference/pigment-swatches.png` | 0.010484 | 16 |
+| `curves/kaleidoscope.png` | 0.009757 | 124 | `map-styles/bold.png` | 0.008674 | 20 |
 | `hero.png` | 0.003558 | 159 | `explanation/nib-set-down.png` | 0.003164 | 135 |
 
 Looked at side by side with `main`: on the brush sheet the 12 px pen swatches (rows 5, 6
