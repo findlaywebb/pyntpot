@@ -64,7 +64,9 @@ check that names appear rather than that what the page says about them is true.
 - [ ] `mkdocs.yml` validates anchors (`validation: anchors: warn`), so a link to a missing
       `#term-...` or heading fails the strict build.
 - [ ] The strict build passes:
-      `uv run --locked --group docs mkdocs build --strict`.
+      `uv run --locked --group docs mkdocs build --strict`, and with the tooltips on it
+      stays under 5 s ("Documentation built in"), against 2.29 s before, on the same
+      machine.
 
 ### Reference truth (#163)
 
@@ -94,8 +96,10 @@ check that names appear rather than that what the page says about them is true.
       down.
 - [ ] On every site page, an image followed by a `*Painted by ...*` caption: the caption
       names the registry entry's script, its `figure` and its `theme` when the entry has
-      them; every number after "The labels read" is a numeric literal of that script, and
-      the name after "The name is" is a string literal of it (tests). The landing-page and
+      them; in the sentence after "The labels read", each `across` or `down` list of two
+      or more numbers (not a "1 to 8" range) equals, in order, the numbers of one tuple or
+      list literal of that script, and the name after "The name is" is a string literal of
+      it (tests). The landing-page and
       data-policy captions name their theme files.
 - [ ] `docs/gallery.md` shows every registered image outside `site/` (test); the four
       missing images are added under their sections.
@@ -109,6 +113,8 @@ check that names appear rather than that what the page says about them is true.
       Pictures, Vector drawing, in the nav, its index and the gallery (test).
 - [ ] Every nav section with an index page lists its pages there in nav order, and the
       gallery's sections follow nav order (tests; the How-to nav takes its index's order).
+      A section's pages are its own entries and its subsections' index pages; a
+      subsection's other pages belong to the subsection's index.
 - [ ] Every tutorial page ends with a `Next: [...](...)` line naming the next page in nav
       order; the last tutorial page's points at the how-to index (test).
 - [ ] Every tutorial page that is not an index links at least one page under `how-to/`,
@@ -136,6 +142,9 @@ check that names appear rather than that what the page says about them is true.
 
 ### Whole feature
 
+- [ ] Every `pyntpot` command on a site page or in `README.md` parses with the CLI's
+      parser, and every option of a `uv run python examples/<script>.py` command is an
+      option that script declares (test, generic over pages).
 - [ ] No pinned or golden image moves; no image is added to the registry; no example
       script's output changes (full suite with golden-marked tests green).
 - [ ] The notes for #162 and #163 and the feature notes for #65 and #172 are deleted, as
