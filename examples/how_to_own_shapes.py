@@ -154,9 +154,7 @@ def main(out_dir: Path) -> Path:
     canvas2 = Canvas(0, 0, NIB_SCALE * W, NIB_SCALE * H, NIB_SCALE * W, NIB_SCALE * H)
     dark2 = np.zeros((NIB_SCALE * H, NIB_SCALE * W), np.float32)
     surface = NibSurface(canvas2, NIB_SCALE, dark2, GRAN_PX * NIB_SCALE)
-    groups = NibGroups(
-        NibStyle(), face, hand_style, BrushStyle(pen_pool_radius_frac=0.15), PaperStyle()
-    )
+    groups = NibGroups(NibStyle(), face, hand_style, BrushStyle(), PaperStyle())
     plate_path = nib_plate(marks, surface, groups, out_dir / f"{STEM}-plate.webp")
     if plate_path is None:
         raise RuntimeError("the hand wrote no marks")

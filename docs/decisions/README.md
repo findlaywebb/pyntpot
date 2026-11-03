@@ -55,8 +55,12 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0046 | One route ink (amends 0005, 0026, 0027 and 0037) |
 | 0047 | Names on the paper and off the water: the seventh golden regeneration |
 | 0048 | The label ink token (amends 0008 and 0026) |
+| 0049 | A generator per item: the eighth golden regeneration |
+| 0050 | The coast cut at the card edge: a golden regeneration |
 | 0051 | The classic paper lock is tolerant too (applies 0030) |
 | 0052 | Golden diff images in the PR body (amends 0006 and 0036) |
 | 0055 | A nib width that does not flicker: a golden regeneration |
 | 0059 | The organic drift is rescaled about its own mean: a golden regeneration |
+| 0060 | The pen's set-down blot stays on its stroke: a golden regeneration |
+| 0061 | A reloaded nib swells back: a golden regeneration |
 | 0067 | A pin ring is sized round its hole: a golden regeneration |

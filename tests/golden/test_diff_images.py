@@ -88,7 +88,7 @@ class TestTrees:
         summary = run(out, images_under(after), TreeSide(before), TreeSide(after))
         assert Summary.from_json((out / SUMMARY_JSON).read_text()) == summary
         text = (out / SUMMARY_MD).read_text()
-        assert "](docs/images/moved.webp.diff.png)" in text
+        assert '<img src="docs/images/moved.webp.diff.png"' in text
         assert "| `tests/golden/docs/new.png` | | added |" in text
 
     def test_min_fraction_leaves_out_small_changes(self, tmp_path: Path) -> None:

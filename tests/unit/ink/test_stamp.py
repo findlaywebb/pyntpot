@@ -1,4 +1,7 @@
-"""Tests for the stamp: one stroke's marks, the reservoir, the break, the nib and the tip."""
+"""Tests for the stamp: one stroke's marks, the reservoir, the break, the nib and the tip.
+
+The pen's set-down blot is tested in `test_stamp_pool.py`.
+"""
 
 from dataclasses import replace
 
@@ -28,22 +31,6 @@ def test_a_dry_brush_breaks_where_a_wet_one_does_not():
     dry = marks["dry"][band] > 0.25
     assert wet.mean() > dry.mean()
     assert dry.any()  # broken, not absent
-
-
-def test_the_pen_sets_down_where_it_touches_and_nowhere_else():
-    """A nib meeting the paper: extra ink over about a width, then nothing."""
-    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, BrushStyle(), "lane")
-    assert tuned.load > 0 and tuned.pool > 0
-    assert tuned.load_px == pytest.approx(tuned.width * 0.85)
-    bare = replace(tuned, load=0.0, pool=0.0)
-    line = np.stack([np.linspace(10, 190, 90), np.full(90, 20.0)], axis=1)
-    marks = []
-    for brush in (tuned, bare):
-        acc = np.zeros((40, 200), np.float32)
-        stamp(acc, line, brush, np.random.default_rng(5))
-        marks.append(acc)
-    assert marks[0][:, 8:18].sum() > marks[1][:, 8:18].sum() * 1.3
-    assert marks[0][:, 60:160].sum() == pytest.approx(marks[1][:, 60:160].sum(), rel=1e-4)
 
 
 def test_two_strokes_crossing_never_double():

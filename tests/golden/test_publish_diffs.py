@@ -66,10 +66,10 @@ class TestLinks:
             github_slug("https://example.invalid/pyntpot.git")
 
     def test_a_raw_link_quotes_each_segment(self) -> None:
-        """A raw link names the commit and quotes spaces, keeping slashes."""
+        """A raw link is on github.com, names the commit's first 12 characters, quotes spaces, keeps slashes."""
         path = "fix/a b/docs/images/hero.webp.diff.png"
         assert asset_url("o/r", COMMIT, path) == (
-            f"https://raw.githubusercontent.com/o/r/{COMMIT}/fix/a%20b/docs/images/hero.webp.diff.png"
+            "https://github.com/o/r/raw/0123456789ab/fix/a%20b/docs/images/hero.webp.diff.png"
         )
 
     @pytest.mark.parametrize(
@@ -305,14 +305,23 @@ class TestPublish:
     def test_main_pushes_and_writes_the_pr_body_with_commit_links(
         self, repo: Path, origin: Path, tmp_path: Path
     ) -> None:
-        """The command names the current branch's directory and links raw files at the pushed commit."""
+        """The command names the current branch's directory and tags raw files at the pushed commit."""
         out = _diff_output(tmp_path / "out")
         assert main([str(out), "--repo", str(repo), "--push"]) == 0
         commit = _origin_tip(origin)
         body = (out / PR_BODY).read_text()
-        want = f"https://raw.githubusercontent.com/findlaywebb/pyntpot/{commit}/main/docs/images/hero.webp.diff.png"
-        assert f"]({want})" in body
+        src = f"https://github.com/findlaywebb/pyntpot/raw/{commit[:12]}/main/docs/images/hero.webp.diff.png"
+        alt = "docs/images/hero.webp: before, after and difference"
+        assert f'\n\n<img src="{src}" alt="{alt}" width="720">\n\n' in body
         assert PR_BODY not in "\n".join(_files(origin, commit))
+
+    def test_main_sizes_the_diff_images_to_the_given_width(
+        self, repo: Path, origin: Path, tmp_path: Path
+    ) -> None:
+        """`--width` sets the diff image's width in the written block."""
+        out = _diff_output(tmp_path / "out")
+        assert main([str(out), "--repo", str(repo), "--width", "600"]) == 0
+        assert 'difference" width="600">' in (out / PR_BODY).read_text()
 
     def test_main_says_a_dry_runs_links_are_not_live(
         self, repo: Path, origin: Path, tmp_path: Path, caplog: pytest.LogCaptureFixture
