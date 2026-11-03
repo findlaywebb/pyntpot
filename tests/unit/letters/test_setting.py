@@ -23,12 +23,12 @@ class TestSetting:
         assert setting.anchor is None
         assert (setting.slant, setting.tracking, setting.ink) == (0.22, 0.24, "water")
 
-    def test_a_flat_setting_defaults_to_one_upright_row_in_map_ink(self) -> None:
-        """A flat setting with only an anchor is upright, untracked, map ink, washed."""
+    def test_a_flat_setting_defaults_to_one_upright_row_in_label_ink(self) -> None:
+        """A flat setting with only an anchor is upright, untracked, label ink, washed."""
         setting = Setting("Keswick", 20.0, anchor=(40.0, 30.0))
         assert setting.align == "start"
         assert (setting.slant, setting.tracking) == (0.0, 0.0)
-        assert setting.ink == "map"
+        assert setting.ink == "label"
         assert setting.lines == ()
         assert setting.wash is True
 
@@ -72,11 +72,11 @@ class TestSetting:
 class TestMark:
     """A mark is one stroke in display pixels with pinned defaults."""
 
-    def test_a_mark_defaults_to_a_washed_glyph_in_map_ink_at_the_line_size(self) -> None:
-        """A mark given only points is a glyph, map ink, 20 px, no pen tilt, washed."""
+    def test_a_mark_defaults_to_a_washed_glyph_in_label_ink_at_the_line_size(self) -> None:
+        """A mark given only points is a glyph, label ink, 20 px, no pen tilt, washed."""
         mark = Mark(pts=[(0.0, 0.0), (1.0, 1.0)])
         assert mark.role == "glyph"
-        assert mark.ink == "map"
+        assert mark.ink == "label"
         assert mark.size == 20.0
         assert mark.pen == 0.0
         assert mark.wash is True
