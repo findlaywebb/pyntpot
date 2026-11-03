@@ -7,7 +7,7 @@ what was compared and every `FileDiff`, in path order. `Summary.to_json` and
 holds, with the image links a caller's `link` makes from each review image's path. Each
 review image is an HTML `<img>` tag on its own line between blank lines, not Markdown image
 syntax, which the GitHub MCP tools mangle when they post a PR body; the diff image is shown
-`width` pixels wide, the crop image at its natural size, so it stays at 1:1.
+`width` pixels wide, the crop image at its natural size, so its pixels stay whole.
 
 Statuses: `changed` (both sides hold the image and some pixel differs), `added` (only the
 later side holds it), `removed` (only the earlier side). An image whose pixels are equal is
@@ -46,7 +46,7 @@ class FileDiff:
         status: `changed`, `added` or `removed`.
         measurement: How it changed; `None` unless `changed`.
         diff_image: The diff image's path under the output directory, if drawn.
-        crop_image: The 1:1 crop image's path under the output directory, if drawn.
+        crop_image: The crop image's path under the output directory, if drawn.
     """
 
     path: str
@@ -180,7 +180,7 @@ def _review_images(
         alt = f"{diff.path}: before, after and difference"
         lines += [image_tag(link(diff.diff_image), alt, width), ""]
     if diff.crop_image is not None:
-        alt = f"{diff.path}: the most-changed region at 1:1"
+        alt = f"{diff.path}: the most-changed region, close up"
         lines += [image_tag(link(diff.crop_image), alt), ""]
     return [*lines, "</details>", ""]
 

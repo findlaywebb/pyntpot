@@ -99,7 +99,7 @@ class TestMarkdown:
         text = markdown(Summary("a", "b", (_changed("x.png"),)), lambda path: f"https://h/{path}")
         diff_tag = '<img src="https://h/x.png.diff.png" alt="x.png: before, after and difference" width="720">'
         crop_tag = (
-            '<img src="https://h/x.png.crop.png" alt="x.png: the most-changed region at 1:1">'
+            '<img src="https://h/x.png.crop.png" alt="x.png: the most-changed region, close up">'
         )
         assert f"\n\n{diff_tag}\n\n" in text
         assert f"\n\n{crop_tag}\n\n" in text
@@ -112,13 +112,13 @@ class TestMarkdown:
         assert text.count("<img ") == 2
 
     def test_the_diff_image_width_is_the_callers(self) -> None:
-        """A given width sizes the diff image; the crop image stays at its natural size, 1:1."""
+        """A given width sizes the diff image; the crop image stays at its natural size."""
         text = markdown(Summary("a", "b", (_changed("x.png"),)), str, width=480)
         assert (
             '<img src="x.png.diff.png" alt="x.png: before, after and difference" width="480">'
             in text
         )
-        assert '<img src="x.png.crop.png" alt="x.png: the most-changed region at 1:1">' in text
+        assert '<img src="x.png.crop.png" alt="x.png: the most-changed region, close up">' in text
 
     def test_a_tag_escapes_its_attributes(self) -> None:
         """A quote or angle bracket in a path cannot end an attribute or the tag early."""

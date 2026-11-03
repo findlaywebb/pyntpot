@@ -15,7 +15,7 @@ JPEG files (JPEG for the registered social preview, `docs/images/social-preview.
 
 For each image whose pixels differ it writes, under `OUT` at the image's own path, a
 diff image (`<path>.diff.png`: before, after, the heat map and a key, shrunk to fit a
-phone-width PR body) and a 1:1 crop image of the most-changed region (`<path>.crop.png`),
+phone-width PR body) and a crop image of the most-changed region (`<path>.crop.png`, a small crop enlarged),
 then `summary.json` and `summary.md` (a table of every image that differs, and the
 review images). `--min-fraction F` leaves out the review images and rows of changed images
 whose changed fraction is at most `F`, as the parity gate passes a fraction at most its

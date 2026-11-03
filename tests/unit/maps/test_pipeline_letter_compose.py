@@ -30,7 +30,7 @@ PINNED_LABELS = (
     "B3234",
     "Saint Mary the Virgin",
     "Lynton and Exmoor Museum",
-    "Living Waters Lynton United Reformed Church",
+    "Wind Hill",
     "start",
 )
 

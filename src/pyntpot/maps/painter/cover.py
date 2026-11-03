@@ -11,9 +11,12 @@ and are not touched by it. Inside the wet field the classes are wet at the same 
 they bleed into each other and no boundary between two of them carries its own rim; the
 outer silhouette of the land sits outside it and keeps the edge it should have.
 
-It does not paint the wood's texture or dabs, the relief or the sea. Each wash keys its
-blooms by its class (`PaintJob.bloom`) and each ring its deformation by its own points, so
-neither depends on the classes or rings painted before it.
+A class in `PAINTED_AS` is labelled at its own place in the order but washed with the
+class it is painted as, at that class's place, so its pixels and that class's are one
+wash in one pigment. It does not paint the wood's texture or dabs, the relief or the
+sea. Each wash keys its blooms by its class (`PaintJob.bloom`) and each ring its
+deformation by its own points, so neither depends on the classes or rings painted
+before it.
 """
 
 import numpy as np
@@ -24,6 +27,7 @@ from pyntpot.ink.raster import Deform, deform_rings, fill_cov
 from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import WashStyle
 from pyntpot.ink.wash import WashOptions, separated, wash
+from pyntpot.maps.cover import PAINTED_AS
 from pyntpot.maps.painter.job import INSIDE, PaintJob, PlateStack, drawable
 from pyntpot.maps.rings import orient
 
@@ -100,14 +104,32 @@ def _label(job: PaintJob, stack: PlateStack, order: list[str]) -> None:
     stack.label[stack.water] = 0
 
 
+def _washed(order: list[str]) -> list[tuple[str, list[int]]]:
+    """Each washed class with the label indices it covers, in wash order.
+
+    A class painted as another joins that class's wash where the order carries it, and
+    is washed on its own, in the other's pigment, where it does not.
+    """
+    washes: dict[str, list[int]] = {}
+    for i, cls in enumerate(order, 1):
+        target = PAINTED_AS.get(cls, cls)
+        if target == cls or target not in order:
+            washes.setdefault(target, []).append(i)
+    for i, cls in enumerate(order, 1):
+        target = PAINTED_AS.get(cls, cls)
+        if target != cls and target in order:
+            washes[target].append(i)
+    return list(washes.items())
+
+
 def _class_washes(job: PaintJob, stack: PlateStack, order: list[str]) -> list[PigmentLayer]:
-    """One separated wash per labelled class, wet together across the cover."""
+    """One separated wash per washed class, wet together across the cover."""
     style = job.style
     wet_map = wet_field(stack.label, style.wash, job.rim_cov)
     layers: list[PigmentLayer] = []
-    for i, cls in enumerate(order, 1):
+    for cls, indices in _washed(order):
         base, pool = style.cover.cover_cfg.get(cls, (0.5, 0.2))
-        cov = (stack.label == i).astype(F32)
+        cov = np.isin(stack.label, indices).astype(F32)
         if not cov.any():
             continue
         options = WashOptions(

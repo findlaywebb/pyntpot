@@ -33,14 +33,19 @@ from pyntpot.maps.lettering.placement_costs import (
 )
 from pyntpot.maps.lettering.placement_flat import ANCHOR_PULL, ROAD_CROSS_COST, SEPARATION_WEIGHT
 from pyntpot.maps.lettering.placement_lift import (
+    INK_ASCENT_CAPS,
+    INK_DESCENT_CAPS,
     MAX_LOCAL_TILT_DEG,
     MAX_TILT_DEG,
     TILT_EXEMPT_KINDS,
     curved_boxes,
+    lift_middle,
     line_tilt,
+    offset_line,
     reading,
     tilt_max,
 )
+from pyntpot.maps.lettering.placement_water import along_water_cost
 from pyntpot.maps.lettering.placement_window import (
     MAX_BOW_FRAC,
     MAX_TURN_DEG,
@@ -114,11 +119,23 @@ def _window_shape(
     return turn, tilt, bow
 
 
-def _ground_cost(lb: Label, window: list[Pt], cells: list[Box], terms: Terms) -> float:
+def ink_band(lb: Label, window: list[Pt], side: float) -> list[Pt]:
+    """Points over the ink of a name set along a window: its middle line and both edges.
+
+    The band is the one the pen writes, `INK_ASCENT_CAPS` and `INK_DESCENT_CAPS`
+    of the type size about `lift_middle`, so a point here is a point of a letter.
+    """
+    middle = lift_middle(lb, side)
+    half = lb.size * (INK_ASCENT_CAPS + INK_DESCENT_CAPS) / 2
+    return [p for off in (-half, 0.0, half) for p in offset_line(window, middle + off)]
+
+
+def _ground_cost(lb: Label, window: list[Pt], cells: list[Box], terms: Terms, side: float) -> float:
     """What a window costs a reader, per box, on the terms the flat answer is scored on.
 
     What it sits on, how near the route and the roads it is, how much room it
-    has. That is what decides whether the name is set along the line at all.
+    has, and the water under its letters. That is what decides whether the name
+    is set along the line at all.
     """
     n = len(cells)
     # A river's window is not choosing whether to follow the
@@ -148,6 +165,11 @@ def _ground_cost(lb: Label, window: list[Pt], cells: list[Box], terms: Terms) ->
     # clear reach of water just beside it.
     road_cost = IN_WATER_ROAD_COST if lb.in_water else ROAD_CROSS_COST * soft
     ground += (sum(on_road(box, terms.roads) for box in cells) / n) * road_cost
+    # Water under the letters, its own stroke included, is a letter painted
+    # over; not discounted, for the reason overlap is not. A name written on
+    # the water is not charged for it.
+    if not lb.in_water:
+        ground += along_water_cost(ink_band(lb, window, side), terms.water)
     mid = window[len(window) // 2]
     ground += math.dist(mid, (lb.px, lb.py)) * ANCHOR_PULL
     ground -= min(separation(box, terms.boxes) for box in cells) * SEPARATION_WEIGHT
@@ -257,7 +279,7 @@ def place_along(
             # answer: a river that bends is not thereby better off in clear
             # paper, and pricing its own curvature against a horizontal
             # alternative meant nothing was ever set along anything.
-            ground = _ground_cost(lb, window, cells, terms)
+            ground = _ground_cost(lb, window, cells, terms, side)
             tilt_term = 0.0 if lb.kind in TILT_EXEMPT_KINDS else tilt * 0.8
             pick = ground + turn * 1.5 + tilt_term + bow * 400.0
             if best is None or pick < best[0]:

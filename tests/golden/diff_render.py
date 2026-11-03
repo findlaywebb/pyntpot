@@ -1,4 +1,4 @@
-"""Draw the review images of a changed image: the diff image and the 1:1 crop image.
+"""Draw the review images of a changed image: the diff image and the crop image.
 
 The drawing half of the golden diff tooling (`diff_images.py` is the command,
 `diff_measure.py` measures). Both review images are a two-by-two grid of labelled cells
@@ -8,8 +8,11 @@ phone-width PR body:
 - `diff_image`: the earlier image, the later one, the heat map of the difference and a key
   (the colour scale and the measurement), each cell shrunk by one whole factor to fit
   `CELL` pixels.
-- `crop_image`: the same three at 1:1 over the crop box, and a locator, the whole later
-  image shrunk with the crop box outlined.
+- `crop_image`: the same three over the crop box, and a locator, the whole later image
+  shrunk with the crop box outlined. A crop shorter than `CROP_TARGET` on its longer side is
+  enlarged by the whole factor `enlarge_factor` picks (at most `CROP_MAX_FACTOR`), by
+  nearest-neighbour, so each pixel becomes a crisp square block and the label reads `N:1`;
+  a crop at least that long stays at 1:1.
 
 The heat map colours each pixel by its delta (`support.golden.channel_delta`): blue at or
 under the channel bound, then red through orange to yellow at `SCALE_TOP`, white at 255. An
@@ -36,6 +39,12 @@ SCALE_TOP = 32
 
 #: Pixels between cells and round the review image.
 GUTTER = 8
+
+#: The side, in pixels, a crop image's crop is enlarged to reach on its longer side.
+CROP_TARGET = 360
+
+#: The largest whole factor a crop image's crop is enlarged by.
+CROP_MAX_FACTOR = 8
 
 #: The height of a cell's label strip.
 LABEL_HEIGHT = 22
@@ -81,6 +90,23 @@ def shrink_factor(width: int, height: int, cell: int = CELL) -> int:
     return max(1, math.ceil(max(width, height) / cell))
 
 
+def enlarge_factor(
+    width: int, height: int, target: int = CROP_TARGET, cap: int = CROP_MAX_FACTOR
+) -> int:
+    """Return the smallest whole factor, at most `cap`, that makes the longer side reach `target`.
+
+    A side already at least `target` long gives 1: a large crop is never enlarged.
+    """
+    return max(1, min(cap, math.ceil(target / max(width, height, 1))))
+
+
+def enlarge(img: Image.Image, factor: int) -> Image.Image:
+    """Return `img` enlarged by `factor` by nearest-neighbour: each pixel a `factor`-square block."""
+    if factor == 1:
+        return img
+    return img.resize((img.width * factor, img.height * factor), Image.Resampling.NEAREST)
+
+
 def block_max(delta: np.ndarray, factor: int) -> np.ndarray:
     """Shrink `delta` by `factor`, keeping each block's largest value; partial edge blocks count."""
     if factor == 1:
@@ -107,17 +133,25 @@ def _shrunk(img: Image.Image, factor: int) -> Image.Image:
 
 
 def _grid(cells: list[tuple[str, Image.Image]]) -> Image.Image:
-    """Lay labelled cells out two to a row on the background, each cell as large as the largest."""
-    cell_w = max(img.width for _, img in cells)
-    cell_h = max(img.height for _, img in cells) + LABEL_HEIGHT
-    rows = math.ceil(len(cells) / 2)
+    """Lay labelled cells out two to a row, each column as wide and each row as tall as its largest.
+
+    Sizing columns and rows apart, not every cell as the largest, keeps a small cell (the
+    locator beside an enlarged crop) from opening gaps across the whole grid.
+    """
+    widths = [max(img.width for _, img in cells[col::2]) for col in range(2)]
+    heights = [
+        max(img.height for _, img in cells[row : row + 2]) + LABEL_HEIGHT
+        for row in range(0, len(cells), 2)
+    ]
     grid = Image.new(
-        "RGB", (GUTTER + 2 * (cell_w + GUTTER), GUTTER + rows * (cell_h + GUTTER)), _BACKGROUND
+        "RGB",
+        (GUTTER + sum(w + GUTTER for w in widths), GUTTER + sum(h + GUTTER for h in heights)),
+        _BACKGROUND,
     )
     draw = ImageDraw.Draw(grid)
     for index, (label, img) in enumerate(cells):
-        x = GUTTER + (index % 2) * (cell_w + GUTTER)
-        y = GUTTER + (index // 2) * (cell_h + GUTTER)
+        x = GUTTER + sum(w + GUTTER for w in widths[: index % 2])
+        y = GUTTER + sum(h + GUTTER for h in heights[: index // 2])
         draw.text((x, y + 3), label, fill=_INK, font=_FONT)
         grid.paste(img, (x, y + LABEL_HEIGHT))
     return grid
@@ -196,8 +230,14 @@ def diff_image(
     return _grid([("before", earlier), ("after", later), ("difference", heat), ("key", key)])
 
 
-def crop_image(before: np.ndarray, after: np.ndarray, delta: np.ndarray, box: Box) -> Image.Image:
-    """Return the crop image: before, after and the heat map at 1:1 over `box`, and a locator."""
+def crop_cells(
+    before: np.ndarray, after: np.ndarray, delta: np.ndarray, box: Box
+) -> list[tuple[str, Image.Image]]:
+    """Return the crop image's labelled cells: before, after and the heat map over `box`, and a locator.
+
+    The three crops are enlarged by `enlarge_factor` of the box's size, by nearest-neighbour,
+    and labelled with the scale (`1:1` when not enlarged); the locator is not enlarged.
+    """
     later = viewable(after)
     crop_heat = heat_map(delta[box[1] : box[3], box[0] : box[2]], later.crop(box))
     factor = shrink_factor(later.width, later.height, CELL // 2)
@@ -211,11 +251,15 @@ def crop_image(before: np.ndarray, after: np.ndarray, delta: np.ndarray, box: Bo
     ]
     draw.rectangle(shrunk_box, outline=_OUTLINE, width=2)
     left, top, right, bottom = box
-    return _grid(
-        [
-            ("before, 1:1", viewable(before).crop(box)),
-            ("after, 1:1", later.crop(box)),
-            ("difference, 1:1", crop_heat),
-            (f"where: {left},{top} to {right},{bottom}", locator),
-        ]
-    )
+    scale = enlarge_factor(right - left, bottom - top)
+    return [
+        (f"before, {scale}:1", enlarge(viewable(before).crop(box), scale)),
+        (f"after, {scale}:1", enlarge(later.crop(box), scale)),
+        (f"difference, {scale}:1", enlarge(crop_heat, scale)),
+        (f"where: {left},{top} to {right},{bottom}", locator),
+    ]
+
+
+def crop_image(before: np.ndarray, after: np.ndarray, delta: np.ndarray, box: Box) -> Image.Image:
+    """Return the crop image: `crop_cells` laid out two by two, each column and row fitted."""
+    return _grid(crop_cells(before, after, delta, box))

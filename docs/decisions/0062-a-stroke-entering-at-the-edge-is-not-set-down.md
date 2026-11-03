@@ -64,9 +64,9 @@ an edge-hugging segment, a first segment outside, a two-point piece). 12 survive
 
 ## Golden regeneration
 
-Process as ADR 0036, with the review images of ADR 0052, repainted on main after ADR 0049
-(a generator per item, main at `cacaf83`). The tolerance bound is not changed and no gate is
-loosened.
+Process as ADR 0036, with the review images of ADR 0052, repainted on main after ADR 0066
+(the backing wash fading out from the letters, main at `dd914ea`). The tolerance bound is
+not changed and no gate is loosened.
 
 ### Lynmouth compare, against the committed goldens
 
@@ -74,8 +74,8 @@ loosened.
 paper.webp: identical yes, differing fraction 0.000000
 wash.webp: identical no, differing fraction 0.012135
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.002938
-map.png: identical no, differing fraction 0.012445
+labels-centreline.webp: identical no, differing fraction 0.001492
+map.png: identical no, differing fraction 0.012332
 manifest hash: 818ec1260e9283d7-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
 ```
 
@@ -95,23 +95,24 @@ fractions against main:
 
 | Master | Fraction | Max delta | Master | Fraction | Max delta |
 |---|---|---|---|---|---|
-| `how-to/route-ink-grid.png` | 0.107639 | 184 | `places/y-fenni.png` | 0.085261 | 189 |
-| `places/oxford.png` | 0.060650 | 209 | `map-styles/bold.png` | 0.044932 | 223 |
-| `gallery/route-map.png` | 0.041082 | 211 | `places/ambleside.png` | 0.041082 | 211 |
-| `tutorials/route-map.png` | 0.040936 | 212 | `how-to/route-ink.png` | 0.040887 | 212 |
-| `map-styles/winter.png` | 0.040863 | 212 | `map-styles/sepia.png` | 0.037256 | 144 |
-| `map-styles/pen-and-ink.png` | 0.031457 | 156 | `hero.png` | 0.024635 | 191 |
-| `places/yr-wyddfa.png` | 0.020189 | 199 | `how-to/command-line.png` | 0.015872 | 185 |
-| `social-preview.png` | 0.009444 | 124 | `places/skye.png` | 0.007243 | 101 |
+| `how-to/route-ink-grid.png` | 0.107598 | 184 | `places/y-fenni.png` | 0.065557 | 178 |
+| `places/oxford.png` | 0.059404 | 209 | `map-styles/bold.png` | 0.045078 | 223 |
+| `tutorials/route-map.png` | 0.043056 | 212 | `how-to/route-ink.png` | 0.042982 | 212 |
+| `map-styles/winter.png` | 0.042982 | 212 | `gallery/route-map.png` | 0.041106 | 211 |
+| `places/ambleside.png` | 0.041106 | 211 | `map-styles/sepia.png` | 0.039133 | 144 |
+| `map-styles/pen-and-ink.png` | 0.033626 | 164 | `hero.png` | 0.026438 | 191 |
+| `places/yr-wyddfa.png` | 0.020189 | 199 | `how-to/command-line.png` | 0.015722 | 185 |
+| `social-preview.png` | 0.009444 | 124 | `places/skye.png` | 0.007282 | 101 |
 
 Looked at side by side with `main`: on the hero the soft blob where the Brathay started at the
 lower left is gone and the river runs on to the bottom edge, thin where it enters; the dark
 dot by the left edge is now a short line coming in from that edge. On every card, rivers that
 leave the card now reach its edge instead of stopping short of it, and a few names and leaders
 shift by a few pixels where the water they avoid now reaches the edge (on Oxford, "Thames").
-The rest of each card's fraction is a low speckle (most pixels within a delta of 10) over the
-land wash, which a reader sees only by flicking between the two; on Lynmouth it is absent and
-the change is the East Lyn and its name.
+On the masters nearly all of each card's fraction lies along those rivers and their names; the
+land wash keeps only scattered pixels a delta of 1 or 2 off, which a reader cannot see.
+On Lynmouth the change is the East Lyn and its name, with a faint line of such pixels along
+the coast.
 
 ## Consequences
 

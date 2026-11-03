@@ -3,7 +3,8 @@
 Key names: `cover_rings`, the land cover polygons by pigment class, clipped to the card
 and simplified; `wood_rings`, the woods of the feature payload; `coastline_chains`, the
 coast as surveyed, joined and never smoothed; `COVER_TAGS` and `COVER_ORDER`, the
-tag-to-pigment table and the painting order. The sea made from the coast is in `sea`.
+tag-to-pigment table and the painting order; `PAINTED_AS`, the classes washed in
+another class's pigment. The sea made from the coast is in `sea`.
 
 It does not fetch payloads, project a track, or paint anything: it reads the files the
 cache already holds and returns rings in card metres. Invariants: a missing payload
@@ -42,7 +43,10 @@ JOIN_TOL_M = 2.0
 MIN_COAST_M = 300.0
 
 #: OSM tag to pigment class. An element that matches on more than one key takes
-#: the class of the last of `landuse`, `natural` and `leisure` that matches.
+#: the class of the last of `amenity`, `landuse`, `natural` and `leisure` that matches,
+#: so a college's own garden or meadow keeps its green. Education land (schools,
+#: colleges, universities) is `campus`: washed as `built`, but labelled below the greens,
+#: so a quad or college meadow inside it keeps its own colour.
 COVER_TAGS: tuple[tuple[str, str, str], ...] = (
     ("landuse", "farmland", "farmland"),
     ("landuse", "farmyard", "built"),
@@ -73,6 +77,9 @@ COVER_TAGS: tuple[tuple[str, str, str], ...] = (
     ("landuse", "commercial", "built"),
     ("landuse", "retail", "built"),
     ("landuse", "cemetery", "built"),
+    ("landuse", "education", "campus"),
+    ("amenity", "university", "campus"),
+    ("amenity", "college", "campus"),
     ("landuse", "industrial", "works"),
     ("landuse", "quarry", "works"),
     ("landuse", "greenhouse_horticulture", "works"),
@@ -83,6 +90,7 @@ COVER_TAGS: tuple[tuple[str, str, str], ...] = (
 #: Painting order, low to high. A later class replaces an earlier one where they
 #: overlap, so the plate carries one class per pixel and no two land pigments stack.
 COVER_ORDER: tuple[str, ...] = (
+    "campus",
     "farmland",
     "meadow",
     "orchard",
@@ -95,6 +103,11 @@ COVER_ORDER: tuple[str, ...] = (
     "works",
     "wood",
 )
+
+#: A class labelled at its own place in `COVER_ORDER` but washed as another, in that
+#: class's pigment and as one wash with it. Education land is the town's ground, yet a
+#: green inside it is painted over it, where a green inside the town is painted under.
+PAINTED_AS: dict[str, str] = {"campus": "built"}
 
 
 def cover_rings(
@@ -121,7 +134,7 @@ def cover_rings(
     for entry in payload.get("elements", []):
         tags = entry.get("tags") or {}
         cls = None
-        for tag_key in ("landuse", "natural", "leisure"):
+        for tag_key in ("amenity", "landuse", "natural", "leisure"):
             if tag_key in tags:
                 cls = lookup.get((tag_key, tags[tag_key]), cls)
         if cls is None:
