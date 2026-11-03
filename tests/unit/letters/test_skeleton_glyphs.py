@@ -37,7 +37,8 @@ JOINED = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghklmnopqrstuvwxyz0123456789"
 #: are free, where the pen lifts off a terminal of the outline rather than ending
 #: on a stroke. The `D` keeps its tail below the bowl, the `Q` the tail through its
 #: bowl at both ends, the `3` its tongue; the `8` is one ring through its waist
-#: with no bridge across it, and an `X` or an `x` is two strokes crossing.
+#: with no bridge across it, and an `X` or an `x` is two strokes crossing. The `w` keeps
+#: the fork thinning grows in its first valley pruned.
 TRACED: dict[str, tuple[int, int]] = {
     "D": (1, 1),
     "Q": (2, 2),
@@ -45,6 +46,7 @@ TRACED: dict[str, tuple[int, int]] = {
     "8": (1, 0),
     "X": (2, 4),
     "x": (2, 4),
+    "w": (2, 2),
 }
 
 #: How far, in em, a skeleton pixel may be from the nearest stroke: under this the

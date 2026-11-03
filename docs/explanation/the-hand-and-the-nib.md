@@ -26,7 +26,10 @@ name was set along.
 The face gives the proportions. pyntpot uses the vendored Patrick Hand, a face somebody
 drew by hand, and not a stroke font somebody plotted. A glyph becomes something a pen can
 follow by thinning its filled shape to a one pixel skeleton, walking the skeleton into
-chains and pruning the spurs that thinning grows. That is the `centreline` route; the
+chains and pruning the spurs that thinning grows. A short branch that leaves its junction's
+own ink is kept, because it is a stroke ending (the tail of a D, the tongue of a 3), and two
+forks a short bridge apart are one crossing, so an 8 or an X is written through its waist
+rather than with a stub across it. That is the `centreline` route; the
 `outline` route draws round the contour instead, and the two are different letters, not a
 choice and a fallback.
 

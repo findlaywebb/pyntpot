@@ -57,3 +57,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0048 | The label ink token (amends 0008 and 0026) |
 | 0051 | The classic paper lock is tolerant too (applies 0030) |
 | 0052 | Golden diff images in the PR body (amends 0006 and 0036) |
+| 0056 | Terminal tails kept and crossings written through: a golden regeneration |
