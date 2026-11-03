@@ -17,37 +17,49 @@ Measured on the issue's repro (a 5 px `MAJ6-e` pen, `pen_reservoir=22`, `pen_thi
 
 ## Decision
 
-- **The refill eases.** `_nib_spent(run, b)` is the spent share at each stamp. Since the
-  last dip the load falls as before, `1 - exp(-since / run_px)`; after the first dip it
-  carries what the nib had spent by the dip, `1 - exp(-dip_px / run_px)`, and lets it ease
-  away as `exp(-since / (REFILL_WIDTHS * width))`, with `_REFILL_WIDTHS` = 2. The spent
-  share is continuous at the dip, the line swells back to full over about three nib widths,
-  and it is capped at 1. Before the first dip nothing is carried, so a stroke shorter than
-  one dip is unchanged.
+- **The refill eases.** `_nib_spent(run, b)` is the spent share at each stamp. A fresh
+  load falls as before, `exp(-since / run_px)` from the last dip. What the nib had spent by
+  the dip, `carried`, eases away as `exp(-since / refill_px)`, with `refill_px` =
+  `_REFILL_WIDTHS * width` and `_REFILL_WIDTHS` = 2, and the two combine as
+  `1 - load * (1 - carried * ease)`. The share carried into each load is the share spent
+  at the end of the one before, so the spent share is continuous at every dip, not only
+  the first, and it never reaches 1, so no cap is needed. In closed form the k-th load
+  carries `at_dip * (1 - c**k) / (1 - c)`, with `at_dip = 1 - exp(-dip_px / run_px)` and
+  `c = (1 - at_dip) * exp(-dip_px / refill_px)`. Before the first dip nothing is
+  carried, so a stroke shorter than one dip is unchanged.
+- **A small reservoir is smooth too.** With a reservoir long beside the refill (the
+  default, 420 nib widths), the carry has gone by the next dip and every dip carries
+  `at_dip` (0.753 on the repro). With one shorter than the refill (`pen_reservoir` of
+  about 1 or less) the carry has not gone, and each dip carries a little more than the
+  last, towards `at_dip / (1 - c)` (0.753, 0.846, 0.857, 0.858 at the first four dips of
+  the repro nib with `pen_reservoir=1`, and at most 0.912 with `pen_reservoir=0.5`). An
+  earlier draft carried only `at_dip`, capped at 1, which stepped from 1 back to 0.753 at
+  every dip after the first on such a nib.
 - Only the nib (`pen_starve`) changes. A brush's reservoir (`ink_starve`, `deposit.spend`)
   keeps its hard seam at the dip, which is what makes a long brushed line look drawn.
 - No style field is added: the refill length is a property of a nib, stated in its own
   widths.
 
-Pinned by `tests/unit/ink/test_stamp.py` (`TestTheReload`), on the issue's repro: the line
-regains under 60% of what its run lost within one nib width (it regains 42%); no nib width
+Pinned by `tests/unit/ink/test_nib_reload.py`. `TestTheSpentShare` reads `_nib_spent`
+directly: the share either side of the repro's dip (0.7534 both), either side of the
+first four dips with `pen_reservoir=1`, its limit with `pen_reservoir=0.5`, a run short of
+the first dip, and the share two nib widths past a dip (0.3400). A property in
+`tests/property/test_stamp.py` checks continuity and a share below 1 at the first eight dips
+across reservoirs of 0.1 to 60 widths, dip multiples of 1.05 to 4 and widths of 0.5 to 12 px.
+`TestTheReload`, on the issue's repro, draws the line: it regains under 60% of what its run
+lost within one nib width (it regains 43%); no nib width
 loses a quarter of what a run loses, and the line keeps 40% of its peak; and the dry nib's
 line is nowhere darker than the same nib's never running down. The existing test that a long
 line comes back to its full width somewhere past the first dip still holds.
 
 ### Mutation testing
 
-Run on `ink.stamp._width` and `ink.stamp._nib_spent`: 93 mutants, 77 killed by the first
-run; the tests above then killed 5 of the 9 `_nib_spent` survivors (a growing exponent, a
-spent share at the dip over 1, the carried share divided rather than multiplied). Left:
+Run on `ink.stamp._width` and `ink.stamp._nib_spent`: 102 mutants, 94 killed. `_nib_spent`
+16 (`exp(-dip_px * run_px)`, the share spent at the dip read as 1 rather than 0.753) is
+killed by the direct reads either side of the dip. There is no cap left to mutate. Left:
 
-- `_nib_spent` 16 (`exp(-dip_px * run_px)`: the share spent at the dip read as 1 rather than
-  0.75 on the repro). Not equivalent, and not killed: the extra drop is from a quarter of the
-  nib's width to none, and a nib at no width still lays its core, so neither the column ink
-  nor the line's width tells them apart. 24 (the refill length floored at 1 px rather than
-  1e-6): only a pen under half a pixel wide reaches the floor. 32 (`run > dip_px` for
-  `>=`): differs only on a stamp exactly at the dip. 43 (the cap at 2 rather than 1): the
-  spent and carried shares never sum past the share at the dip, so the cap never binds.
+- `_nib_spent` 12 (the refill length floored at 1.000001 px rather than 1e-6): only a pen
+  under half a pixel wide reaches the floor.
 - `_width` 9, 10, 25 (a width profile of one or two samples, or one starting a pixel in):
   the profile lines this branch does not touch; no nib profile has under three samples and a
   one-pixel shift of its start is below what a test of the mark resolves. 27, 29, 39 (a
