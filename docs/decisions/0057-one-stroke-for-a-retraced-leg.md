@@ -52,21 +52,24 @@ out-and-back on the pen plate crosses one inked run).
 
 Process as ADR 0036, with the review images of ADR 0052. The tolerance bound is not
 changed, no gate is loosened and the hash input does not change; the manifest hash does not
-move (`340a7f6e260ee1e2-d9c56c0811177b0f`).
+move (`3976d23ae248ca86-d9c56c0811177b0f`).
 
 ### Lynmouth compare, against the committed goldens
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
 wash.webp: identical yes, differing fraction 0.000000
-pen.webp: identical no, differing fraction 0.000986
-labels-centreline.webp: identical no, differing fraction 0.000748
-map.png: identical no, differing fraction 0.000902
-manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
+pen.webp: identical no, differing fraction 0.010347
+labels-centreline.webp: identical no, differing fraction 0.000662
+map.png: identical no, differing fraction 0.000828
+manifest hash: 3976d23ae248ca86-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
 ```
 
-The pen plate and the composed map move only in the box where the Lynmouth track doubles
-back, which is now one line; the lettering moves with the route it is set against.
+The composed map moves only in the box where the Lynmouth track doubles back, which is now
+one line; the lettering moves with the route it is set against. The pen plate moves along
+the whole route, faintly, at the edges of its stroke: the route pen is one stroke, keyed by
+its geometry (ADR 0049), so moving the doubled stretch re-keys the whole stroke's
+bristles. Its strong difference is the doubled stretch.
 `PINNED_LABELS` is unchanged, as are the place pins and the map-styles means. The
 Lynmouth track's first points lie on a stretch it runs again, so `FIRST_STRANDS` in
 `tests/unit/maps/test_pipeline_fetch_paint.py` moves by about a pixel and is re-pinned. The goldens were regenerated from that paint and every gate run on it.
@@ -80,16 +83,18 @@ fractions against `main`:
 
 | Image | Master | Image | Master |
 |---|---|---|---|
-| `map-styles/bold.webp` | 0.031993 | `map-styles/winter.webp` | 0.026730 |
-| `map-styles/sepia.webp` | 0.026511 | `places/skye.webp` | 0.019899 |
-| `places/y-fenni.webp` | 0.018283 | `how-to/route-ink-grid.webp` | 0.013521 |
-| `gallery/route-map.webp` | 0.004557 | `places/ambleside.webp` | 0.004557 |
-| `places/oxford.webp` | 0.003855 | `how-to/route-ink.webp` | 0.003582 |
-| `map-styles/pen-and-ink.webp` | 0.003509 | `tutorials/route-map.webp` | 0.003095 |
-| `hero.webp` | 0.002729 | `social-preview.jpg` | 0.002535 |
-| `how-to/command-line.webp` | 0.002341 | | |
+| `how-to/route-ink-grid.webp` | 0.066544 | `places/skye.webp` | 0.019938 |
+| `places/y-fenni.webp` | 0.018127 | `map-styles/bold.webp` | 0.016155 |
+| `map-styles/sepia.webp` | 0.014059 | `gallery/route-map.webp` | 0.004678 |
+| `places/ambleside.webp` | 0.004678 | `places/oxford.webp` | 0.003660 |
+| `how-to/route-ink.webp` | 0.003436 | `map-styles/winter.webp` | 0.003289 |
+| `map-styles/pen-and-ink.webp` | 0.003265 | `tutorials/route-map.webp` | 0.002973 |
+| `hero.webp` | 0.002680 | `social-preview.jpg` | 0.002674 |
+| `how-to/command-line.webp` | 0.002448 | | |
 
-The lossy WebP images move further than their masters (up to 0.22 of their pixels), almost
+`how-to/route-ink-grid.webp` moves most because its six cards ink the route with a pen,
+which is re-keyed along its whole length, as on the Lynmouth pen plate above.
+The lossy WebP images move further than their masters (up to 0.26 of their pixels), almost
 all by one to a few levels: the encoder's blocks after the moved route are coded afresh.
 
 Looked at side by side with `main`: on Skye the Armadale spur and the Dunvegan and Fairy
@@ -98,9 +103,9 @@ leaves the A87 no longer crosses itself; on Y Fenni the spur by the start is one
 "start" moves to sit beside it; on Oxford the spur at the Bridge of Sighs is one stroke and
 the Magdalen Bridge out-and-back is unchanged; on the Ambleside cards the doubled stretch into Ambleside is one stroke. The paint under
 the route does not move. The names set against the route move with it where it was
-doubled: on the Ambleside cards "A591", "Ambleside", "St Mary's" and "Rothay" shift a few
-pixels, and in the bold, sepia and winter styles the names placed after them in tier order
-("Pelter Bridge", "Loughrigg Fell", "Rydal Water", "Brathay") take nearby seats.
+doubled: on the Ambleside cards the names round the doubled stretch ("A591", "Ambleside",
+"St Mary's") shift a few pixels. Painted on `main` after ADR 0049, no other name takes a
+new seat.
 
 ## Consequences
 
