@@ -9,13 +9,13 @@
       "status": "changed",
       "width": 360,
       "height": 200,
-      "changed_fraction": 0.008527777777777778,
+      "changed_fraction": 0.007875,
       "over_bound": true,
-      "max_delta": 117,
+      "max_delta": 115,
       "box": [
         135,
         55,
-        274,
+        268,
         123
       ],
       "extent": "local",
@@ -23,34 +23,16 @@
       "crop_image": "docs/images/explanation/nib-runs-dry.webp.crop.png"
     },
     {
-      "path": "docs/images/places/oxford.webp",
-      "status": "changed",
-      "width": 720,
-      "height": 643,
-      "changed_fraction": 0.005825557283566615,
-      "over_bound": true,
-      "max_delta": 11,
-      "box": [
-        66,
-        456,
-        720,
-        643
-      ],
-      "extent": "widespread",
-      "diff_image": "docs/images/places/oxford.webp.diff.png",
-      "crop_image": "docs/images/places/oxford.webp.crop.png"
-    },
-    {
       "path": "docs/images/places/y-fenni.webp",
       "status": "changed",
       "width": 720,
       "height": 643,
-      "changed_fraction": 0.02175565923621911,
+      "changed_fraction": 0.033713495766372906,
       "over_bound": true,
-      "max_delta": 12,
+      "max_delta": 13,
       "box": [
-        16,
-        348,
+        0,
+        344,
         720,
         643
       ],
@@ -63,13 +45,13 @@
       "status": "changed",
       "width": 240,
       "height": 133,
-      "changed_fraction": 0.010401002506265664,
+      "changed_fraction": 0.009649122807017544,
       "over_bound": true,
-      "max_delta": 109,
+      "max_delta": 108,
       "box": [
         90,
         37,
-        180,
+        179,
         82
       ],
       "extent": "local",
@@ -105,30 +87,12 @@
       "box": [
         506,
         378,
-        1237,
-        651
+        797,
+        1107
       ],
       "extent": "local",
       "diff_image": "tests/golden/lynmouth/labels-centreline.webp.diff.png",
       "crop_image": "tests/golden/lynmouth/labels-centreline.webp.crop.png"
-    },
-    {
-      "path": "tests/golden/lynmouth/map.png",
-      "status": "changed",
-      "width": 1800,
-      "height": 1457,
-      "changed_fraction": 0.0,
-      "over_bound": false,
-      "max_delta": 1,
-      "box": [
-        600,
-        430,
-        601,
-        431
-      ],
-      "extent": "local",
-      "diff_image": "tests/golden/lynmouth/map.png.diff.png",
-      "crop_image": "tests/golden/lynmouth/map.png.crop.png"
     }
   ]
 }
