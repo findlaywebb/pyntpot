@@ -75,6 +75,25 @@ def test_a_landmark_beside_a_lake_is_seated_on_the_dry_side():
     assert on_water(lake.box, Water([LAKE]), lake.size) == 0.0
 
 
+#: A broad lake across the middle of the small card, with a dry shore along its south side.
+BROAD_LAKE = [(60.0, 60.0), (340.0, 60.0), (340.0, 200.0), (60.0, 200.0)]
+
+
+def test_a_land_callout_whose_cheapest_seat_is_on_a_lake_is_lettered_off_it():
+    """A callout for a cave on a lake's shore, cheapest seated on the lake, is lettered on dry land."""
+
+    def cave() -> Label:
+        """Rydal Cave, a curated callout anchored on the dry shore just south of the lake."""
+        return Label(name="Rydal Cave", kind="", px=200.0, py=205.0, tier=TIER_LANDMARK, size=14.0)
+
+    unpriced = _placed(cave(), Water())
+    assert unpriced.box is not None
+    assert on_water(unpriced.box, Water([BROAD_LAKE]), 0.0) == 1.0, "the case needs a wet seat"
+    priced = _placed(cave(), Water([BROAD_LAKE]))
+    assert priced.box is not None
+    assert on_water(priced.box, Water([BROAD_LAKE]), 0.0) == 0.0
+
+
 def test_a_river_name_set_flat_keeps_off_its_own_stroke():
     """A river with no reach to write along is lettered beside its own water, not across it."""
     # A stream that zigzags down the card every 15 pixels: no reach of it is straight
