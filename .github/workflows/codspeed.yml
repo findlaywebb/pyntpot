@@ -7,6 +7,14 @@ on:
   # Lets CodSpeed trigger backtest runs to build an initial history.
   workflow_dispatch:
 
+# A new push to a pull request cancels that PR's run still in flight; a PR run is only
+# compared with main's, so nothing is lost. Every other event gets a group of its own (the
+# run id), so each main run completes and uploads its baseline, and a backtest dispatch is
+# never cancelled or replaced.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
   id-token: write # OpenID Connect authentication with CodSpeed

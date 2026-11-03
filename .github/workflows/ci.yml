@@ -6,6 +6,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+# A new push to a pull request cancels that PR's run still in flight. Every other event
+# gets a group of its own (the run id), so main's runs all complete and none waits behind
+# or replaces another, which a shared group would do even with cancel-in-progress off.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   checks:
     runs-on: ubuntu-latest
