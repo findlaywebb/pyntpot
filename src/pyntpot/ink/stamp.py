@@ -157,10 +157,16 @@ def _organic_fields(
         # each bristle's drift is its own field, and neighbours can be driven
         # apart far enough to cross. Rescaled to the spread it had, because
         # smoothing independent fields together flattens them and the point
-        # is who drifts with whom, not how far.
+        # is who drifts with whom, not how far. Only the spread about the
+        # stroke's own mean is rescaled: smoothing across the tip leaves that
+        # mean where it was, and a stroke shorter than a lattice cell has a
+        # field nearly constant along it, so rescaling the mean too would blow
+        # it up into a sideways shift of the whole stroke, which closes a small
+        # letter's bowl.
         was = float(jit_log.std())
         jit_log = tip_band(jit_log, b.coherence * m)
-        jit_log = jit_log * F32(was / max(float(jit_log.std()), 1e-6))
+        mean = F32(jit_log.mean())
+        jit_log = mean + (jit_log - mean) * F32(was / max(float(jit_log.std()), 1e-6))
     along_log = fbm1(t, _TAU * 24.0 * b.unit * b.org_mult, b, rng, m)
     return jit_log, along_log
 
