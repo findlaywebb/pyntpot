@@ -9,8 +9,8 @@ from pyntpot.ink.brush import Brush, brush_from_id, ink_aux, scaled_brush
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.pad import ink_density
 from pyntpot.ink.sheet import Sheet
-from pyntpot.ink.stamp import stamp
-from pyntpot.ink.tip import tip_band
+from pyntpot.ink.stamp import _organic_fields, stamp
+from pyntpot.ink.tip import fbm1, tip_band
 
 
 def test_a_dry_brush_breaks_where_a_wet_one_does_not():
@@ -373,3 +373,28 @@ def test_a_short_ring_is_not_shifted_off_its_path_by_the_shared_drift():
         shifts.append(float((acc * outside).sum() / acc.sum()))
     worst = max(shifts, key=abs)
     assert abs(worst) < brush.jitter * 1.6, f"a ring moved {worst:.2f} px off its path"
+
+
+def test_the_shared_drift_keeps_the_field_s_spread_and_mean_and_leans_its_way():
+    """Sharing the drift across the tip keeps its spread and its mean, and each bristle's lean.
+
+    Drawn from the same seed, the drift before sharing is the plain lattice field. After
+    it, its spread is restored exactly, its mean over the stroke stays where the field put
+    it (a short stroke's mean is not blown up into a shift), and it still correlates with
+    the field it came from.
+    """
+    brush, _ = brush_from_id("MAJ2-a", 2.0, 2.0, BrushStyle(brush_organic=True), "road_major")
+    m = brush.bristles
+    t = np.linspace(0.0, 40.0, int(40.0 / brush.step) + 2).astype(np.float32)
+    cell = 6.283 * 62.0 * brush.unit * brush.org_mult
+    shifts, leans = [], []
+    for seed in range(20):
+        field = fbm1(t, cell, brush, np.random.default_rng(seed), m)
+        drift, _along = _organic_fields(t, m, brush, np.random.default_rng(seed))
+        assert float(drift.std()) == pytest.approx(float(field.std()), rel=1e-3)
+        shifts.append(abs(float(drift.mean()) - float(field.mean())))
+        leans.append(
+            np.corrcoef((field - field.mean()).ravel(), (drift - drift.mean()).ravel())[0, 1]
+        )
+    assert max(shifts) < 0.25, "the shared part of a short stroke's drift was amplified"
+    assert float(np.mean(leans)) > 0.1
