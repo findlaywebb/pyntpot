@@ -11,7 +11,8 @@ from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, PigmentLayer, composite
-from pyntpot.ink.sheet import Sheet, rgb
+from pyntpot.ink.raster import deform_rings, fill_cov
+from pyntpot.ink.sheet import Canvas, Sheet, rgb
 from pyntpot.ink.stamp import stamp
 from pyntpot.ink.style import PaperStyle
 from pyntpot.ink.wash import WashOptions, wash
@@ -111,6 +112,29 @@ def test_laying_a_wet_wash(benchmark: BenchmarkFixture, sheet: Sheet) -> None:
     cover = _blob()
     options = WashOptions(wet=np.clip(cover * 0.8, 0.0, 1.0), gran_gamma=1.6)
     benchmark(wash, cover, sheet, 0.52, 0.20, options)
+
+
+def _lumpy_ring() -> list[tuple[float, float]]:
+    """The lumpy disc's outline, 360 points round it, in metres one per render pixel."""
+    angle = np.linspace(0.0, math.tau, 360, endpoint=False)
+    radius = SIDE * (0.30 + 0.05 * np.sin(5.0 * angle))
+    return [
+        (SIDE / 2 + float(r * math.cos(t)), SIDE / 2 + float(r * math.sin(t)))
+        for r, t in zip(radius, angle, strict=True)
+    ]
+
+
+def test_laying_a_deformed_wash_with_blooms(benchmark: BenchmarkFixture, sheet: Sheet) -> None:
+    """Times a deformed outline filled and laid with the flow rim and six blooms."""
+    canvas = Canvas(0.0, 0.0, float(SIDE), float(SIDE), SIDE, SIDE)
+    ring = [_lumpy_ring()]
+    options = WashOptions(flow=(0.125, 0.02, 0.38), blooms=(57, 6, 0.17, 0.45, 0.45))
+
+    def lay() -> np.ndarray:
+        cover = fill_cov(deform_rings(ring, (9, 0.26, 4, 0.55, 16.0, 0.5)), canvas)
+        return wash(cover, sheet, 0.52, 0.20, options)
+
+    benchmark(lay)
 
 
 @pytest.mark.parametrize("glazing", GLAZING.values(), ids=GLAZING.keys())

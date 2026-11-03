@@ -147,7 +147,7 @@ def paint_lakes(job: PaintJob, stack: PlateStack) -> None:
                     gran=0.22,
                     gran_gamma=job.gran_gamma,
                     flow=job.flow,
-                    blooms=job.bloom(lake_cov),
+                    blooms=job.bloom(lake_cov, "lake"),
                 ),
             ),
             rgb(job.style.cover.pigments["water"]),
@@ -173,7 +173,7 @@ def sea_layer(job: PaintJob, stack: PlateStack) -> PigmentLayer | None:
             gran=0.22,
             gran_gamma=job.gran_gamma,
             flow=job.flow,
-            blooms=job.bloom(sea_cov),
+            blooms=job.bloom(sea_cov, "sea"),
         ),
     )
     if job.style.wash.sea_variation:

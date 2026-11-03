@@ -478,7 +478,7 @@ def _nib_grid() -> np.ndarray:
             nib = NibStyle(label_pen_angle_deg=angle, label_pen_thin=thin, label_pen_width_px=2.0)
             setting = Setting(NIB_NAME, 50.0, anchor=(w / 2, 0.68 * ch), align="middle", wash=False)
             cell = out[y : y + ch, x : x + w]
-            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib, pool=0.15)
+            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib)
     return _labels(out, boxes, angles, thins)
 ```
 
@@ -582,7 +582,7 @@ def _lettering_grid() -> np.ndarray:
             nib = NibStyle(label_pen_width_px=1.8)
             seed = 3 * r + c + 1
             cell = out[y : y + ch, x : x + w]
-            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib, seed, pool=0.15)
+            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib, seed)
     return out
 ```
 
@@ -646,9 +646,7 @@ def main(out_dir: Path) -> Path:
     canvas2 = Canvas(0, 0, NIB_SCALE * W, NIB_SCALE * H, NIB_SCALE * W, NIB_SCALE * H)
     dark2 = np.zeros((NIB_SCALE * H, NIB_SCALE * W), np.float32)
     surface = NibSurface(canvas2, NIB_SCALE, dark2, GRAN_PX * NIB_SCALE)
-    groups = NibGroups(
-        NibStyle(), face, hand_style, BrushStyle(pen_pool_radius_frac=0.15), PaperStyle()
-    )
+    groups = NibGroups(NibStyle(), face, hand_style, BrushStyle(), PaperStyle())
     plate_path = nib_plate(marks, surface, groups, out_dir / f"{STEM}-plate.webp")
     if plate_path is None:
         raise RuntimeError("the hand wrote no marks")
