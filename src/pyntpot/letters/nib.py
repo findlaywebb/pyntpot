@@ -11,7 +11,8 @@ multiply can only darken. Everything on it is stroked through the same ink
 engine as the roads and the rivers and gated on the same paper, so the
 lettering is made of the painted ink and not printed over it. A broad nib held at
 a fixed angle draws its full width across itself and almost nothing along
-itself, so a glyph's width follows the angle between the stroke and the nib.
+itself, so a glyph's width follows the angle between the stroke and the nib
+(`letters.pen_profile`).
 
 `nib_plate` builds its own `Sheet` from the paper group and the surface, in one
 place. It does not decide what is written, where, or in which ink a class of
@@ -38,6 +39,7 @@ from pyntpot.ink.pad import InkPad
 from pyntpot.ink.sheet import Canvas, Sheet, rgb
 from pyntpot.ink.style import PaperStyle
 from pyntpot.ink.wash import WashOptions, wash
+from pyntpot.letters.pen_profile import pen_profile
 from pyntpot.letters.setting import Mark
 from pyntpot.letters.style import FaceStyle, NibGroups, NibStyle
 
@@ -56,18 +58,8 @@ MARK_WEIGHT = {
 #: A colour a mark may name directly, as opposed to one of the four ink tokens.
 _HEX = re.compile(r"#[0-9a-fA-F]{6}")
 
-#: Points a stroke's width profile is sampled at.
-_PROFILE_SAMPLES = 24
-
-#: How many boxes a stroke's direction is averaged through, spread over one
-#: window, so the average is weighted as a tent rather than a box.
-_TENT_TAPS = 8
-
 #: The fewest points a stroke can be run along: it needs two ends.
 _STROKE_ENDS = 2
-
-#: A stroke shorter than this, in render pixels, has no direction to take a width from.
-_MIN_LENGTH_PX = 1e-6
 
 #: The ink density above which a pixel counts as covered by the nib.
 _COVERED = 0.12
@@ -140,78 +132,6 @@ def nib_brushes(
         return b
 
     return make
-
-
-def _pen_profile(
-    pts: np.ndarray,
-    angle: float,
-    thin: float,
-    window: float,
-    samples: int = _PROFILE_SAMPLES,
-) -> np.ndarray:
-    """A width along one stroke, from the angle between it and the nib.
-
-    A broad nib held at a fixed angle draws its full width across itself and
-    almost nothing along itself. That single fact is most of what separates a
-    written letter from a plotted one, and it is why the same skeleton stamped
-    at one width reads as a machine.
-
-    The direction is the stroke's own, smoothed along it: a glyph's stroke
-    comes off a thinned skeleton and turns a pixel at a time, a staircase of
-    flats and diagonals, and read segment by segment a stroke near the nib's
-    angle swings between full width and a hairline stamp by stamp. The unit
-    tangent is averaged, weighted by length under a tent `window` wide at half
-    its height, centred on each sample and cut to the stroke at its ends, so a
-    corner turns the width through the angles between. So the width moves
-    continuously along the stroke and with its direction: turning a stroke by
-    an angle moves no sample by more than `thin` times it. The samples are
-    evenly spaced, none more than half a window from the next.
-
-    Args:
-        pts: The stroke in render pixels.
-        angle: The nib's angle in radians from the page's horizontal, in
-            render pixels with y down.
-        thin: How much of the width a stroke drawn straight along the nib loses.
-        window: How much of the stroke, in render pixels, its direction is
-            averaged over; the nib's own width.
-        samples: The fewest points the profile is sampled at.
-
-    Returns:
-        The multiplier at evenly spaced points from the stroke's start to end.
-    """
-    if len(pts) < _STROKE_ENDS:
-        return np.ones(_STROKE_ENDS, F32)
-    d = np.diff(pts, axis=0)
-    seg = np.hypot(d[:, 0], d[:, 1])
-    cum = np.concatenate([[0.0], np.cumsum(seg)])
-    total = float(cum[-1])
-    if total <= _MIN_LENGTH_PX:
-        return np.ones(_STROKE_ENDS, F32)
-    width = max(window, _MIN_LENGTH_PX)
-    at = np.linspace(0.0, total, max(samples, math.ceil(2.0 * total / width) + 1))
-    # A tent is a box of boxes: one box a window wide at each of `_TENT_TAPS`
-    # points spread over a window round the sample, their integrals summed.
-    taps = ((np.arange(_TENT_TAPS) + 0.5) / _TENT_TAPS - 0.5) * width
-    centre = at[:, None] + taps[None, :]
-    lo = np.clip(centre - width * 0.5, 0.0, total)
-    hi = np.clip(centre + width * 0.5, 0.0, total)
-    unit = d / np.maximum(seg, _MIN_LENGTH_PX)[:, None]
-    cos_sum = _integral(cum, seg * unit[:, 0], lo, hi).sum(axis=1)
-    sin_sum = _integral(cum, seg * unit[:, 1], lo, hi).sum(axis=1)
-    smooth = np.arctan2(sin_sum, cos_sum)
-    across = np.abs(np.sin(smooth - angle))
-    return ((1.0 - thin) + thin * across).astype(F32)
-
-
-def _integral(cum: np.ndarray, weighted: np.ndarray, lo: np.ndarray, hi: np.ndarray) -> np.ndarray:
-    """A per-segment value integrated over each span `[lo, hi]` of a stroke's length.
-
-    `weighted` is the value times each segment's length, so its running sum,
-    piecewise linear in the length, is read at each span's ends; an empty span
-    gives zero.
-    """
-    run = np.concatenate([[0.0], np.cumsum(weighted)])
-    return np.interp(hi, cum, run) - np.interp(lo, cum, run)
 
 
 def _sheet(surface: NibSurface, paper: PaperStyle) -> Sheet:
@@ -289,7 +209,7 @@ def _items(marks: Sequence[Mark], groups: NibGroups, scale: float) -> dict[str, 
             continue
         pen = brush(mark.role, mark.size)
         prof = (
-            _pen_profile(pts, angle + mark.pen, nib.label_pen_thin, pen.width)
+            pen_profile(pts, angle + mark.pen, nib.label_pen_thin, pen.width)
             if mark.role == "glyph"
             else None
         )

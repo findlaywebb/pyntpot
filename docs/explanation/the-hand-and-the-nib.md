@@ -64,7 +64,11 @@ The direction is the stroke's own, averaged along it over about the nib's width.
 comes off the thinned skeleton a pixel step at a time, flats and diagonals, and read step by
 step a stroke that runs close to the nib would swing between full width and a hairline from
 one stamp to the next. Averaged, it keeps one width along a straight run and turns through
-the widths between at a curve or a corner.
+the widths between at a curve or a corner. At a sharp corner the average points between the
+two legs, a direction neither has, so the width there is never read thinner than both
+legs: a V whose point lies along the nib keeps its legs' width at the point rather than
+pinching to a hairline. A closed stroke, an `o`, has no ends, and its width runs on round
+it.
 
 ![The word Keswick written twelve times in three rows of four. The columns turn the nib through four angles and the rows thin the line along the nib by none, about half and most. In the top row every stroke is one width. In the bottom row the strokes along the nib fall away to hairlines, and which strokes those are depends on the angle.](../images/explanation/nib-angles.webp)
 

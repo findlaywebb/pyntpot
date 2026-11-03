@@ -3,7 +3,7 @@
 GitHub issue: [#76](https://github.com/findlaywebb/pyntpot/issues/76)
 
 **What exists today.** The nib's angle is fixed to the page.
-`pyntpot.letters.nib._pen_profile` takes the stroke's direction, smoothed along
+`pyntpot.letters.pen_profile.pen_profile` takes the stroke's direction, smoothed along
 it over the nib's width, in render pixels and compares it with
 `radians(NibStyle.label_pen_angle_deg) + mark.pen`; both angles are measured from
 the page's horizontal (y down). For a flat block the writing line is the page's
@@ -23,7 +23,7 @@ look is kept, and the goldens do not move.
 
 **Why it is not a defect.** The page-fixed nib is the ported behaviour and the
 look the goldens record; the comment on `NibStyle.label_pen_angle_deg` and the
-`angle` argument of `_pen_profile` say what the code does. An earlier comment
+`angle` argument of `pen_profile` say what the code does. An earlier comment
 said "anticlockwise from the writing line", which is the turning nib; the
 maintainer kept the current look and recorded the turning nib as a candidate.
 
