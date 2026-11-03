@@ -107,3 +107,58 @@ class TestPenProfile:
         assert prof[0] == pytest.approx(0.962, abs=1e-3)
         assert prof[-1] == pytest.approx(prof[0], abs=1e-6)
         assert np.allclose(prof[:16], prof[16:32], atol=1e-5)
+
+    @pytest.mark.parametrize(
+        ("samples", "near"),
+        [
+            (61, [0.751, 0.747, 0.7242, 0.6729, 0.751, 0.751, 0.751, 0.751, 0.751]),
+            (25, [0.751, 0.751, 0.751, 0.751, 0.747, 0.751, 0.751, 0.751, 0.747]),
+        ],
+        ids=["one-px-apart", "two-and-a-half-px-apart"],
+    )
+    def test_the_corner_floor_reaches_half_a_window_either_side(
+        self, samples: int, near: list[float]
+    ) -> None:
+        """A V's floor is carried half a window (4 px) from its point, by as many samples as fit, and no further."""
+        pts = np.array([(-30.0, -30.0), (0.0, 0.0), (30.0, -30.0)])
+        prof = pen_profile(pts, 0.0, 0.85, 8.0, samples)
+        mid = samples // 2
+        assert prof[mid - 6 : mid + 3].tolist() == pytest.approx(near, abs=1e-4)
+        assert prof.tolist() == pytest.approx(prof[::-1].tolist(), abs=1e-6)
+
+    def test_a_closed_triangle_is_floored_both_ways_round(self) -> None:
+        """A closed triangle walked from its apex reads the same both ways round from it, its seam included."""
+        turn = math.radians(30.0)
+        apex, right, left = (
+            (0.0, 0.0),
+            (40.0 * math.sin(turn), -34.641),
+            (-40.0 * math.sin(turn), -34.641),
+        )
+        prof = pen_profile(np.array([apex, right, left, apex]), math.pi / 2, 0.85, 8.0, 61)
+        assert prof[0] == prof[-1] == pytest.approx(1.0, abs=1e-6)
+        assert prof[20] == pytest.approx(0.575, abs=1e-4)
+        assert prof.tolist() == pytest.approx(prof[::-1].tolist(), abs=1e-5)
+
+    @pytest.mark.parametrize(
+        ("window", "width"),
+        [(8.06, 0.751), (7.88, 0.6633)],
+        ids=["just-over-four-samples", "just-under-four-samples"],
+    )
+    def test_the_floor_reaches_as_many_whole_samples_as_half_a_window_spans(
+        self, window: float, width: float
+    ) -> None:
+        """Four px from a V's point, one sample a px, the floor holds when half the window spans four samples and not three."""
+        leg = 30.0 / math.sqrt(2.0)
+        pts = np.array([(-leg, -leg), (0.0, 0.0), (leg, -leg)])
+        prof = pen_profile(pts, 0.0, 0.85, window, 61)
+        assert prof[26] == pytest.approx(width, abs=1e-4)
+        assert prof[34] == pytest.approx(width, abs=1e-4)
+
+    def test_a_ring_started_just_past_a_corner_ends_where_it_starts(self) -> None:
+        """A closed V started 3.5 px past its pinched point carries the corner's floor over its seam to both ends alike."""
+        side = 30.0 * math.sin(math.pi / 4)
+        apex, right, left = (0.0, 0.0), (side, -side), (-side, -side)
+        start = (side * 3.5 / 30.0, -side * 3.5 / 30.0)
+        prof = pen_profile(np.array([start, right, left, apex, start]), 0.0, 0.85, 8.0, 61)
+        assert prof[0] == pytest.approx(0.7377, abs=1e-4)
+        assert prof[-1] == pytest.approx(prof[0], abs=1e-6)
