@@ -101,6 +101,9 @@ class CoverStyle:
     relief: bool = True
     #: Multiplies the relief's density, and the ceiling it is held to. 1.0 is the quiet relief.
     relief_strength: float = 1.0
+    #: Display pixels below which a painted cover patch takes its largest painted
+    #: neighbour's class; a patch nothing painted touches is kept. Zero keeps every patch.
+    min_patch_px: float = 0.0
     #: How dark a wash of each class goes, and how hard its edge pools.
     cover_cfg: dict[str, tuple[float, float]] = field(
         default_factory=lambda: {

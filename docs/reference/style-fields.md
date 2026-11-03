@@ -236,6 +236,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `land_cover` | boolean | `true` | Paint the cover classes. Off paints the pale single wash. |
 | `relief` | boolean | `true` | Paint the relief from the elevation grid. |
 | `relief_strength` | number | `1.0` | Multiplies the relief's density, and the ceiling the density is held to, so 2 paints the slopes twice as dark. |
+| `min_patch_px` | number | `0.0` | Display pixels below which a painted cover patch takes the class of its largest painted neighbour; a patch nothing painted touches, such as an island's wood, is kept. Zero keeps every patch. |
 | `cover_cfg` | table | table | Table of cover class to two numbers: how dark a wash of the class goes and how hard its edge pools. |
 | `pigments` | table | table | Table of pigment key to the colour a full-strength wash transmits. See [Pigments](pigments.md). |
 | `pale_base` | number | `0.5` | Density of the pale single wash. |
