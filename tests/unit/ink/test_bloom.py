@@ -5,9 +5,9 @@ import math
 import numpy as np
 import pytest
 
+from pyntpot.ink.bloom import Blooms, bloom, bloom_radius, highest
 from pyntpot.ink.keyed import uniform_at
 from pyntpot.ink.sheet import Sheet
-from pyntpot.ink.wash import Blooms, bloom, bloom_radius, highest
 
 #: Lots with ties at the cut and above it: the cases a bare partition gets wrong.
 TIED = np.array([0.5, -1.0, 0.5, 2.0, 0.5, -3.0, 2.0, 0.5])
@@ -68,13 +68,17 @@ class TestBloomLaid:
         bloom(dens, a, Sheet(60, 60, gran_px=6.0, seed=2), (5, 1, 0.17, 0.45, 0.45))
         assert not np.array_equal(dens, np.full((60, 60), 0.5, np.float32))
 
-    @pytest.mark.parametrize(("h", "laid"), [(4, False), (5, True)], ids=["4-rows", "5-rows"])
-    def test_a_box_under_five_pixels_is_skipped(self, h: int, laid: bool):
-        """A strip four rows tall has no room for a bloom's box; five rows has."""
-        a = np.ones((h, 200), np.float32)
-        dens = np.full((h, 200), 0.5, np.float32)
-        bloom(dens, a, Sheet(h, 200, gran_px=6.0, seed=2), (5, 2, 0.17, 0.45, 0.45))
-        assert (not np.array_equal(dens, np.full((h, 200), 0.5, np.float32))) is laid
+    @pytest.mark.parametrize(
+        ("h", "w", "laid"),
+        [(4, 200, False), (5, 200, True), (200, 4, False), (200, 5, True)],
+        ids=["4-rows", "5-rows", "4-columns", "5-columns"],
+    )
+    def test_a_box_under_five_pixels_is_skipped(self, h: int, w: int, laid: bool):
+        """A strip four pixels across has no room for a bloom's box; five has."""
+        a = np.ones((h, w), np.float32)
+        dens = np.full((h, w), 0.5, np.float32)
+        bloom(dens, a, Sheet(h, w, gran_px=6.0, seed=2), (5, 2, 0.17, 0.45, 0.45))
+        assert (not np.array_equal(dens, np.full((h, w), 0.5, np.float32))) is laid
 
 
 class TestBloomRadius:
@@ -83,7 +87,7 @@ class TestBloomRadius:
     def test_the_radius_is_the_pinned_step(self):
         """The root of the area times the share, taken to the nearest quarter octave."""
         assert bloom_radius(0.17, 10000) == 16.0
-        assert bloom_radius(0.17, 95871) == 53.81737057623773
+        assert bloom_radius(0.17, 95871) == 2.0**5.75
         assert bloom_radius(0.17, 2**20) == 181.01933598375618
         assert bloom_radius(0.17, 1) == 0.1767766952966369
 

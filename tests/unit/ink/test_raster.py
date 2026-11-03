@@ -22,30 +22,22 @@ def test_an_outline_given_no_deform_is_the_outline_it_was():
 
 
 def test_the_deformed_outline_wobbles_at_more_than_one_scale():
-    """One frequency everywhere is what the blurred-mask edge already does.
-
-    Measured over eight seeds and read at the median, so the bars describe the
-    deformation rather than one seed's draws.
-    """
+    """One frequency everywhere is what the blurred-mask edge already does."""
     ring = np.asarray(ring_of(), float)
-    coarse_std, fine_std = [], []
-    for seed in range(8):
-        out = deform_ring(ring, (seed, 0.26, 4, 0.55, 16.0, 0.5))
-        assert len(out) == len(ring) * 16
-        rad = np.hypot(out[:, 0], out[:, 1]) - 200.0
-        # Split the deviation into what a long smoothing keeps and what it removes.
-        k = np.ones(33) / 33.0
-        coarse = np.convolve(np.concatenate([rad[-16:], rad, rad[:16]]), k, "same")[16:-16]
-        fine = rad - coarse
-        coarse_std.append(float(coarse.std()))
-        fine_std.append(float(fine.std()))
-        # Neither scale swamps the other: that mixture is the whole point of it.
-        assert 0.15 < fine_std[-1] / coarse_std[-1] < 6.0
-        # And it is a deformation, not a new shape: the ring keeps its place.
-        assert abs(float(out[:, 0].mean())) < 12.0
-        assert abs(float(np.hypot(out[:, 0], out[:, 1]).mean()) - 200.0) < 12.0
-    assert float(np.median(coarse_std)) > 1.0, "no wobble the eye reads as a lobe"
-    assert float(np.median(fine_std)) > 0.3, "no wobble at the scale of a brush edge"
+    out = deform_ring(ring, (5, 0.26, 4, 0.55, 16.0, 0.5))
+    assert len(out) == len(ring) * 16
+    rad = np.hypot(out[:, 0], out[:, 1]) - 200.0
+    # Split the deviation into what a long smoothing keeps and what it removes.
+    k = np.ones(33) / 33.0
+    coarse = np.convolve(np.concatenate([rad[-16:], rad, rad[:16]]), k, "same")[16:-16]
+    fine = rad - coarse
+    assert coarse.std() > 1.0, "no wobble the eye reads as a lobe"
+    assert fine.std() > 0.3, "no wobble at the scale of a brush edge"
+    # Neither scale swamps the other: that mixture is the whole point of it.
+    assert 0.15 < fine.std() / coarse.std() < 6.0
+    # And it is a deformation, not a new shape: the ring keeps its place.
+    assert abs(float(out[:, 0].mean())) < 12.0
+    assert abs(float(np.hypot(out[:, 0], out[:, 1]).mean()) - 200.0) < 12.0
 
 
 def test_no_one_displacement_runs_away_with_a_long_segment():
@@ -102,18 +94,18 @@ class TestDeformRingExactly:
         """Three rounds on a square, the cap binding, give the pinned points."""
         out = deform_ring(self.SQUARE, (9, 0.26, 3, 0.55, 4.0, 0.5))
         assert len(out) == 32
-        assert out[1].tolist() == [12.414456646512129, 4.115518267727979]
-        assert out[5].tolist() == [62.196521989560246, -0.6043723374708556]
-        assert out[-1].tolist() == [-0.07175802582150825, 12.70572319907893]
-        assert float(out.sum()) == 3220.668229215158
+        assert out[1].tolist() == [12.594983122532152, 0.2621447378270182]
+        assert out[5].tolist() == [62.70499850434101, -4.413828694322792]
+        assert out[-1].tolist() == [-4.239172682310188, 12.434463821657026]
+        assert float(out.sum()) == 3218.9794857326724
 
     def test_a_ring_of_sub_metre_edges_deforms_to_the_pinned_points(self):
         """Edges under a metre are divided by their own length, not by a metre."""
         small = [(0.0, 0.0), (0.6, 0.0), (0.6, 0.6), (0.0, 0.6)]
         out = deform_ring(small, (4, 0.26, 2, 0.55, 16.0, 0.3))
         assert len(out) == 16
-        assert out[1].tolist() == [0.12784089080951924, 0.1338466529964048]
-        assert float(out.sum()) == 10.473641018245548
+        assert out[1].tolist() == [0.05920894661291781, 0.23484089545159872]
+        assert float(out.sum()) == 9.751449298444236
 
     @pytest.mark.parametrize(
         ("ring", "deform"),

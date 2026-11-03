@@ -10,7 +10,7 @@ strokes.
 Only the dither generator is shared: the wood and the plates draw from it in one
 fixed order and a fixed amount for a given card, so its state at any point of a
 painting is the same on every run. Everything laid item by item draws from a
-generator keyed by the item instead (`ink.keyed`): each cover ring by what it encloses, each
+generator keyed by the item instead (`ink.keyed`): each cover ring by its points, each
 stroke by its points, each wash's blooms by the wash's name (`PaintJob.bloom`) and
 their centres. So a change to one item, such as a coast moved by a sub-pixel, moves only
 that item's pixels.
@@ -33,11 +33,11 @@ from typing import Self
 
 import numpy as np
 
+from pyntpot.ink.bloom import Blooms
 from pyntpot.ink.keyed import keyed_rng
 from pyntpot.ink.noise import F32
 from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.sheet import Canvas, Sheet
-from pyntpot.ink.wash import Blooms
 from pyntpot.maps.basemap import Basemap, Layers, Line
 from pyntpot.maps.style import Style
 

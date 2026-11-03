@@ -5,15 +5,16 @@ import math
 import numpy as np
 import pytest
 
+from pyntpot.ink.bloom import bloom
 from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.keyed import keyed_rng, line_key, ring_key, uniform_at
+from pyntpot.ink.keyed import keyed_rng, line_key, uniform_at
 from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.pad import InkPad
 from pyntpot.ink.raster import deform_rings
 from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.stamp import stamp
-from pyntpot.ink.wash import WashOptions, bloom, wash
+from pyntpot.ink.wash import WashOptions, wash
 
 #: `deform_rings` settings with the displacement on: seed, amount, rounds, decay, cap, stop.
 DEFORM = (9, 0.26, 4, 0.55, 16.0, 0.5)
@@ -86,80 +87,6 @@ class TestKeys:
         assert np.array_equal(uniform_at(3, idx[::-7]), whole[::-7])
         assert float(whole.min()) > 0.0 and float(whole.max()) < 1.0
         assert abs(float(whole.mean()) - 0.5) < 0.02
-
-
-class TestRingKeys:
-    """What names a closed ring: its centroid and root area, not where it starts."""
-
-    def test_a_ring_is_named_by_what_it_encloses(self):
-        """Closing it, starting it elsewhere or resampling an edge keeps the key."""
-        square = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]
-        key = ring_key(square, 1.0)
-        assert key == (1159970523152480690, 3068994725590552575)
-        assert ring_key([*square, square[0]], 1.0) == key
-        assert ring_key(square[2:] + square[:2], 1.0) == key
-        assert ring_key([square[0], (5.0, 0.0), *square[1:]], 1.0) == key
-
-    def test_a_ring_that_moves_or_grows_is_renamed(self):
-        """A shift of a cell, a larger ring or the other winding each change the key."""
-        ring = np.array(circle(40.0, 30.0, 25.0))
-        key = ring_key(ring, 1.0)
-        assert ring_key(ring + np.array([3.0, 0.0]), 1.0) != key
-        assert ring_key(ring + np.array([0.0, 3.0]), 1.0) != key
-        assert ring_key((ring - 40.0) * 1.2 + 40.0, 1.0) != key
-        assert ring_key(ring[::-1], 1.0) != key
-        assert ring_key(ring + 0.01, 1.0) == key
-
-    def test_a_ring_with_no_area_is_named_by_its_mean(self):
-        """Points on one line have no centroid, so the mean names them; nothing is (0, 0)."""
-        flat = [(0.0, 5.0), (4.0, 5.0), (8.0, 5.0)]
-        assert ring_key(flat, 1.0) == ring_key([(4.0, 5.0), (8.0, 5.0), (0.0, 5.0)], 1.0)
-        assert ring_key(flat, 1.0) != ring_key([(0.0, 9.0), (4.0, 9.0), (8.0, 9.0)], 1.0)
-        assert ring_key(np.zeros((0, 2)), 1.0) == (0, 0)
-
-    def test_a_sliver_with_area_is_centred_and_one_with_none_is_averaged(self):
-        """The cut between a ring with area and one without sits near no area at all.
-
-        A trapezoid 1000 m long and a hundred-thousandth of a metre wide still has area,
-        so its centroid names it; the same outline a ten-millionth wide is a line in all
-        but rounding, and its points' mean names it, as the exact line's does.
-        """
-        line = [(3000.0, 0.0), (3100.0, 0.0), (4000.0, 0.0), (3000.0, 0.0)]
-
-        def trapezoid(width: float) -> list[tuple[float, float]]:
-            return [(3000.0, 0.0), (3100.0, 0.0), (4000.0, width), (3000.0, width)]
-
-        assert ring_key(trapezoid(1e-7), 1.0) == ring_key(line, 1.0)
-        assert ring_key(trapezoid(1e-5), 1.0) != ring_key(line, 1.0)
-
-    def test_the_grid_is_the_cell_the_words_are_rounded_to(self):
-        """A shift inside a coarse cell keeps the key; the same shift across a fine one does not."""
-        square = np.array([(15.0, 15.0), (25.0, 15.0), (25.0, 25.0), (15.0, 25.0)])
-        assert ring_key(square + 3.0, 10.0) == ring_key(square, 10.0)
-        assert ring_key(square + 0.4, 0.5) != ring_key(square, 0.5)
-
-    def test_a_small_nudge_renames_a_ring_less_often_than_its_points_would(self):
-        """Points nudged by under 0.05 m rename far fewer rings than `line_key` would."""
-        rng = np.random.default_rng(0)
-        by_ring = by_line = 0
-        for _ in range(400):
-            n = int(rng.integers(8, 300))
-            angle = np.sort(rng.uniform(0.0, 2 * math.pi, n))
-            radius = rng.uniform(20.0, 800.0) * (1 + 0.3 * rng.uniform(-1, 1, n))
-            ring = np.stack(
-                [
-                    rng.uniform(-5e3, 5e3) + radius * np.cos(angle),
-                    rng.uniform(-5e3, 5e3) + radius * np.sin(angle),
-                ],
-                axis=1,
-            )
-            ring = np.vstack([ring, ring[:1]])
-            nudged = ring + rng.uniform(-0.05, 0.05, ring.shape)
-            nudged[-1] = nudged[0]
-            by_ring += ring_key(ring, 1.0) != ring_key(nudged, 1.0)
-            by_line += line_key(ring, 1.0) != line_key(nudged, 1.0)
-        assert by_ring < 30
-        assert by_ring * 4 < by_line
 
 
 class TestDecoupled:

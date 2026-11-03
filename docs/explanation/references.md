@@ -118,7 +118,7 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 - Design input: the canonical source above.
 - Design input: Deegan et al. Coffee-ring drying, named in the design record without a title. [named-only: deegan-coffee-ring; 2026-10-07]
 - Design input: A 2019 arXiv study of watercolour drying patterns, named in the design record without a title. [named-only: arxiv-watercolour-drying; 2026-10-07]
-- Implemented in: `pyntpot.ink.wash.bloom`
+- Implemented in: `pyntpot.ink.bloom.bloom`
 
 ## `granulation` granulation following the paper
 

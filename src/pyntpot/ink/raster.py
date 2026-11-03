@@ -11,8 +11,7 @@ as pixels or as deformed metres.
 Invariants: `fill_cov` returns `float32` in 0 to 1 at the canvas's own size; `deform_rings`
 with no settings returns the rings it was given, unchanged; a ring's deformation is a pure
 function of the ring and the settings, because each ring draws from a generator keyed by
-its own centroid and area (`ink.keyed.ring_key`), so deforming one ring differently moves
-no other ring.
+its own points (`ink.keyed`), so deforming one ring differently moves no other ring.
 """
 
 from typing import Any
@@ -20,7 +19,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-from pyntpot.ink.keyed import keyed_rng, ring_key
+from pyntpot.ink.keyed import keyed_rng, line_key
 from pyntpot.ink.noise import F32, chamfer_distance
 from pyntpot.ink.polyline import Pt
 from pyntpot.ink.sheet import Canvas
@@ -30,7 +29,7 @@ _MIN_RING = 3
 _POINT_DIMS = 2
 #: Deformation stops doubling a ring that has grown past this many points.
 _MAX_RING_POINTS = 24000
-#: A ring is named for its generator by its centroid and root area to this many metres.
+#: A ring is named for its generator by its points rounded to this many metres.
 _RING_KEY_M = 1.0
 
 
@@ -78,8 +77,8 @@ def deform_ring(ring: npt.ArrayLike, deform: Deform) -> np.ndarray:
     what makes one stretch of a wood loose and the next stretch tight.
 
     The displacements are drawn from the ring's own generator, keyed by the seed and
-    the ring's centroid and root area rounded to the metre (`ink.keyed.ring_key`), so
-    the result is the same whichever rings are deformed before it.
+    the ring's points rounded to the metre (`ink.keyed.line_key`), so the result is the
+    same whichever rings are deformed before it.
 
     Source: `midpoint-displacement` in docs/explanation/references.md.
 
@@ -99,7 +98,7 @@ def deform_ring(ring: npt.ArrayLike, deform: Deform) -> np.ndarray:
     p = np.asarray(ring, dtype=np.float64)
     if p.ndim != _POINT_DIMS or len(p) < _MIN_RING:
         return p
-    rng = keyed_rng(seed, *ring_key(p, _RING_KEY_M))
+    rng = keyed_rng(seed, *line_key(p, _RING_KEY_M))
     var = np.full(len(p), max(amount, 0.0))
     for _ in range(max(int(depth), 0)):
         n = len(p)
