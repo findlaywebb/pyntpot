@@ -207,8 +207,31 @@ golden-moving sessions (D, H, I, J) have landed. Size M/L.
 4. **H** and **I** one after the other, never together.
 5. **K** last.
 
-## Before any of this
+## Filed
 
-Each new defect and feature above needs its note in `docs/issues/` or `docs/features/` and a
-GitHub issue, per CLAUDE.md. Proposed: P1 to P7 as defect notes, N1 to N11 as feature notes,
-with N4 and N6 written as extensions to #73/#78 and #68 rather than new issues.
+Every new item has its note and GitHub issue (2026-11-03).
+
+| Id | Issue | Note |
+|---|---|---|
+| P1 | #158 | `docs/issues/maps-theme-missing-keys-take-dataclass-defaults.md` |
+| P2 | #159 | `docs/issues/maps-route-ink-leaves-marker-labels-pink.md` |
+| P3 | #160 | `docs/issues/maps-elevation-credit-always-srtm.md` |
+| P4 | #161 | `docs/issues/maps-annotations-roads-ignored.md` |
+| P5 | #162 | `docs/issues/docs-gallery-nib-angles-caption-wrong.md` |
+| P6 | #163 | `docs/issues/docs-style-fields-imports-and-reference-checks.md` |
+| P7 | #164 | `docs/issues/maps-public-functions-shadow-modules.md` |
+| N1 | #165 | `docs/features/letters-lettering-over-an-image.md` |
+| N2 | #166 | `docs/features/ink-blank-paper-by-size.md` |
+| N3 | #167 | `docs/features/maps-fetch-hands-back-the-plates-dir.md` |
+| N4 | #168 | `docs/features/maps-public-signature-types.md` (the remainder after #73 and #78) |
+| N5 | #169 | `docs/features/docs-field-docs-that-render.md` |
+| N6 | #68 | added to `docs/features/cli-wider-commands.md` |
+| N7 | #170 | `docs/features/docs-labelled-grid-helper.md` |
+| N8 | #171 | `docs/features/ink-stroke-density-profile.md` |
+| N9 | #172 | `docs/features/docs-tutorials-lead-on.md` |
+| N10 | #173 | `docs/features/docs-missing-how-tos.md` |
+| N11 | #174 | `docs/features/docs-examples-housekeeping.md` |
+
+Counts in the notes were re-measured against the code when filed and supersede the review
+figures above where they differ (for example 35 `paper_plate` calls, not 33; `nib_plate`
+writes lossless WebP by default, not lossy).

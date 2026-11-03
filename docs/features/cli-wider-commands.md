@@ -16,6 +16,25 @@ example:
 - lettering a word or a place card;
 - painting a drawing from an SVG file, once the SVG reader exists.
 
+**Options on `pyntpot map`.** The one command also lacks options the how-tos need. Its
+flags today are `-o`, `--cache`, `--contact`, `--style`, `--margin-m` and
+`--no-attribution` (`maps/cli.py`), and three guides say outright that the command line
+cannot do their task (`change-the-route-ink.md`, `letter-your-own-landmarks.md`,
+`work-offline-and-reuse-the-cache.md`). Each missing option is a thin call into the
+existing API:
+
+- `--route-colour` and `--route-width`, through `Style.with_route_ink`;
+- `--landmarks FILE`, reading the table shape `examples/places.toml` already uses;
+- `--size`, the card's display width, as `examples/place_card.py --size` does;
+- `--offline`, building the providers with a budget of 0 so a cache miss fails rather than
+  going online;
+- defaults in `--help`: it shows neither `--margin-m`'s 1500 nor that land cover is
+  fetched at no less than 2600;
+- errors without tracebacks: `main` catches nothing, so a missing GPX file prints a
+  Python traceback ending in `FileNotFoundError` and exits 1. A short
+  `pyntpot map: error: <message>` for a missing file, a bad GPX or theme, and a
+  `FetchError` would let the command-line guide list messages, not exception classes.
+
 **Why it is not a defect.** At 0.1 the command line covers the main use, a route map,
 and the rest is shown as Python in the docs (maintainer, 2026-10-24, P7 feedback
 round 1: out of scope for P7).
