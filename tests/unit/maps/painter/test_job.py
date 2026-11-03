@@ -29,20 +29,16 @@ class TestBegin:
         assert job.rim_cov == 45.0
 
     def test_the_same_inputs_seed_the_same_generators(self, tmp_path):
-        """Two jobs over one style draw the same first numbers from each shared generator."""
+        """Two jobs over one style draw the same first numbers from the shared generator."""
         style = tiny_style(wash={"blooms": True})
         one, two = tiny_job(tmp_path, style), tiny_job(tmp_path, style)
-        assert one.bloom_rng is not None and two.bloom_rng is not None
-        assert one.bloom_rng.random() == two.bloom_rng.random()
         assert one.dither_rng.random() == two.dither_rng.random()
-        assert one.ink_rng.random() == two.ink_rng.random()
-        assert one.pen_rng.random() != one.ink_rng.random()
+        assert one.pen_seed == style.brush.ink_seed + 1
 
-    def test_blooms_off_leaves_no_bloom_generator(self, tmp_path):
-        """A style with blooms off has no generator and no bloom argument."""
+    def test_blooms_off_leaves_no_bloom_argument(self, tmp_path):
+        """A style with blooms off gives no wash a bloom argument."""
         job = tiny_job(tmp_path, tiny_style(wash={"blooms": False}))
-        assert job.bloom_rng is None
-        assert job.bloom(np.ones((4, 4), np.float32)) is None
+        assert job.bloom(np.ones((4, 4), np.float32), "wood") is None
 
 
 class TestBloom:
@@ -51,11 +47,21 @@ class TestBloom:
     def test_a_large_wash_gets_blooms_and_an_empty_one_none(self, tmp_path):
         """The count follows the wash's area, and a wash with no area has none."""
         job = tiny_job(tmp_path, tiny_style(wash={"blooms": True, "bloom_density": 1.0}))
-        big = job.bloom(np.ones((120, 160), np.float32))
+        big = job.bloom(np.ones((120, 160), np.float32), "wood")
         assert big is not None
-        assert big[0] is job.bloom_rng
         assert big[1] >= 1
-        assert job.bloom(np.zeros((120, 160), np.float32)) is None
+        assert job.bloom(np.zeros((120, 160), np.float32), "wood") is None
+
+    def test_each_wash_is_seeded_by_its_name_alone(self, tmp_path):
+        """Two washes of one name share a seed on any job; two names never do."""
+        style = tiny_style(wash={"blooms": True, "bloom_density": 1.0})
+        cov = np.ones((120, 160), np.float32)
+        one, two = tiny_job(tmp_path, style), tiny_job(tmp_path, style)
+        wood, lake = one.bloom(cov, "wood"), one.bloom(cov, "lake")
+        again = two.bloom(cov[:60], "wood")
+        assert wood is not None and lake is not None and again is not None
+        assert wood[0] == again[0]
+        assert wood[0] != lake[0]
 
 
 class TestTransparency:

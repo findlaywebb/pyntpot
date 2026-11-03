@@ -170,6 +170,29 @@ class TestMarks:
         washed = _plate([Mark(STROKE)], tmp_path / "a.webp")
         assert _plate([Mark(STROKE, wash=False)], tmp_path / "b.webp") != washed
 
+    def test_a_washed_mark_beside_an_unwashed_one_keeps_its_own_wash(self, tmp_path: Path) -> None:
+        """In one ink, the washed mark's wash is laid as when every mark is washed.
+
+        The washed marks are laid again on their own pad for the wash, from the same
+        label seed, so the wash under them matches the all-washed plate there, and the
+        unwashed mark far off reads as when no mark is washed.
+        """
+        top = [(8.0, 8.0), (30.0, 10.0), (52.0, 8.0)]
+        low = [(8.0, 120.0), (30.0, 122.0), (52.0, 120.0)]
+        surface = _surface(64, 140, 1.0)
+
+        def alpha(marks: list[Mark], name: str) -> np.ndarray:
+            written = nib_plate(marks, surface, GROUPS, tmp_path / name)
+            assert written is not None
+            return np.asarray(Image.open(written).convert("RGBA"), np.int16)[..., 3]
+
+        mixed = alpha([Mark(top), Mark(low, wash=False)], "mixed.webp")
+        washed = alpha([Mark(top), Mark(low)], "washed.webp")
+        bare = alpha([Mark(top, wash=False), Mark(low, wash=False)], "bare.webp")
+        assert not np.array_equal(washed[:40], bare[:40]), "the wash shows under the top mark"
+        assert int(np.abs(mixed[:40] - washed[:40]).max()) <= 1
+        assert int(np.abs(mixed[90:] - bare[90:]).max()) <= 1
+
 
 #: The brush the map paints its labels with: organic, so the bristles drift on a lattice.
 ORGANIC = BrushStyle(brush_organic=True, pen_starve=True, stroke_smooth=True)
