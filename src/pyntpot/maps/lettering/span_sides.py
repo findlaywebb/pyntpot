@@ -17,7 +17,7 @@ import logging
 import math
 from typing import Any
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import Span
 from pyntpot.maps.lettering.span_clear import SPAN_CLEAR_CAPS, clear_of_route
@@ -111,7 +111,7 @@ SPAN_CURVE_WEIGHT = 0.08
 SPAN_CURVE_SCALE_CAPS = 1.5
 
 
-def route_turn(line: list[Pt]) -> tuple[float, float]:
+def route_turn(line: list[Point]) -> tuple[float, float]:
     """How far a polyline turns, net and gross, in degrees.
 
     Signed the way a turn is signed in display pixels, where y runs down:
@@ -140,7 +140,7 @@ def route_turn(line: list[Pt]) -> tuple[float, float]:
     return net, gross
 
 
-def bend_strength(sub: list[Pt], scale_px: float) -> float:
+def bend_strength(sub: list[Point], scale_px: float) -> float:
     """How much of an outside a stretch has, from 0 to 1.
 
     Zero when the stretch is too straight for "the outside" to name anything,
@@ -173,7 +173,7 @@ def bend_strength(sub: list[Pt], scale_px: float) -> float:
     return min(max(ramp, 0.0), 1.0)
 
 
-def _outward(sub: list[Pt]) -> tuple[Pt, Pt]:
+def _outward(sub: list[Point]) -> tuple[Point, Point]:
     """The middle of a stretch's chord, and the unit vector out of its bend.
 
     The chord is the widest pair of points and not the two ends, because an
@@ -199,14 +199,16 @@ def _outward(sub: list[Pt]) -> tuple[Pt, Pt]:
     return middle, ((cx / run, cy / run) if run > _ZERO_LENGTH else (0.0, 0.0))
 
 
-def _mark_broken(line: list[Pt], route_px: list[Pt], clear_px: float) -> bool:
+def _mark_broken(line: list[Point], route_px: list[Point], clear_px: float) -> bool:
     """Whether a drawn mark failed as a mark rather than merely read worse."""
     if len(line) < _FEWEST_FOR_A_SEGMENT:
         return True
     return not clear_of_route(line, route_px, clear_px)
 
 
-def _convex_side(span: Span, route_px: list[Pt], cap_px: float) -> tuple[int, dict[int, list[Pt]]]:
+def _convex_side(
+    span: Span, route_px: list[Point], cap_px: float
+) -> tuple[int, dict[int, list[Point]]]:
     """Which side draws the bracket on the outside of the bend, by measurement.
 
     The mark is drawn both ways and the two are compared, rather than a side
@@ -249,7 +251,7 @@ def _convex_side(span: Span, route_px: list[Pt], cap_px: float) -> tuple[int, di
     return (1 if reach[1] > reach[-1] else -1), marks
 
 
-def curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_px: float) -> int:
+def curved_side(span: Span, route_px: list[Point], base: int, margin: float, cap_px: float) -> int:
     """The side the bracket goes on once the bend has had its say.
 
     A weighted term and never an override. The free-paper choice arrives with
@@ -313,7 +315,7 @@ def curved_side(span: Span, route_px: list[Pt], base: int, margin: float, cap_px
 
 
 def freer_side(
-    span: Span, route_px: list[Pt], dark: dict[str, Any], card: Card, cap_px: float
+    span: Span, route_px: list[Point], dark: dict[str, Any], card: Card, cap_px: float
 ) -> tuple[int, float]:
     """Which side of its own extent has the more free paper, and by how much.
 

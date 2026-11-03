@@ -12,7 +12,7 @@ past either end of a line is the end.
 
 import math
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 #: Past this much turning across the run, text is not set along a line; a
 #: span's name has its own limit, `SPAN_MAX_TURN_DEG`.
@@ -24,7 +24,7 @@ MAX_TURN_DEG = 62.0
 MAX_BOW_FRAC = 0.09
 
 
-def line_window(line: list[Pt], start: int, want: float) -> list[Pt] | None:
+def line_window(line: list[Point], start: int, want: float) -> list[Point] | None:
     """The run of a line from one point that is `want` long, or None."""
     out = [line[start]]
     run = 0.0
@@ -36,7 +36,7 @@ def line_window(line: list[Pt], start: int, want: float) -> list[Pt] | None:
     return None
 
 
-def turning(pts: list[Pt]) -> float:
+def turning(pts: list[Point]) -> float:
     """Total turning along a polyline, in degrees.
 
     The test that decides whether text can be set along something. Curvature at
@@ -51,14 +51,14 @@ def turning(pts: list[Pt]) -> float:
     return math.degrees(total)
 
 
-def line_bow(pts: list[Pt]) -> float:
+def line_bow(pts: list[Point]) -> float:
     """How far a run wanders off the straight line between its own ends."""
     (ax, ay), (bx, by) = pts[0], pts[-1]
     run = math.hypot(bx - ax, by - ay) or 1.0
     return max(abs((bx - ax) * (ay - y) - (ax - x) * (by - ay)) / run for x, y in pts)
 
 
-def on_line(line: list[Pt], cum: list[float], at: float) -> tuple[Pt, float]:
+def on_line(line: list[Point], cum: list[float], at: float) -> tuple[Point, float]:
     """The point at an arc length along a line, and the tangent's angle there."""
     at = min(max(at, 0.0), cum[-1])
     i = min(_bisect(cum, at), len(line) - 2)

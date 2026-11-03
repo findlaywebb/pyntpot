@@ -14,8 +14,8 @@ defended are the pixels the reader sees.
 import itertools
 import math
 
-from pyntpot.ink.polyline import Pt, cumulative_length
-from pyntpot.maps.lettering.label import Box, Label
+from pyntpot.ink.polyline import Box, Point, cumulative_length
+from pyntpot.maps.lettering.label import Label
 from pyntpot.maps.lettering.placement_window import on_line
 
 #: The fewest points that make a segment.
@@ -50,7 +50,7 @@ MAX_LOCAL_TILT_DEG = 58.0
 TILT_EXEMPT_KINDS = ("river",)
 
 
-def reading(window: list[Pt]) -> list[Pt]:
+def reading(window: list[Point]) -> list[Point]:
     """The window turned so the name reads the more legible way along it.
 
     A run whose text would go right to left is written along the same line the
@@ -163,7 +163,7 @@ def lift_middle(lb: Label, side: float) -> float:
     return lift_baseline(lb, side) + lb.size * (INK_ASCENT_CAPS - INK_DESCENT_CAPS) / 2
 
 
-def offset_line(line: list[Pt], lift: float) -> list[Pt]:
+def offset_line(line: list[Point], lift: float) -> list[Point]:
     """A polyline pushed off itself by `lift`, on the normal at each point.
 
     Signed: positive is the upper side in display pixels, where y runs down. This
@@ -172,7 +172,7 @@ def offset_line(line: list[Pt], lift: float) -> list[Pt]:
     """
     if len(line) < _FEWEST_FOR_A_SEGMENT or abs(lift) < _ZERO_LENGTH:
         return list(line)
-    out: list[Pt] = []
+    out: list[Point] = []
     for i, (x, y) in enumerate(line):
         a = line[max(i - 1, 0)]
         b = line[min(i + 1, len(line) - 1)]
@@ -182,7 +182,7 @@ def offset_line(line: list[Pt], lift: float) -> list[Pt]:
     return out
 
 
-def curved_boxes(window: list[Pt], lb: Label, th: float, side: float | None = None) -> list[Box]:
+def curved_boxes(window: list[Point], lb: Label, th: float, side: float | None = None) -> list[Box]:
     """One small box every few characters of a name set along a line.
 
     A curved name's real extent is a ribbon, and the placer works in rectangles,
@@ -211,7 +211,7 @@ def curved_boxes(window: list[Pt], lb: Label, th: float, side: float | None = No
     return out
 
 
-def line_tilt(line: list[Pt]) -> float:
+def line_tilt(line: list[Point]) -> float:
     """How far a run leaves the horizontal, in degrees, ignoring its direction.
 
     A name set down the map is read by tilting the head, which is a worse
@@ -223,7 +223,7 @@ def line_tilt(line: list[Pt]) -> float:
     return min(ang, 180.0 - ang)
 
 
-def tilt_max(line: list[Pt]) -> float:
+def tilt_max(line: list[Point]) -> float:
     """The steepest single piece of a run, which is what one glyph sits on."""
     worst = 0.0
     for a, b in itertools.pairwise(line):

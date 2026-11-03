@@ -33,7 +33,7 @@ from dataclasses import dataclass, replace
 from functools import partial
 from pathlib import Path
 
-from pyntpot.ink.polyline import Pt, cumulative_length
+from pyntpot.ink.polyline import Point, cumulative_length
 from pyntpot.ink.sheet import Canvas
 from pyntpot.letters import nib
 from pyntpot.letters.style import NibGroups
@@ -141,7 +141,7 @@ def letter(
 def _ground(
     basemap: Basemap,
     lines: NamedLines,
-    strands: list[Pt],
+    strands: list[Point],
     annotations: Annotations | None,
     style: Style,
 ) -> list[Label]:
@@ -184,7 +184,7 @@ def _anchored(basemap: Basemap, annotations: Annotations | None, style: Style) -
 
 
 def _spans(
-    plates: Plates, basemap: Basemap, annotations: Annotations | None, strands: list[Pt]
+    plates: Plates, basemap: Basemap, annotations: Annotations | None, strands: list[Point]
 ) -> list[Span]:
     """The caller's span requests resolved onto the strands' arc length and the track's times."""
     times = list(basemap.track_time) if basemap.track_time is not None else []
@@ -195,7 +195,7 @@ def draw_plate(
     plates: Plates,
     placed: list[Label],
     spans: list[Span],
-    route_px: list[Pt],
+    route_px: list[Point],
     style: Style,
     route: str | None = None,
 ) -> Path | None:

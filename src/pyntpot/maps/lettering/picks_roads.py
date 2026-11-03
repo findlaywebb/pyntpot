@@ -13,7 +13,7 @@ track was never on is not lettered.
 import math
 
 from pyntpot.ink.chains import joined
-from pyntpot.ink.polyline import Pt, length
+from pyntpot.ink.polyline import Point, length
 from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.card import Card
@@ -45,7 +45,7 @@ def pick_roads(
     basemap: Basemap,
     lines: NamedLines,
     card: Card,
-    route_px: list[Pt],
+    route_px: list[Point],
     budget: int = ROAD_MAX,
 ) -> list[Label]:
     """Which named roads the map numbers, set along their own tarmac.
@@ -77,7 +77,7 @@ def pick_roads(
     """
     geom = lines.get("roads") or []
     thin = route_px[::4] or route_px
-    pieces: dict[str, list[list[Pt]]] = {}
+    pieces: dict[str, list[list[Point]]] = {}
     widths: dict[str, float] = {}
     for entry in geom:
         name = str(entry.get("n") or "")
@@ -92,7 +92,7 @@ def pick_roads(
             )
     size = DEFAULT_LINE_PX * 0.7
     shortest = road_min_px(size)
-    best: dict[str, tuple[float, list[Pt]]] = {}
+    best: dict[str, tuple[float, list[Point]]] = {}
     for key, parts in pieces.items():
         line = max(joined(parts), key=length)
         if length(line) < shortest:

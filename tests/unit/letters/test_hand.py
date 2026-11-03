@@ -4,7 +4,7 @@ import dataclasses
 
 import pytest
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.letters.font import OutlineFont
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.setting import Align, Mark, Setting
@@ -22,7 +22,7 @@ def hand() -> Hand:
     return Hand(FaceStyle(), HandStyle())
 
 
-def _points(marks: list[Mark]) -> list[Pt]:
+def _points(marks: list[Mark]) -> list[Point]:
     """Every point of every mark, in the order written."""
     return [pt for mark in marks for pt in mark.pts]
 

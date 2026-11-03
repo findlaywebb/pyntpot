@@ -14,9 +14,10 @@ whose point is off the card, or whose cheapest seat is off the paper, raises `Va
 naming it; a note is seated against the boxes already taken and the notes seated before it.
 """
 
+from pyntpot.ink.polyline import Box
 from pyntpot.maps.annotations import Annotations
 from pyntpot.maps.basemap import Basemap
-from pyntpot.maps.lettering.label import Box, Label, Measure
+from pyntpot.maps.lettering.label import Label, Measure
 from pyntpot.maps.lettering.label_sizing import block_size, wrap_forms
 from pyntpot.maps.lettering.placement_costs import Backdrop, Terms, box_on_paper
 from pyntpot.maps.lettering.placement_flat import best_flat

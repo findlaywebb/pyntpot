@@ -3,7 +3,7 @@
 from typing import Any
 
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps.basemap_strokes import (
     STUB_FLOOR_PX,
     Frame,
@@ -24,20 +24,20 @@ FRAME = Frame(
     brush=BrushStyle(),
 )
 #: A long street, west to east along y = 0, and a second one along y = 2 * SHORT_M.
-MAIN: list[Pt] = [(-1000.0, 0.0), (1000.0, 0.0)]
-PARALLEL: list[Pt] = [(-1000.0, 2 * SHORT_M), (1000.0, 2 * SHORT_M)]
+MAIN: list[Point] = [(-1000.0, 0.0), (1000.0, 0.0)]
+PARALLEL: list[Point] = [(-1000.0, 2 * SHORT_M), (1000.0, 2 * SHORT_M)]
 #: A short piece off the main street, ending on nothing.
-SPUR: list[Pt] = [(0.0, 0.0), (0.0, SHORT_M)]
+SPUR: list[Point] = [(0.0, 0.0), (0.0, SHORT_M)]
 #: A short piece from the main street to the parallel one.
-LINK: list[Pt] = [(300.0, 0.0), (300.0, 2 * SHORT_M)]
+LINK: list[Point] = [(300.0, 0.0), (300.0, 2 * SHORT_M)]
 
 
-def _road(line: list[Pt], highway: str, name: str, cls: str = "minor") -> dict[str, Any]:
+def _road(line: list[Point], highway: str, name: str, cls: str = "minor") -> dict[str, Any]:
     """One road row as the vector map carries it."""
     return {"c": cls, "k": highway, "n": name, "r": "", "d": path_d(line)}
 
 
-def _river(line: list[Pt], name: str, cls: str = "stream") -> dict[str, Any]:
+def _river(line: list[Point], name: str, cls: str = "stream") -> dict[str, Any]:
     """One river row as the vector map carries it."""
     return {"c": cls, "n": name, "d": path_d(line)}
 

@@ -15,7 +15,7 @@ input.
 import itertools
 import math
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 #: The fewest points a spline needs to curve: a shorter line comes back as it was.
 _FEWEST_TO_SPLINE = 3
@@ -23,7 +23,7 @@ _FEWEST_TO_SPLINE = 3
 _DEGENERATE = 1e-9
 
 
-def spline(pts: list[Pt], step: float, corners: set[int] | None = None) -> list[Pt]:
+def spline(pts: list[Point], step: float, corners: set[int] | None = None) -> list[Point]:
     """A Catmull-Rom curve through every one of `pts`, sampled every `step`.
 
     Through them and not near them: the points are the turns the road makes,
@@ -41,7 +41,7 @@ def spline(pts: list[Pt], step: float, corners: set[int] | None = None) -> list[
         return list(pts)
     cuts = sorted(corners or set())
     if cuts:
-        out: list[Pt] = []
+        out: list[Point] = []
         edges = [0, *cuts, len(pts) - 1]
         for a, b in itertools.pairwise(edges):
             run = spline(pts[a : b + 1], step)
@@ -84,7 +84,7 @@ def spline(pts: list[Pt], step: float, corners: set[int] | None = None) -> list[
 MITER_LIMIT = 2.5
 
 
-def offset_curve(shape: list[Pt], side: int, offset_px: float) -> list[Pt]:
+def offset_curve(shape: list[Point], side: int, offset_px: float) -> list[Point]:
     """The shape pushed off to one side by the offset, mitred at its corners.
 
     Point by point along the normals is right in the middle of a segment and
@@ -97,7 +97,7 @@ def offset_curve(shape: list[Pt], side: int, offset_px: float) -> list[Pt]:
 
     `side` is +1 for the left of travel in display pixels and -1 for the right.
     """
-    out: list[Pt] = []
+    out: list[Point] = []
     for i, p in enumerate(shape):
         before = unit_normal(shape, i - 1, i)
         after = unit_normal(shape, i, i + 1)
@@ -122,7 +122,7 @@ def offset_curve(shape: list[Pt], side: int, offset_px: float) -> list[Pt]:
     return out
 
 
-def unit_normal(pts: list[Pt], i: int, j: int) -> Pt | None:
+def unit_normal(pts: list[Point], i: int, j: int) -> Point | None:
     """The unit normal of one segment, or None when there is no segment.
 
     Unlike `polyline.normal_at` it points right of the direction of travel

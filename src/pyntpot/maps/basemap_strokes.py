@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any
 
 from pyntpot.ink.chains import join_strokes
 from pyntpot.ink.cut import cut_line
-from pyntpot.ink.polyline import Pt, clip_line, eased, foot_on, length, simplify, smooth
+from pyntpot.ink.polyline import Point, clip_line, eased, foot_on, length, simplify, smooth
 from pyntpot.maps.basemap import Line, River, Road
 from pyntpot.maps.rivers import CHANNEL_EASE_SAMPLES, channel, major_rivers, painted_width_px
 from pyntpot.maps.svg_path import parse_path
@@ -84,18 +84,18 @@ class Frame:
     brush: BrushStyle
 
 
-def line_of(points: list[Pt]) -> Line:
+def line_of(points: list[Point]) -> Line:
     """A polyline as the basemap carries it: float pairs at full precision."""
     return tuple((float(x), float(y)) for x, y in points)
 
 
-def drawn(piece: list[Pt], tol: float) -> Line:
+def drawn(piece: list[Point], tol: float) -> Line:
     """Simplify, then Chaikin: a line someone drew, not a line surveyed."""
     return line_of(smooth(simplify(piece, tol), passes=2))
 
 
 def stubs(
-    lines: list[list[Pt]], short: list[bool], ground: list[list[Pt]], meet: float
+    lines: list[list[Point]], short: list[bool], ground: list[list[Point]], meet: float
 ) -> set[int]:
     """The short lines with an end that meets no other line: the strokes not to draw.
 
@@ -114,7 +114,7 @@ def stubs(
     """
     others = [(i, line, _box(line, meet)) for i, line in enumerate([*lines, *ground])]
 
-    def met(end: Pt, own: int) -> bool:
+    def met(end: Point, own: int) -> bool:
         x, y = end
         return any(
             i != own
@@ -129,7 +129,7 @@ def stubs(
     }
 
 
-def _box(line: list[Pt], grow: float) -> tuple[float, float, float, float]:
+def _box(line: list[Point], grow: float) -> tuple[float, float, float, float]:
     """A line's bounding box grown by `grow` on every side."""
     xs = [p[0] for p in line]
     ys = [p[1] for p in line]
@@ -164,7 +164,7 @@ def roads_from_paths(rows: list[dict[str, Any]], frame: Frame) -> list[Road]:
     Returns:
         One stroke per chained road, in the order the roads first appear.
     """
-    pieces: dict[tuple[Any, ...], list[list[Pt]]] = {}
+    pieces: dict[tuple[Any, ...], list[list[Point]]] = {}
     meta: dict[tuple[Any, ...], dict[str, Any]] = {}
     for r in rows:
         band = _band(r)
@@ -186,7 +186,7 @@ def roads_from_paths(rows: list[dict[str, Any]], frame: Frame) -> list[Road]:
     # instead: many are under one display pixel long, and each would still pay
     # for a set-down blot the size of the brush.
     mpp = frame.geometry["mpp_display"]
-    chains: list[tuple[list[Pt], dict[str, Any]]] = []
+    chains: list[tuple[list[Point], dict[str, Any]]] = []
     for road_key, lines in pieces.items():
         band = road_key[0]
         width = frame.brush.brush_width_px.get(BAND_BRUSH[band], FALLBACK_BRUSH_PX)
@@ -215,7 +215,13 @@ def roads_from_paths(rows: list[dict[str, Any]], frame: Frame) -> list[Road]:
 
 
 def _river(
-    chain: list[Pt], cls: str, name: str, lakes: list[list[Pt]], frame: Frame, *, measured: bool
+    chain: list[Point],
+    cls: str,
+    name: str,
+    lakes: list[list[Point]],
+    frame: Frame,
+    *,
+    measured: bool,
 ) -> River:
     """One watercourse chain as a stroke.
 
@@ -248,7 +254,7 @@ def _river(
 
 
 def rivers_from_paths(
-    rows: list[dict[str, Any]], lakes: list[list[Pt]], frame: Frame
+    rows: list[dict[str, Any]], lakes: list[list[Point]], frame: Frame
 ) -> list[River]:
     """The river strokes of the vector map's river rows.
 
@@ -265,7 +271,7 @@ def rivers_from_paths(
     Returns:
         One stroke per chained watercourse, in the order the names first appear.
     """
-    pieces_by: dict[str, list[list[Pt]]] = {}
+    pieces_by: dict[str, list[list[Point]]] = {}
     for r in rows:
         for seg in parse_path(r["d"]):
             # Cut where it crosses the card's edge, so a river that comes in from

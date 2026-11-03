@@ -24,7 +24,7 @@ import math
 
 import numpy as np
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.letters.hand import Hand
 from pyntpot.maps.lettering.label import Label
 from pyntpot.maps.lettering.span_line import resample
@@ -79,7 +79,7 @@ def pin(
     *,
     gap_at: float | None = None,
     gap_px: float = 0.0,
-) -> list[Pt]:
+) -> list[Point]:
     """The ring a leader points at, drawn round rather than filled, open where the leader comes in.
 
     An open ring is an arc of the circle with a gap of `gap_px` between its two
@@ -117,7 +117,7 @@ def pin(
     return hand.stroke(ring, rng, 0.2)
 
 
-def leader(hand: Hand, ends: tuple[Pt, Pt], rng: np.random.Generator) -> list[Pt]:
+def leader(hand: Hand, ends: tuple[Point, Point], rng: np.random.Generator) -> list[Point]:
     """A curve from the pin's centre to the name, bent a different way each time.
 
     A leader exists only to disambiguate a pin, so it is the quietest mark on
@@ -143,7 +143,7 @@ def leader(hand: Hand, ends: tuple[Pt, Pt], rng: np.random.Generator) -> list[Pt
     return hand.stroke([_quad_at(quad, t / _LEADER_STEPS) for t in steps], rng, 0.5)
 
 
-def leader_angle(line: list[Pt], centre: Pt, radius: float) -> float:
+def leader_angle(line: list[Point], centre: Point, radius: float) -> float:
     """The direction a leader leaves its pin's ring, in radians with y down.
 
     It is where the wandered leader first reaches `radius` from the centre,
@@ -172,7 +172,7 @@ def leader_angle(line: list[Pt], centre: Pt, radius: float) -> float:
     return math.atan2(last[1] - cy, last[0] - cx)
 
 
-def underline(hand: Hand, lb: Label, width: float, rng: np.random.Generator) -> list[Pt]:
+def underline(hand: Hand, lb: Label, width: float, rng: np.random.Generator) -> list[Point]:
     """A hand-drawn rule under a town's name, never quite level.
 
     One stroke, not one a word, and it lifts very slightly to the right, which
@@ -185,7 +185,7 @@ def underline(hand: Hand, lb: Label, width: float, rng: np.random.Generator) -> 
     return hand.stroke(resample(line, max(width / 10.0, 3.0)), rng, 0.45)
 
 
-def _quad_at(quad: list[Pt], t: float) -> Pt:
+def _quad_at(quad: list[Point], t: float) -> Point:
     """One point on a three point quadratic."""
     u = 1.0 - t
     return (

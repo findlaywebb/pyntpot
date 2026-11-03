@@ -2,13 +2,15 @@
 
 import math
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps.sea import sea_from_coast
 
 CLIP = (-5000.0, -5000.0, 5000.0, 5000.0)
 
 
-def _circle(cx: float, cy: float, r: float, *, anticlockwise: bool = True, n: int = 48) -> list[Pt]:
+def _circle(
+    cx: float, cy: float, r: float, *, anticlockwise: bool = True, n: int = 48
+) -> list[Point]:
     """A closed ring of n points, first point repeated at the end."""
     sign = 1 if anticlockwise else -1
     pts = [
@@ -21,7 +23,7 @@ def _circle(cx: float, cy: float, r: float, *, anticlockwise: bool = True, n: in
     return [*pts, pts[0]]
 
 
-def _is_sea(p: Pt, rings: list[list[Pt]]) -> bool:
+def _is_sea(p: Point, rings: list[list[Point]]) -> bool:
     """A point is sea when an odd number of the rings hold it (they nest, never cross)."""
     inside = 0
     for ring in rings:
@@ -34,7 +36,7 @@ def _is_sea(p: Pt, rings: list[list[Pt]]) -> bool:
     return inside % 2 == 1
 
 
-def _mainland_south() -> list[Pt]:
+def _mainland_south() -> list[Point]:
     """An open coast along y = -3000, land to the south (on its left, walking west)."""
     return [(-5000.0 + 250.0 * k, -3000.0 + 40.0 * math.sin(k)) for k in range(40, -1, -1)]
 

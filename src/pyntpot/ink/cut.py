@@ -13,10 +13,10 @@ of the line lies exactly on the box's edge; a piece has at least two distinct po
 
 import itertools
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 
-def cut_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[list[Pt]]:
+def cut_line(line: list[Point], box: tuple[float, float, float, float]) -> list[list[Point]]:
     """Split a polyline into its pieces inside a rectangle, cut where it crosses the edge.
 
     Unlike `clip_line`, a piece that comes in from outside starts on the box's edge
@@ -24,8 +24,8 @@ def cut_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[lis
     line that runs off the box is drawn up to the edge. A piece that only touches the
     box at a point is dropped.
     """
-    out: list[list[Pt]] = []
-    run: list[Pt] = []
+    out: list[list[Point]] = []
+    run: list[Point] = []
     for a, b in itertools.pairwise(line):
         cut = _cut_segment(a, b, box)
         if cut is None or cut[0] == cut[1]:
@@ -40,7 +40,9 @@ def cut_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[lis
     return out
 
 
-def _cut_segment(a: Pt, b: Pt, box: tuple[float, float, float, float]) -> tuple[Pt, Pt] | None:
+def _cut_segment(
+    a: Point, b: Point, box: tuple[float, float, float, float]
+) -> tuple[Point, Point] | None:
     """The part of segment `ab` inside the box, its cut ends held on the edge, or None.
 
     The segment is walked as `a + t (b - a)` and each of the box's four sides narrows

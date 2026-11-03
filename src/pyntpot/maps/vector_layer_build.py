@@ -30,12 +30,10 @@ from pyntpot.maps.layers import BasemapInputs, basemap
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from pyntpot.ink.polyline import Box
     from pyntpot.maps.cache import Cache
     from pyntpot.maps.style import Style
     from pyntpot.maps.track import Track
-
-#: A box in card metres: west, south, east, north.
-Box = tuple[float, float, float, float]
 
 
 @dataclass(frozen=True)

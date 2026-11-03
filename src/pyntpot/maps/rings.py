@@ -12,13 +12,13 @@ data. Invariants: a ring is a list of points with the closing edge implied, and
 
 from itertools import pairwise
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 #: A layer's outer rings and the holes punched through them.
-Rings = tuple[list[list[Pt]], list[list[Pt]]]
+Rings = tuple[list[list[Point]], list[list[Point]]]
 
 
-def signed_area(ring: list[Pt]) -> float:
+def signed_area(ring: list[Point]) -> float:
     """Twice the signed area of a ring; positive is counter-clockwise."""
     total = 0.0
     for i in range(len(ring)):
@@ -28,7 +28,7 @@ def signed_area(ring: list[Pt]) -> float:
     return total
 
 
-def orient(ring: list[Pt], *, counter_clockwise: bool = True) -> list[Pt]:
+def orient(ring: list[Point], *, counter_clockwise: bool = True) -> list[Point]:
     """The ring wound the way asked for.
 
     Every filled layer is drawn as one path with `fill-rule="nonzero"`, so an
@@ -40,7 +40,7 @@ def orient(ring: list[Pt], *, counter_clockwise: bool = True) -> list[Pt]:
     return list(ring)
 
 
-def point_in_ring(x: float, y: float, ring: list[Pt]) -> bool:
+def point_in_ring(x: float, y: float, ring: list[Point]) -> bool:
     """Even-odd point-in-polygon test."""
     inside = False
     n = len(ring)
@@ -54,7 +54,9 @@ def point_in_ring(x: float, y: float, ring: list[Pt]) -> bool:
     return inside
 
 
-def _cut_segment(a: Pt, b: Pt, box: tuple[float, float, float, float]) -> tuple[Pt, Pt] | None:
+def _cut_segment(
+    a: Point, b: Point, box: tuple[float, float, float, float]
+) -> tuple[Point, Point] | None:
     """The piece of a segment inside a rectangle (Liang-Barsky), or None when none is."""
     xmin, ymin, xmax, ymax = box
     dx, dy = b[0] - a[0], b[1] - a[1]
@@ -81,7 +83,7 @@ def _cut_segment(a: Pt, b: Pt, box: tuple[float, float, float, float]) -> tuple[
     return start, end
 
 
-def cut_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[list[Pt]]:
+def cut_line(line: list[Point], box: tuple[float, float, float, float]) -> list[list[Point]]:
     """Split a polyline into its runs inside a rectangle, cut where it crosses the edge.
 
     Unlike `ink.polyline.clip_line`, which keeps or drops vertices whole, a run that
@@ -97,8 +99,8 @@ def cut_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[lis
     Returns:
         The runs inside the box in the line's order, each of at least two points.
     """
-    out: list[list[Pt]] = []
-    run: list[Pt] = []
+    out: list[list[Point]] = []
+    run: list[Point] = []
     for a, b in pairwise(line):
         piece = _cut_segment(a, b, box)
         if piece is None:
@@ -120,7 +122,7 @@ def cut_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[lis
     return out
 
 
-def clip_ring(ring: list[Pt], box: tuple[float, float, float, float]) -> list[Pt]:
+def clip_ring(ring: list[Point], box: tuple[float, float, float, float]) -> list[Point]:
     """Sutherland-Hodgman clip of a ring to an axis-aligned rectangle.
 
     A wood relation that covers the whole map is not dropped for being big:
@@ -145,7 +147,7 @@ def clip_ring(ring: list[Pt], box: tuple[float, float, float, float]) -> list[Pt
     for keep, axis, at in edges:
         if not out:
             return []
-        nxt: list[Pt] = []
+        nxt: list[Point] = []
         for i in range(len(out)):
             cur, prev = out[i], out[i - 1]
             cur_in, prev_in = keep(cur), keep(prev)

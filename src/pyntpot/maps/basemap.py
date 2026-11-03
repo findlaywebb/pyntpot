@@ -29,7 +29,7 @@ from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 if TYPE_CHECKING:
     from pyntpot.maps.card import Card
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from pyntpot.maps.projection import Projection
 
 #: A polyline or a ring, in card metres.
-Line = tuple[Pt, ...]
+Line = tuple[Point, ...]
 
 
 @dataclass(frozen=True)

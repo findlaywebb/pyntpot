@@ -31,7 +31,7 @@ from fontTools.ttLib import TTFont
 from pyntpot.letters.trace import CENTRELINE, centrelines
 
 if TYPE_CHECKING:
-    from pyntpot.ink.polyline import Pt
+    from pyntpot.ink.polyline import Point
 
 #: The vendored face.
 DEFAULT_FONT = Path(str(resources.files("pyntpot.letters") / "fonts" / "PatrickHand-Regular.ttf"))
@@ -55,26 +55,26 @@ class _Flatten(AbstractPen):
 
     def __init__(self) -> None:
         """Start with nothing recorded."""
-        self.contours: list[list[Pt]] = []
-        self._cur: list[Pt] = []
-        self._start: Pt = (0.0, 0.0)
+        self.contours: list[list[Point]] = []
+        self._cur: list[Point] = []
+        self._start: Point = (0.0, 0.0)
 
     @override
-    def moveTo(self, pt: Pt) -> None:
+    def moveTo(self, pt: Point) -> None:
         """Start a contour."""
         self._flush()
         self._cur = [(float(pt[0]), float(pt[1]))]
         self._start = self._cur[0]
 
     @override
-    def lineTo(self, pt: Pt) -> None:
+    def lineTo(self, pt: Point) -> None:
         """A straight piece."""
         if not self._cur:
             return
         self._cur.append((float(pt[0]), float(pt[1])))
 
     @override
-    def curveTo(self, *pts: Pt) -> None:
+    def curveTo(self, *pts: Point) -> None:
         """A cubic, or the higher-order form fontTools hands a pen."""
         if len(pts) == QUAD_ARGS:
             self.qCurveTo(*pts)
@@ -89,7 +89,7 @@ class _Flatten(AbstractPen):
             a = self._cur[-1]
 
     @override
-    def qCurveTo(self, *pts: Pt | None) -> None:
+    def qCurveTo(self, *pts: Point | None) -> None:
         """A quadratic run, with TrueType's implied on-curve points.
 
         A contour with no on-curve point at all is written as a run ending in
@@ -126,7 +126,7 @@ class _Flatten(AbstractPen):
     def addComponent(self, glyphName: str, transformation: Any) -> None:
         """Components are decomposed before the pen sees them."""
 
-    def _all_off(self, ctrls: list[Pt]) -> None:
+    def _all_off(self, ctrls: list[Point]) -> None:
         """A closed contour made only of control points."""
         if len(ctrls) < MIN_CONTROLS:
             return
@@ -142,7 +142,7 @@ class _Flatten(AbstractPen):
             a = end
         self.closePath()
 
-    def _quad(self, a: Pt, b: Pt, c: Pt) -> None:
+    def _quad(self, a: Point, b: Point, c: Point) -> None:
         """One quadratic, flattened."""
         for i in range(1, CURVE_STEPS + 1):
             t = i / CURVE_STEPS
@@ -154,7 +154,7 @@ class _Flatten(AbstractPen):
                 )
             )
 
-    def _cubic(self, a: Pt, b: Pt, c: Pt, d: Pt) -> None:
+    def _cubic(self, a: Point, b: Point, c: Point, d: Point) -> None:
         """One cubic, flattened."""
         for i in range(1, CURVE_STEPS + 1):
             t = i / CURVE_STEPS
@@ -184,7 +184,7 @@ class Glyph:
 
     ch: str
     advance: float
-    paths: list[list[Pt]]
+    paths: list[list[Point]]
 
     @property
     def ink(self) -> bool:
@@ -283,7 +283,7 @@ class OutlineFont:
 
     def run(
         self, text: str, size: float, tracking: float = 0.0
-    ) -> list[tuple[str, float, float, list[list[Pt]]]]:
+    ) -> list[tuple[str, float, float, list[list[Point]]]]:
         """Every glyph of a line, at its pen position, scaled to the type size.
 
         Args:

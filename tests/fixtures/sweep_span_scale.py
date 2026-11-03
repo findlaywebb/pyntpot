@@ -41,7 +41,7 @@ from fixtures.span_sweep_score import (
     sweep,
 )
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps import (
     Cache,
     FetchMargins,
@@ -68,7 +68,7 @@ FIXTURES = (
 )
 
 
-def fixture_route(directory: str, theme: str, margins: FetchMargins) -> list[Pt]:
+def fixture_route(directory: str, theme: str, margins: FetchMargins) -> list[Point]:
     """A fixture's track in display pixels, pulled into strands, as the lettering sees it."""
     contact = "pyntpot-sweep@example.invalid"
     with tempfile.TemporaryDirectory() as tmp:
@@ -84,8 +84,8 @@ def fixture_route(directory: str, theme: str, margins: FetchMargins) -> list[Pt]
 
 
 def _judged(
-    routes: dict[str, list[Pt]], cap_px: float, length_caps: float
-) -> dict[str, list[tuple[list[Pt], Verdict]]]:
+    routes: dict[str, list[Point]], cap_px: float, length_caps: float
+) -> dict[str, list[tuple[list[Point], Verdict]]]:
     """Every fixture's stretches at one length, each judged once."""
     out = {}
     for name, route in routes.items():
@@ -111,7 +111,7 @@ def _table(rows: Sequence[ScaleRow]) -> list[str]:
     return out
 
 
-def _cases_table(judged: dict[str, list[tuple[list[Pt], Verdict]]]) -> list[str]:
+def _cases_table(judged: dict[str, list[tuple[list[Point], Verdict]]]) -> list[str]:
     """Each fixture's stretches by case, before the vote."""
     out = ["| fixture | stretches | " + " | ".join(CASES) + " |", "|---" * (len(CASES) + 2) + "|"]
     for name, cases in judged.items():
@@ -120,7 +120,7 @@ def _cases_table(judged: dict[str, list[tuple[list[Pt], Verdict]]]) -> list[str]
     return out
 
 
-def report(routes: dict[str, list[Pt]], cap_px: float) -> tuple[str, Decision]:
+def report(routes: dict[str, list[Point]], cap_px: float) -> tuple[str, Decision]:
     """The whole sweep as markdown, and the decision on the primary length."""
     judged = _judged(routes, cap_px, LENGTH_CAPS)
     cases = [case for per in judged.values() for case in per]

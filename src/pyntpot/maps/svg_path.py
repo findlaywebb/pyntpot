@@ -10,7 +10,7 @@ points only to that precision. It does
 not project, simplify or clip; the caller hands it finished points.
 """
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps.rings import orient
 
 #: The fewest points that make a line, and so a path.
@@ -20,7 +20,7 @@ MIN_LINE_POINTS = 2
 MIN_RING_POINTS = 3
 
 
-def path_d(points: list[Pt], *, close: bool = False, places: int = 1) -> str:
+def path_d(points: list[Point], *, close: bool = False, places: int = 1) -> str:
     """SVG path data for one polyline, rounded to `places` decimals."""
     if len(points) < MIN_LINE_POINTS:
         return ""
@@ -28,7 +28,7 @@ def path_d(points: list[Pt], *, close: bool = False, places: int = 1) -> str:
     return d + "Z" if close else d
 
 
-def stroke_d(points: list[Pt]) -> str:
+def stroke_d(points: list[Point]) -> str:
     """Compact path data for a short stroke: absolute start, relative steps.
 
     A hachure field is thousands of short lines, and short deltas take far
@@ -45,7 +45,7 @@ def stroke_d(points: list[Pt]) -> str:
     return out
 
 
-def rings_path(rings: list[list[Pt]], holes: list[list[Pt]] | None = None) -> str:
+def rings_path(rings: list[list[Point]], holes: list[list[Point]] | None = None) -> str:
     """One path holding every ring of a layer, wound for `fill-rule="nonzero"`.
 
     Args:
@@ -68,14 +68,14 @@ def rings_path(rings: list[list[Pt]], holes: list[list[Pt]] | None = None) -> st
     return "".join(p for p in parts if p)
 
 
-def parse_path(d: str) -> list[list[Pt]]:
+def parse_path(d: str) -> list[list[Point]]:
     """The point lists inside one `M x,y L x,y` path, the inverse of `path_d`."""
-    out: list[list[Pt]] = []
+    out: list[list[Point]] = []
     for piece in d.split("M"):
         chunk = piece.strip().rstrip("Z").strip()
         if not chunk:
             continue
-        pts: list[Pt] = []
+        pts: list[Point] = []
         for token in chunk.replace("L", " ").split():
             if "," in token:
                 a, b = token.split(",")

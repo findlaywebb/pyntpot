@@ -11,7 +11,7 @@ Invariants: a settlement is never chosen by raw distance; a forced name spends n
 import math
 from typing import Any
 
-from pyntpot.ink.polyline import Pt, length
+from pyntpot.ink.polyline import Point, length
 from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.card import Card
@@ -91,7 +91,7 @@ def settlement_budget(display_px: float) -> int:
 def pick_settlements(
     basemap: Basemap,
     card: Card,
-    route_px: list[Pt],
+    route_px: list[Point],
     always: list[str] | None = None,
     wanted: list[str] | None = None,
     budget: int | None = None,
@@ -120,7 +120,7 @@ def pick_settlements(
     ends = [route_px[0], route_px[-1]] if route_px else []
     reach = length(route_px) * SETTLEMENT_ENDPOINT_FRAC
     found = settlements(basemap)
-    scored: list[tuple[float, bool, dict[str, Any], Pt]] = []
+    scored: list[tuple[float, bool, dict[str, Any], Point]] = []
     for entry in found:
         if entry["off_route_m"] > SETTLEMENT_MAX_OFF_M:
             continue
@@ -163,7 +163,7 @@ def pick_settlements(
 
 
 def _nearest_to_ends(
-    entry: dict[str, Any], found: list[dict[str, Any]], card: Card, ends: list[Pt], reach: float
+    entry: dict[str, Any], found: list[dict[str, Any]], card: Card, ends: list[Point], reach: float
 ) -> bool:
     """True when this is the settlement the route set off from or finished in.
 

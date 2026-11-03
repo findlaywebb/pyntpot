@@ -37,11 +37,10 @@ from pyntpot.ink.bloom import Blooms
 from pyntpot.ink.keyed import keyed_rng
 from pyntpot.ink.noise import F32
 from pyntpot.ink.pigment import PigmentLayer
+from pyntpot.ink.polyline import Point
 from pyntpot.ink.sheet import Canvas, Sheet
 from pyntpot.maps.basemap import Basemap, Layers, Line
 from pyntpot.maps.style import Style
-
-Pt = tuple[float, float]
 
 #: Coverage above this is inside a wash.
 INSIDE = 0.5
@@ -54,7 +53,7 @@ _BLOOM_AREA_PX = 260.0
 _BLOOM_FLOOR_AREA = 400
 
 
-def drawable(lines: tuple[Line, ...]) -> list[list[Pt]]:
+def drawable(lines: tuple[Line, ...]) -> list[list[Point]]:
     """The lines long enough to draw, as the point lists the painter fills and strokes."""
     return [list(line) for line in lines if len(line) >= _MIN_POINTS]
 

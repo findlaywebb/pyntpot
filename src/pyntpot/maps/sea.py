@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import math
 
-from pyntpot.ink.polyline import Pt, length
+from pyntpot.ink.polyline import Point, length
 from pyntpot.maps.cover import JOIN_TOL_M, RING_POINTS_OVER, Clip
 from pyntpot.maps.rings import point_in_ring
 
@@ -49,7 +49,7 @@ CORNER_EPS = 1e-9
 SEA_SHARE = 0.5
 
 
-def _perimeter_t(p: Pt, clip: Clip) -> float:
+def _perimeter_t(p: Point, clip: Clip) -> float:
     """Position of a point on the card edge, 0 to 4, anticlockwise."""
     xmin, ymin, xmax, ymax = clip
     x, y = p
@@ -62,11 +62,11 @@ def _perimeter_t(p: Pt, clip: Clip) -> float:
     return 3 + (ymax - y) / max(ymax - ymin, EDGE_EPS)
 
 
-def _arc(t0: float, t1: float, clip: Clip, *, forward: bool) -> list[Pt]:
+def _arc(t0: float, t1: float, clip: Clip, *, forward: bool) -> list[Point]:
     """The card corners passed walking the edge from t0 to t1."""
     xmin, ymin, xmax, ymax = clip
     corners = [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)]
-    out: list[Pt] = []
+    out: list[Point] = []
     t = t0
     for _ in range(CORNERS_PASSED):
         nxt = (math.floor(t) + 1) if forward else (math.ceil(t) - 1)
@@ -79,13 +79,13 @@ def _arc(t0: float, t1: float, clip: Clip, *, forward: bool) -> list[Pt]:
     return out
 
 
-def _edge_gap(p: Pt, clip: Clip) -> float:
+def _edge_gap(p: Point, clip: Clip) -> float:
     """How far a point is from the nearest card edge."""
     xmin, ymin, xmax, ymax = clip
     return min(abs(p[0] - xmin), abs(p[0] - xmax), abs(p[1] - ymin), abs(p[1] - ymax))
 
 
-def _snap(p: Pt, clip: Clip) -> Pt:
+def _snap(p: Point, clip: Clip) -> Point:
     """Put an endpoint exactly on the card edge it was clipped against."""
     xmin, ymin, xmax, ymax = clip
     x, y = p
@@ -98,9 +98,9 @@ def _snap(p: Pt, clip: Clip) -> Pt:
     return min(gaps)[1]
 
 
-def _probes(chain: list[Pt]) -> list[Pt]:
+def _probes(chain: list[Point]) -> list[Point]:
     """Points just to the right of the coast, where the sea is."""
-    probes: list[Pt] = []
+    probes: list[Point] = []
     for k in range(1, PROBE_STEPS):
         i = max(min(len(chain) * k // PROBE_STEPS, len(chain) - 2), 0)
         dx, dy = chain[i + 1][0] - chain[i][0], chain[i + 1][1] - chain[i][1]
@@ -113,7 +113,7 @@ def _probes(chain: list[Pt]) -> list[Pt]:
     return probes
 
 
-def _single_closure(chain: list[Pt], clip: Clip) -> list[list[Pt]]:
+def _single_closure(chain: list[Point], clip: Clip) -> list[list[Point]]:
     """The sea side of one open chain, closed round the card edge.
 
     Both closures round the card are built and the one that holds most of a set of
@@ -122,7 +122,7 @@ def _single_closure(chain: list[Pt], clip: Clip) -> list[list[Pt]]:
     """
     probes = _probes(chain)
     t0, t1 = _perimeter_t(chain[-1], clip), _perimeter_t(chain[0], clip)
-    best: list[Pt] | None = None
+    best: list[Point] | None = None
     best_score = -1
     for forward in (True, False):
         ring = chain + _arc(t0, t1, clip, forward=forward)
@@ -136,7 +136,9 @@ def _single_closure(chain: list[Pt], clip: Clip) -> list[list[Pt]]:
     return [best]
 
 
-def _land_rings(opens: list[list[Pt]], closed: list[list[Pt]], clip: Clip) -> list[list[Pt]]:
+def _land_rings(
+    opens: list[list[Point]], closed: list[list[Point]], clip: Clip
+) -> list[list[Point]]:
     """Land regions, anticlockwise: closed rings as they are, open chains joined along the edge.
 
     Walking the card edge anticlockwise from where a chain leaves the card, the next
@@ -148,7 +150,7 @@ def _land_rings(opens: list[list[Pt]], closed: list[list[Pt]], clip: Clip) -> li
     follow = [min(range(len(opens)), key=lambda j, t=t: (starts[j] - t) % SIDES) for t in ends]
     seen: set[int] = set()
     for first in range(len(opens)):
-        ring: list[Pt] = []
+        ring: list[Point] = []
         path: list[int] = []
         i = first
         while i not in seen and i not in path:
@@ -161,7 +163,7 @@ def _land_rings(opens: list[list[Pt]], closed: list[list[Pt]], clip: Clip) -> li
     return rings
 
 
-def _share_in_sea(chains: list[list[Pt]], land: list[list[Pt]]) -> float:
+def _share_in_sea(chains: list[list[Point]], land: list[list[Point]]) -> float:
     """The share of probes just right of the chains that lie outside every land region."""
     probes = [p for c in chains for p in _probes(c)]
     if not probes:
@@ -170,7 +172,7 @@ def _share_in_sea(chains: list[list[Pt]], land: list[list[Pt]]) -> float:
     return dry / len(probes)
 
 
-def sea_from_coast(chains: list[list[Pt]], clip: Clip) -> list[list[Pt]]:
+def sea_from_coast(chains: list[list[Point]], clip: Clip) -> list[list[Point]]:
     """The card area outside every land region, as rings that fill by the nonzero rule.
 
     Land regions are the closed coastline rings (islands and islets, anticlockwise

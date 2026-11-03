@@ -14,7 +14,7 @@ never more than the cap it was given, and an empty neighbourhood answers the cap
 import math
 from itertools import pairwise
 
-from pyntpot.ink.polyline import Pt, segments_cross
+from pyntpot.ink.polyline import Point, segments_cross
 
 
 class TrackIndex:
@@ -24,7 +24,7 @@ class TrackIndex:
     the minor roads and the streams are each asked this question.
     """
 
-    def __init__(self, points: list[Pt], cell_m: float = 120.0) -> None:
+    def __init__(self, points: list[Point], cell_m: float = 120.0) -> None:
         """Index the track.
 
         Args:
@@ -34,7 +34,7 @@ class TrackIndex:
         """
         self.cell = cell_m
         self.points = points
-        self.buckets: dict[tuple[int, int], list[Pt]] = {}
+        self.buckets: dict[tuple[int, int], list[Point]] = {}
         for p in points:
             self.buckets.setdefault((int(p[0] // cell_m), int(p[1] // cell_m)), []).append(p)
 
@@ -59,7 +59,7 @@ class TrackIndex:
                     best = min(best, d)
         return best
 
-    def interacts(self, line: list[Pt], within_m: float, run_m: float) -> bool:
+    def interacts(self, line: list[Point], within_m: float, run_m: float) -> bool:
         """True when the track ran alongside this line, or crossed it.
 
         Args:
@@ -85,7 +85,7 @@ class TrackIndex:
                 run = 0.0
         return self._crosses(line)
 
-    def _crosses(self, line: list[Pt]) -> bool:
+    def _crosses(self, line: list[Point]) -> bool:
         """True when a feature segment intersects a track segment."""
         for a, b in pairwise(line):
             for c, d in pairwise(self.points):
@@ -98,9 +98,9 @@ class TrackIndex:
         return False
 
 
-def densify(line: list[Pt], step_m: float) -> list[Pt]:
+def densify(line: list[Point], step_m: float) -> list[Point]:
     """A polyline resampled so no two points are more than `step_m` apart."""
-    out: list[Pt] = []
+    out: list[Point] = []
     for a, b in pairwise(line):
         steps = max(1, int(math.dist(a, b) // step_m))
         for k in range(steps):

@@ -26,7 +26,7 @@ from pyntpot.maps.svg_path import path_d, rings_path
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from pyntpot.ink.polyline import Pt
+    from pyntpot.ink.polyline import Point
     from pyntpot.maps.projection import Projection
     from pyntpot.maps.style_groups import BasemapStyle
     from pyntpot.maps.track_index import TrackIndex
@@ -50,8 +50,8 @@ WAVE_LENGTH_FACTOR = 0.8
 
 
 def _sea_path(
-    water: list[list[Pt]],
-    islands: list[list[Pt]],
+    water: list[list[Point]],
+    islands: list[list[Point]],
     clip: Clip,
     options: BasemapStyle,
     derived: dict[str, Any],
@@ -84,7 +84,7 @@ def _sea_path(
 
 
 def _shading(
-    terrain: Terrain, options: BasemapStyle, derived: dict[str, Any], corners: tuple[Pt, Pt]
+    terrain: Terrain, options: BasemapStyle, derived: dict[str, Any], corners: tuple[Point, Point]
 ) -> dict[str, Any]:
     """The hillshade bands, the hillshade raster and the contours the options ask for.
 

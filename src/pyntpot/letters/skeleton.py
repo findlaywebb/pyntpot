@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from pyntpot.ink.polyline import Pt
+    from pyntpot.ink.polyline import Point
 
 
 #: Raster pixels an em, the scale a glyph is rasterised at before it is
@@ -50,7 +50,7 @@ MIN_LOOP = 3
 SPECKLE = 2
 
 
-def fill(contours: list[list[Pt]], upem: int, pad: int = 3) -> tuple[np.ndarray, float, float]:
+def fill(contours: list[list[Point]], upem: int, pad: int = 3) -> tuple[np.ndarray, float, float]:
     """A filled bitmap of one glyph, and where its bottom left corner sits.
 
     Even-odd scanline fill rather than a library rasteriser, because a glyph is

@@ -13,14 +13,14 @@ fills in place.
 
 import math
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 #: The fewest points a ring needs to enclose anything.
 MIN_RING_POINTS = 3
 
 
 def _fill_ring(
-    mask: list[bytearray], ring: list[Pt], x0: float, y0: float, cell: float, value: int
+    mask: list[bytearray], ring: list[Point], x0: float, y0: float, cell: float, value: int
 ) -> None:
     """Scanline-fill one ring into a mask, in place.
 
@@ -58,8 +58,8 @@ def _fill_ring(
 
 
 def rasterise(
-    rings: list[list[Pt]],
-    holes: list[list[Pt]],
+    rings: list[list[Point]],
+    holes: list[list[Point]],
     clip: tuple[float, float, float, float],
     cell: float,
 ) -> list[bytearray]:

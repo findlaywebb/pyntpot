@@ -22,15 +22,14 @@ imports nothing from `pyntpot` but `ink`.
 from dataclasses import dataclass
 from typing import Literal
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 #: The type size of a line of lettering, in display pixels, when nothing else
 #: says what it is.
 DEFAULT_LINE_PX = 20.0
 
-#: Which edge of a flat block sits on its anchor: its left end, its middle, or
-#: its right end.
 Align = Literal["start", "middle", "end"]
+"""Which end of a line of text its anchor point is: `"start"`, `"middle"` or `"end"`."""
 
 #: The fewest points a path can be written along: a line needs two ends.
 _PATH_ENDS = 2
@@ -67,8 +66,8 @@ class Setting:
 
     text: str
     size: float
-    anchor: Pt | None = None
-    path: tuple[Pt, ...] | None = None
+    anchor: Point | None = None
+    path: tuple[Point, ...] | None = None
     align: Align = "start"
     slant: float = 0.0
     tracking: float = 0.0
@@ -101,7 +100,7 @@ class Mark:
     written with the hand held at exactly the same tilt.
     """
 
-    pts: list[Pt]
+    pts: list[Point]
     role: str = "glyph"
     ink: str = "label"
     size: float = DEFAULT_LINE_PX

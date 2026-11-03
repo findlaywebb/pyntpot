@@ -30,7 +30,7 @@ import math
 
 import numpy as np
 
-from pyntpot.ink.polyline import Pt, cumulative_length, deform_line
+from pyntpot.ink.polyline import Point, cumulative_length, deform_line
 from pyntpot.letters.font import load as load_font
 from pyntpot.letters.setting import Mark, Setting
 from pyntpot.letters.style import FaceStyle, HandStyle
@@ -82,7 +82,7 @@ class Hand:
         """
         return np.random.default_rng((self.seed ^ int(seed)) & _SEED_MASK)
 
-    def stroke(self, points: list[Pt], rng: np.random.Generator, amount: float) -> list[Pt]:
+    def stroke(self, points: list[Point], rng: np.random.Generator, amount: float) -> list[Point]:
         """A hand's own wander along a line the caller drew, a different curve every instance.
 
         Args:
@@ -130,12 +130,12 @@ class Hand:
         ]
 
     def _along(
-        self, setting: Setting, walk: tuple[Pt, ...], rng: np.random.Generator
-    ) -> list[list[Pt]]:
+        self, setting: Setting, walk: tuple[Point, ...], rng: np.random.Generator
+    ) -> list[list[Point]]:
         """The text set along a line, each glyph on its own tangent."""
         line = list(walk)
         cum = cumulative_length(line)
-        out: list[list[Pt]] = []
+        out: list[list[Point]] = []
         for _ch, pen_x, adv, paths in self.font.run(setting.text, setting.size, setting.tracking):
             if not paths:
                 continue
@@ -150,7 +150,7 @@ class Hand:
                 out.append(self.stroke(pts, rng, 0.14))
         return out
 
-    def _flat(self, setting: Setting, anchor: Pt, rng: np.random.Generator) -> list[list[Pt]]:
+    def _flat(self, setting: Setting, anchor: Point, rng: np.random.Generator) -> list[list[Point]]:
         """The text set horizontally from its anchor, one row at a time.
 
         Each row is aligned on the block, not on itself, so a `start` block
@@ -162,7 +162,7 @@ class Hand:
         width = max(self.font.measure(row, size, track)[0] for row in rows)
         tilt = float(rng.normal(0.0, 0.012))
         cos_t, sin_t = math.cos(tilt), math.sin(tilt)
-        out: list[list[Pt]] = []
+        out: list[list[Point]] = []
         for index, text in enumerate(rows):
             run = self.font.measure(text, size, track)[0]
             x0 = ax - _held_back(setting.align, width) + _row_pad(setting.align, width, run)
@@ -179,7 +179,7 @@ class Hand:
                     out.append(self.stroke(pts, rng, 0.14))
         return out
 
-    def _vary(self, path: list[Pt], setting: Setting, rng: np.random.Generator) -> list[Pt]:
+    def _vary(self, path: list[Point], setting: Setting, rng: np.random.Generator) -> list[Point]:
         """One stroke of a glyph, this time: leaned, scaled, turned and nudged a little."""
         lean = setting.slant + float(rng.normal(0.0, 0.03))
         sx = 1.0 + float(rng.normal(0.0, 0.022))
@@ -209,7 +209,7 @@ def _row_pad(align: str, width: float, run: float) -> float:
     return width - run if align == "end" else (width - run) / 2
 
 
-def _on_line(line: list[Pt], cum: list[float], at: float) -> tuple[Pt, float]:
+def _on_line(line: list[Point], cum: list[float], at: float) -> tuple[Point, float]:
     """The point at an arc length along a line, and the tangent's angle there."""
     at = min(max(at, 0.0), cum[-1])
     i = min(_segment(cum, at), len(line) - 2)

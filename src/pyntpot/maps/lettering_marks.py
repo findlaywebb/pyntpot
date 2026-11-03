@@ -29,7 +29,7 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.nib import mark_width_px
 from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark, Setting
@@ -198,7 +198,7 @@ def _ink(lb: Label) -> str:
     return KIND_INK.get(lb.kind, "label")
 
 
-def _setting(lb: Label, base: list[Pt] | None, track: float) -> Setting:
+def _setting(lb: Label, base: list[Point] | None, track: float) -> Setting:
     """The label as the hand is asked to write it: along its lifted line, or flat."""
     slant = KIND_SLANT.get(lb.kind, 0.0)
     if lb.tier == TIER_SPAN and lb.kind in SPAN_EFFORT:

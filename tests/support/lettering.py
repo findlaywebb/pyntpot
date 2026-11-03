@@ -9,7 +9,7 @@ from pyntpot.letters.hand import Hand
 from pyntpot.letters.style import FaceStyle, HandStyle
 from pyntpot.maps.card import Card
 
-Pt = tuple[float, float]
+Point = tuple[float, float]
 
 
 def map_card() -> Card:
@@ -33,7 +33,7 @@ def open_hand() -> Hand:
     return Hand(FaceStyle(), HandStyle())
 
 
-def arc(turn_deg: float, n: int = 60, r: float = 100.0, start: float = 180.0) -> list[Pt]:
+def arc(turn_deg: float, n: int = 60, r: float = 100.0, start: float = 180.0) -> list[Point]:
     """One circular arc turning `turn_deg`, centred so it sits on the map.
 
     Positive `turn_deg` turns towards side +1, which in display pixels is the
@@ -47,7 +47,7 @@ def arc(turn_deg: float, n: int = 60, r: float = 100.0, start: float = 180.0) ->
     return out
 
 
-def shapes() -> dict[str, list[Pt]]:
+def shapes() -> dict[str, list[Point]]:
     """One route a case: the shapes a hand-drawn set of marks is made of."""
     straight = [(60.0 + i * 4.0, 150.0) for i in range(60)]
     bend = [(60.0 + i * 3.0, 120.0) for i in range(30)]
@@ -64,10 +64,10 @@ def shapes() -> dict[str, list[Pt]]:
     }
 
 
-def crosses(line: list[Pt], route: list[Pt]) -> bool:
+def crosses(line: list[Point], route: list[Point]) -> bool:
     """Whether a drawn line properly crosses a route polyline anywhere."""
 
-    def side(p: Pt, q: Pt, r: Pt) -> float:
+    def side(p: Point, q: Point, r: Point) -> float:
         return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
 
     for a, b in itertools.pairwise(line):
@@ -79,7 +79,7 @@ def crosses(line: list[Pt], route: list[Pt]) -> bool:
     return False
 
 
-def corners(pts: list[Pt], tol: float = 3.0) -> int:
+def corners(pts: list[Point], tol: float = 3.0) -> int:
     """How many turns a drawn line has, at the tolerance a reader sees.
 
     A spline is a hundred points that each turn a degree; what a person counts

@@ -13,7 +13,7 @@ import math
 import re
 
 from pyntpot.ink.chains import joined
-from pyntpot.ink.polyline import Pt, cumulative_length, length
+from pyntpot.ink.polyline import Point, cumulative_length, length
 from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.card import Card
@@ -54,7 +54,7 @@ def pick_rivers(
     basemap: Basemap,
     lines: NamedLines,
     card: Card,
-    route_px: list[Pt],
+    route_px: list[Point],
     budget: int = RIVER_MAX,
 ) -> list[Label]:
     """Which watercourses the map names, by run inside the card and proximity.
@@ -78,7 +78,7 @@ def pick_rivers(
     geom = lines.get("rivers") or []
     thin = route_px[::3] or route_px
     typical: dict[str, float] = {}
-    scored: list[tuple[float, str, list[Pt]]] = []
+    scored: list[tuple[float, str, list[Point]]] = []
     widths: dict[str, float] = {}
     for entry in geom:
         name = str(entry.get("n") or "")
@@ -105,12 +105,12 @@ def pick_rivers(
     # watercourse, and that freedom is only real if the watercourse is one
     # line, so the pieces are chained end to end first, exactly as a road's
     # are, and the longest chain is the river's baseline.
-    pieces: dict[str, list[list[Pt]]] = {}
+    pieces: dict[str, list[list[Point]]] = {}
     totals: dict[str, float] = {}
     for score, name, line in scored:
         pieces.setdefault(name, []).append(line)
         totals[name] = totals.get(name, 0.0) + score
-    merged: dict[str, tuple[float, list[Pt]]] = {
+    merged: dict[str, tuple[float, list[Point]]] = {
         name: (totals[name], max(joined(parts), key=length)) for name, parts in pieces.items()
     }
     order = sorted(merged.items(), key=lambda kv: -kv[1][0])

@@ -2,7 +2,7 @@
 
 Key types: `Label`, one name with its anchor, kind, tier, size and the box or window the
 placer gave it; `Span`, one effort or climb with the line drawn beside the route, its
-end ticks and its name; `Anchor`, `Box` and `Measure`; the `TIER_*` order in which names
+end ticks and its name; `Measure`; the `TIER_*` order in which names
 claim their boxes. The rules that size and wrap a name are in `maps.lettering.label_sizing`.
 
 It places nothing and draws nothing, and it knows no hand: a caller supplies the
@@ -13,14 +13,9 @@ Invariants: a lower tier claims its box first.
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Literal
 
-from pyntpot.ink.polyline import Pt
-from pyntpot.letters.setting import DEFAULT_LINE_PX
-
-Anchor = Literal["start", "middle", "end"]
-
-Box = tuple[float, float, float, float]
+from pyntpot.ink.polyline import Box, Point
+from pyntpot.letters.setting import DEFAULT_LINE_PX, Align
 
 #: The order names claim their boxes in. A settlement cannot move, because it is
 #: its place; a river can slide along its own water but not off it; a climb's
@@ -74,20 +69,20 @@ class Label:
     box: Box | None = None
     tx: float = 0.0
     ty: float = 0.0
-    anchor: Anchor = "start"
+    anchor: Align = "start"
     #: `((x0, y0), (x1, y1))` from the anchor to the text, or None for a label
     #: that sits on its own mark and needs no leader.
-    leader: tuple[Pt, Pt] | None = None
+    leader: tuple[Point, Point] | None = None
     #: The name broken into the lines it is actually written on. Empty means
     #: one line, which is `name`. The placer fills this in when a second line
     #: bought a better position, and the boxes it claimed are the block's, so
     #: what is reserved and what is drawn are the same pixels.
     lines: list[str] = field(default_factory=list)
     #: The line a curved label is set along, in display pixels. Empty is horizontal.
-    baseline: list[Pt] = field(default_factory=list)
+    baseline: list[Point] = field(default_factory=list)
     #: The run of that line the placer actually chose, once it has chosen it.
     #: Empty means it has not, and the hand picks its own window unless `flat`.
-    window: list[Pt] = field(default_factory=list)
+    window: list[Point] = field(default_factory=list)
     #: True once the placer has decided this name is set flat. The distinction
     #: from "no window yet" matters: without it the hand would look for its own
     #: window for every name the placer had already rejected one for, and the
@@ -116,12 +111,12 @@ class Label:
     #: nearest point of the bracket, a name set off the end of a short bracket
     #: is charged for its own width and a compact two-line block beside the
     #: middle of it is not, which is what pulls a wrapped name in close.
-    mark: list[Pt] = field(default_factory=list)
+    mark: list[Point] = field(default_factory=list)
     #: The points the placer may hang this name off, in display pixels. Empty
     #: means the one anchor at `px`/`py`. A span offers several, spread along
     #: its own bracket, so a name blocked beside the middle of it slides along
     #: the line rather than away from it.
-    anchors: list[Pt] = field(default_factory=list)
+    anchors: list[Point] = field(default_factory=list)
     #: The stretch of route a span's name belongs to, as indices. The route
     #: costs a name that sits on it, and a span's name is beside the route by
     #: construction, so its own stretch is exempt: what a span must not do is
@@ -180,8 +175,8 @@ class Span:
     rank: int = 0
     offset_px: float = 0.0
     #: The offset line in display pixels, and the two end ticks, likewise.
-    line: list[Pt] = field(default_factory=list)
-    ticks: list[list[Pt]] = field(default_factory=list)
+    line: list[Point] = field(default_factory=list)
+    ticks: list[list[Point]] = field(default_factory=list)
     label: Label | None = None
 
     @property

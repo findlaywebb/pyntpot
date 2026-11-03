@@ -11,8 +11,8 @@ and nothing by `mark_through`.
 
 import math
 
-from pyntpot.ink.polyline import foot_on
-from pyntpot.maps.lettering.label import TIER_SPAN, Box, Label
+from pyntpot.ink.polyline import Box, foot_on
+from pyntpot.maps.lettering.label import TIER_SPAN, Label
 
 #: Below this a distance in pixels is zero.
 _ZERO_PX = 1e-6

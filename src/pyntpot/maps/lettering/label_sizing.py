@@ -14,7 +14,7 @@ has at most `MAX_LINES` lines.
 import math
 from collections.abc import Callable
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.lettering.label import TIER_LANDMARK, TIER_SPAN, Measure, Span
 
@@ -179,7 +179,7 @@ def feature_px(basemap: Basemap, kind: str, cls: str, own: float = 0.0) -> float
     return float(ROAD_PX_DEFAULT.get(cls, 3.4)) * WET_SPREAD
 
 
-def outboard(span: Span, route_px: list[Pt]) -> float:
+def outboard(span: Span, route_px: list[Point]) -> float:
     """Which side of a span's own line is away from the route: +1 or -1.
 
     The line is the stretch's smoothed shape pushed off the route, bridged at a

@@ -15,7 +15,7 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
-from pyntpot.ink.polyline import Pt, foot_on, length
+from pyntpot.ink.polyline import Point, foot_on, length
 from pyntpot.maps.annotations import Annotations, SpanRequest
 from pyntpot.maps.card import Card
 from pyntpot.maps.lettering.label import Measure, Span
@@ -135,10 +135,10 @@ class SpanSurroundings:
     """
 
     card: Card
-    route_px: list[Pt]
+    route_px: list[Point]
     dark: dict[str, Any]
     avoid: list[tuple[float, float, float, float]] | None = None
-    lines: list[list[Pt]] | None = None
+    lines: list[list[Point]] | None = None
 
 
 def place_spans(
@@ -251,12 +251,12 @@ SPAN_FEATURE_COST = 1.5
 
 def _drawn_side(
     span: Span,
-    route_px: list[Pt],
+    route_px: list[Point],
     cap_px: float,
     offset_px: float,
     avoid: list[tuple[float, float, float, float]] | None,
-    lines: list[list[Pt]] | None = None,
-) -> tuple[int, list[Pt]]:
+    lines: list[list[Point]] | None = None,
+) -> tuple[int, list[Point]]:
     """The side the mark is actually drawn on, and the mark.
 
     The side arrives already chosen, by free paper and then by the bend. Both
@@ -319,7 +319,7 @@ SPAN_LINE_REACH_CAPS = 0.7
 SPAN_LINE_COST = 0.5
 
 
-def _on_line_cost(line: list[Pt], lines: list[list[Pt]] | None, cap_px: float) -> float:
+def _on_line_cost(line: list[Point], lines: list[list[Point]] | None, cap_px: float) -> float:
     """What a mark pays for lying along a river, a road or a lane, in pixels.
 
     Charged on how much of the mark sits within `SPAN_LINE_REACH_CAPS` of one
@@ -341,7 +341,9 @@ def _on_line_cost(line: list[Pt], lines: list[list[Pt]] | None, cap_px: float) -
     return (on / len(pts)) * run * SPAN_LINE_COST
 
 
-def _feature_cost(line: list[Pt], avoid: list[tuple[float, float, float, float]] | None) -> float:
+def _feature_cost(
+    line: list[Point], avoid: list[tuple[float, float, float, float]] | None
+) -> float:
     """What a mark pays for the map content it is drawn over, in pixels.
 
     Charged on how much of the line lies inside a place's own radius, times

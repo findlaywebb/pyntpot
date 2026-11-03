@@ -15,7 +15,7 @@ import math
 from typing import Any
 
 from pyntpot.ink.chains import join_chains
-from pyntpot.ink.polyline import Pt, simplify, smooth
+from pyntpot.ink.polyline import Point, simplify, smooth
 from pyntpot.maps.projection import Projection
 from pyntpot.maps.rings import Rings, point_in_ring
 from pyntpot.maps.svg_path import path_d
@@ -30,7 +30,7 @@ LOOP_MIN_POINTS = 4
 SHORE_MIN_POINTS = 4
 
 
-def marching_squares(grid: list[list[float]], level: float) -> list[list[Pt]]:
+def marching_squares(grid: list[list[float]], level: float) -> list[list[Point]]:
     """Contour polylines for one level, in fractional (column, row) grid space.
 
     Source: `marching-squares` in docs/explanation/references.md.
@@ -43,7 +43,7 @@ def marching_squares(grid: list[list[float]], level: float) -> list[list[Pt]]:
         Polylines; a ring comes back with its first and last point equal.
     """
     rows, cols = len(grid), len(grid[0])
-    segs: list[tuple[Pt, Pt]] = []
+    segs: list[tuple[Point, Point]] = []
 
     def interp(a: float, b: float) -> float:
         """Where `level` falls between two samples, as a share of the way from `a` to `b`."""
@@ -82,10 +82,10 @@ def marching_squares(grid: list[list[float]], level: float) -> list[list[Pt]]:
     return _stitch(segs)
 
 
-def _stitch(segs: list[tuple[Pt, Pt]]) -> list[list[Pt]]:
+def _stitch(segs: list[tuple[Point, Point]]) -> list[list[Point]]:
     """Join contour segments end to end into polylines."""
 
-    def key(p: Pt) -> tuple[float, float]:
+    def key(p: Point) -> tuple[float, float]:
         """A point rounded to four decimals, so two segment ends that meet compare equal."""
         return (round(p[0], 4), round(p[1], 4))
 
@@ -96,7 +96,7 @@ def _stitch(segs: list[tuple[Pt, Pt]]) -> list[list[Pt]]:
     for i, (_, b) in enumerate(segs):
         ends.setdefault(key(b), []).append(i)
     used = [False] * len(segs)
-    out: list[list[Pt]] = []
+    out: list[list[Point]] = []
     for i, (a, b) in enumerate(segs):
         if used[i]:
             continue
@@ -119,8 +119,8 @@ def _stitch(segs: list[tuple[Pt, Pt]]) -> list[list[Pt]]:
 
 
 def grid_line_to_metres(
-    line: list[Pt], lats: list[float], lons: list[float], proj: Projection, pad: int = 0
-) -> list[Pt]:
+    line: list[Point], lats: list[float], lons: list[float], proj: Projection, pad: int = 0
+) -> list[Point]:
     """Map a polyline in fractional grid space to card metres.
 
     Args:
@@ -227,8 +227,8 @@ def sea_rings(
     if not any(value for row in mask for value in row):
         return [], []
     padded = padded_grid(mask, 0.0)
-    water: list[list[Pt]] = []
-    islands: list[list[Pt]] = []
+    water: list[list[Point]] = []
+    islands: list[list[Point]] = []
     for ring in marching_squares(padded, 0.5):
         if len(ring) < LOOP_MIN_POINTS:
             continue
@@ -240,7 +240,7 @@ def sea_rings(
     return water, islands
 
 
-def ring_is_wet(ring: list[Pt], padded: list[list[float]], level: float) -> bool:
+def ring_is_wet(ring: list[Point], padded: list[list[float]], level: float) -> bool:
     """True when at least half the cells a ring encloses are at or above `level`."""
     cols = [c for c, _ in ring]
     rows = [r for _, r in ring]

@@ -22,9 +22,9 @@ from typing import Any
 
 import numpy as np
 
-from pyntpot.ink.polyline import Pt, foot_on
+from pyntpot.ink.polyline import Box, Point, foot_on
 from pyntpot.maps.card import Card
-from pyntpot.maps.lettering.label import NO_LEADER, Box, Label
+from pyntpot.maps.lettering.label import NO_LEADER, Label
 from pyntpot.maps.lettering.placement_water import Water
 from pyntpot.maps.lettering.span_clear import seg_in_box
 
@@ -91,7 +91,7 @@ class RouteSegments:
     ends: np.ndarray = field(default_factory=lambda: np.zeros((0, 2)))
 
     @classmethod
-    def of(cls, route_px: list[Pt]) -> "RouteSegments":
+    def of(cls, route_px: list[Point]) -> "RouteSegments":
         """The segments of a polyline; none for fewer than two points."""
         if len(route_px) < _FEWEST_FOR_A_SEGMENT:
             return cls()
@@ -114,13 +114,13 @@ class Backdrop:
     """
 
     card: Card
-    route_px: list[Pt]
+    route_px: list[Point]
     dark: dict[str, Any]
-    roads: list[list[Pt]] = field(default_factory=list)
+    roads: list[list[Point]] = field(default_factory=list)
     water: Water = field(default_factory=Water)
 
     @property
-    def thin(self) -> list[Pt]:
+    def thin(self) -> list[Point]:
         """The route, thinned, which is what a name is priced against."""
         return self.route_px[::_ROUTE_THINNING] or self.route_px
 
@@ -148,13 +148,13 @@ class Terms:
     card: Card
     dark: dict[str, Any]
     boxes: list[Box]
-    roads: list[list[Pt]]
-    route: list[tuple[list[Pt], float]]
+    roads: list[list[Point]]
+    route: list[tuple[list[Point], float]]
     water: Water = field(default_factory=Water)
     segments: RouteSegments = field(default_factory=RouteSegments)
 
 
-def _crossings(box: Box, roads: list[list[Pt]]) -> int:
+def _crossings(box: Box, roads: list[list[Point]]) -> int:
     """How many roads a box sits on. One count a road, not one a segment."""
     if not roads:
         return 0
@@ -168,7 +168,7 @@ def _crossings(box: Box, roads: list[list[Pt]]) -> int:
     return hit
 
 
-def on_road(box: Box, roads: list[list[Pt]]) -> float:
+def on_road(box: Box, roads: list[list[Point]]) -> float:
     """Whether a box sits on tarmac at all: 1.0 or 0.0.
 
     Deliberately not a count. A name that lands on a junction touches five ways
@@ -178,12 +178,12 @@ def on_road(box: Box, roads: list[list[Pt]]) -> float:
     return 1.0 if _crossings(box, roads) else 0.0
 
 
-def leader_crossings(start: Pt, end: Pt, boxes: list[Box]) -> float:
+def leader_crossings(start: Point, end: Point, boxes: list[Box]) -> float:
     """How many placed boxes a leader segment passes through, as a count."""
     return float(sum(seg_in_box(start, end, *box) for box in boxes))
 
 
-def leader_route_crossings(start: Pt, end: Pt, segments: RouteSegments) -> float:
+def leader_route_crossings(start: Point, end: Point, segments: RouteSegments) -> float:
     """How many times a leader from its pin at `start` crosses the route, as a count.
 
     A crossing within `LEADER_ROUTE_SLACK_PX` of the pin is not counted: that is
@@ -269,7 +269,7 @@ OWN_LINE_PX = 2.0
 OWN_LINE_FRAC = 0.9
 
 
-def _is_own_feature(line: list[Pt], baseline: list[Pt]) -> bool:
+def _is_own_feature(line: list[Point], baseline: list[Point]) -> bool:
     """Whether one crossing line is a piece of the feature a name belongs to."""
     if len(line) < _FEWEST_FOR_A_SEGMENT or len(baseline) < _FEWEST_FOR_A_SEGMENT:
         return False
@@ -280,7 +280,7 @@ def _is_own_feature(line: list[Pt], baseline: list[Pt]) -> bool:
     return near >= OWN_LINE_FRAC * len(line)
 
 
-def off_own(roads: list[list[Pt]], lb: Label) -> list[list[Pt]]:
+def off_own(roads: list[list[Point]], lb: Label) -> list[list[Point]]:
     """The lines a name is charged for crossing, its own feature removed.
 
     `road_lines` is everything a name should not be laid across, and it holds
@@ -323,7 +323,7 @@ def off_own_feature(box: Box, lb: Label) -> float:
 
 
 def near_route(
-    box: Box, thin: list[tuple[list[Pt], float]], reach: float = ROUTE_REACH_PX
+    box: Box, thin: list[tuple[list[Point], float]], reach: float = ROUTE_REACH_PX
 ) -> float:
     """What sitting on or beside the route costs one box.
 
@@ -376,7 +376,9 @@ def near_route(
 SPAN_OWN_ROUTE_FRAC = 0.25
 
 
-def route_for(lb: Label, route_px: list[Pt], thin: list[Pt]) -> list[tuple[list[Pt], float]]:
+def route_for(
+    lb: Label, route_px: list[Point], thin: list[Point]
+) -> list[tuple[list[Point], float]]:
     """The route this label keeps off, and how much each part of it counts.
 
     A span's bracket is drawn beside its own extent, so its name is near that
@@ -391,7 +393,7 @@ def route_for(lb: Label, route_px: list[Pt], thin: list[Pt]) -> list[tuple[list[
     i0, i1 = lb.span_range
     own = [p for j, p in enumerate(thin) if i0 <= j * 3 <= i1]
     rest = [p for j, p in enumerate(thin) if not (i0 <= j * 3 <= i1)]
-    out: list[tuple[list[Pt], float]] = [(rest, 1.0)] if rest else []
+    out: list[tuple[list[Point], float]] = [(rest, 1.0)] if rest else []
     if own:
         out.append((own, SPAN_OWN_ROUTE_FRAC))
     return out or [(thin, 1.0)]

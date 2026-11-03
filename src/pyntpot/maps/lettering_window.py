@@ -20,7 +20,7 @@ right to left is returned the other way along the same line.
 
 import math
 
-from pyntpot.ink.polyline import Pt, length
+from pyntpot.ink.polyline import Point, length
 from pyntpot.maps.lettering.label import Label
 from pyntpot.maps.lettering.placement import MIN_CURVED_CHARS
 from pyntpot.maps.lettering.placement_window import (
@@ -37,7 +37,7 @@ from pyntpot.maps.lettering.span_line import resample
 _WINDOW_SLACK = 1.02
 
 
-def baseline(lb: Label, width: float) -> list[Pt] | None:
+def baseline(lb: Label, width: float) -> list[Point] | None:
     """The run of line this name is set along, or None to set it flat.
 
     Args:
@@ -64,10 +64,10 @@ def baseline(lb: Label, width: float) -> list[Pt] | None:
     return at[::-1] if at[-1][0] < at[0][0] else at
 
 
-def _best_window(line: list[Pt], want: float, near: Pt) -> list[Pt] | None:
+def _best_window(line: list[Point], want: float, near: Point) -> list[Point] | None:
     """The readable run of a line that sits closest to a point, or None."""
     best: float | None = None
-    at: list[Pt] | None = None
+    at: list[Point] | None = None
     step = max(len(line) // 40, 1)
     for i in range(0, len(line), step):
         window = line_window(line, i, want)

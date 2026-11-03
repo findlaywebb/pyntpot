@@ -15,12 +15,12 @@ the track and carry the route's ink.
 import math
 from typing import Any
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Box, Point
 from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.annotations import Annotations
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.card import Card
-from pyntpot.maps.lettering.label import TIER_MARKER, TIER_PLACE, Box, Label, Measure
+from pyntpot.maps.lettering.label import TIER_MARKER, TIER_PLACE, Label, Measure
 from pyntpot.maps.lettering.picks_lines import NamedLines
 from pyntpot.maps.lettering.picks_rivers import pick_rivers
 from pyntpot.maps.lettering.picks_settlements import MERGE_M, pick_settlements
@@ -129,7 +129,7 @@ def ground_labels(
     basemap: Basemap,
     lines: NamedLines,
     card: Card,
-    route_px: list[Pt],
+    route_px: list[Point],
     picks: Annotations | None = None,
 ) -> list[Label]:
     """The names the ground is entitled to, whatever the annotations asked for.
@@ -172,7 +172,7 @@ def ground_labels(
     return mine + settled + pick_rivers(basemap, lines, card, route_px)
 
 
-def route_markers(route_px: list[Pt], size: float = DEFAULT_LINE_PX * 0.65) -> list[Label]:
+def route_markers(route_px: list[Point], size: float = DEFAULT_LINE_PX * 0.65) -> list[Label]:
     """Where the track set off and where it finished, in the route's own ink.
 
     The ground is drawn in the map's ink and the track in the route's, and

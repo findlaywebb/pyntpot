@@ -16,7 +16,7 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
-from pyntpot.ink.polyline import Pt, simplify, smooth
+from pyntpot.ink.polyline import Point, simplify, smooth
 from pyntpot.maps.contours import marching_squares, ring_is_wet
 from pyntpot.maps.masks import declutter, rasterise, spread
 from pyntpot.maps.relief_strokes import jitter
@@ -72,7 +72,7 @@ def trace_mask(
     cell: float,
     eps: float = 18.0,
     passes: int = 3,
-) -> list[list[Pt]]:
+) -> list[list[Point]]:
     """Trace a mask back into smooth rings.
 
     Args:
@@ -118,11 +118,11 @@ def _min_cells(grid: Generalisation) -> int:
 
 
 def generalise(
-    rings: list[list[Pt]],
-    holes: list[list[Pt]],
+    rings: list[list[Point]],
+    holes: list[list[Point]],
     clip: tuple[float, float, float, float],
     grid: Generalisation,
-) -> list[list[Pt]]:
+) -> list[list[Point]]:
     """Raster generalisation: union, close, open, declutter, trace, smooth.
 
     Everything that reaches the map has been through one grid, so what comes
@@ -144,7 +144,7 @@ def generalise(
     return trace_mask(mask, clip, grid.cell, eps=grid.cell * 0.55, passes=grid.passes)
 
 
-def jitter_ring(ring: list[Pt], amplitude: float, seed: int = 0) -> list[Pt]:
+def jitter_ring(ring: list[Point], amplitude: float, seed: int = 0) -> list[Point]:
     """Push a ring's outline in and out along its own normals.
 
     A generalised mask traces as a smooth but obviously computed curve. A
@@ -185,7 +185,7 @@ def scatter(
     cell: float,
     spacing_m: float,
     salt: int = 3,
-) -> list[Pt]:
+) -> list[Point]:
     """Points on a jittered grid that fall well inside a mask.
 
     For the tree glyphs: a wood is a wash, and a handful of little conifers in
@@ -205,7 +205,7 @@ def scatter(
         return []
     inner = spread(mask, 1, grow=False)
     xmin, ymin, xmax, ymax = clip
-    out: list[Pt] = []
+    out: list[Point] = []
     cols = int((xmax - xmin) / spacing_m) + 1
     rows = int((ymax - ymin) / spacing_m) + 1
     for j in range(rows):
@@ -220,8 +220,8 @@ def scatter(
 
 
 def generalise_layer(
-    rings: list[list[Pt]],
-    holes: list[list[Pt]],
+    rings: list[list[Point]],
+    holes: list[list[Point]],
     clip: tuple[float, float, float, float],
     grid: Generalisation,
     finish: Finish = DEFAULT_FINISH,
@@ -246,7 +246,7 @@ def generalise_layer(
     mask = _closed_opened(rasterise(rings, holes, clip, cell), grid)
     eps = cell * 0.55
 
-    def traced(source: list[bytearray], salt: int) -> list[list[Pt]]:
+    def traced(source: list[bytearray], salt: int) -> list[list[Point]]:
         """Trace a mask into rings, each given a loose edge when the finish asks for one."""
         out = []
         for ring in trace_mask(source, clip, cell, eps=eps, passes=grid.passes):

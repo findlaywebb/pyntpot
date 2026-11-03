@@ -19,10 +19,8 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from pyntpot.ink.brush_style import BrushStyle
-    from pyntpot.ink.polyline import Pt
+    from pyntpot.ink.polyline import Box, Point
     from pyntpot.maps.style_groups import CardStyle, RibbonStyle
-
-Box = tuple[float, float, float, float]
 
 
 def _card_box(bounds: Box, fitted: float, ribbon: RibbonStyle) -> Box:
@@ -46,7 +44,7 @@ def _card_box(bounds: Box, fitted: float, ribbon: RibbonStyle) -> Box:
 
 
 def journal_geometry(
-    route: list[Pt], card: CardStyle, ribbon: RibbonStyle, brush: BrushStyle
+    route: list[Point], card: CardStyle, ribbon: RibbonStyle, brush: BrushStyle
 ) -> dict[str, Any]:
     """The card, its ribbon radius, and every size the plate is painted at.
 

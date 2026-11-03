@@ -12,7 +12,7 @@ crossing line so the cost can still see it.
 
 from typing import Any
 
-from pyntpot.ink.polyline import Pt, simplify
+from pyntpot.ink.polyline import Point, simplify
 from pyntpot.maps.basemap import Basemap, Line
 from pyntpot.maps.card import Card
 
@@ -97,7 +97,7 @@ def named_lines(basemap: Basemap, tol_px: float) -> NamedLines:
     return geom
 
 
-def road_lines(lines: NamedLines, card: Card) -> list[list[Pt]]:
+def road_lines(lines: NamedLines, card: Card) -> list[list[Point]]:
     """Everything on the card a name should not be laid across, in display pixels.
 
     The named roads, the unnamed lanes, and the watercourses. All three are
@@ -106,7 +106,7 @@ def road_lines(lines: NamedLines, card: Card) -> list[list[Pt]]:
     The lanes have no name and cannot carry one, so they are kept in
     `crossings` purely for this.
     """
-    out: list[list[Pt]] = []
+    out: list[list[Point]] = []
     geom = lines
     for key in ("roads", "rivers"):
         for entry in geom.get(key) or []:

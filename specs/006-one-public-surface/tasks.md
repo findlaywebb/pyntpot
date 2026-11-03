@@ -8,7 +8,7 @@
       (`maps/lettering/label_sizing.py`); pure moves, suite green.
 - [x] S1: collision and directive tests red, four modules renamed, importers, reference
       directives and `references.md` paths repointed; green (#164).
-- [ ] S2: `Pt` to `Point`, one `Box`, `Anchor` folded into `Align`, alias docstrings.
+- [x] S2: `Pt` to `Point`, one `Box`, `Anchor` folded into `Align`, alias docstrings.
 - [ ] S3: `griffelib` in `dev`; `test_public_signatures.py` (transitive walk, alias rule,
       `layer_of`, strings fail closed, `ALLOWED` the reviewed 30-name literal) and
       `test_field_docs.py` with self-tests and the per-lane pending ratchet; the run
