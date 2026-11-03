@@ -7,6 +7,7 @@ import pytest
 
 from pyntpot.ink.brush import Brush, brush_from_id, ink_aux, scaled_brush
 from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.pad import ink_density
 from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.stamp import stamp
@@ -44,6 +45,22 @@ def test_the_pen_sets_down_where_it_touches_and_nowhere_else():
         marks.append(acc)
     assert marks[0][:, 8:18].sum() > marks[1][:, 8:18].sum() * 1.3
     assert marks[0][:, 60:160].sum() == pytest.approx(marks[1][:, 60:160].sum(), rel=1e-4)
+
+
+def test_a_wide_pen_leaves_no_grey_ring_round_its_ink():
+    """A 2.6 px pen's set-down blot adds nothing to the paper 3 to 8 px out from its ink."""
+    sheet = Sheet(60, 120, gran_px=6.0, seed=4)
+    pen, _ = brush_from_id("MAJ6-e", 2.6, 2.0, BrushStyle())
+    line = np.stack([np.linspace(30, 100, 60), np.full(60, 30.0)], axis=1)
+    dens = []
+    for brush in (pen, replace(pen, pool=0.0)):
+        acc = np.zeros((60, 120), np.float32)
+        stamp(acc, line, brush, np.random.default_rng(9))
+        dens.append(ink_density(acc, brush, sheet))
+    away = chamfer_distance(dens[1] > 0.05)
+    ring = (away >= 3.0) & (away <= 8.0)
+    assert ring.sum() > 500
+    assert float((dens[0] - dens[1])[ring].mean()) < 1e-4
 
 
 def test_two_strokes_crossing_never_double():

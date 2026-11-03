@@ -1,6 +1,11 @@
-"""Properties of `stamp`: seeded determinism, an untouched path, and no mark from a speck of a path."""
+"""Properties of `stamp`: determinism, an untouched path, specks, and the pen's set-down blot.
+
+One seed gives one deposit, the caller's path is left alone, a path no longer than 2 px lays
+nothing, and a nib's set-down blot stays on its own stroke.
+"""
 
 import math
+from dataclasses import replace
 
 import numpy as np
 from hypothesis import given
@@ -8,6 +13,7 @@ from hypothesis import strategies as st
 
 from pyntpot.ink.brush import brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.stamp import stamp
 
 from support.properties import UNTIMED
@@ -19,6 +25,11 @@ Y = st.floats(2, 58, allow_nan=False, allow_infinity=False)
 PATHS = st.lists(st.tuples(X, Y), min_size=2, max_size=30).map(np.array)
 STEP = st.floats(-1, 1, allow_nan=False, allow_infinity=False)
 LENGTH = st.floats(0, 2.0, exclude_min=True, allow_nan=False, allow_infinity=False)
+#: Pen widths in display pixels, from a hairline to a heavy route pen.
+PEN_WIDTHS = st.floats(1.0, 8.0, allow_nan=False, allow_infinity=False)
+#: How far past the stroke's own ink the blot may reach: the nib's zero-weight samples at the
+#: very start and the bilinear splat's one pixel.
+BLOT_SLACK_PX = 2.0
 
 
 @st.composite
@@ -74,3 +85,17 @@ class TestStamp:
         canvas = _canvas()
         stamp(canvas, path, brush, np.random.default_rng(seed))
         assert not canvas.any()
+
+    @UNTIMED
+    @given(path=PATHS, width=PEN_WIDTHS, seed=SEEDS)
+    def test_a_pen_s_set_down_blot_stays_on_its_own_stroke(
+        self, path: np.ndarray, width: float, seed: int
+    ) -> None:
+        """A nib's set-down blot lays no ink more than 2 px past the stroke's own ink, at any width."""
+        pen, _ = brush_from_id("MAJ6-e", width, 2.0, BrushStyle())
+        assert pen.pool > 0
+        with_blot, without = _canvas(), _canvas()
+        stamp(with_blot, path, pen, np.random.default_rng(seed))
+        stamp(without, path, replace(pen, pool=0.0), np.random.default_rng(seed))
+        far = chamfer_distance(without > 0) > BLOT_SLACK_PX
+        assert not (with_blot - without)[far].any()

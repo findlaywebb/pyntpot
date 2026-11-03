@@ -284,4 +284,4 @@ def stamp(
     py = tr.y[:, None] + tr.ny[:, None] * lay.off
     deposit(acc, aux, (px, py), wgt, wgt_r, wgt_t)
     if b.pool > 0:
-        pool(acc, b, float(tr.x[0]), float(tr.y[0]))
+        pool(acc, b, lay, (px, py))

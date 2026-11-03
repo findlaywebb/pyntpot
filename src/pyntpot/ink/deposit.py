@@ -2,7 +2,7 @@
 
 Key names: `weights`, the ink each sample deposits; `channels`, those weights for the ink, the
 reservoir and the break-texture accumulators; `deposit`, the bilinear splat into them; `pool`,
-the blot where a nib touches down.
+the blot where a nib touches down, laid only on the paper the nib covers (`nib_cover`).
 
 It draws no random numbers and builds no path: it reads the `Lay` that `pyntpot.ink.stamp`
 has laid out. It does not saturate or gate the accumulator (`pyntpot.ink.pad`).
@@ -169,20 +169,62 @@ def deposit(
                 np.add.at(view, at, (g * wx * wy * keep).ravel())
 
 
-def pool(acc: np.ndarray, b: Brush, x: float, y: float) -> None:
-    """Leave a blot where the stroke starts.
+def pool(acc: np.ndarray, b: Brush, lay: Lay, pos: tuple[np.ndarray, np.ndarray]) -> None:
+    """Leave a blot where the stroke starts, on the paper the nib itself covers.
 
     Tighter and denser than a swelling, so it reads as the first touch rather
     than a bulge in the line. The Gaussian is cut at three radii, where it has faded to
-    1.1% at the side of the span, so the blot has no square edge.
+    1.1% at the side of the span, so the blot has no square edge. Its radius grows
+    with the pen, so on its own it would reach past a pen wider than about two
+    pixels and ring the ink with grey; it is laid in proportion to the nib's own
+    cover of each pixel (`nib_cover`), so it darkens the start of the stroke and
+    none of the paper round it.
+
+    Args:
+        acc: The accumulator, added to in place.
+        b: The brush.
+        lay: The stroke as laid out, for where it starts and how wide the nib is.
+        pos: Where each sample of the stroke lands, as `deposit` takes them.
     """
     h, w = acc.shape
     r = max(b.width * b.pool_radius_frac, 1.2)
     span = math.ceil(r * 3)
-    yy, xx = np.ogrid[-span : span + 1, -span : span + 1]
-    blob = np.exp(-(xx * xx + yy * yy) / (2 * r * r)).astype(F32) * b.pool * b.pool_gain
-    cy, cx = round(y), round(x)
+    cy, cx = round(float(lay.tr.y[0])), round(float(lay.tr.x[0]))
     y0, y1 = max(cy - span, 0), min(cy + span + 1, h)
     x0, x1 = max(cx - span, 0), min(cx + span + 1, w)
-    if y1 > y0 and x1 > x0:
-        acc[y0:y1, x0:x1] += blob[y0 - cy + span : y1 - cy + span, x0 - cx + span : x1 - cx + span]
+    if y1 <= y0 or x1 <= x0:
+        return
+    yy, xx = np.ogrid[y0 - cy : y1 - cy, x0 - cx : x1 - cx]
+    blob = np.exp(-(xx * xx + yy * yy) / (2 * r * r)).astype(F32) * b.pool * b.pool_gain
+    acc[y0:y1, x0:x1] += blob * nib_cover(lay, pos, (y0, y1, x0, x1))
+
+
+def nib_cover(
+    lay: Lay, pos: tuple[np.ndarray, np.ndarray], box: tuple[int, int, int, int]
+) -> np.ndarray:
+    """How much of each pixel in `box` the nib passes over, from 0 to 1.
+
+    Each sample stands for the patch of paper between it and its neighbours,
+    one stamp spacing along the stroke and one sample spacing across the tip,
+    and is splatted as `deposit` lays ink, so a pixel the tip sweeps whole reads
+    1, one it grazes a share, and one it never reaches 0. It reads the samples'
+    positions, not their weights: the stroke's very start, where the pressure is
+    still zero, is under the nib all the same.
+
+    Args:
+        lay: The stroke as laid out.
+        pos: Where each sample lands, in the accumulator's pixels.
+        box: The window `(y0, y1, x0, x1)`, in the accumulator's pixels.
+
+    Returns:
+        The cover, the window's shape.
+    """
+    y0, y1, x0, x1 = box
+    px, py = pos
+    along = lay.tr.total / max(len(lay.tr.t) - 1, 1)
+    across = lay.ink.width / max(lay.smp.m_hi - 1, 1)
+    patch = np.broadcast_to((along * across).astype(F32)[:, None], px.shape)
+    near = (px > x0 - 1) & (px < x1) & (py > y0 - 1) & (py < y1)
+    cover = np.zeros((y1 - y0, x1 - x0), F32)
+    deposit(cover, None, (px[near] - x0, py[near] - y0), patch[near], None, None)
+    return np.minimum(cover, F32(1.0))
