@@ -31,9 +31,11 @@ def test_each_image_matches_a_fresh_paint(
     tmp_path: Path, golden_tolerance: bool, entry: DocsImage
 ) -> None:
     """The committed master equals the fresh master within the bound; exactly, so does the docs image."""
-    fresh_docs = tmp_path / "fresh" / Path(entry.image).name
-    fresh_master = tmp_path / "fresh" / Path(master_path(entry.image)).name
-    fresh_docs.parent.mkdir()
+    # At the repository paths, so CI's failure step can diff the fresh tree (`diff_images.py`).
+    fresh_docs = tmp_path / "fresh" / IMAGES_DIR / entry.image
+    fresh_master = tmp_path / "fresh" / MASTERS_DIR / master_path(entry.image)
+    for fresh in (fresh_docs, fresh_master):
+        fresh.parent.mkdir(parents=True)
     data, master = paint_entry(entry, tmp_path / "work")
     fresh_docs.write_bytes(data)
     fresh_master.write_bytes(master)

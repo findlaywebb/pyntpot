@@ -47,3 +47,27 @@ jobs:
             ${{ runner.temp }}/pytest/**/*.png
             ${{ runner.temp }}/pytest/**/*.webp
           retention-days: 7
+
+      # Diff images of each fresh paint past the parity bound (ADR 0048). The parity and docs
+      # pins copy their paints into `fresh` trees at the repository paths; merged, they are
+      # the later side and the checkout the earlier. Small changes are left out, so only the
+      # failing images are drawn.
+      - name: Diff the fresh paints
+        if: failure()
+        continue-on-error: true
+        run: |
+          mkdir -p "$RUNNER_TEMP/fresh"
+          for tree in $(find "$RUNNER_TEMP/pytest" -type d -name 'fresh*' -prune); do
+            cp -R "$tree/." "$RUNNER_TEMP/fresh/"
+          done
+          PYTHONPATH=tests uv run python tests/golden/diff_images.py "$RUNNER_TEMP/golden-diffs" \
+            --before . --after "$RUNNER_TEMP/fresh" --min-fraction 0.005
+
+      - name: Keep the diff images
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: golden-diffs-${{ matrix.os }}
+          path: ${{ runner.temp }}/golden-diffs
+          if-no-files-found: ignore
+          retention-days: 7

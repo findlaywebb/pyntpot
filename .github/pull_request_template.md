@@ -9,6 +9,12 @@ one per line, any other change a user would notice, in the same form; leave it e
 otherwise. These lines go into the squash commit and git-cliff reads them.
 fix(maps): a note no longer hides the home glyph -->
 
+## Golden and docs images
+
+<!-- Delete this section unless the PR moves a golden or a docs image (ADR 0048). Paste the
+block `tests/golden/publish_diffs.py --push` prints, after `diff_images.py --ref origin/main`
+(CONTRIBUTING.md, "Golden and docs images"). -->
+
 ## Spec
 
 - [ ] Matches `specs/NNN-name/spec.md` acceptance criteria
