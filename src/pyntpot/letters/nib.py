@@ -3,7 +3,8 @@
 Key types: `NibSurface`, what the nib writes on (the render canvas, the
 display-to-render `scale`, the darkness under the plate and the paper's
 granulation cell); `nib_plate`, which strokes marks onto it and writes the file;
-`nib_brushes`, the brush per role and type size.
+`nib_brushes`, the brush per role and type size; `mark_width_px`, the width a
+mark of one role and type size is drawn at, in display pixels.
 
 The plate is composited normally rather than multiplied, which is the whole
 reason it is its own plate: the backing wash is the paper's own colour and
@@ -87,6 +88,32 @@ class NibSurface:
     gran_px: float
 
 
+def mark_width_px(nib: NibStyle, role: str, size: float, *, outline: bool = False) -> float:
+    """How wide a mark of one role is drawn at one type size, in display pixels.
+
+    A glyph takes the lettering pen and every other role the leader pen, each
+    scaled from the style's type size to the mark's and weighted by its role's
+    `MARK_WEIGHT`. A caller drawing furniture round a hole (a pin's ring) reads
+    the width here, so the hole is sized from the pen that will draw it.
+
+    Args:
+        nib: The nib style, for the pens and the type size they are set at.
+        role: The mark's role; one `MARK_WEIGHT` does not name weighs 1.
+        size: The type size the mark belongs to, in display pixels.
+        outline: True when the glyph pen is narrowed for an outline route; it
+            changes only a glyph's width.
+
+    Returns:
+        The pen's width in display pixels.
+    """
+    pen = role == "glyph"
+    wid = nib.label_pen_width_px if pen else nib.label_leader_width_px
+    if pen and outline:
+        wid *= nib.label_outline_width_frac
+    wid = wid * max(size, 1.0) / max(nib.label_size_px, 1e-6)
+    return wid * MARK_WEIGHT.get(role, 1.0)
+
+
 def nib_brushes(
     nib: NibStyle, face: FaceStyle, brush: BrushStyle, scale: float
 ) -> Callable[[str, float], Brush]:
@@ -115,13 +142,9 @@ def nib_brushes(
         if got is not None:
             return got
         pen = role == "glyph"
-        wid = nib.label_pen_width_px if pen else nib.label_leader_width_px
-        if pen and face.label_route == "outline":
-            wid *= nib.label_outline_width_frac
-        wid = wid * max(size, 1.0) / max(nib.label_size_px, 1e-6)
         made[key], _hex = brush_from_id(
             nib.label_brush if pen else nib.label_leader_brush,
-            wid * MARK_WEIGHT.get(role, 1.0),
+            mark_width_px(nib, role, size, outline=face.label_route == "outline"),
             scale,
             brush,
             "label",

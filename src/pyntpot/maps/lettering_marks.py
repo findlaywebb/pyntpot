@@ -31,7 +31,9 @@ import numpy as np
 
 from pyntpot.ink.polyline import Pt
 from pyntpot.letters.hand import Hand
+from pyntpot.letters.nib import mark_width_px
 from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark, Setting
+from pyntpot.letters.style import NibStyle
 from pyntpot.maps.lettering.label import (
     KIND_TRACKING,
     NO_LEADER,
@@ -104,13 +106,15 @@ def box_size(hand: Hand, text: str, size: float, tracking: float = 0.0) -> tuple
     return width + size * 0.5, height
 
 
-def marks(hand: Hand, placed: Sequence[Label], spans: Sequence[Span]) -> list[Mark]:
+def marks(hand: Hand, placed: Sequence[Label], spans: Sequence[Span], nib: NibStyle) -> list[Mark]:
     """Everything on the label layer, as strokes in display pixels.
 
     Args:
         hand: The hand that writes and wanders every mark.
         placed: The placed labels, in the order they claimed their boxes.
         spans: The placed spans, whose lines and ticks are drawn too.
+        nib: The nib the marks will be stroked with, for the pen width a pin's
+            ring is sized round.
 
     Returns:
         The marks, spans first, in the order they are laid down.
@@ -119,7 +123,7 @@ def marks(hand: Hand, placed: Sequence[Label], spans: Sequence[Span]) -> list[Ma
     for span in spans:
         out.extend(span_marks(hand, span))
     for lb in placed:
-        out.extend(label_marks(hand, lb))
+        out.extend(label_marks(hand, lb, nib))
     return out
 
 
@@ -149,11 +153,12 @@ def span_marks(hand: Hand, span: Span) -> list[Mark]:
     return out
 
 
-def label_marks(hand: Hand, lb: Label) -> list[Mark]:
+def label_marks(hand: Hand, lb: Label, nib: NibStyle) -> list[Mark]:
     """One name, and whatever furniture its kind is entitled to.
 
     `lb.lift` is which side of its own baseline a curved name sits on: above it
-    for a river or a road, outboard of the route for a span.
+    for a river or a road, outboard of the route for a span. `nib` is the nib
+    the marks will be stroked with: a pin's ring is sized round its pen.
     """
     rng = hand.generator(_crc(lb.name, round(lb.px, 1), round(lb.py, 1)))
     track = KIND_TRACKING.get(lb.kind, 0.0)
@@ -162,7 +167,7 @@ def label_marks(hand: Hand, lb: Label) -> list[Mark]:
     out = hand.write(_setting(lb, base, track), rng)
     ink = _ink(lb)
     if base is None:
-        out.extend(_furniture(hand, lb, rng, ink))
+        out.extend(_furniture(hand, lb, rng, ink, nib))
     if lb.kind == "home":
         pts = hand.stroke([(lb.px + x, lb.py + y) for x, y in HOME_GLYPH], rng, 0.35)
         out.append(Mark(pts=pts, role="span", ink=ink, size=lb.size))
@@ -215,7 +220,9 @@ def _setting(lb: Label, base: list[Pt] | None, track: float) -> Setting:
     )
 
 
-def _furniture(hand: Hand, lb: Label, rng: np.random.Generator, ink: str) -> list[Mark]:
+def _furniture(
+    hand: Hand, lb: Label, rng: np.random.Generator, ink: str, nib: NibStyle
+) -> list[Mark]:
     """The pin and the leader a pinned name takes; a span and a kind that is its place take none.
 
     A span never takes a leader. Its name sits in clear paper beside its own
@@ -225,6 +232,7 @@ def _furniture(hand: Hand, lb: Label, rng: np.random.Generator, ink: str) -> lis
     ends = lb.leader
     if not ends or lb.kind in NO_LEADER or lb.tier == TIER_SPAN:
         return []
-    ring = Mark(pts=pin(hand, lb, rng), role="pin", ink=ink, size=lb.size)
+    ring_px = mark_width_px(nib, "pin", lb.size)
+    ring = Mark(pts=pin(hand, lb, rng, ring_px), role="pin", ink=ink, size=lb.size)
     line = Mark(pts=leader(hand, ends, rng), role="leader", ink=ink, size=lb.size)
     return [ring, line]

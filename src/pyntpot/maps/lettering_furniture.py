@@ -1,9 +1,9 @@
 """The furniture drawn beside a name: its pin, its leader and a town's underline.
 
-Key names: `pin`, the ring a leader points at; `leader`, the curve from the pin
-to the name; `underline`, the rule under a town's name. Each returns the points
-of one stroke, wandered by `Hand.stroke` from the generator the name's glyphs
-were written with.
+Key names: `pin`, the ring a leader points at, sized round its hole;
+`leader`, the curve from the pin to the name; `underline`, the rule under a
+town's name. Each returns the points of one stroke, wandered by `Hand.stroke`
+from the generator the name's glyphs were written with.
 
 It draws nothing into a plate and it decides nothing about which label takes
 which: that is `maps.lettering_marks`. The geometry is the map's, the wander is
@@ -11,7 +11,9 @@ the hand's.
 
 Invariants: the draws a stroke takes from the generator before it is wandered
 (a leader's bend, an underline's rise) come first, in the order the pin, the
-leader and the underline are called, so the same label draws the same strokes.
+leader and the underline are called, so the same label draws the same strokes;
+a pin's hole, the paper inside its ink, is at least `PIN_HOLE_MIN_PX` in radius
+for the pen width it is given.
 """
 
 import math
@@ -26,10 +28,36 @@ from pyntpot.maps.lettering.span_line import resample
 #: How many segments the quadratic of a leader is cut into.
 _LEADER_STEPS = 12
 
+#: The radius of the paper inside a pin's ring, as a share of the type size.
+PIN_HOLE_SIZE_FRAC = 0.14
 
-def pin(hand: Hand, lb: Label, rng: np.random.Generator) -> list[Pt]:
-    """The dot the leader points at, drawn round rather than filled."""
-    r = max(lb.size * 0.14, 2.2)
+#: The smallest radius of the paper inside a pin's ring, in display pixels. The
+#: organic nib's bristles spread a fixed distance either side of the stroke,
+#: whatever its size, and a smaller hole fills on some seeds.
+PIN_HOLE_MIN_PX = 2.8
+
+
+def pin(hand: Hand, lb: Label, rng: np.random.Generator, pen_px: float) -> list[Pt]:
+    """The dot the leader points at, drawn round rather than filled.
+
+    The hole is sized and the pen laid outside it: the ring's centreline sits
+    half a pen width beyond `PIN_HOLE_SIZE_FRAC` of the type size, or beyond
+    `PIN_HOLE_MIN_PX` on a small name, so the paper left inside the ink is that
+    wide whatever the pen. A ring sized at its centreline gives half its pen to
+    the hole, and the bristles' sideways spread, which does not shrink with the
+    pen, then fills what is left on one seed in five.
+
+    Args:
+        hand: The hand that wanders the ring.
+        lb: The label, for its anchor and type size.
+        rng: The generator the wander is drawn from.
+        pen_px: The width the ring is drawn at, in display pixels: the nib's
+            `mark_width_px` for the `pin` role at the label's size.
+
+    Returns:
+        The wandered ring, in display pixels.
+    """
+    r = max(lb.size * PIN_HOLE_SIZE_FRAC, PIN_HOLE_MIN_PX) + pen_px / 2
     ring = [
         (lb.px + r * math.cos(a * math.tau / 14), lb.py + r * math.sin(a * math.tau / 14))
         for a in range(15)

@@ -10,7 +10,7 @@ from PIL import Image
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.sheet import Canvas
 from pyntpot.ink.style import PaperStyle
-from pyntpot.letters.nib import NibSurface, nib_plate
+from pyntpot.letters.nib import NibSurface, mark_width_px, nib_plate
 from pyntpot.letters.setting import Mark
 from pyntpot.letters.style import FaceStyle, HandStyle, NibGroups, NibStyle
 
@@ -199,3 +199,26 @@ class TestCounters:
             alpha = np.asarray(Image.open(written).getchannel("A"), np.float32) / 255.0
             worst = max(worst, float(alpha[core].mean()))
         assert worst < 0.4, f"the bowl's middle is {worst:.2f} inked: the counter closed"
+
+
+class TestMarkWidth:
+    """A mark's pen width follows its role's weight and its type size."""
+
+    @pytest.mark.parametrize(
+        ("role", "size", "outline", "width"),
+        [
+            ("pin", 20.0, False, 1.275),
+            ("pin", 10.0, False, 0.6375),
+            ("leader", 20.0, False, 0.612),
+            ("glyph", 20.0, False, 1.05),
+            ("glyph", 20.0, True, 0.651),
+            ("leader", 20.0, True, 0.612),
+            ("pin", 0.5, False, 0.06375),
+        ],
+        ids=["pin", "half-size-pin", "leader", "glyph", "outline-glyph", "outline-leader", "tiny"],
+    )
+    def test_the_width_is_the_pen_times_the_weight_at_the_size(
+        self, role: str, size: float, outline: bool, width: float
+    ) -> None:
+        """The default nib draws each role at its pinned width in display pixels."""
+        assert mark_width_px(NibStyle(), role, size, outline=outline) == pytest.approx(width)
