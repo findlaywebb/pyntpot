@@ -3,8 +3,8 @@
 Key names: `_place_flat`, one horizontal name tried on every side of its anchor at every
 rung of the ladder; `course_anchors`, the points a flat river name may be seated beside
 along its own course; `best_flat`, the cheapest answer over every way the name may be
-broken; `ROAD_CROSS_COST`, `LEADER_CROSS_LABEL_COST`, `LEADER_COST_PX`, `SEPARATION_WEIGHT` and `WRAP_COST`, the
-prices the answers are weighed in.
+broken; `ROAD_CROSS_COST`, `LEADER_CROSS_LABEL_COST`, `LEADER_CROSS_ROUTE_COST`,
+`LEADER_COST_PX`, `SEPARATION_WEIGHT` and `WRAP_COST`, the prices the answers are weighed in.
 
 It does not set a name along a line, choose the order names are placed in or swap
 leaders afterwards, and it draws nothing.
@@ -39,6 +39,7 @@ from pyntpot.maps.lettering.placement_costs import (
     box_on_paper,
     darkness,
     leader_crossings,
+    leader_route_crossings,
     near_route,
     off_own_feature,
     on_road,
@@ -66,6 +67,13 @@ ROAD_CROSS_COST = 90.0
 #: another name makes both hard to read, but sometimes there is nowhere else,
 #: so it is a price and not a ban.
 LEADER_CROSS_LABEL_COST = ROAD_CROSS_COST
+
+
+#: What a leader drawn across the route costs, for each time it crosses it past
+#: its own pin. Equal to a road crossing: a line over the track reads as a turn
+#: off it or sends the reader to the wrong side of it, but a pin hemmed in by
+#: the route on every side still has to be named, so it is a price and not a ban.
+LEADER_CROSS_ROUTE_COST = ROAD_CROSS_COST
 
 
 #: What a pixel of leader costs, so the two are directly comparable.
@@ -292,6 +300,7 @@ def _seat_cost(
         if hopeless():
             return None
         cost += leader_crossings(anchor, foot, terms.boxes) * LEADER_CROSS_LABEL_COST
+        cost += leader_route_crossings(anchor, foot, terms.segments) * LEADER_CROSS_ROUTE_COST
     cost -= separation(box, terms.boxes) * SEPARATION_WEIGHT
     return cost
 

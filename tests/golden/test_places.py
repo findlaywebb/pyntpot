@@ -24,6 +24,7 @@ from pyntpot.maps import (
 )
 from pyntpot.maps.cache import LANDCOVER_MARGIN_M, MARGIN_M
 from pyntpot.maps.lettering.label import NO_LEADER, Label
+from pyntpot.maps.lettering.placement_costs import RouteSegments, leader_route_crossings
 from pyntpot.maps.lettering.placement_water import Water, on_water, water_from
 
 from support import REPO_ROOT
@@ -43,6 +44,14 @@ PLACES_TOML = REPO_ROOT / "examples" / "places.toml"
 
 #: The share of a flat name's box a lake may graze at its padded edges.
 LAKE_GRAZE = 0.05
+
+#: The callouts whose leader still crosses the route, per place. A leader across the track is
+#: priced, not banned: each of these pins has the route or a road on every seat on its own
+#: side, so its cheapest seat is over the track. Any other leader that crosses it fails.
+HEMMED_LEADERS = {
+    "skye": {"Thursday: the Storr and a long Staffin lunch"},
+    "y-fenni": {"Bean & Bread", "Shepherd's Ice Cream"},
+}
 
 #: How the providers name the caller; never sent, since no request is made.
 CONTACT = "pyntpot-tests@example.invalid"
@@ -200,6 +209,14 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
     names = {label.name for label in lettering.labels}
     assert names == set(place.labels)
     _assert_clear(list(lettering.labels), water_from(basemap))
+    crossing = {
+        lb.name
+        for lb in lettering.labels
+        if lb.leader is not None
+        and lb.kind not in NO_LEADER
+        and leader_route_crossings(*lb.leader, RouteSegments.of(list(plates.strands)))
+    }
+    assert crossing == HEMMED_LEADERS.get(place.directory, set()), "a leader crosses the route"
     if place.directory == "y-fenni":
         assert {"Y Fenni", "Tŷ Melin", "Castell y Fenni"} <= names
         assert "Abergavenny" not in names

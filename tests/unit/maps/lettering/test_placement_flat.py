@@ -16,7 +16,13 @@ from pyntpot.maps.lettering.label import (
     block_size,
 )
 from pyntpot.maps.lettering.placement import place
-from pyntpot.maps.lettering.placement_costs import EDGE_PX, Backdrop, Terms
+from pyntpot.maps.lettering.placement_costs import (
+    EDGE_PX,
+    Backdrop,
+    RouteSegments,
+    Terms,
+    leader_route_crossings,
+)
 from pyntpot.maps.lettering.placement_flat import _place_flat
 from pyntpot.maps.lettering.span_clear import seg_in_box
 from pyntpot.maps.lettering_marks import box_size, label_marks
@@ -63,6 +69,23 @@ def test_a_leader_is_not_run_through_a_placed_label():
     _place_flat(mark, wide, tall, Terms(card, flat_dark(), [wall, west], [], []))
     assert mark.leader is not None
     assert not seg_in_box(mark.leader[0], mark.leader[1], *wall)
+
+
+def test_a_leader_is_not_run_across_the_route_beside_its_pin():
+    """Bean & Bread's pin sits six pixels west of the track, so its name keeps to the west."""
+    card = map_card()
+    track = [(206.0, float(y)) for y in range(0, 301, 5)]
+    mark = Label(name="Bean & Bread", kind="cafe", tier=3, px=200.0, py=150.0, size=14.0)
+    wide, tall = block_size([mark.name], mark.size, flat_measure)
+    # The west half of the card a shade darker, so without the crossing priced the
+    # cheapest seat is east of the track, at the end of a leader drawn over it.
+    dark = {"w": 2, "h": 1, "v": [[0.1, 0.0]]}
+    terms = Terms(card, dark, [], [], [(track, 1.0)], segments=RouteSegments.of(track))
+    _place_flat(mark, wide, tall, terms)
+    assert mark.leader is not None
+    assert mark.box is not None
+    assert leader_route_crossings(*mark.leader, terms.segments) == 0.0
+    assert mark.box[2] < track[0][0], "the name was not kept to its pin's side of the track"
 
 
 def _set_flat(name: Label, card: Card, taken: list[Box]) -> tuple[list[Label], Hand]:
