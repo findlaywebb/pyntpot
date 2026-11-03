@@ -92,70 +92,81 @@ profile changed by up to 0.77 of the full width between neighbouring samples, an
 - Not changed: the nib's angle is still fixed to the page (issue #76), and no other mark
   (leader, span, tick, underline, pin) has a profile.
 
-Pinned by `tests/property/test_pen_profile.py` (a V's point is never thinner than the
-narrower of its legs, at any turn and nib angle; starting a closed ring one vertex on shifts
-its widths and changes none; both fail on the first version of this change, which the next
-two do not: turning a stroke by an angle moves no sample of its
-width by more than `thin` times that angle; a pixel staircase at any angle to the nib keeps
-within 0.12 of its straight line's width at thin 0.85, sample to sample and against the true
-width) and `tests/unit/letters/test_pen_profile.py` (a straight stroke keeps the exact sine law; an
-L climbs through the widths between, pinned; a V along the nib keeps its legs' 0.751 at
-the point, where the first version read 0.15; a ring's first and last widths agree; the
-sample count; "Keswick" at the issue's settings, three seeds, its window from
-`nib_brushes`, has no zigzag).
+Pinned by `tests/property/test_pen_profile.py`: no sample of a V is thinner than its
+narrower leg, at any turn, nib angle, leg lengths (2 to 40 px, shorter and longer than the
+window) and sample count (2 to 90, odd and even); turning the nib by up to 0.01 rad on any
+stroke of up to five straight pieces moves no sample by more than `thin` times the turn;
+turning a pixel staircase moves no sample by more than `thin` times the turn; a pixel
+staircase at any angle to the nib keeps within 0.12 of its straight line's width at thin
+0.85, sample to sample and against the true width; starting a closed ring one vertex on
+shifts its widths and changes none. And by `tests/unit/letters/test_pen_profile.py`: a
+straight stroke keeps the exact sine law; an L climbs through the widths between, pinned,
+unchanged from the first version; a ±45 degree V under a flat nib keeps its legs' 0.751 at
+every sample at 24, 25, 60 and 61 samples and with its point off centre (the first version
+read 0.471 at 24 and 0.673 at 61); a closed V started 3.5 px past its point reads 0.751 at
+both ends (0.7377 before); a hairline running into a 2 px kink (`TestHairlineKink`) moves by
+at most `thin` times a 1.6e-4 rad turn of the nib (0.29 before), climbs into the kink by
+pinned widths with no step, and is untouched (0.1873) more than half a window before the
+kink and under 0.3 to 1 px before it (0.487 before); a ring shorter than the tent is cut at
+every lap of its vertices, pinned; a ring's first and last widths agree; the sample count;
+"Keswick" at the issue's settings, three seeds, its window from `nib_brushes`, has no zigzag.
+`tests/benchmarks/test_letters.py::test_the_nib_widths_of_a_name` times the profile along
+every glyph stroke of a long name, which no other benchmark runs.
 
 ## Golden regeneration
 
-Process as ADR 0036, with the review images of ADR 0052. The tolerance bound is not
-changed, no gate is loosened and the hash input does not change; the manifest hash does not
-move (`340a7f6e260ee1e2-d9c56c0811177b0f`).
+Process as ADR 0036, with the review images of ADR 0052, on `main` with ADR 0059 merged.
+The tolerance bound is not changed, no gate is loosened and the hash input does not change;
+the manifest hash does not move (`340a7f6e260ee1e2-d9c56c0811177b0f`).
 
-### Lynmouth compare, against the committed goldens
+### Lynmouth compare, against `main`'s goldens
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
 wash.webp: identical yes, differing fraction 0.000000
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.005128
-map.png: identical no, differing fraction 0.002638
+labels-centreline.webp: identical no, differing fraction 0.005672
+map.png: identical no, differing fraction 0.002459
 manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
 ```
 
 Only the lettering moves, and only in its strokes' widths: placement does not read the
 nib, so every name keeps its seat and `PINNED_LABELS` is unchanged. `GOLDEN_HASH` is not
-re-pinned. The place pins (`tests/golden/test_places.py`), the map-styles means and
+re-pinned. The goldens were regenerated in place with `make_golden.py` and compared with the
+paint they came from (`--require-identical all --require-hash equal`): every output
+byte-identical. The place pins (`tests/golden/test_places.py`), the map-styles means and
 the smoke lock pass unchanged on the regenerated goldens, so none is re-pinned.
 
 ### Docs images
 
-Every docs image and master was repainted on top of ADR 0047's, on the final code (with the
-corner floor and the closed ring; the numbers here replace those of the first version). The 37 that letter
-anything moved (every map card, the lettering, nib and tutorial figures, and the figures
-whose grids carry lettered captions); every other entry is byte-identical. Master
-differing fractions against main's masters:
+Every docs image and master was repainted with `make_docs_images.py` on the merged code.
+The 37 that letter anything moved (every map card, the lettering, nib and tutorial
+figures, and the figures whose grids carry lettered captions); every other entry is
+byte-identical. Master differing fractions against `main`'s masters:
 
 | Image | Master | Image | Master |
 |---|---|---|---|
-| `explanation/nib-hands.webp` | 0.102170 | `tutorials/grid-nib.webp` | 0.083745 |
-| `tutorials/grid-lettering.webp` | 0.073587 | `explanation/nib-angles.webp` | 0.057841 |
-| `explanation/nib-backing.webp` | 0.029104 | `social-preview.jpg` | 0.021042 |
-| `word.webp` | 0.016667 | `explanation/nib-ground.webp` | 0.015821 |
-| `tutorials/grid-composition.webp` | 0.012333 | `tutorials/lettering.webp` | 0.010313 |
-| `gallery/lettering.webp` | 0.010313 | `map-styles/bold.webp` | 0.005361 |
-| `tutorials/composition.webp` | 0.005156 | `gallery/composition.webp` | 0.005156 |
-| `how-to/own-shapes.webp` | 0.004245 | `painting-with-python/derwentwater.webp` | 0.004219 |
-| `tutorials/grid-brush.webp` | 0.004090 | `how-to/route-ink-grid.webp` | 0.004003 |
-| `reference/pigment-swatches.webp` | 0.003719 | `places/y-fenni.webp` | 0.003583 |
-| `places/skye.webp` | 0.003485 | `explanation/wash-glaze.webp` | 0.003214 |
-| `map-styles/pen-and-ink.webp` | 0.002997 | `map-styles/winter.webp` | 0.002534 |
-| `how-to/route-ink.webp` | 0.002534 | `places/ambleside.webp` | 0.002510 |
-| `gallery/route-map.webp` | 0.002510 | `tutorials/route-map.webp` | 0.002485 |
-| `tutorials/grid-wash.webp` | 0.002267 | `how-to/command-line.webp` | 0.002255 |
-| `reference/brush-sheet.webp` | 0.002036 | `places/oxford.webp` | 0.002025 |
-| `tutorials/grid-paper.webp` | 0.001867 | `tutorials/grid-pigments.webp` | 0.001767 |
-| `map-styles/sepia.webp` | 0.001365 | `places/yr-wyddfa.webp` | 0.001181 |
-| `hero.webp` | 0.000780 | | |
+| `explanation/nib-hands.webp` | 0.103299 | `tutorials/grid-nib.webp` | 0.084203 |
+| `tutorials/grid-lettering.webp` | 0.073877 | `explanation/nib-angles.webp` | 0.057538 |
+| `explanation/nib-backing.webp` | 0.029543 | `social-preview.jpg` | 0.021076 |
+| `word.webp` | 0.016821 | `explanation/nib-ground.webp` | 0.015727 |
+| `tutorials/grid-composition.webp` | 0.012633 | `gallery/lettering.webp` | 0.010156 |
+| `tutorials/lettering.webp` | 0.010156 | `gallery/composition.webp` | 0.005156 |
+| `tutorials/composition.webp` | 0.005156 | `map-styles/bold.webp` | 0.005044 |
+| `how-to/own-shapes.webp` | 0.004427 | `painting-with-python/derwentwater.webp` | 0.004089 |
+| `tutorials/grid-brush.webp` | 0.004052 | `reference/pigment-swatches.webp` | 0.003943 |
+| `how-to/route-ink-grid.webp` | 0.003881 | `places/y-fenni.webp` | 0.003485 |
+| `explanation/wash-glaze.webp` | 0.003333 | `places/skye.webp` | 0.003135 |
+| `map-styles/pen-and-ink.webp` | 0.002997 | `gallery/route-map.webp` | 0.002461 |
+| `places/ambleside.webp` | 0.002461 | `how-to/route-ink.webp` | 0.002412 |
+| `tutorials/route-map.webp` | 0.002388 | `tutorials/grid-wash.webp` | 0.002367 |
+| `map-styles/winter.webp` | 0.002290 | `tutorials/grid-paper.webp` | 0.002067 |
+| `how-to/command-line.webp` | 0.002062 | `reference/brush-sheet.webp` | 0.001941 |
+| `places/oxford.webp` | 0.001908 | `tutorials/grid-pigments.webp` | 0.001667 |
+| `map-styles/sepia.webp` | 0.001340 | `places/yr-wyddfa.webp` | 0.001160 |
+| `hero.webp` | 0.000780 |  |  |
 
+The map cards' masters move by 0.000780 to 0.005044.
 Looked at side by side with `main` (the review images in the pull request): on
 `nib-angles.webp` the top row (thin 0) is unchanged, and at 0.52 and 0.85 the strokes'
 edges run smooth where they were stair-stepped; at the 90 degree cell the K and the w are
@@ -166,43 +177,53 @@ holds.
 
 ## Mutation
 
-Run on the changed functions as CONTRIBUTING.md says (`pen_profile`, `_point`, `_across`,
-`_leg`, `_spread`, and `letters.nib._items` and `_sheet`, which `tests/mutation/scope.py`
-picks up from the hunks the split touched). Every survivor of `letters.pen_profile` was
-killed by a focused test or is equivalent:
+Run on the changed functions of `letters.pen_profile` as CONTRIBUTING.md says
+(`pen_profile`, `_cuts`, `_reached`, `_point`, `_across`, `_side`). `letters.nib._items` and
+`_sheet`, which `tests/mutation/scope.py` also picks up from the split's hunks, are not
+changed by this rework; their survivors are those the first version listed (the label token
+in the set of named inks, the `float64` dtype of `np.asarray`, and which paper parameters
+reach the sheet), none on a line this change wrote. Every other survivor is killed or
+equivalent:
 
-- `pen_profile`: `at + taps` made `at - taps`. The taps are symmetric about zero, so the
-  same boxes are summed in another order.
-- `_spread`: the loop bound `min(reach, len(ring) - 1)` made `len(ring) + 1` or
-  `len(ring) - 2`. Past `len - 1` an open stroke's slices are empty and a ring's roll comes
-  back round to a shift already taken; `len - 2` drops only the shift to the far end, and a
-  pinched sample is never an open stroke's end (there one half is empty and the other is the
-  whole window, so the halves cannot beat it) nor needs it on a ring, where a roll by
-  `len - 1` is the roll by -1 already taken.
-- `_leg`: `>` made `>=` against `_MIN_LENGTH_PX`, which differs only on a half exactly that
-  long; the empty half's 1.0 made 2.0, which `min` with the other half (at most 1) never
-  picks, and both halves are empty only on a stroke of no length, which returns before.
+- `_cuts`, the ring's lap count `ceil((end[-1] - start[0]) / cum[-1])` made `*`, `end[+1]`,
+  `end[-2]`, `start[1]`, `cum[+1]` or `cum[-2]`, and the laps' range made one longer. Each
+  gives at least as many laps as the tent needs (`ceil(15 W / 16 / length)` either way, where
+  the count taken is about twice that), and a surplus lap only adds vertices outside every
+  tent, which `searchsorted` never picks. The one mutant that gave too few (`end + start`)
+  is killed by the ring shorter than the tent.
+- `_cuts`, `searchsorted`'s `side` dropped (to its default) on either bound, `- first` made
+  `+ first`, `slot < count` made `<=`, and the index clamp made `len - 2`. Each only adds or
+  drops a cut at or past a tent's edge, or repeats one; a cut there leaves one side empty,
+  and an empty side reads full, so that cut's floor is the whole tent's and never decides.
+- `_reached`: `<=` made `<`. A box end exactly on the cut is the cut's own point either way.
+- `_side`: `>` made `>=` against `_MIN_LENGTH_PX`, which differs only on a side exactly that
+  long; the empty side's 1.0 made 2.0, which `min` with the other side (at most 1) never
+  picks, and both sides are empty only on a stroke of no length, which returns before.
 
-The clip bounds of the first version (`np.clip(..., 0, total)` on each box's ends) were
-made redundant by `np.interp`'s clamp and are gone, as are the running sums, and with them
-their mutants. The four survivors of `letters.nib._items` are on lines this change did not
-write and are equivalent: the label token renamed in the set of named inks (an unknown ink
-falls back to `label` anyway) and the `float64` dtype dropped from `np.asarray` (the points
-are floats). `_sheet` is unchanged here; its survivors (which paper parameters reach the
-sheet) are not this change's and are left to a test of the sheet.
+The first version's `_spread` and `_leg`, and with them their mutants, are gone.
 
 ## Consequences
 
-- A glyph's width along a stroke is a continuous function of its direction and of where on
-  the stroke it is; a staircase near the nib's angle reads as one width.
+- A glyph's width along a stroke is a continuous function of its direction and of the nib's
+  angle; a staircase near the nib's angle reads as one width.
+- A stroke of two straight legs is nowhere thinner than its narrower leg, however the
+  samples fall; the floor costs no truncated reach and no gate.
+- A floor reaches as far as a sample's tent does (15/16 of a window either side), not half a
+  window: just past half a window a V's tent still reaches round its point, and the whole
+  tent there reads 0.66 against legs of 0.751, so the floor must reach it. It lifts a sample
+  only where the two sides of a cut lie either side of the nib, and never above the narrower,
+  so a straight hairline is not lifted until its tent reaches past the turn's first vertex;
+  on the kink pinned above, nothing more than half a window out moves.
 - A tight curve, shorter than the nib is wide, has its thinnest point softened: the width
   there is the average over a nib's width of path, which is the nib's own footprint. Where
-  such a curve turns through the nib's own direction, the corner floor softens it a little
-  further, since within a window a curve and a corner look alike: a smooth ring of radius
-  12 px under an 8 px window at thin 0.85, sampled every few tenths of a pixel, reads 0.33
-  at its thinnest against 0.15 unfloored. At the profile's own spacing (about half a window)
-  a sample seldom lands on the thinnest point, and the same ring reads 0.214 against 0.208.
-- A sharp corner is never read thinner than both its legs at a sample on it, and the
-  samples half a window either side carry that floor; a ring's width runs on round its
-  seam.
+  such a curve turns through the nib's own direction, the cut sides straddle the nib and
+  soften it a little further, since within a window a curve and a corner look alike: a
+  smooth ring of radius 12 px under an 8 px window at thin 0.85 reads 0.333 at its thinnest
+  against 0.15 unfloored, every few tenths of a pixel or at 24 samples (0.337); the first
+  version read 0.336 and 0.279, by where the samples fell.
+- The profile costs more: along every glyph stroke of a long name
+  (`test_the_nib_widths_of_a_name`'s workload) it takes 7.5 ms against the first version's
+  4.8, from the cuts. End to end, `test_maps.py::test_letter` took 172.8 ms at best of three
+  12-round runs against `main`'s 169.4 (2 %), on a shared four-core machine whose medians
+  overlapped.
 - A further regeneration needs its own ADR.
