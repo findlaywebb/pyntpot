@@ -52,7 +52,7 @@ wash.webp: identical yes, differing fraction 0.000000
 pen.webp: identical yes, differing fraction 0.000000
 labels-centreline.webp: identical yes, differing fraction 0.000000
 map.png: identical yes, differing fraction 0.000000
-manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
+manifest hash: 3976d23ae248ca86-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
 ```
 
 No Lynmouth river name lies on water, so nothing moves; `PINNED_LABELS` and `GOLDEN_HASH`
@@ -60,31 +60,45 @@ are unchanged.
 
 ### Docs images
 
-Every docs image was repainted with `repaint.py`; eight moved, and only they:
+Repainted on `main` after ADR 0049 (a generator per item), ADR 0053, ADR 0063 and ADR 0064
+were merged in. Every docs image was repainted with `make_docs_images.py --compare` against
+`main`'s; eight moved, and only they:
 
 | Image | Image changed | Master changed |
 |---|---|---|
-| `places/oxford.webp` | 0.179638 | 0.026032 |
-| `map-styles/bold.webp` | 0.076343 | 0.010502 |
-| `tutorials/route-map.webp` | 0.072903 | 0.005093 |
-| `how-to/route-ink.webp` | 0.015020 | 0.005093 |
-| `hero.webp` | 0.015007 | 0.003874 |
-| `map-styles/winter.webp` | 0.014564 | 0.005239 |
-| `map-styles/pen-and-ink.webp` | 0.012956 | 0.005141 |
-| `map-styles/sepia.webp` | 0.012828 | 0.004898 |
+| `places/oxford.webp` | 0.187411 | 0.057165 |
+| `map-styles/bold.webp` | 0.118500 | 0.010551 |
+| `tutorials/route-map.webp` | 0.100760 | 0.004922 |
+| `map-styles/sepia.webp` | 0.085729 | 0.004727 |
+| `map-styles/winter.webp` | 0.071785 | 0.005117 |
+| `how-to/route-ink.webp` | 0.069737 | 0.004922 |
+| `hero.webp` | 0.020017 | 0.003850 |
+| `map-styles/pen-and-ink.webp` | 0.017225 | 0.005044 |
+
+The masters' changes are local to the names that move. The WebP images' larger, widespread
+fractions are faint speckle at a channel delta of a few levels, where the lossy encoder
+re-quantises the paper and washes around those names; the paint under them is unchanged.
 
 Looked at side by side with `main`: on Oxford the lower "Cherwell" leaves the parallel
-channel it was written over for the paper on the other side of its own, and the upper one
-and "Thames" shift along their water; on the Ambleside cards (the hero, the map styles, the
-route-map tutorial and the route-ink how-to) "Brathay" moves off the side stream onto clear
-paper beside it, and on `map-styles/bold.webp` "Rothay" moves off a channel to sit beside
-it. No other name moves. The place pins and the map-styles means did not move.
+channel it was written over for the meadow on the other side of its own, and the upper one
+and "Thames" shift along their water; "Magdalen Bridge" then takes the seat east of its pin
+with a short leader, in place of the seat south east of it with a long one, and "A4158"
+moves down beside it. The bridge's move was not there when this change was painted on the
+earlier `main`; painting this change on `main` without ADR 0064 moves it the same way, so it
+comes from the change meeting `main`'s earlier merges (ADRs 0049, 0053 and 0063), not from
+ADR 0064's leader price. ADR
+0064's own Oxford moves ("Christ Church", "Radcliffe Camera", "The Bridge of Sighs") are
+unchanged by this change. On the Ambleside cards (the hero, the map styles, the route-map
+tutorial and the route-ink how-to) "Brathay" moves off the side stream onto clear paper beside
+it, and on `map-styles/bold.webp` "Rothay" moves off a channel to sit beside it. No other
+name moves. The place pins and the map-styles means did not move.
 
 ## Consequences
 
 - A name set along a line keeps its letters off the lakes and strokes where its line
   offers a dry window; it is a price, so a river whose every window is wet still letters.
-- "Magdalen Bridge" stays across three streets on Oxford, so issue #52 stays open for it.
+- "Magdalen Bridge" stays across streets on Oxford (its new seat east of the pin lies over
+  "A4158" and the streets beside it), so issue #52 stays open for it.
   Counting the roads under a seat (the first in full, each further one at half, three at
   most) was tried in this window and moved no name there: every seat within `LEADER_RUNGS`
   of the bridge's pin lies across three streets or on the Cherwell and its meadow, so the

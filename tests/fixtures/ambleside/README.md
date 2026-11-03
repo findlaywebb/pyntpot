@@ -52,6 +52,10 @@ cache over a copy of this directory finds every payload and fetches nothing.
   `https://api.opentopodata.org/v1/srtm30m`. 64 calls of 100 points.
 - **Contact string sent**: `https://github.com/findlaywebb/pyntpot`.
 - **Fetched**: 2026-10-25.
+- **Education land, added to the land cover payload**: fetched 2026-11-03 from the same mirror
+  when the land cover query gained `landuse=education` and `amenity=university|college`
+  (ADR 0053): those four query lines alone over the land cover box, trimmed as the rest of the
+  payload was, and appended after its elements; nothing already there changed.
 
 ## Bounding boxes
 
@@ -154,10 +158,10 @@ would not hold this one: land cover on the fells is dense), enforced by `tests/a
 | File | Bytes | Gzip bytes |
 |---|---|---|
 | `elevation-f0a137ce97afcb43.json` | 45,649 | 10,781 |
-| `landcover-f0a137ce97afcb43.json` | 4,869,967 | 792,667 |
+| `landcover-f0a137ce97afcb43.json` | 4,872,558 | 793,247 |
 | `overpass-f0a137ce97afcb43.json` | 1,624,907 | 320,303 |
 | `track.gpx` | 21,855 | 3,402 |
-| **Total, README excluded** | **6,562,378** | **1,127,153** |
+| **Total, README excluded** | **6,564,969** | **1,127,733** |
 
 ## Licences and attribution
 

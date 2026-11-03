@@ -2,7 +2,7 @@
 
 GitHub issue: [#52](https://github.com/findlaywebb/pyntpot/issues/52)
 
-"Magdalen Bridge" on the Oxford card is lettered across three roads, which a city theme
+"Magdalen Bridge" on the Oxford card is lettered across several roads, which a city theme
 with `roads = "all"` draws densely; the placer's road penalty (`on_road`, one road or none)
 is the same as in a village.
 

@@ -26,8 +26,8 @@ up to:
 - **The leader is barely priced.** A seat is charged its rung's distance, not the length
   of the leader drawn to it, which is longer on a diagonal; and a pixel of separation
   (0.55) is worth more than a pixel of leader (0.4), so in clear paper the far rung wins.
-  A leader is priced for the boxes it cuts (`leader_crossings`, `placement_costs.py:136`)
-  and nothing else: not the route, not the water. It is priced as a straight segment but
+  A leader is priced for the boxes it cuts (`leader_crossings`) and, since ADR 0064, the
+  route it crosses past its pin (`leader_route_crossings`), but not the water. It is priced as a straight segment but
   drawn bent, by a random fraction of its run (`lettering_furniture.leader`), so a long
   leader drawn can stray from the one priced.
 - **The backing wash runs under the furniture.** Pins and leaders go through the nib with
@@ -57,8 +57,8 @@ placement quality, tuning facilities, and a tool to place names by hand.
 - **Price a wrap against the best one-line seat**, not as a flat 26: a second line only
   when the best one-line seat is materially worse. Fewer needless wraps; a long name in a
   tight spot loses its narrow fallback.
-- **Price the leader's crossings of water and the route**, as `leader_crossings` does for
-  boxes. Grasmere's and Glaslyn's leaders cross less water; but a lake name pinned in its
+- **Price the leader's crossings of water**, as `leader_crossings` does for boxes and
+  `leader_route_crossings` for the route (ADR 0064). Grasmere's and Glaslyn's leaders cross less water; but a lake name pinned in its
   lake always crosses some shore, so the price has to allow its own water or move its pin
   to the shore.
 - **Take the backing wash off pins and leaders** (`wash=False` in `_furniture`). No band
@@ -143,8 +143,8 @@ adopt:
   which shared term moved it.
 
 Not in it: what is named (the picks), the hand's lettering and the nib, where a span's
-bracket is drawn (`place_spans`), and the backing wash's own shape (#49). Related: #50 and
-#51, which this would likely close or narrow.
+bracket is drawn (`place_spans`), and the backing wash's own shape (#49). Related: #50, which
+this would likely close or narrow.
 
 **Decided** (maintainer, 2026-11-02):
 

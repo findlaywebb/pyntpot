@@ -11,8 +11,12 @@ and are not touched by it. Inside the wet field the classes are wet at the same 
 they bleed into each other and no boundary between two of them carries its own rim; the
 outer silhouette of the land sits outside it and keeps the edge it should have.
 
-It does not paint the wood's texture or dabs, the relief or the sea. Each wash draws its
-blooms from the job's shared generator, in class order.
+A class in `PAINTED_AS` is labelled at its own place in the order but washed with the
+class it is painted as, at that class's place, so its pixels and that class's are one
+wash in one pigment. It does not paint the wood's texture or dabs, the relief or the
+sea. Each wash keys its blooms by its class (`PaintJob.bloom`) and each ring its
+deformation by its own points, so neither depends on the classes or rings painted
+before it.
 """
 
 import numpy as np
@@ -23,6 +27,7 @@ from pyntpot.ink.raster import Deform, deform_rings, fill_cov
 from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import WashStyle
 from pyntpot.ink.wash import WashOptions, separated, wash
+from pyntpot.maps.cover import PAINTED_AS
 from pyntpot.maps.painter.job import INSIDE, PaintJob, PlateStack, drawable
 from pyntpot.maps.rings import orient
 
@@ -67,7 +72,7 @@ def _deform(job: PaintJob) -> Deform | None:
         return None
     floor_m, mult = wash_style.silhouette_deform_max_m
     return (
-        job.deform_rng,
+        wash_style.silhouette_deform_seed,
         wash_style.silhouette_deform_amount,
         int(wash_style.silhouette_deform_depth),
         wash_style.silhouette_deform_decay,
@@ -88,7 +93,7 @@ def _label(job: PaintJob, stack: PlateStack, order: list[str]) -> None:
     A class is the union of its rings. They come wound as they were surveyed, so each
     is wound anticlockwise before the nonzero fill; otherwise a ring inside another and
     wound against it, such as a lawn inside its park, would cut a hole in the class.
-    They are wound after the deform, which keeps its draws in the surveyed order.
+    They are wound after the deform, so a ring is keyed by its points as surveyed.
     """
     deform = _deform(job)
     for i, cls in enumerate(order, 1):
@@ -99,14 +104,32 @@ def _label(job: PaintJob, stack: PlateStack, order: list[str]) -> None:
     stack.label[stack.water] = 0
 
 
+def _washed(order: list[str]) -> list[tuple[str, list[int]]]:
+    """Each washed class with the label indices it covers, in wash order.
+
+    A class painted as another joins that class's wash where the order carries it, and
+    is washed on its own, in the other's pigment, where it does not.
+    """
+    washes: dict[str, list[int]] = {}
+    for i, cls in enumerate(order, 1):
+        target = PAINTED_AS.get(cls, cls)
+        if target == cls or target not in order:
+            washes.setdefault(target, []).append(i)
+    for i, cls in enumerate(order, 1):
+        target = PAINTED_AS.get(cls, cls)
+        if target != cls and target in order:
+            washes[target].append(i)
+    return list(washes.items())
+
+
 def _class_washes(job: PaintJob, stack: PlateStack, order: list[str]) -> list[PigmentLayer]:
-    """One separated wash per labelled class, wet together across the cover."""
+    """One separated wash per washed class, wet together across the cover."""
     style = job.style
     wet_map = wet_field(stack.label, style.wash, job.rim_cov)
     layers: list[PigmentLayer] = []
-    for i, cls in enumerate(order, 1):
+    for cls, indices in _washed(order):
         base, pool = style.cover.cover_cfg.get(cls, (0.5, 0.2))
-        cov = (stack.label == i).astype(F32)
+        cov = np.isin(stack.label, indices).astype(F32)
         if not cov.any():
             continue
         options = WashOptions(
@@ -117,7 +140,7 @@ def _class_washes(job: PaintJob, stack: PlateStack, order: list[str]) -> list[Pi
             rim_drop=style.wash.wet_rim_drop,
             gran_gamma=job.gran_gamma,
             flow=job.flow,
-            blooms=job.bloom(cov),
+            blooms=job.bloom(cov, cls),
         )
         layers.extend(
             separated(
@@ -140,7 +163,7 @@ def _pale_wash(job: PaintJob, stack: PlateStack) -> PigmentLayer:
         rim_px=max(6.0, 120.0 / job.mpp),
         gran_gamma=job.gran_gamma,
         flow=job.flow,
-        blooms=job.bloom(pale),
+        blooms=job.bloom(pale, "pale"),
     )
     return (
         wash(pale, job.sheet, cover.pale_base, cover.pale_pool, options),
