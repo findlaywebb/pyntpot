@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from pyntpot.ink.chains import join_strokes
+from pyntpot.ink.cut import cut_line
 from pyntpot.ink.polyline import Pt, clip_line, eased, length, simplify, smooth
 from pyntpot.maps.basemap import Line, River, Road
 from pyntpot.maps.rivers import CHANNEL_EASE_SAMPLES, channel, major_rivers, painted_width_px
@@ -202,9 +203,10 @@ def rivers_from_paths(
     pieces_by: dict[str, list[list[Pt]]] = {}
     for r in rows:
         for seg in parse_path(r["d"]):
-            pieces_by.setdefault(r["n"], []).extend(
-                c for c in clip_line(seg, frame.clip) if len(c) > 1
-            )
+            # Cut where it crosses the card's edge, so a river that comes in from
+            # beyond the card starts on the edge, where the stamp knows it was not
+            # set down on this paper, rather than at its first point inside.
+            pieces_by.setdefault(r["n"], []).extend(cut_line(seg, frame.clip))
     major, widths = major_rivers(pieces_by, lakes, frame.brush.major_river_rel_frac)
     classed = {
         r["n"]: (("major" if r["n"] in major else "medium") if r["c"] == "river" else "minor")

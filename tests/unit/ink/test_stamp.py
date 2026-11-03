@@ -33,6 +33,52 @@ def test_a_dry_brush_breaks_where_a_wet_one_does_not():
     assert dry.any()  # broken, not absent
 
 
+@pytest.mark.parametrize(
+    "start",
+    [(0.0, 20.0), (199.0, 20.0), (60.0, 0.0), (60.0, 39.0), (-6.0, 20.0)],
+    ids=["left", "right", "top", "bottom", "beyond"],
+)
+def test_a_stroke_that_enters_at_the_edge_is_not_set_down(start: tuple[float, float]) -> None:
+    """A stroke starting on or off the plate's edge carries no set-down ink and no blot."""
+    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, BrushStyle(), "lane")
+    line = np.array([start, (100.0, 20.0)])
+    marks = []
+    for brush in (tuned, replace(tuned, load=0.0, pool=0.0)):
+        acc = np.zeros((40, 200), np.float32)
+        stamp(acc, line, brush, np.random.default_rng(5))
+        marks.append(acc)
+    assert marks[0].any()
+    assert np.array_equal(marks[0], marks[1])
+
+
+def test_a_stroke_entering_at_the_edge_lays_what_a_bare_one_lays_further_in() -> None:
+    """Entering at x 0, a lane lays what the same lane with no load or pool lays from x 10."""
+    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, BrushStyle(), "lane")
+    entering = np.zeros((40, 200), np.float32)
+    stamp(entering, np.array([(0.0, 20.0), (100.0, 20.0)]), tuned, np.random.default_rng(5))
+    inside = np.zeros((40, 210), np.float32)
+    bare = replace(tuned, load=0.0, pool=0.0)
+    stamp(inside, np.array([(10.0, 20.0), (110.0, 20.0)]), bare, np.random.default_rng(5))
+    np.testing.assert_allclose(entering, inside[:, 10:], rtol=1e-3, atol=1e-4)
+
+
+@pytest.mark.parametrize(
+    "start",
+    [(1.0, 20.0), (198.0, 20.0), (60.0, 1.0), (60.0, 38.0)],
+    ids=["left", "right", "top", "bottom"],
+)
+def test_a_stroke_one_pixel_in_from_the_edge_is_set_down(start: tuple[float, float]) -> None:
+    """A stroke starting one plate pixel inside the edge is on the paper, and is set down."""
+    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, BrushStyle(), "lane")
+    line = np.array([start, (100.0, 20.0)])
+    marks = []
+    for brush in (tuned, replace(tuned, load=0.0, pool=0.0)):
+        acc = np.zeros((40, 200), np.float32)
+        stamp(acc, line, brush, np.random.default_rng(5))
+        marks.append(acc)
+    assert not np.array_equal(marks[0], marks[1])
+
+
 def test_two_strokes_crossing_never_double():
     """Saturation is what stops a crossing reaching twice the black."""
     sheet = Sheet(60, 60, gran_px=6.0, seed=2)

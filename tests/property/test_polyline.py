@@ -1,4 +1,8 @@
-"""Properties of `simplify` (ends kept, a subsequence, idempotent, within tolerance) and `normal_at`."""
+"""Properties of `simplify`, `normal_at` and `cut_line`.
+
+`simplify` keeps the ends, returns a subsequence, settles and stays within tolerance;
+`cut_line` keeps every piece in the box and cuts a piece's open ends on its edge.
+"""
 
 import math
 
@@ -6,6 +10,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from pyntpot.ink.cut import cut_line
 from pyntpot.ink.polyline import Pt, normal_at, simplify
 
 from support.properties import UNTIMED
@@ -96,3 +101,27 @@ class TestNormalAt:
         assert math.hypot(nx, ny) == pytest.approx(1.0)
         assert nx * dx + ny * dy == pytest.approx(0.0, abs=1e-9)
         assert dx * ny - dy * nx > 0
+
+
+BOX = (-200.0, -150.0, 300.0, 250.0)
+
+
+def _on_edge(p: Pt) -> bool:
+    """Whether a point lies on `BOX`'s boundary."""
+    xmin, ymin, xmax, ymax = BOX
+    return p[0] in (xmin, xmax) or p[1] in (ymin, ymax)
+
+
+class TestCutLine:
+    """Every piece lies in the box, and a piece's end that is not a point of the line is on its edge."""
+
+    @UNTIMED
+    @given(points=POINTS)
+    def test_every_piece_lies_in_the_box_and_starts_and_ends_on_it(self, points: list[Pt]) -> None:
+        """Each piece has two or more points, all inside the box; a cut end lies on the box's edge."""
+        xmin, ymin, xmax, ymax = BOX
+        for piece in cut_line(points, BOX):
+            assert len(piece) > 1
+            assert all(xmin <= x <= xmax and ymin <= y <= ymax for x, y in piece)
+            for end in (piece[0], piece[-1]):
+                assert end in points or _on_edge(end)

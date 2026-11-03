@@ -64,6 +64,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0059 | The organic drift is rescaled about its own mean: a golden regeneration |
 | 0060 | The pen's set-down blot stays on its stroke: a golden regeneration |
 | 0061 | A reloaded nib swells back: a golden regeneration |
+| 0062 | A stroke that enters at the card's edge is not set down: a golden regeneration |
 | 0063 | Long landmark names rank last: a golden regeneration |
 | 0064 | A leader is priced for crossing the route: a golden regeneration |
 | 0065 | A name set along water keeps its letters off it: a golden regeneration |
