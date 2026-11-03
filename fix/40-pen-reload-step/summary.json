@@ -1,0 +1,134 @@
+{
+  "before": "origin/main",
+  "after": "working tree",
+  "channel_delta": 2,
+  "max_differing_fraction": 0.005,
+  "files": [
+    {
+      "path": "docs/images/explanation/nib-runs-dry.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.008527777777777778,
+      "over_bound": true,
+      "max_delta": 117,
+      "box": [
+        135,
+        55,
+        274,
+        123
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/explanation/nib-runs-dry.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-runs-dry.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/oxford.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 643,
+      "changed_fraction": 0.005825557283566615,
+      "over_bound": true,
+      "max_delta": 11,
+      "box": [
+        66,
+        456,
+        720,
+        643
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/oxford.webp.diff.png",
+      "crop_image": "docs/images/places/oxford.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/y-fenni.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 643,
+      "changed_fraction": 0.02175565923621911,
+      "over_bound": true,
+      "max_delta": 12,
+      "box": [
+        16,
+        348,
+        720,
+        643
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/y-fenni.webp.diff.png",
+      "crop_image": "docs/images/places/y-fenni.webp.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-runs-dry.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.010401002506265664,
+      "over_bound": true,
+      "max_delta": 109,
+      "box": [
+        90,
+        37,
+        180,
+        82
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/explanation/nib-runs-dry.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-runs-dry.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/y-fenni.png",
+      "status": "changed",
+      "width": 240,
+      "height": 214,
+      "changed_fraction": 0.0,
+      "over_bound": false,
+      "max_delta": 1,
+      "box": [
+        100,
+        42,
+        101,
+        43
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/places/y-fenni.png.diff.png",
+      "crop_image": "tests/golden/docs/places/y-fenni.png.crop.png"
+    },
+    {
+      "path": "tests/golden/lynmouth/labels-centreline.webp",
+      "status": "changed",
+      "width": 1800,
+      "height": 1457,
+      "changed_fraction": 0.0,
+      "over_bound": false,
+      "max_delta": 1,
+      "box": [
+        506,
+        378,
+        1237,
+        651
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/lynmouth/labels-centreline.webp.diff.png",
+      "crop_image": "tests/golden/lynmouth/labels-centreline.webp.crop.png"
+    },
+    {
+      "path": "tests/golden/lynmouth/map.png",
+      "status": "changed",
+      "width": 1800,
+      "height": 1457,
+      "changed_fraction": 0.0,
+      "over_bound": false,
+      "max_delta": 1,
+      "box": [
+        600,
+        430,
+        601,
+        431
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/lynmouth/map.png.diff.png",
+      "crop_image": "tests/golden/lynmouth/map.png.crop.png"
+    }
+  ]
+}
