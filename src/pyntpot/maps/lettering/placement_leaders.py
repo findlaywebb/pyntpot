@@ -14,7 +14,8 @@ import math
 from typing import Any
 
 from pyntpot.ink.polyline import Pt, meet
-from pyntpot.maps.lettering.label import NO_LEADER, TIER_SPAN, WRAP_LEADING, Box, Label
+from pyntpot.maps.lettering.label import NO_LEADER, TIER_SPAN, Box, Label
+from pyntpot.maps.lettering.label_sizing import WRAP_LEADING
 from pyntpot.maps.lettering.placement_costs import (
     ROUTE_REACH_PX,
     Backdrop,

@@ -34,14 +34,8 @@ from pyntpot.letters.hand import Hand
 from pyntpot.letters.nib import mark_width_px
 from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark, Setting
 from pyntpot.letters.style import NibStyle
-from pyntpot.maps.lettering.label import (
-    KIND_TRACKING,
-    NO_LEADER,
-    SPAN_EFFORT,
-    TIER_SPAN,
-    Label,
-    Span,
-)
+from pyntpot.maps.lettering.label import NO_LEADER, SPAN_EFFORT, TIER_SPAN, Label, Span
+from pyntpot.maps.lettering.label_sizing import KIND_TRACKING
 from pyntpot.maps.lettering.placement_lift import lift_baseline, offset_line
 from pyntpot.maps.lettering_furniture import (
     leader,

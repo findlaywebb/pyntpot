@@ -21,16 +21,8 @@ from typing import Any
 
 from pyntpot.ink.polyline import Pt, cumulative_length
 from pyntpot.maps.card import Card
-from pyntpot.maps.lettering.label import (
-    NO_LEADER,
-    TIER_SPAN,
-    WRAP_LEADING,
-    Box,
-    Label,
-    Measure,
-    block_size,
-    wrap_forms,
-)
+from pyntpot.maps.lettering.label import NO_LEADER, TIER_SPAN, Box, Label, Measure
+from pyntpot.maps.lettering.label_sizing import WRAP_LEADING, block_size, wrap_forms
 from pyntpot.maps.lettering.placement_costs import (
     EDGE_PX,
     ROUTE_REACH_PX,

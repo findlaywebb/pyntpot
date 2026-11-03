@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from pyntpot.ink import PAINTERS_PIGMENTS, PIGMENTS
-from pyntpot.ink.brush import BRUSH_COLOURS, BRUSH_TREATMENTS
+from pyntpot.ink.brush_sheet import BRUSH_COLOURS, BRUSH_TREATMENTS
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.cli import build_parser
 from pyntpot.maps.plates import Manifest

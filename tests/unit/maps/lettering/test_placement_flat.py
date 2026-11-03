@@ -8,14 +8,8 @@ from pyntpot.ink.polyline import Pt
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.style import NibStyle
 from pyntpot.maps.card import Card
-from pyntpot.maps.lettering.label import (
-    TIER_RIVER,
-    TIER_SPAN,
-    WRAP_LEADING,
-    Box,
-    Label,
-    block_size,
-)
+from pyntpot.maps.lettering.label import TIER_RIVER, TIER_SPAN, Box, Label
+from pyntpot.maps.lettering.label_sizing import WRAP_LEADING, block_size
 from pyntpot.maps.lettering.placement import place
 from pyntpot.maps.lettering.placement_costs import (
     EDGE_PX,

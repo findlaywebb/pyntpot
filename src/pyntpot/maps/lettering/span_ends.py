@@ -14,7 +14,8 @@ set along a line sits on the far side of the line from the route.
 import math
 
 from pyntpot.ink.polyline import Pt, length
-from pyntpot.maps.lettering.label import TIER_SPAN, Label, Measure, Span, outboard
+from pyntpot.maps.lettering.label import TIER_SPAN, Label, Measure, Span
+from pyntpot.maps.lettering.label_sizing import outboard
 from pyntpot.maps.lettering.span_clear import (
     FEWEST_FOR_A_SEGMENT,
     SPAN_ALONG_MAX_BEARING_DEG,

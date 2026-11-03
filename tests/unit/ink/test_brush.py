@@ -2,7 +2,8 @@
 
 import pytest
 
-from pyntpot.ink.brush import PEN_ROWS, brush_from_id, ink_aux, scaled_brush
+from pyntpot.ink.brush import brush_from_id, ink_aux, scaled_brush
+from pyntpot.ink.brush_sheet import PEN_ROWS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.pad import InkPad
 

@@ -17,7 +17,8 @@ from pyntpot.ink.polyline import Pt, cumulative_length, length
 from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.card import Card
-from pyntpot.maps.lettering.label import TIER_RIVER, Label, feature_px
+from pyntpot.maps.lettering.label import TIER_RIVER, Label
+from pyntpot.maps.lettering.label_sizing import feature_px
 from pyntpot.maps.lettering.picks_lines import NamedLines
 from pyntpot.maps.lettering.placement_names import MAJOR_RIVER_LABELS
 from pyntpot.maps.lettering.placement_window import on_line

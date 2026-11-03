@@ -2,7 +2,8 @@
 
 import pytest
 
-from pyntpot.maps.lettering.label import TIER_RIVER, TIER_ROAD, WET_SPREAD, Label, feature_px
+from pyntpot.maps.lettering.label import TIER_RIVER, TIER_ROAD, Label
+from pyntpot.maps.lettering.label_sizing import WET_SPREAD, feature_px
 from pyntpot.maps.lettering.placement_lift import (
     INK_ASCENT_CAPS,
     INK_DESCENT_CAPS,

@@ -4,7 +4,7 @@
       and #161.
 - [x] ADR 0068 and its index row; spec, plan, tasks.
 - [x] Plan-reviewer passes the plan (round 4).
-- [ ] S0: split `ink/brush.py` (`ink/brush_sheet.py`) and `maps/lettering/label.py`
+- [x] S0: split `ink/brush.py` (`ink/brush_sheet.py`) and `maps/lettering/label.py`
       (`maps/lettering/label_sizing.py`); pure moves, suite green.
 - [ ] S1: collision and directive tests red, four modules renamed, importers, reference
       directives and `references.md` paths repointed; green (#164).

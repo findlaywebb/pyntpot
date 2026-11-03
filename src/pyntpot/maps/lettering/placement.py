@@ -16,15 +16,8 @@ over when the swap uncrosses them and makes the pair cheaper.
 """
 
 from pyntpot.letters.setting import DEFAULT_LINE_PX
-from pyntpot.maps.lettering.label import (
-    OFF_PAPER_DROPPED_KINDS,
-    Box,
-    Label,
-    Measure,
-    MeasureTracked,
-    Span,
-    kind_measure,
-)
+from pyntpot.maps.lettering.label import OFF_PAPER_DROPPED_KINDS, Box, Label, Measure, Span
+from pyntpot.maps.lettering.label_sizing import MeasureTracked, kind_measure
 from pyntpot.maps.lettering.placement_along import place_along
 from pyntpot.maps.lettering.placement_costs import (
     Backdrop,
