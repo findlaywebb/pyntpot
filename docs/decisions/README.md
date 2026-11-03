@@ -74,3 +74,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0065 | A name set along water keeps its letters off it: a golden regeneration |
 | 0066 | The backing wash fades out from the letters: a golden regeneration |
 | 0067 | A leader's pin is an open ring facing its leader: a golden regeneration |
+| 0068 | One public surface (amends 0004, 0005, 0007, 0026 and 0027) |
