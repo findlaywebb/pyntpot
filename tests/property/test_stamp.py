@@ -1,7 +1,8 @@
-"""Properties of `stamp`: determinism, an untouched path, specks, and the pen's set-down blot.
+"""Properties of `stamp`: determinism, an untouched path, specks, the set-down blot, a smooth reload.
 
 One seed gives one deposit, the caller's path is left alone, a path no longer than 2 px lays
-nothing, and a nib's set-down blot stays on its own stroke.
+nothing, a nib's set-down blot stays on its own stroke, and a reloaded nib's spent share is
+continuous at every dip.
 """
 
 import math
@@ -14,7 +15,7 @@ from hypothesis import strategies as st
 from pyntpot.ink.brush import brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.noise import chamfer_distance
-from pyntpot.ink.stamp import stamp
+from pyntpot.ink.stamp import _nib_spent, stamp
 
 from support.properties import UNTIMED
 
@@ -24,6 +25,9 @@ X = st.floats(2, 218, allow_nan=False, allow_infinity=False)
 Y = st.floats(2, 58, allow_nan=False, allow_infinity=False)
 PATHS = st.lists(st.tuples(X, Y), min_size=2, max_size=30).map(np.array)
 STEP = st.floats(-1, 1, allow_nan=False, allow_infinity=False)
+RESERVOIRS = st.floats(0.1, 60.0, allow_nan=False, allow_infinity=False)
+DIP_MULTS = st.floats(1.05, 4.0, allow_nan=False, allow_infinity=False)
+WIDTHS = st.floats(0.5, 12.0, allow_nan=False, allow_infinity=False)
 LENGTH = st.floats(0, 2.0, exclude_min=True, allow_nan=False, allow_infinity=False)
 #: Pen widths in display pixels, from a hairline to a heavy route pen.
 PEN_WIDTHS = st.floats(1.0, 8.0, allow_nan=False, allow_infinity=False)
@@ -99,3 +103,27 @@ class TestStamp:
         stamp(without, path, replace(pen, pool=0.0), np.random.default_rng(seed))
         far = chamfer_distance(without > 0) > BLOT_SLACK_PX
         assert not (with_blot - without)[far].any()
+
+
+class TestNibReload:
+    """A nib that runs dry and is dipped again: its spent share, `_nib_spent`."""
+
+    @UNTIMED
+    @given(reservoir=RESERVOIRS, dip_mult=DIP_MULTS, width=WIDTHS)
+    def test_the_spent_share_is_continuous_and_below_one_at_every_dip(
+        self, reservoir: float, dip_mult: float, width: float
+    ) -> None:
+        """At each of the first eight dips the share either side agrees, and stays in [0, 1)."""
+        style = replace(
+            BrushStyle(),
+            pen_starve=True,
+            pen_reservoir=reservoir,
+            pen_thin=1.0,
+            ink_dip_mult=dip_mult,
+        )
+        pen, _ = brush_from_id("MAJ6-e", width, 1.0, style)
+        dips = pen.dip_px * np.arange(1, 9)
+        eps = 1e-7 * pen.dip_px
+        before, after = _nib_spent(dips - eps, pen), _nib_spent(dips + eps, pen)
+        np.testing.assert_allclose(before, after, atol=1e-4)
+        assert np.all(after >= 0.0) and np.all(after < 1.0)
