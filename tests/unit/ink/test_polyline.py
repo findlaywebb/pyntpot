@@ -1,8 +1,17 @@
-"""Tests for the polyline helpers: simplify, clip and the length measures."""
+"""Tests for the polyline helpers: simplify, clip, the length measures and the point normal."""
 
 import numpy as np
+import pytest
 
-from pyntpot.ink.polyline import clip_line, cumulative_length, deform_line, length, simplify
+from pyntpot.ink.polyline import (
+    Pt,
+    clip_line,
+    cumulative_length,
+    deform_line,
+    length,
+    normal_at,
+    simplify,
+)
 
 #: A five-point line with two small wobbles and one real turn.
 WOBBLY = [(0.0, 0.0), (1.0, 0.1), (2.0, -0.1), (3.0, 5.0), (4.0, 6.0)]
@@ -73,3 +82,51 @@ def test_an_open_line_deforms_without_moving_its_ends():
     # Seeded, so the same leader is the same curve on every render.
     again = deform_line(line, (np.random.default_rng(3), 0.06, 4, 0.62, 6.0, 1.0))
     assert np.allclose(out, again)
+
+
+class TestNormalAt:
+    """The unit left normal across a point's neighbours, with the (0, 1) fallback."""
+
+    @pytest.mark.parametrize(
+        ("pts", "i", "normal"),
+        [
+            ([(0.0, 0.0), (1.0, 1.0), (3.0, 4.0)], 1, (-0.8, 0.6)),
+            ([(0.0, 0.0), (0.0, 2.0), (5.0, 9.0)], 0, (-1.0, 0.0)),
+            ([(5.0, 9.0), (0.0, 2.0), (4.0, 5.0)], 2, (-0.6, 0.8)),
+            ([(0.0, 0.0), (3.0, 4.0)], 0, (-0.8, 0.6)),
+            ([(0.0, 0.0), (3.0, 4.0)], 1, (-0.8, 0.6)),
+            ([(0.0, 6.0), (0.0, 3.0), (0.0, 0.0)], 1, (1.0, 0.0)),
+        ],
+        ids=[
+            "interior",
+            "first-point",
+            "last-point",
+            "two-point-start",
+            "two-point-end",
+            "downward",
+        ],
+    )
+    def test_the_normal_is_pinned(self, pts: list[Pt], i: int, normal: Pt) -> None:
+        """The normal is the pinned unit vector left of the run from the point before to the point after."""
+        assert normal_at(pts, i) == pytest.approx(normal, abs=1e-12)
+
+    def test_the_interior_normal_ignores_the_point_itself(self) -> None:
+        """An interior normal depends on its neighbours only, so a kink at the point moves nothing."""
+        assert normal_at([(0.0, 0.0), (50.0, -70.0), (6.0, 8.0)], 1) == pytest.approx((-0.8, 0.6))
+
+    @pytest.mark.parametrize(
+        ("pts", "i"),
+        [
+            ([(1.0, 1.0), (1.0, 1.0), (1.0, 1.0)], 1),
+            ([(2.0, 3.0)], 0),
+            ([(0.0, 0.0), (0.0, 1e-9)], 0),
+        ],
+        ids=["repeated-points", "single-point", "run-at-the-threshold"],
+    )
+    def test_a_degenerate_run_falls_back_to_straight_up(self, pts: list[Pt], i: int) -> None:
+        """A run no longer than the degenerate threshold gives exactly (0, 1)."""
+        assert normal_at(pts, i) == (0.0, 1.0)
+
+    def test_a_run_just_past_the_threshold_is_not_degenerate(self) -> None:
+        """A run of twice the threshold still gives its own normal, not the fallback."""
+        assert normal_at([(0.0, 0.0), (0.0, 2e-9)], 0) == pytest.approx((-1.0, 0.0))
