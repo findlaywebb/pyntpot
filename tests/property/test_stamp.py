@@ -1,6 +1,7 @@
-"""Properties of `stamp`: seeded determinism, an untouched path, and no mark from a speck of a path."""
+"""Properties of `stamp`: seeded determinism, an untouched path, no mark from a speck, a smooth reload."""
 
 import math
+from dataclasses import replace
 
 import numpy as np
 from hypothesis import given
@@ -8,7 +9,7 @@ from hypothesis import strategies as st
 
 from pyntpot.ink.brush import brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.stamp import stamp
+from pyntpot.ink.stamp import _nib_spent, stamp
 
 from support.properties import UNTIMED
 
@@ -18,6 +19,9 @@ X = st.floats(2, 218, allow_nan=False, allow_infinity=False)
 Y = st.floats(2, 58, allow_nan=False, allow_infinity=False)
 PATHS = st.lists(st.tuples(X, Y), min_size=2, max_size=30).map(np.array)
 STEP = st.floats(-1, 1, allow_nan=False, allow_infinity=False)
+RESERVOIRS = st.floats(0.1, 60.0, allow_nan=False, allow_infinity=False)
+DIP_MULTS = st.floats(1.05, 4.0, allow_nan=False, allow_infinity=False)
+WIDTHS = st.floats(0.5, 12.0, allow_nan=False, allow_infinity=False)
 LENGTH = st.floats(0, 2.0, exclude_min=True, allow_nan=False, allow_infinity=False)
 
 
@@ -74,3 +78,27 @@ class TestStamp:
         canvas = _canvas()
         stamp(canvas, path, brush, np.random.default_rng(seed))
         assert not canvas.any()
+
+
+class TestNibReload:
+    """A nib that runs dry and is dipped again: its spent share, `_nib_spent`."""
+
+    @UNTIMED
+    @given(reservoir=RESERVOIRS, dip_mult=DIP_MULTS, width=WIDTHS)
+    def test_the_spent_share_is_continuous_and_below_one_at_every_dip(
+        self, reservoir: float, dip_mult: float, width: float
+    ) -> None:
+        """At each of the first eight dips the share either side agrees, and stays in [0, 1)."""
+        style = replace(
+            BrushStyle(),
+            pen_starve=True,
+            pen_reservoir=reservoir,
+            pen_thin=1.0,
+            ink_dip_mult=dip_mult,
+        )
+        pen, _ = brush_from_id("MAJ6-e", width, 1.0, style)
+        dips = pen.dip_px * np.arange(1, 9)
+        eps = 1e-7 * pen.dip_px
+        before, after = _nib_spent(dips - eps, pen), _nib_spent(dips + eps, pen)
+        np.testing.assert_allclose(before, after, atol=1e-4)
+        assert np.all(after >= 0.0) and np.all(after < 1.0)

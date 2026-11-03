@@ -103,20 +103,27 @@ def _width(tr: Trace, b: Brush, press: np.ndarray, wprof: np.ndarray | None) -> 
 
 
 def _nib_spent(run: np.ndarray, b: Brush) -> np.ndarray:
-    """How much of its load a nib has spent at each stamp, from 0 full to 1 empty.
+    """How much of its load a nib has spent at each stamp, from 0 full to under 1.
 
-    `run` is the distance travelled, weighted by pressure. The load falls as
-    `1 - exp(-since / run_px)` from the last reload, `dip_px` apart. A fresh dip
-    does not refill the line in one stamp: what the nib had spent by the dip
-    eases away over a few nib widths (`exp(-since / (_REFILL_WIDTHS * width))`),
-    so the line swells back to full rather than stepping to it.
+    `run` is the distance travelled, weighted by pressure; the nib is dipped every
+    `dip_px` of it. A fresh load falls as `exp(-since / run_px)` from the last dip.
+    A dip does not refill the line in one stamp: the share spent by the dip,
+    `carried`, eases away over a few nib widths (`exp(-since / (_REFILL_WIDTHS *
+    width))`), and the two combine as `1 - load * (1 - carried * ease)`. The
+    result is continuous at every dip, not only the first, and never reaches 1,
+    so the line swells back rather than stepping. With a reservoir shorter than
+    the refill, each dip carries more than the last, towards
+    `at_dip / (1 - (1 - at_dip) * exp(-dip_px / refill_px))`.
     """
-    since = np.mod(run, b.dip_px)
-    spent = 1.0 - np.exp(-since / b.run_px)
-    at_dip = 1.0 - np.exp(-b.dip_px / b.run_px)
+    dips, since = np.divmod(run, b.dip_px)
     refill_px = max(_REFILL_WIDTHS * b.width, 1e-6)
-    carried = np.where(run >= b.dip_px, at_dip * np.exp(-since / refill_px), 0.0)
-    return np.minimum(spent + carried, 1.0)
+    at_dip = -np.expm1(-b.dip_px / b.run_px)
+    # The share carried into the k-th load: at_dip * (1 + c + ... + c**(k-1)),
+    # with c the share of a carry still left, and still in the load, a dip on.
+    log_c = -b.dip_px * (1.0 / b.run_px + 1.0 / refill_px)
+    carried = at_dip * np.expm1(dips * log_c) / np.expm1(log_c)
+    load = np.exp(-since / b.run_px)
+    return 1.0 - load * (1.0 - carried * np.exp(-since / refill_px))
 
 
 def _wobble(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> Trace:
