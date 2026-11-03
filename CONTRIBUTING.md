@@ -67,7 +67,7 @@ To see what a change moves before committing anything, repaint into a scratch di
 PYTHONPATH=tests uv run python tests/golden/repaint.py /tmp/repaint map-styles/sepia.webp hero.webp
 ```
 
-It writes the paints to `/tmp/repaint/tree/` at their repository paths and the diff images to `/tmp/repaint/diffs/`. To diff a branch's committed images instead, against `main` (add `--after-ref REF` to compare two refs without checking either out), or any two directories of one layout:
+It writes the paints to `/tmp/repaint/tree/` at their repository paths and the review images to `/tmp/repaint/diffs/`. To diff a branch's committed images instead, against `main` (add `--after-ref REF` to compare two refs without checking either out), or any two directories of one layout:
 
 ```bash
 PYTHONPATH=tests uv run python tests/golden/diff_images.py /tmp/diffs --ref origin/main

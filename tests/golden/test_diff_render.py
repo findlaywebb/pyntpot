@@ -1,4 +1,4 @@
-"""Tests for the golden diff images: the heat map's colours, shrinking, and the review images' sizes."""
+"""Tests for the golden review images: the heat map's colours, shrinking, and the review images' sizes."""
 
 import numpy as np
 from golden.diff_measure import measure

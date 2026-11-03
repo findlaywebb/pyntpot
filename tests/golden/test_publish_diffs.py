@@ -1,4 +1,4 @@
-"""Tests for publishing diff images: links, and real commits pushed to a bare `origin` in `tmp_path`."""
+"""Tests for publishing review images: links, and real commits pushed to a bare `origin` in `tmp_path`."""
 
 import stat
 from pathlib import Path
@@ -117,7 +117,7 @@ def _push_from_another_clone(origin: Path, root: Path) -> str:
     git(other, "checkout", "--quiet", "--detach", "FETCH_HEAD")
     (other / "fix/99").mkdir(parents=True)
     (other / "fix/99/summary.json").write_text("{}\n")
-    theirs = commit_all(other, "Diff images for fix/99")
+    theirs = commit_all(other, "Review images for fix/99")
     git(other, "push", "--quiet", str(origin), f"HEAD:{REMOTE_HEAD}")
     return theirs
 
@@ -282,6 +282,16 @@ class TestPublish:
         git(origin, "config", "core.hooksPath", str(origin / "hooks"))
         with pytest.raises(PublishError, match="pushes are closed"):
             self._publish(repo, _diff_output(tmp_path / "b", b"two"))
+
+    def test_an_excludes_file_ignoring_pngs_drops_no_review_image(
+        self, repo: Path, origin: Path, tmp_path: Path
+    ) -> None:
+        """A user's excludes file ignoring `*.png` (as a global one would) still publishes the PNG."""
+        excludes = tmp_path / "excludes"
+        excludes.write_text("*.png\n")
+        git(repo, "config", "core.excludesFile", str(excludes))
+        commit = self._publish(repo, _diff_output(tmp_path / "out"))
+        assert "fix/53/docs/images/hero.webp.diff.png" in _files(origin, commit)
 
     def test_a_failed_build_removes_its_worktree_and_keeps_the_error(
         self, repo: Path, tmp_path: Path

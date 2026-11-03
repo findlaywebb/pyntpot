@@ -1,4 +1,4 @@
-"""Commit diff images to the `pr-assets` branch and write the Markdown block for a PR body.
+"""Commit review images to the `pr-assets` branch and write the Markdown block for a PR body.
 
 Run from the repository root, after `diff_images.py`, as
 `PYTHONPATH=tests uv run python tests/golden/publish_diffs.py OUT [--pr-branch NAME] [--push]`.
@@ -44,7 +44,7 @@ from support.git_commands import git
 
 logger = logging.getLogger("publish_diffs")
 
-#: The orphan branch that holds every PR's diff images.
+#: The orphan branch that holds every PR's review images.
 ASSETS_BRANCH = "pr-assets"
 
 #: The Markdown block written beside the review images.
@@ -149,7 +149,7 @@ def _build_and_push(
             if base is not None and tree == git(repo, "rev-parse", f"{base}^{{tree}}"):
                 return base
             parents = [] if base is None else ["-p", base]
-            message = f"Diff images for {pr_branch}"
+            message = f"Review images for {pr_branch}"
             commit = git(worktree, "commit-tree", tree, *parents, "-m", message)
             git(worktree, "update-ref", "--no-deref", "HEAD", commit)
             if remote is not None:
@@ -162,14 +162,15 @@ def _build_and_push(
 def _staged_tree(repo: Path, worktree: Path, out: Path, target: str, base: str | None) -> str:
     """Add a detached worktree, stage `base`'s tree with `target/` replaced by `out`; return it.
 
-    Only the index is filled from `base`: other PRs' files are never written out.
+    Only the index is filled from `base`: other PRs' files are never written out. The add is
+    forced, so no ignore rule (the user's global excludes among them) drops a review image.
     """
     add = ["worktree", "add", "--quiet", "--detach", "--no-checkout", str(worktree)]
     git(repo, *add, "HEAD" if base is None else base)
     git(worktree, "read-tree", *(["--empty"] if base is None else [base]))
     git(worktree, "rm", "-r", "--cached", "--quiet", "--ignore-unmatch", "--", target)
     shutil.copytree(out, worktree / target, ignore=shutil.ignore_patterns(PR_BODY))
-    git(worktree, "add", "--all", "--", target)
+    git(worktree, "add", "--all", "--force", "--", target)
     return git(worktree, "write-tree")
 
 
@@ -230,7 +231,7 @@ def pr_body(summary: Summary, slug: str, commit: str, target: str) -> str:
 
 def _parse(argv: list[str] | None) -> argparse.Namespace:
     """Parse the command line."""
-    parser = argparse.ArgumentParser(description="Publish diff images for a PR body.")
+    parser = argparse.ArgumentParser(description="Publish review images for a PR body.")
     parser.add_argument("out", type=Path, metavar="OUT", help="a diff_images.py output directory")
     parser.add_argument("--pr-branch", default=None, help="the PR branch (default: checked out)")
     parser.add_argument("--remote", default="origin", help="the remote (default: origin)")

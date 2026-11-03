@@ -19,6 +19,7 @@ from golden.diff_images import (
 from golden.diff_report import Summary
 from PIL import Image
 
+from support.git_commands import git
 from support.git_repos import commit_all, scratch_repo
 from support.golden import MAX_DIFFERING_FRACTION
 
@@ -144,6 +145,30 @@ class TestTrees:
         assert code == 2
         assert (precious / "keep.txt").is_file()
 
+    @pytest.mark.parametrize("missing", ["--before", "--after"], ids=["before", "after"])
+    def test_a_side_that_is_not_a_directory_is_refused(
+        self, tmp_path: Path, missing: str, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A missing `--before` or `--after` directory exits 2 with its path logged, writing nothing."""
+        before, after = _trees(tmp_path)
+        sides = {"--before": before, "--after": after, missing: tmp_path / "absent"}
+        out = tmp_path / "out"
+        args = [str(out), "--before", str(sides["--before"]), "--after", str(sides["--after"])]
+        assert main(args) == 2
+        assert f"not a directory: {tmp_path / 'absent'}" in caplog.text
+        assert not out.exists()
+
+    def test_an_out_that_is_a_file_is_refused(
+        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """An `OUT` naming an existing file exits 2 with a logged reason and leaves the file."""
+        before, after = _trees(tmp_path)
+        out = tmp_path / "out.txt"
+        out.write_text("keep\n")
+        assert main([str(out), "--before", str(before), "--after", str(after)]) == 2
+        assert f"{out} is not a directory" in caplog.text
+        assert out.read_text() == "keep\n"
+
 
 class TestRefs:
     """A git ref as the earlier side, and the working tree or a second ref as the later."""
@@ -180,6 +205,25 @@ class TestRefs:
         assert side.read("docs/images/map.webp") == _blob(repo, "HEAD~1:docs/images/map.webp")
         assert side.read("docs/images/absent.webp") is None
 
+    def test_a_failed_read_at_the_ref_raises_rather_than_reading_as_absent(
+        self, repo: Path
+    ) -> None:
+        """A path in the ref's tree whose blob is missing raises; it is not reported as added."""
+        _drop_blob(repo, "HEAD~1:docs/images/map.webp")
+        with pytest.raises(subprocess.CalledProcessError):
+            RefSide(repo, "HEAD~1").read("docs/images/map.webp")
+
+    def test_main_stops_on_a_failed_read_at_the_ref(
+        self, repo: Path, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The command exits 2 with git's reason logged, not a summary calling the image added."""
+        _drop_blob(repo, "HEAD~1:docs/images/map.webp")
+        out = tmp_path / "out"
+        code = main([str(out), "--ref", "HEAD~1", "--after-ref", "HEAD", "--repo", str(repo)])
+        assert code == 2
+        assert "git failed reading an image" in caplog.text
+        assert not (out / SUMMARY_JSON).exists()
+
     def test_main_draws_the_moved_image_between_two_refs(self, repo: Path, tmp_path: Path) -> None:
         """The command, given two refs, writes one changed row with both review images."""
         out = tmp_path / "out"
@@ -212,6 +256,12 @@ def _blob(repo: Path, spec: str) -> bytes:
         ["git", "cat-file", "blob", spec], cwd=repo, capture_output=True, check=True
     )
     return done.stdout
+
+
+def _drop_blob(repo: Path, spec: str) -> None:
+    """Delete the loose object git holds for `REF:path`, leaving the tree that names it."""
+    blob = git(repo, "rev-parse", spec)
+    (repo / ".git/objects" / blob[:2] / blob[2:]).unlink()
 
 
 def test_the_command_line_needs_one_mode() -> None:

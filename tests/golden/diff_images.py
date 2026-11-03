@@ -25,8 +25,10 @@ the images that failed. An image whose pixels are equal is skipped, whatever its
 replaced.
 
 Exit codes: 0 when the review images were written, whatever changed (the gate is
-`test_parity.py`); 2 for a bad command line, a bad ref or an `OUT` that is not safe to
-replace. Publishing the review images for a PR body is `publish_diffs.py`.
+`test_parity.py`); 2 for a bad command line, a bad ref, a `--before` or `--after` that is
+not a directory, an `OUT` that is not safe to replace, or a git failure reading an image
+(a path absent at a ref is an added or removed image; any other failure is not).
+Publishing the review images for a PR body is `publish_diffs.py`.
 """
 
 import argparse
@@ -42,7 +44,7 @@ from golden.diff_report import FileDiff, Summary, markdown
 from PIL import Image
 
 from support import REPO_ROOT
-from support.git_commands import git_lines, is_commit
+from support.git_commands import git, git_bytes, git_lines, is_commit
 from support.golden import MAX_DIFFERING_FRACTION, channel_delta, decode
 
 logger = logging.getLogger("diff_images")
@@ -93,11 +95,20 @@ class RefSide:
         return self.ref
 
     def read(self, path: str) -> bytes | None:
-        """Return the image's bytes at the ref, or `None` when the ref holds no such file."""
-        done = subprocess.run(
-            ["git", "show", f"{self.ref}:{path}"], cwd=self.repo, capture_output=True, check=False
-        )
-        return done.stdout if done.returncode == 0 else None
+        """Return the image's bytes at the ref, or `None` when the ref's tree holds no such path.
+
+        Only a path absent from the ref's tree reads as `None` (an image added or removed);
+        any other failure to read it, such as a missing object, raises rather than passing
+        for one.
+
+        Raises:
+            subprocess.CalledProcessError: When git cannot list the ref's tree or show the file.
+        """
+        if not git(self.repo, "ls-tree", "--name-only", self.ref, "--", path):
+            return None
+        done = git_bytes(self.repo, "show", f"{self.ref}:{path}")
+        done.check_returncode()
+        return done.stdout
 
 
 Side = TreeSide | RefSide
@@ -181,8 +192,11 @@ def _prepared(out: Path) -> None:
     """Make `out` an empty directory, replacing an earlier run's output.
 
     Raises:
-        ValueError: When `out` holds files and is not an earlier run's output.
+        ValueError: When `out` is not a directory, or holds files and is not an earlier
+            run's output.
     """
+    if out.exists() and not out.is_dir():
+        raise ValueError(f"{out} is not a directory; not replacing it")
     if out.exists() and any(out.iterdir()):
         if not (out / SUMMARY_JSON).is_file():
             raise ValueError(f"{out} is not empty and holds no {SUMMARY_JSON}; not replacing it")
@@ -225,7 +239,7 @@ def run(
 
 def _parse(argv: list[str] | None) -> argparse.Namespace:
     """Parse the command line."""
-    parser = argparse.ArgumentParser(description="Draw diff images of changed images.")
+    parser = argparse.ArgumentParser(description="Draw review images of changed images.")
     parser.add_argument("out", type=Path, metavar="OUT", help="directory to write into")
     parser.add_argument("--before", type=Path, metavar="DIR", help="the earlier directory")
     parser.add_argument("--after", type=Path, metavar="DIR", help="the later directory")
@@ -250,10 +264,14 @@ def _parse(argv: list[str] | None) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Compare, draw and summarise; return 0 when written, 2 for a bad ref or `OUT`."""
+    """Compare, draw and summarise; return 0 when written, 2 for a bad side, ref, `OUT` or git read."""
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     args = _parse(argv)
     if args.ref is None:
+        for side in (args.before, args.after):
+            if not side.is_dir():
+                logger.error("not a directory: %s", side)
+                return 2
         before: Side = TreeSide(args.before)
         after: Side = TreeSide(args.after)
         paths = images_under(args.after)
@@ -273,6 +291,12 @@ def main(argv: list[str] | None = None) -> int:
         run(args.out, paths, before, after, args.min_fraction)
     except ValueError as exc:
         logger.error("%s", exc)  # noqa: TRY400 (the reason is the whole message)
+        return 2
+    except subprocess.CalledProcessError as exc:
+        reason = (
+            exc.stderr.decode(errors="replace") if isinstance(exc.stderr, bytes) else exc.stderr
+        )
+        logger.error("git failed reading an image: %s", str(reason).strip())  # noqa: TRY400
         return 2
     return 0
 
