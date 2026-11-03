@@ -72,12 +72,16 @@ manifest hash: f151b40adc3d7ccd-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c08
 ```
 
 `PINNED_LABELS` is unchanged. `GOLDEN_HASH` is re-pinned to
-`f151b40adc3d7ccd-d9c56c0811177b0f`. The Lynmouth box's road strokes go from 39 to 35
+`f151b40adc3d7ccd-d9c56c0811177b0f` on this change's base; landed in one merge train with
+ADR 0062's edge cut, the geometry half is `90193bbb26f681bf`
+(`90193bbb26f681bf-d9c56c0811177b0f`). The Lynmouth box's road strokes go from 39 to 35
 (`test_basemap.py`, `test_pipeline_fetch_paint.py`) and its vector roads from 82 to 85, the
 unnamed ways now kept with the way they carry on from (`FIXTURE_ROADS` in
 `test_vector_layers.py`). The map-styles means (`tests/golden/test_map_styles.py`) move by
 1.1 to 2.2 levels and are re-measured and re-pinned, all four themes. The place pins did not
-move. The goldens were regenerated from that paint and every gate run on it.
+move. Landed with ADR 0064's leader price, "Garnedd Ugain" on Yr Wyddfa, whose pin is on the
+route where the spur to the summit leaves it, crosses the spur on its cheapest seat as it did
+on `main`, now just past the measure, and joins `HEMMED_LEADERS` in `tests/golden/test_places.py`. The goldens were regenerated from that paint and every gate run on it.
 
 ### Docs images
 

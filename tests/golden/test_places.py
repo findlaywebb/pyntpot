@@ -51,9 +51,13 @@ LAKE_GRAZE = 0.05
 #: The callouts whose leader still crosses the route, per place. A leader across the track is
 #: priced, not banned: each of these pins has the route or a road on every seat on its own
 #: side, so its cheapest seat is over the track. Any other leader that crosses it fails.
+#: Garnedd Ugain's pin is on the route where the spur to Yr Wyddfa leaves it, so every seat
+#: west of it is across the spur. Shepherd's Ice Cream crossed a second strand of a retraced
+#: leg, which is drawn as one stroke now, so its leader no longer crosses.
 HEMMED_LEADERS = {
     "skye": {"Thursday: the Storr and a long Staffin lunch"},
-    "y-fenni": {"Bean & Bread", "Shepherd's Ice Cream"},
+    "y-fenni": {"Bean & Bread"},
+    "yr-wyddfa": {"Garnedd Ugain"},
 }
 
 #: Villages either side of Kyle Akin that the Skye card paints as land: Kyleakin on Skye,

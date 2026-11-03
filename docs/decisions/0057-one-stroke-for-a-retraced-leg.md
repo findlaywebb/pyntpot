@@ -73,7 +73,9 @@ bristles. Its strong difference is the doubled stretch.
 `PINNED_LABELS` is unchanged, as are the place pins and the map-styles means. The
 Lynmouth track's first points lie on a stretch it runs again, so `FIRST_STRANDS` in
 `tests/unit/maps/test_pipeline_fetch_paint.py` moves by about a pixel and is re-pinned. The goldens were regenerated from that paint and every gate run on it.
-`GOLDEN_HASH` is not re-pinned.
+`GOLDEN_HASH` is not re-pinned. Landed with ADR 0064's leader price, "Shepherd's Ice Cream" on
+Y Fenni no longer crosses the route (the strand it crossed is one stroke now) and leaves
+`HEMMED_LEADERS` in `tests/golden/test_places.py`.
 
 ### Docs images
 
