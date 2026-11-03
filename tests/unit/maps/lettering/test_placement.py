@@ -15,10 +15,11 @@ from pyntpot.maps.lettering.label import (
     TIER_SPAN,
     Label,
 )
-from pyntpot.maps.lettering.placement import _reseat, _uncross_leaders, place
+from pyntpot.maps.lettering.placement import place
 from pyntpot.maps.lettering.placement_along import IN_WATER_ROAD_COST
 from pyntpot.maps.lettering.placement_costs import Backdrop, _crossings, on_road
 from pyntpot.maps.lettering.placement_flat import LEADER_COST_PX, LEADER_RUNGS, ROAD_CROSS_COST
+from pyntpot.maps.lettering.placement_leaders import reseat, uncross_leaders
 from pyntpot.maps.lettering.placement_lift import (
     MAX_TILT_DEG,
     TILT_EXEMPT_KINDS,
@@ -280,7 +281,7 @@ def _seat(label, cx, cy, width):
     label.box = (cx - width / 2, cy - 10, cx + width / 2, cy + 10)
     label.flat = True
     label.leader = ((label.px, label.py), (cx, cy))
-    _reseat(label, cx, cy)
+    reseat(label, cx, cy)
 
 
 def test_two_leaders_that_cross_are_swapped_over():
@@ -292,7 +293,7 @@ def test_two_leaders_that_cross_are_swapped_over():
     _seat(a, 300.0, 200.0, 60.0)
     _seat(b, 300.0, 100.0, 60.0)
     assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
-    _uncross_leaders([a, b], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
+    uncross_leaders([a, b], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
     assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is None
     assert a.leader[1][1] < b.leader[1][1], "each name is still past the other"
 
@@ -307,7 +308,7 @@ def test_a_swap_that_reads_worse_is_refused():
     _seat(b, 110.0, 200.0, 160.0)
     assert meet(a.leader[0], a.leader[1], b.leader[0], b.leader[1]) is not None
     seats = (a.box, b.box)
-    _uncross_leaders([a, b], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
+    uncross_leaders([a, b], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
     assert (a.box, b.box) == seats, "a name was swapped off the paper"
 
 
@@ -319,7 +320,7 @@ def test_a_swap_that_runs_a_leader_through_a_placed_label_is_refused():
     between = Label(name="Gamma", kind="monument", px=0.0, py=0.0, tier=TIER_LANDMARK, size=14.0)
     between.box, between.flat = (190.0, 90.0, 210.0, 110.0), True
     seats = (a.box, b.box)
-    _uncross_leaders(
+    uncross_leaders(
         [a, b, between], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), [])
     )
     assert (a.box, b.box) == seats, "a swap put a leader through Gamma"
@@ -339,7 +340,7 @@ def test_a_name_on_its_own_mark_is_never_swapped():
     )
     town.box, town.flat, town.leader = (70.0, 140.0, 130.0, 160.0), True, None
     seat = town.box
-    _uncross_leaders([a, town], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
+    uncross_leaders([a, town], Backdrop(map_card(), [(0.0, 10.0), (400.0, 10.0)], _dark(), []))
     assert town.box == seat
 
 

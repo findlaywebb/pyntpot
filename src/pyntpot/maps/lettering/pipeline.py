@@ -54,6 +54,7 @@ from pyntpot.maps.lettering.picks_lines import NamedLines, named_lines, road_lin
 from pyntpot.maps.lettering.picks_roads import pick_roads
 from pyntpot.maps.lettering.placement import place
 from pyntpot.maps.lettering.placement_costs import Backdrop
+from pyntpot.maps.lettering.placement_water import water_from
 from pyntpot.maps.lettering.spans import resolve_spans
 from pyntpot.maps.plates import Plates, dark_array
 from pyntpot.maps.style import Style
@@ -115,6 +116,7 @@ def letter(
         strands,
         {"w": dark.w, "h": dark.h, "v": dark.values},
         road_lines(lines, card),
+        water_from(basemap),
     )
     # Notes are seated before any other name; `place` is told their boxes and never sees them.
     notes, taken = seat_notes(
