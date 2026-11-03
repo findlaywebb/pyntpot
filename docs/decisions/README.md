@@ -59,3 +59,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0052 | Golden diff images in the PR body (amends 0006 and 0036) |
 | 0055 | A nib width that does not flicker: a golden regeneration |
 | 0059 | The organic drift is rescaled about its own mean: a golden regeneration |
+| 0061 | A reloaded nib swells back: a golden regeneration |
