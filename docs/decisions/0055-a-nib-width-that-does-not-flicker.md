@@ -37,22 +37,50 @@ profile changed by up to 0.77 of the full width between neighbouring samples, an
   nib 90 degrees, thin 0.85, seed 7, turns of 110 to 127 degrees fell to 0.18 to 0.30 where
   both legs were 0.8 to 0.95, and at 20 px under the default -38 degree nib a corner dipped
   0.38 below its legs.
-- **A corner is floored at its legs.** The direction is also averaged over the half of the
-  tent before each sample and the half after (the same chords, with the boxes cut at the
-  sample), each read as a width (`_leg`; an empty half, at an open stroke's end, sets no
-  floor). Where the smaller of the two is wider than the whole window's width, the whole is
-  pinched and that smaller width is a floor. A floor at the one sample on the corner alone
-  left a notch (the samples beside it, whose halves straddle the corner, were still pinched,
-  and "Keswick" zigzagged twice a word), so the floor is carried half a window either side
-  (`_spread`), and only from pinched samples: an L whose leg lies along the nib, where the
-  halves never beat the whole, climbs exactly as before. On a straight staircase the halves
-  agree with the whole to within the ripple, so the floor almost never binds; where a curve
-  turns through the nib's own direction within a window (a small `o` at a high thin), its
-  halves straddle the nib too, and its thinnest point is read no thinner than half a window
-  either side of it.
+- **A corner is floored at its legs, by cutting the tent at the stroke's vertices.** Each
+  sample's tent is also cut in two at every vertex of the stroke it reaches (`_cuts`), and
+  each side is read as a width on its own (`_side`; an empty side, past an open stroke's
+  end, reads full, so the other side decides). The narrower side of each cut is a floor, and
+  the sample's width is the widest of those floors and the whole tent's:
+  `max(whole, max over vertices v of min(before_v, after_v))`. The sides are the same box
+  chords, each box cut at the vertex: a running sum of the box ends at or before the vertex,
+  plus the vertex once for each end past it (`_reached`), so the cut needs no more points
+  read off the stroke than the whole tent does.
+  - **Why it holds wherever the samples fall.** Cut at a corner, each side of a tent that
+    covers only two straight legs is one leg, so a stroke of two straight legs is nowhere
+    thinner than the narrower leg: at the point, beside it, and at a sample just past half a
+    window, where the tent still reaches round the corner. The floor is read from the
+    stroke's vertices, which are the stroke's own, not from the samples, so there is no reach
+    to round to a whole number of samples.
+  - **Why it does not bend the L.** Where both sides of a cut lie on one side of the nib's
+    direction, the whole (their sum) lies between them, and `|sin|` has no minimum inside
+    such an arc, so the whole is no narrower than the narrower side and the floor does not
+    bind. That covers a straight run (a staircase's sides agree with its whole to within the
+    ripple) and an L whose leg lies along the nib, which climbs exactly as before.
+  - **Why it is continuous in the nib.** Every width is `|sin|` of a direction the stroke
+    alone fixes less the nib's angle (or full, for an empty side, which the stroke alone
+    decides too), and the floor is a widest of narrowest of them; nothing is gated on a
+    width. So turning the nib, or the stroke, by an angle moves no sample by more than
+    `thin` times that angle.
+  - **How far it reaches.** A floor binds only where the two sides lie either side of the
+    nib's direction, and never above the narrower of them. A hairline running straight along
+    the nib is lifted only where its tent reaches a vertex past the turn's first, and never
+    above the side of that cut that holds the hairline. Where a curve turns through the nib's
+    own direction within a window (a small `o` at a high thin), its sides straddle the nib,
+    and its thinnest point is read as wide as the narrower side of a cut there.
+  - **What it replaced.** The version this PR first carried compared the halves of the tent
+    cut at each sample with the whole, and where they beat it (the whole was "pinched") it
+    carried the narrower half to the samples half a window either side (`_spread`). That
+    floor depended on where the samples fell: with the default 24 samples a ±45 degree V
+    under a flat nib dipped to 0.471 beside its point against legs of 0.751, and at 61
+    samples to 0.673, because the reach was truncated to whole samples (2.83 px of the 4).
+    Its gate (`np.where(legs > whole, legs, 0)`) switched the floor on at full strength, so
+    on a hairline running into a 2 px kink, turning the nib by 1.6e-4 rad moved a sample from
+    0.187 to 0.473, against the 1.4e-4 the sine law allows. Both are pinned below.
 - **A closed stroke has no ends.** `skeleton._loops` closes a ring back on its start, so a
   stroke whose last point is its first is read round the ring: a span reaching past the seam
-  carries on from the start, and the floor's spread wraps. Cutting the window at the seam,
+  carries on from the start, and the vertices a tent is cut at are read round the ring too
+  (so a ring's width does not depend on which vertex it starts at). Cutting the window at the seam,
   as the first version of this change did, gave the seam a width jump of 0.05 to 0.12 that
   the segment-by-segment width did not have (0.84 at the worst on "Keswick" at 20 px).
 - **The profile is its own module**, `letters/pen_profile.py`, split from `letters/nib.py`

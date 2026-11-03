@@ -181,3 +181,14 @@ class TestHairlineKink:
         along = np.linspace(0.0, 42.0, samples)
         assert prof[along < 20.0 - 4.0].max() == pytest.approx(0.1873, abs=1e-4)
         assert prof[along < 20.0 - 1.0].max() <= 0.3
+
+
+class TestSmallRing:
+    """A closed stroke shorter than the tent, which reaches round it more than once."""
+
+    def test_a_ring_shorter_than_the_tent_is_cut_at_every_lap_of_its_vertices(self) -> None:
+        """A 1.3 px sliver of a ring under an 8 px window, which reaches round it three times either way, reads its pinned widths."""
+        pts = np.array([(0.0, 0.2), (-0.3, -0.2), (-0.5, -0.2), (0.0, 0.2)])
+        prof = pen_profile(pts, -2.25, 0.85, 8.0, 9)
+        pinned = [0.9802, 0.9574, 0.9388, 0.8579, 0.6266, 0.7371, 0.988, 0.9672, 0.9802]
+        assert prof.tolist() == pytest.approx(pinned, abs=1e-4)
