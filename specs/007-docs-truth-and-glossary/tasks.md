@@ -17,15 +17,15 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 
 ## S1 — Glossary (#65)
 
-- [ ] Red: `tests/docs/test_glossary.py` (parse; the real file: each Say instead ends in a term, every In-the-code name resolves, no `’` on site pages; generated files; mkdocs config).
-- [ ] `tests/support/glossary.py`: parse, plain, anchor, glossary page, abbreviations, main.
-- [ ] `GLOSSARY.md` in three sections with every row of the plan's table and the spec's Meanings; six retired words.
-- [ ] Generated `docs/reference/glossary.md` and `docs/includes/abbreviations.md` (a blank line between definitions).
-- [ ] `mkdocs.yml`: `abbr`, `pymdownx.snippets` auto_append, `content.tooltips`.
-- [ ] Generated page carries the GitHub link the existing pointer test checks (test file untouched); reference index line; `CONTRIBUTING.md` glossary paragraph.
-- [ ] "brush sheet", "style group" and "vector layers" rows keep `main`'s meaning (006's facts wait for S8).
-- [ ] Strict build green; tooltips render (glossary, a tutorial, the maps API page) and none inside code.
-- [ ] Strict build time measured before and after and stated in the commit message; after is under 5 s.
+- [x] Red: `tests/docs/test_glossary.py` (parse; the real file: each Say instead ends in a term, every In-the-code name resolves, no `’` on site pages; generated files; mkdocs config).
+- [x] `tests/support/glossary.py`: parse, plain, anchor, glossary page, abbreviations, main.
+- [x] `GLOSSARY.md` in three sections with every row of the plan's table and the spec's Meanings; six retired words.
+- [x] Generated `docs/reference/glossary.md` and `docs/includes/abbreviations.md` (a blank line between definitions).
+- [x] `mkdocs.yml`: `abbr`, `pymdownx.snippets` auto_append, `content.tooltips`.
+- [x] Generated page carries the GitHub link the existing pointer test checks (test file untouched); reference index line; `CONTRIBUTING.md` glossary paragraph.
+- [x] "brush sheet", "style group" and "vector layers" rows keep `main`'s meaning (006's facts wait for S8).
+- [x] Strict build green; tooltips render (glossary, a tutorial, the maps API page) and none inside code.
+- [x] Strict build time measured before and after and stated in the commit message; after is under 5 s.
 
 ## S2 — Reference truth (#163)
 

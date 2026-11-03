@@ -153,6 +153,11 @@ the style; the words stay plain.
   Lynmouth card. Never invent a name.
 - **Designed gaps** are stated as capability facts, never as roadmap numbers.
 
+**Glossary:** to add or change a term, edit `GLOSSARY.md`, then run
+`PYTHONPATH=tests uv run python -m support.glossary` to regenerate the site's glossary page
+and the tooltips; the docs tests fail until you do. A reader term's Tooltip lists the
+forms a page underlines, or reads `no` for an everyday word such as "map" or "wash".
+
 Before you commit docs, search the human-facing prose (everything except
 `docs/decisions/`) for em and en dashes; the search finds none.
 
