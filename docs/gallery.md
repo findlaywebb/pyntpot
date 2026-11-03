@@ -120,6 +120,18 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/svg_drawing.py` (seed 5).*
 
+![The drawing in flat colour on white: a pale ochre sun, a blue-grey fell behind a green fell, a pale blue tarn, two green banks, a wall of small stones, a brown track, a blue beck, two round trees and two birds, all with hard clean edges.](images/painting-with-python/svg-flat.webp)
+
+*Painted by `examples/svg_drawing.py` (seed 5, figure flat).*
+
+![The same drawing as washes on warm paper: the sun, the far fell, the main fell, the banks and the tarn are soft-edged washes of pigment, with two round trees in darker green. There are no lines.](images/painting-with-python/svg-washes.webp)
+
+*Painted by `examples/svg_drawing.py` (seed 5, figure washes).*
+
+![The same drawing as pen lines alone on warm paper: a dark skyline along the top of the main fell, a wall of small stones, a broken orange-brown track, a blue beck, two short tree trunks and two birds. There are no washes.](images/painting-with-python/svg-ink.webp)
+
+*Painted by `examples/svg_drawing.py` (seed 5, figure ink).*
+
 ## How-to guides
 
 ### [Write a theme](how-to/write-a-theme.md)
@@ -140,33 +152,33 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/map_styles.py` (figure winter).*
 
+### [Map from the command line](how-to/map-from-the-command-line.md)
+
+![The Lynmouth route map: a pink route over washes of green and blue, with the river, roads and names lettered by hand.](images/how-to/command-line.webp)
+
+*Painted by `examples/route_map.py`, which makes the same map as the command.*
+
 ### [Change the route ink](how-to/change-the-route-ink.md)
 
-![The Ambleside route map card with the route drawn in deep violet, a little heavier than the default pink.](images/how-to/route-ink.webp)
+![The Ambleside route map with the route drawn in deep violet, a little heavier than the default pink.](images/how-to/route-ink.webp)
 
 *Painted by `examples/how_to_route_ink.py`.*
 
-![Six small copies of the Ambleside card, each cropped to the loop, in two rows of three. The columns are the route in maroon, in indigo and in burnt sienna and are lettered so; the rows are a wet pen line and a dry pen line that thins and breaks, lettered wet pen and dry pen.](images/how-to/route-ink-grid.webp)
+![Six small copies of the Ambleside map, each cropped to the loop, in two rows of three. The columns are the route in maroon, in indigo and in burnt sienna and are lettered so; the rows are a wet pen line and a dry pen line that thins and breaks, lettered wet pen and dry pen.](images/how-to/route-ink-grid.webp)
 
 *Painted by `examples/how_to_route_ink.py` (figure grid, theme `examples/themes/ambleside.toml`). The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`. The route is drawn in the normal blend, so it keeps its colour over water.*
 
 ### [Letter your own landmarks](how-to/letter-your-own-landmarks.md)
 
-![The Y Fenni route map card: a short maroon route winding through the town between a river and a castle, with callouts lettered by hand on leader lines.](images/places/y-fenni.webp)
+![The Y Fenni route map: a short maroon route winding through the town between a river and a castle, with landmarks lettered by hand on leader lines.](images/places/y-fenni.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml` and the callouts of `examples/places.toml`. The callouts are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream.*
+*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml` and the landmarks of `examples/places.toml`. The landmarks are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream.*
 
 ### [Paint your own shapes](how-to/paint-your-own-shapes.md)
 
 ![A hill-shaped fell washed in pale blue-green that fades out toward its foot, with a black pen line that swells and thins along its smooth skyline, and the name Skiddaw lettered by hand, centred beneath it on clean paper.](images/how-to/own-shapes.webp)
 
 *Painted by `examples/how_to_own_shapes.py` (seed 5).*
-
-### [Map from the command line](how-to/map-from-the-command-line.md)
-
-![The Lynmouth route map card: a pink route over washes of green and blue, with the river, roads and names lettered by hand.](images/how-to/command-line.webp)
-
-*Painted by `examples/route_map.py`, which makes the same card as the command.*
 
 ## Reference
 
@@ -181,6 +193,12 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 ![The brush grid: eight brush treatments in one brown ink, stroked as a wave at 3, 6 and 12 pixels wide in three rows. The wet treatments stay whole at every width, the dry ones break into flecks as they widen, and the nibs leave a blot where they touch down.](images/reference/brush-sheet.webp)
 
 *Painted by `examples/brush_sheet.py` (seed 11, figure grid).* The labels read the treatment numbers 1 to 8 across, the widths 3 px, 6 px and 12 px down, and wet, soft, gritty, dry, nib, pen, driest and light nib under the columns.
+
+### [Letters](reference/letters.md)
+
+![The glyph sheet: every printable ASCII glyph of the hand in brown-black ink on cream paper. Sixteen cells a row hold the capitals, the small letters, the digits and the 32 symbols at 32 pixels; below them the same characters run as three lines at 14 pixels, the size a map label is read at.](images/reference/glyph-sheet.webp)
+
+*Painted by `examples/glyph_sheet.py`, seed 11, with the default face, hand, nib and ink: each glyph alone at 32 px, then running at the 14 px of a map label. Every cell and every running line is a render of its own, seeded from its character or its line, so a change to one glyph moves only its cell and the lines that hold it.*
 
 ## Explanation
 
@@ -218,7 +236,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ![The word Keswick written twelve times in three rows of four. The columns turn the nib through four angles and the rows thin the line along the nib by none, about half and most. In the top row every stroke is one width. In the bottom row the strokes along the nib fall away to hairlines, and which strokes those are depends on the angle.](images/explanation/nib-angles.webp)
 
-*Painted by `examples/nib_stages.py` (seed 7, figure angles, size 840). The name is Ambleside. The labels read -38, 0 and 90 across, and 0.5 and 0.85 down.*
+*Painted by `examples/nib_stages.py` (seed 7, figure angles, size 840). The name is Keswick. The labels read -38, 0, 38 and 90 across, the nib's angle in degrees, and 0, 0.52 and 0.85 down, `label_pen_thin`.*
 
 ![The word Keswick written in dark ink over an irregular patch of deep sap green, with a faint pencil line under the name. The ink is legible but low in contrast against the green.](images/explanation/nib-ground.webp)
 
@@ -242,7 +260,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ## Places
 
-The five showcase maps, each painted from a recorded fixture by one script, `examples/place_card.py`, in its own theme with its curated callouts. Every route follows public OpenStreetMap ways. Each card links its fixture.
+The five showcase maps, each painted from a recorded fixture by one script, `examples/place_card.py`, in its own theme with its curated landmarks. Every route follows public OpenStreetMap ways. Each map links its fixture.
 
 ### [Ambleside, the Lake District](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/ambleside)
 
@@ -270,7 +288,7 @@ The five showcase maps, each painted from a recorded fixture by one script, `exa
 
 ### [Y Fenni](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/y-fenni)
 
-![A hand-painted map of Y Fenni: washes for the town, the blue river Wysg and a maroon route winding through the town centre, with callouts lettered Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream](images/places/y-fenni.webp)
+![A hand-painted map of Y Fenni: washes for the town, the blue river Wysg and a maroon route winding through the town centre, with landmarks lettered Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream](images/places/y-fenni.webp)
 
 *Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml`.* A food tour in a Welsh-named market town: the town is lettered Y Fenni where OpenStreetMap carries the Welsh name. Among the names it letters are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise, Shepherd's Ice Cream, Afon Wysg and Llan-ffwyst; the list is not complete.
 
@@ -324,4 +342,4 @@ The README's strip is one thumbnail for each rung of the [tutorials](tutorials/i
 
 ![A hand-painted map of Ambleside and Rydal Water in the showcase theme: tawny fell and green wood washes, two blue lakes and a maroon route looping out to Loughrigg Terrace](images/gallery/route-map.webp)
 
-*Painted by `examples/place_card.py` in `examples/themes/ambleside.toml`, with the curated callouts of `examples/places.toml`.*
+*Painted by `examples/place_card.py` in `examples/themes/ambleside.toml`, with the curated landmarks of `examples/places.toml`.*
