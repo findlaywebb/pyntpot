@@ -6,23 +6,60 @@ on:
   pull_request:
   workflow_dispatch:
 
+# A new push to a pull request cancels that PR's run still in flight, so a superseded run
+# does not hold one of the account's few concurrent macOS slots. Every other event gets a
+# group of its own (the run id): main's runs all complete, and none waits behind or replaces
+# another, which a shared group would do even with cancel-in-progress off.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 # Exact golden comparison is the local gate only: a CI runner's OS or BLAS build is not
 # guaranteed to match the machine the goldens were made on, bit for bit.
 jobs:
-  golden:
-    # Kept to the OS alone, so the matrix's `workers` key does not rename the checks.
-    name: golden (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-15]
-        # A worker peaks near 3 GB on the biggest paints; macos-15 has 3 cores and 7 GB, so it
-        # runs two workers rather than one per core.
-        include:
-          - os: macos-15
-            workers: 2
-    runs-on: ${{ matrix.os }}
+  # Whether this run needs the macOS leg: always off a pull request; on one, only when the
+  # diff touches a path that can move arm64 pixels or the macOS leg itself.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      macos: ${{ steps.paths.outputs.macos }}
     steps:
+      # Full history for the merge base, but trees only: the diff needs names, not blobs.
+      - uses: actions/checkout@v7.0.1
+        if: github.event_name == 'pull_request'
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Paths that can move arm64 pixels
+        id: paths
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" != pull_request ]; then
+            echo "macos=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "origin/$BASE_REF...HEAD")
+          printf '%s\n' "$changed"
+          pixels='^(src/pyntpot/(ink|letters)/|tests/golden/|tests/unit/ink/test_paper\.py$|tests/unit/maps/painter/test_smoke\.py$|tests/conftest\.py$|uv\.lock$|pyproject\.toml$|\.github/workflows/golden\.yml$)'
+          if grep -qE "$pixels" <<<"$changed"; then
+            echo "macos=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "macos=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Two jobs rather than an OS matrix, so the macOS one can be skipped on its own. Each
+  # `name` is the check name the matrix gave, so required checks still match; a job skipped
+  # by its `if` reports success. The steps are shared through a YAML anchor.
+  golden-ubuntu:
+    name: golden (ubuntu-latest)
+    runs-on: ubuntu-latest
+    env:
+      GOLDEN_OS: ubuntu-latest
+      GOLDEN_WORKERS: auto
+    steps: &golden-steps
       - uses: actions/checkout@v7.0.1
 
       - uses: astral-sh/setup-uv@v10.3.3
@@ -37,7 +74,7 @@ jobs:
       # so they run here in tolerance mode, where a wrong bound fails them (ADRs 0030, 0051).
       # They are not marked golden, so the parity step below does not select them.
       - name: Pinned plate hashes (arm64, tolerance)
-        if: matrix.os == 'macos-15'
+        if: env.GOLDEN_OS == 'macos-15'
         run: >-
           uv run pytest --golden-tolerance
           "tests/unit/ink/test_paper.py::TestClassicEdge::test_the_classic_plate_is_the_pinned_one"
@@ -45,14 +82,14 @@ jobs:
           "tests/unit/maps/painter/test_smoke.py::test_the_wash_flags_off_still_paint_the_plates_that_were_approved"
 
       - name: Golden parity (tolerance)
-        run: uv run pytest -m golden --golden-tolerance -n ${{ matrix.workers || 'auto' }} --dist loadgroup --basetemp=${{ runner.temp }}/pytest
+        run: uv run pytest -m golden --golden-tolerance -n ${{ env.GOLDEN_WORKERS }} --dist loadgroup --basetemp=${{ runner.temp }}/pytest
 
       # A failing fresh paint is only inspectable if its pictures outlive the runner.
       - name: Keep the fresh paints
         if: failure()
         uses: actions/upload-artifact@v7.0.2
         with:
-          name: golden-paints-${{ matrix.os }}
+          name: golden-paints-${{ env.GOLDEN_OS }}
           # The painted images only, not the copied fixture caches. The Lynmouth paint dirs
           # are left out: the parity pin copies each output into its `fresh` tree, which is kept.
           path: |
@@ -83,7 +120,21 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7.0.2
         with:
-          name: golden-diffs-${{ matrix.os }}
+          name: golden-diffs-${{ env.GOLDEN_OS }}
           path: ${{ runner.temp }}/golden-diffs
           if-no-files-found: ignore
           retention-days: 7
+
+  golden-macos:
+    name: golden (macos-15)
+    needs: changes
+    # Runs unless `changes` said no: a failed `changes` leaves the output empty, so the
+    # macOS leg runs rather than passing unseen.
+    if: ${{ !cancelled() && needs.changes.outputs.macos != 'false' }}
+    runs-on: macos-15
+    env:
+      GOLDEN_OS: macos-15
+      # A worker peaks near 3 GB on the biggest paints; macos-15 has 3 cores and 7 GB, so it
+      # runs two workers rather than one per core.
+      GOLDEN_WORKERS: 2
+    steps: *golden-steps
