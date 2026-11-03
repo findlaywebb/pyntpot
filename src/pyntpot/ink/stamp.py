@@ -3,9 +3,10 @@
 Key name: `stamp`, which walks a path in render pixels, draws a tip of logical bristles from
 the generator, and deposits every bristle's ink bilinearly into the accumulator. It is split
 into named steps, each a stage of a stroke: the path (`_trace`), the pressure and width along
-it (`_pressure`, `_width`), the wander (`_wobble`), the tip (`_draw_tip`, `_sample_tip`),
-where each bristle lands (`_offsets`) and what each carries (`_lanes`). What the weights are
-and how they are deposited is `pyntpot.ink.deposit`.
+it (`_pressure`, `_width`, with a nib's run and reload in `_nib_spent`), the wander
+(`_wobble`), the tip (`_draw_tip`, `_sample_tip`), where each bristle lands (`_offsets`) and
+what each carries (`_lanes`). What the weights are and how they are deposited is
+`pyntpot.ink.deposit`.
 
 It does not turn an accumulator into density (`pyntpot.ink.pad`) and builds no brush
 (`pyntpot.ink.brush`).
@@ -31,6 +32,9 @@ _MAX_TIP_SAMPLES = 512
 _MIN_POINTS = 2
 #: Normals shorter than this are left unscaled.
 _MIN_NORMAL = 1e-5
+#: How far a reloaded nib takes to swell back, in its own widths: the spent
+#: share left at the dip falls by `e` over this distance.
+_REFILL_WIDTHS = 2.0
 _TAU = 6.283
 
 
@@ -92,10 +96,27 @@ def _width(tr: Trace, b: Brush, press: np.ndarray, wprof: np.ndarray | None) -> 
         # comes back full at the reload. The thinning is put on the width rather
         # than on the pressure because a pen's ink is saturated long before the
         # accumulator is, so darkness alone would not show.
-        spent = 1.0 - np.exp(-np.mod(np.cumsum(press) * b.step, b.dip_px) / b.run_px)
+        spent = _nib_spent(np.cumsum(press) * b.step, b)
         nib = (1.0 - b.pen_thin * spent).astype(F32)
         width = width * nib
     return StrokeProfile(press, width, spent)
+
+
+def _nib_spent(run: np.ndarray, b: Brush) -> np.ndarray:
+    """How much of its load a nib has spent at each stamp, from 0 full to 1 empty.
+
+    `run` is the distance travelled, weighted by pressure. The load falls as
+    `1 - exp(-since / run_px)` from the last reload, `dip_px` apart. A fresh dip
+    does not refill the line in one stamp: what the nib had spent by the dip
+    eases away over a few nib widths (`exp(-since / (_REFILL_WIDTHS * width))`),
+    so the line swells back to full rather than stepping to it.
+    """
+    since = np.mod(run, b.dip_px)
+    spent = 1.0 - np.exp(-since / b.run_px)
+    at_dip = 1.0 - np.exp(-b.dip_px / b.run_px)
+    refill_px = max(_REFILL_WIDTHS * b.width, 1e-6)
+    carried = np.where(run >= b.dip_px, at_dip * np.exp(-since / refill_px), 0.0)
+    return np.minimum(spent + carried, 1.0)
 
 
 def _wobble(tr: Trace, b: Brush, ph: float, rng: np.random.Generator) -> Trace:
