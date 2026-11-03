@@ -9,12 +9,12 @@
       "status": "changed",
       "width": 720,
       "height": 583,
-      "changed_fraction": 0.12850676577091671,
+      "changed_fraction": 0.12117162187916905,
       "over_bound": true,
       "max_delta": 225,
       "box": [
         0,
-        112,
+        95,
         720,
         583
       ],
@@ -27,14 +27,14 @@
       "status": "changed",
       "width": 240,
       "height": 194,
-      "changed_fraction": 0.03797250859106529,
+      "changed_fraction": 0.03741408934707904,
       "over_bound": true,
-      "max_delta": 244,
+      "max_delta": 245,
       "box": [
         17,
         41,
         213,
-        83
+        73
       ],
       "extent": "local",
       "diff_image": "tests/golden/docs/how-to/command-line.png.diff.png",
@@ -45,16 +45,16 @@
       "status": "changed",
       "width": 1800,
       "height": 1457,
-      "changed_fraction": 0.0548364218714253,
+      "changed_fraction": 0.054307176084801345,
       "over_bound": true,
       "max_delta": 255,
       "box": [
         114,
         304,
         1800,
-        1022
+        608
       ],
-      "extent": "widespread",
+      "extent": "local",
       "diff_image": "tests/golden/lynmouth/labels-centreline.webp.diff.png",
       "crop_image": "tests/golden/lynmouth/labels-centreline.webp.crop.png"
     },
@@ -63,14 +63,14 @@
       "status": "changed",
       "width": 1800,
       "height": 1457,
-      "changed_fraction": 0.029915732479219095,
+      "changed_fraction": 0.029840997483413408,
       "over_bound": true,
       "max_delta": 215,
       "box": [
         122,
         308,
-        1590,
-        620
+        1589,
+        540
       ],
       "extent": "local",
       "diff_image": "tests/golden/lynmouth/map.png.diff.png",
