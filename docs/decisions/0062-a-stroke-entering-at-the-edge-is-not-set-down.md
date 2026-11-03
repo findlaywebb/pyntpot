@@ -64,53 +64,54 @@ an edge-hugging segment, a first segment outside, a two-point piece). 12 survive
 
 ## Golden regeneration
 
-Process as ADR 0036, with the review images of ADR 0052, on top of ADR 0059's images (main
-at `4fed836`). The tolerance bound is not changed and no gate is loosened.
+Process as ADR 0036, with the review images of ADR 0052, repainted on main after ADR 0049
+(a generator per item, main at `cacaf83`). The tolerance bound is not changed and no gate is
+loosened.
 
 ### Lynmouth compare, against the committed goldens
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
-wash.webp: identical no, differing fraction 0.070019
+wash.webp: identical no, differing fraction 0.012135
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.014207
-map.png: identical no, differing fraction 0.067188
-manifest hash: eb86b256459e2f0f-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
+labels-centreline.webp: identical no, differing fraction 0.002938
+map.png: identical no, differing fraction 0.012445
+manifest hash: 818ec1260e9283d7-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
 ```
 
 The manifest hash's first half moves, because the basemap's rivers move, so `GOLDEN_HASH` is
-re-pinned to `eb86b256459e2f0f-d9c56c0811177b0f`. `PINNED_LABELS`, the place pins, the
-map-styles means and the smoke lock do not move. Most of the wash and map change is not the
-fix: rivers, the coast and roads share one generator (issue #61), and a river that now runs
-to the edge is longer, draws a longer lattice and moves every later stroke's bristle
-texture; strokes keep their paths and widths. The intended change is local: the East and
-West Lyn and the coast-side streams now reach the card's edge. The label plate moves where
-the placement prices names off the water, which now reaches the edge too.
+re-pinned to `818ec1260e9283d7-d9c56c0811177b0f`. `PINNED_LABELS`, the place pins, the
+map-styles means and the smoke lock do not move. With a generator per item (ADR 0049), a
+river that now runs to the edge no longer reshuffles every later stroke's texture: the wash
+and map move along the rivers that now reach the card's edge (the East and West Lyn and the
+coast-side streams), and the label plate moves where the placement prices names off the
+water, which now reaches the edge too.
 
 ### Docs images
 
-Every docs image and master was repainted with `make_docs_images.py`, on top of main at
-`b78a1bb`. The 16 that paint a map card moved, and only they; every other entry is
-byte-identical. Master differing fractions:
+Every docs image and master was repainted with `make_docs_images.py`. The 16 that paint a
+map card moved, and only they; every other entry is byte-identical. Master differing
+fractions against main:
 
 | Master | Fraction | Max delta | Master | Fraction | Max delta |
 |---|---|---|---|---|---|
-| `places/oxford.png` | 0.318750 | 209 | `places/y-fenni.png` | 0.255004 | 192 |
-| `places/skye.png` | 0.204887 | 80 | `how-to/route-ink-grid.png` | 0.145343 | 174 |
-| `map-styles/bold.png` | 0.120541 | 226 | `tutorials/route-map.png` | 0.110746 | 212 |
-| `how-to/route-ink.png` | 0.109771 | 212 | `map-styles/winter.png` | 0.107359 | 211 |
-| `map-styles/sepia.png` | 0.100073 | 145 | `gallery/route-map.png` | 0.099172 | 210 |
-| `places/ambleside.png` | 0.099172 | 210 | `map-styles/pen-and-ink.png` | 0.093348 | 146 |
-| `how-to/command-line.png` | 0.090442 | 185 | `places/yr-wyddfa.png` | 0.067418 | 181 |
-| `hero.png` | 0.066618 | 191 | `social-preview.png` | 0.039410 | 149 |
+| `how-to/route-ink-grid.png` | 0.107639 | 184 | `places/y-fenni.png` | 0.085261 | 189 |
+| `places/oxford.png` | 0.060650 | 209 | `map-styles/bold.png` | 0.044932 | 223 |
+| `gallery/route-map.png` | 0.041082 | 211 | `places/ambleside.png` | 0.041082 | 211 |
+| `tutorials/route-map.png` | 0.040936 | 212 | `how-to/route-ink.png` | 0.040887 | 212 |
+| `map-styles/winter.png` | 0.040863 | 212 | `map-styles/sepia.png` | 0.037256 | 144 |
+| `map-styles/pen-and-ink.png` | 0.031457 | 156 | `hero.png` | 0.024635 | 191 |
+| `places/yr-wyddfa.png` | 0.020189 | 199 | `how-to/command-line.png` | 0.015872 | 185 |
+| `social-preview.png` | 0.009444 | 124 | `places/skye.png` | 0.007243 | 101 |
 
 Looked at side by side with `main`: on the hero the soft blob where the Brathay started at the
 lower left is gone and the river runs on to the bottom edge, thin where it enters; the dark
 dot by the left edge is now a short line coming in from that edge. On every card, rivers that
-leave the card now reach its edge instead of stopping short of it. The large fractions are
-the shared-generator reshuffle above: bristle texture along rivers, the coast and roads,
-which a reader sees only by flicking between the two; a few names and leaders shift by a few
-pixels where the water they avoid now reaches the edge (on Oxford, "Christ Church"'s leader).
+leave the card now reach its edge instead of stopping short of it, and a few names and leaders
+shift by a few pixels where the water they avoid now reaches the edge (on Oxford, "Thames").
+The rest of each card's fraction is a low speckle (most pixels within a delta of 10) over the
+land wash, which a reader sees only by flicking between the two; on Lynmouth it is absent and
+the change is the East Lyn and its name.
 
 ## Consequences
 
