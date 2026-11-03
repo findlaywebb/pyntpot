@@ -88,13 +88,28 @@ class TestOpenPin:
     def test_the_gap_faces_the_leader_at_every_angle(
         self, hand: Hand, style: Style, size: float
     ) -> None:
-        """Over 72 leader directions the gap is centred where the leader leaves the ring, near its name's direction."""
+        """Over 72 leader directions the gap is centred where the leader leaves the ring."""
         for i in range(TURNS):
             turn = i * math.tau / TURNS - math.pi
             ring, line = _furniture(hand, style, _pinned(turn, size))
             crossing = leader_angle(line, MUSEUM, pin_radius(_pinned(turn, size)))
             assert _turn_apart(_gap_bisector(ring), crossing) < 1e-6
-            assert _turn_apart(_gap_bisector(ring), turn) < math.radians(20.0)
+
+    @pytest.mark.parametrize("size", [11.0, 20.0, 40.0], ids=["small", "shipped", "large"])
+    def test_a_leader_bent_little_leaves_its_ring_towards_its_name(
+        self, hand: Hand, size: float
+    ) -> None:
+        """Over 72 directions a leader drawn from one fixed generator leaves the ring within 20 degrees of its name."""
+        # The generator is the leader's own, not the label's: in `label_marks` the name's
+        # glyphs draw from the label's generator first, so the bend it leaves the leader
+        # moves with any change to how the letters are stroked.
+        for i in range(TURNS):
+            turn = i * math.tau / TURNS - math.pi
+            label = _pinned(turn, size)
+            assert label.leader is not None
+            line = leader(hand, label.leader, np.random.default_rng(0))
+            crossing = leader_angle(line, MUSEUM, pin_radius(label))
+            assert _turn_apart(crossing, turn) < math.radians(20.0)
 
     @pytest.mark.parametrize("size", [11.0, 20.0, 40.0], ids=["small", "shipped", "large"])
     def test_the_leader_passes_through_the_gap_clear_of_the_arc(
@@ -193,7 +208,7 @@ class TestDeterminism:
         assert [m.role for m in marks] == ["pin", "leader"]
         ring, line = marks[0].pts, marks[1].pts
         assert len(ring) == 11
-        assert ring[0] == pytest.approx((414.6939553, 268.7632856))
-        assert ring[-1] == pytest.approx((412.3267592, 265.2191317))
+        assert ring[0] == pytest.approx((414.4496701, 266.6438597))
+        assert ring[-1] == pytest.approx((410.2728206, 265.7961735))
         assert line[0] == pytest.approx(MUSEUM)
         assert line[-1] == pytest.approx((440.2842712, 239.7157288))

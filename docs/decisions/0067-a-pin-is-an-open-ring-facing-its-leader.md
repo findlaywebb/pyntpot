@@ -35,9 +35,11 @@ icon per theme, and turning the rotation off, is filed as its own feature (issue
 - **The gap faces the leader.** `_furniture` now draws the leader first, then reads
   `leader_angle`: the direction from the pin's centre to where the wandered leader first
   reaches the ring's radius. That, not the straight line to the name, is `gap_at`, so a
-  leader bent near its pin still comes in through the middle of its gap. Over 360
-  directions the gap's bisector is within 16 degrees of the straight line to the name at
-  11 px, and within 12 at 20 px; the difference is the leader's bend.
+  leader bent near its pin still comes in through the middle of its gap. The gap's
+  bisector is off the straight line to the name by the leader's bend near its pin: over 360
+  directions within 16 degrees at 11 px and 12 at 20 px on this branch's base, and within 39
+  and 34 once the terminal-tails fix (#139) changes how many strokes the name's glyphs draw
+  from the same generator first, which moves the one bend every direction shares.
 - **The gap is the leader's pen, two ring pens and the bristles' jitter.**
   `pin_gap_px(leader_px, ring_px)` = `leader_px + PIN_GAP_RING_PENS * ring_px +
   PIN_GAP_CLEAR_PX`, with `PIN_GAP_RING_PENS = 2` and `PIN_GAP_CLEAR_PX = 1.1`. Half a ring
@@ -67,7 +69,8 @@ icon per theme, and turning the rotation off, is filed as its own feature (issue
   wander, and every other mark.
 
 Pinned by `tests/unit/maps/test_lettering_furniture.py`: over 72 directions at 11, 20 and
-40 px the gap is centred on the leader's crossing and within 20 degrees of its name, and
+40 px the gap is centred on the leader's crossing, a leader drawn from its own fixed
+generator leaves the ring within 20 degrees of its name, and
 the leader's centreline clears the arc's by both half pens and the jitter; the leader runs
 from the pin's centre to its name; the gap is 4.262 px at the shipped size; the chord across
 the arc's ends is the gap asked for; an east-facing arc's ends are pinned literals; a gap
