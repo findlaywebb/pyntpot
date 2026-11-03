@@ -1,6 +1,6 @@
 # The wash essay says `wash` takes only a body and a pool
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues/TBD)
+GitHub issue: [#176](https://github.com/findlaywebb/pyntpot/issues/176)
 
 Area: docs (explanation).
 
