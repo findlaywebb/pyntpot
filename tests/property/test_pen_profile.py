@@ -1,8 +1,9 @@
 """Properties of the nib's width profile: it follows the stroke's direction continuously, with no flicker.
 
 The rotation property holds for any smoothing that reads the direction and not the
-position, so it guards the continuity, not the corner floor or the ring's seam; the
-V and the ring properties are the ones that guard those.
+position, so it guards the continuity on a staircase, not the corner floor or the ring's
+seam; the V, the nib-turn and the ring properties are the ones that guard those, at any
+sample count, so the floor cannot lean on where the samples land.
 """
 
 import math
@@ -27,8 +28,14 @@ WINDOW = 12.0
 #: A V's leg, in render pixels: longer than the window, so each half window at the point is one leg.
 LEG = 30.0
 
-#: Samples along a V: an odd count, so the middle one falls on the point.
-VEE_SAMPLES = 61
+#: A V's legs, in render pixels, from shorter than half a window to well past it.
+LEG_LENGTHS = st.floats(2.0, 40.0, allow_nan=False, allow_infinity=False)
+
+#: Sample counts, odd and even, so a corner falls on a sample or between two.
+SAMPLE_COUNTS = st.integers(2, 90)
+
+#: A small turn of the nib, in radians either way.
+NUDGES = st.floats(-0.01, 0.01, allow_nan=False, allow_infinity=False)
 
 #: A ring's sides, and samples round it at two per side, so starting at the next vertex
 #: shifts the samples by exactly two.
@@ -48,13 +55,19 @@ def _staircase(heading: float, length: int) -> np.ndarray:
     return cells[keep]
 
 
-def _vee(half: float, heading: float) -> np.ndarray:
-    """A V of two `LEG` px legs meeting at the origin, `half` either side of `heading`, walked in and out."""
+def _vee(half: float, heading: float, first: float = LEG, second: float = LEG) -> np.ndarray:
+    """A V of a `first` and a `second` px leg meeting at the origin, `half` either side of `heading`."""
     into = heading + math.pi + half
     out = heading - half
-    start = (LEG * math.cos(into), LEG * math.sin(into))
-    end = (LEG * math.cos(out), LEG * math.sin(out))
+    start = (first * math.cos(into), first * math.sin(into))
+    end = (second * math.cos(out), second * math.sin(out))
     return np.array([start, (0.0, 0.0), end])
+
+
+def _kinked(turns: list[float], lengths: list[float]) -> np.ndarray:
+    """A stroke of straight pieces of `lengths` px, each heading at its angle in `turns`."""
+    steps = [(n * math.cos(a), n * math.sin(a)) for a, n in zip(turns, lengths, strict=True)]
+    return np.concatenate([[(0.0, 0.0)], np.cumsum(steps, axis=0)])
 
 
 def _ring(radius: float, sides: int, first: int) -> np.ndarray:
@@ -110,15 +123,49 @@ class TestPenProfile:
         heading=ANGLES,
         nib=ANGLES,
         thin=THIN,
+        legs=st.tuples(LEG_LENGTHS, LEG_LENGTHS),
+        samples=SAMPLE_COUNTS,
     )
     def test_a_corner_is_never_thinner_than_both_its_legs(
-        self, half: float, heading: float, nib: float, thin: float
+        self,
+        half: float,
+        heading: float,
+        nib: float,
+        thin: float,
+        legs: tuple[float, float],
+        samples: int,
     ) -> None:
-        """The point of a V is at least as wide as the narrower of its two legs, at any turn and nib angle."""
-        pts = _vee(half, heading)
-        prof = pen_profile(pts, nib, thin, WINDOW, VEE_SAMPLES)
-        legs = min(_width(heading - half, nib, thin), _width(heading + half, nib, thin))
-        assert prof[VEE_SAMPLES // 2] >= legs - 1e-4
+        """No sample of a V is thinner than its narrower leg, at any turn, nib, leg lengths and sample count."""
+        pts = _vee(half, heading, *legs)
+        prof = pen_profile(pts, nib, thin, WINDOW, samples)
+        narrower = min(_width(heading - half, nib, thin), _width(heading + half, nib, thin))
+        assert prof.min() >= narrower - 1e-5
+
+    @UNTIMED
+    @given(
+        turns=st.lists(ANGLES, min_size=1, max_size=5),
+        lengths=st.lists(
+            st.floats(0.5, 30.0, allow_nan=False, allow_infinity=False), min_size=5, max_size=5
+        ),
+        nib=ANGLES,
+        thin=THIN,
+        nudge=NUDGES,
+        samples=SAMPLE_COUNTS,
+    )
+    def test_turning_the_nib_moves_no_sample_more_than_thin_times_the_turn(
+        self,
+        turns: list[float],
+        lengths: list[float],
+        nib: float,
+        thin: float,
+        nudge: float,
+        samples: int,
+    ) -> None:
+        """On any kinked stroke, turning the nib by an angle moves no sample by more than `thin` times that angle."""
+        pts = _kinked(turns, lengths[: len(turns)])
+        before = pen_profile(pts, nib, thin, WINDOW, samples)
+        after = pen_profile(pts, nib + nudge, thin, WINDOW, samples)
+        assert np.abs(after - before).max() <= thin * abs(nudge) + 1e-5
 
     @UNTIMED
     @given(

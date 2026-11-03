@@ -109,22 +109,20 @@ class TestPenProfile:
         assert np.allclose(prof[:16], prof[16:32], atol=1e-5)
 
     @pytest.mark.parametrize(
-        ("samples", "near"),
-        [
-            (61, [0.751, 0.747, 0.7242, 0.6729, 0.751, 0.751, 0.751, 0.751, 0.751]),
-            (25, [0.751, 0.751, 0.751, 0.751, 0.747, 0.751, 0.751, 0.751, 0.747]),
-        ],
-        ids=["one-px-apart", "two-and-a-half-px-apart"],
+        ("samples", "second"),
+        [(24, 30.0), (25, 30.0), (60, 30.0), (61, 30.0), (24, 47.0), (61, 47.0)],
+        ids=["24", "25", "60", "61", "off-centre-24", "off-centre-61"],
     )
-    def test_the_corner_floor_reaches_half_a_window_either_side(
-        self, samples: int, near: list[float]
+    def test_a_vee_is_never_thinner_than_its_legs_wherever_the_samples_fall(
+        self, samples: int, second: float
     ) -> None:
-        """A V's floor is carried half a window (4 px) from its point, by as many samples as fit, and no further."""
-        pts = np.array([(-30.0, -30.0), (0.0, 0.0), (30.0, -30.0)])
+        """A V 45 degrees either side of a flat nib keeps its legs' 0.751 at every sample, its point on one or not."""
+        side = second / math.sqrt(2.0)
+        pts = np.array(
+            [(-30.0 / math.sqrt(2.0), -30.0 / math.sqrt(2.0)), (0.0, 0.0), (side, -side)]
+        )
         prof = pen_profile(pts, 0.0, 0.85, 8.0, samples)
-        mid = samples // 2
-        assert prof[mid - 6 : mid + 3].tolist() == pytest.approx(near, abs=1e-4)
-        assert prof.tolist() == pytest.approx(prof[::-1].tolist(), abs=1e-6)
+        assert prof.min() == pytest.approx(0.15 + 0.85 * math.sin(math.pi / 4), abs=1e-5)
 
     def test_a_closed_triangle_is_floored_both_ways_round(self) -> None:
         """A closed triangle walked from its apex reads the same both ways round from it, its seam included."""
@@ -139,26 +137,47 @@ class TestPenProfile:
         assert prof[20] == pytest.approx(0.575, abs=1e-4)
         assert prof.tolist() == pytest.approx(prof[::-1].tolist(), abs=1e-5)
 
-    @pytest.mark.parametrize(
-        ("window", "width"),
-        [(8.06, 0.751), (7.88, 0.6633)],
-        ids=["just-over-four-samples", "just-under-four-samples"],
-    )
-    def test_the_floor_reaches_as_many_whole_samples_as_half_a_window_spans(
-        self, window: float, width: float
-    ) -> None:
-        """Four px from a V's point, one sample a px, the floor holds when half the window spans four samples and not three."""
-        leg = 30.0 / math.sqrt(2.0)
-        pts = np.array([(-leg, -leg), (0.0, 0.0), (leg, -leg)])
-        prof = pen_profile(pts, 0.0, 0.85, window, 61)
-        assert prof[26] == pytest.approx(width, abs=1e-4)
-        assert prof[34] == pytest.approx(width, abs=1e-4)
-
-    def test_a_ring_started_just_past_a_corner_ends_where_it_starts(self) -> None:
-        """A closed V started 3.5 px past its pinched point carries the corner's floor over its seam to both ends alike."""
+    def test_a_closed_vee_started_past_its_point_ends_where_it_starts(self) -> None:
+        """A closed V started 3.5 px past its point reads its legs' 0.751 at both ends, across the seam."""
         side = 30.0 * math.sin(math.pi / 4)
         apex, right, left = (0.0, 0.0), (side, -side), (-side, -side)
         start = (side * 3.5 / 30.0, -side * 3.5 / 30.0)
         prof = pen_profile(np.array([start, right, left, apex, start]), 0.0, 0.85, 8.0, 61)
-        assert prof[0] == pytest.approx(0.7377, abs=1e-4)
+        assert prof[0] == pytest.approx(0.15 + 0.85 * math.sin(math.pi / 4), abs=1e-5)
         assert prof[-1] == pytest.approx(prof[0], abs=1e-6)
+
+
+def _hairline_kink() -> np.ndarray:
+    """A 20 px hairline along a flat nib, a 2 px kink up at 60 degrees, then 20 px down at 60 degrees."""
+    turn = math.radians(60.0)
+    kink = (2.0 * math.cos(turn), -2.0 * math.sin(turn))
+    out = (kink[0] + 20.0 * math.cos(turn), kink[1] + 20.0 * math.sin(turn))
+    return np.array([(-20.0, 0.0), (0.0, 0.0), kink, out])
+
+
+class TestHairlineKink:
+    """A hairline meeting a short kink, where a floor gated on a pinch switched on at full strength."""
+
+    #: A nib angle where the old gate sat on its edge: a turn of 1.6e-4 rad moved a sample 0.29.
+    NIB = -0.04385
+
+    def test_turning_the_nib_a_little_moves_the_width_a_little(self) -> None:
+        """Turning the nib by 1.6e-4 rad moves no sample by more than `thin` times that, where a gate jumped 0.29."""
+        nudge = 1.6e-4
+        here = pen_profile(_hairline_kink(), self.NIB, 0.85, 8.0)
+        turned = pen_profile(_hairline_kink(), self.NIB + nudge, 0.85, 8.0)
+        assert np.abs(turned - here).max() <= 0.85 * nudge + 1e-6
+
+    def test_the_width_climbs_into_the_kink(self) -> None:
+        """At the default 24 samples the hairline climbs into the kink by the pinned widths, with no step."""
+        prof = pen_profile(_hairline_kink(), self.NIB, 0.85, 8.0)
+        pinned = [0.1873] * 9 + [0.2, 0.2665, 0.3731, 0.4834, 0.7112]
+        assert prof[:14].tolist() == pytest.approx(pinned, abs=1e-4)
+
+    def test_the_hairline_is_not_thickened_past_half_a_window_from_the_kink(self) -> None:
+        """The 0.187 hairline is untouched more than 4 px before the kink and climbs under 0.3 to 1 px, where a spread floor read 0.49."""
+        samples = 421
+        prof = pen_profile(_hairline_kink(), self.NIB, 0.85, 8.0, samples)
+        along = np.linspace(0.0, 42.0, samples)
+        assert prof[along < 20.0 - 4.0].max() == pytest.approx(0.1873, abs=1e-4)
+        assert prof[along < 20.0 - 1.0].max() <= 0.3

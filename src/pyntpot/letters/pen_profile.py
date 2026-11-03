@@ -7,17 +7,27 @@ A broad nib held at a fixed angle draws its full width across itself and almost
 nothing along itself, so a glyph's width follows the angle between the stroke
 and the nib: `1 - thin` along it, all of it across, the sine between. The
 direction is the stroke's own, smoothed along it over the nib's width, so a
-pixel staircase reads as one width and a corner turns the width through the
-angles between.
+pixel staircase reads as one width and a gentle turn moves the width through
+the angles between. Where the smoothed direction cuts across a sharp corner,
+the corner is read from its legs instead (`pen_profile` says how).
 
 It does not stroke, colour or place anything, and it reads no style: the nib's
 angle, how much it thins and its width arrive as numbers. The nib's angle is
 fixed to the page; no mark but a glyph's stroke has a profile.
 
-Invariants: the width is in `[1 - thin, 1]`; a sample on a corner is never
-thinner than both of the legs either side of it; a closed stroke (its last point its first) has no
-ends, so its width runs on round the seam; a stroke of fewer than two points or
-no length keeps its full width.
+Invariants, wherever the samples fall and however many there are:
+
+- the width is in `[1 - thin, 1]`;
+- turning the nib, or the stroke, by an angle moves no sample by more than
+  `thin` times that angle;
+- a stroke of two straight legs (a V or an L) is nowhere thinner than the
+  narrower leg;
+- a sample is lifted above its smoothed direction's width only by a vertex
+  within its own smoothing window, and never above the narrower side of that
+  window cut at the vertex;
+- a closed stroke (its last point its first) has no ends, so its width runs on
+  round the seam and does not depend on which vertex it starts at;
+- a stroke of fewer than two points or no length keeps its full width.
 """
 
 import math
@@ -59,30 +69,37 @@ def pen_profile(
     flats and diagonals, and read segment by segment a stroke near the nib's
     angle swings between full width and a hairline stamp by stamp. The unit
     tangent is averaged, weighted by length under a tent `window` wide at half
-    its height, centred on each sample, so a corner turns the width through the
-    angles between. The length-weighted tangent over a span is the chord
-    between its ends, so each box of the tent is read from the stroke's own
-    points. An open stroke's window is cut at its ends; a closed one's runs on
+    its height, centred on each sample, so a gentle turn moves the width
+    through the angles between. The length-weighted tangent over a span is the
+    chord between its ends, so each box of the tent is read from the stroke's
+    own points. An open stroke's tent is cut at its ends; a closed one's runs on
     round the ring.
 
     Averaged across a sharp corner, the tangent points along the corner's
     bisector, a direction neither leg has, and where the nib lies along it the
-    width would fall to a hairline at the point. So the direction is also
-    averaged over the half of the tent before each sample and the half after,
-    each read as a width, and where the smaller of those two is wider than the
-    whole window's width (the whole is pinched), it is a floor: a sample on a
-    corner is never thinner than both its legs. The floor is carried half a
-    window either side, to the samples beside the corner, whose halves straddle
-    it; it is never carried where nothing is pinched, so a turn through the
-    angles between (an L whose leg lies along the nib) climbs as it did. On a
-    straight stroke the halves agree with the whole and the floor does not
-    bind; where a curve turns through the nib's own direction within a window,
-    its halves straddle the nib too, and its thinnest point is read no thinner
-    than half a window either side of it.
+    width would fall to a hairline that neither leg has. So each sample's tent
+    is also cut in two at every vertex of the stroke it reaches, and each side
+    read as a width on its own (an empty side, past an open stroke's end, reads
+    full, so the other side decides). The narrower side of each cut is a floor,
+    and the sample's width is the widest of those floors and the whole tent's.
+    Cut at a corner, each side is one leg, so a stroke of two straight legs is
+    nowhere thinner than the narrower leg. Where both sides of a cut lie on
+    one side of the nib's direction (a straight run, or an L whose leg lies
+    along the nib), the whole lies between them and is no narrower than the
+    narrower side, so the floor does not bind and the L climbs through the
+    angles between. A floor binds only where the two sides lie either side of
+    the nib's direction, and never above the narrower of them: a hairline
+    running straight along the nib is lifted only where its tent reaches a
+    vertex past a turn's first, and never above the side of that cut that
+    holds the hairline.
 
-    So the width moves continuously along the stroke and with its direction:
-    turning a stroke by an angle moves no sample by more than `thin` times it.
-    The samples are evenly spaced, none more than half a window from the next.
+    Every width here is the sine between a direction the stroke alone fixes
+    and the nib (or full, for an empty side), and the floor is a widest of
+    narrowest of them, so turning the nib, or the stroke, by an angle moves no
+    sample by more than `thin` times it. The samples
+    are evenly spaced, none more than half a window from the next, and the
+    floor holds at each of them however they fall, since it is read from the
+    stroke's vertices, not from the samples.
 
     Args:
         pts: The stroke in render pixels; closed when its last point is its first.
@@ -108,44 +125,59 @@ def pen_profile(
     # A tent is a box of boxes: one box a window wide at each of `_TENT_TAPS`
     # points spread over a window round the sample.
     taps = ((np.arange(_TENT_TAPS) + 0.5) / _TENT_TAPS - 0.5) * width
-    centre = at[:, None] + taps[None, :]
-    lo = centre - width * 0.5
-    hi = centre + width * 0.5
-    here = at[:, None]
+    lo = at[:, None] + taps[None, :] - width * 0.5
+    hi = at[:, None] + taps[None, :] + width * 0.5
     closed = bool(np.array_equal(pts[0], pts[-1]))
-
-    def chords(start: np.ndarray, end: np.ndarray) -> np.ndarray:
-        """The chord of each box from `start` to `end`, summed over a sample's boxes."""
-        return (_point(pts, cum, end, closed=closed) - _point(pts, cum, start, closed=closed)).sum(
-            axis=1
-        )
-
-    whole = _across(chords(lo, hi), angle)
-    before = _leg(chords(np.minimum(lo, here), np.minimum(hi, here)), angle)
-    after = _leg(chords(np.maximum(lo, here), np.maximum(hi, here)), angle)
-    legs = np.minimum(before, after)
-    # Half a window in samples; the samples are at most half a window apart.
-    reach = max(1, int(0.5 * width * (len(at) - 1) / total))
-    pinched = np.where(legs > whole, legs, 0.0)
-    across = np.maximum(whole, _spread(pinched, reach, closed=closed))
+    at_lo = _point(pts, cum, lo, closed=closed)
+    at_hi = _point(pts, cum, hi, closed=closed)
+    whole = (at_hi - at_lo).sum(axis=1)
+    cut, cut_at, real = _cuts(pts, cum, lo[:, 0], hi[:, -1], closed=closed)
+    before = _reached(hi, at_hi, cut, cut_at) - _reached(lo, at_lo, cut, cut_at)
+    after = whole[:, None, :] - before
+    floors = np.where(real, np.minimum(_side(before, angle), _side(after, angle)), 0.0)
+    across = np.maximum(_across(whole, angle), floors.max(axis=1))
     return ((1.0 - thin) + thin * across).astype(F32)
 
 
-def _spread(floor: np.ndarray, reach: int, *, closed: bool) -> np.ndarray:
-    """The largest of `floor` within `reach` samples of each, wrapped round a closed stroke.
+def _cuts(
+    pts: np.ndarray, cum: np.ndarray, start: np.ndarray, end: np.ndarray, *, closed: bool
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """The stroke's vertices from `start` to `end` along it, one row per sample.
 
-    A closed stroke's first and last samples are the same point, so the
-    distinct samples are all but the last, and the last copies the first.
+    Returns each row's vertices' lengths along the stroke and points, padded to
+    the longest row, with a mask of which are real. A closed stroke's vertices
+    are repeated a ring's length either side, often enough to cover a window
+    reaching past the seam, so a row can hold a vertex at its unwrapped length;
+    its seam is one vertex, not two.
     """
-    ring = floor[:-1] if closed else floor
-    out = ring.copy()
-    for k in range(1, min(reach, len(ring) - 1) + 1):
-        if closed:
-            out = np.maximum(out, np.maximum(np.roll(ring, k), np.roll(ring, -k)))
-        else:
-            out[k:] = np.maximum(out[k:], ring[:-k])
-            out[:-k] = np.maximum(out[:-k], ring[k:])
-    return np.append(out, out[0]) if closed else out
+    if closed:
+        laps = math.ceil((end[-1] - start[0]) / cum[-1])
+        lap = np.arange(-laps, laps + 1)[:, None] * cum[-1]
+        length = (cum[:-1][None, :] + lap).ravel()
+        which = np.tile(np.arange(len(pts) - 1), len(lap))
+    else:
+        length, which = cum, np.arange(len(pts))
+    first = np.searchsorted(length, start, side="left")
+    count = np.searchsorted(length, end, side="right") - first
+    slot = np.arange(count.max())[None, :]
+    index = np.minimum(first[:, None] + slot, len(length) - 1)
+    return length[index], pts[which[index]], slot < count[:, None]
+
+
+def _reached(ends: np.ndarray, at: np.ndarray, cut: np.ndarray, cut_at: np.ndarray) -> np.ndarray:
+    """The sum over a sample's boxes of the point at each box end, or at the cut if that comes first.
+
+    `ends` is each sample's box ends along the stroke, in order, and `at`
+    their points; `cut` and `cut_at` are each sample's vertices and their
+    points. The ends at or before a cut are summed as they are (a running sum,
+    since they are in order) and each end past it adds the vertex instead.
+    Returned per sample and vertex, with a last axis of two; the box ends'
+    sum less the box starts' sum is the chord of the tent before the cut.
+    """
+    taken = (ends[:, None, :] <= cut[:, :, None]).sum(axis=2)
+    run = np.concatenate([np.zeros_like(at[:, :1]), np.cumsum(at, axis=1)], axis=1)
+    past = ends.shape[1] - taken
+    return np.take_along_axis(run, taken[:, :, None], axis=1) + past[:, :, None] * cut_at
 
 
 def _point(pts: np.ndarray, cum: np.ndarray, s: np.ndarray, *, closed: bool) -> np.ndarray:
@@ -160,16 +192,16 @@ def _point(pts: np.ndarray, cum: np.ndarray, s: np.ndarray, *, closed: bool) -> 
 
 
 def _across(chord: np.ndarray, angle: float) -> np.ndarray:
-    """How far across the nib each summed chord points, as `|sin|` of the angle between."""
-    return np.abs(np.sin(np.arctan2(chord[:, 1], chord[:, 0]) - angle))
+    """How far across the nib each chord points, as `|sin|` of the angle between."""
+    return np.abs(np.sin(np.arctan2(chord[..., 1], chord[..., 0]) - angle))
 
 
-def _leg(chord: np.ndarray, angle: float) -> np.ndarray:
-    """`_across` for one half of the window, where an empty half sets no floor.
+def _side(chord: np.ndarray, angle: float) -> np.ndarray:
+    """`_across` for one side of a cut tent, where an empty side sets no floor.
 
-    A half is empty at an open stroke's end, where there is no stroke before
-    the first sample or after the last; it reads as full width, so the other
-    half, which is then the whole window, decides.
+    A side is empty past an open stroke's end, where there is no stroke before
+    the first vertex or after the last; it reads as full width, so the other
+    side, which is then the whole tent, decides.
     """
-    full = np.hypot(chord[:, 0], chord[:, 1]) > _MIN_LENGTH_PX
+    full = np.hypot(chord[..., 0], chord[..., 1]) > _MIN_LENGTH_PX
     return np.where(full, _across(chord, angle), 1.0)
