@@ -69,9 +69,9 @@ killed by the direct reads either side of the dip. There is no cap left to mutat
 
 ## Golden regeneration
 
-Process as ADR 0036, with the review images of ADR 0052, on top of ADR 0059's images (main
-at `4fed836`). The tolerance bound is not changed, no gate is loosened and the hash input
-does not change.
+Process as ADR 0036, with the review images of ADR 0052, on top of ADR 0055's images (main
+at `b78a1bb`, which smooths the nib's direction in lettering). The tolerance bound is not
+changed, no gate is loosened and the hash input does not change.
 
 ### Lynmouth compare, against the committed goldens
 
@@ -80,15 +80,15 @@ paper.webp: identical yes, differing fraction 0.000000
 wash.webp: identical yes, differing fraction 0.000000
 pen.webp: identical yes, differing fraction 0.000000
 labels-centreline.webp: identical no, differing fraction 0.000000
-map.png: identical no, differing fraction 0.000000
+map.png: identical yes, differing fraction 0.000000
 manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
 ```
 
 No Lynmouth map stroke is long enough to reach a dip (the default reservoir is 420 nib
-widths and the dip 3.2 of those), so the pen plate is byte-identical. The label plate and the
-map move by at most one level in a few pixels, where a long leader or glyph stroke reaches a
-dip. `GOLDEN_HASH`, `PINNED_LABELS`, the place pins, the map-styles means and the smoke lock
-do not move.
+widths and the dip 3.2 of those), so the pen plate is byte-identical. The label plate moves
+by at most one level in a few pixels, where a long leader or glyph stroke reaches a dip;
+the map does not move. `GOLDEN_HASH`, `PINNED_LABELS`, the place pins, the map-styles means
+and the smoke lock do not move.
 
 ### Docs images
 
@@ -96,14 +96,14 @@ Every docs image and master was repainted with `make_docs_images.py`. Two master
 
 | Master | Fraction | Max delta |
 |---|---|---|
-| `explanation/nib-runs-dry.png` | 0.010401 | 109 |
+| `explanation/nib-runs-dry.png` | 0.009649 | 108 |
 | `places/y-fenni.png` | 0.000000 | 1 |
 
-and three docs images (`explanation/nib-runs-dry.webp` 0.008528, `places/y-fenni.webp`
-0.021756 and `places/oxford.webp` 0.005826, both of the last two at most 12 levels, the
-lossy encoder spreading a one-level change). Looked at side by side with `main`: on
-`nib-runs-dry` the thick step where the line jumped back to full width at each reload is now
-a swell over a few nib widths; on the place cards nothing a reader would see moved.
+and two docs images (`explanation/nib-runs-dry.webp` 0.007875, at most 115 levels, and
+`places/y-fenni.webp` 0.033713, at most 13 levels, the lossy encoder spreading a one-level
+change). Looked at side by side with `main`: on `nib-runs-dry` the thick step where the line
+jumped back to full width at each reload is now a swell over a few nib widths; on the
+Y Fenni card nothing a reader would see moved.
 
 ## Consequences
 
