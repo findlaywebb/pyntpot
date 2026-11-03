@@ -57,6 +57,33 @@ Benchmarks live in `tests/benchmarks`; a plain `uv run pytest` calls each once, 
 uv run pytest -m benchmark --benchmark-enable
 ```
 
+## Golden and docs images
+
+The Lynmouth goldens (`tests/golden/lynmouth/`), the docs images (`docs/images/`) and their masters (`tests/golden/docs/`) move only in a golden regeneration, which has its own ADR (ADRs 0006 and 0036 set out the process). `make_golden.py` and `make_docs_images.py` paint them; their `--compare` logs one line per image. Golden runs are slow (the whole `-m golden` suite takes about 27 minutes on four cores), so run the images a change can reach, not the suite.
+
+To see what a change moves before committing anything, repaint into a scratch directory and diff it with the working tree. NAMEs are docs image paths under `docs/images/`; none means all of them, and `--no-lynmouth` or `--no-docs` skips a half:
+
+```bash
+PYTHONPATH=tests uv run python tests/golden/repaint.py /tmp/repaint map-styles/sepia.webp hero.webp
+```
+
+It writes the paints to `/tmp/repaint/tree/` at their repository paths and the review images to `/tmp/repaint/diffs/`. To diff a branch's committed images instead, against `main` (add `--after-ref REF` to compare two refs without checking either out), or any two directories of one layout:
+
+```bash
+PYTHONPATH=tests uv run python tests/golden/diff_images.py /tmp/diffs --ref origin/main
+PYTHONPATH=tests uv run python tests/golden/diff_images.py /tmp/diffs --before OLD --after NEW
+```
+
+For each image whose pixels differ it writes `<path>.diff.png` (before, after, a heat map of the difference and a key) and `<path>.crop.png` (the most-changed region at 1:1, with a locator), and `summary.json` and `summary.md`: per image, the size, the fraction of pixels past channel delta 2 (flagged past the 0.5% parity bound), the largest delta, the changed box, and whether the change is local or widespread. It never fails on what moved; the parity tests are the gate.
+
+**A PR that moves a golden or docs image shows the review images in its body** (ADR 0052). Publish them to the orphan branch `pr-assets`, under your branch's name, and paste the block it prints (also written to `/tmp/diffs/pr-body.md`) under "Golden and docs images" in the PR description:
+
+```bash
+PYTHONPATH=tests uv run python tests/golden/publish_diffs.py /tmp/diffs --push
+```
+
+It builds one commit on the fetched tip of `origin`'s `pr-assets` in a temporary worktree and pushes it as a fast-forward, so your branches, index and working tree are untouched and no local `pr-assets` branch is made. Without `--push` it is a dry run: the same block is written, but its links are not live until a publish with `--push`. If someone else publishes at the same moment, it fetches their tip and rebuilds on it, three times at most. The links name the `pr-assets` commit, so republishing after another change leaves an earlier PR comment's images as they were; paste the new block. When the golden workflow fails on CI, its `golden-diffs-<os>` artifact holds the same review images for every paint past the bound, beside the fresh paints.
+
 ## Spec flow
 
 One feature is one spec dir under `specs/NNN-name/`, one branch and one pull request.
