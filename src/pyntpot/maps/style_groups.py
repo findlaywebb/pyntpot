@@ -10,7 +10,7 @@ module reads and so belong to no group.
 
 Base groups feed the base plates; `LetteringPolicy` feeds only the lettering;
 `RouteInk` is read only when the route is placed and drawn (`paint` takes the
-strand gap from its width), so changing the ink repaints no plate. The defaults
+strand merge reach from its width), so changing the ink repaints no plate. The defaults
 are the source classes' own defaults, not a resolved theme: the effective
 basemap options and the resolved ink are theme values. `RouteInk`'s treatment,
 width and colour have no defaults, because no class carries one.
@@ -257,14 +257,14 @@ class LetteringPolicy:
 class RouteInk:
     """How the route is drawn on the card: its treatment, width, colour, blend and opacity.
 
-    Only `paint` (the strand gap, from `px`) and the compose step read it.
+    Only `paint` (the strand merge reach, from `px`) and the compose step read it.
     """
 
     #: `"pen"` tints the painted pen plate when one was painted; any other value
     #: (every theme says `"solid"`) draws the line.
     style: str
-    #: Width in display pixels; it also sets how far apart the strands of a
-    #: doubled-back route are drawn.
+    #: Width in display pixels; it also sets how near two passes of a retraced
+    #: route have to come to be drawn as one stroke.
     px: float
     #: Colour as `#rrggbb`.
     colour: str

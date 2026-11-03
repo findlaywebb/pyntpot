@@ -13,8 +13,9 @@ The stage between `paint` and `compose` is `maps.lettering.pipeline.letter`.
 are fitted to it. `paint` uses the basemap's card and layers as given: a basemap
 fetched with one style and painted with another paints the first style's card,
 in the second style's pigments. `paint` places the basemap's track on the card
-for the plates it returns, both as recorded and pulled apart into strands where
-the route runs back over itself, the line the route is drawn along.
+for the plates it returns, both as recorded and with each stretch the route runs
+more than once pulled onto one line (`Plates.strands`), the line the route is drawn
+along.
 
 `compose` draws the route along `Plates.strands` in the style's route ink and
 pastes the label plate over it when the lettering has one; with no label plate
@@ -51,7 +52,7 @@ from pyntpot.maps.lettering.pipeline import Lettering
 from pyntpot.maps.painter.plates import paint_plates
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.providers.base import Elevation, Features
-from pyntpot.maps.strands import separate_strands, strand_gap_px
+from pyntpot.maps.strands import merge_strands, strand_merge_px
 from pyntpot.maps.style import Style
 from pyntpot.maps.track import Track
 
@@ -110,14 +111,15 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
     Args:
         basemap: The basemap to paint.
         style: The style: its painter fields paint, its base digest goes into
-            the hash, and its route ink and route pen width set the gap between
-            strands.
+            the hash, and its route ink and route pen width set how near two
+            passes of the route have to come to be drawn as one.
         out_dir: Where the plates and their manifest are written; created when
             missing.
 
     Returns:
         The plates, freshly painted or already current, with the track placed
-        on the card as `route_px` and pulled apart into `strands`.
+        on the card as `route_px` and with its retraced stretches merged into
+        `strands`.
     """
     plates = _current(out_dir, Cache.base_key(basemap, style))
     if plates is None:
@@ -126,7 +128,7 @@ def paint(basemap: Basemap, style: Style, out_dir: Path) -> Plates:
         log.info("plates in %s are current, nothing repainted", out_dir)
     card = basemap.card
     route_px = tuple(card.xy(x, y) for x, y in basemap.track)
-    strands = tuple(separate_strands(list(route_px), strand_gap_px(style)))
+    strands = tuple(merge_strands(list(route_px), strand_merge_px(style)))
     return dataclasses.replace(plates, route_px=route_px, strands=strands)
 
 
