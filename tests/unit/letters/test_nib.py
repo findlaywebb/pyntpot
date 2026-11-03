@@ -1,8 +1,10 @@
-"""Tests for the nib plate: marks are stroked onto a surface of the given scale."""
+"""Tests for the nib plate: marks are stroked at the surface's scale, in their inks, brushes and washes."""
 
+import math
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from pyntpot.ink.brush_style import BrushStyle
@@ -22,14 +24,14 @@ def _surface(w: int, h: int, scale: float) -> NibSurface:
     )
 
 
-def _marks(k: float) -> list[Mark]:
-    """Three strokes near the left of the card, with every point scaled by `k`."""
+def _marks(k: float, ink: str = "label") -> list[Mark]:
+    """Three strokes near the left of the card in one ink, with every point scaled by `k`."""
     lines = [
         [(8.0, 12.0), (20.0, 14.0), (32.0, 12.0)],
         [(8.0, 22.0), (20.0, 24.0), (32.0, 22.0)],
         [(8.0, 32.0), (20.0, 34.0), (32.0, 32.0)],
     ]
-    return [Mark([(x * k, y * k) for x, y in line], size=14.0 * k) for line in lines]
+    return [Mark([(x * k, y * k) for x, y in line], ink=ink, size=14.0 * k) for line in lines]
 
 
 class TestPlate:
@@ -53,6 +55,9 @@ class TestPlate:
         assert one.exists()
         assert alpha[20:72, 8:72].max() > 0
         assert alpha[:, 96:].max() == 0
+        # The wash leaves faint alpha everywhere; the ink itself is solid only near the
+        # doubled positions, never above row 16, where the halved ones would sit.
+        assert alpha[:16].max() < 128, "the marks were shrunk, not enlarged, by the scale"
 
     def test_nothing_to_draw_writes_nothing(self, tmp_path: Path) -> None:
         """No marks, or only marks too short to stroke, write no file."""
@@ -60,3 +65,107 @@ class TestPlate:
         assert nib_plate([], surface, GROUPS, tmp_path / "a.webp") is None
         assert nib_plate([Mark([(1.0, 1.0)])], surface, GROUPS, tmp_path / "a.webp") is None
         assert not (tmp_path / "a.webp").exists()
+
+
+class TestInks:
+    """An ink token names one of the nib style's inks; anything else falls back to the label ink."""
+
+    @pytest.mark.parametrize(
+        ("token", "colour"),
+        [
+            ("label", NibStyle().label_ink),
+            ("route", NibStyle().label_route_ink),
+            ("water", NibStyle().label_water_ink),
+            ("in_water", NibStyle().label_in_water_ink),
+        ],
+        ids=["label", "route", "water", "in-water"],
+    )
+    def test_a_token_paints_as_the_colour_it_names(
+        self, tmp_path: Path, token: str, colour: str
+    ) -> None:
+        """Marks in an ink token write the same plate as marks in the colour that token names."""
+        surface = _surface(64, 48, 1.0)
+        named = nib_plate(_marks(1.0, token), surface, GROUPS, tmp_path / "named.webp")
+        given = nib_plate(_marks(1.0, colour), surface, GROUPS, tmp_path / "given.webp")
+        assert named is not None
+        assert given is not None
+        assert named.read_bytes() == given.read_bytes()
+
+    @pytest.mark.parametrize(
+        "token", ["map", "smudge", "#12345"], ids=["retired-map-token", "unknown-word", "short-hex"]
+    )
+    def test_an_ink_nobody_chose_falls_back_to_the_label_ink(
+        self, tmp_path: Path, token: str
+    ) -> None:
+        """A mark in an ink that is neither a token nor a #rrggbb colour is written in the label ink."""
+        surface = _surface(64, 48, 1.0)
+        odd = nib_plate(_marks(1.0, token), surface, GROUPS, tmp_path / "odd.webp")
+        label = nib_plate(_marks(1.0, "label"), surface, GROUPS, tmp_path / "label.webp")
+        assert odd is not None
+        assert label is not None
+        assert odd.read_bytes() == label.read_bytes()
+
+    def test_the_label_ink_is_not_the_route_ink(self, tmp_path: Path) -> None:
+        """Two different inks write different plates, so the equalities above are not vacuous."""
+        surface = _surface(64, 48, 1.0)
+        label = nib_plate(_marks(1.0, "label"), surface, GROUPS, tmp_path / "label.webp")
+        route = nib_plate(_marks(1.0, "route"), surface, GROUPS, tmp_path / "route.webp")
+        assert label is not None
+        assert route is not None
+        assert label.read_bytes() != route.read_bytes()
+
+
+#: One stroke well inside a 64 by 48 surface.
+STROKE = [(8.0, 12.0), (20.0, 24.0), (32.0, 30.0)]
+
+
+def _plate(marks: list[Mark], path: Path, groups: NibGroups = GROUPS) -> bytes:
+    """The bytes of the plate the marks write on a 64 by 48 surface at scale 1."""
+    written = nib_plate(marks, _surface(64, 48, 1.0), groups, path)
+    assert written is not None
+    return written.read_bytes()
+
+
+class TestMarks:
+    """Which marks are stroked, and with which brush, pen profile and wash."""
+
+    def test_a_two_point_mark_is_stroked(self, tmp_path: Path) -> None:
+        """A mark of exactly two points, the fewest a stroke needs, is written."""
+        assert nib_plate(
+            [Mark([(8.0, 12.0), (32.0, 30.0)])], _surface(64, 48, 1.0), GROUPS, tmp_path / "a.webp"
+        )
+
+    def test_a_too_short_mark_is_skipped_not_the_rest(self, tmp_path: Path) -> None:
+        """A one-point mark before a real one is skipped, and the real one is still written."""
+        alone = _plate([Mark(STROKE)], tmp_path / "a.webp")
+        after = _plate([Mark([(1.0, 1.0)]), Mark(STROKE)], tmp_path / "b.webp")
+        assert after == alone
+
+    def test_a_glyphs_pen_tilt_turns_the_nib(self, tmp_path: Path) -> None:
+        """A glyph tilted by `pen` writes as the untilted glyph does with the nib's angle turned by as much."""
+        tilt = 0.4
+        turned = NibGroups(
+            NibStyle(label_pen_angle_deg=NibStyle().label_pen_angle_deg + math.degrees(tilt)),
+            FaceStyle(),
+            HandStyle(),
+            BrushStyle(),
+            PaperStyle(),
+        )
+        tilted = _plate([Mark(STROKE, pen=tilt)], tmp_path / "a.webp")
+        assert tilted == _plate([Mark(STROKE)], tmp_path / "b.webp", turned)
+        assert tilted != _plate([Mark(STROKE)], tmp_path / "c.webp")
+
+    def test_a_leader_has_no_pen_profile(self, tmp_path: Path) -> None:
+        """Only a glyph's width follows the pen's angle, so a leader's tilt changes nothing."""
+        upright = _plate([Mark(STROKE, role="leader")], tmp_path / "a.webp")
+        assert _plate([Mark(STROKE, role="leader", pen=0.4)], tmp_path / "b.webp") == upright
+
+    def test_the_role_picks_the_brush(self, tmp_path: Path) -> None:
+        """A leader and a pin, two roles of different weights, write different plates."""
+        leader = _plate([Mark(STROKE, role="leader")], tmp_path / "a.webp")
+        assert _plate([Mark(STROKE, role="pin")], tmp_path / "b.webp") != leader
+
+    def test_a_mark_without_a_wash_writes_a_different_plate(self, tmp_path: Path) -> None:
+        """Turning a mark's backing wash off changes what is written under it."""
+        washed = _plate([Mark(STROKE)], tmp_path / "a.webp")
+        assert _plate([Mark(STROKE, wash=False)], tmp_path / "b.webp") != washed

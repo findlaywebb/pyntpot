@@ -8,6 +8,8 @@ Run this before every commit. It is what CI runs.
 uv sync && uv run prek run --all-files && uv run pytest
 ```
 
+The pinned plate hashes and the goldens are exact on the machine that made them. A numpy on another CPU or OS can round a last bit the other way, so anywhere else add `--golden-tolerance`, as CI does; it compares those plates within a bound instead (ADRs 0006, 0030 and 0051). A test that still fails with the flag is yours.
+
 Plain `uv run pytest` runs one test at a time, so a failure reads in order and a debugger works. To run on every core, as CI does:
 
 ```bash
