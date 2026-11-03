@@ -25,6 +25,7 @@ from pyntpot.maps.lettering.label import (
     NO_LEADER,
     TIER_SPAN,
     WRAP_LEADING,
+    Box,
     Label,
     Measure,
     block_size,
@@ -33,6 +34,7 @@ from pyntpot.maps.lettering.label import (
 from pyntpot.maps.lettering.placement_costs import (
     EDGE_PX,
     ROUTE_REACH_PX,
+    SEPARATION_CAP_PX,
     Terms,
     box_on_paper,
     darkness,
@@ -193,6 +195,7 @@ def _place_flat(
     near_mark = lb.tier == TIER_SPAN or lb.kind in NO_LEADER
     rungs = NEAR_RUNGS if near_mark else LEADER_RUNGS
     per_px = NEAR_GAP_COST_PX if near_mark else LEADER_COST_PX
+    gap_px = SPAN_MARK_COST_PX if lb.tier == TIER_SPAN else per_px
     best = None
     on_paper = None
     for ax, ay in lb.anchors or course_anchors(lb, terms.card):
@@ -205,24 +208,14 @@ def _place_flat(
                     cx = ax
                 x0, y0 = cx - tw / 2, cy - th / 2
                 box = (x0, y0, x0 + tw, y0 + th)
-                cost = pull
                 inside = box_on_paper(box, terms.card)
-                if not inside:
-                    cost += 400
-                cost += near_route(box, terms.route, max(ROUTE_REACH_PX, lb.size))
-                cost += overlap(box, terms.boxes)
-                cost += darkness(box, terms.card, terms.dark) * 150
-                cost += on_road(box, terms.roads) * ROAD_CROSS_COST
-                if not lb.in_water:
-                    cost += water_cost(box, terms.water, lb.size)
-                cost += off_own_feature(box, lb)
-                gap_px = SPAN_MARK_COST_PX if lb.tier == TIER_SPAN else per_px
-                cost += mark_gap(box, lb, dist) * gap_px
-                cost += mark_through(box, lb)
-                if not near_mark:
-                    foot = (cx - ox * tw / 2 if ox else cx, cy)
-                    cost += leader_crossings((ax, ay), foot, terms.boxes) * LEADER_CROSS_LABEL_COST
-                cost -= separation(box, terms.boxes) * SEPARATION_WEIGHT
+                # The bar a seat has to get under to change the answer: the cheapest
+                # seat so far, and the cheapest on the paper while this one is on it.
+                bar = _bar(best, on_paper, inside=inside)
+                foot = (cx - ox * tw / 2 if ox else cx, cy)
+                cost = _seat_cost(lb, box, terms, (pull, inside, dist, gap_px, (ax, ay), foot), bar)
+                if cost is None:
+                    continue
                 here = (cost, cx, cy, x0, y0, ox, ax, ay)
                 if best is None or cost < best[0]:
                     best = here
@@ -232,6 +225,75 @@ def _place_flat(
     assert chosen is not None
     _seat_block(lb, chosen, tw, th, nlines)
     return chosen[0]
+
+
+#: The most the separation reward can take off a seat's cost: what lets a seat be
+#: given up before all of it is priced.
+_SEPARATION_MAX = SEPARATION_CAP_PX * SEPARATION_WEIGHT
+
+
+def _bar(best: tuple[Any, ...] | None, on_paper: tuple[Any, ...] | None, *, inside: bool) -> float:
+    """The cost a seat has to come in under to change the answer, or infinity.
+
+    A seat changes the answer only by beating the cheapest seat so far, or, when
+    it is on the paper, the cheapest one on the paper; the higher of the two
+    that applies is the bar.
+    """
+    if best is None:
+        return math.inf
+    if not inside:
+        return float(best[0])
+    return math.inf if on_paper is None else float(max(best[0], on_paper[0]))
+
+
+def _seat_cost(
+    lb: Label, box: Box, terms: Terms, seat: tuple[float, bool, float, float, Pt, Pt], bar: float
+) -> float | None:
+    """What one candidate seat costs, or None once it cannot come in under `bar`.
+
+    Every term but the separation reward is never negative, so a running total
+    less the most that reward can take off is a floor on the final cost; the
+    dear terms are priced only while that floor is still under the bar. The
+    terms are added in one fixed order whether or not the seat is given up, so
+    a seat that is priced in full costs exactly what it always did.
+
+    Args:
+        lb: The label.
+        box: The seat's box.
+        terms: What the seat is priced against.
+        seat: The travel from the label's anchor, whether the box is on the
+            paper, the rung, what a pixel of gap costs, the anchor tried and
+            where its leader meets the block.
+        bar: What the seat has to come in under.
+    """
+    pull, inside, dist, gap_px, anchor, foot = seat
+    cost = pull if inside else pull + 400
+
+    def hopeless() -> bool:
+        """Whether the seat can no longer come in under the bar."""
+        return cost - _SEPARATION_MAX >= bar
+
+    if hopeless():
+        return None
+    cost += near_route(box, terms.route, max(ROUTE_REACH_PX, lb.size))
+    cost += overlap(box, terms.boxes)
+    cost += darkness(box, terms.card, terms.dark) * 150
+    cost += on_road(box, terms.roads) * ROAD_CROSS_COST
+    if hopeless():
+        return None
+    if not lb.in_water:
+        cost += water_cost(box, terms.water, lb.size)
+    if hopeless():
+        return None
+    cost += off_own_feature(box, lb)
+    cost += mark_gap(box, lb, dist) * gap_px
+    cost += mark_through(box, lb)
+    if lb.tier != TIER_SPAN and lb.kind not in NO_LEADER:
+        if hopeless():
+            return None
+        cost += leader_crossings(anchor, foot, terms.boxes) * LEADER_CROSS_LABEL_COST
+    cost -= separation(box, terms.boxes) * SEPARATION_WEIGHT
+    return cost
 
 
 def course_anchors(lb: Label, card: Card) -> list[Pt]:

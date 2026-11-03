@@ -41,13 +41,19 @@ the landmarks after it other seats.
   five-point pond grazing one serif of "Crib Goch" sent the name a long leader away and
   across Llyn Llydaw's. The swap pass prices a seat on the same terms, so a swap cannot put
   a name back on a lake. A name written on the water is not priced.
-- **The water is priced in arrays.** `Water` holds every lake edge and stroke segment as
-  arrays, and a grid of the display pixels some segment's reach box covers, both built once
-  a card; a box's sample points are tested together, and only those in a covered cell are
-  measured against the strokes. Measured point by point in Python, as first written, it
-  made `letter` 25 times slower on the benchmark (40.8 s against 1.6 s); the arrays give
-  the same shares to the bit on the pinned cases and the same seats on every card, at
-  2.05 s against main's 1.56 s on the same machine.
+- **The water is priced in arrays, and only where it could matter.** `Water` holds every
+  lake edge and stroke segment as arrays, a grid of the display pixels some segment's reach
+  box covers, and a summed-area table of the pixels where any water could lie, all built
+  once a card. A box with no such pixel under it is priced dry in constant time; otherwise
+  its sample points are tested together, and only those in a covered cell are measured
+  against the strokes. A flat seat's terms are added in a fixed order and the seat is given
+  up as soon as its running cost, less the most the separation reward can take off, can no
+  longer beat the cheapest seat so far, so the water and the other dear terms are priced
+  only for seats that could still win. Measured point by point in Python, as first
+  written, `letter` was 25 times slower than main by wall time on the benchmark; with
+  these it places every name exactly where it did (the pinned shares agree to the bit, the
+  seats and every golden are unchanged) at about 1.3 times main's instructions with the
+  label plate already stroked (4.73 against 3.68 billion under callgrind).
 - **A river's flat name may sit beside any point of its course** (`COURSE_KINDS`,
   `COURSE_ANCHORS` = 12 points on the paper, plus its anchor), paying `ANCHOR_PULL` a pixel
   of travel, the pull a curved name already paid; the constant moves from `placement_along`

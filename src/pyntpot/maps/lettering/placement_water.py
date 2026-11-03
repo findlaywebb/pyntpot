@@ -19,6 +19,7 @@ import math
 from dataclasses import dataclass, field
 
 import numpy as np
+from PIL import Image, ImageDraw
 
 from pyntpot.ink.polyline import Pt
 from pyntpot.maps.basemap import Basemap
@@ -55,6 +56,10 @@ _SAMPLE_STEP_PX = 4.0
 #: A segment this short, squared, is a point: `polyline.foot_on`'s threshold.
 _DEGENERATE_AREA = 1e-12
 
+#: The most display pixels the wet-pixel table is built over; water spread wider than
+#: this is priced without it.
+_WET_GRID_MAX_CELLS = 40_000_000
+
 #: The fewest points that make a ring.
 _FEWEST_FOR_A_RING = 3
 
@@ -79,6 +84,11 @@ class Water:
             it, from `reach_origin`: a point in a cell not set is under no stroke, so
             only the points in set cells are measured.
         reach_origin: The display pixel the first cell of `reach` starts at.
+        wet_sums: The summed-area table of the display pixels where some water could
+            lie (in or beside a lake ring, or in a segment's reach), from
+            `wet_origin`, so a box with none of them under it is priced dry in
+            constant time; `None` when the water spans too many pixels to tabulate.
+        wet_origin: The display pixel the first cell of `wet_sums` starts at.
     """
 
     lakes: list[list[Pt]] = field(default_factory=list)
@@ -89,6 +99,8 @@ class Water:
     segments: np.ndarray = field(init=False, repr=False)
     reach: np.ndarray = field(init=False, repr=False)
     reach_origin: tuple[int, int] = field(init=False, repr=False)
+    wet_sums: np.ndarray | None = field(init=False, repr=False)
+    wet_origin: tuple[int, int] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         """Work out the boxes, edges and segments of the lakes and strokes, once."""
@@ -109,6 +121,7 @@ class Water:
         object.__setattr__(self, "edges", np.array(edges, float).reshape(-1, 5))
         object.__setattr__(self, "segments", np.array(segments, float).reshape(-1, 10))
         self._grid_reach()
+        self._grid_wet()
 
     def _grid_reach(self) -> None:
         """Mark every display pixel some segment's reach box covers, once."""
@@ -124,6 +137,62 @@ class Water:
             grid[cy0 : cy1 + 1, cx0 : cx1 + 1] = True
         object.__setattr__(self, "reach", grid)
         object.__setattr__(self, "reach_origin", (ox, oy))
+
+    def _grid_wet(self) -> None:
+        """Tabulate the display pixels where some water could lie, once.
+
+        A superset, never less: every pixel a lake ring's edge passes through or
+        beside, every pixel its fill covers, and every pixel a segment's reach box
+        covers. A point outside all of them is on no lake and under no stroke.
+        """
+        boxes = np.vstack([self.lake_boxes, self.segments[:, 6:10]])
+        object.__setattr__(self, "wet_sums", None)
+        object.__setattr__(self, "wet_origin", (0, 0))
+        if not boxes.size:
+            return
+        ox, oy = math.floor(boxes[:, 0].min()) - 1, math.floor(boxes[:, 1].min()) - 1
+        w = math.floor(boxes[:, 2].max()) - ox + 2
+        h = math.floor(boxes[:, 3].max()) - oy + 2
+        if w * h > _WET_GRID_MAX_CELLS:
+            return
+        fill = Image.new("1", (w, h), 0)
+        draw = ImageDraw.Draw(fill)
+        for ring in self.lakes:
+            draw.polygon([(x - ox, y - oy) for x, y in ring], fill=1, outline=1)
+        grid = np.array(fill, bool)
+        rims = np.column_stack(
+            [
+                np.minimum(self.edges[:, 0], self.edges[:, 2]),
+                np.minimum(self.edges[:, 1], self.edges[:, 3]),
+                np.maximum(self.edges[:, 0], self.edges[:, 2]),
+                np.maximum(self.edges[:, 1], self.edges[:, 3]),
+            ]
+        )
+        for cx0, cy0, cx1, cy1 in np.floor(rims - (ox, oy, ox, oy)).astype(int).tolist():
+            grid[max(cy0 - 1, 0) : cy1 + 2, max(cx0 - 1, 0) : cx1 + 2] = True
+        for cx0, cy0, cx1, cy1 in (
+            np.floor(self.segments[:, 6:10] - (ox, oy, ox, oy)).astype(int).tolist()
+        ):
+            grid[cy0 : cy1 + 1, cx0 : cx1 + 1] = True
+        sums = np.zeros((h + 1, w + 1), np.int64)
+        sums[1:, 1:] = grid.cumsum(0).cumsum(1)
+        object.__setattr__(self, "wet_sums", sums)
+        object.__setattr__(self, "wet_origin", (ox, oy))
+
+    def maybe_wet(self, box: Box) -> bool:
+        """Whether any pixel under a box, a pixel of slack round it, could be on water."""
+        sums = self.wet_sums
+        if sums is None:
+            return True
+        ox, oy = self.wet_origin
+        rows, cols = sums.shape[0] - 1, sums.shape[1] - 1
+        cx0 = max(math.floor(box[0] - ox) - 1, 0)
+        cy0 = max(math.floor(box[1] - oy) - 1, 0)
+        cx1 = min(math.floor(box[2] - ox) + 2, cols)
+        cy1 = min(math.floor(box[3] - oy) + 2, rows)
+        if cx0 >= cx1 or cy0 >= cy1:
+            return False
+        return bool(sums[cy1, cx1] - sums[cy0, cx1] - sums[cy1, cx0] + sums[cy0, cx0])
 
     def near_stroke(self, xs: np.ndarray, ys: np.ndarray) -> np.ndarray:
         """Which points lie in a cell some segment's reach box covers."""
@@ -186,6 +255,8 @@ def on_water(box: Box, water: Water, size: float) -> float:
         return 0.0
     pad = size * WASH_REACH_EM
     grown = (box[0] - pad, box[1] - pad, box[2] + pad, box[3] + pad)
+    if not water.maybe_wet(grown):
+        return 0.0
     rings = _meets(water.lake_boxes, grown)
     strokes = _meets(water.stroke_boxes, grown)
     if not rings.any() and not strokes.any():
