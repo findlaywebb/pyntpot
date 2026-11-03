@@ -56,18 +56,19 @@ limit, the order of the chains and the carry-on rule).
 
 ## Golden regeneration
 
-Process as ADR 0036, with the review images of ADR 0052. The tolerance bound is not
+Process as ADR 0036, with the review images of ADR 0052, on top of ADR 0059's regeneration
+(the organic drift rescaled about its mean), which landed on `main` first. The tolerance bound is not
 changed, no gate is loosened and the hash input does not change; the manifest hash does not
 move (`340a7f6e260ee1e2-d9c56c0811177b0f`).
 
-### Lynmouth compare, against the committed goldens
+### Lynmouth compare, against `main`'s goldens (ADR 0059's)
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
 wash.webp: identical yes, differing fraction 0.000000
 pen.webp: identical yes, differing fraction 0.000000
-labels-centreline.webp: identical no, differing fraction 0.023244
-map.png: identical no, differing fraction 0.015170
+labels-centreline.webp: identical no, differing fraction 0.020464
+map.png: identical no, differing fraction 0.014066
 manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
 ```
 
@@ -82,31 +83,39 @@ the regenerated goldens, so none is re-pinned.
 
 ### Docs images
 
-Every docs image and master was repainted on top of ADR 0047's. The 24 that letter a name or
+Every docs image and master was repainted on top of ADR 0059's. The 24 that letter a name or
 caption containing a changed glyph, or a mark drawn after one, moved; every other entry is
 byte-identical. Master differing fractions against main's masters:
 
 | Image | Master | Image | Master |
 |---|---|---|---|
-| `places/skye.webp` | 0.033898 | `reference/brush-sheet.webp` | 0.023911 |
-| `how-to/command-line.webp` | 0.023411 | `places/oxford.webp` | 0.021865 |
-| `places/yr-wyddfa.webp` | 0.019115 | `places/y-fenni.webp` | 0.018477 |
-| `tutorials/grid-brush.webp` | 0.017164 | `tutorials/grid-nib.webp` | 0.011859 |
+| `places/skye.webp` | 0.030569 | `reference/brush-sheet.webp` | 0.023911 |
+| `how-to/command-line.webp` | 0.021435 | `places/oxford.webp` | 0.019276 |
+| `tutorials/grid-brush.webp` | 0.017164 | `places/y-fenni.webp` | 0.016219 |
+| `places/yr-wyddfa.webp` | 0.015249 | `tutorials/grid-nib.webp` | 0.011859 |
 | `tutorials/grid-wash.webp` | 0.011033 | `tutorials/grid-pigments.webp` | 0.010767 |
 | `explanation/nib-angles.webp` | 0.009886 | `tutorials/grid-paper.webp` | 0.008667 |
-| `map-styles/bold.webp` | 0.005653 | `map-styles/pen-and-ink.webp` | 0.005458 |
-| `how-to/route-ink.webp` | 0.004873 | `tutorials/route-map.webp` | 0.004751 |
-| `map-styles/winter.webp` | 0.004703 | `places/ambleside.webp` | 0.004435 |
-| `gallery/route-map.webp` | 0.004435 | `map-styles/sepia.webp` | 0.004069 |
+| `map-styles/bold.webp` | 0.005385 | `map-styles/pen-and-ink.webp` | 0.005044 |
+| `how-to/route-ink.webp` | 0.004362 | `tutorials/route-map.webp` | 0.004313 |
+| `map-styles/winter.webp` | 0.004191 | `gallery/route-map.webp` | 0.004094 |
+| `places/ambleside.webp` | 0.004094 | `map-styles/sepia.webp` | 0.003509 |
 | `tutorials/grid-composition.webp` | 0.003033 | `painting-with-python/derwentwater.webp` | 0.002422 |
-| `social-preview.jpg` | 0.000937 | `hero.webp` | 0.000512 |
-
+| `social-preview.jpg` | 0.000937 | `hero.webp` | 0.000536 |
 Looked at side by side with `main` (the review images in the pull request): the names keep
 their seats on every card. Where a name has a `D`, `Q`, `3`, `8`, `X` or `R` the letter is
 written whole (the `D`'s stem reaches the foot of the letter, the `8` has no stub across
 its waist), a pixel or two of difference at map size; the leaders and pin rings after it on
 the same plate are redrawn with a slightly different wander, a few display pixels at most.
 The paint under the names is unchanged.
+
+One pin ring still paints near solid: the pin of "Lynton and Exmoor Museum" on Lynmouth (its
+middle, within half the ring's radius, is 0.75 inked against 0.38 on `main`; the measure is
+`TestCounters`'). It is not this change's geometry: the pin's points are the same ring on
+both sides, and only the generator state the plate strokes it with differs, because the `x`
+of "Exmoor" is now two strokes, not three. It is the pin ring's own margin: a ring of 2.8
+display pixels at a pin weight of 1.275 pixels leaves a hole of about 2.2 pixels, and the
+bristle jitter closes it on about three seeds in ten when the ring is stroked alone (none
+with the jitter at zero). It is not fixed here.
 
 ## Consequences
 
