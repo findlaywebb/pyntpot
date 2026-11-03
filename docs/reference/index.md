@@ -11,5 +11,5 @@ These pages list what pyntpot has, and nothing else. For how to use it, see the 
 - [Glossary: a pointer to the glossary](glossary.md)
 - [API, `pyntpot`: the top-level package and its version](pyntpot.md)
 - [API, `ink`: paper, washes, brushes and pigment](ink.md)
-- [API, `letters`: the hand and the nib](letters.md)
+- [API, `letters`: the hand, the nib and the glyph sheet](letters.md)
 - [API, `maps`: tracks, styles, providers and the pipeline](maps.md)

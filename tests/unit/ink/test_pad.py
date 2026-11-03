@@ -36,12 +36,12 @@ def padded(
     sheet = Sheet(h, length, gran_px=9.0, seed=sheet_seed)
     pts = np.stack([np.linspace(20.0, length - 20.0, 900), np.full(900, h / 2)], axis=1)
     pad = InkPad((h, length), brush, style)
-    pad.lay([(brush, pts)], np.random.default_rng(seed))
+    pad.lay([(brush, pts)], seed)
     return pad.read(brush, sheet)
 
 
 def shared_repeat(
-    brush_id: str, width_px: float, over: str, seeds: int = 6, **style_over: object
+    brush_id: str, width_px: float, over: str, seeds: int = 10, **style_over: object
 ) -> tuple[float, int]:
     """The strongest repeat a class carries beyond the bristle scale.
 
@@ -123,7 +123,7 @@ def test_a_road_split_into_ways_is_one_mark_again():
         style = replace(BrushStyle(), **style_over)
         brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
         pad = InkPad((h, w), brush, style)
-        pad.lay([(brush, line) for line in lines], np.random.default_rng(91))
+        pad.lay([(brush, line) for line in lines], 91)
         return pad.read(brush, sheet).sum(axis=0)[60:-60]
 
     ref = lay([whole])
@@ -168,7 +168,7 @@ def test_a_finer_grid_converges_on_the_mark_the_brush_describes():
         brush, _ = brush_from_id("MAJ6-e", 3.0, 2.0, style, "route")
         pad = InkPad((h, w), brush, style)
         assert pad.acc.shape == (h * ss, w * ss)
-        pad.lay([(brush, pts)], np.random.default_rng(91))
+        pad.lay([(brush, pts)], 91)
         return pad.read(brush, sheet)
 
     ref = at(6)
@@ -198,7 +198,7 @@ def test_a_finer_grid_lays_the_mark_where_the_plate_grid_does():
         style = BrushStyle(ink_ss=ss)
         brush, _ = brush_from_id("MAJ6-e", 3.0, 2.0, style, "route")
         pad = InkPad((h, w), brush, style)
-        pad.lay([(brush, pts)], np.random.default_rng(91))
+        pad.lay([(brush, pts)], 91)
         dens = pad.read(brush, sheet).astype(np.float64)
         return float((dens.sum(axis=1) * np.arange(h)).sum() / dens.sum())
 

@@ -121,3 +121,13 @@ def test_the_query_asks_for_the_things_a_runner_would_pick() -> None:
     assert '"bridge"' in query
     assert "cathedral" in query
     assert "place_of_worship" in query
+
+
+def test_landcover_query_asks_for_education_land() -> None:
+    """Education land is asked for; a campus `site` relation, which is not an area, is not."""
+    with serve([(200, "{}")]) as server, _client() as client:
+        OverpassFeatures("walker@example.org", (server.url,), client=client).landcover(LYNMOUTH)
+    query = _sent_query(server.requests[0])
+    assert "education" in query
+    assert 'way["amenity"~"^(university|college)$"]' in query
+    assert 'relation["amenity"~"^(university|college)$"]["type"="multipolygon"]' in query

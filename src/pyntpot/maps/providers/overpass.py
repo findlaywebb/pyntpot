@@ -148,10 +148,11 @@ LANDCOVER_LANDUSE = (
     "farmland|meadow|grass|orchard|vineyard|allotments|"
     "village_green|recreation_ground|cemetery|residential|"
     "industrial|commercial|retail|quarry|farmyard|"
-    "greenhouse_horticulture"
+    "greenhouse_horticulture|education"
 )
 LANDCOVER_NATURAL = "grassland|heath|moor|scrub|wetland|bare_rock|beach|sand|shingle|cliff|scree"
 LANDCOVER_LEISURE = "park|golf_course|nature_reserve|pitch|garden"
+LANDCOVER_AMENITY = "university|college"
 
 #: The land cover query: the ground between the feature query's woods, water and roads.
 LANDCOVER_QUERY = """[out:json][timeout:300];
@@ -162,6 +163,8 @@ LANDCOVER_QUERY = """[out:json][timeout:300];
   relation["natural"~"^({natural})$"]({box});
   way["leisure"~"^({leisure})$"]({box});
   relation["leisure"~"^({leisure})$"]({box});
+  way["amenity"~"^({amenity})$"]({box});
+  relation["amenity"~"^({amenity})$"]["type"="multipolygon"]({box});
 );
 out geom;"""
 
@@ -257,6 +260,7 @@ class OverpassFeatures:
             landuse=LANDCOVER_LANDUSE,
             natural=LANDCOVER_NATURAL,
             leisure=LANDCOVER_LEISURE,
+            amenity=LANDCOVER_AMENITY,
         )
         return self._query(query, LANDCOVER_TIMEOUT_S)
 
