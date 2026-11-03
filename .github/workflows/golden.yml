@@ -33,6 +33,17 @@ jobs:
       - name: Sync
         run: uv sync --locked
 
+      # The arm64 check of issue #86: the three pinned-hash tests fail exact on Apple Silicon,
+      # so they run here in tolerance mode, where a wrong bound fails them (ADRs 0030, 0051).
+      # They are not marked golden, so the parity step below does not select them.
+      - name: Pinned plate hashes (arm64, tolerance)
+        if: matrix.os == 'macos-15'
+        run: >-
+          uv run pytest --golden-tolerance
+          "tests/unit/ink/test_paper.py::TestClassicEdge::test_the_classic_plate_is_the_pinned_one"
+          "tests/unit/maps/painter/test_smoke.py::test_the_flags_off_still_paint_the_plates_that_were_approved"
+          "tests/unit/maps/painter/test_smoke.py::test_the_wash_flags_off_still_paint_the_plates_that_were_approved"
+
       - name: Golden parity (tolerance)
         run: uv run pytest -m golden --golden-tolerance -n ${{ matrix.workers || 'auto' }} --dist loadgroup --basetemp=${{ runner.temp }}/pytest
 
