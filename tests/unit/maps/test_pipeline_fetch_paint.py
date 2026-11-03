@@ -131,7 +131,7 @@ class TestFetch:
 
     def test_the_basemap_carries_the_pinned_roads(self, fetched: Fetched) -> None:
         """The fetched basemap holds the fixture box's pinned number of roads."""
-        assert len(fetched.basemap.layers.roads) == 39
+        assert len(fetched.basemap.layers.roads) == 35
 
     def test_the_basemap_carries_both_credits(self, fetched: Fetched) -> None:
         """The basemap's credits are the feature and the elevation provider's, in that order."""

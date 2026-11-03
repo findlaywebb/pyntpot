@@ -9,9 +9,10 @@ stated against.
 A street is one stroke: OSM hands it over cut at every junction, so the pieces of one
 road (or one watercourse, by name) are chained back together before the brush is set
 down. It does not fetch features, keep or drop roads by interaction, or paint. Invariants:
-a road stroke shorter than the brush that would draw it is dropped; a river is drawn at
-the width it measures at each point where mapped water gives one, and at its class
-floor elsewhere.
+a road stroke shorter than the brush that would draw it is dropped; a lane, path or stream
+stroke shorter than `STUB_FLOOR_PX` display pixels is dropped unless both its ends meet
+another stroke (`stubs`); a river is drawn at the width it measures at each point where
+mapped water gives one, and at its class floor elsewhere.
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from typing import TYPE_CHECKING, Any
 
 from pyntpot.ink.chains import join_strokes
 from pyntpot.ink.cut import cut_line
-from pyntpot.ink.polyline import Pt, clip_line, eased, length, simplify, smooth
+from pyntpot.ink.polyline import Pt, clip_line, eased, foot_on, length, simplify, smooth
 from pyntpot.maps.basemap import Line, River, Road
 from pyntpot.maps.rivers import CHANNEL_EASE_SAMPLES, channel, major_rivers, painted_width_px
 from pyntpot.maps.svg_path import parse_path
@@ -50,6 +51,21 @@ BAND_BRUSH = {"major": "road_major", "minor": "lane", "path": "track"}
 #: The highway values that are paths for the brush's sake.
 PATH_HIGHWAYS = ("track", "path", "footway", "bridleway")
 
+#: The road bands and the watercourse class a short loose piece is dropped from. The
+#: major roads and the rivers are left whole: a gap in either would show.
+STUB_BANDS = ("minor", "path")
+STUB_CLASS = "minor"
+
+#: A lane, path or stream stroke shorter than this, in display pixels, with an end that
+#: meets nothing, is a stub: a hair sticking out of the route where the track met the
+#: end of a driveway, or a dash of brook that starts and stops on the land. Twenty
+#: pixels is a couple of letters of a name; less than that says nothing about where
+#: the road or the water goes.
+STUB_FLOOR_PX = 20.0
+
+#: How near, in display pixels, a stroke's end has to come to another stroke to meet it.
+MEET_PX = 1.5
+
 
 @dataclass(frozen=True)
 class Frame:
@@ -76,6 +92,48 @@ def line_of(points: list[Pt]) -> Line:
 def drawn(piece: list[Pt], tol: float) -> Line:
     """Simplify, then Chaikin: a line someone drew, not a line surveyed."""
     return line_of(smooth(simplify(piece, tol), passes=2))
+
+
+def stubs(
+    lines: list[list[Pt]], short: list[bool], ground: list[list[Pt]], meet: float
+) -> set[int]:
+    """The short lines with an end that meets no other line: the strokes not to draw.
+
+    A short piece between two others is a link in the network, a street joining two
+    streets or a beck joining a lake to a river, and is kept; a short piece with an end
+    on nothing is a stub.
+
+    Args:
+        lines: The strokes, in metres.
+        short: Whether each stroke is short enough to be a stub.
+        ground: Further lines an end may meet, such as the lake shores, in metres; none empty.
+        meet: How near an end has to come to another line to meet it, in metres.
+
+    Returns:
+        The indices of the short strokes that have a loose end.
+    """
+    others = [(i, line, _box(line, meet)) for i, line in enumerate([*lines, *ground])]
+
+    def met(end: Pt, own: int) -> bool:
+        x, y = end
+        return any(
+            i != own
+            and box[0] <= x <= box[2]
+            and box[1] <= y <= box[3]
+            and foot_on(end, line)[0] <= meet
+            for i, line, box in others
+        )
+
+    return {
+        i for i, line in enumerate(lines) if short[i] and not (met(line[0], i) and met(line[-1], i))
+    }
+
+
+def _box(line: list[Pt], grow: float) -> tuple[float, float, float, float]:
+    """A line's bounding box grown by `grow` on every side."""
+    xs = [p[0] for p in line]
+    ys = [p[1] for p in line]
+    return (min(xs) - grow, min(ys) - grow, max(xs) + grow, max(ys) + grow)
 
 
 def _band(row: dict[str, Any]) -> str:
@@ -127,26 +185,33 @@ def roads_from_paths(rows: list[dict[str, Any]], frame: Frame) -> list[Road]:
     # junction that the chain could not take because it took the carriageway
     # instead: many are under one display pixel long, and each would still pay
     # for a set-down blot the size of the brush.
-    roads = []
+    mpp = frame.geometry["mpp_display"]
+    chains: list[tuple[list[Pt], dict[str, Any]]] = []
     for road_key, lines in pieces.items():
         band = road_key[0]
         width = frame.brush.brush_width_px.get(BAND_BRUSH[band], FALLBACK_BRUSH_PX)
-        floor = width * frame.geometry["mpp_display"]
-        info = meta[road_key]
-        for chain in join_strokes(lines, tol=max(frame.eps, MIN_JOIN_M)):
-            if length(chain) < floor:
-                continue
-            roads.append(
-                Road(
-                    line=drawn(chain, frame.eps),
-                    cls=info["c"],
-                    band=info["b"],
-                    highway=info["k"],
-                    name=info["n"],
-                    ref=info["r"],
-                )
-            )
-    return roads
+        floor = width * mpp
+        chains += [
+            (chain, meta[road_key])
+            for chain in join_strokes(lines, tol=max(frame.eps, MIN_JOIN_M))
+            if length(chain) >= floor
+        ]
+    # And a lane or path that is short and ends on nothing is a stub: the end of a
+    # driveway the track touched, drawn as a hair off the route.
+    short = [i["b"] in STUB_BANDS and length(c) < STUB_FLOOR_PX * mpp for c, i in chains]
+    dropped = stubs([c for c, _ in chains], short, [], MEET_PX * mpp)
+    return [
+        Road(
+            line=drawn(chain, frame.eps),
+            cls=info["c"],
+            band=info["b"],
+            highway=info["k"],
+            name=info["n"],
+            ref=info["r"],
+        )
+        for i, (chain, info) in enumerate(chains)
+        if i not in dropped
+    ]
 
 
 def _river(
@@ -212,8 +277,19 @@ def rivers_from_paths(
         r["n"]: (("major" if r["n"] in major else "medium") if r["c"] == "river" else "minor")
         for r in rows
     }
-    return [
-        _river(chain, classed.get(name, "minor"), name, lakes, frame, measured=name in widths)
+    chains = [
+        (chain, name, classed.get(name, "minor"))
         for name, lines in pieces_by.items()
         for chain in join_strokes(lines, tol=max(frame.eps, MIN_JOIN_M))
+    ]
+    # A stream that is short and ends on nothing, not on other water, is a dash on
+    # the land: drawn, it reads as water that stops dead.
+    mpp = frame.geometry["mpp_display"]
+    short = [c == STUB_CLASS and length(chain) < STUB_FLOOR_PX * mpp for chain, _, c in chains]
+    shores = [[*ring, ring[0]] for ring in lakes if len(ring) > 1]
+    dropped = stubs([chain for chain, _, _ in chains], short, shores, MEET_PX * mpp)
+    return [
+        _river(chain, cls, name, lakes, frame, measured=name in widths)
+        for i, (chain, name, cls) in enumerate(chains)
+        if i not in dropped
     ]
