@@ -51,7 +51,7 @@ uv run mutmut show <mutant-name>                # one mutant's diff
 
 `no tests` means no test in the mutation selection reaches the function, typically one only `maps` tests call: write a focused `ink` or `letters` test for it. For each survivor, write a focused test that fails against the mutant, or, when the mutant changes no behaviour (an equivalent mutant), list it in the PR description with the reason. An empty pattern list means the branch changed no function in scope, and there is nothing to run.
 
-Benchmarks live in `tests/benchmarks`; a plain `uv run pytest` calls each once, untimed, as a smoke test. `docs/explanation/performance.md` says what they measure. To time them locally:
+Benchmarks live in `tests/benchmarks`; a plain `uv run pytest` calls each once, untimed, as a smoke test. `docs/runbooks/performance.md` says what they measure. To time them locally:
 
 ```bash
 uv run pytest -m benchmark --benchmark-enable

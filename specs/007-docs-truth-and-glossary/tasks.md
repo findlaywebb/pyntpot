@@ -6,14 +6,14 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 
 ## S0 — Scaffold and site shape
 
-- [ ] `tests/docs/` package created; nothing under `tests/architecture/` touched (the two docs tests move in S8).
-- [ ] Red: `tests/docs/test_site_pages.py` for the helper API.
-- [ ] `tests/support/site_pages.py`: pages, exclusions, nav, fenced blocks (indented fences; marker is the nearest non-blank line above), prose, links, resolve, resolve_dotted.
-- [ ] Red: `tests/docs/test_nav.py` (section index order by exact section, first occurrence; performance log off the site; anchors validated before `nav:`; `includes/` excluded).
-- [ ] `mkdocs.yml`: Painting with Python and How-to nav order, no performance page, `includes/` excluded, `validation: anchors: warn`.
-- [ ] `performance.md` to `docs/runbooks/`; Explanation index, `docs/README.md`, `CONTRIBUTING.md` repointed.
-- [ ] prek `docs-tests` hook; time measured.
-- [ ] Gate and strict build green.
+- [x] `tests/docs/` package created; nothing under `tests/architecture/` touched (the two docs tests move in S8).
+- [x] Red: `tests/docs/test_site_pages.py` for the helper API.
+- [x] `tests/support/site_pages.py`: pages, exclusions, nav, fenced blocks (indented fences; marker is the nearest non-blank line above), prose, links, resolve, resolve_dotted.
+- [x] Red: `tests/docs/test_nav.py` (section index order by exact section, first occurrence; performance log off the site; anchors validated before `nav:`; `includes/` excluded).
+- [x] `mkdocs.yml`: Painting with Python and How-to nav order, no performance page, `includes/` excluded, `validation: anchors: warn`.
+- [x] `performance.md` to `docs/runbooks/`; Explanation index, `docs/README.md`, `CONTRIBUTING.md` repointed.
+- [x] prek `docs-tests` hook; time measured.
+- [x] Gate and strict build green.
 
 ## S1 — Glossary (#65)
 
