@@ -64,6 +64,14 @@ _STROKE_ENDS = 2
 #: The ink density above which a pixel counts as covered by the nib.
 _COVERED = 0.12
 
+#: How far from the ink the backing wash's grain is laid, in its reaches. The feather
+#: blurs the reach by a third of itself, so it is nothing well inside two and a half.
+_GRAIN_REACH = 2.5
+
+#: Under this the feather is nothing: the blur's tail would otherwise leave a lift of
+#: one level in the alpha far out on the paper.
+_FEATHER_FLOOR = 0.02
+
 
 @dataclass(frozen=True, eq=False)
 class NibSurface:
@@ -159,7 +167,9 @@ def _backing_wash(
 
     Not a halo: a halo is an outline offset from the glyphs and it reads as a
     sticker cut round the letters. This is one soft blob a word, granulated on
-    the paper's own pits with a pooled rim, and it is absent where the ground
+    the paper's own pits, strongest at the letters and fading to nothing a reach
+    (`label_wash_spread` of the type size) or so out, with no flat body and no
+    rim: either reads as a pale box on dark paint. It is absent where the ground
     is already pale enough to read on, so it says "the paint was lifted before
     this was written" rather than sitting under every name on the plate.
 
@@ -175,18 +185,21 @@ def _backing_wash(
     nib, paper = groups.nib, groups.paper
     reach = max(nib.label_wash_spread * nib.label_size_px * surface.scale, 2.0)
     near = chamfer_distance(cover > _COVERED)
-    blob = blur(np.clip(1.0 - near / reach, 0.0, 1.0), reach * 0.35)
+    # Squared, so the lift is strongest at the letters and falls away from them with
+    # no flat body between: a plateau round a word block is what read as a pale box.
+    soft = blur(np.clip(1.0 - near / reach, 0.0, 1.0) ** 2, reach * 0.35)
+    feather = np.clip((soft - _FEATHER_FLOOR) / (1.0 - _FEATHER_FLOOR), 0.0, 1.0)
+    # The wash gives the lift its grain, laid over a field reaching past every pixel
+    # the feather touches, so its own thresholded, pooled edge falls where the feather
+    # is already nothing; the lift's edge is the feather's, fading out from the ink.
     dens = wash(
-        np.clip(blob * 1.6, 0.0, 1.0),
+        (near < reach * _GRAIN_REACH).astype(F32),
         sheet,
         0.85,
-        0.3,
-        WashOptions(
-            rim_px=max(reach * 0.4, 3.0),
-            gran=0.3,
-            gran_gamma=paper.gran_gamma if paper.paper_fibre else 0.0,
-        ),
+        0.0,
+        WashOptions(gran=0.3, gran_gamma=paper.gran_gamma if paper.paper_fibre else 0.0),
     )
+    dens = dens * feather
     floor = nib.label_wash_dark_floor
     gate = np.clip((surface.dark - floor) / max(1.0 - floor, 1e-3), 0.0, 1.0)
     alpha = np.clip(dens * gate * nib.label_wash_alpha, 0.0, 1.0)

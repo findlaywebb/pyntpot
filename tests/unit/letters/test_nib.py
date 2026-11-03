@@ -10,7 +10,7 @@ from PIL import Image
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.sheet import Canvas
 from pyntpot.ink.style import PaperStyle
-from pyntpot.letters.nib import NibSurface, nib_plate
+from pyntpot.letters.nib import NibSurface, _backing_wash, _sheet, nib_plate
 from pyntpot.letters.setting import Mark
 from pyntpot.letters.style import FaceStyle, HandStyle, NibGroups, NibStyle
 
@@ -199,3 +199,48 @@ class TestCounters:
             alpha = np.asarray(Image.open(written).getchannel("A"), np.float32) / 255.0
             worst = max(worst, float(alpha[core].mean()))
         assert worst < 0.4, f"the bowl's middle is {worst:.2f} inked: the counter closed"
+
+
+class TestBackingWash:
+    """The lift under a name fades out from its ink, with no flat body and no edge of its own."""
+
+    #: Where the name's ink lies on the 200 by 120 surface: one line of "Llyn Llydaw".
+    INK = (slice(52, 68), slice(40, 160))
+
+    def _lift(self) -> tuple[np.ndarray, float]:
+        """The backing wash's alpha under one line of ink on dark paint, and its reach in pixels."""
+        surface = NibSurface(
+            Canvas(0.0, 0.0, 200.0, 120.0, 200, 120), 1.0, np.full((120, 200), 0.8, np.float32), 6.0
+        )
+        cover = np.zeros((120, 200), np.float32)
+        cover[self.INK] = 1.0
+        _rgb, alpha = _backing_wash(cover, surface, _sheet(surface, GROUPS.paper), GROUPS)
+        nib = GROUPS.nib
+        return alpha, nib.label_wash_spread * nib.label_size_px
+
+    def test_the_lift_is_strongest_at_the_ink(self) -> None:
+        """Half a reach above the ink the lift is under half what it is beside the letters."""
+        alpha, reach = self._lift()
+        beside = float(alpha[50, 60:140].mean())
+        half_out = float(alpha[52 - round(reach / 2), 60:140].mean())
+        assert beside > 0.0
+        assert half_out < beside / 2, "the lift has a flat body round the name"
+
+    def test_the_lift_has_no_edge(self) -> None:
+        """Walking out from the ink the lift never steps by more than a small share of its peak."""
+        alpha, _reach = self._lift()
+        column = alpha[:52, 60:140].mean(axis=1)
+        steps = np.abs(np.diff(column))
+        assert float(steps.max()) < 0.1 * float(column.max()), "the lift ends in an edge"
+
+    def test_the_lift_is_gone_two_reaches_out(self) -> None:
+        """Nothing of the lift is left two reaches from the ink."""
+        alpha, reach = self._lift()
+        assert float(alpha[: 52 - round(2 * reach), :].max()) < 0.01
+
+    def test_the_lift_is_the_pinned_one(self) -> None:
+        """Its strength beside the letters, its grain there and its whole weight, pinned."""
+        alpha, _reach = self._lift()
+        assert float(alpha[50, 60:140].mean()) == pytest.approx(0.193397, rel=1e-3)
+        assert float(alpha[50, 60:140].std()) == pytest.approx(0.010929, rel=1e-2)
+        assert float(alpha.sum()) == pytest.approx(891.583, rel=1e-3)

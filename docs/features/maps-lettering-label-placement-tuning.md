@@ -139,7 +139,7 @@ adopt:
   which shared term moved it.
 
 Not in it: what is named (the picks), the hand's lettering and the nib, where a span's
-bracket is drawn (`place_spans`), and the backing wash's own shape (#49). Related: #50 and
+bracket is drawn (`place_spans`), and the backing wash's own shape (ADR 0066). Related: #50 and
 #51, which this would likely close or narrow.
 
 **Decided** (maintainer, 2026-11-02):
