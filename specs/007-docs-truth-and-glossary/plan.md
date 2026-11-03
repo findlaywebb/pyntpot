@@ -36,9 +36,10 @@ Three pieces of machinery, each generic and data-driven:
 3. **Tutorial paths**: one nav-derived reading order, a `Next:` line per tutorial page,
    and a lead-on link from each tutorial page to a guide, reference or explanation page.
 
-The existing docs tests `tests/architecture/test_tutorials.py` and
-`tests/architecture/test_reference_pages.py` move to `tests/docs/` (they check prose, not
-architecture), but only in S8, after the rebase onto 006: 006 owns `tests/architecture/`
+The existing docs-prose tests `tests/architecture/test_tutorials.py`,
+`test_reference_pages.py`, `test_readme.py` and `test_docs_images.py` move to `tests/docs/`
+(they check prose, not architecture) and `test_how_to_commands.py` is deleted as subsumed
+by S7's commands test, but only in S8, after the rebase onto 006: 006 owns `tests/architecture/`
 and edits `test_reference_pages.py` (S0a repoints its brush-table import), `test_site.py`
 and `test_reference_keys.py`. Until then no 007 slice moves or edits any file under
 `tests/architecture/`; every new test goes in `tests/docs/` from S0 on.
@@ -125,29 +126,57 @@ Steps:
      library (PyYAML is not a declared dependency).
    - `Block` (frozen dataclass: `lang: str`, `code: str`, `marker: str | None`,
      `line: int`) and `fenced_blocks(text: str) -> list[Block]`: backtick or tilde
-     fences; `marker` is the `<!-- ... -->` comment on the line before the fence.
-   - `prose(text: str) -> str`: the text with fenced blocks removed.
-   - `links(text: str) -> list[str]`: Markdown link targets, images excluded.
+     fences, at the margin or indented (a fence inside a list item, as on
+     `paint-your-own-shapes.md:16-51`, is indented three spaces); each code line is
+     dedented by its opening fence's indent and no further, so a block quoting indented
+     script lines keeps their indentation. `marker` is the nearest preceding non-blank
+     line, stripped, when that line is an HTML comment `<!-- ... -->`, else `None`: the
+     watercolour tutorial puts the marker on the line before the fence, while
+     `curves.md` (7 blocks) and `fractals.md` (13 blocks) leave a blank line between,
+     as `tests/architecture/test_tutorials.py:34`'s `-->\s*\n` allows. Helper tests pin
+     both spacings, an indented fence and a block with no comment above it.
+   - `prose(text: str) -> str`: the text with fenced blocks removed (indented fences
+     included).
+   - `links(text: str) -> list[str]`: Markdown link targets, images excluded, in page
+     order, duplicates kept.
    - `resolve(page: Path, href: str) -> Path | None`: a relative `.md` link resolved
      against the page, fragment dropped; `None` for absolute URLs.
+   - `resolve_dotted(path: str) -> object`: imports the longest importable module prefix
+     of a dotted `pyntpot.…` path, then `getattr` on each remaining part; raises
+     `LookupError` naming the path when a part is missing. The one resolver for S1's
+     "In the code" check, S2's dotted-path test and S8 step 6.
 4. Write `tests/docs/test_nav.py`:
    - `test_every_section_index_lists_its_pages_in_nav_order`: for each nav section whose
-     first entry is an `index.md`, the links on that index page that resolve to pages of
-     the same section, in order, equal the section's other pages in nav order. Fails
-     today: Painting with Python (nav has Vector drawing before Pictures) and How-to
-     guides (nav order differs from `how-to/index.md`).
+     first entry is an `index.md`, the section's pages are the entries whose
+     `NavEntry.sections` equals that section's tuple exactly (the index itself left out),
+     plus the index entry of each direct subsection that opens with one, all in nav
+     order. A subsection's other pages belong to the subsection's own index, not to the
+     parent's. The index page's `links()`, resolved, filtered to those pages, with each
+     page kept at its first occurrence only (so S4's `Next:` line, which repeats a page
+     the list already links, changes nothing), must equal that list. Today this gives:
+     Tutorials `[paint-a-watercolour, first-map, painting-with-python/index]` (passes);
+     Painting with Python fails (nav has Vector drawing before Pictures); How-to guides
+     fails (nav order differs from `how-to/index.md`); Reference passes (its API
+     subsection opens with no index, so the API pages are nobody's); Explanation passes
+     before and after S0 drops the performance page from both the nav and its index.
    - `test_the_performance_log_is_a_runbook_and_no_site_page_links_it`:
      `docs/runbooks/performance.md` exists, no nav entry and no site page link resolves
      to a `performance.md`. Fails today.
    - `test_the_strict_build_validates_anchors`: `mkdocs.yml` has
-     `validation:` with `anchors: warn`. Fails today.
+     `validation:` with `anchors: warn`, placed before `nav:`, and `nav:` is the file's
+     last top-level key (`tests/architecture/test_site.py:103` and `nav()` both read
+     everything after `"\nnav:\n"`). Fails today.
+   - `test_the_includes_directory_is_not_a_site_page`: `excluded()` lists `includes/`
+     and no `site_pages()` path is under `docs/includes/`. mkdocs reports a page left out
+     of the nav only at INFO, so without this nothing fails if the exclusion is dropped
+     and the abbreviations file becomes a page. Fails today.
 5. Make them pass:
    - `mkdocs.yml` nav: Painting with Python in the order Curves, Symmetry, Fractals,
      Pictures, Vector drawing; How-to guides in `how-to/index.md`'s order (write a theme,
      map from the command line, change the route ink, letter your own landmarks, work
      offline and reuse the cache, credit the map data, self-host providers, paint your
      own shapes); drop `explanation/performance.md`; add `includes/` to `exclude_docs`;
-     add `validation:` / `  anchors: warn`.
+     add `validation:` / `  anchors: warn` above `nav:`, which stays the last key.
    - `git mv docs/explanation/performance.md docs/runbooks/performance.md`, content
      unchanged (it has no relative links). Remove its line from
      `docs/explanation/index.md`. `docs/README.md`: drop "performance" from the
@@ -161,7 +190,7 @@ Steps:
      (do not drop the hook).
 6. Gate: `uv run pytest tests/docs tests/architecture -q`, strict build.
 
-Done: the three nav tests and the helper tests pass; the strict build passes with anchor
+Done: the four nav tests and the helper tests pass; the strict build passes with anchor
 validation on; `git diff --stat` shows nothing under `tests/architecture/`.
 
 ### S1 — Glossary (#65), parallel
@@ -325,7 +354,9 @@ Generator, `tests/support/glossary.py` (stdlib only; module docstring states it 
 one reader of `GLOSSARY.md`'s format and writes the two files, and that it does not build
 the site):
 
-- `Term` (frozen: `name`, `meaning`, `code`, `tooltip: tuple[str, ...]`,
+- `Term` (frozen: `name`, `meaning`, `code: tuple[str, ...]` (the "In the code" cell's
+  bare dotted names, backticks stripped, in cell order; empty for an empty cell),
+  `tooltip: tuple[str, ...]`,
   `audience: Literal["reader", "contributor"]`, `group: str`), `Retired` (frozen:
   `word`, `instead`), `Glossary` (frozen: `terms`, `retired`).
 - `parse(text: str) -> Glossary`: raises `ValueError` naming the line for an unknown
@@ -354,7 +385,13 @@ the site):
   are not on the page.
 - `abbreviations(glossary: Glossary) -> str`: the same comment line, then one line
   `*[<form>]: <plain(meaning)>` per Tooltip form, terms in file order and forms in cell
-  order, ending in one newline.
+  order, with exactly one blank line between consecutive definitions (and after the
+  comment line), ending in one newline. The blank line is for build time, not looks:
+  mkdocstrings converts each of the API pages' roughly 355 docstrings with the site's
+  Markdown extensions, so `auto_append` runs on every one of them too, and `abbr`'s
+  block parser is roughly quadratic over a dense run of definitions. The review measured
+  a 117-line file on the real site: 2.3 s today, 27 s with the definitions dense, 4.0 s
+  with a blank line between them.
 - `main() -> None` writes both files under `support.REPO_ROOT` and logs each path at
   INFO; `if __name__ == "__main__":` sets `logging.basicConfig(level=logging.INFO)` and
   calls it. No `print`.
@@ -374,7 +411,16 @@ Steps:
      mark, setting, terms, reference, label, labels, place, places, face, layers,
      density, pigment, credit, manifest, candidate, canvas, lettering, tip, body, pool,
      trace, landmark, landmarks, provider, annotations, edge, line, name, names);
-     every retired word is not a term, and every "Say instead" is a term.
+     every retired word is not a term; every "Say instead" ends in a term as a whole
+     word, matched case-insensitively (so "nib plate", "landmark", "map" and "track" are
+     terms themselves, and "centreline trace" and "outline trace" end in the term
+     "trace"; a qualifier before the term is allowed, a Say instead with no term is
+     not); every name in every "In the code" cell resolves with
+     `support.site_pages.resolve_dotted` (this is what checks the contributor rows,
+     since `GLOSSARY.md` is not a site page and S2's dotted-path test never reads it);
+     no site page contains a curly apostrophe `’` (a Tooltip form such as "painter's
+     pigment" is written with `'`, and `abbr` would not underline the `’` spelling; none
+     exists today).
    - `TestGeneratedFiles`: `docs/reference/glossary.md` equals
      `glossary_page(parse(...))` and `docs/includes/abbreviations.md` equals
      `abbreviations(parse(...))`, each failing with the regenerate command in the message;
@@ -394,10 +440,21 @@ Steps:
    `CONTRIBUTING.md`: a short "Glossary" paragraph: add or change a term in `GLOSSARY.md`,
    then run the regenerate command; a Tooltip of `no` for an everyday word.
 5. Gate: `uv run pytest tests/docs -q`, strict build. Open the built
-   `reference/glossary.html` and one tutorial page in the build output and confirm by
-   `grep -c '<abbr' ` that tooltips render and `grep '<code>[^<]*<abbr'` finds none.
+   `reference/glossary/index.html` (the site uses directory URLs), one tutorial page and
+   `reference/maps/index.html` (API
+   docstrings get tooltips too, because mkdocstrings converts them with the site's
+   extensions) in the build output and confirm by `grep -c '<abbr'` that tooltips render
+   in each, and that `grep '<code>[^<]*<abbr'` finds none.
+6. Build time: run the strict build twice, before S1's changes and after, and take the
+   "Documentation built in N seconds" line of the second run each time. At this plan's
+   base it reads 2.29 s (2.7 s wall clock, measured in the plan's fix round). After S1 it
+   must read under 5 s on the same machine. Over 5 s is a red gate: find the cause and
+   fix it (for example, the definitions are not blank-line separated, or a form is
+   pathological), never drop the tooltips or the API pages to get under.
 
-Done: tests green; strict build green; no contributor term on the site page.
+Done: tests green; strict build green; no contributor term on the site page; the S1
+commit message states the measured build time before and after (for example "strict
+build 2.29 s to 3.9 s"), and after is under 5 s.
 
 ### S2 — Reference truth (#163), parallel
 
@@ -416,8 +473,8 @@ Steps:
      `` `Name`, from `pyntpot.x` `` or `` `Name` from `pyntpot.x` `` names a module whose
      `__all__` holds `Name`. Fails today on the 8 claims of #163.
    - `test_every_dotted_pyntpot_path_resolves`: each backticked `pyntpot.a.b...` in prose
-     (a trailing `(...)` dropped) resolves by importing the longest module prefix and
-     `getattr` on the rest. Passes today (69 paths). 006's branch does not have
+     (a trailing `(...)` dropped) resolves with S0's `support.site_pages.resolve_dotted`
+     (no second resolver here). Passes today (69 paths). 006's branch does not have
      `tests/docs/`, so this is the check S8's rebase runs: it names any prose path 006's
      renames broke on a page this feature owns (none today outside the files 006 edits
      itself; the grep in S8 step 1 confirms).
@@ -434,10 +491,18 @@ Steps:
      `` ^`(?P<cls>\w+)`(?:, from `(?P<pkg>pyntpot[\w.]*)`)?, read as `Style\.default\(\)\.(?P<group>\w+)`\. ``
      with `cls` the group's dataclass name and `group` the section's group. Fails today on
      the line format.
-   - `TestCliSynopsis.test_the_synopsis_is_the_parser_usage`: the fenced block under
-     `## Synopsis` equals, line by line with whitespace runs collapsed, the
-     `format_usage()` of `build_parser()` and of each subparser, `usage: ` removed. Fails
-     today (`{map}` and `--margin-m`).
+   - `TestCliSynopsis.test_the_synopsis_is_the_parser_usage`: the parsers are
+     `pyntpot.maps.cli.build_parser()` and then each subparser in its subparsers action's
+     `choices` order. For each, take `format_usage()`, remove the leading `usage: `, and
+     collapse every whitespace run, newlines included, to one space, then strip. The
+     non-empty lines of the fenced block under `## Synopsis`, each with whitespace runs
+     collapsed the same way, must equal that list, one line per parser. argparse wraps
+     usage at the terminal width (at 80 columns, which xdist workers get, the `map` usage
+     is three lines; at 200 it is one), and it wraps only between usage parts, so
+     collapsing makes the comparison width-independent with no need to force `COLUMNS`
+     (which would need a `src/` change or environment config this feature does not
+     make). A helper test pins the collapse on the three-line 80-column form. Fails today
+     (`{map}` and `--margin-m`).
    - `TestPigmentTables`: rows of the table with columns Strip, Key, Colour, Transparency
      match `PIGMENTS[key]` and `float(cell) == TRANSPARENCY[key]`; rows of the table with
      columns Key, Colour, Transparency match `PAINTERS_PIGMENTS` and
@@ -500,9 +565,22 @@ Steps:
      caption contains the theme's path. Fails today: `docs/index.md` (hero, says "the
      Ambleside theme") and `docs/explanation/data-policy.md` (`places/ambleside.webp`).
      With two registry entries for one image, one matching entry suffices.
-   - `test_every_label_number_in_a_caption_is_a_literal_of_its_script`: every number in
-     the sentence after "The labels read" is a numeric literal (unary minus included) in
-     the script's AST.
+   - `test_every_label_list_in_a_caption_is_a_tuple_of_its_script`: in the sentence after
+     "The labels read" (up to its full stop), each clause ending in the word `across` or
+     `down` runs from the sentence start or the previous `across`/`down` to that word.
+     When a clause holds two or more numbers and no `to` range ("1 to 8"), its numbers in
+     order, compared as floats, must equal the numeric elements, in order, of one tuple
+     or list literal in the script's AST whose elements are all numeric constants (unary
+     minus included). A clause with fewer than two numbers is skipped; words between the
+     numbers are ignored ("seed 11 and seed 23" is `[11, 23]`, "3 px, 6 px and 12 px" is
+     `[3, 6, 12]`); a number counts only when it is not part of a word (`RIV1-a` holds
+     none). Prototyped against every
+     current caption in the plan's fix round: 22 clauses, all pass except both clauses
+     of `gallery.md:221` (`[-38, 0, 90]` and `[0.5, 0.85]`, no such tuple in
+     `examples/nib_stages.py`); the corrected caption matches line 90's `ANGLES` and
+     `THINS`. The looser rule of the first draft (each number is *some* literal of the
+     script) passed #162's own wrong caption, since -38.0, 0.0, 90.0, 0.85 and `0.5 * w`
+     all occur in it. Fails today: `gallery.md:221` (#162).
    - `test_every_name_in_a_caption_is_written_by_its_script`: the name after "The name
      is" occurs in a string literal of the script. Fails today: nib-angles (#162).
 2. Write `tests/docs/test_gallery.py`:
@@ -511,7 +589,10 @@ Steps:
      Fails today: `painting-with-python/svg-flat.webp`, `svg-washes.webp`, `svg-ink.webp`,
      `reference/glyph-sheet.webp`.
    - `test_the_gallery_lists_its_pages_in_nav_order`: the pages its `###` heading links
-     resolve to are a subsequence, in order, of the nav.
+     resolve to are a subsequence, in order, of the nav. Fails after S0's nav change:
+     the gallery's How-to headings run Write a theme, Change the route ink, Letter your
+     own landmarks, Paint your own shapes, Map from the command line
+     (`gallery.md:125-165`), and the nav puts Map from the command line second.
 3. Make them pass:
    - `gallery.md:221` caption: "*Painted by `examples/nib_stages.py` (seed 7, figure
      angles, size 840). The name is Keswick. The labels read -38, 0, 38 and 90 across, the
@@ -522,6 +603,9 @@ Steps:
      the alt text and figure value from `docs/tutorials/painting-with-python/vector-drawing.md`,
      which shows them); add the glyph sheet under the Reference section after Brushes,
      with the alt text and caption `docs/reference/letters.md` uses.
+   - Move the gallery's "Map from the command line" section (its heading, image and
+     caption, `gallery.md:165` to the line before `## Reference`) to directly after the
+     "Write a theme" section, unchanged.
    - `docs/index.md` hero caption: "*Painted by `examples/place_card.py` (size 1200,
      theme `examples/themes/ambleside-hero.toml`).*"
    - `data-policy.md` caption: name `examples/themes/ambleside.toml` as the gallery's
@@ -566,18 +650,25 @@ Steps:
      last page's resolves to `docs/how-to/index.md`. Fails today on all nine.
    - `test_every_tutorial_page_but_an_index_leads_on_to_a_guide_reference_or_explanation`:
      each non-`index.md` tutorial page has a link resolving under `docs/how-to/`,
-     `docs/reference/` or `docs/explanation/`. Fails today on all six.
+     `docs/reference/` or `docs/explanation/`. Fails today on all seven.
 3. Make them pass:
    - `pictures.md`: put a `<!-- from examples/derwentwater.py -->` marker before each of
-     its two python blocks and make each block the script's exact text (the first now
-     reads `& inside)` where `examples/derwentwater.py:189` reads `& scene.inside)`).
+     its two python blocks and make each block the script's exact text. The first block
+     (`pictures.md:28-31`) differs twice: `& inside)` where `examples/derwentwater.py:189`
+     reads `& scene.inside)`, and `wash(cover, sheet, ...` where `:190` reads
+     `wash(cover, scene.sheet, ...`. The verbatim check is a raw substring check, so the
+     two-line block keeps the script's 8-space indentation on both lines. The prose after
+     it (`pictures.md:33`) then says "`scene.inside` is the picture less its side
+     margins". The second block is one line and already a substring.
    - `Next:` lines, each the page's last line: tutorials index to Paint a watercolour;
      Paint a watercolour to First map; First map to Painting with Python; its index to
      Curves; Curves to Symmetry; Symmetry to Fractals; Fractals to Pictures; Pictures to
      Vector drawing; Vector drawing to the how-to guides (`../../how-to/index.md`). Form:
      `Next: [First map](first-map.md), a route map of Ambleside from recorded data.` (a
      short clause saying what the next page paints). `pictures.md` loses its "The next
-     page, ..." sentence.
+     page, ..." sentence. The two index pages' `Next:` targets are pages their lists
+     already link; S0's index-order test keeps each page's first occurrence only, so the
+     repeat leaves it green (run `tests/docs/test_nav.py` in the gate to see it).
    - Lead-on links, in each page's last section (create "## Where next" where none):
      paint-a-watercolour: `../reference/brushes.md`, `../reference/pigments.md`,
      `../explanation/how-the-wash-works.md`, `../explanation/the-hand-and-the-nib.md`;
@@ -699,12 +790,22 @@ prints nothing).
 
 ### S7 — Integration (after S0 to S6)
 
-Owned files: `tests/docs/test_retired_words.py` (new), the notes listed below. Not
+Owned files: `tests/docs/test_retired_words.py` (new), `tests/docs/test_docs_commands.py`
+(new), the notes listed below, and any site page, `README.md` line or example docstring
+a red after the merge names. Not
 `docs/features/docs-missing-how-tos.md` or `docs/features/docs-examples-housekeeping.md`:
 006's S8 edits both, so this feature's edits to them are S8's.
 
+S2's, S3's and S6's tests scan every site page, but each ran in its own worktree, so they
+first meet S4's and S5's page edits here. The integrator owns every red that appears
+after the merge, whichever slice's test raises it, and fixes it in the page the red
+names (never by loosening the test, never in `src/`).
+
 Steps:
 
+0. Merge S1 to S6 and run `uv run pytest tests/docs tests/architecture -q` and the strict
+   build. Fix each red as above and list each fix in the PR description under the test
+   that raised it.
 1. Write `tests/docs/test_retired_words.py`:
    `test_no_page_or_example_uses_a_retired_word`: for each retired word of
    `parse(GLOSSARY.md)`, no site page, `README.md`, or `examples/**/*.{py,toml,md}`
@@ -712,6 +813,30 @@ Steps:
    spaces matching any whitespace run, after backticks are removed. It must pass on
    arrival if S1 to S6 swept correctly; any failure is fixed in the file it names (the
    integrator owns those fixes now that the parallel slices are merged).
+1a. Write `tests/docs/test_docs_commands.py`, over every site page and `README.md`, on
+   the code of fenced `bash`, `console`, `shell`, `sh` and `text` blocks (via
+   `fenced_blocks`), one command per line after joining `\` continuations and dropping a
+   leading `$ ` and a leading `uv run `:
+   - `test_every_pyntpot_command_parses`: each line starting `pyntpot ` is split with
+     `shlex` and `pyntpot.maps.cli.build_parser().parse_args(...)` accepts the rest
+     (argparse's exit is caught as a failure naming the page and line). The usage lines of
+     `cli.md`'s synopsis start `pyntpot [` or `pyntpot map [` and are skipped by that
+     shape. This covers the tutorial commands `first-map.md:131` and `:152`, which the
+     how-to-only `tests/architecture/test_how_to_commands.py` never reads.
+   - `test_every_example_command_names_a_script_and_its_options`: each line starting
+     `python examples/<path>.py` names a file that exists, and every token starting `-`
+     is an option string of one of that script's `add_argument` calls, read from its AST
+     (the script is never run). This checks S4's new
+     `place_card.py … --theme … --place ambleside --size 720` command beyond the script's
+     existence.
+   Prototyped in the plan's fix round: 23 commands (7 `pyntpot`, 16 example scripts,
+   README's continued command included) all pass today, so the test passes on arrival
+   unless S4 or S5 wrote a wrong command; a red is fixed on the page.
+1b. Review the remaining `\bcards?\b` on site pages: list each occurrence
+   (`grep -rnwE 'cards?' docs --include=*.md` minus excluded paths) in the PR description,
+   and check each against the glossary's definition of card (the frame, not the
+   picture). Four parallel slices judged "card meaning the picture" separately; this
+   puts one reader over all of it. Fix any that mean the picture.
 2. Delete `docs/issues/docs-gallery-nib-angles-caption-wrong.md`,
    `docs/issues/docs-style-fields-imports-and-reference-checks.md`,
    `docs/features/docs-glossary-in-place.md`, `docs/features/docs-tutorials-lead-on.md`,
@@ -744,8 +869,10 @@ the #163 style-group lines with the real public imports; and every item in the "
 session A" list of 006's plan. Each change starts from a test that fails for the reason
 given. No `src/` file is edited here either.
 
-Owned files: `tests/architecture/test_tutorials.py` and
-`tests/architecture/test_reference_pages.py` (moved to `tests/docs/`),
+Owned files: `tests/architecture/test_tutorials.py`,
+`tests/architecture/test_reference_pages.py`, `tests/architecture/test_readme.py` and
+`tests/architecture/test_docs_images.py` (moved to `tests/docs/`),
+`tests/architecture/test_how_to_commands.py` (deleted, subsumed),
 `tests/docs/test_tutorial_quotes.py`, `tests/docs/test_reference_values.py` (the brush
 import and the group-line check), `tests/docs/test_glossary.py` (one test),
 `tests/docs/test_docs_links.py` (new), `tests/docs/test_retired_words.py`,
@@ -783,10 +910,18 @@ Steps:
    `tests/docs/test_reference_pages.py`, `test_label_plate_files_and_sidecar_keys_are_named`
    becomes `test_nib_plate_files_and_sidecar_keys_are_named` and its docstring (line 168
    at `03cf136`) says "Both nib plates". `examples/brush_sheet.py:16`'s docstring names
-   `tests/docs/test_reference_pages.py`. Done when `tests/architecture/` holds neither
-   file, `grep -rn "architecture/test_tutorials\|architecture/test_reference_pages"`
-   outside `specs/` and `docs/issues/` finds nothing, and both moved files pass under the
-   `docs-tests` hook.
+   `tests/docs/test_reference_pages.py`. The same reason ("they check prose, not
+   architecture") moves two more, unchanged: `git mv` `test_readme.py` and
+   `test_docs_images.py` to `tests/docs/` (both import only from `support`). Delete
+   `tests/architecture/test_how_to_commands.py`: S7's `test_docs_commands.py` parses
+   every `pyntpot` command on every site page, the how-to pages included, with the same
+   parser. `tests/architecture/test_reference_keys.py` stays: it reads `src/` modules
+   through `tests/architecture/_ast_checks.py` and checks that code's `Source:` citations
+   against `references.md`'s keys, a code-side contract, and 006 edits it. Done when
+   `tests/architecture/` holds none of the four moved or deleted files,
+   `grep -rnE "architecture/test_(tutorials|reference_pages|readme|docs_images|how_to_commands)"`
+   outside `specs/` and `docs/issues/` finds nothing (repoint any docstring or note that
+   names them), and the moved files pass under the `docs-tests` hook.
 3. **Repoint this suite's imports** to 006's modules: `tests/docs/test_reference_values.py`
    imports `BRUSH_TREATMENTS`, `BRUSH_COLOURS` and `PEN_ROWS` from
    `pyntpot.ink.brush_sheet`, as the moved `test_reference_pages.py` does. Green before
@@ -826,7 +961,8 @@ Steps:
    `test_a_quoted_signature_lists_every_parameter` stays green on line 32.
 6. **The glossary, after 006.** Red: in `TestTheGlossary`, add
    `test_in_the_code_names_the_exported_name_where_there_is_one`: for each dotted path in
-   an "In the code" cell that resolves to a class, function or constant (not a module),
+   an "In the code" cell that `resolve_dotted` resolves to a class, function or constant
+   (not a module),
    if some layer package's `__all__` binds the same object, the cell must name it as
    `pyntpot.<layer>.<name>`. At the branch's base it passes; after the rebase it fails on
    the private paths to names ADR 0068 exports. Green, in `GLOSSARY.md`:
@@ -856,7 +992,10 @@ Steps:
    `tests/docs/test_docs_links.py::test_every_repository_link_names_a_file_on_the_branch`:
    on every site page and `README.md`, each link to
    `https://github.com/findlaywebb/pyntpot/blob/main/<path>` (fragment dropped) names a
-   path that exists under `REPO_ROOT`. Every such link resolves at the branch's base;
+   file that exists under `REPO_ROOT`, and each link to `…/tree/main/<path>` names a
+   directory that exists (the gallery's Places headings, `gallery.md:247-271`,
+   `first-map.md:23` and `write-a-theme.md:54` link `tree/main/`). Every such link
+   resolves at the branch's base;
    after the rebase it fails on `docs/how-to/self-host-providers.md:9`, whose note
    (`maps-public-provider-protocols.md`) 006 deleted. Green:
    - `self-host-providers.md` lines 7 to 9: "Writing a provider of your own works too:
@@ -892,7 +1031,7 @@ Steps:
     ready.
 
 Done: `uv run pytest tests/docs -q` green with 006 in; `tests/architecture/` holds no
-docs test; every group line names its package; the strict build green; the PR is ready
+docs-prose test (only `test_reference_keys.py`, a code-side contract, reads docs there); every group line names its package; the strict build green; the PR is ready
 with `Closes #65`, `Closes #162`, `Closes #163`, `Closes #172`, `Closes #176`.
 
 ## Parallelism
@@ -901,7 +1040,7 @@ with `Closes #65`, `Closes #162`, `Closes #163`, `Closes #172`, `Closes #176`.
 | --- | --- | --- |
 | 1 | S0 | none (alone) |
 | 2 | S1, S2, S3, S4, S5, S6 | none: each owns its files above; `mkdocs.yml` and `CONTRIBUTING.md` are S0's then S1's, never concurrent |
-| 3 | S7 | merges wave 2 |
+| 3 | S7 | merges wave 2; owns every red the merge raises, fixed in the page it names |
 | 4 | S8 | after 006 merges; owns the files held back from S0, S1, S4 and S7 |
 
 Cross-slice contracts inside wave 2: S4's first-map caption follows S3's caption rule
@@ -923,8 +1062,9 @@ Before 006 merges (S0 to S7): `GLOSSARY.md`; `mkdocs.yml`; `.pre-commit-config.y
 `tests/golden/test_places.py`, `tests/unit/maps/test_example_themes.py` (the key);
 the notes S7 deletes and files.
 
-After 006 merges (S8): `tests/architecture/test_tutorials.py` and
-`test_reference_pages.py` moved to `tests/docs/`; `docs/architecture.md` (one sentence);
+After 006 merges (S8): `tests/architecture/test_tutorials.py`,
+`test_reference_pages.py`, `test_readme.py` and `test_docs_images.py` moved to
+`tests/docs/`; `tests/architecture/test_how_to_commands.py` deleted; `docs/architecture.md` (one sentence);
 `docs/features/docs-missing-how-tos.md` and `docs-examples-housekeeping.md` (one line
 each, and the #174 paragraph); `examples/brush_sheet.py` (one docstring sentence); the
 test docstrings and one test name listed in S8 step 9; and second edits to
@@ -938,7 +1078,8 @@ test docstrings and one test name listed in S8 step 9; and second edits to
   word sits. S8's scan reports a miss to the orchestrator rather than fixing it.
 - `tests/architecture/**` before 006 merges, with no exception: 006 owns it and edits
   `test_reference_pages.py`, `test_site.py` and `test_reference_keys.py`. After it merges,
-  S8 moves `test_tutorials.py` and `test_reference_pages.py` out and touches nothing else
+  S8 moves `test_tutorials.py`, `test_reference_pages.py`, `test_readme.py` and
+  `test_docs_images.py` out, deletes `test_how_to_commands.py`, and touches nothing else
   there.
 - `docs/reference/{pyntpot,ink,letters,maps}.md` (directives and dotted paths) and the
   "Implemented in" lines of `docs/explanation/references.md`: 006 fixes them with its
@@ -948,7 +1089,10 @@ test docstrings and one test name listed in S8 step 9; and second edits to
 - The notes 006's S8 edits or deletes (its plan lists them), except the two lines and the
   #174 paragraph S8 adds after 006 has merged.
 - `docs/features/ink-public-wash-options.md` (#73) and every other note not named above.
-- Every example's code lines, `tests/golden/**` pins and masters,
+- Every example's code lines, with one exception: S5 changes `examples/place_card.py:69`
+  to read the `landmarks` key (`entry.get("landmarks", [])`), together with the key
+  in `examples/places.toml`; no picture changes, because the painter never reads the
+  key's name. Also left alone: `tests/golden/**` pins and masters,
   `tests/golden/make_docs_images.py`, the image registry's entries: no image moves or is
   added.
 - `docs/decisions/**`: no ADR changes; accepted ADRs are history.
@@ -961,8 +1105,10 @@ test docstrings and one test name listed in S8 step 9; and second edits to
   forms get a tooltip, and the everyday-word list guards it.
 - **Concurrent edits with 006.** No pre-006 slice edits a file 006's plan edits (the
   overlap table under "Slices"); the one textual conflict, `GLOSSARY.md`, is resolved in
-  S8 step 1 by taking this branch's file and re-applying 006's three facts. If 006's plan
-  changes after this one is reviewed, rerun the overlap grep before S8.
+  S8 step 1 by taking this branch's file and re-applying 006's three facts. 006's plan is
+  being rewritten in its own fix round while this one is reviewed, so S8 reruns the
+  overlap grep against the merged 006 on `main` (its actual diff), not against any
+  version of 006's plan.
 - **006 slips or changes scope.** S0 to S7 stay true at the base whatever 006 does, but
   the PR stays a draft until S8. If ADR 0068 is amended (a name not exported, a different
   rename), S8's exact lines change with it; the S8 tests (the required `, from` part, the
@@ -974,3 +1120,48 @@ test docstrings and one test name listed in S8 step 9; and second edits to
   now: fixed by copying the script's text into the page, never the reverse.
 - **Snippets path**: `auto_append` resolves from the working directory, so the build runs
   from the repo root, as CI does; `check_paths: true` fails loudly otherwise.
+
+## Response to review 1
+
+Every finding was checked against the worktree at `7b61165` before the plan changed. None
+was wrong. The blockers and should-fixes were confirmed as follows.
+
+Blockers, all fixed:
+
+1. **Index order and `Next:`.** Confirmed: `tutorials/index.md:8` and the series index's
+   first bullet already link the pages S4's `Next:` lines name. S0's test now keeps each
+   linked page at its first occurrence only. "Same section" now means an exact
+   `NavEntry.sections` match, plus each direct subsection's index page, so a
+   subsection's pages belong to its own index. This is stricter than the review's
+   proposal: Tutorials must also list Painting with Python's index, which it does.
+2. **Block marker.** Confirmed: `curves.md` (7 blocks) and `fractals.md` (13 blocks) leave
+   a blank line between marker and fence. `marker` is now the nearest preceding non-blank
+   line when that line is an HTML comment.
+3. **CLI synopsis.** Confirmed at 80 and 200 columns. Each parser's usage, and each
+   synopsis line, has every whitespace run (newlines included) collapsed to one space.
+   That is width-independent, so the test forces no width: forcing one would need
+   environment config or a `src/` change.
+4. **Say instead.** Each "Say instead" now has to end in a term as a whole word, so the
+   test and the data agree. The data stays as the spec words it ("centreline trace", not
+   "trace (centreline trace)").
+5. **#162 numbers.** Re-prototyped: 22 clauses across all current captions, and only both
+   clauses of `gallery.md:221` fail. Adopted as the review proposes, with the clause
+   boundaries written out. The spec's criterion now matches.
+
+Should-fixes:
+
+- Adopted: 1 (blank-line abbreviations, the API page in the `<abbr` check, and a measured
+  build-time budget in S1's done criteria: 2.29 s today, under 5 s after); 2 (gallery
+  reorder step); 3 (`resolve_dotted` in S0, contributor paths checked in S1,
+  `Term.code` as bare names); 4 (example code carve-out); 5 (all three `pictures.md`
+  details); 6 (`validation:` before `nav:`, asserted); 7 (indented fences dedented by
+  the fence indent); 8 (S7 owns every post-merge red); 9 (`test_docs_commands.py` in
+  S7, prototyped green on 23 commands; S8 deletes the how-to-only test); 10
+  (`tree/main/`); 11 (`includes/` exclusion asserted); 12 (S8 moves
+  `test_readme.py` and `test_docs_images.py` too).
+- Partly adopted, 12: `test_reference_keys.py` stays in `tests/architecture/`. It reads
+  `src/` through `_ast_checks.py` and checks code citations against `references.md`, a
+  code-side contract, and 006 edits it.
+- Consider items, all adopted: S7 lists and reviews every remaining `card`; S1 guards
+  against `’` on site pages; "seven" non-index tutorial pages (plan and tasks); S8 reruns
+  the overlap grep against the merged 006, not its plan.
