@@ -4,7 +4,10 @@ Key types: `FileDiff`, one image's status, measurement and review-image paths; `
 what was compared and every `FileDiff`, in path order. `Summary.to_json` and
 `Summary.from_json` are the machine-readable form `diff_images.py` writes as
 `summary.json`; `markdown` renders a summary as the Markdown a PR body or `summary.md`
-holds, with the image links a caller's `link` makes from each review image's path.
+holds, with the image links a caller's `link` makes from each review image's path. Each
+review image is an HTML `<img>` tag on its own line between blank lines, not Markdown image
+syntax, which the GitHub MCP tools mangle when they post a PR body; the diff image is shown
+`width` pixels wide, the crop image at its natural size, so its pixels stay whole.
 
 Statuses: `changed` (both sides hold the image and some pixel differs), `added` (only the
 later side holds it), `removed` (only the earlier side). An image whose pixels are equal is
@@ -14,6 +17,7 @@ directory, with `/` separators.
 It does not measure, draw, or read or write files.
 """
 
+import html
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -29,6 +33,9 @@ _STATUSES: tuple[Status, ...] = ("changed", "added", "removed")
 #: A PR body shows each image's review images open up to this many changed images.
 OPEN_LIMIT = 6
 
+#: A PR body shows each diff image this many pixels wide.
+DIFF_WIDTH = 720
+
 
 @dataclass(frozen=True)
 class FileDiff:
@@ -39,7 +46,7 @@ class FileDiff:
         status: `changed`, `added` or `removed`.
         measurement: How it changed; `None` unless `changed`.
         diff_image: The diff image's path under the output directory, if drawn.
-        crop_image: The 1:1 crop image's path under the output directory, if drawn.
+        crop_image: The crop image's path under the output directory, if drawn.
     """
 
     path: str
@@ -149,8 +156,19 @@ def _counts(files: tuple[FileDiff, ...]) -> str:
     return ", ".join(f"{n} {status}" for status, n in counted.items())
 
 
-def _review_images(diff: FileDiff, link: Callable[[str], str], *, opened: bool) -> list[str]:
-    """Return one changed image's collapsible block of review images."""
+def image_tag(src: str, alt: str, width: int | None = None) -> str:
+    """Return an HTML `<img>` tag; with `width` it is shown that many pixels wide.
+
+    Both attributes are HTML-escaped, so a quote in a path cannot end one early.
+    """
+    sized = "" if width is None else f' width="{width}"'
+    return f'<img src="{html.escape(src)}" alt="{html.escape(alt)}"{sized}>'
+
+
+def _review_images(
+    diff: FileDiff, link: Callable[[str], str], *, opened: bool, width: int
+) -> list[str]:
+    """Return one changed image's collapsible block of review images, each tag on its own line."""
     found = diff.measurement
     extent = "" if found is None else f": {found.extent}, {found.changed_fraction:.6f}"
     lines = [
@@ -159,19 +177,22 @@ def _review_images(diff: FileDiff, link: Callable[[str], str], *, opened: bool) 
         "",
     ]
     if diff.diff_image is not None:
-        lines += [f"![{diff.path}: before, after and difference]({link(diff.diff_image)})", ""]
+        alt = f"{diff.path}: before, after and difference"
+        lines += [image_tag(link(diff.diff_image), alt, width), ""]
     if diff.crop_image is not None:
-        lines += [f"![{diff.path}: the most-changed region at 1:1]({link(diff.crop_image)})", ""]
+        alt = f"{diff.path}: the most-changed region, close up"
+        lines += [image_tag(link(diff.crop_image), alt), ""]
     return [*lines, "</details>", ""]
 
 
-def markdown(summary: Summary, link: Callable[[str], str]) -> str:
+def markdown(summary: Summary, link: Callable[[str], str], width: int = DIFF_WIDTH) -> str:
     """Return the summary as Markdown: a heading, a table, then each changed image's review images.
 
     Args:
         summary: The summary to render.
         link: Turns a review image's path under the output directory into the link the
             Markdown shows (a relative path for `summary.md`, a URL for a PR body).
+        width: How many pixels wide each diff image is shown; crop images keep their size.
 
     Returns:
         The Markdown, ending in a newline.
@@ -197,5 +218,5 @@ def markdown(summary: Summary, link: Callable[[str], str]) -> str:
     ]
     shown = [diff for diff in summary.files if diff.diff_image is not None]
     for diff in shown:
-        lines += _review_images(diff, link, opened=len(shown) <= OPEN_LIMIT)
+        lines += _review_images(diff, link, opened=len(shown) <= OPEN_LIMIT, width=width)
     return "\n".join(lines)

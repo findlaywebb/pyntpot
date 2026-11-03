@@ -6,9 +6,16 @@ import pytest
 
 from pyntpot.maps.lettering.label import TIER_LANDMARK, TIER_RIVER, Label
 from pyntpot.maps.lettering.placement import place
+from pyntpot.maps.lettering.placement_along import ink_band
 from pyntpot.maps.lettering.placement_costs import Backdrop
 from pyntpot.maps.lettering.placement_leaders import uncross_leaders
-from pyntpot.maps.lettering.placement_water import WASH_REACH_EM, Water, on_water, water_cost
+from pyntpot.maps.lettering.placement_water import (
+    WASH_REACH_EM,
+    Water,
+    ink_on_water,
+    on_water,
+    water_cost,
+)
 
 from support.lettering import flat_dark, map_card
 from support.measure import flat_measure
@@ -173,3 +180,38 @@ def test_the_water_share_is_the_one_pinned(
     assert on_water(box, water, 14.0) == washed
     assert on_water(box, water, 0.0) == bare
     assert water_cost(box, water, 14.0) == cost
+
+
+class TestInkOnWater:
+    """The share of the points over a name's ink that lie on water."""
+
+    def test_points_under_a_stroke_are_on_water(self) -> None:
+        """Half the points on a stream's stroke, half on the paper beside it."""
+        water = Water([], [([(100.0, 0.0), (100.0, 300.0)], 4.0)])
+        points = [(99.0, 150.0), (102.0, 160.0), (120.0, 150.0), (140.0, 160.0)]
+        assert ink_on_water(points, water) == 0.5
+
+    def test_points_on_an_island_are_dry(self) -> None:
+        """A point in the lake is on water; one on its island is not."""
+        water = Water([LAKE, ISLAND])
+        assert ink_on_water([(220.0, 110.0), (260.0, 150.0)], water) == 0.5
+
+    def test_no_points_and_no_water_price_nothing(self) -> None:
+        """An empty band, or a card with no water, is dry."""
+        assert ink_on_water([], Water([LAKE])) == 0.0
+        assert ink_on_water([(220.0, 110.0)], Water()) == 0.0
+
+
+def test_a_river_name_set_along_its_water_keeps_its_letters_off_a_second_channel():
+    """The Cherwell runs in two channels: its name is set beside one, clear of the other."""
+    channel = [(float(x), 150.0) for x in range(20, 381, 10)]
+    # The second channel runs beside the first, close enough that a name lifted off the
+    # first to that side is written across it.
+    other = [(float(x), 128.0) for x in range(20, 381, 10)]
+    water = Water([], [(channel, 3.0), (other, 3.0)])
+    river = Label(name="Cherwell", kind="river", px=200.0, py=150.0, tier=TIER_RIVER, size=14.0)
+    river.baseline = channel
+    river.feature_px = 6.0
+    _placed(river, water)
+    assert not river.flat, "the straight channel was not written along"
+    assert ink_on_water(ink_band(river, river.window, river.lift), water) == 0.0

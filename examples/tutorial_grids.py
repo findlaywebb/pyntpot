@@ -122,15 +122,12 @@ def _letter(
     nib: NibStyle,
     seed: int = SEED,
     ground: np.ndarray | None = None,
-    pool: float = 0.5,
 ) -> np.ndarray:
     """Letter the settings over `img` with the nib and return the result.
 
     The nib plate is painted at `NIB_SCALE` times the size of `img`, then brought down to it
     with Lanczos, and laid over `img` by its alpha. `ground` is how dark the paint is under
-    each pixel of `img`, as the nib's backing wash reads it; none means bare paper. `pool` is
-    `BrushStyle.pen_pool_radius_frac`: the default 0.5 is the library's, and a pen over 2 pixels
-    wide wants about 0.15, or its ink pools into a grey halo round the word.
+    each pixel of `img`, as the nib's backing wash reads it; none means bare paper.
 
     Raises:
         RuntimeError: When the hand wrote no marks, so there is no plate to lay.
@@ -145,7 +142,7 @@ def _letter(
     dark = np.asarray(Image.fromarray(dark).resize((big_w, big_h), Image.Resampling.BILINEAR))
     canvas = Canvas(0, 0, big_w, big_h, big_w, big_h)
     surface = NibSurface(canvas, NIB_SCALE, dark, GRAN_PX * NIB_SCALE)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(pen_pool_radius_frac=pool), PaperStyle())
+    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
     with tempfile.TemporaryDirectory() as scratch:
         written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
         if written is None:
@@ -284,7 +281,7 @@ def _nib_grid() -> np.ndarray:
             nib = NibStyle(label_pen_angle_deg=angle, label_pen_thin=thin, label_pen_width_px=2.0)
             setting = Setting(NIB_NAME, 50.0, anchor=(w / 2, 0.68 * ch), align="middle", wash=False)
             cell = out[y : y + ch, x : x + w]
-            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib, pool=0.15)
+            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib)
     return _labels(out, boxes, angles, thins)
 
 
@@ -298,7 +295,7 @@ def _lettering_grid() -> np.ndarray:
             nib = NibStyle(label_pen_width_px=1.8)
             seed = 3 * r + c + 1
             cell = out[y : y + ch, x : x + w]
-            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib, seed, pool=0.15)
+            out[y : y + ch, x : x + w] = _letter(cell, [setting], nib, seed)
     return out
 
 
@@ -318,7 +315,7 @@ def _composition_cell(w: int, h: int, seed: int, *, backing: bool) -> np.ndarray
     )
     setting = Setting(NAME, 30.0, anchor=(w / 2, 0.52 * h), align="middle", wash=backing)
     nib = NibStyle(label_pen_width_px=1.8)
-    return _letter(painted, [setting], nib, seed, np.maximum(density, stroke), pool=0.15)
+    return _letter(painted, [setting], nib, seed, np.maximum(density, stroke))
 
 
 def _composition_grid() -> np.ndarray:

@@ -74,7 +74,13 @@ def seat_notes(
     boxes = list(taken)
     for lb in notes:
         terms = Terms(
-            ground.card, ground.dark, boxes, ground.roads, [(ground.thin, 1.0)], ground.water
+            ground.card,
+            ground.dark,
+            boxes,
+            ground.roads,
+            [(ground.thin, 1.0)],
+            ground.water,
+            ground.segments,
         )
         best_flat(lb, terms, measure_fn, [_form(lb, ground.card.w, measure_fn)])
         if lb.box is None or not box_on_paper(lb.box, ground.card):

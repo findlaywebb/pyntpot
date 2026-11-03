@@ -26,8 +26,8 @@ up to:
 - **The leader is barely priced.** A seat is charged its rung's distance, not the length
   of the leader drawn to it, which is longer on a diagonal; and a pixel of separation
   (0.55) is worth more than a pixel of leader (0.4), so in clear paper the far rung wins.
-  A leader is priced for the boxes it cuts (`leader_crossings`, `placement_costs.py:136`)
-  and nothing else: not the route, not the water. It is priced as a straight segment but
+  A leader is priced for the boxes it cuts (`leader_crossings`) and, since ADR 0064, the
+  route it crosses past its pin (`leader_route_crossings`), but not the water. It is priced as a straight segment but
   drawn bent, by a random fraction of its run (`lettering_furniture.leader`), so a long
   leader drawn can stray from the one priced.
 - **The backing wash runs under the furniture.** Pins and leaders go through the nib with
@@ -37,8 +37,9 @@ up to:
 - **Nothing says why a name went where it did.** Tuning means editing a constant,
   repainting and comparing by eye; the before-and-after crops for #53 were cut by hand
   with PIL in a scratchpad.
-- #52 stays open for "Cherwell" written along its own stroke and "Magdalen Bridge" set
-  across dense roads on Oxford.
+- #52 stays open for "Magdalen Bridge" set across dense roads on Oxford; "Cherwell" written
+  over its own channels was fixed by pricing the water under a name set along a line
+  (ADR 0065).
 
 `tests/golden/test_places.py:212` now asserts, for every focus place, that no two leaders
 cross and that no flat name sits on a lake. Nothing measures how long the leaders are, how
@@ -56,8 +57,8 @@ placement quality, tuning facilities, and a tool to place names by hand.
 - **Price a wrap against the best one-line seat**, not as a flat 26: a second line only
   when the best one-line seat is materially worse. Fewer needless wraps; a long name in a
   tight spot loses its narrow fallback.
-- **Price the leader's crossings of water and the route**, as `leader_crossings` does for
-  boxes. Grasmere's and Glaslyn's leaders cross less water; but a lake name pinned in its
+- **Price the leader's crossings of water**, as `leader_crossings` does for boxes and
+  `leader_route_crossings` for the route (ADR 0064). Grasmere's and Glaslyn's leaders cross less water; but a lake name pinned in its
   lake always crosses some shore, so the price has to allow its own water or move its pin
   to the shore.
 - **Take the backing wash off pins and leaders** (`wash=False` in `_furniture`). No band
@@ -68,8 +69,11 @@ placement quality, tuning facilities, and a tool to place names by hand.
   near each one that moved. One tier's change then settles locally instead of cascading;
   it costs time per card, and a repair needs a bound so it terminates. Decided: behind a
   switch.
-- **#52's two cases**: offset a name set along water clear of its stroke and price the water
-  for it, and scale the road cost by how many roads the style draws.
+- **#52's remaining case**: price a seat by how many roads lie under it, not only whether
+  one does. Tried in ADR 0065's window (the first road in full, each further one at half,
+  three at most): every seat within `LEADER_RUNGS` of "Magdalen Bridge" lies across three
+  streets or on the water, so it moved no name there and only shifted names elsewhere; it
+  needs seats further out (a longer leader) to pay.
 
 *Tuning facilities*:
 
@@ -139,8 +143,8 @@ adopt:
   which shared term moved it.
 
 Not in it: what is named (the picks), the hand's lettering and the nib, where a span's
-bracket is drawn (`place_spans`), and the backing wash's own shape (ADR 0066). Related: #50 and
-#51, which this would likely close or narrow.
+bracket is drawn (`place_spans`), and the backing wash's own shape (ADR 0066). Related: #50, which
+this would likely close or narrow.
 
 **Decided** (maintainer, 2026-11-02):
 

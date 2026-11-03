@@ -19,8 +19,10 @@ place. It does not decide what is written, where, or in which ink a class of
 feature takes (the marks arrive with their ink), and it builds no dark grid:
 the caller hands the grid as an array.
 
-Invariants: the same marks, surface and groups write the same pixels; a mark
-of fewer than two points is skipped; with nothing to draw no file is written.
+Invariants: the same marks, surface and groups write the same pixels; each mark's
+bristles are drawn from a generator keyed by the label seed and the mark's own points
+(`ink.pad.InkPad.lay`), so a mark that changes moves no other mark; a mark of fewer than
+two points is skipped; with nothing to draw no file is written.
 """
 
 import math
@@ -280,7 +282,7 @@ def nib_plate(
         return None
 
     nib, paper, pad_style = groups.nib, groups.paper, groups.brush
-    rng = np.random.default_rng(groups.hand.label_seed)
+    seed = groups.hand.label_seed
     layers: list[tuple[np.ndarray, np.ndarray]] = []
     cover = np.zeros((rh, rw), F32)
     dark = surface.dark
@@ -293,7 +295,7 @@ def nib_plate(
         pad = InkPad((rh, rw), base, pad_style)
         pad.lay(
             [(b, line) for b, line, _p, _w in items],
-            rng,
+            seed,
             profiles=[prof for _b, _l, prof, _w in items],
         )
         dens = pad.read(base, sheet)
@@ -307,7 +309,7 @@ def nib_plate(
                 keep = InkPad((rh, rw), base, pad_style)
                 keep.lay(
                     [(b, line) for b, line, _p, w in items if w],
-                    rng,
+                    seed,
                     profiles=[prof for _b, _l, prof, w in items if w],
                 )
                 cover = np.maximum(cover, keep.read(base, sheet))

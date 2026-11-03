@@ -4,7 +4,7 @@ import json
 
 import pytest
 from golden.diff_measure import Measurement
-from golden.diff_report import OPEN_LIMIT, FileDiff, Summary, markdown, table_row
+from golden.diff_report import OPEN_LIMIT, FileDiff, Summary, image_tag, markdown, table_row
 
 LOCAL = Measurement(
     width=1200,
@@ -97,9 +97,34 @@ class TestMarkdown:
     def test_review_images_are_linked_through_the_callers_link(self) -> None:
         """Each review image's path goes through `link`, so a PR body can carry URLs."""
         text = markdown(Summary("a", "b", (_changed("x.png"),)), lambda path: f"https://h/{path}")
-        assert "![x.png: before, after and difference](https://h/x.png.diff.png)" in text
-        assert "![x.png: the most-changed region at 1:1](https://h/x.png.crop.png)" in text
+        diff_tag = '<img src="https://h/x.png.diff.png" alt="x.png: before, after and difference" width="720">'
+        crop_tag = (
+            '<img src="https://h/x.png.crop.png" alt="x.png: the most-changed region, close up">'
+        )
+        assert f"\n\n{diff_tag}\n\n" in text
+        assert f"\n\n{crop_tag}\n\n" in text
         assert "1 changed, 0 added, 0 removed" in text
+
+    def test_no_markdown_image_syntax_survives(self) -> None:
+        """Review images are `<img>` tags only, the one form the PR-posting tools leave intact."""
+        text = markdown(Summary("a", "b", (_changed("x.png"),)), str)
+        assert "![" not in text
+        assert text.count("<img ") == 2
+
+    def test_the_diff_image_width_is_the_callers(self) -> None:
+        """A given width sizes the diff image; the crop image stays at its natural size."""
+        text = markdown(Summary("a", "b", (_changed("x.png"),)), str, width=480)
+        assert (
+            '<img src="x.png.diff.png" alt="x.png: before, after and difference" width="480">'
+            in text
+        )
+        assert '<img src="x.png.crop.png" alt="x.png: the most-changed region, close up">' in text
+
+    def test_a_tag_escapes_its_attributes(self) -> None:
+        """A quote or angle bracket in a path cannot end an attribute or the tag early."""
+        assert image_tag('a"b<c>.png', 'say "x"', 10) == (
+            '<img src="a&quot;b&lt;c&gt;.png" alt="say &quot;x&quot;" width="10">'
+        )
 
     def test_many_changed_images_are_collapsed(self) -> None:
         """Up to the open limit the blocks start open; past it they start collapsed."""
