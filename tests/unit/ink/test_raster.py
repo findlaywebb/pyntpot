@@ -91,3 +91,62 @@ class TestFillCoverage:
         """A NaN or infinite point is refused before any crossing is counted."""
         with pytest.raises(ValueError, match="not finite"):
             fill_cov([[(1.0, 1.0), (bad, 2.0), (3.0, 9.0)]], self._canvas())
+
+
+class TestDeformRingExactly:
+    """The deformation's own draws, pinned, and the cases it hands back unchanged."""
+
+    SQUARE = ((0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0))
+
+    def test_a_square_deforms_to_the_pinned_points(self):
+        """Three rounds on a square, the cap binding, give the pinned points."""
+        out = deform_ring(self.SQUARE, (9, 0.26, 3, 0.55, 4.0, 0.5))
+        assert len(out) == 32
+        assert out[1].tolist() == [12.414456646512129, 4.115518267727979]
+        assert out[5].tolist() == [62.196521989560246, -0.6043723374708556]
+        assert out[-1].tolist() == [-0.07175802582150825, 12.70572319907893]
+        assert float(out.sum()) == 3220.668229215158
+
+    def test_a_ring_of_sub_metre_edges_deforms_to_the_pinned_points(self):
+        """Edges under a metre are divided by their own length, not by a metre."""
+        small = [(0.0, 0.0), (0.6, 0.0), (0.6, 0.6), (0.0, 0.6)]
+        out = deform_ring(small, (4, 0.26, 2, 0.55, 16.0, 0.3))
+        assert len(out) == 16
+        assert out[1].tolist() == [0.12784089080951924, 0.1338466529964048]
+        assert float(out.sum()) == 10.473641018245548
+
+    @pytest.mark.parametrize(
+        ("ring", "deform"),
+        [
+            (SQUARE, (9, 0.26, 0, 0.55, 16.0, 0.5)),
+            (SQUARE, (9, 0.26, 3, 0.55, 16.0, 200.0)),
+            (((0.0, 0.0), (100.0, 0.0)), (9, 0.26, 3, 0.55, 16.0, 0.5)),
+        ],
+        ids=["no-rounds", "edges-under-the-stop", "two-points"],
+    )
+    def test_what_is_not_deformed_comes_back_as_it_was(self, ring, deform):
+        """No rounds, edges already under the stop, or too few points leave the ring as given."""
+        assert np.array_equal(deform_ring(ring, deform), np.asarray(ring, float))
+
+    def test_a_negative_amount_only_divides_the_edges(self):
+        """A variance below zero is none: each new point is its edge's midpoint."""
+        out = deform_ring(self.SQUARE, (9, -0.5, 1, 0.55, 16.0, 0.5))
+        assert out.tolist() == [
+            [0.0, 0.0], [50.0, 0.0], [100.0, 0.0], [100.0, 50.0],
+            [100.0, 100.0], [50.0, 100.0], [0.0, 100.0], [0.0, 50.0],
+        ]  # fmt: skip
+
+    def test_a_triangle_is_deformed(self):
+        """Three points are enough to enclose something, so a triangle is deformed."""
+        tri = [(0.0, 0.0), (100.0, 0.0), (50.0, 80.0)]
+        assert len(deform_ring(tri, (9, 0.26, 1, 0.55, 16.0, 0.5))) == 6
+
+    def test_a_ring_at_the_point_ceiling_is_doubled_once_more_and_past_it_not(self):
+        """At the ceiling a ring still doubles; one point past it comes back as it was."""
+
+        def ring(n: int) -> list[tuple[float, float]]:
+            return ring_of(n, 4000.0)
+
+        assert len(deform_ring(ring(24000), (9, 0.26, 1, 0.55, 16.0, 0.5))) == 48000
+        past = ring(24001)
+        assert np.array_equal(deform_ring(past, (9, 0.26, 1, 0.55, 16.0, 0.5)), np.asarray(past))

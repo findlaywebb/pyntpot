@@ -6,10 +6,75 @@ import numpy as np
 import pytest
 
 from pyntpot.ink.keyed import uniform_at
-from pyntpot.ink.wash import bloom_radius, highest
+from pyntpot.ink.sheet import Sheet
+from pyntpot.ink.wash import Blooms, bloom, bloom_radius, highest
 
 #: Lots with ties at the cut and above it: the cases a bare partition gets wrong.
 TIED = np.array([0.5, -1.0, 0.5, 2.0, 0.5, -3.0, 2.0, 0.5])
+
+
+#: Pinned blooms on `plate()`: the settings, then the density's sum and min after.
+PINNED = {
+    "four": ((5, 4, 0.17, 0.45, 0.45), 9712.473272539675, 0.05103231221437454),
+    "lift-past-one": ((5, 3, 0.17, 1.5, 0.45), 9245.935428768938, 0.0),
+    "radius-floor": ((5, 2, 0.01, 0.45, 0.45), 10580.063149034977, 0.13616839051246643),
+    "radius-ceiling": ((5, 2, 2.0, 0.45, 0.45), 10046.169436208904, 0.04963906109333038),
+    "one": ((5, 1, 0.17, 0.45, 0.45), 10310.253994897008, 0.08259120583534241),
+}
+
+
+def plate(h: int = 120, w: int = 160) -> tuple[np.ndarray, np.ndarray]:
+    """A wash's alpha and density: a block with bands at exactly 0.6 and 0.5, over waves."""
+    a = np.zeros((h, w), np.float32)
+    a[10:110, 10:150] = 1.0
+    a[10:110, 60:66] = 0.6
+    a[10:110, 90:96] = 0.5
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    dens = (0.55 + 0.4 * np.sin(xx / 9.0) * np.cos(yy / 13.0)).astype(np.float32)
+    return a, dens
+
+
+class TestBloomLaid:
+    """What `bloom` lays, pinned, and when it lays nothing."""
+
+    @pytest.mark.parametrize("name", PINNED, ids=PINNED.keys())
+    def test_the_blooms_lay_the_pinned_density(self, name: str):
+        """Seats, sizes, boxes, warps, fronts and the clip all show in the pinned sums."""
+        blooms, total, low = PINNED[name]
+        a, dens = plate()
+        bloom(dens, a, Sheet(120, 160, gran_px=6.0, seed=2), blooms)
+        assert float(dens.sum(dtype=np.float64)) == pytest.approx(total, rel=1e-7)
+        assert float(dens.min()) == pytest.approx(low, abs=1e-6)
+        assert float(dens.max()) == 1.0
+
+    @pytest.mark.parametrize(
+        ("blooms", "rows"),
+        [((5, 0, 0.17, 0.45, 0.45), 100), ((5, 3, 0.17, 0.45, 0.45), 7)],
+        ids=["no-count", "under-64-pixels"],
+    )
+    def test_no_count_or_too_little_wash_lays_nothing(self, blooms: Blooms, rows: int):
+        """A count of 0, or under 64 thick pixels, leaves the density as it was."""
+        a = np.zeros((120, 160), np.float32)
+        a[20 : 20 + rows, 20:29] = 1.0
+        dens = np.full((120, 160), 0.5, np.float32)
+        bloom(dens, a, Sheet(120, 160, gran_px=6.0, seed=2), blooms)
+        assert np.array_equal(dens, np.full((120, 160), 0.5, np.float32))
+
+    def test_sixty_four_thick_pixels_are_enough(self):
+        """A wash of exactly 64 thick pixels carries its bloom."""
+        a = np.zeros((60, 60), np.float32)
+        a[20:28, 20:28] = 1.0
+        dens = np.full((60, 60), 0.5, np.float32)
+        bloom(dens, a, Sheet(60, 60, gran_px=6.0, seed=2), (5, 1, 0.17, 0.45, 0.45))
+        assert not np.array_equal(dens, np.full((60, 60), 0.5, np.float32))
+
+    @pytest.mark.parametrize(("h", "laid"), [(4, False), (5, True)], ids=["4-rows", "5-rows"])
+    def test_a_box_under_five_pixels_is_skipped(self, h: int, laid: bool):
+        """A strip four rows tall has no room for a bloom's box; five rows has."""
+        a = np.ones((h, 200), np.float32)
+        dens = np.full((h, 200), 0.5, np.float32)
+        bloom(dens, a, Sheet(h, 200, gran_px=6.0, seed=2), (5, 2, 0.17, 0.45, 0.45))
+        assert (not np.array_equal(dens, np.full((h, 200), 0.5, np.float32))) is laid
 
 
 class TestBloomRadius:
@@ -73,3 +138,4 @@ class TestHighest:
         """The pick indexes an array, so it comes back as `int64` even when it holds all."""
         assert highest(TIED, 3).dtype == np.int64
         assert highest(TIED, 99).dtype == np.int64
+        assert highest(TIED, 0).dtype == np.int64

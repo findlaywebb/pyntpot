@@ -12,7 +12,7 @@ they bleed into each other and no boundary between two of them carries its own r
 outer silhouette of the land sits outside it and keeps the edge it should have.
 
 It does not paint the wood's texture or dabs, the relief or the sea. Each wash keys its
-blooms by its class (`PaintJob.bloom`) and each ring its deformation by its own points, so
+blooms by its class (`PaintJob.bloom`) and each ring its deformation by what it encloses, so
 neither depends on the classes or rings painted before it.
 """
 
@@ -89,7 +89,7 @@ def _label(job: PaintJob, stack: PlateStack, order: list[str]) -> None:
     A class is the union of its rings. They come wound as they were surveyed, so each
     is wound anticlockwise before the nonzero fill; otherwise a ring inside another and
     wound against it, such as a lawn inside its park, would cut a hole in the class.
-    They are wound after the deform, so a ring is keyed by its points as surveyed.
+    They are wound after the deform, so a ring is keyed by its outline as surveyed.
     """
     deform = _deform(job)
     for i, cls in enumerate(order, 1):

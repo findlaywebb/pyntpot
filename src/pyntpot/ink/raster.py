@@ -11,7 +11,8 @@ as pixels or as deformed metres.
 Invariants: `fill_cov` returns `float32` in 0 to 1 at the canvas's own size; `deform_rings`
 with no settings returns the rings it was given, unchanged; a ring's deformation is a pure
 function of the ring and the settings, because each ring draws from a generator keyed by
-its own points (`ink.keyed`), so deforming one ring differently moves no other ring.
+its own centroid and area (`ink.keyed.ring_key`), so deforming one ring differently moves
+no other ring.
 """
 
 from typing import Any

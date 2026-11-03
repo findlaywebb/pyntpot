@@ -3,6 +3,7 @@
 import math
 
 import numpy as np
+import pytest
 
 from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
@@ -51,6 +52,17 @@ class TestKeys:
         assert keyed_rng(7, "lake", 3).random() != first
         assert keyed_rng(7, "wood", 4).random() != first
 
+    def test_a_line_key_is_the_pinned_words(self):
+        """A line's two words are pinned, so its halfway point, grid and digest cannot drift."""
+        assert line_key(np.array([(0.0, 0.0), (80.0, 0.0)]), 1.0) == (
+            885644230248880606,
+            5709838475537992243,
+        )
+        assert line_key(np.array([(0.0, 0.0), (30.0, 0.0), (30.0, 50.0)]), 0.5) == (
+            12666373528499336266,
+            14387293118605953118,
+        )
+
     def test_a_line_is_named_by_its_points_rounded_to_the_grid(self):
         """A shift inside the grid or a finer sampling keeps the key; moving a cell changes it."""
         line = line_at(20.0, 10.0, 90.0, 40)
@@ -62,6 +74,10 @@ class TestKeys:
         bent[20, 1] += 9.0
         assert line_key(bent, 1.0) != line_key(line, 1.0)
         assert line_key(np.zeros((0, 2)), 1.0) == (0, 0)
+
+    def test_a_single_index_draws_as_it_does_in_a_field(self):
+        """One index on its own, as a numpy scalar, overflows quietly and draws its field value."""
+        assert float(uniform_at(7, np.uint64(2))) == 0.016788294528156167
 
     def test_a_draw_at_an_index_does_not_depend_on_the_others(self):
         """Drawing a field at fewer or reordered indices gives each index the same draw."""
@@ -100,6 +116,27 @@ class TestRingKeys:
         assert ring_key(flat, 1.0) == ring_key([(4.0, 5.0), (8.0, 5.0), (0.0, 5.0)], 1.0)
         assert ring_key(flat, 1.0) != ring_key([(0.0, 9.0), (4.0, 9.0), (8.0, 9.0)], 1.0)
         assert ring_key(np.zeros((0, 2)), 1.0) == (0, 0)
+
+    def test_a_sliver_with_area_is_centred_and_one_with_none_is_averaged(self):
+        """The cut between a ring with area and one without sits near no area at all.
+
+        A trapezoid 1000 m long and a hundred-thousandth of a metre wide still has area,
+        so its centroid names it; the same outline a ten-millionth wide is a line in all
+        but rounding, and its points' mean names it, as the exact line's does.
+        """
+        line = [(3000.0, 0.0), (3100.0, 0.0), (4000.0, 0.0), (3000.0, 0.0)]
+
+        def trapezoid(width: float) -> list[tuple[float, float]]:
+            return [(3000.0, 0.0), (3100.0, 0.0), (4000.0, width), (3000.0, width)]
+
+        assert ring_key(trapezoid(1e-7), 1.0) == ring_key(line, 1.0)
+        assert ring_key(trapezoid(1e-5), 1.0) != ring_key(line, 1.0)
+
+    def test_the_grid_is_the_cell_the_words_are_rounded_to(self):
+        """A shift inside a coarse cell keeps the key; the same shift across a fine one does not."""
+        square = np.array([(15.0, 15.0), (25.0, 15.0), (25.0, 25.0), (15.0, 25.0)])
+        assert ring_key(square + 3.0, 10.0) == ring_key(square, 10.0)
+        assert ring_key(square + 0.4, 0.5) != ring_key(square, 0.5)
 
     def test_a_small_nudge_renames_a_ring_less_often_than_its_points_would(self):
         """Points nudged by under 0.05 m rename far fewer rings than `line_key` would."""
@@ -229,3 +266,43 @@ class TestPadStreams:
         for nth in (0, 1):
             stamp(acc, line, brush, keyed_rng(91, *line_key(line, 1.0), nth))
         assert np.array_equal(pad.acc, acc)
+
+    def test_profiles_must_match_the_strokes(self):
+        """A width profile list shorter than the strokes is refused, not silently cut."""
+        style = BrushStyle(ink_ss=1)
+        brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
+        pad = InkPad((60, 300), brush, style)
+        with pytest.raises(ValueError, match="shorter"):
+            pad.lay(
+                [(brush, line_at(20.0, 20.0, 280.0)), (brush, line_at(40.0, 20.0, 280.0))],
+                91,
+                profiles=[None],
+            )
+
+    def test_joined_strokes_keep_each_its_own_brush(self):
+        """With joining on, ways are grouped by brush, so each is stamped with its own."""
+        h, w = 60, 300
+        style = BrushStyle(ink_ss=1, ink_joins=True)
+        wide, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
+        fine, _ = brush_from_id("MAJ2-a", 1.2, 2.0, style, "road_major")
+        first, second = line_at(15.0, 20.0, 280.0), line_at(45.0, 20.0, 280.0)
+        pad = InkPad((h, w), wide, style)
+        pad.lay([(wide, first), (fine, second)], 91)
+        acc = np.zeros((h, w), np.float32)
+        stamp(acc, first, wide, keyed_rng(91, *line_key(first, 1.0), 0))
+        stamp(acc, second, fine, keyed_rng(91, *line_key(second, 1.0), 0))
+        assert np.array_equal(pad.acc, acc)
+
+    @pytest.mark.parametrize(("tol", "joined"), [(0.0, False), (1.0, True)], ids=["off", "one-px"])
+    def test_a_join_tolerance_of_zero_joins_nothing(self, tol: float, joined: bool):
+        """Two ways meeting end to end are one stroke at a pixel's tolerance and two at none."""
+        h, w = 60, 300
+        style = BrushStyle(ink_ss=1, ink_joins=True, ink_join_tol_px=tol)
+        brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
+        left, right = line_at(30.0, 20.0, 150.0, 120), line_at(30.0, 150.0, 280.0, 120)
+        pad = InkPad((h, w), brush, style)
+        pad.lay([(brush, left), (brush, right)], 91)
+        apart = np.zeros((h, w), np.float32)
+        for line in (left, right):
+            stamp(apart, line, brush, keyed_rng(91, *line_key(line, 1.0), 0))
+        assert (not np.array_equal(pad.acc, apart)) is joined

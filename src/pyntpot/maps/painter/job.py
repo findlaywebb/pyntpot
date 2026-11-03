@@ -10,7 +10,7 @@ strokes.
 Only the dither generator is shared: the wood and the plates draw from it in one
 fixed order and a fixed amount for a given card, so its state at any point of a
 painting is the same on every run. Everything laid item by item draws from a
-generator keyed by the item instead (`ink.keyed`): each cover ring by its points, each
+generator keyed by the item instead (`ink.keyed`): each cover ring by what it encloses, each
 stroke by its points, each wash's blooms by the wash's name (`PaintJob.bloom`) and
 their centres. So a change to one item, such as a coast moved by a sub-pixel, moves only
 that item's pixels.
