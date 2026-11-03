@@ -33,7 +33,7 @@ tutorial. The command line has no route-ink option, so use a script or a
    `Style` is frozen, so `with_route_ink` does not change the style you call it on. The
    stages need the new one it returns.
 
-3. Run the script. If you had already painted the card in the old ink, the plates in the
+3. Run the script. If you had already painted the map in the old ink, the plates in the
    cache are still current. `paint` logs that it repainted nothing, and the run takes
    seconds:
 
@@ -47,7 +47,7 @@ tutorial. The command line has no route-ink option, so use a script or a
 
 ## Result
 
-![The Ambleside route map card with the route drawn in deep violet, a little heavier than the default pink.](../images/how-to/route-ink.webp)
+![The Ambleside route map with the route drawn in deep violet, a little heavier than the default pink.](../images/how-to/route-ink.webp)
 
 Painted by `examples/how_to_route_ink.py`, which is `examples/route_map.py` with only the
 route's ink changed. Run it with your track, a cache directory, an output directory and a
@@ -60,14 +60,14 @@ uv run python examples/how_to_route_ink.py route.gpx cache/ out/ https://example
 Pick a colour that stands apart from the washes under it. Maroon and violet show up against
 the greens and the blue water. A blue route would be lost among the rivers.
 
-## Try the treatments and the colours
+## Try the styles and the colours
 
-The ink also has a treatment. The theme's `[route_ink]` table sets a `style`. The
+The ink also has a style. The theme's `[route_ink]` table sets a `style`. The
 route is drawn either as a plain `solid` line or as a `pen` stroke, tinted from a plate
 the pen painted. The pen's brush changes the line: a wet brush lays a heavy, even line,
 and a dry one lays a thinner, paler line.
 
-![Six small copies of the Ambleside card, each cropped to the loop, in two rows of three. The columns are the route in maroon, indigo and burnt sienna. The top row is a wet pen line, heavy and even. The bottom row is a dry pen line, thinner and paler, and it fades in places. Rows and columns are lettered.](../images/how-to/route-ink-grid.webp)
+![Six small copies of the Ambleside map, each cropped to the loop, in two rows of three. The columns are the route in maroon, indigo and burnt sienna. The top row is a wet pen line, heavy and even. The bottom row is a dry pen line, thinner and paler, and it fades in places. Rows and columns are lettered.](../images/how-to/route-ink-grid.webp)
 
 *Painted by `examples/how_to_route_ink.py`, `figure="grid"`, in `examples/themes/ambleside.toml`. The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`.*
 
@@ -96,7 +96,7 @@ them, and `with_route_ink` sets the colour:
         )
 ```
 
-Only `pen` changes how the route is drawn: any other treatment is a solid line.
+Only `pen` changes how the route is drawn: any other style is a solid line.
 
 ## When it goes wrong
 
@@ -107,7 +107,7 @@ Only `pen` changes how the route is drawn: any other treatment is a solid line.
   zero, and not infinite or `nan`. A `bool` is refused too.
 - The route did not change colour: you passed the original `Style.default()` to a stage
   instead of the copy `with_route_ink` returned. Pass the copy to every stage.
-- The width changed nothing you can see: the route ink is a `pen` treatment. It tints the
+- The width changed nothing you can see: the route ink's style is `pen`. It tints the
   painted pen plate, and that plate's stroke width is the `route` group's
   `route_pen_width_px`. The width you pass then only sets how near two passes of a
   retraced route have to come to be drawn as one stroke. The default theme's route is `solid`, so there the

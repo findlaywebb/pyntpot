@@ -38,12 +38,12 @@ Turn a GPX file of a walk, ride or run into a painted PNG map with one command,
    the repository stores them, trimmed to what pyntpot reads, so a fresh fetch of the same
    route reports larger ones.
 
-3. Open `out/route.png`. It is the route map card: washes for the land, pen lines for roads
+3. Open `out/route.png`. It is the route map: washes for the land, pen lines for roads
    and water, names lettered by hand, your route in pink and the data credit at the bottom
    right.
 
 4. Run the same command again. The cache holds the payloads and the painted plates, so
-   nothing is fetched or repainted. The card is composed in a few seconds:
+   nothing is fetched or repainted. The map is composed in a few seconds:
 
    ```text
    plates in cache/plates/f173b2f7a20bb9d4 are current, nothing repainted
@@ -51,15 +51,15 @@ Turn a GPX file of a walk, ride or run into a painted PNG map with one command,
    ```
 
 To paint with your own theme, add `--style my-theme.toml`
-([Write a theme](write-a-theme.md)). To leave the credit off the card, add
+([Write a theme](write-a-theme.md)). To leave the credit off the map, add
 `--no-attribution`. Read [Credit the map data](credit-the-map-data.md) first, because the
 duty to credit is then yours.
 
 ## Result
 
-![The Lynmouth route map card: a pink route over washes of green and blue, with the river, roads and names lettered by hand.](../images/how-to/command-line.webp)
+![The Lynmouth route map: a pink route over washes of green and blue, with the river, roads and names lettered by hand.](../images/how-to/command-line.webp)
 
-*Painted by `examples/route_map.py`, which makes the same card as the command.*
+*Painted by `examples/route_map.py`, which makes the same map as the command.*
 
 ## When it goes wrong
 
@@ -75,4 +75,4 @@ Find the line that matches your error.
 - `FetchError: a provider could not answer: opentopodata-srtm30m ...`: OpenTopoData failed after Overpass had answered. Rerun the command. The features and land cover are not fetched again. The public OpenTopoData server allows 1000 calls a day and one map takes 64, so a day of heavy use can spend them.
 - `ValueError: Overpass needs a contact string, such as an email address`: `--contact` was empty. Give a web address or an email address.
 - `pydantic_core._pydantic_core.ValidationError: ... for Style`: Your `--style` theme is missing a group, names a key that does not exist or has a value of the wrong type. The lines under the error name the group and the key. [Write a theme](write-a-theme.md) covers the groups.
-- The card has no credit at the bottom right: You passed `--no-attribution`, or the picture was scaled down until you cannot read the credit. [Credit the map data](credit-the-map-data.md) says where else to put it.
+- The map has no credit at the bottom right: You passed `--no-attribution`, or the picture was scaled down until you cannot read the credit. [Credit the map data](credit-the-map-data.md) says where else to put it.
