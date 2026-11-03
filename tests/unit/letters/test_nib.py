@@ -10,7 +10,7 @@ from PIL import Image
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.sheet import Canvas
 from pyntpot.ink.style import PaperStyle
-from pyntpot.letters.nib import NibSurface, mark_width_px, nib_plate
+from pyntpot.letters.nib import NibSurface, mark_width_px, nib_brushes, nib_plate
 from pyntpot.letters.setting import Mark
 from pyntpot.letters.style import FaceStyle, HandStyle, NibGroups, NibStyle
 
@@ -222,3 +222,32 @@ class TestMarkWidth:
     ) -> None:
         """The default nib draws each role at its pinned width in display pixels."""
         assert mark_width_px(NibStyle(), role, size, outline=outline) == pytest.approx(width)
+
+    def test_a_glyph_is_drawn_with_the_full_pen_unless_asked_for_an_outline(self) -> None:
+        """Without `outline` a glyph takes the whole lettering pen, 1.05 px at 20 px."""
+        assert mark_width_px(NibStyle(), "glyph", 20.0) == pytest.approx(1.05)
+
+    def test_a_role_without_a_weight_takes_the_leader_pen_unweighted(self) -> None:
+        """A role `MARK_WEIGHT` does not name is drawn at the leader pen's own 0.85 px."""
+        assert mark_width_px(NibStyle(), "home", 20.0) == pytest.approx(0.85)
+
+    def test_a_style_set_below_one_pixel_scales_from_its_own_size(self) -> None:
+        """A nib set at a 0.5 px type size doubles its leader pen at 1 px: 0.85 times 2 times 1.5."""
+        nib = NibStyle(label_size_px=0.5)
+        assert mark_width_px(nib, "pin", 1.0) == pytest.approx(2.55)
+
+    @pytest.mark.parametrize(
+        ("route", "role", "width"),
+        [
+            ("centreline", "glyph", 2.1),
+            ("outline", "glyph", 1.302),
+            ("outline", "pin", 2.55),
+        ],
+        ids=["centreline-glyph", "outline-glyph", "outline-pin"],
+    )
+    def test_the_brush_is_as_wide_as_the_mark_at_the_scale(
+        self, route: str, role: str, width: float
+    ) -> None:
+        """At scale 2 a 20 px mark's brush is twice its `mark_width_px`, narrowed only on an outline glyph."""
+        brush = nib_brushes(NibStyle(), FaceStyle(label_route=route), BrushStyle(), 2.0)
+        assert brush(role, 20.0).width == pytest.approx(width)
