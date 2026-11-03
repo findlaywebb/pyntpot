@@ -53,4 +53,6 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0044 | No pre-release Python job (amends D4) |
 | 0045 | Cover rings fill as a union: the sixth golden regeneration |
 | 0046 | One route ink (amends 0005, 0026, 0027 and 0037) |
+| 0047 | Names on the paper and off the water: the seventh golden regeneration |
+| 0048 | The label ink token (amends 0008 and 0026) |
 | 0051 | The classic paper lock is tolerant too (applies 0030) |

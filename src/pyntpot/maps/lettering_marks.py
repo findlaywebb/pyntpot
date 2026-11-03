@@ -189,7 +189,7 @@ def _ink(lb: Label) -> str:
         return SPAN_INTENT_INK.get(lb.intent or "note", SPAN_INTENT_INK["note"])
     if lb.in_water:
         return "in_water"
-    return KIND_INK.get(lb.kind, "map")
+    return KIND_INK.get(lb.kind, "label")
 
 
 def _setting(lb: Label, base: list[Pt] | None, track: float) -> Setting:

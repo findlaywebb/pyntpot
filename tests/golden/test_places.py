@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
+from pyntpot.ink.polyline import meet
 from pyntpot.maps import (
     Annotations,
     Cache,
@@ -22,6 +23,8 @@ from pyntpot.maps import (
     paint,
 )
 from pyntpot.maps.cache import LANDCOVER_MARGIN_M, MARGIN_M
+from pyntpot.maps.lettering.label import NO_LEADER, Label
+from pyntpot.maps.lettering.placement_water import Water, on_water, water_from
 
 from support import REPO_ROOT
 from support.paths import (
@@ -37,6 +40,9 @@ pytestmark = pytest.mark.golden
 
 #: The curated callouts and journal notes of the showcase places, one table per fixture directory.
 PLACES_TOML = REPO_ROOT / "examples" / "places.toml"
+
+#: The share of a flat name's box a lake may graze at its padded edges.
+LAKE_GRAZE = 0.05
 
 #: How the providers name the caller; never sent, since no request is made.
 CONTACT = "pyntpot-tests@example.invalid"
@@ -168,7 +174,7 @@ def curated(directory: str) -> Annotations | None:
 
 @pytest.mark.parametrize("place", PLACES, ids=[p.directory for p in PLACES])
 def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path) -> None:
-    """From a copy of the fixture, no request is made, the card paints and it letters the pinned names."""
+    """From a copy of the fixture, no request is made, the card paints and letters the pinned names clear."""
     cache_dir = tmp_path / "cache"
     shutil.copytree(FIXTURES / place.directory, cache_dir)
     features = OverpassFeatures(CONTACT, ("http://127.0.0.1:9/api/interpreter",), budget=0)
@@ -193,6 +199,7 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
 
     names = {label.name for label in lettering.labels}
     assert names == set(place.labels)
+    _assert_clear(list(lettering.labels), water_from(basemap))
     if place.directory == "y-fenni":
         assert {"Y Fenni", "Tŷ Melin", "Castell y Fenni"} <= names
         assert "Abergavenny" not in names
@@ -200,3 +207,17 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
     card.save(tmp_path / "map.png")
     with Image.open(tmp_path / "map.png") as saved:
         assert saved.mode == "RGB"
+
+
+def _assert_clear(labels: list[Label], water: Water) -> None:
+    """No two leaders on the card cross, and no flat name off the water sits on a lake."""
+    leaders = [lb.leader for lb in labels if lb.leader is not None and lb.kind not in NO_LEADER]
+    for i, (a0, a1) in enumerate(leaders):
+        for b0, b1 in leaders[i + 1 :]:
+            assert meet(a0, a1, b0, b1) is None, "two leaders cross"
+    lakes = Water(water.lakes)
+    for lb in labels:
+        if lb.flat and not lb.in_water and lb.box is not None:
+            # A box is half an em wider than its ink, so a lake may graze a corner of it
+            # (Sligachan's, on Skye) without touching a letter.
+            assert on_water(lb.box, lakes, 0.0) < LAKE_GRAZE, f"{lb.name} is lettered on a lake"

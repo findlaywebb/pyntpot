@@ -3,7 +3,8 @@
 Key names: `place_along`, the window of a line a name is set along, tried on both sides
 of the line where the kind allows it; `_window_shape`, whether a window bends too far to
 read; `_ground_cost`, what a window costs a reader, on the terms the flat answer is
-scored on; the constants that say how far a window may turn and bow.
+scored on; the constants that say how far a window may turn and bow; `ANCHOR_PULL` is
+`placement_flat`'s.
 
 It does not set a name flat, choose the order names are placed in or swap leaders
 afterwards, and it draws nothing.
@@ -30,7 +31,7 @@ from pyntpot.maps.lettering.placement_costs import (
     overlap,
     separation,
 )
-from pyntpot.maps.lettering.placement_flat import ROAD_CROSS_COST, SEPARATION_WEIGHT
+from pyntpot.maps.lettering.placement_flat import ANCHOR_PULL, ROAD_CROSS_COST, SEPARATION_WEIGHT
 from pyntpot.maps.lettering.placement_lift import (
     MAX_LOCAL_TILT_DEG,
     MAX_TILT_DEG,
@@ -48,14 +49,6 @@ from pyntpot.maps.lettering.placement_window import (
     turning,
 )
 from pyntpot.maps.lettering.span_line import resample
-
-#: What a pixel of travel away from where a curved name started costs. Light,
-#: because the freedom to slide along the whole feature is the point; not zero,
-#: because with the separation reward and nothing pulling back, two names of one
-#: river both run to opposite corners of the card and neither ends up where the
-#: river is worth naming.
-ANCHOR_PULL = 0.22
-
 
 #: The kinds whose name may sit on either side of the line it follows. A river
 #: and a road are lines on the ground with paper on both sides of them, and
