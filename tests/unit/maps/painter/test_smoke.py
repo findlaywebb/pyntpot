@@ -12,7 +12,6 @@ from typing import Any
 
 import numpy as np
 import pytest
-from golden.test_parity import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION
 from PIL import Image
 
 from pyntpot.ink.paper import paper_plate
@@ -30,7 +29,7 @@ from support.basemaps import (
     tiny_style,
     with_fields,
 )
-from support.golden import differing_fraction
+from support.golden import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION, differing_fraction
 from support.paths import FIXTURE_DIR, SMOKE_DIR
 from support.providers import FixtureElevation, FixtureFeatures
 
@@ -113,7 +112,8 @@ SMOKE_RIVERS = (
 #: sees and has to be argued for. The `pen` hash moved once more when the nib's touch-down pool
 #: was cut at three radii instead of two (it has no square edge now); `wash` did not move.
 #: The `paper` and `wash` bytes moved once more, and their pixels did not, when lossless
-#: plates went to WebP method 1 (ADR 0043).
+#: plates went to WebP method 1 (ADR 0043). The `pen` hash moved again when the touch-down
+#: pool was laid only on its stroke's own ink (ADR 0060), and again when a wide nib's blot was kept to its inked paper; `paper` and `wash` did not.
 #: `pen` and `wash` moved once more when every ring and stroke took a generator of its
 #: own (ADR 0049); `paper` did not move.
 #: The bytes are this machine's. A numpy that

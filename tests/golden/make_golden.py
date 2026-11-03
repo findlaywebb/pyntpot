@@ -21,10 +21,8 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from golden.test_parity import MAX_CHANNEL_DELTA
-
 from support import REPO_ROOT
-from support.golden import OUTPUTS, differing_fraction, paint_fixture
+from support.golden import MAX_CHANNEL_DELTA, OUTPUTS, differing_fraction, paint_fixture
 from support.paths import GOLDEN_DIR
 
 logger = logging.getLogger("make_golden")
