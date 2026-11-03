@@ -9,12 +9,12 @@
       "status": "changed",
       "width": 720,
       "height": 643,
-      "changed_fraction": 0.2382840850181441,
+      "changed_fraction": 0.23167876274408156,
       "over_bound": true,
-      "max_delta": 208,
+      "max_delta": 201,
       "box": [
         0,
-        0,
+        14,
         720,
         643
       ],
@@ -27,12 +27,12 @@
       "status": "changed",
       "width": 720,
       "height": 643,
-      "changed_fraction": 0.18171980300673923,
+      "changed_fraction": 0.1442802833938137,
       "over_bound": true,
-      "max_delta": 208,
+      "max_delta": 213,
       "box": [
         0,
-        32,
+        169,
         720,
         643
       ],
@@ -45,16 +45,16 @@
       "status": "changed",
       "width": 240,
       "height": 214,
-      "changed_fraction": 0.05623052959501558,
+      "changed_fraction": 0.0573208722741433,
       "over_bound": true,
-      "max_delta": 171,
+      "max_delta": 165,
       "box": [
         37,
         33,
-        210,
+        142,
         110
       ],
-      "extent": "widespread",
+      "extent": "local",
       "diff_image": "tests/golden/docs/places/oxford.png.diff.png",
       "crop_image": "tests/golden/docs/places/oxford.png.crop.png"
     },
@@ -63,14 +63,14 @@
       "status": "changed",
       "width": 240,
       "height": 214,
-      "changed_fraction": 0.058664330218068536,
+      "changed_fraction": 0.04783878504672897,
       "over_bound": true,
-      "max_delta": 185,
+      "max_delta": 184,
       "box": [
-        26,
+        80,
         59,
-        206,
-        197
+        204,
+        163
       ],
       "extent": "widespread",
       "diff_image": "tests/golden/docs/places/y-fenni.png.diff.png",
