@@ -90,6 +90,35 @@ def flow_edge(
     return np.clip(rim, 0.0, 1.0)
 
 
+def highest(lots: np.ndarray, k: int) -> np.ndarray:
+    """The indices of the `k` highest lots, highest first, ties to the lower index.
+
+    What a stable descending sort's first `k` are, without sorting the rest: a
+    partition finds the `k`-th highest lot, every lot above it is kept, the lots equal
+    to it are kept from the lowest index up until `k` are held, and only those are
+    sorted. A partition alone may keep any of the tied lots and keeps them unordered.
+
+    Args:
+        lots: The lots, one dimension.
+        k: How many to keep; at least the number of lots keeps them all.
+
+    Returns:
+        At most `k` indices into `lots`, `int64`.
+    """
+    n = lots.size
+    if k <= 0 or not n:
+        return np.zeros(0, np.int64)
+    neg = -lots
+    if k < n:
+        cut = neg[np.argpartition(neg, k - 1)[k - 1]]
+        above = np.flatnonzero(neg < cut)
+        tied = np.flatnonzero(neg == cut)[: k - above.size]
+        pick = np.concatenate([above, tied])
+    else:
+        pick = np.arange(n)
+    return pick[np.lexsort((pick, neg[pick]))].astype(np.int64)
+
+
 def bloom(dens: np.ndarray, a: np.ndarray, sheet: Sheet, blooms: Blooms) -> None:
     """Backruns, as a re-wet event with no solver. Modifies `dens` in place.
 
@@ -134,7 +163,7 @@ def bloom(dens: np.ndarray, a: np.ndarray, sheet: Sheet, blooms: Blooms) -> None
     # highest win (Efraimidis and Spirakis' weighted sampling).
     weight = np.maximum(flat[inside].astype(np.float64), 1e-6)
     lots = np.log(uniform_at(seed, inside)) / weight
-    for at in inside[np.argsort(-lots, kind="stable")[: int(count)]]:
+    for at in inside[highest(lots, int(count))]:
         cy, cx = divmod(int(at), w)
         rng = keyed_rng(seed, cy, cx)
         r = radius * float(rng.uniform(0.7, 1.3))
