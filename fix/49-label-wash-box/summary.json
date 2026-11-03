@@ -9,9 +9,9 @@
       "status": "changed",
       "width": 360,
       "height": 200,
-      "changed_fraction": 0.2889027777777778,
+      "changed_fraction": 0.2885138888888889,
       "over_bound": true,
-      "max_delta": 78,
+      "max_delta": 77,
       "box": [
         36,
         20,
@@ -27,12 +27,12 @@
       "status": "changed",
       "width": 720,
       "height": 512,
-      "changed_fraction": 0.24817708333333333,
+      "changed_fraction": 0.26815863715277777,
       "over_bound": true,
-      "max_delta": 52,
+      "max_delta": 54,
       "box": [
         0,
-        32,
+        16,
         720,
         512
       ],
@@ -45,7 +45,7 @@
       "status": "changed",
       "width": 1200,
       "height": 854,
-      "changed_fraction": 0.1439656518345043,
+      "changed_fraction": 0.14921448087431693,
       "over_bound": true,
       "max_delta": 38,
       "box": [
@@ -63,9 +63,9 @@
       "status": "changed",
       "width": 720,
       "height": 583,
-      "changed_fraction": 0.12758481036782923,
+      "changed_fraction": 0.11927291785782351,
       "over_bound": true,
-      "max_delta": 59,
+      "max_delta": 54,
       "box": [
         0,
         112,
@@ -81,9 +81,9 @@
       "status": "changed",
       "width": 720,
       "height": 512,
-      "changed_fraction": 0.10869683159722222,
+      "changed_fraction": 0.10416666666666667,
       "over_bound": true,
-      "max_delta": 48,
+      "max_delta": 43,
       "box": [
         0,
         104,
@@ -99,13 +99,13 @@
       "status": "changed",
       "width": 720,
       "height": 512,
-      "changed_fraction": 0.13310004340277778,
+      "changed_fraction": 0.12394748263888888,
       "over_bound": true,
       "max_delta": 60,
       "box": [
-        0,
+        12,
         104,
-        720,
+        707,
         512
       ],
       "extent": "widespread",
@@ -117,9 +117,9 @@
       "status": "changed",
       "width": 720,
       "height": 512,
-      "changed_fraction": 0.13233778211805555,
+      "changed_fraction": 0.13501790364583333,
       "over_bound": true,
-      "max_delta": 47,
+      "max_delta": 45,
       "box": [
         0,
         32,
@@ -135,11 +135,11 @@
       "status": "changed",
       "width": 720,
       "height": 512,
-      "changed_fraction": 0.10162217881944445,
+      "changed_fraction": 0.10667317708333333,
       "over_bound": true,
-      "max_delta": 44,
+      "max_delta": 45,
       "box": [
-        12,
+        0,
         104,
         720,
         512
@@ -153,12 +153,12 @@
       "status": "changed",
       "width": 720,
       "height": 512,
-      "changed_fraction": 0.24817708333333333,
+      "changed_fraction": 0.26815863715277777,
       "over_bound": true,
-      "max_delta": 52,
+      "max_delta": 54,
       "box": [
         0,
-        32,
+        16,
         720,
         512
       ],
@@ -171,9 +171,9 @@
       "status": "changed",
       "width": 720,
       "height": 643,
-      "changed_fraction": 0.22833938137204077,
+      "changed_fraction": 0.22292638672887508,
       "over_bound": true,
-      "max_delta": 64,
+      "max_delta": 65,
       "box": [
         0,
         92,
@@ -189,9 +189,9 @@
       "status": "changed",
       "width": 720,
       "height": 643,
-      "changed_fraction": 0.4293265076896492,
+      "changed_fraction": 0.40040176257128046,
       "over_bound": true,
-      "max_delta": 57,
+      "max_delta": 56,
       "box": [
         0,
         0,
@@ -207,9 +207,9 @@
       "status": "changed",
       "width": 720,
       "height": 643,
-      "changed_fraction": 0.19692198030067393,
+      "changed_fraction": 0.1986111111111111,
       "over_bound": true,
-      "max_delta": 61,
+      "max_delta": 60,
       "box": [
         0,
         32,
@@ -225,12 +225,12 @@
       "status": "changed",
       "width": 720,
       "height": 582,
-      "changed_fraction": 0.18097794959908362,
+      "changed_fraction": 0.2949766132111493,
       "over_bound": true,
       "max_delta": 59,
       "box": [
         0,
-        111,
+        0,
         720,
         582
       ],
@@ -243,9 +243,9 @@
       "status": "changed",
       "width": 1280,
       "height": 640,
-      "changed_fraction": 0.03864013671875,
+      "changed_fraction": 0.038619384765625,
       "over_bound": true,
-      "max_delta": 30,
+      "max_delta": 29,
       "box": [
         112,
         128,
@@ -261,13 +261,13 @@
       "status": "changed",
       "width": 720,
       "height": 374,
-      "changed_fraction": 0.07032456922162804,
+      "changed_fraction": 0.06971553773024361,
       "over_bound": true,
-      "max_delta": 41,
+      "max_delta": 43,
       "box": [
-        80,
-        240,
-        708,
+        132,
+        118,
+        712,
         374
       ],
       "extent": "widespread",
@@ -279,12 +279,12 @@
       "status": "changed",
       "width": 900,
       "height": 640,
-      "changed_fraction": 0.09687673611111111,
+      "changed_fraction": 0.09666666666666666,
       "over_bound": true,
-      "max_delta": 44,
+      "max_delta": 45,
       "box": [
         0,
-        111,
+        129,
         900,
         640
       ],
@@ -297,7 +297,7 @@
       "status": "changed",
       "width": 240,
       "height": 133,
-      "changed_fraction": 0.29097744360902256,
+      "changed_fraction": 0.2903195488721805,
       "over_bound": true,
       "max_delta": 77,
       "box": [
@@ -315,7 +315,7 @@
       "status": "changed",
       "width": 240,
       "height": 171,
-      "changed_fraction": 0.09519980506822612,
+      "changed_fraction": 0.09483430799220273,
       "over_bound": true,
       "max_delta": 50,
       "box": [
@@ -333,7 +333,7 @@
       "status": "changed",
       "width": 240,
       "height": 171,
-      "changed_fraction": 0.03382066276803119,
+      "changed_fraction": 0.03396686159844055,
       "over_bound": true,
       "max_delta": 30,
       "box": [
@@ -357,7 +357,7 @@
       "box": [
         17,
         41,
-        189,
+        190,
         149
       ],
       "extent": "widespread",
@@ -369,7 +369,7 @@
       "status": "changed",
       "width": 240,
       "height": 171,
-      "changed_fraction": 0.013304093567251462,
+      "changed_fraction": 0.013230994152046784,
       "over_bound": true,
       "max_delta": 40,
       "box": [
@@ -387,7 +387,7 @@
       "status": "changed",
       "width": 240,
       "height": 171,
-      "changed_fraction": 0.02490253411306043,
+      "changed_fraction": 0.02492690058479532,
       "over_bound": true,
       "max_delta": 59,
       "box": [
@@ -405,7 +405,7 @@
       "status": "changed",
       "width": 240,
       "height": 171,
-      "changed_fraction": 0.02631578947368421,
+      "changed_fraction": 0.026437621832358673,
       "over_bound": true,
       "max_delta": 40,
       "box": [
@@ -423,7 +423,7 @@
       "status": "changed",
       "width": 240,
       "height": 171,
-      "changed_fraction": 0.01320662768031189,
+      "changed_fraction": 0.013133528265107212,
       "over_bound": true,
       "max_delta": 37,
       "box": [
@@ -441,7 +441,7 @@
       "status": "changed",
       "width": 240,
       "height": 171,
-      "changed_fraction": 0.09519980506822612,
+      "changed_fraction": 0.09483430799220273,
       "over_bound": true,
       "max_delta": 50,
       "box": [
@@ -459,7 +459,7 @@
       "status": "changed",
       "width": 240,
       "height": 214,
-      "changed_fraction": 0.06191588785046729,
+      "changed_fraction": 0.062052180685358255,
       "over_bound": true,
       "max_delta": 58,
       "box": [
@@ -477,7 +477,7 @@
       "status": "changed",
       "width": 240,
       "height": 214,
-      "changed_fraction": 0.1107671339563863,
+      "changed_fraction": 0.11049454828660436,
       "over_bound": true,
       "max_delta": 51,
       "box": [
@@ -495,7 +495,7 @@
       "status": "changed",
       "width": 240,
       "height": 214,
-      "changed_fraction": 0.05800233644859813,
+      "changed_fraction": 0.05788551401869159,
       "over_bound": true,
       "max_delta": 54,
       "box": [
@@ -513,7 +513,7 @@
       "status": "changed",
       "width": 240,
       "height": 194,
-      "changed_fraction": 0.07996134020618556,
+      "changed_fraction": 0.07981099656357388,
       "over_bound": true,
       "max_delta": 53,
       "box": [
@@ -531,7 +531,7 @@
       "status": "changed",
       "width": 240,
       "height": 120,
-      "changed_fraction": 0.02736111111111111,
+      "changed_fraction": 0.02746527777777778,
       "over_bound": true,
       "max_delta": 28,
       "box": [
@@ -549,7 +549,7 @@
       "status": "changed",
       "width": 240,
       "height": 125,
-      "changed_fraction": 0.0386,
+      "changed_fraction": 0.0385,
       "over_bound": true,
       "max_delta": 38,
       "box": [
@@ -567,7 +567,7 @@
       "status": "changed",
       "width": 240,
       "height": 171,
-      "changed_fraction": 0.013328460038986354,
+      "changed_fraction": 0.013230994152046784,
       "over_bound": true,
       "max_delta": 41,
       "box": [
@@ -585,7 +585,7 @@
       "status": "changed",
       "width": 1800,
       "height": 1457,
-      "changed_fraction": 0.0591371158392435,
+      "changed_fraction": 0.06033058796614047,
       "over_bound": true,
       "max_delta": 254,
       "box": [
@@ -603,7 +603,7 @@
       "status": "changed",
       "width": 1800,
       "height": 1457,
-      "changed_fraction": 0.023901090520857166,
+      "changed_fraction": 0.023906047433844276,
       "over_bound": true,
       "max_delta": 56,
       "box": [
