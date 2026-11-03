@@ -129,7 +129,7 @@ def test_a_road_is_kept_whole_where_any_of_it_met_the_track(tmp_path: Path) -> N
 
 
 def test_an_unnamed_way_is_still_decided_on_its_own(tmp_path: Path) -> None:
-    """A service road with no number and no name belongs to no road."""
+    """Two unnamed service ways that do not meet are two roads: only the one the track met is kept."""
     elements = [_way(1, {"highway": "service"}, BESIDE), _way(2, {"highway": "service"}, AWAY)]
     assert len(_layers(_inputs(tmp_path, elements), BasemapStyle(roads="key"))["roads"]) == 1
 
@@ -331,3 +331,63 @@ def test_a_lake_keeps_its_island_in_the_painted_mask(tmp_path: Path) -> None:
     cov = fill_cov(rings, Canvas(*box, w=100, h=high))
     assert cov[high // 2, 50] == pytest.approx(0.0), "the island is painted as water"
     assert cov[5, 5] == pytest.approx(1.0), "the lake around the island is not painted"
+
+
+#: Where `BESIDE` ends, and a way that carries on from that very point away from the
+#: track: the same feature, mapped as a second way, as OSM cuts a watercourse or a
+#: service road wherever a tag changes.
+ONWARD = [BESIDE[-1], *[(BESIDE[-1][0] + 0.00060 * i, BESIDE[-1][1]) for i in range(1, 12)]]
+
+
+def test_a_stream_is_kept_whole_where_any_of_it_met_the_track(tmp_path: Path) -> None:
+    """A named brook cut into two ways keeps the way that runs off away from the track.
+
+    Kept way by way, only the block the route met was drawn, and the brook
+    stopped dead on the land a few pixels from the route.
+    """
+    elements = [
+        _way(1, {"waterway": "stream", "name": "Rydal Beck"}, BESIDE),
+        _way(2, {"waterway": "stream", "name": "Rydal Beck"}, AWAY),
+        _way(3, {"waterway": "stream", "name": "Scandale Beck"}, AWAY),
+    ]
+    data = _layers(_inputs(tmp_path, elements), BasemapStyle(rivers="key"))
+    kept = [r for r in data["rivers"] if r["n"] == "Rydal Beck"]
+    assert len(kept) == 2, "the brook was kept in one way and dropped in the next"
+    assert not [r for r in data["rivers"] if r["n"] == "Scandale Beck"]
+
+
+def test_an_unnamed_stream_carries_on_into_the_way_it_continues_as(tmp_path: Path) -> None:
+    """An unnamed stream's second way, starting where the first one ends, is the same stream."""
+    elements = [
+        _way(1, {"waterway": "stream"}, BESIDE),
+        _way(2, {"waterway": "stream"}, ONWARD),
+        _way(3, {"waterway": "stream"}, AWAY),
+    ]
+    data = _layers(_inputs(tmp_path, elements), BasemapStyle(rivers="key"))
+    assert len(data["rivers"]) == 2
+
+
+def test_an_unnamed_road_carries_on_into_the_way_it_continues_as(tmp_path: Path) -> None:
+    """An unnamed service road's second way, from the first one's end, is kept with it.
+
+    Kept way by way, the block the route met was a hair-like stub off the route.
+    """
+    elements = [
+        _way(1, {"highway": "service"}, BESIDE),
+        _way(2, {"highway": "service"}, ONWARD),
+        _way(3, {"highway": "track"}, ONWARD),
+    ]
+    data = _layers(_inputs(tmp_path, elements), BasemapStyle(roads="key"))
+    assert sorted(r["k"] for r in data["roads"]) == ["service", "service"]
+
+
+def test_unnamed_ways_meeting_at_a_junction_are_decided_each_on_its_own(tmp_path: Path) -> None:
+    """Three unnamed ways ending at one point are three roads, not one: only one met the track."""
+    fork = [ONWARD[0], (ONWARD[0][0] + 0.0040, ONWARD[0][1] + 0.0040)]
+    elements = [
+        _way(1, {"highway": "service"}, BESIDE),
+        _way(2, {"highway": "service"}, ONWARD),
+        _way(3, {"highway": "service"}, fork),
+    ]
+    data = _layers(_inputs(tmp_path, elements), BasemapStyle(roads="key"))
+    assert len(data["roads"]) == 1

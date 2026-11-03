@@ -51,7 +51,7 @@ def basemap(tmp_path_factory: pytest.TempPathFactory) -> Basemap:
 def test_the_fixture_box_carries_the_pinned_counts(basemap: Basemap) -> None:
     """The fixture yields the pinned numbers of roads, watercourses and cover rings."""
     layers = basemap.layers
-    assert len(layers.roads) == 39
+    assert len(layers.roads) == 35
     assert len(layers.rivers) == 4
     assert {cls: len(rings) for cls, rings in layers.cover.items()} == COVER_RINGS
 

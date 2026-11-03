@@ -6,8 +6,10 @@ which keeps one landmark candidate per name; `BURIED_FRAC`, the share of a water
 underground that drops it.
 
 Every filled layer comes back as one path wound for `fill-rule="nonzero"`, so two woods
-that overlap fill once rather than stacking their alpha. Roads are kept or dropped per
-road, not per way, and a watercourse OSM tags as underground is dropped whole.
+that overlap fill once rather than stacking their alpha. Roads and streams are
+kept or dropped per road and per watercourse, not per way: an unnamed way is joined to
+the way it carries on as (`carried_on`), and a watercourse OSM tags as underground is
+dropped whole.
 
 It does not fetch, classify landmark tags, choose which landmarks the map labels, or
 read relief. Invariants: everything is cut to the clip box; a layer's path is empty,
@@ -44,6 +46,49 @@ PARK_AREA_FACTOR = 3
 #: Shifts the park's edge wobble so it does not move in step with the wood's.
 PARK_SEED = 9
 
+#: The ways that end at one point when one carries straight on as the other. At
+#: three or more the point is a junction, and which way is which road's next is
+#: a guess, so none is joined there.
+CARRIED_ON_WAYS = 2
+
+
+def carried_on[Key](ends: dict[Any, list[Key]]) -> dict[Key, Key]:
+    """Each unnamed way's road: the one key of every chain of ways that carry on as each other.
+
+    Two ways are one road where exactly `CARRIED_ON_WAYS` of a kind end at one
+    point, which is how OSM maps one road cut where a tag changes. The keys are
+    joined through every such point, so a chain of any length shares a key.
+
+    Args:
+        ends: The ways ending at each kind and point, as `Harvest` files them.
+
+    Returns:
+        The key each joined way is decided under; a way on its own is absent.
+    """
+    root: dict[Key, Key] = {}
+
+    def find(key: Key) -> Key:
+        while root.get(key, key) != key:
+            key = root[key]
+        return key
+
+    for keys in ends.values():
+        if len(keys) == CARRIED_ON_WAYS and keys[0] != keys[1]:
+            a, b = find(keys[0]), find(keys[1])
+            if a != b:
+                root[b] = a
+    return {key: find(key) for key in root}
+
+
+def _joined_keep[Key](keep: dict[Key, bool], ends: dict[Any, list[Key]]) -> dict[Key, bool]:
+    """Whether each way's road or watercourse is kept: any of the chain it carries on in."""
+    road = carried_on(ends)
+    chain: dict[Key, bool] = {}
+    for key, kept in keep.items():
+        at = road.get(key, key)
+        chain[at] = chain.get(at, False) or kept
+    return {key: chain[road.get(key, key)] for key in keep}
+
 
 def _dedupe(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """One entry per name, the nearest the track kept; every unnamed entry kept, nearest first."""
@@ -60,8 +105,9 @@ def _dedupe(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _kept_roads(found: Harvest) -> list[dict[str, Any]]:
     """The ways of every road that earned a place, counting the ways of the rest as dropped."""
     roads: list[dict[str, Any]] = []
+    keep = _joined_keep(found.road_keep, found.road_ends)
     for road, entries in found.ways.items():
-        if found.road_keep.get(road, False):
+        if keep.get(road, False):
             roads += entries
         else:
             found.counts["road_dropped"] += len(entries)
@@ -69,7 +115,11 @@ def _kept_roads(found: Harvest) -> list[dict[str, Any]]:
 
 
 def _open_rivers(found: Harvest) -> list[dict[str, Any]]:
-    """The watercourses that are on the ground, not in a sewer.
+    """The watercourses that earned a place and are on the ground, not in a sewer.
+
+    A watercourse's pieces are all collected and the keep test is answered for
+    the watercourse, joined through its unnamed ways; the pieces of one that did
+    not earn a place are counted as dropped.
 
     **A buried river is not on the ground, so it is not drawn.** OSM maps a
     buried river as a watercourse because it still flows; it runs in a sewer
@@ -83,8 +133,11 @@ def _open_rivers(found: Harvest) -> list[dict[str, Any]]:
         for key, run in found.overall.items()
         if run > 0 and found.under.get(key, 0.0) / run >= BURIED_FRAC
     }
-    found.counts["river_buried"] = sum(1 for r in found.rivers if r["k"] in gone)
-    return [{k: v for k, v in r.items() if k != "k"} for r in found.rivers if r["k"] not in gone]
+    keep = _joined_keep(found.stream_keep, found.stream_ends)
+    kept = [r for r in found.rivers if keep.get(r["k"], False)]
+    found.counts["stream_dropped"] += len(found.rivers) - len(kept)
+    found.counts["river_buried"] = sum(1 for r in kept if r["k"] in gone)
+    return [{k: v for k, v in r.items() if k != "k"} for r in kept if r["k"] not in gone]
 
 
 def _fills(found: Harvest, scope: Scope) -> dict[str, Any]:

@@ -25,7 +25,7 @@ from support.paths import FIXTURE_DIR, KEY
 from support.providers import OSM_CREDIT, SRTM_CREDIT, FixtureElevation, FixtureFeatures
 
 #: The base hash of the regenerated golden `plates.json`.
-GOLDEN_HASH = "340a7f6e260ee1e2-d9c56c0811177b0f"
+GOLDEN_HASH = "643c61991c4a08ce-d9c56c0811177b0f"
 
 #: The first three points of the drawn route, taken once from the compose step.
 FIRST_STRANDS = (
@@ -130,7 +130,7 @@ class TestFetch:
 
     def test_the_basemap_carries_the_pinned_roads(self, fetched: Fetched) -> None:
         """The fetched basemap holds the fixture box's pinned number of roads."""
-        assert len(fetched.basemap.layers.roads) == 39
+        assert len(fetched.basemap.layers.roads) == 35
 
     def test_the_basemap_carries_both_credits(self, fetched: Fetched) -> None:
         """The basemap's credits are the feature and the elevation provider's, in that order."""
