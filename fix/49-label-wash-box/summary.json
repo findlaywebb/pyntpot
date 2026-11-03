@@ -1,0 +1,620 @@
+{
+  "before": "origin/main",
+  "after": "working tree",
+  "channel_delta": 2,
+  "max_differing_fraction": 0.005,
+  "files": [
+    {
+      "path": "docs/images/explanation/nib-backing.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.2889027777777778,
+      "over_bound": true,
+      "max_delta": 78,
+      "box": [
+        36,
+        20,
+        298,
+        142
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-backing.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-backing.webp.crop.png"
+    },
+    {
+      "path": "docs/images/gallery/route-map.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.24817708333333333,
+      "over_bound": true,
+      "max_delta": 52,
+      "box": [
+        0,
+        32,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/gallery/route-map.webp.diff.png",
+      "crop_image": "docs/images/gallery/route-map.webp.crop.png"
+    },
+    {
+      "path": "docs/images/hero.webp",
+      "status": "changed",
+      "width": 1200,
+      "height": 854,
+      "changed_fraction": 0.1439656518345043,
+      "over_bound": true,
+      "max_delta": 38,
+      "box": [
+        0,
+        142,
+        1200,
+        854
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/hero.webp.diff.png",
+      "crop_image": "docs/images/hero.webp.crop.png"
+    },
+    {
+      "path": "docs/images/how-to/command-line.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 583,
+      "changed_fraction": 0.12758481036782923,
+      "over_bound": true,
+      "max_delta": 59,
+      "box": [
+        0,
+        112,
+        720,
+        583
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/how-to/command-line.webp.diff.png",
+      "crop_image": "docs/images/how-to/command-line.webp.crop.png"
+    },
+    {
+      "path": "docs/images/how-to/route-ink.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.10869683159722222,
+      "over_bound": true,
+      "max_delta": 48,
+      "box": [
+        0,
+        104,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/how-to/route-ink.webp.diff.png",
+      "crop_image": "docs/images/how-to/route-ink.webp.crop.png"
+    },
+    {
+      "path": "docs/images/map-styles/bold.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.13310004340277778,
+      "over_bound": true,
+      "max_delta": 60,
+      "box": [
+        0,
+        104,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/map-styles/bold.webp.diff.png",
+      "crop_image": "docs/images/map-styles/bold.webp.crop.png"
+    },
+    {
+      "path": "docs/images/map-styles/sepia.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.13233778211805555,
+      "over_bound": true,
+      "max_delta": 47,
+      "box": [
+        0,
+        32,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/map-styles/sepia.webp.diff.png",
+      "crop_image": "docs/images/map-styles/sepia.webp.crop.png"
+    },
+    {
+      "path": "docs/images/map-styles/winter.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.10162217881944445,
+      "over_bound": true,
+      "max_delta": 44,
+      "box": [
+        12,
+        104,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/map-styles/winter.webp.diff.png",
+      "crop_image": "docs/images/map-styles/winter.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/ambleside.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 512,
+      "changed_fraction": 0.24817708333333333,
+      "over_bound": true,
+      "max_delta": 52,
+      "box": [
+        0,
+        32,
+        720,
+        512
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/ambleside.webp.diff.png",
+      "crop_image": "docs/images/places/ambleside.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/oxford.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 643,
+      "changed_fraction": 0.22833938137204077,
+      "over_bound": true,
+      "max_delta": 64,
+      "box": [
+        0,
+        92,
+        720,
+        643
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/oxford.webp.diff.png",
+      "crop_image": "docs/images/places/oxford.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/skye.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 643,
+      "changed_fraction": 0.4293265076896492,
+      "over_bound": true,
+      "max_delta": 57,
+      "box": [
+        0,
+        0,
+        720,
+        643
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/skye.webp.diff.png",
+      "crop_image": "docs/images/places/skye.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/y-fenni.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 643,
+      "changed_fraction": 0.19692198030067393,
+      "over_bound": true,
+      "max_delta": 61,
+      "box": [
+        0,
+        32,
+        720,
+        643
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/y-fenni.webp.diff.png",
+      "crop_image": "docs/images/places/y-fenni.webp.crop.png"
+    },
+    {
+      "path": "docs/images/places/yr-wyddfa.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 582,
+      "changed_fraction": 0.18097794959908362,
+      "over_bound": true,
+      "max_delta": 59,
+      "box": [
+        0,
+        111,
+        720,
+        582
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/places/yr-wyddfa.webp.diff.png",
+      "crop_image": "docs/images/places/yr-wyddfa.webp.crop.png"
+    },
+    {
+      "path": "docs/images/social-preview.jpg",
+      "status": "changed",
+      "width": 1280,
+      "height": 640,
+      "changed_fraction": 0.03864013671875,
+      "over_bound": true,
+      "max_delta": 30,
+      "box": [
+        112,
+        128,
+        1136,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/social-preview.jpg.diff.png",
+      "crop_image": "docs/images/social-preview.jpg.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-composition.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 374,
+      "changed_fraction": 0.07032456922162804,
+      "over_bound": true,
+      "max_delta": 41,
+      "box": [
+        80,
+        240,
+        708,
+        374
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-composition.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-composition.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/route-map.webp",
+      "status": "changed",
+      "width": 900,
+      "height": 640,
+      "changed_fraction": 0.09687673611111111,
+      "over_bound": true,
+      "max_delta": 44,
+      "box": [
+        0,
+        111,
+        900,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/route-map.webp.diff.png",
+      "crop_image": "docs/images/tutorials/route-map.webp.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-backing.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.29097744360902256,
+      "over_bound": true,
+      "max_delta": 77,
+      "box": [
+        23,
+        13,
+        199,
+        94
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-backing.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-backing.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/gallery/route-map.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.09519980506822612,
+      "over_bound": true,
+      "max_delta": 50,
+      "box": [
+        7,
+        14,
+        229,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/gallery/route-map.png.diff.png",
+      "crop_image": "tests/golden/docs/gallery/route-map.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/hero.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.03382066276803119,
+      "over_bound": true,
+      "max_delta": 30,
+      "box": [
+        21,
+        29,
+        214,
+        169
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/hero.png.diff.png",
+      "crop_image": "tests/golden/docs/hero.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/how-to/command-line.png",
+      "status": "changed",
+      "width": 240,
+      "height": 194,
+      "changed_fraction": 0.02461340206185567,
+      "over_bound": true,
+      "max_delta": 53,
+      "box": [
+        17,
+        41,
+        189,
+        149
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/how-to/command-line.png.diff.png",
+      "crop_image": "tests/golden/docs/how-to/command-line.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/how-to/route-ink.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.013304093567251462,
+      "over_bound": true,
+      "max_delta": 40,
+      "box": [
+        57,
+        37,
+        206,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/how-to/route-ink.png.diff.png",
+      "crop_image": "tests/golden/docs/how-to/route-ink.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/map-styles/bold.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.02490253411306043,
+      "over_bound": true,
+      "max_delta": 59,
+      "box": [
+        54,
+        39,
+        208,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/map-styles/bold.png.diff.png",
+      "crop_image": "tests/golden/docs/map-styles/bold.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/map-styles/sepia.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.02631578947368421,
+      "over_bound": true,
+      "max_delta": 40,
+      "box": [
+        55,
+        35,
+        220,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/map-styles/sepia.png.diff.png",
+      "crop_image": "tests/golden/docs/map-styles/sepia.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/map-styles/winter.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.01320662768031189,
+      "over_bound": true,
+      "max_delta": 37,
+      "box": [
+        129,
+        37,
+        206,
+        168
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/map-styles/winter.png.diff.png",
+      "crop_image": "tests/golden/docs/map-styles/winter.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/ambleside.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.09519980506822612,
+      "over_bound": true,
+      "max_delta": 50,
+      "box": [
+        7,
+        14,
+        229,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/places/ambleside.png.diff.png",
+      "crop_image": "tests/golden/docs/places/ambleside.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/oxford.png",
+      "status": "changed",
+      "width": 240,
+      "height": 214,
+      "changed_fraction": 0.06191588785046729,
+      "over_bound": true,
+      "max_delta": 58,
+      "box": [
+        37,
+        33,
+        213,
+        211
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/places/oxford.png.diff.png",
+      "crop_image": "tests/golden/docs/places/oxford.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/skye.png",
+      "status": "changed",
+      "width": 240,
+      "height": 214,
+      "changed_fraction": 0.1107671339563863,
+      "over_bound": true,
+      "max_delta": 51,
+      "box": [
+        37,
+        49,
+        236,
+        211
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/places/skye.png.diff.png",
+      "crop_image": "tests/golden/docs/places/skye.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/y-fenni.png",
+      "status": "changed",
+      "width": 240,
+      "height": 214,
+      "changed_fraction": 0.05800233644859813,
+      "over_bound": true,
+      "max_delta": 54,
+      "box": [
+        26,
+        59,
+        235,
+        211
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/places/y-fenni.png.diff.png",
+      "crop_image": "tests/golden/docs/places/y-fenni.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/places/yr-wyddfa.png",
+      "status": "changed",
+      "width": 240,
+      "height": 194,
+      "changed_fraction": 0.07996134020618556,
+      "over_bound": true,
+      "max_delta": 53,
+      "box": [
+        18,
+        39,
+        234,
+        191
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/places/yr-wyddfa.png.diff.png",
+      "crop_image": "tests/golden/docs/places/yr-wyddfa.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/social-preview.png",
+      "status": "changed",
+      "width": 240,
+      "height": 120,
+      "changed_fraction": 0.02736111111111111,
+      "over_bound": true,
+      "max_delta": 28,
+      "box": [
+        22,
+        26,
+        211,
+        120
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/social-preview.png.diff.png",
+      "crop_image": "tests/golden/docs/social-preview.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-composition.png",
+      "status": "changed",
+      "width": 240,
+      "height": 125,
+      "changed_fraction": 0.0386,
+      "over_bound": true,
+      "max_delta": 38,
+      "box": [
+        46,
+        85,
+        220,
+        102
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/tutorials/grid-composition.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-composition.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/route-map.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.013328460038986354,
+      "over_bound": true,
+      "max_delta": 41,
+      "box": [
+        57,
+        37,
+        206,
+        168
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/route-map.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/route-map.png.crop.png"
+    },
+    {
+      "path": "tests/golden/lynmouth/labels-centreline.webp",
+      "status": "changed",
+      "width": 1800,
+      "height": 1457,
+      "changed_fraction": 0.0591371158392435,
+      "over_bound": true,
+      "max_delta": 254,
+      "box": [
+        113,
+        303,
+        1800,
+        1152
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/lynmouth/labels-centreline.webp.diff.png",
+      "crop_image": "tests/golden/lynmouth/labels-centreline.webp.crop.png"
+    },
+    {
+      "path": "tests/golden/lynmouth/map.png",
+      "status": "changed",
+      "width": 1800,
+      "height": 1457,
+      "changed_fraction": 0.023901090520857166,
+      "over_bound": true,
+      "max_delta": 56,
+      "box": [
+        128,
+        310,
+        1425,
+        1122
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/lynmouth/map.png.diff.png",
+      "crop_image": "tests/golden/lynmouth/map.png.crop.png"
+    }
+  ]
+}
