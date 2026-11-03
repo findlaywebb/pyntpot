@@ -131,40 +131,54 @@ the new streams, their bars unchanged:
 
 ## Golden regeneration (the eighth)
 
-Process as ADR 0036, on the tree merged with main (after ADRs 0047 and 0048). The
+Process as ADR 0036, with the review images of ADR 0052, on the tree merged with main
+(after ADRs 0050, 0051, 0055, 0059, 0060 and 0061, at `8a105db`). The
 tolerance bound is not changed, no gate is loosened and the hash input does not change.
 
 ### Lynmouth compare, against main's committed goldens
 
 ```
 paper.webp: identical yes, differing fraction 0.000000
-wash.webp: identical no, differing fraction 0.374052
-pen.webp: identical no, differing fraction 0.010388
-labels-centreline.webp: identical no, differing fraction 0.046841
-map.png: identical no, differing fraction 0.361626
-manifest hash: 340a7f6e260ee1e2-d9c56c0811177b0f here, 340a7f6e260ee1e2-d9c56c0811177b0f in the goldens
+wash.webp: identical no, differing fraction 0.362858
+pen.webp: identical no, differing fraction 0.010369
+labels-centreline.webp: identical no, differing fraction 0.050960
+map.png: identical no, differing fraction 0.350016
+manifest hash: 3976d23ae248ca86-d9c56c0811177b0f here, 3976d23ae248ca86-d9c56c0811177b0f in the goldens
 ```
 
 Every plate drawn from a shared generator moves; the paper, seeded once per sheet, does
-not. Of that, the radius steps account for 0.041 of the wash, 0.003 of the labels-centreline
-plate and 0.036 of the map against this branch's first cut; the partition for none. `PINNED_LABELS` is
-unchanged, the manifest hash does not move and `GOLDEN_HASH` is not re-pinned: placement
-draws nothing from the painter's generators. Looked at side by side, the change is random
+not. The goldens were then regenerated in place with `make_golden.py` and compared with that
+paint: byte-identical for every output, the hash equal on both sides. On the earlier base
+(main after ADR 0048), the radius steps accounted for 0.041 of the wash, 0.003 of the
+labels-centreline plate and 0.036 of the map against this branch's first cut; the partition
+for none. `PINNED_LABELS` is
+unchanged, the manifest hash does not move (main's ADR 0050 moved its geometry half, to
+`3976d23ae248ca86`, before this merge) and `GOLDEN_HASH` is not re-pinned: placement draws
+nothing from the painter's generators. Looked at side by side, the change is random
 texture only: the cover outlines wobble differently, the roads, rivers and route lay other
 bristles, and the sea's blooms sit in other places, spread through the water rather than
 along the coast. The composition, the colours and every label's seat are as they were.
 The first cut laid the "o" of "Reformed" in "Living Waters Lynton United Reformed Church"
-with its counter filled, so it read as a dot; the drift fix below opens it again. Against
-the cut before that fix the wash moves 0.013018, the pen 0.007080, the labels-centreline
-plate 0.015006 and the map 0.019663, with the same labels in the same order.
-The smoke lock does not move in this round (the smoke box lays no blooms or deformed
-cover); its `pen` and `wash` and the committed `tests/golden/smoke/wash.webp` were
-re-pinned by the first cut, and `paper` does not move.
+with its counter filled, so it read as a dot; the drift fix below opens it again.
+In the smoke lock, `pen` is re-pinned on the merged tree: main's set-down blot (ADR 0060)
+and this branch's keyed strokes both move it. `wash` and the committed
+`tests/golden/smoke/wash.webp` keep the values this branch's first cut pinned (the smoke box
+lays no blooms or deformed cover, and main's changes do not reach its wash), and `paper` does
+not move.
+
+On the merged tree no counter fills. Measured as `TestCounters` measures it (the mean alpha
+of the label plate, painted without the backing wash, inside each closed mark's outline
+shrunk to half about its centroid), the worst glyph counter on the Lynmouth card is 0.344
+inked against main's 0.407, under `TestCounters`' 0.4 bar. The three pin rings read 0.853,
+0.823 and 0.331 against main's 0.724, 0.574 and 0.435: the leader's end is laid into its
+pin, and laid alone, with the same keyed bristles, the rings read 0.491, 0.198 and 0.399.
+That is within what the ring draws on either tree: one pin ring laid alone over 150 label
+seeds reads a median of 0.313 and at most 0.698 here, and 0.317 and 0.714 on main.
 
 ### Docs images
 
 Every docs image and master was repainted with `make_docs_images.py` on the merged tree and
-compared with main's (ADR 0048's) images and masters. 40 of the 70 masters moved, with
+compared with main's (ADR 0061's) images and masters. 38 of the 70 masters moved, with
 their images: every image that paints a wash with blooms or deformed cover, or lays strokes
 through an `InkPad` (map cards, lettering, brush and nib figures); the rest, painted without
 the pad or the painter, are byte-identical. The compare exits 1, as a regeneration that
@@ -173,26 +187,25 @@ the new goldens. Master differing fractions against main's masters:
 
 | Master | Fraction | Master | Fraction |
 |---|---|---|---|
-| `places/skye.png` | 0.681562 | `places/y-fenni.png` | 0.580841 |
-| `places/oxford.png` | 0.563396 | `gallery/route-map.png` | 0.447222 |
-| `places/ambleside.png` | 0.447222 | `hero.png` | 0.442422 |
-| `social-preview.png` | 0.431944 | `how-to/command-line.png` | 0.395060 |
-| `how-to/route-ink-grid.png` | 0.351389 | `map-styles/bold.png` | 0.296832 |
-| `places/yr-wyddfa.png` | 0.277448 | `tutorials/route-map.png` | 0.256408 |
-| `how-to/route-ink.png` | 0.254703 | `map-styles/winter.png` | 0.252729 |
-| `map-styles/sepia.png` | 0.242812 | `map-styles/pen-and-ink.png` | 0.212865 |
-| `explanation/nib-hands.png` | 0.134071 | `tutorials/grid-nib.png` | 0.129075 |
-| `tutorials/grid-lettering.png` | 0.124855 | `explanation/nib-angles.png` | 0.109811 |
-| `painting-with-python/tree-family.png` | 0.065052 | `explanation/nib-backing.png` | 0.060338 |
-| `painting-with-python/tree.png` | 0.058854 | `explanation/nib-centreline.png` | 0.056610 |
-| `tutorials/grid-composition.png` | 0.035367 | `explanation/nib-ground.png` | 0.031924 |
-| `word.png` | 0.029414 | `reference/pigment-swatches.png` | 0.024014 |
-| `gallery/lettering.png` | 0.022344 | `tutorials/lettering.png` | 0.022344 |
-| `tutorials/grid-brush.png` | 0.017508 | `reference/brush-sheet.png` | 0.015625 |
-| `gallery/composition.png` | 0.013776 | `tutorials/composition.png` | 0.013776 |
-| `painting-with-python/derwentwater.png` | 0.012839 | `how-to/own-shapes.png` | 0.012292 |
-| `explanation/wash-glaze.png` | 0.011667 | `tutorials/grid-paper.png` | 0.009367 |
-| `tutorials/grid-wash.png` | 0.008467 | `tutorials/grid-pigments.png` | 0.008133 |
+| `places/y-fenni.png` | 0.578427 | `places/skye.png` | 0.572157 |
+| `places/oxford.png` | 0.561994 | `places/ambleside.png` | 0.443981 |
+| `gallery/route-map.png` | 0.443981 | `hero.png` | 0.440278 |
+| `social-preview.png` | 0.431632 | `how-to/command-line.png` | 0.383999 |
+| `how-to/route-ink-grid.png` | 0.349837 | `map-styles/bold.png` | 0.295054 |
+| `places/yr-wyddfa.png` | 0.273647 | `tutorials/route-map.png` | 0.255531 |
+| `how-to/route-ink.png` | 0.253899 | `map-styles/winter.png` | 0.251706 |
+| `map-styles/sepia.png` | 0.241009 | `map-styles/pen-and-ink.png` | 0.211477 |
+| `explanation/nib-hands.png` | 0.134852 | `tutorials/grid-nib.png` | 0.130815 |
+| `tutorials/grid-lettering.png` | 0.126014 | `explanation/nib-angles.png` | 0.111061 |
+| `explanation/nib-backing.png` | 0.061247 | `explanation/nib-centreline.png` | 0.056516 |
+| `tutorials/grid-composition.png` | 0.035133 | `explanation/nib-ground.png` | 0.033051 |
+| `word.png` | 0.029753 | `reference/pigment-swatches.png` | 0.024462 |
+| `gallery/lettering.png` | 0.022057 | `tutorials/lettering.png` | 0.022057 |
+| `tutorials/grid-brush.png` | 0.017775 | `reference/brush-sheet.png` | 0.015814 |
+| `gallery/composition.png` | 0.013958 | `tutorials/composition.png` | 0.013958 |
+| `painting-with-python/derwentwater.png` | 0.013073 | `how-to/own-shapes.png` | 0.012448 |
+| `explanation/wash-glaze.png` | 0.011905 | `tutorials/grid-paper.png` | 0.009333 |
+| `tutorials/grid-wash.png` | 0.008500 | `tutorials/grid-pigments.png` | 0.008100 |
 
 Looked at side by side with main's masters (Skye, Y Fenni, Oxford, the Lynmouth map): the
 change is random texture. The sea's blooms and the cover's wobble sit in other places and
@@ -209,8 +222,8 @@ spread it had. A stroke shorter than the drift's coarsest cell (584 pad pixels f
 label brush, against 130 along that "o") has a field nearly constant along it, so the
 spread is mostly the bristles' differences; smoothing removes those and the rescale, about
 zero, multiplied the part every bristle shares several times over, past the field's own
-range of 1.6 (to 4.5 on that glyph). That part is a constant offset along the stroke's normal: on an open stroke a shift of
-the line, on a closed one a change of radius. The "o" took a shift of 8.1 pad pixels
+range of 1.6 (to 4.5 on that glyph). That part is a constant offset along the stroke's
+normal: on an open stroke a shift of the line, on a closed one a change of radius. The "o" took a shift of 8.1 pad pixels
 inward and its bowl closed.
 
 Over 2000 seeds on that glyph's own stroke, the mean sideways shift was 0.58 pad pixels at
@@ -225,13 +238,12 @@ was. The median shift falls to 0.18, the largest over 2000 seeds to 1.9, no seed
 counter, and every counter on the cards keeps at least 0.64 of its core bare. A long
 stroke's mean is near zero already, so its wander is as it was.
 
-Pinned by `tests/unit/letters/test_nib.py::TestCounters` (a 20 px "o" at scale 2 keeps its
-core under 0.4 inked for 400 label seeds; 0.81 before) and
-`tests/unit/ink/test_stamp.py::test_a_short_ring_is_not_shifted_off_its_path_by_the_shared_drift`
-(a small ring's ink stays within the drift's reach of its path over 300 seeds; 3.34 pixels
-before, against a bound of 1.76). Only organic brushes move: the nib figures painted with
-the default brush style are byte-identical to the first cut, and the two tree figures,
-painted with organic brushes, move for the first time in this round.
+This fix landed on main on its own (issue #125, ADR 0059), and the merged tree keeps main's
+`_organic_fields` and main's tests of it: `tests/unit/letters/test_nib.py::TestCounters` (a
+20 px "o" at scale 2 keeps its core under 0.4 inked for 400 label seeds) and
+`tests/unit/ink/test_stamp_drift.py` (a small ring's ink stays within the drift's reach of
+its path over 300 seeds). So this regeneration does not move the two tree figures, which
+only the drift fix moved.
 
 ## Consequences
 

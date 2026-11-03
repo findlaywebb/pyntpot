@@ -124,7 +124,7 @@ SMOKE_RIVERS = (
 #: for byte (ADR 0030).
 SMOKE_SHA = {
     "paper": "35c84fb0d3806aa995f699c638b3479b6db64fa3c4a74999e58ce792517379d8",
-    "pen": "a55144ee7f8d28d5c1f13cf81b02f5e0ec5e476d46628149ca741811a4a51fab",
+    "pen": "b667aefad2259108a3f529e49686fd18749212257bf99d15cdf548411959cd60",
     "wash": "056a201288fe7b0fa71b09fa489eb3f398fa6e61c5ecc1535730ad5f9368dd3a",
 }
 
