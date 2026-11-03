@@ -53,8 +53,37 @@ jobs:
         uses: actions/upload-artifact@v7.0.2
         with:
           name: golden-paints-${{ matrix.os }}
-          # The painted images only, not the copied fixture caches.
+          # The painted images only, not the copied fixture caches. The Lynmouth paint dirs
+          # are left out: the parity pin copies each output into its `fresh` tree, which is kept.
           path: |
             ${{ runner.temp }}/pytest/**/*.png
             ${{ runner.temp }}/pytest/**/*.webp
+            !${{ runner.temp }}/pytest/**/lynmouth*/**
+          retention-days: 7
+
+      # Review images of each fresh paint past the parity bound (ADR 0052). The parity and docs
+      # pins copy what they gate into `fresh` trees at the repository paths (in tolerance
+      # mode, the Lynmouth outputs and the docs masters; never the lossy docs files, which
+      # this gate does not check); merged, they are the later side and the checkout the
+      # earlier. Bare `--min-fraction` leaves out changes within the parity bound
+      # (`MAX_DIFFERING_FRACTION`), so only the failing images are drawn.
+      - name: Diff the fresh paints
+        if: failure()
+        continue-on-error: true
+        run: |
+          mkdir -p "$RUNNER_TEMP/fresh"
+          find "$RUNNER_TEMP/pytest" -type d -name 'fresh*' -prune -print0 |
+            while IFS= read -r -d '' tree; do
+              cp -R "$tree/." "$RUNNER_TEMP/fresh/"
+            done
+          PYTHONPATH=tests uv run python tests/golden/diff_images.py "$RUNNER_TEMP/golden-diffs" \
+            --before . --after "$RUNNER_TEMP/fresh" --min-fraction
+
+      - name: Keep the review images
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: golden-diffs-${{ matrix.os }}
+          path: ${{ runner.temp }}/golden-diffs
+          if-no-files-found: ignore
           retention-days: 7

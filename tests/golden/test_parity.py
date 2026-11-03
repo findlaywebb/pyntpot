@@ -1,23 +1,37 @@
 """Golden parity: the ported painter reproduces the pre-port Lynmouth plates."""
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 
-from support.golden import OUTPUTS, differing_fraction, paint_fixture
+from support import REPO_ROOT
+from support.golden import (
+    MAX_CHANNEL_DELTA,
+    MAX_DIFFERING_FRACTION,
+    OUTPUTS,
+    differing_fraction,
+    paint_fixture,
+)
+from support.paths import GOLDEN_DIR
 
 #: The module fixture paints once, so its tests share one xdist worker.
 pytestmark = [pytest.mark.golden, pytest.mark.xdist_group("test_parity")]
 
-MAX_DIFFERING_FRACTION = 0.005
-MAX_CHANNEL_DELTA = 2
-
 
 @pytest.fixture(scope="module")
 def painted(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
-    """Paint and compose the fixture into a fresh copy, returning each output's path."""
+    """Paint and compose the fixture into a fresh copy, returning each output's path.
+
+    The outputs are also copied into a `fresh` tree at the goldens' repository path, which
+    CI's failure step diffs against the committed goldens (`diff_images.py`).
+    """
     paths, _placed = paint_fixture(tmp_path_factory.mktemp("lynmouth"))
+    fresh = tmp_path_factory.mktemp("fresh") / GOLDEN_DIR.relative_to(REPO_ROOT)
+    fresh.mkdir(parents=True)
+    for name in OUTPUTS:
+        shutil.copyfile(paths[name], fresh / name)
     return paths
 
 
