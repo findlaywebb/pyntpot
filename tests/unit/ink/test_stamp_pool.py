@@ -80,3 +80,13 @@ def test_a_stroke_from_far_off_the_plate_in_one_axis_lays_no_blot():
     stamp(acc, line, pen, np.random.default_rng(9))
     assert acc[:40].sum() > 0
     assert not blot_ink(1.3, line, (60, 120)).any()
+
+
+def test_a_stroke_that_comes_back_over_its_start_does_not_widen_the_blot():
+    """A loop that returns along the line behind its start leaves no blot there: it counts the set-down only."""
+    loop = np.array(
+        [(60.0, 30.0), (90.0, 30.0), (90.0, 45.0), (40.0, 45.0), (40.0, 30.0), (60.0, 30.0)]
+    )
+    blot = blot_ink(1.3, loop, (60, 120))
+    assert blot[28:33, 61:65].sum() > 0
+    assert not blot[28:33, 50:59].any()

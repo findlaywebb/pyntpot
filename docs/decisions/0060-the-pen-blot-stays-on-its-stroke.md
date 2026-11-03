@@ -80,7 +80,28 @@ and mask on the set-down's samples, about 30 µs a stroke.
 
 ### Mutation testing
 
-MUTATION_PLACEHOLDER
+Run on `ink.deposit.pool`, `ink.deposit.nib_cover`, `ink.deposit.ink_cover` and
+`ink.stamp.stamp`, after the tests below were added; 29 survived, none in `ink_cover`.
+`pool` 48 (`or` to `and` in the empty-window return) is not equivalent: a stroke starting
+more than three radii off the plate in one axis only reached `nib_cover` with a negative
+window and raised; `test_a_stroke_from_far_off_the_plate_in_one_axis_lays_no_blot` kills it.
+`nib_cover` 28 (no set-down slice) is killed by
+`test_a_stroke_that_comes_back_over_its_start_does_not_widen_the_blot`. The survivors:
+
+- Equivalent. `pool` 49, 50: `<=` to `<` in the empty-window return lets an empty window
+  through, which adds nothing. `pool` 68, `nib_cover` 141: float64 in place of float32, the
+  last bit only. `nib_cover` 52, 61: the floor of 1 on `len(t) - 1` and `m_hi - 1` raised to
+  2; a stamped stroke has at least three stamps and more than two samples across. `nib_cover`
+  66, 69, 70, 73: `>`/`<` to `>=`/`<=` on the mask, which differ only for a sample exactly on
+  the window's edge. `nib_cover` 140: `reshape(-2, ...)` reads as `reshape(-1, ...)`.
+- Not equivalent, not killed: the set-down's reach. `nib_cover` 4, 6, 11, 16 to 19, 24 to 27,
+  35, 36 move the arc length the slice stops at by a pixel or a stamp, or widen it on one axis;
+  on a path that does not come back to its start inside the window, any reach at least the
+  window's lays the same cover, and only a path that curls back within a pixel of the reach
+  would tell them apart. 67 and 71 drop samples in the window's first two columns or rows,
+  where the Gaussian is under 1.1% of its centre and the test strokes lay no ink.
+- `stamp` 8: the pressure's random phase drawn over a narrower range is still a random phase.
+  112: `pool >= 0` calls `pool` for a zero pool, which adds zero.
 
 ## Golden regeneration
 
@@ -110,26 +131,29 @@ their dark touch.
 
 ### Docs images
 
-Every docs image and master was repainted with `make_docs_images.py`, on top of ADR 0059's
-images (main at `4fed836`). The 48 that draw a
-pooled pen or nib stroke moved (20 of their masters past the 0.005 parity fraction, all with
-the change at stroke starts); the other 22 are byte-identical. The largest master fractions:
+Every docs image and master was repainted with `make_docs_images.py` on the merge with
+`main` at `b78a1bb` (ADR 0055's images under it). The 48 docs images that draw a pooled pen
+or nib stroke moved, with their 48 masters (12 of them past the 0.005 parity fraction, all
+with the change at stroke starts); the other 22 are byte-identical. The largest master
+fractions:
 
 | Master | Fraction | Max delta | Master | Fraction | Max delta |
 |---|---|---|---|---|---|
-| `social-preview.png` | 0.019965 | 77 | `explanation/nib-hands.png` | 0.019227 | 34 |
-| `reference/brush-sheet.png` | 0.018797 | 174 | `places/oxford.png` | 0.018049 | 51 |
-| `places/y-fenni.png` | 0.016881 | 78 | `explanation/nib-angles.png` | 0.017652 | 32 |
-| `painting-with-python/tree-family.png` | 0.011042 | 36 | `reference/pigment-swatches.png` | 0.010484 | 16 |
-| `curves/kaleidoscope.png` | 0.009757 | 124 | `map-styles/bold.png` | 0.008674 | 20 |
-| `hero.png` | 0.003558 | 159 | `explanation/nib-set-down.png` | 0.003164 | 135 |
+| `explanation/nib-hands.png` | 0.031207 | 30 | `explanation/nib-angles.png` | 0.029773 | 27 |
+| `social-preview.png` | 0.019757 | 76 | `reference/brush-sheet.png` | 0.016051 | 155 |
+| `tutorials/grid-lettering.png` | 0.013841 | 11 | `places/oxford.png` | 0.013220 | 37 |
+| `places/y-fenni.png` | 0.012987 | 64 | `tutorials/grid-nib.png` | 0.012225 | 9 |
+| `curves/kaleidoscope.png` | 0.007465 | 48 | `hero.png` | 0.003533 | 159 |
 
-Looked at side by side with `main`: on the brush sheet the 12 px pen swatches (rows 5, 6
-and 8) lose the round dark disc at their start and begin as a dark touch inside the line;
-the lettered words and the leaders lose the faint grey cloud round their glyph starts and
-pins; on the hero the soft blue disc where the Brathay starts at the lower left is gone. The
-lossy WebP docs images show change across the whole picture at one or two levels, which is
-the encoder, not the paint: the masters' changes are local to the stroke starts.
+Looked at side by side with `main`: on the brush sheet the 12 px pen swatches lose the round
+dark disc at their start and begin as a dark touch inside the line; the lettered words and
+the leaders lose the faint grey cloud round their glyph starts and pins, and the glyph
+starts keep their dark touch. On the hero the soft blue disc round the Brathay's first point
+at the lower left goes, because it was this blot laid past the river's line; the wet brush's
+heavy dab and its comma-shaped tail, which GitHub issue #55 records, are the river brush's
+own load and are not changed here (PR #137 takes them). The lossy WebP docs images show
+change across the whole picture at one or two levels, which is the encoder, not the paint:
+the masters' changes are local to the stroke starts.
 
 ## Consequences
 
