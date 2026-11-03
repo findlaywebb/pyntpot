@@ -4,13 +4,16 @@
 stroke of any two that leave a junction in nearly opposite directions, so a stem
 is written top to bottom in one go and a crossing is two strokes, not four.
 `leaving` is the direction a run sets off in. Junction pixels a few pixels apart
-are one junction. This module does not trace and does not draw.
+are one junction, and so are two junctions joined by a run shorter than a stroke
+is wide: thinning draws an `X` as two forks and a short bridge between them.
+This module does not trace and does not draw.
 """
 
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from pyntpot.letters.skeleton import THROUGH_DOT
@@ -74,7 +77,43 @@ def _junctions(nodes: set[tuple[int, int]]) -> dict[tuple[int, int], tuple[int, 
     return group
 
 
-def join_through(kept: list[tuple[list[tuple[int, int]], list[Pt]]]) -> list[list[Pt]]:
+def _bridged(
+    pieces: dict[int, _Piece], group: dict[tuple[int, int], tuple[int, int]], bridge: float
+) -> None:
+    """Make one junction of two that a run shorter than `bridge` joins, and drop the run.
+
+    Where two strokes cross at a shallow angle thinning does not meet them in
+    one pixel: it forks twice and joins the forks with a short run, the bridge
+    in the waist of an `8`. Drawn, the bridge is a stroke of its own across the
+    crossing. Both ends must be junctions of `JUNCTION_ARMS` arms or more, so a
+    short stroke that ends free is never taken for one. `pieces` and `group`
+    are changed in place.
+    """
+    while True:
+        arms: dict[tuple[int, int], int] = {}
+        for piece in pieces.values():
+            for at in (piece.start, piece.end):
+                arms[group[at]] = arms.get(group[at], 0) + 1
+        short = [
+            i
+            for i, piece in pieces.items()
+            if group[piece.start] != group[piece.end]
+            and arms[group[piece.start]] >= JUNCTION_ARMS
+            and arms[group[piece.end]] >= JUNCTION_ARMS
+            and sum(math.dist(a, b) for a, b in pairwise(piece.pts)) < bridge
+        ]
+        if not short:
+            return
+        piece = pieces.pop(short[0])
+        keep, gone = group[piece.start], group[piece.end]
+        for node, of in group.items():
+            if of == gone:
+                group[node] = keep
+
+
+def join_through(
+    kept: list[tuple[list[tuple[int, int]], list[Pt]]], bridge: float
+) -> list[list[Pt]]:
     """The runs, with the two that run straight on through a junction made one.
 
     A pen writes a stem top to bottom in one go. Left as two strokes that meet
@@ -82,10 +121,15 @@ def join_through(kept: list[tuple[list[tuple[int, int]], list[Pt]]]) -> list[lis
     very place it is joined: a letter with a waist, or a tick that has come
     away from its stem. At every junction the pair of arms leaving in nearly
     opposite directions is joined, and a crossing of two strokes, a `t` or an
-    `f`, joins both of its pairs.
+    `f`, joins both of its pairs. A run that leaves a junction and comes back
+    to it straight on, as the two strokes of an `8` do once joined through its
+    waist, is closed into a ring.
 
     Args:
         kept: Each traced chain and the run of points it became.
+        bridge: A run shorter than this, in raster pixels, between two
+            junctions is a bridge across one crossing (`_bridged`): a stroke's
+            width.
 
     Returns:
         The runs, fewer than there were wherever strokes were joined.
@@ -102,6 +146,7 @@ def join_through(kept: list[tuple[list[tuple[int, int]], list[Pt]]]) -> list[lis
         if group[piece.start] == group[piece.end] and len(piece.pts) <= JOIN_PX * 2
     ]:
         del pieces[i]
+    _bridged(pieces, group, bridge)
     for node in sorted(set(group.values())):
         arms = [
             (i, end)
@@ -129,7 +174,21 @@ def join_through(kept: list[tuple[list[tuple[int, int]], list[Pt]]]) -> list[lis
                 break
             into = pieces[a[0]] if a[1] == 1 else pieces[a[0]].reversed()
             onward = pieces[b[0]] if b[1] == 0 else pieces[b[0]].reversed()
-            pieces[a[0]] = _Piece(into.start, onward.end, [*into.pts, *onward.pts[1:]])
+            joined = _Piece(into.start, onward.end, [*into.pts, *onward.pts[1:]])
+            pieces[a[0]] = _closed(joined, group, node)
             del pieces[b[0]]
             arms = [m for m in arms if m[0] not in (a[0], b[0])]
     return [piece.pts for piece in pieces.values()]
+
+
+def _closed(
+    piece: _Piece, group: dict[tuple[int, int], tuple[int, int]], node: tuple[int, int]
+) -> _Piece:
+    """A joined run closed into a ring when both its ends are at `node` and meet straight on."""
+    if group[piece.start] != node or group[piece.end] != node:
+        return piece
+    out = leaving(piece.pts, LOOK)
+    back = leaving(piece.pts[::-1], LOOK)
+    if out[0] * back[0] + out[1] * back[1] > THROUGH_DOT:
+        return piece
+    return _Piece(piece.start, piece.start, [*piece.pts, piece.pts[0]])

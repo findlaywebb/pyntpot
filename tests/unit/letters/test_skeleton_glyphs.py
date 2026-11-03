@@ -30,9 +30,22 @@ PIECES: dict[str, int] = {
 }
 
 #: The glyphs whose junctions, strokes and ends are checked besides the ones above:
-#: every letter and figure but D, Q, 3 and 8, whose own terminal tails and crossing
-#: bridge are a separate fault.
-JOINED = "ABCEFGHIJKLMNOPRSTUVWXYZabcdefghklmnopqrstuvwxyz01245679"
+#: every letter and figure.
+JOINED = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghklmnopqrstuvwxyz0123456789"
+
+#: How many strokes each listed glyph is traced into, and how many of their ends
+#: are free, where the pen lifts off a terminal of the outline rather than ending
+#: on a stroke. The `D` keeps its tail below the bowl, the `Q` the tail through its
+#: bowl at both ends, the `3` its tongue; the `8` is one ring through its waist
+#: with no bridge across it, and an `X` or an `x` is two strokes crossing.
+TRACED: dict[str, tuple[int, int]] = {
+    "D": (1, 1),
+    "Q": (2, 2),
+    "3": (3, 3),
+    "8": (1, 0),
+    "X": (2, 4),
+    "x": (2, 4),
+}
 
 #: How far, in em, a skeleton pixel may be from the nearest stroke: under this the
 #: stroke is on it, over it a stem end or a branch has been left undrawn.
@@ -82,6 +95,19 @@ def _pieces(paths: list[list[tuple[float, float]]]) -> int:
             todo -= joined
             stack.extend(joined)
     return pieces
+
+
+def _free_ends(paths: list[list[tuple[float, float]]]) -> int:
+    """How many stroke ends lie clear of every stroke, their own beyond a stroke width back."""
+    samples = [_samples(p) for p in paths]
+    back = int(STROKE_EM / STEP)
+    free = 0
+    for i, own in enumerate(samples):
+        for end, rest in ((own[0], own[back + 1 :]), (own[-1], own[: -back - 1])):
+            near = [q for j, other in enumerate(samples) if j != i for q in other] + rest
+            if not near or min(math.dist(end, q) for q in near) > STROKE_EM / 2:
+                free += 1
+    return free
 
 
 def _alongside(a: list[tuple[float, float]], b: list[tuple[float, float]]) -> float:
@@ -166,3 +192,18 @@ class TestJoined:
     def test_a_cross_is_a_stem_and_a_bar(self, face: OutlineFont) -> None:
         """The t is two strokes, each written through the crossing, not four that meet in it."""
         assert len(_paths(face, "t")) == 2
+
+
+class TestTerminals:
+    """A stroke that ends the outline is traced to its end, and a crossing's bridge is not a stroke."""
+
+    @pytest.mark.parametrize("ch", list(TRACED), ids=list(TRACED))
+    def test_the_strokes_and_free_ends_are_the_glyphs_own(self, face: OutlineFont, ch: str) -> None:
+        """A listed glyph is traced into its pinned number of strokes with its pinned free ends."""
+        paths = _paths(face, ch)
+        assert (len(paths), _free_ends(paths)) == TRACED[ch]
+
+    def test_the_eight_is_one_ring(self, face: OutlineFont) -> None:
+        """The 8 is written as one closed stroke through its waist, with no bridge drawn across it."""
+        (ring,) = _paths(face, "8")
+        assert math.dist(ring[0], ring[-1]) < STROKE_EM / 4

@@ -2,8 +2,8 @@
 
 `fill` rasterises a glyph's contours with an even-odd scanline fill, `thin`
 takes the bitmap to a one pixel Zhang-Suen skeleton, and `skeleton_chains` walks that
-skeleton into runs split at every junction, which `prune` clears of the short
-spurs thinning grows. `components` finds the separate blobs of ink. All of it
+skeleton into runs split at every junction, which `letters.spurs.prune` clears of
+the short spurs thinning grows. `components` finds the separate blobs of ink. All of it
 works in raster pixels as `(row, col)`.
 
 Thinning is the risk: a medial axis forks at every join and every terminal, and
@@ -311,53 +311,6 @@ def skeleton_chains(skel: np.ndarray) -> list[list[tuple[int, int]]]:
     left = on - {p for chain in out for p in chain}
     out.extend(_loops(nbrs, left, {p for chain in out for p in chain}))
     return out
-
-
-def _leaves(chain: list[tuple[int, int]], node: tuple[int, int]) -> tuple[float, float]:
-    """The unit direction a chain sets off in from one of its own ends."""
-    run = chain if chain[0] == node else chain[::-1]
-    (r0, c0), (r1, c1) = run[0], run[min(3, len(run) - 1)]
-    d = math.hypot(r1 - r0, c1 - c0) or 1.0
-    return ((r1 - r0) / d, (c1 - c0) / d)
-
-
-def prune(chains: list[list[tuple[int, int]]], limit: float) -> list[list[tuple[int, int]]]:
-    """Drop the short branches thinning grows at joins and at terminals.
-
-    A short branch that carries straight on from another branch at its junction
-    is not one of those: it is the end of a stem that runs on past where
-    something joins it, the top of an `n` or the foot of a `d`, and it stays.
-    """
-    ends: dict[tuple[int, int], int] = {}
-    for chain in chains:
-        for p in (chain[0], chain[-1]):
-            ends[p] = ends.get(p, 0) + 1
-    keep = []
-    for chain in chains:
-        spur = ends.get(chain[0], 0) == 1 or ends.get(chain[-1], 0) == 1
-        if spur and len(chain) < limit and len(chains) > 1 and not _carries_on(chain, chains, ends):
-            continue
-        keep.append(chain)
-    return keep or chains
-
-
-def _carries_on(
-    chain: list[tuple[int, int]],
-    chains: list[list[tuple[int, int]]],
-    ends: dict[tuple[int, int], int],
-) -> bool:
-    """Whether a spur runs straight on from another branch at its junction."""
-    node = chain[-1] if ends.get(chain[0], 0) == 1 else chain[0]
-    if ends.get(node, 0) < PASSING + 1:
-        return False
-    mine = _leaves(chain, node)
-    for other in chains:
-        if other is chain or node not in (other[0], other[-1]):
-            continue
-        theirs = _leaves(other, node)
-        if mine[0] * theirs[0] + mine[1] * theirs[1] <= THROUGH_DOT:
-            return True
-    return False
 
 
 def components(img: np.ndarray) -> list[list[tuple[int, int]]]:

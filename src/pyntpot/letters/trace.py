@@ -31,10 +31,10 @@ from pyntpot.letters.skeleton import (
     components,
     crossings,
     fill,
-    prune,
     skeleton_chains,
     thin,
 )
+from pyntpot.letters.spurs import prune
 
 #: How the glyph is turned into something a pen can follow.
 CENTRELINE = "centreline"
@@ -279,13 +279,13 @@ def centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     free = {p for p in on if crossings(p, on) <= 1}
     drawn: set[tuple[int, int]] = set()
     kept: list[tuple[list[tuple[int, int]], list[Pt]]] = []
-    for chain in prune(skeleton_chains(skel), SPUR_EM * RASTER_EM):
+    for chain in prune(skeleton_chains(skel), SPUR_EM * RASTER_EM, reach):
         pts = [(c + 0.5, r + 0.5) for r, c in chain]
         if len(pts) < MIN_STROKE:
             continue
         drawn.update(chain)
         kept.append((chain, _extend(pts, chain, reach, free)))
-    runs = join_through(kept)
+    runs = join_through(kept, 2.0 * half)
     runs.extend(_flanks(kept, img > 0, half))
     runs.extend(_dots(img, reach, drawn))
     return [[((x * k + ox) / upem, (y * k + oy) / upem) for x, y in run] for run in runs]
