@@ -435,10 +435,12 @@ leaves alone until it has merged:
 - The note edits of 006's S8, among them `docs/features/docs-missing-how-tos.md` and
   `docs/features/docs-examples-housekeeping.md`; this feature's edits to those two notes
   wait for S8.
-- `tests/unit/maps/**` by glob (006's S6). 007's S5 edits one file under it,
-  `tests/unit/maps/test_example_themes.py` (the `callouts` key); 006 names nothing in that
-  file (no renamed class, alias, module or positional style group), so the two diffs do
-  not meet.
+- `tests/**` retired words (006's S9): docstrings, comments, test names and locals. 007
+  changes only what the `examples/places.toml` key rename (`callouts` to `landmarks`)
+  requires: the `"callouts"` key strings at `tests/golden/test_places.py:194` and
+  `tests/unit/maps/test_example_themes.py:70`, which 006 leaves because `examples/` is
+  outside its scope. Line 70 is edited on both sides; plan slice S8 resolves that rebase
+  conflict.
 
 After 006 lands, plan slice S8 rebases, makes the sentences that are only true after 006
 (the "Handed to session A" list of 006's plan), repoints this suite's imports to 006's

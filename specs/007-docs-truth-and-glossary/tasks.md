@@ -62,11 +62,11 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 
 ## S5 — Terminology sweep
 
-- [ ] Red: places tests read the `landmarks` key.
-- [ ] `examples/places.toml` key, `place_card.py`, docstrings and comments say landmarks.
+- [ ] Red: places tests read the `landmarks` key (the two `"callouts"` key strings only; 006's S9 owns their comments, docstrings, test name and local).
+- [ ] `examples/places.toml` key, `place_card.py` and `social_preview.py` docstrings and comments say landmarks; `tests/support/docs_images.py` untouched.
 - [ ] How-to pages: landmark, route ink style, map for the picture, track.
 - [ ] The hand and the nib: centreline trace.
-- [ ] `self-host-providers.md` protocols sentence and the landmarks how-to's import sentence left for S8.
+- [ ] `self-host-providers.md` protocols sentence left for S8; no sentence about importing `Landmark` (S8 adds it).
 - [ ] Gate, places golden test and strict build green; no golden moved.
 
 ## S6 — The wash essay (#176)
@@ -79,7 +79,7 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 
 - [ ] S1 to S6 merged; every red the merge raises fixed in the page it names and listed in the PR.
 - [ ] `tests/docs/test_retired_words.py` green over pages, README and examples.
-- [ ] `tests/docs/test_docs_commands.py`: every `pyntpot` command parses; every example command's options are the script's.
+- [ ] `tests/docs/test_docs_commands.py`: fenced commands and inline `uv run python examples/` spans; every `pyntpot` command parses; every example command's options are the script's; extractor helper tests and non-vacuity assertions.
 - [ ] Remaining `card` on site pages listed in the PR and checked against the glossary.
 - [ ] Notes for #162, #163, #65, #172 and #176 deleted; links to them repointed, except in `docs-missing-how-tos.md` and `docs-examples-housekeeping.md` (S8).
 - [ ] Out-of-scope notes and issues filed (the #174 paragraph and comment are S8's).
@@ -88,13 +88,13 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 
 ## S8 — After feature 006
 
-- [ ] Rebase on `main` with 006; `GLOSSARY.md` conflict resolved; only the expected reds (route ink and lettering group lines).
-- [ ] `test_tutorials.py`, `test_reference_pages.py`, `test_readme.py` and `test_docs_images.py` moved to `tests/docs/`; `test_how_to_commands.py` deleted; subsumed verbatim test dropped; "eighth rung" and "label plate" docstrings fixed; `examples/brush_sheet.py` docstring repointed.
+- [ ] Rebase on `main` with 006 (plan reconciled at `a7d664d`); `GLOSSARY.md`, `test_example_themes.py:70` and any `test_places.py` hunk resolved as S8 step 1 says; only the expected reds (route ink and lettering group lines).
+- [ ] `test_tutorials.py`, `test_reference_pages.py`, `test_readme.py` and `test_docs_images.py` moved to `tests/docs/`; `test_how_to_commands.py` deleted; subsumed verbatim test and `test_every_run_command_names_an_existing_script` dropped; "eighth rung" docstring fixed; nib plate test renamed; `examples/brush_sheet.py` and `tests/support/docs_images.py` docstrings repointed; path grep clean outside `specs/`, `docs/issues/`, `docs/decisions/`.
 - [ ] `test_reference_values.py` imports the brush tables from `pyntpot.ink.brush_sheet`.
 - [ ] Red: group line requires `, from` an exporting package (#163). Green: `WashStyle` from `pyntpot.ink`, seven map groups from `pyntpot.maps`, `RouteInkStyle`, `LetteringStyle`; bullet and keyword-only sentence.
 - [ ] Wash essay (#176): `WashOptions`, `separated`, `fluid_modulate` from `pyntpot.ink`; from-claim test shown to guard them.
 - [ ] Red: glossary cells name the exported name where there is one. Green: cells swapped; 006's three rows in the new format; files regenerated.
 - [ ] Red: repository links (`blob/main/` files, `tree/main/` directories) exist on the branch. Green: `self-host-providers.md` protocols; landmarks how-to names `Landmark`; `docs/architecture.md` states ADR 0068's rule.
 - [ ] `docs-missing-how-tos.md` and `docs-examples-housekeeping.md` drop the lead-on note; #174 paragraph and comment.
-- [ ] Red: retired-word scan over `src/` and `tests/`. Green: test docstrings and one test name fixed; any `src/` miss reported to 006, not edited.
+- [ ] Retired-word scan extended to `src/` and `tests/`, green on arrival after 006's S9 (non-vacuity shown); any `tests/` miss fixed here; any `src/` miss reported to 006, not edited.
 - [ ] Full gates green; PR marked ready.
