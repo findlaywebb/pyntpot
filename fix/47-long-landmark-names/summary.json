@@ -1,0 +1,80 @@
+{
+  "before": "origin/main",
+  "after": "working tree",
+  "channel_delta": 2,
+  "max_differing_fraction": 0.005,
+  "files": [
+    {
+      "path": "docs/images/how-to/command-line.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 583,
+      "changed_fraction": 0.12850676577091671,
+      "over_bound": true,
+      "max_delta": 225,
+      "box": [
+        0,
+        112,
+        720,
+        583
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/how-to/command-line.webp.diff.png",
+      "crop_image": "docs/images/how-to/command-line.webp.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/how-to/command-line.png",
+      "status": "changed",
+      "width": 240,
+      "height": 194,
+      "changed_fraction": 0.03797250859106529,
+      "over_bound": true,
+      "max_delta": 244,
+      "box": [
+        17,
+        41,
+        213,
+        83
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/how-to/command-line.png.diff.png",
+      "crop_image": "tests/golden/docs/how-to/command-line.png.crop.png"
+    },
+    {
+      "path": "tests/golden/lynmouth/labels-centreline.webp",
+      "status": "changed",
+      "width": 1800,
+      "height": 1457,
+      "changed_fraction": 0.0548364218714253,
+      "over_bound": true,
+      "max_delta": 255,
+      "box": [
+        114,
+        304,
+        1800,
+        1022
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/lynmouth/labels-centreline.webp.diff.png",
+      "crop_image": "tests/golden/lynmouth/labels-centreline.webp.crop.png"
+    },
+    {
+      "path": "tests/golden/lynmouth/map.png",
+      "status": "changed",
+      "width": 1800,
+      "height": 1457,
+      "changed_fraction": 0.029915732479219095,
+      "over_bound": true,
+      "max_delta": 215,
+      "box": [
+        122,
+        308,
+        1590,
+        620
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/lynmouth/map.png.diff.png",
+      "crop_image": "tests/golden/lynmouth/map.png.crop.png"
+    }
+  ]
+}
