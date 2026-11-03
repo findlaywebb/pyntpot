@@ -29,6 +29,7 @@ from pyntpot.ink.style import WashStyle
 from pyntpot.ink.wash import WashOptions, separated, wash
 from pyntpot.maps.cover import PAINTED_AS
 from pyntpot.maps.painter.job import INSIDE, PaintJob, PlateStack, drawable
+from pyntpot.maps.painter.patches import merge_small_patches
 from pyntpot.maps.rings import orient
 
 #: A wet field's reach is never narrower than this many pixels.
@@ -93,7 +94,9 @@ def _label(job: PaintJob, stack: PlateStack, order: list[str]) -> None:
     A class is the union of its rings. They come wound as they were surveyed, so each
     is wound anticlockwise before the nonzero fill; otherwise a ring inside another and
     wound against it, such as a lawn inside its park, would cut a hole in the class.
-    They are wound after the deform, so a ring is keyed by its points as surveyed.
+    They are wound after the deform, so a ring is keyed by its points as surveyed. Last,
+    a patch smaller than the theme's `min_patch_px` display pixels is folded into its
+    largest neighbour, so a card seen small is not speckled.
     """
     deform = _deform(job)
     for i, cls in enumerate(order, 1):
@@ -102,6 +105,8 @@ def _label(job: PaintJob, stack: PlateStack, order: list[str]) -> None:
             wound = [orient(r) for r in deform_rings(rings, deform)]
             stack.label[fill_cov(wound, job.canvas) > INSIDE] = i
     stack.label[stack.water] = 0
+    floor = job.style.cover.min_patch_px * job.scale * job.scale
+    stack.label[...] = merge_small_patches(stack.label, floor)
 
 
 def _washed(order: list[str]) -> list[tuple[str, list[int]]]:
