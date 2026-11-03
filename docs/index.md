@@ -2,7 +2,7 @@
 
 ![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes, the river Rothay in dark blue, and a maroon route looping from Ambleside out to Loughrigg Terrace and back, with the names written by hand](images/hero.webp)
 
-*Painted by `examples/place_card.py` (size 1200, the Ambleside theme).*
+*Painted by `examples/place_card.py` (size 1200, theme `examples/themes/ambleside-hero.toml`).*
 
 pyntpot paints watercolour and pen-and-ink pictures in Python the way a painter works:
 paper first, then washes, brushes, the pen, and the names last. Maps are its first use

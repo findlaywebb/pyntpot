@@ -18,15 +18,15 @@ publicly it must credit OpenStreetMap and make clear that the data is under the 
 OpenStreetMap Foundation's guidelines for [Produced Works][produced-work] and for
 [attribution][attribution] say how.
 
-pyntpot draws that credit for you. `compose` writes it at the bottom right of the card,
+pyntpot draws that credit for you. `compose` writes it at the bottom right of the map,
 lettered in the style's hand. It joins each source's short credit with a middle dot:
 "© OpenStreetMap contributors (openstreetmap.org/copyright) · elevation: NASA SRTM". The
 line carries the URL because the guidelines ask for it on a static or printed image, where a
 link cannot be followed.
 
-![The Ambleside card with its credit lettered small at the bottom right corner, below the foot of the route.](../images/places/ambleside.webp)
+![The Ambleside map with its credit lettered small at the bottom right corner, below the foot of the route.](../images/places/ambleside.webp)
 
-*Painted by `examples/place_card.py`. The credit is the small line at the bottom right.*
+*Painted by `examples/place_card.py` with `examples/themes/ambleside.toml`. The credit is the small line at the bottom right.*
 
 The elevation is NASA's SRTM data, served by OpenTopoData. SRTM carries no use restriction.
 It is credited anyway, and OpenTopoData's public service has its own limits, below.
@@ -82,10 +82,10 @@ public servers are not for bulk work.
 The OpenStreetMap guidelines ask that the credit be easy to read. pyntpot letters it in the
 default ink, `#241c14`, on the paper's colour, `#f3ead6`, which is a contrast of 14 to 1 by
 the WCAG formula. The ink is laid with the paper's grain in it, so the painted line is a
-little lighter than that number. The credit is written straight onto the card at the bottom
-right, with no backing wash under it, so where the card is dark there, its legibility is
+little lighter than that number. The credit is written straight onto the map at the bottom
+right, with no backing wash under it, so where the map is dark there, its legibility is
 the ground's. Look at the corner of an image before you publish it. A theme that changes the
-ink, or a card whose ground is dark in that corner, can take the credit below a readable
+ink, or a map whose ground is dark in that corner, can take the credit below a readable
 contrast, and `attribution=False` with a credit beside the image is the way out.
 
 [produced-work]: https://osmfoundation.org/wiki/Licence/Community_Guidelines/Produced_Work_-_Guideline
