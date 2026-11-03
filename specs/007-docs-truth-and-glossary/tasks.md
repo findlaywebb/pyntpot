@@ -29,13 +29,13 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 
 ## S2 — Reference truth (#163)
 
-- [ ] Red: `tests/docs/test_docs_imports.py` (imports, from claims, dotted paths).
-- [ ] Red: `tests/docs/test_reference_values.py` (style-field rows, synopsis, pigments, brushes).
-- [ ] Style-field group lines true on both sides of 006 (package only where exported today; `RouteInk`, `LetteringPolicy` as the code has them); reading-the-tables bullet; route ink `style` row; nib plate.
-- [ ] Brush tables imported from `pyntpot.ink.brush` (S8 repoints).
-- [ ] `cli.md` synopsis equals the parser's usage.
-- [ ] Cache layout: nib plate, trace; manifest, pigments, brushes: map for the picture.
-- [ ] Gate and strict build green.
+- [x] Red: `tests/docs/test_docs_imports.py` (imports, from claims, dotted paths).
+- [x] Red: `tests/docs/test_reference_values.py` (style-field rows, synopsis, pigments, brushes).
+- [x] Style-field group lines true on both sides of 006 (package only where exported today; `RouteInk`, `LetteringPolicy` as the code has them); reading-the-tables bullet; route ink `style` row; nib plate.
+- [x] Brush tables imported from `pyntpot.ink.brush` (S8 repoints).
+- [x] `cli.md` synopsis equals the parser's usage.
+- [x] Cache layout: nib plate, trace; manifest, pigments, brushes: map for the picture.
+- [x] Gate and strict build green.
 
 ## S3 — Gallery and captions (#162)
 
