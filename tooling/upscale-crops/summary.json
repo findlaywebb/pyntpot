@@ -1,0 +1,26 @@
+{
+  "before": "/tmp/claude-0/-home-user-pyntpot/1d79c270-6236-5bf4-82b6-e519237905dd/scratchpad/crop-demo/before",
+  "after": "/tmp/claude-0/-home-user-pyntpot/1d79c270-6236-5bf4-82b6-e519237905dd/scratchpad/crop-demo/after",
+  "channel_delta": 2,
+  "max_differing_fraction": 0.005,
+  "files": [
+    {
+      "path": "places/ambleside.png",
+      "status": "changed",
+      "width": 240,
+      "height": 171,
+      "changed_fraction": 0.000925925925925926,
+      "over_bound": false,
+      "max_delta": 132,
+      "box": [
+        110,
+        120,
+        130,
+        134
+      ],
+      "extent": "local",
+      "diff_image": "places/ambleside.png.diff.png",
+      "crop_image": "places/ambleside.png.crop.png"
+    }
+  ]
+}
