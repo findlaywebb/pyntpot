@@ -1,0 +1,34 @@
+{
+  "before": "origin/main",
+  "after": "working tree",
+  "channel_delta": 2,
+  "max_differing_fraction": 0.005,
+  "files": [
+    {
+      "path": "docs/images/reference/glyph-sheet.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 464,
+      "changed_fraction": 1.0,
+      "over_bound": true,
+      "max_delta": null,
+      "box": null,
+      "extent": "widespread",
+      "diff_image": "docs/images/reference/glyph-sheet.webp.diff.png",
+      "crop_image": null
+    },
+    {
+      "path": "tests/golden/docs/reference/glyph-sheet.png",
+      "status": "changed",
+      "width": 240,
+      "height": 155,
+      "changed_fraction": 1.0,
+      "over_bound": true,
+      "max_delta": null,
+      "box": null,
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/reference/glyph-sheet.png.diff.png",
+      "crop_image": null
+    }
+  ]
+}
