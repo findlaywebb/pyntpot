@@ -6,6 +6,7 @@ import pytest
 
 from pyntpot.maps.candidates.landmark_classes import classify
 from pyntpot.maps.candidates.landmarks import (
+    LANDMARK_NAME_MAX,
     landmark_rank,
     landmark_reach,
     pick_landmarks,
@@ -86,6 +87,30 @@ class TestPickLandmarks:
             "Ruined colliery",
         ]
 
+    def test_all_offers_a_long_name_after_every_name_that_fits(self) -> None:
+        """Mode `all` keeps a forty-character chapel, but behind a farther, lower-tier statue."""
+        chapel = {
+            "n": "Living Waters Lynton United Reformed Church",
+            "cls": "worship",
+            "d": 63.0,
+            "x": 1.0,
+            "y": 1.0,
+        }
+        kept = pick_landmarks([chapel, *_candidates()], mode="all")
+        assert _names(kept)[-1] == "Living Waters Lynton United Reformed Church"
+
+    def test_a_payload_may_still_pick_a_long_name(self) -> None:
+        """The length rule orders the heuristic; a name the payload chose is drawn as asked."""
+        chapel = {
+            "n": "Living Waters Lynton United Reformed Church",
+            "cls": "worship",
+            "d": 63.0,
+            "x": 1.0,
+            "y": 1.0,
+        }
+        kept = pick_landmarks([chapel], picks=("Living Waters Lynton United Reformed Church",))
+        assert _names(kept) == ["Living Waters Lynton United Reformed Church"]
+
     def test_the_payload_replaces_the_heuristic(self) -> None:
         """A payload pick is drawn whether or not the rule would have chosen it."""
         kept = pick_landmarks(_candidates(), picks=("Bakewell", "Far sculpture"))
@@ -124,11 +149,11 @@ class TestReachAndRank:
 
     def test_the_rank_is_tier_then_comfort_and_a_missing_distance_is_last(self) -> None:
         """A tier one thing outranks tier two, and no distance ranks beyond any."""
-        hill = landmark_rank({"cls": "summit", "d": 600.0})
-        assert hill == (1, True, 0.1)
-        assert landmark_rank({"cls": "monument", "d": 0.0}) == (2, True, 0.0)
+        hill = landmark_rank({"n": "Wind Hill", "cls": "summit", "d": 600.0})
+        assert hill == (False, 1, True, 0.1)
+        assert landmark_rank({"cls": "monument", "d": 0.0}) == (False, 2, True, 0.0)
         assert (
-            landmark_rank({"cls": "monument"})[2] > landmark_rank({"cls": "monument", "d": 1e6})[2]
+            landmark_rank({"cls": "monument"})[3] > landmark_rank({"cls": "monument", "d": 1e6})[3]
         )
 
     def test_a_recorded_thing_ranks_before_an_unrecorded_one_in_its_tier(self) -> None:
@@ -162,7 +187,38 @@ class TestReachAndRank:
         chapel = {"cls": classify(chapel_tags), "d": 100.0, "tags": chapel_tags}
         assert landmark_rank(castle) < landmark_rank(chapel)
         ruin = {"cls": classify({"historic": "ruins"}), "d": 0.0, "tags": {}}
-        assert landmark_rank(castle)[0] < landmark_rank(ruin)[0]
+        assert landmark_rank(castle)[1] < landmark_rank(ruin)[1]
+
+    @pytest.mark.parametrize(
+        ("name", "too_long"),
+        [
+            ("Valley of Rocks Viewpoint", False),
+            ("Countisbury Hill Viewpoint", True),
+        ],
+        ids=["twenty-five-fits", "twenty-six-is-too-long"],
+    )
+    def test_the_first_term_is_whether_the_name_is_too_long_to_letter(
+        self, name: str, too_long: bool
+    ) -> None:
+        """A name of 25 characters fits a label and one of 26 does not."""
+        assert LANDMARK_NAME_MAX == 25
+        assert landmark_rank({"n": name, "cls": "viewpoint", "d": 10.0})[0] is too_long
+
+    def test_the_name_is_read_from_the_export_row_too(self) -> None:
+        """A `name` key counts as the `n` key does, so the export and the heuristic agree."""
+        row = {"name": "Living Waters Lynton United Reformed Church", "class": "worship"}
+        assert landmark_rank(row)[0] is True
+
+    def test_a_long_name_ranks_after_every_name_that_fits(self) -> None:
+        """A recorded chapel at 63 m with a 43-character name ranks below an unrecorded ruin."""
+        chapel = {
+            "n": "Living Waters Lynton United Reformed Church",
+            "cls": "worship",
+            "d": 63.0,
+            "tags": {"wikidata": "Q26569308"},
+        }
+        ruin = {"n": "Hollerday House", "cls": "ruin", "d": 190.0, "tags": {}}
+        assert landmark_rank(ruin) < landmark_rank(chapel)
 
 
 class TestRankLandmarks:
@@ -224,6 +280,20 @@ class TestRankLandmarks:
             True,
         )
         assert (hill["lat"], hill["lng"]) == pytest.approx((51.228619, -3.831394), abs=1e-6)
+
+    def test_a_long_name_is_offered_after_the_names_that_fit(self) -> None:
+        """The export keeps a forty-character chapel at 63 m but ranks it below a statue."""
+        proj, _ = track_projection(LATS, LNGS)
+        chapel = {
+            "n": "Living Waters Lynton United Reformed Church",
+            "cls": "worship",
+            "x": 200.0,
+            "y": 150.0,
+            "d": 63,
+            "tags": {"wikidata": "Q26569308"},
+        }
+        ranked = rank_landmarks([chapel, *self._entries()], proj)
+        assert [c.name for c in ranked][-1] == "Living Waters Lynton United Reformed Church"
 
     def test_the_cap_keeps_the_most_notable(self) -> None:
         """Two of three kept are the first two of the ranking."""

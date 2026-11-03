@@ -10,7 +10,10 @@ offered in.
 a city: the eighty nearest things can fail to reach out of one district, so a
 zoo is not offered and a drinking fountain is. `landmark_rank` puts the things
 someone on the track navigates by first and, inside a tier, the ones sitting most comfortably
-inside their own reach. **The reach is the thing's own**, read off its class and
+inside their own reach. **A name too long to letter comes last**: one over
+`LANDMARK_NAME_MAX` characters is still offered, and a payload may still pick it,
+but it ranks after every name that fits, so "Living Waters Lynton United Reformed
+Church" is not the heuristic's choice beside the shorter names around it. **The reach is the thing's own**, read off its class and
 off whatever height OSM states, so a statue is worth naming from a hundred
 metres and a hill from six kilometres.
 
@@ -42,6 +45,12 @@ UNKNOWN_DISTANCE_M = 9e9
 #: Decimal places of a latitude or longitude in a candidate row.
 COORDINATE_PLACES = 6
 
+#: The longest name, in characters, the heuristic offers ahead of the rest. A
+#: label wraps onto two lines at most, and past about 25 characters a name on a
+#: leader reads as a sentence on the map rather than a place. A longer name is
+#: ranked after every name that fits, not dropped.
+LANDMARK_NAME_MAX = 25
+
 
 def landmark_reach(entry: Mapping[str, Any], scale: float = 1.0) -> float:
     """How far off the route this one thing is still worth naming, in metres.
@@ -57,21 +66,26 @@ def landmark_reach(entry: Mapping[str, Any], scale: float = 1.0) -> float:
     return min(max(base, tall), REACH_CAP_M) * scale
 
 
-def landmark_rank(entry: Mapping[str, Any], scale: float = 1.0) -> tuple[int, bool, float]:
-    """What order the candidates are offered in: notability, record, then comfort.
+def landmark_rank(entry: Mapping[str, Any], scale: float = 1.0) -> tuple[bool, int, bool, float]:
+    """What order the candidates are offered in: length, notability, record, then comfort.
 
-    The first term is the tier, so the things someone on the track navigates by come before
-    the things they pass; the second is whether the thing is unrecorded, so inside a tier
-    what Wikidata, Wikipedia, a heritage designation or a listing knows comes first; the
-    third is how comfortably the thing sits inside its own reach, so within that the
-    nearer and the taller both rise.
+    The first term is whether the name (`n` or `name`) is longer than
+    `LANDMARK_NAME_MAX`, so a name too long to letter comes after every name
+    that fits, whatever its tier. The second is the tier, so the things someone
+    on the track navigates by come before the things they pass; the third is
+    whether the thing is unrecorded, so inside a tier what Wikidata, Wikipedia, a
+    heritage designation or a listing knows comes first; the fourth is how
+    comfortably the thing sits inside its own reach, so within that the nearer
+    and the taller both rise.
     """
     cls = entry.get("cls") or entry.get("class") or "other"
     tier, _base = LANDMARK_REACH_M.get(cls, LANDMARK_REACH_M["other"])
     d = entry.get("d")
     d = entry.get("distance_m") if d is None else d
     far = UNKNOWN_DISTANCE_M if d is None else float(d)
+    name = entry.get("n") or entry.get("name") or ""
     return (
+        len(name) > LANDMARK_NAME_MAX,
         tier,
         not is_recorded(entry.get("tags") or {}),
         far / max(landmark_reach(entry, scale), 1.0),
