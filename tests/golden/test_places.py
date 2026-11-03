@@ -1,5 +1,6 @@
 """The focus-place fixtures each paint a card from their cache alone, with the names expected."""
 
+import json
 import shutil
 import tomllib
 from dataclasses import dataclass
@@ -46,21 +47,12 @@ PLACES_TOML = REPO_ROOT / "examples" / "places.toml"
 #: The share of a flat name's box a lake may graze at its padded edges.
 LAKE_GRAZE = 0.05
 
-#: Villages either side of Kyle Akin, at their OSM place nodes in degrees, that the Skye card
-#: paints as land: Kyleakin on Skye, the rest on the mainland.
-SKYE_LAND = {
-    "Kyle of Lochalsh": (57.2814, -5.7151),
-    "Kyleakin": (57.2721, -5.7308),
-    "Balmacara": (57.2929, -5.6420),
-    "Plockton": (57.3381, -5.6519),
-    "Dornie": (57.2791, -5.5154),
-}
+#: Villages either side of Kyle Akin that the Skye card paints as land: Kyleakin on Skye,
+#: the rest on the mainland. Each is found by name among the payload's OSM place nodes.
+SKYE_LAND = ("Kyle of Lochalsh", "Kyleakin", "Balmacara", "Plockton", "Dornie")
 
-#: The water between those shores, in degrees, that the Skye card paints as sea.
-SKYE_SEA = {
-    "Kyle Akin": (57.2765, -5.7230),
-    "Loch Alsh": (57.2650, -5.6500),
-}
+#: The loch whose OSM line, run down its water from Dornie to Kyle Akin, the card paints as sea.
+SKYE_LOCH = "Loch Alsh"
 
 #: How the providers name the caller; never sent, since no request is made.
 CONTACT = "pyntpot-tests@example.invalid"
@@ -219,7 +211,7 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
     assert names == set(place.labels)
     _assert_clear(list(lettering.labels), water_from(basemap))
     if place.directory == "skye":
-        _assert_skye_sea(basemap)
+        _assert_skye_sea(basemap, cache_dir / f"overpass-{place.key}.json")
     if place.directory == "y-fenni":
         assert {"Y Fenni", "Tŷ Melin", "Castell y Fenni"} <= names
         assert "Abergavenny" not in names
@@ -229,11 +221,25 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
         assert saved.mode == "RGB"
 
 
-def _assert_skye_sea(basemap: Basemap) -> None:
-    """Both shores of Kyle Akin are land on the Skye card and the water off them is sea.
+def _assert_skye_sea(basemap: Basemap, payload: Path) -> None:
+    """Both shores of Kyle Akin are land on the Skye card and the water between them is sea.
 
     The mainland's coast crosses the card's east edge; cut short of it, its land was sea.
+    The places are read from the fixture's own OSM payload by name, so no coordinate is
+    written here: the villages' place nodes, the vertices of Loch Alsh's line, and the
+    point halfway between Kyleakin and Kyle of Lochalsh, in the narrows.
     """
+    elements = json.loads(payload.read_text())["elements"]
+    villages = {
+        e["tags"]["name"]: (e["lat"], e["lon"])
+        for e in elements
+        if e["type"] == "node" and (e.get("tags") or {}).get("name") in SKYE_LAND
+    }
+    loch = next(
+        e["geometry"]
+        for e in elements
+        if e["type"] == "way" and (e.get("tags") or {}).get("name") == SKYE_LOCH
+    )
     sea = [list(ring) for ring in basemap.layers.sea]
 
     def is_sea(lat: float, lng: float) -> bool:
@@ -244,10 +250,13 @@ def _assert_skye_sea(basemap: Basemap) -> None:
         )
         return winding != 0
 
-    for name, (lat, lng) in SKYE_LAND.items():
+    assert set(villages) == set(SKYE_LAND)
+    for name, (lat, lng) in villages.items():
         assert not is_sea(lat, lng), f"{name} is painted as sea"
-    for name, (lat, lng) in SKYE_SEA.items():
-        assert is_sea(lat, lng), f"{name} is painted as land"
+    for k, vertex in enumerate(loch):
+        assert is_sea(vertex["lat"], vertex["lon"]), f"{SKYE_LOCH} vertex {k} is painted as land"
+    (lat_a, lng_a), (lat_b, lng_b) = villages["Kyleakin"], villages["Kyle of Lochalsh"]
+    assert is_sea((lat_a + lat_b) / 2, (lng_a + lng_b) / 2), "Kyle Akin is painted as land"
 
 
 def _assert_clear(labels: list[Label], water: Water) -> None:

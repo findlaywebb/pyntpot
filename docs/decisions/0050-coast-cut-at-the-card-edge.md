@@ -45,9 +45,12 @@ Pinned by `tests/unit/maps/test_rings.py` (`TestCutLine`: a line is cut at its c
 segment through a corner keeps its inside piece, a line that leaves and comes back is two
 runs, one inside is kept whole and one outside dropped) and `tests/unit/maps/test_cover.py`
 (a coast surveyed a kilometre between vertices ends on the card edge and its land is not
-sea; it failed before the fix with the chain ending 120 m short). `tests/golden/test_places.py`
+sea; it failed before the fix with the chain ending 292 m short). `tests/golden/test_places.py`
 now asserts, on the Skye card, that Kyle of Lochalsh, Kyleakin, Balmacara, Plockton and
-Dornie are land and that Kyle Akin and Loch Alsh are sea.
+Dornie are land and that Kyle Akin and Loch Alsh are sea; before the fix it failed
+with the mainland villages painted as sea. The places are read by name from the fixture's OSM payload (the village
+nodes, the vertices of Loch Alsh's line, and the point halfway between Kyleakin and Kyle
+of Lochalsh), because they lie east of the Skye fixture box that test coordinates keep to.
 
 ## Golden regeneration
 

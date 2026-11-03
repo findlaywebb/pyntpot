@@ -47,11 +47,11 @@ def test_the_coast_is_cut_at_the_card_edge_and_its_land_is_not_sea(tmp_path: Pat
     way = {
         "type": "way",
         "tags": {"natural": "coastline"},
-        "geometry": [{"lat": 51.2256, "lon": -3.74 - 0.015 * k} for k in range(13)],
+        "geometry": [{"lat": 51.2256, "lon": -3.801 - 0.0145 * k} for k in range(6)],
     }
     (tmp_path / "overpass-iCOAST.json").write_text(json.dumps({"elements": [way]}))
     proj, _ = track_projection(LATS, LNGS)
-    clip = (-5000.0, -3000.0, 5000.0, 3000.0)
+    clip = (-2000.0, -3000.0, 2000.0, 3000.0)
     chains = coastline_chains("iCOAST", proj, clip, Cache(tmp_path))
     assert len(chains) == 1
     assert chains[0][0][0] == pytest.approx(clip[2])
