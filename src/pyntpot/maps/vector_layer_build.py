@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from pyntpot.maps.track import Track
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class VectorArea:
     """A filled area and the inner ring a wash dries back to.
 
@@ -49,7 +49,7 @@ class VectorArea:
     inner: str = ""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class VectorLine:
     """One line of a layer, with its class, name, weight and level.
 
@@ -70,7 +70,7 @@ class VectorLine:
     level_m: float | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class HillshadeBand:
     """One posterised relief band.
 
@@ -85,7 +85,7 @@ class HillshadeBand:
     level: float
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class HillshadeImage:
     """The greyscale hillshade image and where it sits on the card.
 

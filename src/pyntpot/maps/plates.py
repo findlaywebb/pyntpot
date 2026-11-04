@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 _NO_GRID_DARKNESS = 0.35
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class DarkGrid:
     """How dark the painted map is, cell by cell, on a coarse grid.
 
@@ -82,7 +82,7 @@ def dark_array(grid: DarkGrid | None, h: int, w: int) -> np.ndarray:
     )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Manifest:
     """The sidecar record of one map's painted plates.
 

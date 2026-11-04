@@ -22,9 +22,9 @@ from pyntpot.maps.style_groups import (
     BasemapStyle,
     CardStyle,
     CoverStyle,
-    LetteringPolicy,
+    LetteringStyle,
     RibbonStyle,
-    RouteInk,
+    RouteInkStyle,
     RouteStyle,
 )
 
@@ -235,14 +235,14 @@ PINNED: dict[type, tuple[str, ...]] = {
         "tree_spacing_m",
         "all_variants",
     ),
-    LetteringPolicy: (
+    LetteringStyle: (
         "label_max",
         "labels",
         "label_ground",
         "label_geom_tol_px",
         "home_glyph",
     ),
-    RouteInk: ("style", "px", "colour", "blend", "opacity"),
+    RouteInkStyle: ("style", "px", "colour", "blend", "opacity"),
 }
 
 #: The groups that were copied from the flat painter style, each with the
@@ -259,7 +259,7 @@ SOURCED: dict[type, str] = {
     RibbonStyle: "6c8fdf4184013394",
     CoverStyle: "8ff38fcbad0d7a6f",
     RouteStyle: "e7af799eb721f445",
-    LetteringPolicy: "252f33e095df0b01",
+    LetteringStyle: "252f33e095df0b01",
 }
 
 #: `BasemapStyle`'s defaults, the basemap options' class defaults, as pinned literals.
@@ -307,7 +307,7 @@ MULTI_LAYER: tuple[tuple[str, type], ...] = (
     ("sheet_seed", PaperStyle),
     ("display_px", CardStyle),
     ("brush_width_px", BrushStyle),
-    ("label_geom_tol_px", LetteringPolicy),
+    ("label_geom_tol_px", LetteringStyle),
 )
 
 
@@ -372,3 +372,27 @@ def test_groups_are_frozen(group: type) -> None:
     first = _names(group)[0]
     with pytest.raises(dataclasses.FrozenInstanceError):
         setattr(built, first, getattr(built, first))
+
+
+#: Each map style group with keywords that build it: its defaults, or the ink's three
+#: required fields.
+MAP_GROUPS: dict[type, dict[str, Any]] = {
+    CardStyle: {},
+    RibbonStyle: {},
+    CoverStyle: {},
+    RouteStyle: {},
+    BasemapStyle: {},
+    LetteringStyle: {},
+    RouteInkStyle: {"style": "solid", "px": 3.0, "colour": "#b5332a"},
+}
+
+
+@pytest.mark.parametrize(
+    ("group", "keywords"), MAP_GROUPS.items(), ids=[group.__name__ for group in MAP_GROUPS]
+)
+def test_a_map_style_group_takes_only_keywords(group: type, keywords: dict[str, Any]) -> None:
+    """A map style group passed its fields by position raises `TypeError`."""
+    built: Any = group(**keywords)
+    values = [getattr(built, name) for name in _names(group)]
+    with pytest.raises(TypeError):
+        group(*values)

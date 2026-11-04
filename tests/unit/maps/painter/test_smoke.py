@@ -83,15 +83,48 @@ def test_the_plates_are_webp_the_size_they_were_painted(tmp_path):
 #: The smoke box: a route, three roads and two watercourses, so every brush the
 #: plate carries is stamped. Small enough to paint in a fraction of a second.
 SMOKE_ROADS = (
-    Road(((0.0, 200.0), (400.0, 180.0), (900.0, 240.0), (1390.0, 200.0)), "", "major", "", "", ""),
-    Road(((40.0, 60.0), (600.0, 140.0), (1340.0, 90.0)), "", "minor", "", "", ""),
-    Road(((30.0, 340.0), (700.0, 300.0), (1360.0, 360.0)), "", "path", "", "", ""),
+    Road(
+        line=((0.0, 200.0), (400.0, 180.0), (900.0, 240.0), (1390.0, 200.0)),
+        cls="",
+        band="major",
+        highway="",
+        name="",
+        ref="",
+    ),
+    Road(
+        line=((40.0, 60.0), (600.0, 140.0), (1340.0, 90.0)),
+        cls="",
+        band="minor",
+        highway="",
+        name="",
+        ref="",
+    ),
+    Road(
+        line=((30.0, 340.0), (700.0, 300.0), (1360.0, 360.0)),
+        cls="",
+        band="path",
+        highway="",
+        name="",
+        ref="",
+    ),
 )
 
 
 SMOKE_RIVERS = (
-    River(((20.0, 10.0), (400.0, 120.0), (900.0, 60.0), (1380.0, 150.0)), "major", "Lyn", 0.0, 0.0),
-    River(((60.0, 300.0), (500.0, 250.0), (1100.0, 320.0)), "minor", "", 0.0, 0.0),
+    River(
+        line=((20.0, 10.0), (400.0, 120.0), (900.0, 60.0), (1380.0, 150.0)),
+        cls="major",
+        name="Lyn",
+        width_px=0.0,
+        name_width_px=0.0,
+    ),
+    River(
+        line=((60.0, 300.0), (500.0, 250.0), (1100.0, 320.0)),
+        cls="minor",
+        name="",
+        width_px=0.0,
+        name_width_px=0.0,
+    ),
 )
 
 

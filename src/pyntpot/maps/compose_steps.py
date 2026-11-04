@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from pyntpot.maps.plates import Plates
-    from pyntpot.maps.style_groups import RouteInk
+    from pyntpot.maps.style_groups import RouteInkStyle
 
 #: How many times finer than the card the route is drawn, before it is
 #: reduced back. 4 is where a diagonal stops showing its steps at the
@@ -57,7 +57,7 @@ def route(
     card_img: Image.Image,
     plates: Plates,
     route_px: list[tuple[float, float]],
-    ink: RouteInk,
+    ink: RouteInkStyle,
     k: float,
 ) -> None:
     """The route, in the route ink, drawn onto the card in place.

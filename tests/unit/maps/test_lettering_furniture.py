@@ -43,7 +43,7 @@ def _pinned(turn: float, size: float = 20.0, run: float = 40.0) -> Label:
     """The museum's label, its leader running `run` px from the pin in direction `turn`."""
     px, py = MUSEUM
     name = (px + run * math.cos(turn), py + run * math.sin(turn))
-    return Label("Lynton and Exmoor Museum", px=px, py=py, size=size, leader=(MUSEUM, name))
+    return Label(name="Lynton and Exmoor Museum", px=px, py=py, size=size, leader=(MUSEUM, name))
 
 
 def _furniture(hand: Hand, style: Style, label: Label) -> tuple[list[Point], list[Point]]:
@@ -178,7 +178,7 @@ class TestClosedPin:
     def test_a_name_without_a_leader_takes_no_pin(self, hand: Hand, style: Style) -> None:
         """A label with no leader draws neither a ring nor a leader beside its name."""
         px, py = MUSEUM
-        label = Label("Lynton and Exmoor Museum", px=px, py=py, size=20.0)
+        label = Label(name="Lynton and Exmoor Museum", px=px, py=py, size=20.0)
         marks = lettering_marks.label_marks(hand, label, style.nib)
         assert not {"pin", "leader"} & {m.role for m in marks}
 

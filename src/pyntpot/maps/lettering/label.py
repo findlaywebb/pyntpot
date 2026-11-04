@@ -47,7 +47,7 @@ OFF_PAPER_DROPPED_KINDS = ("river", "road")
 Measure = Callable[[str, float], tuple[float, float]]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Label:
     """One name on the map: what it is, where it points, and where it sits.
 
@@ -55,6 +55,65 @@ class Label:
     `place` fills in the rest (`home_labels` does for a house): the box the
     name occupies, the point its baseline starts from with the anchor that goes
     with it, and the two ends of its leader when it has one.
+
+    The placer fills these fields in; a `Label` handed back by `letter` is a finished
+    value, and writing to one is unsupported.
+
+    Attributes:
+        name: The name as it is written.
+        kind: What the name is about, such as `settlement`, `river`, `road`, `marker` or
+            a landmark's own kind.
+        why: Why it is lettered, carried from the pick or the caller's annotation.
+        px: The anchor's x, in display pixels.
+        py: The anchor's y, in display pixels.
+        tier: The order this name claims its box in; a lower tier goes first.
+        size: The type size in display pixels, so a hierarchy can set one kind smaller
+            than another without the placer having to know the hierarchy.
+        box: The box the name occupies, in display pixels, once it is placed.
+        tx: The x its baseline starts from, in display pixels.
+        ty: The y its baseline starts from, in display pixels.
+        anchor: How the text aligns on `tx`.
+        leader: `((x0, y0), (x1, y1))` from the anchor to the text, or None for a label
+            that sits on its own mark and needs no leader.
+        lines: The name broken into the lines it is actually written on. Empty means one
+            line, which is `name`. The placer fills this in when a second line bought a
+            better position, and the boxes it claimed are the block's, so what is reserved
+            and what is drawn are the same pixels.
+        baseline: The line a curved label is set along, in display pixels. Empty is
+            horizontal.
+        window: The run of that line the placer actually chose, once it has chosen it.
+            Empty means it has not, and the hand picks its own window unless `flat`.
+        flat: True once the placer has decided this name is set flat. The distinction
+            from "no window yet" matters: without it the hand would look for its own
+            window for every name the placer had already rejected one for, and the reader
+            would see a curve the placer had never defended a box for.
+        lift: Which side of its own baseline a curved name sits on: +1 above the line in
+            display pixels, -1 below it. A span sets this outboard of the route.
+        in_water: True when this name is written *on* its own feature rather than beside
+            it. A river drawn at the quarter kilometre it occupies has room for its own
+            name in the water, which is where a map puts it; a river drawn at the
+            legibility floor has not, and its name stays in the paper beside it.
+        feature_px: How wide the thing this name is about was painted, in display pixels.
+            A river's name has to clear its own water and a road number its own tarmac,
+            and the width of the mark is not the width of the centreline the name is set
+            along. Zero on anything that is not drawn as a ribbon.
+        intent: A span's meaning, which is what its colour comes from. Empty on anything
+            that is not a span.
+        mark: The mark this name belongs to, in display pixels: a span's own bracket. With
+            no leader drawn, the only thing joining a name to its mark is that the two are
+            near each other, and "near" has to be measured against the whole mark and the
+            whole block. Measured from the block's middle to the nearest point of the
+            bracket, a name set off the end of a short bracket is charged for its own
+            width and a compact two-line block beside the middle of it is not, which is
+            what pulls a wrapped name in close.
+        anchors: The points the placer may hang this name off, in display pixels. Empty
+            means the one anchor at `px`/`py`. A span offers several, spread along its own
+            bracket, so a name blocked beside the middle of it slides along the line
+            rather than away from it.
+        span_range: The stretch of route a span's name belongs to, as indices. The route
+            costs a name that sits on it, and a span's name is beside the route by
+            construction, so its own stretch is exempt: what a span must not do is cross
+            some *other* part of the track.
     """
 
     name: str
@@ -63,64 +122,22 @@ class Label:
     px: float = 0.0
     py: float = 0.0
     tier: int = TIER_LANDMARK
-    #: The type size in display pixels, so a hierarchy can set one kind smaller
-    #: than another without the placer having to know the hierarchy.
     size: float = DEFAULT_LINE_PX
     box: Box | None = None
     tx: float = 0.0
     ty: float = 0.0
     anchor: Align = "start"
-    #: `((x0, y0), (x1, y1))` from the anchor to the text, or None for a label
-    #: that sits on its own mark and needs no leader.
     leader: tuple[Point, Point] | None = None
-    #: The name broken into the lines it is actually written on. Empty means
-    #: one line, which is `name`. The placer fills this in when a second line
-    #: bought a better position, and the boxes it claimed are the block's, so
-    #: what is reserved and what is drawn are the same pixels.
     lines: list[str] = field(default_factory=list)
-    #: The line a curved label is set along, in display pixels. Empty is horizontal.
     baseline: list[Point] = field(default_factory=list)
-    #: The run of that line the placer actually chose, once it has chosen it.
-    #: Empty means it has not, and the hand picks its own window unless `flat`.
     window: list[Point] = field(default_factory=list)
-    #: True once the placer has decided this name is set flat. The distinction
-    #: from "no window yet" matters: without it the hand would look for its own
-    #: window for every name the placer had already rejected one for, and the
-    #: reader would see a curve the placer had never defended a box for.
     flat: bool = False
-    #: Which side of its own baseline a curved name sits on: +1 above the line
-    #: in display pixels, -1 below it. A span sets this outboard of the route.
     lift: float = 1.0
-    #: True when this name is written *on* its own feature rather than beside
-    #: it. A river drawn at the quarter kilometre it occupies has room for its
-    #: own name in the water, which is where a map puts it; a river drawn at the
-    #: legibility floor has not, and its name stays in the paper beside it.
     in_water: bool = False
-    #: How wide the thing this name is about was painted, in display pixels. A
-    #: river's name has to clear its own water and a road number its own tarmac,
-    #: and the width of the mark is not the width of the centreline the name is
-    #: set along. Zero on anything that is not drawn as a ribbon.
     feature_px: float = 0.0
-    #: A span's meaning, which is what its colour comes from. Empty on anything
-    #: that is not a span.
     intent: str = ""
-    #: The mark this name belongs to, in display pixels: a span's own bracket.
-    #: With no leader drawn, the only thing joining a name to its mark is that
-    #: the two are near each other, and "near" has to be measured against the
-    #: whole mark and the whole block. Measured from the block's middle to the
-    #: nearest point of the bracket, a name set off the end of a short bracket
-    #: is charged for its own width and a compact two-line block beside the
-    #: middle of it is not, which is what pulls a wrapped name in close.
     mark: list[Point] = field(default_factory=list)
-    #: The points the placer may hang this name off, in display pixels. Empty
-    #: means the one anchor at `px`/`py`. A span offers several, spread along
-    #: its own bracket, so a name blocked beside the middle of it slides along
-    #: the line rather than away from it.
     anchors: list[Point] = field(default_factory=list)
-    #: The stretch of route a span's name belongs to, as indices. The route
-    #: costs a name that sits on it, and a span's name is beside the route by
-    #: construction, so its own stretch is exempt: what a span must not do is
-    #: cross some *other* part of the track.
     span_range: tuple[int, int] | None = None
 
     @property
@@ -149,7 +166,7 @@ SPAN_GROUND = ("climb", "drag", "descent", "road", "water")
 SPAN_EFFORT = ("fast", "hard_set", "best_effort", "fade", "walk", "headwind", "steady", "other")
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Span:
     """One stretch of the track the map annotates, with extent, not a pin.
 
@@ -158,23 +175,36 @@ class Span:
     resolved to a pair of indices into the route, because that is the only
     vocabulary the drawing needs. `side`, `rank`, `offset_px`, `line`, `ticks`
     and `label` are filled in by `place_spans`.
+
+    The placer fills these fields in; a `Span` handed back by `letter` is a finished
+    value, and writing to one is unsupported.
+
+    Attributes:
+        name: The span's name, as it is written.
+        kind: What the span is, one of `SPAN_GROUND` or `SPAN_EFFORT`.
+        why: Why it is marked, carried from the caller's request.
+        intent: One of the intents `maps.lettering_marks.SPAN_INTENT_INK` names, which is
+            what decides the colour it is drawn in.
+        i0: The index into the route where the span starts.
+        i1: The index into the route where the span ends.
+        side: +1 is left of the direction of travel, -1 is right, 0 is not yet chosen.
+        rank: The rung of the offset ladder, so overlapping spans nest rather than stack
+            on each other.
+        offset_px: How far the offset line sits from the route, in display pixels.
+        line: The offset line in display pixels.
+        ticks: The two end ticks, in display pixels.
+        label: The span's name as placed, or None before it is.
     """
 
     name: str
     kind: str = "climb"
     why: str = ""
-    #: One of the intents `maps.lettering_marks.SPAN_INTENT_INK` names, which is what decides
-    #: the colour it is drawn in.
     intent: str = "note"
     i0: int = 0
     i1: int = 0
-    #: +1 is left of the direction of travel, -1 is right, 0 is not yet chosen.
     side: int = 0
-    #: The rung of the offset ladder, so overlapping spans nest rather than
-    #: stack on each other.
     rank: int = 0
     offset_px: float = 0.0
-    #: The offset line in display pixels, and the two end ticks, likewise.
     line: list[Point] = field(default_factory=list)
     ticks: list[list[Point]] = field(default_factory=list)
     label: Label | None = None

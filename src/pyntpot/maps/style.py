@@ -45,9 +45,9 @@ from pyntpot.maps.style_groups import (
     BasemapStyle,
     CardStyle,
     CoverStyle,
-    LetteringPolicy,
+    LetteringStyle,
     RibbonStyle,
-    RouteInk,
+    RouteInkStyle,
     RouteStyle,
 )
 
@@ -107,8 +107,8 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
     ribbon: RibbonStyle
     cover: CoverStyle
     route: RouteStyle
-    route_ink: RouteInk
-    lettering: LetteringPolicy
+    route_ink: RouteInkStyle
+    lettering: LetteringStyle
     basemap: BasemapStyle
 
     @pydantic.model_validator(mode="before")
