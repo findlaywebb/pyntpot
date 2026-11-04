@@ -114,3 +114,20 @@ class TestGround:
         """A named road that the lines do not carry raises, naming it."""
         with pytest.raises(ValueError, match="'A9'"):
             _ground(basemap, _lines(), _strands(basemap), Annotations(roads=("A9",)), _style())
+
+    def test_the_annotations_places_reach_the_ground(self) -> None:
+        """A hamlet too far off the track to letter is lettered when the annotations name it."""
+        brendon = {
+            "name": "Brendon",
+            "x": 300.0,
+            "y": 44.0,
+            "class": "place",
+            "distance_m": 700,
+            "tags": {"place": "hamlet"},
+        }
+        basemap = tiny_basemap(_style(), candidates=[brendon])
+        strands = _strands(basemap)
+        asked = _ground(basemap, _lines(), strands, Annotations(places=("Brendon",)), _style())
+        unasked = _ground(basemap, _lines(), strands, Annotations(), _style())
+        assert "Brendon" in [label.name for label in asked]
+        assert "Brendon" not in [label.name for label in unasked]

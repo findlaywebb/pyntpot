@@ -2,7 +2,7 @@
 
 Key types: `Sheet`, the paper's own noise fields, seeded, shared by every wash and every
 mark; `Canvas`, a box in world units and the pixel grid it is painted on, which
-projects metre points into render pixels. `rgb` reads a hex colour as floats and `PAPER`
+projects world-unit points into render pixels. `rgb` reads a hex colour as floats and `PAPER`
 is the paper's own cream.
 
 It paints nothing: it is the surface painting is done on.
@@ -47,10 +47,10 @@ class Canvas:
     """A world-unit box and the pixel grid it is painted on.
 
     Attributes:
-        x0: The box's west edge, in the card's metres.
-        y0: The box's south edge, in the card's metres.
-        x1: The box's east edge, in the card's metres.
-        y1: The box's north edge, in the card's metres.
+        x0: The box's west edge, in world units.
+        y0: The box's south edge, in world units.
+        x1: The box's east edge, in world units.
+        y1: The box's north edge, in world units.
         w: The grid's width, in render pixels.
         h: The grid's height, in render pixels.
     """
@@ -64,11 +64,11 @@ class Canvas:
 
     @property
     def scale(self) -> float:
-        """Render pixels per metre."""
+        """Render pixels per world unit."""
         return self.w / (self.x1 - self.x0)
 
     def px(self, pts: npt.ArrayLike) -> np.ndarray:
-        """Project metre points into render pixels, north up.
+        """Project world-unit points into render pixels, north up.
 
         Args:
             pts: Points in world units, `(n, 2)`.

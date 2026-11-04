@@ -30,3 +30,33 @@ def test_inverse_round_trips(point: tuple[float, float]) -> None:
     lat, lng = list(track.lat), list(track.lng)
     proj, _ = track_projection(lat, lng)
     assert proj.inverse(*proj(*point)) == pytest.approx(point, abs=1e-9)
+
+
+class TestTrackProjection:
+    """How `track_projection` builds its `Projection` and where it puts the origin."""
+
+    def test_the_reference_is_the_first_point_and_x_scales_at_the_mean_latitude(self) -> None:
+        """The record holds the mean latitude and the track's first latitude and longitude."""
+        lat, lng = [p[0] for p in INSIDE_BOX], [p[1] for p in INSIDE_BOX]
+        proj, _ = track_projection(lat, lng)
+        assert proj.lat0 == pytest.approx(51.2266666666667, abs=1e-12)
+        assert (proj.lat_ref, proj.lng_ref) == (51.2270, -3.8200)
+
+    def test_unequal_latitudes_and_longitudes_raise(self) -> None:
+        """A longitude short of the latitudes is an error, not a shorter track."""
+        lat, lng = [p[0] for p in INSIDE_BOX], [p[1] for p in INSIDE_BOX]
+        with pytest.raises(ValueError, match="zip"):
+            track_projection(lat, lng[:2])
+
+    def test_an_empty_route_puts_the_origin_at_the_south_west_corner(self) -> None:
+        """An empty route is no route: the smallest x and the smallest y are both zero."""
+        lat, lng = [p[0] for p in INSIDE_BOX], [p[1] for p in INSIDE_BOX]
+        _, pts = track_projection(lat, lng, [])
+        assert min(x for x, _ in pts) == 0.0
+        assert min(y for _, y in pts) == 0.0
+
+    def test_a_route_puts_the_first_point_on_the_routes_first_point(self) -> None:
+        """Given a route, the track's first point lands on the route's first point."""
+        lat, lng = [p[0] for p in INSIDE_BOX], [p[1] for p in INSIDE_BOX]
+        _, pts = track_projection(lat, lng, [(250.0, 1200.0)])
+        assert pts[0] == pytest.approx((250.0, 1200.0), abs=1e-9)

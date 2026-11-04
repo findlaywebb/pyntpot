@@ -113,6 +113,37 @@ class TestBloomLaid:
         )
         assert (not np.array_equal(dens, np.full((h, w), 0.5, np.float32))) is laid
 
+    def test_alpha_at_exactly_the_thick_line_is_not_thick(self):
+        """Wash at exactly 0.6 alpha seats no bloom; only wash above it is thick."""
+        a = np.zeros((60, 60), np.float64)
+        a[20:28, 20:28] = 0.6
+        dens = np.full((60, 60), 0.5, np.float32)
+        bloom(
+            dens,
+            a,
+            Sheet(60, 60, gran_px=6.0, seed=2),
+            Blooms(seed=5, count=1, radius_frac=0.17, lift=0.45, warp=0.45),
+        )
+        assert np.array_equal(dens, np.full((60, 60), 0.5, np.float32))
+
+    def test_a_bloom_whose_core_holds_no_wash_lays_no_ridge(self):
+        """A centre warped out of its own core gives up nothing, so no ridge rises anywhere."""
+        # Sixty-four thick pixels 32 px apart, holding no pigment, in wash at
+        # exactly 0.5 alpha, which no core counts. A warp of 4 pushes some
+        # centres out of their own cores, and those cores hold nothing.
+        a = np.full((256, 256), 0.5, np.float32)
+        dens = np.full((256, 256), 0.5, np.float32)
+        a[16::32, 16::32] = 1.0
+        dens[16::32, 16::32] = 0.0
+        bloom(
+            dens,
+            a,
+            Sheet(8, 8, gran_px=6.0, seed=2),
+            Blooms(seed=5, count=64, radius_frac=0.01, lift=0.45, warp=4.0),
+        )
+        assert float(dens.max()) == 0.5
+        assert float(dens.min()) < 0.5
+
 
 class TestBloomRadius:
     """A wash's base bloom radius, held on quarter-octave steps."""
