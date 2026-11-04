@@ -31,6 +31,7 @@ from pyntpot.maps import (
 )
 
 __version__ = importlib.metadata.version("pyntpot")
+"""The installed distribution's version string."""
 
 __all__: list[str] = [
     "Annotations",

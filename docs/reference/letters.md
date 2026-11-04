@@ -11,6 +11,8 @@
 
 *Painted by `examples/glyph_sheet.py`, seed 11, with the default face, hand, nib and ink: each glyph alone at 32 px, then running at the 14 px of a map label. Every cell and every running line is a render of its own, seeded from its character or its line, so a change to one glyph moves only its cell and the lines that hold it.*
 
+::: pyntpot.letters.Align
+
 ::: pyntpot.letters.FaceStyle
 
 ::: pyntpot.letters.Hand

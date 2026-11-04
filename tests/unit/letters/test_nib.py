@@ -224,7 +224,9 @@ class TestCounters:
         core = ((xx - 32.0) / (2.0 * rx)) ** 2 + ((yy - 32.0) / (2.0 * ry)) ** 2 < 0.25
         worst = 0.0
         for seed in range(400):
-            groups = NibGroups(NibStyle(), FaceStyle(), HandStyle(seed), ORGANIC, PaperStyle())
+            groups = NibGroups(
+                NibStyle(), FaceStyle(), HandStyle(label_seed=seed), ORGANIC, PaperStyle()
+            )
             written = nib_plate([mark], surface, groups, tmp_path / "o.webp")
             assert written is not None
             alpha = np.asarray(Image.open(written).getchannel("A"), np.float32) / 255.0
@@ -327,7 +329,7 @@ class TestNoStrayAlpha:
         )
         marks = [Mark(line, size=14.0) for line in LAYOUTS[layout]]
         paper = PaperStyle(sheet_seed=sheet_seed)
-        hand = HandStyle(hand_seed)
+        hand = HandStyle(label_seed=hand_seed)
         bare = NibGroups(NibStyle(label_wash=False), FaceStyle(), hand, BrushStyle(), paper)
         washed = NibGroups(NibStyle(), FaceStyle(), hand, BrushStyle(), paper)
         ink_path = nib_plate(marks, surface, bare, tmp_path / "ink.webp")

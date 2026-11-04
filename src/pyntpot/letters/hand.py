@@ -52,6 +52,11 @@ class Hand:
         face: Which face to open and how a glyph becomes a pen path.
         hand: The style whose `label_seed` every generator is mixed with.
         route: `centreline` or `outline`; the face style's when not given.
+
+    Attributes:
+        route: `centreline` or `outline`, the way a glyph becomes a pen path.
+        font: The opened face, traced by `route`.
+        seed: The style's `label_seed`, mixed into every generator.
     """
 
     def __init__(self, face: FaceStyle, hand: HandStyle, route: str | None = None) -> None:

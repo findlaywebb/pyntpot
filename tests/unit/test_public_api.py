@@ -49,6 +49,7 @@ INK_PUBLIC: tuple[str, ...] = (
 )
 
 LETTERS_PUBLIC: tuple[str, ...] = (
+    "Align",
     "FaceStyle",
     "Hand",
     "HandStyle",
