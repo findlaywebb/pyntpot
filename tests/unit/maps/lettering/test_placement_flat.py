@@ -4,18 +4,12 @@ from functools import partial
 
 import pytest
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Box, Point
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.style import NibStyle
 from pyntpot.maps.card import Card
-from pyntpot.maps.lettering.label import (
-    TIER_RIVER,
-    TIER_SPAN,
-    WRAP_LEADING,
-    Box,
-    Label,
-    block_size,
-)
+from pyntpot.maps.lettering.label import TIER_RIVER, TIER_SPAN, Label
+from pyntpot.maps.lettering.label_sizing import WRAP_LEADING, block_size
 from pyntpot.maps.lettering.placement import place
 from pyntpot.maps.lettering.placement_costs import (
     EDGE_PX,
@@ -115,7 +109,7 @@ EDGE_CASES = (
 
 @pytest.mark.parametrize(("anchor", "taken"), EDGE_CASES, ids=["left", "right", "top", "bottom"])
 def test_a_tracked_name_set_flat_near_the_edge_is_written_inside_the_paper(
-    anchor: Pt, taken: list[Box]
+    anchor: Point, taken: list[Box]
 ) -> None:
     """Every glyph of a river name set flat, as wide as the hand tracks it, stays in its box."""
     card = map_card()

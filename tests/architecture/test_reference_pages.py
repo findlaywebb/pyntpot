@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from pyntpot.ink import PAINTERS_PIGMENTS, PIGMENTS
-from pyntpot.ink.brush import BRUSH_COLOURS, BRUSH_TREATMENTS
+from pyntpot.ink.brush_sheet import BRUSH_COLOURS, BRUSH_TREATMENTS
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.cli import build_parser
 from pyntpot.maps.plates import Manifest
@@ -165,7 +165,7 @@ class TestCacheLayout:
         assert not missing, f"cache-layout.md lacks: {missing}"
 
     def test_label_plate_files_and_sidecar_keys_are_named(self):
-        """Both label plates, their sidecars and the sidecar's keys are in cache-layout.md."""
+        """Both nib plates, their sidecars and the sidecar's keys are in cache-layout.md."""
         text = _page("cache-layout.md")
         facts = [
             f"labels-{route}.{suffix}"

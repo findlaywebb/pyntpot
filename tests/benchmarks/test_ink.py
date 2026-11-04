@@ -7,15 +7,16 @@ import numpy as np
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 
+from pyntpot.ink.bloom import Blooms
 from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, PigmentLayer, composite
 from pyntpot.ink.raster import deform_rings, fill_cov
 from pyntpot.ink.sheet import Canvas, Sheet, rgb
-from pyntpot.ink.stamp import stamp
+from pyntpot.ink.stamping import stamp
 from pyntpot.ink.style import PaperStyle
-from pyntpot.ink.wash import WashOptions, wash
+from pyntpot.ink.washing import Flow, WashOptions, wash
 
 pytestmark = pytest.mark.benchmark
 
@@ -128,7 +129,10 @@ def test_laying_a_deformed_wash_with_blooms(benchmark: BenchmarkFixture, sheet: 
     """Times a deformed outline filled and laid with the flow rim and six blooms."""
     canvas = Canvas(0.0, 0.0, float(SIDE), float(SIDE), SIDE, SIDE)
     ring = [_lumpy_ring()]
-    options = WashOptions(flow=(0.125, 0.02, 0.38), blooms=(57, 6, 0.17, 0.45, 0.45))
+    options = WashOptions(
+        flow=Flow(exp=0.125, ref_frac=0.02, frac=0.38),
+        blooms=Blooms(seed=57, count=6, radius_frac=0.17, lift=0.45, warp=0.45),
+    )
 
     def lay() -> np.ndarray:
         cover = fill_cov(deform_rings(ring, (9, 0.26, 4, 0.55, 16.0, 0.5)), canvas)

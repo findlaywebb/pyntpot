@@ -348,7 +348,7 @@ _PLACES: tuple[tuple[str, str | None, float | None], ...] = (
 
 
 def _place_card(fixture: str, theme: str | None, margin: float | None, slice_: str) -> DocsImage:
-    """Return one place card entry: the card at 720 pixels, in its theme, with its curated callouts."""
+    """Return one place card entry: the card at 720 px, in its theme, with its curated landmarks."""
     return DocsImage(
         f"places/{fixture}.webp",
         "place_card",

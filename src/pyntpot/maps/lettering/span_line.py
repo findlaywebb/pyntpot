@@ -14,7 +14,7 @@ import itertools
 import math
 
 from pyntpot.ink.curves import offset_curve, spline
-from pyntpot.ink.polyline import Pt, foot_on, length, meet, simplify
+from pyntpot.ink.polyline import Point, foot_on, length, meet, simplify
 from pyntpot.maps.lettering.span_clear import SPAN_CLEAR_CAPS, clear_of, nearest_on
 
 #: The fewest points a stretch needs before it can be said to double back.
@@ -74,13 +74,13 @@ DOUBLED_BACK_OFFSETS = 0.5
 
 
 def span_line(
-    route_px: list[Pt],
+    route_px: list[Point],
     i0: int,
     i1: int,
     side: int,
     offset_px: float,
     clear_px: float | None = None,
-) -> list[Pt]:
+) -> list[Point]:
     """The span's own mark: the stretch's shape, smoothed, offset and inked.
 
     What a person does with a pen. They look at the stretch, see the three or
@@ -143,7 +143,7 @@ def span_line(
     return clear_of(line, route_px, clear_px)
 
 
-def shape_curve(raw: list[Pt], offset_px: float) -> list[Pt]:
+def shape_curve(raw: list[Point], offset_px: float) -> list[Point]:
     """The stretch as a few strokes: its significant turns, splined together.
 
     Douglas-Peucker first, which is what picks the turns: it keeps the points a
@@ -173,7 +173,7 @@ def shape_curve(raw: list[Pt], offset_px: float) -> list[Pt]:
 SHAPE_CORNER_DEG = 75.0
 
 
-def _corners_of(path: list[Pt], corners: list[Pt], offset_px: float) -> set[int]:
+def _corners_of(path: list[Point], corners: list[Point], offset_px: float) -> set[int]:
     """Which of the simplified points are corners rather than bends.
 
     Read on the path itself and not on the simplified line, because what makes
@@ -190,7 +190,7 @@ def _corners_of(path: list[Pt], corners: list[Pt], offset_px: float) -> set[int]
     return out
 
 
-def _turn_over(path: list[Pt], at: int, reach: float) -> float:
+def _turn_over(path: list[Point], at: int, reach: float) -> float:
     """How far a path turns at one point, measured over `reach` either side."""
     back, run = at, 0.0
     while back > 0 and run < reach:
@@ -214,7 +214,7 @@ def _turn_over(path: list[Pt], at: int, reach: float) -> float:
 FOLD_KEEP_FRAC = 0.7
 
 
-def _drop_folds(line: list[Pt], shape: list[Pt], offset_px: float) -> list[Pt]:
+def _drop_folds(line: list[Point], shape: list[Point], offset_px: float) -> list[Point]:
     """Throw away the part of an offset line that folded back inside itself.
 
     Where the shape turns tighter than the offset, the inner offset runs
@@ -231,7 +231,7 @@ def _drop_folds(line: list[Pt], shape: list[Pt], offset_px: float) -> list[Pt]:
     return keep if len(keep) >= _FEWEST_FOR_A_SEGMENT else list(line)
 
 
-def _forward_only(line: list[Pt], shape: list[Pt]) -> list[Pt]:
+def _forward_only(line: list[Point], shape: list[Point]) -> list[Point]:
     """Keep only the part of an offset line that goes forwards along the shape.
 
     A fold does not merely come too near the shape, it runs backwards along it,
@@ -243,7 +243,7 @@ def _forward_only(line: list[Pt], shape: list[Pt]) -> list[Pt]:
     """
     if len(line) < _FEWEST_WITH_A_MIDDLE or len(shape) < _FEWEST_FOR_A_SEGMENT:
         return list(line)
-    out: list[Pt] = []
+    out: list[Point] = []
     seen = -1
     for p in line:
         at = nearest_on(shape, p)
@@ -254,14 +254,14 @@ def _forward_only(line: list[Pt], shape: list[Pt]) -> list[Pt]:
     return out if len(out) >= _FEWEST_FOR_A_SEGMENT else list(line)
 
 
-def _uncross(line: list[Pt]) -> list[Pt]:
+def _uncross(line: list[Point]) -> list[Point]:
     """Cut the loop out of a line that crosses itself.
 
     The inside of a bend tighter than the offset ties the offset curve in a
     little knot. A person drawing the same stroke does not tie it; they cut
     the corner. Splicing the loop out at the crossing is that cut.
     """
-    out: list[Pt] = list(line)
+    out: list[Point] = list(line)
     for _ in range(8):
         hit = _first_loop(out)
         if hit is None:
@@ -271,7 +271,7 @@ def _uncross(line: list[Pt]) -> list[Pt]:
     return out
 
 
-def _first_loop(line: list[Pt]) -> tuple[int, int, Pt] | None:
+def _first_loop(line: list[Point]) -> tuple[int, int, Point] | None:
     """The first place a line crosses itself, and where the crossing is."""
     for i in range(len(line) - 1):
         for j in range(i + 2, len(line) - 1):
@@ -281,7 +281,7 @@ def _first_loop(line: list[Pt]) -> tuple[int, int, Pt] | None:
     return None
 
 
-def doubling_px(sub: list[Pt], apart: float = 0.25) -> float:
+def doubling_px(sub: list[Point], apart: float = 0.25) -> float:
     """How near a stretch comes back to itself, in display pixels.
 
     For every point, the distance to the nearest part of the stretch at least
@@ -312,7 +312,7 @@ def doubling_px(sub: list[Pt], apart: float = 0.25) -> float:
 MOUTH_NEAR_FRAC = 0.3
 
 
-def _mouth_path(raw: list[Pt], offset_px: float) -> list[Pt]:
+def _mouth_path(raw: list[Point], offset_px: float) -> list[Point]:
     """The piece of an out-and-back that joins its two ends, and nothing else.
 
     A stretch that walks one path out and back has no room for a mark between
@@ -365,7 +365,7 @@ def _mouth_path(raw: list[Pt], offset_px: float) -> list[Pt]:
 MOUTH_MIN_SPAN = 2.5
 
 
-def resample(line: list[Pt], step: float) -> list[Pt]:
+def resample(line: list[Point], step: float) -> list[Point]:
     """A polyline at an even spacing, so an arc length is a straight lookup."""
     if len(line) < _FEWEST_FOR_A_SEGMENT or step <= 0:
         return list(line)

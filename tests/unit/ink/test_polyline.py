@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from pyntpot.ink.polyline import (
-    Pt,
+    Point,
     clip_line,
     cumulative_length,
     deform_line,
@@ -106,7 +106,7 @@ class TestNormalAt:
             "downward",
         ],
     )
-    def test_the_normal_is_pinned(self, pts: list[Pt], i: int, normal: Pt) -> None:
+    def test_the_normal_is_pinned(self, pts: list[Point], i: int, normal: Point) -> None:
         """The normal is the pinned unit vector left of the run from the point before to the point after."""
         assert normal_at(pts, i) == pytest.approx(normal, abs=1e-12)
 
@@ -123,7 +123,7 @@ class TestNormalAt:
         ],
         ids=["repeated-points", "single-point", "run-at-the-threshold"],
     )
-    def test_a_degenerate_run_falls_back_to_straight_up(self, pts: list[Pt], i: int) -> None:
+    def test_a_degenerate_run_falls_back_to_straight_up(self, pts: list[Point], i: int) -> None:
         """A run no longer than the degenerate threshold gives exactly (0, 1)."""
         assert normal_at(pts, i) == (0.0, 1.0)
 

@@ -6,7 +6,7 @@ import math
 import numpy as np
 import pytest
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.nib import mark_width_px
 from pyntpot.maps import lettering_marks
@@ -43,10 +43,10 @@ def _pinned(turn: float, size: float = 20.0, run: float = 40.0) -> Label:
     """The museum's label, its leader running `run` px from the pin in direction `turn`."""
     px, py = MUSEUM
     name = (px + run * math.cos(turn), py + run * math.sin(turn))
-    return Label("Lynton and Exmoor Museum", px=px, py=py, size=size, leader=(MUSEUM, name))
+    return Label(name="Lynton and Exmoor Museum", px=px, py=py, size=size, leader=(MUSEUM, name))
 
 
-def _furniture(hand: Hand, style: Style, label: Label) -> tuple[list[Pt], list[Pt]]:
+def _furniture(hand: Hand, style: Style, label: Label) -> tuple[list[Point], list[Point]]:
     """The pin's and the leader's points as `label_marks` draws them for the default nib."""
     marks = lettering_marks.label_marks(hand, label, style.nib)
     ring = [m.pts for m in marks if m.role == "pin"]
@@ -55,7 +55,7 @@ def _furniture(hand: Hand, style: Style, label: Label) -> tuple[list[Pt], list[P
     return ring[0], line[0]
 
 
-def _gap_bisector(ring: list[Pt]) -> float:
+def _gap_bisector(ring: list[Point]) -> float:
     """The direction from the pin's centre to the middle of the chord across its gap."""
     (x0, y0), (x1, y1) = ring[0], ring[-1]
     return math.atan2((y0 + y1) / 2 - MUSEUM[1], (x0 + x1) / 2 - MUSEUM[0])
@@ -66,7 +66,7 @@ def _turn_apart(a: float, b: float) -> float:
     return abs((a - b + math.pi) % math.tau - math.pi)
 
 
-def _segment_gap(p: Pt, a: Pt, b: Pt) -> float:
+def _segment_gap(p: Point, a: Point, b: Point) -> float:
     """The distance from a point to a segment."""
     dx, dy = b[0] - a[0], b[1] - a[1]
     t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / ((dx * dx + dy * dy) or 1.0)
@@ -74,7 +74,7 @@ def _segment_gap(p: Pt, a: Pt, b: Pt) -> float:
     return math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy)
 
 
-def _clearance(line: list[Pt], ring: list[Pt]) -> float:
+def _clearance(line: list[Point], ring: list[Point]) -> float:
     """The closest the leader's centreline comes to the arc's, checked both ways."""
     one = min(_segment_gap(p, a, b) for p in line for a, b in itertools.pairwise(ring))
     two = min(_segment_gap(p, a, b) for p in ring for a, b in itertools.pairwise(line))
@@ -178,7 +178,7 @@ class TestClosedPin:
     def test_a_name_without_a_leader_takes_no_pin(self, hand: Hand, style: Style) -> None:
         """A label with no leader draws neither a ring nor a leader beside its name."""
         px, py = MUSEUM
-        label = Label("Lynton and Exmoor Museum", px=px, py=py, size=20.0)
+        label = Label(name="Lynton and Exmoor Museum", px=px, py=py, size=20.0)
         marks = lettering_marks.label_marks(hand, label, style.nib)
         assert not {"pin", "leader"} & {m.role for m in marks}
 

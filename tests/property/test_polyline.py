@@ -11,7 +11,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from pyntpot.ink.cut import cut_line
-from pyntpot.ink.polyline import Pt, normal_at, simplify
+from pyntpot.ink.polyline import Point, normal_at, simplify
 
 from support.properties import UNTIMED
 
@@ -20,7 +20,7 @@ POINTS = st.lists(st.tuples(COORD, COORD), min_size=0, max_size=60)
 EPS = st.floats(0, 50, allow_nan=False, allow_infinity=False)
 
 
-def _gap(p: Pt, a: Pt, b: Pt) -> float:
+def _gap(p: Point, a: Point, b: Point) -> float:
     """Distance from p to the infinite line through a and b, or to a when they coincide."""
     dx, dy = b[0] - a[0], b[1] - a[1]
     den = math.hypot(dx, dy)
@@ -34,7 +34,7 @@ class TestSimplify:
 
     @UNTIMED
     @given(points=POINTS, eps=EPS)
-    def test_the_ends_are_kept(self, points: list[Pt], eps: float) -> None:
+    def test_the_ends_are_kept(self, points: list[Point], eps: float) -> None:
         """The first and last points survive; a line under three points comes back equal, its two ends by identity."""
         out = simplify(points, eps)
         if len(points) < 3:
@@ -48,14 +48,14 @@ class TestSimplify:
 
     @UNTIMED
     @given(points=POINTS, eps=EPS)
-    def test_the_output_is_an_ordered_subsequence(self, points: list[Pt], eps: float) -> None:
+    def test_the_output_is_an_ordered_subsequence(self, points: list[Point], eps: float) -> None:
         """Every kept point is an input point, in input order."""
         it = iter(points)
         assert all(any(p is q for q in it) for p in simplify(points, eps))
 
     @UNTIMED
     @given(points=POINTS, eps=EPS)
-    def test_simplifying_twice_changes_nothing(self, points: list[Pt], eps: float) -> None:
+    def test_simplifying_twice_changes_nothing(self, points: list[Point], eps: float) -> None:
         """A simplified line is its own simplification."""
         once = simplify(points, eps)
         assert simplify(once, eps) == once
@@ -63,7 +63,7 @@ class TestSimplify:
     @UNTIMED
     @given(points=POINTS, eps=EPS)
     def test_every_dropped_point_is_within_eps_of_its_kept_neighbours(
-        self, points: list[Pt], eps: float
+        self, points: list[Point], eps: float
     ) -> None:
         """A dropped point lies within eps of the line through the kept points either side."""
         out = simplify(points, eps)
@@ -87,7 +87,7 @@ class TestNormalAt:
     @UNTIMED
     @given(points=GRID_POINTS, data=st.data())
     def test_the_normal_is_unit_and_left_of_the_chord(
-        self, points: list[Pt], data: st.DataObject
+        self, points: list[Point], data: st.DataObject
     ) -> None:
         """Off a degenerate run the normal is unit length, square to the chord and on its left; on one it is (0, 1)."""
         i = data.draw(st.integers(0, len(points) - 1))
@@ -106,7 +106,7 @@ class TestNormalAt:
 BOX = (-200.0, -150.0, 300.0, 250.0)
 
 
-def _on_edge(p: Pt) -> bool:
+def _on_edge(p: Point) -> bool:
     """Whether a point lies on `BOX`'s boundary."""
     xmin, ymin, xmax, ymax = BOX
     return p[0] in (xmin, xmax) or p[1] in (ymin, ymax)
@@ -117,7 +117,9 @@ class TestCutLine:
 
     @UNTIMED
     @given(points=POINTS)
-    def test_every_piece_lies_in_the_box_and_starts_and_ends_on_it(self, points: list[Pt]) -> None:
+    def test_every_piece_lies_in_the_box_and_starts_and_ends_on_it(
+        self, points: list[Point]
+    ) -> None:
         """Each piece has two or more points, all inside the box; a cut end lies on the box's edge."""
         xmin, ymin, xmax, ymax = BOX
         for piece in cut_line(points, BOX):

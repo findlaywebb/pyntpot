@@ -23,7 +23,7 @@ import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from pyntpot.ink.polyline import Pt, simplify
+from pyntpot.ink.polyline import Point, simplify
 from pyntpot.maps.basemap import Basemap, ElevationPatch, Layers
 from pyntpot.maps.basemap_strokes import (
     Frame,
@@ -166,7 +166,7 @@ def _place_marks(
 def basemap(
     inputs: BasemapInputs,
     options: BasemapStyle | None = None,
-    route: list[Pt] | None = None,
+    route: list[Point] | None = None,
     clip_margin_m: float = DEFAULT_CLIP_MARGIN_M,
 ) -> dict[str, Any] | None:
     """Assemble every basemap layer for one track from the cache.
@@ -248,7 +248,7 @@ def _elevation_patch(path: Path, proj: Projection) -> ElevationPatch | None:
 
 def _cover(
     inputs: BasemapInputs, proj: Projection, clip: Clip, eps: float
-) -> tuple[dict[str, list[list[Pt]]], list[list[Pt]], list[list[Pt]]]:
+) -> tuple[dict[str, list[list[Point]]], list[list[Point]], list[list[Point]]]:
     """The land cover rings with the woods laid over them, the coast and the sea."""
     cover = cover_rings(inputs.key, proj, clip, eps, inputs.cache)
     wood = wood_rings(inputs.key, proj, clip, eps, inputs.cache)
@@ -259,7 +259,7 @@ def _cover(
 
 
 def build_basemap(
-    inputs: BasemapInputs, style: Style, route: list[Pt] | None = None
+    inputs: BasemapInputs, style: Style, route: list[Point] | None = None
 ) -> Basemap | None:
     """Everything the painter needs for one track, from the cache.
 

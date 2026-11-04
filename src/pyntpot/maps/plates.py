@@ -40,13 +40,13 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from pathlib import Path
 
-    from pyntpot.ink.polyline import Pt
+    from pyntpot.ink.polyline import Point
 
 #: The darkness assumed where there is no dark grid to read.
 _NO_GRID_DARKNESS = 0.35
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class DarkGrid:
     """How dark the painted map is, cell by cell, on a coarse grid.
 
@@ -82,7 +82,7 @@ def dark_array(grid: DarkGrid | None, h: int, w: int) -> np.ndarray:
     )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Manifest:
     """The sidecar record of one map's painted plates.
 
@@ -199,8 +199,8 @@ class Plates:
 
     directory: Path
     manifest: Manifest
-    route_px: tuple[Pt, ...] = ()
-    strands: tuple[Pt, ...] = ()
+    route_px: tuple[Point, ...] = ()
+    strands: tuple[Point, ...] = ()
 
     @property
     def paths(self) -> Mapping[str, Path]:

@@ -19,18 +19,10 @@ holding the form and the position that won.
 import math
 from typing import Any
 
-from pyntpot.ink.polyline import Pt, cumulative_length
+from pyntpot.ink.polyline import Box, Point, cumulative_length
 from pyntpot.maps.card import Card
-from pyntpot.maps.lettering.label import (
-    NO_LEADER,
-    TIER_SPAN,
-    WRAP_LEADING,
-    Box,
-    Label,
-    Measure,
-    block_size,
-    wrap_forms,
-)
+from pyntpot.maps.lettering.label import NO_LEADER, TIER_SPAN, Label, Measure
+from pyntpot.maps.lettering.label_sizing import WRAP_LEADING, block_size, wrap_forms
 from pyntpot.maps.lettering.placement_costs import (
     EDGE_PX,
     ROUTE_REACH_PX,
@@ -255,7 +247,11 @@ def _bar(best: tuple[Any, ...] | None, on_paper: tuple[Any, ...] | None, *, insi
 
 
 def _seat_cost(
-    lb: Label, box: Box, terms: Terms, seat: tuple[float, bool, float, float, Pt, Pt], bar: float
+    lb: Label,
+    box: Box,
+    terms: Terms,
+    seat: tuple[float, bool, float, float, Point, Point],
+    bar: float,
 ) -> float | None:
     """What one candidate seat costs, or None once it cannot come in under `bar`.
 
@@ -305,14 +301,14 @@ def _seat_cost(
     return cost
 
 
-def course_anchors(lb: Label, card: Card) -> list[Pt]:
+def course_anchors(lb: Label, card: Card) -> list[Point]:
     """Where a flat name may be seated: beside its anchor, and along its course for a river.
 
     The anchor comes first. For a kind in `COURSE_KINDS` with a line of its own,
     `COURSE_ANCHORS` more points follow, spread evenly along that line, each on
     the paper; `ANCHOR_PULL` prices the travel to them.
     """
-    out: list[Pt] = [(lb.px, lb.py)]
+    out: list[Point] = [(lb.px, lb.py)]
     if lb.kind not in COURSE_KINDS or len(lb.baseline) < _FEWEST_FOR_A_LINE:
         return out
     cum = cumulative_length(lb.baseline)

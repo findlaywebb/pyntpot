@@ -13,8 +13,9 @@ together; a refused swap leaves both names exactly where they were.
 import math
 from typing import Any
 
-from pyntpot.ink.polyline import Pt, meet
-from pyntpot.maps.lettering.label import NO_LEADER, TIER_SPAN, WRAP_LEADING, Box, Label
+from pyntpot.ink.polyline import Box, Point, meet
+from pyntpot.maps.lettering.label import NO_LEADER, TIER_SPAN, Label
+from pyntpot.maps.lettering.label_sizing import WRAP_LEADING
 from pyntpot.maps.lettering.placement_costs import (
     ROUTE_REACH_PX,
     Backdrop,
@@ -52,7 +53,7 @@ def _leader_px(lb: Label) -> float:
     return math.dist(lb.leader[0], lb.leader[1]) if lb.leader else 0.0
 
 
-def _centre(box: Box) -> Pt:
+def _centre(box: Box) -> Point:
     """The middle of a box."""
     return ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2)
 

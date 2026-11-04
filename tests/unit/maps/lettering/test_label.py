@@ -5,18 +5,14 @@ import math
 import pytest
 
 from pyntpot.letters.style import NibStyle
-from pyntpot.maps.lettering.label import (
+from pyntpot.maps.lettering.label import SPAN_EFFORT, SPAN_GROUND, TIER_ROAD, TIER_SPAN, Label
+from pyntpot.maps.lettering.label_sizing import (
     MAX_LINES,
-    SPAN_EFFORT,
-    SPAN_GROUND,
-    TIER_ROAD,
-    TIER_SPAN,
     WET_PX_DEFAULT,
     WET_SPREAD,
     WRAP_LEADING,
     WRAP_MIN_CHARS,
     WRAP_MIN_SHARE,
-    Label,
     block_size,
     feature_px,
     wrap_forms,

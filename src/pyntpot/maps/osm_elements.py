@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pyntpot.ink.chains import join_chains
-from pyntpot.ink.polyline import Pt, clip_line, length, simplify, smooth
+from pyntpot.ink.polyline import Point, clip_line, length, simplify, smooth
 from pyntpot.maps.candidates.landmark_classes import OFFERED_CLASSES, classify
 from pyntpot.maps.providers.overpass import MAJOR_ROADS
 from pyntpot.maps.rings import Rings, clip_ring
@@ -106,23 +106,23 @@ class Scope(NamedTuple):
 class Harvest:
     """The layers collected so far, in payload order."""
 
-    wood: list[list[Pt]] = field(default_factory=list)
-    wood_holes: list[list[Pt]] = field(default_factory=list)
-    park: list[list[Pt]] = field(default_factory=list)
-    lakes: list[list[Pt]] = field(default_factory=list)
-    lake_holes: list[list[Pt]] = field(default_factory=list)
-    sea_polys: list[list[Pt]] = field(default_factory=list)
+    wood: list[list[Point]] = field(default_factory=list)
+    wood_holes: list[list[Point]] = field(default_factory=list)
+    park: list[list[Point]] = field(default_factory=list)
+    lakes: list[list[Point]] = field(default_factory=list)
+    lake_holes: list[list[Point]] = field(default_factory=list)
+    sea_polys: list[list[Point]] = field(default_factory=list)
     # Every way of one road, and whether any of it earned the road a place.
     ways: dict[tuple[str, str], list[dict[str, Any]]] = field(default_factory=dict)
     road_keep: dict[tuple[str, str], bool] = field(default_factory=dict)
     # Each unnamed road's ends, by highway and point, so a way can be joined to
     # the way it carries on as.
-    road_ends: dict[tuple[str, Pt], list[tuple[str, str]]] = field(default_factory=dict)
+    road_ends: dict[tuple[str, Point], list[tuple[str, str]]] = field(default_factory=dict)
     rivers: list[dict[str, Any]] = field(default_factory=list)
     # Whether any of each watercourse earned it a place, and each unnamed one's
     # ends, by waterway and point.
     stream_keep: dict[str, bool] = field(default_factory=dict)
-    stream_ends: dict[tuple[str, Pt], list[str]] = field(default_factory=dict)
+    stream_ends: dict[tuple[str, Point], list[str]] = field(default_factory=dict)
     # Metres of each watercourse OSM tags as underground, against its whole run.
     under: dict[str, float] = field(default_factory=dict)
     overall: dict[str, float] = field(default_factory=dict)
@@ -133,7 +133,7 @@ class Harvest:
     )
 
 
-def _geom(entry: dict[str, Any], proj: Projection) -> list[Pt]:
+def _geom(entry: dict[str, Any], proj: Projection) -> list[Point]:
     """Project one Overpass `geometry` array into metres."""
     return [proj(g["lat"], g["lon"]) for g in entry.get("geometry") or [] if g]
 
@@ -155,7 +155,7 @@ def polygon_rings(entry: dict[str, Any], proj: Projection) -> Rings:
     )
 
 
-def _soften(line: list[Pt], eps: float, options: BasemapStyle) -> list[Pt]:
+def _soften(line: list[Point], eps: float, options: BasemapStyle) -> list[Point]:
     """Simplify a line, then round its corners off.
 
     A road drawn from OSM nodes is a survey; up to two Chaikin passes, when the
@@ -183,7 +183,7 @@ def _name(tags: dict[str, Any], name_tags: tuple[str, ...]) -> str:
     return ""
 
 
-def _candidate(name: str, tags: dict[str, Any], at: Pt, index: TrackIndex) -> dict[str, Any]:
+def _candidate(name: str, tags: dict[str, Any], at: Point, index: TrackIndex) -> dict[str, Any]:
     """One landmark candidate at a point, with how far off the track it sits."""
     x, y = at
     return {
@@ -207,7 +207,7 @@ def _area_rings(entry: dict[str, Any], eps: float, scope: Scope) -> Rings:
     )
 
 
-def _ends(entry: dict[str, Any], kind: str, proj: Projection) -> list[tuple[str, Pt]]:
+def _ends(entry: dict[str, Any], kind: str, proj: Projection) -> list[tuple[str, Point]]:
     """A way's two ends as it was mapped, before any clip, filed under its kind.
 
     Two ways OSM joins share the node at the join, so its projected point is the

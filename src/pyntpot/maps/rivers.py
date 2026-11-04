@@ -12,7 +12,7 @@ where no mapped area was met, and thin water is drawn at its class floor while w
 water is drawn at its own width.
 """
 
-from pyntpot.ink.polyline import Pt, eased, length, normal_at
+from pyntpot.ink.polyline import Point, eased, length, normal_at
 from pyntpot.maps.track_index import densify
 
 #: The fewest points that make a ring a water area.
@@ -42,7 +42,7 @@ CHANNEL_EASE_SAMPLES = 4
 WIDTH_RUN_M = 250.0
 
 
-def _ring_boxes(rings: list[list[Pt]]) -> list[tuple[list[Pt], tuple[float, ...]]]:
+def _ring_boxes(rings: list[list[Point]]) -> list[tuple[list[Point], tuple[float, ...]]]:
     """Each ring with its bounding box, so a point tests against few of them."""
     out = []
     for ring in rings:
@@ -54,7 +54,7 @@ def _ring_boxes(rings: list[list[Pt]]) -> list[tuple[list[Pt], tuple[float, ...]
     return out
 
 
-def _ray_to_ring(p: Pt, d: Pt, ring: list[Pt]) -> float | None:
+def _ray_to_ring(p: Point, d: Point, ring: list[Point]) -> float | None:
     """Distance from `p` along the unit direction `d` to the first bank ahead."""
     best: float | None = None
     for a, b in zip(ring, ring[1:] + ring[:1], strict=False):
@@ -69,7 +69,7 @@ def _ray_to_ring(p: Pt, d: Pt, ring: list[Pt]) -> float | None:
     return best
 
 
-def _winding(p: Pt, ring: list[Pt]) -> int:
+def _winding(p: Point, ring: list[Point]) -> int:
     """How many times the ring winds around the point, counter-clockwise positive."""
     turns = 0
     for a, b in zip(ring, ring[1:] + ring[:1], strict=False):
@@ -81,7 +81,7 @@ def _winding(p: Pt, ring: list[Pt]) -> int:
     return turns
 
 
-def _in_water(p: Pt, boxed: list[tuple[list[Pt], tuple[float, ...]]]) -> bool:
+def _in_water(p: Point, boxed: list[tuple[list[Point], tuple[float, ...]]]) -> bool:
     """Whether this point is in mapped water: nonzero winding over every ring.
 
     The rings of a lake wind one way round its shore and the other round each
@@ -94,7 +94,9 @@ def _in_water(p: Pt, boxed: list[tuple[list[Pt], tuple[float, ...]]]) -> bool:
     return total != 0
 
 
-def _nearest_bank(p: Pt, d: Pt, boxed: list[tuple[list[Pt], tuple[float, ...]]]) -> float | None:
+def _nearest_bank(
+    p: Point, d: Point, boxed: list[tuple[list[Point], tuple[float, ...]]]
+) -> float | None:
     """Distance from `p` along `d` to the first bank ahead, over every ring, holes included."""
     best: float | None = None
     for ring, _box in boxed:
@@ -105,7 +107,7 @@ def _nearest_bank(p: Pt, d: Pt, boxed: list[tuple[list[Pt], tuple[float, ...]]])
 
 
 def _banks_at(
-    p: Pt, n: Pt, boxed: list[tuple[list[Pt], tuple[float, ...]]]
+    p: Point, n: Point, boxed: list[tuple[list[Point], tuple[float, ...]]]
 ) -> tuple[float | None, float]:
     """The width of the water at `p` and the sideways shift to its middle.
 
@@ -125,7 +127,7 @@ def _banks_at(
     return None, 0.0
 
 
-def channel(line: list[Pt], rings: list[list[Pt]]) -> tuple[list[Pt], list[float | None]]:
+def channel(line: list[Point], rings: list[list[Point]]) -> tuple[list[Point], list[float | None]]:
     """One watercourse re-centred in its own channel, and how wide it is.
 
     OSM's centreline says where a river goes; it does not promise to run down
@@ -153,7 +155,7 @@ def channel(line: list[Pt], rings: list[list[Pt]]) -> tuple[list[Pt], list[float
     boxed = _ring_boxes(rings)
     widths: list[float | None] = []
     offsets: list[float] = []
-    normals: list[Pt] = []
+    normals: list[Point] = []
     for i, p in enumerate(pts):
         n = normal_at(pts, i)
         normals.append(n)
@@ -187,7 +189,7 @@ def _accepted(widths: list[float | None]) -> list[float]:
     return kept
 
 
-def measured_width_m(lines: list[list[Pt]], rings: list[list[Pt]]) -> float | None:
+def measured_width_m(lines: list[list[Point]], rings: list[list[Point]]) -> float | None:
     """How wide one watercourse really is, from the water area it runs in.
 
     OSM maps a big river twice: a centreline that says where it goes and a
@@ -237,7 +239,7 @@ def painted_width_px(floor_px: float, measured_m: float, mppd: float) -> float:
 
 
 def major_rivers(
-    pieces_by: dict[str, list[list[Pt]]], rings: list[list[Pt]], rel_frac: float
+    pieces_by: dict[str, list[list[Point]]], rings: list[list[Point]], rel_frac: float
 ) -> tuple[set[str], dict[str, float]]:
     """Which watercourses are the main ones of a box, and how wide each is.
 

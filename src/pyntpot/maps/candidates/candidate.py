@@ -19,7 +19,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 
 @dataclass(frozen=True)
@@ -40,6 +40,6 @@ class Candidate:
     name: str
     rank: int
     at_m: float | None
-    where: Pt | None
+    where: Point | None
     span: tuple[int, int] | None
     detail: Mapping[str, Any]

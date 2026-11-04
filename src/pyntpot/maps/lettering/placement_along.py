@@ -15,10 +15,9 @@ the cost returned is on the same scale as the flat answer so the two can be comp
 
 import math
 
-from pyntpot.ink.polyline import Pt, cumulative_length, length
+from pyntpot.ink.polyline import Box, Point, cumulative_length, length
 from pyntpot.maps.lettering.label import (
     TIER_SPAN,
-    Box,
     Label,
 )
 from pyntpot.maps.lettering.placement_costs import (
@@ -91,7 +90,7 @@ SPAN_MAX_BOW_FRAC = 0.19
 
 
 def _window_shape(
-    lb: Label, window: list[Pt], turn_max: float, bow_max: float
+    lb: Label, window: list[Point], turn_max: float, bow_max: float
 ) -> tuple[float, float, float] | None:
     """How a window of the line bends, or None when the name may not be set on it.
 
@@ -119,7 +118,7 @@ def _window_shape(
     return turn, tilt, bow
 
 
-def ink_band(lb: Label, window: list[Pt], side: float) -> list[Pt]:
+def ink_band(lb: Label, window: list[Point], side: float) -> list[Point]:
     """Points over the ink of a name set along a window: its middle line and both edges.
 
     The band is the one the pen writes, `INK_ASCENT_CAPS` and `INK_DESCENT_CAPS`
@@ -130,7 +129,9 @@ def ink_band(lb: Label, window: list[Pt], side: float) -> list[Pt]:
     return [p for off in (-half, 0.0, half) for p in offset_line(window, middle + off)]
 
 
-def _ground_cost(lb: Label, window: list[Pt], cells: list[Box], terms: Terms, side: float) -> float:
+def _ground_cost(
+    lb: Label, window: list[Point], cells: list[Box], terms: Terms, side: float
+) -> float:
     """What a window costs a reader, per box, on the terms the flat answer is scored on.
 
     What it sits on, how near the route and the roads it is, how much room it
@@ -195,7 +196,7 @@ def _sides(lb: Label) -> tuple[float, ...]:
     return (lb.lift,)
 
 
-def _read_side(window: list[Pt], side: float) -> tuple[list[Pt], float]:
+def _read_side(window: list[Point], side: float) -> tuple[list[Point], float]:
     """The window the name reads along, and the side it lifts to once that is settled."""
     read = reading(window)
     # Turning the window round turns its normal round with it, so the side the
@@ -212,7 +213,7 @@ def place_along(
     th: float,
     terms: Terms,
     apart_from: list[float] | None = None,
-) -> tuple[float, list[Box], list[Pt], float, float] | None:
+) -> tuple[float, list[Box], list[Point], float, float] | None:
     """The run of its own line a curved name is set on, and the boxes it takes.
 
     Every window of the right length along the whole feature is a candidate,
@@ -252,7 +253,7 @@ def place_along(
     apart = max(length(line) * RIVER_REPEAT_FRAC, want)
     cum = cumulative_length(line)
     sides = _sides(lb)
-    best: tuple[float, list[Pt], list[Box], float, float, float] | None = None
+    best: tuple[float, list[Point], list[Box], float, float, float] | None = None
     step = max(len(line) // 60, 1)
     for i in range(0, len(line), step):
         window = line_window(line, i, want)

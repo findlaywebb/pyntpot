@@ -3,11 +3,12 @@
 import numpy as np
 import pytest
 
+from pyntpot.ink.bloom import Blooms
 from pyntpot.ink.noise import blur, chamfer_distance, smoothstep
 from pyntpot.ink.pigment import PIGMENTS, PigmentLayer
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.style import WashStyle
-from pyntpot.ink.wash import WashOptions, flow_edge, fluid_modulate, separated, wash
+from pyntpot.ink.washing import Flow, WashOptions, flow_edge, fluid_modulate, separated, wash
 
 from support.washes import fluid_fields, two_squares
 
@@ -30,6 +31,24 @@ def test_a_wash_given_no_option_is_the_wash_it_always_was():
         WashOptions(rim_px=7.0, wet=None, gran_gamma=0.0, flow=None, blooms=None),
     )
     assert np.array_equal(plain, same)
+
+
+def test_flow_and_blooms_take_only_keywords():
+    """`Flow` and `Blooms` refuse positional numbers and build from keywords."""
+    with pytest.raises(TypeError):
+        Flow(0.125, 0.02, 0.38)  # ty: ignore[missing-argument, too-many-positional-arguments]
+    with pytest.raises(TypeError):
+        Blooms(3, 6, 0.17, 0.45, 0.45)  # ty: ignore[missing-argument, too-many-positional-arguments]
+    flow = Flow(exp=0.125, ref_frac=0.02, frac=0.38)
+    blooms = Blooms(seed=3, count=6, radius_frac=0.17, lift=0.45, warp=0.45)
+    assert (flow.exp, flow.ref_frac, flow.frac) == (0.125, 0.02, 0.38)
+    assert (blooms.seed, blooms.count, blooms.radius_frac, blooms.lift, blooms.warp) == (
+        3,
+        6,
+        0.17,
+        0.45,
+        0.45,
+    )
 
 
 def test_granulation_settles_in_the_pits_the_dry_brush_breaks_on():
@@ -107,7 +126,9 @@ def test_a_bloom_lifts_the_centre_and_deposits_it_at_the_front():
         sheet,
         0.52,
         0.20,
-        WashOptions(rim_px=7.0, blooms=(3, 6, 0.17, 0.45, 0.45)),
+        WashOptions(
+            rim_px=7.0, blooms=Blooms(seed=3, count=6, radius_frac=0.17, lift=0.45, warp=0.45)
+        ),
     )
     assert blown[core].std() > flat[core].std() * 1.5
     assert blown[core].min() < flat[core].min() - 0.1, "a lighter centre"
@@ -118,7 +139,9 @@ def test_a_bloom_lifts_the_centre_and_deposits_it_at_the_front():
         sheet,
         0.52,
         0.20,
-        WashOptions(rim_px=7.0, blooms=(3, 6, 0.17, 0.45, 0.45)),
+        WashOptions(
+            rim_px=7.0, blooms=Blooms(seed=3, count=6, radius_frac=0.17, lift=0.45, warp=0.45)
+        ),
     )
     assert np.array_equal(blown, again)
 

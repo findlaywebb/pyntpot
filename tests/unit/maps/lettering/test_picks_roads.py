@@ -1,12 +1,18 @@
 """Which named roads a card numbers: by number first, by name only where there is none."""
 
+import logging
+from typing import Any
+
 import pytest
 
 from pyntpot.ink.polyline import length
 from pyntpot.letters.setting import DEFAULT_LINE_PX
-from pyntpot.maps.lettering.picks_roads import pick_roads, road_min_px, road_ref
+from pyntpot.maps.basemap import Basemap, Road
+from pyntpot.maps.lettering.label import TIER_ROAD, Label
+from pyntpot.maps.lettering.picks_lines import NamedLines, named_lines
+from pyntpot.maps.lettering.picks_roads import named_roads, pick_roads, road_min_px, road_ref
 
-from support.basemaps import hung_card, label_basemap
+from support.basemaps import class_style, hung_card, label_basemap, tiny_basemap
 
 
 def test_a_road_is_lettered_by_its_number_and_falls_back_to_its_name():
@@ -91,3 +97,264 @@ def test_a_road_label_says_the_track_was_on_it():
     route = [(float(x), 45.0) for x in range(0, 400, 10)]
     got = pick_roads(label_basemap(), lines, card, route, budget=2)
     assert [(label.name, label.why) for label in got] == [("A361", "road the track was on")]
+
+
+def _leg(x0: int, x1: int, northing: float) -> list[list[float]]:
+    """A straight east-west run of road at `northing`, in card metres, a point every 25 m."""
+    return [[round(float(x), 1), northing] for x in range(x0, x1 + 1, 25)]
+
+
+def _road(
+    name: str, ref: str, northing: float, cls: str = "major", x1: int = 3000
+) -> dict[str, Any]:
+    """One road entry as `named_lines` files it, running east from the card's west edge."""
+    return {"n": name, "c": cls, "r": ref, "w": 0.0, "wn": 0.0, "d": _leg(0, x1, northing)}
+
+
+def _lines(*roads: dict[str, Any], numbered: tuple[dict[str, Any], ...] = ()) -> NamedLines:
+    """Named lines carrying `roads` under `roads` and `numbered` under `numbered`."""
+    return {
+        "roads": list(roads),
+        "rivers": [],
+        "coast": [],
+        "crossings": [],
+        "numbered": list(numbered),
+    }
+
+
+#: A tenth of a pixel a metre, the card's top edge 400 m north of the origin.
+CARD = hung_card(400, 300, 10.0, top=400.0)
+
+#: A track 45 px down the card, beside a road at northing 0 (40 px down).
+ROUTE = [(float(x), 45.0) for x in range(0, 400, 10)]
+
+
+class TestNamedRoads:
+    """`named_roads` letters the roads the caller names, whatever their class and wherever they run."""
+
+    def test_a_named_road_is_lettered_though_the_track_was_never_on_it(self) -> None:
+        """A road 200 px off any track is lettered when named; `named_roads` takes no route."""
+        lines = _lines(_road("Penrith Road", "A66", -2000.0))
+        got = named_roads(label_basemap(), lines, CARD, ("A66",))
+        assert [(label.name, label.kind, label.why) for label in got] == [
+            ("A66", "road", "road the caller named")
+        ]
+        assert got[0].py == pytest.approx(240.0)
+
+    def test_a_named_minor_road_is_lettered(self) -> None:
+        """A named minor road is lettered by name, where the picker skips it for its class alone."""
+        lines = _lines(_road("Old Lake Road", "", 0.0, cls="minor"))
+        got = named_roads(label_basemap(), lines, CARD, ("Old Lake Road",))
+        assert [label.name for label in got] == ["Old Lake Road"]
+        assert length(got[0].baseline) > road_min_px(got[0].size)
+        assert pick_roads(label_basemap(), lines, CARD, ROUTE) == []
+
+    def test_a_road_is_matched_by_number_ignoring_case(self) -> None:
+        """A number written in lower case matches the road's `ref`."""
+        lines = _lines(_road("Rydal Road", "A591", 0.0))
+        got = named_roads(label_basemap(), lines, CARD, ("a591",))
+        assert [label.name for label in got] == ["A591"]
+
+    def test_a_road_matched_by_its_name_is_lettered_by_its_number(self) -> None:
+        """A road named by its street is lettered by the number it carries."""
+        lines = _lines(_road("Rydal Road", "A591", 0.0))
+        got = named_roads(label_basemap(), lines, CARD, ("rydal road",))
+        assert [label.name for label in got] == ["A591"]
+
+    def test_a_road_named_twice_is_lettered_once_at_its_first_place(self) -> None:
+        """A road matched by number and again by street name is lettered once, where first named."""
+        lines = _lines(_road("Rydal Road", "A591", 0.0), _road("Penrith Road", "A66", -1000.0))
+        got = named_roads(label_basemap(), lines, CARD, ("A591", "A66", "Rydal Road"))
+        assert [label.name for label in got] == ["A591", "A66"]
+
+    def test_named_roads_come_in_the_callers_order(self) -> None:
+        """The labels follow the order the caller listed the roads in, not the lines' order."""
+        lines = _lines(_road("Rydal Road", "A591", 0.0), _road("Penrith Road", "A66", -1000.0))
+        got = named_roads(label_basemap(), lines, CARD, ("A66", "A591"))
+        assert [label.name for label in got] == ["A66", "A591"]
+
+    def test_named_roads_are_not_held_to_the_budget(self) -> None:
+        """Three named roads are all lettered, past the picker's budget of two."""
+        lines = _lines(
+            _road("Rydal Road", "A591", 0.0),
+            _road("Penrith Road", "A66", -1000.0),
+            _road("Glencoe Road", "A82", -2000.0),
+        )
+        got = named_roads(label_basemap(), lines, CARD, ("A591", "A66", "A82"))
+        assert [label.name for label in got] == ["A591", "A66", "A82"]
+
+    def test_a_named_road_too_short_for_its_number_is_skipped_and_logged(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A named road shorter than its number needs is left out and logged at INFO, not raised."""
+        caplog.set_level(logging.INFO, logger="pyntpot.maps.lettering.picks_roads")
+        lines = _lines(_road("Rydal Road", "A591", 0.0, x1=500))
+        got = named_roads(label_basemap(), lines, CARD, ("A591",))
+        assert got == []
+        assert "A591" in caplog.text
+
+    def test_an_unmatched_name_raises_naming_it(self) -> None:
+        """Names that match no drawn road raise, every one named in the listed order."""
+        lines = _lines(_road("Rydal Road", "A591", 0.0))
+        with pytest.raises(ValueError, match="'A9', 'B4521'"):
+            named_roads(label_basemap(), lines, CARD, ("A591", "A9", "B4521"))
+
+    def test_a_numbered_road_with_no_name_is_matched(self) -> None:
+        """A road with a number and no name is filed under `numbered` and lettered by it."""
+        basemap = _numbered_basemap()
+        lines = named_lines(basemap, 2.0)
+        assert [entry["r"] for entry in lines["numbered"]] == ["A9"]
+        assert [entry["r"] for entry in lines["roads"]] == ["A591"]
+        got = named_roads(basemap, lines, basemap.card, ("A9",))
+        assert [label.name for label in got] == ["A9"]
+
+    def test_the_numbered_lines_change_nothing_the_picker_reads(self) -> None:
+        """The roads, rivers, coast and crossings are what they were before `numbered` existed."""
+        lines = named_lines(_numbered_basemap(), 2.0)
+        assert lines["roads"] == [
+            {
+                "n": "Rydal Road",
+                "c": "major",
+                "r": "A591",
+                "w": 0.0,
+                "wn": 0.0,
+                "d": [[0.0, 0.0], [1360.0, 0.0]],
+            }
+        ]
+        assert lines["rivers"] == []
+        assert lines["coast"] == []
+        assert lines["crossings"] == [[[-500.0, 800.0], [1800.0, 800.0]]]
+
+    def test_a_named_road_label_carries_its_middle_tier_size_and_widest_width(self) -> None:
+        """The label sits mid-run, at the road tier and size, as wide as the widest piece's class."""
+        minor = {"n": "", "c": "minor", "r": "A39", "d": _leg(0, 500, -2000.0)}
+        got = named_roads(label_basemap(), _lines(_road("", "A39", 0.0), minor), CARD, ("A39",))
+        _assert_road_label(got[0])
+
+    def test_a_name_on_several_roads_letters_each_past_one_already_lettered(self) -> None:
+        """A street name matching a road already lettered still letters the other road it names."""
+        lines = _lines(_road("Rydal Road", "A591", 0.0), _road("Rydal Road", "B5287", -1000.0))
+        got = named_roads(label_basemap(), lines, CARD, ("A591", "Rydal Road"))
+        assert [label.name for label in got] == ["A591", "B5287"]
+
+    def test_a_road_too_short_does_not_stop_the_next_of_its_name(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A short road is logged by number and skipped, and the next road of its name is lettered."""
+        caplog.set_level(logging.INFO, logger="pyntpot.maps.lettering.picks_roads")
+        short = _road("Rydal Road", "A591", 0.0, x1=500)
+        lines = _lines(short, _road("Rydal Road", "B5287", -1000.0))
+        got = named_roads(label_basemap(), lines, CARD, ("Rydal Road",))
+        assert [label.name for label in got] == ["B5287"]
+        assert [r.getMessage() for r in caplog.records] == [
+            "road A591 is too short on this card to letter"
+        ]
+
+    def test_a_road_of_one_point_is_not_drawn(self) -> None:
+        """A road whose only piece is one point matches nothing, so naming it raises."""
+        lines = _lines({"n": "Countisbury Hill", "c": "major", "r": "", "d": [[0.0, 0.0]]})
+        with pytest.raises(ValueError, match="'Countisbury Hill'"):
+            named_roads(label_basemap(), lines, CARD, ("Countisbury Hill",))
+
+
+def _assert_road_label(label: Label) -> None:
+    """The A39 along northing 0, 300 px long: mid-run at (150, 40), road tier, major width."""
+    assert (label.name, label.px, label.py) == ("A39", pytest.approx(150.0), pytest.approx(40.0))
+    assert (label.tier, label.size) == (TIER_ROAD, pytest.approx(DEFAULT_LINE_PX * 0.7))
+    assert label.feature_px == pytest.approx(5.0 * 1.35)
+
+
+class TestPickRoads:
+    """Which roads beside the track `pick_roads` letters, in what order, and what each carries."""
+
+    def test_a_picked_road_label_carries_its_middle_tier_size_and_width(self) -> None:
+        """The label sits mid-run, at the road tier and size, as wide as a major road is painted."""
+        _assert_road_label(
+            pick_roads(label_basemap(), _lines(_road("", "A39", 0.0)), CARD, ROUTE)[0]
+        )
+
+    def test_a_medium_road_beside_the_track_is_lettered(self) -> None:
+        """Medium roads are numbered along with major ones."""
+        lines = _lines(_road("Lynbridge Road", "B3234", 0.0, cls="medium"))
+        assert [label.name for label in pick_roads(label_basemap(), lines, CARD, ROUTE)] == [
+            "B3234"
+        ]
+
+    @pytest.mark.parametrize(
+        ("near", "names"), [(4, ["A39"]), (1, [])], ids=["fourth-point", "first-point"]
+    )
+    def test_the_track_is_read_at_every_fourth_point(self, near: int, names: list[str]) -> None:
+        """Only every fourth track point is measured against the road, starting at the first."""
+        route = [(10.0 * i, 45.0 if i == near else 200.0) for i in range(8)]
+        got = pick_roads(label_basemap(), _lines(_road("", "A39", 0.0)), CARD, route)
+        assert [label.name for label in got] == names
+
+    def test_a_road_exactly_40_px_off_the_track_was_on_it(self) -> None:
+        """A road whose every other point comes exactly 40 px from the track still counts."""
+        got = pick_roads(label_basemap(), _lines(_road("", "A39", 0.0)), CARD, [(100.0, 0.0)])
+        assert [label.name for label in got] == ["A39"]
+
+    def test_a_road_exactly_as_long_as_its_number_needs_is_lettered(self) -> None:
+        """A run of exactly `road_min_px` is long enough, for the picker and for a named road."""
+        exact = {"n": "", "c": "major", "r": "A39", "d": [[0.0, 0.0], [896.0, 0.0]]}
+        lines = _lines(exact)
+        assert length(pick_roads(label_basemap(), lines, CARD, ROUTE)[0].baseline) == road_min_px(
+            DEFAULT_LINE_PX * 0.7
+        )
+        assert [label.name for label in named_roads(label_basemap(), lines, CARD, ("A39",))] == [
+            "A39"
+        ]
+
+    @pytest.mark.parametrize(
+        "skipped",
+        [
+            _road("Lynbridge Road", "B3234", 0.0, x1=500),
+            _road("Lynbridge Road", "B3234", -2000.0),
+            _road("Lynbridge Road", "B3234", 0.0, cls="minor"),
+        ],
+        ids=["too-short", "off-the-track", "minor"],
+    )
+    def test_a_skipped_road_does_not_stop_the_picker(self, skipped: dict[str, Any]) -> None:
+        """A road skipped for its length, its distance or its class leaves the next one lettered."""
+        lines = _lines(skipped, _road("", "A39", 0.0))
+        assert [label.name for label in pick_roads(label_basemap(), lines, CARD, ROUTE)] == ["A39"]
+
+    def test_the_longest_piece_carries_the_label(self) -> None:
+        """Of two pieces too far apart to join, the longer is the baseline, wherever it starts."""
+        apart = {"n": "", "c": "major", "r": "A39", "d": _leg(2500, 3500, 0.0)}
+        lines = _lines(_road("", "A39", 0.0, x1=2000), apart)
+        picked = pick_roads(label_basemap(), lines, CARD, ROUTE)
+        named = named_roads(label_basemap(), lines, CARD, ("A39",))
+        assert length(picked[0].baseline) == pytest.approx(200.0)
+        assert length(named[0].baseline) == pytest.approx(200.0)
+
+    def test_a_nearer_road_outranks_a_longer_one_further_off(self) -> None:
+        """The score is the run less its distance from the track, best first."""
+        lines = _lines(_road("", "A39", -300.0, x1=2300), _road("", "A399", 0.0, x1=2200))
+        got = pick_roads(label_basemap(), lines, CARD, ROUTE)
+        assert [label.name for label in got] == ["A399", "A39"]
+
+    def test_a_road_with_no_name_and_no_number_is_not_lettered(self) -> None:
+        """A road with nothing to write is skipped, however near the track it runs."""
+        assert pick_roads(label_basemap(), _lines(_road("", "", 0.0)), CARD, ROUTE) == []
+
+
+def _numbered_basemap() -> Basemap:
+    """A 320 px card carrying the A591 as Rydal Road and an A9 piece with no name."""
+    rydal = Road(
+        line=((0.0, 0.0), (680.0, 0.0), (1360.0, 0.0)),
+        cls="major",
+        band="major",
+        highway="trunk",
+        name="Rydal Road",
+        ref="A591",
+    )
+    unnamed = Road(
+        line=((-500.0, 800.0), (650.0, 800.0), (1800.0, 800.0)),
+        cls="major",
+        band="major",
+        highway="trunk",
+        name="",
+        ref="A9",
+    )
+    return tiny_basemap(class_style(display_px=320, supersample=1), roads=(rydal, unnamed))

@@ -29,19 +29,13 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.nib import mark_width_px
 from pyntpot.letters.setting import DEFAULT_LINE_PX, Mark, Setting
 from pyntpot.letters.style import NibStyle
-from pyntpot.maps.lettering.label import (
-    KIND_TRACKING,
-    NO_LEADER,
-    SPAN_EFFORT,
-    TIER_SPAN,
-    Label,
-    Span,
-)
+from pyntpot.maps.lettering.label import NO_LEADER, SPAN_EFFORT, TIER_SPAN, Label, Span
+from pyntpot.maps.lettering.label_sizing import KIND_TRACKING
 from pyntpot.maps.lettering.placement_lift import lift_baseline, offset_line
 from pyntpot.maps.lettering_furniture import (
     leader,
@@ -80,7 +74,7 @@ SPAN_INTENT_INK = {
 }
 
 #: The user's own place, as a small house in display pixels with y down, drawn in
-#: the map's own ink on the label plate, so the card and the page get the same
+#: the map's own ink on the nib plate, so the card and the page get the same
 #: pixels and reserve the same room for it.
 HOME_GLYPH = [(-7.0, 1.5), (0.0, -6.5), (7.0, 1.5), (7.0, 8.0), (-7.0, 8.0), (-7.0, 1.5)]
 
@@ -93,7 +87,7 @@ def open_hand(style: Style, route: str | None = None) -> Hand | None:
 
     Args:
         style: The style whose face and hand are opened.
-        route: `centreline` or `outline`; the style's when not given.
+        route: The trace, `centreline` or `outline`; the style's when not given.
     """
     try:
         return Hand(style.face, style.hand, route)
@@ -204,7 +198,7 @@ def _ink(lb: Label) -> str:
     return KIND_INK.get(lb.kind, "label")
 
 
-def _setting(lb: Label, base: list[Pt] | None, track: float) -> Setting:
+def _setting(lb: Label, base: list[Point] | None, track: float) -> Setting:
     """The label as the hand is asked to write it: along its lifted line, or flat."""
     slant = KIND_SLANT.get(lb.kind, 0.0)
     if lb.tier == TIER_SPAN and lb.kind in SPAN_EFFORT:

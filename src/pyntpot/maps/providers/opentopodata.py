@@ -52,14 +52,14 @@ class OpenTopoData:
     """An OpenTopoData server as an `Elevation` provider.
 
     Attributes:
-        id: `opentopodata-<dataset>`, the name the fetch cache keys on.
         credit: The attribution the elevation data is owed.
+        id: `opentopodata-<dataset>`, the name the fetch cache keys on.
     """
 
     credit = Credit(
-        "Elevation: NASA SRTM via OpenTopoData",
-        "https://www.opentopodata.org/",
-        "elevation: NASA SRTM",
+        text="Elevation: NASA SRTM via OpenTopoData",
+        url="https://www.opentopodata.org/",
+        short="elevation: NASA SRTM",
     )
 
     def __init__(

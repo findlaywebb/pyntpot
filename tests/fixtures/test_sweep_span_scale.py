@@ -19,7 +19,7 @@ from fixtures.span_sweep_score import (
 )
 from fixtures.sweep_span_scale import FIXTURES, fixture_route
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps.lettering.label import Span
 from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, span_line
 from pyntpot.maps.lettering.span_sides import _convex_side
@@ -30,13 +30,13 @@ from support.lettering import arc
 STRAIGHT = [(float(x), 0.0) for x in range(101)]
 
 
-def _leg(a: Pt, b: Pt, step: float = 2.0) -> list[Pt]:
+def _leg(a: Point, b: Point, step: float = 2.0) -> list[Point]:
     """The points from `a` (not included) to `b`, about `step` apart."""
     n = max(int(math.dist(a, b) // step), 1)
     return [(a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n) for i in range(1, n + 1)]
 
 
-def _bend_then_strand(y: float) -> list[Pt]:
+def _bend_then_strand(y: float) -> list[Point]:
     """A 90 degree bend, then the route on east, down to `y` and back west past the bend's end."""
     route = arc(90.0, r=100.0)
     for a, b in (((200.0, 50.0), (240.0, 50.0)), ((240.0, 50.0), (240.0, y))):
@@ -44,7 +44,7 @@ def _bend_then_strand(y: float) -> list[Pt]:
     return route + _leg((240.0, y), (170.0, y))
 
 
-def _shares(route: list[Pt], i1: int) -> dict[int, float | None]:
+def _shares(route: list[Point], i1: int) -> dict[int, float | None]:
     """Each side's kept share over the span `0..i1`, measured as `judge` measures it."""
     _, marks = _convex_side(Span(name="Loughrigg", i0=0, i1=i1), route, 14.0)
     return {

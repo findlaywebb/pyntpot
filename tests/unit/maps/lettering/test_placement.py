@@ -7,7 +7,6 @@ from pyntpot.ink.polyline import length, meet
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.setting import DEFAULT_LINE_PX
 from pyntpot.maps.lettering.label import (
-    KIND_TRACKING,
     TIER_LANDMARK,
     TIER_RIVER,
     TIER_ROAD,
@@ -15,6 +14,7 @@ from pyntpot.maps.lettering.label import (
     TIER_SPAN,
     Label,
 )
+from pyntpot.maps.lettering.label_sizing import KIND_TRACKING
 from pyntpot.maps.lettering.placement import place
 from pyntpot.maps.lettering.placement_along import IN_WATER_ROAD_COST
 from pyntpot.maps.lettering.placement_costs import Backdrop, _crossings, on_road

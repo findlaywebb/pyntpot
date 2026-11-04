@@ -5,7 +5,7 @@ import math
 from hypothesis import given
 from hypothesis import strategies as st
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps.rings import clip_ring, signed_area
 
 from support.properties import UNTIMED
@@ -18,7 +18,7 @@ def _floats(lo: float, hi: float) -> st.SearchStrategy[float]:
     return st.floats(lo, hi, allow_nan=False, allow_infinity=False)
 
 
-def _ring(centre: Pt, radius: float, angles: list[float]) -> list[Pt]:
+def _ring(centre: Point, radius: float, angles: list[float]) -> list[Point]:
     """A convex ring: points on a circle at sorted angles."""
     return [(centre[0] + radius * math.cos(t), centre[1] + radius * math.sin(t)) for t in angles]
 
@@ -43,13 +43,13 @@ def boxes(draw: st.DrawFn) -> Box:
     return (xmin, ymin, xmax, ymax)
 
 
-def _box_ring(box: Box) -> list[Pt]:
+def _box_ring(box: Box) -> list[Point]:
     """The box's four corners as a ring."""
     xmin, ymin, xmax, ymax = box
     return [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)]
 
 
-def _extent(*rings: list[Pt]) -> float:
+def _extent(*rings: list[Point]) -> float:
     """The largest absolute coordinate over some rings."""
     return max(abs(c) for ring in rings for p in ring for c in p)
 
@@ -59,7 +59,7 @@ class TestClipRing:
 
     @UNTIMED
     @given(ring=RINGS, box=boxes())
-    def test_every_output_point_is_in_the_box(self, ring: list[Pt], box: Box) -> None:
+    def test_every_output_point_is_in_the_box(self, ring: list[Point], box: Box) -> None:
         """Clipped points lie in the box to interpolation rounding."""
         out = clip_ring(ring, box)
         tol = 1e-9 * (1 + _extent(ring, _box_ring(box)))
@@ -70,7 +70,7 @@ class TestClipRing:
 
     @UNTIMED
     @given(ring=RINGS, box=boxes())
-    def test_clipping_never_gains_area(self, ring: list[Pt], box: Box) -> None:
+    def test_clipping_never_gains_area(self, ring: list[Point], box: Box) -> None:
         """The clip's area is at most the ring's and at most the box's."""
         out = clip_ring(ring, box)
         tol = 1e-9 * (1 + abs(signed_area(ring)))
@@ -91,7 +91,7 @@ class TestClipRing:
     @UNTIMED
     @given(ring=RINGS, box=boxes(), side=st.sampled_from(("east", "west", "north", "south")))
     def test_a_ring_clear_of_the_box_clips_to_nothing(
-        self, ring: list[Pt], box: Box, side: str
+        self, ring: list[Point], box: Box, side: str
     ) -> None:
         """A ring shifted along one axis until its bounding box clears the box is dropped."""
         xmin, ymin, xmax, ymax = box

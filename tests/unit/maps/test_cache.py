@@ -203,7 +203,7 @@ class TestKey:
 
 
 class TestLetteringKey:
-    """The label plate's key follows the marks, the base hash and the lettering digest."""
+    """The nib plate's key follows the marks, the base hash and the lettering digest."""
 
     MARKS = (
         Mark(pts=[(1.0, 2.0), (3.0, 4.0)], role="glyph", ink="label", size=14.0),

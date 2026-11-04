@@ -13,8 +13,9 @@ set along a line sits on the far side of the line from the route.
 
 import math
 
-from pyntpot.ink.polyline import Pt, length
-from pyntpot.maps.lettering.label import TIER_SPAN, Label, Measure, Span, outboard
+from pyntpot.ink.polyline import Point, length
+from pyntpot.maps.lettering.label import TIER_SPAN, Label, Measure, Span
+from pyntpot.maps.lettering.label_sizing import outboard
 from pyntpot.maps.lettering.span_clear import (
     FEWEST_FOR_A_SEGMENT,
     SPAN_ALONG_MAX_BEARING_DEG,
@@ -31,7 +32,7 @@ from pyntpot.maps.lettering.span_clear import (
 SPAN_TICK_CAPS = 0.85
 
 
-def span_ticks(span: Span, route_px: list[Pt], cap_px: float) -> list[list[Pt]]:
+def span_ticks(span: Span, route_px: list[Point], cap_px: float) -> list[list[Point]]:
     """A tick from each end of the mark, pointing at the end of the stretch.
 
     The end marks run from the end of the line towards the end of the segment,
@@ -69,7 +70,7 @@ def span_ticks(span: Span, route_px: list[Pt], cap_px: float) -> list[list[Pt]]:
 
 def span_label(
     span: Span,
-    route_px: list[Pt],
+    route_px: list[Point],
     cap_px: float,
     measure_fn: Measure,
     along_max_deg: float = SPAN_ALONG_MAX_BEARING_DEG,
@@ -89,7 +90,7 @@ def span_label(
         and span_bearing(span.line) <= along_max_deg
         and length(span.line) >= width * 1.02
     )
-    anchors: list[Pt] = []
+    anchors: list[Point] = []
     if not along and span.line:
         # Anchored on the outboard side of the line, so the placer looks for
         # its clear paper on the far side from the route rather than in the gap
@@ -130,7 +131,7 @@ def span_label(
 SPAN_ANCHOR_FRACS = (0.15, 0.325, 0.5, 0.675, 0.85)
 
 
-def _beside(line: list[Pt], frac: float, push: Pt) -> Pt:
+def _beside(line: list[Point], frac: float, push: Point) -> Point:
     """The vertex just short of a fraction along a line, shifted by an offset.
 
     The shift is the same vector at every fraction, taken from the line's
@@ -152,7 +153,7 @@ def _beside(line: list[Pt], frac: float, push: Pt) -> Pt:
     return (p[0] + push[0], p[1] + push[1])
 
 
-def _span_normal(line: list[Pt]) -> Pt:
+def _span_normal(line: list[Point]) -> Point:
     """The unit normal to a span line at its middle, pointing to +1 lift."""
     i = len(line) // 2
     a, b = line[max(i - 1, 0)], line[min(i + 1, len(line) - 1)]

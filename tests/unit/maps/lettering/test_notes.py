@@ -6,11 +6,11 @@ from typing import NamedTuple
 import pydantic
 import pytest
 
+from pyntpot.ink.polyline import Box
 from pyntpot.maps import pipeline
 from pyntpot.maps.annotations import Annotations, JournalNote
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
-from pyntpot.maps.lettering.label import Box
 from pyntpot.maps.lettering.pipeline import letter
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.style import Style

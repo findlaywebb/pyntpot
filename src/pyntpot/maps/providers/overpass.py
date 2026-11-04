@@ -191,9 +191,9 @@ class OverpassFeatures:
 
     id = "overpass"
     credit = Credit(
-        "© OpenStreetMap contributors",
-        "https://www.openstreetmap.org/copyright",
-        "© OpenStreetMap contributors (openstreetmap.org/copyright)",
+        text="© OpenStreetMap contributors",
+        url="https://www.openstreetmap.org/copyright",
+        short="© OpenStreetMap contributors (openstreetmap.org/copyright)",
     )
 
     def __init__(

@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 from pyntpot.letters.skeleton import THROUGH_DOT
 
 if TYPE_CHECKING:
-    from pyntpot.ink.polyline import Pt
+    from pyntpot.ink.polyline import Point
 
 #: A junction of at least this many arms can have a stroke passing through it.
 JUNCTION_ARMS = 3
@@ -35,7 +35,7 @@ JOIN_PX = 3
 MIN_PAIR = 2
 
 
-def leaving(run: list[Pt], look: int = 3) -> Pt:
+def leaving(run: list[Point], look: int = 3) -> Point:
     """The unit direction a run sets off in from its own first point."""
     a, b = run[0], run[min(look, len(run) - 1)]
     d = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
@@ -48,7 +48,7 @@ class _Piece:
 
     start: tuple[int, int]
     end: tuple[int, int]
-    pts: list[Pt]
+    pts: list[Point]
 
     def reversed(self) -> _Piece:
         """The same run, walked the other way."""
@@ -112,8 +112,8 @@ def _bridged(
 
 
 def join_through(
-    kept: list[tuple[list[tuple[int, int]], list[Pt]]], bridge: float
-) -> list[list[Pt]]:
+    kept: list[tuple[list[tuple[int, int]], list[Point]]], bridge: float
+) -> list[list[Point]]:
     """The runs, with the two that run straight on through a junction made one.
 
     A pen writes a stem top to bottom in one go. Left as two strokes that meet

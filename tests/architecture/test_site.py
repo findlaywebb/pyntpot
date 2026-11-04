@@ -3,10 +3,11 @@
 Read statically, so no build runs: each page under `docs/reference/` for a public module
 (`pyntpot`, `pyntpot.ink`, `pyntpot.letters`, `pyntpot.maps`) holds one mkdocstrings directive
 for the module itself, with `members: false` so it renders only the module's docstring, and one
-directive per public name, `::: pyntpot.<layer>.<module>.<name>` or `::: pyntpot.<layer>.<name>`.
+directive per public name, always `::: pyntpot.<layer>.<name>`, never a deeper module path.
 Every name in the four `__all__` lists must be the last part of exactly one such directive,
-and a directive for any other name is a name that is not public. `mkdocs.yml`'s nav lists only
-pages that exist, and lists the four pages.
+and a directive for any other name is a name that is not public. No package binds a name in its
+`__init__.py` that is also one of its submodules, so each such path resolves to the name.
+`mkdocs.yml`'s nav lists only pages that exist, and lists the four pages.
 """
 
 import ast
@@ -54,6 +55,48 @@ def _is_module_file(parts: list[str]) -> bool:
     return base.with_suffix(".py").is_file() or (base / "__init__.py").is_file()
 
 
+SRC = REPO_ROOT / "src" / "pyntpot"
+PACKAGES: list[Path] = sorted(SRC.rglob("__init__.py"))
+
+
+def _bound_names(init: Path) -> set[str]:
+    """Return the names an `__init__.py` binds at module level: imports, defs, classes, assignments."""
+    names: set[str] = set()
+    for node in ast.parse(init.read_text(), filename=str(init)).body:
+        match node:
+            case ast.Import(names=aliases) | ast.ImportFrom(names=aliases):
+                names |= {(a.asname or a.name).split(".")[0] for a in aliases}
+            case (
+                ast.FunctionDef(name=name)
+                | ast.AsyncFunctionDef(name=name)
+                | ast.ClassDef(name=name)
+            ):
+                names.add(name)
+            case ast.Assign(targets=targets):
+                names |= {n.id for t in targets for n in ast.walk(t) if isinstance(n, ast.Name)}
+            case ast.AnnAssign(target=ast.Name(id=name)):
+                names.add(name)
+            case _:
+                continue
+    return names
+
+
+def _submodules(package: Path) -> set[str]:
+    """Return a package's module stems and sub-package directory names."""
+    stems = {p.stem for p in package.glob("*.py") if p.name != "__init__.py"}
+    dirs = {p.name for p in package.iterdir() if (p / "__init__.py").is_file()}
+    return stems | dirs
+
+
+@pytest.mark.parametrize(
+    "init", PACKAGES, ids=[str(p.parent.relative_to(SRC.parent)) for p in PACKAGES]
+)
+def test_no_package_binds_a_name_that_is_one_of_its_submodules(init: Path) -> None:
+    """No name bound in a package's `__init__.py` equals one of that package's submodules."""
+    shadowed = _bound_names(init) & _submodules(init.parent)
+    assert not shadowed, f"{init.relative_to(REPO_ROOT)} shadows submodules: {sorted(shadowed)}"
+
+
 def test_every_public_name_is_rendered_once() -> None:
     """Each name in the four `__all__` lists is the last part of exactly one name directive, and no other name is."""
     public = {name for module in PAGES for name in _module_all(module)}
@@ -93,6 +136,11 @@ class TestPage:
             )
             assert _is_module_file(parts[:-1]), f"{path}: {'.'.join(parts[:-1])} is not a module"
             assert parts[-1] in listed, f"{path} is not in {module}'s `__all__`"
+
+    def test_each_name_directive_is_the_public_path(self, module: str, page: str) -> None:
+        """Every name directive is exactly the module path and the name, never a deeper module path."""
+        deep = [p for p, _o in _directives(page)[1:] if p != f"{module}.{p.rsplit('.', 1)[1]}"]
+        assert not deep, f"{page} has directives deeper than {module}: {deep}"
 
 
 class TestNav:

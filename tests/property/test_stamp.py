@@ -15,7 +15,7 @@ from hypothesis import strategies as st
 from pyntpot.ink.brush import brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.noise import chamfer_distance
-from pyntpot.ink.stamp import _nib_spent, stamp
+from pyntpot.ink.stamping import _nib_spent, stamp
 
 from support.properties import UNTIMED
 

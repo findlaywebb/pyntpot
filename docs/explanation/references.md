@@ -19,7 +19,7 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 - Canonical source: W3C (2024). Compositing and Blending Level 1. W3C Candidate Recommendation Draft, 21 March 2024. https://www.w3.org/TR/compositing-1/ [verified: page 200, title and w3c-state W3C Candidate Recommendation Draft, updated 2024-03-21; 2026-10-07]
 - Design input: Watson, Z. (Stamen Design) (2012). Watercolor Process. https://stamen.com/watercolor-process-3dd5135861fe/ [verified: page 200 with its pinned words, published 2012-03-26; 2026-10-07]
 - Design input: Osman (osmanyy.com) (2025). Risograph.css. https://osmanyy.com/projects/risograph-css/ [verified: page 200 with its pinned words, published 2025-07-03; 2026-10-07]
-- Implemented in: `pyntpot.ink.pigment.multiply_plate`, `pyntpot.ink.pigment.composite`, `pyntpot.maps.compose.painted_map`
+- Implemented in: `pyntpot.ink.pigment.multiply_plate`, `pyntpot.ink.pigment.composite`, `pyntpot.maps.compose_steps.painted_map`
 
 ## `zhang-suen` Zhang-Suen thinning
 
@@ -56,7 +56,7 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 
 - Canonical source: Duchon, C. E. (1979). Lanczos Filtering in One and Two Dimensions. *Journal of Applied Meteorology* 18(8), 1016-1022. https://doi.org/10.1175/1520-0450(1979)018<1016:LFIOAT>2.0.CO;2 [verified-via-index: Crossref record, publisher page 403; 2026-10-07]
 - Design input: original design reading not recorded; the canonical source stands in.
-- Implemented in: `pyntpot.ink.pad._reduce`, `pyntpot.maps.compose.painted_map`, `pyntpot.maps.compose.route`, `pyntpot.maps.compose.paste_labels`
+- Implemented in: `pyntpot.ink.pad._reduce`, `pyntpot.maps.compose_steps.painted_map`, `pyntpot.maps.compose_steps.route`, `pyntpot.maps.compose_steps.paste_labels`
 - Note: the filter is applied through Pillow: each site resizes with `Image.Resampling.LANCZOS` and computes no window of its own.
 
 ## `value-noise` value noise
@@ -110,7 +110,7 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 - Design input: the canonical source above.
 - Design input: Bousseau, A.; Kaplan, M.; Thollot, J.; Sillion, F. X. (2006). Interactive watercolor rendering with temporal coherence and abstraction. *Proceedings of the 4th international symposium on Non-photorealistic animation and rendering*, 141-149. https://doi.org/10.1145/1124728.1124751 [verified-via-index: Crossref record by bibliographic search, publisher page 403 challenge; 2026-10-07]
 - Design input: Watson, Z. (Stamen Design) (2012). Watercolor Process. https://stamen.com/watercolor-process-3dd5135861fe/ [verified: page 200 with its pinned words, published 2012-03-26; 2026-10-07]
-- Implemented in: `pyntpot.ink.wash.flow_edge`, `pyntpot.ink.wash.wash`
+- Implemented in: `pyntpot.ink.washing.flow_edge`, `pyntpot.ink.washing.wash`
 
 ## `backruns` backruns (blooms)
 
@@ -124,7 +124,7 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 
 - Canonical source: Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997). Computer-generated watercolor. *Proceedings of the 24th annual conference on Computer graphics and interactive techniques - SIGGRAPH '97*, 421-430. https://doi.org/10.1145/258734.258896 [verified-via-index: Crossref record, publisher page 403 Cloudflare block; 2026-10-07]
 - Design input: the canonical source above.
-- Implemented in: `pyntpot.ink.sheet.Sheet.pits`, `pyntpot.ink.wash.wash`
+- Implemented in: `pyntpot.ink.sheet.Sheet.pits`, `pyntpot.ink.washing.wash`
 
 ## `shallow-water` the shallow-water pass
 
@@ -139,14 +139,14 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 - Canonical source: Luft, T.; Deussen, O. (2006). Real-time watercolor illustrations of plants using a blurred depth test. *Proceedings of the 4th international symposium on Non-photorealistic animation and rendering*, 11-20. https://doi.org/10.1145/1124728.1124732 [verified-via-index: Crossref record, publisher page 403 challenge; 2026-10-07]
 - Design input: Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997, year from the design record, not shown on the page). Computer-Generated Watercolor. https://grail.cs.washington.edu/projects/watercolor/paper_small.pdf [verified: PDF 200, title and every author in the text; 2026-10-07]
 - Design input: the canonical source above.
-- Implemented in: `pyntpot.ink.wash.wash`, `pyntpot.maps.painter.cover.wet_field`
+- Implemented in: `pyntpot.ink.washing.wash`, `pyntpot.maps.painter.cover.wet_field`
 
 ## `bristle-brush` bristle brush tip and stamp
 
 - Canonical source: Strassmann, S. (1986). Hairy brushes. *ACM SIGGRAPH Computer Graphics* 20(4), 225-232. https://doi.org/10.1145/15886.15911 [verified-via-index: Crossref record, publisher page 403 challenge; 2026-10-07]
 - Design input: Chu, N. S.-H.; Tai, C.-L. (2005). MoXi: real-time ink dispersion in absorbent paper. *ACM SIGGRAPH 2005 Papers*, 504-511. https://doi.org/10.1145/1186822.1073221 [verified-via-index: Crossref record, publisher page 403 challenge; 2026-10-07]
 - Design input: Baxter, W. V.; Lin, M. C. (2004). A versatile interactive 3D brush model. *12th Pacific Conference on Computer Graphics and Applications, 2004. PG 2004. Proceedings.*, 316-325. https://doi.org/10.1109/pccga.2004.1348363 [verified-via-index: Crossref record by bibliographic search, issued null, year from the container title PG 2004, publisher page 202 with an empty body; 2026-10-07]
-- Implemented in: `pyntpot.ink.stamp.stamp`
+- Implemented in: `pyntpot.ink.stamping.stamp`
 
 ## `nib` pen nib stroke
 
@@ -172,7 +172,7 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 
 - Canonical source: Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997). Computer-generated watercolor. *Proceedings of the 24th annual conference on Computer graphics and interactive techniques - SIGGRAPH '97*, 421-430. https://doi.org/10.1145/258734.258896 [verified-via-index: Crossref record, publisher page 403 Cloudflare block; 2026-10-07]
 - Design input: the canonical source above.
-- Implemented in: `pyntpot.ink.wash.separated`
+- Implemented in: `pyntpot.ink.washing.separated`
 
 ## Read during design, no technique here
 

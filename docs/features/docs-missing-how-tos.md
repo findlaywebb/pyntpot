@@ -11,15 +11,15 @@ plausibly has with no guide. The ones most often wanted:
 1. **Change the card's size or resolution.** Needs `model_copy` with `dataclasses.replace`
    on `card.display_px` and `supersample`; `pyntpot map` has no `--size`.
 2. **Mark a stretch of the route** (a climb, a stop, a bad section) through
-   `Annotations.spans`, by track index, kilometre or seconds. `SpanRequest` is not exported
-   from `pyntpot.maps`, so a user cannot build one through the public API.
+   `Annotations.spans`, by track index, kilometre or seconds. `SpanRequest` is exported
+   from `pyntpot.maps`, but no guide shows how to build one.
 3. **Pin journal notes to the map.** `JournalNote` is public and the Skye card uses notes,
    but no guide gives the limits (6 notes of 60 characters).
 4. **Map a planned route or a track that is not GPX.** `Track(lat=..., lng=...)` already
    takes a list of points; the command-line guide only says to export the recorded track.
 5. **Choose names from the candidate export.** `candidate_export`, pick, then
-   `Annotations.landmarks`. A landmark placed at coordinates is a `Landmark`, which is not
-   exported either.
+   `Annotations.landmarks`. A landmark placed at coordinates is a `Landmark`, exported
+   from `pyntpot.maps` too.
 6. **Add relief or turn it off**: `[basemap] hillshade_mode` and `contour_interval`.
 7. **Use another font for the lettering**: `[face] label_face` takes a `.ttf` path.
 8. **Handle fetch failures in a script**: `FetchError` and `ProviderBudgetExceededError` are
@@ -34,13 +34,13 @@ wash colour in your own painting, and use the plates on disk in another tool.
 index by task, each with a command-line path first where `pyntpot map` can do it and Python
 second.
 
-**Possible shape.** Write the ones that need no library change first (3, 4, 6, 7, 8).
-Guides 2 and 5 wait on `SpanRequest` and `Landmark` becoming public
-(`maps-public-signature-types.md`). Guide 1 is one line once `pyntpot map`
+**Possible shape.** Write the ones that need no library change first (2, 3, 4, 5, 6, 7,
+8); `SpanRequest` and `Landmark` are public, so guides 2 and 5 need nothing more. Guide 1
+is one line once `pyntpot map`
 takes `--size` (`cli-wider-commands.md`, #68), and shorter in Python once a theme can
 override one field (`maps-themes-as-overrides.md`, #80). Picking roads per card (as
-opposed to `[basemap] pick_roads` in a theme) waits on `Annotations.roads`, which is accepted and then ignored today
-(`docs/issues/maps-annotations-roads-ignored.md`).
+opposed to `[basemap] pick_roads` in a theme) is `Annotations.roads`, which letters the
+roads it names, by name or number.
 
-**Related.** `maps-public-signature-types.md`, `cli-wider-commands.md` (#68),
+**Related.** `cli-wider-commands.md` (#68),
 `maps-themes-as-overrides.md` (#80), `docs-tutorials-lead-on.md`.

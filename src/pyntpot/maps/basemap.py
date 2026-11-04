@@ -29,18 +29,18 @@ from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 if TYPE_CHECKING:
     from pyntpot.maps.card import Card
     from pyntpot.maps.credit import Credit
     from pyntpot.maps.projection import Projection
 
-#: A polyline or a ring, in card metres.
-Line = tuple[Pt, ...]
+Line = tuple[Point, ...]
+"""A polyline or a ring, in card metres."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Road:
     """One road as one brush stroke: the pieces of one named road chained.
 
@@ -61,7 +61,7 @@ class Road:
     ref: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class River:
     """One watercourse as one brush stroke, at the width it is painted.
 
@@ -84,7 +84,7 @@ class River:
     profile: tuple[float, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ElevationPatch:
     """The elevation samples a basemap carries, placed in card metres.
 
@@ -110,7 +110,7 @@ class ElevationPatch:
     high: int
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Layers:
     """The geometry and measurements of a basemap that the painter reads.
 

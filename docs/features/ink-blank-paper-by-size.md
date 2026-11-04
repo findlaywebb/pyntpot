@@ -42,5 +42,4 @@ and tutorial are rewritten to the new calls and the docs images and goldens stay
 are.
 
 **Related.** `docs-examples-review` (#63); `ink-one-pigment-registry` (#72), the colour half
-of the same boilerplate; `ink-public-wash-options` (#73), which touches the same `wash`
-signature.
+of the same boilerplate; `WashOptions`, public from `pyntpot.ink`, which `wash` takes.

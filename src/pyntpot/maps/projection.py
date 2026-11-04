@@ -17,15 +17,16 @@ so the whole track lies in the positive quadrant.
 
 from __future__ import annotations
 
+import dataclasses
 import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pyntpot.ink.polyline import Pt
+    from pyntpot.ink.polyline import Point
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class Projection:
     """The route chart's local equirectangular projection.
 
@@ -54,7 +55,7 @@ class Projection:
         """Metres per degree of longitude at the track's mean latitude."""
         return 111320.0 * math.cos(math.radians(self.lat0))
 
-    def __call__(self, lat: float, lng: float) -> Pt:
+    def __call__(self, lat: float, lng: float) -> Point:
         """Project one coordinate into card metres."""
         return ((lng - self.lng_ref) * self.kx - self.x0, (lat - self.lat_ref) * self.ky - self.y0)
 
@@ -64,8 +65,8 @@ class Projection:
 
 
 def track_projection(
-    lat: list[float], lng: list[float], route: list[Pt] | None = None
-) -> tuple[Projection, list[Pt]]:
+    lat: list[float], lng: list[float], route: list[Point] | None = None
+) -> tuple[Projection, list[Point]]:
     """The projection for one track, and the track projected through it.
 
     Args:
@@ -78,12 +79,13 @@ def track_projection(
     Returns:
         The projection, and the track in metres.
     """
-    proj = Projection(lat0=sum(lat) / len(lat), lat_ref=lat[0], lng_ref=lng[0])
-    raw = [proj(a, b) for a, b in zip(lat, lng, strict=True)]
+    base = Projection(lat0=sum(lat) / len(lat), lat_ref=lat[0], lng_ref=lng[0])
+    raw = [base(a, b) for a, b in zip(lat, lng, strict=True)]
     if route is not None and len(route) > 0:
-        proj.x0 = raw[0][0] - route[0][0]
-        proj.y0 = raw[0][1] - route[0][1]
+        x0 = raw[0][0] - route[0][0]
+        y0 = raw[0][1] - route[0][1]
     else:
-        proj.x0 = min(x for x, _ in raw)
-        proj.y0 = min(y for _, y in raw)
+        x0 = min(x for x, _ in raw)
+        y0 = min(y for _, y in raw)
+    proj = dataclasses.replace(base, x0=x0, y0=y0)
     return proj, [(x - proj.x0, y - proj.y0) for x, y in raw]

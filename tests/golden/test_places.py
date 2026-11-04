@@ -42,13 +42,13 @@ from support.paths import (
 
 pytestmark = pytest.mark.golden
 
-#: The curated callouts and journal notes of the showcase places, one table per fixture directory.
+#: The curated landmarks and journal notes of the showcase places, one table per fixture directory.
 PLACES_TOML = REPO_ROOT / "examples" / "places.toml"
 
 #: The share of a flat name's box a lake may graze at its padded edges.
 LAKE_GRAZE = 0.05
 
-#: The callouts whose leader still crosses the route, per place. A leader across the track is
+#: The landmarks whose leader still crosses the route, per place. A leader across the track is
 #: priced, not banned: each of these pins has the route or a road on every seat on its own
 #: side, so its cheapest seat is over the track. Any other leader that crosses it fails.
 #: Garnedd Ugain's pin is on the route where the spur to Yr Wyddfa leaves it, so every seat
@@ -86,10 +86,10 @@ class Place:
 
 
 #: Each place's labels are the names its style (the default unless `theme` is given) places, with
-#: the curated callouts and journal notes of `examples/places.toml`, pinned from the painting of the
-#: recorded fixture at the style's own card width. The test compares the distinct names only: how
-#: many times a long river is named, and in what order, can shift on a placement near-tie between
-#: platforms (CI placed one "Cherwell" on Oxford where the recording machine placed two).
+#: the curated landmarks and journal notes of `examples/places.toml`, pinned from the painting of
+#: the recorded fixture at the style's own card width. The test compares the distinct names only:
+#: how many times a long river is named, and in what order, can shift on a placement near-tie
+#: between platforms (CI placed one "Cherwell" on Oxford where the recording machine placed two).
 PLACES = (
     Place(
         "skye",
@@ -185,7 +185,7 @@ PLACES = (
 
 
 def curated(directory: str) -> Annotations | None:
-    """The callouts and journal notes `examples/places.toml` holds for a place, or `None` for none."""
+    """The landmarks and journal notes `examples/places.toml` holds for a place, else `None`."""
     with PLACES_TOML.open("rb") as handle:
         entry = tomllib.load(handle).get(directory)
     if entry is None:

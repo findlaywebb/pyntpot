@@ -10,7 +10,7 @@ add the term here when you coin one.
 | plate | One painted raster layer: paper, wash, pen, labels; the painter writes each to disk. |
 | plates | The set of plates plus its manifest for one render. `maps.plates.Plates`, with its manifest `plates.json`. |
 | brush | One mark-making tool, in render pixels: a tip of bristles stamped along a path. `ink.brush.Brush`. |
-| brush sheet | The catalogue of brush cells: stroke treatments by row `"1"` to `"8"`, the rows that are a nib, and ink colours by the id's three-letter prefix and column. A brush id `<PREFIX><row>-<column>` such as `MAJ2-a` is an opaque cell name; `ink` never reads the prefix as a feature class. `ink.brush.BRUSH_TREATMENTS`, `PEN_ROWS`, `BRUSH_COLOURS`. |
+| brush sheet | The catalogue of brush cells: stroke treatments by row `"1"` to `"8"`, the rows that are a nib, and ink colours by the id's three-letter prefix and column. A brush id `<PREFIX><row>-<column>` such as `MAJ2-a` is an opaque cell name; `ink` never reads the prefix as a feature class. `ink.brush_sheet.BRUSH_TREATMENTS`, `PEN_ROWS`, `BRUSH_COLOURS`. |
 | wash | A pigment field laid on the paper. |
 | hand | The lettering writer. `letters.hand.Hand`, reading its face through `letters.font.OutlineFont`. |
 | trace | How a glyph becomes strokes: centreline or outline. `letters.trace.CENTRELINE` or `OUTLINE`, chosen by `letters.font.OutlineFont`. |
@@ -28,7 +28,7 @@ add the term here when you coin one.
 | card | The coordinate frame of one map: a box in card metres and the display and render pixel grids it maps to; converts between them. A canvas (`ink.sheet.Canvas`) is the raster a plate is painted on; a card is the frame that says where things go on it. |
 | manifest | The plates' sidecar record (`plates.json`): the base hash, the files written and the measurements later stages read. |
 | style | Every style group a map is painted, lettered and composed with, as one value (`maps.style.Style`). |
-| style group | One layer's share of the style, a frozen dataclass of the fields its readers read: `PaperStyle`, `NibStyle`, `BasemapStyle` and the rest. |
+| style group | One layer's share of the style, a frozen dataclass of the fields its readers read: `PaperStyle`, `NibStyle`, `BasemapStyle` and the rest. Each is a frozen, keyword-only dataclass named `<Group>Style`. |
 | theme | A TOML file holding one style, a table per style group. The packaged default theme is the resolved default style. |
 | credit | One data source's attribution: the full text, a link, and the short line drawn on the map. `maps.credit.Credit`. |
 | elevation grid | An n by n lattice of elevations over a bounding box, as an elevation provider returns it and the fetch cache stores it. `maps.providers.base.ElevationGrid`. |
@@ -51,7 +51,7 @@ add the term here when you coin one.
 | pigment layer | One layer of the pigment stack `composite` lays: a density, a pigment colour and optionally its transparency. Not the basemap's layers. `ink.pigment.PigmentLayer`. |
 | density | How much pigment or ink lies at a pixel, 0 to 1: what `wash` and `ink_density` return and a pigment layer carries. |
 | nib plate | The lettering's own RGBA plate: marks stroked through the ink engine on the paper's colour, composited normally rather than multiplied. `letters.nib.nib_plate`, on a `letters.nib.NibSurface`. |
-| vector layers | The basemap's layers as SVG path data in card metres, read from the fetch cache under the track's key, with the landmarks and places chosen for the box (the style's picks replacing the chosen landmarks), for a caller that draws its own map instead of painting one. Not the painter's layers. `maps.vector_layers.VectorLayers`, built by `vector_layers`. |
+| vector layers | The basemap's layers as SVG path data in card metres, read from the fetch cache under the track's key, with the landmarks and places chosen for the box (the style's picks replacing the chosen landmarks), for a caller that draws its own map instead of painting one. Not the painter's layers. `maps.vector_layer_build.VectorLayers`, built by `vector_layers`. |
 | candidate export | What a track passes, for a caller to choose names from: the route's totals and the settlements it passed, in order, each climb grounded in that route, and every landmark candidate beside it, as one JSON-ready dictionary read from the fetch cache under the track's key. `maps.candidates.export.candidate_export`. |
 | route ink | How the route is drawn on the card: its treatment, its width in display pixels, its colour, its blend and its opacity; the width also sets how near two passes of a retraced route have to come to be drawn as one stroke. The style field `maps.style.Style.route_ink`, a theme's `[route_ink]` table; a caller feeds its colour and width through `Style.with_route_ink`. |
 | review image | Either picture `diff_images.py` draws of a golden or docs image whose pixels changed, the diff image or the crop image, written under the output directory at the image's own path; `publish_diffs.py` commits them to `pr-assets` for a PR body. Test tooling only. |

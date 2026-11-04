@@ -5,7 +5,7 @@ stamp strokes into it and `read` to get density back; `ink_density`, which turns
 accumulator into ink by saturating, gating on the paper and bleeding the edge; `_bleed`, the
 mark's soft edge; `_reduce`, carrying a plane back down to the plate's grid.
 
-It builds no brush and draws no bristle: strokes go through `pyntpot.ink.stamp`. It reads the
+It builds no brush and draws no bristle: strokes go through `pyntpot.ink.stamping`. It reads the
 `BrushStyle` for the grid and the joining only.
 
 Invariants: at a supersample of 1 the pad is the plate's own accumulator and every brush
@@ -23,7 +23,7 @@ from pyntpot.ink.chains import chain_lines
 from pyntpot.ink.keyed import keyed_rng, line_key
 from pyntpot.ink.noise import F32, blur
 from pyntpot.ink.sheet import Sheet
-from pyntpot.ink.stamp import stamp
+from pyntpot.ink.stamping import stamp
 
 #: Blur radius, in render pixels, at or under which a mark has no soft edge to wick.
 _MIN_BLEED_PX = 0.4

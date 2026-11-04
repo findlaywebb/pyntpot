@@ -1416,6 +1416,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "griffelib" },
     { name = "hypothesis" },
     { name = "import-linter" },
     { name = "mutmut" },
@@ -1447,6 +1448,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "griffelib", specifier = ">=2.4.1" },
     { name = "hypothesis", specifier = ">=6.168" },
     { name = "import-linter", specifier = ">=2.11" },
     { name = "mutmut", specifier = ">=3.8" },

@@ -15,7 +15,7 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps.projection import Projection
 from pyntpot.maps.svg_path import stroke_d
 from pyntpot.maps.track_index import TrackIndex
@@ -91,7 +91,7 @@ class Field:
         bot = self.grid[r0 + 1][c0] * (1 - tc) + self.grid[r0 + 1][c0 + 1] * tc
         return top * (1 - tr) + bot * tr
 
-    def slope(self, x: float, y: float) -> tuple[Pt, float]:
+    def slope(self, x: float, y: float) -> tuple[Point, float]:
         """Downhill direction and gradient magnitude at a point in metres."""
         h = max(self.dx, self.dy) * 0.5
         gx = (self.at(x + h, y) - self.at(x - h, y)) / (2 * h)
@@ -122,7 +122,7 @@ def _descent(
     field: Field,
     index: TrackIndex | None,
     hatching: Hatching,
-) -> list[Pt]:
+) -> list[Point]:
     """The line a stroke walks downhill from a seed, stopping on flat ground or at the buffer."""
     line = [(x, y)]
     px, py = x, y
@@ -147,7 +147,7 @@ def _stroke_at(
     field: Field,
     index: TrackIndex | None,
     hatching: Hatching,
-) -> tuple[float, list[Pt]] | None:
+) -> tuple[float, list[Point]] | None:
     """The weight and line of the hachure seeded in one cell, or None for none."""
     xmin, ymin, xmax, ymax = clip
     spacing_m = hatching.spacing_m

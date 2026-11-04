@@ -53,7 +53,7 @@ PASS_BREAK_REACHES = 2.0
 def strand_merge_px(style: Style) -> float:
     """The reach, in display pixels, within which two passes of the shown route are one line.
 
-    When the style paints the route pen and its route ink is the `"pen"` treatment,
+    When the style paints the route pen and its route ink is the `"pen"` style,
     the route shown is the pen plate, which the painter merged by the pen's own
     width, so this is `route_pen_width_px * STRAND_MERGE_WIDTHS`. Otherwise the
     route is drawn in the route ink's own width and this is `route_ink.px *

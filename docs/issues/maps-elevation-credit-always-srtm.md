@@ -16,13 +16,13 @@ The basemap's own source list has the same fault: `basemap` in `maps/layers.py` 
 the fixed string `"SRTM 30 m via OpenTopoData"` whenever an elevation payload exists,
 whichever provider or dataset wrote it.
 
-The constructor has no `credit` argument, and `Credit` is not exported from
-`pyntpot.maps`. The documented remedy (`docs/how-to/credit-the-map-data.md`, "When it goes
+The constructor has no `credit` argument. `Credit` is exported from `pyntpot.maps`, but no
+provider takes one. The documented remedy (`docs/how-to/credit-the-map-data.md`, "When it goes
 wrong", and `docs/how-to/self-host-providers.md`) is to turn the credit off with
 `--no-attribution` or `attribution=False` and write one by hand, so the user loses the
 on-card credit.
 
 Possible fix: give the provider a `credit=` keyword (or derive the credit from the dataset
-name for the public server's known datasets), export `Credit`, take the basemap's source
+name for the public server's known datasets), take the basemap's source
 line from the provider rather than a literal, and rewrite both "When it goes wrong"
 entries.

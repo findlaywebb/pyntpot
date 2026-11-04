@@ -26,7 +26,7 @@ from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.raster import Deform, deform_rings, fill_cov
 from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import WashStyle
-from pyntpot.ink.wash import WashOptions, separated, wash
+from pyntpot.ink.washing import WashOptions, separated, wash
 from pyntpot.maps.cover import PAINTED_AS
 from pyntpot.maps.painter.job import INSIDE, PaintJob, PlateStack, drawable
 from pyntpot.maps.painter.patches import merge_small_patches

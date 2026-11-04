@@ -9,8 +9,10 @@ index, by kilometre or by seconds from the start.
 It does not place, resolve or draw anything: the lettering stage reads these
 values and decides where each lands. A span request is not a placed span: it
 says which stretch is meant, and the lettering resolves it onto the route and
-places it. `Annotations.roads` is accepted and not read: no road is lettered by
-a caller's name, the roads lettered are the ones the lettering picks itself.
+places it. `Annotations.roads` names the roads to letter, by number or OSM name, in place
+of the roads the lettering picks; a name no drawn road carries raises `ValueError` at
+lettering time, and when no named road is long enough to letter, the picked roads are
+lettered instead.
 
 Invariants: every value here is immutable and rejects unknown fields; a span
 request states exactly one start and exactly one end; a map carries at most
@@ -21,11 +23,11 @@ from typing import Annotated, Self
 
 import pydantic
 
-#: The most journal notes a map carries.
 MAX_NOTES = 6
+"""The most journal notes a map carries."""
 
-#: The longest a journal note's text may be: two lines of the existing wrap.
 MAX_NOTE_CHARS = 60
+"""The longest a journal note's text may be: two lines of the existing wrap."""
 
 
 class Landmark(pydantic.BaseModel, frozen=True, extra="forbid"):
@@ -112,8 +114,9 @@ class Annotations(pydantic.BaseModel, frozen=True, extra="forbid"):
             preference. A bare string is a name looked up among the basemap's
             candidates.
         places: Names of settlements the lettering should always letter.
-        roads: Accepted and not read: road names are never taken from a
-            caller.
+        roads: Roads to letter by number or OSM name, in place of the roads the
+            lettering picks. Each must be a road the basemap draws. When none is long
+            enough to letter, the lettering falls back to the roads it picks.
         spans: The stretches of the route to mark, best first.
         notes: The journal notes to letter, at most `MAX_NOTES`. They are
             seated before any other name and are never moved or dropped

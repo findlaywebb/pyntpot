@@ -4,7 +4,7 @@ Key types: `Cache`, a directory the caller names, holding the feature, land cove
 elevation payloads for a track's bounding box under one key, and the plates painted from
 them. Two more keys say when a painted thing is still current: `Cache.base_key`, the
 hash the base plates' manifest carries (the basemap's canonical text and the style's base
-digest), and `Cache.lettering_key`, the key of the label plate (the marks the nib
+digest), and `Cache.lettering_key`, the key of the nib plate (the marks the nib
 strokes, the base hash and the style's lettering digest). `Cache.load_plates` reads a
 plates directory back. `FetchError` is raised when a provider cannot answer; it is
 defined here because `ensure` is where the providers are called, and
@@ -22,7 +22,7 @@ The directory is always an explicit argument; nothing is resolved against the wo
 directory. Payload file names are `overpass-<key>.json`, `landcover-<key>.json` and
 `elevation-<key>.json`, the names the basemap is built from.
 
-The label plate's key is derived from the marks themselves, every float rounded to
+The nib plate's key is derived from the marks themselves, every float rounded to
 three decimals, with no list of fields: a field added to a mark, or a pin, leader or span
 line moved, changes the key without this module being told. It is not a golden; only
 `base_key` is frozen, because the manifest carries it.
@@ -225,11 +225,11 @@ class Cache:
 
     @staticmethod
     def lettering_key(marks: Sequence[Mark], base_hash: str, style: Style) -> str:
-        """Return the key a label plate is cached under.
+        """Return the key a nib plate is cached under.
 
         Args:
             marks: The marks the nib strokes, furniture included.
-            base_hash: The hash of the base plates the label plate is drawn against.
+            base_hash: The hash of the base plates the nib plate is drawn against.
             style: The style whose lettering digest is hashed in.
 
         Returns:

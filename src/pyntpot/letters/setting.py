@@ -22,15 +22,14 @@ imports nothing from `pyntpot` but `ink`.
 from dataclasses import dataclass
 from typing import Literal
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 #: The type size of a line of lettering, in display pixels, when nothing else
 #: says what it is.
 DEFAULT_LINE_PX = 20.0
 
-#: Which edge of a flat block sits on its anchor: its left end, its middle, or
-#: its right end.
 Align = Literal["start", "middle", "end"]
+"""Which end of a line of text its anchor point is: `"start"`, `"middle"` or `"end"`."""
 
 #: The fewest points a path can be written along: a line needs two ends.
 _PATH_ENDS = 2
@@ -47,7 +46,7 @@ class Setting:
     from it, one row per entry of `lines` (or the `text` alone), each row
     aligned on the widest by `align`.
 
-    Args:
+    Attributes:
         text: What is written; the whole name, even when `lines` wraps it.
         size: The type size, in display pixels.
         anchor: Where a flat block is set from: its baseline and its `align` edge.
@@ -67,8 +66,8 @@ class Setting:
 
     text: str
     size: float
-    anchor: Pt | None = None
-    path: tuple[Pt, ...] | None = None
+    anchor: Point | None = None
+    path: tuple[Point, ...] | None = None
     align: Align = "start"
     slant: float = 0.0
     tracking: float = 0.0
@@ -95,19 +94,23 @@ class Setting:
 class Mark:
     """One stroke for the nib to run along, in display pixels.
 
-    `role` sets the weight and whether the pen's angle modulates it, `ink`
-    its ink token or a `#rrggbb` colour, `size` the type size it belongs to, and
-    `pen` the per-instance wobble on the nib's angle, so no two words are
-    written with the hand held at exactly the same tilt.
+    Attributes:
+        pts: The points the stroke runs through, in display pixels.
+        role: Sets the weight and whether the pen's angle modulates it.
+        ink: The ink token or a `#rrggbb` colour.
+        size: The type size the mark belongs to.
+        pen: The per-instance wobble on the nib's angle, so no two words are
+            written with the hand held at exactly the same tilt.
+        wash: Whether the backing wash is lifted under this mark. A name written
+            on its own water does not want one: the wash is there to make a name
+            readable on ground it was not meant to be on, and a pale blob on a
+            river reads as a hole in the water rather than as paint lifted off
+            the paper.
     """
 
-    pts: list[Pt]
+    pts: list[Point]
     role: str = "glyph"
     ink: str = "label"
     size: float = DEFAULT_LINE_PX
     pen: float = 0.0
-    #: Whether the backing wash is lifted under this mark. A name written on
-    #: its own water does not want one: the wash is there to make a name
-    #: readable on ground it was not meant to be on, and a pale blob on a river
-    #: reads as a hole in the water rather than as paint lifted off the paper.
     wash: bool = True

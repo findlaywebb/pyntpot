@@ -11,7 +11,7 @@ value and hashes, so a set of credits holds each distinct credit once.
 from dataclasses import dataclass
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Credit:
     """One data source's attribution.
 

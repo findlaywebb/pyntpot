@@ -41,7 +41,7 @@ from pyntpot.ink.noise import F32, blur, chamfer_distance
 from pyntpot.ink.pad import InkPad
 from pyntpot.ink.sheet import Canvas, Sheet, rgb
 from pyntpot.ink.style import PaperStyle
-from pyntpot.ink.wash import WashOptions, wash
+from pyntpot.ink.washing import WashOptions, wash
 from pyntpot.letters.pen_profile import pen_profile
 from pyntpot.letters.setting import Mark
 from pyntpot.letters.style import FaceStyle, NibGroups, NibStyle
@@ -113,7 +113,7 @@ def mark_width_px(nib: NibStyle, role: str, size: float, *, outline: bool = Fals
         nib: The nib style, for the pens and the type size they are set at.
         role: The mark's role; one `MARK_WEIGHT` does not name weighs 1.
         size: The type size the mark belongs to, in display pixels.
-        outline: True when the glyph pen is narrowed for an outline route; it
+        outline: True when the glyph pen is narrowed for an outline trace; it
             changes only a glyph's width.
 
     Returns:

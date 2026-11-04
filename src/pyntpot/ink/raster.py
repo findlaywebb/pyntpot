@@ -21,7 +21,7 @@ import numpy.typing as npt
 
 from pyntpot.ink.keyed import keyed_rng, line_key
 from pyntpot.ink.noise import F32, chamfer_distance
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.ink.sheet import Canvas
 
 #: A ring needs three points to enclose anything, and a ring array is `(n, 2)`.
@@ -122,7 +122,7 @@ def deform_ring(ring: npt.ArrayLike, deform: Deform) -> np.ndarray:
     return p
 
 
-def deform_rings(rings: list[list[Pt]], deform: Deform | None) -> list[Any]:
+def deform_rings(rings: list[list[Point]], deform: Deform | None) -> list[Any]:
     """Every outline of one class deformed, or the outlines unchanged.
 
     Args:
@@ -137,7 +137,7 @@ def deform_rings(rings: list[list[Pt]], deform: Deform | None) -> list[Any]:
     return [deform_ring(r, deform) for r in rings]
 
 
-def fill_cov(rings: list[list[Pt]], canvas: Canvas, ss: int = 2) -> np.ndarray:
+def fill_cov(rings: list[list[Point]], canvas: Canvas, ss: int = 2) -> np.ndarray:
     """Coverage of a set of rings, supersampled and averaged down.
 
     Filled by the nonzero winding rule, so a ring wound against the one around
@@ -167,7 +167,7 @@ def fill_cov(rings: list[list[Pt]], canvas: Canvas, ss: int = 2) -> np.ndarray:
     return count.astype(F32) / F32(ss * ss)
 
 
-def stroke_mask(lines: list[list[Pt]], canvas: Canvas, width_px: float) -> np.ndarray:
+def stroke_mask(lines: list[list[Point]], canvas: Canvas, width_px: float) -> np.ndarray:
     """A binary mask of polylines stroked at a fixed width."""
     hits = np.zeros((canvas.h, canvas.w), bool)
     for pts in lines:

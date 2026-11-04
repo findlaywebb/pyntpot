@@ -1,7 +1,7 @@
 """Polyline geometry: simplify, smooth, clip, measure, cross and wobble a line.
 
-Key types: `Pt`, one point as an `(x, y)` pair of floats, and a polyline as a
-list of them. The functions measure a line (`length`,
+Key types: `Point`, one point as an `(x, y)` pair of floats, and a polyline as a
+list of them; `Box`, an axis-aligned box as `(x0, y0, x1, y1)`. The functions measure a line (`length`,
 `cumulative_length`), reshape it (`simplify`, `smooth`,
 `clip_line`, `eased`, `ease_along`, `deform_line`), and answer local questions
 about it (`normal_at`, `normals`, `tangent_at`, `side`, `segments_cross`,
@@ -12,8 +12,8 @@ pixels, and every tolerance is in that same space. It paints nothing, reads no
 style and holds no state; `deform_line` draws only from the generator it is
 handed.
 
-Invariants: no function changes its input; `Pt` is the one point alias, and `maps`
-and `letters` import it from here.
+Invariants: no function changes its input; `Point` is the one point alias and `Box` the
+one box alias, and `maps` and `letters` import them from here.
 """
 
 import itertools
@@ -23,7 +23,11 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import ArrayLike
 
-Pt = tuple[float, float]
+Point = tuple[float, float]
+"""A point `(x, y)`, in the units of whatever holds it."""
+
+Box = tuple[float, float, float, float]
+"""An axis-aligned box `(x0, y0, x1, y1)`, in the units of whatever holds it."""
 
 #: The fewest points a line needs to have one between its ends: a shorter line
 #: has nothing to drop, cut or average and comes back as it was.
@@ -41,7 +45,7 @@ _FEWEST_POINTS = 2
 _DEFORM_MAX_POINTS = 24000
 
 
-def simplify(points: list[Pt], eps: float) -> list[Pt]:
+def simplify(points: list[Point], eps: float) -> list[Point]:
     """Douglas-Peucker simplification, iterative so a long ring cannot recurse away.
 
     Source: `douglas-peucker` in docs/explanation/references.md.
@@ -82,7 +86,7 @@ def simplify(points: list[Pt], eps: float) -> list[Pt]:
     return [p for p, k in zip(points, keep, strict=True) if k]
 
 
-def smooth(points: list[Pt], passes: int = 2, *, closed: bool = False) -> list[Pt]:
+def smooth(points: list[Point], passes: int = 2, *, closed: bool = False) -> list[Point]:
     """Chaikin corner cutting, which rounds a marching-squares staircase off.
 
     Source: `chaikin` in docs/explanation/references.md.
@@ -99,7 +103,7 @@ def smooth(points: list[Pt], passes: int = 2, *, closed: bool = False) -> list[P
     for _ in range(passes):
         if len(out) < _FEWEST_WITH_A_MIDDLE:
             return out
-        nxt: list[Pt] = [] if closed else [out[0]]
+        nxt: list[Point] = [] if closed else [out[0]]
         span = len(out) if closed else len(out) - 1
         for i in range(span):
             (ax, ay), (bx, by) = out[i], out[(i + 1) % len(out)]
@@ -111,7 +115,7 @@ def smooth(points: list[Pt], passes: int = 2, *, closed: bool = False) -> list[P
     return out
 
 
-def clip_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[list[Pt]]:
+def clip_line(line: list[Point], box: tuple[float, float, float, float]) -> list[list[Point]]:
     """Split a polyline into its runs of points inside a rectangle.
 
     Points are kept or dropped whole: the line is not cut where it crosses the
@@ -119,12 +123,12 @@ def clip_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[li
     """
     xmin, ymin, xmax, ymax = box
 
-    def inside(p: Pt) -> bool:
+    def inside(p: Point) -> bool:
         """Whether a point lies in the box, its edges included."""
         return xmin <= p[0] <= xmax and ymin <= p[1] <= ymax
 
-    out: list[list[Pt]] = []
-    run: list[Pt] = []
+    out: list[list[Point]] = []
+    run: list[Point] = []
     for p in line:
         if inside(p):
             run.append(p)
@@ -137,7 +141,7 @@ def clip_line(line: list[Pt], box: tuple[float, float, float, float]) -> list[li
     return out
 
 
-def normal_at(pts: list[Pt], i: int) -> Pt:
+def normal_at(pts: list[Point], i: int) -> Point:
     """The unit left normal of a polyline at one of its points.
 
     Unlike `normals` it differences the points one either side and falls back
@@ -163,24 +167,24 @@ def eased(values: list[float], reach: int) -> list[float]:
     return out
 
 
-def side(a: Pt, b: Pt, c: Pt) -> float:
+def side(a: Point, b: Point, c: Point) -> float:
     """Cross product of ab and ac; its sign says which side of ab c lies."""
     return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
 
 
-def segments_cross(a: Pt, b: Pt, c: Pt, d: Pt) -> bool:
+def segments_cross(a: Point, b: Point, c: Point, d: Point) -> bool:
     """True when segment ab properly crosses segment cd."""
     d1, d2 = side(c, d, a), side(c, d, b)
     d3, d4 = side(a, b, c), side(a, b, d)
     return ((d1 > 0) != (d2 > 0)) and ((d3 > 0) != (d4 > 0))
 
 
-def length(line: list[Pt]) -> float:
+def length(line: list[Point]) -> float:
     """How long a polyline is, end to end along itself."""
     return sum(math.dist(a, b) for a, b in itertools.pairwise(line))
 
 
-def cumulative_length(line: Sequence[Pt], scale: float = 1.0) -> list[float]:
+def cumulative_length(line: Sequence[Point], scale: float = 1.0) -> list[float]:
     """The length covered at each point of a polyline, from zero at its first.
 
     Each step is divided by `scale` (floored at 1e-9), so a track drawn in display
@@ -193,7 +197,7 @@ def cumulative_length(line: Sequence[Pt], scale: float = 1.0) -> list[float]:
     return out
 
 
-def meet(a: Pt, b: Pt, c: Pt, d: Pt) -> Pt | None:
+def meet(a: Point, b: Point, c: Point, d: Point) -> Point | None:
     """Where two segments cross, or None when they do not."""
     rx, ry = b[0] - a[0], b[1] - a[1]
     sx, sy = d[0] - c[0], d[1] - c[1]
@@ -207,7 +211,7 @@ def meet(a: Pt, b: Pt, c: Pt, d: Pt) -> Pt | None:
     return (a[0] + rx * t, a[1] + ry * t)
 
 
-def seg_gap(a: Pt, b: Pt, c: Pt, d: Pt) -> float:
+def seg_gap(a: Point, b: Point, c: Point, d: Point) -> float:
     """The distance between two segments. Zero when they cross."""
     if meet(a, b, c, d) is not None:
         return 0.0
@@ -219,7 +223,7 @@ def seg_gap(a: Pt, b: Pt, c: Pt, d: Pt) -> float:
     )
 
 
-def foot_on(p: Pt, poly: list[Pt]) -> tuple[float, Pt]:
+def foot_on(p: Point, poly: list[Point]) -> tuple[float, Point]:
     """The distance from a point to a polyline, and the point it lands on.
 
     Segments, not vertices. A track sampled every few pixels and a bracket
@@ -280,7 +284,7 @@ def ease_along(push: list[float], cum: list[float], reach: float) -> list[float]
     return out
 
 
-def normals(pts: list[Pt]) -> list[Pt]:
+def normals(pts: list[Point]) -> list[Point]:
     """A unit normal at every point of a run, from a smoothed tangent.
 
     Unlike `normal_at` it differences the points three either side, which

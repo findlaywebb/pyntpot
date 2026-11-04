@@ -1,4 +1,4 @@
-"""Strokes from a glyph: the centreline route and the outline route.
+"""Strokes from a glyph: the centreline trace and the outline trace.
 
 `CENTRELINE` thins the glyph to a skeleton (`letters.skeleton`), traces it into
 chains, prunes its spurs and pushes its ends back out to where the ink actually
@@ -12,7 +12,7 @@ Where a junction has a stroke running straight on through it, `letters.junction`
 joins the two into one stroke. Where thinning merges two strokes into one mass, `_flanks` gives the arm back
 off the width of the ink, and `_dots` draws a blob thinning ate whole as a small
 ring. Paths come back in em units with y up. This module does not open fonts
-and does not choose a route; `letters.font` does.
+and does not choose a trace; `letters.font` does.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ import math
 import numpy as np
 
 from pyntpot.ink.noise import chamfer_distance
-from pyntpot.ink.polyline import Pt, normals
+from pyntpot.ink.polyline import Point, normals
 from pyntpot.letters.junction import JUNCTION_ARMS, join_through, leaving
 from pyntpot.letters.skeleton import (
     RASTER_EM,
@@ -94,7 +94,7 @@ def _half_width(skel: np.ndarray, reach: np.ndarray) -> float:
     return float(np.median(vals)) if vals.size else 1.0
 
 
-def _edge(img: np.ndarray, at: Pt, along: Pt, cap: float) -> float:
+def _edge(img: np.ndarray, at: Point, along: Point, cap: float) -> float:
     """How far the ink reaches from a point in one direction, up to `cap`."""
     h, w = img.shape
     step = 0.5
@@ -109,7 +109,7 @@ def _edge(img: np.ndarray, at: Pt, along: Pt, cap: float) -> float:
     return d
 
 
-def _flank(pts: list[Pt], img: np.ndarray, half: float, side: float) -> list[Pt] | None:
+def _flank(pts: list[Point], img: np.ndarray, half: float, side: float) -> list[Point] | None:
     """The second stroke hiding on one side of a run, or None if there is none.
 
     Where two strokes of a letter run together along their length rather
@@ -168,10 +168,10 @@ def _flank(pts: list[Pt], img: np.ndarray, half: float, side: float) -> list[Pt]
 
 
 def _arms(
-    kept: list[tuple[list[tuple[int, int]], list[Pt]]],
-) -> dict[tuple[int, int], list[list[Pt]]]:
+    kept: list[tuple[list[tuple[int, int]], list[Point]]],
+) -> dict[tuple[int, int], list[list[Point]]]:
     """Every open run, oriented to leave each of its end nodes, grouped by node."""
-    ends: dict[tuple[int, int], list[list[Pt]]] = {}
+    ends: dict[tuple[int, int], list[list[Point]]] = {}
     for chain, run in kept:
         if chain[0] == chain[-1] or len(run) < MIN_RUN:
             continue
@@ -181,8 +181,8 @@ def _arms(
 
 
 def _flanks(
-    kept: list[tuple[list[tuple[int, int]], list[Pt]]], ink: np.ndarray, half: float
-) -> list[list[Pt]]:
+    kept: list[tuple[list[tuple[int, int]], list[Point]]], ink: np.ndarray, half: float
+) -> list[list[Point]]:
     """Every stroke that merged into another one, recovered at its junction.
 
     A junction where one branch runs into a stroke passing straight through is
@@ -200,7 +200,7 @@ def _flanks(
     Returns:
         The recovered strokes, in raster pixels.
     """
-    out: list[list[Pt]] = []
+    out: list[list[Point]] = []
     for arms in _arms(kept).values():
         if len(arms) < JUNCTION_ARMS:
             continue
@@ -223,7 +223,7 @@ def _flanks(
     return out
 
 
-def _from(node: tuple[int, int], run: list[Pt]) -> list[Pt]:
+def _from(node: tuple[int, int], run: list[Point]) -> list[Point]:
     """A run oriented to start at one of its own end nodes."""
     at = (node[1] + 0.5, node[0] + 0.5)
     if math.dist(run[0], at) <= math.dist(run[-1], at):
@@ -231,7 +231,7 @@ def _from(node: tuple[int, int], run: list[Pt]) -> list[Pt]:
     return run[::-1]
 
 
-def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> list[list[Pt]]:
+def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> list[list[Point]]:
     """A ring for every blob of ink the thinning ate whole.
 
     Zhang-Suen deletes a small round component from both sides at once and
@@ -240,7 +240,7 @@ def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> li
     small ring rather than a point, because a nib asked to draw one point
     leaves no mark at all.
     """
-    out: list[list[Pt]] = []
+    out: list[list[Point]] = []
     for blob in components(img):
         if any(p in drawn for p in blob):
             continue
@@ -258,7 +258,7 @@ def _dots(img: np.ndarray, reach: np.ndarray, drawn: set[tuple[int, int]]) -> li
     return out
 
 
-def centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
+def centrelines(contours: list[list[Point]], upem: int) -> list[list[Point]]:
     """One glyph's skeleton, in em units with y up.
 
     The free ends are pushed back out along their own direction by the
@@ -278,7 +278,7 @@ def centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
     on = {(int(r), int(c)) for r, c in zip(*np.nonzero(skel), strict=True)}
     free = {p for p in on if crossings(p, on) <= 1}
     drawn: set[tuple[int, int]] = set()
-    kept: list[tuple[list[tuple[int, int]], list[Pt]]] = []
+    kept: list[tuple[list[tuple[int, int]], list[Point]]] = []
     for chain in prune(skeleton_chains(skel), SPUR_EM * RASTER_EM, reach):
         pts = [(c + 0.5, r + 0.5) for r, c in chain]
         if len(pts) < MIN_STROKE:
@@ -292,8 +292,8 @@ def centrelines(contours: list[list[Pt]], upem: int) -> list[list[Pt]]:
 
 
 def _extend(
-    pts: list[Pt], chain: list[tuple[int, int]], inside: np.ndarray, free: set[tuple[int, int]]
-) -> list[Pt]:
+    pts: list[Point], chain: list[tuple[int, int]], inside: np.ndarray, free: set[tuple[int, int]]
+) -> list[Point]:
     """Push a free end out to where the ink stops, along the chain's own run.
 
     Only a free end. A chain that stops at a junction stops there because

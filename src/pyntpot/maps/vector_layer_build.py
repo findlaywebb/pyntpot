@@ -30,15 +30,13 @@ from pyntpot.maps.layers import BasemapInputs, basemap
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from pyntpot.ink.polyline import Box
     from pyntpot.maps.cache import Cache
     from pyntpot.maps.style import Style
     from pyntpot.maps.track import Track
 
-#: A box in card metres: west, south, east, north.
-Box = tuple[float, float, float, float]
 
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class VectorArea:
     """A filled area and the inner ring a wash dries back to.
 
@@ -51,7 +49,7 @@ class VectorArea:
     inner: str = ""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class VectorLine:
     """One line of a layer, with its class, name, weight and level.
 
@@ -72,7 +70,7 @@ class VectorLine:
     level_m: float | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class HillshadeBand:
     """One posterised relief band.
 
@@ -87,7 +85,7 @@ class HillshadeBand:
     level: float
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class HillshadeImage:
     """The greyscale hillshade image and where it sits on the card.
 

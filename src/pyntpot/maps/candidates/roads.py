@@ -20,7 +20,7 @@ from collections.abc import Mapping, Sequence
 from itertools import pairwise
 from typing import Any
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps.basemap import Line
 from pyntpot.maps.candidates.candidate import Candidate
 from pyntpot.maps.projection import Projection
@@ -93,7 +93,7 @@ def _cell_index(roads: Sequence[Mapping[str, Any]]) -> Index:
     return grid
 
 
-def _point_to_line(px: float, py: float, pts: Sequence[Pt]) -> float:
+def _point_to_line(px: float, py: float, pts: Sequence[Point]) -> float:
     """Metres from a point to a polyline."""
     best = math.inf
     for (ax, ay), (bx, by) in pairwise(pts):
@@ -104,7 +104,7 @@ def _point_to_line(px: float, py: float, pts: Sequence[Pt]) -> float:
     return best
 
 
-def _road_at(roads: Sequence[Mapping[str, Any]], grid: Index, point: Pt) -> str | None:
+def _road_at(roads: Sequence[Mapping[str, Any]], grid: Index, point: Point) -> str | None:
     """The name of the nearest road within `SNAP_M` of a point, or `None`."""
     px, py = point
     cx, cy = int(px // CELL_M), int(py // CELL_M)

@@ -12,7 +12,7 @@ from pyntpot.ink.brush import Brush, brush_from_id, ink_aux, scaled_brush
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.pad import ink_density
 from pyntpot.ink.sheet import Sheet
-from pyntpot.ink.stamp import stamp
+from pyntpot.ink.stamping import stamp
 from pyntpot.ink.tip import tip_band
 
 

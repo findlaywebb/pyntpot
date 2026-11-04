@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Card:
     """The coordinate frame of one map.
 

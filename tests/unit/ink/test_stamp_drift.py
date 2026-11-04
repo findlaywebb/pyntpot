@@ -7,7 +7,7 @@ import pytest
 
 from pyntpot.ink.brush import brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.stamp import _organic_fields, stamp
+from pyntpot.ink.stamping import _organic_fields, stamp
 from pyntpot.ink.tip import fbm1
 
 

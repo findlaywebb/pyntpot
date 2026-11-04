@@ -24,9 +24,8 @@ from dataclasses import dataclass, field
 import numpy as np
 from PIL import Image, ImageDraw
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Box, Point
 from pyntpot.maps.basemap import Basemap
-from pyntpot.maps.lettering.label import Box
 
 #: How far round a name its backing wash reaches, in ems of the name's size. The
 #: wash lifts the paper's colour over whatever it lands on, so a name whose wash
@@ -94,8 +93,8 @@ class Water:
         wet_origin: The display pixel the first cell of `wet_sums` starts at.
     """
 
-    lakes: list[list[Pt]] = field(default_factory=list)
-    strokes: list[tuple[list[Pt], float]] = field(default_factory=list)
+    lakes: list[list[Point]] = field(default_factory=list)
+    strokes: list[tuple[list[Point], float]] = field(default_factory=list)
     lake_boxes: np.ndarray = field(init=False, repr=False)
     stroke_boxes: np.ndarray = field(init=False, repr=False)
     edges: np.ndarray = field(init=False, repr=False)
@@ -243,7 +242,7 @@ def water_cost(box: Box, water: Water, size: float) -> float:
     return share * WATER_COST + WATER_UNDER_COST * min(under / UNDER_FULL_SHARE, 1.0)
 
 
-def ink_on_water(points: list[Pt], water: Water) -> float:
+def ink_on_water(points: list[Point], water: Water) -> float:
     """The share of points, sampled over a name's ink, that lie on a lake or under a stroke.
 
     A name set along a line covers a ribbon, not a box, so its ink is sampled as
@@ -266,7 +265,7 @@ def ink_on_water(points: list[Pt], water: Water) -> float:
     return float(np.count_nonzero(wet)) / xs.size
 
 
-def along_water_cost(points: list[Pt], water: Water) -> float:
+def along_water_cost(points: list[Point], water: Water) -> float:
     """What water under the letters of a name set along a line costs it.
 
     `WATER_UNDER_COST`, in full once `UNDER_FULL_SHARE` of the ink lies on
@@ -309,7 +308,7 @@ def on_water(box: Box, water: Water, size: float) -> float:
     return float(np.count_nonzero(wet)) / xs.size
 
 
-def _extent(line: list[Pt], pad: float) -> Box:
+def _extent(line: list[Point], pad: float) -> Box:
     """The box a line covers, grown by `pad` on every side."""
     xs = [x for x, _y in line]
     ys = [y for _x, y in line]

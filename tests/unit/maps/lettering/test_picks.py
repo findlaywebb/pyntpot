@@ -30,11 +30,31 @@ def test_the_named_lines_keep_what_a_name_can_be_set_along():
     """
     basemap = tiny_basemap(
         roads=(
-            Road(((0.0, 0.0), (300.0, 4.0), (600.0, 0.0)), "major", "major", "primary", "A39", ""),
-            Road(((0.0, 90.0), (600.0, 90.0)), "minor", "minor", "unclassified", "", ""),
+            Road(
+                line=((0.0, 0.0), (300.0, 4.0), (600.0, 0.0)),
+                cls="major",
+                band="major",
+                highway="primary",
+                name="A39",
+                ref="",
+            ),
+            Road(
+                line=((0.0, 90.0), (600.0, 90.0)),
+                cls="minor",
+                band="minor",
+                highway="unclassified",
+                name="",
+                ref="",
+            ),
         ),
         rivers=(
-            River(((0.0, 40.0), (400.0, 44.0), (800.0, 40.0)), "major", "River Lyn", 0.0, 0.0),
+            River(
+                line=((0.0, 40.0), (400.0, 44.0), (800.0, 40.0)),
+                cls="major",
+                name="River Lyn",
+                width_px=0.0,
+                name_width_px=0.0,
+            ),
         ),
         coastline=(((0.0, 10.0), (900.0, 12.0)),),
     )

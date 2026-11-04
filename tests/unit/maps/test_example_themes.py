@@ -50,7 +50,7 @@ SHOWCASE_NAMES = ("ambleside", "skye", "yr-wyddfa", "oxford", "y-fenni")
 
 
 class TestShowcaseThemes:
-    """The five showcase themes share one route ink and keep to their curated callouts."""
+    """The five showcase themes share one route ink and keep to their curated landmarks."""
 
     @pytest.mark.parametrize("name", SHOWCASE_NAMES, ids=SHOWCASE_NAMES)
     def test_the_route_is_the_maroon_wet_pen(self, name: str) -> None:
@@ -64,13 +64,13 @@ class TestShowcaseThemes:
         assert (ink.blend, ink.opacity) == ("normal", 1.0)
 
     @pytest.mark.parametrize("name", SHOWCASE_NAMES, ids=SHOWCASE_NAMES)
-    def test_the_label_cap_is_the_callout_count(self, name: str) -> None:
-        """`label_max` equals the number of callouts `examples/places.toml` holds for the place."""
+    def test_the_label_cap_is_the_landmark_count(self, name: str) -> None:
+        """`label_max` equals the number of landmarks `examples/places.toml` holds for the place."""
         with (REPO_ROOT / "examples" / "places.toml").open("rb") as handle:
-            callouts = tomllib.load(handle)[name].get("callouts", [])
+            landmarks = tomllib.load(handle)[name].get("callouts", [])
         style = Style.from_toml(THEMES_DIR / f"{name}.toml")
 
-        assert style.lettering.label_max == len(callouts)
+        assert style.lettering.label_max == len(landmarks)
 
     @pytest.mark.parametrize(
         "name", ("ambleside", "skye", "yr-wyddfa"), ids=("ambleside", "skye", "yr-wyddfa")

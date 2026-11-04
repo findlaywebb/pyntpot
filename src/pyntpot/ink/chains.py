@@ -20,13 +20,13 @@ from collections.abc import Callable
 
 import numpy as np
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 
 #: The fewest lines there must be for any two of them to chain.
 _FEWEST_TO_CHAIN = 2
 
 
-def join_strokes(lines: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
+def join_strokes(lines: list[list[Point]], tol: float = 1.0) -> list[list[Point]]:
     """Chain open polylines head to tail wherever their ends meet.
 
     OSM cuts a road at every junction, every bridge and every change of tag, so
@@ -52,7 +52,7 @@ def join_strokes(lines: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
     """
     cell = max(tol, 1e-6)
 
-    def near(p: Pt) -> list[int]:
+    def near(p: Point) -> list[int]:
         """Every piece with an end in this point's cell or the eight round it."""
         cx, cy = int(p[0] // cell), int(p[1] // cell)
         out: list[int] = []
@@ -66,7 +66,7 @@ def join_strokes(lines: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
     for i, line in live.items():
         for p in (line[0], line[-1]):
             at.setdefault((int(p[0] // cell), int(p[1] // cell)), []).append(i)
-    out: list[list[Pt]] = []
+    out: list[list[Point]] = []
     while live:
         start, chain = live.popitem()
         # The tail first, then the head, so a piece taken from the middle of a
@@ -78,14 +78,14 @@ def join_strokes(lines: list[list[Pt]], tol: float = 1.0) -> list[list[Pt]]:
 
 
 def _grow_end(
-    chain: list[Pt],
+    chain: list[Point],
     start: int,
-    live: dict[int, list[Pt]],
-    near: Callable[[Pt], list[int]],
+    live: dict[int, list[Point]],
+    near: Callable[[Point], list[int]],
     tol: float,
     *,
     head: bool,
-) -> list[Pt]:
+) -> list[Point]:
     """Grow one end of a chain from the live pieces until nothing more meets it.
 
     A piece that joins is taken out of `live`.
@@ -107,7 +107,9 @@ def _grow_end(
     return chain
 
 
-def _attach(chain: list[Pt], tip: Pt, cand: list[Pt], tol: float, *, head: bool) -> list[Pt] | None:
+def _attach(
+    chain: list[Point], tip: Point, cand: list[Point], tol: float, *, head: bool
+) -> list[Point] | None:
     """The chain with a piece joined at its head or tail, or None when it does not meet."""
     if head and math.dist(tip, cand[-1]) <= tol:
         return cand[:-1] + chain
@@ -120,7 +122,7 @@ def _attach(chain: list[Pt], tip: Pt, cand: list[Pt], tol: float, *, head: bool)
     return None
 
 
-def join_chains(lines: list[list[Pt]], tol: float) -> list[list[Pt]]:
+def join_chains(lines: list[list[Point]], tol: float) -> list[list[Point]]:
     """Chain polylines that share an endpoint into as few pieces as possible.
 
     Greedy: the last piece is taken from the pool and grown, at either end, by
@@ -146,7 +148,7 @@ def join_chains(lines: list[list[Pt]], tol: float) -> list[list[Pt]]:
         The joined polylines, closed rings and open chains alike.
     """
     pool = [list(line) for line in lines if len(line) > 1]
-    out: list[list[Pt]] = []
+    out: list[list[Point]] = []
     while pool:
         chain = pool.pop()
         joined = True
@@ -170,7 +172,7 @@ def join_chains(lines: list[list[Pt]], tol: float) -> list[list[Pt]]:
     return out
 
 
-def joined(parts: list[list[Pt]], tol: float = 8.0) -> list[list[Pt]]:
+def joined(parts: list[list[Point]], tol: float = 8.0) -> list[list[Point]]:
     """One road's pieces chained end to end, so a name has a road to sit on.
 
     OSM cuts a road at every junction and every change of surface, so a street

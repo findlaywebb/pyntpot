@@ -2,9 +2,9 @@
 
 Key names: `letter`, which picks what a map names, anchors it on the card,
 seats the caller's journal notes first (`lettering.notes`), resolves the caller's span requests onto the route, places every name and span
-measured by the hand, and strokes them into a label plate beside the plates;
+measured by the hand, and strokes them into a nib plate beside the plates;
 `Lettering`, what it hands back: the placed labels, the placed spans and the
-label plate's path.
+nib plate's path.
 
 Everything route-shaped that `letter` reads is `Plates.strands`, the route as
 it is drawn: the ground names, the road numbers and the route markers are
@@ -14,7 +14,8 @@ by point index, by kilometre along the strands, and by seconds from the start
 when the basemap carries the track's times; one stated in seconds over a
 basemap without times does not land and is left out. When there are no
 annotations, or none of their landmarks lands, the basemap's leading
-candidates are lettered instead.
+candidates are lettered instead. The caller's named roads replace the picked
+ones.
 
 It does not paint the base plates and it does not compose the card. It reads
 no configuration from the environment. When there is no hand to letter with
@@ -33,7 +34,7 @@ from dataclasses import dataclass, replace
 from functools import partial
 from pathlib import Path
 
-from pyntpot.ink.polyline import Pt, cumulative_length
+from pyntpot.ink.polyline import Point, cumulative_length
 from pyntpot.ink.sheet import Canvas
 from pyntpot.letters import nib
 from pyntpot.letters.style import NibGroups
@@ -51,7 +52,7 @@ from pyntpot.maps.lettering.picks import (
     route_markers,
 )
 from pyntpot.maps.lettering.picks_lines import NamedLines, named_lines, road_lines
-from pyntpot.maps.lettering.picks_roads import pick_roads
+from pyntpot.maps.lettering.picks_roads import named_roads, pick_roads
 from pyntpot.maps.lettering.placement import place
 from pyntpot.maps.lettering.placement_costs import Backdrop
 from pyntpot.maps.lettering.placement_water import water_from
@@ -70,7 +71,7 @@ class Lettering:
         labels: The placed labels, in placement order.
         spans: The placed spans, each resolved from a span request onto the
             route.
-        plate_path: The label plate, or `None` when nothing was stroked.
+        plate_path: The nib plate, or `None` when nothing was stroked.
     """
 
     labels: tuple[Label, ...]
@@ -81,11 +82,11 @@ class Lettering:
 def letter(
     plates: Plates, basemap: Basemap, annotations: Annotations | None, style: Style
 ) -> Lettering:
-    """Place a map's names and spans and stroke them into a label plate.
+    """Place a map's names and spans and stroke them into a nib plate.
 
     Args:
         plates: The painted plates: their strands are the route lettered
-            against, their darkness keeps names on light ground, and the label
+            against, their darkness keeps names on light ground, and the nib
             plate is written beside them.
         basemap: The basemap the plates were painted from, for the places, the
             candidates, the named lines, the projection and the track's times.
@@ -95,8 +96,12 @@ def letter(
         style: The style the card is lettered in.
 
     Returns:
-        The placed labels and spans and the label plate; empty, with no plate,
+        The placed labels and spans and the nib plate; empty, with no plate,
         when there is no hand to letter with.
+
+    Raises:
+        ValueError: A journal note is off the card or has no seat, or a road named
+            in `annotations.roads` is not drawn on the card.
     """
     hand = lettering_marks.open_hand(style) if style.lettering.labels else None
     if hand is None:
@@ -141,17 +146,26 @@ def letter(
 def _ground(
     basemap: Basemap,
     lines: NamedLines,
-    strands: list[Pt],
+    strands: list[Point],
     annotations: Annotations | None,
     style: Style,
 ) -> list[Label]:
-    """The settlements, rivers, road numbers and route markers, when the style letters the ground."""
+    """The caller's named roads always, and the ground when the style letters it.
+
+    The ground is the settlements, rivers, picked road numbers and route
+    markers; named roads replace the picked ones.
+    """
+    named = (
+        named_roads(basemap, lines, basemap.card, annotations.roads)
+        if annotations is not None and annotations.roads
+        else []
+    )
     if not style.lettering.label_ground:
-        return []
+        return named
     card = basemap.card
     return (
         ground_labels(basemap, lines, card, strands, annotations)
-        + pick_roads(basemap, lines, card, strands)
+        + (named or pick_roads(basemap, lines, card, strands))
         + route_markers(strands)
     )
 
@@ -184,7 +198,7 @@ def _anchored(basemap: Basemap, annotations: Annotations | None, style: Style) -
 
 
 def _spans(
-    plates: Plates, basemap: Basemap, annotations: Annotations | None, strands: list[Pt]
+    plates: Plates, basemap: Basemap, annotations: Annotations | None, strands: list[Point]
 ) -> list[Span]:
     """The caller's span requests resolved onto the strands' arc length and the track's times."""
     times = list(basemap.track_time) if basemap.track_time is not None else []
@@ -195,7 +209,7 @@ def draw_plate(
     plates: Plates,
     placed: list[Label],
     spans: list[Span],
-    route_px: list[Pt],
+    route_px: list[Point],
     style: Style,
     route: str | None = None,
 ) -> Path | None:
@@ -214,13 +228,13 @@ def draw_plate(
     never lettered over today's map.
 
     Args:
-        plates: The painted plates, beside which the label plate is written.
+        plates: The painted plates, beside which the nib plate is written.
         placed: The placed labels.
         spans: The placed spans.
         route_px: The track in display pixels.
         style: The style the card is lettered in; its brush style makes the
             lettering's brushes and ink pads.
-        route: `centreline` or `outline`; the style's when not given.
+        route: The trace, `centreline` or `outline`; the style's when not given.
 
     Returns:
         The path to the plate, or None when there is nothing to draw or no

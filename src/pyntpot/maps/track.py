@@ -1,4 +1,4 @@
-"""A recorded route as plain data: where it went, and optionally how high and when.
+"""A recorded GPS track as plain data: where it went, and optionally how high and when.
 
 Key types: `Track`, an immutable run of latitudes and longitudes with optional
 elevations and times, and `BoundingBox`, the south, west, north, east degrees
@@ -28,7 +28,14 @@ MAX_LATITUDE_DEGREES = 90.0
 
 
 class BoundingBox(NamedTuple):
-    """South, west, north, east degrees."""
+    """South, west, north, east degrees.
+
+    Attributes:
+        south: The southern edge's latitude, in degrees.
+        west: The western edge's longitude, in degrees.
+        north: The northern edge's latitude, in degrees.
+        east: The eastern edge's longitude, in degrees.
+    """
 
     south: float
     west: float
@@ -37,7 +44,7 @@ class BoundingBox(NamedTuple):
 
 
 class Track(pydantic.BaseModel, frozen=True):
-    """A recorded route.
+    """A recorded GPS track.
 
     Attributes:
         lat: Latitudes in degrees, in recorded order.

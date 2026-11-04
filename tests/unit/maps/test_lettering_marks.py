@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from pyntpot.ink.brush import BRUSH_COLOURS
+from pyntpot.ink.brush_sheet import BRUSH_COLOURS
 from pyntpot.letters.hand import Hand
 from pyntpot.letters.style import FaceStyle, HandStyle, NibStyle
 from pyntpot.maps import lettering_marks

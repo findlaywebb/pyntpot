@@ -1,4 +1,4 @@
-"""`draw_plate` strokes the placed names into an RGBA label plate beside the painted plates."""
+"""`draw_plate` strokes the placed names into an RGBA nib plate beside the painted plates."""
 
 import dataclasses
 
@@ -45,7 +45,7 @@ def test_the_label_plate_carries_its_own_colour_and_its_own_alpha(tmp_path):
 
 
 def test_an_outline_route_is_written_with_the_finer_nib(tmp_path):
-    """An outline route passed to `draw_plate` narrows the nib as the face style's outline does."""
+    """An outline trace passed to `draw_plate` narrows the nib as the face style's outline does."""
     style = tiny_style()
     outline_style = style.model_copy(
         update={"face": dataclasses.replace(style.face, label_route="outline")}

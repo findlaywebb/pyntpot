@@ -15,7 +15,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import pairwise
 
-from pyntpot.ink.polyline import Pt
+from pyntpot.ink.polyline import Point
 from pyntpot.maps.lettering.label import Span
 from pyntpot.maps.lettering.span_line import SPAN_OFFSET_CAPS, span_line
 from pyntpot.maps.lettering.span_sides import _convex_side, bend_strength
@@ -48,7 +48,7 @@ _FEWEST = 3
 CASES = ("no-outside", "empty-mark", "ambiguous-feet", "even", "decisive")
 
 
-def _cumulative(line: Sequence[Pt]) -> list[float]:
+def _cumulative(line: Sequence[Point]) -> list[float]:
     """Arc length at every point of a polyline."""
     out: list[float] = [0.0]
     for a, b in pairwise(line):
@@ -57,7 +57,7 @@ def _cumulative(line: Sequence[Pt]) -> list[float]:
 
 
 def stretches(
-    route_px: Sequence[Pt], cap_px: float, length_caps: float, step_caps: float
+    route_px: Sequence[Point], cap_px: float, length_caps: float, step_caps: float
 ) -> list[tuple[int, int]]:
     """Sliding stretches as `(i0, i1)`: each end the first index at or past its arc length.
 
@@ -78,7 +78,7 @@ def stretches(
     return out
 
 
-def _position(p: Pt, sub: Sequence[Pt], cum: list[float]) -> float:
+def _position(p: Point, sub: Sequence[Point], cum: list[float]) -> float:
     """Arc length along `sub` of the foot of `p` on its nearest segment."""
     best, at = math.inf, 0.0
     for i, (a, b) in enumerate(pairwise(sub)):
@@ -92,7 +92,7 @@ def _position(p: Pt, sub: Sequence[Pt], cum: list[float]) -> float:
     return at
 
 
-def coverage(mark: Sequence[Pt], sub: Sequence[Pt]) -> float:
+def coverage(mark: Sequence[Point], sub: Sequence[Point]) -> float:
     """The signed share of the stretch between the feet of the mark's two ends.
 
     Negative when the last end's foot comes before the first's; not clamped; 0.0 for a
@@ -106,7 +106,9 @@ def coverage(mark: Sequence[Pt], sub: Sequence[Pt]) -> float:
     return (_position(mark[-1], sub, cum) - _position(mark[0], sub, cum)) / cum[-1]
 
 
-def kept_share(drawn: Sequence[Pt], unclipped: Sequence[Pt], sub: Sequence[Pt]) -> float | None:
+def kept_share(
+    drawn: Sequence[Point], unclipped: Sequence[Point], sub: Sequence[Point]
+) -> float | None:
     """How much of its own unclipped mark a side keeps once cleared of the route.
 
     None, the ambiguous-feet case, when the unclipped coverage is not positive, the drawn
@@ -142,7 +144,7 @@ class Verdict:
         return self.case == "decisive" and self.outside == self.better
 
 
-def judge(span: Span, route_px: list[Pt], cap_px: float) -> Verdict:
+def judge(span: Span, route_px: list[Point], cap_px: float) -> Verdict:
     """Which case a stretch is, by the marks the shipped code draws for rung 0."""
     outside, marks = _convex_side(span, route_px, cap_px)
     if outside == 0:
@@ -181,7 +183,7 @@ class ScaleRow:
 
 
 def sweep(
-    cases: Sequence[tuple[Sequence[Pt], Verdict]], cap_px: float, scales: Sequence[float]
+    cases: Sequence[tuple[Sequence[Point], Verdict]], cap_px: float, scales: Sequence[float]
 ) -> list[ScaleRow]:
     """Per scale, the voted stretches by case; only the bend's vote is read again."""
     rows = []

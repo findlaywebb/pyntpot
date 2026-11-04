@@ -2,10 +2,10 @@
 
 GitHub issue: [#71](https://github.com/findlaywebb/pyntpot/issues/71)
 
-**What exists today.** Brushes are Python dictionaries in `ink/brush.py`
-(`BRUSH_TREATMENTS`, `BRUSH_COLOURS`), and pigments are the `PIGMENTS`,
-`TRANSPARENCY`, `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY` tables in
-`ink/pigment.py`. Adding a brush or a colour means editing the package.
+**What exists today.** Brushes are Python dictionaries in `ink/brush_sheet.py`
+(`BRUSH_TREATMENTS`, `BRUSH_COLOURS`), read by the brushes in `ink/brush.py`, and pigments
+are the `PIGMENTS`, `TRANSPARENCY`, `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY` tables
+in `ink/pigment.py`. Adding a brush or a colour means editing the package.
 
 **What the feature would add.** Brushes and pigments declared in data files shipped with
 the package (YAML, the theme format of `maps-themes-as-overrides.md`), loaded into the

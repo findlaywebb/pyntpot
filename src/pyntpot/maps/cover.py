@@ -21,7 +21,7 @@ import math
 from typing import TYPE_CHECKING
 
 from pyntpot.ink.chains import join_chains
-from pyntpot.ink.polyline import Pt, simplify
+from pyntpot.ink.polyline import Point, simplify
 from pyntpot.maps.osm_elements import polygon_rings
 from pyntpot.maps.rings import clip_ring, cut_line
 
@@ -112,7 +112,7 @@ PAINTED_AS: dict[str, str] = {"campus": "built"}
 
 def cover_rings(
     key: str, proj: Projection, clip: Clip, eps: float, cache: Cache
-) -> dict[str, list[list[Pt]]]:
+) -> dict[str, list[list[Point]]]:
     """Land cover rings by pigment class, clipped to the card and simplified.
 
     Args:
@@ -126,7 +126,7 @@ def cover_rings(
         Rings by class; empty when there is no land cover cached.
     """
     path = cache.landcover_path(key)
-    out: dict[str, list[list[Pt]]] = {}
+    out: dict[str, list[list[Point]]] = {}
     if not path.exists():
         return out
     lookup = {(key, value): cls for key, value, cls in COVER_TAGS}
@@ -147,10 +147,12 @@ def cover_rings(
     return out
 
 
-def wood_rings(key: str, proj: Projection, clip: Clip, eps: float, cache: Cache) -> list[list[Pt]]:
+def wood_rings(
+    key: str, proj: Projection, clip: Clip, eps: float, cache: Cache
+) -> list[list[Point]]:
     """Wood rings from the cached feature payload, clipped to the card and simplified."""
     path = cache.features_path(key)
-    rings: list[list[Pt]] = []
+    rings: list[list[Point]] = []
     if not path.exists():
         return rings
     for entry in json.loads(path.read_text()).get("elements", []):
@@ -165,7 +167,7 @@ def wood_rings(key: str, proj: Projection, clip: Clip, eps: float, cache: Cache)
     return rings
 
 
-def _chain_length(chain: list[Pt]) -> float:
+def _chain_length(chain: list[Point]) -> float:
     """The length of a chain, vertex by vertex."""
     return sum(math.dist(chain[i], chain[i + 1]) for i in range(len(chain) - 1))
 
@@ -176,7 +178,7 @@ def coastline_chains(
     clip: Clip,
     cache: Cache,
     min_length_m: float = MIN_COAST_M,
-) -> list[list[Pt]]:
+) -> list[list[Point]]:
     """Coastline ways as surveyed: cut at the card edge, joined, and never smoothed.
 
     The coast is the one line on the map a reader would notice being wrong,
@@ -189,7 +191,7 @@ def coastline_chains(
     path = cache.features_path(key)
     if not path.exists():
         return []
-    ways: list[list[Pt]] = []
+    ways: list[list[Point]] = []
     for entry in json.loads(path.read_text()).get("elements", []):
         if (entry.get("tags") or {}).get("natural") != "coastline":
             continue
