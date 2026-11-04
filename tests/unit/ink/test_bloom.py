@@ -15,11 +15,31 @@ TIED = np.array([0.5, -1.0, 0.5, 2.0, 0.5, -3.0, 2.0, 0.5])
 
 #: Pinned blooms on `plate()`: the settings, then the density's sum and min after.
 PINNED = {
-    "four": ((5, 4, 0.17, 0.45, 0.45), 9712.473272539675, 0.05103231221437454),
-    "lift-past-one": ((5, 3, 0.17, 1.5, 0.45), 9245.935428768938, 0.0),
-    "radius-floor": ((5, 2, 0.01, 0.45, 0.45), 10580.063149034977, 0.13616839051246643),
-    "radius-ceiling": ((5, 2, 2.0, 0.45, 0.45), 10046.169436208904, 0.04963906109333038),
-    "one": ((5, 1, 0.17, 0.45, 0.45), 10310.253994897008, 0.08259120583534241),
+    "four": (
+        Blooms(seed=5, count=4, radius_frac=0.17, lift=0.45, warp=0.45),
+        9712.473272539675,
+        0.05103231221437454,
+    ),
+    "lift-past-one": (
+        Blooms(seed=5, count=3, radius_frac=0.17, lift=1.5, warp=0.45),
+        9245.935428768938,
+        0.0,
+    ),
+    "radius-floor": (
+        Blooms(seed=5, count=2, radius_frac=0.01, lift=0.45, warp=0.45),
+        10580.063149034977,
+        0.13616839051246643,
+    ),
+    "radius-ceiling": (
+        Blooms(seed=5, count=2, radius_frac=2.0, lift=0.45, warp=0.45),
+        10046.169436208904,
+        0.04963906109333038,
+    ),
+    "one": (
+        Blooms(seed=5, count=1, radius_frac=0.17, lift=0.45, warp=0.45),
+        10310.253994897008,
+        0.08259120583534241,
+    ),
 }
 
 
@@ -49,7 +69,10 @@ class TestBloomLaid:
 
     @pytest.mark.parametrize(
         ("blooms", "rows"),
-        [((5, 0, 0.17, 0.45, 0.45), 100), ((5, 3, 0.17, 0.45, 0.45), 7)],
+        [
+            (Blooms(seed=5, count=0, radius_frac=0.17, lift=0.45, warp=0.45), 100),
+            (Blooms(seed=5, count=3, radius_frac=0.17, lift=0.45, warp=0.45), 7),
+        ],
         ids=["no-count", "under-64-pixels"],
     )
     def test_no_count_or_too_little_wash_lays_nothing(self, blooms: Blooms, rows: int):
@@ -65,7 +88,12 @@ class TestBloomLaid:
         a = np.zeros((60, 60), np.float32)
         a[20:28, 20:28] = 1.0
         dens = np.full((60, 60), 0.5, np.float32)
-        bloom(dens, a, Sheet(60, 60, gran_px=6.0, seed=2), (5, 1, 0.17, 0.45, 0.45))
+        bloom(
+            dens,
+            a,
+            Sheet(60, 60, gran_px=6.0, seed=2),
+            Blooms(seed=5, count=1, radius_frac=0.17, lift=0.45, warp=0.45),
+        )
         assert not np.array_equal(dens, np.full((60, 60), 0.5, np.float32))
 
     @pytest.mark.parametrize(
@@ -77,7 +105,12 @@ class TestBloomLaid:
         """A strip four pixels across has no room for a bloom's box; five has."""
         a = np.ones((h, w), np.float32)
         dens = np.full((h, w), 0.5, np.float32)
-        bloom(dens, a, Sheet(h, w, gran_px=6.0, seed=2), (5, 2, 0.17, 0.45, 0.45))
+        bloom(
+            dens,
+            a,
+            Sheet(h, w, gran_px=6.0, seed=2),
+            Blooms(seed=5, count=2, radius_frac=0.17, lift=0.45, warp=0.45),
+        )
         assert (not np.array_equal(dens, np.full((h, w), 0.5, np.float32))) is laid
 
 

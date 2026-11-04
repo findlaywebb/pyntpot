@@ -2,6 +2,7 @@
 
 import numpy as np
 
+from pyntpot.ink.washing import Flow
 from pyntpot.maps.painter.job import PlateStack, drawable
 
 from .jobs import CARD, tiny_job, tiny_style
@@ -41,6 +42,18 @@ class TestBegin:
         assert job.bloom(np.ones((4, 4), np.float32), "wood") is None
 
 
+class TestFlow:
+    """The flow-rim option every wash is laid with."""
+
+    def test_the_flow_option_carries_the_wash_styles_rim_settings(self, tmp_path):
+        """With the flow rim on, `flow` holds the style's three rim numbers; off, it is `None`."""
+        rim = {"flow_rim_exp": 0.25, "flow_rim_ref_frac": 0.05, "flow_rim_frac": 0.5}
+        on = tiny_job(tmp_path, tiny_style(wash={"flow_rim": True, **rim}))
+        off = tiny_job(tmp_path, tiny_style(wash={"flow_rim": False, **rim}))
+        assert on.flow == Flow(exp=0.25, ref_frac=0.05, frac=0.5)
+        assert off.flow is None
+
+
 class TestBloom:
     """The bloom argument of one wash."""
 
@@ -49,7 +62,7 @@ class TestBloom:
         job = tiny_job(tmp_path, tiny_style(wash={"blooms": True, "bloom_density": 1.0}))
         big = job.bloom(np.ones((120, 160), np.float32), "wood")
         assert big is not None
-        assert big[1] >= 1
+        assert big.count >= 1
         assert job.bloom(np.zeros((120, 160), np.float32), "wood") is None
 
     def test_each_wash_is_seeded_by_its_name_alone(self, tmp_path):
@@ -60,8 +73,8 @@ class TestBloom:
         wood, lake = one.bloom(cov, "wood"), one.bloom(cov, "lake")
         again = two.bloom(cov[:60], "wood")
         assert wood is not None and lake is not None and again is not None
-        assert wood[0] == again[0]
-        assert wood[0] != lake[0]
+        assert wood.seed == again.seed
+        assert wood.seed != lake.seed
 
 
 class TestTransparency:

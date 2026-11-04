@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pytest
 
-from pyntpot.ink.bloom import bloom
+from pyntpot.ink.bloom import Blooms, bloom
 from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.keyed import keyed_rng, line_key, uniform_at
@@ -14,7 +14,7 @@ from pyntpot.ink.pad import InkPad
 from pyntpot.ink.raster import deform_rings
 from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.stamping import stamp
-from pyntpot.ink.washing import WashOptions, wash
+from pyntpot.ink.washing import Flow, WashOptions, wash
 
 #: `deform_rings` settings with the displacement on: seed, amount, rounds, decay, cap, stop.
 DEFORM = (9, 0.26, 4, 0.55, 16.0, 0.5)
@@ -129,8 +129,10 @@ class TestDecoupled:
         trimmed[20:240, 376:380] = 0.0
         flat = np.full((h, w), 0.5, np.float32)
         before, after = flat.copy(), flat.copy()
-        bloom(before, a, sheet, (3, 6, 0.06, 0.45, 0.45))
-        bloom(after, trimmed, sheet, (3, 6, 0.06, 0.45, 0.45))
+        bloom(before, a, sheet, Blooms(seed=3, count=6, radius_frac=0.06, lift=0.45, warp=0.45))
+        bloom(
+            after, trimmed, sheet, Blooms(seed=3, count=6, radius_frac=0.06, lift=0.45, warp=0.45)
+        )
         far = chamfer_distance(trimmed != a) > 60
         assert not np.array_equal(before, flat), "the blooms were laid"
         assert np.array_equal(before[far], after[far])
@@ -150,11 +152,11 @@ class TestDecoupled:
         trimmed = cover.copy()
         trimmed[30:270, 426:430] = 0.0
 
-        def lay(c: np.ndarray, blooms: tuple[int, int, float, float, float] | None):
-            options = WashOptions(flow=(0.125, 0.02, 0.38), blooms=blooms)
+        def lay(c: np.ndarray, blooms: Blooms | None):
+            options = WashOptions(flow=Flow(exp=0.125, ref_frac=0.02, frac=0.38), blooms=blooms)
             return wash(c, sheet, 0.52, 0.20, options)
 
-        blooms = (3, 6, 0.17, 0.45, 0.45)
+        blooms = Blooms(seed=3, count=6, radius_frac=0.17, lift=0.45, warp=0.45)
         before = lay(cover, blooms) - lay(cover, None)
         after = lay(trimmed, blooms) - lay(trimmed, None)
         far = chamfer_distance(trimmed != cover) > 80
