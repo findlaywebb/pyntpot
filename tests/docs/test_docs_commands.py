@@ -27,7 +27,7 @@ from support.site_pages import DOCS, fenced_blocks, site_pages
 _SHELL_BLOCKS = frozenset({"bash", "console", "shell", "sh", "text"})
 _COMMAND_STARTS = ("pyntpot ", "python examples/")
 _INLINE = re.compile(r"`uv run (?P<command>python examples/[^`]+)`")
-_USAGE = re.compile(r"^pyntpot (map )?\[")
+_USAGE = re.compile(r"^pyntpot (\w+ )?\[")
 _SCRIPT = re.compile(r"^python (?P<path>examples/\S+\.py)$")
 
 

@@ -57,7 +57,7 @@ every page are generated from this file: after an edit, run
 | --- | --- | --- | --- |
 | track | The recorded GPS path being mapped: its points, and optionally their heights and times. | `pyntpot.maps.Track` | no |
 | route | The painted line of the track on the map; not the track itself. | | no |
-| map | The picture of one track: the paper, washes, pen and lettering laid on its card, as `compose` returns it and `pyntpot map` writes it. The maps side's word, which `ink` and `letters` never use. | `pyntpot.maps.compose` | no |
+| map | The picture of one track: the paper, washes, pen and lettering laid on its card, as `compose` returns it and `pyntpot map` writes it. The maps side's word: no name `ink` or `letters` exports uses it. | `pyntpot.maps.compose` | no |
 | card | The coordinate frame of one map: a box in card metres and the display and render pixel grids it maps to; converts between them. A canvas is the raster a plate is painted on; a card is the frame that says where things go on it. Not the picture: that is the map. | `pyntpot.maps.Card` | no |
 | display pixels | The card's display grid, origin top left, y down, that `Card.xy` maps card metres to; marks, settings and type sizes are in it. | `pyntpot.maps.Card` | display pixels |
 | render pixels | The finer grid a plate is painted on: display pixels times `Card.render_scale`; brushes and canvases are in it. | `pyntpot.maps.Card` | render pixels |

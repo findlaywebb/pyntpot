@@ -78,7 +78,7 @@ def _manifest_keys() -> list[str]:
 
 
 class TestEveryPageExists:
-    """The six reference pages and the glossary pointer are written."""
+    """The six reference pages and the generated glossary page are written."""
 
     @pytest.mark.parametrize(
         "name",
@@ -91,6 +91,7 @@ class TestEveryPageExists:
             "brushes.md",
             "glossary.md",
         ],
+        ids=["cli", "style-fields", "cache-layout", "manifest", "pigments", "brushes", "glossary"],
     )
     def test_page_is_written(self, name):
         """Each reference page exists and is not empty."""

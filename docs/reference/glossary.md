@@ -51,7 +51,7 @@ Every term these docs use, what it means and where it lives in the code. The doc
 | --- | --- | --- |
 | <span id="term-track"></span>track | The recorded GPS path being mapped: its points, and optionally their heights and times. | `pyntpot.maps.Track` |
 | <span id="term-route"></span>route | The painted line of the track on the map; not the track itself. |  |
-| <span id="term-map"></span>map | The picture of one track: the paper, washes, pen and lettering laid on its card, as `compose` returns it and `pyntpot map` writes it. The maps side's word, which `ink` and `letters` never use. | `pyntpot.maps.compose` |
+| <span id="term-map"></span>map | The picture of one track: the paper, washes, pen and lettering laid on its card, as `compose` returns it and `pyntpot map` writes it. The maps side's word: no name `ink` or `letters` exports uses it. | `pyntpot.maps.compose` |
 | <span id="term-card"></span>card | The coordinate frame of one map: a box in card metres and the display and render pixel grids it maps to; converts between them. A canvas is the raster a plate is painted on; a card is the frame that says where things go on it. Not the picture: that is the map. | `pyntpot.maps.Card` |
 | <span id="term-display-pixels"></span>display pixels | The card's display grid, origin top left, y down, that `Card.xy` maps card metres to; marks, settings and type sizes are in it. | `pyntpot.maps.Card` |
 | <span id="term-render-pixels"></span>render pixels | The finer grid a plate is painted on: display pixels times `Card.render_scale`; brushes and canvases are in it. | `pyntpot.maps.Card` |

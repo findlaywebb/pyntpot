@@ -4,9 +4,10 @@ Point pyntpot at your own Overpass and OpenTopoData servers instead of the publi
 for heavy use, a private network, or to stay clear of the public servers' limits.
 
 This covers the two providers pyntpot ships, `OverpassFeatures` and `OpenTopoData`.
-Writing a provider of your own works too: `fetch` and `Cache` take any provider that
-satisfies `Features`, from `pyntpot.maps`, or `Elevation`, from `pyntpot.maps`; this page
-covers only the two that ship.
+Writing a provider of your own works too: `fetch`, `Cache.key` and `Cache.ensure` each take
+a features provider that satisfies `Features` and an elevation provider that satisfies
+`Elevation`, both from `pyntpot.maps`, and any pair that does will serve; this page covers
+only the two that ship.
 
 **Before you start:** you need an Overpass server whose data covers your track, and an
 OpenTopoData server with a dataset loaded (the default is `srtm30m`). Their own
