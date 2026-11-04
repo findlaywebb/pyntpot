@@ -82,7 +82,7 @@ S8 after feature 006 has merged. No slice edits `src/`; nothing under
 - [x] `tests/docs/test_docs_commands.py`: fenced commands and inline `uv run python examples/` spans; every `pyntpot` command parses; every example command's options are the script's; extractor helper tests and non-vacuity assertions.
 - [x] Remaining `card` on site pages listed in the PR and checked against the glossary.
 - [x] Notes for #162, #163, #65, #172 and #176 deleted; links to them repointed, except in `docs-missing-how-tos.md` and `docs-examples-housekeeping.md` (S8).
-- [ ] Out-of-scope notes and issues filed (the #174 paragraph and comment are S8's).
+- [x] Out-of-scope notes and issues filed (the #174 paragraph and comment are S8's).
 - [x] Full suite, `prek run --all-files` and strict build green; no golden moved.
 - [ ] Diff reviewed against the plan; draft PR opened closing #65, #162, #163, #172 and #176.
 

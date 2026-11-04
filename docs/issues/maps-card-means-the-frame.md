@@ -1,6 +1,6 @@
 # Some docstrings in maps still call the picture a card
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues/TBD)
+GitHub issue: [#178](https://github.com/findlaywebb/pyntpot/issues/178)
 
 Area: maps (docstrings).
 

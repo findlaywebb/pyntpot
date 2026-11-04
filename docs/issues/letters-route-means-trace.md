@@ -1,6 +1,6 @@
 # Some identifiers say route where they mean the trace
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues/TBD)
+GitHub issue: [#181](https://github.com/findlaywebb/pyntpot/issues/181)
 
 Area: letters, with maps (lettering).
 

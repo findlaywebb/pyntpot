@@ -1,6 +1,6 @@
 # fetch(places=) and Annotations.places mean different things
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues/TBD)
+GitHub issue: [#180](https://github.com/findlaywebb/pyntpot/issues/180)
 
 Area: maps.
 
