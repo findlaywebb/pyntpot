@@ -1,6 +1,6 @@
 # Setting.wash is named for the backing wash
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues/TBD)
+GitHub issue: [#183](https://github.com/findlaywebb/pyntpot/issues/183)
 
 Area: letters.
 

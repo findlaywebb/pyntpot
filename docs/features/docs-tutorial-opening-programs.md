@@ -1,6 +1,6 @@
 # Each Painting with Python page could open with a short complete program
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues/TBD)
+GitHub issue: [#177](https://github.com/findlaywebb/pyntpot/issues/177)
 
 **What exists today.** The five Painting with Python pages (`curves.md`, `symmetry.md`,
 `fractals.md`, `pictures.md`, `vector-drawing.md` under

@@ -1,6 +1,6 @@
 # The style-fields page could list the keys of its table fields
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues/TBD)
+GitHub issue: [#186](https://github.com/findlaywebb/pyntpot/issues/186)
 
 **What exists today.** `docs/reference/style-fields.md` shows eight fields only as
 `table`, with "Its keys and values are in `src/pyntpot/maps/themes/default.toml`":

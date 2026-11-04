@@ -1,6 +1,6 @@
 # The watercolour tutorial could be split, and its explanation moved out
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues/TBD)
+GitHub issue: [#185](https://github.com/findlaywebb/pyntpot/issues/185)
 
 **What exists today.** `docs/tutorials/paint-a-watercolour.md` is one 722-line page with
 seven rungs (stretch the paper, lay a wash, pull a brush, mix two pigments, take up the

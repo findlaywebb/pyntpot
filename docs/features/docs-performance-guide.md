@@ -1,6 +1,6 @@
 # The docs could say how long a map takes and how much memory it needs
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues/TBD)
+GitHub issue: [#184](https://github.com/findlaywebb/pyntpot/issues/184)
 
 **What exists today.** `docs/runbooks/performance.md` records benchmark measurements for
 contributors: where the painter's time goes and what the gates cost. It is off the site.
