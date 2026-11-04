@@ -1,13 +1,15 @@
 """The named lines a name can be set along, and the lines a name must not be laid across.
 
-Key names: `NamedLines`, the roads, rivers, coast and crossings in card metres;
+Key names: `NamedLines`, the roads, rivers, coast, crossings and numbered roads in card
+metres;
 `named_lines`, which builds them from a basemap; `road_lines`, which turns them into
 display-pixel lines a name is charged for crossing.
 
 It does not choose a name or place one.
 
 Invariants: only named roads and rivers carry a name; an unnamed lane is kept as a bare
-crossing line so the cost can still see it.
+crossing line so the cost can still see it, and an unnamed numbered road is also kept under
+`numbered`, which only the named roads read.
 """
 
 from typing import Any
@@ -18,7 +20,9 @@ from pyntpot.maps.card import Card
 
 #: The lines a label may be set along or is charged for crossing, by kind:
 #: `roads` and `rivers` (one entry a named line), `coast` and `crossings` (bare
-#: point lists), in card metres. `named_lines` builds it from a basemap.
+#: point lists), and `numbered` (one entry an unnamed road that carries a number, read
+#: only by the caller's named roads), in card metres. `named_lines` builds it from a
+#: basemap.
 NamedLines = dict[str, list[Any]]
 
 
@@ -33,10 +37,12 @@ def named_lines(basemap: Basemap, tol_px: float) -> NamedLines:
         tol_px: Simplification tolerance in display pixels.
 
     Returns:
-        `{"roads": [...], "rivers": [...], "coast": [...], "crossings": [...]}`:
-        each road and river entry a name, a class, a road number where OSM has
-        one, the painted widths and a polyline `d`; each coast and crossing
-        entry a bare polyline.
+        `{"roads": [...], "rivers": [...], "coast": [...], "crossings": [...],
+        "numbered": [...]}`: each road and river entry a name, a class, a road
+        number where OSM has one, the painted widths and a polyline `d`; each
+        coast and crossing entry a bare polyline; each `numbered` entry an
+        unnamed road that carries a number, as a road entry with an empty name,
+        and kept under `crossings` too.
     """
     layers = basemap.layers
     tol = max(tol_px * float(basemap.card.mpp_display), 1.0)
@@ -67,7 +73,7 @@ def named_lines(basemap: Basemap, tol_px: float) -> NamedLines:
             for r in layers.rivers
         ],
     }
-    geom: NamedLines = {"roads": [], "rivers": [], "coast": [], "crossings": []}
+    geom: NamedLines = {"roads": [], "rivers": [], "coast": [], "crossings": [], "numbered": []}
     for key in ("roads", "rivers"):
         for entry in named[key]:
             for line in kept_lines(entry["line"]):
@@ -92,6 +98,19 @@ def named_lines(basemap: Basemap, tol_px: float) -> NamedLines:
                     # could be laid across one for nothing. It is kept, without
                     # a name, purely so the crossing cost can see it.
                     geom["crossings"].append(line)
+                    if key == "roads" and entry["r"]:
+                        # A numbered road can be named by its number alone, so an
+                        # unnamed piece of one is kept for the caller's named roads.
+                        geom["numbered"].append(
+                            {
+                                "n": "",
+                                "c": entry["c"],
+                                "r": entry["r"],
+                                "w": entry["w"],
+                                "wn": entry["wn"],
+                                "d": line,
+                            }
+                        )
     for coast in layers.coastline:
         geom["coast"].extend(kept_lines(coast))
     return geom

@@ -23,7 +23,7 @@
       groups, 31 maps exports with the protocols, newly public records frozen and
       keyword-only (`Projection` frozen, `Label`/`Span` keyword-only), maps field docs,
       `maps.md`, protocol conformance test; `_pending_maps.py` empty (#78).
-- [ ] S7 (parallel): `Annotations.roads` letters the roads it names, every class and
+- [x] S7 (parallel): `Annotations.roads` letters the roads it names, every class and
       numbered-only roads; unmatched names raise `ValueError`; non-golden
       `test_ground.py` covers `_ground`; goldens unchanged; `_pending_roads.py` empty
       (#161).
