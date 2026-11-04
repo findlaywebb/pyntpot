@@ -4,18 +4,19 @@ Each check reads its facts from the code and compares them with the page's cells
 style-field tables with `Style.default()` and the group dataclasses, the command line's
 synopsis with `build_parser()`'s usage, the pigment tables with `PIGMENTS` and its
 neighbours, and the brush tables with the brush sheet's tables. Presence of a name is
-`tests/architecture/test_reference_pages.py`'s check; this one checks what a page says
+`tests/docs/test_reference_pages.py`'s check; this one checks what a page says
 about it. Nothing here renders a page or builds the site.
 """
 
 import argparse
 import dataclasses
+import importlib
 import json
 import re
 from collections.abc import Mapping, Sequence
 
 from pyntpot.ink import PAINTERS_PIGMENTS, PAINTERS_TRANSPARENCY, PIGMENTS, TRANSPARENCY
-from pyntpot.ink.brush import BRUSH_COLOURS, BRUSH_TREATMENTS, PEN_ROWS
+from pyntpot.ink.brush_sheet import BRUSH_COLOURS, BRUSH_TREATMENTS, PEN_ROWS
 from pyntpot.maps.cli import build_parser
 from pyntpot.maps.style import Style
 
@@ -25,7 +26,7 @@ REFERENCE = DOCS / "reference"
 
 _GROUP_HEADING = re.compile(r"^## `(?P<group>\w+)`$", re.MULTILINE)
 _GROUP_LINE = re.compile(
-    r"^`(?P<cls>\w+)`(?:, from `(?P<pkg>pyntpot[\w.]*)`)?,"
+    r"^`(?P<cls>\w+)`, from `(?P<pkg>pyntpot\.(?:ink|letters|maps))`,"
     r" read as `Style\.default\(\)\.(?P<group>\w+)`\."
 )
 _CHOICES = re.compile(r'^`"\w+"`(?: or `"\w+"`)+$')
@@ -166,7 +167,7 @@ class TestStyleFieldTables:
         assert not wrong, "\n".join(wrong)
 
     def test_every_group_line_names_its_dataclass(self) -> None:
-        """Each section's first line names the group's dataclass and how to read the group from a style."""
+        """Each section's first line names the group's dataclass, the layer package exporting it, and how to read it."""
         style = Style.default()
         wrong: list[str] = []
         for group, section in self._sections().items():
@@ -174,7 +175,11 @@ class TestStyleFieldTables:
             found = _GROUP_LINE.match(line)
             cls = type(getattr(style, group)).__name__
             if found is None or found["cls"] != cls or found["group"] != group:
-                wrong.append(f"{group}: {line!r} does not name `{cls}` read as `.{group}`")
+                wrong.append(
+                    f"{group}: {line!r} does not name `{cls}`, from a layer, read as `.{group}`"
+                )
+            elif cls not in importlib.import_module(found["pkg"]).__all__:
+                wrong.append(f"{group}: `{cls}` is not in `{found['pkg']}.__all__`")
         assert not wrong, "\n".join(wrong)
 
     def test_a_default_renders_as_the_table_writes_it(self) -> None:

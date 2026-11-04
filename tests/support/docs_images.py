@@ -37,7 +37,7 @@ master, not the lossy file, is compared (ADR 0033).
 
 It does not paint, encode or read any image: `tests/golden/make_docs_images.py` paints
 and encodes, `tests/golden/test_docs_images.py` pins, and
-`tests/architecture/test_docs_images.py` checks the registry against the files and the
+`tests/docs/test_docs_images.py` checks the registry against the files and the
 Markdown that shows them.
 """
 

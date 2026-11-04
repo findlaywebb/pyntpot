@@ -1,10 +1,12 @@
-"""No site page, `README.md` or example uses a word `GLOSSARY.md` has retired.
+"""No site page, `README.md`, example, source or test file uses a word `GLOSSARY.md` has retired.
 
 Reads the retired words from the real `GLOSSARY.md` and scans the real site pages, the
-README and every `.py`, `.toml` and `.md` file under `examples/`. A word matches
+README, every `.py`, `.toml` and `.md` file under `examples/`, and every `.py` file under
+`src/` and `tests/` except `tests/docs/` and `tests/support/glossary.py`, which quote
+retired words as data. A word matches
 case-insensitively as a whole phrase with an optional plural `s`, its spaces matching any
 run of whitespace (so a phrase wrapped across lines still matches), after backticks are
-removed (so a quoted retired word still counts). It does not scan `src/` or `tests/`.
+removed (so a quoted retired word still counts).
 """
 
 import re
@@ -19,6 +21,10 @@ from support.site_pages import site_pages
 _GLOSSARY = REPO_ROOT / "GLOSSARY.md"
 _EXAMPLES = REPO_ROOT / "examples"
 _SUFFIXES = frozenset({".py", ".toml", ".md"})
+_SOURCE = REPO_ROOT / "src"
+_TESTS = REPO_ROOT / "tests"
+#: Test code that quotes retired words as data, so the scan leaves it out.
+_QUOTING = (_TESTS / "docs", _TESTS / "support" / "glossary.py")
 
 
 def retired_pattern(word: str) -> re.Pattern[str]:
@@ -36,11 +42,17 @@ def uses(text: str, word: str) -> list[int]:
 
 
 def _scanned_files() -> list[Path]:
-    """Return the site pages, the README and the example files the scan reads."""
+    """Return the site pages, the README, the example files and the source and test code the scan reads."""
     examples = sorted(
         path for path in _EXAMPLES.rglob("*") if path.is_file() and path.suffix in _SUFFIXES
     )
-    return [*site_pages(), REPO_ROOT / "README.md", *examples]
+    source = sorted(_SOURCE.rglob("*.py"))
+    tests = sorted(
+        path
+        for path in _TESTS.rglob("*.py")
+        if not any(path == quoting or path.is_relative_to(quoting) for quoting in _QUOTING)
+    )
+    return [*site_pages(), REPO_ROOT / "README.md", *examples, *source, *tests]
 
 
 class TestTheMatcher:
@@ -71,7 +83,7 @@ class TestTheRetiredWords:
         assert parse(_GLOSSARY.read_text()).retired
 
     def test_no_page_or_example_uses_a_retired_word(self) -> None:
-        """No site page, README or example file contains a retired word."""
+        """No site page, README, example file, or source or test code outside the quoting files contains a retired word."""
         words = [retired.word for retired in parse(_GLOSSARY.read_text()).retired]
         found = [
             f"{path.relative_to(REPO_ROOT)}:{line}: {word!r}"

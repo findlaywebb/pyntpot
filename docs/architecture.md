@@ -21,6 +21,7 @@ The boundary is enforced by import-linter (`[tool.importlinter]` in `pyproject.t
 the AST fitness tests in `tests/architecture/`. See `BOUNDARIES.md`.
 
 The public surface is `pyntpot.__all__` and the `__all__` of each layer package (ADR 0026);
-a name in no `__all__` is private. `examples/` holds the tutorial scripts, one per rung,
-which import only public names (`tests/architecture/test_examples.py`) and run offline
-under `tests/examples/`.
+a name in no `__all__` is private. Every name a public signature reaches is itself public,
+exported from its layer package (ADR 0068, `tests/architecture/test_public_signatures.py`).
+`examples/` holds the tutorial scripts, one per rung, which import only public names
+(`tests/architecture/test_examples.py`) and run offline under `tests/examples/`.

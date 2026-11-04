@@ -42,6 +42,8 @@ tutorial. The command line has no option for landmarks.
    `examples/place_card.py` does this, reading its place's table from `examples/places.toml`
    by the `place` option.
 
+   `Annotations` checks each table as a `Landmark`, from `pyntpot.maps`.
+
 3. Run the script. The plates are current in the cache, so nothing is repainted. Only the
    lettering and the composition run.
 

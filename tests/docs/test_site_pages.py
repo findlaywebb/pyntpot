@@ -229,8 +229,8 @@ class TestResolveDotted:
         assert resolve_dotted("pyntpot.maps.card.Card") is Card
 
     def test_a_module_shadowing_a_function_resolves_to_the_module(self) -> None:
-        """`pyntpot.ink.wash` is the module, not the exported function of the same name."""
-        assert inspect.ismodule(resolve_dotted("pyntpot.ink.wash"))
+        """`unittest.main` is the module, not the package attribute of the same name."""
+        assert inspect.ismodule(resolve_dotted("unittest.main"))
 
     def test_a_missing_part_raises_naming_the_path(self) -> None:
         """A path whose last part does not exist raises `LookupError` naming the path."""

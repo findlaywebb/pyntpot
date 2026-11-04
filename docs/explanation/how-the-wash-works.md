@@ -31,12 +31,13 @@ Source: `multiply-compositing` in [references](references.md).
 ## The body: an edge that gives way, a tone that drifts
 
 `wash(cover, sheet, base, pool, options)` takes the coverage mask and returns a density;
-`options`, a `WashOptions`, is optional, and this page leaves it out. With `pool` at 0 it
-lays the body alone, and already the disc is a different thing. The mask is blurred, then
-cut against two scales of noise from the sheet, so the edge is soft and wavers instead of
-following the circle. The tone drifts slowly across the wash, because a second noise field
-varies it, and the paper's own height lightens it where the tooth is high. A last blur,
-more or less strong from place to place, keeps some edges sharper than others.
+`options`, a `WashOptions`, from `pyntpot.ink`, is optional, and this page leaves it out.
+With `pool` at 0 it lays the body alone, and already the disc is a different thing. The
+mask is blurred, then cut against two scales of noise from the sheet, so the edge is soft
+and wavers instead of following the circle. The tone drifts slowly across the wash,
+because a second noise field varies it, and the paper's own height lightens it where the
+tooth is high. A last blur, more or less strong from place to place, keeps some edges
+sharper than others.
 
 ![The same disc as a wash: the edge is soft and a little uneven, and the blue deepens and fades slowly across the disc.](../images/explanation/wash-body.webp)
 
@@ -129,8 +130,10 @@ Four more behaviours are in the wash code, and a theme's wash group turns each o
 Backruns and bleed are fields of the `WashOptions` that `wash` takes besides a body and a
 pool, which the map painter builds from the theme. Pigment separation and the shallow-water
 pass are not: they act on what washes produce, one wash's density and then the whole stack
-of layers, and the map painter runs them after its washes. This page shows none of them as
-a figure.
+of layers, and the map painter runs them after its washes. They are `separated` and
+`fluid_modulate`, from `pyntpot.ink`, and both read their settings from `WashStyle`, the
+theme's wash group, because those settings belong to a plate rather than to one wash. This
+page shows none of them as a figure.
 
 - Backruns. A second front of water pushes deposited pigment out ahead of it: the centre
   goes pale and the front dries as a dark, crenellated ridge. Source: `backruns`.

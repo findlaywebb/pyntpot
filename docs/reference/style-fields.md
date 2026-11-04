@@ -1,10 +1,10 @@
 # Style fields
 
-The style is every style group a map is painted, lettered and composed with, as one value: `pyntpot.maps.Style`. A theme is a TOML file with one table for each group, read by `Style.from_toml` and by the command line's `--style`. This page lists every field of every style group.
+The style is every style group a map is painted, lettered and composed with, as one value: `pyntpot.maps.Style`. A theme is a TOML file with one table for each group, read by `Style.from_toml` and by the command line's `--style`. This page lists every field of every style group. Every group is a frozen dataclass built by keyword: make a variant with `dataclasses.replace(group, field=value)`.
 
 ## Reading the tables
 
-- The section heading is the group's table name in a theme. The line under it names the group's dataclass, the package that exports it when one does, and how to read the group from a style.
+- The section heading is the group's table name in a theme. The line under it names the group's dataclass, the package that exports it, and how to read the group from a style.
 - Type is the TOML type: boolean, integer, number, string, array or table.
 - Default is the value in the packaged default theme, which `Style.default()` reads. It is the resolved default style, not the dataclass default; the two differ for some fields.
 - A table or an array of tables is shown as `table`. Its keys and values are in `src/pyntpot/maps/themes/default.toml`.
@@ -52,7 +52,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `wash`
 
-`WashStyle`, read as `Style.default().wash`. How a laid wash wets, bleeds, rims, blooms, separates and flows.
+`WashStyle`, from `pyntpot.ink`, read as `Style.default().wash`. How a laid wash wets, bleeds, rims, blooms, separates and flows.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -195,7 +195,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `card`
 
-`CardStyle`, read as `Style.default().card`. The card's display size, its supersampling and the dark grid's size.
+`CardStyle`, from `pyntpot.maps`, read as `Style.default().card`. The card's display size, its supersampling and the dark grid's size.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -205,7 +205,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `ribbon`
 
-`RibbonStyle`, read as `Style.default().ribbon`. The trimmed extent of the painted ground, and the card around it.
+`RibbonStyle`, from `pyntpot.maps`, read as `Style.default().ribbon`. The trimmed extent of the painted ground, and the card around it.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -228,7 +228,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `cover`
 
-`CoverStyle`, read as `Style.default().cover`. Land cover and the wood: the classes, their pigments, and the wood's texture and dabs.
+`CoverStyle`, from `pyntpot.maps`, read as `Style.default().cover`. Land cover and the wood: the classes, their pigments, and the wood's texture and dabs.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -250,7 +250,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `route`
 
-`RouteStyle`, read as `Style.default().route`. The route's own painted plate: whether it is drawn, with which nib, how wide. The plate is tinted at compose time by the route ink.
+`RouteStyle`, from `pyntpot.maps`, read as `Style.default().route`. The route's own painted plate: whether it is drawn, with which nib, how wide. The plate is tinted at compose time by the route ink.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -260,7 +260,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `route_ink`
 
-`RouteInk`, read as `Style.default().route_ink`. How the route is drawn on the map. It is read only when the route is placed and drawn, so changing it paints no plate again. `Style.with_route_ink` feeds its colour and width.
+`RouteInkStyle`, from `pyntpot.maps`, read as `Style.default().route_ink`. How the route is drawn on the map. It is read only when the route is placed and drawn, so changing it paints no plate again. `Style.with_route_ink` feeds its colour and width.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -274,7 +274,7 @@ The compose step draws no casing, glow or shadow round the route.
 
 ## `lettering`
 
-`LetteringPolicy`, read as `Style.default().lettering`. Which names a map letters, and how many.
+`LetteringStyle`, from `pyntpot.maps`, read as `Style.default().lettering`. Which names a map letters, and how many.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -286,7 +286,7 @@ The compose step draws no casing, glow or shadow round the route.
 
 ## `basemap`
 
-`BasemapStyle`, read as `Style.default().basemap`. What the basemap draws, and how much of it.
+`BasemapStyle`, from `pyntpot.maps`, read as `Style.default().basemap`. What the basemap draws, and how much of it.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |

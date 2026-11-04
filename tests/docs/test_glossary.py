@@ -6,6 +6,8 @@ checks the two committed files the generator writes, and the site configuration 
 them.
 """
 
+import importlib
+import inspect
 import re
 import string
 from pathlib import Path
@@ -40,6 +42,7 @@ _COMMENT = (
     "PYTHONPATH=tests uv run python -m support.glossary -->"
 )
 _CURLY_APOSTROPHE = "\u2019"
+_LAYERS = ("ink", "letters", "maps")
 _RETIRED_HEADER = "| Retired | Say instead |\n| --- | --- |\n"
 
 
@@ -248,6 +251,25 @@ class TestTheGlossary:
                 except LookupError:
                     missing.append(f"{term.name}: {name}")
         assert missing == []
+
+    def test_in_the_code_names_the_exported_name_where_there_is_one(self, glossary):
+        """A code name that a layer package exports is written as `pyntpot.<layer>.<name>`, not by its private path."""
+        layers = [importlib.import_module(f"pyntpot.{layer}") for layer in _LAYERS]
+        private = []
+        for term in glossary.terms:
+            for name in term.code:
+                found = resolve_dotted(name)
+                if inspect.ismodule(found):
+                    continue
+                exported = [
+                    f"{package.__name__}.{bound}"
+                    for package in layers
+                    for bound in package.__all__
+                    if getattr(package, bound) is found
+                ]
+                if exported and name not in exported:
+                    private.append(f"{term.name}: {name} is exported as {' or '.join(exported)}")
+        assert private == []
 
     def test_no_site_page_has_a_curly_apostrophe(self):
         """No site page writes a curly apostrophe, which a tooltip form spelt with `'` would not underline."""

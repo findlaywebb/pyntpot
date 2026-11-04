@@ -13,7 +13,7 @@ each treatment row, so a row reads left to right from row 1 to row 8. Strokes of
 are combined before the ink is composited over the paper.
 
 `BRUSH_IDS` lists the ids as a literal tuple, in sheet order, because the brush tables are
-private to `pyntpot.ink`; `tests/architecture/test_reference_pages.py` checks it against
+private to `pyntpot.ink`; `tests/docs/test_reference_pages.py` checks it against
 those tables.
 
 Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `paper_plate`,

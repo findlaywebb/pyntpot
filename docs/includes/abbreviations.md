@@ -124,9 +124,9 @@
 
 *[vector layers]: The basemap's layers as SVG path data in card metres, read from the fetch cache under the track's key, with the landmarks and places chosen for the box (the style's picks replacing the chosen landmarks), for a caller that draws its own map instead of painting one. Not the painter's layers.
 
-*[style group]: One layer's share of the style, a frozen dataclass of the fields its readers read: PaperStyle, NibStyle, BasemapStyle and the rest.
+*[style group]: One layer's share of the style, a frozen dataclass of the fields its readers read: PaperStyle, NibStyle, BasemapStyle and the rest. Each is a frozen, keyword-only dataclass named <Group>Style.
 
-*[style groups]: One layer's share of the style, a frozen dataclass of the fields its readers read: PaperStyle, NibStyle, BasemapStyle and the rest.
+*[style groups]: One layer's share of the style, a frozen dataclass of the fields its readers read: PaperStyle, NibStyle, BasemapStyle and the rest. Each is a frozen, keyword-only dataclass named <Group>Style.
 
 *[route ink]: How the route is drawn on the map: its style (pen, or any other value for a solid line), its width in display pixels, its colour, its blend and its opacity; the width also sets how near two passes of a retraced route have to come to be drawn as one stroke. The style field Style.route_ink, a theme's [route_ink] table; a caller feeds its colour and width through Style.with_route_ink.
 
