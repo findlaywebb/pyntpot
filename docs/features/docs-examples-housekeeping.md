@@ -19,7 +19,7 @@ things make them harder to use than to read:
   `fern_points`, `_count`, `_cover`, `_thicken` and `_dabs`, with `fern_points` taking
   different arguments, where `trees.py` paints the single tree and the family with `figure=`.
 - **`kaleidoscope.py`'s `_dense` does nothing.** `stamp` already resamples a path evenly by
-  arc length (`_trace` in `ink/stamp.py`), yet `symmetry.md` quotes
+  arc length (`_trace` in `ink/stamping.py`), yet `symmetry.md` quotes
   `stamp(acc, _dense(points, 1.0), brush, rng)` as if the spacing mattered.
 - **Six scripts have no fast test**: `word`, `how_to_own_shapes`, `how_to_route_ink`,
   `place_card`, `social_preview` and `map_styles` appear nowhere in `tests/examples/`. They

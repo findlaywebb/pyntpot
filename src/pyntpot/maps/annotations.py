@@ -9,8 +9,10 @@ index, by kilometre or by seconds from the start.
 It does not place, resolve or draw anything: the lettering stage reads these
 values and decides where each lands. A span request is not a placed span: it
 says which stretch is meant, and the lettering resolves it onto the route and
-places it. `Annotations.roads` names the roads to letter, by number or OSM name; a name no
-drawn road carries is an error at lettering time.
+places it. `Annotations.roads` names the roads to letter, by number or OSM name, in place
+of the roads the lettering picks; a name no drawn road carries raises `ValueError` at
+lettering time, and when no named road is long enough to letter, the picked roads are
+lettered instead.
 
 Invariants: every value here is immutable and rejects unknown fields; a span
 request states exactly one start and exactly one end; a map carries at most
@@ -113,7 +115,8 @@ class Annotations(pydantic.BaseModel, frozen=True, extra="forbid"):
             candidates.
         places: Names of settlements the lettering should always letter.
         roads: Roads to letter by number or OSM name, in place of the roads the
-            lettering picks. Each must be a road the basemap draws.
+            lettering picks. Each must be a road the basemap draws. When none is long
+            enough to letter, the lettering falls back to the roads it picks.
         spans: The stretches of the route to mark, best first.
         notes: The journal notes to letter, at most `MAX_NOTES`. They are
             seated before any other name and are never moved or dropped

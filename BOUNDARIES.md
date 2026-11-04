@@ -28,4 +28,5 @@ Hard rules the checks enforce:
 
 Public surface discipline: each package `__init__.py` exports only what is public, and
 its module docstring states purpose, non-goals and invariants. Keep both current; they are
-the first thing an agent reads.
+the first thing an agent reads. Every name a public signature reaches is public (ADR 0068,
+`tests/architecture/test_public_signatures.py`).

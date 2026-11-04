@@ -7,24 +7,16 @@ field. A field is an attribute not starting with `_`, not a property, not a `Cla
 and not pydantic's `model_config`. No comment stays in the class body outside its
 methods, but a tool pragma. A checked module attribute has an attribute docstring.
 
-The self-tests write a tiny `pyntpot` package to `tmp_path`. The real tests compare the
-run against the pending sets of the per-lane ratchet files, which can only shrink.
+The self-tests write a tiny `pyntpot` package to `tmp_path`. The real test holds the real
+package to the rule with no exceptions.
 """
 
 import griffe
 import pytest
 
-from . import _pending_ink, _pending_letters, _pending_maps, _pending_roads
 from ._field_rule import attribute_doc_violations, field_doc_violations, field_docs
 from ._public_surface import LAYERS, ROOT, build, load
 from support import REPO_ROOT
-
-PENDING = (
-    _pending_ink.FIELD_DOCS
-    | _pending_letters.FIELD_DOCS
-    | _pending_maps.FIELD_DOCS
-    | _pending_roads.FIELD_DOCS
-)
 
 
 def core_object(tmp_path, core: str, name: str) -> griffe.Object:
@@ -207,13 +199,6 @@ def checked() -> dict[str, list[str]]:
 
 
 def test_every_public_field_and_attribute_is_documented(checked):
-    """Every checked class and module attribute keeps the field rule, or is pending."""
-    new = {path: problems for path, problems in checked.items() if path not in PENDING}
-    listing = "\n".join(f"  {p}" for problems in new.values() for p in problems)
-    assert not new, f"fields or attributes not documented by the rule:\n{listing}"
-
-
-def test_every_pending_field_docs_entry_still_violates(checked):
-    """The ratchet only shrinks: every pending field docs entry still breaks the rule."""
-    stale = PENDING - set(checked)
-    assert not stale, f"pending entries that no longer violate; delete them: {sorted(stale)}"
+    """Every checked class and module attribute keeps the field rule."""
+    listing = "\n".join(f"  {p}" for problems in checked.values() for p in problems)
+    assert not checked, f"fields or attributes not documented by the rule:\n{listing}"

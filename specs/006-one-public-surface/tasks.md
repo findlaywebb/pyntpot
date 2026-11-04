@@ -27,8 +27,8 @@
       numbered-only roads; unmatched names raise `ValueError`; non-golden
       `test_ground.py` covers `_ground`; goldens unchanged; `_pending_roads.py` empty
       (#161).
-- [ ] Merge S5, S4, S7, S6; standard gate green after each.
-- [ ] S8: ratchet deleted, gates absolute; `GLOSSARY.md` three rows, `BOUNDARIES.md`;
+- [x] Merge S5, S4, S7, S6; standard gate green after each.
+- [x] S8: ratchet deleted, gates absolute; `GLOSSARY.md` three rows, `BOUNDARIES.md`;
       six notes deleted, citing notes repointed; seven follow-up notes and issues filed
       (#168, #169).
 - [ ] S9: docstring terminology sweep: every row of plan.md Appendix A (007 at

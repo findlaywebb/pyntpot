@@ -20,7 +20,7 @@ Comparing each group's no-argument dataclass with `Style.default()`, 25 fields d
 - `basemap` (`BasemapStyle`, `maps/style_groups.py`): `landmarks`, `landmark_max`,
   `generalise`.
 
-`RouteInk()` cannot be built with no arguments at all. The other groups agree.
+`RouteInkStyle()` cannot be built with no arguments at all. The other groups agree.
 
 So a user who trims their copy of `default.toml` to the keys they changed gets a flatter
 map (no blooms, no wet bleed, no Kubelka-Munk glazing) with no error and no log line. The

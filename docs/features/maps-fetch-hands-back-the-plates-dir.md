@@ -19,7 +19,7 @@ three docs pages
 `docs/how-to/self-host-providers.md`), in the command line (`src/pyntpot/maps/cli.py`) and
 in `tests/support/golden.py`. `candidate_export(track, cache, key)` and
 `vector_layers(track, cache, key, style)` take the same key. Building it needs `Features` and
-`Elevation`, which are not public.
+`Elevation`, the provider protocols `pyntpot.maps` exports.
 
 **What the feature would add.** A map in three calls with no key rebuilt: whatever `fetch`
 returns is enough for `paint`, `candidate_export` and `vector_layers`, and the tutorial's
@@ -38,4 +38,5 @@ but is a separate decision. No pixels move; the examples, the three docs pages a
 reference page change.
 
 **Related.** `cli-wider-commands` (#68), which a shared pipeline call would serve;
-`maps-public-provider-protocols` (#78), since the key today needs the private protocols.
+the provider protocols `Features` and `Elevation`, public from `pyntpot.maps`, which the key
+needs.

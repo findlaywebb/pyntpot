@@ -10,8 +10,7 @@ wrapper, and walks each `pyntpot` object it reaches by the same rules, once. A r
 `Raises:` entry, an unresolved `pyntpot` path) is a violation, never skipped.
 
 The self-tests write a tiny `pyntpot` package to `tmp_path` and load it with `load`. The
-real tests compare the run against the pending sets of the per-lane ratchet files, which
-can only shrink.
+real tests hold the real package to the rule with no exceptions.
 """
 
 from pathlib import Path
@@ -19,7 +18,6 @@ from pathlib import Path
 import griffe
 import pytest
 
-from . import _pending_ink, _pending_letters, _pending_maps, _pending_roads
 from ._public_surface import (
     ALLOWED,
     LAYERS,
@@ -32,12 +30,6 @@ from ._public_surface import (
 from support import REPO_ROOT
 
 ALL_LAYERS = (ROOT, *LAYERS)
-PENDING = (
-    _pending_ink.SIGNATURES
-    | _pending_letters.SIGNATURES
-    | _pending_maps.SIGNATURES
-    | _pending_roads.SIGNATURES
-)
 
 
 def ink_violations(tmp_path: Path, core: str, exports: str = "f") -> dict[str, set[str]]:
@@ -311,10 +303,9 @@ def _listing(found: dict[str, set[str]]) -> str:
 
 
 def test_no_public_signature_names_a_private_name(pyntpot_module):
-    """Every `pyntpot` name a public signature reaches is public, or pending in the ratchet."""
+    """Every `pyntpot` name a public signature reaches is public."""
     found = signature_violations(pyntpot_module, ALL_LAYERS)
-    new = {path: where for path, where in found.items() if path not in PENDING}
-    assert not new, f"public signatures reach names that are not public:\n{_listing(new)}"
+    assert not found, f"public signatures reach names that are not public:\n{_listing(found)}"
 
 
 def test_no_public_signature_names_an_unknown_external_name(pyntpot_module):
@@ -322,12 +313,6 @@ def test_no_public_signature_names_an_unknown_external_name(pyntpot_module):
     found = external_names(pyntpot_module, ALL_LAYERS)
     unknown = {path: where for path, where in found.items() if path not in ALLOWED}
     assert not unknown, f"external names not in ALLOWED:\n{_listing(unknown)}"
-
-
-def test_every_pending_signature_entry_still_violates(pyntpot_module):
-    """The ratchet only shrinks: every pending signature entry is still a violation."""
-    stale = PENDING - set(signature_violations(pyntpot_module, ALL_LAYERS))
-    assert not stale, f"pending entries that no longer violate; delete them: {sorted(stale)}"
 
 
 def test_every_allowed_name_is_reached(pyntpot_module):

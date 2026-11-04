@@ -2,7 +2,7 @@
 
 GitHub issue: [#171](https://github.com/findlaywebb/pyntpot/issues/171)
 
-**What exists today.** `stamp` (`pyntpot.ink.stamp`) takes `wprof`, a width multiplier
+**What exists today.** `stamp` (`pyntpot.ink.stamping`) takes `wprof`, a width multiplier
 sampled evenly from a stroke's start to its end, and nothing else that varies along the
 stroke. `ink_density` turns the whole accumulator into one density, and a `PigmentLayer`
 (`ink/pigment.py`) is one density with one pigment and at most one transparency. So a stroke that fades or changes colour has to

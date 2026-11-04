@@ -79,7 +79,7 @@ placement quality, tuning facilities, and a tool to place names by hand.
 
 - **One home for the weights.** Every placement price in one frozen value, injected (not
   `os.environ`), with the shipped numbers as its defaults. Decided: a theme can tune it,
-  in its `[lettering]` table (`LetteringPolicy`, `style_groups.py:233`), so a change
+  in its `[lettering]` table (`LetteringStyle`, `style_groups.py:290`), so a change
   re-letters without repainting (`lettering_digest`).
 - **A placement report.** Per name: the seat chosen, the next few seats tried, and each
   one's cost broken down by term (route, overlap, dark grid, road, water, leader, wrap,

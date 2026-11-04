@@ -1,7 +1,7 @@
 """Polyline geometry: simplify, smooth, clip, measure, cross and wobble a line.
 
 Key types: `Point`, one point as an `(x, y)` pair of floats, and a polyline as a
-list of them. The functions measure a line (`length`,
+list of them; `Box`, an axis-aligned box as `(x0, y0, x1, y1)`. The functions measure a line (`length`,
 `cumulative_length`), reshape it (`simplify`, `smooth`,
 `clip_line`, `eased`, `ease_along`, `deform_line`), and answer local questions
 about it (`normal_at`, `normals`, `tangent_at`, `side`, `segments_cross`,
@@ -12,8 +12,8 @@ pixels, and every tolerance is in that same space. It paints nothing, reads no
 style and holds no state; `deform_line` draws only from the generator it is
 handed.
 
-Invariants: no function changes its input; `Point` is the one point alias, and `maps`
-and `letters` import it from here.
+Invariants: no function changes its input; `Point` is the one point alias and `Box` the
+one box alias, and `maps` and `letters` import them from here.
 """
 
 import itertools
