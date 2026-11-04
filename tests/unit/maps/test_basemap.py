@@ -77,17 +77,22 @@ def synthetic_basemap() -> Basemap:
         coastline=(((-0.0001, 7.7771), (8.8881, 9.9991)),),
         roads=(
             Road(
-                ((100.1234, 50.4321), (200.2341, 60.3412)), "major", "major", "primary", "A39", ""
+                line=((100.1234, 50.4321), (200.2341, 60.3412)),
+                cls="major",
+                band="major",
+                highway="primary",
+                name="A39",
+                ref="",
             ),
         ),
         rivers=(
             River(
-                ((3.1234, 4.2341), (5.3412, 6.4123)),
-                "major",
-                "East Lyn",
-                4.1234,
-                2.4321,
-                (0.5123, 1.0012),
+                line=((3.1234, 4.2341), (5.3412, 6.4123)),
+                cls="major",
+                name="East Lyn",
+                width_px=4.1234,
+                name_width_px=2.4321,
+                profile=(0.5123, 1.0012),
             ),
         ),
         elevation=ElevationPatch(

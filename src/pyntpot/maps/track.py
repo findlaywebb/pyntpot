@@ -28,7 +28,14 @@ MAX_LATITUDE_DEGREES = 90.0
 
 
 class BoundingBox(NamedTuple):
-    """South, west, north, east degrees."""
+    """South, west, north, east degrees.
+
+    Attributes:
+        south: The southern edge's latitude, in degrees.
+        west: The western edge's longitude, in degrees.
+        north: The northern edge's latitude, in degrees.
+        east: The eastern edge's longitude, in degrees.
+    """
 
     south: float
     west: float

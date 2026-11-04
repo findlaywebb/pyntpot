@@ -31,7 +31,7 @@ class TestProjection:
         target: tuple[float, float],
     ) -> None:
         """Projecting a coordinate and inverting it gives the coordinate back."""
-        proj = Projection(lat0, ref[0], ref[1], shift[0], shift[1])
+        proj = Projection(lat0=lat0, lat_ref=ref[0], lng_ref=ref[1], x0=shift[0], y0=shift[1])
         assert proj.inverse(*proj(*target)) == pytest.approx(target, abs=1e-9)
 
 

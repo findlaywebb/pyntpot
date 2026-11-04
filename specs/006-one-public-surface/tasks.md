@@ -19,7 +19,7 @@
       empty (#73).
 - [ ] S5 (parallel): letters lane: keyword-only letters groups, `Align`, letters field
       docs, `__version__` docstring, `letters.md`; `_pending_letters.py` empty.
-- [ ] S6 (parallel): maps lane: `LetteringStyle`/`RouteInkStyle`, keyword-only map
+- [x] S6 (parallel): maps lane: `LetteringStyle`/`RouteInkStyle`, keyword-only map
       groups, 31 maps exports with the protocols, newly public records frozen and
       keyword-only (`Projection` frozen, `Label`/`Span` keyword-only), maps field docs,
       `maps.md`, protocol conformance test; `_pending_maps.py` empty (#78).

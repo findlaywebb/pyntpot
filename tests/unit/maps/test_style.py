@@ -13,7 +13,7 @@ import pydantic
 import pytest
 
 from pyntpot.maps.style import Style
-from pyntpot.maps.style_groups import BasemapStyle, CoverStyle, RouteInk
+from pyntpot.maps.style_groups import BasemapStyle, CoverStyle, RouteInkStyle
 
 from support import REPO_ROOT
 
@@ -50,7 +50,7 @@ RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
 )
 
 #: The route ink the reference sheets were painted with, pinned.
-ROUTE_INK = RouteInk(colour="#c22050", px=5.4, style="solid", blend="normal", opacity=1.0)
+ROUTE_INK = RouteInkStyle(colour="#c22050", px=5.4, style="solid", blend="normal", opacity=1.0)
 
 #: The default style's three digests, pinned.
 DIGEST = "1b08804a7f30026b"

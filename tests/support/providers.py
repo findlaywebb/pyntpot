@@ -15,16 +15,16 @@ from support.paths import FIXTURE_DIR, KEY
 
 #: The shipped Overpass provider's credit, written out here.
 OSM_CREDIT = Credit(
-    "© OpenStreetMap contributors",
-    "https://www.openstreetmap.org/copyright",
-    "© OpenStreetMap contributors (openstreetmap.org/copyright)",
+    text="© OpenStreetMap contributors",
+    url="https://www.openstreetmap.org/copyright",
+    short="© OpenStreetMap contributors (openstreetmap.org/copyright)",
 )
 
 #: The shipped OpenTopoData provider's credit for its default dataset, written out here.
 SRTM_CREDIT = Credit(
-    "Elevation: NASA SRTM via OpenTopoData",
-    "https://www.opentopodata.org/",
-    "elevation: NASA SRTM",
+    text="Elevation: NASA SRTM via OpenTopoData",
+    url="https://www.opentopodata.org/",
+    short="elevation: NASA SRTM",
 )
 
 

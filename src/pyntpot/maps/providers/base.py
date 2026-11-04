@@ -8,10 +8,17 @@ usage budget. Both errors are public, as `pyntpot.maps.ProviderError` and
 `pyntpot.maps.ProviderBudgetExceededError`; `Cache.ensure`, and so `fetch`, raises
 `FetchError` from them.
 
-The two protocols are the package's only protocols. A provider carries a stable `id`,
-which the fetch cache keys on, and the `Credit` its data is owed. This module fetches
-nothing, holds no state and imports nothing from the painter: the shipped providers
-and any caller's own implement the protocols elsewhere.
+The two protocols are the package's only protocols, and both are exported from
+`pyntpot.maps` as the way to feed `fetch` and `Cache` from another source. A features
+provider offers `id`, `credit`, `features(box)` and `landcover(box)`, and returns
+Overpass JSON text: no other features format is read. An elevation provider offers `id`,
+`credit` and `grid(box, n)`, returning an `ElevationGrid`. A provider's `id` enters the
+fetch cache key, so it changes whenever the provider's output changes; its `credit` is
+the `Credit` its data is owed. A provider signals failure with `ProviderError` or
+`ProviderBudgetExceededError`. The protocols are structural and not runtime checkable:
+a provider is checked statically. This module fetches nothing, holds no state and
+imports nothing from the painter: the shipped providers and any caller's own implement
+the protocols elsewhere.
 
 Invariants: `ElevationGrid.to_json` writes the same bytes as the fetch cache's elevation
 file (keys `n`, `bbox`, `lats`, `lons`, `elev`, default separators, no trailing
@@ -34,7 +41,7 @@ class ProviderBudgetExceededError(ProviderError):
     """A provider refused a call because it would pass the provider's usage budget."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ElevationGrid:
     """An `n` by `n` lattice of elevations over a bounding box.
 
