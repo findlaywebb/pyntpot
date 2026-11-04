@@ -2,16 +2,20 @@
 
 import dataclasses
 import importlib.util
+import logging
 import shutil
 from pathlib import Path
 from typing import NamedTuple
 
 import pytest
 
+from pyntpot.ink.polyline import length
 from pyntpot.maps import pipeline
 from pyntpot.maps.annotations import Annotations, SpanRequest
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
+from pyntpot.maps.lettering.picks_lines import named_lines
+from pyntpot.maps.lettering.picks_roads import named_roads, road_min_px
 from pyntpot.maps.lettering.pipeline import Lettering, letter
 from pyntpot.maps.plates import Plates
 from pyntpot.maps.style import Style
@@ -60,6 +64,18 @@ def painted(tmp_path_factory: pytest.TempPathFactory) -> Painted:
     basemap = pipeline.fetch(track, cache, FixtureFeatures(), FixtureElevation(), style)
     plates = pipeline.paint(basemap, style, cache.plates_dir(KEY))
     return Painted(basemap, plates, style)
+
+
+def copied_plates(painted: Painted, tmp_path: Path) -> Plates:
+    """The painted plates over a copy of their directory, so a test's nib plate leaves the module's alone."""
+    copy = tmp_path / "plates"
+    shutil.copytree(painted.plates.directory, copy)
+    return dataclasses.replace(painted.plates, directory=copy)
+
+
+def road_names(lettering: Lettering) -> list[str]:
+    """The placed road labels' names, in placement order."""
+    return [label.name for label in lettering.labels if label.kind == "road"]
 
 
 @pytest.fixture(scope="module")
@@ -115,6 +131,80 @@ class TestLetter:
         notes = Annotations(spans=(SpanRequest(name="Dovedale", from_s=600.0, to_s=1500.0),))
         got = letter(plates, basemap, notes, painted.style)
         assert [(span.i0, span.i1) for span in got.spans] == [(60, 150)]
+
+    def test_empty_annotations_letter_the_pinned_list(
+        self, painted: Painted, tmp_path: Path
+    ) -> None:
+        """Annotations naming nothing place exactly the pinned names, as no annotations do."""
+        got = letter(
+            copied_plates(painted, tmp_path), painted.basemap, Annotations(), painted.style
+        )
+        assert tuple(label.name for label in got.labels) == PINNED_LABELS
+
+    def test_named_roads_replace_the_picked_roads(self, painted: Painted, tmp_path: Path) -> None:
+        """Naming the B3234 letters it as the only road, in place of both picked roads."""
+        notes = Annotations(roads=("B3234",))
+        got = letter(copied_plates(painted, tmp_path), painted.basemap, notes, painted.style)
+        assert road_names(got) == ["B3234"]
+
+    def test_a_road_named_by_its_street_is_lettered_by_its_number(
+        self, painted: Painted, tmp_path: Path
+    ) -> None:
+        """Naming Lynbridge Road letters the number its pieces carry, B3234."""
+        notes = Annotations(roads=("Lynbridge Road",))
+        got = letter(copied_plates(painted, tmp_path), painted.basemap, notes, painted.style)
+        assert road_names(got) == ["B3234"]
+
+    def test_an_unknown_named_road_raises_and_writes_no_plate(
+        self, painted: Painted, tmp_path: Path
+    ) -> None:
+        """A named road the map does not draw raises before any nib plate is written."""
+        plates = copied_plates(painted, tmp_path)
+        before = {p.name: p.stat().st_mtime_ns for p in plates.directory.iterdir()}
+        with pytest.raises(ValueError, match="'A591'"):
+            letter(plates, painted.basemap, Annotations(roads=("A591",)), painted.style)
+        after = {p.name: p.stat().st_mtime_ns for p in plates.directory.iterdir()}
+        assert after == before
+
+    def test_named_roads_are_lettered_when_the_style_letters_no_ground(
+        self, painted: Painted, tmp_path: Path
+    ) -> None:
+        """With the ground unlettered, a named road is still lettered, and no ground name is."""
+        style = painted.style
+        lettering = dataclasses.replace(style.lettering, label_ground=False)
+        quiet = style.model_copy(update={"lettering": lettering})
+        notes = Annotations(roads=("B3234",))
+        got = letter(copied_plates(painted, tmp_path), painted.basemap, notes, quiet)
+        names = [label.name for label in got.labels]
+        assert "B3234" in names
+        for ground in ("Lynton", "Barbrook", "East Lyn", "start"):
+            assert ground not in names
+
+    def test_a_named_minor_road_is_set_along_its_lane(self, painted: Painted) -> None:
+        """Lydiate Lane, a minor road on the path band, is set along a run long enough for it."""
+        basemap = painted.basemap
+        lines = named_lines(basemap, painted.style.lettering.label_geom_tol_px)
+        got = named_roads(basemap, lines, basemap.card, ("Lydiate Lane",))
+        assert [label.name for label in got] == ["Lydiate Lane"]
+        assert length(got[0].baseline) >= road_min_px(got[0].size)
+
+    def test_a_named_road_too_short_on_the_card_falls_back_to_the_picked_roads(
+        self, painted: Painted, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Lee Road is too short to letter: it is logged, nothing raises, the picked roads stay."""
+        caplog.set_level(logging.INFO, logger="pyntpot.maps.lettering.picks_roads")
+        notes = Annotations(roads=("Lee Road",))
+        got = letter(copied_plates(painted, tmp_path), painted.basemap, notes, painted.style)
+        assert "Lee Road" in caplog.text
+        assert road_names(got) == ["A39", "B3234"]
+
+    def test_a_numbered_road_lettered_only_through_its_unnamed_pieces(
+        self, painted: Painted, tmp_path: Path
+    ) -> None:
+        """The B3223 reaches its minimum run only with its unnamed numbered piece, and is lettered."""
+        notes = Annotations(roads=("B3223",))
+        got = letter(copied_plates(painted, tmp_path), painted.basemap, notes, painted.style)
+        assert road_names(got) == ["B3223"]
 
 
 @pytest.mark.golden
