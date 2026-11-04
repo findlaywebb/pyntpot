@@ -39,6 +39,7 @@ from pyntpot.ink.noise import F32
 from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.polyline import Point
 from pyntpot.ink.sheet import Canvas, Sheet
+from pyntpot.ink.washing import Flow
 from pyntpot.maps.basemap import Basemap, Layers, Line
 from pyntpot.maps.style import Style
 
@@ -133,12 +134,12 @@ class PaintJob:
         return paper.gran_gamma if paper.paper_fibre else 0.0
 
     @property
-    def flow(self) -> tuple[float, float, float] | None:
+    def flow(self) -> Flow | None:
         """The flow-rim option every wash is laid with, or `None` when it is off."""
         wash = self.style.wash
         if not wash.flow_rim:
             return None
-        return (wash.flow_rim_exp, wash.flow_rim_ref_frac, wash.flow_rim_frac)
+        return Flow(exp=wash.flow_rim_exp, ref_frac=wash.flow_rim_ref_frac, frac=wash.flow_rim_frac)
 
     @property
     def rim_cov(self) -> float:
@@ -184,7 +185,9 @@ class PaintJob:
         if not n:
             return None
         seed = int(keyed_rng(wash.bloom_seed, name).integers(1 << 62))
-        return (seed, n, wash.bloom_radius_frac, lift, wash.bloom_warp)
+        return Blooms(
+            seed=seed, count=n, radius_frac=wash.bloom_radius_frac, lift=lift, warp=wash.bloom_warp
+        )
 
 
 @dataclass

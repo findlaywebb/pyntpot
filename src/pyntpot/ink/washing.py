@@ -39,10 +39,19 @@ _NO_PIGMENT = 1e-9
 _WET_FLOOR = 0.05
 
 
-#: The settings that take the rim from `flow_edge`: how fast the width grows with area, the
-#: reference area as a share of the canvas and the decay length as a share of the
-#: rim's width.
-Flow = tuple[float, float, float]
+@dataclass(frozen=True, kw_only=True)
+class Flow:
+    """The settings that take the rim from `flow_edge`, named as its parameters are.
+
+    Attributes:
+        exp: How fast the width grows with area.
+        ref_frac: The reference area, as a share of the canvas.
+        frac: The decay length, as a share of the rim's width.
+    """
+
+    exp: float
+    ref_frac: float
+    frac: float
 
 
 def flow_edge(
@@ -80,39 +89,43 @@ def flow_edge(
     return np.clip(rim, 0.0, 1.0)
 
 
-@dataclass(frozen=True, eq=False)
+@dataclass(frozen=True, kw_only=True, eq=False)
 class WashOptions:
     """How one wash looks: its edge, its body, the wet area it shares and its extras.
 
     Every field from `wet` on is inert when it is not given.
+
+    Attributes:
+        wobble: Coarse noise on the edge, in mask units.
+        dry: Fine noise on the edge, in mask units.
+        rim_px: Width of the pooled edge, in render pixels.
+        gran: Granulation, as a share of the body density.
+        uneven: Slow variation across the wash.
+        tooth: How much the paper's tooth lightens it.
+        wet: The shared wet-area field, when there is one. Inside it this wash bleeds into whatever
+            is beside it and gives up most of its rim, because a class boundary under water is not
+            an edge.
+        bleed_px: How far the bleed carries, in render pixels.
+        bleed_mix: How much of the bleed is taken at the centre of a wet area.
+        rim_drop: How much of the rim the wet area removes.
+        gran_gamma: Above 0, granulation follows the paper's own pits at this gamma rather than the
+            unrelated `sheet.gran` field.
+        flow: To take the rim from `flow_edge` instead.
+        blooms: To lay backruns.
     """
 
-    #: Coarse and fine noise on the edge, in mask units.
     wobble: float = 3.6
     dry: float = 1.8
-    #: Width of the pooled edge, in render pixels.
     rim_px: float = 7.0
-    #: Granulation, as a share of the body density.
     gran: float = 0.26
-    #: Slow variation across the wash.
     uneven: float = 0.22
-    #: How much the paper's tooth lightens it.
     tooth: float = 0.34
-    #: The shared wet-area field, when there is one. Inside it this wash bleeds
-    #: into whatever is beside it and gives up most of its rim, because a class
-    #: boundary under water is not an edge.
     wet: np.ndarray | None = None
-    #: How far the bleed carries, in render pixels, how much of it is taken at
-    #: the centre of a wet area, and how much of the rim the wet area removes.
     bleed_px: float = 5.0
     bleed_mix: float = 0.55
     rim_drop: float = 0.7
-    #: Above 0, granulation follows the paper's own pits at this gamma rather
-    #: than the unrelated `sheet.gran` field.
     gran_gamma: float = 0.0
-    #: To take the rim from `flow_edge` instead.
     flow: Flow | None = None
-    #: To lay backruns.
     blooms: Blooms | None = None
 
 
@@ -155,7 +168,7 @@ def wash(
     edge = (o.wobble * (sheet.coarse - 0.5) + o.dry * (sheet.fine - 0.5)) * 0.06
     a = np.clip((soft - 0.5 + edge) * 3.2 + 0.5, 0.0, 1.0)
     if o.flow is not None:
-        rim = flow_edge(a, sheet, o.rim_px, o.flow[0], o.flow[1], o.flow[2])
+        rim = flow_edge(a, sheet, o.rim_px, o.flow.exp, o.flow.ref_frac, o.flow.frac)
     else:
         rim = np.clip(a - blur(a, o.rim_px), 0.0, 1.0)
     peak = float(rim.max())

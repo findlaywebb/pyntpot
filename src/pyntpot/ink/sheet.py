@@ -44,7 +44,16 @@ def rgb(hex_s: str) -> np.ndarray:
 
 @dataclass
 class Canvas:
-    """The card's metre box and the pixel grid it is painted on."""
+    """The card's metre box and the pixel grid it is painted on.
+
+    Attributes:
+        x0: The box's west edge, in the card's metres.
+        y0: The box's south edge, in the card's metres.
+        x1: The box's east edge, in the card's metres.
+        y1: The box's north edge, in the card's metres.
+        w: The grid's width, in render pixels.
+        h: The grid's height, in render pixels.
+    """
 
     x0: float
     y0: float
@@ -82,15 +91,31 @@ class Sheet:
 
     The fields are made once, in `__post_init__`, and are not edited in place after it:
     the paper carried up to an ink pad's finer grid is kept per grid on that promise.
+
+    Attributes:
+        h: The sheet's height, in render pixels.
+        w: The sheet's width, in render pixels.
+        gran_px: The cell of the granulation field, in render pixels.
+        seed: The seed the five fields are drawn from.
+        fibre: Cold press. Above 0 a second noise field, stretched along one sheet-wide axis, is
+            mixed into the tooth at this weight, so the paper reads as a laid fibre rather than as
+            concrete. 0 is the isotropic sheet.
+        fibre_stretch: How much longer than it is wide a fibre is.
+        fibre_angle: The angle of the fibre's axis, in radians.
+        fibre_cell: The fibre's own cell, in render pixels.
+        paper: The paper's height, its tooth, in 0 to 1: fine and broad noise mixed, with the fibre
+            laid in when there is one.
+        coarse: Coarse noise, which breaks up a wash's edge and its rim.
+        fine: Fine noise on a wash's edge.
+        wet: Broad, slow noise: how wet each part of the sheet is, which softens a wash and varies
+            its density.
+        gran: Granulation noise at `gran_px`.
     """
 
     h: int
     w: int
     gran_px: float
     seed: int = 11
-    #: Cold press. Above 0 a second noise field, stretched along one sheet-wide
-    #: axis, is mixed into the tooth at this weight, so the paper reads as a
-    #: laid fibre rather than as concrete. 0 is the isotropic sheet.
     fibre: float = 0.0
     fibre_stretch: float = 3.0
     fibre_angle: float = 0.42

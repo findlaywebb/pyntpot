@@ -15,6 +15,7 @@ exactly what a stable descending sort's first `k` would.
 """
 
 import math
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -32,10 +33,25 @@ _MIN_BOX = 5
 #: A bloom's base radius is held on this many steps per doubling (`bloom_radius`).
 _RADIUS_STEPS = 4
 
-#: What blooms are laid by: the wash's own seed, how many, the radius as a share
-#: of the root of the wash's area, how much pigment the front lifts out of the
-#: centre and how far the fbm warps the front off a circle.
-Blooms = tuple[int, int, float, float, float]
+
+@dataclass(frozen=True, kw_only=True)
+class Blooms:
+    """What one wash's blooms are laid by.
+
+    Attributes:
+        seed: The wash's own seed, which the lots and each bloom's generator are keyed
+            from.
+        count: How many blooms to lay.
+        radius_frac: The radius as a share of the root of the wash's area.
+        lift: How much pigment the front lifts out of the centre.
+        warp: How far the fbm warps the front off a circle.
+    """
+
+    seed: int
+    count: int
+    radius_frac: float
+    lift: float
+    warp: float
 
 
 def bloom_radius(radius_frac: float, area: int) -> float:
@@ -116,13 +132,10 @@ def bloom(dens: np.ndarray, a: np.ndarray, sheet: Sheet, blooms: Blooms) -> None
         dens: The wash's density, changed in place.
         a: The wash's alpha, so a bloom stops at the wash's edge.
         sheet: The paper's noise fields.
-        blooms: The settings, in `Blooms`' order: the wash's own seed, which the
-            lots and each bloom's generator are keyed from; how many blooms to lay;
-            the radius as a share of the root of the wash's area; how much pigment
-            the front takes out of the centre; and how far the fbm pushes the front
-            off a circle.
+        blooms: What the blooms are laid by; `Blooms`' `Attributes:` give each setting.
     """
-    seed, count, radius_frac, lift, warp = blooms
+    seed, count, radius_frac = blooms.seed, blooms.count, blooms.radius_frac
+    lift, warp = blooms.lift, blooms.warp
     inside = np.flatnonzero((a > _THICK).ravel())
     if count < 1 or inside.size < _MIN_BLOOM_PIXELS:
         return

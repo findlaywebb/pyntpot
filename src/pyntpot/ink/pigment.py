@@ -18,8 +18,6 @@ import numpy as np
 from pyntpot.ink.noise import F32
 from pyntpot.ink.style import PaperStyle
 
-#: Multiply colours: what a full-strength wash of each pigment transmits. The
-#: inks are darker than the washes, because a mark is not a wash.
 PIGMENTS = {
     "farmland": "#dfe0b0",
     "meadow": "#cfdfae",
@@ -37,14 +35,10 @@ PIGMENTS = {
     "relief": "#c9bda4",
     "rim": "#c2ad91",
 }
+"""Multiply colours: what a full-strength wash of each pigment transmits. The inks are darker than
+the washes, because a mark is not a wash."""
 
 
-#: What each pigment shows over black, as a share of what it shows over white.
-#: This is the one number Kubelka-Munk glazing needs beyond the hex, and it is
-#: where a pigment is recorded as staining or covering: near 0 is a transparent
-#: glaze that lets the layer under it through, near 1 is a covering body colour.
-#: The wood green and the water blue stain; the relief grey and the built greys
-#: sit on the surface. Anything not named here takes `km_transparency`.
 TRANSPARENCY = {
     "farmland": 0.10,
     "meadow": 0.09,
@@ -62,11 +56,13 @@ TRANSPARENCY = {
     "relief": 0.30,
     "rim": 0.18,
 }
+"""What each pigment shows over black, as a share of what it shows over white. This is the one
+number Kubelka-Munk glazing needs beyond the hex, and it is where a pigment is recorded as
+staining or covering: near 0 is a transparent glaze that lets the layer under it through, near 1
+is a covering body colour. The wood green and the water blue stain; the relief grey and the built
+greys sit on the surface. Anything not named here takes `km_transparency`."""
 
 
-#: Painter's pigments: the same meaning as `PIGMENTS`, keyed by the tube a painter names
-#: rather than by map role. No map style reads this table; it is for whoever paints with
-#: the engine directly. Each colour is what a full-strength wash transmits.
 PAINTERS_PIGMENTS = {
     "ultramarine": "#2b3d8f",
     "cerulean": "#2a7ab0",
@@ -79,10 +75,10 @@ PAINTERS_PIGMENTS = {
     "quinacridone_rose": "#b8215e",
     "paynes_grey": "#3b4452",
 }
+"""Painter's pigments: the same meaning as `PIGMENTS`, keyed by the tube a painter names rather than
+by map role. No map style reads this table; it is for whoever paints with the engine directly.
+Each colour is what a full-strength wash transmits."""
 
-#: What each painter's pigment shows over black, as a share of what it shows over white,
-#: the same meaning as `TRANSPARENCY`. Ultramarine, cerulean and the sienna earths sit
-#: nearer a covering body; the quinacridone, the maroon and the indigo stain.
 PAINTERS_TRANSPARENCY = {
     "ultramarine": 0.06,
     "cerulean": 0.22,
@@ -95,12 +91,15 @@ PAINTERS_TRANSPARENCY = {
     "quinacridone_rose": 0.05,
     "paynes_grey": 0.10,
 }
+"""What each painter's pigment shows over black, as a share of what it shows over white, the same
+meaning as `TRANSPARENCY`. Ultramarine, cerulean and the sienna earths sit nearer a covering
+body; the quinacridone, the maroon and the indigo stain."""
 
 
-#: One layer of the pigment stack: its density, its pigment over white, and,
-#: where the caller knows it, what that pigment shows over black as a share of
-#: that. Only Kubelka-Munk glazing reads the third; multiply ignores it.
 PigmentLayer = tuple[np.ndarray | None, np.ndarray] | tuple[np.ndarray | None, np.ndarray, float]
+"""One layer of the pigment stack: its density, its pigment over white, and, where the caller knows
+it, what that pigment shows over black as a share of that. Only Kubelka-Munk glazing reads the
+third; multiply ignores it."""
 
 #: How many members a layer has when it names its own transparency.
 _WITH_TRANSPARENCY = 3

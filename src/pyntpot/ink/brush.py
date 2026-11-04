@@ -32,62 +32,105 @@ class Brush:
     bristles leave the same streaks the whole way down the mark. Pressure varies
     slowly and drives width and darkness together; the paper's own tooth gates
     the ink, so a dry brush breaks where the paper is low.
+
+    Attributes:
+        width: Full width of the tip at neutral pressure.
+        darkness: Ink laid per stamp.
+        bristles: Tines across the tip.
+        gap: Share of them missing.
+        dry: 0 a loaded wet brush, 1 bone dry.
+        thr: Paper height at which a dry mark starts to break.
+        jitter: How far a bristle wanders sideways.
+        press: Slow pressure variation.
+        press_cell: Pixels per pressure cycle.
+        wobble: Slow wander of the whole line, for a pen.
+        load: Extra ink where the brush is first set down.
+        pool: A blot at the start, for a nib.
+        bleed: Blur radius of the soft edge.
+        lift: Pixels over which the stroke lifts to a point.
+        texture: How much the bristles show: 0 a flat band, 1 grain.
+        step: Spacing of the stamps along the path.
+        profile_px: Spacing the tip's profile is sampled at.
+        solid: A flat core under the bristles, for a loaded pen.
+        load_px: How fast the set-down ink runs out; 0 derives it.
+        pool_radius_frac: Radius of the blot a nib leaves where it touches down, as a share of the
+            width.
+        pool_gain: Density of that blot, as a multiple of `pool`.
+        starve: Spend a per-bristle load along the stroke. The reservoir and the directional break
+            fields from here to `pen_thin` are all inert at their defaults, so a brush built without
+            the flags is the plain stamped brush.
+        run_px: How far one load carries, in render pixels.
+        res_floor: What is left in a nominally empty bristle.
+        dip_px: Distance between reloads; 0 is never reload.
+        knee: Ink kept at empty, before the paper gate.
+        dir_dry: Stretch the break texture along the stroke.
+        dir_elong: How much longer along the mark than across it one break is.
+        dir_cell: Width of one break across the mark, in pixels.
+        dir_gain: 1 is the paper's own contrast, more is harsher.
+        dir_mix: How far the paper gate moves from the paper's own tooth toward the directional
+            break, 0 to 1.
+        pen: This treatment is a nib, not a brush.
+        pen_starve: The nib thins and lightens as it runs down.
+        pen_thin: How much of the width and the ink an empty nib has lost.
+        organic: Drift and pressure from a lattice, not a sine. The brush quality fields from here
+            to `smooth` are inert at their defaults, so a brush built without the flags is the plain
+            stamped brush.
+        org_oct: Octaves in each lattice noise.
+        org_lac: The ratio between those octaves' cells.
+        org_mult: Lattice cell, as a share of the sine's wavelength.
+        smooth: Corner radius in render pixels; 0 leaves the path.
+        unit: Pixels of the brush's own grid per render pixel. 1 is the plate itself; `scaled_brush`
+            sets it when the ink is painted on a finer grid, so the wavelengths written into `stamp`
+            stay the same lengths on the plate.
+        band_px: How far the tip's own weights are smoothed across the mark, in render pixels. 0
+            leaves the tip as it was.
+        contrast: A multiplier on the tip's variation about its own mean weight.
+        coherence: How much of its sideways drift a bristle shares with its neighbours, as a share
+            of the tip. 0 draws every bristle's phase independently.
     """
 
-    width: float  # full width of the tip at neutral pressure
-    darkness: float  # ink laid per stamp
-    bristles: int  # tines across the tip
-    gap: float  # share of them missing
-    dry: float  # 0 a loaded wet brush, 1 bone dry
-    thr: float  # paper height at which a dry mark starts to break
-    jitter: float  # how far a bristle wanders sideways
-    press: float  # slow pressure variation
-    press_cell: float  # pixels per pressure cycle
-    wobble: float  # slow wander of the whole line, for a pen
-    load: float  # extra ink where the brush is first set down
-    pool: float  # a blot at the start, for a nib
-    bleed: float  # blur radius of the soft edge
-    lift: float  # pixels over which the stroke lifts to a point
-    texture: float = 0.7  # how much the bristles show: 0 a flat band, 1 grain
-    step: float = 0.40  # spacing of the stamps along the path
-    profile_px: float = 0.55  # spacing the tip's profile is sampled at
-    solid: float = 0.0  # a flat core under the bristles, for a loaded pen
-    load_px: float = 0.0  # how fast the set-down ink runs out; 0 derives it
+    width: float
+    darkness: float
+    bristles: int
+    gap: float
+    dry: float
+    thr: float
+    jitter: float
+    press: float
+    press_cell: float
+    wobble: float
+    load: float
+    pool: float
+    bleed: float
+    lift: float
+    texture: float = 0.7
+    step: float = 0.40
+    profile_px: float = 0.55
+    solid: float = 0.0
+    load_px: float = 0.0
     pool_radius_frac: float = 0.5
     pool_gain: float = 1.9
-    # --- the reservoir and the directional break. All inert at these defaults,
-    # so a brush built without the flags is the plain stamped brush.
-    starve: bool = False  # spend a per-bristle load along the stroke
-    run_px: float = 0.0  # how far one load carries, in render pixels
-    res_floor: float = 0.38  # what is left in a nominally empty bristle
-    dip_px: float = 0.0  # distance between reloads; 0 is never reload
-    knee: float = 0.62  # ink kept at empty, before the paper gate
-    dir_dry: bool = False  # stretch the break texture along the stroke
+    starve: bool = False
+    run_px: float = 0.0
+    res_floor: float = 0.38
+    dip_px: float = 0.0
+    knee: float = 0.62
+    dir_dry: bool = False
     dir_elong: float = 5.0
-    dir_cell: float = 7.0  # width of one break across the mark, in pixels
-    dir_gain: float = 1.0  # 1 is the paper's own contrast, more is harsher
+    dir_cell: float = 7.0
+    dir_gain: float = 1.0
     dir_mix: float = 0.8
-    pen: bool = False  # this treatment is a nib, not a brush
-    pen_starve: bool = False  # the nib thins and lightens as it runs down
+    pen: bool = False
+    pen_starve: bool = False
     pen_thin: float = 0.26
-    # --- brush quality. Inert at these defaults, so a brush built without the
-    # flags is the plain stamped brush.
-    organic: bool = False  # drift and pressure from a lattice, not a sine
+    organic: bool = False
     org_oct: int = 4
     org_lac: float = 2.17
-    org_mult: float = 0.5  # lattice cell, as a share of the sine's wavelength
-    smooth: float = 0.0  # corner radius in render pixels; 0 leaves the path
-    #: Pixels of the brush's own grid per render pixel. 1 is the plate itself;
-    #: `scaled_brush` sets it when the ink is painted on a finer grid, so the
-    #: wavelengths written into `stamp` stay the same lengths on the plate.
+    org_mult: float = 0.5
+    smooth: float = 0.0
     unit: float = 1.0
-    #: How far the tip's own weights are smoothed across the mark, in render
-    #: pixels. 0 leaves the tip as it was.
     band_px: float = 0.0
-    #: A multiplier on the tip's variation about its own mean weight.
     contrast: float = 1.0
-    #: How much of its sideways drift a bristle shares with its neighbours, as
-    #: a share of the tip. 0 draws every bristle's phase independently.
     coherence: float = 0.0
 
 

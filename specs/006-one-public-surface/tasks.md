@@ -14,7 +14,7 @@
       `test_field_docs.py` with self-tests and the per-lane pending ratchet; the run
       reproduces plan.md's expected 38 violations (6/1/31/0) and 30 external names, or S3
       stops and reports; architecture tests green.
-- [ ] S4 (parallel): ink lane: `Flow`/`Blooms` records, keyword-only ink groups and
+- [x] S4 (parallel): ink lane: `Flow`/`Blooms` records, keyword-only ink groups and
       `WashOptions`, eight ink exports, ink field docs, `ink.md`; `_pending_ink.py`
       empty (#73).
 - [ ] S5 (parallel): letters lane: keyword-only letters groups, `Align`, letters field
