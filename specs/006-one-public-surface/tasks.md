@@ -34,7 +34,7 @@
 - [x] S9: docstring terminology sweep: every row of plan.md Appendix A (007 at
       `529753f`), the N24 log message, the test docstrings; no retired word left in
       `src/**/*.py` or `tests/**/*.py` but the two `"callouts"` key lines.
-- [ ] S10: local mutation run on the behaviour-changed functions (plan.md S10 table and
+- [x] S10: local mutation run on the behaviour-changed functions (plan.md S10 table and
       rule; the seven maps patterns in a throwaway worktree config, re-run from each new
       `HEAD` until every survivor is killed or named).
 - [ ] S11: final review against plan and spec; all gates and the strict docs build green;
