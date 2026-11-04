@@ -15,15 +15,8 @@ import griffe
 import pytest
 
 from . import _pending_ink, _pending_letters, _pending_maps, _pending_roads
-from ._public_surface import (
-    LAYERS,
-    ROOT,
-    attribute_doc_violations,
-    build,
-    field_doc_violations,
-    field_docs,
-    load,
-)
+from ._field_rule import attribute_doc_violations, field_doc_violations, field_docs
+from ._public_surface import LAYERS, ROOT, build, load
 from support import REPO_ROOT
 
 PENDING = (

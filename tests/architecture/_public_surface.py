@@ -1,24 +1,21 @@
 """Read pyntpot's public surface with griffe, the way the reference site reads it (ADR 0068).
 
-Shared by `test_public_signatures.py` and `test_field_docs.py`. `load` parses a package
+Shared by `test_public_signatures.py` and `_field_rule.py`. `load` parses a package
 statically (no import), resolving `TYPE_CHECKING` imports and quoted annotations.
 `public_objects` is the set of canonical paths a layer package exports and defines.
 `reached` walks every public object's signature transitively and returns each name it
 reaches with where it was reached; `signature_violations` keeps the `pyntpot` names that
 are not public, and the names the walk could not read (a string outside `Literal[...]`,
 an unparsed `Raises:` entry, an unresolved `pyntpot` path, an unknown expression).
-`field_doc_violations` and `attribute_doc_violations` apply the field documentation rule.
 
 It loads only the package under test, so an alias to a third-party or standard-library
 name is never resolved: its target path is the external name, checked against
 `ALLOWED`. It does not judge whether a name *should* be public, only whether the rule
-holds.
+holds, and it does not apply the field documentation rule (`_field_rule.py` does).
 """
 
 import ast
-import io
 import textwrap
-import tokenize
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -78,9 +75,7 @@ ALLOWED: frozenset[str] = frozenset(
 _LITERALS = frozenset({"typing.Literal", "typing_extensions.Literal"})
 _PROTOCOLS = frozenset({"typing.Protocol", "typing_extensions.Protocol"})
 _TYPE_ALIAS = frozenset({"typing.TypeAlias", "typing_extensions.TypeAlias"})
-_CLASS_VARS = frozenset({"typing.ClassVar", "typing_extensions.ClassVar"})
 _PUBLIC_DUNDERS = frozenset({"__init__", "__call__"})
-_PRAGMAS = ("# type:", "# noqa", "# pragma")
 _LOOKUP_ERRORS = (KeyError, ValueError, griffe.AliasResolutionError, griffe.CyclicAliasError)
 
 
@@ -376,89 +371,3 @@ def external_names(module: griffe.Module, layers: tuple[str, ...]) -> dict[str, 
     """Return every reached name outside `pyntpot`, with where it was reached."""
     walk = reached(module, layers)
     return {path: where for path, where in walk.reached.items() if not _in_package(path)}
-
-
-def _is_field(name: str, member: griffe.Object | griffe.Alias) -> bool:
-    if name.startswith("_") or name == "model_config" or member.is_alias:
-        return False
-    if not isinstance(member, griffe.Attribute) or "property" in member.labels:
-        return False
-    annotation = member.annotation
-    if isinstance(annotation, griffe.ExprSubscript):
-        annotation = annotation.left
-    return not (
-        isinstance(annotation, griffe.ExprName | griffe.ExprAttribute)
-        and annotation.canonical_path in _CLASS_VARS
-    )
-
-
-def _attribute_entries(cls: griffe.Class) -> list[tuple[str, str]]:
-    if cls.docstring is None:
-        return []
-    return [
-        (entry.name, entry.description.strip())
-        for section in cls.docstring.parsed
-        if section.kind is griffe.DocstringSectionKind.attributes
-        for entry in section.value
-    ]
-
-
-def _comment_lines(cls: griffe.Class) -> list[int]:
-    """Return the line numbers of non-pragma comments in a class body outside its methods."""
-    source = textwrap.dedent("\n".join(cls.lines))
-    node = ast.parse(source).body[0]
-    methods = [
-        range(min([d.lineno for d in item.decorator_list] + [item.lineno]), item.end_lineno + 1)
-        for item in getattr(node, "body", [])
-        if isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef) and item.end_lineno
-    ]
-    found = []
-    for token in tokenize.generate_tokens(io.StringIO(source).readline):
-        line = token.start[0]
-        if token.type != tokenize.COMMENT or token.string.startswith(_PRAGMAS):
-            continue
-        if not any(line in method for method in methods):
-            found.append(line + (cls.lineno or 1) - 1)
-    return found
-
-
-def field_doc_violations(cls: griffe.Class) -> list[str]:
-    """Return each way a class's `Attributes:` section or body breaks the field rule."""
-    fields = [name for name, member in cls.members.items() if _is_field(name, member)]
-    entries = _attribute_entries(cls)
-    named = [name for name, _ in entries]
-    found = [f"{cls.path}.{name}: missing entry" for name in fields if name not in named]
-    found += [f"{cls.path}.{name}: empty entry" for name, text in entries if not text]
-    found += [f"{cls.path}.{name}: stale entry" for name in named if name not in fields]
-    found += [f"{cls.path}.{name}: duplicate entry" for name in set(named) if named.count(name) > 1]
-    listed = [name for name in named if name in fields]
-    if listed != [name for name in fields if name in listed]:
-        found.append(f"{cls.path}: entries out of field order")
-    found += [f"{cls.path}:{line}: comment in the class body" for line in _comment_lines(cls)]
-    return found
-
-
-def attribute_doc_violations(attr: griffe.Attribute | griffe.TypeAlias) -> list[str]:
-    """Return the violation of a module attribute with no attribute docstring, if any."""
-    if attr.docstring is None or not attr.docstring.value.strip():
-        return [f"{attr.path}: no attribute docstring"]
-    return []
-
-
-def field_docs(module: griffe.Module, layers: tuple[str, ...]) -> dict[str, list[str]]:
-    """Return the checked classes and module attributes that break the rule, with why."""
-    checked = public_objects(module, layers) | set(signature_violations(module, layers))
-    found: dict[str, list[str]] = {}
-    for path in sorted(checked):
-        obj = _lookup(module, path)
-        if isinstance(obj, griffe.Class):
-            problems = field_doc_violations(obj)
-        elif isinstance(obj, griffe.TypeAlias) or (
-            isinstance(obj, griffe.Attribute) and isinstance(obj.parent, griffe.Module)
-        ):
-            problems = attribute_doc_violations(obj)
-        else:
-            problems = []
-        if problems:
-            found[path] = problems
-    return found
