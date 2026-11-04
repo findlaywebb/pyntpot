@@ -1,14 +1,14 @@
-"""The raster card's drawing steps: the painted map, the route and the label plate.
+"""The map's drawing steps: the painting, the route and the nib plate.
 
 The page draws the map as an SVG with the plates inlined and the route, the
 pins and the names set in vector on top. These are the steps that lay the same
-plates into a single raster card instead, so the picture can be handed over
+plates into a single map instead, so the picture can be handed over
 alone: `painted_map` multiplies the wash over the paper, `route` draws the route on it in
-the route ink, and `paste_labels` pastes the label plate over both. The
+the route ink, and `paste_labels` pastes the nib plate over both. The
 compose stage calls them in that order.
 
 Nothing here paints, fetches, letters or places a name: it takes plates the
-painter made, a route already in display pixels and a label plate already
+painter made, a route already in display pixels and a nib plate already
 stroked.
 """
 
@@ -122,7 +122,7 @@ def _lay(
 
 
 def paste_labels(card_img: Image.Image, plate: Path) -> None:
-    """The label plate, over the painting, at the card's own size.
+    """The nib plate, over the painting, at the card's own size.
 
     The card and the page draw the same pixels, because they are the same
     pixels: one RGBA plate, stroked through the ink engine, embedded by the

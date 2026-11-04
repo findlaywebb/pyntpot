@@ -84,7 +84,7 @@ def pin(
 
     An open ring is an arc of the circle with a gap of `gap_px` between its two
     ends, measured as the chord at the centreline and centred on `gap_at`, so
-    the leader and the ring read as one mark, a callout drawn in one go. A gap
+    the leader and the ring read as one mark, drawn in one go. A gap
     as wide as the ring leaves half of it. The arc takes its share of the closed
     ring's sides.
 

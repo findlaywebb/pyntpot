@@ -24,7 +24,7 @@ FED_WIDTH_PX = 4.8
 THIN_WIDTH_PX = 2.0
 WIDE_WIDTH_PX = 12.0
 
-#: No labels, no spans and no label plate, so the route is the top mark on the card.
+#: No labels, no spans and no nib plate, so the route is the top mark on the card.
 UNLETTERED = Lettering((), (), None)
 
 

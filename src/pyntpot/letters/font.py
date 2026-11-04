@@ -3,7 +3,7 @@
 `OutlineFont` opens one `.ttf`, flattens each glyph's contours, and hands back
 `Glyph` records: paths in em units with the baseline at y zero and y up, and
 the advance. It measures a line and lays one out in the caller's own pixels.
-How a glyph becomes strokes is `letters.trace`; this module chooses the route
+How a glyph becomes strokes is `letters.trace`; this module chooses the trace
 and caches the result a glyph.
 
 The face is vendored under `fonts/`; its licence is `LICENSE-FONT` at the
@@ -197,8 +197,8 @@ class OutlineFont:
 
     Args:
         path: The `.ttf` to read.
-        route: `CENTRELINE` to thin the glyph to a written skeleton, `OUTLINE`
-            to draw round its own contour.
+        route: The trace, `CENTRELINE` to thin the glyph to a written skeleton,
+            `OUTLINE` to draw round its own contour.
     """
 
     def __init__(self, path: Path | str = DEFAULT_FONT, route: str = CENTRELINE) -> None:
@@ -308,11 +308,11 @@ class OutlineFont:
 
 @functools.lru_cache(maxsize=8)
 def load(path: str | None = None, route: str = CENTRELINE) -> OutlineFont:
-    """A face, the vendored one by default, opened once a path and route and kept.
+    """A face, the vendored one by default, opened once a path and trace and kept.
 
     Args:
         path: The font file, or None for the vendored one.
-        route: `CENTRELINE` or `OUTLINE`.
+        route: The trace, `CENTRELINE` or `OUTLINE`.
 
     Returns:
         The face.

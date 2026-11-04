@@ -51,7 +51,7 @@ class Hand:
     Args:
         face: Which face to open and how a glyph becomes a pen path.
         hand: The style whose `label_seed` every generator is mixed with.
-        route: `centreline` or `outline`; the face style's when not given.
+        route: The trace, `centreline` or `outline`; the face style's when not given.
 
     Attributes:
         route: `centreline` or `outline`, the way a glyph becomes a pen path.

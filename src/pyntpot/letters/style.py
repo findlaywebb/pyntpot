@@ -74,7 +74,7 @@ class NibStyle:
             a letter at fourteen pixels breaks up if the mark can break, and a
             broken letter is a wrong letter rather than a textured one.
         label_pen_width_px: The nib's width, in display pixels.
-        label_outline_width_frac: The outline route draws two strokes where the
+        label_outline_width_frac: The outline trace draws two strokes where the
             centreline draws one, a stroke's width apart, so the same nib fills
             the counters and the letter comes out a bolder thing than the face
             is. It writes with a finer one: this share of the nib's width.

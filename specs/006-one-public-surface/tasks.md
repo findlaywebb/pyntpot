@@ -30,8 +30,8 @@
 - [x] Merge S5, S4, S7, S6; standard gate green after each.
 - [x] S8: ratchet deleted, gates absolute; `GLOSSARY.md` three rows, `BOUNDARIES.md`;
       six notes deleted, citing notes repointed; seven follow-up notes and issues filed
-      (#168, #169).
-- [ ] S9: docstring terminology sweep: every row of plan.md Appendix A (007 at
+      as #188 to #194 (#168, #169).
+- [x] S9: docstring terminology sweep: every row of plan.md Appendix A (007 at
       `529753f`), the N24 log message, the test docstrings; no retired word left in
       `src/**/*.py` or `tests/**/*.py` but the two `"callouts"` key lines.
 - [ ] S10: local mutation run on the behaviour-changed functions (plan.md S10 table and

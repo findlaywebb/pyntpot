@@ -172,8 +172,8 @@ class WashStyle:
             classes meet along hairlines of unmapped ground, the median class seam sits 2 px from
             one, and a wet field taken from the raw union is therefore punched full of holes exactly
             where two washes meet. At 5 px the share of seam that is wet goes from 0.00 to 0.58
-            while the dry share of the card moves 0.148 to 0.140, so the land's outer silhouette is
-            where it was. 0 is the union as it stands.
+            while the dry share of the painting moves 0.148 to 0.140, so the land's outer
+            silhouette is where it was. 0 is the union as it stands.
         silhouette_deform: Recursive midpoint deformation of the land cover's own outlines before
             they are rasterised. The wash edge is a blurred mask thresholded against two noise
             scales, so every edge wobbles at the same two frequencies and none of them stays sharp.

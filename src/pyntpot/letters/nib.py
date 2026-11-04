@@ -113,7 +113,7 @@ def mark_width_px(nib: NibStyle, role: str, size: float, *, outline: bool = Fals
         nib: The nib style, for the pens and the type size they are set at.
         role: The mark's role; one `MARK_WEIGHT` does not name weighs 1.
         size: The type size the mark belongs to, in display pixels.
-        outline: True when the glyph pen is narrowed for an outline route; it
+        outline: True when the glyph pen is narrowed for an outline trace; it
             changes only a glyph's width.
 
     Returns:

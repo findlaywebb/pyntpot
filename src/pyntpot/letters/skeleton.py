@@ -55,7 +55,7 @@ def fill(contours: list[list[Point]], upem: int, pad: int = 3) -> tuple[np.ndarr
 
     Even-odd scanline fill rather than a library rasteriser, because a glyph is
     a handful of closed contours and the fill has to agree exactly with the
-    contours the outline route draws.
+    contours the outline trace draws.
 
     Args:
         contours: The glyph's contours in font units.

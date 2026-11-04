@@ -86,11 +86,11 @@ def test_a_landmark_beside_a_lake_is_seated_on_the_dry_side():
 BROAD_LAKE = [(60.0, 60.0), (340.0, 60.0), (340.0, 200.0), (60.0, 200.0)]
 
 
-def test_a_land_callout_whose_cheapest_seat_is_on_a_lake_is_lettered_off_it():
-    """A callout for a cave on a lake's shore, cheapest seated on the lake, is lettered on dry land."""
+def test_a_land_landmark_whose_cheapest_seat_is_on_a_lake_is_lettered_off_it():
+    """A landmark for a lakeshore cave, cheapest seated on the lake, is lettered on dry land."""
 
     def cave() -> Label:
-        """Rydal Cave, a curated callout anchored on the dry shore just south of the lake."""
+        """Rydal Cave, a curated landmark anchored on the dry shore just south of the lake."""
         return Label(name="Rydal Cave", kind="", px=200.0, py=205.0, tier=TIER_LANDMARK, size=14.0)
 
     unpriced = _placed(cave(), Water())

@@ -1,9 +1,9 @@
 """The sheet and the canvas: the paper's noise fields and the pixel grid a plate is painted on.
 
 Key types: `Sheet`, the paper's own noise fields, seeded, shared by every wash and every
-mark; `Canvas`, a box in the card's metres and the pixel grid it is painted on, which
+mark; `Canvas`, a box in world units and the pixel grid it is painted on, which
 projects metre points into render pixels. `rgb` reads a hex colour as floats and `PAPER`
-is the card's own cream.
+is the paper's own cream.
 
 It paints nothing: it is the surface painting is done on.
 
@@ -20,7 +20,7 @@ from PIL import Image
 
 from pyntpot.ink.noise import F32, fbm, fbm_aniso
 
-#: The card's own cream, before anything is laid on it.
+#: The paper's own cream, before anything is laid on it.
 PAPER = "#f3ead6"
 
 
@@ -44,7 +44,7 @@ def rgb(hex_s: str) -> np.ndarray:
 
 @dataclass
 class Canvas:
-    """The card's metre box and the pixel grid it is painted on.
+    """A world-unit box and the pixel grid it is painted on.
 
     Attributes:
         x0: The box's west edge, in the card's metres.
@@ -71,7 +71,7 @@ class Canvas:
         """Project metre points into render pixels, north up.
 
         Args:
-            pts: Points in the card's metres, `(n, 2)`.
+            pts: Points in world units, `(n, 2)`.
 
         Returns:
             Render pixels, `(n, 2)`, with x from the box's west edge and y down

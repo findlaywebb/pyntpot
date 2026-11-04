@@ -1,8 +1,8 @@
 """Cutting a polyline to a box: the pieces inside it, cut where the line crosses the edge.
 
 Key function: `cut_line`, the pieces of a line inside a rectangle, each starting and ending
-on the rectangle's edge where the line comes in or goes out, so a line that runs off a card
-is drawn up to the card's edge. `pyntpot.ink.polyline.clip_line` is the coarser clip that
+on the rectangle's edge where the line comes in or goes out, so a line that runs off a canvas
+is drawn up to the canvas's edge. `pyntpot.ink.polyline.clip_line` is the coarser clip that
 keeps or drops whole points.
 
 It knows no units and holds no state; it does not simplify, smooth or join the pieces.

@@ -1,4 +1,4 @@
-"""Strokes from a glyph: the centreline route and the outline route.
+"""Strokes from a glyph: the centreline trace and the outline trace.
 
 `CENTRELINE` thins the glyph to a skeleton (`letters.skeleton`), traces it into
 chains, prunes its spurs and pushes its ends back out to where the ink actually
@@ -12,7 +12,7 @@ Where a junction has a stroke running straight on through it, `letters.junction`
 joins the two into one stroke. Where thinning merges two strokes into one mass, `_flanks` gives the arm back
 off the width of the ink, and `_dots` draws a blob thinning ate whole as a small
 ring. Paths come back in em units with y up. This module does not open fonts
-and does not choose a route; `letters.font` does.
+and does not choose a trace; `letters.font` does.
 """
 
 from __future__ import annotations

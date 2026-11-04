@@ -74,7 +74,7 @@ SPAN_INTENT_INK = {
 }
 
 #: The user's own place, as a small house in display pixels with y down, drawn in
-#: the map's own ink on the label plate, so the card and the page get the same
+#: the map's own ink on the nib plate, so the card and the page get the same
 #: pixels and reserve the same room for it.
 HOME_GLYPH = [(-7.0, 1.5), (0.0, -6.5), (7.0, 1.5), (7.0, 8.0), (-7.0, 8.0), (-7.0, 1.5)]
 
@@ -87,7 +87,7 @@ def open_hand(style: Style, route: str | None = None) -> Hand | None:
 
     Args:
         style: The style whose face and hand are opened.
-        route: `centreline` or `outline`; the style's when not given.
+        route: The trace, `centreline` or `outline`; the style's when not given.
     """
     try:
         return Hand(style.face, style.hand, route)

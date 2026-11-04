@@ -1,6 +1,6 @@
 # The API reference pages could be grouped into sections
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues)
+GitHub issue: [#190](https://github.com/findlaywebb/pyntpot/issues/190)
 
 **What exists today.** Each API reference page (`docs/reference/ink.md`, `letters.md`,
 `maps.md`) lists its layer's public names in one run. `pyntpot.maps` exports 52 names,

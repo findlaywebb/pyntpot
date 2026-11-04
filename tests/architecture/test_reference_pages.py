@@ -165,7 +165,7 @@ class TestCacheLayout:
         assert not missing, f"cache-layout.md lacks: {missing}"
 
     def test_label_plate_files_and_sidecar_keys_are_named(self):
-        """Both label plates, their sidecars and the sidecar's keys are in cache-layout.md."""
+        """Both nib plates, their sidecars and the sidecar's keys are in cache-layout.md."""
         text = _page("cache-layout.md")
         facts = [
             f"labels-{route}.{suffix}"

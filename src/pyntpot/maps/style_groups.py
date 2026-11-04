@@ -12,7 +12,7 @@ Base groups feed the base plates; `LetteringStyle` feeds only the lettering;
 `RouteInkStyle` is read only when the route is placed and drawn (`paint` takes the
 strand merge reach from its width), so changing the ink repaints no plate. The defaults
 are the source classes' own defaults, not a resolved theme: the effective
-basemap options and the resolved ink are theme values. `RouteInkStyle`'s treatment,
+basemap options and the resolved ink are theme values. `RouteInkStyle`'s style,
 width and colour have no defaults, because no class carries one.
 
 It paints, letters and fetches nothing. The route ink knows nothing of what a
@@ -295,7 +295,7 @@ class LetteringStyle:
             compete with them; three leaves room for both. Spans have their own cap in
             `lettering.spans.SPAN_MAX`.
         labels: Letter the map at all. Off, the lettering stage opens no hand: it places no
-            labels or spans and draws no label plate. The attribution follows `compose`'s
+            labels or spans and draws no nib plate. The attribution follows `compose`'s
             `attribution` flag alone.
         label_ground: Letter the settlements, the watercourses and the roads the box holds,
             as the hierarchy asks: a settlement beside its dot with no leader, a river along
@@ -314,7 +314,7 @@ class LetteringStyle:
 
 @dataclass(frozen=True, kw_only=True)
 class RouteInkStyle:
-    """How the route is drawn on the card: its treatment, width, colour, blend and opacity.
+    """How the route is drawn on the map: its style, width, colour, blend and opacity.
 
     Only `paint` (the strand merge reach, from `px`) and the compose step read it.
 

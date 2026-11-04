@@ -1,6 +1,6 @@
 # A snapshot of the public signatures could show every surface change in review
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues)
+GitHub issue: [#194](https://github.com/findlaywebb/pyntpot/issues/194)
 
 **What exists today.** `tests/unit/test_public_api.py` pins the names each layer exports,
 and `tests/architecture/test_public_signatures.py` checks that every name a public

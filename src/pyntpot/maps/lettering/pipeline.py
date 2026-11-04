@@ -2,9 +2,9 @@
 
 Key names: `letter`, which picks what a map names, anchors it on the card,
 seats the caller's journal notes first (`lettering.notes`), resolves the caller's span requests onto the route, places every name and span
-measured by the hand, and strokes them into a label plate beside the plates;
+measured by the hand, and strokes them into a nib plate beside the plates;
 `Lettering`, what it hands back: the placed labels, the placed spans and the
-label plate's path.
+nib plate's path.
 
 Everything route-shaped that `letter` reads is `Plates.strands`, the route as
 it is drawn: the ground names, the road numbers and the route markers are
@@ -71,7 +71,7 @@ class Lettering:
         labels: The placed labels, in placement order.
         spans: The placed spans, each resolved from a span request onto the
             route.
-        plate_path: The label plate, or `None` when nothing was stroked.
+        plate_path: The nib plate, or `None` when nothing was stroked.
     """
 
     labels: tuple[Label, ...]
@@ -82,11 +82,11 @@ class Lettering:
 def letter(
     plates: Plates, basemap: Basemap, annotations: Annotations | None, style: Style
 ) -> Lettering:
-    """Place a map's names and spans and stroke them into a label plate.
+    """Place a map's names and spans and stroke them into a nib plate.
 
     Args:
         plates: The painted plates: their strands are the route lettered
-            against, their darkness keeps names on light ground, and the label
+            against, their darkness keeps names on light ground, and the nib
             plate is written beside them.
         basemap: The basemap the plates were painted from, for the places, the
             candidates, the named lines, the projection and the track's times.
@@ -96,7 +96,7 @@ def letter(
         style: The style the card is lettered in.
 
     Returns:
-        The placed labels and spans and the label plate; empty, with no plate,
+        The placed labels and spans and the nib plate; empty, with no plate,
         when there is no hand to letter with.
 
     Raises:
@@ -228,13 +228,13 @@ def draw_plate(
     never lettered over today's map.
 
     Args:
-        plates: The painted plates, beside which the label plate is written.
+        plates: The painted plates, beside which the nib plate is written.
         placed: The placed labels.
         spans: The placed spans.
         route_px: The track in display pixels.
         style: The style the card is lettered in; its brush style makes the
             lettering's brushes and ink pads.
-        route: `centreline` or `outline`; the style's when not given.
+        route: The trace, `centreline` or `outline`; the style's when not given.
 
     Returns:
         The path to the plate, or None when there is nothing to draw or no

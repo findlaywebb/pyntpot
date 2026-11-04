@@ -1,6 +1,6 @@
 # The four private `Clip` aliases could be `Box`
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues)
+GitHub issue: [#189](https://github.com/findlaywebb/pyntpot/issues/189)
 
 **What exists today.** `pyntpot.ink.polyline.Box` is the one public alias for an
 axis-aligned box `(x0, y0, x1, y1)` (ADR 0068). Four private modules still define their

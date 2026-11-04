@@ -1,6 +1,6 @@
 # Parameter defaults could render as values in the reference
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues)
+GitHub issue: [#193](https://github.com/findlaywebb/pyntpot/issues/193)
 
 **What exists today.** The reference site renders a parameter default as written in the
 source. Where the default names a private constant, the reader sees a bare name with no

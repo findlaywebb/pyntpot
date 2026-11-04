@@ -120,15 +120,15 @@ def save_rgba(
 ) -> int:
     """Write a plate carrying its own colour and its own alpha.
 
-    The label plate is composited normally rather than multiplied, so it needs
-    both: multiply can only darken, and a backing wash in the paper's own colour
-    has to be able to lighten.
+    A plate with its own alpha, such as the nib plate, is composited normally
+    rather than multiplied, so it needs both: multiply can only darken, and a
+    backing wash in the paper's own colour has to be able to lighten.
 
     Lossless by default, and for the same reason the base plates are: the lossy
     encoder transforms in 4 by 4 blocks on a half resolution chroma plane, and
     a thinned glyph stroke is between one and three pixels wide. It is the
     worst case the encoder has, not a marginal one, and a name is the thing on
-    the card a reader looks at closest.
+    the painting a reader looks at closest.
 
     Args:
         rgb: The colour, `(h, w, 3)` in 0 to 1.

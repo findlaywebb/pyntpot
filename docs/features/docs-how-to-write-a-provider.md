@@ -1,6 +1,6 @@
 # A how-to could show how to write a data provider
 
-GitHub issue: [#TBD](https://github.com/findlaywebb/pyntpot/issues)
+GitHub issue: [#188](https://github.com/findlaywebb/pyntpot/issues/188)
 
 **What exists today.** `Features` and `Elevation`, the provider protocols, are public from
 `pyntpot.maps` (ADR 0068). The shipped `OverpassFeatures` and `OpenTopoData` meet them,

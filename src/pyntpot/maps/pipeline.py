@@ -4,7 +4,7 @@ Key names: `fetch`, which fills a `Cache` for a `Track` through the providers it
 is handed and builds the track's `Basemap` from the cached payloads; `paint`,
 which paints a basemap's plates into a directory, or hands back the plates
 already there when their manifest carries the current hash; `compose`, which
-lays the painted plates, the route and the label plate into one raster card;
+lays the painted plates, the route and the nib plate into one map;
 `FetchError` (from `maps.cache`), raised when a provider cannot answer or the cached features are gone
 once the fetch has run.
 The stage between `paint` and `compose` is `maps.lettering.pipeline.letter`.
@@ -18,7 +18,7 @@ more than once pulled onto one line (`Plates.strands`), the line the route is dr
 along.
 
 `compose` draws the route along `Plates.strands` in the style's route ink and
-pastes the label plate over it when the lettering has one; with no label plate
+pastes the nib plate over it when the lettering has one; with no nib plate
 the card is handed over bare. Unless its `attribution` flag is off it then
 writes the basemap's credits at the bottom right (`maps.attribution`).
 
@@ -70,7 +70,7 @@ def fetch(
     """Fetch whatever the cache lacks for a track and build its basemap.
 
     Args:
-        track: The route to map.
+        track: The track to map.
         cache: Where the provider payloads are cached; its margins say how far beyond
             the track's extent they are fetched. The card clips every layer to its own
             box, so ground fetched beyond the card is never painted.
@@ -140,16 +140,16 @@ def compose(
     *,
     attribution: bool = True,
 ) -> Image.Image:
-    """Compose painted, lettered plates into one raster card.
+    """Compose painted, lettered plates into one map.
 
     The wash is multiplied over the paper, the route is drawn along
     `plates.strands` in the style's route ink (tinting the pen plate when the
-    ink is a pen), the label plate is pasted over both when there is one, and
+    ink is a pen), the nib plate is pasted over both when there is one, and
     the attribution is written last.
 
     Args:
         plates: The painted plates, with their strands set.
-        lettering: The lettering; its label plate, when set, is pasted over the
+        lettering: The lettering; its nib plate, when set, is pasted over the
             route.
         basemap: The basemap the plates were painted from, whose credits are
             owed on the card.
@@ -164,7 +164,7 @@ def compose(
     k = card.width / max(plates.card.display[0], 1)
     route(card, plates, list(plates.strands), style.route_ink, k)
     if lettering.plate_path is None:
-        log.info("no label plate for %s, the card has no lettering", plates.directory)
+        log.info("no nib plate for %s, the map has no lettering", plates.directory)
     else:
         paste_labels(card, lettering.plate_path)
     if attribution:

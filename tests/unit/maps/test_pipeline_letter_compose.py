@@ -115,7 +115,7 @@ class TestLetter:
     def test_the_label_plate_is_written_beside_the_plates(
         self, lettered: Lettering, painted: Painted
     ) -> None:
-        """The label plate is a file inside the plates directory."""
+        """The nib plate is a file inside the plates directory."""
         assert lettered.plate_path is not None
         assert lettered.plate_path.parent == painted.plates.directory
         assert lettered.plate_path.is_file()
