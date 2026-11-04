@@ -131,7 +131,7 @@ Process:
 PR title:
 
 ```
-feat(ink)!: one public surface: every type a public signature names is exported
+feat(maps)!: one public surface: every type a public signature names is exported
 ```
 
 Under "Changelog" in the PR description:
@@ -144,7 +144,7 @@ feat(ink): export WashOptions, Flow, Blooms, WashStyle, separated, fluid_modulat
 feat(letters): export Align
 feat(ink)!: PaperStyle and BrushStyle are keyword-only
 feat(letters)!: FaceStyle, HandStyle and NibStyle are keyword-only
-feat(maps): Annotations.roads letters the roads it names, of any class, and raises ValueError for a name no drawn road carries
+feat(maps)!: Annotations.roads letters the roads it names, of any class, and raises ValueError for a name no drawn road carries
 fix(maps): public functions no longer shadow their modules, now ink.stamping, ink.washing, maps.compose_steps and maps.vector_layer_build
 docs(ink): every public field and constant has text in the API reference
 ```

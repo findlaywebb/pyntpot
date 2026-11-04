@@ -37,7 +37,7 @@
 - [x] S10: local mutation run on the behaviour-changed functions (plan.md S10 table and
       rule; the seven maps patterns in a throwaway worktree config, re-run from each new
       `HEAD` until every survivor is killed or named).
-- [ ] S11: final review against plan and spec; all gates and the strict docs build green;
+- [x] S11: final review against plan and spec; all gates and the strict docs build green;
       PR body drafted with Changelog, `Closes #168 #73 #78 #169 #164 #161`, mutation
       equivalents and the session A handoff.
 - [ ] Merge closes #168, #73, #78, #169, #164, #161 (ticked with the issues).

@@ -6,7 +6,7 @@ fetch cache `Cache` and its `FetchMargins`, the shipped providers `OverpassFeatu
 errors they raise, `ProviderError` and `ProviderBudgetExceededError`, and two cache
 readers for a caller that chooses or draws for itself: `candidate_export`, what a track
 passes, and `vector_layers`, which builds `VectorLayers`, the basemap's layers as SVG
-path data. The other candidates modules and the command line are reached through their
+path data. The other candidate modules and the command line are reached through their
 own modules, not exported here.
 
 The seven map style groups sit beside `Style`, one per field of it: `CardStyle`,
