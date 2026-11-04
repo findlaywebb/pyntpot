@@ -4,9 +4,10 @@ Point pyntpot at your own Overpass and OpenTopoData servers instead of the publi
 for heavy use, a private network, or to stay clear of the public servers' limits.
 
 This covers the two providers pyntpot ships, `OverpassFeatures` and `OpenTopoData`.
-Writing a provider of your own is not supported yet, because the `Features` and
-`Elevation` protocols are not public
-([a caller could write their own data provider](https://github.com/findlaywebb/pyntpot/blob/main/docs/features/maps-public-provider-protocols.md)).
+Writing a provider of your own works too: `fetch`, `Cache.key` and `Cache.ensure` each take
+a features provider that satisfies `Features` and an elevation provider that satisfies
+`Elevation`, both from `pyntpot.maps`, and any pair that does will serve; this page covers
+only the two that ship.
 
 **Before you start:** you need an Overpass server whose data covers your track, and an
 OpenTopoData server with a dataset loaded (the default is `srtm30m`). Their own
@@ -68,8 +69,8 @@ documentation covers setting them up.
 
 ## Result
 
-The card is painted from your servers' data. The cache directory holds the same three
-payload files as a public run, and the credit on the card is the same.
+The map is painted from your servers' data. The cache directory holds the same three
+payload files as a public run, and the credit on the map is the same.
 
 The cache key has two consequences. It is made from the track's box and the providers'
 ids. An id is `overpass` or `opentopodata-<dataset>`, never an address. So your server reuses a
@@ -102,6 +103,6 @@ has a different id, so it gets its own key.
 - The map has no relief, or the land is flat: OpenTopoData's reply had no elevation for
   those points, and pyntpot reads that as `0.0`, sea level. Check that your dataset covers
   the track.
-- The card says "elevation: NASA SRTM" over another dataset: the credit comes from the
+- The map says "elevation: NASA SRTM" over another dataset: the credit comes from the
   provider class and does not follow the dataset. See
   [Credit the map data](credit-the-map-data.md).

@@ -51,7 +51,7 @@ uv run mutmut show <mutant-name>                # one mutant's diff
 
 `no tests` means no test in the mutation selection reaches the function, typically one only `maps` tests call: write a focused `ink` or `letters` test for it. For each survivor, write a focused test that fails against the mutant, or, when the mutant changes no behaviour (an equivalent mutant), list it in the PR description with the reason. An empty pattern list means the branch changed no function in scope, and there is nothing to run.
 
-Benchmarks live in `tests/benchmarks`; a plain `uv run pytest` calls each once, untimed, as a smoke test. `docs/explanation/performance.md` says what they measure. To time them locally:
+Benchmarks live in `tests/benchmarks`; a plain `uv run pytest` calls each once, untimed, as a smoke test. `docs/runbooks/performance.md` says what they measure. To time them locally:
 
 ```bash
 uv run pytest -m benchmark --benchmark-enable
@@ -152,6 +152,11 @@ the style; the words stay plain.
 - **Places:** use the focus places for new figures. Lynmouth names appear only for the
   Lynmouth card. Never invent a name.
 - **Designed gaps** are stated as capability facts, never as roadmap numbers.
+
+**Glossary:** to add or change a term, edit `GLOSSARY.md`, then run
+`PYTHONPATH=tests uv run python -m support.glossary` to regenerate the site's glossary page
+and the tooltips; the docs tests fail until you do. A reader term's Tooltip lists the
+forms a page underlines, or reads `no` for an everyday word such as "map" or "wash".
 
 Before you commit docs, search the human-facing prose (everything except
 `docs/decisions/`) for em and en dashes; the search finds none.

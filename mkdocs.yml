@@ -17,6 +17,7 @@ exclude_docs: |
   issues/
   features/
   runbooks/
+  includes/
 
 theme:
   name: material
@@ -39,6 +40,7 @@ theme:
     - navigation.indexes
     - navigation.top
     - content.code.copy
+    - content.tooltips
 
 extra_css:
   - stylesheets/pyntpot.css
@@ -49,6 +51,12 @@ markdown_extensions:
       permalink: false
   - pymdownx.highlight
   - pymdownx.superfences
+  # The glossary's tooltips: every page gets the generated abbreviations appended, and
+  # abbr underlines each Tooltip form with its meaning.
+  - abbr
+  - pymdownx.snippets:
+      auto_append: [docs/includes/abbreviations.md]
+      check_paths: true
 
 plugins:
   - search
@@ -68,6 +76,9 @@ plugins:
             separate_signature: true
             signature_crossrefs: true
 
+validation:
+  anchors: warn
+
 nav:
   - Home: index.md
   - Gallery: gallery.md
@@ -80,18 +91,18 @@ nav:
           - Curves: tutorials/painting-with-python/curves.md
           - Symmetry: tutorials/painting-with-python/symmetry.md
           - Fractals: tutorials/painting-with-python/fractals.md
-          - Vector drawing: tutorials/painting-with-python/vector-drawing.md
           - Pictures: tutorials/painting-with-python/pictures.md
+          - Vector drawing: tutorials/painting-with-python/vector-drawing.md
   - How-to guides:
       - how-to/index.md
       - how-to/write-a-theme.md
       - how-to/map-from-the-command-line.md
-      - how-to/work-offline-and-reuse-the-cache.md
-      - how-to/credit-the-map-data.md
       - how-to/change-the-route-ink.md
       - how-to/letter-your-own-landmarks.md
-      - how-to/paint-your-own-shapes.md
+      - how-to/work-offline-and-reuse-the-cache.md
+      - how-to/credit-the-map-data.md
       - how-to/self-host-providers.md
+      - how-to/paint-your-own-shapes.md
   - Reference:
       - reference/index.md
       - reference/cli.md
@@ -111,5 +122,4 @@ nav:
       - explanation/how-the-wash-works.md
       - explanation/the-hand-and-the-nib.md
       - explanation/data-policy.md
-      - explanation/performance.md
       - explanation/references.md

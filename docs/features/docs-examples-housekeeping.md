@@ -41,4 +41,9 @@ stays exact. The map scripts' smoke tests can share the offline Lynmouth paint
 (`tests-shared-lynmouth-paint.md`).
 
 **Related.** `docs-examples-review.md` (#63), `tests-shared-lynmouth-paint.md` (#90),
-`docs-tutorials-lead-on.md`, `docs-labelled-grid-helper.md`.
+`docs-labelled-grid-helper.md`.
+
+**Example code names.** `route = Track.from_gpx(track)`,
+`card = compose(...)`, `crest` and `WASH_BODY` for a wash body, and example docstrings that
+call the picture a card. The docs quote these scripts verbatim, so a rename here moves the
+pages' quotes with it.

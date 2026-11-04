@@ -5,11 +5,11 @@ The `pyntpot` command paints a GPX track as a map PNG. It is the entry point `py
 ## Synopsis
 
 ```text
-pyntpot [-h] command ...
-pyntpot map [-h] -o OUTPUT --cache CACHE --contact CONTACT [--style STYLE] [--no-attribution] track
+pyntpot [-h] {map} ...
+pyntpot map [-h] -o OUTPUT --cache CACHE --contact CONTACT [--style STYLE] [--margin-m MARGIN_M] [--no-attribution] track
 ```
 
-`command` is required and takes one value, `map`. The program reads the track, fills the fetch cache for any payload it lacks, paints the plates into the cache's plates directory for the track's key, letters the card with no annotations and composes the PNG. A cache that already holds the payloads sends no request. See [Cache layout](cache-layout.md) for the files it writes.
+`{map}` is the command, and `map` its one value. The parser names it `command`, and it is required. The program reads the track, fills the fetch cache for any payload it lacks, paints the plates into the cache's plates directory for the track's key, letters the map with no annotations and composes the PNG. A cache that already holds the payloads sends no request. See [Cache layout](cache-layout.md) for the files it writes.
 
 ## Commands
 

@@ -7,3 +7,5 @@ These pages use the same engine for pictures that are not maps. They cover curve
 - [Fractals: a Barnsley fern, a family of ferns and a recursive tree](fractals.md)
 - [Pictures: layered hill washes and a lettered Derwentwater](pictures.md)
 - [Vector drawing: a small drawing, its filled shapes washed and its strokes inked](vector-drawing.md)
+
+Next: [Curves](curves.md), a rose and a spirograph in brush and a Lissajous figure in pen.

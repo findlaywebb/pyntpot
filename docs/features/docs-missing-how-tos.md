@@ -43,4 +43,4 @@ opposed to `[basemap] pick_roads` in a theme) is `Annotations.roads`, which lett
 roads it names, by name or number.
 
 **Related.** `cli-wider-commands.md` (#68),
-`maps-themes-as-overrides.md` (#80), `docs-tutorials-lead-on.md`.
+`maps-themes-as-overrides.md` (#80).

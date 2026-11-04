@@ -78,7 +78,7 @@ def _manifest_keys() -> list[str]:
 
 
 class TestEveryPageExists:
-    """The six reference pages and the glossary pointer are written."""
+    """The six reference pages and the generated glossary page are written."""
 
     @pytest.mark.parametrize(
         "name",
@@ -91,6 +91,7 @@ class TestEveryPageExists:
             "brushes.md",
             "glossary.md",
         ],
+        ids=["cli", "style-fields", "cache-layout", "manifest", "pigments", "brushes", "glossary"],
     )
     def test_page_is_written(self, name):
         """Each reference page exists and is not empty."""
@@ -164,7 +165,7 @@ class TestCacheLayout:
         missing = [name for name in files if f"`{name}`" not in text]
         assert not missing, f"cache-layout.md lacks: {missing}"
 
-    def test_label_plate_files_and_sidecar_keys_are_named(self):
+    def test_nib_plate_files_and_sidecar_keys_are_named(self):
         """Both nib plates, their sidecars and the sidecar's keys are in cache-layout.md."""
         text = _page("cache-layout.md")
         facts = [

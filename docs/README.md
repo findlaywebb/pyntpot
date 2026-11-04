@@ -19,13 +19,13 @@ for users are:
 - `tutorials/`: learn by painting, then `tutorials/painting-with-python/`.
 - `how-to/`: one task per guide.
 - `reference/`: the command line, style fields, cache, manifest, pigments, brushes, glossary.
-- `explanation/`: how the wash works, the hand and the nib, the data policy, performance, references.
+- `explanation/`: how the wash works, the hand and the nib, the data policy, references.
 
 Subfolders:
 
 - `decisions/`: Architecture Decision Records (`NNNN-title.md`).
 - `explanation/`: background and the references bibliography.
-- `runbooks/`: operational playbooks (dependency updates, releases).
+- `runbooks/`: operational playbooks (dependency updates, releases, performance baselines).
 - `issues/`: one markdown file per out-of-scope issue found while doing something else.
 - `features/`: one markdown file per candidate feature: behaviour the library does not have
   and could add, recorded so it is not mistaken for a defect.

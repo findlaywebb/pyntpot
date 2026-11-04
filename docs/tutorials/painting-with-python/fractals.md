@@ -433,3 +433,10 @@ It pastes the cell's layers into the grid's. The paper is laid once, under all n
   into a wide fan.
 - In `trees.py`, change `LAST_BRUSHED` from `3` to `5`. The brush draws more of the limbs
   and the pen only the finest twigs.
+
+## Where next
+
+- [Brushes](../../reference/brushes.md) lists every brush id the trees' limbs and twigs
+  can be drawn with.
+
+Next: [Pictures](pictures.md), layered hill washes and a lettered Derwentwater.

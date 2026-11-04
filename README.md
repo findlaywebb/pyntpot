@@ -37,7 +37,7 @@ from a local cache after that.
 
 ## Gallery
 
-Each picture is one rung of the tutorial, and links to its page.
+The first seven pictures are the rungs of the watercolour tutorial and the eighth is the first map; each links to its page.
 
 | | | | |
 | --- | --- | --- | --- |

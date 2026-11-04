@@ -93,7 +93,7 @@ letters larger and heavier. `[route_ink]` makes the route magenta and 8 pixels w
 *Painted by `examples/map_styles.py` with `figure="winter"`.*
 
 The paper is a pale blue-white without foxing, and the pigments are greys and blues. The
-roads are grey-brown. The route is the one warm colour on the card.
+roads are grey-brown. The route is the one warm colour on the map.
 
 ## When it goes wrong
 

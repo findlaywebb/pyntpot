@@ -30,12 +30,14 @@ Source: `multiply-compositing` in [references](references.md).
 
 ## The body: an edge that gives way, a tone that drifts
 
-`wash(cover, sheet, base, pool)` takes the mask and returns a density. With `pool` at 0 it
-lays the body alone, and already the disc is a different thing. The mask is blurred, then
-cut against two scales of noise from the sheet, so the edge is soft and wavers instead of
-following the circle. The tone drifts slowly across the wash, because a second noise field
-varies it, and the paper's own height lightens it where the tooth is high. A last blur,
-more or less strong from place to place, keeps some edges sharper than others.
+`wash(cover, sheet, base, pool, options)` takes the coverage mask and returns a density;
+`options`, a `WashOptions`, from `pyntpot.ink`, is optional, and this page leaves it out.
+With `pool` at 0 it lays the body alone, and already the disc is a different thing. The
+mask is blurred, then cut against two scales of noise from the sheet, so the edge is soft
+and wavers instead of following the circle. The tone drifts slowly across the wash,
+because a second noise field varies it, and the paper's own height lightens it where the
+tooth is high. A last blur, more or less strong from place to place, keeps some edges
+sharper than others.
 
 ![The same disc as a wash: the edge is soft and a little uneven, and the blue deepens and fades slowly across the disc.](../images/explanation/wash-body.webp)
 
@@ -64,8 +66,8 @@ extra density that band carries.
 The band here is the wash's mask minus a blur of itself, scaled so its strongest point is 1
 and multiplied by `pool`; the wash is then 0.8 of body plus 0.55 of band. It is one width
 wherever the edge is. The truer form, an outward flow that decays inward and is wider on a
-large wash than a small one, is in the wash options, and `pyntpot.ink` does not export
-them. The painter that lays washes for a whole picture reaches it through its wash style.
+large wash than a small one, is in the wash options, which this page leaves out. The
+painter that lays washes for a whole picture reaches it through its wash style.
 
 Source: `edge-darkening` in [references](references.md).
 
@@ -82,7 +84,7 @@ the wash multiplies its body by a noise field of that cell.
 Here the grain is its own noise field, drawn from the sheet's seed. In a real wash the
 grain follows the paper: pigment settles in the hollows the dry brush skips over. The wash
 has a form that does this, taking granulation from the paper's pits. That too sits behind
-the options `pyntpot.ink` does not export, so no figure here shows it.
+the wash options, so no figure here shows it.
 
 Source: `granulation` in [references](references.md).
 
@@ -124,8 +126,14 @@ Source: `kubelka-munk` and `multiply-compositing` in [references](references.md)
 
 ## What the figures leave out
 
-Four more behaviours are in the wash code, and a theme's wash group turns each on. The
-public `wash` takes a body and a pool and nothing else, so none has a figure here.
+Four more behaviours are in the wash code, and a theme's wash group turns each on.
+Backruns and bleed are fields of the `WashOptions` that `wash` takes besides a body and a
+pool, which the map painter builds from the theme. Pigment separation and the shallow-water
+pass are not: they act on what washes produce, one wash's density and then the whole stack
+of layers, and the map painter runs them after its washes. They are `separated` and
+`fluid_modulate`, from `pyntpot.ink`, and both read their settings from `WashStyle`, the
+theme's wash group, because those settings belong to a plate rather than to one wash. This
+page shows none of them as a figure.
 
 - Backruns. A second front of water pushes deposited pigment out ahead of it: the centre
   goes pale and the front dries as a dark, crenellated ridge. Source: `backruns`.
@@ -137,6 +145,4 @@ public `wash` takes a body and a pool and nothing else, so none has a figure her
 - The shallow-water pass. One coarse pass of water over the whole picture that modulates the
   densities already laid, which makes the drying directional. Source: `shallow-water`.
 
-See [references](references.md) for each source, and
-[the feature note](https://github.com/findlaywebb/pyntpot/blob/main/docs/features/ink-public-wash-options.md) for what exposing them would
-take.
+See [references](references.md) for each source.

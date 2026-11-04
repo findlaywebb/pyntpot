@@ -33,6 +33,12 @@ repos:
         entry: uv run pytest tests/architecture
         pass_filenames: false
         files: '\.py$'
+      - id: docs-tests
+        name: docs truth tests
+        language: system
+        entry: uv run pytest tests/docs
+        pass_filenames: false
+        files: '\.(py|md|toml|yml)$'
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:

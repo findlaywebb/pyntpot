@@ -61,7 +61,7 @@ public servers.
 
 ## Result
 
-The run logs that the plates are current and writes the card in a few seconds. It sends
+The run logs that the plates are current and writes the map in a few seconds. It sends
 no request:
 
 ```text

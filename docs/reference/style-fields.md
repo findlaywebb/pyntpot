@@ -1,10 +1,10 @@
 # Style fields
 
-The style is every style group a map is painted, lettered and composed with, as one value: `pyntpot.maps.Style`. A theme is a TOML file with one table for each group, read by `Style.from_toml` and by the command line's `--style`. This page lists every field of every style group.
+The style is every style group a map is painted, lettered and composed with, as one value: `pyntpot.maps.Style`. A theme is a TOML file with one table for each group, read by `Style.from_toml` and by the command line's `--style`. This page lists every field of every style group. Every group is a frozen dataclass built by keyword: make a variant with `dataclasses.replace(group, field=value)`.
 
 ## Reading the tables
 
-- The section heading is the group's table name in a theme. The line under it names the dataclass and the package it comes from.
+- The section heading is the group's table name in a theme. The line under it names the group's dataclass, the package that exports it, and how to read the group from a style.
 - Type is the TOML type: boolean, integer, number, string, array or table.
 - Default is the value in the packaged default theme, which `Style.default()` reads. It is the resolved default style, not the dataclass default; the two differ for some fields.
 - A table or an array of tables is shown as `table`. Its keys and values are in `src/pyntpot/maps/themes/default.toml`.
@@ -23,7 +23,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `paper`
 
-`PaperStyle`, from `pyntpot.ink`. The paper, its encoder and the compositing of the pigment stack over it. Read by the painter for every plate and by the lettering.
+`PaperStyle`, from `pyntpot.ink`, read as `Style.default().paper`. The paper, its encoder and the compositing of the pigment stack over it. Read by the painter for every plate and by the lettering.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -52,7 +52,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `wash`
 
-`WashStyle`, from `pyntpot.ink`. How a laid wash wets, bleeds, rims, blooms, separates and flows.
+`WashStyle`, from `pyntpot.ink`, read as `Style.default().wash`. How a laid wash wets, bleeds, rims, blooms, separates and flows.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -103,7 +103,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `brush`
 
-`BrushStyle`, from `pyntpot.ink`. Which brush each line class takes, how wide, and how the brush behaves.
+`BrushStyle`, from `pyntpot.ink`, read as `Style.default().brush`. Which brush each line class takes, how wide, and how the brush behaves.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -155,7 +155,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `face`
 
-`FaceStyle`, from `pyntpot.letters`. The face the hand opens and how a glyph becomes a pen path.
+`FaceStyle`, from `pyntpot.letters`, read as `Style.default().face`. The face the hand opens and how a glyph becomes a pen path.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -164,7 +164,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `nib`
 
-`NibStyle`, from `pyntpot.letters`. The nib, its inks, widths and angle, and the backing wash under a name. Sizes and widths are in display pixels; the angle is in degrees.
+`NibStyle`, from `pyntpot.letters`, read as `Style.default().nib`. The nib, its inks, widths and angle, and the backing wash under a name. Sizes and widths are in display pixels; the angle is in degrees.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -172,7 +172,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `label_ink` | string | `"#241c14"` | Ink the lettering is written in, as `#rrggbb`. |
 | `label_brush` | string | `"MAJ6-e"` | Brush id of the nib the lettering is written with. |
 | `label_pen_width_px` | number | `1.05` | The nib's width, in display pixels. |
-| `label_outline_width_frac` | number | `0.62` | Width of the finer nib the outline route writes with, as a share of `label_pen_width_px`. |
+| `label_outline_width_frac` | number | `0.62` | Width of the finer nib the outline trace writes with, as a share of `label_pen_width_px`. |
 | `label_leader_brush` | string | `"MAJ6-e"` | Brush id for every mark that is not a glyph: a leader, a span line, a tick, an underline, a pin. |
 | `label_leader_width_px` | number | `0.85` | Width of those marks, in display pixels. |
 | `label_pen_angle_deg` | number | `-38.0` | The pen's angle in degrees from the page's horizontal, y down, so a negative angle turns anticlockwise on the page. |
@@ -187,7 +187,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `hand`
 
-`HandStyle`, from `pyntpot.letters`. The seed the hand draws every label's randomness from.
+`HandStyle`, from `pyntpot.letters`, read as `Style.default().hand`. The seed the hand draws every label's randomness from.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -195,7 +195,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `card`
 
-`CardStyle`, from `pyntpot.maps`. The card's display size, its supersampling and the dark grid's size.
+`CardStyle`, from `pyntpot.maps`, read as `Style.default().card`. The card's display size, its supersampling and the dark grid's size.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -205,7 +205,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `ribbon`
 
-`RibbonStyle`, from `pyntpot.maps`. The trimmed extent of the painted ground, and the card around it.
+`RibbonStyle`, from `pyntpot.maps`, read as `Style.default().ribbon`. The trimmed extent of the painted ground, and the card around it.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -228,7 +228,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `cover`
 
-`CoverStyle`, from `pyntpot.maps`. Land cover and the wood: the classes, their pigments, and the wood's texture and dabs.
+`CoverStyle`, from `pyntpot.maps`, read as `Style.default().cover`. Land cover and the wood: the classes, their pigments, and the wood's texture and dabs.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -250,7 +250,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `route`
 
-`RouteStyle`, from `pyntpot.maps`. The route's own painted plate: whether it is drawn, with which nib, how wide. The plate is tinted at compose time by the route ink.
+`RouteStyle`, from `pyntpot.maps`, read as `Style.default().route`. The route's own painted plate: whether it is drawn, with which nib, how wide. The plate is tinted at compose time by the route ink.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
@@ -260,33 +260,33 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 ## `route_ink`
 
-`RouteInk`, from `pyntpot.maps`. How the route is drawn on the card. It is read only when the route is placed and drawn, so changing it paints no plate again. `Style.with_route_ink` feeds its colour and width.
+`RouteInkStyle`, from `pyntpot.maps`, read as `Style.default().route_ink`. How the route is drawn on the map. It is read only when the route is placed and drawn, so changing it paints no plate again. `Style.with_route_ink` feeds its colour and width.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
-| `style` | string | `"solid"` | The route's treatment. `"pen"` tints the pen plate when the `route` group painted one; any other value draws the line. |
+| `style` | string | `"solid"` | How the route is drawn: `"pen"` tints the pen plate when the `route` group painted one; any other value draws a solid line. |
 | `px` | number | `5.4` | Width in display pixels. It also sets how near two passes of a retraced route have to come to be drawn as one stroke. |
 | `colour` | string | `"#c22050"` | Colour as `#rrggbb`. |
-| `blend` | string | `"normal"` | `"normal"` lays the ink over the card; `"multiply"` multiplies it into the card, so the route darkens a wash instead of covering it. Any other value is an error when the route is drawn. |
+| `blend` | string | `"normal"` | `"normal"` lays the ink over the map; `"multiply"` multiplies it into the map, so the route darkens a wash instead of covering it. Any other value is an error when the route is drawn. |
 | `opacity` | number | `1.0` | How much of the ink is laid, from 0 to 1. The default theme does not write it; a table without it reads 1.0. |
 
 The compose step draws no casing, glow or shadow round the route.
 
 ## `lettering`
 
-`LetteringPolicy`, from `pyntpot.maps`. Which names a map letters, and how many.
+`LetteringStyle`, from `pyntpot.maps`, read as `Style.default().lettering`. Which names a map letters, and how many.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
 | `label_max` | integer | `3` | The most landmark labels. |
-| `labels` | boolean | `true` | Letter the map at all. Off opens no hand and draws no label plate. |
+| `labels` | boolean | `true` | Letter the map at all. Off opens no hand and draws no nib plate. |
 | `label_ground` | boolean | `true` | Letter the settlements, watercourses and roads the box holds. |
 | `label_geom_tol_px` | number | `8.0` | How far a named road or watercourse is simplified before a label is set along it, in display pixels. |
 | `home_glyph` | boolean | `true` | Letter the user's marked places, each under its own name. |
 
 ## `basemap`
 
-`BasemapStyle`, from `pyntpot.maps`. What the basemap draws, and how much of it.
+`BasemapStyle`, from `pyntpot.maps`, read as `Style.default().basemap`. What the basemap draws, and how much of it.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
