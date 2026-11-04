@@ -9,7 +9,7 @@
 - [x] S1: collision and directive tests red, four modules renamed, importers, reference
       directives and `references.md` paths repointed; green (#164).
 - [x] S2: `Pt` to `Point`, one `Box`, `Anchor` folded into `Align`, alias docstrings.
-- [ ] S3: `griffelib` in `dev`; `test_public_signatures.py` (transitive walk, alias rule,
+- [x] S3: `griffelib` in `dev`; `test_public_signatures.py` (transitive walk, alias rule,
       `layer_of`, strings fail closed, `ALLOWED` the reviewed 30-name literal) and
       `test_field_docs.py` with self-tests and the per-lane pending ratchet; the run
       reproduces plan.md's expected 38 violations (6/1/31/0) and 30 external names, or S3

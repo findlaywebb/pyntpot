@@ -1,0 +1,28 @@
+"""The letters lane's pending violations of the public-surface gates.
+
+It holds the paths under `pyntpot.letters.` and the top-level `pyntpot.__version__`.
+
+This is the ratchet of plan 006: `test_public_signatures.py` and `test_field_docs.py`
+fail on a violation not listed here and on a listed entry that no longer violates, so the
+sets only shrink. The letters lane empties both; then the ratchet is deleted.
+"""
+
+#: Private canonical paths a public signature reaches today.
+SIGNATURES: frozenset[str] = frozenset(
+    {
+        "pyntpot.letters.setting.Align",
+    }
+)
+
+#: Checked classes and module attributes whose fields or docstring break the field rule today.
+FIELD_DOCS: frozenset[str] = frozenset(
+    {
+        "pyntpot.__version__",
+        "pyntpot.letters.hand.Hand",
+        "pyntpot.letters.setting.Mark",
+        "pyntpot.letters.setting.Setting",
+        "pyntpot.letters.style.FaceStyle",
+        "pyntpot.letters.style.HandStyle",
+        "pyntpot.letters.style.NibStyle",
+    }
+)
