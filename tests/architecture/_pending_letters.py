@@ -8,21 +8,7 @@ sets only shrink. The letters lane empties both; then the ratchet is deleted.
 """
 
 #: Private canonical paths a public signature reaches today.
-SIGNATURES: frozenset[str] = frozenset(
-    {
-        "pyntpot.letters.setting.Align",
-    }
-)
+SIGNATURES: frozenset[str] = frozenset[str]()
 
 #: Checked classes and module attributes whose fields or docstring break the field rule today.
-FIELD_DOCS: frozenset[str] = frozenset(
-    {
-        "pyntpot.__version__",
-        "pyntpot.letters.hand.Hand",
-        "pyntpot.letters.setting.Mark",
-        "pyntpot.letters.setting.Setting",
-        "pyntpot.letters.style.FaceStyle",
-        "pyntpot.letters.style.HandStyle",
-        "pyntpot.letters.style.NibStyle",
-    }
-)
+FIELD_DOCS: frozenset[str] = frozenset[str]()

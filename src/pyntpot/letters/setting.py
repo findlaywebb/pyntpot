@@ -46,7 +46,7 @@ class Setting:
     from it, one row per entry of `lines` (or the `text` alone), each row
     aligned on the widest by `align`.
 
-    Args:
+    Attributes:
         text: What is written; the whole name, even when `lines` wraps it.
         size: The type size, in display pixels.
         anchor: Where a flat block is set from: its baseline and its `align` edge.
@@ -94,10 +94,18 @@ class Setting:
 class Mark:
     """One stroke for the nib to run along, in display pixels.
 
-    `role` sets the weight and whether the pen's angle modulates it, `ink`
-    its ink token or a `#rrggbb` colour, `size` the type size it belongs to, and
-    `pen` the per-instance wobble on the nib's angle, so no two words are
-    written with the hand held at exactly the same tilt.
+    Attributes:
+        pts: The points the stroke runs through, in display pixels.
+        role: Sets the weight and whether the pen's angle modulates it.
+        ink: The ink token or a `#rrggbb` colour.
+        size: The type size the mark belongs to.
+        pen: The per-instance wobble on the nib's angle, so no two words are
+            written with the hand held at exactly the same tilt.
+        wash: Whether the backing wash is lifted under this mark. A name written
+            on its own water does not want one: the wash is there to make a name
+            readable on ground it was not meant to be on, and a pale blob on a
+            river reads as a hole in the water rather than as paint lifted off
+            the paper.
     """
 
     pts: list[Point]
@@ -105,8 +113,4 @@ class Mark:
     ink: str = "label"
     size: float = DEFAULT_LINE_PX
     pen: float = 0.0
-    #: Whether the backing wash is lifted under this mark. A name written on
-    #: its own water does not want one: the wash is there to make a name
-    #: readable on ground it was not meant to be on, and a pale blob on a river
-    #: reads as a hole in the water rather than as paint lifted off the paper.
     wash: bool = True

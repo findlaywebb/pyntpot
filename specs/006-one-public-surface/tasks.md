@@ -17,7 +17,7 @@
 - [ ] S4 (parallel): ink lane: `Flow`/`Blooms` records, keyword-only ink groups and
       `WashOptions`, eight ink exports, ink field docs, `ink.md`; `_pending_ink.py`
       empty (#73).
-- [ ] S5 (parallel): letters lane: keyword-only letters groups, `Align`, letters field
+- [x] S5 (parallel): letters lane: keyword-only letters groups, `Align`, letters field
       docs, `__version__` docstring, `letters.md`; `_pending_letters.py` empty.
 - [ ] S6 (parallel): maps lane: `LetteringStyle`/`RouteInkStyle`, keyword-only map
       groups, 31 maps exports with the protocols, newly public records frozen and
