@@ -8,7 +8,9 @@ Written ahead of 008's merge; slice P0 re-checks every path and name below again
 
 ### P0 — Check and decide (serial)
 
-1. Confirm on `main`: `Style.named`, `Style.themes()`, `.yaml` themes, `examples/place_card.py`'s
+1. Confirm on `main`: `Style.named`, `Style.themes()`, `Style.from_theme(theme,
+   relative_to=...)` (public, taking a name or a `.yaml` path), `.yaml` themes,
+   `examples/place_card.py`'s
    offline path (it paints from a cache that already holds the payloads, so the providers
    are never called). If any differs, update this plan first.
 2. Write ADR 0070, "A preview fixture in the Lynmouth box" (amends 0032): one new fixture
@@ -49,7 +51,8 @@ Written ahead of 008's merge; slice P0 re-checks every path and name below again
    writes a 600 px wide PNG; mean RGB pinned per theme (measured once, then literals);
    the placed label names pinned for `default`.
 2. Green: `examples/theme_preview.py` (public imports only), modelled on `place_card.py`:
-   `--theme` by 008's rule, the fixture cache, `display_px` 600, the journal note
+   `--theme` by 008's rule, loaded with `Style.from_theme(theme, relative_to=REPO_ROOT)`
+   (no branching on the value in the script), the fixture cache, `display_px` 600, the journal note
    "High tide at Lynmouth" on the route, `Annotations` with the landmark "Foreland
    Point". Docstring with the run command.
 

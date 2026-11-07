@@ -5,7 +5,7 @@ map styles; note `docs/features/maps-theme-preview-card.md`).
 
 Branch: its own, cut from `main` after feature 008 merges. Decision record: an amendment
 to ADR 0032 (one new fixture directory and its box), written as ADR 0070 in this spec's
-first slice. Depends on 008: named themes, YAML themes, `Style.named`.
+first slice. Depends on 008: named themes, YAML themes, `Style.named`, `Style.from_theme`.
 
 ## Problem
 
@@ -34,7 +34,7 @@ one card and break on another.
       East Lyn River, West Lyn River, Countisbury, Watersmeet, Foreland Point); features
       with no real name there carry no name tag.
 - [ ] `examples/theme_preview.py` takes `--theme` (a name or a `.yaml` path, the 008
-      rule) and an output path, paints the card at 600 px from the fixture offline, in
+      rule, loaded with the public `Style.from_theme`) and an output path, paints the card at 600 px from the fixture offline, in
       under 15 seconds on four cores.
 - [ ] `tests/golden/test_theme_preview.py` paints every packaged theme and every example
       theme on it (golden-marked), pins each image's mean RGB within 1.5 like

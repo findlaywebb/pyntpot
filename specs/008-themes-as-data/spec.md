@@ -40,9 +40,14 @@ reuses the word the whole style goes by (#182).
       `d15ae2f30e9ca5ce` until the rename below moves `digest()` alone.
 - [ ] `src/pyntpot/maps/themes/default.toml` is deleted and no file restates the defaults.
 - [ ] `tests/architecture/test_one_source_of_defaults.py` fails when a group field has no
-      default, when `Style()` differs from the default theme, when a `default.*` file or
-      any `.toml` file appears under `src/`, or when a shipped or example theme sets a key
-      to the value its base already has (shown failing on a planted file in each case).
+      default or a `Style` field is required, when `Style()` differs from the default
+      theme, when a `default.*` file or any `.toml` file appears under `src/`, or when a
+      shipped or example theme sets a key to the value its base already has. Each check
+      is a function over a class or a path, and a self-test plants its defect and shows
+      the check reporting it: a planted dataclass field and `Style` field, and planted
+      files in `tmp_path` (a `default.yaml` and a `.toml` file under a package, a theme
+      restating `wash.blooms: true`). `Style()` equal to the default theme is asserted
+      directly.
 - [ ] Docstrings of `ink/style.py`, `ink/brush_style.py`, `letters/style.py`,
       `maps/style_groups.py` and `maps/style.py` say the defaults are the default look;
       none says "class defaults" or "not a resolved theme".
@@ -53,9 +58,10 @@ reuses the word the whole style goes by (#182).
       a top-level `extends` and gives only overrides; a missing `extends` means `default`;
       chains resolve recursively and a cycle is an error naming it.
 - [ ] Merge: tables deep-merge; scalars, sequences and tuples replace; dict fields merge
-      per entry, a table entry deep-merging. Hypothesis properties: merge is associative;
-      an empty override gives its base; an override file and its fully expanded copy give
-      equal `digest()`.
+      per entry, a table entry deep-merging. Hypothesis properties: merge is associative
+      over inputs of one fixed shape (each key always a table or always a leaf, as the
+      model fixes it); an empty override gives its base; an override file and its fully
+      expanded copy give equal `digest()`.
 - [ ] Rejected at load, each with file, dotted key path and line: duplicate keys, anchors,
       aliases, merge keys (`<<`), explicit tags, `%` directives, more than one document,
       a key with no value, unknown keys at every level (dict-field entries and
@@ -63,13 +69,18 @@ reuses the word the whole style goes by (#182).
       under strict rules (`"5"` for a number, `1` for a boolean, `5.0` for an integer),
       enum values outside their `Literal`, unknown brush ids, colours that are not
       `#rrggbb`, and renamed keys. All problems in a file are reported together in one
-      `ThemeError`.
+      `ThemeError`, every duplicate key included; problems of the YAML itself (syntax,
+      duplicates, anchors, aliases, merge keys, tags, directives) are reported before any
+      key or type check.
+- [ ] A field typed as a dataclass (a sub-table, none today) is checked, merged, built and
+      written into the schema as a table of its own fields, shown on a planted group, so
+      a later sub-table needs no loader or format change.
 - [ ] YAML 1.2 typing: `blooms: no` is an error ("'no' is not a boolean"), never `False`.
 - [ ] `ink` and `letters` cannot import `ruamel` (import-linter); `maps` can; PyYAML stays
       banned everywhere; `BOUNDARIES.md` says so.
 - [ ] `Style.from_toml` is gone; `Style.from_yaml(path)` loads a file; a `.toml` theme
-      reference fails with "themes are YAML since ADR 0069" and the how-to's conversion
-      section; `.yml` fails suggesting `.yaml`.
+      path, given as a `str` or a `Path`, fails with "themes are YAML since ADR 0069" and
+      the how-to's conversion section; `.yml` fails suggesting `.yaml`.
 - [ ] Each of the ten example themes is a YAML override file setting no key to its base's
       value, and resolves to the `digest()`, `base_digest()` and `lettering_digest()`
       pinned in `plan.md` (S4) from the TOML files before conversion.
@@ -92,6 +103,8 @@ reuses the word the whole style goes by (#182).
       wheel.
 - [ ] `Style.named(name)` and `Style.themes()` (`("bold", "default", "pen-and-ink",
       "sepia", "winter")`); a bad name lists the available names.
+      `Style.from_theme(theme, relative_to=None)` takes a name or a `.yaml` path by the
+      rule below; the command line and the examples that take a theme use it.
 - [ ] `pyntpot map --style VALUE`: a value ending `.yaml` is a path, anything else a name
       matching `^[a-z][a-z0-9-]*$`; `extends` follows the same rule, relative paths from
       the extending file. A bad theme prints every problem and exits 2, with no traceback.
@@ -148,7 +161,7 @@ fix(maps): a theme that leaves out a key paints the default look, not a port-era
 feat(ink)!: PaperStyle, WashStyle and BrushStyle default to the default look (glazing, fibre, wet bleed, blooms and the brush flags on)
 feat(maps)!: BasemapStyle and RouteInkStyle default to the default look; RouteInkStyle() builds
 feat(maps)!: themes are YAML files that extend a base and give only overrides; Style.from_toml is replaced by Style.from_yaml
-feat(maps): Style.named and Style.themes load the packaged themes pen-and-ink, sepia, bold and winter by name
+feat(maps): Style.named and Style.themes load the packaged themes pen-and-ink, sepia, bold and winter by name, and Style.from_theme takes a name or a .yaml path
 feat(cli): pyntpot map --style takes a theme name or a .yaml path
 feat(maps): every theme problem is reported at load with its file, key and line, in one ThemeError
 feat(maps): a JSON Schema for theme files, for editor completion

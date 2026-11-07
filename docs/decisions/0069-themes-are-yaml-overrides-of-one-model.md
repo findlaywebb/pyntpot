@@ -58,12 +58,19 @@ values.
   overridden. `Style.default()` and `Style.named("default")` both return `Style()`.
 - `maps/themes/default.toml` is deleted, and no `default.yaml` replaces it. Nothing needs
   a file: a file holding the defaults would be a second copy that can disagree.
-- The digest rule `DIGEST_OMITS_AT_DEFAULT` compares a field with its dataclass default.
-  The four fields it names (`name_tags`, `minor_road_classes`, `relief_strength`,
-  `min_patch_px`) already default to the default theme's values, so moving the other
-  defaults changes nothing the rule omits, and no `digest()` of any theme moves because of
-  this section. A field added later with a default that leaves the look alone still moves
-  no digest of a style that does not set it.
+- The digest rule `DIGEST_OMITS_AT_DEFAULT` leaves a named field out of its group's
+  digest while the field equals its default. The four fields it names (`name_tags`,
+  `minor_road_classes`, `relief_strength`, `min_patch_px`) already default to the default
+  theme's values, so moving the other defaults changes nothing the rule omits, and no
+  `digest()` of any theme moves because of this section.
+- Adding a field moves the digest of every style that leaves it at its default, unless
+  the field is named in `DIGEST_OMITS_AT_DEFAULT`: the group's fields are hashed, so a
+  new name changes the hash. A field added later and named in the rule moves no digest
+  of a style that leaves it at its default. The rule used to compare a field with its
+  `default` only, which is `MISSING` for a field with a `default_factory` (a dict, or a
+  sub-table built by its dataclass), so such a field could never be omitted; the rule now
+  takes the factory's value as the default when there is no plain one. The four fields
+  named today have plain defaults, so this moves no digest.
 - **ADR 0020 is superseded** and **ADR 0005's** sentences "Each field's dataclass default
   is its source class default ... copied verbatim" and "The resolved and effective values
   belong to the theme, not to these defaults" no longer hold. The section "The basemap
@@ -141,14 +148,18 @@ Session F's data-driven brushes and pigments
 (`docs/features/ink-data-driven-brushes-and-pigments.md`) also assumes YAML; this sets the
 precedent, and whether its files are read in `ink` is that session's decision and ADR.
 
-**Files and names.** `.yaml` is the one extension. A theme reference that ends in `.yaml`
-is a path. Anything else is a name, which must match `^[a-z][a-z0-9-]*$` and be one of the
-packaged themes. A reference ending in `.yml` is an error that suggests `.yaml`; one ending
-in `.toml` is an error saying themes are YAML since ADR 0069 and pointing at the theme
-how-to's section on converting a TOML theme. Anything else that is neither a valid name
-nor a `.yaml` path is an error listing the available names. The same rule applies to
-`extends`, with a relative path resolved against the extending file's directory. Other
-TOML data files (`examples/places.toml`) are not themes and stay TOML.
+**Files and names.** `.yaml` is the one extension. A theme given as a value that ends in
+`.yaml` is a path. Any other string is a name, which must match `^[a-z][a-z0-9-]*$` in
+full and be one of the packaged themes. A value ending in `.yml` is an error that suggests
+`.yaml`; one ending in `.toml` is an error saying themes are YAML since ADR 0069 and
+pointing at the theme how-to's section on converting a TOML theme. The suffix is read the
+same way whether the value is a string or a `pathlib.Path`, so `Path("old.toml")` gets the
+same pointer; a `Path` is never a name. Anything else that is neither a valid name nor a
+`.yaml` path is an error listing the available names. The same rule applies to `extends`,
+with a relative path resolved against the extending file's directory. Other TOML data
+files (`examples/places.toml`) are not themes and stay TOML. The code and its messages
+say "a theme name or a .yaml path", never "reference", which the glossary keeps for an
+entry of the references page.
 
 ### The boundary
 
@@ -176,8 +187,22 @@ ruamel", forbidding `ruamel` too. `BOUNDARIES.md` says the same. This amends ADR
   error always names the file that holds the bad key. The merged result is then built into
   the groups; it is valid because each layer was.
 
-Merge is associative, an empty override gives its base, and an override file and its
-fully expanded copy load to equal styles and so equal `digest()` (Hypothesis properties).
+**The shape is fixed, and the model fixes it.** Every key path of a theme is one of two
+kinds, and which kind is a fact of the model, not of the file: a table (a group, a
+dict-valued field, a table entry such as `brush_overrides.lane`, or a field typed as a
+dataclass) or a leaf (every other field, and every entry of a dict field whose values are
+not tables). Each file is checked against the model before it is merged, and a leaf where
+a table belongs, or a table where a leaf belongs, is refused there. So `merge` never
+meets a table on one side and a leaf on the other at the same path. That matters because
+deep merge is associative only on such inputs: with `a = {k: {x: 1}}`, `b = {k: 5}` and
+`c = {k: {y: 2}}`, merging left first gives `{k: {y: 2}}` and right first gives
+`{k: {x: 1, y: 2}}`. The model rules `b` out, so the property is drawn over one fixed
+shape, each key always a table or always a leaf.
+
+On that domain merge is associative, an empty override gives its base, and an override
+file and its fully expanded copy load to equal styles and so equal `digest()`
+(Hypothesis properties). The merge reads the tables as the check converted them (an
+integer in a float field already a float), so `5` and `5.0` merge to the same value.
 
 ### Validation, before any fetch
 
@@ -208,6 +233,10 @@ caller can fetch or paint, and report every problem together, not the first:
 - **Renamed keys** fail with what they are called now, from one table,
   `maps.theme_check.RENAMED_KEYS`, so the next rename (#181, `face.label_route`) adds a
   row: `route_ink.style: renamed to drawn_as`.
+- **The YAML itself** is checked first, from the parser's events: syntax errors, duplicate
+  keys (every one, with its key path, not only the first), anchors, aliases, merge keys,
+  tags and directives. A file with such a problem is not loaded further, so its key and
+  type checks do not run and its `extends` is not followed.
 - Every problem names the file, the dotted key path and the line:
   `my-theme.yaml:7: route_ink.drawn_as: 'pne' is not one of 'pen', 'solid'`. They are
   raised together as one `ThemeError`, a `ValueError` whose `problems` are
@@ -218,7 +247,8 @@ caller can fetch or paint, and report every problem together, not the first:
 
 A JSON Schema for a theme file is generated from the model by walking the group
 dataclasses, in override form: every key optional, `additionalProperties: false` at every
-level including dict fields (their `propertyNames` are the vocabularies above), enums for
+level including dict fields (their `propertyNames` are the vocabularies above) and fields
+typed as a dataclass (an object of that dataclass's own fields), enums for
 the `Literal` fields, each field's default, its `Attributes:` text as the description,
 and the top-level `extends`. It is committed twice, as package data
 (`src/pyntpot/maps/themes/theme.schema.json`) and on the docs site
@@ -238,10 +268,14 @@ the site URL.
   `ambleside-hero`, `oxford`, `skye`, `y-fenni`, `yr-wyddfa`) stay examples: their
   landmark caps are curated against `examples/places.toml`.
 - Python: `Style.named(name)` loads a packaged theme by name; `Style.themes()` lists the
-  names, sorted, `default` included; `Style.from_yaml(path)` loads a file.
-  **`Style.from_toml` is removed** (breaking).
+  names, sorted, `default` included; `Style.from_yaml(path)` loads a file; and
+  `Style.from_theme(theme, relative_to=None)` takes either, by the rule above, a relative
+  path read from `relative_to` (the current directory when `None`). `from_theme` is
+  public because three callers need "a name or a path": the command line, the examples
+  that take a theme, and the theme preview card's script, which may use public names
+  only. **`Style.from_toml` is removed** (breaking).
 - Command line: `pyntpot map --style VALUE` takes a name or a `.yaml` path by the rule
-  above. A bad theme prints its problems, one per line, and exits with status 2. Nothing
+  above, through `Style.from_theme`. A bad theme prints its problems, one per line, and exits with status 2. Nothing
   else about themes reaches the command line here (#68).
 
 ### The route ink's `style` becomes `drawn_as` (#182)
@@ -259,27 +293,38 @@ of every style (the group's field name is hashed) and neither `base_digest()` no
 
 Added to `pyntpot.maps`: `ThemeError` and `ThemeProblem` (`Style.from_yaml` and
 `Style.named` raise the first, and its `problems` holds the second). New `Style` methods:
-`from_yaml`, `named`, `themes`. Removed: `Style.from_toml`. ADR 0068's rule covers the new
+`from_yaml`, `from_theme`, `named`, `themes`. Removed: `Style.from_toml`. ADR 0068's rule covers the new
 names; this ADR is the record of the change it requires.
 
 ### Forward compatibility
 
 A new theme setting is a new field with a model default that leaves the look as it was,
-plus a schema regeneration. No format change, and every existing theme stays valid:
+plus a schema regeneration. No format change, and every existing theme stays valid. A new
+field moves `digest()` (and `base_digest()` for a base group) of every style unless it is
+named in `DIGEST_OMITS_AT_DEFAULT`; naming it there keeps every digest where it was for
+styles that leave it at its default, a plain default or a factory's. A sub-table is built
+now, not promised: the check, the merge, the building of a group and the schema all walk a
+field typed as a dataclass as a table of its own fields, and tests show it on a planted
+group, so a sub-table drops in with no change to the loader or the format.
 
 - **C2.** Cover order (#147) is a sequence field and replaces wholesale, so a theme that
   sets it states the whole order. Pin icons (#149) are a field (or a small group table)
   that `lettering_marks._furniture` reads, defaulting to today's open ring.
 - **D.** Route casing, glow and shadow (#104, #105, #106) are new `RouteInkStyle` fields
-  or sub-tables (a table deep-merges, so a theme can set only a glow's colour), each
-  defaulting to off. Route labels (#159) are a field defaulting to today's behaviour.
+  or sub-tables typed as dataclasses (a table deep-merges, so a theme can set only a
+  glow's colour), each defaulting to off and named in `DIGEST_OMITS_AT_DEFAULT` so that
+  adding them moves no digest. Route labels (#159) are a field defaulting to today's behaviour.
 - A field renamed later adds a row to `RENAMED_KEYS`; one removed fails as an unknown key
   with its nearest neighbour suggested.
 
 ### The guard
 
 `tests/architecture/test_one_source_of_defaults.py` fails if a second set of values comes
-back:
+back. Each check is a function over a class or a path, and each has a self-test that
+plants its defect (a field with no default, a required `Style` field, a `default.yaml` or
+a `.toml` file in a package written to a temporary directory, a theme that restates
+`wash.blooms: true`) and shows the check reporting it, so a check cannot pass by reading
+nothing:
 
 - every field of every style group has a default (no `MISSING`), and every `Style` field
   is optional;
@@ -322,7 +367,11 @@ Expected, from the measurements on `f34de97`:
   `BASEMAP_DEFAULTS` (`landmarks`, `landmark_max`, `generalise`); `DIGEST` in
   `test_style.py`, from the `drawn_as` rename only (`1b08804a7f30026b` to
   `88b356ada294ff60`); and each docs image whose example builds an ink or basemap group
-  with no arguments (up to 56 of the 71 registered, from 24 scripts).
+  itself (with no arguments, or naming only some fields) or calls the basemap directly (up to 58 of the 71 registered, from the
+  25 scripts the plan lists; measured by grep on `f34de97`). Each moved image is read
+  against its caption and the paragraph it illustrates; a figure whose text a newly
+  enabled effect contradicts either passes those flags off explicitly or has its text
+  rewritten, and the regeneration lists every moved image with its fix.
 
 (S8 replaces this list with the measured table: every moved pin and image, its old and new
 value or differing fraction, and the reason.)
