@@ -6,20 +6,20 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## Start
 
-- [ ] Start: comment the branch `claude/trusting-babbage-i3edsh` and spec `008` on #158, #80, #77, #182 and #186 (#79: spec `008a`).
-- [ ] ADR 0069 and its index row (pointers on 0002, 0005, 0015, 0020, 0037, 0046); spec, plan, tasks; `specs/008a-theme-preview-card/` spec and plan.
-- [ ] Plan-reviewer passes the plan (rounds 1 and 2 blocked; round 3 on the revised plan).
+- [x] Start: comment the branch `claude/trusting-babbage-i3edsh` and spec `008` on #158, #80, #77, #182 and #186 (#79: spec `008a`).
+- [x] ADR 0069 and its index row (pointers on 0002, 0005, 0015, 0020, 0037, 0046); spec, plan, tasks; `specs/008a-theme-preview-card/` spec and plan.
+- [x] Plan-reviewer passes the plan (rounds 1 and 2 blocked; round 3 on the revised plan).
 
 ## S1 — One source of defaults (#158)
 
-- [ ] Red: `tests/architecture/test_one_source_of_defaults.py`: the checks as functions (fields without a default, required `Style` fields, package files that restate the defaults), each with a self-test that plants the defect (a field with no default, a required field, `default.yaml`, a `.toml` file, a stray file) and sees it reported; `Style()` is the default theme.
-- [ ] Red: a trimmed theme paints the default look; `RouteInkStyle()` builds.
-- [ ] The 25 dataclass defaults set to the default look; `RouteInkStyle` defaults; every `Style` field defaulted; `Style.default()` is `Style()`.
-- [ ] `default.toml` deleted; its three test callers repointed (`_theme_with` replaced by `_write_theme` and six inline TOML snippets).
-- [ ] Docstrings say the defaults are the default look (grep empty).
-- [ ] `tests/support/flags_off.py`; `class_style` renamed `flags_off_style`; the (A) and (C) tests on `flags_off`, pins unchanged.
-- [ ] The four (B) default pins marked for the regeneration window.
-- [ ] Digests unchanged (`1b08804a7f30026b`, `d9c56c0811177b0f`, `d15ae2f30e9ca5ce`); slice gate green.
+- [x] Red: `tests/architecture/test_one_source_of_defaults.py`: the checks as functions (fields without a default, required `Style` fields, package files that restate the defaults), each with a self-test that plants the defect (a field with no default, a required field, `default.yaml`, a `.toml` file, a stray file) and sees it reported; `Style()` is the default theme.
+- [x] Red: a trimmed theme paints the default look; `RouteInkStyle()` builds.
+- [x] The 25 dataclass defaults set to the default look; `RouteInkStyle` defaults; every `Style` field defaulted; `Style.default()` is `Style()`.
+- [x] `default.toml` deleted; its three test callers repointed (`_theme_with` replaced by `_write_theme` and six inline TOML snippets).
+- [x] Docstrings say the defaults are the default look (grep empty).
+- [x] `tests/support/flags_off.py`; `class_style` renamed `flags_off_style`; the (A) and (C) tests on `flags_off`, pins unchanged.
+- [x] The four (B) default pins marked for the regeneration window.
+- [x] Digests unchanged (`1b08804a7f30026b`, `d9c56c0811177b0f`, `d15ae2f30e9ca5ce`); slice gate green.
 
 ## S2 — The reader
 

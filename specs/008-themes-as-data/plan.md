@@ -716,7 +716,10 @@ Steps:
 
 
    def check_theme(
-       theme: ThemeFile, groups: Mapping[str, type], *, renamed: Mapping[tuple[str, ...], str] = RENAMED_KEYS
+       theme: ThemeFile,
+       groups: Mapping[str, type],
+       *,
+       renamed: Mapping[tuple[str, ...], str] = RENAMED_KEYS,
    ) -> tuple[dict[str, object], tuple[ThemeProblem, ...]]: ...
    ```
 
@@ -861,13 +864,20 @@ Steps:
    LEAF = None  # marks a leaf in a shape
    _KEYS = st.sampled_from(("a", "b", "c", "d"))
    _LEAVES = st.one_of(
-       st.integers(), st.floats(allow_nan=False), st.text(max_size=3),
+       st.integers(),
+       st.floats(allow_nan=False),
+       st.text(max_size=3),
        st.tuples(st.integers(), st.integers()),
    )
    shapes = st.dictionaries(
        _KEYS,
-       st.recursive(st.just(LEAF), lambda inner: st.dictionaries(_KEYS, inner, min_size=1, max_size=3), max_leaves=8),
-       min_size=1, max_size=3,
+       st.recursive(
+           st.just(LEAF),
+           lambda inner: st.dictionaries(_KEYS, inner, min_size=1, max_size=3),
+           max_leaves=8,
+       ),
+       min_size=1,
+       max_size=3,
    )
 
 
@@ -899,7 +909,9 @@ Steps:
    NAME = re.compile(r"[a-z][a-z0-9-]*")
 
 
-   def names_in(directory: Traversable) -> tuple[str, ...]: ...  # "default" plus its *.yaml stems, sorted
+   def names_in(
+       directory: Traversable,
+   ) -> tuple[str, ...]: ...  # "default" plus its *.yaml stems, sorted
    def theme_names() -> tuple[str, ...]: ...  # names_in(resources.files("pyntpot.maps") / "themes")
    def resolve(
        theme: str | Path, *, relative_to: Path, groups: Mapping[str, type], base: Mapping[str, object]
