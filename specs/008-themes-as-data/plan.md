@@ -15,27 +15,32 @@ Four moves, in this order:
    to the same digests as before. What does move is about 35 unit and property tests that
    used a no-argument group to mean "every flag off"; they move onto a named test
    configuration, `flags_off`, so their pins hold.
-2. **The YAML loader (S2, S3).** New modules under `maps/` read a YAML theme with
-   positions, reject the YAML features we do not allow, check every key and value against
-   the model strictly, resolve `extends`, merge, and raise one `ThemeError` holding every
-   problem. Then the JSON Schema.
-3. **The themes (S4, S5, S6).** The ten example themes become override files (digests
+2. **The YAML loader (S2, S3, S4), then the schema (S5).** New modules under `maps/`:
+   S2 reads a YAML theme with positions and rejects the YAML features we do not allow;
+   S3 checks every key and value against the model strictly; S4 resolves `extends`,
+   merges, and raises one `ThemeError` holding every problem, behind `Style.from_yaml`.
+   Then the JSON Schema.
+3. **The themes (S6, S7, S8).** The ten example themes become override files (digests
    pinned before, checked after), four move into the package as named themes, the CLI
    and the examples take a name or a path through the public `Style.from_theme`,
    `route_ink.style` becomes `drawn_as`.
-4. **Docs, goldens, mutation (S7, S8, S9)**, then the final review (S10). The preview card
+4. **Docs, goldens, mutation (S9, S10, S11)**, then the final review (S12). The preview card
    (#79) is `specs/008a-theme-preview-card/`, its own PR.
 
 ### The regeneration window
 
-From S1 to S8 the defaults have moved but pinned literals that hash the defaults are not
-re-pinned (ADR 0006's window): they are re-measured once, in S8. During the window:
+From S1 to S10 the defaults have moved but pinned literals that hash the defaults are not
+re-pinned (ADR 0006's window): they are re-measured once, in S10. During the window:
 
 - The four non-golden tests that pin group defaults are marked
   `@pytest.mark.xfail(strict=True, reason=WINDOW)` with
-  `WINDOW = "regeneration window: re-pinned in 008 S8 (ADR 0069)"`, written in each test
-  module, not shared. Strict, so a pin that unexpectedly holds fails. S8 removes every
-  mark: `git grep -n "regeneration window" tests` must be empty at the end of S8.
+  `WINDOW = "regeneration window: re-pinned in 008 S10 (ADR 0069)"`, written in each test
+  module, not shared. Strict, so a pin that unexpectedly holds fails. S10 removes every
+  mark: `git grep -n "regeneration window" tests` must be empty at the end of S10.
+- One default pin is not in the window: `DIGEST` in `tests/unit/maps/test_style.py`.
+  S1 leaves it unmoved (measured), and only the `drawn_as` rename moves it, so S8, the
+  rename slice, re-pins it to the measured `88b356ada294ff60` in the same commit, with no
+  `xfail`.
 - Golden-marked tests (`-m golden`) are not run per slice, except the ones a slice names.
 - Each slice's gate is the **slice gate** below. A failure there that the slice did not
   cause is a defect in an earlier slice: stop and fix it in that slice's files, never mark
@@ -53,19 +58,32 @@ re-pinned (ADR 0006's window): they are re-measured once, in S8. During the wind
 
   plus no file under `src/` over 400 lines (`tests/architecture/test_boundaries.py`, in
   the run above). The non-golden suite takes about a minute on four cores.
-- **Merge gate** (after the parallel pair S3 ∥ S4 is merged, as its own step, before S5
-  starts): merge both worktrees into the branch, run the whole slice gate above on the
-  merged tree, and commit the merge only when it is green. A failure here that neither
-  slice shows alone is a defect of the pair: fix it on the merged tree in the files of the
-  slice that owns them, and name the fix in the merge commit.
-- **Golden run** (S8, S10): `uv run pytest -n auto --dist loadgroup --golden-tolerance`
+- **Coverage gate** (S2, S3, S4, the merge gate, S7 and S12, in addition to the slice
+  gate): CI's own test and coverage steps, copied from `.github/workflows/ci.yml`:
+
+  ```bash
+  uv run pytest -m "not golden and not benchmark" --cov --golden-tolerance -n auto --dist loadgroup
+  uv run coverage report --include="src/pyntpot/ink/*,src/pyntpot/letters/*" --fail-under=95 --precision=2
+  uv run coverage report --include="src/pyntpot/maps/*" --fail-under=92 --precision=2
+  ```
+
+  Measured on `f34de97`: 97.32% for `ink` and `letters`, 94.80% for `maps`. These slices
+  add most of the new `maps` code; a module whose tests leave it under the bar is a
+  missing test, never a lower `--fail-under`.
+- **Merge gate** (after the parallel pair S5 ∥ S6 is merged, as its own step, before S7
+  starts): merge both worktrees into the branch, run the whole slice gate and the
+  coverage gate above on the merged tree, and commit the merge only when it is green. A
+  failure here that neither slice shows alone is a defect of the pair: fix it on the
+  merged tree in the files of the slice that owns them, and name the fix in the merge
+  commit.
+- **Golden run** (S10, S12): `uv run pytest -n auto --dist loadgroup --golden-tolerance`
   (about 27 minutes on four cores; exact, without `--golden-tolerance`, only on the pinning
   machine).
-- **Strict docs build** (S7, S10), from the repo root:
+- **Strict docs build** (S9, S12), from the repo root:
   `NO_MKDOCS_2_WARNING=1 uv run --locked --group docs mkdocs build --strict -d "$SCRATCH/site"`,
   `$SCRATCH` being your scratchpad.
-- **Glossary regeneration** (S7): `PYTHONPATH=tests uv run python -m support.glossary`.
-- **Schema regeneration** (S3 on): `PYTHONPATH=tests uv run python -m support.theme_schema`.
+- **Glossary regeneration** (S9): `PYTHONPATH=tests uv run python -m support.glossary`.
+- **Schema regeneration** (S5 on): `PYTHONPATH=tests uv run python -m support.theme_schema`.
 - Every test written first: write it, run it, see it fail for the stated reason, then
   make it pass. Every test has a one-line docstring saying what it proves; `parametrize`
   carries `ids=`; no mocking; no `autouse`; no `print`.
@@ -76,7 +94,7 @@ re-pinned (ADR 0006's window): they are re-measured once, in S8. During the wind
 
 | File | Now | After | Note |
 | --- | --- | --- | --- |
-| `src/pyntpot/maps/style.py` | 236 | ~300 | +field defaults, `from_yaml`, `from_theme`, `named`, `themes`, `_build`, `_digest_fields`; −`from_toml`, `resources` |
+| `src/pyntpot/maps/style.py` | 236 | ~310 | +field defaults, `from_yaml`, `from_theme`, `named`, `themes`, `_build`, `_digest_fields`, `_groups`, `_base`; −`from_toml`, `resources` |
 | `src/pyntpot/maps/style_groups.py` | 336 | ~345 | three defaults, `Literal`s, docstring; no loader code here |
 | `src/pyntpot/ink/style.py` | 266 | ~268 | values only |
 | `src/pyntpot/ink/brush_style.py` | 244 | ~244 | values only |
@@ -97,11 +115,13 @@ update this table in the same commit.
 
 ## Slices
 
-Order: **S1 → S2 → (S3 ∥ S4) → merge gate → S5 → S6 → S7 → S8 → S9 → S10**. S3 and S4
-own disjoint files and may run in parallel worktrees branched from the S2 checkpoint;
-merge both and pass the merge gate before S5. Everything else is serial: S6 runs after
-S5 because both pin the named themes' digests (S5 moves four `DIGESTS` rows into
-`test_theme_named.py`; S6 re-pins them there and in `test_example_themes.py`).
+Order: **S1 → S2 → S3 → S4 → (S5 ∥ S6) → merge gate → S7 → S8 → S9 → S10 → S11 →
+S12**. S2, S3 and S4 are the loader in three serial slices with disjoint owned files, each
+building on the one before through the interface its "Gives" line states. S5 and S6
+own disjoint files and may run in parallel worktrees branched from the S4 checkpoint;
+merge both and pass the merge gate before S7. Everything else is serial: S8 runs after
+S7 because both pin the named themes' digests (S7 moves four `DIGESTS` rows into
+`test_theme_named.py`; S8 re-pins them there and in `test_example_themes.py`).
 
 ---
 
@@ -127,7 +147,7 @@ Steps:
    problems it finds as sorted strings (empty when it holds). The real-tree tests call the
    checks on the real model and the real `src/pyntpot/`; the self-tests plant each defect
    and show the check reporting it, as `tests/architecture/test_field_docs.py` does. The
-   theme-file check needs the reader, so S2 adds it (step 10 there).
+   theme-file check needs the loader, so S4 adds it (step 5 there).
 
    ```python
    def fields_without_a_default(groups: Mapping[str, type]) -> list[str]: ...
@@ -141,19 +161,21 @@ Steps:
      dataclass is walked the same way, as `"{name}.{field}.{inner}"`.
    - `required_style_fields`: the names in `model.model_fields` whose
      `info.is_required()` is true.
-   - `files_that_restate_the_defaults`: paths relative to `package`, POSIX form, of every
-     `*.toml` file anywhere under it (`package.rglob("*.toml")`), and, under
-     `package / "maps" / "themes"` when that directory exists, every file whose stem is
-     `default` and every file that is neither `*.yaml` nor `theme.schema.json`. A missing
+   - `files_that_restate_the_defaults`: paths relative to `package`, POSIX form, sorted
+     and without repeats, of every `*.toml` file anywhere under it
+     (`package.rglob("*.toml")`), every file named `default.*` anywhere under it
+     (`package.rglob("default.*")`: the spec bans a `default.*` file under `src/`, not
+     only among the themes), and, under `package / "maps" / "themes"` when that directory
+     exists, every file that is neither `*.yaml` nor `theme.schema.json`. A missing
      `maps/themes/` is not a problem: after this slice deletes `default.toml`, a fresh
-     checkout has no such directory until S3 commits the schema.
+     checkout has no such directory until S5 commits the schema.
 
    Real-tree tests:
    - `test_every_style_group_field_has_a_default`: `fields_without_a_default({name:
      info.annotation for name, info in Style.model_fields.items()}) == []` and
      `required_style_fields(Style) == []`.
    - `test_the_default_theme_is_the_model_with_nothing_overridden`: `Style() ==
-     Style.default()`; from S5 also `== Style.named("default")` (S5 adds that line).
+     Style.default()`; from S7 also `== Style.named("default")` (S7 adds that line).
      This is a direct equality: a regression fails it with no planted file.
    - `test_no_package_file_restates_the_defaults`:
      `files_that_restate_the_defaults(REPO_ROOT / "src" / "pyntpot") == []`.
@@ -175,6 +197,8 @@ Steps:
      `["maps/themes/default.yaml"]`.
    - `test_a_toml_file_anywhere_is_found(tmp_path)`: write `tmp_path / "ink/old.toml"`;
      the check returns `["ink/old.toml"]`.
+   - `test_a_default_file_outside_the_themes_is_found(tmp_path)`: write
+     `tmp_path / "ink/default.json"`; the check returns `["ink/default.json"]`.
    - `test_a_stray_file_among_the_themes_is_found(tmp_path)`: write
      `tmp_path / "maps/themes/notes.txt"`; the check returns `["maps/themes/notes.txt"]`.
    - `test_a_clean_package_has_nothing_to_report(tmp_path)`: with
@@ -182,7 +206,7 @@ Steps:
      written, and again with no `maps/themes/` at all, the check returns `[]`.
 
    Self-tests and models never write under the repository; only `tmp_path`. Do not spell
-   `default.toml` in this module (S7's acceptance grep counts it): plant `default.yaml`
+   `default.toml` in this module (S9's acceptance grep counts it): plant `default.yaml`
    and `old.toml`.
 
    Run with the three functions as stubs returning `[]`: the self-tests fail (nothing is
@@ -223,9 +247,10 @@ Steps:
    `paper: PaperStyle = pydantic.Field(default_factory=PaperStyle)` (and so on for all
    13). `Style.default()` becomes `return cls()`, docstring "The default look: every group
    at its model defaults, nothing overridden." Drop the `resources` import. `from_toml`
-   stays (S4 removes it); its docstring loses "with a table for every group" and its
+   stays (S6 removes it); its docstring loses "with a table for every group" and its
    `Raises:` loses "a group is missing". Delete `src/pyntpot/maps/themes/default.toml`
-   (`git rm`). The directory is now empty: create no placeholder; S5 fills it.
+   (`git rm`). The directory is now empty: create no placeholder; S5 commits the schema
+   there and S7 the named themes.
 5. **Green: docstrings.** Replace the "class defaults / not a resolved theme" sentences:
    `maps/style.py:6-8` ("`Style.default` reads the packaged default theme ... not the
    groups' dataclass defaults") becomes "`Style()` is the default look: every group's
@@ -306,7 +331,7 @@ Steps:
      `::test_basemap_defaults_are_the_pinned_literals`.
 
    Any other test that fails: read its docstring; if it is about the engine with the
-   flags off, (A); if it pins a default, (B) and add it to S8's list in this file; if it
+   flags off, (A); if it pins a default, (B) and add it to S10's list in this file; if it
    is neither, stop: it is a behaviour change the plan did not foresee. Tests that call
    `basemap(inputs)` or `basemap(inputs, BasemapStyle(roads=...))` in
    `tests/unit/maps/test_layers.py` passed in the measurement; if one fails, it is (A)
@@ -330,10 +355,10 @@ Steps:
      | `test_an_effect_table_in_the_route_ink_is_rejected` | `'[route_ink.effect]\nblend = "normal"\n'` | `"effect"` |
      | `test_the_four_sport_inks_are_rejected` | `"[route_inks.ride]\n"` | `"route_inks"` |
 
-     The other tests keep reading `Style.default()`. S4 rewrites these six as YAML.
+     The other tests keep reading `Style.default()`. S6 rewrites these six as YAML.
    - `tests/unit/maps/test_cli.py:60` and `tests/unit/maps/test_cache_margins.py:172`:
      write the small theme as `"[card]\ndisplay_px = 120\n"` instead of copying the
-     default (S4 turns these into YAML).
+     default (S6 turns these into YAML).
 
 **Acceptance.**
 
@@ -349,24 +374,23 @@ and the slice gate green, with exactly the four (B) tests reported `xfailed`.
 
 ---
 
-### S2 — The YAML loader: read, check, merge, resolve, report (#80; serial)
+### S2 — The reader: dependency, errors, YAML in (#80; serial)
+
+**Gives S3 and S4** (the interface; nothing else of this slice is used later):
+`pyntpot.maps.theme_errors.ThemeProblem` and `ThemeError` (also exported from
+`pyntpot.maps`), `pyntpot.maps.theme_read.ThemeFile` and `read_theme(path, text)`, and the
+test helper `support.theme_files.theme_file(text, name="t.yaml")`.
 
 **Owned files.** `pyproject.toml` (dependency and import-linter only), `uv.lock`,
-`BOUNDARIES.md`, `src/pyntpot/maps/theme_errors.py`, `theme_read.py`, `theme_merge.py`,
-`theme_check.py`, `theme_vocab.py`, `theme_resolve.py` (all new),
-`src/pyntpot/maps/style.py`, `src/pyntpot/maps/style_groups.py` (`Literal`s),
-`src/pyntpot/letters/style.py` (`label_route` `Literal`), `src/pyntpot/ink/brush.py`,
-`src/pyntpot/maps/__init__.py`, `docs/reference/maps.md` (two directives),
-`tests/unit/test_public_api.py`, `tests/unit/maps/test_theme_read.py`,
-`test_theme_merge.py`, `test_theme_check.py`, `test_theme_resolve.py`,
-`tests/unit/ink/test_brush.py` (two new tests), `tests/property/test_theme_merge.py`,
-`tests/support/theme_files.py` (new), `tests/architecture/test_one_source_of_defaults.py`
-(the theme-file check), `tests/unit/maps/test_style.py` (`TestFromYaml`, the digest-rule
-test), `tests/unit/letters/test_nib.py` (line 396's parameter annotation only) and
-`tests/unit/maps/test_layers.py` (line 77's parameter annotation only).
+`BOUNDARIES.md`, `src/pyntpot/maps/theme_errors.py` and `src/pyntpot/maps/theme_read.py`
+(new), `src/pyntpot/maps/__init__.py`, `docs/reference/maps.md` (two directives),
+`tests/unit/test_public_api.py`, `tests/unit/maps/test_theme_errors.py` and
+`tests/unit/maps/test_theme_read.py` (new), `tests/support/theme_files.py` (new),
+`tests/architecture/test_theme_imports.py` (new).
 
-**Leave alone.** The example themes and every caller of `from_toml` (S4); `cli.py` (S4,
-S5); `maps/themes/` (S5); the route ink field name (S6).
+**Leave alone.** `style.py`, `style_groups.py` and every other `src/` file (S3, S4); the
+example themes and every caller of `from_toml` (S6); `cli.py` (S6, S7); `maps/themes/`
+(S7); the route ink field name (S8).
 
 Steps:
 
@@ -391,15 +415,47 @@ Steps:
      `pydantic` and `ruamel.yaml` out of `ink` and `letters` (ADRs 0010, 0069); the hard
      rules read "`pyntpot` imports no `matplotlib`, `pandas`, `jinja2` or `yaml`
      (PyYAML)." and "`ink` and `letters` import neither `httpx`, `pydantic` nor
-     `ruamel.yaml`; `maps` reads theme files with `ruamel.yaml` (ADR 0069)."
+     `ruamel.yaml`; `maps` reads theme files with `ruamel.yaml` (ADR 0069)." Add a third
+     rule: "No `maps/theme_*` module but `theme_schema` imports `pyntpot.maps.style` or
+     the `pyntpot.maps` package: `style.py` imports the loader, so the loader must not
+     import `style.py` (enforced by `tests/architecture/test_theme_imports.py`)."
    - `tests/architecture/`: no test encodes the YAML ban (checked: `git grep -ni yaml
-     tests/architecture` is empty); nothing to change there.
+     tests/architecture` is empty); nothing to change there for it.
    - `ty check` with `ruamel.yaml`: if ty reports missing stubs or unknown attributes on
      `ruamel.yaml` objects, confine every `ruamel` touch to `theme_read.py`, type the
      loaded objects as `object` and narrow with `isinstance(..., CommentedMap /
      CommentedSeq)`; do not add a ty ignore rule to `pyproject.toml`.
-2. **`theme_errors.py`** (module docstring per CLAUDE.md: purpose, key types, what it
-   does not do, invariants):
+2. **Red, then green: the import rule**, `tests/architecture/test_theme_imports.py`.
+   Why: `style.py` will import `theme_resolve`, which imports `theme_check`, which imports
+   `theme_vocab`; a `theme_*` module that imported `pyntpot.maps.style` (or
+   `from pyntpot.maps import ...`, which runs the package `__init__` and so `style.py`)
+   would close a cycle that fails at import time. The rule holds by construction and this
+   test keeps it:
+
+   ```python
+   #: The modules a loader module may not import: the style, and the package that imports it.
+   FORBIDDEN = frozenset({"pyntpot.maps", "pyntpot.maps.style"})
+
+
+   def theme_modules_importing_the_style(maps: Path) -> list[str]: ...
+   ```
+
+   For each `maps.glob("theme_*.py")`, sorted, except `theme_schema.py`: parse it with
+   `ast`, and for each `ast.Import` alias name and each `ast.ImportFrom` module, report
+   `"{file name}:{lineno}: {module}"` when the module is in `FORBIDDEN` or the import is
+   relative (`level > 0`, spelled as that many dots plus the module). The real-tree test
+   `test_no_loader_module_imports_the_style` asserts
+   `theme_modules_importing_the_style(REPO_ROOT / "src" / "pyntpot" / "maps") == []`
+   (it holds from the first `theme_*` module on, and covers every later one by the glob).
+   Self-tests in `TestTheCheckFindsAPlantedImport`, files in `tmp_path`: `theme_a.py`
+   holding `from pyntpot.maps.style import Style` gives `["theme_a.py:1:
+   pyntpot.maps.style"]`; `from pyntpot.maps import Style` gives `[... pyntpot.maps]`;
+   `import pyntpot.maps.style` is found; `from . import style` gives
+   `["theme_a.py:1: ."]`; `theme_schema.py` holding `from pyntpot.maps.style import
+   Style` and `theme_a.py` holding `from pyntpot.maps.style_groups import CoverStyle`
+   give `[]`. (Prototyped on a scratch copy: those outputs, and `[]` on the real tree.)
+3. **Red, then green: `theme_errors.py`** (module docstring per CLAUDE.md: purpose, key
+   types, what it does not do, invariants):
 
    ```python
    @dataclass(frozen=True, kw_only=True)
@@ -438,8 +494,12 @@ Steps:
    ```
 
    Sorted by `(str(path), line or 0, key)`; `ThemeError` with no problems is a
-   `ValueError("a theme error needs a problem")` (programming error).
-3. **Red, then green: `theme_read.py`.** One function and one record:
+   `ValueError("a theme error needs a problem")` (programming error). Tests in
+   `tests/unit/maps/test_theme_errors.py`: the four `str` forms (line and key, line only,
+   key only, neither); problems given out of order come back sorted; the message is one
+   line per problem in that order; `ThemeError(())` raises `ValueError` with that message;
+   `ThemeError` is a `ValueError`.
+4. **Red, then green: `theme_read.py`.** One function and one record:
 
    ```python
    @dataclass(frozen=True, kw_only=True)
@@ -463,6 +523,10 @@ Steps:
    def read_theme(path: Path, text: str) -> ThemeFile: ...
    ```
 
+   `read_theme` never raises for a bad file: every problem is in `problems`, and S4's
+   `resolve` is the one place that reports them (S3's `check_theme` never repeats them).
+   ruff's complexity limits (`max-complexity` 10, `max-branches` 10) apply: give the
+   event walk one small helper per rule below rather than one long loop body.
    Behaviour, in this order (each a test in `tests/unit/maps/test_theme_read.py`, inputs
    as inline strings, `path=Path("t.yaml")`):
    - **The event walk.** Iterate `YAML(typ="rt").parse(io.StringIO(text))` inside one
@@ -493,7 +557,7 @@ Steps:
      sets `version=(1, 1)` and would read `no` as `False`.
    - **Walk problems come first.** If the walk found any problem, return them with an
      empty table and empty lines: nothing is loaded, so no key or type check runs on that
-     file, and S2 step 7 does not follow its `extends`.
+     file, and S4's `resolve` does not follow its `extends`.
    - **The load.** `YAML(typ="rt").load(text)` inside `try`; a `MarkedYAMLError` (the
      walk has already caught syntax errors and duplicates, so this is a constructor
      error) → its `problem` at `problem_mark.line + 1`, key empty. Catch only
@@ -513,70 +577,72 @@ Steps:
      gives two "duplicate key" problems, `wash.blooms` line 3 and `card.display_px` line
      6; `wash:\n  blooms: [1, 2\n` gives one problem from the parser with a line and an
      empty table; an alias before a syntax error gives both problems.
-4. **Red, then green: `theme_merge.py`.**
-   `merge(base: Mapping[str, object], over: Mapping[str, object]) -> dict[str, object]`:
-   a new dict; for each key of `over`, when both values are `Mapping`, the merge of the
-   two, else `over`'s value; every other key of `base` kept. Never mutates its inputs.
-   Unit tests (`tests/unit/maps/test_theme_merge.py`): a nested key replaces only itself;
-   a tuple replaces whole; a dict entry merges per key (`cover.pigments.wood` keeps the
-   other fourteen); a table entry deep-merges (`brush.brush_overrides.lane.pool` keeps
-   `lane.jitter_px`); inputs unchanged.
+5. **Export and the test helper.**
+   - Export `ThemeError` and `ThemeProblem` from `pyntpot.maps` (`__init__.py` import from
+     `pyntpot.maps.theme_errors`, and `__all__`, sorted). `docs/reference/maps.md` lists
+     its directives alphabetically and has no errors section: add
+     `::: pyntpot.maps.ThemeError` and `::: pyntpot.maps.ThemeProblem` after
+     `::: pyntpot.maps.Style` and before `::: pyntpot.maps.Track`, each followed by a blank
+     line as the others are. Add both names to `tests/unit/test_public_api.py`'s pinned
+     `MAPS_PUBLIC`, in its order. `tests/architecture` (the field-docs and
+     public-signature checks) and `tests/docs` must stay green: `ThemeProblem`'s fields
+     have `Attributes:` entries and reach only `pathlib.Path`, `str` and `int`.
+   - `tests/support/theme_files.py`, module docstring "Theme files for the loader's tests:
+     `theme_file` reads inline YAML as the loader does.":
+     `theme_file(text: str, name: str = "t.yaml") -> ThemeFile`, returning
+     `read_theme(Path(name), text)`. S3 and S4 read their inputs through it.
 
-   Hypothesis, `tests/property/test_theme_merge.py`. Merge is associative only where a
-   key path is a table in every input or a leaf in every input: with `a = {"k": {"x":
-   1}}`, `b = {"k": 5}`, `c = {"k": {"y": 2}}` the two sides differ (`{"k": {"y": 2}}`
-   against `{"k": {"x": 1, "y": 2}}`). The model fixes that shape: each key path is a
-   table (a group, a dict field, a `brush_overrides` entry, a dataclass-typed field) or a
-   leaf, and `check_theme` refuses a leaf where a table belongs and a table where a leaf
-   belongs, before anything is merged (ADR 0069, "Merge"). So the strategy draws one
-   shape and then the inputs as partial fillings of it:
+**Acceptance.**
 
-   ```python
-   LEAF = None  # marks a leaf in a shape
-   _KEYS = st.sampled_from(("a", "b", "c", "d"))
-   _LEAVES = st.one_of(
-       st.integers(), st.floats(allow_nan=False), st.text(max_size=3),
-       st.tuples(st.integers(), st.integers()),
-   )
-   shapes = st.dictionaries(
-       _KEYS,
-       st.recursive(st.just(LEAF), lambda inner: st.dictionaries(_KEYS, inner, min_size=1, max_size=3), max_leaves=8),
-       min_size=1, max_size=3,
-   )
+```bash
+uv run pytest tests/unit/maps/test_theme_errors.py tests/unit/maps/test_theme_read.py tests/architecture/test_theme_imports.py tests/unit/test_public_api.py tests/architecture tests/docs -q
+uv run lint-imports   # every contract kept
+uv run ty check       # 0 diagnostics
+git grep -n "ruamel" src | grep -v "^src/pyntpot/maps/theme_read.py"   # empty: no output
+```
 
+and the slice gate and the coverage gate green.
 
-   @st.composite
-   def filling(draw: st.DrawFn, shape: Mapping[str, object]) -> dict[str, object]:
-       """Draw a table that names some of `shape`'s keys, a leaf where it has a leaf and a table where it has a table."""
-       table: dict[str, object] = {}
-       for key, inner in shape.items():
-           if draw(st.booleans()):
-               table[key] = draw(_LEAVES) if inner is LEAF else draw(filling(inner))
-       return table
-   ```
+---
 
-   Tests, each `@given(st.data())` drawing `shape` first and then `a`, `b`, `c` as
-   `filling(shape)`: `test_merge_is_associative` (`merge(merge(a, b), c) == merge(a,
-   merge(b, c))`); `test_an_empty_override_gives_the_base` (`merge(a, {}) == a`);
-   `test_an_override_of_nothing_is_the_override` (`merge({}, a) == a`);
-   `test_merge_never_mutates_its_inputs` (`copy.deepcopy` of `a` and `b` before, equal
-   after). The counterexample above is pinned as a unit test in `test_theme_merge.py`,
-   `test_a_leaf_between_two_tables_is_outside_the_model`, which asserts the two sides
-   differ, so the reason for the fixed shape stays visible.
-5. **Red, then green: vocabularies and value checks, `theme_vocab.py` and `ink/brush.py`.**
-   - In `ink/brush.py`: `BRUSH_OVERRIDE_KEYS: frozenset[str]`, with an attribute
-     docstring, the fifteen keys `_sheet_brush` reads from `over`: `jitter_px`,
-     `press_cell_px`, `wobble_px`, `darkness`, `bristles`, `gap`, `dry`, `thr`, `texture`,
-     `press`, `load`, `pool`, `bleed`, `lift`, `solid`. `brush_id_known(brush_id: str) ->
-     bool`: the existing check of `brush_from_id` (`row in BRUSH_TREATMENTS and col in
-     BRUSH_COLOURS.get(cls, {})`), which `brush_from_id` then calls. Tests in
-     `tests/unit/ink/test_brush.py`: `test_every_override_key_changes_the_brush` (for each
-     key, a `brush_overrides` entry setting it to a distinct value builds a different
-     `Brush` than without it; proves the set is what is read, both ways: add a key to the
-     set that nothing reads and it fails) and `test_a_brush_id_is_known_only_on_the_sheet`
-     (`"MAJ6-e"` and `"TRK4-d"` known; `"MAJ9-e"`, `"XXX1-a"`, `"MAJ6"` not).
-   - `theme_vocab.py`: for each dict-valued field, the set of keys a theme may give,
-     computed from the model, never written out:
+### S3 — The checker: vocabularies, strict values, sub-tables (#80; serial)
+
+**Takes from S2:** `ThemeFile`, `ThemeProblem`, `support.theme_files.theme_file`.
+**Gives S4 and S5:** `pyntpot.maps.theme_check.check_theme(theme, groups, *,
+renamed=RENAMED_KEYS) -> tuple[dict[str, object], tuple[ThemeProblem, ...]]`,
+`build_group(group, table)`, `RENAMED_KEYS`; `pyntpot.maps.theme_vocab`'s vocabularies,
+`BRUSH_ID_FIELDS` and `COLOUR_FIELDS`; the planted groups `Glow` and `Ink` in
+`support.planted_groups`.
+
+**Owned files.** `src/pyntpot/maps/theme_vocab.py` and `src/pyntpot/maps/theme_check.py`
+(new), `src/pyntpot/ink/brush.py`, `src/pyntpot/maps/style_groups.py` (the `Literal`s),
+`src/pyntpot/letters/style.py` (the `label_route` `Literal`),
+`tests/unit/ink/test_brush.py` (two new tests), `tests/unit/maps/test_theme_vocab.py` and
+`tests/unit/maps/test_theme_check.py` (new), `tests/support/planted_groups.py` (new),
+`tests/unit/letters/test_nib.py` (the parameter annotation at line 393 only) and
+`tests/unit/maps/test_layers.py` (the parameter annotation at line 77 only).
+
+**Leave alone.** `style.py`, `theme_read.py`, `theme_errors.py` (S2's, used as they are);
+`theme_merge.py` and `theme_resolve.py` (S4); every caller of `from_toml` (S6).
+
+Steps:
+
+1. **Red, then green: `ink/brush.py`.** `BRUSH_OVERRIDE_KEYS: frozenset[str]`, with an
+   attribute docstring, the fifteen keys `_sheet_brush` reads from `over`: `jitter_px`,
+   `press_cell_px`, `wobble_px`, `darkness`, `bristles`, `gap`, `dry`, `thr`, `texture`,
+   `press`, `load`, `pool`, `bleed`, `lift`, `solid`. `brush_id_known(brush_id: str) ->
+   bool`: the existing check of `brush_from_id` (`row in BRUSH_TREATMENTS and col in
+   BRUSH_COLOURS.get(cls, {})`), which `brush_from_id` then calls. Tests in
+   `tests/unit/ink/test_brush.py`: `test_every_override_key_changes_the_brush` (for each
+   key, a `brush_overrides` entry setting it to a distinct value builds a different
+   `Brush` than without it; proves the set is what is read, both ways: add a key to the
+   set that nothing reads and it fails) and `test_a_brush_id_is_known_only_on_the_sheet`
+   (`"MAJ6-e"` and `"TRK4-d"` known; `"MAJ9-e"`, `"XXX1-a"`, `"MAJ6"` not).
+2. **Red, then green: `theme_vocab.py`.** It imports `pyntpot.maps.style_groups`,
+   `pyntpot.ink.*` and `pyntpot.letters.*` group classes as it needs them, never
+   `pyntpot.maps.style` or the `pyntpot.maps` package (S2's import rule).
+   - For each dict-valued field, the set of keys a theme may give, computed from the
+     group defaults (`CoverStyle()`, `BrushStyle()` and so on), never written out:
 
      | Field | Vocabulary |
      | --- | --- |
@@ -590,49 +656,81 @@ Steps:
      `maps/card_geometry.py:94`, `maps/painter/brushes.py:52-57`,
      `maps/painter/pen.py:62,118`, `letters/nib.py:158`, `ink/brush.py:163`. If a reader
      reads a key outside its row, widen the row and say so in the commit.
-     `BRUSH_ID_FIELDS = (("brush", "brushes", "*"), ("route", "route_pen_brush"),
+   - `BRUSH_ID_FIELDS = (("brush", "brushes", "*"), ("route", "route_pen_brush"),
      ("nib", "label_brush"), ("nib", "label_leader_brush"))`.
-     `COLOUR_FIELDS`: every `str` field whose `Style()` value matches `#[0-9a-f]{6}`
-     (`paper.paper_hex`, the four `nib.label_*ink` fields, `route_ink.colour`) plus
-     `cover.pigments.*` and `wash.separation_pigments.*`. Test
-     `test_every_colour_default_is_a_colour_field`: walking every `str` leaf of `Style()`
-     (dict entries included), a value matching the pattern has its path in
-     `COLOUR_FIELDS`, and every `COLOUR_FIELDS` path's default matches.
-   - `Literal` types (step 5b): `basemap.hillshade_mode`, `sea_style`, `roads`, `rivers`,
-     `landmarks`; `route_ink.blend` and (until S6) `style` as `Literal["pen", "solid"]`;
-     `face.label_route` (`Literal["centreline", "outline"]`). Values exactly as ADR 0069
-     lists; confirm each against its readers (`relief_layers.py:144,191`,
-     `osm_elements.py:262-295`, `layers.py` for `landmarks`, `compose_steps.py:109-112`
-     for `blend`, `letters/nib.py:160` for `label_route`). Write the `Literal` inline in
-     the annotation (no new alias: ADR 0068 would make an alias public). Fix any `ty`
-     error in a caller that passes a plain `str` by annotating that caller's value with
-     the same `Literal`, never with a cast. Measured on a scratch copy with the nine
-     `Literal`s applied: `uv run ty check` reports exactly two errors, both in tests:
-     `tests/unit/letters/test_nib.py:396` (`FaceStyle(label_route=route)`; annotate the
-     test's parameter `route: Literal["centreline", "outline"]`) and
-     `tests/unit/maps/test_layers.py:90` (`BasemapStyle(roads=roads)`; annotate
-     `_road_names`'s parameter at line 77 `roads: Literal["all", "key", "major"]`). Add
-     `Literal` to each module's `typing` import. Any other error is unforeseen: stop.
-6. **Red, then green: `theme_check.py`.**
+   - `COLOUR_FIELDS`, a literal tuple of key paths like `BRUSH_ID_FIELDS` (a literal, so
+     the module needs no `Style()` and so no import of `style.py`), with an attribute
+     docstring:
+
+     ```python
+     COLOUR_FIELDS = (
+         ("paper", "paper_hex"),
+         ("wash", "separation_pigments", "*"),
+         ("nib", "label_ink"),
+         ("nib", "label_water_ink"),
+         ("nib", "label_in_water_ink"),
+         ("nib", "label_route_ink"),
+         ("cover", "pigments", "*"),
+         ("route_ink", "colour"),
+     )
+     ```
+
+     (measured on a scratch copy with S1 applied: these are exactly the paths whose
+     `Style()` value fullmatches `#[0-9a-f]{6}`; no tuple field holds one, and no other
+     dict field's values do). Test in `tests/unit/maps/test_theme_vocab.py`,
+     `test_the_colour_fields_are_what_the_model_implies`: walk `Style()` (the test may
+     import it); for each group field, a `str` value is the path `(group, field)` and a
+     `dict` value whose values are all `str` is the path `(group, field, "*")`; the set of
+     those paths whose value (every value, for a dict) fullmatches `#[0-9a-f]{6}` equals
+     `set(COLOUR_FIELDS)`, and `len(COLOUR_FIELDS) == len(set(COLOUR_FIELDS))`. A new
+     colour field fails it until it is added to the literal. Also
+     `test_each_vocabulary_is_its_default_s_keys` (each table row above, from the
+     defaults).
+3. **The `Literal` types.** Eight new ones (`paper.paper_edge` already is one, so nine in
+   all, as ADR 0069 lists): `basemap.hillshade_mode`, `sea_style`, `roads`, `rivers`,
+   `landmarks`; `route_ink.blend` and (until S8) `style` as `Literal["pen", "solid"]`;
+   `face.label_route` (`Literal["centreline", "outline"]`). Values exactly as ADR 0069
+   lists; confirm each against its readers (`relief_layers.py:144,191`,
+   `osm_elements.py:262-295`, `layers.py` for `landmarks`, `compose_steps.py:109-112`
+   for `blend`, `letters/nib.py:160` for `label_route`). Write the `Literal` inline in
+   the annotation (no new alias: ADR 0068 would make an alias public). Fix any `ty`
+   error in a caller that passes a plain `str` by annotating that caller's value with
+   the same `Literal`, never with a cast. Measured on a scratch copy with the eight
+   applied (re-measured for this revision, with the two annotations then giving 0
+   diagnostics and ruff clean): `uv run ty check` reports exactly two errors, both in
+   tests:
+   `tests/unit/letters/test_nib.py:396` (the call `FaceStyle(label_route=route)`; annotate
+   the test method's parameter at line 393, `route: Literal["centreline", "outline"]`)
+   and `tests/unit/maps/test_layers.py:90` (the call `BasemapStyle(roads=roads)`;
+   annotate `_road_names`'s parameter at line 77, `roads: Literal["all", "key",
+   "major"]`). Add `Literal` to each module's `typing` import (`letters/style.py` and
+   `test_nib.py` have none yet: add `from typing import Literal`). Any other error is
+   unforeseen: stop.
+4. **Red, then green: `theme_check.py`.**
 
    ```python
-   RENAMED_KEYS: dict[tuple[str, ...], str] = {}  # S6 adds route_ink.style
+   #: Old key paths and what each is called now; a theme that uses one is told the new name.
+   RENAMED_KEYS: dict[tuple[str, ...], str] = {}  # S8 adds a row
 
 
    def check_theme(
-       theme: ThemeFile, groups: Mapping[str, type]
+       theme: ThemeFile, groups: Mapping[str, type], *, renamed: Mapping[tuple[str, ...], str] = RENAMED_KEYS
    ) -> tuple[dict[str, object], tuple[ThemeProblem, ...]]: ...
    ```
 
    `groups` is `{name: info.annotation for name, info in Style.model_fields.items()}`,
-   passed by `style.py` (no import of `Style` here: no cycle). Returns the table with
-   every valid leaf converted to its field type (ints to floats where the field is a
-   float, through the adapter) and invalid leaves dropped, plus every problem:
+   passed by the caller (S4's `style.py`; tests build it the same way): this module
+   imports no `Style`. It checks `theme.table` only and returns the problems it finds
+   there. It never copies `theme.problems` into its result: S4's `resolve` reports those,
+   and calls `check_theme` only on a file whose read found none, so no problem is
+   reported twice. Returns the table with every valid leaf converted to its field type
+   (ints to floats where the field is a float, through the adapter) and invalid leaves
+   dropped, plus every problem:
    - top-level keys: `extends` (must be a `str`: "extends is a theme name or a .yaml
      path") and the group names; anything else unknown.
    - Unknown key at any level (group, dict field entry, `brush_overrides` entry key):
      "unknown key; did you mean {near}?" with `difflib.get_close_matches(key, known, n=1,
-     cutoff=0.6)`, else "unknown key". A key in `RENAMED_KEYS`: "renamed to {new}" (and no
+     cutoff=0.6)`, else "unknown key". A key in `renamed`: "renamed to {new}" (and no
      suggestion).
    - A group or dict field given a non-mapping: "is a table of keys".
    - Each leaf: `pydantic.TypeAdapter(hint, config=pydantic.ConfigDict(strict=True))`,
@@ -653,37 +751,43 @@ Steps:
      (also for `ruamel`'s `ScalarFloat`), returns a plain `int` for `ScalarInt` and
      `HexInt`, and rejects `"5"`, `True` for a number, `1` for a `bool`, `5.0` for an
      `int` and a list for a tuple (the reader already made sequences tuples).
-   - **Dataclass-typed fields** (none today; #104 to #106 may add sub-tables such as a
-     route glow): a field whose type is a dataclass is checked as a table of that
+   - **Dataclass-typed fields** (no real group has one yet; the parameter `groups` lets
+     the tests plant one): a field whose type is a dataclass is checked as a table of that
      dataclass's fields, recursively, with the same rules (unknown keys with a
      suggestion, "is a table of keys" for a non-mapping, strict leaves, lines), and its
      converted entries are a nested `dict`. One code path walks a group and a sub-table:
      `_check_table(group: type, value, key_path)`, called for each group and again for
-     each dataclass-typed field.
-   - Brush ids at `BRUSH_ID_FIELDS`: "{v!r} is not a brush on the sheet".
+     each dataclass-typed field. The module docstring states this as a capability ("a
+     field typed as a dataclass is a sub-table, checked by the same rules") with no issue
+     or roadmap number (`tests/architecture` enforces that rule on docstrings).
+   - Brush ids at `BRUSH_ID_FIELDS`: "{v!r} is not a brush on the sheet", by
+     `brush_id_known`.
    - Colours at `COLOUR_FIELDS`: "{v!r} is not a # and six hexadecimal digits".
    - Lines from `theme.lines[path]`; the line of the nearest present ancestor otherwise.
    Tests (`tests/unit/maps/test_theme_check.py`, one class per family, inputs from
-   `tests/support/theme_files.py`'s `theme_file(text: str, name: str = "t.yaml") ->
-   ThemeFile`, a thin call of `read_theme`): every bullet above, including
-   `wash.blom` suggesting `blooms`, `cover.cover_cfg.wod` suggesting `wood`,
-   `brush.brush_overrides.lane.jiter_px` suggesting `jitter_px`, `blooms: no` →
-   "'no' is not a boolean (true or false)", `display_px: "900"`, `bloom_max: 5.5`,
-   `cover.cover_cfg.wood: [0.1, 0.2, 0.3]`, `basemap.roads: some`,
+   `support.theme_files.theme_file`, `groups` built from `Style.model_fields` as above):
+   every bullet above, including `wash.blom` suggesting `blooms`, `cover.cover_cfg.wod`
+   suggesting `wood`, `brush.brush_overrides.lane.jiter_px` suggesting `jitter_px`,
+   `blooms: no` → "'no' is not a boolean (true or false)", `display_px: "900"`,
+   `bloom_max: 5.5`, `cover.cover_cfg.wood: [0.1, 0.2, 0.3]`, `basemap.roads: some`,
    `brush.brushes.lane: LAN9-z`, `route_ink.colour: red`; a file with three problems
-   reports all three in line order; a renamed key, using a local table passed through a
-   `renamed` keyword argument of `check_theme` (default `RENAMED_KEYS`), says
-   "renamed to"; the valid leaves of a file with an error are still returned converted;
-   `card.dark_grid: [80]` → "a list of 2 values, not 1" (one problem) and
+   reports all three in line order; a renamed key, using a local table passed as
+   `renamed={("wash", "bloom"): "blooms"}`, says "renamed to blooms" (the real table is
+   empty until S8); the valid leaves of a file with an error are still returned
+   converted; `card.dark_grid: [80]` → "a list of 2 values, not 1" (one problem) and
    `card.dark_grid: [80, 60, 40]` → "a list of 2 values, not 3"; `wash.wet_bleed_px: 20`
-   returns the `float` `20.0` (`type(...) is float`).
-   Sub-table tests, `TestASubTable`, through `groups` (the parameter exists for this:
-   the real model has no dataclass-typed field yet): two planted groups in
-   `tests/support/theme_files.py`, so S3's schema test reuses them,
+   returns the `float` `20.0` (`type(...) is float`);
+   `test_the_reader_s_problems_are_not_repeated`: a `ThemeFile(path=Path("t.yaml"),
+   table={}, lines={}, problems=(one ThemeProblem,))` gives `({}, ())`.
+   Sub-table tests, `TestASubTable`, through `groups`: two planted groups in
+   `tests/support/planted_groups.py` (module docstring "Planted style groups for the
+   loader's and the schema's tests: a group with a dataclass-typed field, which no real
+   group has yet."), so S5's schema test reuses them,
    `@dataclass(frozen=True, kw_only=True) class Glow` (`colour: str = "#ffffff"`,
    `px: float = 2.0`) and `class Ink` (`glow: Glow = field(default_factory=Glow)`,
    `px: float = 5.4`), each with a docstring saying it is a planted sub-table for the
-   loader's tests and no style group; `groups = {"route_ink": Ink}`:
+   loader's tests and no style group, and an `Attributes:` entry per field;
+   `groups = {"route_ink": Ink}`:
    `route_ink:\n  glow:\n    px: 3\n` → table `{"route_ink": {"glow": {"px": 3.0}}}`,
    no problems; `glo:` suggests `glow`; `glow: 5` → "is a table of keys";
    `glow:\n    pxx: 1\n` suggests `px` with key `route_ink.glow.pxx` and its line.
@@ -694,7 +798,99 @@ Steps:
    every other value as it is. Test: `build_group(Ink, {"glow": {"colour": "#ffffff",
    "px": 3.0}, "px": 5.4}) == Ink(glow=Glow(px=3.0))`, and for every real group,
    `build_group(G, dataclasses.asdict(G())) == G()`.
-7. **Red, then green: `theme_resolve.py`.**
+
+**Acceptance.**
+
+```bash
+uv run pytest tests/unit/maps/test_theme_vocab.py tests/unit/maps/test_theme_check.py tests/unit/ink/test_brush.py tests/unit/letters/test_nib.py tests/unit/maps/test_layers.py tests/architecture/test_theme_imports.py -q
+uv run ty check       # 0 diagnostics
+PYTHONPATH=src uv run python -c "from pyntpot.maps import Style; s=Style(); print(s.digest(), s.base_digest(), s.lettering_digest())"
+# 1b08804a7f30026b d9c56c0811177b0f d15ae2f30e9ca5ce   (a Literal annotation moves no value)
+```
+
+and the slice gate and the coverage gate green.
+
+---
+
+### S4 — Merge, resolve and `Style.from_yaml` (#80; serial)
+
+**Takes from S2 and S3:** `read_theme`, `ThemeFile`, `ThemeProblem`, `ThemeError`,
+`check_theme`, `build_group`, `COLOUR_FIELDS`, `support.theme_files.theme_file`.
+**Gives S5 to S8:** `pyntpot.maps.theme_merge.merge`, `pyntpot.maps.theme_resolve`
+(`NAME`, `names_in`, `theme_names`, `resolve`), `Style.from_yaml`, `Style._build`, the
+theme-file guard `keys_set_to_their_base_value` and `theme_files()`.
+
+**Owned files.** `src/pyntpot/maps/theme_merge.py` and `src/pyntpot/maps/theme_resolve.py`
+(new), `src/pyntpot/maps/style.py`, `tests/unit/maps/test_theme_merge.py`,
+`tests/property/test_theme_merge.py` and `tests/unit/maps/test_theme_resolve.py` (new),
+`tests/support/theme_dump.py` (new), `tests/unit/maps/test_style.py` (`TestFromYaml` and
+the digest-rule test), `tests/architecture/test_one_source_of_defaults.py` (the theme-file
+check).
+
+**Leave alone.** The S2 and S3 modules and their tests (fix a defect found there in that
+slice's files, as "Running the gates" says); `cli.py` (S6, S7); `maps/themes/` (S7); the
+example themes (S6).
+
+Steps:
+
+1. **Red, then green: `theme_merge.py`.**
+   `merge(base: Mapping[str, object], over: Mapping[str, object]) -> dict[str, object]`:
+   a new dict; for each key of `over`, when both values are `Mapping`, the merge of the
+   two, else `over`'s value; every other key of `base` kept. Never mutates its inputs.
+   Unit tests (`tests/unit/maps/test_theme_merge.py`): a nested key replaces only itself;
+   a tuple replaces whole; a dict entry merges per key (`cover.pigments.wood` keeps the
+   other fourteen); a table entry deep-merges (`brush.brush_overrides.lane.pool` keeps
+   `lane.jitter_px`); inputs unchanged.
+
+   Hypothesis, `tests/property/test_theme_merge.py`. Merge is associative only where a
+   key path is a table in every input or a leaf in every input: with `a = {"k": {"x":
+   1}}`, `b = {"k": 5}`, `c = {"k": {"y": 2}}` the two sides differ (`{"k": {"y": 2}}`
+   against `{"k": {"x": 1, "y": 2}}`). The model fixes that shape: each key path is a
+   table (a group, a dict field, a `brush_overrides` entry, a dataclass-typed field) or a
+   leaf, and `check_theme` refuses a leaf where a table belongs and a table where a leaf
+   belongs, before anything is merged (ADR 0069, "Merge"). So the strategy draws one
+   shape and then the inputs as partial fillings of it. The `isinstance` narrowing is
+   needed: `shape.items()` gives `object` values, and `ty` refuses an `object` for
+   `filling`'s `Mapping` parameter (measured: one diagnostic without it, none with it;
+   the property below passes with this strategy):
+
+   ```python
+   LEAF = None  # marks a leaf in a shape
+   _KEYS = st.sampled_from(("a", "b", "c", "d"))
+   _LEAVES = st.one_of(
+       st.integers(), st.floats(allow_nan=False), st.text(max_size=3),
+       st.tuples(st.integers(), st.integers()),
+   )
+   shapes = st.dictionaries(
+       _KEYS,
+       st.recursive(st.just(LEAF), lambda inner: st.dictionaries(_KEYS, inner, min_size=1, max_size=3), max_leaves=8),
+       min_size=1, max_size=3,
+   )
+
+
+   @st.composite
+   def filling(draw: st.DrawFn, shape: Mapping[str, object]) -> dict[str, object]:
+       """Draw a table that names some of `shape`'s keys, a leaf where it has a leaf and a table where it has a table."""
+       table: dict[str, object] = {}
+       for key, inner in shape.items():
+           if not draw(st.booleans()):
+               continue
+           if inner is LEAF:
+               table[key] = draw(_LEAVES)
+           elif isinstance(inner, Mapping):
+               table[key] = draw(filling(inner))
+       return table
+   ```
+
+   Tests, each `@given(st.data())` drawing `shape` first and then `a`, `b`, `c` as
+   `filling(shape)`: `test_merge_is_associative` (`merge(merge(a, b), c) == merge(a,
+   merge(b, c))`); `test_an_empty_override_gives_the_base` (`merge(a, {}) == a`);
+   `test_an_override_of_nothing_is_the_override` (`merge({}, a) == a`);
+   `test_merge_never_mutates_its_inputs` (`copy.deepcopy` of `a` and `b` before, equal
+   after). The counterexample above is pinned as a unit test in `test_theme_merge.py`,
+   `test_a_leaf_between_two_tables_is_outside_the_model`, which asserts the two sides
+   differ, so the reason for the fixed shape stays visible.
+2. **Red, then green: `theme_resolve.py`.**
 
    ```python
    NAME = re.compile(r"[a-z][a-z0-9-]*")
@@ -707,13 +903,15 @@ Steps:
    ) -> dict[str, object]: ...
    ```
 
-   The parameter is `theme`, a theme given by its name or its file, and no name or
-   message here says "reference": `GLOSSARY.md` gives "reference" to an entry of the
-   references page. `base` is the defaults table `style.py` passes (`{name:
+   It imports `theme_read`, `theme_check`, `theme_merge` and `theme_errors`, and never
+   `style.py` (S2's import rule): `groups` and `base` come from the caller. The parameter
+   is `theme`, a theme given by its name or its file, and no name or message here says
+   "reference": `GLOSSARY.md` gives "reference" to an entry of the references page.
+   `base` is the defaults table `style.py` passes (`{name:
    dataclasses.asdict(getattr(Style(), name))}`).
 
    `names_in(directory)` (`Traversable` from `importlib.resources.abc`): when `directory`
-   is not a directory, `("default",)`, which is the packaged state from S1 until S3
+   is not a directory, `("default",)`, which is the packaged state from S1 until S5
    commits the schema (git keeps no empty directory); otherwise `"default"` plus the
    stems of its `*.yaml` files, sorted together. `theme_names()` calls it on the
    package's `themes` directory.
@@ -736,35 +934,47 @@ Steps:
       {names}".
    A refusal in rules 2 to 7 is a `ThemeProblem` with `path` the given value as a `Path`,
    key `""` for the top-level call and `extends` for a chained one, at the `extends`
-   line. Packaged files are read through `resources.as_file`. A missing file: "no such
-   theme file".
+   line (line `None` for the top-level call). Packaged files are read through
+   `resources.as_file`. A missing file: "no such theme file", key `""`, line `None`.
 
-   The chain: read the file (`read_theme`), check it (`check_theme(file, groups)`), and
-   follow the checked table's `extends` (default `"default"`, relative paths from the
-   extending file's directory) by the same rule, until `default`. A file whose read
-   returned problems stops the chain there (its `extends` was never loaded). A resolved
-   path seen before is "extends cycle: a.yaml -> b.yaml -> a.yaml" on the `extends`
-   key's line. Every file's problems are collected; if any, `raise ThemeError(problems)`.
-   Otherwise fold `merge` from `base` through the chain, base first, over the **converted
-   tables `check_theme` returned**, never the raw `ThemeFile.table`, so every leaf is the
-   field's own type (a raw `5` in a float field would dump as `5`, not `5.0`, and move
-   `digest()`), then drop `extends`.
+   The chain, and **the one reporter of a file's problems**: for each file, read it
+   (`read_theme`) and add its `ThemeFile.problems` to the collected problems. When that
+   file's read found none, check it (`check_theme(file, groups)`) and add the problems
+   `check_theme` returns (which never include the read's own: S3 step 4); when it found
+   some, do not check it and stop the chain there (its `extends` was never loaded).
+   Follow the checked table's `extends` (default `"default"`, relative paths from the
+   extending file's directory) by the same rule, until `default`. A resolved path seen
+   before is "extends cycle: a.yaml -> b.yaml -> a.yaml" on the `extends` key's line.
+   If any problem was collected, `raise ThemeError(problems)`. Otherwise fold `merge` from
+   `base` through the chain, base first, over the **converted tables `check_theme`
+   returned**, never the raw `ThemeFile.table`, so every leaf is the field's own type (a
+   raw `5` in a float field would dump as `5`, not `5.0`, and move `digest()`), then drop
+   `extends`.
 
    Tests (`tests/unit/maps/test_theme_resolve.py`, files in `tmp_path`): each rule above,
-   including `Path("old.toml")` and `Path("old.yml")` given as `Path`, `Path("sepia")`
-   refused by rule 4, and `"Sepia"`, `"sepia_2"`, `"2sepia"` refused by rule 7; a
-   three-file chain (`c.yaml` extends `b.yaml` extends `a.yaml`) applies in order; a
-   relative `extends: ../shared/base.yaml` resolves from the extending file; a two-file
-   cycle and a self-cycle; problems in two files of a chain are both reported; a missing
-   `extends` means `default`; `extends: default` with `card:\n  display_px: 120` gives
-   `card.display_px == 120`, and `wash:\n  wet_bleed_px: 20` gives the `float` `20.0`
-   in the result; `names_in(tmp_path / "absent") == ("default",)`, and for a directory
-   holding `b.yaml`, `a.yaml` and `theme.schema.json`, `("a", "b", "default")`.
-8. **Green: `Style`.** In `maps/style.py`:
+   including `"old.toml"`, `Path("old.toml")` and `Path("old.yml")` (the TOML ones as
+   `test_a_toml_theme_is_refused_with_the_conversion_pointer`), `Path("sepia")` refused
+   by rule 4, and `"Sepia"`, `"sepia_2"`, `"2sepia"` refused by rule 7; a three-file chain
+   (`c.yaml` extends `b.yaml` extends `a.yaml`) applies in order; a relative
+   `extends: ../shared/base.yaml` resolves from the extending file; a two-file cycle and a
+   self-cycle; problems in two files of a chain are both reported;
+   `test_a_read_problem_is_reported_once`: a file holding `a: &x 1\n` raises `ThemeError`
+   with exactly one problem; a missing `extends` means `default`; `extends: default` with
+   `card:\n  display_px: 120` gives `card.display_px == 120`, and `wash:\n
+   wet_bleed_px: 20` gives the `float` `20.0` in the result;
+   `names_in(tmp_path / "absent") == ("default",)`, and for a directory holding `b.yaml`,
+   `a.yaml` and `theme.schema.json`, `("a", "b", "default")`. Tests build `groups` and
+   `base` from `Style` as `style.py` does.
+3. **Green: `Style`.** In `maps/style.py`:
+   - Two private module helpers, `_groups() -> dict[str, type]` (`{name: info.annotation
+     for name, info in Style.model_fields.items()}`) and `_base() -> dict[str, object]`
+     (`{name: dataclasses.asdict(getattr(Style(), name)) for name in Style.model_fields}`),
+     each with a one-line docstring; `from_yaml`, S7's `from_theme` and S4's guard use
+     them, so every caller builds `groups` and `base` one way.
    - `from_yaml(cls, path: Path) -> Self`: `resolve(Path(path), relative_to=Path.cwd(),
-     ...)` then `cls._build(table)`. Always a path: a `.toml` or `.yml` file gets rule 3
-     or 2 of step 7. Docstring with `Raises: ThemeError: When the file or any theme it
-     extends has a problem; every problem is in its problems.`
+     groups=_groups(), base=_base())` then `cls._build(table)`. Always a path: a `.toml`
+     or `.yml` file gets rule 3 or 2 of step 2. Docstring with `Raises: ThemeError: When
+     the file or any theme it extends has a problem; every problem is in its problems.`
    - `_build(cls, table) -> Self`: `cls(**{name: build_group(groups[name], table[name])
      for name in groups})`, so a dataclass-typed sub-table is built as its dataclass.
    - **The digest rule and factory defaults.** `DIGEST_OMITS_AT_DEFAULT` compares a field
@@ -775,8 +985,8 @@ Steps:
      `dataclasses.asdict`, minus each field named in the rule that equals its default,
      where the default is `spec.default` or, when that is `MISSING`,
      `spec.default_factory()`), and have `_group_digest` hash it. The four fields named
-     today all have plain defaults, so no digest moves (the S2 acceptance prints the
-     three digests). Test in `test_style.py`,
+     today all have plain defaults, so no digest moves (the acceptance prints the three
+     digests). Test in `test_style.py`,
      `test_a_factory_default_counts_for_the_digest_rule`: a test-local dataclass with
      `name_tags: tuple[str, ...] = field(default_factory=lambda: ("name",))` and `px:
      float = 1.0` gives `_digest_fields(...) == {"px": 1.0}` at its defaults and keeps
@@ -784,15 +994,11 @@ Steps:
      ("... equals its default, or what its default factory builds ...").
    - Keep `_reject_unknown_group_keys` and `_check_keys`: `model_validate` of a dict stays
      a supported pydantic entry point.
-   - Export `ThemeError` and `ThemeProblem` from `pyntpot.maps` (`__init__.py` import and
-     `__all__`, sorted), add `::: pyntpot.maps.ThemeError` and
-     `::: pyntpot.maps.ThemeProblem` to `docs/reference/maps.md` in the section the other
-     maps errors sit in, and add both to `tests/unit/test_public_api.py`'s pinned list.
    - Tests in `test_style.py`, `TestFromYaml`: a minimal file loads; a file with an error
      raises `ThemeError` whose `problems[0].line` is right; `Style.from_yaml` on a
      file holding only `extends: default` equals `Style()`; `Style.from_yaml(Path("old.toml"))`
      raises `ThemeError` with the ADR 0069 pointer (the suffix rule on a `Path`).
-9. **Green: the property that matters.** In `tests/property/test_theme_merge.py`,
+4. **Green: the property that matters.** In `tests/property/test_theme_merge.py`,
    `test_an_override_and_its_expanded_copy_give_one_digest`: draw a set of leaf paths
    from `Style()`'s table (dict-field entries and `brush_overrides` entry keys included)
    and a factor in `[0.5, 2.0]`, and give each drawn leaf a new value by its default's
@@ -806,65 +1012,71 @@ Steps:
    - a `str` at a `COLOUR_FIELDS` path: a drawn `#rrggbb` (lower-case hex);
    - anything else (other strings, empty tuples): not drawn; filter the candidate paths
      to the kinds above before drawing.
-   Write the drawn leaves as an override YAML (`ruamel.yaml` dump of the plain tree,
-   tuples as lists) and the expanded copy (the whole `merge(base, override)` dumped) into
-   a `tempfile.TemporaryDirectory()` per example (function-scoped `tmp_path` and
-   Hypothesis do not mix), load both with `Style.from_yaml`: equal styles and equal
-   `digest()`. `@settings(max_examples=50, deadline=None)`.
-   `tests/support/theme_files.py` gets `dump_theme(table: Mapping[str, object]) ->
-   str`.
-10. **Guard: the theme-file check.** In `tests/architecture/test_one_source_of_defaults.py`
-    add
+   Write the drawn leaves as an override YAML and the expanded copy (the whole
+   `merge(base, override)`) with `dump_theme`, into a `tempfile.TemporaryDirectory()` per
+   example (function-scoped `tmp_path` and Hypothesis do not mix), load both with
+   `Style.from_yaml`: equal styles and equal `digest()`.
+   `@settings(max_examples=50, deadline=None)`. `tests/support/theme_dump.py` (module
+   docstring "Write a plain theme table as YAML text, for the loader's property tests.")
+   holds `dump_theme(table: Mapping[str, object]) -> str`: a `ruamel.yaml` dump of the
+   plain tree, tuples as lists.
+5. **Guard: the theme-file check.** In `tests/architecture/test_one_source_of_defaults.py`
+   add
 
-    ```python
-    def keys_set_to_their_base_value(theme: Path) -> list[str]: ...
-    def theme_files() -> list[Path]: ...  # sorted *.yaml of src/pyntpot/maps/themes and examples/themes
-    ```
+   ```python
+   def keys_set_to_their_base_value(theme: Path) -> list[str]: ...
+   def theme_files() -> list[Path]: ...  # sorted *.yaml of src/pyntpot/maps/themes and examples/themes
+   ```
 
-    `keys_set_to_their_base_value` reads the file with `read_theme`, checks it with
-    `check_theme`, resolves its base table with `theme_resolve.resolve` (the file's
-    `extends`, relative to the file's directory, or `"default"`; `groups` and `base` built
-    from `Style` exactly as `style.py` builds them), and walks every leaf
-    the converted table sets (into groups, dict-field entries, `brush_overrides` entry
-    keys and dataclass-typed sub-tables), returning `"{file name}: {dotted key path}"`
-    for each leaf equal to the base's value at that path. A file that does not load
-    returns `["{file name}: does not load: {problem}"]`, one per problem. The real-tree
-    test, `test_no_theme_file_sets_a_key_to_its_base_value`, loops over `theme_files()`
-    (one test, not a parametrize: the list is empty until S4) and asserts the joined
-    result is empty, naming each file and key.
+   `keys_set_to_their_base_value(theme)`: first `resolve(theme, relative_to=theme.parent,
+   groups=_groups(), base=_base())`; a `ThemeError` returns `["{file name}: does not
+   load: {problem}" for each problem]` (so each problem is reported once, by `resolve`).
+   Otherwise read the file with `read_theme` and take its converted table from
+   `check_theme` (no problems now), resolve its base table with `resolve` (the file's
+   `extends`, relative to the file's directory, or `"default"`), and walk every leaf the
+   converted table sets (into groups, dict-field entries, `brush_overrides` entry keys
+   and dataclass-typed sub-tables, skipping `extends`), returning
+   `"{file name}: {dotted key path}"` for each leaf equal to the base's value at that
+   path. The real-tree test, `test_no_theme_file_sets_a_key_to_its_base_value`, loops
+   over `theme_files()` (one test, not a parametrize: the list is empty until S6) and
+   asserts the joined result is empty, naming each file and key.
 
-    Self-tests (in `TestTheChecksFindAPlantedDefect`, files in `tmp_path`):
-    - `test_a_theme_restating_a_default_is_found`: `t.yaml` holding
-      `wash:\n  blooms: true\n` gives `["t.yaml: wash.blooms"]`; with `blooms: false`,
-      `[]`.
-    - `test_a_restated_value_is_found_after_conversion`: `wash:\n  wet_bleed_px: 20\n`
-      (an int for the default `20.0`) gives `["t.yaml: wash.wet_bleed_px"]`.
-    - `test_a_restated_dict_entry_is_found`: `cover:\n  pigments:\n    wood: "<the
-      default wood colour, read from CoverStyle().pigments>"\n` gives
-      `["t.yaml: cover.pigments.wood"]`.
-    - `test_the_base_is_the_extended_theme`: `base.yaml` holding `wash:\n  blooms:
-      false\n` and `child.yaml` holding `extends: base.yaml\nwash:\n  blooms: false\n`
-      gives `["child.yaml: wash.blooms"]`; with the child setting `blooms: true` (the
-      default, but not the base's value), `[]`.
-    - `test_a_theme_that_does_not_load_is_reported`: `wash:\n  blom: true\n` gives one
-      entry starting `"t.yaml: does not load:"`.
+   Self-tests (in `TestTheChecksFindAPlantedDefect`, files in `tmp_path`):
+   - `test_a_theme_restating_a_default_is_found`: `t.yaml` holding
+     `wash:\n  blooms: true\n` gives `["t.yaml: wash.blooms"]`; with `blooms: false`,
+     `[]`.
+   - `test_a_restated_value_is_found_after_conversion`: `wash:\n  wet_bleed_px: 20\n`
+     (an int for the default `20.0`) gives `["t.yaml: wash.wet_bleed_px"]`.
+   - `test_a_restated_dict_entry_is_found`: `cover:\n  pigments:\n    wood: "<the
+     default wood colour, read from CoverStyle().pigments>"\n` gives
+     `["t.yaml: cover.pigments.wood"]`.
+   - `test_the_base_is_the_extended_theme`: `base.yaml` holding `wash:\n  blooms:
+     false\n` and `child.yaml` holding `extends: base.yaml\nwash:\n  blooms: false\n`
+     gives `["child.yaml: wash.blooms"]`; with the child setting `blooms: true` (the
+     default, but not the base's value), `[]`.
+   - `test_a_theme_that_does_not_load_is_reported`: `wash:\n  blom: true\n` gives one
+     entry starting `"t.yaml: does not load:"`.
 
 **Acceptance.**
 
 ```bash
-uv run pytest tests/unit/maps/test_theme_read.py tests/unit/maps/test_theme_merge.py tests/unit/maps/test_theme_check.py tests/unit/maps/test_theme_resolve.py tests/property/test_theme_merge.py tests/unit/ink/test_brush.py tests/unit/maps/test_style.py tests/unit/test_public_api.py tests/architecture/test_one_source_of_defaults.py -q
-uv run lint-imports   # every contract kept
+uv run pytest tests/unit/maps/test_theme_merge.py tests/property/test_theme_merge.py tests/unit/maps/test_theme_resolve.py tests/unit/maps/test_style.py tests/architecture -q
 uv run ty check       # 0 diagnostics
 git grep -n "ruamel" src | grep -v "^src/pyntpot/maps/theme_read.py"   # empty: no output
 PYTHONPATH=src uv run python -c "from pyntpot.maps import Style; s=Style(); print(s.digest(), s.base_digest(), s.lettering_digest())"
 # 1b08804a7f30026b d9c56c0811177b0f d15ae2f30e9ca5ce
 ```
 
-and the slice gate green.
+and the slice gate and the coverage gate green.
 
 ---
 
-### S3 — The schema (parallel with S4)
+### S5 — The schema (parallel with S6)
+
+**Takes from S3 and S4:** `theme_vocab` (the vocabularies and `COLOUR_FIELDS`),
+`support.planted_groups` (`Glow`, `Ink`), `Style`. `theme_schema` is the one `theme_*`
+module S2's import rule lets import `pyntpot.maps.style`: nothing in `src/` imports
+`theme_schema`, so no cycle can form.
 
 **Owned files.** `src/pyntpot/maps/theme_schema.py` (new),
 `src/pyntpot/maps/themes/theme.schema.json` (new), `docs/reference/theme.schema.json`
@@ -872,7 +1084,7 @@ and the slice gate green.
 `tests/unit/maps/test_theme_schema.py` (new), `mkdocs.yml` (only if the build excludes
 `.json`; it does not by default).
 
-**Leave alone.** Every theme file (S4 adds their directive lines), `style.py`.
+**Leave alone.** Every theme file (S6 adds their directive lines), `style.py`.
 
 Steps:
 
@@ -892,16 +1104,16 @@ Steps:
    - `test_extends_is_the_one_extra_top_level_key`, `test_no_key_is_required` (no
      `"required"` anywhere).
    - `test_every_theme_key_is_a_schema_path`: for every `*.yaml` under `maps/themes/` and
-     `examples/themes/` (empty until S4/S5), walk the file's keys through the schema
+     `examples/themes/` (empty until S6/S7), walk the file's keys through the schema
      (`properties`, then `additionalProperties` for dict entries) and check enum values;
      a test-local walker, no new dependency. Add `test_the_theme_files_name_a_schema`:
      each file's first line is `# yaml-language-server: $schema=<target>` and `<target>`,
      resolved from the file's directory, is an existing file or is
      `https://findlaywebb.github.io/pyntpot/reference/theme.schema.json`. Both theme-file
      tests loop over the files in one test each (no parametrize: the list is empty in
-     this slice's worktree, and the merge gate runs them on S4's ten files).
+     this slice's worktree, and the merge gate runs them on S6's ten files).
    - `test_a_sub_table_is_an_object_of_its_fields`: with `Glow` and `Ink` from
-     `support.theme_files` (S2 step 6; `groups={"route_ink": Ink}`), the schema's
+     `support.planted_groups` (S3 step 4; `groups={"route_ink": Ink}`), the schema's
      `properties.route_ink.properties.glow` has `"type": "object"`,
      `"additionalProperties": false`, `properties.px` with `"type": "number"` and
      `"default": 2.0`, and its own `"default"` `{"colour": "#ffffff", "px": 2.0}`.
@@ -910,8 +1122,8 @@ Steps:
    for the sub-table test), hand-walked over the groups and each group's
    `dataclasses.fields` with
    `typing.get_type_hints`: `bool` → `{"type": "boolean"}`; `int` → `"integer"`;
-   `float` → `"number"`; `str` → `"string"` (`"pattern": "^#[0-9a-fA-F]{6}$"` at
-   `COLOUR_FIELDS`); `Literal` → `"enum"`; `tuple[X, ...]` → `"array"` with `items`;
+   `float` → `"number"`; `str` → `"string"` (`"pattern": "^#[0-9a-fA-F]{6}$"` at each
+   `theme_vocab.COLOUR_FIELDS` path, a `"*"` meaning every entry of that dict field); `Literal` → `"enum"`; `tuple[X, ...]` → `"array"` with `items`;
    `tuple[X, Y]` → `"array"`, `prefixItems`, `minItems` = `maxItems` = 2;
    `dict[str, V]` → `"object"` with `propertyNames` and `additionalProperties` = V's
    schema; a dataclass → `"object"`, `"additionalProperties": false` and `properties`
@@ -930,12 +1142,18 @@ Steps:
    indent=2, sort_keys=False) + "\n"` to both paths, logging each (no `print`).
 3. Run the regenerator; commit both JSON files.
 
-**Acceptance.** `uv run pytest tests/unit/maps/test_theme_schema.py -q`; the regenerator
-run twice leaves `git status` clean; the slice gate green.
+**Acceptance.**
+
+```bash
+uv run pytest tests/unit/maps/test_theme_schema.py tests/architecture/test_theme_imports.py -q
+PYTHONPATH=tests uv run python -m support.theme_schema && git status --porcelain   # after the commit: prints nothing
+```
+
+and the slice gate green.
 
 ---
 
-### S4 — The ten example themes as overrides (#80; parallel with S3)
+### S6 — The ten example themes as overrides (#80; parallel with S5)
 
 **Owned files.** `examples/themes/*` (ten `.toml` deleted, ten `.yaml` added),
 `examples/map_styles.py`, `examples/place_card.py`, `examples/social_preview.py`,
@@ -946,8 +1164,7 @@ and the `Style.from_toml` call at line 207), `tests/fixtures/sweep_span_scale.py
 paths and the `Style.from_toml` call at line 79), `src/pyntpot/maps/style.py` (remove
 `from_toml` and `tomllib`), `src/pyntpot/maps/cli.py` (line 77 only: `Style.from_yaml`),
 `tests/unit/maps/test_style.py` (the TOML tests), `tests/unit/maps/test_cli.py`,
-`tests/unit/maps/test_cache_margins.py`, `tests/unit/maps/test_theme_resolve.py` (one
-test, if S2 did not write it), `tests/architecture/test_one_source_of_defaults.py` (the
+`tests/unit/maps/test_cache_margins.py`, `tests/architecture/test_one_source_of_defaults.py` (the
 count check), `tests/architecture/_public_surface.py` (two `ALLOWED` entries),
 `tests/docs/test_retired_words.py` (`_SUFFIXES`), and, for the theme path in each
 caption and command only (`examples/themes/<name>.toml` → `examples/themes/<name>.yaml`,
@@ -955,9 +1172,9 @@ nothing else on the page): `docs/gallery.md`, `docs/index.md`,
 `docs/tutorials/first-map.md`, `docs/explanation/data-policy.md`,
 `docs/how-to/change-the-route-ink.md`, `docs/how-to/letter-your-own-landmarks.md`.
 
-**Leave alone.** `theme_schema.py` and the JSON (S3), `maps/themes/` (S5), every other
-docs page and every other line of the six pages above (S7), the notes (S7), the four
-named themes' move (S5: in this slice they are converted in `examples/themes/`).
+**Leave alone.** `theme_schema.py` and the JSON (S5), `maps/themes/` (S7), every other
+docs page and every other line of the six pages above (S9), the notes (S9), the four
+named themes' move (S7: in this slice they are converted in `examples/themes/`).
 
 **Docs tests this slice moves**, checked on `f34de97` before assigning (every test under
 `tests/docs/` and `tests/architecture/` that names a `.toml` path, `from_toml` or a theme
@@ -975,7 +1192,7 @@ files a command names), `test_docs_links.py` (no `blob/main` link names a theme 
 `test_docs_signatures.py` (no page spells `pyntpot.maps.Style.from_toml`; the signature
 check reads `__all__` callables, not methods), `test_tutorial_quotes.py` (no quoted
 block holds a theme path), `test_reference_pages.py` and `test_reference_values.py`
-(`cli.md`'s help text is unchanged until S5; the style-field rows are unchanged until S6).
+(`cli.md`'s help text is unchanged until S7; the style-field rows are unchanged until S8).
 
 Steps:
 
@@ -999,7 +1216,7 @@ Steps:
 
    (`digest`, `base_digest`, `lettering_digest`), and
    `test_each_theme_resolves_to_its_pinned_digests`, parametrized with `ids=` the names,
-   loading `examples/themes/{name}.toml` with `Style.from_toml`. Run it: green on the S2
+   loading `examples/themes/{name}.toml` with `Style.from_toml`. Run it: green on the S4
    checkpoint (measured: identical before and after S1's defaults). Commit this alone
    ("pin the example themes' digests before conversion"). If any value differs, stop: S1
    changed what a theme resolves to.
@@ -1034,11 +1251,11 @@ Steps:
    loader at line 207 (`Style.from_yaml(REPO_ROOT / place.theme)`),
    `tests/fixtures/sweep_span_scale.py:65-67` and the loader at line 79, the example
    scripts (`place_card.py:108` and `how_to_route_ink.py:120` load with
-   `Style.from_yaml(REPO_ROOT / theme)`; S5 moves them to `Style.from_theme`; their and
+   `Style.from_yaml(REPO_ROOT / theme)`; S7 moves them to `Style.from_theme`; their and
    `social_preview.py`'s docstrings and `--theme` help say "a .yaml theme file";
    `map_styles.py` reads `Style.from_yaml(THEMES_DIR / f"{figure}.yaml")` and its
    docstring says the themes are override files), and `cli.py:77`
-   (`Style.from_yaml(args.style)`; S5 rewrites it). Then the six docs pages: replace each
+   (`Style.from_yaml(args.style)`; S7 rewrites it). Then the six docs pages: replace each
    `examples/themes/<name>.toml` with `examples/themes/<name>.yaml` and change nothing
    else (`sed -i -E 's#(examples/themes/[a-z-]+)\.toml#\1.yaml#g'` on exactly those six
    files).
@@ -1051,16 +1268,15 @@ Steps:
    `route_ink.stile`, `route_ink.casing_px`, `route_ink.effect`, `route_inks`);
    `_write_theme` writes `theme.yaml`; S1's `test_a_trimmed_theme_paints_the_default_look`
    reads a YAML file (`wash:\n  flow_rim: true\n`). `test_cli.py` and
-   `test_cache_margins.py` write `small.yaml` holding `card:\n  display_px: 120\n`. Add
-   `test_a_toml_theme_is_refused_with_the_conversion_pointer` to `test_theme_resolve.py`
-   if S2 did not already.
+   `test_cache_margins.py` write `small.yaml` holding `card:\n  display_px: 120\n`.
+   (S4 already wrote `test_a_toml_theme_is_refused_with_the_conversion_pointer`.)
 5. **Rewrite `test_example_themes.py`'s framing:** module docstring "The example themes
    in `examples/themes/` are YAML overrides that load and differ from the default and
    each other."; `test_the_directory_holds_exactly_these_themes` pins the ten `.yaml`
    stems; `TestShowcaseThemes` unchanged in substance.
 6. **Guard.** Add `test_the_theme_file_checks_see_every_theme` to
    `tests/architecture/test_one_source_of_defaults.py`: `len(theme_files()) == 10` (ten
-   now, ten after S5's move: six examples plus four packaged). Run
+   now, ten after S7's move: six examples plus four packaged). Run
    `test_no_theme_file_sets_a_key_to_its_base_value` on the converted files: green.
 
 **Acceptance.** Each grep states what it must print.
@@ -1080,7 +1296,7 @@ and the slice gate green.
 
 ---
 
-### S5 — Named themes, `from_theme` and the command line (#77; serial, after the merge gate)
+### S7 — Named themes, `from_theme` and the command line (#77; serial, after the merge gate)
 
 **Owned files.** `src/pyntpot/maps/themes/{pen-and-ink,sepia,bold,winter}.yaml` (moved
 from `examples/themes/` with `git mv`), `src/pyntpot/maps/style.py` (`named`, `themes`,
@@ -1093,7 +1309,7 @@ from `examples/themes/` with `git mv`), `src/pyntpot/maps/style.py` (`named`, `t
 section only.
 
 **Leave alone.** `style_groups.py`, `strands.py`, `compose_steps.py`, `theme_check.py`
-(S6); every other docs page and the rest of `cli.md` (S7). Measured: no entry of
+(S8); every other docs page and the rest of `cli.md` (S9). Measured: no entry of
 `tests/support/docs_images.py` and no golden test names one of the four theme paths
 (`map_styles.py` takes them by `figure`), so neither file changes here.
 
@@ -1110,17 +1326,24 @@ Steps:
    `test_the_packaged_themes_are_listed` (`Style.themes() == ("bold", "default",
    "pen-and-ink", "sepia", "winter")`); `test_default_is_the_model` (`Style.named("default")
    == Style()`); `test_each_named_theme_keeps_its_digests` (the four, against their rows
-   of S4's `DIGESTS`, moved out of `test_example_themes.py` into this module as its own
+   of S6's `DIGESTS`, moved out of `test_example_themes.py` into this module as its own
    `DIGESTS`, since the files moved; the comment above them says they were measured from
-   the TOML files on `f34de97`; S6 re-pins their first elements);
+   the TOML files on `f34de97`; S8 re-pins their first elements);
    `test_an_unknown_name_lists_the_names` (`ThemeError` message contains "available:
    bold, default, pen-and-ink, sepia, winter"); `test_a_name_must_be_lower_case_and_hyphenated`
    (`"Sepia"`, `"sepia_2"`, `"2sepia"` refused by rule 7's message);
    `test_a_theme_can_extend_a_named_theme` (a `tmp_path` file `extends: sepia` with one
    override equals `Style.named("sepia")` with that field replaced);
-   `test_every_named_theme_paints_the_lynmouth_card` (each name, through `fetch`,
-   `paint`, `letter`, `compose` on the Lynmouth fixture cache at `display_px: 120`, as
-   `tests/unit/maps/test_cli.py` does: returns an image of the card's size);
+   `test_every_named_theme_paints_the_lynmouth_card` (parametrized over the five names,
+   `ids=` the names; each writes `tmp_path / "small.yaml"` holding
+   `extends: {name}\ncard:\n  display_px: 120\n`, copies `FIXTURE_DIR` to
+   `tmp_path / "cache"` and runs `pyntpot.maps.cli.main` with `--style` that file and
+   `--no-attribution`, exactly as `test_cli.py`'s
+   `test_a_small_display_style_paints_a_map_quickly` does: exit 0 and a PNG 240 pixels
+   wide. The 120-pixel card is what keeps it fast, about 1.5 s a theme, measured on that
+   test; a named theme alone paints at its 900 px, about 19 s);
+   `test_named_refuses_a_file` (`Style.named("sepia.yaml")` raises `ThemeError` whose
+   message contains "Style.named takes a name; use Style.from_yaml for a file");
    `test_each_named_theme_is_package_data` (for each name,
    `resources.files("pyntpot.maps").joinpath("themes", f"{name}.yaml").is_file()`; the
    built wheel is checked by the acceptance command). And `TestFromTheme`:
@@ -1135,13 +1358,17 @@ Steps:
    - `from_theme(cls, theme: str | Path, *, relative_to: Path | None = None) -> Self`:
      "A style from a theme given by its name or by its .yaml file." `relative_to` is the
      directory a relative path is read from, the current directory when `None`. It calls
-     `theme_resolve.resolve(theme, relative_to=..., ...)` and `_build`, so the rule of S2
-     step 7 applies whole. `Raises: ThemeError`. This is the one public entry for "a name
+     `theme_resolve.resolve(theme, relative_to=relative_to or Path.cwd(), groups=_groups(),
+     base=_base())` and `_build`, so the rule of S4 step 2 applies whole.
+     `Raises: ThemeError`. This is the one public entry for "a name
      or a path": the command line, three examples and 008a's `theme_preview.py` call it.
      The name follows `GLOSSARY.md`: a "theme" is a file or a packaged name, and
      "reference" is a different term there, so no `_from_reference`.
-   - `named(cls, name: str) -> Self`: refuses a `Path` or a `str` with a suffix
-     ("Style.named takes a name; use Style.from_yaml for a file"), else `from_theme(name)`.
+   - `named(cls, name: str) -> Self`: a `name` with a suffix (`PurePath(name).suffix`
+     not empty) raises `ThemeError((ThemeProblem(path=Path(name), key="", line=None,
+     message="Style.named takes a name; use Style.from_yaml for a file"),))`; otherwise
+     `from_theme(name)`, so a bad name gets rule 6 or 7. The parameter is typed `str`, so
+     the refusal is tested with a `str` (`ty` would refuse a `Path` argument in the test).
    - `themes(cls) -> tuple[str, ...]`: `theme_resolve.theme_names()`.
    - Docstrings name the methods by what they take, with `Args:`, `Returns:`, `Raises:`.
    `examples/map_styles.py` loads `Style.named(figure)` and its docstring says the four
@@ -1154,8 +1381,13 @@ Steps:
    "a theme name or a .yaml theme file; the default look when absent". `main` loads it
    with `Style.from_theme(args.style)` when given, else `Style()`. Catch `ThemeError`
    only around that call, log `"pyntpot map: %s"` per problem with `log.error`, return 2.
-   Update the module docstring synopsis. Tests in `test_cli.py`: `--style sepia` paints;
-   `--style small.yaml` paints; `--style missing` returns 2 and logs the available names
+   Update the module docstring synopsis. Tests in `test_cli.py`:
+   `test_a_named_style_paints_a_map`, `--style sepia` exits 0 and writes the PNG, marked
+   `@pytest.mark.golden` (a name cannot shrink the card, so it paints at 900 px, about
+   19 s, which is why `test_a_full_cache_makes_no_request` is golden-marked too);
+   `test_a_small_theme_extending_a_name_paints_quickly`, `--style small.yaml` holding
+   `extends: sepia\ncard:\n  display_px: 120\n` writes a 240-pixel-wide PNG (not golden);
+   S6's `small.yaml` test stays; `--style missing` returns 2 and logs the available names
    (read with `caplog`); `--style old.toml` returns 2 and logs the ADR 0069 pointer.
    `docs/reference/cli.md`: the synopsis line reads `[--style THEME]` (the parser's
    usage, whitespace collapsed); the `### --style` section's "Argument:" says "`THEME`, a
@@ -1169,31 +1401,32 @@ Steps:
 ```bash
 uv run pytest tests/unit/maps/test_theme_named.py tests/unit/maps/test_cli.py tests/unit/maps/test_example_themes.py tests/architecture tests/docs -q
 uv build --wheel -o "$SCRATCH/dist" && unzip -l "$SCRATCH"/dist/*.whl | grep -E "maps/themes/(bold|pen-and-ink|sepia|winter)\.yaml|theme\.schema\.json"   # exactly five lines
-uv run pyntpot map --help | grep -- "--style THEME"   # one line
+uv run pyntpot map --help | grep -c -- "^  --style THEME"   # prints 1 (the option row; the usage line also holds "[--style THEME]")
 git grep -n "_from_reference" src tests examples      # prints nothing
+uv run pytest tests/unit/maps/test_cli.py -m golden -k named --golden-tolerance -q   # the golden-marked --style sepia test: 1 passed
 ```
 
-and the slice gate green.
+and the slice gate and the coverage gate green.
 
 ---
 
-### S6 — The route ink's `drawn_as` (#182; serial, after S5)
+### S8 — The route ink's `drawn_as` (#182; serial, after S7)
 
 **Owned files.** `src/pyntpot/maps/style_groups.py`, `src/pyntpot/maps/strands.py`,
 `src/pyntpot/maps/compose_steps.py`, `src/pyntpot/maps/style.py` (`with_route_ink`
 docstring only), `src/pyntpot/maps/theme_check.py` (`RENAMED_KEYS` row),
 `examples/how_to_route_ink.py`, `tests/unit/maps/test_route_ink.py`,
 `tests/unit/maps/painter/test_pen_strands.py`, `tests/unit/maps/test_style_groups.py`
-(`PINNED` field names, line 386), `tests/unit/maps/test_style.py` (`ROUTE_INK`, line 239,
-the rename tests), `tests/unit/maps/test_theme_check.py`,
+(the `RouteInkStyle` rows of `PINNED`, line 245, and of `MAP_GROUPS`, line 386),
+`tests/unit/maps/test_style.py` (`ROUTE_INK`, line 53; `DIGEST`, line 56; line 239), `tests/unit/maps/test_theme_check.py`,
 `tests/unit/maps/test_example_themes.py` and `tests/unit/maps/test_theme_named.py` (the
 `DIGESTS` literals in both), `docs/reference/style-fields.md` (the `route_ink` table's
 `style` row only), `src/pyntpot/maps/themes/theme.schema.json` and
 `docs/reference/theme.schema.json` (regenerated).
 
-**Leave alone.** `cli.py` (S5), the theme files (none sets `route_ink.style`, measured:
-every TOML theme said `"solid"`, which S4's converter dropped as the default), every
-other docs page and every other line of `style-fields.md` (S7).
+**Leave alone.** `cli.py` (S7), the theme files (none sets `route_ink.style`, measured:
+every TOML theme said `"solid"`, which S6's converter dropped as the default), every
+other docs page and every other line of `style-fields.md` (S9).
 
 **Docs tests this slice moves** (checked on `f34de97`):
 `tests/docs/test_reference_values.py` (the group rows must be the group's fields, with
@@ -1201,8 +1434,8 @@ the model's default and type) and
 `tests/docs/test_reference_pages.py::TestStyleFields::test_every_field_of_every_group_is_named`.
 Both read `style-fields.md:267`, the `style` row. Rewrite that row as
 ``| `drawn_as` | string | `"solid"` | How the route is drawn: `"pen"` tints the pen plate when the `route` group painted one; `"solid"` draws a line. Any other value is an error at load. |``
-(Type stays `string`: S7 changes the Type column to the YAML vocabulary). No other docs
-test names a route ink field: the glossary's "route ink" sentence is prose (S7), and
+(Type stays `string`: S9 changes the Type column to the YAML vocabulary). No other docs
+test names a route ink field: the glossary's "route ink" sentence is prose (S9), and
 `change-the-route-ink.md`'s quoted block from `how_to_route_ink.py` does not hold the
 renamed line.
 
@@ -1216,9 +1449,22 @@ Steps:
 2. **Green.** Rename the field (`drawn_as: Literal["pen", "solid"] = "solid"`), its
    `Attributes:` entry ("`pen` tints the painted pen plate when one was painted; `solid`
    draws the line."), the two readers (`strands.py:64`, `compose_steps.py:74`), the
-   `with_route_ink` docstring ("when `drawn_as` is `"pen"`"), every test and example use
-   (`git grep -nE "ink\.style\b|route_ink\.style\b|style=\"(pen|solid)\"|\"style\": \"solid\"|_inked_as"`),
-   `_inked_as`'s parameter in `test_pen_strands.py`, `PINNED` in `test_style_groups.py`.
+   `with_route_ink` docstring ("when `drawn_as` is `"pen"`"), and every test and example
+   use, found with
+
+   ```bash
+   git grep -nE "route_ink\.style\b|(^|[^.[:alnum:]_])ink\.style\b|style=\"(pen|solid)\"|style=ink_style|\"style\": \"solid\"|\(\"style\", \"px\"|_inked_as" src tests examples
+   ```
+
+   The anchor `(^|[^.[:alnum:]_])` keeps out every `pyntpot.ink.style` import, and the
+   unanchored `route_ink\.style` still finds `painted.style.route_ink.style`. Measured on
+   `f34de97`, it prints exactly 15 lines (earlier slices may shift their line numbers):
+   `examples/how_to_route_ink.py:146`, `compose_steps.py:74`, `strands.py:64`,
+   `test_pen_strands.py:23,25,58,73,81,82` (`_inked_as` and its calls: rename its
+   parameter `ink_style` to `drawn_as`; the helper keeps its name),
+   `test_route_ink.py:113,159`, `test_style.py:53,239`, and `test_style_groups.py:245`
+   (`PINNED`'s field names) and `:386` (`MAP_GROUPS`' keywords). Change every one but
+   the helper's name and its call sites.
    Add `RENAMED_KEYS[("route_ink", "style")] = "drawn_as"` (as a literal entry in the
    dict, with the comment `# ADR 0069 (#182)`).
 3. **Re-pin the example digests**, because the rename moves every `digest()` (the field
@@ -1239,31 +1485,39 @@ Steps:
    | yr-wyddfa | `79f5230efc0d75e4` |
 
    Replace the first element of each `DIGESTS` row with these: the six rows in
-   `test_example_themes.py` and the four (`bold`, `pen-and-ink`, `sepia`, `winter`) S5
+   `test_example_themes.py` and the four (`bold`, `pen-and-ink`, `sepia`, `winter`) S7
    moved into `test_theme_named.py`. The `base_digest` and `lettering_digest` elements
    stay. If a value differs, stop and find out why: the
-   rename must move nothing else. `test_style.py`'s `DIGEST` is a window pin: mark
-   `test_default_digests_are_pinned` `xfail(strict=True, reason=WINDOW)` (expected new
-   value `88b356ada294ff60`, re-pinned in S8).
+   rename must move nothing else.
+
+   **Re-pin `DIGEST`** in `test_style.py` to `DIGEST = "88b356ada294ff60"`, in this
+   commit, with no `xfail` (it is measured, not a golden; S10 does not touch it). Four
+   tests compare with it, and all four fail after the rename until it is re-pinned
+   (measured on a scratch copy with S1's defaults and the rename, and green with the new
+   value): `TestDigests::test_default_digests_are_pinned`,
+   `TestDigests::test_a_non_default_name_tags_moves_the_base_and_full_digests`,
+   `TestDigests::test_a_default_showcase_field_leaves_every_digest` and
+   `TestFedRouteInk::test_equal_fed_values_give_equal_digests`. `BASE_DIGEST` and
+   `LETTERING_DIGEST` do not move.
 4. Regenerate the schema.
 
 **Acceptance.**
 
 ```bash
 uv run pytest tests/unit/maps/test_route_ink.py tests/unit/maps/painter/test_pen_strands.py tests/unit/maps/test_theme_check.py tests/unit/maps/test_example_themes.py tests/unit/maps/test_theme_schema.py -q
-uv run pytest tests/unit/maps/test_theme_named.py tests/unit/maps/test_style.py tests/docs -q
-git grep -nE "ink\.style\b|route_ink\.style\b" src tests examples
+uv run pytest tests/unit/maps/test_theme_named.py tests/unit/maps/test_style.py tests/docs -q   # no xfail in test_style.py's digest tests
+git grep -nE "route_ink\.style\b|(^|[^.[:alnum:]_])ink\.style\b" src tests examples
 # prints only lines of tests/unit/maps/test_theme_check.py: the assertion that the
 # problem's key is "route_ink.style" (the RENAMED_KEYS row is spelled ("route_ink", "style")
-# and does not match)
-git grep -nE "style=\"(pen|solid)\"|\bstyle=ink_style" src tests examples   # prints nothing
+# and does not match, and no docstring names the old key)
+git grep -nE "style=\"(pen|solid)\"|style=ink_style|\"style\": \"solid\"|\(\"style\", \"px\"" src tests examples   # prints nothing
 ```
 
 and the slice gate green.
 
 ---
 
-### S7 — Docs (serial)
+### S9 — Docs (serial)
 
 **Owned files.** `docs/how-to/write-a-theme.md`, `docs/reference/style-fields.md`,
 `docs/reference/cli.md`, `docs/how-to/map-from-the-command-line.md`,
@@ -1310,25 +1564,33 @@ this feature", no history; ADR numbers only where a page already cites ADRs):
    args); rename its `toml_value` and `toml_type` helpers `yaml_value` and `yaml_type`,
    with `yaml_type` giving `list` where `toml_type` gave `array`. Write the test change
    first and see it fail on the old page.
-3. **`cli.md`** (the rest of the page: S5 wrote the synopsis and the `--style`
+3. **`cli.md`** (the rest of the page: S7 wrote the synopsis and the `--style`
    section), **`map-from-the-command-line.md`** (its known-message list loses the
    pydantic traceback and gains a `ThemeError` example; `--style my-theme.yaml`),
    **`change-the-route-ink.md`** (`drawn_as`, and "The theme's `route_ink` table"),
    **`first-map.md`** (line 157: "`--style` takes a theme name or a `.yaml` theme"),
    **`index.md`**, **`gallery.md`**, **`data-policy.md`**,
    **`letter-your-own-landmarks.md`**: every TOML theme sentence and `from_toml` becomes
-   the YAML form or a name. S4 already changed the `examples/themes/*.toml` paths. The
+   the YAML form or a name. S6 already changed the `examples/themes/*.toml` paths. The
    check covers the site pages and the README only (the ADRs keep their history and the
    notes are step 5's):
 
    ```bash
-   git grep -n "toml" -- 'docs/*.md' README.md ':!docs/decisions' ':!docs/features' ':!docs/issues' | grep -vE "pyproject\.toml|places\.toml"
+   git grep -n -i "toml" -- 'docs/*.md' README.md ':!docs/decisions' ':!docs/features' ':!docs/issues' | grep -viE "pyproject\.toml|places\.toml"
    ```
 
-   It prints only these lines: in `docs/how-to/letter-your-own-landmarks.md`, the two
-   ```` ```toml ```` fences of the `places.toml` snippets and the sentence saying the
-   landmarks are read with `tomllib`; and in `docs/how-to/write-a-theme.md`, lines inside
-   the "Convert a TOML theme" section. Any other line is a page still on TOML.
+   `-i`, because the prose says "TOML" (measured on `f34de97`, case-insensitively and
+   besides the theme paths S6 changes: `write-a-theme.md:3,20,21,24,27,30,45,111,114`,
+   `cli.md:65,66` (S7 rewrites both), `style-fields.md:3,8,10`, `first-map.md:157`,
+   `map-from-the-command-line.md:53`, `glossary.md:80` (regenerated from `GLOSSARY.md:86`
+   in step 4) and the three `letter-your-own-landmarks.md` lines below). After this
+   slice it prints only these lines: in `docs/how-to/letter-your-own-landmarks.md`, the
+   two ```` ```toml ```` fences of the `places.toml` snippets (lines 19 and 56) and the
+   sentence saying the landmarks are read with `tomllib` (line 40); in
+   `docs/how-to/write-a-theme.md`, lines inside the "Convert a TOML theme" section, its
+   heading included; and on any page, a line whose only TOML mention is a link to that
+   section (`write-a-theme.md#convert-a-toml-theme`). Any other line is a page still on
+   TOML.
    **`docs/architecture.md`**: the style row names the `theme_*` modules and says
    `maps` reads YAML with `ruamel.yaml`.
 4. **`GLOSSARY.md`**: "theme" becomes "A YAML file that names a base theme with
@@ -1365,17 +1627,16 @@ this feature", no history; ADR numbers only where a page already cites ADRs):
 prints nothing (measured on `f34de97`, its hits are the five deleted notes,
 `maps-cover-layering-order.md`, `letters-route-means-trace.md`,
 `maps-route-ink-leaves-marker-labels-pink.md`, `write-a-theme.md`, `cli.md` and
-`style-fields.md`, which this slice owns, and files S1, S4 and S5 have already changed;
+`style-fields.md`, which this slice owns, and files S1, S6 and S7 have already changed;
 the conversion section's snippet uses `tomllib`, not `from_toml`); the step 3 check
 prints only the lines it lists; the slice gate green.
 
 ---
 
-### S8 — Golden regeneration (serial)
+### S10 — Golden regeneration (serial)
 
 **Owned files.** `tests/unit/maps/test_style_groups.py` (`SOURCED`, `BASEMAP_DEFAULTS`,
-a `RouteInkStyle` row), `tests/unit/maps/test_style.py` (`DIGEST`), every module holding a
-window mark, `docs/images/**`, `tests/golden/docs/**` (the masters), any other golden S1
+a `RouteInkStyle` row), every module holding a window mark, `docs/images/**`, `tests/golden/docs/**` (the masters), any other golden S1
 listed, ADR 0069's "Golden regeneration" section, and only for a fix step 3 names: the
 example script of a flagged figure (fix A), the caption or sentence of a flagged figure
 (fix B), and a tutorial block that quotes a line fix A changed.
@@ -1387,8 +1648,8 @@ Steps:
 1. Process as ADRs 0036 and 0052 on the pinning machine (exact) if available, else under
    `--golden-tolerance` and say so in the ADR. The tolerance bound is not changed.
 2. **The pins.** Re-measure and re-pin `SOURCED` (`PaperStyle`, `WashStyle`,
-   `BrushStyle`; add `RouteInkStyle`, which now builds), `BASEMAP_DEFAULTS`, and `DIGEST`
-   (expected `88b356ada294ff60`: if it differs, stop). Remove every window mark:
+   `BrushStyle`; add `RouteInkStyle`, which now builds) and `BASEMAP_DEFAULTS`. `DIGEST`
+   is not here: S8 re-pinned it with the rename. Remove every window mark:
    `git grep -n "regeneration window" tests` empty.
 3. **The docs images: a bounded review.**
    1. **Which may move.** Measured on `f34de97` with
@@ -1401,10 +1662,34 @@ Steps:
       `social_preview`, `svg_drawing`, `trees`, `tutorial_grids`, `wash`, `wash_stages`,
       `word`. The other 13 images (`map_styles`, `place_card`, `route_map`) read a theme
       or `Style()` only and must not move.
-   2. **Measure.** `PYTHONPATH=tests uv run python tests/golden/make_docs_images.py "$SCRATCH/docs-new" --compare docs/images`
-      lists the moved images; draw each one's review images with
-      `tests/golden/diff_images.py`. A moved image whose registry `stem` is not in the
-      list above is a defect: stop and find the slice that caused it.
+   2. **Measure** with the repository's own tooling (CONTRIBUTING.md, "Golden and docs
+      images"; flags as `tests/golden/repaint.py --help` states them):
+
+      ```bash
+      PYTHONPATH=tests uv run python tests/golden/repaint.py "$SCRATCH/repaint" --no-lynmouth
+      ```
+
+      It paints every registered docs image (no NAME means all) into
+      `$SCRATCH/repaint/tree/docs/images/` and its master into
+      `$SCRATCH/repaint/tree/tests/golden/docs/`, the repository's own paths, and diffs that
+      tree with the working tree into `$SCRATCH/repaint/diffs/` (`summary.md`,
+      `summary.json`, and a `.diff.png` and `.crop.png` per moved image). `--no-lynmouth`,
+      because the Lynmouth goldens are step 4's and must not move. `OUT` must be absent or
+      empty (exit 2 otherwise). It writes nothing into the repository. (Do not use
+      `make_docs_images.py OUT --compare docs/images`: it also compares `OUT/masters/`
+      with `docs/images/masters/`, which does not exist, so every master is reported
+      missing and it exits 1.) The moved set is the `files` of `summary.json`; list each
+      with its registry `stem` and changed fraction:
+
+      ```bash
+      PYTHONPATH=tests uv run python -c "import json,sys; from support.docs_images import IMAGES, master_path; s={**{f'docs/images/{e.image}': e.stem for e in IMAGES}, **{f'tests/golden/docs/{master_path(e.image)}': e.stem for e in IMAGES}}; [print(f['path'], s.get(f['path'], 'NOT REGISTERED'), f.get('changed_fraction')) for f in json.load(open(sys.argv[1]))['files']]" "$SCRATCH/repaint/diffs/summary.json"
+      ```
+
+      (Tried on a scratch copy with S1's defaults, for two images: `tutorials/wash.webp`
+      and its master are listed with stem `wash`; `gallery/paper.webp` did not move.) A
+      moved image whose stem is not in the list of step 3.1, or `NOT REGISTERED`, is a
+      defect: stop and find the slice that caused it. The list of step 3.1 is an upper
+      bound: an image of a listed script that does not move needs no review.
    3. **Judge each moved image against its text, and nothing more.** For each one, find
       every page that shows it (`git grep -n "<path under docs/images>" docs`) and read
       its caption (the `*Painted by ...*` paragraph) and the paragraph before the image.
@@ -1427,9 +1712,27 @@ Steps:
       - **Fix B, the text follows the picture**: otherwise, rewrite the flagged sentence
         or caption to say what the figure now shows; the caption still names its script,
         figure, theme, label lists and name, as `test_captions.py` checks.
-   5. **Repaint and recheck.** Regenerate in place with `make_docs_images.py docs/images`
-      (and the masters per the script's options) and compare once more: the moved set
-      is the step 2 list, plus nothing.
+   5. **Repaint, commit, recheck.** After the step 4 fixes, repaint into a fresh
+      directory and take the moved files into the repository:
+
+      ```bash
+      PYTHONPATH=tests uv run python tests/golden/repaint.py "$SCRATCH/repaint-2" --no-lynmouth
+      PYTHONPATH=tests uv run python -c "import json,shutil,sys; from pathlib import Path; out=Path(sys.argv[1]); [shutil.copyfile(out / 'tree' / f['path'], f['path']) for f in json.load(open(out / 'diffs' / 'summary.json'))['files'] if f['status'] == 'changed']" "$SCRATCH/repaint-2"
+      ```
+
+      run from the repository root. This copies each moved docs image and master from
+      `tree/` to the same path in the repository, as CONTRIBUTING describes, and only
+      those: an image whose pixels did not move keeps its committed bytes. (Never run
+      `make_docs_images.py docs/images`: it writes the 71 masters into
+      `docs/images/masters/`, which breaks `test_docs_images.py`, and leaves
+      `tests/golden/docs/` stale.) Then recheck the working tree against the branch base:
+
+      ```bash
+      PYTHONPATH=tests uv run python tests/golden/diff_images.py "$SCRATCH/recheck" --ref "$(git merge-base HEAD origin/main)"
+      ```
+
+      Its `summary.json` lists the step 2 set, minus any image a fix A put back, plus
+      nothing; a repaint into a third empty directory then diffs to `0 images differ`.
    6. **Record.** A table of every moved image: its path, its master's differing
       fraction, flagged or not, and for a flagged one the fix (A with the fields passed,
       or B with the new sentence). It goes in ADR 0069's "Golden regeneration" (step 5)
@@ -1442,20 +1745,34 @@ Steps:
    table: each moved pin (old, new, reason: "default is the default look", "field renamed
    drawn_as", "now buildable"), each moved image with its master's differing fraction and
    reason ("built from `PaperStyle()`: glazing and fibre on", and so on per script), the
-   step 3 table with its fixes, and the unmoved list with their values. Publish the image
-   diffs for the PR body with `tests/golden/publish_diffs.py --push` (ADR 0052).
+   step 3 table with its fixes, and the unmoved list with their values. Publish the
+   review images for the PR body (ADR 0052) from the step 3.5 repaint, whose diffs are
+   the final images against the branch base:
 
-**Acceptance.** `uv run pytest -n auto --dist loadgroup --golden-tolerance -q` green;
-`git grep -n "regeneration window" tests` empty; ADR 0069's section has no "Expected"
-wording left.
+   ```bash
+   PYTHONPATH=tests uv run python tests/golden/publish_diffs.py "$SCRATCH/repaint-2/diffs"           # dry run: writes pr-body.md
+   PYTHONPATH=tests uv run python tests/golden/publish_diffs.py "$SCRATCH/repaint-2/diffs" --push    # pushes to pr-assets
+   ```
+
+   `--pr-branch` defaults to the branch checked out. The push writes only the orphan
+   `pr-assets` branch (never this branch, the index or the working tree); if this slice
+   runs where remote writes are not allowed, run the dry run, keep `pr-body.md`, and leave
+   the `--push` to the orchestrator before S12's PR. The printed block goes under "Golden
+   and docs images" in the PR description, unchanged.
+
+**Acceptance.** `uv run pytest -n auto --dist loadgroup --golden-tolerance -q` green
+(`test_docs_images.py` among it: each committed master within the bound of a fresh
+paint); `git grep -n "regeneration window" tests` empty; `git status --porcelain
+docs/images tests/golden/docs` names only files in the step 3.5 summary and nothing under
+`docs/images/masters/`; ADR 0069's section has no "Expected" wording left.
 
 ---
 
-### S9 — Mutation testing (serial, local only)
+### S11 — Mutation testing (serial, local only)
 
 Per `CONTRIBUTING.md` "Mutation testing". The changed `ink` and `letters` functions are
-`brush_id_known`, `brush_from_id` (its check now calls it) and any function S1 or S8
-touched; the default-value edits are not functions. Run:
+`brush_id_known`, `brush_from_id` (its check now calls it; both S3's) and any function
+S1 or S10 touched; the default-value edits are not functions. Run:
 
 ```bash
 patterns=$(mktemp)
@@ -1467,20 +1784,21 @@ uv run mutmut results | grep -v 'not checked'
 Kill each survivor with a focused test in `tests/unit/ink` or `tests/unit/letters`, or
 name it as equivalent in the PR description with the reason. The `maps/theme_*` modules
 are outside mutmut's scope (`only_mutate` is `ink` and `letters`); instead, review their
-tests against each branch of the code by reading (every message in S2 steps 3 to 7 has a
-test), and record the result in `specs/008-themes-as-data/mutation.md` as 006 did.
+tests against each branch of the code by reading (every message in S2 step 4, S3 step 4
+and S4 step 2 has a test), and record the result in `specs/008-themes-as-data/mutation.md` as 006 did.
 
 ---
 
-### S10 — Final review (serial, fresh context)
+### S12 — Final review (serial, fresh context)
 
 A fresh-context reviewer reads the spec, ADR 0069 and the diff, ticks each acceptance
 criterion against evidence, and writes `specs/008-themes-as-data/review/diff-review.md`.
-Then the full gates (golden run, `prek run --all-files`, strict docs build), and the PR:
+Then the full gates (golden run, the coverage gate, `prek run --all-files`, strict docs
+build), and the PR:
 title `feat(maps)!: themes are YAML overrides of one model, chosen by name`, the spec's
 Changelog block, `Closes #158`, `Closes #80`, `Closes #77`, `Closes #182`, `Closes #186`,
-the list of every moved docs image with its S8 fix (A, B or none),
-the golden-diff images, the mutation equivalents, the files filed in S7.
+the list of every moved docs image with its S10 fix (A, B or none),
+the golden-diff images, the mutation equivalents, the files filed in S9.
 
 ## Files to touch
 
@@ -1489,12 +1807,13 @@ Everything named under a slice's "Owned files", and nothing else. New files:
 `src/pyntpot/maps/themes/{bold,pen-and-ink,sepia,winter}.yaml`,
 `src/pyntpot/maps/themes/theme.schema.json`, `docs/reference/theme.schema.json`,
 `examples/themes/{ambleside,ambleside-hero,oxford,skye,y-fenni,yr-wyddfa}.yaml`,
-`tests/support/{flags_off,theme_files,theme_schema}.py`,
+`tests/support/{flags_off,theme_files,planted_groups,theme_dump,theme_schema}.py`,
 `tests/architecture/test_one_source_of_defaults.py`,
-`tests/unit/maps/test_theme_{read,merge,check,resolve,schema,named}.py`,
+`tests/architecture/test_theme_imports.py`,
+`tests/unit/maps/test_theme_{errors,read,vocab,merge,check,resolve,schema,named}.py`,
 `tests/property/test_theme_merge.py`, `specs/008-themes-as-data/mutation.md`,
 `specs/008-themes-as-data/review/*`. Deleted: `src/pyntpot/maps/themes/default.toml`,
-`examples/themes/*.toml`, the five notes of S7.
+`examples/themes/*.toml`, the five notes of S9.
 
 ## Files to leave alone
 
@@ -1504,7 +1823,7 @@ Everything named under a slice's "Owned files", and nothing else. New files:
   change shape.
 - `tests/golden/test_parity.py` and the Lynmouth goldens: nothing they record moves.
 - The `DIGEST_OMITS_AT_DEFAULT` tuple: its four fields already default to the default
-  look. S2 changes only how the rule reads a field's default (a factory's value counts),
+  look. S4 changes only how the rule reads a field's default (a factory's value counts),
   which moves no digest today.
 - `CONSUMER_ONLY`: cover order and pin icons are C2.
 - `mkdocs.yml` nav (no new page: the schema is a file, the how-to and reference pages
@@ -1513,12 +1832,13 @@ Everything named under a slice's "Owned files", and nothing else. New files:
 
 ## Delegation
 
-S1, S2 and S4 carry the design risk: give each to one implementer with this plan and ADR
-0069 only. S3 ∥ S4 is the one parallel pair: two worktrees branched from the S2
-checkpoint, which share no file, then the merge gate on the merged tree before S5. S5
-and S6 are serial (both pin the named themes' digests). S7 is docs only and can be a
-cheaper model with the pages listed. S8 needs the pinning machine or a long run; S9 is
-local. S10 is a fresh reviewer.
+S1, S2, S3, S4 and S6 carry the design risk: give each to one implementer with this plan
+and ADR 0069 only. Each loader slice's "Takes" and "Gives" lines are its whole interface
+with the others. S5 ∥ S6 is the one parallel pair: two worktrees branched from the S4
+checkpoint, which share no file, then the merge gate on the merged tree before S7. S7
+and S8 are serial (both pin the named themes' digests). S9 is docs only and can be a
+cheaper model with the pages listed. S10 needs the pinning machine or a long run; S11 is
+local. S12 is a fresh reviewer.
 
 ## Decisions
 
@@ -1541,10 +1861,20 @@ The plan's own choices, beyond ADR 0069:
   one copied into scripts. Its name uses the glossary's "theme" (a file, or a packaged
   name); "reference" is another glossary term, so it appears in no name or message.
 - **The model fixes the shape a merge sees**, so the associativity property draws inputs
-  from one shape (S2 step 4); a table and a leaf at one path never reach `merge`.
+  from one shape (S4 step 1); a table and a leaf at one path never reach `merge`.
 - **Sub-tables are built now, not promised.** `check_theme`, `build_group`,
   `theme_schema` and the guard walk dataclass-typed fields, tested on a planted group,
-  so #104 to #106 can add a sub-table with no loader or format change.
+  so #104 to #106 can add a sub-table with no loader or format change. (Issue numbers
+  stay in the plan: module docstrings state the capability only.)
+- **The loader is three slices** (S2 reader, S3 checker, S4 merge and resolve), serial,
+  with disjoint files: S4's `resolve` calls S3's `check_theme`, which reads S2's
+  `ThemeFile`, so that is the only order that builds.
+- **One reporter of a file's read problems**: `resolve`. `check_theme` reports only what
+  it finds in the table, and runs only on a file whose read found nothing.
+- **`COLOUR_FIELDS` is a literal**, tested against the model, so `theme_vocab` needs no
+  `Style()` and the loader never imports `style.py` (S2's import rule).
+- **`DIGEST` moves with the rename and is re-pinned there (S8)**, not in the window: its
+  value is measured and only the rename moves it.
 - **#186 is folded in**: the style-fields page pointed at `default.toml`, which goes.
 - **#79 is `specs/008a-theme-preview-card/`**: a new fixture and an example script, judged
   on its own, after this PR.

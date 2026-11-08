@@ -170,6 +170,12 @@ of httpx and pydantic" becomes "ink and letters stay free of httpx, pydantic and
 ruamel", forbidding `ruamel` too. `BOUNDARIES.md` says the same. This amends ADR 0002's
 "keeps ... YAML libraries out of the package" and ADR 0015's list of boundary libraries.
 
+Inside `maps`, the loader modules (`theme_read`, `theme_check`, `theme_resolve` and the
+rest) never import `pyntpot.maps.style` or the `pyntpot.maps` package: `Style` imports the
+loader, and the loader takes the groups and the defaults table as arguments, so no import
+cycle can form. The schema generator, `theme_schema`, is the one exception: nothing in
+the package imports it. An architecture test checks the rule.
+
 ### Merge
 
 - Tables deep-merge recursively: a key the override names replaces the base's value at
@@ -353,7 +359,7 @@ nothing:
 ## Golden regeneration
 
 Process as ADRs 0036 and 0052. The tolerance bound is not changed, no gate is loosened and
-the hash input does not change. The goldens are regenerated once, in the plan's slice S8,
+the hash input does not change. The goldens are regenerated once, in the plan's slice S10,
 and this section is completed there with the measured values.
 
 Expected, from the measurements on `f34de97`:
@@ -366,12 +372,12 @@ Expected, from the measurements on `f34de97`:
   `BrushStyle`, and a new `RouteInkStyle` row (their defaults changed or now exist);
   `BASEMAP_DEFAULTS` (`landmarks`, `landmark_max`, `generalise`); `DIGEST` in
   `test_style.py`, from the `drawn_as` rename only (`1b08804a7f30026b` to
-  `88b356ada294ff60`); and each docs image whose example builds an ink or basemap group
+  `88b356ada294ff60`), re-pinned in the rename's own slice, S8, not in S10; and each docs image whose example builds an ink or basemap group
   itself (with no arguments, or naming only some fields) or calls the basemap directly (up to 58 of the 71 registered, from the
   25 scripts the plan lists; measured by grep on `f34de97`). Each moved image is read
   against its caption and the paragraph it illustrates; a figure whose text a newly
   enabled effect contradicts either passes those flags off explicitly or has its text
   rewritten, and the regeneration lists every moved image with its fix.
 
-(S8 replaces this list with the measured table: every moved pin and image, its old and new
+(S10 replaces this list with the measured table: every moved pin and image, its old and new
 value or differing fraction, and the reason.)

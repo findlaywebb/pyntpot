@@ -83,7 +83,7 @@ reuses the word the whole style goes by (#182).
       the how-to's conversion section; `.yml` fails suggesting `.yaml`.
 - [ ] Each of the ten example themes is a YAML override file setting no key to its base's
       value, and resolves to the `digest()`, `base_digest()` and `lettering_digest()`
-      pinned in `plan.md` (S4) from the TOML files before conversion.
+      pinned in `plan.md` (S6) from the TOML files before conversion.
 
 ### The schema
 
@@ -134,7 +134,7 @@ reuses the word the whole style goes by (#182).
 
 ### Whole feature
 
-- [ ] Goldens regenerated once, in S8; ADR 0069's "Golden regeneration" section lists
+- [ ] Goldens regenerated once, in S10; ADR 0069's "Golden regeneration" section lists
       every moved pin and image with its value or differing fraction and reason; the
       Lynmouth goldens, `GOLDEN_HASH`, `BASE_DIGEST`, `LETTERING_DIGEST`, `SMOKE_SHA`, the
       place pins and the map-styles means do not move.
@@ -179,12 +179,12 @@ Already filed, not done here:
   `maps-route-glow.md`, `maps-route-shadow.md`) and #159 marker labels
   (`docs/issues/maps-route-ink-leaves-marker-labels-pink.md`): session D.
 - #68 wider CLI (`docs/features/cli-wider-commands.md`): `pyntpot theme clone` and
-  `theme check`, more map options; session G. S7 updates that note's facts only.
+  `theme check`, more map options; session G. S9 updates that note's facts only.
 - #181 `face.label_route` means the trace (`docs/issues/letters-route-means-trace.md`):
-  S6 leaves a `RENAMED_KEYS` table it can reuse; S7 adds that sentence to the note.
+  S8 leaves a `RENAMED_KEYS` table it can reuse; S9 adds that sentence to the note.
 - #79 the preview card: `specs/008a-theme-preview-card/`.
 
-Found while planning, to be filed in S7 if still true (note plus issue):
+Found while planning, to be filed in S9 if still true (note plus issue):
 
 - `maps-numeric-ranges-unchecked.md` (enhancement, area: maps): numeric ranges
   (`display_px: -5`, `opacity: 2`) are not checked at load.
