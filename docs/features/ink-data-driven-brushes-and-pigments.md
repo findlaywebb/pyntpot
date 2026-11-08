@@ -8,7 +8,7 @@ are the `PIGMENTS`, `TRANSPARENCY`, `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPAREN
 in `ink/pigment.py`. Adding a brush or a colour means editing the package.
 
 **What the feature would add.** Brushes and pigments declared in data files shipped with
-the package (YAML, the theme format of `maps-themes-as-overrides.md`), loaded into the
+the package (YAML, the theme format, ADR 0069), loaded into the
 registries at import, and extendable by a caller or a theme that declares its own brush or
 pigment by name.
 

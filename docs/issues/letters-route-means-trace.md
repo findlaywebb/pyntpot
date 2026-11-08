@@ -8,8 +8,7 @@ Area: letters, with maps (lettering).
 and keeps route for the painted line of the track. Three identifiers still say route for
 the trace:
 
-- `FaceStyle.label_route` in `letters/style.py` (and `label_route` in
-  `maps/themes/default.toml` and every theme);
+- `FaceStyle.label_route` in `letters/style.py` (and the theme key `face.label_route`);
 - the `route=` argument of `Hand` in `letters/hand.py` (`self.route = route or
   face.label_route`);
 - the nib plate's sidecar key `route`, written by `maps/lettering/pipeline.py`.
@@ -19,4 +18,5 @@ sharing the word makes the two easy to confuse.
 
 Possible fix: rename to say trace, with an ADR since `FaceStyle` is public and themes
 carry the key. The sidecar key is part of the fetch cache's layout, so renaming it changes
-`docs/reference/cache-layout.md` and needs old caches to read or refetch.
+`docs/reference/cache-layout.md` and needs old caches to read or refetch. A rename adds a
+row to `maps.theme_check.RENAMED_KEYS`.

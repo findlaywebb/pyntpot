@@ -1,7 +1,8 @@
 """The reference pages' tables and synopsis hold the values the code holds, cell by cell.
 
 Each check reads its facts from the code and compares them with the page's cells: the
-style-field tables with `Style.default()` and the group dataclasses, the command line's
+style-field tables with `Style.default()` and the group dataclasses (each table field's
+key sub-table, and each `Literal` field's choices, included), the command line's
 synopsis with `build_parser()`'s usage, the pigment tables with `PIGMENTS` and its
 neighbours, and the brush tables with the brush sheet's tables. Presence of a name is
 `tests/docs/test_reference_pages.py`'s check; this one checks what a page says
@@ -13,6 +14,7 @@ import dataclasses
 import importlib
 import json
 import re
+import typing
 from collections.abc import Mapping, Sequence
 
 from pyntpot.ink import PAINTERS_PIGMENTS, PAINTERS_TRANSPARENCY, PIGMENTS, TRANSPARENCY
@@ -25,6 +27,7 @@ from support.site_pages import DOCS, fenced_blocks
 REFERENCE = DOCS / "reference"
 
 _GROUP_HEADING = re.compile(r"^## `(?P<group>\w+)`$", re.MULTILINE)
+_KEYS_HEADING = re.compile(r"^### `(?P<group>\w+)\.(?P<field>\w+)`$", re.MULTILINE)
 _GROUP_LINE = re.compile(
     r"^`(?P<cls>\w+)`, from `(?P<pkg>pyntpot\.(?:ink|letters|maps))`,"
     r" read as `Style\.default\(\)\.(?P<group>\w+)`\."
@@ -83,24 +86,39 @@ def _scalar_value(value: bool | int | float | str) -> str:
     return repr(value)
 
 
-def toml_value(value: object) -> str:
+def yaml_value(value: object) -> str:
     """Return how the style-field table writes a default value."""
     if isinstance(value, bool | int | float | str):
         return _scalar_value(value)
     if _is_record(value):
         return "table"
-    assert isinstance(value, Sequence), f"no TOML rendering for {value!r}"
+    assert isinstance(value, Sequence), f"no YAML rendering for {value!r}"
     if value and all(_is_record(item) for item in value):
         return "table"
-    return "[" + ", ".join(toml_value(item) for item in value) + "]"
+    return "[" + ", ".join(yaml_value(item) for item in value) + "]"
 
 
-def toml_type(value: object) -> str:
-    """Return the TOML type the style-field table names for a default value."""
+def yaml_type(value: object) -> str:
+    """Return the YAML type the style-field table names for a default value."""
     for kind, name in _SCALAR_TYPES:
         if isinstance(value, kind):
             return name
-    return "table" if toml_value(value) == "table" else "array"
+    return "table" if yaml_value(value) == "table" else "list"
+
+
+def entry_value(value: object) -> str:
+    """Return how a key sub-table writes one entry of a table field: a table entry as a flow map."""
+    if isinstance(value, Mapping):
+        return "{" + ", ".join(f"{key}: {entry_value(item)}" for key, item in value.items()) + "}"
+    return yaml_value(value)
+
+
+def field_type(group: object, name: str) -> str:
+    """Return the Type cell a field's row should hold: `one of` its choices for a `Literal`."""
+    hint = typing.get_type_hints(type(group))[name]
+    if typing.get_origin(hint) is typing.Literal:
+        return "one of " + ", ".join(f"`{choice}`" for choice in typing.get_args(hint))
+    return yaml_type(getattr(group, name))
 
 
 def _collapse(usage: str) -> str:
@@ -149,7 +167,7 @@ class TestStyleFieldTables:
         assert not wrong, "\n".join(wrong)
 
     def test_every_default_and_type_is_the_default_style(self) -> None:
-        """Each row's Default and Type cells are the packaged default style's value and its TOML type."""
+        """Each row's Default cell is the default style's value and its Type the field's YAML type."""
         style = Style.default()
         wrong: list[str] = []
         for group, section in self._sections().items():
@@ -159,12 +177,43 @@ class TestStyleFieldTables:
                 if not hasattr(values, name):
                     continue
                 value = getattr(values, name)
-                if _code(default) != toml_value(value):
-                    wrong.append(f"{group}.{name}: Default {default}, style {toml_value(value)}")
-                choices = toml_type(value) == "string" and _CHOICES.match(kind) is not None
-                if kind != toml_type(value) and not (choices and toml_value(value) in kind):
-                    wrong.append(f"{group}.{name}: Type {kind}, style {toml_type(value)}")
+                if _code(default) != yaml_value(value):
+                    wrong.append(f"{group}.{name}: Default {default}, style {yaml_value(value)}")
+                if kind != field_type(values, name):
+                    wrong.append(f"{group}.{name}: Type {kind}, model {field_type(values, name)}")
         assert not wrong, "\n".join(wrong)
+
+    def test_every_table_field_lists_its_keys(self) -> None:
+        """Each table field has one key sub-table: a row per key of its default, with that key's value, and no other row."""
+        style = Style.default()
+        text = (REFERENCE / "style-fields.md").read_text()
+        found: dict[str, list[list[str]]] = {}
+        for heading in _KEYS_HEADING.finditer(text):
+            rest = text[heading.end() :]
+            following = re.search(r"^##", rest, re.MULTILINE)
+            key = f"{heading['group']}.{heading['field']}"
+            assert key not in found, f"two key sub-tables for {key}"
+            found[key] = _table(
+                rest[: following.start() if following else None], ["Key", "Default"]
+            )
+        expected = {
+            f"{group}.{spec.name}": getattr(getattr(style, group), spec.name)
+            for group in Style.model_fields
+            for spec in dataclasses.fields(getattr(style, group))
+            if isinstance(getattr(getattr(style, group), spec.name), Mapping)
+        }
+        assert sorted(found) == sorted(expected)
+        for key, rows in found.items():
+            cells = [(_code(name), _code(value)) for name, value in rows]
+            assert cells == [(name, entry_value(value)) for name, value in expected[key].items()], (
+                key
+            )
+
+    def test_a_literal_field_types_as_its_choices(self) -> None:
+        """A `Literal` field's Type cell lists its choices in order, and any other field's is its YAML type."""
+        style = Style.default()
+        assert field_type(style.basemap, "sea_style") == "one of `fill`, `waves`"
+        assert field_type(style.paper, "paper_hex") == "string"
 
     def test_every_group_line_names_its_dataclass(self) -> None:
         """Each section's first line names the group's dataclass, the layer package exporting it, and how to read it."""
@@ -185,15 +234,15 @@ class TestStyleFieldTables:
     def test_a_default_renders_as_the_table_writes_it(self) -> None:
         """Booleans, numbers, strings, records and sequences render as the page's Default cells do."""
         assert [
-            toml_value(True),
-            toml_value(26.0),
-            toml_value(11),
-            toml_value("Eryri"),
-            toml_value({"wood": 0.05}),
-            toml_value((80, 60)),
-            toml_value(("name:cy", "name")),
-            toml_value(()),
-            toml_value(({"a": 1},)),
+            yaml_value(True),
+            yaml_value(26.0),
+            yaml_value(11),
+            yaml_value("Eryri"),
+            yaml_value({"wood": 0.05}),
+            yaml_value((80, 60)),
+            yaml_value(("name:cy", "name")),
+            yaml_value(()),
+            yaml_value(({"a": 1},)),
         ] == [
             "true",
             "26.0",
@@ -205,6 +254,13 @@ class TestStyleFieldTables:
             "[]",
             "table",
         ]
+
+    def test_a_sequence_types_as_a_list(self) -> None:
+        """A sequence default is a YAML `list`, a mapping a `table`, and a table entry writes as a flow map."""
+        assert [yaml_type((80, 60)), yaml_type({"wood": 0.05})] == ["list", "table"]
+        assert (
+            entry_value({"press_cell_px": 70.0, "pool": 1.4}) == "{press_cell_px: 70.0, pool: 1.4}"
+        )
 
 
 class TestCliSynopsis:

@@ -154,7 +154,7 @@ $ uv run pyntpot map my-walk.gpx -o out/my-walk.png --cache cache/ --contact "yo
 
 Replace `you@example.org` with your own contact. The command fills `cache/` with the
 payloads your track lacks, then paints, letters and writes the map. Run it a second
-time and nothing is fetched. `--style` takes a TOML theme for another look.
+time and nothing is fetched. `--style` takes a theme name or a `.yaml` theme for another look.
 `--no-attribution` leaves the credit off the map. If you publish the map, leave the
 credit on.
 

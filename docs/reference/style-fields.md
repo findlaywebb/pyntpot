@@ -1,14 +1,14 @@
 # Style fields
 
-The style is every style group a map is painted, lettered and composed with, as one value: `pyntpot.maps.Style`. A theme is a TOML file with one table for each group, read by `Style.from_toml` and by the command line's `--style`. This page lists every field of every style group. Every group is a frozen dataclass built by keyword: make a variant with `dataclasses.replace(group, field=value)`.
+The style is every style group a map is painted, lettered and composed with, as one value: `pyntpot.maps.Style`. A theme is a YAML file that names its base theme with `extends` and gives the fields it changes, read by `Style.from_yaml` and by the command line's `--style`. This page lists every field of every style group. Every group is a frozen dataclass built by keyword: make a variant with `dataclasses.replace(group, field=value)`.
 
 ## Reading the tables
 
-- The section heading is the group's table name in a theme. The line under it names the group's dataclass, the package that exports it, and how to read the group from a style.
-- Type is the TOML type: boolean, integer, number, string, array or table.
-- Default is the value in the packaged default theme, which `Style.default()` reads. It is the resolved default style, not the dataclass default; the two differ for some fields.
-- A table or an array of tables is shown as `table`. Its keys and values are in `src/pyntpot/maps/themes/default.toml`.
-- A theme names every group. A key a group does not have is rejected, at the top level, inside a group and inside the route ink, as is a missing group or a value of the wrong type.
+- The section heading is the group's key in a theme. The line under it names the group's dataclass, the package that exports it, and how to read the group from a style.
+- Type is the YAML type: boolean, integer, number, string, list or table. A field with a fixed set of values is `one of` those values, and any other value is an error at load.
+- Default is the model's default, which is the default look: what `Style()` and the `default` theme hold.
+- A table field is shown as `table`. Its keys and their default values are in the sub-table under the group's fields, headed with the field's dotted key path.
+- A theme names only what it changes; a key it leaves out holds its base theme's value. Every key is checked at load, at the top level, inside a group and inside a table field, as is every value's type. The JSON Schema for theme files is [`theme.schema.json`](theme.schema.json).
 - Sizes and widths in `_px` fields are in display pixels unless the description says render pixels. Fields ending `_m` are in metres.
 
 ## Which groups feed what
@@ -38,7 +38,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `paper_worn` | number | `0.2` | Strength of the worn border. |
 | `paper_vignette` | number | `0.05` | Strength of the vignette. |
 | `paper_foxing` | number | `0.09` | Strength of the foxing. |
-| `paper_edge` | `"classic"` or `"warm"` | `"warm"` | The look of the edge and the foxing. `"warm"` browns a narrow, uneven edge and flecks the sheet with small rust specks; `"classic"` is the grey vignette and broad grey smudges. |
+| `paper_edge` | one of `classic`, `warm` | `"warm"` | The look of the edge and the foxing. `"warm"` browns a narrow, uneven edge and flecks the sheet with small rust specks; `"classic"` is the grey vignette and broad grey smudges. |
 | `sheet_seed` | integer | `11` | Seed of the paper's noise fields, so the same box paints the same paper. |
 | `km_glazing` | boolean | `true` | Composite the pigment stack by Kubelka-Munk glazing instead of multiply. |
 | `pigment_transparency` | table | table | Table of pigment key to transparency, as `TRANSPARENCY`. See [Pigments](pigments.md). |
@@ -49,6 +49,28 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `paper_fibre_angle` | number | `0.42` | Angle of the fibre grain, in radians. |
 | `paper_fibre_cell_px` | number | `4.2` | Size of the fibre's own cell, in render pixels. |
 | `gran_gamma` | number | `1.7` | How sharply granulation follows the paper's pits. Above 1, pigment has to reach a real hollow before it settles. |
+
+### `paper.pigment_transparency`
+
+A theme may give only these keys.
+
+| Key | Default |
+| --- | --- |
+| `farmland` | `0.1` |
+| `meadow` | `0.09` |
+| `orchard` | `0.09` |
+| `scrub` | `0.08` |
+| `heath` | `0.14` |
+| `sand` | `0.16` |
+| `rock` | `0.22` |
+| `wetland` | `0.08` |
+| `built` | `0.26` |
+| `works` | `0.28` |
+| `wood` | `0.05` |
+| `pale` | `0.12` |
+| `water` | `0.04` |
+| `relief` | `0.3` |
+| `rim` | `0.18` |
 
 ## `wash`
 
@@ -85,7 +107,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `silhouette_deform_amount` | number | `0.26` | One displacement as a share of the segment it sits on, in the first round. |
 | `silhouette_deform_decay` | number | `0.55` | How much of a displacement each round hands its children. |
 | `silhouette_deform_depth` | integer | `4` | Rounds of midpoint displacement. Each doubles the ring's point count. |
-| `silhouette_deform_max_m` | array | `[16.0, 3.0]` | Ceiling on one displacement: a floor in metres and a multiple of the plate's metres per render pixel. |
+| `silhouette_deform_max_m` | list | `[16.0, 3.0]` | Ceiling on one displacement: a floor in metres and a multiple of the plate's metres per render pixel. |
 | `silhouette_deform_min_px` | number | `1.6` | Segment length below which the recursion stops, in render pixels. |
 | `silhouette_deform_seed` | integer | `73` | Seed of the deformation. |
 | `pigment_separation` | boolean | `true` | Lay a second, heavier pigment over the classes named in `separation_pigments`, so the two separate as the wash dries. |
@@ -101,6 +123,14 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `fluid_gran` | number | `0.6` | How much settling follows the paper's own height. |
 | `fluid_seed` | integer | `41` | Seed of the pass. |
 
+### `wash.separation_pigments`
+
+A theme may give any pigment key of `cover.pigments`. A class it does not name stays one wash.
+
+| Key | Default |
+| --- | --- |
+| `wood` | `"#6e7f8b"` |
+
 ## `brush`
 
 `BrushStyle`, from `pyntpot.ink`, read as `Style.default().brush`. Which brush each line class takes, how wide, and how the brush behaves.
@@ -111,9 +141,9 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `river_curve` | table | table | Table of watercourse class to four numbers: coefficient and exponent on the box in kilometres, then a floor and a ceiling, in display pixels. |
 | `major_river_rel_frac` | number | `0.65` | Share of the box's longest named river a river's run has to reach to count as major. |
 | `minor_roads_mppd` | number | `8.0` | Metres per display pixel above which lanes and tracks are dropped. |
-| `blotch_m` | array | `[190.0, 26.0]` | The wood's blotch size, in metres: a floor and a multiple of the plate's metres per display pixel. |
-| `dab_spacing_m` | array | `[620.0, 95.0]` | The wood's dab spacing, in metres: a floor and a multiple. |
-| `gran_m` | array | `[70.0, 9.0]` | The granulation size, in metres: a floor and a multiple. |
+| `blotch_m` | list | `[190.0, 26.0]` | The wood's blotch size, in metres: a floor and a multiple of the plate's metres per display pixel. |
+| `dab_spacing_m` | list | `[620.0, 95.0]` | The wood's dab spacing, in metres: a floor and a multiple. |
+| `gran_m` | list | `[70.0, 9.0]` | The granulation size, in metres: a floor and a multiple. |
 | `river_mult` | number | `1.0` | Multiplier on every painted width. |
 | `brushes` | table | table | Table of line class to brush id. See [Brushes](brushes.md). |
 | `brush_width_px` | table | table | Table of class to painted width in display pixels, for the classes not on the river curve. |
@@ -153,13 +183,60 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `bristle_contrast` | number | `1.0` | Multiplier on the variation of the bristle weights about their mean. |
 | `bristle_drift_coherence` | number | `0.25` | How much of its sideways drift a bristle shares with its neighbours, as a share of the tip's width. 0 draws each independently. |
 
+### `brush.river_curve`
+
+A theme may give only these keys.
+
+| Key | Default |
+| --- | --- |
+| `major` | `[14.2, -0.2, 4.0, 12.0]` |
+| `medium` | `[10.5, -0.42, 2.2, 7.0]` |
+| `minor` | `[13.5, -0.78, 1.3, 8.0]` |
+
+### `brush.brushes`
+
+A theme may give only these keys.
+
+| Key | Default |
+| --- | --- |
+| `major` | `"RIV1-a"` |
+| `medium` | `"STR2-a"` |
+| `minor` | `"STR3-a"` |
+| `coast` | `"STR2-a"` |
+| `road_major` | `"MAJ2-a"` |
+| `lane` | `"LAN5-a"` |
+| `track` | `"TRK4-d"` |
+
+### `brush.brush_width_px`
+
+A theme may give only these keys.
+
+| Key | Default |
+| --- | --- |
+| `road_major` | `3.6` |
+| `lane` | `1.8` |
+| `track` | `2.4` |
+
+### `brush.brush_overrides`
+
+Besides these keys, a theme may give a brush-id prefix in lower case (`riv`, `str`, `maj`, `lan` or `trk`), `route` or `label`. An entry's keys are the values the sheet brush reads: `bleed`, `bristles`, `darkness`, `dry`, `gap`, `jitter_px`, `lift`, `load`, `pool`, `press`, `press_cell_px`, `solid`, `texture`, `thr` and `wobble_px`.
+
+| Key | Default |
+| --- | --- |
+| `major` | `{press_cell_px: 170.0, jitter_px: 0.55, wobble_px: 0.25}` |
+| `medium` | `{press_cell_px: 130.0, jitter_px: 0.5, wobble_px: 0.3}` |
+| `minor` | `{press_cell_px: 95.0, jitter_px: 0.55, wobble_px: 0.35}` |
+| `coast` | `{press_cell_px: 120.0, jitter_px: 0.4, wobble_px: 0.2}` |
+| `lane` | `{press_cell_px: 70.0, jitter_px: 0.3, wobble_px: 0.55, pool: 1.4}` |
+| `track` | `{press_cell_px: 60.0, jitter_px: 0.65, wobble_px: 0.4}` |
+
 ## `face`
 
 `FaceStyle`, from `pyntpot.letters`, read as `Style.default().face`. The face the hand opens and how a glyph becomes a pen path.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
-| `label_route` | string | `"centreline"` | How a glyph becomes a pen path: `centreline` thins the face's outline to a written skeleton, `outline` draws round the contour. Neither falls back to the other. |
+| `label_route` | one of `centreline`, `outline` | `"centreline"` | How a glyph becomes a pen path: `centreline` thins the face's outline to a written skeleton, `outline` draws round the contour. Neither falls back to the other. |
 | `label_face` | string | `""` | Path of the `.ttf` to open. Empty opens the vendored face. |
 
 ## `nib`
@@ -201,7 +278,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | --- | --- | --- | --- |
 | `display_px` | integer | `900` | Display width of the card in pixels; the height follows its aspect. Below 900 the lanes and tracks are not drawn. |
 | `supersample` | integer | `2` | The plates are painted at this multiple of the display size. |
-| `dark_grid` | array | `[80, 60]` | Cells across and down of the dark grid the label placer scores against. |
+| `dark_grid` | list | `[80, 60]` | Cells across and down of the dark grid the label placer scores against. |
 
 ## `ribbon`
 
@@ -243,10 +320,50 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `pale_pool` | number | `0.16` | How hard the pale wash's edge pools. |
 | `wood_texture` | number | `0.75` | Slider for the wood's texture, a cross fade over three printed scales. |
 | `wood_dabs` | number | `0.78` | Slider for the wood's dabs, a cross fade over three printed spacings. |
-| `wood_tex_scales` | array | `[2.1, 1.0, 0.45]` | The three printed scales of the wood's texture. |
-| `wood_tex_strengths` | array | `[0.3, 0.4, 0.48]` | The strength of each printed scale. |
-| `dab_spacings` | array | `[1.7, 1.0, 0.6]` | The three printed spacings of the wood's dabs. |
-| `dab_strengths` | array | `[0.34, 0.36, 0.38]` | The strength of each printed spacing. |
+| `wood_tex_scales` | list | `[2.1, 1.0, 0.45]` | The three printed scales of the wood's texture. |
+| `wood_tex_strengths` | list | `[0.3, 0.4, 0.48]` | The strength of each printed scale. |
+| `dab_spacings` | list | `[1.7, 1.0, 0.6]` | The three printed spacings of the wood's dabs. |
+| `dab_strengths` | list | `[0.34, 0.36, 0.38]` | The strength of each printed spacing. |
+
+### `cover.cover_cfg`
+
+A theme may give only these keys.
+
+| Key | Default |
+| --- | --- |
+| `farmland` | `[0.52, 0.2]` |
+| `meadow` | `[0.55, 0.22]` |
+| `orchard` | `[0.55, 0.24]` |
+| `scrub` | `[0.58, 0.26]` |
+| `heath` | `[0.6, 0.26]` |
+| `sand` | `[0.5, 0.22]` |
+| `rock` | `[0.52, 0.26]` |
+| `wetland` | `[0.6, 0.28]` |
+| `built` | `[0.55, 0.2]` |
+| `works` | `[0.58, 0.22]` |
+| `wood` | `[0.72, 0.3]` |
+
+### `cover.pigments`
+
+A theme may give only these keys.
+
+| Key | Default |
+| --- | --- |
+| `farmland` | `"#dfe0b0"` |
+| `meadow` | `"#cfdfae"` |
+| `orchard` | `"#d5dda2"` |
+| `scrub` | `"#c9d5a4"` |
+| `heath` | `"#e0cda2"` |
+| `sand` | `"#ecdfbe"` |
+| `rock` | `"#dcd6c6"` |
+| `wetland` | `"#bfd2cd"` |
+| `built` | `"#ddd3c3"` |
+| `works` | `"#d2cbc0"` |
+| `wood` | `"#a8c286"` |
+| `pale` | `"#d5e0b4"` |
+| `water` | `"#9ec4de"` |
+| `relief` | `"#c9bda4"` |
+| `rim` | `"#c2ad91"` |
 
 ## `route`
 
@@ -264,11 +381,11 @@ A change to a group moves the digests it feeds, and only those plates are painte
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
-| `drawn_as` | string | `"solid"` | How the route is drawn: `"pen"` tints the pen plate when the `route` group painted one; `"solid"` draws a line. Any other value is an error at load. |
+| `drawn_as` | one of `pen`, `solid` | `"solid"` | How the route is drawn: `"pen"` tints the pen plate when the `route` group painted one; `"solid"` draws a line. |
 | `px` | number | `5.4` | Width in display pixels. It also sets how near two passes of a retraced route have to come to be drawn as one stroke. |
 | `colour` | string | `"#c22050"` | Colour as `#rrggbb`. |
-| `blend` | string | `"normal"` | `"normal"` lays the ink over the map; `"multiply"` multiplies it into the map, so the route darkens a wash instead of covering it. Any other value is an error when the route is drawn. |
-| `opacity` | number | `1.0` | How much of the ink is laid, from 0 to 1. The default theme does not write it; a table without it reads 1.0. |
+| `blend` | one of `normal`, `multiply` | `"normal"` | `"normal"` lays the ink over the map; `"multiply"` multiplies it into the map, so the route darkens a wash instead of covering it. |
+| `opacity` | number | `1.0` | How much of the ink is laid, from 0 to 1. |
 
 The compose step draws no casing, glow or shadow round the route.
 
@@ -290,26 +407,26 @@ The compose step draws no casing, glow or shadow round the route.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
-| `hillshade_mode` | string | `"off"` | How relief is drawn: `bands`, `raster`, `contours`, `hachures` or `off`. |
+| `hillshade_mode` | one of `bands`, `raster`, `contours`, `hachures`, `off` | `"off"` | How relief is drawn: `bands`, `raster`, `contours`, `hachures` or `off`. |
 | `hillshade_levels` | integer | `5` | Number of bands in `bands` mode. |
 | `hillshade_opacity` | number | `0.5` | Has no reader; kept for the upstream consumer. |
 | `hachure_spacing_m` | number | `75.0` | Seed spacing of hachures, in metres, stated for a 4 km box and scaled up. |
 | `hachure_min_slope` | number | `0.035` | Gradient below which no hachure is drawn. |
 | `hachure_max_length_m` | number | `90.0` | Longest hachure stroke, in metres, stated for a 4 km box. |
-| `sea_style` | string | `"fill"` | How the sea is drawn: `fill` or `waves`. |
+| `sea_style` | one of `fill`, `waves` | `"fill"` | How the sea is drawn: `fill` or `waves`. |
 | `contour_interval` | number | `50.0` | Contour interval in metres, used when the mode is `contours`. |
-| `roads` | string | `"key"` | Which roads are drawn: `all`, `key` (major plus interacted) or `major`. |
-| `minor_road_classes` | array | `["tertiary", "unclassified", "residential", "track", "service"]` | The minor highway classes `roads = "all"` keeps; a way of another class is dropped. The fetch asks for all of them whatever this says. |
-| `rivers` | string | `"key"` | Which watercourses are drawn: `all`, `key` (rivers plus interacted streams) or `rivers`. |
+| `roads` | one of `all`, `key`, `major` | `"key"` | Which roads are drawn: `all`, `key` (major plus interacted) or `major`. |
+| `minor_road_classes` | list | `["tertiary", "unclassified", "residential", "track", "service"]` | The minor highway classes `roads = "all"` keeps; a way of another class is dropped. The fetch asks for all of them whatever this says. |
+| `rivers` | one of `all`, `key`, `rivers` | `"key"` | Which watercourses are drawn: `all`, `key` (rivers plus interacted streams) or `rivers`. |
 | `interaction_m` | number | `60.0` | Metres within which a minor road or a stream counts as touched by the track. |
 | `interaction_run_m` | number | `100.0` | Metres of that contact needed before it counts, unless the track crosses. |
-| `landmarks` | string | `"all"` | How landmarks are chosen: `heuristic`, `all` or `payload`. |
+| `landmarks` | one of `heuristic`, `all`, `payload` | `"all"` | How landmarks are chosen: `heuristic`, `all` or `payload`. |
 | `landmark_max` | integer | `40` | The most landmarks. |
 | `landmark_radius_m` | number | `300.0` | Radius, in metres, the landmark heuristic works over, scaled to the box. |
-| `pick_landmarks` | array | `[]` | Names the payload picked: replaces the landmark heuristic when given. |
-| `pick_roads` | array | `[]` | Names of minor roads to keep. |
-| `pick_places` | array | `[]` | Has no reader; kept for the upstream consumer. |
-| `name_tags` | array | `["name"]` | The OSM tags that name a feature, in order of preference: the map letters the first one an element carries. `["name:cy", "name"]` letters Welsh names where OSM has them. |
+| `pick_landmarks` | list | `[]` | Names the payload picked: replaces the landmark heuristic when given. |
+| `pick_roads` | list | `[]` | Names of minor roads to keep. |
+| `pick_places` | list | `[]` | Has no reader; kept for the upstream consumer. |
+| `name_tags` | list | `["name"]` | The OSM tags that name a feature, in order of preference: the map letters the first one an element carries. `["name:cy", "name"]` letters Welsh names where OSM has them. |
 | `generalise` | boolean | `false` | Rasterise, close, open, declutter and trace the wood, the parkland and the sea back as a few smooth shapes. Off draws the raw outlines. |
 | `cell_m` | number | `60.0` | Metres per cell of the working grid, stated for a 4 km box and scaled up. |
 | `morph_cells` | integer | `2` | Radius of the close and open, in cells. |

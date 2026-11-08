@@ -62,9 +62,8 @@ the greens and the blue water. A blue route would be lost among the rivers.
 
 ## Try the styles and the colours
 
-The ink also has a style. The theme's `[route_ink]` table sets a `style`. The
-route is drawn either as a plain `solid` line or as a `pen` stroke, tinted from a plate
-the pen painted. The pen's brush changes the line: a wet brush lays a heavy, even line,
+The theme's `route_ink` table also sets how the route is drawn, by `drawn_as`: a plain
+`solid` line, the default, or a `pen` stroke, tinted from a plate the pen painted. The pen's brush changes the line: a wet brush lays a heavy, even line,
 and a dry one lays a thinner, paler line.
 
 ![Six small copies of the Ambleside map, each cropped to the loop, in two rows of three. The columns are the route in maroon, indigo and burnt sienna. The top row is a wet pen line, heavy and even. The bottom row is a dry pen line, thinner and paler, and it fades in places. Rows and columns are lettered.](../images/how-to/route-ink-grid.webp)
@@ -96,7 +95,7 @@ them, and `with_route_ink` sets the colour:
         )
 ```
 
-Only `pen` changes how the route is drawn: any other style is a solid line.
+`drawn_as` is `pen` or `solid`; a theme with any other value does not load.
 
 ## When it goes wrong
 
@@ -107,7 +106,7 @@ Only `pen` changes how the route is drawn: any other style is a solid line.
   zero, and not infinite or `nan`. A `bool` is refused too.
 - The route did not change colour: you passed the original `Style.default()` to a stage
   instead of the copy `with_route_ink` returned. Pass the copy to every stage.
-- The width changed nothing you can see: the route ink's style is `pen`. It tints the
+- The width changed nothing you can see: the route ink's `drawn_as` is `pen`. It tints the
   painted pen plate, and that plate's stroke width is the `route` group's
   `route_pen_width_px`. The width you pass then only sets how near two passes of a
   retraced route have to come to be drawn as one stroke. The default theme's route is `solid`, so there the

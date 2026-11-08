@@ -92,7 +92,7 @@ pyntpot map [-h] -o OUTPUT --cache CACHE --contact CONTACT [--style THEME] [--ma
 | --- | --- |
 | 0 | The PNG was written. |
 | 1 | Any other error, such as a missing GPX file or a failed fetch; the traceback names it. |
-| 2 | A required argument is missing or an argument is not understood, as `argparse` exits. |
+| 2 | A required argument is missing or an argument is not understood, as `argparse` exits, or the `--style` theme does not load; each of its problems is printed on its own line, after `pyntpot map: `. |
 
 ## What the command does not take
 

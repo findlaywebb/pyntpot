@@ -76,11 +76,11 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S9 — Docs
 
-- [ ] Red: the style-fields comparator covers table-field keys and enum types (#186).
-- [ ] `write-a-theme.md` with "Convert a TOML theme"; `style-fields.md` with table keys (#186); CLI, how-to, tutorial and landing pages on YAML and names.
-- [ ] `GLOSSARY.md`: theme, base theme, route ink; glossary files regenerated.
-- [ ] Notes for #158, #182, #80, #77 and #186 deleted, links repointed; related notes' facts updated; numeric-ranges note written if still true, its issue listed to file.
-- [ ] The case-insensitive TOML grep prints only the allowed lines; strict docs build and slice gate green.
+- [x] Red: the style-fields comparator covers table-field keys and enum types (#186).
+- [x] `write-a-theme.md` with "Convert a TOML theme"; `style-fields.md` with table keys (#186); CLI, how-to, tutorial and landing pages on YAML and names.
+- [x] `GLOSSARY.md`: theme, base theme, route ink; glossary files regenerated.
+- [x] Notes for #158, #182, #80, #77 and #186 deleted, links repointed; related notes' facts updated; numeric-ranges note written if still true, its issue listed to file.
+- [x] The case-insensitive TOML grep prints only the allowed lines; strict docs build and slice gate green.
 
 ## S10 — Golden regeneration
 

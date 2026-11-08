@@ -2,13 +2,15 @@
 
 GitHub issue: [#174](https://github.com/findlaywebb/pyntpot/issues/174)
 
-**What exists today.** `examples/` holds 28 scripts, ten themes and `places.toml`. Small
+**What exists today.** `examples/` holds 28 scripts, six place themes and `places.toml`. Small
 things make them harder to use than to read:
 
-- **Themes resolve against the repository root.** `place_card.py` and `how_to_route_ink.py`
-  join `--theme` to `REPO_ROOT = Path(__file__).resolve().parent.parent`; `map_styles.py`
-  reads `THEMES_DIR` beside the script, a third way. A script copied into another project,
-  or given a path relative to the working directory, finds the wrong file.
+- **Theme paths resolve against the repository root.** `place_card.py` and
+  `how_to_route_ink.py` take `--theme` as a theme name or a `.yaml` path and read it with
+  `Style.from_theme(theme, relative_to=REPO_ROOT)`, where
+  `REPO_ROOT = Path(__file__).resolve().parent.parent`; `map_styles.py` takes a packaged
+  theme by name only. A name works anywhere, but a script copied into another project, or
+  given a path relative to the working directory, finds the wrong file.
 - **`map.png` is overwritten.** `map_styles.py` and `place_card.py` write `out_dir / "map.png"`
   whatever the theme or place, so running the themes or places into one `out/` keeps only
   the last card. Every other multi-figure script names its file by figure.
@@ -28,7 +30,7 @@ things make them harder to use than to read:
   (`site_theme.py`, `social_preview.py`).
 
 **What the feature would add.** Scripts a reader can copy out and run: `main` takes a plain
-theme `Path` that the caller resolves; output named `map-<theme>.png` and `<place>.png`;
+theme name or `.yaml` path read from the working directory, as `pyntpot map --style` reads it; output named `map-<theme>.png` and `<place>.png`;
 `out/`, `cache/` and `ambleside/` in `.gitignore`; the fern family as `fern.py
 --figure family`; `_dense` gone from the script and the page, with `stamp`'s docstring
 saying that any spacing of points is fine; a small-size smoke test for each untested

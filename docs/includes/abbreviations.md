@@ -128,7 +128,9 @@
 
 *[style groups]: One layer's share of the style, a frozen dataclass of the fields its readers read: PaperStyle, NibStyle, BasemapStyle and the rest. Each is a frozen, keyword-only dataclass named <Group>Style.
 
-*[route ink]: How the route is drawn on the map: its style (pen, or any other value for a solid line), its width in display pixels, its colour, its blend and its opacity; the width also sets how near two passes of a retraced route have to come to be drawn as one stroke. The style field Style.route_ink, a theme's [route_ink] table; a caller feeds its colour and width through Style.with_route_ink.
+*[base theme]: The theme an override theme's extends names; its values hold wherever the override is silent. default when extends is absent.
+
+*[route ink]: How the route is drawn on the map: its drawn_as (pen or solid), its width in display pixels, its colour, its blend and its opacity; the width also sets how near two passes of a retraced route have to come to be drawn as one stroke. The style field Style.route_ink, a theme's route_ink table; a caller feeds its colour and width through Style.with_route_ink.
 
 *[fetch cache]: The directory a fetch keeps its provider payloads in, keyed on the track's box, the margin and the providers' ids, which also holds each key's plates and lettering.
 

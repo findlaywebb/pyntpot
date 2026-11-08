@@ -50,8 +50,8 @@ Turn a GPX file of a walk, ride or run into a painted PNG map with one command,
    wrote out/route.png
    ```
 
-To paint with your own theme, add `--style my-theme.toml`
-([Write a theme](write-a-theme.md)). To leave the credit off the map, add
+To paint in a packaged theme, add `--style` and its name, such as `--style sepia`. To
+paint with your own theme, add `--style my-theme.yaml` ([Write a theme](write-a-theme.md)). To leave the credit off the map, add
 `--no-attribution`. Read [Credit the map data](credit-the-map-data.md) first, because the
 duty to credit is then yours.
 
@@ -74,5 +74,6 @@ Find the line that matches your error.
 - `FetchError: a provider could not answer: every Overpass endpoint refused the query`: Overpass was busy or unreachable. The log above the error says why, for example a 429 for too many requests. After a 429 pyntpot waits 30 seconds before it tries the next server. Run the same command again later. Payloads fetched before the failure are in the cache, so the rerun fetches only what is missing.
 - `FetchError: a provider could not answer: opentopodata-srtm30m ...`: OpenTopoData failed after Overpass had answered. Rerun the command. The features and land cover are not fetched again. The public OpenTopoData server allows 1000 calls a day and one map takes 64, so a day of heavy use can spend them.
 - `ValueError: Overpass needs a contact string, such as an email address`: `--contact` was empty. Give a web address or an email address.
-- `pydantic_core._pydantic_core.ValidationError: ... for Style`: Your `--style` theme is missing a group, names a key that does not exist or has a value of the wrong type. The lines under the error name the group and the key. [Write a theme](write-a-theme.md) covers the groups.
+- `pyntpot map: /home/you/maps/my-theme.yaml:4: wash.blom: unknown key; did you mean blooms?`: Your `--style` theme has a problem. The command prints one line per problem, each with the file, the line and the dotted key, and exits with status 2 before it fetches anything. [Write a theme](write-a-theme.md#when-a-theme-does-not-load) reads the messages.
+- `pyntpot map: nope: no theme named 'nope'; available: bold, default, pen-and-ink, sepia, winter`: `--style` was given a name that is not a packaged theme. A theme file must end in `.yaml`.
 - The map has no credit at the bottom right: You passed `--no-attribution`, or the picture was scaled down until you cannot read the credit. [Credit the map data](credit-the-map-data.md) says where else to put it.

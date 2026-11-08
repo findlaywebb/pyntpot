@@ -184,7 +184,7 @@ Already filed, not done here:
   S8 leaves a `RENAMED_KEYS` table it can reuse; S9 adds that sentence to the note.
 - #79 the preview card: `specs/008a-theme-preview-card/`.
 
-Found while planning, to be filed in S9 if still true (note plus issue):
+Found while planning, filed in S9 (note plus issue):
 
-- `maps-numeric-ranges-unchecked.md` (enhancement, area: maps): numeric ranges
+- `maps-numeric-ranges-unchecked.md` (#206) (enhancement, area: maps): numeric ranges
   (`display_px: -5`, `opacity: 2`) are not checked at load.

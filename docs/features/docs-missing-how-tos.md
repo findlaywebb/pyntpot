@@ -20,8 +20,8 @@ plausibly has with no guide. The ones most often wanted:
 5. **Choose names from the candidate export.** `candidate_export`, pick, then
    `Annotations.landmarks`. A landmark placed at coordinates is a `Landmark`, exported
    from `pyntpot.maps` too.
-6. **Add relief or turn it off**: `[basemap] hillshade_mode` and `contour_interval`.
-7. **Use another font for the lettering**: `[face] label_face` takes a `.ttf` path.
+6. **Add relief or turn it off**: `basemap.hillshade_mode` and `contour_interval`.
+7. **Use another font for the lettering**: `face.label_face` takes a `.ttf` path.
 8. **Handle fetch failures in a script**: `FetchError` and `ProviderBudgetExceededError` are
    exported, but the guides quote them only as command-line output to read.
 
@@ -37,10 +37,10 @@ second.
 **Possible shape.** Write the ones that need no library change first (2, 3, 4, 5, 6, 7,
 8); `SpanRequest` and `Landmark` are public, so guides 2 and 5 need nothing more. Guide 1
 is one line once `pyntpot map`
-takes `--size` (`cli-wider-commands.md`, #68), and shorter in Python once a theme can
-override one field (`maps-themes-as-overrides.md`, #80). Picking roads per card (as
-opposed to `[basemap] pick_roads` in a theme) is `Annotations.roads`, which letters the
-roads it names, by name or number.
+takes `--size` (`cli-wider-commands.md`, #68); a theme already overrides only the fields it
+names, so a three-line theme setting `card.display_px` and `card.supersample` does it today
+(`docs/how-to/write-a-theme.md`). Picking roads per card (as opposed to
+`basemap.pick_roads` in a theme) is `Annotations.roads`, which letters the roads it names,
+by name or number.
 
-**Related.** `cli-wider-commands.md` (#68),
-`maps-themes-as-overrides.md` (#80).
+**Related.** `cli-wider-commands.md` (#68).
