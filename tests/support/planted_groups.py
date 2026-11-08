@@ -27,3 +27,25 @@ class Ink:
 
     glow: Glow = field(default_factory=Glow)
     px: float = 5.4
+
+
+@dataclass(frozen=True, kw_only=True)
+class Fog:
+    """A planted sub-table holding a dict field no vocabulary names, for the vocabulary guard's test.
+
+    Attributes:
+        density: The fog's density by layer name.
+    """
+
+    density: dict[str, float] = field(default_factory=lambda: {"low": 0.5})
+
+
+@dataclass(frozen=True, kw_only=True)
+class Cloud:
+    """A planted group whose sub-table holds a dict field with no vocabulary, and no style group.
+
+    Attributes:
+        fog: The planted sub-table.
+    """
+
+    fog: Fog = field(default_factory=Fog)

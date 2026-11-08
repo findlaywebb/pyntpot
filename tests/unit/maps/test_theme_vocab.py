@@ -2,6 +2,7 @@
 
 import dataclasses
 import re
+import typing
 
 import pytest
 
@@ -11,6 +12,8 @@ from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.maps import Style
 from pyntpot.maps.style_groups import CoverStyle
 from pyntpot.maps.theme_vocab import BRUSH_ID_FIELDS, COLOUR_FIELDS, VOCABULARIES
+
+from support.planted_groups import Cloud
 
 HEX = re.compile(r"#[0-9a-f]{6}")
 
@@ -26,6 +29,33 @@ def _string_paths(style: Style) -> dict[tuple[str, ...], list[str]]:
             elif isinstance(value, dict) and all(isinstance(v, str) for v in value.values()):
                 paths[(group, item.name, "*")] = list(value.values())
     return paths
+
+
+def _has_vocabulary(path: tuple[str, ...]) -> bool:
+    """Whether some `VOCABULARIES` key path is `path`, a `*` standing for any one key."""
+    return any(
+        len(path) == len(pattern)
+        and all(want in ("*", have) for have, want in zip(path, pattern, strict=True))
+        for pattern in VOCABULARIES
+    )
+
+
+def _unvocabularied(name: str, group: type) -> list[tuple[str, ...]]:
+    """Key paths of dict fields under `group` with no vocabulary, recursing as `theme_check` does."""
+    missing: list[tuple[str, ...]] = []
+
+    def walk(hint: object, path: tuple[str, ...]) -> None:
+        if isinstance(hint, type) and dataclasses.is_dataclass(hint):
+            for key, item in typing.get_type_hints(hint).items():
+                if key in {f.name for f in dataclasses.fields(hint)}:
+                    walk(item, (*path, key))
+        elif typing.get_origin(hint) is dict:
+            if not _has_vocabulary(path):
+                missing.append(path)
+            walk(typing.get_args(hint)[1], (*path, "*"))
+
+    walk(group, (name,))
+    return missing
 
 
 def test_the_colour_fields_are_what_the_model_implies():
@@ -59,6 +89,21 @@ def test_every_dict_field_has_a_vocabulary():
         if isinstance(getattr(getattr(style, group), item.name), dict)
     }
     assert set(VOCABULARIES) == dict_fields | {("brush", "brush_overrides", "*")}
+
+
+def test_the_walk_finds_a_dict_field_with_no_vocabulary():
+    """The guard's walk reports a dict field inside a sub-table that `VOCABULARIES` lacks."""
+    assert _unvocabularied("cloud", Cloud) == [("cloud", "fog", "density")]
+
+
+def test_every_real_dict_field_path_has_a_vocabulary():
+    """Walking every real style group as the checker does, no dict field lacks a vocabulary."""
+    missing = [
+        path
+        for group, info in Style.model_fields.items()
+        for path in _unvocabularied(group, typing.cast("type", info.annotation))
+    ]
+    assert missing == []
 
 
 PIGMENTS = frozenset(CoverStyle().pigments)
