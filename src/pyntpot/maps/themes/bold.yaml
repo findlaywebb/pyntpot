@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# yaml-language-server: $schema=theme.schema.json
 # Bold: the default theme turned up. Bright paper, saturated pigments laid denser, wider rivers,
 # heavier lettering and a strong magenta route ink. It overrides the paper, the transparencies, the
 # cover pigments, the river width, the lettering and the route ink.

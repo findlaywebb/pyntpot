@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# yaml-language-server: $schema=theme.schema.json
 # Sepia: the default theme aged. Yellowed, worn paper with heavy foxing and a dark vignette; every
 # wash, ink and lettering colour is a faded warm brown. It overrides the paper, the cover pigments,
 # the brush ids, the lettering inks and the route ink.

@@ -1,8 +1,8 @@
 """A focus place's route map: the card the README, the gallery and the social preview show.
 
-The card is the one `examples/route_map.py` paints, with two options. `theme` names a .yaml
-theme file by its path relative to the repository's top directory, read with
-`Style.from_yaml`; without it the card takes `Style.default()`. `size` is the card's
+The card is the one `examples/route_map.py` paints, with two options. `theme` is a theme
+name or a .yaml file relative to the repository's top directory, read with
+`Style.from_theme`; without it the card takes `Style()`. `size` is the card's
 display width in pixels, 900 unless you say otherwise: the script copies the style with
 that `card.display_px` and paints the card at it, so the pixel grid, and with it the
 hand's lettering, is set for that width. The track, the cache and the providers are the
@@ -91,8 +91,8 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
         cache_dir: The fetch cache: provider payloads, and the plates painted from them.
         features: The map feature and land cover provider.
         elevation: The elevation provider.
-        theme: A .yaml theme file, as a path relative to the repository's top directory;
-            `Style.default()` when absent.
+        theme: A theme name or a .yaml file relative to the repository's top directory,
+            read with `Style.from_theme`; `Style()` when absent.
         size: The card's display width in pixels.
         margin_m: How far beyond the track's box the features and elevation are fetched, in
             metres; the library's default when absent.
@@ -105,7 +105,9 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
         The path of the saved card, `out_dir / "map.png"`.
     """
     base = (
-        Style.from_yaml(REPO_ROOT / theme) if theme is not None and theme != "" else Style.default()
+        Style.from_theme(theme, relative_to=REPO_ROOT)
+        if theme is not None and theme != ""
+        else Style()
     )
     style = base.model_copy(update={"card": replace(base.card, display_px=size)})
     route = Track.from_gpx(track)
@@ -135,7 +137,7 @@ if __name__ == "__main__":
         "contact", help="how the public servers' operators can reach you, such as an email"
     )
     parser.add_argument(
-        "--theme", help="a .yaml theme file, relative to the repository's top directory"
+        "--theme", help="a theme name or a .yaml file relative to the repository's top directory"
     )
     parser.add_argument("--size", type=int, default=900, help="the card's display width in pixels")
     parser.add_argument("--margin-m", type=float, help="feature and elevation margin, metres")

@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# yaml-language-server: $schema=theme.schema.json
 # Pen and ink: the default theme with the colour washes taken out. The land is a faint grey tint,
 # the wood is ink stipple, and the roads, rivers and route are laid in near-black ink on pale paper,
 # like an etching. It overrides the paper, the cover, the river width, the brush ids, the lettering

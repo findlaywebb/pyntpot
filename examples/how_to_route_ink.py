@@ -1,7 +1,7 @@
 """How-to: paint the route map with the route in another colour, width and treatment.
 
 The card is the one `examples/route_map.py` paints, with changes to the route's ink only.
-`Style.default()` gives the theme's look (or the theme file you name with `theme`);
+`Style.default()` gives the theme's look (or the theme, a name or a .yaml file, you name with `theme`);
 `Style.with_route_ink` returns a copy whose route is inked in the colour and width you feed.
 Only the route's ink changes, so the paper, the washes and the pen plates are the ones a plain
 run painted: `paint` finds them current in the cache and repaints nothing, and `compose` draws
@@ -115,9 +115,11 @@ NIB_SCALE = 2
 
 
 def _base(theme: str | None) -> Style:
-    """The theme file's style, relative to the repository's top directory, or `Style.default()`."""
+    """The style of a theme name or a .yaml file relative to the repository's top directory, or `Style()`."""
     return (
-        Style.from_yaml(REPO_ROOT / theme) if theme is not None and theme != "" else Style.default()
+        Style.from_theme(theme, relative_to=REPO_ROOT)
+        if theme is not None and theme != ""
+        else Style()
     )
 
 
@@ -268,8 +270,8 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
         features: The map feature and land cover provider.
         elevation: The elevation provider.
         figure: The picture, one of `FIGURES`.
-        theme: A .yaml theme file, as a path relative to the repository's top directory;
-            `Style.default()` when absent.
+        theme: A theme name or a .yaml file relative to the repository's top directory,
+            read with `Style.from_theme`; `Style()` when absent.
 
     Returns:
         The path of the saved picture: `out_dir / "route_ink.png"`, or
@@ -298,7 +300,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--figure", choices=FIGURES, default="violet", help="the picture")
     parser.add_argument(
-        "--theme", help="a .yaml theme file, relative to the repository's top directory"
+        "--theme", help="a theme name or a .yaml file relative to the repository's top directory"
     )
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)

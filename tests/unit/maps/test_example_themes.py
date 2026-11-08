@@ -10,10 +10,6 @@ from support import REPO_ROOT
 
 THEMES_DIR = REPO_ROOT / "examples" / "themes"
 THEME_NAMES = (
-    "pen-and-ink",
-    "sepia",
-    "bold",
-    "winter",
     "ambleside",
     "ambleside-hero",
     "skye",
@@ -25,12 +21,8 @@ THEME_NAMES = (
 DIGESTS = {
     "ambleside-hero": ("86ee79977c816d4e", "149792857eb4656a", "6331518a202c936d"),
     "ambleside": ("dbf735ec2626eea1", "1fbd4375dceec789", "6331518a202c936d"),
-    "bold": ("93dfd74809cc40ae", "6d77f74215314006", "2a7a209c41fe7df8"),
     "oxford": ("eb46db87c3080b61", "0f73e166ba6ba263", "36480f1b92757e09"),
-    "pen-and-ink": ("0295772c0971d18a", "0d40a30d74c111e0", "9c4b7732ec2b6d7d"),
-    "sepia": ("5f385631c67344df", "3a2f5fbbd424e347", "9f7523b1ae707038"),
     "skye": ("3a172bc9c6816e7a", "b54086dfe786d1f0", "1976288541cb3b07"),
-    "winter": ("6fd3e5385f7bd0c0", "c1b7c47d4ea12d6c", "68d9f8d8810bd9bb"),
     "y-fenni": ("d2e1c4c2ddacb647", "90c968b5e78d7058", "3c27e8f97c00b9c4"),
     "yr-wyddfa": ("53e17a182a7d962b", "58c70051932a610f", "6331518a202c936d"),
 }

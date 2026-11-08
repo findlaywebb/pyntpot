@@ -160,6 +160,7 @@ def test_every_style_group_field_has_a_default():
 def test_the_default_theme_is_the_model_with_nothing_overridden():
     """`Style()` with nothing overridden is the default look."""
     assert Style() == Style.default()
+    assert Style() == Style.named("default")
 
 
 def test_no_package_file_restates_the_defaults():

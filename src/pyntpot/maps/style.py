@@ -3,10 +3,11 @@
 Key type: `Style`, a frozen pydantic model holding one value of each style group:
 `paper`, `wash` and `brush` (ink), `face`, `nib` and `hand` (letters), `card`,
 `ribbon`, `cover`, `route`, `route_ink`, `lettering` and `basemap` (maps).
-`Style.from_yaml` reads a theme file. A theme names only what it changes over the theme
-it extends, and a theme with problems raises one `ThemeError` holding every problem in
-it. `Style()` is the default look: every group's defaults are the default
-theme, with nothing overridden.
+`Style.from_yaml` reads a theme file, `Style.named` a packaged theme by its name, and
+`Style.from_theme` either; `Style.themes` lists the packaged names. A theme names only
+what it changes over the theme it extends, and a theme with problems raises one
+`ThemeError` holding every problem in it. `Style()` is the default look: every group's
+defaults are the default theme, with nothing overridden.
 
 Three digests key what a style change repaints: `base_digest` over the groups the
 base plates read, `lettering_digest` over the groups only the lettering reads, and
@@ -34,7 +35,7 @@ import math
 import re
 import typing
 from collections.abc import Mapping
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Self
 
 import pydantic
@@ -52,7 +53,8 @@ from pyntpot.maps.style_groups import (
     RouteStyle,
 )
 from pyntpot.maps.theme_check import build_group
-from pyntpot.maps.theme_resolve import resolve
+from pyntpot.maps.theme_errors import ThemeError, ThemeProblem
+from pyntpot.maps.theme_resolve import resolve, theme_names
 
 #: The groups whose fields feed the base plates, in field order.
 BASE_GROUPS: tuple[str, ...] = (
@@ -142,6 +144,61 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         """
         table = resolve(Path(path), relative_to=Path.cwd(), groups=_groups(), base=_base())
         return cls._build(table)
+
+    @classmethod
+    def from_theme(cls, theme: str | Path, *, relative_to: Path | None = None) -> Self:
+        """A style from a theme given by its name or by its .yaml file.
+
+        Args:
+            theme: A packaged theme's name, such as `sepia`, or a `.yaml` theme file as a
+                `str` or a `Path`.
+            relative_to: The directory a relative path is read from; the current
+                directory when `None`.
+
+        Returns:
+            The style the theme describes.
+
+        Raises:
+            ThemeError: When the theme is neither a packaged name nor a `.yaml` file, or
+                it or any theme it extends has a problem; every problem is in its problems.
+        """
+        table = resolve(
+            theme, relative_to=relative_to or Path.cwd(), groups=_groups(), base=_base()
+        )
+        return cls._build(table)
+
+    @classmethod
+    def named(cls, name: str) -> Self:
+        """A style from the packaged theme with this name.
+
+        Args:
+            name: A packaged theme's name, one of `Style.themes()`.
+
+        Returns:
+            The style the packaged theme describes.
+
+        Raises:
+            ThemeError: When `name` has a file suffix, is not a theme name, or names no
+                packaged theme.
+        """
+        if PurePath(name).suffix:
+            problem = ThemeProblem(
+                path=Path(name),
+                key="",
+                line=None,
+                message="Style.named takes a name; use Style.from_yaml for a file",
+            )
+            raise ThemeError((problem,))
+        return cls.from_theme(name)
+
+    @classmethod
+    def themes(cls) -> tuple[str, ...]:
+        """The names of the packaged themes, `default` among them, sorted.
+
+        Returns:
+            Every name `Style.named` takes.
+        """
+        return theme_names()
 
     @classmethod
     def _build(cls, table: Mapping[str, object]) -> Self:

@@ -62,10 +62,10 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S7 — Named themes and the command line (#77)
 
-- [ ] pen-and-ink, sepia, bold and winter moved into `src/pyntpot/maps/themes/`; in the wheel.
-- [ ] `Style.named` (a file refused with `ThemeError`), `Style.themes`, public `Style.from_theme`; every named theme paints the Lynmouth card at 120 px.
-- [ ] `pyntpot map --style THEME`: name or `.yaml` path through `Style.from_theme`; problems logged, exit 2; the full-size `--style sepia` test golden-marked; `cli.md` synopsis and `--style` section; the examples load with `Style.from_theme`.
-- [ ] Slice gate and coverage gate green.
+- [x] pen-and-ink, sepia, bold and winter moved into `src/pyntpot/maps/themes/`; in the wheel.
+- [x] `Style.named` (a file refused with `ThemeError`), `Style.themes`, public `Style.from_theme`; every named theme paints the Lynmouth card at 120 px.
+- [x] `pyntpot map --style THEME`: name or `.yaml` path through `Style.from_theme`; problems logged, exit 2; the full-size `--style sepia` test golden-marked; `cli.md` synopsis and `--style` section; the examples load with `Style.from_theme`.
+- [x] Slice gate and coverage gate green.
 
 ## S8 — drawn_as (#182)
 
