@@ -51,10 +51,10 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S6 — The example themes as overrides (#80)
 
-- [ ] The ten themes' digests pinned from the TOML files, green before conversion, committed alone.
-- [ ] Ten `.yaml` override files with the schema directive; TOML files removed.
-- [ ] Every caller repointed, the six docs pages' caption and command theme paths included; `Style.from_toml` removed with its two `ALLOWED` entries; `.yaml` scanned for retired words; TOML tests rewritten for YAML.
-- [ ] Pinned digests unchanged after conversion; map-styles and place goldens unmoved; each acceptance grep prints what the plan states; slice gate green.
+- [x] The ten themes' digests pinned from the TOML files, green before conversion, committed alone.
+- [x] Ten `.yaml` override files with the schema directive; TOML files removed.
+- [x] Every caller repointed, the six docs pages' caption and command theme paths included; `Style.from_toml` removed with its two `ALLOWED` entries; `.yaml` scanned for retired words; TOML tests rewritten for YAML.
+- [x] Pinned digests unchanged after conversion; map-styles and place goldens unmoved; each acceptance grep prints what the plan states; slice gate green.
 
 ## Merge gate
 
