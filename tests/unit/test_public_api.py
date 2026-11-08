@@ -112,6 +112,8 @@ MAPS_PUBLIC: tuple[str, ...] = (
     "Span",
     "SpanRequest",
     "Style",
+    "ThemeError",
+    "ThemeProblem",
     "Track",
     "VectorArea",
     "VectorLayers",

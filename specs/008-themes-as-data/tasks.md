@@ -23,11 +23,11 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S2 — The reader
 
-- [ ] `ruamel.yaml>=0.19.1` added; import-linter forbids `ruamel` in `ink` and `letters`, keeps PyYAML banned; shown to bite on a scratch copy; `BOUNDARIES.md`, with the loader import rule.
-- [ ] `tests/architecture/test_theme_imports.py`: no `theme_*` module but `theme_schema` imports `pyntpot.maps.style` or `pyntpot.maps`; planted-import self-tests.
-- [ ] `ThemeProblem`, `ThemeError` and their tests; exported, documented (alphabetically in `maps.md`), pinned in the public API test.
-- [ ] `theme_read`: positions; the event walk reports anchors, aliases (once each), merge keys, tags, directives, extra documents, non-string keys, every duplicate key with its key path, and a syntax error from `parse()`, before any load or check; empty values refused; `no` is a string.
-- [ ] `support.theme_files.theme_file`; slice gate and coverage gate green.
+- [x] `ruamel.yaml>=0.19.1` added; import-linter forbids `ruamel` in `ink` and `letters`, keeps PyYAML banned; shown to bite on a scratch copy; `BOUNDARIES.md`, with the loader import rule.
+- [x] `tests/architecture/test_theme_imports.py`: no `theme_*` module but `theme_schema` imports `pyntpot.maps.style` or `pyntpot.maps`; planted-import self-tests.
+- [x] `ThemeProblem`, `ThemeError` and their tests; exported, documented (alphabetically in `maps.md`), pinned in the public API test.
+- [x] `theme_read`: positions; the event walk reports anchors, aliases (once each), merge keys, tags, directives, extra documents, non-string keys, every duplicate key with its key path, and a syntax error from `parse()`, before any load or check; empty values refused; `no` is a string.
+- [x] `support.theme_files.theme_file`; slice gate and coverage gate green.
 
 ## S3 — The checker
 
