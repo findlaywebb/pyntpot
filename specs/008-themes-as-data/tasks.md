@@ -46,8 +46,8 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S5 — The schema
 
-- [ ] Red: committed schemas equal the generated one; defaults, enums, `additionalProperties`, `extends`, nothing required; a dataclass sub-table is an object of its fields; theme keys are schema paths; directive lines resolve.
-- [ ] `theme_schema.py`; regenerator `support.theme_schema`; both JSON files committed; slice gate green.
+- [x] Red: committed schemas equal the generated one; defaults, enums, `additionalProperties`, `extends`, nothing required; a dataclass sub-table is an object of its fields; theme keys are schema paths; directive lines resolve.
+- [x] `theme_schema.py`; regenerator `support.theme_schema`; both JSON files committed; slice gate green.
 
 ## S6 — The example themes as overrides (#80)
 
