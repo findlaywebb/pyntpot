@@ -91,8 +91,9 @@ Source: `granulation` in [references](references.md).
 ## Two washes: multiply, then glaze
 
 A wash is rarely alone. Lay a second, farmland, over the first and the overlap shows how the
-two are combined. By default `composite` multiplies them, as the single wash was, and
-where they cross each channel is scaled twice. The overlap goes darker and quieter.
+two are combined. Given `PaperStyle(km_glazing=False)`, as here, `composite` multiplies
+them, as the single wash was, and where they cross each channel is scaled twice. The
+overlap goes darker and quieter.
 
 ![Two overlapping discs, blue on the left and yellow-green on the right, with a deep, dull green where they cross.](../images/explanation/wash-overlap.webp)
 

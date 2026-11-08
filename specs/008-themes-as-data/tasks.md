@@ -84,10 +84,10 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S10 — Golden regeneration
 
-- [ ] `SOURCED` (with `RouteInkStyle`) and `BASEMAP_DEFAULTS` re-pinned; no window mark left.
-- [ ] Docs images measured with `repaint.py --no-lynmouth`, moved files copied in from its tree and rechecked with `diff_images.py --ref`; only the 25 listed scripts' images moved; each moved image judged against its caption and paragraph, each flagged one given fix A or B; the table of moved images recorded.
-- [ ] The unmoved goldens shown unmoved: Lynmouth, `GOLDEN_HASH`, `BASE_DIGEST`, `LETTERING_DIGEST`, `SMOKE_SHA`, places, map styles, CLI map.
-- [ ] ADR 0069's "Golden regeneration" holds the measured table; diffs published with `publish_diffs.py`.
+- [x] `SOURCED` (with `RouteInkStyle`) and `BASEMAP_DEFAULTS` re-pinned; no window mark left.
+- [x] Docs images measured with `repaint.py --no-lynmouth`, moved files copied in from its tree and rechecked with `diff_images.py --ref`; only the 25 listed scripts' images moved; each moved image judged against its caption and paragraph, each flagged one given fix A or B; the table of moved images recorded.
+- [x] The unmoved goldens shown unmoved: Lynmouth, `GOLDEN_HASH`, `BASE_DIGEST`, `LETTERING_DIGEST`, `SMOKE_SHA`, places, map styles, CLI map.
+- [x] ADR 0069's "Golden regeneration" holds the measured table; diffs published with `publish_diffs.py`.
 
 ## S11 — Mutation testing
 

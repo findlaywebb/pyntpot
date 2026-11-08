@@ -245,13 +245,13 @@ PINNED: dict[type, tuple[str, ...]] = {
     RouteInkStyle: ("drawn_as", "px", "colour", "blend", "opacity"),
 }
 
-#: The groups that were copied from the flat painter style, each with the
-#: pinned digest of its default fields: the first 16 hex digits of the SHA-256
+#: The groups that were copied from the flat painter style, and the route ink, each
+#: with the pinned digest of its default fields: the first 16 hex digits of the SHA-256
 #: of the fields as sorted-key JSON, which tells `0.2` from `0`.
 SOURCED: dict[type, str] = {
-    PaperStyle: "b47c9c6b3a8c1505",
-    WashStyle: "e160d14a7793f90a",
-    BrushStyle: "4160d6cacd208480",
+    PaperStyle: "0af5f9f84facb9e9",
+    WashStyle: "42edd0f93fa39dea",
+    BrushStyle: "0187926c89a1b075",
     FaceStyle: "760ec6039a286528",
     HandStyle: "b25b34674433d32c",
     NibStyle: "76aa066043386bcf",
@@ -260,6 +260,7 @@ SOURCED: dict[type, str] = {
     CoverStyle: "8ff38fcbad0d7a6f",
     RouteStyle: "e7af799eb721f445",
     LetteringStyle: "252f33e095df0b01",
+    RouteInkStyle: "6a536a78d3ad069a",
 }
 
 #: `BasemapStyle`'s defaults, the basemap options' class defaults, as pinned literals.
@@ -277,14 +278,14 @@ BASEMAP_DEFAULTS: dict[str, Any] = {
     "rivers": "key",
     "interaction_m": 60.0,
     "interaction_run_m": 100.0,
-    "landmarks": "heuristic",
-    "landmark_max": 8,
+    "landmarks": "all",
+    "landmark_max": 40,
     "landmark_radius_m": 300.0,
     "pick_landmarks": (),
     "pick_roads": (),
     "pick_places": (),
     "name_tags": ("name",),
-    "generalise": True,
+    "generalise": False,
     "cell_m": 60.0,
     "morph_cells": 2,
     "min_area_ha": 4.0,
@@ -297,23 +298,6 @@ BASEMAP_DEFAULTS: dict[str, Any] = {
 
 GROUP_IDS = [group.__name__ for group in PINNED]
 SOURCED_IDS = [group.__name__ for group in SOURCED]
-
-#: Why a pin of the groups' defaults is expected to fail until it is re-measured.
-WINDOW = "regeneration window: re-pinned in 008 S10 (ADR 0069)"
-
-#: The groups whose defaults moved to the default look, and so whose pins wait for S10.
-_IN_THE_WINDOW = (PaperStyle, WashStyle, BrushStyle)
-
-#: `SOURCED` as parameters, the moved groups marked as in the regeneration window.
-SOURCED_PARAMS = [
-    pytest.param(
-        group,
-        digest,
-        id=group.__name__,
-        marks=[pytest.mark.xfail(strict=True, reason=WINDOW)] if group in _IN_THE_WINDOW else [],
-    )
-    for group, digest in SOURCED.items()
-]
 
 #: The fields more than one layer reads, with the group the table puts each in.
 MULTI_LAYER: tuple[tuple[str, type], ...] = (
@@ -360,7 +344,7 @@ def test_group_fields_match_the_pinned_table(group: type, names: tuple[str, ...]
     assert tuple(_names(group)) == names
 
 
-@pytest.mark.parametrize(("group", "digest"), SOURCED_PARAMS)
+@pytest.mark.parametrize(("group", "digest"), SOURCED.items(), ids=SOURCED_IDS)
 def test_group_defaults_equal_the_pinned_digest(group: type, digest: str) -> None:
     """Each group's default fields, values and types, hash to the digest pinned for them."""
     blob = json.dumps(dataclasses.asdict(group()), sort_keys=True, default=str)
@@ -373,7 +357,6 @@ def test_multi_layer_field_lands_in_its_table_group(name: str, group: type) -> N
     assert name in _names(group)
 
 
-@pytest.mark.xfail(strict=True, reason=WINDOW)
 def test_basemap_defaults_are_the_pinned_literals() -> None:
     """`BasemapStyle`'s defaults equal the pinned literals, value and type, field by field."""
     built = BasemapStyle()

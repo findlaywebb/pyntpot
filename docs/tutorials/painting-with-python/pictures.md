@@ -37,8 +37,9 @@ pools at its edge.
 
 The three fells and two banks are painted in order, far to near. Each has its own
 pigment from `PIGMENTS`: `wetland`, `rock` and `relief` for the fells, and `scrub` and
-`heath` for the banks that frame the lake. The default `PaperStyle` composites by
-multiplying, so a pixel under two washes is darker than under one. The far fell has only
+`heath` for the banks that frame the lake. The default `PaperStyle` glazes the washes
+over each other by Kubelka-Munk, and each lets only part of the light through, so a pixel
+under two washes is darker than under one. The far fell has only
 its own wash and is pale. The near banks sit on the washes before them and are darker.
 Nothing darkens a hill by hand.
 

@@ -358,26 +358,106 @@ nothing:
 
 ## Golden regeneration
 
-Process as ADRs 0036 and 0052. The tolerance bound is not changed, no gate is loosened and
-the hash input does not change. The goldens are regenerated once, in the plan's slice S10,
-and this section is completed there with the measured values.
+Process as ADRs 0036 and 0052, in the plan's slice S10, on a machine that is not the pinning
+machine: every golden comparison ran under `--golden-tolerance`. The tolerance bound is not
+changed, no gate is loosened and the hash input does not change. A change with a differing
+fraction of 0.005 or less would have been noise, not committed; none of the moved images
+came near it.
 
-Expected, from the measurements on `f34de97`:
+### Pins
 
-- **Do not move:** the manifest hash and `GOLDEN_HASH` (`base_digest` is unchanged), the
-  Lynmouth goldens and `plates.json`, `BASE_DIGEST`, `LETTERING_DIGEST`, the place pins,
-  the map-styles means, `SMOKE_SHA` (its tests read `flags_off`), and the command-line
-  golden map.
-- **Move:** the per-group default digests `SOURCED` for `PaperStyle`, `WashStyle` and
-  `BrushStyle`, and a new `RouteInkStyle` row (their defaults changed or now exist);
-  `BASEMAP_DEFAULTS` (`landmarks`, `landmark_max`, `generalise`); `DIGEST` in
-  `test_style.py`, from the `drawn_as` rename only (`1b08804a7f30026b` to
-  `88b356ada294ff60`), re-pinned in the rename's own slice, S8, not in S10; and each docs image whose example builds an ink or basemap group
-  itself (with no arguments, or naming only some fields) or calls the basemap directly (up to 58 of the 71 registered, from the
-  25 scripts the plan lists; measured by grep on `f34de97`). Each moved image is read
-  against its caption and the paragraph it illustrates; a figure whose text a newly
-  enabled effect contradicts either passes those flags off explicitly or has its text
-  rewritten, and the regeneration lists every moved image with its fix.
+| Pin | Old | New | Reason |
+|---|---|---|---|
+| `SOURCED[PaperStyle]` | `b47c9c6b3a8c1505` | `0af5f9f84facb9e9` | default is the default look (`km_glazing`, `paper_fibre` on) |
+| `SOURCED[WashStyle]` | `e160d14a7793f90a` | `42edd0f93fa39dea` | default is the default look (seven flags on, six values moved) |
+| `SOURCED[BrushStyle]` | `4160d6cacd208480` | `0187926c89a1b075` | default is the default look (six flags on) |
+| `SOURCED[RouteInkStyle]` | none | `6a536a78d3ad069a` | now buildable (`drawn_as="solid"`, `px=5.4`, `colour="#c22050"`) |
+| `BASEMAP_DEFAULTS` | `landmarks="heuristic"`, `landmark_max=8`, `generalise=True` | `"all"`, `40`, `False` | default is the default look |
+| `DIGEST` (`test_style.py`) | `1b08804a7f30026b` | `88b356ada294ff60` | field renamed `drawn_as`; re-pinned in S8 with the rename |
 
-(S10 replaces this list with the measured table: every moved pin and image, its old and new
-value or differing fraction, and the reason.)
+Every regeneration-window mark is removed.
+
+### Unmoved
+
+The full golden suite passes unchanged, under `--golden-tolerance`:
+
+- the manifest hash and `GOLDEN_HASH`, `90193bbb26f681bf-d9c56c0811177b0f`;
+- `BASE_DIGEST` `d9c56c0811177b0f` and `LETTERING_DIGEST` `d15ae2f30e9ca5ce`;
+- the Lynmouth goldens and `plates.json` (`tests/golden/lynmouth/`, untouched);
+- `SMOKE_SHA` (paper `35c84fb0…`, pen `b667aefa…`, wash `056a2012…`), whose tests read
+  `flags_off`;
+- the place pins of `test_places.py`, values unchanged (only the theme paths now name
+  `.yaml` files);
+- the map-styles means `MEAN_RGB`: pen-and-ink (226.8, 221.4, 209.3), sepia
+  (198.4, 168.6, 118.3), bold (212.9, 208.3, 182.8), winter (206.2, 213.0, 218.5);
+- the command-line golden map (`tests/golden/lynmouth/map.png`);
+- the 13 docs images that read a theme or `Style()` only (`map_styles`, `place_card`,
+  `route_map`): none moved, and no image outside the 25 scripts that build a group moved.
+
+### Docs images
+
+`repaint.py --no-lynmouth` against the branch base moved 49 images from 23 of the 25
+scripts. Each was read against its caption and the paragraph before it. Six were flagged,
+by two fixes:
+
+| Figure | Flagged because | Fix |
+|---|---|---|
+| `explanation/wash-mask`, `-body`, `-rim`, `-grain`, `-overlap` | the text says the wash is composited by multiplying ("as the single wash was"), and `PaperStyle()` now glazes | A: `examples/wash_stages.py` composites the five with `PaperStyle(km_glazing=False)`; the five no longer move. The sentence before the overlap said "By default `composite` multiplies them", an old default: it now reads "Given `PaperStyle(km_glazing=False)`, as here, `composite` multiplies them" |
+| `painting-with-python/derwentwater` | "The default `PaperStyle` composites by multiplying" states the old `km_glazing` | B: "The default `PaperStyle` glazes the washes over each other by Kubelka-Munk, and each lets only part of the light through, so a pixel under two washes is darker than under one." |
+
+The 44 images that moved after the fixes, each with its master's differing fraction and why
+(where the docs page also has a gallery copy, the gallery image is the same paint).
+"Glazing" is `composite` given `PaperStyle()`, now `km_glazing`; "brush flags" is
+`brush_from_id` given `BrushStyle()`, now with `ink_starve`, `dry_directional`,
+`pen_starve`, `brush_organic`, `ink_joins` and `stroke_smooth`; "lettering" is a nib plate
+given `NibGroups(..., BrushStyle(), PaperStyle())`, now with the brush flags and
+`paper_fibre`. None is flagged.
+
+| Image | Master | Reason |
+|---|---|---|
+| `curves/kaleidoscope.webp` | 0.2807 | glazing, brush flags |
+| `curves/lissajous.webp` | 0.3588 | glazing, brush flags |
+| `curves/rose.webp` | 0.1177 | brush flags |
+| `curves/spirograph.webp` | 0.0968 | brush flags |
+| `explanation/nib-angles.webp` | 0.1404 | lettering |
+| `explanation/nib-backing.webp` | 0.3801 | glazing, brush flags, lettering |
+| `explanation/nib-centreline.webp` | 0.0857 | glazing, brush flags, lettering |
+| `explanation/nib-ground.webp` | 0.2810 | glazing, brush flags, lettering |
+| `explanation/nib-hands.webp` | 0.1632 | lettering |
+| `explanation/nib-runs-dry.webp` | 0.0640 | glazing, brush flags but `pen_starve` (set by the figure) |
+| `explanation/nib-set-down.webp` | 0.0691 | glazing, brush flags but `pen_starve` (set by the figure) |
+| `explanation/wash-glaze.webp` | 0.0126 | lettering (the labels) |
+| `gallery/brush-stroke.webp`, `tutorials/brush-stroke.webp` | 0.0753 | glazing, brush flags |
+| `gallery/composition.webp`, `tutorials/composition.webp` | 0.3045 | glazing, brush flags, lettering |
+| `gallery/lettering.webp`, `tutorials/lettering.webp` | 0.0211 | lettering |
+| `gallery/nib-line.webp`, `tutorials/nib-line.webp` | 0.1224 | glazing, brush flags |
+| `gallery/wash.webp`, `tutorials/wash.webp` | 0.2028 | glazing |
+| `how-to/own-shapes.webp` | 0.1977 | glazing, brush flags, lettering |
+| `how-to/route-ink-grid.webp` | 0.0174 | lettering (the labels; the map cells read the theme) |
+| `painting-with-python/derwentwater.webp` | 0.3019 | glazing, lettering (fix B) |
+| `painting-with-python/fern.webp` | 0.0362 | brush flags |
+| `painting-with-python/fern-family.webp` | 0.0231 | brush flags |
+| `painting-with-python/svg-drawing.webp` | 0.0392 | brush flags |
+| `painting-with-python/svg-ink.webp` | 0.0436 | brush flags |
+| `painting-with-python/tree.webp` | 0.1200 | brush flags (`BrushStyle(brush_organic=True, stroke_smooth=True)` now has the other four on) |
+| `painting-with-python/tree-family.webp` | 0.1614 | brush flags, as the tree |
+| `reference/brush-sheet.webp` | 0.1754 | glazing, brush flags, lettering |
+| `reference/glyph-sheet.webp` | 0.0872 | lettering |
+| `reference/pigment-swatches.webp` | 0.0269 | lettering (the keys) |
+| `site/rule.webp` | 0.4889 | brush flags |
+| `social-preview.jpg` | 0.0307 | lettering (the word) |
+| `tutorials/grid-brush.webp` | 0.1355 | glazing, brush flags, lettering |
+| `tutorials/grid-composition.webp` | 0.1835 | glazing, brush flags, lettering |
+| `tutorials/grid-lettering.webp` | 0.1385 | lettering |
+| `tutorials/grid-nib.webp` | 0.1350 | lettering |
+| `tutorials/grid-paper.webp` | 0.0098 | lettering (the labels) |
+| `tutorials/grid-pigments.webp` | 0.0083 | lettering (the labels) |
+| `tutorials/grid-wash.webp` | 0.1756 | glazing, lettering |
+| `word.webp` | 0.4259 | glazing, lettering |
+
+Before fix A the five wash stages moved by 0.2354 (mask), 0.1873 (body), 0.1655 (rim),
+0.1662 (grain) and 0.1408 (overlap). The images of `paper`, `pigments`, `site/paper.webp`,
+`site/header.webp`, `svg-flat.webp` and `how-to/route-ink.webp` did not move: they reach
+none of the changed fields. Only the moved files were copied in. `diff_images.py --ref`
+against the branch base lists exactly those 44 images and their masters, and a further
+repaint diffs to `0 images differ`.

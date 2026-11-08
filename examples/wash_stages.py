@@ -213,7 +213,7 @@ def main(out_dir: Path, figure: str = "rim", size: int = DESIGN_W) -> Path:
         green = wash(_disc(w, h, 0.62), sheet, BODY, POOL)
         layers.append((green, rgb(PIGMENTS["farmland"]), TRANSPARENCY["farmland"]))
 
-    out = composite(layers, paper, PaperStyle())
+    out = composite(layers, paper, PaperStyle(km_glazing=False))
     save_image(out, path, seed=SEED)
     logger.info("wrote %s", path)
     return path
