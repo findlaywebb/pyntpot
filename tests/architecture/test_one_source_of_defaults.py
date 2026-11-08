@@ -25,10 +25,10 @@ from pyntpot.maps.style import _base, _groups
 from pyntpot.maps.style_groups import CoverStyle
 from pyntpot.maps.theme_check import EXTENDS, check_theme
 from pyntpot.maps.theme_errors import ThemeError
-from pyntpot.maps.theme_read import read_theme
 from pyntpot.maps.theme_resolve import resolve
 
 from support import REPO_ROOT
+from support.theme_files import theme_file_at
 
 #: Where theme files live: the packaged themes and the example themes.
 THEME_DIRS: tuple[Path, ...] = (
@@ -93,7 +93,7 @@ def keys_set_to_their_base_value(theme: Path) -> list[str]:
         resolve(theme, relative_to=theme.parent, groups=_groups(), base=_base())
     except ThemeError as exc:
         return [f"{theme.name}: does not load: {problem}" for problem in exc.problems]
-    table, _ = check_theme(read_theme(theme, theme.read_text(encoding="utf-8")), _groups())
+    table, _ = check_theme(theme_file_at(theme), _groups())
     extends = table.get(EXTENDS, "default")
     assert isinstance(extends, str)
     below = resolve(extends, relative_to=theme.parent, groups=_groups(), base=_base())
@@ -147,11 +147,7 @@ def _write(root: Path, *names: str) -> None:
 
 def test_every_style_group_field_has_a_default():
     """Every field of every style group, and every `Style` field, has a default."""
-    groups = {
-        name: info.annotation
-        for name, info in Style.model_fields.items()
-        if isinstance(info.annotation, type)
-    }
+    groups = _groups()
     assert groups.keys() == Style.model_fields.keys()
     assert fields_without_a_default(groups) == []
     assert required_style_fields(Style) == []

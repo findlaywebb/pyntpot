@@ -4,20 +4,16 @@ from pathlib import Path
 
 import pytest
 
-from pyntpot.maps.theme_read import ThemeFile, read_theme
 from pyntpot.maps.theme_walk import MAX_DEPTH
+
+from support.theme_files import theme_file
 
 PATH = Path("t.yaml")
 
 
-def _read(text: str) -> ThemeFile:
-    """Read `text` as the theme file `t.yaml`."""
-    return read_theme(PATH, text)
-
-
 def _found(text: str) -> list[tuple[str, int | None, str]]:
     """Each problem reading `text` finds, as its key, line and message."""
-    theme = _read(text)
+    theme = theme_file(text)
     assert all(problem.path == PATH for problem in theme.problems)
     return [(problem.key, problem.line, problem.message) for problem in theme.problems]
 
@@ -104,7 +100,7 @@ class TestTheWalkRejectsYamlFeatures:
 
     def test_walk_problems_load_nothing(self) -> None:
         """A file with a walk problem reads as an empty table with no lines."""
-        theme = _read("wash:\n  blooms: true\n  blooms: false\n")
+        theme = theme_file("wash:\n  blooms: true\n  blooms: false\n")
         assert theme.table == {}
         assert theme.lines == {}
 
@@ -114,20 +110,20 @@ class TestSyntaxErrorsEndTheWalk:
 
     def test_unclosed_flow_sequence(self) -> None:
         """An unclosed `[` is one parser problem, with a line and the key being read."""
-        theme = _read("wash:\n  blooms: [1, 2\n")
+        theme = theme_file("wash:\n  blooms: [1, 2\n")
         assert [(p.key, p.line) for p in theme.problems] == [("wash.blooms", 3)]
         assert "expected ',' or ']'" in theme.problems[0].message
         assert theme.table == {}
 
     def test_tab_indent(self) -> None:
         """A tab where indentation belongs is one scanner problem at its line."""
-        theme = _read("wash:\n\tblooms: true\n")
+        theme = theme_file("wash:\n\tblooms: true\n")
         assert [(p.key, p.line) for p in theme.problems] == [("wash", 2)]
         assert "'\\t'" in theme.problems[0].message
 
     def test_the_message_is_the_problem_alone(self) -> None:
         """A syntax error's message is the parser's problem, without its own location text."""
-        theme = _read("wash:\n  blooms: [1, 2\n")
+        theme = theme_file("wash:\n  blooms: [1, 2\n")
         assert theme.problems[0].message == "expected ',' or ']', but got '<stream end>'"
 
     def test_alias_before_a_syntax_error(self) -> None:
@@ -143,26 +139,26 @@ class TestTheContentIsPlainData:
     @pytest.mark.parametrize("text", ["", "# only a comment\n"], ids=["empty", "comment"])
     def test_empty_file_is_an_empty_table(self, text: str) -> None:
         """A file with no content is an empty table and no problem."""
-        theme = _read(text)
+        theme = theme_file(text)
         assert (theme.table, theme.lines, theme.problems) == ({}, {}, ())
 
     def test_an_empty_file_keeps_its_path(self) -> None:
         """A file with no content is still read as the path the caller named."""
-        assert _read("").path == PATH
+        assert theme_file("").path == PATH
 
     @pytest.mark.parametrize("text", ["- wash\n", "5\n"], ids=["sequence", "scalar"])
     def test_top_level_must_be_a_mapping(self, text: str) -> None:
         """A top level that is not a mapping is one problem on line 1."""
         assert _found(text) == [("", 1, "a theme is a mapping of style groups")]
-        assert _read(text).table == {}
+        assert theme_file(text).table == {}
 
     def test_a_top_level_that_is_not_a_mapping_records_no_lines(self) -> None:
         """A top level that is not a mapping records no key lines: an empty mapping."""
-        assert _read("- wash\n").lines == {}
+        assert theme_file("- wash\n").lines == {}
 
     def test_types(self) -> None:
         """Mappings become dicts, sequences tuples, and scalars their plain built-in types."""
-        theme = _read('a:\n  n: 5\n  x: 0.5\n  b: true\n  s: "q"\n  t: [1, 2.5]\n  h: 0x10\n')
+        theme = theme_file('a:\n  n: 5\n  x: 0.5\n  b: true\n  s: "q"\n  t: [1, 2.5]\n  h: 0x10\n')
         assert theme.table == {"a": {"n": 5, "x": 0.5, "b": True, "s": "q", "t": (1, 2.5), "h": 16}}
         inner = theme.table["a"]
         assert isinstance(inner, dict)
@@ -172,11 +168,11 @@ class TestTheContentIsPlainData:
 
     def test_no_is_a_string(self) -> None:
         """`no` reads as the string `"no"` under YAML 1.2, so the checker can refuse it."""
-        assert _read("wash:\n  blooms: no\n").table == {"wash": {"blooms": "no"}}
+        assert theme_file("wash:\n  blooms: no\n").table == {"wash": {"blooms": "no"}}
 
     def test_nested_line(self) -> None:
         """A key three levels deep records its own line, as do its parents."""
-        theme = _read("cover:\n  pigments:\n\n    wood: '#556b2f'\n")
+        theme = theme_file("cover:\n  pigments:\n\n    wood: '#556b2f'\n")
         assert theme.lines == {
             ("cover",): 1,
             ("cover", "pigments"): 2,
@@ -185,24 +181,24 @@ class TestTheContentIsPlainData:
 
     def test_flow_mapping_line(self) -> None:
         """The keys of a flow mapping get the flow's line."""
-        theme = _read("brush:\n  overrides:\n    stroke: {jitter_px: 0.4}\n")
+        theme = theme_file("brush:\n  overrides:\n    stroke: {jitter_px: 0.4}\n")
         assert theme.lines[("brush", "overrides", "stroke", "jitter_px")] == 3
 
     def test_non_string_key(self) -> None:
         """A key that would load as a number is refused in the walk, so nothing loads."""
         assert _found("a: 1\n5: x\n") == [("5", 2, "keys are strings")]
-        assert _read("a: 1\n5: x\n").table == {}
+        assert theme_file("a: 1\n5: x\n").table == {}
 
     def test_a_key_after_one_with_no_value_is_read(self) -> None:
         """A key after one with no value is still read, with its line."""
-        theme = _read("a:\nb: 2\n")
+        theme = theme_file("a:\nb: 2\n")
         assert theme.table == {"b": 2}
         assert theme.lines == {("a",): 1, ("b",): 2}
 
     def test_no_value_in_a_mapping_inside_a_sequence(self) -> None:
         """A key with no value in a mapping inside a sequence is reported at its key."""
         assert _found("a: [{b: }]\n") == [("a.b", 1, "has no value")]
-        assert _read("a: [{b: }]\n").table == {"a": ({},)}
+        assert theme_file("a: [{b: }]\n").table == {"a": ({},)}
 
     @pytest.mark.parametrize(
         "text", ["wash:\n  blooms:\n", "wash:\n  blooms: ~\n"], ids=["bare", "tilde"]
@@ -210,7 +206,7 @@ class TestTheContentIsPlainData:
     def test_no_value(self, text: str) -> None:
         """A key with no value is one problem at its line, and is dropped from the table."""
         assert _found(text) == [("wash.blooms", 2, "has no value")]
-        assert _read(text).table == {"wash": {}}
+        assert theme_file(text).table == {"wash": {}}
 
     def test_conversion_problems_in_line_order(self) -> None:
         """Problems the conversion finds come back in line order."""
@@ -249,13 +245,13 @@ class TestTheWalkReadsEveryScalar:
 
     def test_valid_date(self) -> None:
         """A valid date such as `2024-01-01` is refused: a theme value is never a date."""
-        theme = _read("a: 2024-01-01\n")
+        theme = theme_file("a: 2024-01-01\n")
         assert [(p.key, p.line, p.message) for p in theme.problems] == [("a", 1, DATE)]
         assert theme.table == {}
 
     def test_quoted_date_is_a_string(self) -> None:
         """A quoted date is the string it spells."""
-        assert _read("a: '2024-01-01'\n").table == {"a": "2024-01-01"}
+        assert theme_file("a: '2024-01-01'\n").table == {"a": "2024-01-01"}
 
     def test_other_tags_are_refused(self) -> None:
         """A plain `=` or a `<<` value resolves outside the theme's types and is refused."""
@@ -263,13 +259,13 @@ class TestTheWalkReadsEveryScalar:
 
     def test_ordinary_scalars_read(self) -> None:
         """An ordinary int, float and bool still read as themselves, with no problem."""
-        theme = _read("a: 5\nb: 0.5\nc: true\nd: 1_000\n")
+        theme = theme_file("a: 5\nb: 0.5\nc: true\nd: 1_000\n")
         assert theme.table == {"a": 5, "b": 0.5, "c": True, "d": 1000}
         assert theme.problems == ()
 
     def test_null_in_a_sequence_stays(self) -> None:
         """A null inside a sequence reads as `None`, for the checker to refuse."""
-        assert _read("a: [1, ~]\n").table == {"a": (1, None)}
+        assert theme_file("a: [1, ~]\n").table == {"a": (1, None)}
 
     def test_bad_scalars_reported_together(self) -> None:
         """Several bad scalars are each reported, at their own line and key."""
@@ -300,7 +296,7 @@ class TestEveryCharacterIsReported:
     def test_a_control_character(self, text: str, expected: tuple[str, int, str]) -> None:
         """A NUL or a C0 or C1 control character is one problem at its own line."""
         assert _found(text) == [expected]
-        assert _read(text).table == {}
+        assert theme_file(text).table == {}
 
     def test_far_into_a_long_file(self) -> None:
         """A control character past the reader's first chunk is still at its own line."""
@@ -351,7 +347,7 @@ class TestKeysAreStrings:
 
     def test_quoted_keys_that_look_alike_are_strings(self) -> None:
         """Quoted `null`, `~` and `true` are three string keys, and none of them a duplicate."""
-        theme = _read("'null': 1\n'~': 2\n'true': 3\n")
+        theme = theme_file("'null': 1\n'~': 2\n'true': 3\n")
         assert theme.table == {"null": 1, "~": 2, "true": 3}
         assert theme.problems == ()
 

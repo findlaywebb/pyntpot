@@ -8,6 +8,7 @@ from typing import Literal
 import pytest
 
 from pyntpot.maps import Style
+from pyntpot.maps.style import _groups
 from pyntpot.maps.theme_check import RENAMED_KEYS, build_group, check_theme
 from pyntpot.maps.theme_errors import ThemeProblem
 from pyntpot.maps.theme_read import ThemeFile
@@ -27,15 +28,6 @@ class _Marks:
 
     sizes: dict[str, float] = field(default_factory=dict)
     kinds: tuple[Literal["dot", "dash"], ...] = ()
-
-
-def _groups() -> dict[str, type]:
-    """The style's groups by name, as the loader passes them."""
-    groups: dict[str, type] = {}
-    for name, info in Style.model_fields.items():
-        assert isinstance(info.annotation, type)
-        groups[name] = info.annotation
-    return groups
 
 
 def _check(

@@ -98,10 +98,10 @@ class _Walk:
         if not self.stack:
             return ()
         top = self.stack[-1]
-        if not top.mapping or (top.expect_key and not isinstance(event, ScalarEvent)):
+        if not top.mapping:
             return top.path
-        if top.expect_key and isinstance(event, ScalarEvent):
-            return (*top.path, str(event.value))
+        if top.expect_key:
+            return (*top.path, str(event.value)) if isinstance(event, ScalarEvent) else top.path
         return top.path if top.key is None else (*top.path, top.key)
 
     def resolves_to(self, event: ScalarEvent) -> str:

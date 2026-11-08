@@ -10,12 +10,13 @@ from typing import Any, Literal
 import pytest
 
 from pyntpot.maps import Style
-from pyntpot.maps.theme_read import read_theme
+from pyntpot.maps.style import _groups
 from pyntpot.maps.theme_schema import theme_schema
 from pyntpot.maps.theme_vocab import VOCABULARIES
 
 from support import REPO_ROOT
 from support.planted_groups import Ink
+from support.theme_files import theme_file_at
 from support.theme_schema import REGENERATE, SCHEMA_FILES
 
 #: Where theme files live: the packaged themes and the example themes.
@@ -73,15 +74,6 @@ class _Described:
     a: int = 1
     b: int = 2
     c: int = 3
-
-
-def _groups() -> dict[str, type]:
-    """Each style group's dataclass, by its key in a theme."""
-    return {
-        name: info.annotation
-        for name, info in Style.model_fields.items()
-        if isinstance(info.annotation, type)
-    }
 
 
 def _objects(
@@ -237,7 +229,7 @@ def test_every_theme_key_is_a_schema_path() -> None:
     """Every key path of every theme file is a schema property path, and every enum value is in its enum."""
     schema = theme_schema()
     for path in _theme_files():
-        theme = read_theme(path, path.read_text(encoding="utf-8"))
+        theme = theme_file_at(path)
         assert theme.problems == (), path.name
         assert keys_outside_the_schema(theme.table, schema) == [], path.name
 

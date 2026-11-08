@@ -29,7 +29,7 @@ import difflib
 import functools
 import re
 import typing
-from collections.abc import Mapping
+from collections.abc import Callable, Collection, Mapping
 from typing import Any, Literal
 
 import pydantic
@@ -155,20 +155,8 @@ class _Check:
 
     def table(self, group: type, value: object, path: _Path) -> dict[str, object] | None:
         """Check `value` as a table of `group`'s fields at `path`; None when it is no table."""
-        if not isinstance(value, dict):
-            self.problem(path, _TABLE)
-            return None
         hints = _hints(group)
-        checked: dict[str, object] = {}
-        for key, item in value.items():
-            here = (*path, key)
-            if here in self.renamed or key not in hints:
-                self.unknown(here, hints)
-                continue
-            converted = self.field(hints[key], item, here)
-            if converted is not None:
-                checked[key] = converted
-        return checked
+        return self.mapping(value, path, hints, hints.__getitem__)
 
     def field(self, hint: object, value: object, path: _Path) -> object | None:
         """Check `value` against the field type `hint` at `path`; None when it is refused."""
@@ -180,17 +168,33 @@ class _Check:
 
     def entries(self, hint: object, value: object, path: _Path) -> dict[str, object] | None:
         """Check `value` as a dict field's entries, each against `hint`; None when no table."""
+        return self.mapping(value, path, _vocabulary(path), lambda _key: hint)
+
+    def mapping(
+        self,
+        value: object,
+        path: _Path,
+        known: Collection[str] | None,
+        hint_of: Callable[[str], object],
+    ) -> dict[str, object] | None:
+        """Check `value` as a table at `path` whose keys are `known` (any when None).
+
+        Each key's value is checked against `hint_of(key)`; a renamed or unknown key is
+        recorded and left out.
+
+        Returns:
+            The checked entries, or None when `value` is no table.
+        """
         if not isinstance(value, dict):
             self.problem(path, _TABLE)
             return None
-        known = _vocabulary(path)
         checked: dict[str, object] = {}
         for key, item in value.items():
             here = (*path, key)
             if here in self.renamed or (known is not None and key not in known):
                 self.unknown(here, known or ())
                 continue
-            converted = self.field(hint, item, here)
+            converted = self.field(hint_of(key), item, here)
             if converted is not None:
                 checked[key] = converted
         return checked

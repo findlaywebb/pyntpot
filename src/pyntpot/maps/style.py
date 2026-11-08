@@ -133,8 +133,7 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
             ThemeError: When the file or any theme it extends has a problem; every
                 problem is in its problems.
         """
-        table = resolve(Path(path), relative_to=Path.cwd(), groups=_groups(), base=_base())
-        return cls._build(table)
+        return cls.from_theme(Path(path))
 
     @classmethod
     def from_theme(cls, theme: str | Path, *, relative_to: Path | None = None) -> Self:

@@ -15,9 +15,9 @@ from hypothesis import strategies as st
 
 from pyntpot.maps.style import Style
 from pyntpot.maps.theme_errors import ThemeError
-from pyntpot.maps.theme_read import read_theme
 
 from support.properties import UNTIMED
+from support.theme_files import theme_file
 
 #: Pieces of YAML a drawn file is spliced from.
 _TOKENS = (
@@ -35,7 +35,7 @@ _BYTES = st.one_of(st.binary(max_size=200), _TEXT.map(lambda text: text.encode("
 @settings(UNTIMED, max_examples=300)
 def test_read_theme_never_raises(text: str) -> None:
     """`read_theme` returns for any text: every problem comes back, nothing is raised."""
-    read_theme(Path("t.yaml"), text)
+    theme_file(text)
 
 
 @given(_BYTES)

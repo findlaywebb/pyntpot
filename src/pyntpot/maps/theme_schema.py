@@ -28,6 +28,7 @@ from collections.abc import Mapping
 from typing import Literal
 
 from pyntpot.maps.style import Style
+from pyntpot.maps.theme_check import EXTENDS
 from pyntpot.maps.theme_vocab import COLOUR_FIELDS, VOCABULARIES
 
 #: The schema's address on the docs site.
@@ -36,8 +37,8 @@ SCHEMA_ID = "https://findlaywebb.github.io/pyntpot/reference/theme.schema.json"
 #: The JSON Schema dialect the schema is written in.
 DIALECT = "https://json-schema.org/draft/2020-12/schema"
 
-#: The top-level key naming the theme a theme overrides.
-_EXTENDS = {
+#: The schema of the top-level key naming the theme a theme overrides.
+_EXTENDS_SCHEMA = {
     "type": "string",
     "description": "A theme name or a .yaml path this theme overrides; default when absent.",
 }
@@ -74,7 +75,7 @@ def theme_schema(groups: Mapping[str, type] | None = None) -> dict[str, object]:
     """
     if groups is None:
         groups = _style_groups()
-    properties: dict[str, object] = {"extends": dict(_EXTENDS)}
+    properties: dict[str, object] = {EXTENDS: dict(_EXTENDS_SCHEMA)}
     for name, group in groups.items():
         properties[name] = _object_schema(group, (name,))
     return {

@@ -1,30 +1,17 @@
 """`resolve`: a theme named or given by its file, its `extends` chain, and every problem in it."""
 
-import dataclasses
 from pathlib import Path
 
 import pytest
 
-from pyntpot.maps.style import Style
+from pyntpot.maps.style import _base, _groups
 from pyntpot.maps.theme_errors import ThemeError
 from pyntpot.maps.theme_resolve import NAME, names_in, resolve, theme_names
-
-#: Each style group's dataclass, by its key, built as `style.py` builds it.
-GROUPS: dict[str, type] = {
-    name: info.annotation
-    for name, info in Style.model_fields.items()
-    if isinstance(info.annotation, type)
-}
-
-
-def _base() -> dict[str, object]:
-    """The default table, one entry per group, built as `style.py` builds it."""
-    return {name: dataclasses.asdict(getattr(Style(), name)) for name in Style.model_fields}
 
 
 def _resolve(theme: str | Path, relative_to: Path) -> dict[str, object]:
     """Resolve `theme` from `relative_to` against the real groups and defaults."""
-    return resolve(theme, relative_to=relative_to, groups=GROUPS, base=_base())
+    return resolve(theme, relative_to=relative_to, groups=_groups(), base=_base())
 
 
 def _write(root: Path, name: str, text: str) -> Path:
