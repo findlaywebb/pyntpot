@@ -2,6 +2,7 @@
 
 import math
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import pytest
@@ -395,7 +396,7 @@ class TestMarkWidth:
         ids=["centreline-glyph", "outline-glyph", "outline-pin"],
     )
     def test_the_brush_is_as_wide_as_the_mark_at_the_scale(
-        self, route: str, role: str, width: float
+        self, route: Literal["centreline", "outline"], role: str, width: float
     ) -> None:
         """At scale 2 a 20 px mark's brush is twice its `mark_width_px`, narrowed only on an outline glyph."""
         brush = nib_brushes(NibStyle(), FaceStyle(label_route=route), BrushStyle(), 2.0)

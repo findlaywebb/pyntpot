@@ -12,6 +12,7 @@ Base groups feed the base plates; `LetteringStyle` feeds only the lettering;
 `RouteInkStyle` is read only when the route is placed and drawn (`paint` takes the
 strand merge reach from its width), so changing the ink repaints no plate. The defaults
 are the default look; the default theme is these defaults with nothing overridden.
+A field that takes one of a few words is typed as a `Literal` of those words.
 
 It paints, letters and fetches nothing. The route ink knows nothing of what a
 track records, and holds no casing, glow or shadow: the compose step draws
@@ -24,6 +25,7 @@ package.
 """
 
 from dataclasses import dataclass, field
+from typing import Literal
 
 from pyntpot.maps.providers.overpass import MINOR_ROADS
 
@@ -253,20 +255,20 @@ class BasemapStyle:
             a page can switch between them without a rebuild.
     """
 
-    hillshade_mode: str = "off"
+    hillshade_mode: Literal["bands", "raster", "contours", "hachures", "off"] = "off"
     hillshade_levels: int = 5
     hillshade_opacity: float = 0.5
     hachure_spacing_m: float = 75.0
     hachure_min_slope: float = 0.035
     hachure_max_length_m: float = 90.0
-    sea_style: str = "fill"
+    sea_style: Literal["fill", "waves"] = "fill"
     contour_interval: float = 50.0
-    roads: str = "key"
+    roads: Literal["all", "key", "major"] = "key"
     minor_road_classes: tuple[str, ...] = MINOR_ROADS
-    rivers: str = "key"
+    rivers: Literal["all", "key", "rivers"] = "key"
     interaction_m: float = 60.0
     interaction_run_m: float = 100.0
-    landmarks: str = "all"
+    landmarks: Literal["heuristic", "all", "payload"] = "all"
     landmark_max: int = 40
     landmark_radius_m: float = 300.0
     pick_landmarks: tuple[str, ...] = ()
@@ -327,8 +329,8 @@ class RouteInkStyle:
         opacity: How much of the ink is laid, from 0 to 1.
     """
 
-    style: str = "solid"
+    style: Literal["pen", "solid"] = "solid"
     px: float = 5.4
     colour: str = "#c22050"
-    blend: str = "normal"
+    blend: Literal["normal", "multiply"] = "normal"
     opacity: float = 1.0

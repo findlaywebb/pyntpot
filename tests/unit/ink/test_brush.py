@@ -2,7 +2,13 @@
 
 import pytest
 
-from pyntpot.ink.brush import brush_from_id, ink_aux, scaled_brush
+from pyntpot.ink.brush import (
+    BRUSH_OVERRIDE_KEYS,
+    brush_from_id,
+    brush_id_known,
+    ink_aux,
+    scaled_brush,
+)
 from pyntpot.ink.brush_sheet import PEN_ROWS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.pad import InkPad
@@ -33,6 +39,26 @@ def test_a_brush_id_that_names_nothing_is_refused():
         brush_from_id("MAJ9-a", 3.0, 2.0, BrushStyle())
     with pytest.raises(ValueError, match="no such brush"):
         brush_from_id("RIV1-z", 3.0, 2.0, BrushStyle())
+
+
+@pytest.mark.parametrize("key", sorted(BRUSH_OVERRIDE_KEYS), ids=sorted(BRUSH_OVERRIDE_KEYS))
+def test_every_override_key_changes_the_brush(key: str):
+    """Each override key, set to a value no treatment holds, changes the brush it builds."""
+    plain = BrushStyle(brush_overrides={})
+    over = BrushStyle(brush_overrides={"lane": {key: 0.317}})
+    without, _ = brush_from_id("LAN5-a", 1.8, 2.0, plain, "lane")
+    with_key, _ = brush_from_id("LAN5-a", 1.8, 2.0, over, "lane")
+    assert with_key != without
+
+
+@pytest.mark.parametrize(
+    ("brush_id", "known"),
+    [("MAJ6-e", True), ("TRK4-d", True), ("MAJ9-e", False), ("XXX1-a", False), ("MAJ6", False)],
+    ids=["MAJ6-e", "TRK4-d", "no-row", "no-class", "no-colour"],
+)
+def test_a_brush_id_is_known_only_on_the_sheet(brush_id: str, known: bool):
+    """A brush id is known when the sheet has its row and its class has its colour."""
+    assert brush_id_known(brush_id) is known
 
 
 def test_every_phase_1_brush_flag_off_builds_a_plain_brush():

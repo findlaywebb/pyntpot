@@ -5,7 +5,8 @@ pen path; `HandStyle`, the seed every random draw of a label starts from;
 `NibStyle`, the nib, its inks, its angle and the backing wash under a name;
 `NibGroups`, the groups the nib reads together. The first three are frozen,
 keyword-only dataclasses of plain values, their fields documented in each
-class's `Attributes:` section; `NibGroups` is built positionally.
+class's `Attributes:` section; `NibGroups` is built positionally. `label_route` is a
+`Literal` of its two words.
 
 It letters nothing. The defaults are the default look a map is painted with; the
 module reads no theme. Which names are lettered, and how many, is the caller's
@@ -17,6 +18,7 @@ paper groups `NibGroups` carries.
 """
 
 from dataclasses import dataclass
+from typing import Literal
 
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.style import PaperStyle
@@ -39,7 +41,7 @@ class FaceStyle:
         label_face: The path of the `.ttf` to open. Empty is the vendored one.
     """
 
-    label_route: str = "centreline"
+    label_route: Literal["centreline", "outline"] = "centreline"
     label_face: str = ""
 
 

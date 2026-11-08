@@ -31,11 +31,11 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S3 — The checker
 
-- [ ] `BRUSH_OVERRIDE_KEYS` and `brush_id_known` in `ink/brush.py`, each proved against what `brush_from_id` reads.
-- [ ] `theme_vocab`: vocabularies confirmed against their readers; `COLOUR_FIELDS` a literal, tested equal to what the model implies.
-- [ ] Eight new `Literal` types (nine string enums with `paper_edge`); the two `ty` errors fixed at `test_nib.py:393` and `test_layers.py:77`.
-- [ ] `theme_check`: unknown keys with suggestions, strict types (a short tuple reported from pydantic's `missing`), brush ids, colours, renamed-keys table, dataclass sub-tables (planted groups in `support.planted_groups`), `build_group`; never repeats the reader's problems.
-- [ ] Digests unchanged; slice gate and coverage gate green.
+- [x] `BRUSH_OVERRIDE_KEYS` and `brush_id_known` in `ink/brush.py`, each proved against what `brush_from_id` reads.
+- [x] `theme_vocab`: vocabularies confirmed against their readers; `COLOUR_FIELDS` a literal, tested equal to what the model implies.
+- [x] Eight new `Literal` types (nine string enums with `paper_edge`); the two `ty` errors fixed at `test_nib.py:393` and `test_layers.py:77`.
+- [x] `theme_check`: unknown keys with suggestions, strict types (a short tuple reported from pydantic's `missing`), brush ids, colours, renamed-keys table, dataclass sub-tables (planted groups in `support.planted_groups`), `build_group`; never repeats the reader's problems.
+- [x] Digests unchanged; slice gate and coverage gate green.
 
 ## S4 — Merge, resolve and `Style.from_yaml`
 

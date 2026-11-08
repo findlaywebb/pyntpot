@@ -7,7 +7,7 @@ temporary cache; the typed basemap is built from the Lynmouth fixture.
 import json
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 
@@ -74,7 +74,7 @@ def _layers(inputs: BasemapInputs, options: BasemapStyle | None = None) -> dict[
     return data
 
 
-def _road_names(tmp_path: Path, roads: str) -> set[str]:
+def _road_names(tmp_path: Path, roads: Literal["all", "key", "major"]) -> set[str]:
     """Names of the roads kept for one selection mode."""
     elements = [
         _way(
