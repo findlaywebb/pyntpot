@@ -164,7 +164,7 @@ entry of the references page.
 ### The boundary
 
 `maps` may import `ruamel.yaml`, as it may import pydantic; `ink` and `letters` may not.
-The forbidden contract "No plotting, dataframe, template or YAML dependencies" keeps
+The forbidden contract, renamed "No plotting, dataframe, template or PyYAML dependencies", keeps
 `yaml` (PyYAML) banned for the whole package, and the contract "ink and letters stay free
 of httpx and pydantic" becomes "ink and letters stay free of httpx, pydantic and
 ruamel", forbidding `ruamel` too. `BOUNDARIES.md` says the same. This amends ADR 0002's

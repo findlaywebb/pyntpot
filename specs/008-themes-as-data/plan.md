@@ -405,12 +405,14 @@ Steps:
      `name = "ink and letters stay free of httpx, pydantic and ruamel"`,
      `forbidden_modules = ["httpx", "pydantic", "ruamel"]`. Comment above it:
      `# ruamel.yaml reads theme files in maps only (ADR 0069), as pydantic (ADR 0015).`
-   - Prove the contract bites, in a scratch copy of the tree (not the branch): add
+   - Prove the contract bites, in a scratch copy of the tree (not the branch). A scratch
+     copy means `git worktree add <dir>` then `uv sync` in it, never `cp -r` (its shebangs
+     point at the old venv, so `lint-imports` would check the real tree and report KEPT
+     even with `httpx` imported in `ink`). In it, add
      `import ruamel.yaml` to `src/pyntpot/ink/noise.py`, run `uv run lint-imports`, see it
      fail naming the third contract; repeat with `import yaml` in `maps/style.py` and see
-     the first fail. `ruamel` is a namespace package: if import-linter cannot see it as an
-     external package, the contract fails to load; then forbid `ruamel.yaml` instead and
-     record which form worked in the commit message.
+     the first fail. Forbid `"ruamel"`, not `"ruamel.yaml"`: import-linter rejects
+     subpackages of external packages (measured), so there is no fallback form.
    - `BOUNDARIES.md`: the intro sentence says the second contract keeps `httpx`,
      `pydantic` and `ruamel.yaml` out of `ink` and `letters` (ADRs 0010, 0069); the hard
      rules read "`pyntpot` imports no `matplotlib`, `pandas`, `jinja2` or `yaml`
@@ -619,7 +621,7 @@ renamed=RENAMED_KEYS) -> tuple[dict[str, object], tuple[ThemeProblem, ...]]`,
 `src/pyntpot/letters/style.py` (the `label_route` `Literal`),
 `tests/unit/ink/test_brush.py` (two new tests), `tests/unit/maps/test_theme_vocab.py` and
 `tests/unit/maps/test_theme_check.py` (new), `tests/support/planted_groups.py` (new),
-`tests/unit/letters/test_nib.py` (the parameter annotation at line 393 only) and
+`tests/unit/letters/test_nib.py` (the parameter annotation at line 393 only; line numbers in this file may shift by one after S1 adds an import, so find them by content) and
 `tests/unit/maps/test_layers.py` (the parameter annotation at line 77 only).
 
 **Leave alone.** `style.py`, `theme_read.py`, `theme_errors.py` (S2's, used as they are);
@@ -739,7 +741,8 @@ Steps:
      error `type`: `bool_type` "{v!r} is not a boolean (true or false)"; `float_type`
      "{v!r} is not a number"; `int_type` "{v!r} is not a whole number"; `string_type`
      "{v!r} is not a string"; `tuple_type` "{v!r} is not a list"; `literal_error`
-     "{v!r} is not one of {choices}" (choices quoted, comma-joined, from `typing.get_args`);
+     "{v!r} is not one of {choices}" (`choices = ", ".join(map(repr, choices))` over
+     `typing.get_args`, so they read `'pen', 'solid'`);
      a fixed-length tuple of the wrong length "a list of {n} values, not {m}" ({n} from
      `typing.get_args` of the hint, {m} the tuple's length), reported once per leaf: a
      tuple that is too long gives one `too_long` error, and one that is too short gives a
@@ -932,6 +935,9 @@ Steps:
       '{theme}'; available: {names}" (names comma-joined);
    7. anything else: "'{theme}' is neither a theme name nor a .yaml path; available:
       {names}".
+   Ruff's `max-returns = 5` (PLR0911) forbids one `return` per rule in `resolve`: write one
+   small helper per rule (or raise `ThemeError` from the rule), so no function has more
+   than 5 returns.
    A refusal in rules 2 to 7 is a `ThemeProblem` with `path` the given value as a `Path`,
    key `""` for the top-level call and `extends` for a chained one, at the `extends`
    line (line `None` for the top-level call). Packaged files are read through
@@ -1432,7 +1438,7 @@ other docs page and every other line of `style-fields.md` (S9).
 `tests/docs/test_reference_values.py` (the group rows must be the group's fields, with
 the model's default and type) and
 `tests/docs/test_reference_pages.py::TestStyleFields::test_every_field_of_every_group_is_named`.
-Both read `style-fields.md:267`, the `style` row. Rewrite that row as
+Both read `style-fields.md:266`, the `style` row. Rewrite that row as
 ``| `drawn_as` | string | `"solid"` | How the route is drawn: `"pen"` tints the pen plate when the `route` group painted one; `"solid"` draws a line. Any other value is an error at load. |``
 (Type stays `string`: S9 changes the Type column to the YAML vocabulary). No other docs
 test names a route ink field: the glossary's "route ink" sentence is prose (S9), and
@@ -1689,7 +1695,10 @@ Steps:
       and its master are listed with stem `wash`; `gallery/paper.webp` did not move.) A
       moved image whose stem is not in the list of step 3.1, or `NOT REGISTERED`, is a
       defect: stop and find the slice that caused it. The list of step 3.1 is an upper
-      bound: an image of a listed script that does not move needs no review.
+      bound: an image of a listed script that does not move needs no review. On a
+      non-pinning machine, pixel noise can move other images: a change with
+      `changed_fraction`/mean difference at most 0.005 is noise, not a defect, and is
+      neither reviewed nor committed.
    3. **Judge each moved image against its text, and nothing more.** For each one, find
       every page that shows it (`git grep -n "<path under docs/images>" docs`) and read
       its caption (the `*Painted by ...*` paragraph) and the paragraph before the image.
@@ -1799,6 +1808,9 @@ title `feat(maps)!: themes are YAML overrides of one model, chosen by name`, the
 Changelog block, `Closes #158`, `Closes #80`, `Closes #77`, `Closes #182`, `Closes #186`,
 the list of every moved docs image with its S10 fix (A, B or none),
 the golden-diff images, the mutation equivalents, the files filed in S9.
+
+Known and left as is: the prek `docs-tests` hook's file pattern omits `.yaml`, so a
+theme-only edit does not trigger it locally; CI runs the docs tests regardless.
 
 ## Files to touch
 
