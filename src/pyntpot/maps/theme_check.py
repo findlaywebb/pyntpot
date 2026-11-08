@@ -37,7 +37,7 @@ import pydantic
 from pyntpot.ink.brush import brush_id_known
 from pyntpot.maps.theme_errors import ThemeProblem
 from pyntpot.maps.theme_read import ThemeFile
-from pyntpot.maps.theme_vocab import BRUSH_ID_FIELDS, COLOUR_FIELDS, VOCABULARIES
+from pyntpot.maps.theme_vocab import BRUSH_ID_FIELDS, COLOUR_FIELDS, COLOUR_PATTERN, VOCABULARIES
 
 #: Old key paths and what each is called now; a theme that uses one is told the new name.
 RENAMED_KEYS: dict[tuple[str, ...], str] = {
@@ -48,7 +48,7 @@ RENAMED_KEYS: dict[tuple[str, ...], str] = {
 EXTENDS = "extends"
 
 #: A colour: `#` and six hexadecimal digits.
-_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
+_COLOUR = re.compile(COLOUR_PATTERN)
 
 #: The message for a value that should be a mapping.
 _TABLE = "is a table of keys"

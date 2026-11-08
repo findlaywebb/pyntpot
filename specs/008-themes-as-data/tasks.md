@@ -58,7 +58,7 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## Merge gate
 
-- [ ] S5 and S6 merged; the whole slice gate and the coverage gate green on the merged tree.
+- [x] S5 and S6 merged; the whole slice gate and the coverage gate green on the merged tree.
 
 ## S7 — Named themes and the command line (#77)
 
@@ -95,6 +95,6 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S12 — Final review and PR
 
-- [ ] Fresh-context diff review (`review/diff-review.md`); every acceptance criterion ticked against evidence.
-- [ ] Full gates green: golden run, coverage gate, `prek run --all-files`, strict docs build.
-- [ ] PR opened: `Closes #158` (#158), `Closes #80` (#80), `Closes #77` (#77), `Closes #182` (#182), `Closes #186` (#186), Changelog block, the list of moved docs images, golden diffs, mutation equivalents.
+- [x] Fresh-context diff review (`review/diff-review.md`); every acceptance criterion ticked against evidence.
+- [x] Full gates green: golden run, coverage gate, `prek run --all-files`, strict docs build.
+- [x] PR opened: `Closes #158` (#158), `Closes #80` (#80), `Closes #77` (#77), `Closes #182` (#182), `Closes #186` (#186), Changelog block, the list of moved docs images, golden diffs, mutation equivalents.

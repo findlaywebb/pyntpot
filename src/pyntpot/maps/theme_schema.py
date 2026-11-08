@@ -29,7 +29,7 @@ from typing import Literal
 
 from pyntpot.maps.style import Style
 from pyntpot.maps.theme_check import EXTENDS
-from pyntpot.maps.theme_vocab import COLOUR_FIELDS, VOCABULARIES
+from pyntpot.maps.theme_vocab import COLOUR_FIELDS, COLOUR_PATTERN, VOCABULARIES
 
 #: The schema's address on the docs site.
 SCHEMA_ID = "https://findlaywebb.github.io/pyntpot/reference/theme.schema.json"
@@ -50,9 +50,6 @@ _SCALARS: dict[object, dict[str, object]] = {
     float: {"type": "number"},
     str: {"type": "string"},
 }
-
-#: A colour: `#` and six hexadecimal digits.
-_COLOUR = "^#[0-9a-fA-F]{6}$"
 
 #: An `Attributes:` entry's first line: its field name, a colon and the description's start.
 _ENTRY = re.compile(r"(\w+):\s*(.*)")
@@ -149,7 +146,7 @@ def _leaf_schema(hint: object, path: _Path) -> dict[str, object]:
         TypeError: When `hint` is a type the walk does not know, a programming error.
     """
     if hint is str and path in COLOUR_FIELDS:
-        return {"type": "string", "pattern": _COLOUR}
+        return {"type": "string", "pattern": COLOUR_PATTERN}
     if hint in _SCALARS:
         return dict(_SCALARS[hint])
     if typing.get_origin(hint) is Literal:

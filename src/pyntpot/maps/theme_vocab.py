@@ -51,6 +51,9 @@ BRUSH_ID_FIELDS: tuple[tuple[str, ...], ...] = (
     ("nib", "label_leader_brush"),
 )
 
+#: The regular expression a colour string must match in full: `#` and six hexadecimal digits.
+COLOUR_PATTERN = "^#[0-9a-fA-F]{6}$"
+
 #: The key paths whose values are colours, `#` and six hexadecimal digits.
 COLOUR_FIELDS: tuple[tuple[str, ...], ...] = (
     ("paper", "paper_hex"),
