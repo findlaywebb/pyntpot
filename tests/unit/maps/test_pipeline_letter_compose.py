@@ -25,7 +25,7 @@ from support.golden import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION, differing_
 from support.paths import FIXTURE_DIR, KEY
 from support.providers import FixtureElevation, FixtureFeatures
 
-#: The placed label names, in placement order, as the regeneration window pinned them.
+#: The placed label names, in placement order.
 PINNED_LABELS = (
     "Lynton",
     "Barbrook",

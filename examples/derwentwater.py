@@ -3,8 +3,8 @@
 The picture is built the way a painter builds a view, far to near. Each ridge is a line
 drawn in numpy from a few seeded sines; the ground below it, down to the shore, is a
 coverage mask, and `wash` turns the mask into pigment density. The far fells are one pale
-blue-grey wash; each nearer ridge is another wash laid over the last, so the multiply
-compositing darkens the ground the more washes it sits under, and the colour warms from
+blue-grey wash; each nearer ridge is another wash laid over the last, so Kubelka-Munk
+glazing darkens the ground the more washes it sits under, and the colour warms from
 `wetland` through `rock` and `relief` to `wood`. The density of each hill is faded toward
 its foot, where mist lies, and the nearest hills granulate: their density follows the
 paper's own `Sheet.gran` field.
