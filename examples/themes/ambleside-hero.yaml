@@ -1,0 +1,73 @@
+# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# Ambleside, the hero: a calmer version of ambleside.yaml for the README's picture and the social
+# preview. Fewer, larger cover patches in a narrower palette, thin pale becks and roads, and a
+# heavier route. Ambleside: the hero, a fell walk. Fells and water fill the frame: a wide ribbon,
+# strong relief, a green, russet and lake-blue palette and a maroon wet pen for the route. It
+# overrides the ribbon, the relief, the cover pigments and the route ink.
+
+wash:
+  bloom_max: 2
+
+brush:
+  river_curve:
+    major: [8.0, -0.2, 3.0, 6.0]
+    medium: [6.0, -0.42, 1.6, 5.0]
+    minor: [6.0, -0.78, 1.0, 4.0]
+  minor_roads_mppd: 2.0
+  river_mult: 0.55
+  brush_width_px:
+    lane: 1.2
+    road_major: 2.4
+    track: 1.6
+  pen_pool_gain: 1.0
+  brush_overrides:
+    major:
+      pool: 0.8
+  ink_dip_mult: 1.6
+
+nib:
+  label_route_ink: "#7b2335"
+
+ribbon:
+  ribbon_mult: 2.6
+
+cover:
+  relief_strength: 1.5
+  min_patch_px: 400.0
+  pigments:
+    built: "#cdb899"
+    farmland: "#cdd391"
+    heath: "#d9b47c"
+    meadow: "#bcd08a"
+    orchard: "#a2b868"
+    pale: "#a8c27c"
+    relief: "#b49a7c"
+    rim: "#8f7757"
+    rock: "#a39b8d"
+    sand: "#e0cf9f"
+    scrub: "#b2bd7c"
+    water: "#3a86b5"
+    wetland: "#86b0a4"
+    wood: "#7fa466"
+    works: "#b9ad9c"
+  pale_pool: 0.06
+  wood_texture: 0.3
+  wood_dabs: 0.25
+  wood_tex_strengths: [0.15, 0.2, 0.25]
+  dab_strengths: [0.15, 0.16, 0.18]
+
+route:
+  route_pen_brush: MAJ1-e
+  route_pen_width_px: 6.0
+
+route_ink:
+  colour: "#7b2335"
+
+lettering:
+  label_max: 5
+
+basemap:
+  generalise: true
+  cell_m: 110.0
+  min_area_ha: 40.0
+  tree_spacing_m: 0.0

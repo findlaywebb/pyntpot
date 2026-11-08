@@ -1,11 +1,11 @@
-"""The map's whole style: every style group, loaded from a TOML theme, and its digests.
+"""The map's whole style: every style group, loaded from a YAML theme, and its digests.
 
 Key type: `Style`, a frozen pydantic model holding one value of each style group:
 `paper`, `wash` and `brush` (ink), `face`, `nib` and `hand` (letters), `card`,
 `ribbon`, `cover`, `route`, `route_ink`, `lettering` and `basemap` (maps).
-`Style.from_toml` reads a theme file. `Style.from_yaml` reads a YAML theme, which names
-only what it changes over the theme it extends, and raises one `ThemeError` holding every
-problem in it. `Style()` is the default look: every group's defaults are the default
+`Style.from_yaml` reads a theme file. A theme names only what it changes over the theme
+it extends, and a theme with problems raises one `ThemeError` holding every problem in
+it. `Style()` is the default look: every group's defaults are the default
 theme, with nothing overridden.
 
 Three digests key what a style change repaints: `base_digest` over the groups the
@@ -32,7 +32,6 @@ import hashlib
 import json
 import math
 import re
-import tomllib
 import typing
 from collections.abc import Mapping
 from pathlib import Path
@@ -126,25 +125,6 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
                 if info is not None and isinstance(info.annotation, type):
                     _check_keys(info.annotation, value, name)
         return data
-
-    @classmethod
-    def from_toml(cls, path: Path) -> Self:
-        """Read a theme file: one table per style group.
-
-        Args:
-            path: A TOML theme.
-
-        Returns:
-            The style the theme describes.
-
-        Raises:
-            tomllib.TOMLDecodeError: When the file is not TOML.
-            pydantic.ValidationError: When a key is unknown at any level, or a value
-                has the wrong type.
-        """
-        with path.open("rb") as handle:
-            table = tomllib.load(handle)
-        return cls.model_validate(table)
 
     @classmethod
     def from_yaml(cls, path: Path) -> Self:

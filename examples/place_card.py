@@ -1,8 +1,8 @@
 """A focus place's route map: the card the README, the gallery and the social preview show.
 
-The card is the one `examples/route_map.py` paints, with two options. `theme` names a TOML
+The card is the one `examples/route_map.py` paints, with two options. `theme` names a .yaml
 theme file by its path relative to the repository's top directory, read with
-`Style.from_toml`; without it the card takes `Style.default()`. `size` is the card's
+`Style.from_yaml`; without it the card takes `Style.default()`. `size` is the card's
 display width in pixels, 900 unless you say otherwise: the script copies the style with
 that `card.display_px` and paints the card at it, so the pixel grid, and with it the
 hand's lettering, is set for that width. The track, the cache and the providers are the
@@ -14,11 +14,11 @@ the place's fixture: the card letters the curated landmarks and journal notes th
 `examples/places.toml` holds for it, read with `tomllib`, and letters none for a place it does
 not list.
 
-The README's hero is the Ambleside card at 1200 pixels, in `examples/themes/ambleside-hero.toml`,
-a calmer copy of `ambleside.toml` with fewer cover patches, thinner becks and roads and a heavier route.
+The README's hero is the Ambleside card at 1200 pixels, in `examples/themes/ambleside-hero.yaml`,
+a calmer version of `ambleside.yaml` with fewer cover patches, thinner becks and roads and a heavier route.
 The five place cards of the gallery, Ambleside, Skye, Yr Wyddfa, Oxford and Y Fenni, are
 painted at 720, each in its own theme from `examples/themes/`. Y Fenni takes
-`examples/themes/y-fenni.toml`, which letters the Welsh name where OpenStreetMap carries one.
+`examples/themes/y-fenni.yaml`, which letters the Welsh name where OpenStreetMap carries one.
 
 Run it with a track, a cache directory, an output directory and a contact::
 
@@ -91,7 +91,7 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
         cache_dir: The fetch cache: provider payloads, and the plates painted from them.
         features: The map feature and land cover provider.
         elevation: The elevation provider.
-        theme: A TOML theme file, as a path relative to the repository's top directory;
+        theme: A .yaml theme file, as a path relative to the repository's top directory;
             `Style.default()` when absent.
         size: The card's display width in pixels.
         margin_m: How far beyond the track's box the features and elevation are fetched, in
@@ -105,7 +105,7 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
         The path of the saved card, `out_dir / "map.png"`.
     """
     base = (
-        Style.from_toml(REPO_ROOT / theme) if theme is not None and theme != "" else Style.default()
+        Style.from_yaml(REPO_ROOT / theme) if theme is not None and theme != "" else Style.default()
     )
     style = base.model_copy(update={"card": replace(base.card, display_px=size)})
     route = Track.from_gpx(track)
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         "contact", help="how the public servers' operators can reach you, such as an email"
     )
     parser.add_argument(
-        "--theme", help="a TOML theme file, relative to the repository's top directory"
+        "--theme", help="a .yaml theme file, relative to the repository's top directory"
     )
     parser.add_argument("--size", type=int, default=900, help="the card's display width in pixels")
     parser.add_argument("--margin-m", type=float, help="feature and elevation margin, metres")

@@ -117,7 +117,7 @@ NIB_SCALE = 2
 def _base(theme: str | None) -> Style:
     """The theme file's style, relative to the repository's top directory, or `Style.default()`."""
     return (
-        Style.from_toml(REPO_ROOT / theme) if theme is not None and theme != "" else Style.default()
+        Style.from_yaml(REPO_ROOT / theme) if theme is not None and theme != "" else Style.default()
     )
 
 
@@ -268,7 +268,7 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
         features: The map feature and land cover provider.
         elevation: The elevation provider.
         figure: The picture, one of `FIGURES`.
-        theme: A TOML theme file, as a path relative to the repository's top directory;
+        theme: A .yaml theme file, as a path relative to the repository's top directory;
             `Style.default()` when absent.
 
     Returns:
@@ -298,7 +298,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--figure", choices=FIGURES, default="violet", help="the picture")
     parser.add_argument(
-        "--theme", help="a TOML theme file, relative to the repository's top directory"
+        "--theme", help="a .yaml theme file, relative to the repository's top directory"
     )
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)

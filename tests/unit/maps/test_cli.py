@@ -56,8 +56,8 @@ class TestMap:
 
     def test_a_small_display_style_paints_a_map_quickly(self, tmp_path: Path) -> None:
         """`--style` with a theme naming only a 120-pixel display writes a 240-pixel-wide PNG."""
-        style = tmp_path / "small.toml"
-        style.write_text("[card]\ndisplay_px = 120\n", encoding="utf-8")
+        style = tmp_path / "small.yaml"
+        style.write_text("card:\n  display_px: 120\n", encoding="utf-8")
         cache = tmp_path / "cache"
         shutil.copytree(FIXTURE_DIR, cache)
         out = tmp_path / "out.png"

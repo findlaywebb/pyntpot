@@ -173,6 +173,11 @@ def test_no_theme_file_sets_a_key_to_its_base_value():
     assert "\n".join(found) == ""
 
 
+def test_the_theme_file_checks_see_every_theme():
+    """The theme-file checks find all ten themes, so none is skipped by a wrong directory."""
+    assert len(theme_files()) == 10
+
+
 class TestTheChecksFindAPlantedDefect:
     """Each check reports the defect planted for it, and nothing in a clean tree."""
 

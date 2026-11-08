@@ -1,12 +1,12 @@
 """One route map in four themes: the map is not limited to the default look.
 
-`Style.default()` paints the shipped look, but a style is only data. A theme is a TOML
-file with one table per style group, and `Style.from_toml` reads it. This script paints
+`Style.default()` paints the shipped look, but a style is only data. A theme is a YAML
+file naming only what it changes, and `Style.from_yaml` reads it. This script paints
 the same route, over the same cached payloads, in one of four example themes kept in
 `examples/themes/`: `pen-and-ink` (no colour washes, ink on paper), `sepia` (faded warm
 browns on yellowed paper), `bold` (saturated pigments and a strong route ink) and
-`winter` (cool greys and blues on pale paper). Each is a copy of the default theme with
-a few groups changed: the paper's colour, the pigments, the inks of the lettering and
+`winter` (cool greys and blues on pale paper). Each is an override file of the default theme
+changing a few groups: the paper's colour, the pigments, the inks of the lettering and
 the route, and whether the cover and relief are painted at all.
 
 `figure` names the theme. The track, the cache and the providers are the ones
@@ -72,7 +72,7 @@ def main(
     """
     if figure not in FIGURES:
         raise ValueError(f"figure must be one of {FIGURES}, not {figure!r}")
-    style = Style.from_toml(THEMES_DIR / f"{figure}.toml")
+    style = Style.from_yaml(THEMES_DIR / f"{figure}.yaml")
     route = Track.from_gpx(track)
     cache = Cache(cache_dir)
     basemap = fetch(route, cache, features, elevation, style)

@@ -166,13 +166,13 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ![Six small copies of the Ambleside map, each cropped to the loop, in two rows of three. The columns are the route in maroon, in indigo and in burnt sienna and are lettered so; the rows are a wet pen line and a dry pen line that thins and breaks, lettered wet pen and dry pen.](images/how-to/route-ink-grid.webp)
 
-*Painted by `examples/how_to_route_ink.py` (figure grid, theme `examples/themes/ambleside.toml`). The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`. The route is drawn in the normal blend, so it keeps its colour over water.*
+*Painted by `examples/how_to_route_ink.py` (figure grid, theme `examples/themes/ambleside.yaml`). The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`. The route is drawn in the normal blend, so it keeps its colour over water.*
 
 ### [Letter your own landmarks](how-to/letter-your-own-landmarks.md)
 
 ![The Y Fenni route map: a short maroon route winding through the town between a river and a castle, with landmarks lettered by hand on leader lines.](images/places/y-fenni.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml` and the landmarks of `examples/places.toml`. The landmarks are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream.*
+*Painted by `examples/place_card.py` with `examples/themes/y-fenni.yaml` and the landmarks of `examples/places.toml`. The landmarks are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream.*
 
 ### [Paint your own shapes](how-to/paint-your-own-shapes.md)
 
@@ -266,31 +266,31 @@ The five showcase maps, each painted from a recorded fixture by one script, `exa
 
 ![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes and a maroon route looping from the town out to Loughrigg Terrace, lettered Ambleside, Grasmere, Rydal Water, Loughrigg Terrace, Loughrigg Fell and Bridge House](images/places/ambleside.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/ambleside.toml`.* The hero: a fell walk. Among the names it letters are Ambleside, Grasmere, Rydal Water, Loughrigg Terrace, Loughrigg Fell, Bridge House, Rothay and Brathay; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/ambleside.yaml`.* The hero: a fell walk. Among the names it letters are Ambleside, Grasmere, Rydal Water, Loughrigg Terrace, Loughrigg Fell, Bridge House, Rothay and Brathay; the list is not complete.
 
 ### [Skye](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/skye)
 
 ![A hand-painted map of the Isle of Skye: pale washes of land and sea, a dark route looping across the island, four journal notes lettered in the hand, one for each day of the trip, and the names Portree and The Cuillin](images/places/skye.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/skye.toml`.* An island road trip with journal notes: each day of the trip is a sentence of the walker's own pinned to a point, Monday to Thursday.
+*Painted by `examples/place_card.py` with `examples/themes/skye.yaml`.* An island road trip with journal notes: each day of the trip is a sentence of the walker's own pinned to a point, Monday to Thursday.
 
 ### [Over Crib Goch to the summit of Yr Wyddfa, Eryri](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/yr-wyddfa)
 
 ![A hand-painted map of the route over Crib Goch to Yr Wyddfa: a long pale ribbon of ground with a dark route along its ridge, lettered Garnedd Ugain, Crib Goch, Glaslyn and Llyn Llydaw](images/places/yr-wyddfa.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/yr-wyddfa.toml`.* A mountain ridge: Crib Goch, Garnedd Ugain and the lakes below them. Among the names it letters are Crib Goch, Garnedd Ugain, Glaslyn, Llyn Llydaw and Afon Nant Peris; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/yr-wyddfa.yaml`.* A mountain ridge: Crib Goch, Garnedd Ugain and the lakes below them. Among the names it letters are Crib Goch, Garnedd Ugain, Glaslyn, Llyn Llydaw and Afon Nant Peris; the list is not complete.
 
 ### [Central Oxford](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/oxford)
 
 ![A hand-painted map of central Oxford: washes for the city and the meadows, the rivers Cherwell and Thames as blue strokes and a maroon route round Christ Church Meadow, lettered Radcliffe Camera, Christ Church, Magdalen Bridge and The Bridge of Sighs](images/places/oxford.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/oxford.toml`.* A city of colleges and bridges. Among the names it letters are Radcliffe Camera, Christ Church, Magdalen Bridge, The Bridge of Sighs, Cherwell and Thames; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/oxford.yaml`.* A city of colleges and bridges. Among the names it letters are Radcliffe Camera, Christ Church, Magdalen Bridge, The Bridge of Sighs, Cherwell and Thames; the list is not complete.
 
 ### [Y Fenni](https://github.com/findlaywebb/pyntpot/tree/main/tests/fixtures/y-fenni)
 
 ![A hand-painted map of Y Fenni: washes for the town, the blue river Wysg and a maroon route winding through the town centre, with landmarks lettered Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice Cream](images/places/y-fenni.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml`.* A food tour in a Welsh-named market town: the town is lettered Y Fenni where OpenStreetMap carries the Welsh name. Among the names it letters are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise, Shepherd's Ice Cream, Afon Wysg and Llan-ffwyst; the list is not complete.
+*Painted by `examples/place_card.py` with `examples/themes/y-fenni.yaml`.* A food tour in a Welsh-named market town: the town is lettered Y Fenni where OpenStreetMap carries the Welsh name. Among the names it letters are Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise, Shepherd's Ice Cream, Afon Wysg and Llan-ffwyst; the list is not complete.
 
 ## The README
 
@@ -302,11 +302,11 @@ The pictures that open the [README](https://github.com/findlaywebb/pyntpot#readm
 
 ![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes, the river Rothay in dark blue, and a maroon route looping from Ambleside out to Loughrigg Terrace and back, with the names written by hand](images/hero.webp)
 
-*Painted by `examples/place_card.py` (size 1200, theme `examples/themes/ambleside-hero.toml`, place `ambleside`).*
+*Painted by `examples/place_card.py` (size 1200, theme `examples/themes/ambleside-hero.yaml`, place `ambleside`).*
 
 ![A wide crop of the Ambleside map with the word pyntpot lettered large in dark ink over a soft patch of paper in the middle, the maroon route looping round it](images/social-preview.jpg)
 
-*Painted by `examples/social_preview.py` (theme `examples/themes/ambleside-hero.toml`, place `ambleside`). The word is pyntpot.*
+*Painted by `examples/social_preview.py` (theme `examples/themes/ambleside-hero.yaml`, place `ambleside`). The word is pyntpot.*
 
 ### The strip of eight
 
@@ -342,4 +342,4 @@ The README's strip is one thumbnail for each rung of the [tutorials](tutorials/i
 
 ![A hand-painted map of Ambleside and Rydal Water in the showcase theme: tawny fell and green wood washes, two blue lakes and a maroon route looping out to Loughrigg Terrace](images/gallery/route-map.webp)
 
-*Painted by `examples/place_card.py` in `examples/themes/ambleside.toml`, with the curated landmarks of `examples/places.toml`.*
+*Painted by `examples/place_card.py` in `examples/themes/ambleside.yaml`, with the curated landmarks of `examples/places.toml`.*

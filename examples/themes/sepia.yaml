@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# Sepia: the default theme aged. Yellowed, worn paper with heavy foxing and a dark vignette; every
+# wash, ink and lettering colour is a faded warm brown. It overrides the paper, the cover pigments,
+# the brush ids, the lettering inks and the route ink.
+
+paper:
+  paper_hex: "#e6cf9f"
+  paper_tooth: 0.1
+  paper_worn: 0.38
+  paper_vignette: 0.22
+  paper_foxing: 0.3
+
+wash:
+  separation_pigments:
+    wood: "#7a5f3c"
+
+brush:
+  brushes:
+    coast: MAJ2-c
+    major: MAJ1-c
+    medium: MAJ2-c
+    minor: MAJ3-c
+    road_major: MAJ2-b
+    track: TRK4-a
+
+nib:
+  label_ink: "#3a2411"
+  label_route_ink: "#7a2e14"
+  label_water_ink: "#5c4a2c"
+  label_in_water_ink: "#f1e3bd"
+
+cover:
+  pigments:
+    built: "#c9b48a"
+    farmland: "#d8c58f"
+    heath: "#c9b078"
+    meadow: "#d6c48f"
+    orchard: "#cfba84"
+    pale: "#d9c593"
+    relief: "#a28a62"
+    rim: "#9c7f56"
+    rock: "#cdbb93"
+    sand: "#e0cf9f"
+    scrub: "#c4ae78"
+    water: "#b3a07c"
+    wetland: "#bfb08a"
+    wood: "#9a8658"
+    works: "#c2ad84"
+
+route_ink:
+  colour: "#8a3418"

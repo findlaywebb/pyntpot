@@ -174,19 +174,19 @@ The map above is in the `Style.default()` look. A theme gives it another, and a 
 gives it its landmarks. From the top of the repository:
 
 ```console
-$ uv run python examples/place_card.py ambleside/track.gpx ambleside/ out/ you@example.org --theme examples/themes/ambleside.toml --place ambleside --size 720
+$ uv run python examples/place_card.py ambleside/track.gpx ambleside/ out/ you@example.org --theme examples/themes/ambleside.yaml --place ambleside --size 720
 ```
 
-The theme, `examples/themes/ambleside.toml`, sets the look: the paper, the washes, the
+The theme, `examples/themes/ambleside.yaml`, sets the look: the paper, the washes, the
 brushes, the route ink and the hand. `--place ambleside` letters the landmarks
 `examples/places.toml` holds for Ambleside, such as Loughrigg Terrace and Bridge House,
 as well as the names the lettering picks itself. The map looks like the picture below.
 The README's picture is the same map at 1200 pixels wide, in
-`examples/themes/ambleside-hero.toml`.
+`examples/themes/ambleside-hero.yaml`.
 
 ![A hand-painted map of Ambleside and Rydal Water: tawny fell and green wood washes, two blue lakes and a maroon route looping from the town out to Loughrigg Terrace, lettered Ambleside, Grasmere, Rydal Water, Loughrigg Terrace, Loughrigg Fell and Bridge House](../images/places/ambleside.webp)
 
-*Painted by `examples/place_card.py` in `examples/themes/ambleside.toml`, with the landmarks of `examples/places.toml`.*
+*Painted by `examples/place_card.py` in `examples/themes/ambleside.yaml`, with the landmarks of `examples/places.toml`.*
 
 ## Where next
 

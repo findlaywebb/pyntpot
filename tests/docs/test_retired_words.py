@@ -1,7 +1,7 @@
 """No site page, `README.md`, example, source or test file uses a word `GLOSSARY.md` has retired.
 
 Reads the retired words from the real `GLOSSARY.md` and scans the real site pages, the
-README, every `.py`, `.toml` and `.md` file under `examples/`, and every `.py` file under
+README, every `.py`, `.toml`, `.yaml` and `.md` file under `examples/`, and every `.py` file under
 `src/` and `tests/` except `tests/docs/` and `tests/support/glossary.py`, which quote
 retired words as data. A word matches
 case-insensitively as a whole phrase with an optional plural `s`, its spaces matching any
@@ -20,7 +20,7 @@ from support.site_pages import site_pages
 
 _GLOSSARY = REPO_ROOT / "GLOSSARY.md"
 _EXAMPLES = REPO_ROOT / "examples"
-_SUFFIXES = frozenset({".py", ".toml", ".md"})
+_SUFFIXES = frozenset({".py", ".toml", ".yaml", ".md"})
 _SOURCE = REPO_ROOT / "src"
 _TESTS = REPO_ROOT / "tests"
 #: Test code that quotes retired words as data, so the scan leaves it out.

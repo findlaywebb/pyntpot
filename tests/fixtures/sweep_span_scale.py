@@ -62,9 +62,9 @@ REPO = Path(__file__).resolve().parents[2]
 
 #: The fixtures: directory, theme and the margins `tests/golden/test_places.py` records.
 FIXTURES = (
-    ("ambleside", "examples/themes/ambleside.toml", FetchMargins(MARGIN_M, LANDCOVER_MARGIN_M)),
-    ("skye", "examples/themes/skye.toml", FetchMargins(18000.0, 18000.0)),
-    ("y-fenni", "examples/themes/y-fenni.toml", FetchMargins(MARGIN_M, LANDCOVER_MARGIN_M)),
+    ("ambleside", "examples/themes/ambleside.yaml", FetchMargins(MARGIN_M, LANDCOVER_MARGIN_M)),
+    ("skye", "examples/themes/skye.yaml", FetchMargins(18000.0, 18000.0)),
+    ("y-fenni", "examples/themes/y-fenni.yaml", FetchMargins(MARGIN_M, LANDCOVER_MARGIN_M)),
 )
 
 
@@ -76,7 +76,7 @@ def fixture_route(directory: str, theme: str, margins: FetchMargins) -> list[Poi
         shutil.copytree(REPO / "tests" / "fixtures" / directory, cache_dir)
         features = OverpassFeatures(contact, ("http://127.0.0.1:9/api/interpreter",), budget=0)
         elevation = OpenTopoData(contact, "http://127.0.0.1:9", budget=0)
-        style = Style.from_toml(REPO / theme)
+        style = Style.from_yaml(REPO / theme)
         track = Track.from_gpx(cache_dir / "track.gpx")
         basemap = fetch(track, Cache(cache_dir, margins), features, elevation, style)
     route = [basemap.card.xy(x, y) for x, y in basemap.track]

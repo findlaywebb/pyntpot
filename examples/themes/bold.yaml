@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# Bold: the default theme turned up. Bright paper, saturated pigments laid denser, wider rivers,
+# heavier lettering and a strong magenta route ink. It overrides the paper, the transparencies, the
+# cover pigments, the river width, the lettering and the route ink.
+
+paper:
+  paper_hex: "#fbf6e8"
+  paper_worn: 0.08
+  paper_vignette: 0.02
+  paper_foxing: 0.02
+  pigment_transparency:
+    built: 0.2
+    farmland: 0.06
+    heath: 0.08
+    meadow: 0.05
+    orchard: 0.05
+    pale: 0.07
+    relief: 0.2
+    rim: 0.12
+    rock: 0.15
+    sand: 0.1
+    scrub: 0.05
+    water: 0.02
+    wetland: 0.05
+    wood: 0.03
+    works: 0.2
+
+wash:
+  separation_pigments:
+    wood: "#0d6e8a"
+
+brush:
+  river_mult: 1.35
+  brushes:
+    road_major: MAJ2-b
+    track: TRK4-b
+
+nib:
+  label_size_px: 22.0
+  label_ink: "#10141c"
+  label_pen_width_px: 1.5
+  label_route_ink: "#d4005f"
+  label_water_ink: "#0b5fa8"
+
+cover:
+  pigments:
+    built: "#f0b86a"
+    farmland: "#f2e04a"
+    heath: "#e8a43c"
+    meadow: "#8fe05a"
+    orchard: "#a8e068"
+    pale: "#b9dc72"
+    relief: "#b79a6c"
+    rim: "#d6a46c"
+    rock: "#d6c9b0"
+    sand: "#ffd86a"
+    scrub: "#7ccf5a"
+    water: "#37a6e6"
+    wetland: "#5fcfb0"
+    wood: "#1f9a4a"
+    works: "#e9a26a"
+
+route:
+  route_pen_width_px: 3.6
+
+route_ink:
+  px: 8.0
+  colour: "#e6007a"

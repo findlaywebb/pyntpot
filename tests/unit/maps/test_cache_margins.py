@@ -169,8 +169,8 @@ class TestCli:
         key = Cache(tmp_path, FetchMargins(3000.0, 3000.0)).key(track, *providers)
         for stem in ("overpass", "landcover", "elevation"):
             shutil.copy(FIXTURE_DIR / f"{stem}-{KEY}.json", tmp_path / f"{stem}-{key}.json")
-        style = tmp_path / "small.toml"
-        style.write_text("[card]\ndisplay_px = 120\n", encoding="utf-8")
+        style = tmp_path / "small.yaml"
+        style.write_text("card:\n  display_px: 120\n", encoding="utf-8")
         out = tmp_path / "out.png"
         argv = ["map", str(FIXTURE_DIR / "track.gpx"), "--cache", str(tmp_path), "--contact", "t"]
         argv += ["--margin-m", "3000", "--style", str(style), "--no-attribution", "-o", str(out)]
