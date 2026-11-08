@@ -110,7 +110,7 @@ class TestFedRouteInk:
 
     def test_a_fed_width_draws_a_wider_line_for_a_non_pen_ink(self, painted: Painted) -> None:
         """For an ink that is not the pen, a wider fed width covers more of the card in its colour."""
-        assert painted.style.route_ink.style != "pen"
+        assert painted.style.route_ink.drawn_as != "pen"
         thin_style = painted.style.with_route_ink(colour=FED_COLOUR, width_px=THIN_WIDTH_PX)
         wide_style = painted.style.with_route_ink(colour=FED_COLOUR, width_px=WIDE_WIDTH_PX)
         thin = compose(painted.plates, UNLETTERED, painted.basemap, thin_style, attribution=False)
@@ -156,7 +156,7 @@ class TestRouteBlendAndOpacity:
     def test_a_pen_route_multiplies_too(self, painted: Painted) -> None:
         """A route drawn from the pen plate honours multiply as the solid route does."""
         style = painted.style.with_route_ink(colour="#c8d0ff")
-        ink = dataclasses.replace(style.route_ink, style="pen")
+        ink = dataclasses.replace(style.route_ink, drawn_as="pen")
         multiplied = dataclasses.replace(ink, blend="multiply")
         normal = Image.new("RGB", painted.plates.card.display, DARK_WASH)
         darker = normal.copy()

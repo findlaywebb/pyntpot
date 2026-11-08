@@ -314,13 +314,13 @@ class LetteringStyle:
 
 @dataclass(frozen=True, kw_only=True)
 class RouteInkStyle:
-    """How the route is drawn on the map: its style, width, colour, blend and opacity.
+    """How the route is drawn on the map: pen or solid, its width, colour, blend and opacity.
 
     Only `paint` (the strand merge reach, from `px`) and the compose step read it.
 
     Attributes:
-        style: `"pen"` tints the painted pen plate when one was painted; any other value
-            (every theme says `"solid"`) draws the line.
+        drawn_as: `pen` tints the painted pen plate when one was painted; `solid` draws
+            the line.
         px: Width in display pixels; it also sets how near two passes of a retraced route
             have to come to be drawn as one stroke.
         colour: Colour as `#rrggbb`.
@@ -329,7 +329,7 @@ class RouteInkStyle:
         opacity: How much of the ink is laid, from 0 to 1.
     """
 
-    style: Literal["pen", "solid"] = "solid"
+    drawn_as: Literal["pen", "solid"] = "solid"
     px: float = 5.4
     colour: str = "#c22050"
     blend: Literal["normal", "multiply"] = "normal"

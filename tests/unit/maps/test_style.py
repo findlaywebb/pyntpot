@@ -46,10 +46,10 @@ RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
 )
 
 #: The route ink the reference sheets were painted with, pinned.
-ROUTE_INK = RouteInkStyle(colour="#c22050", px=5.4, style="solid", blend="normal", opacity=1.0)
+ROUTE_INK = RouteInkStyle(colour="#c22050", px=5.4, drawn_as="solid", blend="normal", opacity=1.0)
 
 #: The default style's three digests, pinned.
-DIGEST = "1b08804a7f30026b"
+DIGEST = "88b356ada294ff60"
 BASE_DIGEST = "d9c56c0811177b0f"
 LETTERING_DIGEST = "d15ae2f30e9ca5ce"
 
@@ -291,7 +291,11 @@ class TestFedRouteInk:
         ink = style.with_route_ink(colour="#2050c2", width_px=4.8).route_ink
         assert (ink.colour, ink.px) == ("#2050c2", 4.8)
         theme = style.route_ink
-        assert (ink.style, ink.blend, ink.opacity) == (theme.style, theme.blend, theme.opacity)
+        assert (ink.drawn_as, ink.blend, ink.opacity) == (
+            theme.drawn_as,
+            theme.blend,
+            theme.opacity,
+        )
 
     def test_feeding_nothing_keeps_the_style(self) -> None:
         """Feeding nothing, or the default ink's own colour and width, gives an equal style."""

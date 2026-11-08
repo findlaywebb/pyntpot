@@ -1351,16 +1351,16 @@
     },
     "route_ink": {
       "type": "object",
-      "description": "How the route is drawn on the map: its style, width, colour, blend and opacity.",
+      "description": "How the route is drawn on the map: pen or solid, its width, colour, blend and opacity.",
       "additionalProperties": false,
       "properties": {
-        "style": {
+        "drawn_as": {
           "enum": [
             "pen",
             "solid"
           ],
           "default": "solid",
-          "description": "`\"pen\"` tints the painted pen plate when one was painted; any other value (every theme says `\"solid\"`) draws the line."
+          "description": "`pen` tints the painted pen plate when one was painted; `solid` draws the line."
         },
         "px": {
           "type": "number",

@@ -18,10 +18,10 @@ NAMES = ("bold", "default", "pen-and-ink", "sepia", "winter")
 PACKAGED = ("bold", "pen-and-ink", "sepia", "winter")
 #: Each packaged theme's digests, measured from the TOML files on f34de97 and unchanged by 008 S1.
 DIGESTS = {
-    "bold": ("93dfd74809cc40ae", "6d77f74215314006", "2a7a209c41fe7df8"),
-    "pen-and-ink": ("0295772c0971d18a", "0d40a30d74c111e0", "9c4b7732ec2b6d7d"),
-    "sepia": ("5f385631c67344df", "3a2f5fbbd424e347", "9f7523b1ae707038"),
-    "winter": ("6fd3e5385f7bd0c0", "c1b7c47d4ea12d6c", "68d9f8d8810bd9bb"),
+    "bold": ("2b765c09e23cbcb2", "6d77f74215314006", "2a7a209c41fe7df8"),
+    "pen-and-ink": ("0034f4055bb18feb", "0d40a30d74c111e0", "9c4b7732ec2b6d7d"),
+    "sepia": ("1ea34b096b744d93", "3a2f5fbbd424e347", "9f7523b1ae707038"),
+    "winter": ("0e767aa91ac66511", "c1b7c47d4ea12d6c", "68d9f8d8810bd9bb"),
 }
 ADR_POINTER = "themes are YAML since ADR 0069"
 

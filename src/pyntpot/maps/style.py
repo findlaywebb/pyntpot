@@ -228,9 +228,9 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
     def with_route_ink(self, *, colour: str | None = None, width_px: float | None = None) -> Self:
         """A copy of the style whose route is inked in this colour and spaced for this width.
 
-        Only the colour and the width are fed: the route's style, blend and
+        Only the colour and the width are fed: the route's `drawn_as`, blend and
         opacity stay the theme's. The compose step draws the route line at the fed
-        width, except when the style is `"pen"` and a pen plate was painted: then
+        width, except when `drawn_as` is `"pen"` and a pen plate was painted: then
         it tints that plate, whose stroke width is the `route` group's
         `route_pen_width_px`, so the fed width changes nothing drawn. Otherwise the
         fed width also sets how far apart `paint` draws the strands of a

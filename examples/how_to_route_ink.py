@@ -145,7 +145,7 @@ def _violet(
 
 def _row_style(small: Style, brush: str) -> Style:
     """The style of one row: the card at cell size, a wet pen with the row's brush."""
-    ink = dataclasses.replace(small.route_ink, style="pen")
+    ink = dataclasses.replace(small.route_ink, drawn_as="pen")
     return small.model_copy(
         update={
             "route": dataclasses.replace(small.route, route_pen_brush=brush),

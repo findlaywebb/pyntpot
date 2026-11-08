@@ -19,12 +19,12 @@ THEME_NAMES = (
 )
 #: Each example theme's digests, measured from the TOML files on f34de97 and unchanged by 008 S1.
 DIGESTS = {
-    "ambleside-hero": ("86ee79977c816d4e", "149792857eb4656a", "6331518a202c936d"),
-    "ambleside": ("dbf735ec2626eea1", "1fbd4375dceec789", "6331518a202c936d"),
-    "oxford": ("eb46db87c3080b61", "0f73e166ba6ba263", "36480f1b92757e09"),
-    "skye": ("3a172bc9c6816e7a", "b54086dfe786d1f0", "1976288541cb3b07"),
-    "y-fenni": ("d2e1c4c2ddacb647", "90c968b5e78d7058", "3c27e8f97c00b9c4"),
-    "yr-wyddfa": ("53e17a182a7d962b", "58c70051932a610f", "6331518a202c936d"),
+    "ambleside-hero": ("57ddfa002ea48593", "149792857eb4656a", "6331518a202c936d"),
+    "ambleside": ("afccd911c2e29ce4", "1fbd4375dceec789", "6331518a202c936d"),
+    "oxford": ("379133aed2dd33bb", "0f73e166ba6ba263", "36480f1b92757e09"),
+    "skye": ("8d80163e184edea7", "b54086dfe786d1f0", "1976288541cb3b07"),
+    "y-fenni": ("7161092827e066b7", "90c968b5e78d7058", "3c27e8f97c00b9c4"),
+    "yr-wyddfa": ("79f5230efc0d75e4", "58c70051932a610f", "6331518a202c936d"),
 }
 
 

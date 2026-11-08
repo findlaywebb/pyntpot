@@ -242,7 +242,7 @@ PINNED: dict[type, tuple[str, ...]] = {
         "label_geom_tol_px",
         "home_glyph",
     ),
-    RouteInkStyle: ("style", "px", "colour", "blend", "opacity"),
+    RouteInkStyle: ("drawn_as", "px", "colour", "blend", "opacity"),
 }
 
 #: The groups that were copied from the flat painter style, each with the
@@ -401,7 +401,7 @@ MAP_GROUPS: dict[type, dict[str, Any]] = {
     RouteStyle: {},
     BasemapStyle: {},
     LetteringStyle: {},
-    RouteInkStyle: {"style": "solid", "px": 3.0, "colour": "#b5332a"},
+    RouteInkStyle: {"drawn_as": "solid", "px": 3.0, "colour": "#b5332a"},
 }
 
 

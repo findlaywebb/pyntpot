@@ -69,10 +69,10 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S8 — drawn_as (#182)
 
-- [ ] Red: the old key says renamed; `drawn_as` takes pen or solid.
-- [ ] Field, readers, tests, example and `RENAMED_KEYS` row; schema regenerated.
-- [ ] `style-fields.md`'s `drawn_as` row.
-- [ ] Example digests re-pinned to the plan's post-rename literals in `test_example_themes.py` and `test_theme_named.py`; `DIGEST` re-pinned to `88b356ada294ff60`, no `xfail`; both acceptance greps print what the plan states; slice gate green.
+- [x] Red: the old key says renamed; `drawn_as` takes pen or solid.
+- [x] Field, readers, tests, example and `RENAMED_KEYS` row; schema regenerated.
+- [x] `style-fields.md`'s `drawn_as` row.
+- [x] Example digests re-pinned to the plan's post-rename literals in `test_example_themes.py` and `test_theme_named.py`; `DIGEST` re-pinned to `88b356ada294ff60`, no `xfail`; both acceptance greps print what the plan states; slice gate green.
 
 ## S9 — Docs
 

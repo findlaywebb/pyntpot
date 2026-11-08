@@ -137,9 +137,15 @@ class TestUnknownKeys:
             ("wash.bloom", 2, "renamed to blooms")
         ]
 
-    def test_the_real_renamed_table_is_empty(self):
-        """No key has been renamed yet."""
-        assert RENAMED_KEYS == {}
+    def test_the_old_route_ink_key_says_it_was_renamed(self):
+        """The route ink's old key is refused at its line with its new name."""
+        assert _found("route_ink:\n  style: pen\n") == [
+            ("route_ink.style", 2, "renamed to drawn_as")
+        ]
+
+    def test_the_real_renamed_table_holds_the_route_ink_row(self):
+        """The real renamed table holds the route ink's `drawn_as` row and nothing else."""
+        assert RENAMED_KEYS == {("route_ink", "style"): "drawn_as"}
 
 
 class TestStrictValues:
@@ -210,6 +216,12 @@ class TestStrictValues:
     def test_a_wrong_value(self, text: str, expected: tuple[str, int, str]):
         """The wrong value is refused once, at its key and line, with what is wrong."""
         assert _found(text) == [expected]
+
+    def test_drawn_as_takes_pen_or_solid(self):
+        """A route ink `drawn_as` other than `pen` or `solid` is refused with both choices."""
+        assert _found("route_ink:\n  drawn_as: pne\n") == [
+            ("route_ink.drawn_as", 2, "'pne' is not one of 'pen', 'solid'")
+        ]
 
     def test_a_list_missing_every_value_is_reported_once(self):
         """An empty list for a pair is one problem, though both positions are missing."""

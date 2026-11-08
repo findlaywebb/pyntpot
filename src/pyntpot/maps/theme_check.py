@@ -40,7 +40,9 @@ from pyntpot.maps.theme_read import ThemeFile
 from pyntpot.maps.theme_vocab import BRUSH_ID_FIELDS, COLOUR_FIELDS, VOCABULARIES
 
 #: Old key paths and what each is called now; a theme that uses one is told the new name.
-RENAMED_KEYS: dict[tuple[str, ...], str] = {}  # S8 adds a row
+RENAMED_KEYS: dict[tuple[str, ...], str] = {
+    ("route_ink", "style"): "drawn_as",  # ADR 0069 (#182)
+}
 
 #: The top-level key naming the theme a theme overrides.
 EXTENDS = "extends"
