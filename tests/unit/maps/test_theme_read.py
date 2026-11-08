@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from pyntpot.maps.theme_read import ThemeFile, read_theme
+from pyntpot.maps.theme_walk import MAX_DEPTH
 
 PATH = Path("t.yaml")
 
@@ -188,10 +189,9 @@ class TestTheContentIsPlainData:
         assert theme.lines[("brush", "overrides", "stroke", "jitter_px")] == 3
 
     def test_non_string_key(self) -> None:
-        """A key that loads as a number is refused and left out of the table."""
-        theme = _read("a: 1\n5: x\n")
+        """A key that would load as a number is refused in the walk, so nothing loads."""
         assert _found("a: 1\n5: x\n") == [("5", 2, "keys are strings")]
-        assert theme.table == {"a": 1}
+        assert _read("a: 1\n5: x\n").table == {}
 
     def test_a_key_after_one_with_no_value_is_read(self) -> None:
         """A key after one with no value is still read, with its line."""
@@ -214,7 +214,7 @@ class TestTheContentIsPlainData:
 
     def test_conversion_problems_in_line_order(self) -> None:
         """Problems the conversion finds come back in line order."""
-        found = _found("b:\n  x:\n5: 1\na:\n")
+        found = _found("b:\n  x:\nc: [{d: }]\na:\n")
         assert [line for _, line, _ in found] == [2, 3, 4]
 
 
@@ -277,5 +277,100 @@ class TestTheWalkReadsEveryScalar:
             ("a", 1, "cannot read `0b_` as a number"),
             ("b.c", 3, DATE),
             ("b.d", 4, "cannot read `0x_` as a number"),
-            ("2024-01-01", 5, DATE),
+            ("2024-01-01", 5, "keys are strings"),
         ]
+
+
+SPECIAL = "special characters are not allowed"
+
+
+class TestEveryCharacterIsReported:
+    """A character no YAML file may hold is a problem for the file, at its line, never a raise."""
+
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            ("wash:\n  blooms: tr\x00ue\n", ("", 2, f"unacceptable character #x0000: {SPECIAL}")),
+            ("a: 1\nb: \x9f\n", ("", 2, f"unacceptable character #x009f: {SPECIAL}")),
+            ("\x01", ("", 1, f"unacceptable character #x0001: {SPECIAL}")),
+            ("a: 1\r\nb: 2\r\nc: \x08\n", ("", 3, f"unacceptable character #x0008: {SPECIAL}")),
+        ],
+        ids=["nul", "c1-control", "first-character", "crlf-lines"],
+    )
+    def test_a_control_character(self, text: str, expected: tuple[str, int, str]) -> None:
+        """A NUL or a C0 or C1 control character is one problem at its own line."""
+        assert _found(text) == [expected]
+        assert _read(text).table == {}
+
+    def test_far_into_a_long_file(self) -> None:
+        """A control character past the reader's first chunk is still at its own line."""
+        text = "a: 1\n" * 3000 + "b: \x9f\n"
+        assert [line for _, line, _ in _found(text)][-1] == 3001
+
+
+class TestKeysAreStrings:
+    """A plain key that resolves to anything but a string is refused in the walk, so none loads."""
+
+    @pytest.mark.parametrize(
+        ("text", "keys"),
+        [
+            ("null: 1\n~: 2\n", ["null", "~"]),
+            ("true: 1\nTrue: 2\n", ["true", "True"]),
+            ("card:\n  1: a\n  0x1: b\n", ["card.1", "card.0x1"]),
+            ("1.5: a\n.inf: b\n", ["1.5", ".inf"]),
+        ],
+        ids=["null", "bool", "int", "float"],
+    )
+    def test_keys_equal_once_resolved(self, text: str, keys: list[str]) -> None:
+        """Keys spelled apart that resolve alike are each refused as keys, never a raised duplicate."""
+        assert [(key, message) for key, _, message in _found(text)] == [
+            (key, "keys are strings") for key in keys
+        ]
+
+    def test_an_empty_key(self) -> None:
+        """An empty plain key resolves to null and is refused as a key."""
+        assert _found("? \n: 1\n") == [("", 1, "keys are strings")]
+
+    def test_a_date_key(self) -> None:
+        """A key that resolves to a date is refused as a key, not as a value."""
+        assert _found("2024-01-01: 1\n") == [("2024-01-01", 1, "keys are strings")]
+
+    @pytest.mark.parametrize(
+        "text",
+        ["'5': a\n\"5\": b\n", 'a: 1\n"a": 2\n', 'a: 1\n"\\x61": 2\n'],
+        ids=["quoted", "plain-and-quoted", "escaped"],
+    )
+    def test_string_keys_with_one_text_collide(self, text: str) -> None:
+        """Two string keys with the same text are a duplicate, however each is quoted."""
+        assert [(line, message) for _, line, message in _found(text)] == [(2, "duplicate key")]
+
+    def test_a_quoted_null_and_a_plain_null_do_not_collide(self) -> None:
+        """A quoted `null` is a string key; the plain `null` after it is refused as no string."""
+        assert _found("'null': 1\nnull: 2\n") == [("null", 2, "keys are strings")]
+        assert _found("null: 1\n'null': 2\n") == [("null", 1, "keys are strings")]
+
+    def test_quoted_keys_that_look_alike_are_strings(self) -> None:
+        """Quoted `null`, `~` and `true` are three string keys, and none of them a duplicate."""
+        theme = _read("'null': 1\n'~': 2\n'true': 3\n")
+        assert theme.table == {"null": 1, "~": 2, "true": 3}
+        assert theme.problems == ()
+
+
+class TestNestingIsBounded:
+    """A mapping or sequence nested past `MAX_DEPTH` is one problem, never a `RecursionError`."""
+
+    @pytest.mark.parametrize(
+        "text",
+        ["a: " + "[" * 2000 + "]" * 2000 + "\n", "a: " + "{b: " * 600 + "1" + "}" * 600 + "\n"],
+        ids=["sequences", "mappings"],
+    )
+    def test_deep_flow_nesting(self, text: str) -> None:
+        """Thousands of nested flow collections are one problem at the first too deep."""
+        assert [message for _, _, message in _found(text)] == [f"nested more than {MAX_DEPTH} deep"]
+
+    def test_the_cap_itself_reads(self) -> None:
+        """`MAX_DEPTH` open collections read; one more is the problem."""
+        inside = "a: " + "[" * (MAX_DEPTH - 1) + "]" * (MAX_DEPTH - 1) + "\n"
+        assert _found(inside) == []
+        past = "a: " + "[" * MAX_DEPTH + "]" * MAX_DEPTH + "\n"
+        assert _found(past) == [("a", 1, f"nested more than {MAX_DEPTH} deep")]

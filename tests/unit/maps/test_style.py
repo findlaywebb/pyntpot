@@ -9,6 +9,7 @@ import dataclasses
 from pathlib import Path
 from typing import Any
 
+import pydantic
 import pytest
 
 from pyntpot.maps.style import Style, _digest_fields, _table
@@ -155,6 +156,27 @@ class TestThemeIsStrict:
         """A theme in the old format, with a `route_inks.ride` table, is rejected."""
         theme = _write_theme(tmp_path, "route_inks:\n  ride:\n    px: 5.4\n")
         assert _located(theme) == [("route_inks", 1)]
+
+
+class TestDirectConstructionIsStrict:
+    """`Style(...)` from Python refuses an unknown key itself, with no theme in between."""
+
+    @pytest.mark.parametrize(
+        ("given", "location"),
+        [
+            ({"weather": {"wind": 3}}, ("weather",)),
+            ({"wash": {"wet_bleed_pz": 20.0}}, ("wash", "wet_bleed_pz")),
+            ({"route_ink": {"stile": "solid"}}, ("route_ink", "stile")),
+        ],
+        ids=["top-level", "group", "route-ink"],
+    )
+    def test_an_unknown_key_is_refused(
+        self, given: dict[str, dict[str, object]], location: tuple[str, ...]
+    ) -> None:
+        """An unknown group, or an unknown key in a group's dict, fails at that key's location."""
+        with pytest.raises(pydantic.ValidationError) as caught:
+            Style.model_validate(given)
+        assert [error["loc"] for error in caught.value.errors()] == [location]
 
 
 class TestDigests:

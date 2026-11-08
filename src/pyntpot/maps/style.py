@@ -24,8 +24,10 @@ is the theme's, unless a caller feeds its colour and width with `with_route_ink`
 style knows nothing of what a track records.
 
 Invariants: a theme naming an unknown key, at the top level, inside a group or
-inside the route ink, is rejected; a style never changes once built; changing the route
-ink moves `digest` and neither of the other two.
+inside the route ink, is rejected, and so is such a key given to `Style(...)` directly,
+by pydantic itself (`extra="forbid"` here, and its refusal of an unexpected keyword for
+each group dataclass); a style never changes once built; changing the route ink moves
+`digest` and neither of the other two.
 """
 
 import dataclasses
@@ -116,17 +118,6 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
     route_ink: RouteInkStyle = pydantic.Field(default_factory=RouteInkStyle)
     lettering: LetteringStyle = pydantic.Field(default_factory=LetteringStyle)
     basemap: BasemapStyle = pydantic.Field(default_factory=BasemapStyle)
-
-    @pydantic.model_validator(mode="before")
-    @classmethod
-    def _reject_unknown_group_keys(cls, data: object) -> object:
-        """Reject a group table naming a key its dataclass does not have."""
-        if isinstance(data, dict):
-            for name, value in data.items():
-                info = cls.model_fields.get(name)
-                if info is not None and isinstance(info.annotation, type):
-                    _check_keys(info.annotation, value, name)
-        return data
 
     @classmethod
     def from_yaml(cls, path: Path) -> Self:
@@ -267,21 +258,6 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
             px=ink.px if width_px is None else float(width_px),
         )
         return self.model_copy(update={"route_ink": fed})
-
-
-def _check_keys(group: type, value: object, where: str) -> None:
-    """Raise when a table names a key `group` lacks, recursing into nested groups."""
-    if not dataclasses.is_dataclass(group) or not isinstance(value, dict):
-        return
-    hints = typing.get_type_hints(group)
-    known = {spec.name for spec in dataclasses.fields(group)}
-    unknown = sorted(set(value) - known)
-    if unknown:
-        raise ValueError(f"[{where}] has unknown keys {unknown}")
-    for name, inner in value.items():
-        hint = hints.get(name)
-        if isinstance(hint, type):
-            _check_keys(hint, inner, f"{where}.{name}")
 
 
 def _groups() -> dict[str, type]:

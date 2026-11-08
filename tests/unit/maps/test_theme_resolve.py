@@ -70,7 +70,7 @@ class TestTheRuleForATheme:
         """A `.yml` theme is refused with the `.yaml` name it should have."""
         error = _refusal(theme, tmp_path)
         (problem,) = error.problems
-        assert problem.message == "theme files end in .yaml; did you mean 'old.yaml'?"
+        assert problem.message == "'old.yml': theme files end in .yaml; did you mean 'old.yaml'?"
         assert (problem.path, problem.key, problem.line) == (Path("old.yml"), "", None)
 
     @pytest.mark.parametrize("theme", ["old.toml", Path("old.toml")], ids=["str", "path"])
@@ -80,7 +80,8 @@ class TestTheRuleForATheme:
         """A `.toml` theme, named as a `str` or a `Path`, points at the conversion how-to."""
         (problem,) = _refusal(theme, tmp_path).problems
         assert problem.message == (
-            "themes are YAML since ADR 0069: see 'Convert a TOML theme' in the theme how-to"
+            "'old.toml': themes are YAML since ADR 0069: "
+            "see 'Convert a TOML theme' in the theme how-to"
         )
         assert (problem.path, problem.key, problem.line) == (Path("old.toml"), "", None)
 
@@ -88,7 +89,7 @@ class TestTheRuleForATheme:
     def test_a_path_is_never_a_name(self, tmp_path: Path, theme: Path) -> None:
         """A `Path` that does not end in `.yaml` is refused, even when it spells a name."""
         (problem,) = _refusal(theme, tmp_path).problems
-        assert problem.message == "a theme file ends in .yaml"
+        assert problem.message == f"'{theme}': a theme file ends in .yaml"
 
     def test_the_default_name_is_the_base(self, tmp_path: Path) -> None:
         """`default` resolves to the base table itself, reading no file."""
@@ -120,10 +121,41 @@ class TestTheRuleForATheme:
         assert NAME.fullmatch("sepia_2") is None
 
     def test_a_missing_file_is_refused(self, tmp_path: Path) -> None:
-        """A `.yaml` path naming no file is refused, as the file as a whole."""
+        """A `.yaml` path naming no file is refused as given, with the path it was looked for at."""
         (problem,) = _refusal("absent.yaml", tmp_path).problems
-        assert problem.message == "no such theme file"
-        assert (problem.path, problem.key, problem.line) == (tmp_path / "absent.yaml", "", None)
+        assert problem.message == f"no such theme file: {tmp_path / 'absent.yaml'}"
+        assert (problem.path, problem.key, problem.line) == (Path("absent.yaml"), "", None)
+
+    @pytest.mark.parametrize(
+        ("theme", "shown"),
+        [("./bold", "'./bold' is neither"), ("bold/", "'bold/' is neither"), ("", "an empty")],
+        ids=["dot-slash", "trailing-slash", "empty"],
+    )
+    def test_a_refused_theme_is_named_as_given(
+        self, tmp_path: Path, theme: str, shown: str
+    ) -> None:
+        """A refused theme's message spells it as the caller did, and an empty one as empty."""
+        (problem,) = _refusal(theme, tmp_path).problems
+        assert problem.message.startswith(shown)
+
+    def test_an_empty_name_is_refused_with_the_names(self, tmp_path: Path) -> None:
+        """An empty string is an empty theme name, listing the names there are."""
+        (problem,) = _refusal("", tmp_path).problems
+        assert problem.message == f"an empty theme name; available: {', '.join(theme_names())}"
+
+    def test_a_file_that_is_not_utf8_is_refused_at_its_line(self, tmp_path: Path) -> None:
+        """A byte that is not UTF-8 is a problem for the file at the byte's line, not a raise."""
+        (tmp_path / "t.yaml").write_bytes(b"wash:\n  blooms: \xff\n")
+        (problem,) = _refusal("t.yaml", tmp_path).problems
+        assert (problem.path, problem.key, problem.line) == (tmp_path / "t.yaml", "", 2)
+        assert problem.message == "not UTF-8 text: cannot decode byte 0xff"
+
+    def test_a_file_that_cannot_be_read_is_refused(self, tmp_path: Path) -> None:
+        """A `.yaml` path that is a directory is a problem for that path, not a raised `OSError`."""
+        (tmp_path / "t.yaml").mkdir()
+        (problem,) = _refusal("t.yaml", tmp_path).problems
+        assert (problem.path, problem.key, problem.line) == (tmp_path / "t.yaml", "", None)
+        assert problem.message.startswith("cannot be read: ")
 
 
 class TestTheChain:
@@ -178,10 +210,32 @@ class TestTheChain:
         assert len(_refusal("t.yaml", tmp_path).problems) == 1
 
     def test_a_refused_extends_is_located_at_its_line(self, tmp_path: Path) -> None:
-        """A chained `.toml` theme is refused under the `extends` key, at its line."""
-        _write(tmp_path, "t.yaml", "card:\n  display_px: 120\nextends: old.toml\n")
+        """A chained `.toml` theme is refused in the extending file, at its `extends` line."""
+        path = _write(tmp_path, "t.yaml", "card:\n  display_px: 120\nextends: old.toml\n")
         (problem,) = _refusal("t.yaml", tmp_path).problems
-        assert (problem.path, problem.key, problem.line) == (Path("old.toml"), "extends", 3)
+        assert (problem.path, problem.key, problem.line) == (path, "extends", 3)
+        assert problem.message.startswith("'old.toml': themes are YAML since ADR 0069")
+
+    def test_an_extends_that_is_no_name_is_in_the_extending_file(self, tmp_path: Path) -> None:
+        """`extends: Bold` is refused in the file that says it, naming `Bold` in the message."""
+        path = _write(tmp_path, "badname.yaml", "extends: Bold\n")
+        (problem,) = _refusal("badname.yaml", tmp_path).problems
+        assert (problem.path, problem.key, problem.line) == (path, "extends", 1)
+        assert problem.message.startswith("'Bold' is neither a theme name nor a .yaml path")
+
+    def test_a_missing_extends_target_is_in_the_extending_file(self, tmp_path: Path) -> None:
+        """`extends: missing.yaml` is refused at the `extends` line, naming the path it looked at."""
+        path = _write(tmp_path, "t.yaml", "card:\n  display_px: 120\nextends: missing.yaml\n")
+        (problem,) = _refusal("t.yaml", tmp_path).problems
+        assert (problem.path, problem.key, problem.line) == (path, "extends", 3)
+        assert problem.message == f"no such theme file: {tmp_path / 'missing.yaml'}"
+
+    def test_bad_bytes_in_an_extended_file_are_in_that_file(self, tmp_path: Path) -> None:
+        """A theme extending a file that is not UTF-8 reports the problem on that file."""
+        _write(tmp_path, "t.yaml", "extends: base.yaml\n")
+        (tmp_path / "base.yaml").write_bytes(b"\x80\n")
+        (problem,) = _refusal("t.yaml", tmp_path).problems
+        assert (problem.path, problem.line) == (tmp_path / "base.yaml", 1)
 
     def test_a_missing_extends_means_default(self, tmp_path: Path) -> None:
         """A theme with no `extends` overrides the base itself."""

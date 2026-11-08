@@ -14,6 +14,11 @@ file is read and, when the read found nothing, checked; every problem of every f
 the chain is collected, and the chain stops at a file whose read found a problem. A file
 met twice in one chain is an `extends` cycle.
 
+A theme an `extends` names that is refused, missing or a cycle is a problem of the
+extending file, at its `extends` key and line, whose message names the target as written;
+the caller's own theme, which no file names, is a problem of the name or path as given. A
+file that is not UTF-8 text, or cannot be read, is a problem of that file.
+
 Does not check keys or values itself, build a style, or log; imports no style model: the
 caller passes the groups and the base table. The one place a file's read problems are
 reported.
@@ -151,28 +156,32 @@ def _load(theme: str | Path, where: _Named, chain: list[Path]) -> ThemeFile | No
     """
     suffix = PurePath(theme).suffix
     if suffix == _YAML:
-        return _read_path(Path(theme), where, chain)
+        return _read_path(theme, where, chain)
+    given = f"'{theme}'"
     if suffix == ".yml":
         stem = PurePath(theme).stem
-        _refuse(theme, where, f"theme files end in .yaml; did you mean '{stem}.yaml'?")
+        _refuse(theme, where, f"{given}: theme files end in .yaml; did you mean '{stem}.yaml'?")
     if suffix == ".toml":
         _refuse(
             theme,
             where,
-            "themes are YAML since ADR 0069: see 'Convert a TOML theme' in the theme how-to",
+            f"{given}: themes are YAML since ADR 0069: "
+            "see 'Convert a TOML theme' in the theme how-to",
         )
     if isinstance(theme, Path):
-        _refuse(theme, where, "a theme file ends in .yaml")
-    return _read_name(str(theme), where)
+        _refuse(theme, where, f"{given}: a theme file ends in .yaml")
+    return _read_name(theme, where)
 
 
-def _read_path(theme: Path, where: _Named, chain: list[Path]) -> ThemeFile:
+def _read_path(theme: str | Path, where: _Named, chain: list[Path]) -> ThemeFile:
     """Read the `.yaml` file `theme`, relative to `where`'s directory unless absolute.
 
     Raises:
-        ThemeError: When no such file exists, or it is already in `chain`.
+        ThemeError: When no such file exists, it cannot be read as UTF-8 text, or it is
+            already in `chain`.
     """
-    path = theme if theme.is_absolute() else where.directory / theme
+    given = Path(theme)
+    path = given if given.is_absolute() else where.directory / given
     if path.resolve() in chain:
         names = [*(seen.name for seen in chain), path.name]
         problem = ThemeProblem(
@@ -182,9 +191,10 @@ def _read_path(theme: Path, where: _Named, chain: list[Path]) -> ThemeFile:
             message=f"extends cycle: {' -> '.join(names)}",
         )
         raise ThemeError([problem])
-    if not path.is_file():
-        raise ThemeError([ThemeProblem(path=path, key="", line=None, message="no such theme file")])
-    return read_theme(path, path.read_text(encoding="utf-8"))
+    try:
+        return _read_file(path)
+    except FileNotFoundError as exc:
+        _refuse(theme, where, f"no such theme file: {path}", cause=exc)
 
 
 def _read_name(theme: str, where: _Named) -> ThemeFile | None:
@@ -195,6 +205,8 @@ def _read_name(theme: str, where: _Named) -> ThemeFile | None:
     """
     names = theme_names()
     available = ", ".join(names)
+    if not theme:
+        _refuse(theme, where, f"an empty theme name; available: {available}")
     if NAME.fullmatch(theme) is None:
         _refuse(
             theme,
@@ -206,18 +218,46 @@ def _read_name(theme: str, where: _Named) -> ThemeFile | None:
     if theme == DEFAULT:
         return None
     with resources.as_file(_packaged() / f"{theme}{_YAML}") as path:
-        return read_theme(path, path.read_text(encoding="utf-8"))
+        return _read_file(path)
 
 
-def _refuse(theme: str | Path, where: _Named, message: str) -> NoReturn:
-    """Refuse `theme`, named at `where`, with `message`.
+def _read_file(path: Path) -> ThemeFile:
+    """Read the theme file at `path` as UTF-8 text.
 
     Raises:
-        ThemeError: Always, holding the one problem.
+        FileNotFoundError: When there is no file at `path`, for the caller to place.
+        ThemeError: When the file is not UTF-8 text, at the first bad byte's line, or
+            cannot be read.
     """
-    raise ThemeError(
-        [ThemeProblem(path=Path(theme), key=where.key, line=where.line, message=message)]
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        raise
+    except UnicodeDecodeError as exc:
+        line = exc.object.count(b"\n", 0, exc.start) + 1
+        message = f"not UTF-8 text: cannot decode byte 0x{exc.object[exc.start]:02x}"
+        raise ThemeError([ThemeProblem(path=path, key="", line=line, message=message)]) from exc
+    except OSError as exc:
+        message = f"cannot be read: {exc.strerror or exc}"
+        raise ThemeError([ThemeProblem(path=path, key="", line=None, message=message)]) from exc
+    return read_theme(path, text)
+
+
+def _refuse(
+    theme: str | Path, where: _Named, message: str, *, cause: Exception | None = None
+) -> NoReturn:
+    """Refuse `theme`, named at `where`, with `message`, which names `theme` as given.
+
+    The problem is the extending file's, at its `extends` key and line; for the caller's
+    theme, which no file names, it is `theme` itself, as the caller gave it.
+
+    Raises:
+        ThemeError: Always, holding the one problem, from `cause` when there is one.
+    """
+    problem = ThemeProblem(
+        path=where.by or Path(theme), key=where.key, line=where.line, message=message
     )
+    raise ThemeError([problem]) from cause
 
 
 def _packaged() -> Traversable:

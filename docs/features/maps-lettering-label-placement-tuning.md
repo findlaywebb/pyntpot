@@ -159,4 +159,4 @@ this would likely close or narrow.
 1. Which metrics are gates, and which are only reported?
 2. What form does the placement tool take (a local web page, a desktop app, a notebook
    widget), and where does it live against the layers? Do its overrides belong in the
-   theme's TOML, or in a file per card (beside the caller's annotations)?
+   YAML theme (a theme that `extends` the card's own), or in a file per card (beside the caller's annotations)?
