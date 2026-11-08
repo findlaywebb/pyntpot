@@ -1,4 +1,4 @@
-"""Tests for the brush: the brush sheet's cells, the flags that are off by default, the nib rule."""
+"""Tests for the brush: the brush sheet's cells, the brush with its flags off, the nib rule."""
 
 import pytest
 
@@ -6,6 +6,8 @@ from pyntpot.ink.brush import brush_from_id, ink_aux, scaled_brush
 from pyntpot.ink.brush_sheet import PEN_ROWS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.pad import InkPad
+
+from support.flags_off import flags_off
 
 
 def test_a_brush_id_names_a_treatment_and_a_colour():
@@ -33,9 +35,9 @@ def test_a_brush_id_that_names_nothing_is_refused():
         brush_from_id("RIV1-z", 3.0, 2.0, BrushStyle())
 
 
-def test_every_phase_1_brush_flag_is_off_by_default():
-    """A field added here must not move a plate until a theme asks for it."""
-    style = BrushStyle()
+def test_every_phase_1_brush_flag_off_builds_a_plain_brush():
+    """With the phase 1 flags off, the brush carries no reservoir, no directional break and no aux."""
+    style = flags_off(BrushStyle)
     assert not (style.ink_starve or style.dry_directional or style.pen_starve)
     brush, _ = brush_from_id("TRK4-d", 2.4, 2.0, style, "track")
     assert not (brush.starve or brush.dir_dry or brush.pen_starve)
@@ -52,20 +54,14 @@ def test_a_brush_never_takes_the_nib_treatment_or_the_other_way_round():
     assert frozenset({"5", "6", "8"}) == PEN_ROWS
 
 
-def test_every_phase_2_brush_flag_but_the_ink_grid_is_off_by_default():
-    """A field added here must not move a plate until a theme asks for it.
-
-    `ink_ss` is the one exception and is on at 3, because a mark under four
-    render pixels wide cannot be held by the plate's own grid: that is the
-    stair that reads as scratchiness. The rest still have to be
-    inert, and `ink_ss` back at 1 still has to be the pad it always was.
-    """
-    style = BrushStyle()
+def test_every_phase_2_brush_flag_off_but_the_ink_grid_builds_a_plain_pad():
+    """With the phase 2 flags off the brush and pad are inert, and `ink_ss` at 1 is the plain pad."""
+    style = flags_off(BrushStyle)
     assert style.ink_ss == 3
     assert not (style.brush_organic or style.ink_joins or style.stroke_smooth)
     brush, _ = brush_from_id("TRK4-d", 2.4, 2.0, style, "track")
     assert not brush.organic and brush.smooth == 0.0 and brush.unit == 1.0
     assert scaled_brush(brush, 1) is brush
-    pad = InkPad((8, 8), brush, BrushStyle(ink_ss=1))
+    pad = InkPad((8, 8), brush, flags_off(BrushStyle, ink_ss=1))
     assert pad.ss == 1 and pad.tol == 0.0 and not pad.any()
     assert InkPad((8, 8), brush, style).ss == 3

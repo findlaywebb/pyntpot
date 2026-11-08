@@ -10,6 +10,7 @@ from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.style import WashStyle
 from pyntpot.ink.washing import Flow, WashOptions, flow_edge, fluid_modulate, separated, wash
 
+from support.flags_off import flags_off
 from support.washes import fluid_fields, two_squares
 
 
@@ -161,7 +162,7 @@ def test_the_heavy_pigment_settles_in_the_tooth_and_the_light_one_floats():
     """Two pigments out of one wash: one in the pits, one over them."""
     sheet, left, _ = two_squares(200, 320)
     dens = wash(left, sheet, 0.72, 0.30, WashOptions(rim_px=7.0))
-    style = WashStyle(pigment_separation=True)
+    style = flags_off(WashStyle, pigment_separation=True)
     light, heavy = separated(dens, "wood", rgb(PIGMENTS["wood"]), 0.05, sheet, style)
     body = left > 0.5
 

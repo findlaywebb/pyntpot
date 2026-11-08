@@ -15,10 +15,6 @@ import pytest
 from pyntpot.maps.style import Style
 from pyntpot.maps.style_groups import BasemapStyle, CoverStyle, RouteInkStyle
 
-from support import REPO_ROOT
-
-THEME = REPO_ROOT / "src" / "pyntpot" / "maps" / "themes" / "default.toml"
-
 #: A sample of resolved default values, as group, field and pinned value.
 RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
     ("paper", "paper_hex", "#f3ead6"),
@@ -58,12 +54,10 @@ BASE_DIGEST = "d9c56c0811177b0f"
 LETTERING_DIGEST = "d15ae2f30e9ca5ce"
 
 
-def _theme_with(tmp_path: Path, old: str, new: str) -> Path:
-    """Write the default theme with one piece of text replaced."""
-    text = THEME.read_text()
-    assert old in text
+def _write_theme(tmp_path: Path, text: str) -> Path:
+    """Write a theme file holding exactly `text`."""
     target = tmp_path / "theme.toml"
-    target.write_text(text.replace(old, new, 1))
+    target.write_text(text)
     return target
 
 
@@ -104,48 +98,61 @@ class TestDefaultIsResolved:
             assert value == expected[name], name
 
 
+class TestTheModelIsTheDefaultLook:
+    """The groups' defaults are the default look, so a theme names only what it changes."""
+
+    def test_a_trimmed_theme_paints_the_default_look(self, tmp_path: Path) -> None:
+        """A theme naming one wash key keeps the default look's blooms, glazing and landmarks."""
+        theme = tmp_path / "theme.toml"
+        theme.write_text("[wash]\nflow_rim = true\n")
+        style = Style.from_toml(theme)
+        assert (style.wash.blooms, style.paper.km_glazing, style.basemap.landmarks) == (
+            True,
+            True,
+            "all",
+        )
+
+    def test_route_ink_builds_with_no_arguments(self) -> None:
+        """`RouteInkStyle()` builds, and is the pinned route ink."""
+        assert RouteInkStyle() == ROUTE_INK
+
+
 class TestThemeIsStrict:
     """A theme naming a key no group has is rejected."""
 
-    def test_packaged_theme_reads_from_a_path(self) -> None:
-        """Reading the packaged theme file by path gives the default style."""
-        assert Style.from_toml(THEME) == Style.default()
-
     def test_unknown_top_level_key_is_rejected(self, tmp_path: Path) -> None:
         """A table that is not a style group is rejected."""
-        theme = _theme_with(tmp_path, "[paper]\n", "[weather]\nwind = 3\n\n[paper]\n")
+        theme = _write_theme(tmp_path, "[weather]\nwind = 3\n")
         with pytest.raises(pydantic.ValidationError, match="weather"):
             Style.from_toml(theme)
 
     def test_misspelt_wash_key_is_rejected(self, tmp_path: Path) -> None:
         """A misspelt key inside `[wash]` is rejected, not ignored."""
-        theme = _theme_with(tmp_path, "wet_bleed_px = ", "wet_bleed_pz = ")
+        theme = _write_theme(tmp_path, "[wash]\nwet_bleed_pz = 20.0\n")
         with pytest.raises(pydantic.ValidationError, match="wet_bleed_pz"):
             Style.from_toml(theme)
 
     def test_misspelt_route_ink_key_is_rejected(self, tmp_path: Path) -> None:
         """A misspelt key inside a route ink is rejected, not ignored."""
-        theme = _theme_with(tmp_path, 'style = "solid"', 'stile = "solid"')
+        theme = _write_theme(tmp_path, '[route_ink]\nstile = "solid"\n')
         with pytest.raises(pydantic.ValidationError, match="stile"):
             Style.from_toml(theme)
 
     def test_an_effect_key_in_the_route_ink_is_rejected(self, tmp_path: Path) -> None:
         """A casing key, which nothing paints, is rejected inside `[route_ink]`."""
-        theme = _theme_with(tmp_path, 'blend = "normal"', 'blend = "normal"\ncasing_px = 0.25')
+        theme = _write_theme(tmp_path, '[route_ink]\nblend = "normal"\ncasing_px = 0.25\n')
         with pytest.raises(pydantic.ValidationError, match="casing_px"):
             Style.from_toml(theme)
 
     def test_an_effect_table_in_the_route_ink_is_rejected(self, tmp_path: Path) -> None:
         """The old free `effect` table is rejected inside `[route_ink]`."""
-        theme = _theme_with(
-            tmp_path, "[lettering]\n", '[route_ink.effect]\nblend = "normal"\n\n[lettering]\n'
-        )
+        theme = _write_theme(tmp_path, '[route_ink.effect]\nblend = "normal"\n')
         with pytest.raises(pydantic.ValidationError, match="effect"):
             Style.from_toml(theme)
 
     def test_the_four_sport_inks_are_rejected(self, tmp_path: Path) -> None:
         """A theme in the old format, with a `[route_inks.ride]` table, is rejected."""
-        theme = _theme_with(tmp_path, "[route_ink]\n", "[route_inks.ride]\n")
+        theme = _write_theme(tmp_path, "[route_inks.ride]\n")
         with pytest.raises(pydantic.ValidationError, match="route_inks"):
             Style.from_toml(theme)
 

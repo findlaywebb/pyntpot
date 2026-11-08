@@ -11,7 +11,9 @@ from pyntpot.maps.lettering.picks_rivers import pick_rivers
 from pyntpot.maps.projection import track_projection
 from pyntpot.maps.style import Style
 
-#: The `Style` groups the painter and the lettering read, which `class_style` builds.
+from support.flags_off import flags_off
+
+#: The `Style` groups the painter and the lettering read, which `flags_off_style` builds.
 PAINT_GROUPS: tuple[str, ...] = (
     "paper",
     "wash",
@@ -34,8 +36,8 @@ LATS = [51.2250 + 2e-5 * i for i in range(60)]
 LNGS = [-3.8400 + 0.00040 * i for i in range(60)]
 
 
-def class_style(**over: object) -> Style:
-    """The packaged style with every painted group at its class defaults and `over` moved.
+def flags_off_style(**over: object) -> Style:
+    """The packaged style with every painted group's phase flags off and `over` moved.
 
     Each override is named by the field it moves and goes to the group that holds it.
     """
@@ -45,14 +47,14 @@ def class_style(**over: object) -> Style:
     for name in PAINT_GROUPS:
         group = type(getattr(base, name))
         mine = {f.name: left.pop(f.name) for f in dataclasses.fields(group) if f.name in left}
-        groups[name] = group(**mine)
+        groups[name] = flags_off(group, **mine)
     assert not left, f"no group holds {sorted(left)}"
     return base.model_copy(update=groups)
 
 
 def tiny_style(**over: object) -> Style:
     """The approved style, painted small enough to be a unit test."""
-    return class_style(display_px=80, supersample=2, **over)
+    return flags_off_style(display_px=80, supersample=2, **over)
 
 
 def with_fields(basemap: Basemap, **over: object) -> Basemap:

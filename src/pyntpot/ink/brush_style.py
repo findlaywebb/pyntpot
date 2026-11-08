@@ -5,9 +5,8 @@ of line, and the bristle, reservoir and stroke-quality settings of the brush
 itself. A frozen, keyword-only dataclass of plain values, each field documented
 in the class's `Attributes:` section.
 
-It draws nothing and reads no theme. The defaults are the painter's own class
-defaults, not a resolved theme. The paper and the wash live in
-`pyntpot.ink.style`.
+It draws nothing. The defaults are the default look a map is painted with; the
+module reads no theme. The paper and the wash live in `pyntpot.ink.style`.
 
 Invariants: every field belongs to exactly one style group across the
 package; the module imports nothing outside `ink`.
@@ -20,10 +19,9 @@ from dataclasses import dataclass, field
 class BrushStyle:
     """The brushes: which brush each line class takes, how wide, and how it behaves.
 
-    The reservoir, directional dry brush and stroke-quality switches are off
-    or inert by default, until a theme turns one on; `ink_ss`,
-    `bristle_bandlimit_px` and `bristle_drift_coherence` are the exceptions
-    and are on.
+    The reservoir, directional dry brush and stroke-quality switches are on by
+    default, as the default look paints them, and so are `ink_ss`,
+    `bristle_bandlimit_px` and `bristle_drift_coherence`.
 
     Attributes:
         ink_seed: The ink's seed, so the same box paints the same plate every time.
@@ -217,27 +215,27 @@ class BrushStyle:
             "track": {"press_cell_px": 60.0, "jitter_px": 0.65, "wobble_px": 0.40},
         }
     )
-    ink_starve: bool = False
+    ink_starve: bool = True
     ink_reservoir: float = 150.0
     ink_res_floor: float = 0.38
     ink_dip_mult: float = 3.2
     ink_knee: float = 0.62
-    dry_directional: bool = False
+    dry_directional: bool = True
     dry_dir_elong: float = 4.5
     dry_dir_cell_px: float = 0.9
     dry_dir_gain: float = 1.0
     dry_dir_mix: float = 0.8
-    pen_starve: bool = False
+    pen_starve: bool = True
     pen_reservoir: float = 420.0
     pen_thin: float = 0.26
     ink_ss: int = 3
-    brush_organic: bool = False
+    brush_organic: bool = True
     organic_octaves: int = 4
     organic_lacunarity: float = 2.17
     organic_cell_mult: float = 0.5
-    ink_joins: bool = False
+    ink_joins: bool = True
     ink_join_tol_px: float = 2.5
-    stroke_smooth: bool = False
+    stroke_smooth: bool = True
     stroke_smooth_mult: float = 0.7
     bristle_bandlimit_px: float = 0.9
     bristle_contrast: float = 1.0

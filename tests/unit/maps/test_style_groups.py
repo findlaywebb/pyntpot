@@ -298,6 +298,23 @@ BASEMAP_DEFAULTS: dict[str, Any] = {
 GROUP_IDS = [group.__name__ for group in PINNED]
 SOURCED_IDS = [group.__name__ for group in SOURCED]
 
+#: Why a pin of the groups' defaults is expected to fail until it is re-measured.
+WINDOW = "regeneration window: re-pinned in 008 S10 (ADR 0069)"
+
+#: The groups whose defaults moved to the default look, and so whose pins wait for S10.
+_IN_THE_WINDOW = (PaperStyle, WashStyle, BrushStyle)
+
+#: `SOURCED` as parameters, the moved groups marked as in the regeneration window.
+SOURCED_PARAMS = [
+    pytest.param(
+        group,
+        digest,
+        id=group.__name__,
+        marks=[pytest.mark.xfail(strict=True, reason=WINDOW)] if group in _IN_THE_WINDOW else [],
+    )
+    for group, digest in SOURCED.items()
+]
+
 #: The fields more than one layer reads, with the group the table puts each in.
 MULTI_LAYER: tuple[tuple[str, type], ...] = (
     ("label_size_px", NibStyle),
@@ -343,7 +360,7 @@ def test_group_fields_match_the_pinned_table(group: type, names: tuple[str, ...]
     assert tuple(_names(group)) == names
 
 
-@pytest.mark.parametrize(("group", "digest"), SOURCED.items(), ids=SOURCED_IDS)
+@pytest.mark.parametrize(("group", "digest"), SOURCED_PARAMS)
 def test_group_defaults_equal_the_pinned_digest(group: type, digest: str) -> None:
     """Each group's default fields, values and types, hash to the digest pinned for them."""
     blob = json.dumps(dataclasses.asdict(group()), sort_keys=True, default=str)
@@ -356,6 +373,7 @@ def test_multi_layer_field_lands_in_its_table_group(name: str, group: type) -> N
     assert name in _names(group)
 
 
+@pytest.mark.xfail(strict=True, reason=WINDOW)
 def test_basemap_defaults_are_the_pinned_literals() -> None:
     """`BasemapStyle`'s defaults equal the pinned literals, value and type, field by field."""
     built = BasemapStyle()

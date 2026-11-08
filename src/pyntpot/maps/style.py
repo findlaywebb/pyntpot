@@ -3,9 +3,8 @@
 Key type: `Style`, a frozen pydantic model holding one value of each style group:
 `paper`, `wash` and `brush` (ink), `face`, `nib` and `hand` (letters), `card`,
 `ribbon`, `cover`, `route`, `route_ink`, `lettering` and `basemap` (maps).
-`Style.from_toml` reads a theme file; `Style.default` reads the packaged default
-theme, which is the resolved default style the reference sheets were painted with,
-not the groups' dataclass defaults.
+`Style.from_toml` reads a theme file. `Style()` is the default look: every group's
+defaults are the default theme, with nothing overridden.
 
 Three digests key what a style change repaints: `base_digest` over the groups the
 base plates read, `lettering_digest` over the groups only the lettering reads, and
@@ -32,7 +31,6 @@ import math
 import re
 import tomllib
 import typing
-from importlib import resources
 from pathlib import Path
 from typing import Self
 
@@ -97,19 +95,19 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         basemap: What the basemap draws, and how much of it.
     """
 
-    paper: PaperStyle
-    wash: WashStyle
-    brush: BrushStyle
-    face: FaceStyle
-    nib: NibStyle
-    hand: HandStyle
-    card: CardStyle
-    ribbon: RibbonStyle
-    cover: CoverStyle
-    route: RouteStyle
-    route_ink: RouteInkStyle
-    lettering: LetteringStyle
-    basemap: BasemapStyle
+    paper: PaperStyle = pydantic.Field(default_factory=PaperStyle)
+    wash: WashStyle = pydantic.Field(default_factory=WashStyle)
+    brush: BrushStyle = pydantic.Field(default_factory=BrushStyle)
+    face: FaceStyle = pydantic.Field(default_factory=FaceStyle)
+    nib: NibStyle = pydantic.Field(default_factory=NibStyle)
+    hand: HandStyle = pydantic.Field(default_factory=HandStyle)
+    card: CardStyle = pydantic.Field(default_factory=CardStyle)
+    ribbon: RibbonStyle = pydantic.Field(default_factory=RibbonStyle)
+    cover: CoverStyle = pydantic.Field(default_factory=CoverStyle)
+    route: RouteStyle = pydantic.Field(default_factory=RouteStyle)
+    route_ink: RouteInkStyle = pydantic.Field(default_factory=RouteInkStyle)
+    lettering: LetteringStyle = pydantic.Field(default_factory=LetteringStyle)
+    basemap: BasemapStyle = pydantic.Field(default_factory=BasemapStyle)
 
     @pydantic.model_validator(mode="before")
     @classmethod
@@ -127,15 +125,15 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         """Read a theme file: one table per style group.
 
         Args:
-            path: A TOML theme with a table for every group.
+            path: A TOML theme.
 
         Returns:
             The style the theme describes.
 
         Raises:
             tomllib.TOMLDecodeError: When the file is not TOML.
-            pydantic.ValidationError: When a group is missing, a key is unknown at
-                any level, or a value has the wrong type.
+            pydantic.ValidationError: When a key is unknown at any level, or a value
+                has the wrong type.
         """
         with path.open("rb") as handle:
             table = tomllib.load(handle)
@@ -143,10 +141,8 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
 
     @classmethod
     def default(cls) -> Self:
-        """Read the packaged default theme: the resolved default style."""
-        theme = resources.files("pyntpot.maps") / "themes" / "default.toml"
-        with resources.as_file(theme) as path:
-            return cls.from_toml(path)
+        """The default look: every group at its model defaults, nothing overridden."""
+        return cls()
 
     def digest(self) -> str:
         """A short hash of every group, so any style change is seen."""

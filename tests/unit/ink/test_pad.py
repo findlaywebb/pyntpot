@@ -11,6 +11,8 @@ from pyntpot.ink.chains import chain_lines
 from pyntpot.ink.pad import InkPad, ink_density
 from pyntpot.ink.sheet import Sheet
 
+from support.flags_off import flags_off
+
 #: The classes whose repeat was worth measuring, with the brush and width the
 #: plate paints each of them at.
 REPEATERS = [
@@ -31,7 +33,7 @@ def padded(
 ) -> np.ndarray:
     """One straight stroke's density, through the pad the painter uses."""
     h, length = 44, 1500
-    style = replace(BrushStyle(), **style_over)
+    style = flags_off(BrushStyle, **style_over)
     brush, _ = brush_from_id(brush_id, width_px, 2.0, style, over)
     sheet = Sheet(h, length, gran_px=9.0, seed=sheet_seed)
     pts = np.stack([np.linspace(20.0, length - 20.0, 900), np.full(900, h / 2)], axis=1)
@@ -120,7 +122,7 @@ def test_a_road_split_into_ways_is_one_mark_again():
     sheet = Sheet(h, w, gran_px=9.0, seed=11)
 
     def lay(lines: list[np.ndarray], **style_over: object) -> np.ndarray:
-        style = replace(BrushStyle(), **style_over)
+        style = flags_off(BrushStyle, **style_over)
         brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
         pad = InkPad((h, w), brush, style)
         pad.lay([(brush, line) for line in lines], 91)

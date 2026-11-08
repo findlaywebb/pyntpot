@@ -16,6 +16,8 @@ from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.stamping import stamp
 from pyntpot.ink.washing import Flow, WashOptions, wash
 
+from support.flags_off import flags_off
+
 #: `deform_rings` settings with the displacement on: seed, amount, rounds, decay, cap, stop.
 DEFORM = (9, 0.26, 4, 0.55, 16.0, 0.5)
 
@@ -95,7 +97,7 @@ class TestDecoupled:
     def test_a_stroke_that_changes_moves_no_other_stroke(self):
         """Lengthening one stroke, so it draws more, leaves the stroke laid after it as it was."""
         h, w = 90, 400
-        style = BrushStyle()
+        style = flags_off(BrushStyle)
         brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
         sheet = Sheet(h, w, gran_px=9.0, seed=11)
 
@@ -186,7 +188,7 @@ class TestPadStreams:
     def test_a_repeated_stroke_takes_the_next_count(self):
         """The same stroke laid twice in one call is told apart from itself by its count."""
         h, w = 60, 300
-        style = BrushStyle(ink_ss=1)
+        style = flags_off(BrushStyle, ink_ss=1)
         brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
         line = line_at(30.0, 20.0, 280.0)
         pad = InkPad((h, w), brush, style)
@@ -211,7 +213,7 @@ class TestPadStreams:
     def test_joined_strokes_keep_each_its_own_brush(self):
         """With joining on, ways are grouped by brush, so each is stamped with its own."""
         h, w = 60, 300
-        style = BrushStyle(ink_ss=1, ink_joins=True)
+        style = flags_off(BrushStyle, ink_ss=1, ink_joins=True)
         wide, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
         fine, _ = brush_from_id("MAJ2-a", 1.2, 2.0, style, "road_major")
         first, second = line_at(15.0, 20.0, 280.0), line_at(45.0, 20.0, 280.0)
@@ -226,7 +228,7 @@ class TestPadStreams:
     def test_a_join_tolerance_of_zero_joins_nothing(self, tol: float, joined: bool):
         """Two ways meeting end to end are one stroke at a pixel's tolerance and two at none."""
         h, w = 60, 300
-        style = BrushStyle(ink_ss=1, ink_joins=True, ink_join_tol_px=tol)
+        style = flags_off(BrushStyle, ink_ss=1, ink_joins=True, ink_join_tol_px=tol)
         brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
         left, right = line_at(30.0, 20.0, 150.0, 120), line_at(30.0, 150.0, 280.0, 120)
         pad = InkPad((h, w), brush, style)

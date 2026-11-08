@@ -11,9 +11,7 @@ module reads and so belong to no group.
 Base groups feed the base plates; `LetteringStyle` feeds only the lettering;
 `RouteInkStyle` is read only when the route is placed and drawn (`paint` takes the
 strand merge reach from its width), so changing the ink repaints no plate. The defaults
-are the source classes' own defaults, not a resolved theme: the effective
-basemap options and the resolved ink are theme values. `RouteInkStyle`'s style,
-width and colour have no defaults, because no class carries one.
+are the default look; the default theme is these defaults with nothing overridden.
 
 It paints, letters and fetches nothing. The route ink knows nothing of what a
 track records, and holds no casing, glow or shadow: the compose step draws
@@ -268,14 +266,14 @@ class BasemapStyle:
     rivers: str = "key"
     interaction_m: float = 60.0
     interaction_run_m: float = 100.0
-    landmarks: str = "heuristic"
-    landmark_max: int = 8
+    landmarks: str = "all"
+    landmark_max: int = 40
     landmark_radius_m: float = 300.0
     pick_landmarks: tuple[str, ...] = ()
     pick_roads: tuple[str, ...] = ()
     pick_places: tuple[str, ...] = ()
     name_tags: tuple[str, ...] = ("name",)
-    generalise: bool = True
+    generalise: bool = False
     cell_m: float = 60.0
     morph_cells: int = 2
     min_area_ha: float = 4.0
@@ -329,8 +327,8 @@ class RouteInkStyle:
         opacity: How much of the ink is laid, from 0 to 1.
     """
 
-    style: str
-    px: float
-    colour: str
+    style: str = "solid"
+    px: float = 5.4
+    colour: str = "#c22050"
     blend: str = "normal"
     opacity: float = 1.0

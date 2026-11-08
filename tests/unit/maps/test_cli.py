@@ -5,7 +5,6 @@ and `compose` from `pyntpot.maps.pipeline`; every test here waits on the slice t
 """
 
 import shutil
-from importlib import resources
 from pathlib import Path
 
 import pytest
@@ -56,11 +55,9 @@ class TestMap:
         assert (tmp_path / "out.png").is_file()
 
     def test_a_small_display_style_paints_a_map_quickly(self, tmp_path: Path) -> None:
-        """`--style` with a 120-pixel copy of the default theme writes a 240-pixel-wide PNG."""
-        theme = resources.files("pyntpot.maps").joinpath("themes/default.toml").read_text("utf-8")
-        assert "display_px = 900" in theme
+        """`--style` with a theme naming only a 120-pixel display writes a 240-pixel-wide PNG."""
         style = tmp_path / "small.toml"
-        style.write_text(theme.replace("display_px = 900", "display_px = 120"), encoding="utf-8")
+        style.write_text("[card]\ndisplay_px = 120\n", encoding="utf-8")
         cache = tmp_path / "cache"
         shutil.copytree(FIXTURE_DIR, cache)
         out = tmp_path / "out.png"

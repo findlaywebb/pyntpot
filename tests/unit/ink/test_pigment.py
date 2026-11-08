@@ -18,6 +18,7 @@ from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import PaperStyle
 from pyntpot.ink.washing import wash
 
+from support.flags_off import flags_off
 from support.washes import two_squares
 
 
@@ -30,7 +31,7 @@ def test_multiply_is_still_multiply_when_glazing_is_off():
     ]
     base = np.ones((80, 120, 3), np.float32)
     assert np.array_equal(
-        composite(layers, base, PaperStyle()),
+        composite(layers, base, flags_off(PaperStyle)),
         np.clip(base * multiply_plate(layers, 80, 120), 0, 1),
     )
 

@@ -15,6 +15,8 @@ from pyntpot.ink.pad import ink_density
 from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.stamping import stamp
 
+from support.flags_off import flags_off
+
 #: The ink the set-down blot of a `MAJ6-e` pen 1 to 2 render px wide laid before it was kept
 #: on its stroke: its whole Gaussian, of radius 1.2 px (the floor) cut at 4 px, times pool
 #: 0.9 and gain 1.9. Measured on `main` at `b78a1bb`.
@@ -34,7 +36,7 @@ def blot_ink(width_display_px: float, path: np.ndarray, shape: tuple[int, int]) 
 
 def test_the_pen_sets_down_where_it_touches_and_nowhere_else():
     """A nib meeting the paper: extra ink over about a width, then nothing."""
-    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, BrushStyle(), "lane")
+    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, flags_off(BrushStyle), "lane")
     assert tuned.load > 0 and tuned.pool > 0
     assert tuned.load_px == pytest.approx(tuned.width * 0.85)
     bare = replace(tuned, load=0.0, pool=0.0)

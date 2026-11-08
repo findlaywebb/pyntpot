@@ -5,7 +5,7 @@ import pytest
 from pyntpot.maps.basemap import Basemap, River, Road
 from pyntpot.maps.lettering.picks_lines import named_lines
 
-from support.basemaps import class_style, tiny_basemap
+from support.basemaps import flags_off_style, tiny_basemap
 
 
 def _road(name: str, ref: str, line: tuple[tuple[float, float], ...]) -> Road:
@@ -15,7 +15,7 @@ def _road(name: str, ref: str, line: tuple[tuple[float, float], ...]) -> Road:
 
 def _basemap(*roads: Road, rivers: tuple[River, ...] = ()) -> Basemap:
     """A 320 px card, at 9.8 m a display pixel, carrying `roads` and `rivers`."""
-    return tiny_basemap(class_style(display_px=320, supersample=1), roads=roads, rivers=rivers)
+    return tiny_basemap(flags_off_style(display_px=320, supersample=1), roads=roads, rivers=rivers)
 
 
 class TestNamedLines:

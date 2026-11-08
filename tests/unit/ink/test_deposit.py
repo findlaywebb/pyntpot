@@ -18,6 +18,8 @@ from pyntpot.ink.deposit import blot_share, deposit, ink_cover, nib_cover
 from pyntpot.ink.stamping import stamp
 from pyntpot.ink.stroke import Lay, Sampled, StrokeProfile, Tip, Trace
 
+from support.flags_off import flags_off
+
 
 def one_sample(x: float, y: float) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Deposit one sample of weight one at `(x, y)` into fresh 8 by 8 accumulators."""
@@ -52,7 +54,7 @@ def blot(
 
     The pen is `width` render pixels wide with the given pool and gain, on a 201 by 221 plate.
     """
-    brush, _ = brush_from_id("MAJ1-e", 3.0, 2.0, BrushStyle())
+    brush, _ = brush_from_id("MAJ1-e", 3.0, 2.0, flags_off(BrushStyle))
     brush = dataclasses.replace(brush, width=width, pool=pool, pool_gain=gain)
     marks = []
     for b in (brush, dataclasses.replace(brush, pool=0.0)):

@@ -17,6 +17,7 @@ from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.stamping import _nib_spent, stamp
 
+from support.flags_off import flags_off
 from support.properties import UNTIMED
 
 BRUSH_IDS = st.sampled_from(("RIV1-a", "TRK4-d", "MAJ2-a"))
@@ -118,7 +119,7 @@ class TestStamp:
 
 def _blot_ink(render_px: float, line: np.ndarray, seed: int) -> float:
     """The ink a `MAJ6-e` pen's set-down blot adds at scale 2: with its pool less without."""
-    pen, _ = brush_from_id("MAJ6-e", render_px / 2, 2.0, BrushStyle())
+    pen, _ = brush_from_id("MAJ6-e", render_px / 2, 2.0, flags_off(BrushStyle))
     marks = []
     for brush in (pen, replace(pen, pool=0.0)):
         acc = np.zeros((60, 120), np.float32)
