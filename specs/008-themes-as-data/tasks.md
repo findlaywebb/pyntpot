@@ -39,10 +39,10 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S4 — Merge, resolve and `Style.from_yaml`
 
-- [ ] `theme_merge` and its Hypothesis properties over one fixed shape (associative; empty override is the base; inputs unchanged); the leaf-between-tables counterexample pinned.
-- [ ] `theme_resolve`: names by `NAME.fullmatch`, `.yaml` paths, `.yml` and `.toml` refusals for a `str` and a `Path`, a missing `themes/` directory, `extends` chains, cycles; the one reporter of read problems; merges the converted tables.
-- [ ] `Style.from_yaml`; the digest rule reads a factory default; an override and its expanded copy give one digest (property: bools flipped, integers rounded).
-- [ ] The theme-file guard and its planted-file self-tests; digests unchanged; slice gate and coverage gate green.
+- [x] `theme_merge` and its Hypothesis properties over one fixed shape (associative; empty override is the base; inputs unchanged); the leaf-between-tables counterexample pinned.
+- [x] `theme_resolve`: names by `NAME.fullmatch`, `.yaml` paths, `.yml` and `.toml` refusals for a `str` and a `Path`, a missing `themes/` directory, `extends` chains, cycles; the one reporter of read problems; merges the converted tables.
+- [x] `Style.from_yaml`; the digest rule reads a factory default; an override and its expanded copy give one digest (property: bools flipped, integers rounded).
+- [x] The theme-file guard and its planted-file self-tests; digests unchanged; slice gate and coverage gate green.
 
 ## S5 — The schema
 

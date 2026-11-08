@@ -21,8 +21,20 @@ import pydantic
 
 from pyntpot.ink.style import PaperStyle, WashStyle
 from pyntpot.maps import Style
+from pyntpot.maps.style import _base, _groups
+from pyntpot.maps.style_groups import CoverStyle
+from pyntpot.maps.theme_check import EXTENDS, check_theme
+from pyntpot.maps.theme_errors import ThemeError
+from pyntpot.maps.theme_read import read_theme
+from pyntpot.maps.theme_resolve import resolve
 
 from support import REPO_ROOT
+
+#: Where theme files live: the packaged themes and the example themes.
+THEME_DIRS: tuple[Path, ...] = (
+    REPO_ROOT / "src" / "pyntpot" / "maps" / "themes",
+    REPO_ROOT / "examples" / "themes",
+)
 
 
 def fields_without_a_default(groups: Mapping[str, type]) -> list[str]:
@@ -64,6 +76,43 @@ def files_that_restate_the_defaults(package: Path) -> list[str]:
             if path.suffix != ".yaml" and path.name != "theme.schema.json"
         )
     return sorted({path.relative_to(package).as_posix() for path in found})
+
+
+def theme_files() -> list[Path]:
+    """Every YAML theme file among the packaged themes and the example themes, sorted."""
+    return sorted(path for directory in THEME_DIRS for path in directory.glob("*.yaml"))
+
+
+def keys_set_to_their_base_value(theme: Path) -> list[str]:
+    """Name every key `theme` sets to the value the theme it extends already has.
+
+    A theme that does not load is reported as `{file name}: does not load: {problem}`, one
+    entry per problem; otherwise each restated leaf as `{file name}: {dotted key path}`.
+    """
+    try:
+        resolve(theme, relative_to=theme.parent, groups=_groups(), base=_base())
+    except ThemeError as exc:
+        return [f"{theme.name}: does not load: {problem}" for problem in exc.problems]
+    table, _ = check_theme(read_theme(theme, theme.read_text(encoding="utf-8")), _groups())
+    extends = table.get(EXTENDS, "default")
+    assert isinstance(extends, str)
+    below = resolve(extends, relative_to=theme.parent, groups=_groups(), base=_base())
+    sets = {key: value for key, value in table.items() if key != EXTENDS}
+    return sorted(f"{theme.name}: {'.'.join(path)}" for path in _restated(sets, below, ()))
+
+
+def _restated(
+    table: Mapping[str, object], below: Mapping[str, object], where: tuple[str, ...]
+) -> list[tuple[str, ...]]:
+    """The key path of every leaf of `table` equal to the leaf of `below` at the same path."""
+    found: list[tuple[str, ...]] = []
+    for key, value in table.items():
+        under = below.get(key)
+        if isinstance(value, Mapping) and isinstance(under, Mapping):
+            found.extend(_restated(value, under, (*where, key)))
+        elif value == under:
+            found.append((*where, key))
+    return found
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -118,6 +167,12 @@ def test_no_package_file_restates_the_defaults():
     assert files_that_restate_the_defaults(REPO_ROOT / "src" / "pyntpot") == []
 
 
+def test_no_theme_file_sets_a_key_to_its_base_value():
+    """No packaged or example theme loads badly or restates a value of the theme it extends."""
+    found = [entry for theme in theme_files() for entry in keys_set_to_their_base_value(theme)]
+    assert "\n".join(found) == ""
+
+
 class TestTheChecksFindAPlantedDefect:
     """Each check reports the defect planted for it, and nothing in a clean tree."""
 
@@ -158,3 +213,40 @@ class TestTheChecksFindAPlantedDefect:
         themed = tmp_path / "themed"
         _write(themed, "maps/themes/sepia.yaml", "maps/themes/theme.schema.json", "maps/style.py")
         assert files_that_restate_the_defaults(themed) == []
+
+    def test_a_theme_restating_a_default_is_found(self, tmp_path):
+        """A theme setting a key to its default is reported; setting it to another value is not."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("wash:\n  blooms: true\n", encoding="utf-8")
+        assert keys_set_to_their_base_value(theme) == ["t.yaml: wash.blooms"]
+        theme.write_text("wash:\n  blooms: false\n", encoding="utf-8")
+        assert keys_set_to_their_base_value(theme) == []
+
+    def test_a_restated_value_is_found_after_conversion(self, tmp_path):
+        """A whole number written for a float default equal to it is reported."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("wash:\n  wet_bleed_px: 20\n", encoding="utf-8")
+        assert keys_set_to_their_base_value(theme) == ["t.yaml: wash.wet_bleed_px"]
+
+    def test_a_restated_dict_entry_is_found(self, tmp_path):
+        """A dict-field entry set to its default is reported by its dotted path."""
+        wood = CoverStyle().pigments["wood"]
+        theme = tmp_path / "t.yaml"
+        theme.write_text(f'cover:\n  pigments:\n    wood: "{wood}"\n', encoding="utf-8")
+        assert keys_set_to_their_base_value(theme) == ["t.yaml: cover.pigments.wood"]
+
+    def test_the_base_is_the_extended_theme(self, tmp_path):
+        """A key is compared with the theme it extends, not with the default look."""
+        (tmp_path / "base.yaml").write_text("wash:\n  blooms: false\n", encoding="utf-8")
+        child = tmp_path / "child.yaml"
+        child.write_text("extends: base.yaml\nwash:\n  blooms: false\n", encoding="utf-8")
+        assert keys_set_to_their_base_value(child) == ["child.yaml: wash.blooms"]
+        child.write_text("extends: base.yaml\nwash:\n  blooms: true\n", encoding="utf-8")
+        assert keys_set_to_their_base_value(child) == []
+
+    def test_a_theme_that_does_not_load_is_reported(self, tmp_path):
+        """A theme that does not load is reported once per problem, as not loading."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("wash:\n  blom: true\n", encoding="utf-8")
+        (entry,) = keys_set_to_their_base_value(theme)
+        assert entry.startswith("t.yaml: does not load:")

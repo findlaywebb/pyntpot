@@ -12,8 +12,9 @@ from typing import Any
 import pydantic
 import pytest
 
-from pyntpot.maps.style import Style
+from pyntpot.maps.style import Style, _digest_fields
 from pyntpot.maps.style_groups import BasemapStyle, CoverStyle, RouteInkStyle
+from pyntpot.maps.theme_errors import ThemeError
 
 #: A sample of resolved default values, as group, field and pinned value.
 RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
@@ -225,6 +226,54 @@ class TestDigests:
         assert changed.base_digest() != BASE_DIGEST
         assert changed.digest() != DIGEST
         assert changed.lettering_digest() == LETTERING_DIGEST
+
+    def test_a_factory_default_counts_for_the_digest_rule(self) -> None:
+        """A rule field with a default factory is left out at what the factory builds, and kept otherwise."""
+        assert _digest_fields(_FactoryGroup()) == {"px": 1.0}
+        named = _FactoryGroup(name_tags=("name:cy", "name"))
+        assert _digest_fields(named) == {"name_tags": ("name:cy", "name"), "px": 1.0}
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _FactoryGroup:
+    """A planted group whose digest-rule field has a default factory."""
+
+    name_tags: tuple[str, ...] = dataclasses.field(default_factory=lambda: ("name",))
+    px: float = 1.0
+
+
+class TestFromYaml:
+    """`Style.from_yaml` loads a YAML theme over the default look."""
+
+    def test_a_minimal_file_loads(self, tmp_path: Path) -> None:
+        """A theme naming one key gives the default look with that key changed."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("card:\n  display_px: 120\n", encoding="utf-8")
+        style = Style.from_yaml(theme)
+        assert style.card.display_px == 120
+        assert style.wash == Style().wash
+
+    def test_an_error_is_located_at_its_line(self, tmp_path: Path) -> None:
+        """A wrong value raises `ThemeError` whose problem names the value's line."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("card:\n  supersample: 2\n  display_px: '5'\n", encoding="utf-8")
+        with pytest.raises(ThemeError) as caught:
+            Style.from_yaml(theme)
+        assert (caught.value.problems[0].key, caught.value.problems[0].line) == (
+            "card.display_px",
+            3,
+        )
+
+    def test_extends_default_alone_is_the_default_look(self, tmp_path: Path) -> None:
+        """A file holding only `extends: default` loads to `Style()`."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("extends: default\n", encoding="utf-8")
+        assert Style.from_yaml(theme) == Style()
+
+    def test_a_toml_path_is_refused_with_the_conversion_pointer(self) -> None:
+        """A `.toml` path raises `ThemeError` pointing at ADR 0069's conversion."""
+        with pytest.raises(ThemeError, match="ADR 0069"):
+            Style.from_yaml(Path("old.toml"))
 
 
 #: Fed colours that are not a `#` and six hexadecimal digits.
