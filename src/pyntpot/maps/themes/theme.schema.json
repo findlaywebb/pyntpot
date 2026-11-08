@@ -1,0 +1,1620 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://findlaywebb.github.io/pyntpot/reference/theme.schema.json",
+  "title": "pyntpot theme",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "extends": {
+      "type": "string",
+      "description": "A theme name or a .yaml path this theme overrides; default when absent."
+    },
+    "paper": {
+      "type": "object",
+      "description": "The paper: its encoder, grid, texture, seed and the compositing over it.",
+      "additionalProperties": false,
+      "properties": {
+        "plate_lossless": {
+          "type": "boolean",
+          "default": true,
+          "description": "Write the plates as lossless WebP. On, because lossy WebP is what put the two-plateau step in a stroke: it transforms in 4 by 4 blocks and subsamples the chroma to half resolution, so a mark three or four render pixels wide has its edge-to-centre ramp flattened into a light plateau and a dark one with a jump between them, and its paper grain removed. Measured on a woodland plate, wash layer, against the float the painter composed: mean error over the ink 0.023 at quality 74 and still 0.008 at quality 100, blocking ratio 1.15 against 1.01, and on the paper plate a blocking ratio of 2.56 and 63% of the grain gone. No quality setting fixes it, because the chroma subsampling is not a quality setting. Off is the lossy encoder, which uses the two quality numbers below; the plates are then about eighteen times smaller."
+        },
+        "webp_quality": {
+          "type": "integer",
+          "default": 74,
+          "description": "The lossy encoder's quality for the wash plate, when `plate_lossless` is off."
+        },
+        "paper_quality": {
+          "type": "integer",
+          "default": 80,
+          "description": "The lossy encoder's quality for the paper plate and the nib plate, when `plate_lossless` is off."
+        },
+        "grid": {
+          "type": "boolean",
+          "default": false,
+          "description": "The notebook grid. Off by default."
+        },
+        "grid_spacing_px": {
+          "type": "number",
+          "default": 26.0,
+          "description": "The grid's spacing, in display pixels."
+        },
+        "grid_opacity": {
+          "type": "number",
+          "default": 0.34,
+          "description": "How strongly the grid's lines darken the paper, 0 to 1."
+        },
+        "paper_hex": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "default": "#f3ead6",
+          "description": "The paper's cream, as hex."
+        },
+        "paper_tooth": {
+          "type": "number",
+          "default": 0.085,
+          "description": "Paper texture: how strongly the tooth shows."
+        },
+        "paper_worn": {
+          "type": "number",
+          "default": 0.2,
+          "description": "How strongly the worn border shows."
+        },
+        "paper_vignette": {
+          "type": "number",
+          "default": 0.05,
+          "description": "How strongly the vignette darkens the edge."
+        },
+        "paper_foxing": {
+          "type": "number",
+          "default": 0.09,
+          "description": "How strongly the foxing shows."
+        },
+        "paper_edge": {
+          "enum": [
+            "classic",
+            "warm"
+          ],
+          "default": "warm",
+          "description": "How the edge and the foxing look. `\"warm\"` browns a narrow, uneven edge and flecks the sheet with small rust specks; `\"classic\"` is the grey vignette and the broad grey smudges the paper used to have."
+        },
+        "sheet_seed": {
+          "type": "integer",
+          "default": 11,
+          "description": "The paper's seed, so the same box paints the same paper every time."
+        },
+        "km_glazing": {
+          "type": "boolean",
+          "default": true,
+          "description": "Kubelka-Munk glazing in place of multiply for the pigment stack. Multiply is transmission with no scattering, so two washes crossing lose chroma and go grey; Kubelka-Munk gives each pigment absorption and scattering derived from what it shows over white and over black, and composites the layers optically, so the greens and blues keep their hue where they meet."
+        },
+        "pigment_transparency": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "built",
+              "farmland",
+              "heath",
+              "meadow",
+              "orchard",
+              "pale",
+              "relief",
+              "rim",
+              "rock",
+              "sand",
+              "scrub",
+              "water",
+              "wetland",
+              "wood",
+              "works"
+            ]
+          },
+          "additionalProperties": {
+            "type": "number"
+          },
+          "default": {
+            "farmland": 0.1,
+            "meadow": 0.09,
+            "orchard": 0.09,
+            "scrub": 0.08,
+            "heath": 0.14,
+            "sand": 0.16,
+            "rock": 0.22,
+            "wetland": 0.08,
+            "built": 0.26,
+            "works": 0.28,
+            "wood": 0.05,
+            "pale": 0.12,
+            "water": 0.04,
+            "relief": 0.3,
+            "rim": 0.18
+          },
+          "description": "Per-pigment transparency, as `TRANSPARENCY`. Ink and anything unnamed takes `km_transparency`."
+        },
+        "km_transparency": {
+          "type": "number",
+          "default": 0.06,
+          "description": "The transparency of ink and of any pigment `pigment_transparency` does not name."
+        },
+        "paper_fibre": {
+          "type": "boolean",
+          "default": true,
+          "description": "One cold-press paper field: a second fibre noise stretched along a sheet-wide axis, mixed into the tooth, with granulation then taken from the paper's own height rather than an unrelated field. Heavy pigment settles in the pits the dry brush also breaks on."
+        },
+        "paper_fibre_mix": {
+          "type": "number",
+          "default": 0.35,
+          "description": "The fibre noise's weight in the tooth."
+        },
+        "paper_fibre_stretch": {
+          "type": "number",
+          "default": 3.0,
+          "description": "How much longer than it is wide a fibre is."
+        },
+        "paper_fibre_angle": {
+          "type": "number",
+          "default": 0.42,
+          "description": "The angle of the grain, in radians."
+        },
+        "paper_fibre_cell_px": {
+          "type": "number",
+          "default": 4.2,
+          "description": "The fibre's own cell, in render pixels."
+        },
+        "gran_gamma": {
+          "type": "number",
+          "default": 1.7,
+          "description": "How sharply granulation follows the pits. Above 1 the pigment has to reach a real hollow before it settles."
+        }
+      }
+    },
+    "wash": {
+      "type": "object",
+      "description": "How a laid wash behaves: wet bleed, flow rim, blooms, sea, silhouette, fluid.",
+      "additionalProperties": false,
+      "properties": {
+        "wet_bleed": {
+          "type": "boolean",
+          "default": true,
+          "description": "One wet-area field shared across the land classes, so a wash knows another is beside it: inside the union of the cover, neighbours bleed into each other and no class boundary carries its own rim. The outer silhouette of the land keeps its edge, which is the one that should have it."
+        },
+        "wet_bleed_px": {
+          "type": "number",
+          "default": 20.0,
+          "description": "How far the bleed carries, in render pixels."
+        },
+        "wet_bleed_mix": {
+          "type": "number",
+          "default": 0.7,
+          "description": "How far the bleed goes inside the wet area."
+        },
+        "wet_rim_drop": {
+          "type": "number",
+          "default": 1.0,
+          "description": "How much of the rim the bleed takes away inside the wet area."
+        },
+        "wet_bleed_edge_mult": {
+          "type": "number",
+          "default": 2.2,
+          "description": "How far back from the land's outer edge the wet area starts, as a multiple of the cover's own rim width. The silhouette of the whole land mass is the one edge that should stay hard, so the wet field has to end before it does."
+        },
+        "flow_rim": {
+          "type": "boolean",
+          "default": true,
+          "description": "Edge darkening from an outward flow term rather than mask minus blur. Real edge darkening is pigment carried out by evaporation at a pinned contact line: it sits inside the wet boundary, decays inward, and is wider on a large wash instead of one width everywhere."
+        },
+        "flow_rim_exp": {
+          "type": "number",
+          "default": 0.125,
+          "description": "How fast the rim widens with the wash's area. The width is `rim_px` at the reference area and grows as area to this power."
+        },
+        "flow_rim_ref_frac": {
+          "type": "number",
+          "default": 0.02,
+          "description": "The reference area, as a share of the canvas."
+        },
+        "flow_rim_frac": {
+          "type": "number",
+          "default": 0.38,
+          "description": "The distance the rim decays over, as a share of `rim_px`, at that reference area. Well under 1, because an exponential has a tail and the mask-minus-blur rim it replaces does not."
+        },
+        "blooms": {
+          "type": "boolean",
+          "default": true,
+          "description": "Blooms: a re-wet event with no solver. A second front of liquid pushes deposited pigment out into a crenellated ridge, leaving a lighter centre."
+        },
+        "bloom_density": {
+          "type": "number",
+          "default": 1.0,
+          "description": "Blooms per wash, against the square root of its area. 0 turns them off without turning the flag off."
+        },
+        "bloom_max": {
+          "type": "integer",
+          "default": 5,
+          "description": "The most blooms one wash carries."
+        },
+        "bloom_radius_frac": {
+          "type": "number",
+          "default": 0.17,
+          "description": "The bloom's radius as a share of the root of the wash's area."
+        },
+        "bloom_lift": {
+          "type": "number",
+          "default": 0.45,
+          "description": "How much pigment the front lifts out of the centre."
+        },
+        "bloom_warp": {
+          "type": "number",
+          "default": 0.45,
+          "description": "How far the fbm warps the front off a circle."
+        },
+        "bloom_seed": {
+          "type": "integer",
+          "default": 57,
+          "description": "The seed each wash's bloom seed is keyed from, with the wash's name."
+        },
+        "bloom_strength": {
+          "type": "number",
+          "default": 0.65,
+          "description": "How hard a bloom works, as a multiple of `bloom_lift`. A backrun at full strength is a demonstration of a backrun; the effect should be present and not the first thing the eye lands on."
+        },
+        "sea_variation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Large-scale variation in the sea's pigment strength. A flat sea wash is the one place the plate reads as a fill rather than as paint: a real wash over that much paper dries in broad paler and deeper patches, with the pigment worked along the shore rather than across it."
+        },
+        "sea_variation_cell_m": {
+          "type": "number",
+          "default": 600.0,
+          "description": "The size of a patch on the ground, in metres, so the same sea reads the same on a 3 km box and a 40 km box. Converted at the plate's own mpp."
+        },
+        "sea_variation_amount": {
+          "type": "number",
+          "default": 0.5,
+          "description": "How far the density swings across those patches, 0 to 1, where 1 is plus or minus the wash's own density."
+        },
+        "sea_variation_streak": {
+          "type": "number",
+          "default": 0.45,
+          "description": "The streaking that runs along the coast, as its share of the swing. Its direction is taken from the coast itself."
+        },
+        "sea_variation_elong": {
+          "type": "number",
+          "default": 6.0,
+          "description": "How much longer than wide a streak is."
+        },
+        "sea_variation_band_m": {
+          "type": "number",
+          "default": 420.0,
+          "description": "How far out from the shore the streaking still shows, in metres."
+        },
+        "sea_variation_seed": {
+          "type": "integer",
+          "default": 73,
+          "description": "The seed the sea's patches and streaks are drawn from."
+        },
+        "wet_close_px": {
+          "type": "number",
+          "default": 5.0,
+          "description": "How wide a gap in the land cover the wet field closes over, in render pixels, before it backs off from the land's edge. Measured, not guessed: on a woodland plate the classes meet along hairlines of unmapped ground, the median class seam sits 2 px from one, and a wet field taken from the raw union is therefore punched full of holes exactly where two washes meet. At 5 px the share of seam that is wet goes from 0.00 to 0.58 while the dry share of the painting moves 0.148 to 0.140, so the land's outer silhouette is where it was. 0 is the union as it stands."
+        },
+        "silhouette_deform": {
+          "type": "boolean",
+          "default": true,
+          "description": "Recursive midpoint deformation of the land cover's own outlines before they are rasterised. The wash edge is a blurred mask thresholded against two noise scales, so every edge wobbles at the same two frequencies and none of them stays sharp. Displacing the polygon instead, with a variance carried per segment and randomised into each child, gives an outline that is loose in one place and tight in the next. It costs polygon work rather than pixel work. The surveyed coast and the lakes are not deformed: that edge is a fact, not a brush stroke."
+        },
+        "silhouette_deform_amount": {
+          "type": "number",
+          "default": 0.26,
+          "description": "One displacement as a share of the segment it sits on, at the first round."
+        },
+        "silhouette_deform_decay": {
+          "type": "number",
+          "default": 0.55,
+          "description": "How much of that displacement each round hands its children."
+        },
+        "silhouette_deform_depth": {
+          "type": "integer",
+          "default": 4,
+          "description": "How many rounds of midpoint displacement. Each doubles the ring's point count, so this is also the cost."
+        },
+        "silhouette_deform_max_m": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2,
+          "default": [
+            16.0,
+            3.0
+          ],
+          "description": "A ceiling on one displacement, in metres: a floor, and a multiple of the plate's own metres per render pixel, so a long straight field boundary is not thrown across the canvas on a wide box."
+        },
+        "silhouette_deform_min_px": {
+          "type": "number",
+          "default": 1.6,
+          "description": "Where the recursion stops, in render pixels: a segment shorter than this is already below the wash's own edge noise."
+        },
+        "silhouette_deform_seed": {
+          "type": "integer",
+          "default": 73,
+          "description": "The seed the displacements are drawn from."
+        },
+        "pigment_separation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Two-pigment washes. A real wood green is not one pigment: it is a staining green with a heavier blue-black in it, and the two separate as the wash dries, the heavy one settling into the paper's tooth while the light one floats over it. Curtis' pigment separation, as one extra layer per class rather than a second solver. It is meant to be read through `km_glazing`, which is what keeps the two hues apart where they lie over each other."
+        },
+        "separation_pigments": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "built",
+              "farmland",
+              "heath",
+              "meadow",
+              "orchard",
+              "pale",
+              "relief",
+              "rim",
+              "rock",
+              "sand",
+              "scrub",
+              "water",
+              "wetland",
+              "wood",
+              "works"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "default": {
+            "wood": "#6e7f8b"
+          },
+          "description": "The second pigment per class, over white. Only the classes named here separate; anything else stays the one wash it was."
+        },
+        "separation_share": {
+          "type": "number",
+          "default": 0.05,
+          "description": "How much of the wash's density the heavy pigment carries."
+        },
+        "separation_gamma": {
+          "type": "number",
+          "default": 2.2,
+          "description": "How sharply the heavy pigment follows the pits. Above the granulation's gamma, because a pigment that settles out has to reach a real hollow."
+        },
+        "separation_transparency": {
+          "type": "number",
+          "default": 0.07,
+          "description": "What the heavy pigment shows over black, as a share of over white. A blue-black stains, so it is low."
+        },
+        "fluid_pass": {
+          "type": "boolean",
+          "default": true,
+          "description": "One bounded shallow-water pass over the whole canvas, on a coarse grid: velocities from the pressure gradient, a fixed number of relaxation iterations rather than a convergence test, the outward flow at the wet boundary, then pigment advected and deposited. It buys directional drying and edge darkening that varies around a shape, in one pass shared by every class. It modulates the densities the painter already has and never becomes them, so a failure degrades to the plate without it."
+        },
+        "fluid_grid": {
+          "type": "integer",
+          "default": 4,
+          "description": "How much smaller than the plate the grid is. Quarter resolution is what the cost allows; full resolution is several seconds."
+        },
+        "fluid_steps": {
+          "type": "integer",
+          "default": 40,
+          "description": "Steps. A count and not a tolerance: that is what keeps the pass deterministic."
+        },
+        "fluid_relax": {
+          "type": "integer",
+          "default": 4,
+          "description": "Relaxation iterations inside a step, a count for the same reason."
+        },
+        "fluid_amount": {
+          "type": "number",
+          "default": 0.051429,
+          "description": "How far the deposit moves a density, either way."
+        },
+        "fluid_gran": {
+          "type": "number",
+          "default": 0.6,
+          "description": "How much the settling follows the paper's own height."
+        },
+        "fluid_seed": {
+          "type": "integer",
+          "default": 41,
+          "description": "The seed the pass draws from."
+        }
+      }
+    },
+    "brush": {
+      "type": "object",
+      "description": "The brushes: which brush each line class takes, how wide, and how it behaves.",
+      "additionalProperties": false,
+      "properties": {
+        "ink_seed": {
+          "type": "integer",
+          "default": 91,
+          "description": "The ink's seed, so the same box paints the same plate every time."
+        },
+        "river_curve": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "major",
+              "medium",
+              "minor"
+            ]
+          },
+          "additionalProperties": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "default": {
+            "major": [
+              14.2,
+              -0.2,
+              4.0,
+              12.0
+            ],
+            "medium": [
+              10.5,
+              -0.42,
+              2.2,
+              7.0
+            ],
+            "minor": [
+              13.5,
+              -0.78,
+              1.3,
+              8.0
+            ]
+          },
+          "description": "Watercourse width in display pixels: coefficient and exponent on the box in kilometres, then a floor and a ceiling. The exponents are negative, so a line grows in metres as the box grows but shrinks on screen, which is what keeps a river prominent on a big box and a brook modest on it."
+        },
+        "major_river_rel_frac": {
+          "type": "number",
+          "default": 0.65,
+          "description": "Share of the box's longest named river a river's own run has to reach to also count as major. A box-spanning river and a short tributary fully inside the box can otherwise look comparably long against the box's span alone, which can name the short tributary \"major\" alongside the box-spanning river."
+        },
+        "minor_roads_mppd": {
+          "type": "number",
+          "default": 8.0,
+          "description": "Metres per display pixel above which the lanes and tracks are dropped."
+        },
+        "blotch_m": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2,
+          "default": [
+            190.0,
+            26.0
+          ],
+          "description": "The wood's blotch, in metres: a floor, and a multiple of the plate's own metres per display pixel."
+        },
+        "dab_spacing_m": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2,
+          "default": [
+            620.0,
+            95.0
+          ],
+          "description": "The dab spacing, in metres: a floor, and a multiple of the plate's own metres per display pixel."
+        },
+        "gran_m": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2,
+          "default": [
+            70.0,
+            9.0
+          ],
+          "description": "The granulation, in metres: a floor, and a multiple of the plate's own metres per display pixel."
+        },
+        "river_mult": {
+          "type": "number",
+          "default": 1.0,
+          "description": "The importance curve slider, as a multiplier on every painted width."
+        },
+        "brushes": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "coast",
+              "lane",
+              "major",
+              "medium",
+              "minor",
+              "road_major",
+              "track"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {
+            "major": "RIV1-a",
+            "medium": "STR2-a",
+            "minor": "STR3-a",
+            "coast": "STR2-a",
+            "road_major": "MAJ2-a",
+            "lane": "LAN5-a",
+            "track": "TRK4-d"
+          },
+          "description": "Class to brush id. Water is classed by importance, roads by what the track used: a lane is a pen, a track is the dry broken brush."
+        },
+        "brush_width_px": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "lane",
+              "road_major",
+              "track"
+            ]
+          },
+          "additionalProperties": {
+            "type": "number"
+          },
+          "default": {
+            "road_major": 3.6,
+            "lane": 1.8,
+            "track": 2.4
+          },
+          "description": "Painted width in display pixels for the classes whose width is not on the river curve."
+        },
+        "coast_width_frac": {
+          "type": "number",
+          "default": 0.8,
+          "description": "The coast is drawn at this share of a medium watercourse."
+        },
+        "brush_jitter_px": {
+          "type": "number",
+          "default": 0.55,
+          "description": "Shared stroke geometry: how far a bristle wanders sideways, in display pixels, unless `brush_overrides` gives the class its own."
+        },
+        "brush_press_cell_px": {
+          "type": "number",
+          "default": 110.0,
+          "description": "Display pixels per pressure cycle, unless `brush_overrides` gives the class its own."
+        },
+        "brush_wobble_px": {
+          "type": "number",
+          "default": 0.32,
+          "description": "The slow wander of the whole line, in display pixels, unless `brush_overrides` gives the class its own."
+        },
+        "brush_step": {
+          "type": "number",
+          "default": 0.4,
+          "description": "The spacing of the stamps along the path."
+        },
+        "brush_profile_px": {
+          "type": "number",
+          "default": 0.55,
+          "description": "The spacing the tip's profile is sampled at."
+        },
+        "pen_load_px_frac": {
+          "type": "number",
+          "default": 0.85,
+          "description": "How fast the set-down ink runs out, as a multiple of the brush width."
+        },
+        "pen_pool_radius_frac": {
+          "type": "number",
+          "default": 0.5,
+          "description": "Radius of the blot a nib leaves where it touches down, as a share of the brush width."
+        },
+        "pen_pool_gain": {
+          "type": "number",
+          "default": 1.9,
+          "description": "Density of the blot a nib leaves where it touches down."
+        },
+        "brush_overrides": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "coast",
+              "label",
+              "lan",
+              "lane",
+              "maj",
+              "major",
+              "medium",
+              "minor",
+              "riv",
+              "road_major",
+              "route",
+              "str",
+              "track",
+              "trk"
+            ]
+          },
+          "additionalProperties": {
+            "type": "object",
+            "propertyNames": {
+              "enum": [
+                "bleed",
+                "bristles",
+                "darkness",
+                "dry",
+                "gap",
+                "jitter_px",
+                "lift",
+                "load",
+                "pool",
+                "press",
+                "press_cell_px",
+                "solid",
+                "texture",
+                "thr",
+                "wobble_px"
+              ]
+            },
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "default": {
+            "major": {
+              "press_cell_px": 170.0,
+              "jitter_px": 0.55,
+              "wobble_px": 0.25
+            },
+            "medium": {
+              "press_cell_px": 130.0,
+              "jitter_px": 0.5,
+              "wobble_px": 0.3
+            },
+            "minor": {
+              "press_cell_px": 95.0,
+              "jitter_px": 0.55,
+              "wobble_px": 0.35
+            },
+            "coast": {
+              "press_cell_px": 120.0,
+              "jitter_px": 0.4,
+              "wobble_px": 0.2
+            },
+            "lane": {
+              "press_cell_px": 70.0,
+              "jitter_px": 0.3,
+              "wobble_px": 0.55,
+              "pool": 1.4
+            },
+            "track": {
+              "press_cell_px": 60.0,
+              "jitter_px": 0.65,
+              "wobble_px": 0.4
+            }
+          },
+          "description": "The per-class overrides of the shared stroke geometry. The lane's pool is the pen touch-down as it was last tuned: a nib meeting the paper, not a line that starts fat."
+        },
+        "ink_starve": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ink starvation with reload. Each bristle sets off with its own load, spends it with distance along the stroke, faster under more pressure, and the paper gate tightens as the load falls, so a long lane starts loaded and breaks into skips that run along the mark rather than everywhere at once."
+        },
+        "ink_reservoir": {
+          "type": "number",
+          "default": 150.0,
+          "description": "How far a full load carries, as a multiple of the brush's own width. A track at 4.8 render pixels wide runs about 700 px on one load."
+        },
+        "ink_res_floor": {
+          "type": "number",
+          "default": 0.38,
+          "description": "What is left in a bristle when it is nominally empty: a brush never goes to nothing, it goes to a scratch."
+        },
+        "ink_dip_mult": {
+          "type": "number",
+          "default": 3.2,
+          "description": "The dip. A painter reloads, and the seam that leaves is what makes a long line look drawn rather than extruded. In reservoir lengths."
+        },
+        "ink_knee": {
+          "type": "number",
+          "default": 0.62,
+          "description": "How much of the ink survives an empty brush before the paper gate is asked: 1.0 is no darkening at all from the reservoir itself."
+        },
+        "dry_directional": {
+          "type": "boolean",
+          "default": true,
+          "description": "Directional dry brush: the break texture stretched along the stroke, so a dry mark reads as scratches running with the line rather than blotches."
+        },
+        "dry_dir_elong": {
+          "type": "number",
+          "default": 4.5,
+          "description": "How much longer than it is wide a break is."
+        },
+        "dry_dir_cell_px": {
+          "type": "number",
+          "default": 0.9,
+          "description": "The width of one break across the mark, in display pixels. Under the paper's own grain on purpose: a break that is coarser than the tooth it replaces does not break the mark more often, it breaks it in fewer, longer places, and a track stops reading as a track."
+        },
+        "dry_dir_gain": {
+          "type": "number",
+          "default": 1.0,
+          "description": "How hard the directional tooth is, against the paper's own contrast under the same mark. 1.0 swaps the direction of the break and nothing else; above 1 asks for a tooth harsher than the paper."
+        },
+        "dry_dir_mix": {
+          "type": "number",
+          "default": 0.8,
+          "description": "How far the gate moves from the paper's own tooth toward that texture."
+        },
+        "pen_starve": {
+          "type": "boolean",
+          "default": true,
+          "description": "A nib runs down too. Its line does not break, it thins and lightens over a long run and comes back at the reload."
+        },
+        "pen_reservoir": {
+          "type": "number",
+          "default": 420.0,
+          "description": "The nib's run, as a multiple of its width: much longer than a brush's."
+        },
+        "pen_thin": {
+          "type": "number",
+          "default": 0.26,
+          "description": "How much of the width and the ink an empty nib has lost."
+        },
+        "ink_ss": {
+          "type": "integer",
+          "default": 3,
+          "description": "Paint the ink at this multiple of the plate's own grid and Lanczos-reduce it back. The plate is written at `supersample` times the display size and shown at up to one render pixel per device pixel, so the ink's own grid is what the eye reads as pixelation: a 1.8 display pixel lane is under four render pixels wide and its bilinear splat lands on a visible stair. 1 is the plate's grid. Measured on that lane, stamped along a shallow diagonal so it crosses the pixel grid: the mark's weight beats by 1.03% of itself at 1, 0.70% at 2 and 0.73% at 3, and its cross-section carries 0.81 distinct 8-bit levels per pixel at 1, 0.85 at 2, 0.86 at 3 and 0.88 at 4. 3 is where it stops paying: 4 and above buy a hundredth of a level each and cost the square of the grid in memory."
+        },
+        "brush_organic": {
+          "type": "boolean",
+          "default": true,
+          "description": "Non-repeating drift. Off the flag every wander in a stroke is a sine, so a long mark repeats itself: the bristle drift at 390 render pixels and shared by every bristle, the line's wobble at 210 and 69, the pressure at 2 pi times its own cell, and each bristle's break at 116 to 215 with a beat near 500 where two of them differ a little. On the flag each of the four becomes a one dimensional fractal noise sampled along the stroke from the stroke's own lattice, which has no period for the eye to find."
+        },
+        "organic_octaves": {
+          "type": "integer",
+          "default": 4,
+          "description": "Octaves in each of those noises."
+        },
+        "organic_lacunarity": {
+          "type": "number",
+          "default": 2.17,
+          "description": "The ratio between the octaves. Deliberately not 2: octaves an octave apart line up with each other."
+        },
+        "organic_cell_mult": {
+          "type": "number",
+          "default": 0.5,
+          "description": "The coarsest feature, as a share of the sine's own wavelength. At 0.5 a lattice cell is half a wavelength, which is the same feature size, so the flag changes what repeats rather than how the mark looks."
+        },
+        "ink_joins": {
+          "type": "boolean",
+          "default": true,
+          "description": "Join polylines that meet end to end before stamping. OSM splits one road into many ways: a woodland plate's A road arrives as 43 separate strokes, 25 of them under 60 render pixels, and each took a fresh tip pattern, a fresh set-down blob and a fresh lift taper at both ends. That chain of tapered lozenges with a bead at every join is the sectioning the eye catches."
+        },
+        "ink_join_tol_px": {
+          "type": "number",
+          "default": 2.5,
+          "description": "How close two ends have to be to count as the same mark, in render pixels."
+        },
+        "stroke_smooth": {
+          "type": "boolean",
+          "default": true,
+          "description": "Round a corner to the brush's own width before stamping. A generalised track turns 82 degrees at the 95th percentile of its vertices, and a tip stamped straight through that folds over itself and leaves a bead; no brush draws a corner tighter than it is wide."
+        },
+        "stroke_smooth_mult": {
+          "type": "number",
+          "default": 0.7,
+          "description": "The corner radius, as a multiple of the brush's own width."
+        },
+        "bristle_bandlimit_px": {
+          "type": "number",
+          "default": 0.9,
+          "description": "Bandlimit the tip's own lanes to what a mark this wide can show, with this sigma in render pixels. A treatment names a fixed number of logical bristles whatever it is painted at, so `road_major` at 7.2 render pixels carries 22 of them. One bristle is then 0.33 px; a dropped one, which `gap` 0.09 gives about two of per stroke, goes from full weight to nothing and back inside two thirds of a pixel; and the clumping sine lands between 1.3 and 3.1 px, which is the plate's own Nyquist. None of that can be drawn, so what reaches the plate is an alias of it. This smooths the bristle weights and the break texture across the tip, and only those: the deposit positions are untouched, so the mark keeps its width and its edge. Measured on one `road_major` stroke's accumulator, the cross-tip spread against the mark's own envelope, with the drift already shared: 0.191 at 0 and 0.042 at 0.9, where a tip with no drift at all sits at 0.037. It is the second half of the fix and it only shows once the first is in: with the tip still folding it moves that same number from 0.447 to 0.414, which is nothing. 0 leaves the tip unsmoothed. The lanes a mark is genuinely wide enough to show survive it: the major river at 16.8 px keeps its own."
+        },
+        "bristle_contrast": {
+          "type": "number",
+          "default": 1.0,
+          "description": "How hard the tip's lanes are, as a multiplier on the variation about the tip's own mean. It scales what the bristles weigh and where the brush is breaking, and leaves the tip's profile and its pressure alone, so the knob moves the streaking and not the mark. 1.0 is where this is left: with the fold gone and the weights bandlimited, what remains is variation the plate can actually draw, so it is texture rather than an artefact. This is the knob to soften it further, or to ask for more: the same spread is 0.037 at 0.5 and 0.067 at 2.0."
+        },
+        "bristle_drift_coherence": {
+          "type": "number",
+          "default": 0.25,
+          "description": "How much of its sideways drift a bristle shares with its neighbours, as a share of the tip's own width. This is the fault the shared drift fixes. The regular parallel rails along a road, with a hard step from one to the next, are the tip folded over itself: at 0 every bristle's drift phase is drawn independently of the one beside it, so two neighbours can be driven a full amplitude apart. On `road_major` the drift is 1.1 render pixels either way against a bristle spacing of 0.34, so the tip does not lay a band, it collapses into four or five coincident filaments with nearly bare paper between them, and because the phases do not change along the stroke those gaps run its entire length. Measured on one stroke's accumulator, the deepest hole across the tip against the mark's own envelope: 0.24 at coherence 0, which is a bristle's worth of almost nothing in the middle of a road, against 0.61 at 0.25 and 0.92 once the weights are bandlimited too, where a tip with no drift at all sits at 0.94. It is why `ink_ss` 3 made the streaking worse rather than better: the finer grid resolves the folded tip instead of averaging it away. Above 0.25 nothing more is bought, because the drift that is left is then smooth enough that the tip no longer crosses itself. On, it also turns on two things a drifting tip needs and cannot do without: the sampling widens to cover the room the drift asks for, and each sample carries the strip of tip it actually stands on rather than an equal share, so a bunch is no longer a dark filament. 0 draws the phases independently, from a normal draw, and turns neither of those on."
+        }
+      }
+    },
+    "face": {
+      "type": "object",
+      "description": "The face the hand is opened with, and how a glyph is turned into a pen path.",
+      "additionalProperties": false,
+      "properties": {
+        "label_route": {
+          "enum": [
+            "centreline",
+            "outline"
+          ],
+          "default": "centreline",
+          "description": "How a glyph is turned into something the pen follows. `centreline` thins the face's own outline to a written skeleton; `outline` draws round the contour itself. They are two different letters, not a choice and a fallback: nothing falls back from one to the other."
+        },
+        "label_face": {
+          "type": "string",
+          "default": "",
+          "description": "The path of the `.ttf` to open. Empty is the vendored one."
+        }
+      }
+    },
+    "nib": {
+      "type": "object",
+      "description": "The nib: size, inks, widths, angle, and the backing wash laid under a name.",
+      "additionalProperties": false,
+      "properties": {
+        "label_size_px": {
+          "type": "number",
+          "default": 20.0,
+          "description": "The size the hand is written at, in display pixels."
+        },
+        "label_ink": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "default": "#241c14",
+          "description": "The ink the lettering is written in."
+        },
+        "label_brush": {
+          "type": "string",
+          "default": "MAJ6-e",
+          "description": "The nib the lettering is written with. A nib, not a brush: a letter at fourteen pixels breaks up if the mark can break, and a broken letter is a wrong letter rather than a textured one."
+        },
+        "label_pen_width_px": {
+          "type": "number",
+          "default": 1.05,
+          "description": "The nib's width, in display pixels."
+        },
+        "label_outline_width_frac": {
+          "type": "number",
+          "default": 0.62,
+          "description": "The outline trace draws two strokes where the centreline draws one, a stroke's width apart, so the same nib fills the counters and the letter comes out a bolder thing than the face is. It writes with a finer one: this share of the nib's width."
+        },
+        "label_leader_brush": {
+          "type": "string",
+          "default": "MAJ6-e",
+          "description": "The nib every mark that is not a glyph (a leader, a span line, a tick, an underline, a pin) is written with, one step lighter, so the line recedes behind the name."
+        },
+        "label_leader_width_px": {
+          "type": "number",
+          "default": 0.85,
+          "description": "The width of that lighter nib, in display pixels."
+        },
+        "label_pen_angle_deg": {
+          "type": "number",
+          "default": -38.0,
+          "description": "The pen's angle in degrees from the page's horizontal, in display pixels with y down, so a negative angle turns anticlockwise on the page. Without it the letters come out one thickness the whole way round, which is a plotter and not a pen."
+        },
+        "label_pen_thin": {
+          "type": "number",
+          "default": 0.52,
+          "description": "How much of the width the pen takes off a stroke drawn along its angle."
+        },
+        "label_wash": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the backing wash is laid: paper-coloured, laid through the wash machinery, and absent where the ground is already pale enough to read on."
+        },
+        "label_wash_alpha": {
+          "type": "number",
+          "default": 0.5,
+          "description": "The backing wash's strength, before the lift's own gain."
+        },
+        "label_wash_dark_floor": {
+          "type": "number",
+          "default": 0.22,
+          "description": "The ground darkness at and below which no backing wash is laid; it ramps in over the darker ground above it."
+        },
+        "label_wash_spread": {
+          "type": "number",
+          "default": 0.75,
+          "description": "How far out from the marks the backing wash reaches, as a share of the type size."
+        },
+        "label_route_ink": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "default": "#c22050",
+          "description": "The ink a name in the route's own colour is written in, read from the theme like every other field; the default is the default route ink."
+        },
+        "label_water_ink": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "default": "#4a7691",
+          "description": "The ink the `water` token names."
+        },
+        "label_in_water_ink": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "default": "#f8f4e9",
+          "description": "The ink a name written *on* the water is set in. Reversed out of the river in the paper's own cream rather than written into it in a dark ink: the water is a mid-tone, so a dark ink is fighting it from the wrong side. Measured on a painted river, black holds 3.9:1 and this holds 4.7:1, and the difference on the plate is larger than the ratio suggests because the letters no longer share a value with the bridges crossing them."
+        }
+      }
+    },
+    "hand": {
+      "type": "object",
+      "description": "The seed the hand draws every label's randomness from.",
+      "additionalProperties": false,
+      "properties": {
+        "label_seed": {
+          "type": "integer",
+          "default": 17,
+          "description": "Every random draw a label makes comes from this plus the label's own name, so an unchanged set of names letters identically on every render and a deliberate reshuffle is one number."
+        }
+      }
+    },
+    "card": {
+      "type": "object",
+      "description": "The card's display size, its supersampling, and the dark grid's size.",
+      "additionalProperties": false,
+      "properties": {
+        "display_px": {
+          "type": "integer",
+          "default": 900,
+          "description": "Display width of the card in CSS pixels; the height follows its aspect. 900 is the width the plates were set at, and it is what decides whether the lanes and the tracks are drawn: below it, a display pixel is more than eight metres of ground and a lane is not a mark."
+        },
+        "supersample": {
+          "type": "integer",
+          "default": 2,
+          "description": "Painted at this multiple of the display size, so the grain survives a retina screen. 2 is what the plates were set at."
+        },
+        "dark_grid": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2,
+          "default": [
+            80,
+            60
+          ],
+          "description": "Cells across and down of the dark grid the label placer scores against."
+        }
+      }
+    },
+    "ribbon": {
+      "type": "object",
+      "description": "The ribbon: the trimmed extent of the painted ground, and the card around it.",
+      "additionalProperties": false,
+      "properties": {
+        "ribbon_k": {
+          "type": "number",
+          "default": 7.15,
+          "description": "Radius in metres is `ribbon_k * sqrt(box) + ribbon_c`, then the slider; this is the factor on the square root of the box."
+        },
+        "ribbon_c": {
+          "type": "number",
+          "default": 158.0,
+          "description": "The metres added to that, so a small box keeps a generous ribbon."
+        },
+        "ribbon_mult": {
+          "type": "number",
+          "default": 1.0,
+          "description": "The slider, as a multiplier on that. 1.0 leaves the fitted radius unchanged."
+        },
+        "ribbon_min_m": {
+          "type": "number",
+          "default": 420.0,
+          "description": "The smallest fitted radius, in metres."
+        },
+        "ribbon_max_m": {
+          "type": "number",
+          "default": 1250.0,
+          "description": "The largest fitted radius, in metres."
+        },
+        "card_grow_mult": {
+          "type": "number",
+          "default": 1.55,
+          "description": "The card is framed as though the widest ribbon were on, so the same box is composed whatever the slider is set to: the track's bounds grow by the fitted radius times this."
+        },
+        "card_pad_frac": {
+          "type": "number",
+          "default": 0.09,
+          "description": "Padding round the grown bounds, as a fraction of their longer side."
+        },
+        "card_pad_ribbon_frac": {
+          "type": "number",
+          "default": 0.55,
+          "description": "The least padding, as a fraction of the fitted radius."
+        },
+        "card_aspect_min": {
+          "type": "number",
+          "default": 1.12,
+          "description": "The narrowest the card may be, as width over height; a narrower card is widened."
+        },
+        "card_aspect_max": {
+          "type": "number",
+          "default": 1.62,
+          "description": "The widest the card may be, as width over height; a wider card is made taller."
+        },
+        "ribbon_fill": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fill what the outside cannot reach, so the inside of a loop is painted."
+        },
+        "ribbon_tear_frac": {
+          "type": "number",
+          "default": 0.004,
+          "description": "Torn edge, as a fraction of the render width."
+        },
+        "ribbon_tear_floor_px": {
+          "type": "number",
+          "default": 5.0,
+          "description": "The torn edge's floor, in pixels."
+        },
+        "rim_strength": {
+          "type": "number",
+          "default": 0.4,
+          "description": "The pooled edge just inside the tear."
+        },
+        "coast_hard_mask": {
+          "type": "boolean",
+          "default": true,
+          "description": "The coast is a hard edge: nothing the ribbon carries crosses it."
+        },
+        "sea_to_edge": {
+          "type": "boolean",
+          "default": true,
+          "description": "The sea is painted to the edge of the card and never trimmed."
+        }
+      }
+    },
+    "cover": {
+      "type": "object",
+      "description": "Land cover and the wood: the classes, their pigments, and the wood's texture and dabs.",
+      "additionalProperties": false,
+      "properties": {
+        "dither_seed": {
+          "type": "integer",
+          "default": 23,
+          "description": "Seeds, so the same box paints the same map every time."
+        },
+        "land_cover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Paint the cover classes; off, the pale single wash."
+        },
+        "relief": {
+          "type": "boolean",
+          "default": true,
+          "description": "Paint the relief from the elevation grid."
+        },
+        "relief_strength": {
+          "type": "number",
+          "default": 1.0,
+          "description": "Multiplies the relief's density, and the ceiling it is held to. 1.0 is the quiet relief."
+        },
+        "min_patch_px": {
+          "type": "number",
+          "default": 0.0,
+          "description": "Display pixels below which a painted cover patch takes its largest painted neighbour's class; a patch nothing painted touches is kept. Zero keeps every patch."
+        },
+        "cover_cfg": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "built",
+              "farmland",
+              "heath",
+              "meadow",
+              "orchard",
+              "rock",
+              "sand",
+              "scrub",
+              "wetland",
+              "wood",
+              "works"
+            ]
+          },
+          "additionalProperties": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "default": {
+            "farmland": [
+              0.52,
+              0.2
+            ],
+            "meadow": [
+              0.55,
+              0.22
+            ],
+            "orchard": [
+              0.55,
+              0.24
+            ],
+            "scrub": [
+              0.58,
+              0.26
+            ],
+            "heath": [
+              0.6,
+              0.26
+            ],
+            "sand": [
+              0.5,
+              0.22
+            ],
+            "rock": [
+              0.52,
+              0.26
+            ],
+            "wetland": [
+              0.6,
+              0.28
+            ],
+            "built": [
+              0.55,
+              0.2
+            ],
+            "works": [
+              0.58,
+              0.22
+            ],
+            "wood": [
+              0.72,
+              0.3
+            ]
+          },
+          "description": "How dark a wash of each class goes, and how hard its edge pools."
+        },
+        "pigments": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "built",
+              "farmland",
+              "heath",
+              "meadow",
+              "orchard",
+              "pale",
+              "relief",
+              "rim",
+              "rock",
+              "sand",
+              "scrub",
+              "water",
+              "wetland",
+              "wood",
+              "works"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "default": {
+            "farmland": "#dfe0b0",
+            "meadow": "#cfdfae",
+            "orchard": "#d5dda2",
+            "scrub": "#c9d5a4",
+            "heath": "#e0cda2",
+            "sand": "#ecdfbe",
+            "rock": "#dcd6c6",
+            "wetland": "#bfd2cd",
+            "built": "#ddd3c3",
+            "works": "#d2cbc0",
+            "wood": "#a8c286",
+            "pale": "#d5e0b4",
+            "water": "#9ec4de",
+            "relief": "#c9bda4",
+            "rim": "#c2ad91"
+          },
+          "description": "Multiply colours: what a full-strength wash of each pigment transmits."
+        },
+        "pale_base": {
+          "type": "number",
+          "default": 0.5,
+          "description": "The pale single wash drawn instead of the classes when cover is off: its density."
+        },
+        "pale_pool": {
+          "type": "number",
+          "default": 0.16,
+          "description": "How hard that pale wash's edge pools."
+        },
+        "wood_texture": {
+          "type": "number",
+          "default": 0.75,
+          "description": "The wood's texture slider; 0.75 is its default. It is a cross fade over three printed scales, because a texture's scale cannot be changed after it is printed."
+        },
+        "wood_dabs": {
+          "type": "number",
+          "default": 0.78,
+          "description": "The wood's dabs slider, a cross fade the same way; 0.78 is its default."
+        },
+        "wood_tex_scales": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "default": [
+            2.1,
+            1.0,
+            0.45
+          ],
+          "description": "The three printed scales of the wood's texture."
+        },
+        "wood_tex_strengths": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "default": [
+            0.3,
+            0.4,
+            0.48
+          ],
+          "description": "The strength of the texture at each of those scales."
+        },
+        "dab_spacings": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "default": [
+            1.7,
+            1.0,
+            0.6
+          ],
+          "description": "The three dab spacings the dabs slider fades across."
+        },
+        "dab_strengths": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "default": [
+            0.34,
+            0.36,
+            0.38
+          ],
+          "description": "The strength of the dabs at each of those spacings."
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "description": "The route's own painted plate: whether it is drawn, with which nib, how wide.",
+      "additionalProperties": false,
+      "properties": {
+        "route_pen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Paint the route's own plate."
+        },
+        "route_pen_brush": {
+          "type": "string",
+          "default": "MAJ6-e",
+          "description": "The brush the plate is drawn with."
+        },
+        "route_pen_width_px": {
+          "type": "number",
+          "default": 3.0,
+          "description": "The plate's line width, in display pixels."
+        }
+      }
+    },
+    "route_ink": {
+      "type": "object",
+      "description": "How the route is drawn on the map: its style, width, colour, blend and opacity.",
+      "additionalProperties": false,
+      "properties": {
+        "style": {
+          "enum": [
+            "pen",
+            "solid"
+          ],
+          "default": "solid",
+          "description": "`\"pen\"` tints the painted pen plate when one was painted; any other value (every theme says `\"solid\"`) draws the line."
+        },
+        "px": {
+          "type": "number",
+          "default": 5.4,
+          "description": "Width in display pixels; it also sets how near two passes of a retraced route have to come to be drawn as one stroke."
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "default": "#c22050",
+          "description": "Colour as `#rrggbb`."
+        },
+        "blend": {
+          "enum": [
+            "normal",
+            "multiply"
+          ],
+          "default": "normal",
+          "description": "`\"normal\"` lays the ink over the card; `\"multiply\"` multiplies it in, so a dark wash stays dark under it. The compose step rejects any other value."
+        },
+        "opacity": {
+          "type": "number",
+          "default": 1.0,
+          "description": "How much of the ink is laid, from 0 to 1."
+        }
+      }
+    },
+    "lettering": {
+      "type": "object",
+      "description": "Which names a map letters, and how many: the landmark cap and the switches.",
+      "additionalProperties": false,
+      "properties": {
+        "label_max": {
+          "type": "integer",
+          "default": 3,
+          "description": "The landmark cap. The ground carries its own names and the landmarks compete with them; three leaves room for both. Spans have their own cap in `lettering.spans.SPAN_MAX`."
+        },
+        "labels": {
+          "type": "boolean",
+          "default": true,
+          "description": "Letter the map at all. Off, the lettering stage opens no hand: it places no labels or spans and draws no nib plate. The attribution follows `compose`'s `attribution` flag alone."
+        },
+        "label_ground": {
+          "type": "boolean",
+          "default": true,
+          "description": "Letter the settlements, the watercourses and the roads the box holds, as the hierarchy asks: a settlement beside its dot with no leader, a river along its own water in spaced italic, a road number along its own tarmac."
+        },
+        "label_geom_tol_px": {
+          "type": "number",
+          "default": 8.0,
+          "description": "How far a named road or watercourse is simplified before a label is set along it, in display pixels."
+        },
+        "home_glyph": {
+          "type": "boolean",
+          "default": true,
+          "description": "Letter the user's marked places, each under its own name."
+        }
+      }
+    },
+    "basemap": {
+      "type": "object",
+      "description": "What the basemap draws, and how much of it: relief, roads, rivers, landmarks, shapes.",
+      "additionalProperties": false,
+      "properties": {
+        "hillshade_mode": {
+          "enum": [
+            "bands",
+            "raster",
+            "contours",
+            "hachures",
+            "off"
+          ],
+          "default": "off",
+          "description": "`bands` (posterised vector relief), `raster` (the greyscale PNG), `contours`, `hachures`, or `off`. Bands carry the shape at a tenth of the raster's bytes and stay crisp at any size the page draws."
+        },
+        "hillshade_levels": {
+          "type": "integer",
+          "default": 5,
+          "description": "How many bands the posterised relief is cut into."
+        },
+        "hillshade_opacity": {
+          "type": "number",
+          "default": 0.5,
+          "description": "The relief's opacity; no module reads it, and it is kept for the upstream consumer."
+        },
+        "hachure_spacing_m": {
+          "type": "number",
+          "default": 75.0,
+          "description": "Hachures: seed spacing. Stated for a 4 km box and scaled up."
+        },
+        "hachure_min_slope": {
+          "type": "number",
+          "default": 0.035,
+          "description": "Hachures: the gradient below which nothing is drawn."
+        },
+        "hachure_max_length_m": {
+          "type": "number",
+          "default": 90.0,
+          "description": "Hachures: the longest stroke. Stated for a 4 km box and scaled up."
+        },
+        "sea_style": {
+          "enum": [
+            "fill",
+            "waves"
+          ],
+          "default": "fill",
+          "description": "`fill` or `waves`."
+        },
+        "contour_interval": {
+          "type": "number",
+          "default": 50.0,
+          "description": "Contour interval in metres, used when the mode is `contours`. A 20 m interval draws a hatch, not a map."
+        },
+        "roads": {
+          "enum": [
+            "all",
+            "key",
+            "major"
+          ],
+          "default": "key",
+          "description": "`all`, `key` (major plus interacted), or `major`."
+        },
+        "minor_road_classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "tertiary",
+            "unclassified",
+            "residential",
+            "track",
+            "service"
+          ],
+          "description": "The minor highway classes `roads = \"all\"` keeps; the fetch query is unchanged."
+        },
+        "rivers": {
+          "enum": [
+            "all",
+            "key",
+            "rivers"
+          ],
+          "default": "key",
+          "description": "`all`, `key` (rivers plus interacted streams), or `rivers`."
+        },
+        "interaction_m": {
+          "type": "number",
+          "default": 60.0,
+          "description": "Metres within which a minor road or a stream counts as touched."
+        },
+        "interaction_run_m": {
+          "type": "number",
+          "default": 100.0,
+          "description": "Metres of that contact needed before it counts, unless the track crosses."
+        },
+        "landmarks": {
+          "enum": [
+            "heuristic",
+            "all",
+            "payload"
+          ],
+          "default": "all",
+          "description": "`heuristic`, `all` or `payload`."
+        },
+        "landmark_max": {
+          "type": "integer",
+          "default": 40,
+          "description": "The most landmarks the heuristic keeps, stated for a 4 km box."
+        },
+        "landmark_radius_m": {
+          "type": "number",
+          "default": 300.0,
+          "description": "Metres from the track within which the heuristic looks for landmarks, stated for a 4 km box."
+        },
+        "pick_landmarks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Names the payload picked: `pick_landmarks` replaces the landmark heuristic when given."
+        },
+        "pick_roads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Names the payload picked: `pick_roads` keeps a minor road it names."
+        },
+        "pick_places": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Names the payload picked; no module reads it, and it is kept for the upstream consumer."
+        },
+        "name_tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "name"
+          ],
+          "description": "The OSM tags that name a feature, in order of preference: the map letters the first one an element carries, else nothing. `(\"name:cy\", \"name\")` letters Welsh names where OSM has them. The candidate export keeps reading `name`."
+        },
+        "generalise": {
+          "type": "boolean",
+          "default": false,
+          "description": "The generalisation stage, which runs before anything is drawn: the wood, the parkland and the sea are rasterised, closed, opened, decluttered and traced back as a few smooth shapes. Off draws the raw OSM outlines."
+        },
+        "cell_m": {
+          "type": "number",
+          "default": 60.0,
+          "description": "Metres per cell of the working grid, stated for a 4 km box and scaled up."
+        },
+        "morph_cells": {
+          "type": "integer",
+          "default": 2,
+          "description": "Radius of the morphological close and open, in cells."
+        },
+        "min_area_ha": {
+          "type": "number",
+          "default": 4.0,
+          "description": "Hectares below which a blob, or a hole in one, is dropped."
+        },
+        "smooth_passes": {
+          "type": "integer",
+          "default": 3,
+          "description": "Chaikin passes on a traced outline, and on a road or a river."
+        },
+        "blob_jitter_m": {
+          "type": "number",
+          "default": 22.0,
+          "description": "Metres of loose-edge wobble on a wash. Zero draws the measured edge."
+        },
+        "inset_cells": {
+          "type": "integer",
+          "default": 2,
+          "description": "Cells pulled in for the second, darker pass of pigment inside a wash."
+        },
+        "tree_spacing_m": {
+          "type": "number",
+          "default": 450.0,
+          "description": "Metres between tree glyphs inside a wood. Zero scatters none."
+        },
+        "all_variants": {
+          "type": "boolean",
+          "default": false,
+          "description": "Build every relief variant rather than the one the mode asks for, so a page can switch between them without a rebuild."
+        }
+      }
+    }
+  }
+}
