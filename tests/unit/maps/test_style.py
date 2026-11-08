@@ -9,7 +9,6 @@ import dataclasses
 from pathlib import Path
 from typing import Any
 
-import pydantic
 import pytest
 
 from pyntpot.maps.style import Style, _digest_fields
@@ -57,9 +56,16 @@ LETTERING_DIGEST = "d15ae2f30e9ca5ce"
 
 def _write_theme(tmp_path: Path, text: str) -> Path:
     """Write a theme file holding exactly `text`."""
-    target = tmp_path / "theme.toml"
-    target.write_text(text)
+    target = tmp_path / "theme.yaml"
+    target.write_text(text, encoding="utf-8")
     return target
+
+
+def _located(theme: Path) -> list[tuple[str, int | None]]:
+    """The key path and line of each problem `Style.from_yaml` raises for `theme`."""
+    with pytest.raises(ThemeError) as caught:
+        Style.from_yaml(theme)
+    return [(problem.key, problem.line) for problem in caught.value.problems]
 
 
 class TestDefaultIsResolved:
@@ -104,9 +110,8 @@ class TestTheModelIsTheDefaultLook:
 
     def test_a_trimmed_theme_paints_the_default_look(self, tmp_path: Path) -> None:
         """A theme naming one wash key keeps the default look's blooms, glazing and landmarks."""
-        theme = tmp_path / "theme.toml"
-        theme.write_text("[wash]\nflow_rim = true\n")
-        style = Style.from_toml(theme)
+        theme = _write_theme(tmp_path, "wash:\n  flow_rim: true\n")
+        style = Style.from_yaml(theme)
         assert (style.wash.blooms, style.paper.km_glazing, style.basemap.landmarks) == (
             True,
             True,
@@ -119,43 +124,37 @@ class TestTheModelIsTheDefaultLook:
 
 
 class TestThemeIsStrict:
-    """A theme naming a key no group has is rejected."""
+    """A theme naming a key no group has is rejected, at its key path and line."""
 
     def test_unknown_top_level_key_is_rejected(self, tmp_path: Path) -> None:
         """A table that is not a style group is rejected."""
-        theme = _write_theme(tmp_path, "[weather]\nwind = 3\n")
-        with pytest.raises(pydantic.ValidationError, match="weather"):
-            Style.from_toml(theme)
+        theme = _write_theme(tmp_path, "weather:\n  wind: 3\n")
+        assert _located(theme) == [("weather", 1)]
 
     def test_misspelt_wash_key_is_rejected(self, tmp_path: Path) -> None:
-        """A misspelt key inside `[wash]` is rejected, not ignored."""
-        theme = _write_theme(tmp_path, "[wash]\nwet_bleed_pz = 20.0\n")
-        with pytest.raises(pydantic.ValidationError, match="wet_bleed_pz"):
-            Style.from_toml(theme)
+        """A misspelt key inside `wash` is rejected, not ignored."""
+        theme = _write_theme(tmp_path, "wash:\n  wet_bleed_pz: 20.0\n")
+        assert _located(theme) == [("wash.wet_bleed_pz", 2)]
 
     def test_misspelt_route_ink_key_is_rejected(self, tmp_path: Path) -> None:
         """A misspelt key inside a route ink is rejected, not ignored."""
-        theme = _write_theme(tmp_path, '[route_ink]\nstile = "solid"\n')
-        with pytest.raises(pydantic.ValidationError, match="stile"):
-            Style.from_toml(theme)
+        theme = _write_theme(tmp_path, "route_ink:\n  stile: solid\n")
+        assert _located(theme) == [("route_ink.stile", 2)]
 
     def test_an_effect_key_in_the_route_ink_is_rejected(self, tmp_path: Path) -> None:
-        """A casing key, which nothing paints, is rejected inside `[route_ink]`."""
-        theme = _write_theme(tmp_path, '[route_ink]\nblend = "normal"\ncasing_px = 0.25\n')
-        with pytest.raises(pydantic.ValidationError, match="casing_px"):
-            Style.from_toml(theme)
+        """A casing key, which nothing paints, is rejected inside `route_ink`."""
+        theme = _write_theme(tmp_path, "route_ink:\n  blend: normal\n  casing_px: 0.25\n")
+        assert _located(theme) == [("route_ink.casing_px", 3)]
 
     def test_an_effect_table_in_the_route_ink_is_rejected(self, tmp_path: Path) -> None:
-        """The old free `effect` table is rejected inside `[route_ink]`."""
-        theme = _write_theme(tmp_path, '[route_ink.effect]\nblend = "normal"\n')
-        with pytest.raises(pydantic.ValidationError, match="effect"):
-            Style.from_toml(theme)
+        """The old free `effect` table is rejected inside `route_ink`."""
+        theme = _write_theme(tmp_path, "route_ink:\n  effect:\n    blend: normal\n")
+        assert _located(theme) == [("route_ink.effect", 2)]
 
     def test_the_four_sport_inks_are_rejected(self, tmp_path: Path) -> None:
-        """A theme in the old format, with a `[route_inks.ride]` table, is rejected."""
-        theme = _write_theme(tmp_path, "[route_inks.ride]\n")
-        with pytest.raises(pydantic.ValidationError, match="route_inks"):
-            Style.from_toml(theme)
+        """A theme in the old format, with a `route_inks.ride` table, is rejected."""
+        theme = _write_theme(tmp_path, "route_inks:\n  ride:\n    px: 5.4\n")
+        assert _located(theme) == [("route_inks", 1)]
 
 
 class TestDigests:

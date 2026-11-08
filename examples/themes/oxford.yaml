@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# Oxford: a dense city of streets, colleges and bridges. Every road but the service ways and tracks,
+# fine lanes, a honey built-up wash over stone and slate, green quads and the blue Thames and
+# Cherwell, and a maroon wet pen. It overrides the roads, the lanes, the ribbon, the cover pigments,
+# the lettering and the route ink.
+
+brush:
+  brush_width_px:
+    lane: 1.1
+
+nib:
+  label_route_ink: "#7b2335"
+
+ribbon:
+  ribbon_mult: 2.4
+
+cover:
+  cover_cfg:
+    built: [0.7, 0.3]
+    meadow: [0.8, 0.25]
+    wood: [0.85, 0.3]
+    works: [0.8, 0.25]
+  pigments:
+    built: "#ecc98a"
+    farmland: "#c0cf86"
+    heath: "#d6b783"
+    meadow: "#a8c97c"
+    orchard: "#a2b868"
+    pale: "#ead7a3"
+    relief: "#a9906f"
+    rim: "#a58a5f"
+    rock: "#c9c0b0"
+    sand: "#e8d6a2"
+    scrub: "#94ad69"
+    water: "#5f95b5"
+    wetland: "#8fb5a8"
+    wood: "#5c8a55"
+    works: "#c4a98a"
+
+route:
+  route_pen_brush: MAJ1-e
+  route_pen_width_px: 3.4
+
+route_ink:
+  colour: "#7b2335"
+
+lettering:
+  label_max: 4
+
+basemap:
+  roads: all
+  minor_road_classes: [tertiary, unclassified, residential]

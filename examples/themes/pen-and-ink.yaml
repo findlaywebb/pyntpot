@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# Pen and ink: the default theme with the colour washes taken out. The land is a faint grey tint,
+# the wood is ink stipple, and the roads, rivers and route are laid in near-black ink on pale paper,
+# like an etching. It overrides the paper, the cover, the river width, the brush ids, the lettering
+# inks and the route ink.
+
+paper:
+  paper_hex: "#f2eee4"
+  paper_vignette: 0.03
+  paper_foxing: 0.03
+  pigment_transparency:
+    pale: 0.2
+    wood: 0.03
+
+wash:
+  separation_pigments:
+    wood: "#4a4741"
+
+brush:
+  river_mult: 0.5
+  brushes:
+    coast: MAJ2-d
+    lane: TRK4-c
+    major: MAJ2-d
+    medium: MAJ2-d
+    minor: MAJ3-d
+    road_major: MAJ2-d
+    track: TRK4-c
+
+nib:
+  label_ink: "#15110d"
+  label_wash: false
+  label_route_ink: "#15110d"
+  label_water_ink: "#2f4a5c"
+
+cover:
+  land_cover: false
+  relief: false
+  pigments:
+    built: "#d6d1c5"
+    farmland: "#e9e5da"
+    heath: "#e1ddd2"
+    meadow: "#e9e5da"
+    orchard: "#e1ddd2"
+    pale: "#efebe1"
+    relief: "#6f6a60"
+    rim: "#bdb7a9"
+    rock: "#d9d5ca"
+    sand: "#e9e5da"
+    scrub: "#e1ddd2"
+    water: "#c9d1d4"
+    wetland: "#d9dedc"
+    wood: "#4a4741"
+    works: "#d6d1c5"
+
+route_ink:
+  colour: "#15110d"

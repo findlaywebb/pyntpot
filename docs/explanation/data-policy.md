@@ -26,7 +26,7 @@ link cannot be followed.
 
 ![The Ambleside map with its credit lettered small at the bottom right corner, below the foot of the route.](../images/places/ambleside.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/ambleside.toml`. The credit is the small line at the bottom right.*
+*Painted by `examples/place_card.py` with `examples/themes/ambleside.yaml`. The credit is the small line at the bottom right.*
 
 The elevation is NASA's SRTM data, served by OpenTopoData. SRTM carries no use restriction.
 It is credited anyway, and OpenTopoData's public service has its own limits, below.

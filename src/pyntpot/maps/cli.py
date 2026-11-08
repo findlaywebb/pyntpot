@@ -74,7 +74,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     track = Track.from_gpx(args.track)
-    style = Style.from_toml(args.style) if args.style else Style.default()
+    style = Style.from_yaml(args.style) if args.style else Style.default()
     margins = FetchMargins(args.margin_m, max(LANDCOVER_MARGIN_M, args.margin_m))
     cache = Cache(args.cache, margins)
     features = OverpassFeatures(args.contact)

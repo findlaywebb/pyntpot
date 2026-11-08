@@ -69,7 +69,7 @@ and a dry one lays a thinner, paler line.
 
 ![Six small copies of the Ambleside map, each cropped to the loop, in two rows of three. The columns are the route in maroon, indigo and burnt sienna. The top row is a wet pen line, heavy and even. The bottom row is a dry pen line, thinner and paler, and it fades in places. Rows and columns are lettered.](../images/how-to/route-ink-grid.webp)
 
-*Painted by `examples/how_to_route_ink.py`, `figure="grid"`, in `examples/themes/ambleside.toml`. The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`.*
+*Painted by `examples/how_to_route_ink.py`, `figure="grid"`, in `examples/themes/ambleside.yaml`. The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`.*
 
 A few `ribbon` fields crop each cell to the loop. The route uses the theme's `normal` blend.
 A `multiply` route would darken over a river until every colour read as black. A `for` loop

@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# Yr Wyddfa: a mountain ridge, Crib Goch to the summit. Strong relief in slate violet and bracken
+# russet with deep lake blue, a wide ribbon, and a maroon wet pen along the ridge. It overrides the
+# ribbon, the relief, the cover pigments, the lettering and the route ink.
+
+nib:
+  label_route_ink: "#7b2335"
+
+ribbon:
+  ribbon_mult: 4.8
+  card_pad_frac: 0.14
+
+cover:
+  relief_strength: 2.4
+  cover_cfg:
+    heath: [0.85, 0.3]
+    rock: [0.85, 0.3]
+    scrub: [0.8, 0.3]
+  pigments:
+    built: "#cbb9a2"
+    farmland: "#b4bd84"
+    heath: "#cf9560"
+    meadow: "#abc57c"
+    orchard: "#a2b868"
+    pale: "#dccaa4"
+    relief: "#756f8c"
+    rim: "#8a7f96"
+    rock: "#c0b3a6"
+    sand: "#dccaa0"
+    scrub: "#8d8f62"
+    water: "#2f6f9e"
+    wetland: "#7fa0a0"
+    wood: "#587a52"
+    works: "#b3a79a"
+
+route:
+  route_pen_brush: MAJ1-e
+  route_pen_width_px: 3.6
+
+route_ink:
+  colour: "#7b2335"
+
+lettering:
+  label_max: 5

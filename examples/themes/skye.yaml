@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# Skye: an island road trip. A very wide ribbon takes in the whole island; the land is washed in
+# warm heather, moss and bracken with strong relief, the sea (washed from the coast rings) in a deep
+# slate blue, and a maroon wet pen carries the road. It overrides the ribbon, the relief, the cover
+# pigments and the route ink.
+
+wash:
+  separation_pigments:
+    wood: "#587a4c"
+
+nib:
+  label_route_ink: "#7b2335"
+
+ribbon:
+  ribbon_mult: 14.0
+
+cover:
+  relief_strength: 3.0
+  cover_cfg:
+    farmland: [0.85, 0.25]
+    heath: [0.95, 0.3]
+    meadow: [0.85, 0.25]
+    rock: [0.85, 0.3]
+    scrub: [0.9, 0.3]
+    wood: [0.95, 0.3]
+  pigments:
+    built: "#d2bfa6"
+    farmland: "#b9c480"
+    heath: "#9a7490"
+    meadow: "#a7c077"
+    orchard: "#a2b868"
+    pale: "#cdc39a"
+    relief: "#b59a6c"
+    rim: "#c9b58a"
+    rock: "#9a948c"
+    sand: "#e8d9b0"
+    scrub: "#8f9a5c"
+    water: "#4f86ad"
+    wetland: "#8aa89a"
+    wood: "#587a4c"
+    works: "#b9ad9c"
+
+route:
+  route_pen_brush: MAJ1-e
+  route_pen_width_px: 2.2
+
+route_ink:
+  colour: "#7b2335"
+
+lettering:
+  label_max: 2

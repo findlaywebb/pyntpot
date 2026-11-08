@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# Ambleside: the hero, a fell walk. Fells and water fill the frame: a wide ribbon, strong relief, a
+# green, russet and lake-blue palette and a maroon wet pen for the route. It overrides the ribbon,
+# the relief, the cover pigments and the route ink.
+
+nib:
+  label_route_ink: "#7b2335"
+
+ribbon:
+  ribbon_mult: 2.6
+
+cover:
+  relief_strength: 2.0
+  pigments:
+    built: "#cdb899"
+    farmland: "#c0cf86"
+    heath: "#d9b47c"
+    meadow: "#a9cc78"
+    orchard: "#a2b868"
+    pale: "#a8c27c"
+    relief: "#a98e6e"
+    rim: "#8f7757"
+    rock: "#a39b8d"
+    sand: "#e0cf9f"
+    scrub: "#8fa862"
+    water: "#3a86b5"
+    wetland: "#86b0a4"
+    wood: "#5b8f50"
+    works: "#b9ad9c"
+
+route:
+  route_pen_brush: MAJ1-e
+  route_pen_width_px: 3.6
+
+route_ink:
+  colour: "#7b2335"
+
+lettering:
+  label_max: 5
