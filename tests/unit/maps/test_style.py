@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from pyntpot.maps.style import Style, _digest_fields
+from pyntpot.maps.style import Style, _digest_fields, _table
 from pyntpot.maps.style_groups import BasemapStyle, CoverStyle, RouteInkStyle
 from pyntpot.maps.theme_errors import ThemeError
 
@@ -232,6 +232,18 @@ class TestDigests:
         named = _FactoryGroup(name_tags=("name:cy", "name"))
         assert _digest_fields(named) == {"name_tags": ("name:cy", "name"), "px": 1.0}
 
+    def test_only_a_group_instance_has_digest_fields(self) -> None:
+        """A value that is not a style group instance, or a group's class, is refused by name."""
+        with pytest.raises(TypeError, match="is not a style group"):
+            _digest_fields(5)
+        with pytest.raises(TypeError, match="is not a style group"):
+            _digest_fields(_FactoryGroup)
+
+    def test_a_group_entry_that_is_no_mapping_is_refused(self) -> None:
+        """A resolved group entry that is not a mapping is a programming error, named as such."""
+        with pytest.raises(TypeError, match="is not a group table"):
+            _table(5)
+
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class _FactoryGroup:
@@ -268,6 +280,14 @@ class TestFromYaml:
         theme = tmp_path / "t.yaml"
         theme.write_text("extends: default\n", encoding="utf-8")
         assert Style.from_yaml(theme) == Style()
+
+    def test_a_relative_path_is_read_from_the_working_directory(self, tmp_path: Path) -> None:
+        """A relative path is read from the current directory."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("card:\n  display_px: 120\n", encoding="utf-8")
+        relative = theme.relative_to(Path.cwd(), walk_up=True)
+        assert not relative.is_absolute()
+        assert Style.from_yaml(relative).card.display_px == 120
 
     def test_a_toml_path_is_refused_with_the_conversion_pointer(self) -> None:
         """A `.toml` path raises `ThemeError` pointing at ADR 0069's conversion."""
@@ -324,6 +344,10 @@ class TestFedRouteInk:
         """A width that is not a finite number above zero, or is a bool, raises `ValueError`."""
         with pytest.raises(ValueError, match="width"):
             Style.default().with_route_ink(width_px=width_px)
+
+    def test_a_fed_width_under_one_is_taken(self) -> None:
+        """A width above zero but under one pixel is a valid width."""
+        assert Style.default().with_route_ink(width_px=0.5).route_ink.px == 0.5
 
     def test_equal_fed_values_give_equal_digests(self) -> None:
         """A whole-number width equals its float, and a colour's case does not move `digest()`."""

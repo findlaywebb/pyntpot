@@ -10,7 +10,7 @@ from PIL import Image
 
 from pyntpot.maps import Style
 from pyntpot.maps.cli import main
-from pyntpot.maps.theme_errors import ThemeError
+from pyntpot.maps.theme_errors import ThemeError, ThemeProblem
 
 from support.paths import FIXTURE_DIR
 
@@ -100,6 +100,20 @@ def test_named_refuses_a_file() -> None:
         Style.named("sepia.yaml")
 
     assert "Style.named takes a name; use Style.from_yaml for a file" in str(caught.value)
+
+
+def test_named_refuses_a_file_at_the_name_alone() -> None:
+    """The refusal is one problem at the name, with no key or line, and the exact message."""
+    with pytest.raises(ThemeError) as caught:
+        Style.named("sepia.yaml")
+    assert caught.value.problems == (
+        ThemeProblem(
+            path=Path("sepia.yaml"),
+            key="",
+            line=None,
+            message="Style.named takes a name; use Style.from_yaml for a file",
+        ),
+    )
 
 
 @pytest.mark.parametrize("name", PACKAGED, ids=PACKAGED)

@@ -91,7 +91,7 @@ parallel, the merge gate, then S7, S8, S9, S10, S11, S12 in turn. The preview ca
 
 ## S11 — Mutation testing
 
-- [ ] Changed `ink` and `letters` functions run; survivors killed or named as equivalent; `mutation.md`.
+- [x] Changed `ink` and `letters` functions run; survivors killed or named as equivalent; `mutation.md`.
 
 ## S12 — Final review and PR
 

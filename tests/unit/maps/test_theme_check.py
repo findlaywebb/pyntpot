@@ -124,6 +124,12 @@ class TestUnknownKeys:
         """A dict field set to a scalar is told it is a table of keys."""
         assert _found("cover:\n  pigments: red\n") == [("cover.pigments", 2, "is a table of keys")]
 
+    def test_an_entry_after_an_unknown_entry_is_checked(self):
+        """An unknown entry of a dict field leaves the entries after it checked and kept."""
+        table, problems = _check("cover:\n  pigments:\n    wod: '#556b2f'\n    wood: '#556b2f'\n")
+        assert [(p.key, p.line) for p in problems] == [("cover.pigments.wod", 3)]
+        assert table == {"cover": {"pigments": {"wood": "#556b2f"}}}
+
     def test_an_override_entry_given_a_leaf_is_refused(self):
         """A `brush_overrides` entry set to a scalar is told it is a table of keys."""
         found = _found("brush:\n  brush_overrides:\n    lane: 1\n")
@@ -293,6 +299,17 @@ class TestStrictValues:
         theme = ThemeFile(path=Path("t.yaml"), table={"wash": 5}, lines={}, problems=())
         _table, problems = check_theme(theme, _groups())
         assert [(p.key, p.line) for p in problems] == [("wash", None)]
+
+    def test_a_problem_with_no_line_comes_before_line_one(self):
+        """A problem with no line sorts before one on line 1, whatever the table's order."""
+        theme = ThemeFile(
+            path=Path("t.yaml"),
+            table={"wash": {"blooms": "no"}, "paper": 5},
+            lines={("wash",): 1},
+            problems=(),
+        )
+        _table, problems = check_theme(theme, _groups())
+        assert [(p.key, p.line) for p in problems] == [("paper", None), ("wash.blooms", 1)]
 
     def test_a_problem_names_its_file(self):
         """Each problem carries the theme file's path."""

@@ -51,6 +51,14 @@ def test_every_override_key_changes_the_brush(key: str):
     assert with_key != without
 
 
+def test_without_an_override_key_the_overrides_are_read_by_the_lower_case_prefix():
+    """With no override key, the brush reads the overrides under its id's prefix, lower case."""
+    over = BrushStyle(brush_overrides={"riv": {"darkness": 0.317}})
+    plain, _ = brush_from_id("RIV1-a", 8.4, 2.0, BrushStyle(brush_overrides={}))
+    read, _ = brush_from_id("RIV1-a", 8.4, 2.0, over)
+    assert read != plain
+
+
 @pytest.mark.parametrize(
     ("brush_id", "known"),
     [("MAJ6-e", True), ("TRK4-d", True), ("MAJ9-e", False), ("XXX1-a", False), ("MAJ6", False)],

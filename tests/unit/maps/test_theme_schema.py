@@ -7,6 +7,8 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Any, Literal
 
+import pytest
+
 from pyntpot.maps import Style
 from pyntpot.maps.theme_read import read_theme
 from pyntpot.maps.theme_schema import theme_schema
@@ -30,6 +32,47 @@ DIRECTIVE = "# yaml-language-server: $schema="
 
 #: What a stale committed schema's failure says to do.
 STALE = f"regenerate: {REGENERATE}"
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _Odd:
+    """A test-local group with a field of a type the schema does not know."""
+
+    x: complex = 0j
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _OddList:
+    """A test-local group with a list of a type the schema does not know."""
+
+    x: tuple[complex, ...] = ()
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _OddPair:
+    """A test-local group with a pair of a type the schema does not know."""
+
+    x: tuple[complex, complex] = (0j, 0j)
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _Described:
+    """A test-local group whose docstring shapes its fields' descriptions.
+
+    Attributes:
+            A line deeper than an entry, before any entry.
+        a: Alpha,
+
+            continued after a blank line.
+        b: Beta.
+
+    Notes:
+        c: Past the section's end.
+    """
+
+    a: int = 1
+    b: int = 2
+    c: int = 3
 
 
 def _groups() -> dict[str, type]:
@@ -155,6 +198,28 @@ def test_a_colour_field_takes_a_hex_pattern() -> None:
     assert pattern.items() <= schema["properties"]["paper"]["properties"]["paper_hex"].items()
     pigments = schema["properties"]["cover"]["properties"]["pigments"]
     assert pigments["additionalProperties"] == pattern
+
+
+def test_a_group_that_is_no_dataclass_is_refused() -> None:
+    """A group that is not a dataclass is a programming error, named as such."""
+    with pytest.raises(TypeError, match="is not a dataclass"):
+        theme_schema({"odd": int})
+
+
+@pytest.mark.parametrize("group", [_Odd, _OddList, _OddPair], ids=["leaf", "list", "pair"])
+def test_a_type_with_no_schema_is_refused_at_its_path(group: type) -> None:
+    """A field type the walk does not know, alone or in a list, names itself and its key path."""
+    with pytest.raises(TypeError, match=r"^<class 'complex'> at odd\.x has no schema$"):
+        theme_schema({"odd": group})
+
+
+def test_a_description_is_read_from_the_attributes_section_alone() -> None:
+    """An entry's description runs over blank and deeper lines, and stops at the section's end."""
+    schema: Any = theme_schema({"described": _Described})
+    fields = schema["properties"]["described"]["properties"]
+    assert fields["a"]["description"] == "Alpha, continued after a blank line."
+    assert fields["b"]["description"] == "Beta."
+    assert "description" not in fields["c"]
 
 
 def test_a_sub_table_is_an_object_of_its_fields() -> None:
