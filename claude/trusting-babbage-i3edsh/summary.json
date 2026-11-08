@@ -1,0 +1,1592 @@
+{
+  "before": "/home/user/pyntpot",
+  "after": "/tmp/claude-0/-home-user-pyntpot/16004069-5917-5f5b-b5ec-1b551d9b1123/scratchpad/repaint-2/tree",
+  "channel_delta": 2,
+  "max_differing_fraction": 0.005,
+  "files": [
+    {
+      "path": "docs/images/curves/kaleidoscope.webp",
+      "status": "changed",
+      "width": 640,
+      "height": 640,
+      "changed_fraction": 0.33745849609375,
+      "over_bound": true,
+      "max_delta": 124,
+      "box": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/curves/kaleidoscope.webp.diff.png",
+      "crop_image": "docs/images/curves/kaleidoscope.webp.crop.png"
+    },
+    {
+      "path": "docs/images/curves/lissajous.webp",
+      "status": "changed",
+      "width": 640,
+      "height": 640,
+      "changed_fraction": 0.37143798828125,
+      "over_bound": true,
+      "max_delta": 121,
+      "box": [
+        0,
+        68,
+        640,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/curves/lissajous.webp.diff.png",
+      "crop_image": "docs/images/curves/lissajous.webp.crop.png"
+    },
+    {
+      "path": "docs/images/curves/rose.webp",
+      "status": "changed",
+      "width": 640,
+      "height": 640,
+      "changed_fraction": 0.17472900390625,
+      "over_bound": true,
+      "max_delta": 177,
+      "box": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/curves/rose.webp.diff.png",
+      "crop_image": "docs/images/curves/rose.webp.crop.png"
+    },
+    {
+      "path": "docs/images/curves/spirograph.webp",
+      "status": "changed",
+      "width": 640,
+      "height": 640,
+      "changed_fraction": 0.16352783203125,
+      "over_bound": true,
+      "max_delta": 120,
+      "box": [
+        0,
+        72,
+        640,
+        640
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/curves/spirograph.webp.diff.png",
+      "crop_image": "docs/images/curves/spirograph.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-angles.webp",
+      "status": "changed",
+      "width": 840,
+      "height": 386,
+      "changed_fraction": 0.06342524056254627,
+      "over_bound": true,
+      "max_delta": 153,
+      "box": [
+        57,
+        20,
+        811,
+        349
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-angles.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-angles.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-backing.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.36906944444444445,
+      "over_bound": true,
+      "max_delta": 94,
+      "box": [
+        28,
+        6,
+        360,
+        191
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-backing.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-backing.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-centreline.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.06227777777777778,
+      "over_bound": true,
+      "max_delta": 129,
+      "box": [
+        33,
+        37,
+        326,
+        118
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-centreline.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-centreline.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-ground.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.2678611111111111,
+      "over_bound": true,
+      "max_delta": 54,
+      "box": [
+        28,
+        6,
+        360,
+        191
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-ground.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-ground.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-hands.webp",
+      "status": "changed",
+      "width": 840,
+      "height": 335,
+      "changed_fraction": 0.07061122956645345,
+      "over_bound": true,
+      "max_delta": 174,
+      "box": [
+        55,
+        34,
+        785,
+        299
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-hands.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-hands.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-runs-dry.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.05325,
+      "over_bound": true,
+      "max_delta": 150,
+      "box": [
+        25,
+        55,
+        335,
+        145
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-runs-dry.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-runs-dry.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/nib-set-down.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 200,
+      "changed_fraction": 0.05665277777777778,
+      "over_bound": true,
+      "max_delta": 130,
+      "box": [
+        25,
+        54,
+        336,
+        147
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/nib-set-down.webp.diff.png",
+      "crop_image": "docs/images/explanation/nib-set-down.webp.crop.png"
+    },
+    {
+      "path": "docs/images/explanation/wash-glaze.webp",
+      "status": "changed",
+      "width": 800,
+      "height": 350,
+      "changed_fraction": 0.12801071428571428,
+      "over_bound": true,
+      "max_delta": 95,
+      "box": [
+        0,
+        12,
+        800,
+        350
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/explanation/wash-glaze.webp.diff.png",
+      "crop_image": "docs/images/explanation/wash-glaze.webp.crop.png"
+    },
+    {
+      "path": "docs/images/gallery/brush-stroke.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 240,
+      "changed_fraction": 0.14123842592592592,
+      "over_bound": true,
+      "max_delta": 119,
+      "box": [
+        0,
+        0,
+        360,
+        240
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/gallery/brush-stroke.webp.diff.png",
+      "crop_image": "docs/images/gallery/brush-stroke.webp.crop.png"
+    },
+    {
+      "path": "docs/images/gallery/composition.webp",
+      "status": "changed",
+      "width": 480,
+      "height": 320,
+      "changed_fraction": 0.3146614583333333,
+      "over_bound": true,
+      "max_delta": 116,
+      "box": [
+        0,
+        17,
+        480,
+        320
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/gallery/composition.webp.diff.png",
+      "crop_image": "docs/images/gallery/composition.webp.crop.png"
+    },
+    {
+      "path": "docs/images/gallery/lettering.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 240,
+      "changed_fraction": 0.017106481481481483,
+      "over_bound": true,
+      "max_delta": 98,
+      "box": [
+        90,
+        89,
+        216,
+        131
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/gallery/lettering.webp.diff.png",
+      "crop_image": "docs/images/gallery/lettering.webp.crop.png"
+    },
+    {
+      "path": "docs/images/gallery/nib-line.webp",
+      "status": "changed",
+      "width": 320,
+      "height": 213,
+      "changed_fraction": 0.12078931924882629,
+      "over_bound": true,
+      "max_delta": 134,
+      "box": [
+        79,
+        19,
+        254,
+        182
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/gallery/nib-line.webp.diff.png",
+      "crop_image": "docs/images/gallery/nib-line.webp.crop.png"
+    },
+    {
+      "path": "docs/images/gallery/wash.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 240,
+      "changed_fraction": 0.21994212962962964,
+      "over_bound": true,
+      "max_delta": 12,
+      "box": [
+        1,
+        0,
+        360,
+        240
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/gallery/wash.webp.diff.png",
+      "crop_image": "docs/images/gallery/wash.webp.crop.png"
+    },
+    {
+      "path": "docs/images/how-to/own-shapes.webp",
+      "status": "changed",
+      "width": 480,
+      "height": 320,
+      "changed_fraction": 0.21035807291666667,
+      "over_bound": true,
+      "max_delta": 125,
+      "box": [
+        3,
+        95,
+        480,
+        320
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/how-to/own-shapes.webp.diff.png",
+      "crop_image": "docs/images/how-to/own-shapes.webp.crop.png"
+    },
+    {
+      "path": "docs/images/how-to/route-ink-grid.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 306,
+      "changed_fraction": 0.20469317356572259,
+      "over_bound": true,
+      "max_delta": 93,
+      "box": [
+        16,
+        0,
+        720,
+        306
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/how-to/route-ink-grid.webp.diff.png",
+      "crop_image": "docs/images/how-to/route-ink-grid.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/derwentwater.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 480,
+      "changed_fraction": 0.41942708333333334,
+      "over_bound": true,
+      "max_delta": 95,
+      "box": [
+        0,
+        0,
+        720,
+        480
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/derwentwater.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/derwentwater.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/fern-family.webp",
+      "status": "changed",
+      "width": 900,
+      "height": 1200,
+      "changed_fraction": 0.10543148148148149,
+      "over_bound": true,
+      "max_delta": 43,
+      "box": [
+        0,
+        72,
+        900,
+        1200
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/fern-family.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/fern-family.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/fern.webp",
+      "status": "changed",
+      "width": 600,
+      "height": 800,
+      "changed_fraction": 0.18747083333333334,
+      "over_bound": true,
+      "max_delta": 35,
+      "box": [
+        0,
+        20,
+        600,
+        800
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/fern.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/fern.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/svg-drawing.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 480,
+      "changed_fraction": 0.08256655092592592,
+      "over_bound": true,
+      "max_delta": 106,
+      "box": [
+        16,
+        80,
+        720,
+        480
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/svg-drawing.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/svg-drawing.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/svg-ink.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 480,
+      "changed_fraction": 0.07478877314814815,
+      "over_bound": true,
+      "max_delta": 104,
+      "box": [
+        0,
+        0,
+        720,
+        480
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/svg-ink.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/svg-ink.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/tree-family.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 960,
+      "changed_fraction": 0.25570167824074075,
+      "over_bound": true,
+      "max_delta": 110,
+      "box": [
+        0,
+        88,
+        720,
+        960
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/tree-family.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/tree-family.webp.crop.png"
+    },
+    {
+      "path": "docs/images/painting-with-python/tree.webp",
+      "status": "changed",
+      "width": 600,
+      "height": 800,
+      "changed_fraction": 0.19282291666666668,
+      "over_bound": true,
+      "max_delta": 108,
+      "box": [
+        0,
+        192,
+        600,
+        800
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/painting-with-python/tree.webp.diff.png",
+      "crop_image": "docs/images/painting-with-python/tree.webp.crop.png"
+    },
+    {
+      "path": "docs/images/reference/brush-sheet.webp",
+      "status": "changed",
+      "width": 960,
+      "height": 354,
+      "changed_fraction": 0.19425023540489642,
+      "over_bound": true,
+      "max_delta": 183,
+      "box": [
+        0,
+        0,
+        960,
+        354
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/reference/brush-sheet.webp.diff.png",
+      "crop_image": "docs/images/reference/brush-sheet.webp.crop.png"
+    },
+    {
+      "path": "docs/images/reference/glyph-sheet.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 464,
+      "changed_fraction": 0.054600694444444445,
+      "over_bound": true,
+      "max_delta": 128,
+      "box": [
+        20,
+        34,
+        685,
+        446
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/reference/glyph-sheet.webp.diff.png",
+      "crop_image": "docs/images/reference/glyph-sheet.webp.crop.png"
+    },
+    {
+      "path": "docs/images/reference/pigment-swatches.webp",
+      "status": "changed",
+      "width": 960,
+      "height": 372,
+      "changed_fraction": 0.14268033154121865,
+      "over_bound": true,
+      "max_delta": 101,
+      "box": [
+        0,
+        0,
+        960,
+        372
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/reference/pigment-swatches.webp.diff.png",
+      "crop_image": "docs/images/reference/pigment-swatches.webp.crop.png"
+    },
+    {
+      "path": "docs/images/site/rule.webp",
+      "status": "changed",
+      "width": 1600,
+      "height": 60,
+      "changed_fraction": 0.4431041666666667,
+      "over_bound": true,
+      "max_delta": 214,
+      "box": [
+        28,
+        0,
+        1572,
+        57
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/site/rule.webp.diff.png",
+      "crop_image": "docs/images/site/rule.webp.crop.png"
+    },
+    {
+      "path": "docs/images/social-preview.jpg",
+      "status": "changed",
+      "width": 1280,
+      "height": 640,
+      "changed_fraction": 0.0253759765625,
+      "over_bound": true,
+      "max_delta": 154,
+      "box": [
+        719,
+        64,
+        1232,
+        289
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/social-preview.jpg.diff.png",
+      "crop_image": "docs/images/social-preview.jpg.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/brush-stroke.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 240,
+      "changed_fraction": 0.14123842592592592,
+      "over_bound": true,
+      "max_delta": 119,
+      "box": [
+        0,
+        0,
+        360,
+        240
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/brush-stroke.webp.diff.png",
+      "crop_image": "docs/images/tutorials/brush-stroke.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/composition.webp",
+      "status": "changed",
+      "width": 480,
+      "height": 320,
+      "changed_fraction": 0.3146614583333333,
+      "over_bound": true,
+      "max_delta": 116,
+      "box": [
+        0,
+        17,
+        480,
+        320
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/composition.webp.diff.png",
+      "crop_image": "docs/images/tutorials/composition.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-brush.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 328,
+      "changed_fraction": 0.16730606368563686,
+      "over_bound": true,
+      "max_delta": 202,
+      "box": [
+        0,
+        0,
+        720,
+        328
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-brush.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-brush.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-composition.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 374,
+      "changed_fraction": 0.251711972667855,
+      "over_bound": true,
+      "max_delta": 113,
+      "box": [
+        9,
+        16,
+        720,
+        374
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-composition.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-composition.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-lettering.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 344,
+      "changed_fraction": 0.0678092700258398,
+      "over_bound": true,
+      "max_delta": 139,
+      "box": [
+        47,
+        41,
+        673,
+        305
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-lettering.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-lettering.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-nib.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 274,
+      "changed_fraction": 0.0719434306569343,
+      "over_bound": true,
+      "max_delta": 145,
+      "box": [
+        48,
+        18,
+        698,
+        230
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-nib.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-nib.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-paper.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 374,
+      "changed_fraction": 0.049494949494949494,
+      "over_bound": true,
+      "max_delta": 73,
+      "box": [
+        8,
+        14,
+        720,
+        373
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-paper.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-paper.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-pigments.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 374,
+      "changed_fraction": 0.19371657754010696,
+      "over_bound": true,
+      "max_delta": 75,
+      "box": [
+        0,
+        16,
+        720,
+        374
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-pigments.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-pigments.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/grid-wash.webp",
+      "status": "changed",
+      "width": 720,
+      "height": 374,
+      "changed_fraction": 0.254708853238265,
+      "over_bound": true,
+      "max_delta": 66,
+      "box": [
+        17,
+        14,
+        720,
+        374
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/grid-wash.webp.diff.png",
+      "crop_image": "docs/images/tutorials/grid-wash.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/lettering.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 240,
+      "changed_fraction": 0.017106481481481483,
+      "over_bound": true,
+      "max_delta": 98,
+      "box": [
+        90,
+        89,
+        216,
+        131
+      ],
+      "extent": "local",
+      "diff_image": "docs/images/tutorials/lettering.webp.diff.png",
+      "crop_image": "docs/images/tutorials/lettering.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/nib-line.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 240,
+      "changed_fraction": 0.10144675925925926,
+      "over_bound": true,
+      "max_delta": 140,
+      "box": [
+        89,
+        22,
+        286,
+        205
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/nib-line.webp.diff.png",
+      "crop_image": "docs/images/tutorials/nib-line.webp.crop.png"
+    },
+    {
+      "path": "docs/images/tutorials/wash.webp",
+      "status": "changed",
+      "width": 360,
+      "height": 240,
+      "changed_fraction": 0.21994212962962964,
+      "over_bound": true,
+      "max_delta": 12,
+      "box": [
+        1,
+        0,
+        360,
+        240
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/tutorials/wash.webp.diff.png",
+      "crop_image": "docs/images/tutorials/wash.webp.crop.png"
+    },
+    {
+      "path": "docs/images/word.webp",
+      "status": "changed",
+      "width": 480,
+      "height": 270,
+      "changed_fraction": 0.4236574074074074,
+      "over_bound": true,
+      "max_delta": 91,
+      "box": [
+        111,
+        8,
+        428,
+        262
+      ],
+      "extent": "widespread",
+      "diff_image": "docs/images/word.webp.diff.png",
+      "crop_image": "docs/images/word.webp.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/curves/kaleidoscope.png",
+      "status": "changed",
+      "width": 240,
+      "height": 240,
+      "changed_fraction": 0.28065972222222224,
+      "over_bound": true,
+      "max_delta": 110,
+      "box": [
+        21,
+        22,
+        219,
+        219
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/curves/kaleidoscope.png.diff.png",
+      "crop_image": "tests/golden/docs/curves/kaleidoscope.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/curves/lissajous.png",
+      "status": "changed",
+      "width": 240,
+      "height": 240,
+      "changed_fraction": 0.35875,
+      "over_bound": true,
+      "max_delta": 105,
+      "box": [
+        26,
+        26,
+        214,
+        214
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/curves/lissajous.png.diff.png",
+      "crop_image": "tests/golden/docs/curves/lissajous.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/curves/rose.png",
+      "status": "changed",
+      "width": 240,
+      "height": 240,
+      "changed_fraction": 0.11770833333333333,
+      "over_bound": true,
+      "max_delta": 167,
+      "box": [
+        29,
+        24,
+        212,
+        200
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/curves/rose.png.diff.png",
+      "crop_image": "tests/golden/docs/curves/rose.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/curves/spirograph.png",
+      "status": "changed",
+      "width": 240,
+      "height": 240,
+      "changed_fraction": 0.09678819444444445,
+      "over_bound": true,
+      "max_delta": 121,
+      "box": [
+        32,
+        29,
+        214,
+        213
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/curves/spirograph.png.diff.png",
+      "crop_image": "tests/golden/docs/curves/spirograph.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-angles.png",
+      "status": "changed",
+      "width": 240,
+      "height": 110,
+      "changed_fraction": 0.14037878787878788,
+      "over_bound": true,
+      "max_delta": 59,
+      "box": [
+        15,
+        4,
+        233,
+        100
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-angles.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-angles.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-backing.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.3800751879699248,
+      "over_bound": true,
+      "max_delta": 73,
+      "box": [
+        18,
+        4,
+        240,
+        127
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-backing.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-backing.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-centreline.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.08571428571428572,
+      "over_bound": true,
+      "max_delta": 98,
+      "box": [
+        22,
+        24,
+        217,
+        79
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-centreline.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-centreline.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-ground.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.28095238095238095,
+      "over_bound": true,
+      "max_delta": 43,
+      "box": [
+        18,
+        4,
+        240,
+        127
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-ground.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-ground.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-hands.png",
+      "status": "changed",
+      "width": 240,
+      "height": 96,
+      "changed_fraction": 0.16319444444444445,
+      "over_bound": true,
+      "max_delta": 92,
+      "box": [
+        15,
+        9,
+        226,
+        87
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-hands.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-hands.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-runs-dry.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.06403508771929825,
+      "over_bound": true,
+      "max_delta": 147,
+      "box": [
+        17,
+        36,
+        224,
+        97
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-runs-dry.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-runs-dry.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/nib-set-down.png",
+      "status": "changed",
+      "width": 240,
+      "height": 133,
+      "changed_fraction": 0.06914160401002506,
+      "over_bound": true,
+      "max_delta": 125,
+      "box": [
+        17,
+        36,
+        224,
+        97
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/nib-set-down.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/nib-set-down.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/explanation/wash-glaze.png",
+      "status": "changed",
+      "width": 240,
+      "height": 105,
+      "changed_fraction": 0.012579365079365079,
+      "over_bound": true,
+      "max_delta": 50,
+      "box": [
+        10,
+        5,
+        216,
+        85
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/explanation/wash-glaze.png.diff.png",
+      "crop_image": "tests/golden/docs/explanation/wash-glaze.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/gallery/brush-stroke.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.07526041666666666,
+      "over_bound": true,
+      "max_delta": 124,
+      "box": [
+        22,
+        57,
+        218,
+        142
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/gallery/brush-stroke.png.diff.png",
+      "crop_image": "tests/golden/docs/gallery/brush-stroke.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/gallery/composition.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.304453125,
+      "over_bound": true,
+      "max_delta": 119,
+      "box": [
+        23,
+        15,
+        218,
+        133
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/gallery/composition.png.diff.png",
+      "crop_image": "tests/golden/docs/gallery/composition.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/gallery/lettering.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.021145833333333332,
+      "over_bound": true,
+      "max_delta": 80,
+      "box": [
+        60,
+        59,
+        144,
+        89
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/gallery/lettering.png.diff.png",
+      "crop_image": "tests/golden/docs/gallery/lettering.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/gallery/nib-line.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.122421875,
+      "over_bound": true,
+      "max_delta": 129,
+      "box": [
+        59,
+        15,
+        191,
+        137
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/gallery/nib-line.png.diff.png",
+      "crop_image": "tests/golden/docs/gallery/nib-line.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/gallery/wash.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.20278645833333334,
+      "over_bound": true,
+      "max_delta": 7,
+      "box": [
+        70,
+        29,
+        170,
+        131
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/gallery/wash.png.diff.png",
+      "crop_image": "tests/golden/docs/gallery/wash.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/how-to/own-shapes.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.197734375,
+      "over_bound": true,
+      "max_delta": 121,
+      "box": [
+        19,
+        52,
+        222,
+        149
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/how-to/own-shapes.png.diff.png",
+      "crop_image": "tests/golden/docs/how-to/own-shapes.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/how-to/route-ink-grid.png",
+      "status": "changed",
+      "width": 240,
+      "height": 102,
+      "changed_fraction": 0.017401960784313726,
+      "over_bound": true,
+      "max_delta": 50,
+      "box": [
+        10,
+        4,
+        221,
+        83
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/how-to/route-ink-grid.png.diff.png",
+      "crop_image": "tests/golden/docs/how-to/route-ink-grid.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/derwentwater.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.30192708333333335,
+      "over_bound": true,
+      "max_delta": 47,
+      "box": [
+        12,
+        28,
+        230,
+        151
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/painting-with-python/derwentwater.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/derwentwater.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/fern-family.png",
+      "status": "changed",
+      "width": 240,
+      "height": 320,
+      "changed_fraction": 0.023111979166666668,
+      "over_bound": true,
+      "max_delta": 23,
+      "box": [
+        24,
+        20,
+        220,
+        292
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/painting-with-python/fern-family.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/fern-family.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/fern.png",
+      "status": "changed",
+      "width": 240,
+      "height": 320,
+      "changed_fraction": 0.03623697916666667,
+      "over_bound": true,
+      "max_delta": 26,
+      "box": [
+        39,
+        10,
+        219,
+        307
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/painting-with-python/fern.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/fern.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/svg-drawing.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.03924479166666667,
+      "over_bound": true,
+      "max_delta": 64,
+      "box": [
+        34,
+        27,
+        216,
+        132
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/painting-with-python/svg-drawing.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/svg-drawing.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/svg-ink.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.043645833333333335,
+      "over_bound": true,
+      "max_delta": 79,
+      "box": [
+        34,
+        27,
+        216,
+        132
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/painting-with-python/svg-ink.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/svg-ink.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/tree-family.png",
+      "status": "changed",
+      "width": 240,
+      "height": 320,
+      "changed_fraction": 0.16143229166666667,
+      "over_bound": true,
+      "max_delta": 95,
+      "box": [
+        9,
+        30,
+        231,
+        313
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/painting-with-python/tree-family.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/tree-family.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/painting-with-python/tree.png",
+      "status": "changed",
+      "width": 240,
+      "height": 320,
+      "changed_fraction": 0.11997395833333334,
+      "over_bound": true,
+      "max_delta": 99,
+      "box": [
+        27,
+        77,
+        206,
+        298
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/painting-with-python/tree.png.diff.png",
+      "crop_image": "tests/golden/docs/painting-with-python/tree.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/reference/brush-sheet.png",
+      "status": "changed",
+      "width": 240,
+      "height": 88,
+      "changed_fraction": 0.17542613636363635,
+      "over_bound": true,
+      "max_delta": 141,
+      "box": [
+        5,
+        4,
+        235,
+        87
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/reference/brush-sheet.png.diff.png",
+      "crop_image": "tests/golden/docs/reference/brush-sheet.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/reference/glyph-sheet.png",
+      "status": "changed",
+      "width": 240,
+      "height": 155,
+      "changed_fraction": 0.08720430107526882,
+      "over_bound": true,
+      "max_delta": 71,
+      "box": [
+        5,
+        10,
+        229,
+        149
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/reference/glyph-sheet.png.diff.png",
+      "crop_image": "tests/golden/docs/reference/glyph-sheet.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/reference/pigment-swatches.png",
+      "status": "changed",
+      "width": 240,
+      "height": 93,
+      "changed_fraction": 0.02692652329749104,
+      "over_bound": true,
+      "max_delta": 50,
+      "box": [
+        15,
+        21,
+        223,
+        90
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/reference/pigment-swatches.png.diff.png",
+      "crop_image": "tests/golden/docs/reference/pigment-swatches.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/site/rule.png",
+      "status": "changed",
+      "width": 240,
+      "height": 9,
+      "changed_fraction": 0.4888888888888889,
+      "over_bound": true,
+      "max_delta": 125,
+      "box": [
+        4,
+        0,
+        236,
+        9
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/site/rule.png.diff.png",
+      "crop_image": "tests/golden/docs/site/rule.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/social-preview.png",
+      "status": "changed",
+      "width": 240,
+      "height": 120,
+      "changed_fraction": 0.030694444444444444,
+      "over_bound": true,
+      "max_delta": 58,
+      "box": [
+        134,
+        11,
+        231,
+        54
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/social-preview.png.diff.png",
+      "crop_image": "tests/golden/docs/social-preview.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/brush-stroke.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.07526041666666666,
+      "over_bound": true,
+      "max_delta": 124,
+      "box": [
+        22,
+        57,
+        218,
+        142
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/brush-stroke.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/brush-stroke.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/composition.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.304453125,
+      "over_bound": true,
+      "max_delta": 119,
+      "box": [
+        23,
+        15,
+        218,
+        133
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/composition.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/composition.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-brush.png",
+      "status": "changed",
+      "width": 240,
+      "height": 109,
+      "changed_fraction": 0.13551223241590213,
+      "over_bound": true,
+      "max_delta": 184,
+      "box": [
+        13,
+        5,
+        234,
+        102
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-brush.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-brush.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-composition.png",
+      "status": "changed",
+      "width": 240,
+      "height": 125,
+      "changed_fraction": 0.1835,
+      "over_bound": true,
+      "max_delta": 91,
+      "box": [
+        18,
+        6,
+        231,
+        117
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-composition.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-composition.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-lettering.png",
+      "status": "changed",
+      "width": 240,
+      "height": 115,
+      "changed_fraction": 0.13851449275362318,
+      "over_bound": true,
+      "max_delta": 68,
+      "box": [
+        14,
+        13,
+        226,
+        103
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-lettering.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-lettering.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-nib.png",
+      "status": "changed",
+      "width": 240,
+      "height": 91,
+      "changed_fraction": 0.13498168498168497,
+      "over_bound": true,
+      "max_delta": 75,
+      "box": [
+        15,
+        5,
+        233,
+        77
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-nib.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-nib.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-paper.png",
+      "status": "changed",
+      "width": 240,
+      "height": 125,
+      "changed_fraction": 0.009833333333333333,
+      "over_bound": true,
+      "max_delta": 37,
+      "box": [
+        9,
+        6,
+        209,
+        98
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-paper.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-paper.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-pigments.png",
+      "status": "changed",
+      "width": 240,
+      "height": 125,
+      "changed_fraction": 0.008266666666666667,
+      "over_bound": true,
+      "max_delta": 32,
+      "box": [
+        5,
+        6,
+        214,
+        100
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-pigments.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-pigments.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/grid-wash.png",
+      "status": "changed",
+      "width": 240,
+      "height": 125,
+      "changed_fraction": 0.17563333333333334,
+      "over_bound": true,
+      "max_delta": 43,
+      "box": [
+        7,
+        6,
+        222,
+        114
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/grid-wash.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/grid-wash.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/lettering.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.021145833333333332,
+      "over_bound": true,
+      "max_delta": 80,
+      "box": [
+        60,
+        59,
+        144,
+        89
+      ],
+      "extent": "local",
+      "diff_image": "tests/golden/docs/tutorials/lettering.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/lettering.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/nib-line.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.122421875,
+      "over_bound": true,
+      "max_delta": 129,
+      "box": [
+        59,
+        15,
+        191,
+        137
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/nib-line.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/nib-line.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/tutorials/wash.png",
+      "status": "changed",
+      "width": 240,
+      "height": 160,
+      "changed_fraction": 0.20278645833333334,
+      "over_bound": true,
+      "max_delta": 7,
+      "box": [
+        70,
+        29,
+        170,
+        131
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/tutorials/wash.png.diff.png",
+      "crop_image": "tests/golden/docs/tutorials/wash.png.crop.png"
+    },
+    {
+      "path": "tests/golden/docs/word.png",
+      "status": "changed",
+      "width": 240,
+      "height": 135,
+      "changed_fraction": 0.4258950617283951,
+      "over_bound": true,
+      "max_delta": 55,
+      "box": [
+        56,
+        4,
+        214,
+        131
+      ],
+      "extent": "widespread",
+      "diff_image": "tests/golden/docs/word.png.diff.png",
+      "crop_image": "tests/golden/docs/word.png.crop.png"
+    }
+  ]
+}
