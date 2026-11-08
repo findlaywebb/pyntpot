@@ -10,7 +10,7 @@ from pyntpot.maps.lettering.picks_lines import NamedLines
 from pyntpot.maps.lettering.pipeline import _ground
 from pyntpot.maps.style import Style
 
-from support.basemaps import class_style, tiny_basemap
+from support.basemaps import flags_off_style, tiny_basemap
 
 
 def _leg(x0: int, x1: int, northing: float) -> list[list[float]]:
@@ -59,7 +59,7 @@ def _lines() -> NamedLines:
 @pytest.fixture(scope="module")
 def basemap() -> Basemap:
     """A 320 px card with nothing on it but the route, long enough to letter a road on."""
-    return tiny_basemap(class_style(display_px=320, supersample=1))
+    return tiny_basemap(flags_off_style(display_px=320, supersample=1))
 
 
 def _strands(basemap: Basemap) -> list[tuple[float, float]]:
@@ -75,7 +75,7 @@ def _no_ground(style: Style) -> Style:
 
 def _style() -> Style:
     """The style the basemap was built in."""
-    return class_style(display_px=320, supersample=1)
+    return flags_off_style(display_px=320, supersample=1)
 
 
 class TestGround:

@@ -13,7 +13,7 @@ from pyntpot.maps import lettering_marks
 from pyntpot.maps.lettering.label import Label, Span
 from pyntpot.maps.lettering_window import baseline
 
-from support.basemaps import class_style, river_label
+from support.basemaps import flags_off_style, river_label
 from support.lettering import open_hand
 
 #: A gentle, nearly straight river course, in display pixels.
@@ -156,7 +156,7 @@ def test_the_in_water_ink_beats_a_dark_one_on_the_river():
     Measured against the major watercourse's own pigment, which is what the
     letters are written over.
     """
-    style = class_style()
+    style = flags_off_style()
     river = BRUSH_COLOURS["RIV"]["a"]
     assert _contrast(style.nib.label_in_water_ink, river) > _contrast("#0f1216", river)
     assert _contrast(style.nib.label_in_water_ink, river) > 4.5

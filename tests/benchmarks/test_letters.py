@@ -13,6 +13,8 @@ from pyntpot.letters.pen_profile import pen_profile
 from pyntpot.letters.setting import Mark, Setting
 from pyntpot.letters.style import FaceStyle, HandStyle, NibStyle
 
+from support.flags_off import flags_off
+
 pytestmark = pytest.mark.benchmark
 
 #: A straight synthetic line a long name is written along, in display pixels.
@@ -61,7 +63,7 @@ def test_the_nib_widths_of_a_name(benchmark: BenchmarkFixture, hand: Hand) -> No
     """Times the broad nib's width profile along every glyph stroke of a long name, at the default nib."""
     marks = hand.write(Setting("Lynmouth and Lynton", 14.0, path=LINE), hand.generator(1))
     nib = NibStyle()
-    window = nib_brushes(nib, FaceStyle(), BrushStyle(), SCALE)("glyph", 14.0).width
+    window = nib_brushes(nib, FaceStyle(), flags_off(BrushStyle), SCALE)("glyph", 14.0).width
     angle = math.radians(nib.label_pen_angle_deg)
     strokes = [(np.asarray(mark.pts) * SCALE, angle + mark.pen) for mark in marks]
 

@@ -6,9 +6,8 @@ separates and flows once it is down. Both are frozen, keyword-only dataclasses o
 plain values, each field documented in the class's `Attributes:` section.
 
 It paints nothing and reads no theme: a group is a value a painter is handed.
-The defaults are the painter's own class defaults, not a resolved theme; the
-theme supplies the values a painting is made with. The brush settings live in
-`pyntpot.ink.brush_style`.
+The defaults are the default look a map is painted with; the module reads no theme.
+The brush settings live in `pyntpot.ink.brush_style`.
 
 Invariants: every field belongs to exactly one style group across the
 package; a group never imports anything outside `ink`.
@@ -23,8 +22,8 @@ class PaperStyle:
     """The paper: its encoder, grid, texture, seed and the compositing over it.
 
     Read by the painter for every plate and by the lettering, which lays its
-    backing wash on the same paper. The compositing and fibre fields are off
-    or inert by default, until a theme turns one on.
+    backing wash on the same paper. Kubelka-Munk glazing and the paper fibre are
+    on by default, as the default look paints them; the grid is off.
 
     Attributes:
         plate_lossless: Write the plates as lossless WebP. On, because lossy WebP is what put the
@@ -86,7 +85,7 @@ class PaperStyle:
     paper_foxing: float = 0.09
     paper_edge: Literal["classic", "warm"] = "warm"
     sheet_seed: int = 11
-    km_glazing: bool = False
+    km_glazing: bool = True
     pigment_transparency: dict[str, float] = field(
         default_factory=lambda: {
             "farmland": 0.1,
@@ -107,7 +106,7 @@ class PaperStyle:
         }
     )
     km_transparency: float = 0.06
-    paper_fibre: bool = False
+    paper_fibre: bool = True
     paper_fibre_mix: float = 0.35
     paper_fibre_stretch: float = 3.0
     paper_fibre_angle: float = 0.42
@@ -119,7 +118,7 @@ class PaperStyle:
 class WashStyle:
     """How a laid wash behaves: wet bleed, flow rim, blooms, sea, silhouette, fluid.
 
-    Every switch here is off or inert by default, until a theme turns one on.
+    Every switch here is on by default, as the default look paints them.
 
     Attributes:
         wet_bleed: One wet-area field shared across the land classes, so a wash knows another is
@@ -220,47 +219,47 @@ class WashStyle:
         fluid_seed: The seed the pass draws from.
     """
 
-    wet_bleed: bool = False
-    wet_bleed_px: float = 5.0
-    wet_bleed_mix: float = 0.55
-    wet_rim_drop: float = 0.7
+    wet_bleed: bool = True
+    wet_bleed_px: float = 20.0
+    wet_bleed_mix: float = 0.7
+    wet_rim_drop: float = 1.0
     wet_bleed_edge_mult: float = 2.2
-    flow_rim: bool = False
+    flow_rim: bool = True
     flow_rim_exp: float = 0.125
     flow_rim_ref_frac: float = 0.02
     flow_rim_frac: float = 0.38
-    blooms: bool = False
+    blooms: bool = True
     bloom_density: float = 1.0
     bloom_max: int = 5
     bloom_radius_frac: float = 0.17
     bloom_lift: float = 0.45
     bloom_warp: float = 0.45
     bloom_seed: int = 57
-    bloom_strength: float = 1.0
-    sea_variation: bool = False
+    bloom_strength: float = 0.65
+    sea_variation: bool = True
     sea_variation_cell_m: float = 600.0
     sea_variation_amount: float = 0.5
     sea_variation_streak: float = 0.45
     sea_variation_elong: float = 6.0
     sea_variation_band_m: float = 420.0
     sea_variation_seed: int = 73
-    wet_close_px: float = 0.0
-    silhouette_deform: bool = False
+    wet_close_px: float = 5.0
+    silhouette_deform: bool = True
     silhouette_deform_amount: float = 0.26
     silhouette_deform_decay: float = 0.55
     silhouette_deform_depth: int = 4
     silhouette_deform_max_m: tuple[float, float] = (16.0, 3.0)
     silhouette_deform_min_px: float = 1.6
     silhouette_deform_seed: int = 73
-    pigment_separation: bool = False
+    pigment_separation: bool = True
     separation_pigments: dict[str, str] = field(default_factory=lambda: {"wood": "#6e7f8b"})
-    separation_share: float = 0.22
+    separation_share: float = 0.05
     separation_gamma: float = 2.2
     separation_transparency: float = 0.07
-    fluid_pass: bool = False
+    fluid_pass: bool = True
     fluid_grid: int = 4
     fluid_steps: int = 40
     fluid_relax: int = 4
-    fluid_amount: float = 0.30
+    fluid_amount: float = 0.051429
     fluid_gran: float = 0.6
     fluid_seed: int = 41

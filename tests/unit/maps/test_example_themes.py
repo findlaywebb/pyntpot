@@ -1,4 +1,4 @@
-"""The example themes in `examples/themes/` are full themes that load and differ from the default and each other."""
+"""The example themes in `examples/themes/` are YAML overrides that load and differ from the default and each other."""
 
 import tomllib
 
@@ -10,10 +10,6 @@ from support import REPO_ROOT
 
 THEMES_DIR = REPO_ROOT / "examples" / "themes"
 THEME_NAMES = (
-    "pen-and-ink",
-    "sepia",
-    "bold",
-    "winter",
     "ambleside",
     "ambleside-hero",
     "skye",
@@ -21,27 +17,43 @@ THEME_NAMES = (
     "oxford",
     "y-fenni",
 )
+#: Each example theme's digests, measured from the TOML files on f34de97 and unchanged by 008 S1.
+DIGESTS = {
+    "ambleside-hero": ("57ddfa002ea48593", "149792857eb4656a", "6331518a202c936d"),
+    "ambleside": ("afccd911c2e29ce4", "1fbd4375dceec789", "6331518a202c936d"),
+    "oxford": ("379133aed2dd33bb", "0f73e166ba6ba263", "36480f1b92757e09"),
+    "skye": ("8d80163e184edea7", "b54086dfe786d1f0", "1976288541cb3b07"),
+    "y-fenni": ("7161092827e066b7", "90c968b5e78d7058", "3c27e8f97c00b9c4"),
+    "yr-wyddfa": ("79f5230efc0d75e4", "58c70051932a610f", "6331518a202c936d"),
+}
 
 
 class TestExampleThemes:
-    """Each example theme is a complete theme, as `Style.from_toml` requires."""
+    """Each example theme is an override file that `Style.from_yaml` loads."""
 
     @pytest.mark.parametrize("name", THEME_NAMES, ids=THEME_NAMES)
     def test_the_theme_loads_and_is_not_the_default(self, name: str) -> None:
-        """The file loads with every group present, and it changes the style from the default."""
-        style = Style.from_toml(THEMES_DIR / f"{name}.toml")
+        """The file loads, and it changes the style from the default."""
+        style = Style.from_yaml(THEMES_DIR / f"{name}.yaml")
 
         assert style.digest() != Style.default().digest()
 
     def test_the_themes_differ_from_each_other(self) -> None:
         """No two example themes load to the same style."""
-        digests = {Style.from_toml(THEMES_DIR / f"{name}.toml").digest() for name in THEME_NAMES}
+        digests = {Style.from_yaml(THEMES_DIR / f"{name}.yaml").digest() for name in THEME_NAMES}
 
         assert len(digests) == len(THEME_NAMES)
 
+    @pytest.mark.parametrize("name", sorted(DIGESTS), ids=sorted(DIGESTS))
+    def test_each_theme_resolves_to_its_pinned_digests(self, name: str) -> None:
+        """The theme resolves to its pinned `digest`, `base_digest` and `lettering_digest`."""
+        style = Style.from_yaml(THEMES_DIR / f"{name}.yaml")
+
+        assert (style.digest(), style.base_digest(), style.lettering_digest()) == DIGESTS[name]
+
     def test_the_directory_holds_exactly_these_themes(self) -> None:
         """No theme file sits in the directory without a test above naming it."""
-        found = sorted(path.stem for path in THEMES_DIR.glob("*.toml"))
+        found = sorted(path.stem for path in THEMES_DIR.glob("*.yaml"))
 
         assert found == sorted(THEME_NAMES)
 
@@ -55,7 +67,7 @@ class TestShowcaseThemes:
     @pytest.mark.parametrize("name", SHOWCASE_NAMES, ids=SHOWCASE_NAMES)
     def test_the_route_is_the_maroon_wet_pen(self, name: str) -> None:
         """The route is the MAJ1-e pen in maroon, in the normal blend, fully opaque."""
-        style = Style.from_toml(THEMES_DIR / f"{name}.toml")
+        style = Style.from_yaml(THEMES_DIR / f"{name}.yaml")
         ink = style.route_ink
 
         assert style.route.route_pen_brush == "MAJ1-e"
@@ -68,7 +80,7 @@ class TestShowcaseThemes:
         """`label_max` equals the number of landmarks `examples/places.toml` holds for the place."""
         with (REPO_ROOT / "examples" / "places.toml").open("rb") as handle:
             landmarks = tomllib.load(handle)[name].get("landmarks", [])
-        style = Style.from_toml(THEMES_DIR / f"{name}.toml")
+        style = Style.from_yaml(THEMES_DIR / f"{name}.yaml")
 
         assert style.lettering.label_max == len(landmarks)
 
@@ -77,6 +89,6 @@ class TestShowcaseThemes:
     )
     def test_the_relief_is_strong(self, name: str) -> None:
         """The landscape themes paint the relief at least 1.6 times the quiet default."""
-        style = Style.from_toml(THEMES_DIR / f"{name}.toml")
+        style = Style.from_yaml(THEMES_DIR / f"{name}.yaml")
 
         assert style.cover.relief_strength >= 1.6

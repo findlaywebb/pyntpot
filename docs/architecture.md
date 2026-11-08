@@ -15,7 +15,9 @@ The layering is `maps -> letters -> ink`: each layer imports only the layers to 
   `ink` only.
 - `pyntpot.maps` is the route-map application: data providers, the cache, projection,
   layers, plates, label placement, composition, style and the CLI. It imports `letters`
-  and `ink`.
+  and `ink`. The style is `style.py` and `style_groups.py`; the `theme_*` modules read,
+  check and merge the YAML themes, with `ruamel.yaml`, and the packaged themes and their
+  schema are in `maps/themes/`. `ink` and `letters` import none of `httpx`, `pydantic` and `ruamel.yaml`.
 
 The boundary is enforced by import-linter (`[tool.importlinter]` in `pyproject.toml`) and
 the AST fitness tests in `tests/architecture/`. See `BOUNDARIES.md`.

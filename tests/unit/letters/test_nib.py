@@ -2,6 +2,7 @@
 
 import math
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import pytest
@@ -20,6 +21,8 @@ from pyntpot.letters.nib import (
 )
 from pyntpot.letters.setting import Mark
 from pyntpot.letters.style import FaceStyle, HandStyle, NibGroups, NibStyle
+
+from support.flags_off import flags_off
 
 GROUPS = NibGroups(NibStyle(), FaceStyle(), HandStyle(), BrushStyle(), PaperStyle())
 
@@ -247,8 +250,11 @@ class TestBackingWash:
         )
         cover = np.zeros((120, 200), np.float32)
         cover[self.INK] = 1.0
-        _rgb, alpha = _backing_wash(cover, surface, _sheet(surface, GROUPS.paper), GROUPS)
-        nib = GROUPS.nib
+        groups = NibGroups(
+            NibStyle(), FaceStyle(), HandStyle(), BrushStyle(), flags_off(PaperStyle)
+        )
+        _rgb, alpha = _backing_wash(cover, surface, _sheet(surface, groups.paper), groups)
+        nib = groups.nib
         return alpha, nib.label_wash_spread * nib.label_size_px
 
     def test_the_lift_is_strongest_at_the_ink(self) -> None:
@@ -390,7 +396,7 @@ class TestMarkWidth:
         ids=["centreline-glyph", "outline-glyph", "outline-pin"],
     )
     def test_the_brush_is_as_wide_as_the_mark_at_the_scale(
-        self, route: str, role: str, width: float
+        self, route: Literal["centreline", "outline"], role: str, width: float
     ) -> None:
         """At scale 2 a 20 px mark's brush is twice its `mark_width_px`, narrowed only on an outline glyph."""
         brush = nib_brushes(NibStyle(), FaceStyle(label_route=route), BrushStyle(), 2.0)

@@ -1,12 +1,12 @@
 """One route map in four themes: the map is not limited to the default look.
 
-`Style.default()` paints the shipped look, but a style is only data. A theme is a TOML
-file with one table per style group, and `Style.from_toml` reads it. This script paints
-the same route, over the same cached payloads, in one of four example themes kept in
-`examples/themes/`: `pen-and-ink` (no colour washes, ink on paper), `sepia` (faded warm
+`Style.default()` paints the shipped look, but a style is only data. A theme is a YAML
+file naming only what it changes, and `Style.named` loads a packaged theme by its name.
+This script paints the same route, over the same cached payloads, in one of the four
+packaged themes, besides `default`, that `Style.themes()` lists: `pen-and-ink` (no colour washes, ink on paper), `sepia` (faded warm
 browns on yellowed paper), `bold` (saturated pigments and a strong route ink) and
-`winter` (cool greys and blues on pale paper). Each is a copy of the default theme with
-a few groups changed: the paper's colour, the pigments, the inks of the lettering and
+`winter` (cool greys and blues on pale paper). Each is an override file of the default theme
+changing a few groups: the paper's colour, the pigments, the inks of the lettering and
 the route, and whether the cover and relief are painted at all.
 
 `figure` names the theme. The track, the cache and the providers are the ones
@@ -40,9 +40,8 @@ from pyntpot.maps import (
 
 log = logging.getLogger(__name__)
 
-#: The example themes, by the stem of their file in `themes/` beside this script.
+#: The packaged themes this script paints, by name.
 FIGURES: tuple[str, ...] = ("pen-and-ink", "sepia", "bold", "winter")
-THEMES_DIR = Path(__file__).resolve().parent / "themes"
 
 
 def main(
@@ -54,11 +53,11 @@ def main(
     features: OverpassFeatures,
     elevation: OpenTopoData,
 ) -> Path:
-    """Paint the route map in one example theme and save the card.
+    """Paint the route map in one packaged theme and save the card.
 
     Args:
         out_dir: Where `map.png` is written; created when missing.
-        figure: The theme, one of `FIGURES`.
+        figure: The packaged theme's name, one of `FIGURES`.
         track: The GPX file of the route.
         cache_dir: The fetch cache: provider payloads, and the plates painted from them.
         features: The map feature and land cover provider.
@@ -72,7 +71,7 @@ def main(
     """
     if figure not in FIGURES:
         raise ValueError(f"figure must be one of {FIGURES}, not {figure!r}")
-    style = Style.from_toml(THEMES_DIR / f"{figure}.toml")
+    style = Style.named(figure)
     route = Track.from_gpx(track)
     cache = Cache(cache_dir)
     basemap = fetch(route, cache, features, elevation, style)
@@ -87,8 +86,8 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Paint a route map in an example theme.")
-    parser.add_argument("figure", choices=FIGURES, help="the example theme")
+    parser = argparse.ArgumentParser(description="Paint a route map in a packaged theme.")
+    parser.add_argument("figure", choices=FIGURES, help="the packaged theme")
     parser.add_argument("track", type=Path, help="the GPX file of the route")
     parser.add_argument("cache_dir", type=Path, help="the fetch cache directory")
     parser.add_argument("out_dir", type=Path, help="where map.png is written")

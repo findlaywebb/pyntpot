@@ -6,8 +6,8 @@ the contract**; this page is the orientation read. Changing a boundary is an ADR
 (`docs/decisions/`).
 
 The layering is `maps -> letters -> ink`: dependencies point towards `ink`. import-linter
-enforces it as a layers contract, and a second contract keeps `httpx` and `pydantic` out of
-`ink` and `letters` (ADR 0010).
+enforces it as a layers contract, and a second contract keeps `httpx`, `pydantic` and
+`ruamel.yaml` out of `ink` and `letters` (ADRs 0010, 0069).
 
 | Layer | Owns | May import |
 |---|---|---|
@@ -17,8 +17,12 @@ enforces it as a layers contract, and a second contract keeps `httpx` and `pydan
 
 Hard rules the checks enforce:
 
-- `pyntpot` imports no `matplotlib`, `pandas`, `jinja2` or `yaml`.
-- `ink` and `letters` import neither `httpx` nor `pydantic`.
+- `pyntpot` imports no `matplotlib`, `pandas`, `jinja2` or `yaml` (PyYAML).
+- `ink` and `letters` import neither `httpx`, `pydantic` nor `ruamel.yaml`; `maps` reads
+  theme files with `ruamel.yaml` (ADR 0069).
+- No `maps/theme_*` module but `theme_schema` imports `pyntpot.maps.style` or the
+  `pyntpot.maps` package: `style.py` imports the loader, so the loader must not import
+  `style.py` (enforced by `tests/architecture/test_theme_imports.py`).
 - The package never touches `os.environ` / `os.getenv`: config is injected.
 - No clock reads, no module-level randomness, no `uuid` imports.
 - No `print()` anywhere in `src/`; logging only.

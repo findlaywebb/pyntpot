@@ -11,9 +11,8 @@ module reads and so belong to no group.
 Base groups feed the base plates; `LetteringStyle` feeds only the lettering;
 `RouteInkStyle` is read only when the route is placed and drawn (`paint` takes the
 strand merge reach from its width), so changing the ink repaints no plate. The defaults
-are the source classes' own defaults, not a resolved theme: the effective
-basemap options and the resolved ink are theme values. `RouteInkStyle`'s style,
-width and colour have no defaults, because no class carries one.
+are the default look; the default theme is these defaults with nothing overridden.
+A field that takes one of a few words is typed as a `Literal` of those words.
 
 It paints, letters and fetches nothing. The route ink knows nothing of what a
 track records, and holds no casing, glow or shadow: the compose step draws
@@ -26,6 +25,7 @@ package.
 """
 
 from dataclasses import dataclass, field
+from typing import Literal
 
 from pyntpot.maps.providers.overpass import MINOR_ROADS
 
@@ -255,27 +255,27 @@ class BasemapStyle:
             a page can switch between them without a rebuild.
     """
 
-    hillshade_mode: str = "off"
+    hillshade_mode: Literal["bands", "raster", "contours", "hachures", "off"] = "off"
     hillshade_levels: int = 5
     hillshade_opacity: float = 0.5
     hachure_spacing_m: float = 75.0
     hachure_min_slope: float = 0.035
     hachure_max_length_m: float = 90.0
-    sea_style: str = "fill"
+    sea_style: Literal["fill", "waves"] = "fill"
     contour_interval: float = 50.0
-    roads: str = "key"
+    roads: Literal["all", "key", "major"] = "key"
     minor_road_classes: tuple[str, ...] = MINOR_ROADS
-    rivers: str = "key"
+    rivers: Literal["all", "key", "rivers"] = "key"
     interaction_m: float = 60.0
     interaction_run_m: float = 100.0
-    landmarks: str = "heuristic"
-    landmark_max: int = 8
+    landmarks: Literal["heuristic", "all", "payload"] = "all"
+    landmark_max: int = 40
     landmark_radius_m: float = 300.0
     pick_landmarks: tuple[str, ...] = ()
     pick_roads: tuple[str, ...] = ()
     pick_places: tuple[str, ...] = ()
     name_tags: tuple[str, ...] = ("name",)
-    generalise: bool = True
+    generalise: bool = False
     cell_m: float = 60.0
     morph_cells: int = 2
     min_area_ha: float = 4.0
@@ -314,13 +314,13 @@ class LetteringStyle:
 
 @dataclass(frozen=True, kw_only=True)
 class RouteInkStyle:
-    """How the route is drawn on the map: its style, width, colour, blend and opacity.
+    """How the route is drawn on the map: pen or solid, its width, colour, blend and opacity.
 
     Only `paint` (the strand merge reach, from `px`) and the compose step read it.
 
     Attributes:
-        style: `"pen"` tints the painted pen plate when one was painted; any other value
-            (every theme says `"solid"`) draws the line.
+        drawn_as: `pen` tints the painted pen plate when one was painted; `solid` draws
+            the line.
         px: Width in display pixels; it also sets how near two passes of a retraced route
             have to come to be drawn as one stroke.
         colour: Colour as `#rrggbb`.
@@ -329,8 +329,8 @@ class RouteInkStyle:
         opacity: How much of the ink is laid, from 0 to 1.
     """
 
-    style: str
-    px: float
-    colour: str
-    blend: str = "normal"
+    drawn_as: Literal["pen", "solid"] = "solid"
+    px: float = 5.4
+    colour: str = "#c22050"
+    blend: Literal["normal", "multiply"] = "normal"
     opacity: float = 1.0

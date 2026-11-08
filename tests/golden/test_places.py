@@ -106,7 +106,7 @@ PLACES = (
             "start",
             "finish",
         ],
-        theme="examples/themes/skye.toml",
+        theme="examples/themes/skye.yaml",
         margin_m=18000.0,
         landcover_margin_m=18000.0,
     ),
@@ -126,7 +126,7 @@ PLACES = (
             "Rydal Water",
             "start",
         ],
-        theme="examples/themes/ambleside.toml",
+        theme="examples/themes/ambleside.yaml",
     ),
     Place(
         "yr-wyddfa",
@@ -143,7 +143,7 @@ PLACES = (
             "start",
             "finish",
         ],
-        theme="examples/themes/yr-wyddfa.toml",
+        theme="examples/themes/yr-wyddfa.yaml",
         margin_m=3000.0,
         landcover_margin_m=3000.0,
     ),
@@ -161,7 +161,7 @@ PLACES = (
             "The Bridge of Sighs",
             "start",
         ],
-        theme="examples/themes/oxford.toml",
+        theme="examples/themes/oxford.yaml",
     ),
     Place(
         "y-fenni",
@@ -179,7 +179,7 @@ PLACES = (
             "Y Fenni",
             "start",
         ],
-        theme="examples/themes/y-fenni.toml",
+        theme="examples/themes/y-fenni.yaml",
     ),
 )
 
@@ -204,7 +204,7 @@ def test_a_focus_place_paints_from_its_cache_alone(place: Place, tmp_path: Path)
     elevation = OpenTopoData(CONTACT, "http://127.0.0.1:9", budget=0)
     track = Track.from_gpx(cache_dir / "track.gpx")
     cache = Cache(cache_dir, FetchMargins(place.margin_m, place.landcover_margin_m))
-    style = Style.from_toml(REPO_ROOT / place.theme) if place.theme else Style.default()
+    style = Style.from_yaml(REPO_ROOT / place.theme) if place.theme else Style.default()
     assert cache.key(track, features, elevation) == place.key
     before = sorted(p.name for p in cache_dir.iterdir())
 

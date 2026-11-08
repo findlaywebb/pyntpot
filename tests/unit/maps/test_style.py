@@ -12,12 +12,9 @@ from typing import Any
 import pydantic
 import pytest
 
-from pyntpot.maps.style import Style
+from pyntpot.maps.style import Style, _digest_fields, _table
 from pyntpot.maps.style_groups import BasemapStyle, CoverStyle, RouteInkStyle
-
-from support import REPO_ROOT
-
-THEME = REPO_ROOT / "src" / "pyntpot" / "maps" / "themes" / "default.toml"
+from pyntpot.maps.theme_errors import ThemeError
 
 #: A sample of resolved default values, as group, field and pinned value.
 RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
@@ -50,21 +47,26 @@ RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
 )
 
 #: The route ink the reference sheets were painted with, pinned.
-ROUTE_INK = RouteInkStyle(colour="#c22050", px=5.4, style="solid", blend="normal", opacity=1.0)
+ROUTE_INK = RouteInkStyle(colour="#c22050", px=5.4, drawn_as="solid", blend="normal", opacity=1.0)
 
 #: The default style's three digests, pinned.
-DIGEST = "1b08804a7f30026b"
+DIGEST = "88b356ada294ff60"
 BASE_DIGEST = "d9c56c0811177b0f"
 LETTERING_DIGEST = "d15ae2f30e9ca5ce"
 
 
-def _theme_with(tmp_path: Path, old: str, new: str) -> Path:
-    """Write the default theme with one piece of text replaced."""
-    text = THEME.read_text()
-    assert old in text
-    target = tmp_path / "theme.toml"
-    target.write_text(text.replace(old, new, 1))
+def _write_theme(tmp_path: Path, text: str) -> Path:
+    """Write a theme file holding exactly `text`."""
+    target = tmp_path / "theme.yaml"
+    target.write_text(text, encoding="utf-8")
     return target
+
+
+def _located(theme: Path) -> list[tuple[str, int | None]]:
+    """The key path and line of each problem `Style.from_yaml` raises for `theme`."""
+    with pytest.raises(ThemeError) as caught:
+        Style.from_yaml(theme)
+    return [(problem.key, problem.line) for problem in caught.value.problems]
 
 
 class TestDefaultIsResolved:
@@ -104,50 +106,77 @@ class TestDefaultIsResolved:
             assert value == expected[name], name
 
 
-class TestThemeIsStrict:
-    """A theme naming a key no group has is rejected."""
+class TestTheModelIsTheDefaultLook:
+    """The groups' defaults are the default look, so a theme names only what it changes."""
 
-    def test_packaged_theme_reads_from_a_path(self) -> None:
-        """Reading the packaged theme file by path gives the default style."""
-        assert Style.from_toml(THEME) == Style.default()
+    def test_a_trimmed_theme_paints_the_default_look(self, tmp_path: Path) -> None:
+        """A theme naming one wash key keeps the default look's blooms, glazing and landmarks."""
+        theme = _write_theme(tmp_path, "wash:\n  flow_rim: true\n")
+        style = Style.from_yaml(theme)
+        assert (style.wash.blooms, style.paper.km_glazing, style.basemap.landmarks) == (
+            True,
+            True,
+            "all",
+        )
+
+    def test_route_ink_builds_with_no_arguments(self) -> None:
+        """`RouteInkStyle()` builds, and is the pinned route ink."""
+        assert RouteInkStyle() == ROUTE_INK
+
+
+class TestThemeIsStrict:
+    """A theme naming a key no group has is rejected, at its key path and line."""
 
     def test_unknown_top_level_key_is_rejected(self, tmp_path: Path) -> None:
         """A table that is not a style group is rejected."""
-        theme = _theme_with(tmp_path, "[paper]\n", "[weather]\nwind = 3\n\n[paper]\n")
-        with pytest.raises(pydantic.ValidationError, match="weather"):
-            Style.from_toml(theme)
+        theme = _write_theme(tmp_path, "weather:\n  wind: 3\n")
+        assert _located(theme) == [("weather", 1)]
 
     def test_misspelt_wash_key_is_rejected(self, tmp_path: Path) -> None:
-        """A misspelt key inside `[wash]` is rejected, not ignored."""
-        theme = _theme_with(tmp_path, "wet_bleed_px = ", "wet_bleed_pz = ")
-        with pytest.raises(pydantic.ValidationError, match="wet_bleed_pz"):
-            Style.from_toml(theme)
+        """A misspelt key inside `wash` is rejected, not ignored."""
+        theme = _write_theme(tmp_path, "wash:\n  wet_bleed_pz: 20.0\n")
+        assert _located(theme) == [("wash.wet_bleed_pz", 2)]
 
     def test_misspelt_route_ink_key_is_rejected(self, tmp_path: Path) -> None:
         """A misspelt key inside a route ink is rejected, not ignored."""
-        theme = _theme_with(tmp_path, 'style = "solid"', 'stile = "solid"')
-        with pytest.raises(pydantic.ValidationError, match="stile"):
-            Style.from_toml(theme)
+        theme = _write_theme(tmp_path, "route_ink:\n  stile: solid\n")
+        assert _located(theme) == [("route_ink.stile", 2)]
 
     def test_an_effect_key_in_the_route_ink_is_rejected(self, tmp_path: Path) -> None:
-        """A casing key, which nothing paints, is rejected inside `[route_ink]`."""
-        theme = _theme_with(tmp_path, 'blend = "normal"', 'blend = "normal"\ncasing_px = 0.25')
-        with pytest.raises(pydantic.ValidationError, match="casing_px"):
-            Style.from_toml(theme)
+        """A casing key, which nothing paints, is rejected inside `route_ink`."""
+        theme = _write_theme(tmp_path, "route_ink:\n  blend: normal\n  casing_px: 0.25\n")
+        assert _located(theme) == [("route_ink.casing_px", 3)]
 
     def test_an_effect_table_in_the_route_ink_is_rejected(self, tmp_path: Path) -> None:
-        """The old free `effect` table is rejected inside `[route_ink]`."""
-        theme = _theme_with(
-            tmp_path, "[lettering]\n", '[route_ink.effect]\nblend = "normal"\n\n[lettering]\n'
-        )
-        with pytest.raises(pydantic.ValidationError, match="effect"):
-            Style.from_toml(theme)
+        """The old free `effect` table is rejected inside `route_ink`."""
+        theme = _write_theme(tmp_path, "route_ink:\n  effect:\n    blend: normal\n")
+        assert _located(theme) == [("route_ink.effect", 2)]
 
     def test_the_four_sport_inks_are_rejected(self, tmp_path: Path) -> None:
-        """A theme in the old format, with a `[route_inks.ride]` table, is rejected."""
-        theme = _theme_with(tmp_path, "[route_ink]\n", "[route_inks.ride]\n")
-        with pytest.raises(pydantic.ValidationError, match="route_inks"):
-            Style.from_toml(theme)
+        """A theme in the old format, with a `route_inks.ride` table, is rejected."""
+        theme = _write_theme(tmp_path, "route_inks:\n  ride:\n    px: 5.4\n")
+        assert _located(theme) == [("route_inks", 1)]
+
+
+class TestDirectConstructionIsStrict:
+    """`Style(...)` from Python refuses an unknown key itself, with no theme in between."""
+
+    @pytest.mark.parametrize(
+        ("given", "location"),
+        [
+            ({"weather": {"wind": 3}}, ("weather",)),
+            ({"wash": {"wet_bleed_pz": 20.0}}, ("wash", "wet_bleed_pz")),
+            ({"route_ink": {"stile": "solid"}}, ("route_ink", "stile")),
+        ],
+        ids=["top-level", "group", "route-ink"],
+    )
+    def test_an_unknown_key_is_refused(
+        self, given: dict[str, dict[str, object]], location: tuple[str, ...]
+    ) -> None:
+        """An unknown group, or an unknown key in a group's dict, fails at that key's location."""
+        with pytest.raises(pydantic.ValidationError) as caught:
+            Style.model_validate(given)
+        assert [error["loc"] for error in caught.value.errors()] == [location]
 
 
 class TestDigests:
@@ -219,6 +248,74 @@ class TestDigests:
         assert changed.digest() != DIGEST
         assert changed.lettering_digest() == LETTERING_DIGEST
 
+    def test_a_factory_default_counts_for_the_digest_rule(self) -> None:
+        """A rule field with a default factory is left out at what the factory builds, and kept otherwise."""
+        assert _digest_fields(_FactoryGroup()) == {"px": 1.0}
+        named = _FactoryGroup(name_tags=("name:cy", "name"))
+        assert _digest_fields(named) == {"name_tags": ("name:cy", "name"), "px": 1.0}
+
+    def test_only_a_group_instance_has_digest_fields(self) -> None:
+        """A value that is not a style group instance, or a group's class, is refused by name."""
+        with pytest.raises(TypeError, match="is not a style group"):
+            _digest_fields(5)
+        with pytest.raises(TypeError, match="is not a style group"):
+            _digest_fields(_FactoryGroup)
+
+    def test_a_group_entry_that_is_no_mapping_is_refused(self) -> None:
+        """A resolved group entry that is not a mapping is a programming error, named as such."""
+        with pytest.raises(TypeError, match="is not a group table"):
+            _table(5)
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _FactoryGroup:
+    """A planted group whose digest-rule field has a default factory."""
+
+    name_tags: tuple[str, ...] = dataclasses.field(default_factory=lambda: ("name",))
+    px: float = 1.0
+
+
+class TestFromYaml:
+    """`Style.from_yaml` loads a YAML theme over the default look."""
+
+    def test_a_minimal_file_loads(self, tmp_path: Path) -> None:
+        """A theme naming one key gives the default look with that key changed."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("card:\n  display_px: 120\n", encoding="utf-8")
+        style = Style.from_yaml(theme)
+        assert style.card.display_px == 120
+        assert style.wash == Style().wash
+
+    def test_an_error_is_located_at_its_line(self, tmp_path: Path) -> None:
+        """A wrong value raises `ThemeError` whose problem names the value's line."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("card:\n  supersample: 2\n  display_px: '5'\n", encoding="utf-8")
+        with pytest.raises(ThemeError) as caught:
+            Style.from_yaml(theme)
+        assert (caught.value.problems[0].key, caught.value.problems[0].line) == (
+            "card.display_px",
+            3,
+        )
+
+    def test_extends_default_alone_is_the_default_look(self, tmp_path: Path) -> None:
+        """A file holding only `extends: default` loads to `Style()`."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("extends: default\n", encoding="utf-8")
+        assert Style.from_yaml(theme) == Style()
+
+    def test_a_relative_path_is_read_from_the_working_directory(self, tmp_path: Path) -> None:
+        """A relative path is read from the current directory."""
+        theme = tmp_path / "t.yaml"
+        theme.write_text("card:\n  display_px: 120\n", encoding="utf-8")
+        relative = theme.relative_to(Path.cwd(), walk_up=True)
+        assert not relative.is_absolute()
+        assert Style.from_yaml(relative).card.display_px == 120
+
+    def test_a_toml_path_is_refused_with_the_conversion_pointer(self) -> None:
+        """A `.toml` path raises `ThemeError` pointing at ADR 0069's conversion."""
+        with pytest.raises(ThemeError, match="ADR 0069"):
+            Style.from_yaml(Path("old.toml"))
+
 
 #: Fed colours that are not a `#` and six hexadecimal digits.
 BAD_COLOURS: tuple[str, ...] = ("#abc", "c22050", "#zz0000", "#c22050x")
@@ -236,7 +333,11 @@ class TestFedRouteInk:
         ink = style.with_route_ink(colour="#2050c2", width_px=4.8).route_ink
         assert (ink.colour, ink.px) == ("#2050c2", 4.8)
         theme = style.route_ink
-        assert (ink.style, ink.blend, ink.opacity) == (theme.style, theme.blend, theme.opacity)
+        assert (ink.drawn_as, ink.blend, ink.opacity) == (
+            theme.drawn_as,
+            theme.blend,
+            theme.opacity,
+        )
 
     def test_feeding_nothing_keeps_the_style(self) -> None:
         """Feeding nothing, or the default ink's own colour and width, gives an equal style."""
@@ -265,6 +366,10 @@ class TestFedRouteInk:
         """A width that is not a finite number above zero, or is a bool, raises `ValueError`."""
         with pytest.raises(ValueError, match="width"):
             Style.default().with_route_ink(width_px=width_px)
+
+    def test_a_fed_width_under_one_is_taken(self) -> None:
+        """A width above zero but under one pixel is a valid width."""
+        assert Style.default().with_route_ink(width_px=0.5).route_ink.px == 0.5
 
     def test_equal_fed_values_give_equal_digests(self) -> None:
         """A whole-number width equals its float, and a colour's case does not move `digest()`."""

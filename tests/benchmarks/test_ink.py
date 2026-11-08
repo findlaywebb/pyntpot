@@ -1,6 +1,5 @@
 """Benchmarks for the ink engine: the sheet, the distance transform, strokes, washes and the stack."""
 
-import dataclasses
 import math
 
 import numpy as np
@@ -17,6 +16,8 @@ from pyntpot.ink.sheet import Canvas, Sheet, rgb
 from pyntpot.ink.stamping import stamp
 from pyntpot.ink.style import PaperStyle
 from pyntpot.ink.washing import Flow, WashOptions, wash
+
+from support.flags_off import flags_off
 
 pytestmark = pytest.mark.benchmark
 
@@ -54,10 +55,10 @@ def _meander() -> np.ndarray:
 
 
 def test_stamp_a_2000_point_path(benchmark: BenchmarkFixture) -> None:
-    """Times stamping a river brush along a 2000 point sine path."""
+    """Times stamping a plain river brush, every phase flag off, along a 2000 point sine path."""
     x = np.linspace(20, 1180, 2000)
     path = np.stack([x, 200 + 120 * np.sin(x / 90)], axis=1)
-    brush, _ = brush_from_id("RIV1-a", 3.0, 2.0, BrushStyle())
+    brush, _ = brush_from_id("RIV1-a", 3.0, 2.0, flags_off(BrushStyle))
     benchmark(
         lambda: stamp(np.zeros((400, 1200), np.float32), path, brush, np.random.default_rng(7))
     )
@@ -78,8 +79,8 @@ def test_the_distance_transform(benchmark: BenchmarkFixture) -> None:
 
 @pytest.mark.parametrize("brush_id", ["TRK4-d", "RIV1-a"], ids=["dry-track", "wet-river"])
 def test_stamping_a_long_stroke(benchmark: BenchmarkFixture, brush_id: str) -> None:
-    """Times stamping one brush along a winding 2000 point path."""
-    brush, _ = brush_from_id(brush_id, 3.0, 2.0, BrushStyle())
+    """Times stamping one plain brush, every phase flag off, along a winding 2000 point path."""
+    brush, _ = brush_from_id(brush_id, 3.0, 2.0, flags_off(BrushStyle))
     pts = _meander()
     aux = ink_aux((SIDE, SIDE), brush)
     benchmark(
@@ -90,8 +91,8 @@ def test_stamping_a_long_stroke(benchmark: BenchmarkFixture, brush_id: str) -> N
 
 
 def test_stamping_a_starved_directional_brush(benchmark: BenchmarkFixture) -> None:
-    """Times a stroke with the reservoir and the directional break both on."""
-    style = dataclasses.replace(BrushStyle(), ink_starve=True, dry_directional=True)
+    """Times a stroke with the reservoir and the directional break on and every other flag off."""
+    style = flags_off(BrushStyle, ink_starve=True, dry_directional=True)
     brush, _ = brush_from_id("TRK4-d", 3.0, 2.0, style, "track")
     pts = _meander()
     aux = ink_aux((SIDE, SIDE), brush)
@@ -151,4 +152,4 @@ def test_compositing_a_stack(benchmark: BenchmarkFixture, sheet: Sheet, glazing:
         for i, k in enumerate(keys)
     ]
     base = np.ones((SIDE, SIDE, 3), np.float32)
-    benchmark(composite, layers, base, PaperStyle(km_glazing=glazing))
+    benchmark(composite, layers, base, flags_off(PaperStyle, km_glazing=glazing))

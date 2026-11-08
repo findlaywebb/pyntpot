@@ -16,8 +16,9 @@ fixed in code.
 - whether the icon rotates to face its leader, and the fixed angle it takes when it does not;
 - the size, and for the open ring the gap width.
 
-**Possible shape.** A pin table in the theme, most likely under `[lettering]` in the theme
-TOML (alongside `home_glyph`), with typed fields on the lettering options: `pin_icon`,
+**Possible shape.** A pin table in the theme, most likely under `lettering:` in the YAML
+theme (alongside `home_glyph`), so a theme that `extends` another can change only the pin,
+with typed fields on the lettering options: `pin_icon`,
 `pin_turns`, `pin_angle`, `pin_px` and `pin_gap`. `pin()` would take the icon and dispatch to
 one drawing function per icon, each returning the same list of points. The default theme keeps
 the open ring that turns to the leader, so existing cards do not move once #138 has landed.

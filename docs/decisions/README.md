@@ -9,10 +9,10 @@ the contract speaking — change the ADR first, then the checks, never the other
 | ADR | Decision |
 |---|---|
 | 0001 | Agentic gates |
-| 0002 | Layered package, enforced by import-linter and AST tests |
+| 0002 | Layered package, enforced by import-linter and AST tests (its YAML ban is lifted for `maps` by 0069) |
 | 0003 | Card frame and typed seam |
 | 0004 | Provider protocols, usage limits and the fetch cache key |
-| 0005 | Style groups |
+| 0005 | Style groups (its class-defaults rule is superseded by 0069: the defaults are the default look) |
 | 0006 | Golden regeneration |
 | 0007 | Public API (its "re-exported from `_port` until the split" sentence is history: the engine names now come from `ink` and `letters`, see 0010) |
 | 0008 | Hand writes settings |
@@ -22,12 +22,12 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0012 | Mutation threshold |
 | 0013 | The name and the layered package (points to 0002, 0010) |
 | 0014 | How the code was ported |
-| 0015 | Pydantic at the boundary only |
+| 0015 | Pydantic at the boundary only (0069 adds `ruamel.yaml`, also `maps` only) |
 | 0016 | Providers as protocols, attribution on by default (points to 0004) |
 | 0017 | The fetch cache key (points to 0004) |
 | 0018 | Build backend and versioning |
 | 0019 | The upstream SVG page consumes public pipeline stages (points to 0007) |
-| 0020 | The default style is the resolved one (points to 0005) |
+| 0020 | The default style is the resolved one (points to 0005; superseded by 0069) |
 | 0021 | Every technique cites its source |
 | 0022 | Retire the banned-term test (supersedes D16's enforcement clause) |
 | 0023 | Retire the exemptions mechanism (ends D5's interim relaxation) |
@@ -43,7 +43,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0034 | A docs site on GitHub Pages (amends D13) |
 | 0035 | Lettering name tags (amends 0005) |
 | 0036 | Fourth golden regeneration: the engine fixes of revision round 1 |
-| 0037 | Showcase style fields (amends 0005) |
+| 0037 | Showcase style fields (amends 0005; its `opacity` note is amended by 0069) |
 | 0038 | Journal notes |
 | 0039 | Painter's pigments |
 | 0040 | Fetch margins (amends 0004 and 0029) |
@@ -52,7 +52,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0043 | Lossless plate effort: faster opaque plates, same pixels |
 | 0044 | No pre-release Python job (amends D4) |
 | 0045 | Cover rings fill as a union: the sixth golden regeneration |
-| 0046 | One route ink (amends 0005, 0026, 0027 and 0037) |
+| 0046 | One route ink (amends 0005, 0026, 0027 and 0037; its `style` field is renamed `drawn_as` by 0069) |
 | 0047 | Names on the paper and off the water: the seventh golden regeneration |
 | 0048 | The label ink token (amends 0008 and 0026) |
 | 0049 | A generator per item: the eighth golden regeneration |
@@ -75,3 +75,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0066 | The backing wash fades out from the letters: a golden regeneration |
 | 0067 | A leader's pin is an open ring facing its leader: a golden regeneration |
 | 0068 | One public surface (amends 0004, 0005, 0007, 0026 and 0027) |
+| 0069 | Themes are YAML overrides of one model (supersedes 0020; amends 0002, 0005, 0015, 0037, 0046 and 0068) |

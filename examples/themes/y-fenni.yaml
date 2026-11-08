@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# Y Fenni: a food tour through a Welsh-named market town. The map letters the Welsh name where
+# OpenStreetMap carries one, and six stops are called out. Warm terracotta, saffron and olive on
+# cream with a sage river, and a maroon wet pen. It overrides `name_tags`, the roads, the ribbon,
+# the cover pigments, the lettering and the route ink.
+
+nib:
+  label_route_ink: "#7b2335"
+
+ribbon:
+  ribbon_k: 4.0
+  ribbon_c: 60.0
+  ribbon_mult: 2.4
+  ribbon_min_m: 260.0
+  card_grow_mult: 0.9
+
+cover:
+  cover_cfg:
+    built: [0.6, 0.3]
+    farmland: [0.8, 0.25]
+    meadow: [0.8, 0.25]
+  pigments:
+    built: "#f1c9a6"
+    farmland: "#d4c36e"
+    heath: "#c98a5a"
+    meadow: "#b5c26e"
+    orchard: "#b7a95a"
+    pale: "#f0d9ae"
+    relief: "#b58a6a"
+    rim: "#b0805a"
+    rock: "#cdb9a5"
+    sand: "#ecd69a"
+    scrub: "#9aa05c"
+    water: "#6fa3a6"
+    wetland: "#93b3a0"
+    wood: "#7c8a4a"
+    works: "#c79a82"
+
+route:
+  route_pen_brush: MAJ1-e
+  route_pen_width_px: 3.4
+
+route_ink:
+  colour: "#7b2335"
+
+lettering:
+  label_max: 6
+
+basemap:
+  roads: all
+  minor_road_classes: [tertiary, unclassified, residential]
+  name_tags: [name:cy, name]

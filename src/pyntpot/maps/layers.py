@@ -173,7 +173,7 @@ def basemap(
 
     Args:
         inputs: The cache key, the track, its cache and its places.
-        options: What to draw. The defaults are the basemap group's own.
+        options: What to draw. None draws with the default look's basemap options.
         route: The already-projected track, when the caller has one. Its first
             point fixes the origin, so a caller that simplified its track before
             projecting it gets roads on the same origin as that track, not a

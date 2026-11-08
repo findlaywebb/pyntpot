@@ -12,7 +12,7 @@ from pyntpot.maps.lettering.label import TIER_ROAD, Label
 from pyntpot.maps.lettering.picks_lines import NamedLines, named_lines
 from pyntpot.maps.lettering.picks_roads import named_roads, pick_roads, road_min_px, road_ref
 
-from support.basemaps import class_style, hung_card, label_basemap, tiny_basemap
+from support.basemaps import flags_off_style, hung_card, label_basemap, tiny_basemap
 
 
 def test_a_road_is_lettered_by_its_number_and_falls_back_to_its_name():
@@ -357,4 +357,4 @@ def _numbered_basemap() -> Basemap:
         name="",
         ref="A9",
     )
-    return tiny_basemap(class_style(display_px=320, supersample=1), roads=(rydal, unnamed))
+    return tiny_basemap(flags_off_style(display_px=320, supersample=1), roads=(rydal, unnamed))

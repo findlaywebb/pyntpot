@@ -15,6 +15,8 @@ from pyntpot.ink.sheet import Sheet
 from pyntpot.ink.stamping import stamp
 from pyntpot.ink.tip import tip_band
 
+from support.flags_off import flags_off
+
 
 def test_a_dry_brush_breaks_where_a_wet_one_does_not():
     """Dryness is one number, and it is what makes a track scratchy."""
@@ -100,7 +102,7 @@ def long_stroke(
 ) -> tuple[np.ndarray, Brush]:
     """One straight 1500 px stroke's density, as a swatch image paints it."""
     h = 44
-    style = replace(BrushStyle(), **style_over)
+    style = flags_off(BrushStyle, **style_over)
     brush, _ = brush_from_id(brush_id, width_px, 2.0, style, over)
     sheet = Sheet(h, length, gran_px=9.0, seed=11)
     pts = np.stack([np.linspace(20.0, length - 20.0, 900), np.full(900, h / 2)], axis=1)
@@ -155,7 +157,7 @@ def test_the_reservoir_is_read_off_the_final_density_not_the_deposits():
 def turned_stroke(vertical: bool, **style_over: object) -> tuple[np.ndarray, Sheet, Brush]:
     """The same dry brush drawn across the same paper, one way then the other."""
     size = 420
-    style = replace(BrushStyle(), **style_over)
+    style = flags_off(BrushStyle, **style_over)
     brush, _ = brush_from_id("TRK4-d", 6.0, 2.0, style, "track")
     sheet = Sheet(size, size, gran_px=9.0, seed=11)
     t = np.linspace(20.0, size - 20.0, 600)
@@ -248,7 +250,7 @@ def tip_across(
     Returns:
         `(windows, samples across)`, each row a normalised cross-tip profile.
     """
-    style = replace(BrushStyle(), **style_over)
+    style = flags_off(BrushStyle, **style_over)
     b, _ = brush_from_id(brush_id, width_px, 2.0, style, over)
     sb = scaled_brush(b, ss)
     h, w = 150 * ss, 360 * ss

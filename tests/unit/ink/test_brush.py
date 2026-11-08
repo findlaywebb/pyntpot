@@ -1,11 +1,19 @@
-"""Tests for the brush: the brush sheet's cells, the flags that are off by default, the nib rule."""
+"""Tests for the brush: the brush sheet's cells, the brush with its flags off, the nib rule."""
 
 import pytest
 
-from pyntpot.ink.brush import brush_from_id, ink_aux, scaled_brush
+from pyntpot.ink.brush import (
+    BRUSH_OVERRIDE_KEYS,
+    brush_from_id,
+    brush_id_known,
+    ink_aux,
+    scaled_brush,
+)
 from pyntpot.ink.brush_sheet import PEN_ROWS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.pad import InkPad
+
+from support.flags_off import flags_off
 
 
 def test_a_brush_id_names_a_treatment_and_a_colour():
@@ -33,9 +41,37 @@ def test_a_brush_id_that_names_nothing_is_refused():
         brush_from_id("RIV1-z", 3.0, 2.0, BrushStyle())
 
 
-def test_every_phase_1_brush_flag_is_off_by_default():
-    """A field added here must not move a plate until a theme asks for it."""
-    style = BrushStyle()
+@pytest.mark.parametrize("key", sorted(BRUSH_OVERRIDE_KEYS), ids=sorted(BRUSH_OVERRIDE_KEYS))
+def test_every_override_key_changes_the_brush(key: str):
+    """Each override key, set to a value no treatment holds, changes the brush it builds."""
+    plain = BrushStyle(brush_overrides={})
+    over = BrushStyle(brush_overrides={"lane": {key: 0.317}})
+    without, _ = brush_from_id("LAN5-a", 1.8, 2.0, plain, "lane")
+    with_key, _ = brush_from_id("LAN5-a", 1.8, 2.0, over, "lane")
+    assert with_key != without
+
+
+def test_without_an_override_key_the_overrides_are_read_by_the_lower_case_prefix():
+    """With no override key, the brush reads the overrides under its id's prefix, lower case."""
+    over = BrushStyle(brush_overrides={"riv": {"darkness": 0.317}})
+    plain, _ = brush_from_id("RIV1-a", 8.4, 2.0, BrushStyle(brush_overrides={}))
+    read, _ = brush_from_id("RIV1-a", 8.4, 2.0, over)
+    assert read != plain
+
+
+@pytest.mark.parametrize(
+    ("brush_id", "known"),
+    [("MAJ6-e", True), ("TRK4-d", True), ("MAJ9-e", False), ("XXX1-a", False), ("MAJ6", False)],
+    ids=["MAJ6-e", "TRK4-d", "no-row", "no-class", "no-colour"],
+)
+def test_a_brush_id_is_known_only_on_the_sheet(brush_id: str, known: bool):
+    """A brush id is known when the sheet has its row and its class has its colour."""
+    assert brush_id_known(brush_id) is known
+
+
+def test_every_phase_1_brush_flag_off_builds_a_plain_brush():
+    """With the phase 1 flags off, the brush carries no reservoir, no directional break and no aux."""
+    style = flags_off(BrushStyle)
     assert not (style.ink_starve or style.dry_directional or style.pen_starve)
     brush, _ = brush_from_id("TRK4-d", 2.4, 2.0, style, "track")
     assert not (brush.starve or brush.dir_dry or brush.pen_starve)
@@ -52,20 +88,14 @@ def test_a_brush_never_takes_the_nib_treatment_or_the_other_way_round():
     assert frozenset({"5", "6", "8"}) == PEN_ROWS
 
 
-def test_every_phase_2_brush_flag_but_the_ink_grid_is_off_by_default():
-    """A field added here must not move a plate until a theme asks for it.
-
-    `ink_ss` is the one exception and is on at 3, because a mark under four
-    render pixels wide cannot be held by the plate's own grid: that is the
-    stair that reads as scratchiness. The rest still have to be
-    inert, and `ink_ss` back at 1 still has to be the pad it always was.
-    """
-    style = BrushStyle()
+def test_every_phase_2_brush_flag_off_but_the_ink_grid_builds_a_plain_pad():
+    """With the phase 2 flags off the brush and pad are inert, and `ink_ss` at 1 is the plain pad."""
+    style = flags_off(BrushStyle)
     assert style.ink_ss == 3
     assert not (style.brush_organic or style.ink_joins or style.stroke_smooth)
     brush, _ = brush_from_id("TRK4-d", 2.4, 2.0, style, "track")
     assert not brush.organic and brush.smooth == 0.0 and brush.unit == 1.0
     assert scaled_brush(brush, 1) is brush
-    pad = InkPad((8, 8), brush, BrushStyle(ink_ss=1))
+    pad = InkPad((8, 8), brush, flags_off(BrushStyle, ink_ss=1))
     assert pad.ss == 1 and pad.tol == 0.0 and not pad.any()
     assert InkPad((8, 8), brush, style).ss == 3

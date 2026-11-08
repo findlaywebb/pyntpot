@@ -59,9 +59,6 @@ ALLOWED: frozenset[str] = frozenset(
         # pydantic
         "pydantic.BaseModel",
         "pydantic.Field",
-        "pydantic.ValidationError",
-        # tomllib
-        "tomllib.TOMLDecodeError",
         # typing
         "typing.Annotated",
         "typing.Any",

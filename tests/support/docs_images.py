@@ -14,7 +14,7 @@ read the returned path only; a script may write other files beside it (`letterin
 and `composition.py` write a plate too), which are ignored. A script that reads a
 fixture takes the keywords `track` (the GPX `Path`, which the script reads itself),
 `cache_dir`, `features` and `elevation`, and may take `theme: str | None`, a path
-relative to the repo root loaded with `Style.from_toml`, `Style.default()` when absent.
+relative to the repo root loaded with `Style.from_yaml`, `Style.default()` when absent.
 `make_docs_images.py` and the pin test copy `tests/fixtures/<fixture>/` to a temporary
 cache directory and pass `track=<copy> / "track.gpx"`, that `cache_dir`, and
 `OverpassFeatures` and `OpenTopoData` with a budget of 0 at `http://127.0.0.1:9`, exactly
@@ -165,7 +165,7 @@ IMAGES: tuple[DocsImage, ...] = (
     DocsImage(
         "gallery/route-map.webp",
         "place_card",
-        (("size", 720), ("place", "ambleside"), ("theme", "examples/themes/ambleside.toml")),
+        (("size", 720), ("place", "ambleside"), ("theme", "examples/themes/ambleside.yaml")),
         "ambleside",
         720,
         "page",
@@ -340,10 +340,10 @@ IMAGES += (
 #: The five focus places the README's gallery shows: fixture, theme, then the fetch margin the
 #: fixture was recorded with in metres (`None` for the library's default).
 _PLACES: tuple[tuple[str, str | None, float | None], ...] = (
-    ("skye", "examples/themes/skye.toml", 18000.0),
-    ("yr-wyddfa", "examples/themes/yr-wyddfa.toml", 3000.0),
-    ("oxford", "examples/themes/oxford.toml", None),
-    ("y-fenni", "examples/themes/y-fenni.toml", None),
+    ("skye", "examples/themes/skye.yaml", 18000.0),
+    ("yr-wyddfa", "examples/themes/yr-wyddfa.yaml", 3000.0),
+    ("oxford", "examples/themes/oxford.yaml", None),
+    ("y-fenni", "examples/themes/y-fenni.yaml", None),
 )
 
 
@@ -372,7 +372,7 @@ IMAGES += (
     DocsImage(
         "hero.webp",
         "place_card",
-        (("size", 1200), ("place", "ambleside"), ("theme", "examples/themes/ambleside-hero.toml")),
+        (("size", 1200), ("place", "ambleside"), ("theme", "examples/themes/ambleside-hero.yaml")),
         "ambleside",
         1200,
         "hero",
@@ -383,7 +383,7 @@ IMAGES += (
     DocsImage(
         "social-preview.jpg",
         "social_preview",
-        (("place", "ambleside"), ("theme", "examples/themes/ambleside-hero.toml")),
+        (("place", "ambleside"), ("theme", "examples/themes/ambleside-hero.yaml")),
         "ambleside",
         1280,
         "preview",
@@ -394,7 +394,7 @@ IMAGES += (
 
 IMAGES += (
     # P7.V10: the Ambleside hero card, in its showcase theme.
-    _place_card("ambleside", "examples/themes/ambleside.toml", None, "P7.V10"),
+    _place_card("ambleside", "examples/themes/ambleside.yaml", None, "P7.V10"),
     # P7.V12d: the SVG drawing a step at a time (the finished painting is P7.6c's entry above).
     *(
         DocsImage(
@@ -492,7 +492,7 @@ IMAGES += (
     DocsImage(
         "how-to/route-ink-grid.webp",
         "how_to_route_ink",
-        (("figure", "grid"), ("theme", "examples/themes/ambleside.toml")),
+        (("figure", "grid"), ("theme", "examples/themes/ambleside.yaml")),
         "ambleside",
         720,
         "page",

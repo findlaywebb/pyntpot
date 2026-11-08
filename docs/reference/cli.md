@@ -6,7 +6,7 @@ The `pyntpot` command paints a GPX track as a map PNG. It is the entry point `py
 
 ```text
 pyntpot [-h] {map} ...
-pyntpot map [-h] -o OUTPUT --cache CACHE --contact CONTACT [--style STYLE] [--margin-m MARGIN_M] [--no-attribution] track
+pyntpot map [-h] -o OUTPUT --cache CACHE --contact CONTACT [--style THEME] [--margin-m MARGIN_M] [--no-attribution] track
 ```
 
 `{map}` is the command, and `map` its one value. The parser names it `command`, and it is required. The program reads the track, fills the fetch cache for any payload it lacks, paints the plates into the cache's plates directory for the track's key, letters the map with no annotations and composes the PNG. A cache that already holds the payloads sends no request. See [Cache layout](cache-layout.md) for the files it writes.
@@ -60,10 +60,10 @@ pyntpot map [-h] -o OUTPUT --cache CACHE --contact CONTACT [--style STYLE] [--ma
 
 ### `--style`
 
-- Argument: `STYLE`, a path
+- Argument: `THEME`, a theme name or a path
 - Required: no
-- Help text: a TOML theme; the default theme when absent
-- Description: a theme file with one table per style group, read with `Style.from_toml`. See [Style fields](style-fields.md). An unknown key is rejected.
+- Help text: a theme name or a .yaml theme file; the default look when absent
+- Description: a packaged theme by name (`Style.themes()` lists them) or a `.yaml` theme file, loaded with `Style.from_theme`. A theme with a problem prints each problem and exits with status 2.
 
 ### `--margin-m`
 
@@ -92,7 +92,7 @@ pyntpot map [-h] -o OUTPUT --cache CACHE --contact CONTACT [--style STYLE] [--ma
 | --- | --- |
 | 0 | The PNG was written. |
 | 1 | Any other error, such as a missing GPX file or a failed fetch; the traceback names it. |
-| 2 | A required argument is missing or an argument is not understood, as `argparse` exits. |
+| 2 | A required argument is missing or an argument is not understood, as `argparse` exits, or the `--style` theme does not load; each of its problems is printed on its own line, after `pyntpot map: `. |
 
 ## What the command does not take
 

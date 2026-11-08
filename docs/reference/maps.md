@@ -89,6 +89,10 @@
 
 ::: pyntpot.maps.Style
 
+::: pyntpot.maps.ThemeError
+
+::: pyntpot.maps.ThemeProblem
+
 ::: pyntpot.maps.Track
 
 ::: pyntpot.maps.VectorArea

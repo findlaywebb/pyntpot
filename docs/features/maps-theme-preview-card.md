@@ -22,6 +22,7 @@ time and the gaps.
 
 **Possible shape.** A hand-built fixture (made up, within the test coordinate box, or
 synthetic layers that need no provider) and an example script `theme_preview.py` taking a
-theme path, painting the card in seconds, with a test that every theme in
-`examples/themes/` paints on it. The map styles page and the theme how-to would show
+theme name or a `.yaml` path through `Style.from_theme`, painting the card in seconds, with
+a test that every packaged theme (`Style.themes()`) and every theme in `examples/themes/`
+paints on it. The map styles page and the theme how-to would show
 each theme on this card.

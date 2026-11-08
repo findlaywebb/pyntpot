@@ -5,7 +5,6 @@ and `compose` from `pyntpot.maps.pipeline`; every test here waits on the slice t
 """
 
 import shutil
-from importlib import resources
 from pathlib import Path
 
 import pytest
@@ -25,8 +24,8 @@ def _snapshot(directory: Path) -> dict[str, int]:
     return {path.name: path.stat().st_mtime_ns for path in sorted(directory.glob("*.json"))}
 
 
-def _run(cache: Path, out: Path) -> int:
-    """Run `pyntpot map` over the fixture track and a cache, without attribution."""
+def _run(cache: Path, out: Path, *options: str) -> int:
+    """Run `pyntpot map` over the fixture track and a cache, without attribution, with `options`."""
     argv = [
         "map",
         str(FIXTURE_DIR / "track.gpx"),
@@ -37,6 +36,7 @@ def _run(cache: Path, out: Path) -> int:
         "--no-attribution",
         "-o",
         str(out),
+        *options,
     ]
     return main(argv)
 
@@ -56,11 +56,9 @@ class TestMap:
         assert (tmp_path / "out.png").is_file()
 
     def test_a_small_display_style_paints_a_map_quickly(self, tmp_path: Path) -> None:
-        """`--style` with a 120-pixel copy of the default theme writes a 240-pixel-wide PNG."""
-        theme = resources.files("pyntpot.maps").joinpath("themes/default.toml").read_text("utf-8")
-        assert "display_px = 900" in theme
-        style = tmp_path / "small.toml"
-        style.write_text(theme.replace("display_px = 900", "display_px = 120"), encoding="utf-8")
+        """`--style` with a theme naming only a 120-pixel display writes a 240-pixel-wide PNG."""
+        style = tmp_path / "small.yaml"
+        style.write_text("card:\n  display_px: 120\n", encoding="utf-8")
         cache = tmp_path / "cache"
         shutil.copytree(FIXTURE_DIR, cache)
         out = tmp_path / "out.png"
@@ -69,6 +67,42 @@ class TestMap:
         assert main(argv) == 0
         with Image.open(out) as image:
             assert image.width == 240
+
+    @pytest.mark.golden
+    def test_a_named_style_paints_a_map(self, tmp_path: Path) -> None:
+        """`--style sepia` paints the map in the packaged sepia theme and writes the PNG."""
+        cache = tmp_path / "cache"
+        shutil.copytree(FIXTURE_DIR, cache)
+        out = tmp_path / "out.png"
+        assert _run(cache, out, "--style", "sepia") == 0
+        assert out.is_file()
+
+    def test_a_small_theme_extending_a_name_paints_quickly(self, tmp_path: Path) -> None:
+        """`--style` with a theme extending `sepia` at a 120-pixel display writes a 240-pixel PNG."""
+        style = tmp_path / "small.yaml"
+        style.write_text("extends: sepia\ncard:\n  display_px: 120\n", encoding="utf-8")
+        cache = tmp_path / "cache"
+        shutil.copytree(FIXTURE_DIR, cache)
+        out = tmp_path / "out.png"
+        assert _run(cache, out, "--style", str(style)) == 0
+        with Image.open(out) as image:
+            assert image.width == 240
+
+    def test_an_unknown_style_name_exits_2_with_the_names(
+        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """`--style missing` exits with status 2 and logs the available theme names."""
+        assert _run(tmp_path / "cache", tmp_path / "out.png", "--style", "missing") == 2
+        assert "pyntpot map: " in caplog.text
+        assert "available: bold, default, pen-and-ink, sepia, winter" in caplog.text
+        assert not (tmp_path / "out.png").exists()
+
+    def test_a_toml_style_exits_2_with_the_adr_pointer(
+        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """`--style old.toml` exits with status 2 and logs the pointer to ADR 0069."""
+        assert _run(tmp_path / "cache", tmp_path / "out.png", "--style", "old.toml") == 2
+        assert "themes are YAML since ADR 0069" in caplog.text
 
     @pytest.mark.golden
     def test_the_png_matches_the_golden_map(self, tmp_path: Path) -> None:

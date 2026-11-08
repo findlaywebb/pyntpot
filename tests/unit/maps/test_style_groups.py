@@ -242,16 +242,16 @@ PINNED: dict[type, tuple[str, ...]] = {
         "label_geom_tol_px",
         "home_glyph",
     ),
-    RouteInkStyle: ("style", "px", "colour", "blend", "opacity"),
+    RouteInkStyle: ("drawn_as", "px", "colour", "blend", "opacity"),
 }
 
-#: The groups that were copied from the flat painter style, each with the
-#: pinned digest of its default fields: the first 16 hex digits of the SHA-256
+#: The groups that were copied from the flat painter style, and the route ink, each
+#: with the pinned digest of its default fields: the first 16 hex digits of the SHA-256
 #: of the fields as sorted-key JSON, which tells `0.2` from `0`.
 SOURCED: dict[type, str] = {
-    PaperStyle: "b47c9c6b3a8c1505",
-    WashStyle: "e160d14a7793f90a",
-    BrushStyle: "4160d6cacd208480",
+    PaperStyle: "0af5f9f84facb9e9",
+    WashStyle: "42edd0f93fa39dea",
+    BrushStyle: "0187926c89a1b075",
     FaceStyle: "760ec6039a286528",
     HandStyle: "b25b34674433d32c",
     NibStyle: "76aa066043386bcf",
@@ -260,6 +260,7 @@ SOURCED: dict[type, str] = {
     CoverStyle: "8ff38fcbad0d7a6f",
     RouteStyle: "e7af799eb721f445",
     LetteringStyle: "252f33e095df0b01",
+    RouteInkStyle: "6a536a78d3ad069a",
 }
 
 #: `BasemapStyle`'s defaults, the basemap options' class defaults, as pinned literals.
@@ -277,14 +278,14 @@ BASEMAP_DEFAULTS: dict[str, Any] = {
     "rivers": "key",
     "interaction_m": 60.0,
     "interaction_run_m": 100.0,
-    "landmarks": "heuristic",
-    "landmark_max": 8,
+    "landmarks": "all",
+    "landmark_max": 40,
     "landmark_radius_m": 300.0,
     "pick_landmarks": (),
     "pick_roads": (),
     "pick_places": (),
     "name_tags": ("name",),
-    "generalise": True,
+    "generalise": False,
     "cell_m": 60.0,
     "morph_cells": 2,
     "min_area_ha": 4.0,
@@ -383,7 +384,7 @@ MAP_GROUPS: dict[type, dict[str, Any]] = {
     RouteStyle: {},
     BasemapStyle: {},
     LetteringStyle: {},
-    RouteInkStyle: {"style": "solid", "px": 3.0, "colour": "#b5332a"},
+    RouteInkStyle: {"drawn_as": "solid", "px": 3.0, "colour": "#b5332a"},
 }
 
 

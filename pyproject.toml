@@ -35,6 +35,7 @@ dependencies = [
     "fonttools>=4.63.0",
     "httpx>=0.28",
     "pydantic>=2.13",
+    "ruamel-yaml>=0.19.1",
 ]
 
 [project.scripts]
@@ -84,7 +85,7 @@ root_packages = ["pyntpot"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
-name = "No plotting, dataframe, template or YAML dependencies"
+name = "No plotting, dataframe, template or PyYAML dependencies"
 type = "forbidden"
 source_modules = ["pyntpot"]
 forbidden_modules = ["matplotlib", "pandas", "jinja2", "yaml"]
@@ -94,11 +95,12 @@ name = "Layers: maps -> letters -> ink"
 type = "layers"
 layers = ["pyntpot.maps", "pyntpot.letters", "pyntpot.ink"]
 
+# ruamel.yaml reads theme files in maps only (ADR 0069), as pydantic (ADR 0015).
 [[tool.importlinter.contracts]]
-name = "ink and letters stay free of httpx and pydantic"
+name = "ink and letters stay free of httpx, pydantic and ruamel"
 type = "forbidden"
 source_modules = ["pyntpot.ink", "pyntpot.letters"]
-forbidden_modules = ["httpx", "pydantic"]
+forbidden_modules = ["httpx", "pydantic", "ruamel"]
 
 # ---------------------------------------------------------------------------
 # Lint / format

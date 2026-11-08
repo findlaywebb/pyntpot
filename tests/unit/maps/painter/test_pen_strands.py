@@ -20,9 +20,9 @@ OUT_AND_BACK = tuple(OUT + OUT[::-1])
 MID_COLUMN = 60
 
 
-def _inked_as(style: Style, ink_style: str) -> Style:
+def _inked_as(style: Style, drawn_as: str) -> Style:
     """The style with its route ink drawn in this treatment."""
-    ink = dataclasses.replace(style.route_ink, style=ink_style)
+    ink = dataclasses.replace(style.route_ink, drawn_as=drawn_as)
     return style.model_copy(update={"route_ink": ink})
 
 

@@ -70,7 +70,7 @@ already knows, without placing it yourself.
 
 ![The Y Fenni route map: a maroon route looping through the town's streets over orange and green washes, with six names lettered by hand and joined to their points by leader lines.](../images/places/y-fenni.webp)
 
-*Painted by `examples/place_card.py` with `examples/themes/y-fenni.toml`. The landmarks are
+*Painted by `examples/place_card.py` with `examples/themes/y-fenni.yaml`. The landmarks are
 Tŷ Melin, Castell y Fenni, Angel Bakery, Bean & Bread, Rate of Rise and Shepherd's Ice
 Cream, read from `examples/places.toml`. That theme sets `label_max` to 6, so all six are
 lettered.*
@@ -79,7 +79,7 @@ Run it with your track, a cache directory, an output directory and a contact. Na
 place and the theme:
 
 ```bash
-uv run python examples/place_card.py y-fenni/track.gpx y-fenni/ out/ you@example.org --theme examples/themes/y-fenni.toml --place y-fenni
+uv run python examples/place_card.py y-fenni/track.gpx y-fenni/ out/ you@example.org --theme examples/themes/y-fenni.yaml --place y-fenni
 ```
 
 ## When it goes wrong

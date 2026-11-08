@@ -19,7 +19,7 @@ from pyntpot.maps.style import Style
 
 from support.basemaps import (
     PAINT_GROUPS,
-    class_style,
+    flags_off_style,
     tiny_basemap,
     tiny_style,
     with_fields,
@@ -158,7 +158,7 @@ SMOKE_SHA = {
 
 def smoke_box(**over: object) -> tuple[Style, Basemap]:
     """The smoke box's style and basemap, with any style fields moved."""
-    style = class_style(display_px=120, supersample=2, **over)
+    style = flags_off_style(display_px=120, supersample=2, **over)
     return style, tiny_basemap(style=style, roads=SMOKE_ROADS, rivers=SMOKE_RIVERS)
 
 
@@ -257,9 +257,9 @@ def test_land_cover_is_one_class_per_pixel_with_the_wood_on_top(tmp_path):
 # asks for it. After that, one test a flag, stating what the flag is for.
 
 
-def test_every_phase_one_option_is_off_by_default():
-    """The default plates paint as before until a theme turns one on."""
-    style = class_style()
+def test_every_phase_one_option_is_off_with_the_flags_off():
+    """The flags-off style holds every phase one option off."""
+    style = flags_off_style()
     assert not read(style, "km_glazing")
     assert not read(style, "paper_fibre")
     assert not read(style, "wet_bleed")
@@ -299,9 +299,9 @@ def painted(tmp_path, **over: object) -> dict[str, str]:
     }
 
 
-def test_every_phase_two_wash_option_is_off_by_default():
-    """The default plates paint as before until a theme turns one on."""
-    style = class_style()
+def test_every_phase_two_wash_option_is_off_with_the_flags_off():
+    """The flags-off style holds every phase two wash option off."""
+    style = flags_off_style()
     assert not read(style, "silhouette_deform")
     assert not read(style, "pigment_separation")
     assert not read(style, "fluid_pass")
@@ -344,9 +344,9 @@ def test_the_surveyed_coast_is_not_deformed(tmp_path):
 # ------------------------------------------------------------------ phase 2: tuning and sea
 
 
-def test_every_phase_two_tuning_field_is_inert_by_default():
-    """A field added here must not move a plate until a theme asks for it."""
-    style = class_style()
+def test_every_phase_two_tuning_field_is_inert_with_the_flags_off():
+    """The flags-off style holds every phase two tuning field at its inert value."""
+    style = flags_off_style()
     assert read(style, "bloom_strength") == 1.0
     assert read(style, "wet_close_px") == 0.0
     assert not read(style, "sea_variation")
@@ -357,7 +357,7 @@ def test_every_phase_two_tuning_field_is_inert_by_default():
 
 def test_the_style_decides_how_the_plates_are_written(tmp_path):
     """Lossless is the default, and turning it off is the old encoder back."""
-    assert read(class_style(), "plate_lossless")
+    assert read(flags_off_style(), "plate_lossless")
 
     style, basemap = smoke_box(plate_lossless=False)
     lossy = paint_plates(basemap, style, tmp_path / "lossy")

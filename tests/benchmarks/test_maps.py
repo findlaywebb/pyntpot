@@ -16,7 +16,7 @@ from pytest_benchmark.fixture import BenchmarkFixture
 from pyntpot import Basemap, Lettering, Plates, Style, Track, compose, fetch, letter, paint
 from pyntpot.maps.cache import Cache
 
-from support.basemaps import class_style
+from support.basemaps import flags_off_style
 from support.paths import FIXTURE_DIR
 from support.providers import FixtureElevation, FixtureFeatures
 
@@ -39,7 +39,7 @@ def lynmouth(tmp_path_factory: pytest.TempPathFactory) -> Lynmouth:
     """The fixture copied once and its track parsed, in the class style at `DISPLAY_PX`."""
     work = tmp_path_factory.mktemp("lynmouth")
     shutil.copytree(FIXTURE_DIR, work, dirs_exist_ok=True)
-    style = class_style(display_px=DISPLAY_PX)
+    style = flags_off_style(display_px=DISPLAY_PX)
     return Lynmouth(Track.from_gpx(work / "track.gpx"), Cache(work), style)
 
 

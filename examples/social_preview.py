@@ -20,7 +20,7 @@ Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `Brus
 
 Run it with a track, a cache directory, an output directory and a contact::
 
-    uv run python examples/social_preview.py route.gpx cache/ out/ you@example.org --place ambleside --theme examples/themes/ambleside-hero.toml
+    uv run python examples/social_preview.py route.gpx cache/ out/ you@example.org --place ambleside --theme examples/themes/ambleside-hero.yaml
 """
 
 import argparse
@@ -140,7 +140,8 @@ def main(  # noqa: PLR0913 (the script contract fixes these keywords)
         cache_dir: The fetch cache: provider payloads, and the plates painted from them.
         features: The map feature and land cover provider.
         elevation: The elevation provider.
-        theme: A TOML theme file for the card, as `place_card.py` takes it.
+        theme: A theme name or a .yaml file relative to the repository's top directory,
+            for the card, as `place_card.py` takes it.
         place: The place's fixture name, for the card's curated landmarks, as `place_card.py` takes it.
 
     Returns:
@@ -175,7 +176,7 @@ if __name__ == "__main__":
         "contact", help="how the public servers' operators can reach you, such as an email"
     )
     parser.add_argument(
-        "--theme", help="a TOML theme file, relative to the repository's top directory"
+        "--theme", help="a theme name or a .yaml file relative to the repository's top directory"
     )
     parser.add_argument("--place", help="the name of the place's fixture")
     args = parser.parse_args()

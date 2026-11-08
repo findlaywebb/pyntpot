@@ -2,8 +2,9 @@
 
 Key types: `Brush`, one mark-making tool in render pixels; `brush_from_id`, which builds one
 from a brush sheet cell and the `BrushStyle`; `scaled_brush`, the same tool on a finer grid;
-`ink_aux`, the extra accumulators a brush's flags need. The sheet's tables are in
-`ink.brush_sheet`.
+`ink_aux`, the extra accumulators a brush's flags need; `brush_id_known`, whether a brush id
+names a sheet cell; `BRUSH_OVERRIDE_KEYS`, the keys a `brush_overrides` entry may set. The
+sheet's tables are in `ink.brush_sheet`.
 
 A brush id `<PREFIX><row>-<column>`, such as `MAJ2-a`, is an opaque sheet cell name: this
 module never reads the prefix as a feature class. Which class takes which cell is the style's
@@ -20,6 +21,27 @@ import numpy as np
 from pyntpot.ink.brush_sheet import BRUSH_COLOURS, BRUSH_TREATMENTS, PEN_ROWS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.noise import F32
+
+#: The keys a `brush_overrides` entry may set: every key the sheet brush reads from it.
+BRUSH_OVERRIDE_KEYS: frozenset[str] = frozenset(
+    {
+        "jitter_px",
+        "press_cell_px",
+        "wobble_px",
+        "darkness",
+        "bristles",
+        "gap",
+        "dry",
+        "thr",
+        "texture",
+        "press",
+        "load",
+        "pool",
+        "bleed",
+        "lift",
+        "solid",
+    }
+)
 
 
 @dataclass
@@ -134,6 +156,20 @@ class Brush:
     coherence: float = 0.0
 
 
+def brush_id_known(brush_id: str) -> bool:
+    """Whether `brush_id` names a row the sheet has and a colour its class has.
+
+    Args:
+        brush_id: A cell on the brush sheet, such as `RIV1-a`.
+
+    Returns:
+        True when `brush_from_id` would build a brush from it.
+    """
+    cls, rest = brush_id[:3], brush_id[3:]
+    row, _, col = rest.partition("-")
+    return row in BRUSH_TREATMENTS and col in BRUSH_COLOURS.get(cls, {})
+
+
 def brush_from_id(
     brush_id: str,
     width_display_px: float,
@@ -156,10 +192,10 @@ def brush_from_id(
     Raises:
         ValueError: When the id names a row or a colour that does not exist.
     """
+    if not brush_id_known(brush_id):
+        raise ValueError(f"no such brush {brush_id!r}")
     cls, rest = brush_id[:3], brush_id[3:]
     row, _, col = rest.partition("-")
-    if row not in BRUSH_TREATMENTS or col not in BRUSH_COLOURS.get(cls, {}):
-        raise ValueError(f"no such brush {brush_id!r}")
     over = style.brush_overrides.get(override or cls.lower(), {})
     brush = _sheet_brush(row, over, width_display_px, scale, style)
     _load_reservoir(brush, style)

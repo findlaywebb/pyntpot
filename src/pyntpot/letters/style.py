@@ -5,11 +5,12 @@ pen path; `HandStyle`, the seed every random draw of a label starts from;
 `NibStyle`, the nib, its inks, its angle and the backing wash under a name;
 `NibGroups`, the groups the nib reads together. The first three are frozen,
 keyword-only dataclasses of plain values, their fields documented in each
-class's `Attributes:` section; `NibGroups` is built positionally.
+class's `Attributes:` section; `NibGroups` is built positionally. `label_route` is a
+`Literal` of its two words.
 
-It letters nothing and reads no theme. The defaults are the painter's own
-class defaults, not a resolved theme. Which names are lettered, and how many,
-is the caller's policy; the `maps` package keeps it.
+It letters nothing. The defaults are the default look a map is painted with; the
+module reads no theme. Which names are lettered, and how many, is the caller's
+policy; the `maps` package keeps it.
 
 Invariants: every field belongs to exactly one style group across the
 package; the module imports nothing from `pyntpot` but `ink`, for the brush and
@@ -17,6 +18,7 @@ paper groups `NibGroups` carries.
 """
 
 from dataclasses import dataclass
+from typing import Literal
 
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.style import PaperStyle
@@ -39,7 +41,7 @@ class FaceStyle:
         label_face: The path of the `.ttf` to open. Empty is the vendored one.
     """
 
-    label_route: str = "centreline"
+    label_route: Literal["centreline", "outline"] = "centreline"
     label_face: str = ""
 
 
@@ -133,7 +135,7 @@ class NibGroups:
 
     One frozen value, so `nib_plate` takes one argument; it holds no defaults,
     and `NibGroups(NibStyle(), FaceStyle(), HandStyle(), BrushStyle(),
-    PaperStyle())` is the class defaults throughout.
+    PaperStyle())` is the default look throughout.
 
     Attributes:
         nib: The nib, its inks, widths and angle, and the backing wash.

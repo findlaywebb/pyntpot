@@ -6,8 +6,8 @@ GitHub issue: [#147](https://github.com/findlaywebb/pyntpot/issues/147)
 `COVER_ORDER` in `maps/cover.py`, and `maps/layers.py` reads it directly
 (`cover_order=tuple(c for c in COVER_ORDER if c in cover)`). A later class replaces an
 earlier one where they overlap, so a plate carries one class per pixel. A theme can
-recolour a class (`[cover.cover_cfg]` in `maps/themes/default.toml`, `CoverStyle.cover_cfg`
-in `maps/style_groups.py`) but cannot reorder the classes or say which of them share a wash.
+recolour a class (`cover.cover_cfg`, `CoverStyle.cover_cfg` in `maps/style_groups.py`) but
+cannot reorder the classes or say which of them share a wash.
 
 **Why it came up.** Oxford. PR #122 (fixes #44) gives education land
 (`landuse=education`, `amenity=university`, `amenity=college`) a pigment. Painted as plain
@@ -33,7 +33,7 @@ package.
 
 **Two levels of ambition.**
 
-1. *A toggle.* One theme option, for example `[cover] campus_under_greens = true`, that
+1. *A toggle.* One theme option, for example `cover.campus_under_greens: true`, that
    chooses whether greens paint over campus land (the Oxford answer) or campus land paints
    over greens (the plain town answer). It moves `campus` within the order and nothing else.
    Small, and it settles the case in hand.
@@ -46,15 +46,15 @@ package.
 
 **Open questions.**
 
-- Where the order lives in the theme TOML: a list under `[cover]` (`order = [...]`) beside
-  `cover_cfg`, and a table (`painted_as = { campus = "built" }`). Whether a theme may omit
-  a class and so drop it, or must name every class.
+- Where the order lives in a theme: a list under `cover` (`order: [...]`) beside
+  `cover_cfg`, and a table (`painted_as: {campus: built}`). A list field replaces wholesale
+  when a theme sets it, so a theme that sets the order states the whole order; whether it
+  may omit a class and so drop it, or must name every class, is still open.
 - Its interaction with `maps/style_groups.py`: `CoverStyle` would gain the fields, and the
   loader would need to validate that every class in `COVER_TAGS` appears exactly once, that
-  `painted_as` targets exist, and that no chain loops. `from_toml` currently needs every
-  group present, so this also meets #80 (themes as overrides) and #77 (named themes): an
-  override theme should be able to change just the order, and a shipped theme should be
-  able to carry its own.
+  `painted_as` targets exist, and that no chain loops. A theme is an override of its base,
+  so a theme can change just the order, and a packaged theme can carry its own; the
+  `painted_as` table merges per entry, as every table field does.
 - The boundary: `COVER_TAGS` (tag to class) stays in `maps/cover.py`; only order and
   merging move to the theme. `layers.py` and the painter would read them from the style,
   not import the constant.
@@ -68,6 +68,5 @@ package.
 **Why it is not a defect.** With #122 the shipped answer is "quads on top" for every
 theme; nothing is wrong, the choice is just not the theme's to make.
 
-**Related.** #44 and PR #122 (education land gets a pigment class); #80 (a theme declares
-only what it changes); #77 (themes chosen by name); #46 (cover patches cannot be merged by
-a theme).
+**Related.** #44 and PR #122 (education land gets a pigment class); #46 (cover patches
+cannot be merged by a theme).

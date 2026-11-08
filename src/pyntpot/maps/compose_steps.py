@@ -71,7 +71,7 @@ def route(
     """
     colour = _rgb(ink.colour)
     name = plates.manifest.files.get("pen")
-    if name is not None and name != "" and ink.style == "pen":
+    if name is not None and name != "" and ink.drawn_as == "pen":
         pen = Image.open(plates.directory / name).convert("RGBA")
         if pen.size != card_img.size:
             pen = pen.resize(card_img.size, Image.Resampling.LANCZOS)

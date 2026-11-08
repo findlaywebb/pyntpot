@@ -3,9 +3,10 @@
 Key names: `main`, the entry point `pyntpot` runs; `build_parser`, the argparse
 parser it reads.
 
-`pyntpot map TRACK.gpx -o OUT.png --cache DIR --contact STR [--style FILE]
-[--margin-m M] [--no-attribution]` reads the track, fills the cache directory for any payload it
-lacks from Overpass and OpenTopoData (identified by `--contact`), paints the plates
+`pyntpot map TRACK.gpx -o OUT.png --cache DIR --contact STR [--style THEME]
+[--margin-m M] [--no-attribution]` loads the theme, a packaged theme's name or a `.yaml`
+theme file, with `Style.from_theme`, reads the track, fills the cache directory for any
+payload it lacks from Overpass and OpenTopoData (identified by `--contact`), paints the plates
 into the cache's plates directory for the track's key, letters the card with no
 annotations and composes the PNG. A cache that already holds the payloads sends no
 request.
@@ -16,7 +17,7 @@ arguments, and reads nothing from the environment. Logging is configured inside
 take annotations, places or provider options.
 
 Invariants: `main` returns 0 on success; a missing required argument exits with
-status 2, as `argparse` does.
+status 2, as `argparse` does; a theme with a problem logs each problem and returns 2.
 """
 
 import argparse
@@ -30,6 +31,7 @@ from pyntpot.maps.lettering.pipeline import letter
 from pyntpot.maps.providers.opentopodata import OpenTopoData
 from pyntpot.maps.providers.overpass import OverpassFeatures
 from pyntpot.maps.style import Style
+from pyntpot.maps.theme_errors import ThemeError
 from pyntpot.maps.track import Track
 
 log = logging.getLogger(__name__)
@@ -48,7 +50,12 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="how the data providers' operators can reach you, such as an email address",
     )
-    route.add_argument("--style", type=Path, help="a TOML theme; the default theme when absent")
+    route.add_argument(
+        "--style",
+        type=str,
+        metavar="THEME",
+        help="a theme name or a .yaml theme file; the default look when absent",
+    )
     route.add_argument(
         "--margin-m",
         type=float,
@@ -68,13 +75,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         argv: The arguments after the program name; `sys.argv[1:]` when `None`.
 
     Returns:
-        The exit status: 0 on success. Bad arguments exit with status 2 through
-        `argparse`.
+        The exit status: 0 on success, 2 when the theme has a problem. Bad arguments
+        exit with status 2 through `argparse`.
     """
     args = build_parser().parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(message)s")
+    style = _style(args.style)
+    if style is None:
+        return 2
     track = Track.from_gpx(args.track)
-    style = Style.from_toml(args.style) if args.style else Style.default()
     margins = FetchMargins(args.margin_m, max(LANDCOVER_MARGIN_M, args.margin_m))
     cache = Cache(args.cache, margins)
     features = OverpassFeatures(args.contact)
@@ -88,3 +97,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     image.save(args.output)
     log.info("wrote %s", args.output)
     return 0
+
+
+def _style(theme: str | None) -> Style | None:
+    """The style `theme` names, `Style()` when absent, or `None` after logging its problems."""
+    try:
+        return Style() if theme is None else Style.from_theme(theme)
+    except ThemeError as exc:
+        problems = exc.problems
+    for problem in problems:
+        log.error("pyntpot map: %s", problem)
+    return None
