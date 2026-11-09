@@ -22,7 +22,7 @@ import tempfile
 from pathlib import Path
 from typing import cast
 
-from make_docs_images import _fixture_options
+from make_docs_images import fixture_options
 from PIL import Image
 
 from support.docs_images import IMAGES, DocsImage
@@ -49,7 +49,7 @@ def _hash_entry(entry: DocsImage) -> dict[str, str]:
         work = Path(tmp)
         options: dict[str, object] = dict(entry.options)
         if entry.fixture is not None:
-            options.update(_fixture_options(entry.fixture, work / "cache"))
+            options.update(fixture_options(entry.fixture, work / "cache"))
         written = run_example(entry.stem, work / "out", **options)
         data = written.read_bytes()
         with Image.open(written) as opened:
