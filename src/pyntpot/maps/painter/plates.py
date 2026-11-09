@@ -20,9 +20,9 @@ from pathlib import Path
 
 import numpy as np
 
+from pyntpot.ink.compositing import PigmentLayer, composite
 from pyntpot.ink.io import save_webp, to_img
 from pyntpot.ink.paper import paper_plate
-from pyntpot.ink.pigment import PigmentLayer, composite
 from pyntpot.ink.sheet import rgb
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache

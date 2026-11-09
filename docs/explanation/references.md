@@ -12,14 +12,14 @@ A docstring names an entry by its key, in the line ``Source: `<key>` in docs/exp
 - Design input: Curtis, C. J.; Anderson, S. E.; Seims, J. E.; Fleischer, K. W.; Salesin, D. H. (1997, year from the design record, not shown on the page). Computer-Generated Watercolor. https://grail.cs.washington.edu/projects/watercolor/paper_small.pdf [verified: PDF 200, title and every author in the text; 2026-10-07]
 - Design input: Van Laerhoven, T.; Van Reeth, F. (2005). Real-time simulation of watery paint. *Computer Animation and Virtual Worlds* 16(3-4), 429-439. https://doi.org/10.1002/cav.95 [verified-via-index: Crossref record by bibliographic search, publisher page 403 challenge; 2026-10-07]
 - Design input: the canonical source above.
-- Implemented in: `pyntpot.ink.pigment.km_rt`, `pyntpot.ink.pigment.km_plate`
+- Implemented in: `pyntpot.ink.compositing.km_rt`, `pyntpot.ink.compositing.km_plate`
 
 ## `multiply-compositing` multiply compositing
 
 - Canonical source: W3C (2024). Compositing and Blending Level 1. W3C Candidate Recommendation Draft, 21 March 2024. https://www.w3.org/TR/compositing-1/ [verified: page 200, title and w3c-state W3C Candidate Recommendation Draft, updated 2024-03-21; 2026-10-07]
 - Design input: Watson, Z. (Stamen Design) (2012). Watercolor Process. https://stamen.com/watercolor-process-3dd5135861fe/ [verified: page 200 with its pinned words, published 2012-03-26; 2026-10-07]
 - Design input: Osman (osmanyy.com) (2025). Risograph.css. https://osmanyy.com/projects/risograph-css/ [verified: page 200 with its pinned words, published 2025-07-03; 2026-10-07]
-- Implemented in: `pyntpot.ink.pigment.multiply_plate`, `pyntpot.ink.pigment.composite`, `pyntpot.maps.compose_steps.painted_map`
+- Implemented in: `pyntpot.ink.compositing.multiply_plate`, `pyntpot.ink.compositing.composite`, `pyntpot.maps.compose_steps.painted_map`
 
 ## `zhang-suen` Zhang-Suen thinning
 

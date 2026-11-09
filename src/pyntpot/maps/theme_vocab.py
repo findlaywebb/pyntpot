@@ -17,13 +17,14 @@ entry's keys are the keys the sheet brush reads; no key path appears twice in
 from pyntpot.ink.brush import BRUSH_OVERRIDE_KEYS
 from pyntpot.ink.brush_sheet import BRUSH_COLOURS
 from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.ink.pigment_table import ROLE_PIGMENTS
 from pyntpot.maps.style_groups import CoverStyle
 
 _COVER = CoverStyle()
 _BRUSH = BrushStyle()
 
 #: The pigment keys: a pigment's transparency and its separating partner are keyed alike.
-_PIGMENTS = frozenset(_COVER.pigments)
+_PIGMENTS = frozenset(p.name for p in ROLE_PIGMENTS)
 
 #: The `brush_overrides` entries a caller names itself: the route's pen and the label nib.
 _CALLER_OVERRIDES = frozenset({"route", "label"})

@@ -25,10 +25,10 @@ does not paint the washes.
 import numpy as np
 
 from pyntpot.ink.brush import Brush, brush_from_id
+from pyntpot.ink.compositing import PigmentLayer
 from pyntpot.ink.io import save_alpha
 from pyntpot.ink.noise import F32
 from pyntpot.ink.pad import InkPad
-from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.sheet import rgb
 from pyntpot.maps.basemap import Line
 from pyntpot.maps.painter.brushes import plate_brushes

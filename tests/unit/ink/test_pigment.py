@@ -3,11 +3,13 @@
 import numpy as np
 import pytest
 
-from pyntpot.ink.pigment import (
+from pyntpot.ink import (
     PAINTERS_PIGMENTS,
     PAINTERS_TRANSPARENCY,
     PIGMENTS,
     TRANSPARENCY,
+)
+from pyntpot.ink.compositing import (
     PigmentLayer,
     composite,
     km_plate,

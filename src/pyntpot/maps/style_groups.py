@@ -27,6 +27,7 @@ package.
 from dataclasses import dataclass, field
 from typing import Literal
 
+from pyntpot.ink.pigment_table import PIGMENTS
 from pyntpot.maps.providers.overpass import MINOR_ROADS
 
 #: The painter fields no module reads, kept by the upstream consumer and left
@@ -157,25 +158,7 @@ class CoverStyle:
             "wood": (0.72, 0.3),
         }
     )
-    pigments: dict[str, str] = field(
-        default_factory=lambda: {
-            "farmland": "#dfe0b0",
-            "meadow": "#cfdfae",
-            "orchard": "#d5dda2",
-            "scrub": "#c9d5a4",
-            "heath": "#e0cda2",
-            "sand": "#ecdfbe",
-            "rock": "#dcd6c6",
-            "wetland": "#bfd2cd",
-            "built": "#ddd3c3",
-            "works": "#d2cbc0",
-            "wood": "#a8c286",
-            "pale": "#d5e0b4",
-            "water": "#9ec4de",
-            "relief": "#c9bda4",
-            "rim": "#c2ad91",
-        }
-    )
+    pigments: dict[str, str] = field(default_factory=lambda: dict(PIGMENTS))
     pale_base: float = 0.50
     pale_pool: float = 0.16
     wood_texture: float = 0.75

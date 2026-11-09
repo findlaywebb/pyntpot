@@ -16,6 +16,8 @@ package; a group never imports anything outside `ink`.
 from dataclasses import dataclass, field
 from typing import Literal
 
+from pyntpot.ink.pigment_table import role_transparencies
+
 
 @dataclass(frozen=True, kw_only=True)
 class PaperStyle:
@@ -86,25 +88,7 @@ class PaperStyle:
     paper_edge: Literal["classic", "warm"] = "warm"
     sheet_seed: int = 11
     km_glazing: bool = True
-    pigment_transparency: dict[str, float] = field(
-        default_factory=lambda: {
-            "farmland": 0.1,
-            "meadow": 0.09,
-            "orchard": 0.09,
-            "scrub": 0.08,
-            "heath": 0.14,
-            "sand": 0.16,
-            "rock": 0.22,
-            "wetland": 0.08,
-            "built": 0.26,
-            "works": 0.28,
-            "wood": 0.05,
-            "pale": 0.12,
-            "water": 0.04,
-            "relief": 0.3,
-            "rim": 0.18,
-        }
-    )
+    pigment_transparency: dict[str, float] = field(default_factory=role_transparencies)
     km_transparency: float = 0.06
     paper_fibre: bool = True
     paper_fibre_mix: float = 0.35

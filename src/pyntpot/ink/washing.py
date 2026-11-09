@@ -19,8 +19,8 @@ import numpy as np
 from PIL import Image
 
 from pyntpot.ink.bloom import Blooms, bloom
+from pyntpot.ink.compositing import PigmentLayer
 from pyntpot.ink.noise import F32, blur, chamfer_distance
-from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.shallow_water import shallow_water
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.style import WashStyle

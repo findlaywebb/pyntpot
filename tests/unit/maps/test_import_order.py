@@ -50,7 +50,7 @@ MODULES: tuple[str, ...] = (
     "pyntpot.ink.raster",
     "pyntpot.ink.io",
     "pyntpot.ink.paper",
-    "pyntpot.ink.pigment",
+    "pyntpot.ink.compositing",
     "pyntpot.ink.shallow_water",
     "pyntpot.ink.washing",
     "pyntpot.ink.brush",

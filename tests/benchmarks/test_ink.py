@@ -6,11 +6,12 @@ import numpy as np
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 
+from pyntpot.ink import PIGMENTS, TRANSPARENCY
 from pyntpot.ink.bloom import Blooms
 from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.ink.compositing import PigmentLayer, composite
 from pyntpot.ink.noise import chamfer_distance
-from pyntpot.ink.pigment import PIGMENTS, TRANSPARENCY, PigmentLayer, composite
 from pyntpot.ink.raster import deform_rings, fill_cov
 from pyntpot.ink.sheet import Canvas, Sheet, rgb
 from pyntpot.ink.stamping import stamp

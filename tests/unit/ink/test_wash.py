@@ -3,9 +3,10 @@
 import numpy as np
 import pytest
 
+from pyntpot.ink import PIGMENTS
 from pyntpot.ink.bloom import Blooms
+from pyntpot.ink.compositing import PigmentLayer
 from pyntpot.ink.noise import blur, chamfer_distance, smoothstep
-from pyntpot.ink.pigment import PIGMENTS, PigmentLayer
 from pyntpot.ink.sheet import Sheet, rgb
 from pyntpot.ink.style import WashStyle
 from pyntpot.ink.washing import Flow, WashOptions, flow_edge, fluid_modulate, separated, wash

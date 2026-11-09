@@ -20,8 +20,8 @@ import math
 
 import numpy as np
 
+from pyntpot.ink.compositing import PigmentLayer
 from pyntpot.ink.noise import F32, blur, chamfer_distance, fbm, fbm_aniso
-from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.raster import fill_cov
 from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import WashStyle

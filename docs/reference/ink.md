@@ -13,6 +13,8 @@
 
 ::: pyntpot.ink.PAINTERS_TRANSPARENCY
 
+::: pyntpot.ink.PIGMENT_REGISTRY
+
 ::: pyntpot.ink.Blooms
 
 ::: pyntpot.ink.Box
@@ -23,11 +25,17 @@
 
 ::: pyntpot.ink.Canvas
 
+::: pyntpot.ink.Colour
+
 ::: pyntpot.ink.Flow
 
 ::: pyntpot.ink.PaperStyle
 
+::: pyntpot.ink.Pigment
+
 ::: pyntpot.ink.PigmentLayer
+
+::: pyntpot.ink.PigmentRegistry
 
 ::: pyntpot.ink.Point
 
@@ -46,6 +54,8 @@
 ::: pyntpot.ink.ink_density
 
 ::: pyntpot.ink.paper_plate
+
+::: pyntpot.ink.pigment
 
 ::: pyntpot.ink.rgb
 
