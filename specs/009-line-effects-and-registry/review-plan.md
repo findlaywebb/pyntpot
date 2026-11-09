@@ -748,3 +748,136 @@ few lines of plan.
 - **4.** `Colour.parse(text: str)`, annotated `str` with a runtime check; the `5` and `None` test calls carry `# ty: ignore[invalid-argument-type]`, as `test_wash.py:40` does (plan :167-172).
 - **5.** S7 rewrites `GLOSSARY.md:95` ("colour alias") to say an alias stands for a pigment (plan :950; `tasks.md` S7). The glossary is not edited now.
 - **6.** Rule: a chain whose read stops checks no file, those above the stop included; only the read and `extends` problems are reported. Tested in `test_theme_resolve.py` (a child with a bad field and an unbound alias, extending a missing file, reports one problem). No existing case combines the two, so all pass unchanged (`test_theme_resolve.py:184-226`; plan :445-458).
+
+## Round 5
+
+Reviewer: fresh-context plan reviewer, on `70ccd61`. I checked each "Round 4 resolution" item
+against the code, probed the signatures with ruff, and swept every slice against `tests/`
+once more. Experiments are in the session scratchpad (`r5/`).
+
+### Verdict: PASS
+
+There are no BLOCKING findings. Round 4's two blockers are fixed, and the sweep found no
+existing test that a slice breaks without owning it. Five SHOULD-FIX items are listed below.
+An implementer can absorb each of them, but finding 1 will turn S4's property tests red if
+it is executed literally.
+
+### Resolutions verified
+
+- **Effect value types in `ink`.** `ink/effect_types.py` holds `Casing`, `Glow`, `Shadow`,
+  `PenCasing` and `EFFECT_RANGES` (plan :557-576). The spec (:127-141), ADR 0070
+  (:236, :312-317) and `tasks.md` (:117) agree, and no stale loose-field signature is
+  left.
+- **Parameter counts.**
+  - `max-args = 6` (`pyproject.toml:162`). PLR0917 is preview-only and not selected.
+  - I ran `ruff check --select PLR0913` on `r4fix/probe.py` inside `src/`. Only the old
+    `casing` shape fails (7 > 6).
+  - `casing`, `glow`, `pen_casing`, `shadow` and `lay_stack` have 5 parameters each.
+    `letter_over` and `label_grid` have 6. The `_layout`, `_labels` and `_letter`
+    delegates keep 5, 4 and 5.
+  - `GridSpec` and `LabelStyle` are dataclasses, so their fields are exempt.
+- **Cut points.** Every place that states the cut agrees: plan :103-106, :1095 and
+  :1113-1117, and `tasks.md` :3-5. S4 needs only S1's `pigment` and `Colour` and S3a's
+  `normalise_colours`. S4 owns only new files. S3b touches no `ink` file.
+- **Eight `ink` exports.** The plan (:798), `tasks.md` (:124) and the ADR (:314-316) list
+  the same names. `test_site.py`'s submodule rule holds: the stems are `effect_*`, and no
+  `ink/{casing,glow,shadow}.py` exists.
+- **`maps` exports.** `maps` exports only `EffectStack`, plus S3b's `Palette` (spec
+  :140, ADR :316-317).
+- **Tutorial quotes.**
+  - I mapped every `<!-- from examples/... -->` block to the functions it covers.
+  - In `tutorial_grids.py` the quotes cover :193-330 (the seven grid functions only). In
+    `how_to_route_ink.py` the quote covers :214-228 (`_grid`).
+  - S3a's wraps fall outside every quoted block: `tutorial_grids.py:83` and `:110`,
+    `how_to_route_ink.py:112`, and the lines in `nib_stages`, `brush_sheet`, `wash_stages`
+    and `pigment_swatches`. So do the helper bodies S6 rewrites (`tutorial_grids.py:92-190`).
+  - Every block stays an exact substring.
+
+### Sweep: checked and still green
+
+- **Glossary code names.** `PIGMENTS`, `PigmentLayer` and `brush_sheet` still resolve, and
+  each is still the exported name (`test_glossary.py:243-268`).
+- **Dotted docs paths.** Only `references.md` names `pyntpot.ink.pigment.*`, and it is
+  S1's.
+- **Retired words and the docstring spec-number rule.** Neither is touched.
+- **Other `runpy` callers** (`test_glyph_sheet`, `test_painting_with_python_*`). None of
+  them loads the five scripts. `make_docs_images` and `test_explanation_figures` go
+  through `run_example`.
+- **Strict pydantic at S1.** `dict[str, str]` turns a `Colour` back into a plain `str`
+  (probed), so no group meets a type mismatch before S3a. `RESOLVED_SAMPLE` samples no
+  `cover.pigments` entry.
+- **`style-fields.md` comparator.**
+  - An empty `### \`basemap.line_effects\`` table parses (`test_reference_values.py:40-50`).
+  - Only `Mapping` fields need a key sub-table (:198-203), so `route_ink.effects` needs
+    none.
+  - A `Colour` field's Type cell stays "string".
+- **Modules and packaging.** `test_import_order.MODULES` is not required to be exhaustive.
+  `uv_build` packages `maps/palettes/`. No example stem clashes with the standard library,
+  `tests/` or `src/` once `examples` is a ty root.
+
+### Findings
+
+1. **[SHOULD-FIX] `EFFECT_RANGES` has no upper bound, and the prescribed strategies fail
+   the S4 gate (plan :569-573, :609-613).**
+   - **Evidence, unbounded fields.** "Every `*_px` is at least 0" accepts `inf` and
+     1e12.
+     - Strict pydantic and ruamel both accept `.inf` (probed).
+     - `noise.blur(m, 1e12)` raises `MemoryError`, because `np.pad` pads by `r`
+       (`noise.py:179`). `blur(m, inf)` raises `OverflowError`, and so does
+       `round(inf * sin b)` in `shadow`.
+     - So strategies "drawn inside `EFFECT_RANGES`" go red under Hypothesis.
+     - A theme's `blur_px: .inf` would pass the load check and then crash the painter.
+   - **Evidence, `threshold`.** `floats(0, 1, exclude_min=True)` draws subnormals. In
+     float32, `mask / threshold` overflows or divides by zero, and warnings are errors.
+   - **Fix:**
+     - Prescribe `EFFECT_RANGES: Mapping[str, tuple[float, float]]`, keyed by field name.
+       All three slices read it.
+     - Make every bound finite (for example `*_px` from 0 to 64, `strength` from 0 to 1).
+     - The types refuse a value that is not finite.
+     - Strategies use `allow_nan=False, allow_infinity=False`, and `threshold` is drawn
+       from `floats(0.01, 1)`.
+2. **[SHOULD-FIX] `from pyntpot.ink import EFFECT_RANGES` fails (plan :636-637, `tasks.md`
+   :144-145).**
+   - **Evidence:** `EFFECT_RANGES` is not one of the eight exports. No `maps` module imports
+     the `pyntpot.ink` package: every one imports a submodule (`maps/*.py`, for example
+     `theme_check.py:37`).
+   - **Fix:** `line_effects.py` and `theme_effects.py` import from
+     `pyntpot.ink.effect_types`, and S5b imports `LINE_THRESHOLD` from
+     `pyntpot.ink.effect_mask`.
+3. **[SHOULD-FIX] Gate A turns on two public-surface tests that S4's gate never ran (plan
+   :794-800).**
+   - **Evidence:**
+     - Once exported, the four types fall under `test_field_docs` (an `Attributes:` entry
+       per field, in order, and no class-body comments).
+     - The primitives' `Raises:` entries fall under `test_public_signatures`.
+     - Neither test applies in the worktree, and gate A owns only `ink/__init__.py`,
+       `ink.md` and `test_public_api.py`.
+   - **Fix:** S4 writes those docstrings to the public standard now. Alternatively, gate A
+     is allowed to edit `effect_*.py` docstrings.
+4. **[SHOULD-FIX] A non-string `extends` is not placed in the read-first chain (plan
+   :441-452).**
+   - **Evidence:** today `check_theme` drops `extends: 5` and reports it
+     (`test_theme_check.py:67-73`). `resolve` then ends the chain
+     (`theme_resolve.py:136-137`).
+   - **The risk:** if an implementer counts it as a "stopped read", no file is checked and
+     no read problem exists. The theme would then load silently.
+   - **Fix:**
+     - State that a non-`str` `extends` ends the chain without stopping the read, so the
+       file is checked and reports "extends is a theme name or a .yaml path".
+     - Add that case to `test_theme_resolve.py`.
+5. **[SHOULD-FIX] The `line_effects` split must add only what the file writes (plan
+   :703-704).**
+   - **Evidence:** `test_theme_check.py:62-65` pins `check_theme`'s table exactly.
+     Unconditionally adding `route_ink: {effects: EffectStack()}` would fail that test. It
+     would also turn off a parent's route stack in every child.
+   - **Fix:** a file without `line_effects`, or without its `route` key, adds no
+     `basemap.line_effects` or `route_ink.effects` entry.
+6. **[CONSIDER] The stated reason for S6's ty `root` edit is wrong (plan :917-921).**
+   - **Evidence:** `unresolved-import = "warn"` (`pyproject.toml:200`), so `ty check`
+     would not exit 1 on the sibling import.
+   - **Fix:** the edit is still right, because it types `labelled_grid`'s names. Restate
+     the reason. Also, `test_reference_pages.py` loses its only `runpy` use, so S6 drops
+     `import runpy` (F401).
+7. **[CONSIDER] `painter/effects.lay_wash` has no signature (plan :820-824).** It needs
+   the ground, the sea and rim, the layers, the masks, the stacks, the scale and the paper.
+   Bundle them (for example `job` and `style`) so it stays at most 6 parameters.
