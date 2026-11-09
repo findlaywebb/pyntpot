@@ -517,3 +517,105 @@ Applied on `d66c2d2`; each finding was checked against the code first.
 12. An S7 task fixes `docs/features/ink-stroke-density-profile.md:8` (not edited now).
 13. Each S4 primitive refuses `threshold <= 0`; strategies draw it from `(0, 1]`.
 14. Already committed in `d66c2d2`; nothing to do.
+
+## Round 3
+
+Reviewer: fresh-context plan reviewer, on `1b8950b`. Each "Re-review resolution" item was
+checked against the code. Experiments are in the session scratchpad (`r3/`).
+
+### Verdict: BLOCK
+
+The fourteen re-review resolutions hold against the code, apart from a gap in item 4
+(SHOULD-FIX 3). One new BLOCKING finding remains: S5a's two new fields fail a pinned-table
+test file that no slice owns, and the obvious fix moves a pinned digest. The fix is a few
+lines of plan. With it and the SHOULD-FIX items applied, the plan can pass without a
+fourth round.
+
+### Resolutions verified
+
+- **1.** Only `tests/property/test_theme_merge.py:199-200` dumps YAML (`git grep`), so the
+  `_plain` fix in S1 covers every dump site.
+- **2.** `root` is `["src", "tests"]` (`pyproject.toml:193-196`).
+- **3.** The named tests exist as described: `test_theme_schema.py:131,144,170` and
+  `test_theme_vocab.py:82,98` (through `_unvocabularied`).
+- **5.** The refusal happens in `check_theme_scoped`, ahead of the walk in
+  `TableCheck.mapping` (`theme_check.py:173-200`).
+- **6.** The new pattern is idempotent under the `.gpl` rule.
+- **7.** The move list is complete for `leaf`, `mapping`, `_vocabulary` and
+  `_sheet_and_colour` (`theme_check.py:124-295`). `build_group` keeps `_hints` and
+  `_is_dataclass` through the no-underscore rule (`test_import_order.py`).
+- **8 to 14.** Hold. Every `COLOUR_FIELDS` importer is S3a's. No packaged or example
+  theme, and no example script, writes an upper-case hex, so lower-casing moves no digest.
+  `BrushStyle().brushes` is the seven classes.
+- **4.** The rules now have a shape to live in, but one type in that shape does not exist
+  at S3a (SHOULD-FIX 3).
+
+### Findings
+
+#### BLOCKING
+
+1. **[BLOCKING] S5a fails `tests/unit/maps/test_style_groups.py`, which no slice owns, and
+   the obvious fix moves a pinned digest (plan :515-536, :919; `tasks.md` :93-113).**
+   - **Evidence:**
+     - `PINNED[BasemapStyle]` and `PINNED[RouteInkStyle]` (`:207-245`) pin each group's
+       field names in order, so `test_group_fields_match_the_pinned_table` fails when
+       `line_effects` and `effects` are added.
+     - `test_basemap_defaults_are_the_pinned_literals` (`:360-367`) requires
+       `_names(BasemapStyle) == list(BASEMAP_DEFAULTS)`, so it fails too.
+     - `test_group_defaults_equal_the_pinned_digest` (`:348-351`) hashes the raw
+       `dataclasses.asdict(group())`, with no omit rule. I checked: adding `effects` moves
+       `SOURCED[RouteInkStyle]` from `6a536a78d3ad069a` to `4ff7222687a4890e`. The plan's
+       "Files to leave alone" forbids moving any pinned literal.
+     - Switching that test to `_digest_fields` is no fix either: it moves `CoverStyle`'s
+       pin, `8ff38fcbad0d7a6f`, to `f201b60695520db7` (checked).
+   - **Fix:**
+     - Add `tests/unit/maps/test_style_groups.py` to S5a's Owns, its row in the ownership
+       table, and its `tasks.md` line.
+     - Append `"line_effects"` to the `BasemapStyle` row, `"effects"` to the
+       `RouteInkStyle` row, and `"line_effects": {}` to `BASEMAP_DEFAULTS`.
+     - In the digest test, drop the fields named in `LOADER_FIELDS` before hashing, and
+       say why in its docstring, so every `SOURCED` pin holds.
+     - Add an assertion that `RouteInkStyle().effects == EffectStack()` and
+       `BasemapStyle().line_effects == {}`.
+     - The file is 399 lines now. Move `BASEMAP_DEFAULTS` and its test to a new file
+       rather than pass 400.
+
+#### SHOULD-FIX
+
+2. **S3a meets an exact-type pin and could loosen it (plan :219, :255).**
+   - **Evidence:** `test_style.py:84` asserts `type(got) is type(value)`. Its
+     `RESOLVED_SAMPLE` pins `paper.paper_hex` (`:21`) and `nib.label_ink` (`:32`) as plain
+     `str`, and both become `Colour` in S3a.
+   - **Fix:** S3a pins `Colour("#f3ead6")` and `Colour("#241c14")`. The type assertion
+     stays.
+3. **`ThemeScope.palette: Bound[Palette]` names a class S3a does not have (plan :284-298).**
+   - **Evidence:** `Palette` is created in S3b, so at S3a the annotation is unresolved and
+     `ty` fails.
+   - **Evidence:** importing it at runtime risks a cycle:
+     `theme_scope -> theme_palette -> theme_colours -> theme_scope`.
+   - **Fix:** S3a types the field `Bound[object] | None`, as it does `presets`. S3b
+     narrows it to `Bound[Palette]`, with the import under `TYPE_CHECKING`. State the
+     runtime import direction:
+     `theme_palette -> theme_colours -> theme_scope`.
+4. **Existing tests that S3a rewrites are unnamed, and their messages are unpinned (plan
+   :161-165, :276-277).**
+   - **Evidence:**
+     - `test_theme_schema.py:186-192` asserts the old flat colour node.
+     - `test_theme_check.py:186-191` pins the messages "'red' ..." and "'#a8c28' is not a
+       # and six hexadecimal digits".
+     - `test_theme_check.py:246-248` expects `#C22050` to be kept as written.
+   - **Fix:**
+     - Name all three as rewritten, not deleted.
+     - `Colour.parse` keeps the text "{text!r} is not a # and six hexadecimal digits".
+     - The non-string message is "{v!r} is not a string", matching
+       `_MESSAGES["string_type"]`.
+
+#### CONSIDER
+
+5. **`pigment("#...")` (plan :172).** The plan says a hex "goes to `Colour.parse`". The
+   spec (:36-38) and ADR rule 2 say it returns an anonymous `Pigment` named by the hex,
+   with `transparency=None`. Say that in the plan.
+6. **The `colours` value schema (plan :419-420).** "Names or hex" makes an editor refuse
+   an alias to a theme pigment. Use the three-branch `Colour` node.
+7. **Test file sizes.** `test_style.py` is 384 lines and `test_theme_check.py` 361. Put
+   S2's and S3a's new cases in new files.
