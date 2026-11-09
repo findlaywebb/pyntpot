@@ -631,3 +631,111 @@ fourth round.
 - **6.** The `colours` value schema is the three-branch `Colour` node or `{colour: <node>, override}` (plan :474).
 - **7.** New cases go in new files: S1 `test_registry_defaults.py` (the unnamed maps ties; `test_style_groups.py` is 399 lines), S2 `test_theme_brush_ids.py` (the `MAJ9-a` row at `test_theme_check.py:182-183` rewritten in place), S3a `test_colour_fields.py`, `test_theme_scope.py` and `test_theme_colour_names.py`; each named in its slice and ownership row.
 - **PR 2 re-review 1.** `ThemeScope.aliases: Mapping[str, Bound[Pigment]]` and `Palette(name, pigments: Mapping[str, Pigment])`, a hex alias the anonymous `pigment("#...")`, no separate `colours` mapping; `resolve_pigment` added, `resolve_colour` is its `.colour`, so no digest moves; `.gpl` import yields anonymous pigments and export writes names and hexes; properties revised; ADR rules 5 and 7, the Public names paragraph and the spec updated; no public name changes (plan :311-336, :436-466, :1070).
+
+## Round 4
+
+Reviewer: fresh-context plan reviewer, on `89db1d9`. I checked each "Round 3 resolution" item
+against the code, then swept every slice's source changes against `tests/`. Experiments are
+in the session scratchpad (`r4/`).
+
+### Verdict: BLOCK
+
+The Round 3 resolutions hold, and so does the alias-holds-`Pigment` change. Two new BLOCKING
+findings came out of the sweep. S6 breaks two docs tests that it does not own, and three of
+S4's prescribed signatures, plus S6's `label_grid`, fail `ruff check`. Both fixes are a
+few lines of plan.
+
+### Resolutions verified
+
+- **1.** Dropping the `LOADER_FIELDS` names from `asdict(RouteInkStyle())` gives back
+  today's dict, so `6a536a78d3ad069a` holds (`test_style_groups.py:348-351`). The
+  `CANDIDATE_BASEMAP` pin is a full literal (`candidates/test_export.py:88-121`).
+  `build_group` builds `{"effects": ()}` into `EffectStack()` and passes `{}` through
+  (`theme_check.py:113-121`).
+- **2 to 7.** These hold, at the lines cited (plan :268, :311-336, :297-306, :171-175, :474-476).
+- **Alias holds a `Pigment`.** `ThemeScope.aliases: Mapping[str, Bound[Pigment]]` (plan
+  :311-320). `Palette.pigments` resolves against `PIGMENT_REGISTRY` only (plan :436-442),
+  as ADR rule 7 says. `resolve_colour` is `resolve_pigment(...).colour` (plan :336).
+- **No digest moves.** The digest is `json.dumps(asdict(...), sort_keys=True)`
+  (`style.py:296-311`). A `str` subclass dumps as its text, and every packaged and example
+  theme writes only lower-case hex, so the digests stay put.
+- **No stale shapes.** No `Bound[Colour]` or `Palette.colours` is left in the spec, the
+  plan, the tasks or the ADR.
+
+### Sweep (test files at risk, per slice)
+
+- **S0:** `make_docs_images.py` is owned, and it has one caller (`:100`).
+- **S1:** the 11 importers and pins are owned. These stay green, because each value
+  compares equal as a `str` and keeps today's order: `test_style_groups` `SOURCED`,
+  `test_theme_vocab` `PIGMENTS`, `test_reference_values`, `test_reference_pages`,
+  `test_site_theme`, the committed-schema test and `test_site`.
+- **S2:** two rows of `test_theme_check.py` change. Only one is named (finding 3).
+- **S3a:** every file it touches is owned. These stay green: `test_reference_values`
+  (value-based), `test_one_source_of_defaults`, `test_import_order` (underscores dropped)
+  and `test_tutorial_quotes` (no wrapped literal sits in a quoted block).
+- **S3b:** these stay green: the top-level unknown-key pins (`wsh` still suggests `wash`)
+  and `test_theme_resolve`, because `ThemeError` sorts its problems (`theme_errors.py:65`).
+- **S5a:** every pinned table is owned. These stay green: `test_style.py` `route_ink.effect`
+  and `casing_px` (they pin location only), `test_smoke`, `test_reference_values`
+  (`EffectStack` reads as "table") and `test_one_source_of_defaults`.
+- **S5b:** `paint_pen`'s return is kept, so `test_pen` and the pinned golden hashes stay
+  green.
+- **S6:** two failures (finding 1).
+
+### Findings
+
+1. **[BLOCKING] S6 fails `test_tutorial_quotes.py` and `test_reference_pages.py`, and neither
+   is S6's (plan :800-829).**
+   - **Evidence, the tutorial quotes:**
+     - `docs/tutorials/paint-a-watercolour.md` quotes seven `tutorial_grids.py` grid
+       functions verbatim (markers at :92, :172, :265, :369, :468, :573 and :690).
+     - Each of them calls `_layout(...)`, `_labels(...)` or `_letter(...)`, and the prose at
+       :36 names all three.
+     - `tests/docs/test_tutorial_quotes.py:24-34` requires every quoted block to appear
+       unchanged in its script.
+   - **Evidence, `test_reference_pages.py`:**
+     - `tests/docs/test_reference_pages.py:230` runs `runpy.run_path(brush_sheet.py)`.
+     - I checked: `run_path` on a single file does not put the file's directory on
+       `sys.path`, so `from labelled_grid import` raises `ModuleNotFoundError`.
+   - **Evidence, the `RGBa` guard:** each `.convert("RGBa")` sits in a script's `_letter`
+     (for example `tutorial_grids.py:151` and `nib_stages.py:215`). Those functions letter
+     cell content with a nib, seed and `ground` that change per cell, so `label_grid` alone
+     cannot replace them, and the guard fails.
+   - **Fix:**
+     - `tutorial_grids.py` keeps `_layout`, `_labels` and `_letter` with today's signatures,
+       each a one-line delegate.
+     - `labelled_grid.py` exposes the round trip as its own function, which `label_grid`
+       and every script's `_letter` call.
+     - S6 owns that one test in `test_reference_pages.py`. It loads `brush_sheet.py` through
+       a `support.examples` helper that puts `EXAMPLES_DIR` on `sys.path`, the same helper
+       `run_example` uses.
+     - Label tuples and lettered names stay literals in each script, because
+       `test_captions.py:185-205` reads them from the script's syntax tree.
+2. **[BLOCKING] Prescribed signatures fail `ruff check` with PLR0913 (plan :533-551,
+   :812-814).**
+   - **Evidence:**
+     - `max-args = 6` (`pyproject.toml`), and PLR0913 counts keyword-only parameters. A
+       probe of `casing` gave "7 > 6".
+     - The counts: `casing` 7, `glow` 7, `shadow` 8 and `label_grid` 13.
+     - `src` has no PLR0913 noqa today. The only ones are on the examples' `main`
+       functions, each with a stated reason.
+   - **Fix:** put the decision in the plan, because S4 and S5b share these signatures. Either
+     use a recorded `# noqa: PLR0913 (reason)` on the three primitives, or reshape them to at
+     most 6 parameters. For `label_grid`, use a frozen label-style record, for example
+     `label_grid(img, spec, columns, rows, style, *, extra=())`. The round-trip function in
+     finding 1 also needs at most 6 parameters.
+3. **[SHOULD-FIX] S2 names one of the two brush rows that change (plan :204-207, `tasks.md`
+   :44-46).**
+   - **Evidence:** `test_theme_check.py:177-179` (`LAN9-z`) changes too. I checked the
+     nearest ids at cutoff 0.6: `LAN9-z` gets `LAN8-a`, and `MAJ9-a` gets `MAJ8-a`.
+   - **Fix:** name both rows, with their exact new messages, and state that `nearest`
+     returns one name for these messages.
+4. **[CONSIDER] `Colour.parse`'s parameter type.** If it is annotated `object`,
+   `test_public_signatures` reports it, because `object` is not in `ALLOWED`
+   (`_public_surface.py:30-69`). Annotate it `str` and check the type at runtime.
+5. **[CONSIDER] The glossary entry.** S7 should rewrite `GLOSSARY.md`'s "colour alias" entry
+   to say that an alias stands for a pigment.
+6. **[CONSIDER] A chain whose parent cannot be read.** When the child is checked from the base
+   up, it would report a cascade of "is not a pigment or a colour alias" problems for names
+   the unreadable parent defines. State whether the files below a failed read are still
+   checked.
