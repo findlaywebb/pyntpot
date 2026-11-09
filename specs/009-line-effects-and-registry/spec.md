@@ -64,9 +64,10 @@ layout and label code.
 
 - [ ] `pyntpot.ink.Colour` is a frozen `str` subclass that holds a lower-case `#rrggbb`.
       It has `Colour.parse(text)` (strict: `#` and six hexadecimal digits in either case,
-      lower-cased; no `#abc`, no CSS names), `.rgb` (bit-identical to `ink.rgb` for every
-      hex: a Hypothesis property) and `.rgb8`. It survives `==`, `json.dumps`,
-      `dataclasses.asdict`, `copy.deepcopy` and pickling as the same string.
+      lower-cased; no `#abc`, no CSS names; a non-`str` raises `ValueError`), `.rgb`
+      (bit-identical to `ink.rgb` for every hex: a Hypothesis property) and `.rgb8`. It
+      survives `==`, `json.dumps`, `dataclasses.asdict`, `copy.deepcopy` and pickling as
+      the same string.
 - [ ] Every colour field of every style group is typed `Colour`: `paper.paper_hex`,
       `wash.separation_pigments.*`, the four `nib` inks, `cover.pigments.*`,
       `route_ink.colour`, and the new effect colours. `COLOUR_FIELDS` is gone. A test fails
@@ -95,7 +96,8 @@ layout and label code.
       name, or replaces an inherited or palette alias without `override` is a located
       error.
 - [ ] A theme's top-level `pigments:` adds pigments
-      (`{base, colour, transparency, colour_index}`) that its colour fields may name. A
+      (`{base, colour, transparency, colour_index}`, with `base`, `colour` or both; a field
+      given overrides the base's) that its colour fields may name. A
       name equal to a built-in is refused, and the message points at
       `<new name>: {base: <built-in>}`. In PR 1, a theme pigment's transparency is recorded
       and not used (rule 17 is PR 2).
@@ -121,6 +123,7 @@ layout and label code.
 - [ ] `pyntpot.ink` exports `casing`, `glow`, `shadow` and `pen_casing`. Each is a pure
       function of float32 RGB and a float mask. None knows of maps, and none draws a random
       number.
+- [ ] Each refuses a threshold at or below 0 with `ValueError`.
 - [ ] Hypothesis properties, on arrays before any dither or encode: a casing of width 0
       is the identity, bit for bit; a glow never darkens a pixel; a shadow never paints
       over its casting line (where the mask is at or above the threshold, the output
@@ -142,7 +145,8 @@ layout and label code.
       goes to `route_ink.effects` (read at compose, so `digest()` moves). Off effects and
       empty stacks are dropped once, after the final merge, so a child that writes
       `major: {}` turns off its parent's `major` stack. Neither field can be set inside
-      its group in a theme.
+      its group in a theme. `BasemapStyle` refuses a `line_effects` key outside the seven
+      basemap classes, and at load such a key is a located error.
 - [ ] A negative width, spread, blur or offset, or a strength outside 0 to 1, is a located
       error at load, never clipped; the effect types refuse the same values.
 - [ ] Hypothesis: expanding a preset gives the same style and the same digests as

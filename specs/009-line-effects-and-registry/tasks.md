@@ -31,6 +31,10 @@ gate B; S7, S8, S9.
 - [ ] The four tables (moved to `pigment_table.py`, exported from `pyntpot.ink`) and the
       two map defaults built from the registry, in today's order; `pigment()` delegates a
       name to `PigmentRegistry.get`, the one miss message.
+- [ ] `Colour.parse` raises `ValueError` for any non-`str`; alias names drawn with
+      `fullmatch=True`.
+- [ ] `theme_dump._plain` writes a `str` subclass as `str`, so the theme-merge property
+      dumps `Colour` values.
 - [ ] Exports, `test_public_api.py`, `docs/reference/ink.md`; `test_pigment.py` pins
       unchanged; grid `check`; slice gate green.
 
@@ -52,11 +56,14 @@ gate B; S7, S8, S9.
 - [ ] Colour call sites wrapped in `Colour(...)` in the five grid scripts,
       `pigment_swatches.py` and `test_style.py`; `ty check` green over `examples` and
       `tests`.
-- [ ] `theme_dump._plain` writes a `str` subclass as `str`; `test_theme_merge._is_colour`
-      by `isinstance(value, Colour)`.
-- [ ] Pure move of `_Check` and its helpers to `theme_checker.py`, its own commit.
-- [ ] `theme_scope.py`; the `theme_checker` adapter, context and messages;
-      `COLOUR_FIELDS` retired; `ALIAS_PATTERN`.
+- [ ] `test_theme_merge._is_colour` by `isinstance(value, Colour)`.
+- [ ] `tests/unit/ink/test_style_colours.py` and `tests/unit/letters/test_style.py` cover
+      `normalise_colours` and the `PaperStyle`, `WashStyle` and `NibStyle` hooks.
+- [ ] Pure move of `_Check` and its helpers (`_sheet_and_colour`, `_MESSAGES`, `_TABLE`,
+      `_COLOUR`, `_Path` included) to `theme_checker.py`, its own commit.
+- [ ] `theme_scope.py` in its full shape (`Bound`, the four mappings, cached `registry`,
+      `resolve_colour` order); the `theme_checker` adapter, context and messages;
+      `COLOUR_FIELDS` retired; `ALIAS_PATTERN = "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"`.
 - [ ] Schema regenerated; pinned digests unchanged; grid `check`; slice gate green.
       S6's worktree is cut here.
 
@@ -65,18 +72,21 @@ gate B; S7, S8, S9.
 - [ ] Red: each refusal (chain, built-in name, missing `override`, unknown alias, bad
       `.gpl` row, a `.gpl` name that is no alias, two `.gpl` names with one alias, a
       palette alias clashing with an inherited one), inheritance across `extends`, the
-      binding rule, `Palette.registry_gpl`, the CLI exiting 2 before any fetch, the two
-      properties.
+      binding rule, a theme pigment with `base` and `colour` both, `Palette.registry_gpl`,
+      the CLI exiting 2 before any fetch, the two properties.
+- [ ] `test_theme_schema.py`: the top-level order pinned, the `propertyNames` walk over
+      the group subtrees only, the `colours` and `pigments` key-rule test.
 - [ ] `theme_pigments.py`, `theme_colours.py`, `theme_palette.py`,
       `theme_palette_gpl.py`, `palettes/plain.yaml`, in the wheel.
-- [ ] `check_theme_scoped`; `theme_resolve` reads the chain then checks from the base up.
+- [ ] `check_theme_scoped`; `theme_resolve` reads the chain then checks from the base up;
+      `theme_scope.py` filled on S3a's shape.
 - [ ] `Palette` exported and documented; schema tables; schema regenerated; slice gate
       green.
 
 ## S4: Effect primitives (worktree)
 
 - [ ] Red: the property tests and unit tests of `casing`, `glow`, `shadow` (its rounded
-      offset included) and `pen_casing`.
+      offset included) and `pen_casing`; each refuses `threshold <= 0`.
 - [ ] `ink/effect_mask.py` and the four `effect_*` modules; no export yet; slice gate green
       in the worktree.
 
@@ -84,11 +94,17 @@ gate B; S7, S8, S9.
 
 - [ ] Red: `test_line_effects.py` (ranges, off dropped, the Payne's grey default),
       `test_theme_effects.py` (out-of-range located; a child's `major: {}` turns off its
-      parent's `cased`), `test_digest_omits.py`, the extended schema guard, the two
-      properties.
+      parent's `cased`; the `LOADER_FIELDS` messages), `test_digest_omits.py`, the
+      extended schema guard, a `BasemapStyle` key outside the seven classes refused, the
+      two properties.
+- [ ] `test_theme_schema.py` (top-level order with `effect_presets` and `line_effects`;
+      key rules; field test leaves out `LOADER_FIELDS`) and `test_theme_vocab.py` (both
+      dict-field tests leave out `LOADER_FIELDS`; no `VOCABULARIES` entry for
+      `basemap.line_effects`).
 - [ ] `maps/line_effects.py` (`EFFECT_RANGES`, the `__post_init__` hooks),
       `maps/theme_effects.py`, the two group fields, `BasemapStyle.__post_init__`,
-      `DIGEST_OMITS_AT_DEFAULT`, `LOADER_FIELDS`, the dispatch.
+      `DIGEST_OMITS_AT_DEFAULT`, `LOADER_FIELDS` (taken out in `check_theme_scoped`
+      before the group check), the dispatch, presets in `theme_scope.py`.
 - [ ] The prescribed `line_effects` and `effect_presets` schema shape; `style-fields.md`
       rows for `basemap.line_effects` and `route_ink.effects`; `_BASE` in
       `test_theme_merge.py` without the loader-only fields; `line_effects.py` in the
@@ -114,7 +130,8 @@ gate B; S7, S8, S9.
 - [ ] Red: `boxes()` literals for the five layouts, taken from the old code before any
       edit; the guard that no grid script calls `.convert("RGBa")`.
 - [ ] `examples/labelled_grid.py`; the five scripts moved onto it; `run_example`
-      `sys.path`; the `test_examples.py` sibling allowance.
+      `sys.path`; the `test_examples.py` sibling allowance; `"examples"` added to
+      `[tool.ty.environment] root` in `pyproject.toml`.
 - [ ] Grid `check`; golden docs subset; slice gate green.
 
 ## Merge gate B
@@ -138,11 +155,15 @@ gate B; S7, S8, S9.
       notes updated.
 - [ ] `docs/features/maps-bridges-over-water.md` and `docs/features/maps-water-lining.md`
       cite ADR 0070, linked, in place of "not yet in `docs/decisions/`".
+- [ ] `docs/features/ink-stroke-density-profile.md:8` cites `ink/compositing.py`, not
+      `ink/pigment.py`.
 - [ ] The em and en dash grep is empty; slice gate green.
 
 ## S8: Mutation testing
 
-- [ ] Changed `ink` functions run with `tests/mutation/scope.py` (moved
+- [ ] Changed `ink` and `letters` functions (the `PaperStyle`, `WashStyle` and
+      `NibStyle` hooks and `normalise_colours` included) run with
+      `tests/mutation/scope.py` (moved
       `compositing.py` functions dropped, with the reason); survivors killed or recorded
       as equivalent in `mutation.md`.
 

@@ -7,7 +7,7 @@ ADR 0070 is the design. This plan is how PR 1 lands it. Every fact was measured 
 "Resolution" section maps each finding to its fix here). ADR 0070 was amended to match
 this plan before S0, so the two agree. Read ADR 0070, the spec, `research.md`, `CLAUDE.md`
 and `CONTRIBUTING.md` first. One fact in `research.md` is stale: a YAML writer does exist,
-`tests/support/theme_dump.py` (S3a).
+`tests/support/theme_dump.py` (S1).
 
 **The word "effect".** The user is ruling on whether `CONTRIBUTING.md`'s trap against the
 word "effect" narrows. No slice waits on it: S4 and S5a proceed, and every slice uses
@@ -102,7 +102,11 @@ submodules.
 Order: S0, S1, S2, S3a, S3b, S5a, merge gate A (S4 in), S5b, merge gate B (S6 in), S7, S8,
 S9. S4 runs in a worktree cut after S0. S6 runs in a worktree cut after S3a, because S3a
 wraps colour literals in the five grid scripts S6 rewrites. After its cut, neither
-owns a file any serial slice owns.
+owns a file any serial slice owns. Serial slices may own the same file in turn (for
+example `maps/theme_scope.py` in S3a, S3b and S5a, or `test_theme_schema.py` in S3a, S3b
+and S5a): each later slice edits on the earlier one's committed result, never at the same
+time, so ownership stays disjoint per slice by sequencing. Every slice's gate passes with
+only the files it owns.
 
 ### S0: Baseline (serial, first)
 
@@ -148,9 +152,17 @@ owns a file any serial slice owns.
     `maps/theme_vocab.py` (from `ROLE_PIGMENTS` names).
   - Exports: `ink/__init__.py` (exports and docstring), `tests/unit/test_public_api.py`
     and `docs/reference/ink.md` (one directive per new name).
+  - Test support: `tests/support/theme_dump.py`. `_plain` writes a `str` subclass as
+    `str(value)`, because ruamel's safe dumper raises `RepresenterError` on one, and from
+    this slice `CoverStyle().pigments` holds `Colour` values that
+    `test_an_override_and_its_expanded_copy_give_one_digest`
+    (`tests/property/test_theme_merge.py`, in this slice's gate) dumps.
 - **Shapes:**
   - `Colour(text)` accepts only lower-case `#rrggbb`. `Colour.parse` lower-cases; it
-    defines `__slots__ = ()` and no `__init__`.
+    defines `__slots__ = ()` and no `__init__`. `Colour.parse` raises `ValueError` for
+    any non-`str` before reading it ("is not a string"), so
+    `Style.model_validate({"route_ink": {"colour": 5}})` is a `value_error` and
+    `RouteInkStyle(colour=None)` a `ValueError`, never an `AttributeError`.
   - `Pigment` is `@dataclass(frozen=True, kw_only=True)`.
   - `PigmentRegistry(pigments: tuple[Pigment, ...])` refuses duplicate names. It offers
     `names()`, `get(name)` (`ValueError`: "no pigment 'ultramarin'; did you mean
@@ -160,22 +172,25 @@ owns a file any serial slice owns.
     itself, a `#` goes to `Colour.parse`, and a name goes to `registry.get` (the shared
     registry when `None`), so its miss is `get`'s message.
 - **Tests first:**
-  - `tests/unit/ink/test_colour.py`: parse and refuse cases; `deepcopy`, `pickle`,
-    `asdict` and `json.dumps` round trips.
+  - `tests/unit/ink/test_colour.py`: parse and refuse cases (`5` and `None` among them,
+    each a `ValueError`); `deepcopy`, `pickle`, `asdict` and `json.dumps` round trips.
   - `tests/unit/ink/test_pigment_registry.py`: 25 pinned entries; the lookups; the miss
     message; the four tables equal the registry projection.
   - In maps tests: `CoverStyle().pigments` and `PaperStyle().pigment_transparency` equal
     the registry, keys in pinned order.
-  - `tests/property/test_pigment_registry.py`, strategies `st.from_regex(ALIAS)` names,
-    lower-case hex and `st.none() | st.floats(0, 1)`:
+  - `tests/property/test_pigment_registry.py`, strategies
+    `st.from_regex("^[a-z][a-z0-9]*(_[a-z0-9]+)*$", fullmatch=True)` names (the
+    pattern S3a names `ALIAS_PATTERN`), lower-case hex and
+    `st.none() | st.floats(0, 1)`:
     - `extended(())` resolves every name identically;
     - an extension naming any built-in raises;
-    - a non-colliding extension leaves every built-in lookup equal and the base
-      unchanged;
+    - a non-colliding extension (names filtered off the registry's) leaves every
+      built-in lookup equal and the base unchanged;
     - `Colour.parse(h).rgb.tobytes() == rgb(h).tobytes()`.
   - `tests/architecture/test_one_registry.py`: each built-in hex is a literal in one
     `src` module only.
-- **Gate:** slice gate; `test_pigment.py` pins unchanged; grid `check`.
+- **Gate:** slice gate (`test_theme_merge.py`'s dump included); `test_pigment.py` pins
+  unchanged; grid `check`.
 
 ### S2: The catalogues as typed tables (#71; serial)
 
@@ -202,9 +217,10 @@ owns a file any serial slice owns.
   `maps/theme_schema.py`, both `theme.schema.json` copies,
   `tests/unit/maps/test_theme_vocab.py`, `tests/unit/maps/test_theme_schema.py`,
   `tests/unit/maps/test_theme_check.py`, `tests/unit/maps/test_style.py`,
-  `tests/property/test_theme_merge.py`, `tests/support/theme_dump.py`,
-  `tests/architecture/test_one_hex_parser.py` (new), and the colour call sites below in
-  `examples/`.
+  `tests/property/test_theme_merge.py`, `tests/unit/ink/test_style_colours.py` (new),
+  `tests/unit/letters/test_style.py`, `tests/architecture/test_one_hex_parser.py` (new),
+  and the colour call sites below in `examples/`. `tests/support/theme_dump.py` is S1's,
+  already done.
 - **Retyping fields:**
   - Retype the fields: `paper_hex: Colour = Colour("#f3ead6")`,
     `separation_pigments: dict[str, Colour]`, the four nib inks, `pigments:
@@ -239,15 +255,18 @@ owns a file any serial slice owns.
   `examples/pigment_swatches.py:70` (`KEY_INK`) and `tests/unit/maps/test_style.py:50`.
   The value is the same string, so no pixel moves. `uv run ty check` is the list's
   proof: any further site it names is S3a's too.
-- **Test support.** `tests/support/theme_dump._plain` writes a `str` subclass as
-  `str(value)`, because ruamel's safe dumper refuses a subclass. In
-  `tests/property/test_theme_merge.py`, `_is_colour` becomes `isinstance(value, Colour)`
-  on the leaf (`dataclasses.asdict` keeps the subclass), and the `COLOUR_FIELDS` import
-  goes.
+- **Test support.** In `tests/property/test_theme_merge.py`, `_is_colour` becomes
+  `isinstance(value, Colour)` on the leaf (`dataclasses.asdict` keeps the subclass), and
+  the `COLOUR_FIELDS` import goes. (`theme_dump._plain` already writes a `str` subclass as
+  `str`, from S1.)
 - **The checker.** First, as its own commit, a pure move: `_Check` (renamed
   `TableCheck`), `_adapter`, `_hints`, `_is_dataclass`, `_messages`, `_message`,
-  `_vocabulary` and `_matches` go from `theme_check.py` to `maps/theme_checker.py`,
-  unchanged but for the names the new modules import. `theme_check` keeps `check_theme`,
+  `_vocabulary`, `_matches`, `_sheet_and_colour` (its brush branch, S2's suggestion
+  included, moves with it), `_MESSAGES`, `_TABLE`, `_COLOUR` and `_Path` go from
+  `theme_check.py` to `maps/theme_checker.py`, unchanged but for the names the new
+  modules import (a moved name another module imports drops its underscore, as
+  `TableCheck` does). `TableCheck.leaf` and `TableCheck.mapping` use every one of them, so
+  `theme_checker` imports nothing from `theme_check`. `theme_check` keeps `check_theme`,
   `build_group`, `EXTENDS`, `RENAMED_KEYS` and the dispatch, and imports
   `theme_checker`. The `theme_*` modules S3b and S5a add import `theme_checker`, never
   `theme_check`, so no cycle forms. Then, extended, not replaced:
@@ -256,14 +275,33 @@ owns a file any serial slice owns.
     theme. `TableCheck.leaf` passes `context={"scope": self.scope}`.
   - `resolve_theme_colour` refuses a non-`str` with `ValueError("is not a string")`, and
     `_message` maps `value_error` to the validator's own text.
-  - The colour branch of `_sheet_and_colour` goes (the brush branch stays).
-- **`theme_scope.py`** holds `ThemeScope(registry, aliases, presets)`, the frozen,
-  scoped vocabulary, and `ThemeScope.built_in()`. It also holds `resolve_colour(text,
-  scope) -> Colour`: a leading `#` goes to `Colour.parse`, anything else to an alias and
-  then a registry name. A miss reads "'x' is not a pigment or a colour alias; did you
-  mean y?".
+  - The colour branch of `_sheet_and_colour` goes, in `theme_checker`, and `_COLOUR`,
+    which only that branch reads, goes with it (the brush branch stays).
+- **`theme_scope.py`** holds the frozen, scoped vocabulary. Its full shape is set here,
+  so S3b and S5a fill it without changing it:
+  - `Bound[T](value: T, path: Path, line: int)`, frozen: an entry and the file and line
+    that wrote it, so every clash names both files.
+  - `ThemeScope(pigments: Mapping[str, Bound[Pigment]], palette: Bound[Palette] | None,
+    aliases: Mapping[str, Bound[Colour]], presets: Mapping[str, Bound[object]])`, a
+    frozen dataclass without `slots`. `palette` holds the one palette in effect and so
+    its aliases; `aliases` holds theme aliases only. The split is what lets a file's
+    `palette:` take the inherited palette's aliases out while theme aliases stay.
+  - An entry is the checked file's own when its `Bound.path` is that file's path, and
+    inherited otherwise; that is the marker the `override` rule reads.
+  - `registry` is a `functools.cached_property`,
+    `PIGMENT_REGISTRY.extended(tuple(b.value for b in pigments.values()))`. Theme
+    pigments are held by name in the mapping, so replacing an inherited one (with
+    `override`) is a new mapping, and `extended` never sees two entries of one name; a
+    built-in name is refused before it reaches the mapping.
+  - `ThemeScope.built_in()` is the empty scope (no theme pigments, no palette, no
+    aliases, no presets). S3a types `presets` as `Bound[object]`, and S5a narrows it to
+    `Bound[EffectStack]`.
+  - `resolve_colour(text, scope) -> Colour`: a leading `#` goes to `Colour.parse`;
+    anything else is looked up as a theme alias, then a palette alias, then a registry
+    name. A miss reads "'x' is not a pigment or a colour alias; did you mean y?".
 - **`theme_vocab.py`:** `COLOUR_FIELDS` is retired. `COLOUR_PATTERN` stays, and
-  `ALIAS_PATTERN = "^[a-z][a-z0-9_]*$"` is added.
+  `ALIAS_PATTERN = "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"` is added: no leading, trailing or
+  doubled `_`, so every alias is its own normal form under the `.gpl` rule (S3b).
 - **`theme_schema.py`:** `_leaf_schema` emits for `Colour`:
   `{"anyOf": [{"enum": sorted names}, {"type": "string", "pattern": COLOUR_PATTERN},
   {"type": "string", "pattern": ALIAS_PATTERN}]}`. The third branch exists because the
@@ -281,6 +319,14 @@ owns a file any serial slice owns.
     `("route_ink", "colour")`.
   - `tests/architecture/test_one_hex_parser.py`: no module under `src/` but
     `ink/colour.py` calls `int(..., 16)` or `bytes.fromhex` (an AST walk).
+  - For mutation (S8), the new `ink` and `letters` functions have tests in those layers:
+    `tests/unit/ink/test_style_colours.py` (`normalise_colours` on a plain and a dict
+    field, a `Colour` passed through as itself, a bad value raising, and the
+    `PaperStyle` and `WashStyle` `__post_init__` normalising `"#ABCDEF"`) and
+    `tests/unit/letters/test_style.py` (`NibStyle`'s four inks normalised, a bad ink
+    raising).
+  - `ThemeScope`: `resolve_colour` order (theme alias, palette alias, registry name);
+    `registry` holds the theme pigments; `Bound` carries path and line.
   - `cover.pigments.built: ultramarine` loads as `#2b3d8f`.
   - `ultramarin` is a located error with the suggestion.
   - Upper-case hex is stored lower-case.
@@ -294,9 +340,11 @@ owns a file any serial slice owns.
   `maps/theme_palette_gpl.py` and `maps/palettes/plain.yaml` (all new), plus
   `maps/theme_resolve.py`, `maps/theme_check.py` (top-level dispatch),
   `maps/theme_schema_tables.py` (new), `maps/theme_schema.py`, both schema copies,
+  `maps/theme_scope.py` (filled on S3a's shape: the pigment, palette and alias steps),
   `maps/__init__.py` (exports `Palette`), `docs/reference/maps.md`,
-  `tests/unit/test_public_api.py`, the new tests below, and `tests/unit/maps/test_cli.py`
-  (one case).
+  `tests/unit/test_public_api.py`, `tests/unit/maps/test_theme_schema.py` (the changes
+  under "Existing schema tests" below), the new tests below, and
+  `tests/unit/maps/test_cli.py` (one case).
 - **Checking order.** `check_theme_scoped(theme, groups, scope) -> (table, problems,
   scope)` is new, in `maps/theme_check.py` beside `check_theme`, which keeps its
   signature and return as a wrapper. The modules it dispatches to import
@@ -308,8 +356,10 @@ owns a file any serial slice owns.
   groups.
 - **Rules:**
   - A theme pigment name matches `ALIAS_PATTERN`. Its `base` names a built-in or an
-    inherited pigment, and its `colour` is a hex; exactly one of `base` and `colour` is
-    required.
+    inherited pigment, and its `colour` is a hex. At least one of `base` and `colour` is
+    required, and both may be given: `colour` then overrides the base's colour, as
+    `transparency` and `colour_index` override the base's (ADR 0070 rule 6, "`base` plus
+    the fields it overrides"). A field left out is the base's.
   - A collision with a built-in reads "'ultramarine' is a built-in pigment; derive one:
     my_ultramarine: {base: ultramarine}".
   - An alias value is a pigment name or a hex, never an alias; an alias name is no
@@ -371,11 +421,25 @@ owns a file any serial slice owns.
   - `pigments`: the same key rule; values are an object of `base` (enum names), `colour`
     (hex), `transparency` (0 to 1), `colour_index` and `override`.
   - `palette`: `anyOf` [enum packaged names, a `\.(yaml|gpl)$` pattern].
+  - Top-level property order: `extends, palette, pigments, colours, <groups>` (S5a inserts
+    `effect_presets, line_effects` after `colours`).
+- **Existing schema tests (`tests/unit/maps/test_theme_schema.py`):**
+  - `test_extends_is_the_one_extra_top_level_key` pins
+    `["extends", "palette", "pigments", "colours", *Style.model_fields]`, and is renamed
+    for what it now proves.
+  - `test_every_level_forbids_other_keys` walks only the group subtrees
+    (`schema["properties"][group]` for each group), so its `propertyNames ==
+    {"enum": sorted(VOCABULARIES[path])}` rule and `entries == set(VOCABULARIES)` hold.
+  - A new test pins the top-level tables' key rules: `colours` and `pigments` each have
+    `propertyNames == {"pattern": ALIAS_PATTERN, "not": {"enum": sorted names}}` (S5a
+    adds `effect_presets` and `line_effects`).
 - **Tests first:**
   - `tests/unit/maps/test_theme_colours.py`, `test_theme_pigments.py`,
     `test_theme_palette.py` and `test_theme_palette_gpl.py` cover every refusal, located
     with file, key, line and suggestion (the two new `.gpl` cases included), plus
-    inheritance across `extends`.
+    inheritance across `extends`. `test_theme_pigments.py` also pins `{base: ultramarine,
+    colour: "#203070"}` as ultramarine's transparency with the given colour, and a
+    pigment with neither `base` nor `colour` as a located error.
   - The binding rule, pinned: a parent sets `colours: {sky: cerulean}` and
     `route_ink.colour: sky`; a child sets `colours: {sky: {colour: indigo, override:
     true}}`; the child's `route_ink.colour` is still cerulean's hex. A second case: the
@@ -384,10 +448,11 @@ owns a file any serial slice owns.
   - `Palette.registry_gpl()` lists all 25 pigments under their canonical names, in
     registry order.
   - CLI: a misspelt pigment in `--style` exits 2 and no provider is called.
-  - `tests/property/test_theme_colours.py`: an alias (`from_regex(ALIAS)` filtered off
-    names) to `sampled_from(names)` resolves to `pigment(name).colour`.
-  - `tests/property/test_palette_gpl.py`: `st.dictionaries(alias names, lower hex)`
-    survives export then import as equal.
+  - `tests/property/test_theme_colours.py`: an alias
+    (`from_regex(ALIAS_PATTERN, fullmatch=True)` filtered off the registry's names) to
+    `sampled_from(names)` resolves to `pigment(name).colour`.
+  - `tests/property/test_palette_gpl.py`: `st.dictionaries(alias names, lower hex)`, the
+    names drawn the same way, survives export then import as equal.
 - **Gate:** slice gate; schema regenerated; pinned digests of every theme unchanged.
 
 ### S4: Effect primitives (parallel worktree cut after S0)
@@ -425,10 +490,12 @@ owns a file any serial slice owns.
     returns `(rgb, zeros)`.
   - No function draws a random number, and each returns a new float32 array clipped to 0
     to 1, except the identity returns.
+  - Each refuses `threshold <= 0` with a `ValueError` naming it, before any other work,
+    because `shadow` divides by it and warnings are errors.
 - **Property strategies:**
   - Inputs: `hypothesis.extra.numpy.arrays(np.float32, (h, w, 3), elements=floats(0, 1,
     width=32))` with `h, w` in 8 to 40; a mask from the same strategy with shape `(h, w)`;
-    `paper` as `None` or an array.
+    `paper` as `None` or an array; `threshold` from `floats(0, 1, exclude_min=True)`.
   - Casing: `width_px` in {0.0, -0.0, negatives} gives a bitwise-identical result
     (`view(np.uint32)`).
   - Glow: `out >= rgb` everywhere for any spread, blur, strength and paper.
@@ -436,6 +503,7 @@ owns a file any serial slice owns.
     a unit case pins the rounded `(dx, dy)` for 315 degrees at `offset_px` 1.2 and 2.5.
   - Pen casing: width 0 is the identity and gives zero edges; inside the reserve, minus
     the edge band, `out == paper`.
+  - A unit case per function: `threshold` 0 and -0.1 each raise `ValueError`.
 - **Gate:** slice gate in the worktree. Mutation (S8) needs these tests under
   `tests/unit/ink` and `tests/property`, which is where they are.
 
@@ -454,13 +522,18 @@ the glossary's.
     casing, glow or shadow"), `maps/style.py` (`DIGEST_OMITS_AT_DEFAULT` gains
     `"line_effects"` and `"effects"`, with docs), `maps/theme_check.py` (dispatch
     `effect_presets` and `line_effects`; `LOADER_FIELDS` refusal), `maps/theme_vocab.py`
-    (`LINE_CLASSES` vocabulary and `LOADER_FIELDS = {("basemap", "line_effects"):
-    "line_effects.<class>", ("route_ink", "effects"): "line_effects.route"}`),
-    `maps/theme_schema.py` (skips `LOADER_FIELDS`), `maps/theme_schema_tables.py`, both
-    schemas, `maps/__init__.py`, `docs/reference/maps.md`,
-    `tests/unit/test_public_api.py`, `docs/reference/style-fields.md` (the two rows),
-    `tests/property/test_theme_merge.py` (`_BASE` loses the `LOADER_FIELDS`) and
-    `tests/architecture/test_theme_imports.py` (`line_effects.py` added by name).
+    (`LOADER_FIELDS = {("basemap", "line_effects"): "line_effects.<class>",
+    ("route_ink", "effects"): "line_effects.route"}`; `basemap.line_effects` gets no
+    `VOCABULARIES` entry, because `theme_effects` checks its keys against
+    `LINE_CLASSES`), `maps/theme_scope.py` (presets typed `Bound[EffectStack]`, and the
+    preset step, on S3b's result), `maps/theme_schema.py` (skips `LOADER_FIELDS`),
+    `maps/theme_schema_tables.py`, both schemas, `maps/__init__.py`,
+    `docs/reference/maps.md`, `tests/unit/test_public_api.py`,
+    `docs/reference/style-fields.md` (the two rows), `tests/property/test_theme_merge.py`
+    (`_BASE` loses the `LOADER_FIELDS`), `tests/unit/maps/test_theme_schema.py` and
+    `tests/unit/maps/test_theme_vocab.py` (the changes under "Existing guard tests"
+    below), and `tests/architecture/test_theme_imports.py` (`line_effects.py` added by
+    name).
 - **Types:** frozen, `kw_only`, and default-constructible.
   - `Casing(width_px=0.0, colour=Colour("#ffffff"), strength=1.0)`
   - `Glow(spread_px=0.0, blur_px=0.0, strength=0.0)`
@@ -477,7 +550,13 @@ the glossary's.
   - An effect is off when `strength == 0`, or, for a casing, `width_px == 0` (so `-0.0`
     is off too).
   - `EffectStack.__post_init__` refuses two of a kind and drops off effects.
-  - `BasemapStyle.__post_init__` drops each class whose stack is empty.
+  - `BasemapStyle.__post_init__` first raises `ValueError` for a key outside the seven
+    basemap classes (`LINE_CLASSES` less `route`), naming the key, the nearest class and
+    the seven, so a Python caller's `BasemapStyle(line_effects={"route": ...})` or a
+    misspelt key is never silently ignored. It then drops each class whose stack is
+    empty. Both steps are one helper in `line_effects.py`, so `style_groups.py` gains one
+    line. At load the same key is a located problem from `theme_effects` (below), so the
+    `ValueError` never reaches a theme author.
   - A stack written all off therefore equals `EffectStack()`, and a basemap table of
     such stacks equals `{}`, so a value equal to off moves no digest.
 - **Presets** (provisional values, tuned with figures in PR 2; no PR 1 pin depends on
@@ -485,9 +564,17 @@ the glossary's.
   - `cased = (Casing(width_px=1.2),)`
   - `halo = (Glow(spread_px=1.0, blur_px=2.5, strength=0.8),)`
   - `lifted = (Shadow(offset_px=1.2, blur_px=1.5, strength=0.35),)`
+- **The `LOADER_FIELDS` refusal.** Group keys are walked by `TableCheck.mapping`, in
+  `theme_checker.py`, which S5a does not change. So `check_theme_scoped`, before
+  `check.table(...)` for a group, takes each `LOADER_FIELDS` key out of a copy of the
+  group's mapping and records a problem at its path (for example
+  `basemap.line_effects`): "set only by the top-level line_effects.<class>", or "set only
+  by the top-level line_effects.route" for `route_ink.effects`, the text being
+  `LOADER_FIELDS[path]`. The message is pinned in `test_theme_effects.py`.
 - **`theme_effects.py`:**
   - Checks `effect_presets` (no built-in name; the `override` rule).
-  - Checks `line_effects`: keys against `LINE_CLASSES` with the nearest name. A string
+  - Checks `line_effects`: keys against `LINE_CLASSES` with the nearest name, as a
+    located problem at the key's line. A string
     value is a preset name, with the nearest name on a miss. A mapping value has keys
     `casing`, `glow` and `shadow`, nearest name on a miss, applied in key order. A
     `preset` key reads "a line class takes a preset name or a stack, not both". Each
@@ -518,6 +605,17 @@ the glossary's.
   - `effect_presets`: `propertyNames` `{pattern: ALIAS_PATTERN, not: {enum:
     BUILT_IN_PRESETS}}`; values are the stack object.
   - The schema carries no numeric ranges, as today; the checker owns them.
+- **Existing guard tests:**
+  - `test_theme_schema.py`: the top-level order becomes
+    `["extends", "palette", "pigments", "colours", "effect_presets", "line_effects",
+    *Style.model_fields]`; `test_every_field_is_in_the_schema_with_its_default` leaves
+    out `LOADER_FIELDS` (the schema skips them); the top-level key-rule test (S3b) adds
+    `effect_presets` (`{"pattern": ALIAS_PATTERN, "not": {"enum":
+    sorted(BUILT_IN_PRESETS)}}`) and `line_effects` (`{"enum": sorted(LINE_CLASSES)}`);
+    the group-subtree walk (S3b) is unchanged, and `basemap.line_effects` is not in it.
+  - `test_theme_vocab.py`: `test_every_dict_field_has_a_vocabulary` and
+    `test_every_real_dict_field_path_has_a_vocabulary` (through `_unvocabularied`) leave
+    out `LOADER_FIELDS`, so `basemap.line_effects` needs no vocabulary.
 - **`style-fields.md`** (its comparator, `tests/docs/test_reference_values.py` and
   `test_reference_pages.py`, runs in this slice's gate):
   - `basemap` gains a `line_effects` row: type `table`, default `table`, "Set only by
@@ -531,9 +629,13 @@ the glossary's.
   - `tests/unit/maps/test_line_effects.py`: types; at most one of a kind;
     `LINE_CLASSES == frozenset(BrushStyle().brushes) | {"route"}`; each range refused
     in `__post_init__`; off effects dropped; `Shadow().colour ==
-    pigment("paynes_grey").colour`; `Casing` and `Shadow` normalise a `str` colour.
+    pigment("paynes_grey").colour`; `Casing` and `Shadow` normalise a `str` colour;
+    `BasemapStyle(line_effects={"route": EffectStack()})` and a misspelt key
+    (`"majr"`, suggesting `major`) each raise `ValueError`.
   - `tests/unit/maps/test_theme_effects.py`: every refusal, located (out-of-range
-    numbers included); the split; the `LOADER_FIELDS` refusal; a parent theme sets
+    numbers included); the split; the `LOADER_FIELDS` refusal and its two pinned
+    messages; an unknown `line_effects` key located with the nearest class; a parent
+    theme sets
     `major: cased`, a child sets `major: {}`, and the child's style has no `major` stack
     and the default's three digests; the same with `major: {casing: {width_px: 0}}`.
   - The S3a schema guard is extended to the `Casing.colour` and `Shadow.colour` nodes
@@ -607,7 +709,8 @@ Merge S4. Then:
 - **Owns:** `examples/labelled_grid.py` (new), `examples/tutorial_grids.py`,
   `examples/nib_stages.py`, `examples/brush_sheet.py`, `examples/wash_stages.py`,
   `examples/how_to_route_ink.py`, `tests/support/examples.py`,
-  `tests/architecture/test_examples.py` and `tests/examples/test_labelled_grid.py` (new).
+  `tests/architecture/test_examples.py`, `tests/examples/test_labelled_grid.py` (new) and,
+  for one line, `pyproject.toml` `[tool.ty.environment] root`.
   The worktree is cut from S3a's checkpoint, so the five scripts already wrap their
   colour literals in `Colour(...)`; S6 keeps those wraps wherever the code moves.
 - **`GridSpec`:** frozen, with `width, cols, rows, cell_h, left, top, gap=14,
@@ -621,6 +724,11 @@ Merge S4. Then:
 - **`run_example`** puts `EXAMPLES_DIR` on `sys.path` for the call and restores it after.
   `test_examples.py` allows `from labelled_grid import ...` (an `_EXAMPLE_SIBLINGS`
   allowlist), and the helper itself imports only public names.
+- **`ty` resolves the sibling.** `[tool.ty.environment] root` is `["src", "tests"]`, so
+  `from labelled_grid import ...` is `import-not-found` and `ty` exits 1. S6 adds
+  `"examples"` to `root`, with a comment like the `tests` one. This widens what `ty`
+  resolves and checks; it loosens no gate, and no other line of `pyproject.toml`
+  changes.
 - **Guard:** `test_examples.py` also fails when any of the five grid scripts calls
   `.convert("RGBa")`, so the label round trip lives only in `labelled_grid.py`.
 - **Tests first:** before any edit, run the old `_layout`, `_cells` and the three inline
@@ -662,6 +770,8 @@ tree.
   - In `maps-bridges-over-water.md:43-44` and `maps-water-lining.md:33-34`, replace
     "cited by the brief but not yet in `docs/decisions/` at the time of writing" with a
     link to `../decisions/0070-line-effects-and-one-pigment-registry.md`.
+  - `docs/features/ink-stroke-density-profile.md:8` cites `ink/pigment.py`, a path S1
+    renames: it becomes `ink/compositing.py`.
 - **Gate:** slice gate (the docs tests run inside it); grep for em and en dashes in human
   prose is empty.
 
@@ -674,15 +784,20 @@ xargs -r -a "$patterns" prlimit --as=3500000000 -- uv run mutmut run
 uv run mutmut results | grep -v 'not checked'
 ```
 
-- **In scope:** `ink/colour.py`, `ink/naming.py`, `ink/pigment_table.py`,
-  `ink/pigment_registry.py`, the `effect_*` modules, `ink/brush.py`
-  (`brush_ids`, `brush_from_id`), `ink/sheet.rgb` and `ink/brush_sheet.py`.
+- **In scope:** `ink/colour.py` (`normalise_colours` included), `ink/naming.py`,
+  `ink/pigment_table.py`, `ink/pigment_registry.py`, the `effect_*` modules,
+  `ink/brush.py` (`brush_ids`, `brush_from_id`), `ink/sheet.rgb`, `ink/brush_sheet.py`,
+  and the new `__post_init__` hooks `PaperStyle.__post_init__` and
+  `WashStyle.__post_init__` in `ink/style.py`.
 - **Moved, not changed:** the functions of `ink/compositing.py` were moved unchanged
   (`git diff -M` shows them unchanged). Drop them from the pattern list and say so in
   `mutation.md`.
-- **Letters:** `letters/style.py` changes types only, so there are no letters functions
-  to mutate.
-- **Survivors:** kill each with a test under `tests/unit/ink` or `tests/property`, or
+- **Letters:** `NibStyle.__post_init__` in `letters/style.py` is in scope. mutmut runs
+  `tests/unit/ink`, `tests/unit/letters` and `tests/property`, not `tests/unit/maps`, so
+  S3a's coercion tests for these hooks are in `tests/unit/ink/test_style_colours.py` and
+  `tests/unit/letters/test_style.py`.
+- **Survivors:** kill each with a test under `tests/unit/ink`, `tests/unit/letters` or
+  `tests/property`, or
   record it as equivalent, with the reason, in `specs/009-line-effects-and-registry/mutation.md`.
 
 ### S9: Final review and PR (serial, fresh context)
@@ -697,8 +812,9 @@ uv run mutmut results | grep -v 'not checked'
 ## Files to touch
 
 These are the files named in each slice above. The surface of the theme checker grows in
-`maps/theme_check.py` (dispatch, brush suggestion, `LOADER_FIELDS`),
-`maps/theme_checker.py` (the moved checker, the Colour adapter and messages),
+`maps/theme_check.py` (dispatch, `LOADER_FIELDS`; the brush suggestion lands here in S2
+and moves to `theme_checker` in S3a), `maps/theme_checker.py` (the moved checker, the
+brush suggestion, the Colour adapter and messages), `maps/theme_scope.py`,
 `maps/theme_vocab.py`, `maps/theme_resolve.py` and `maps/theme_schema.py`, with the new
 `theme_*` modules beside them. Under ADR 0069's
 import rule, none of them imports `pyntpot.maps.style` or the `pyntpot.maps` package
@@ -722,7 +838,8 @@ import rule, none of them imports `pyntpot.maps.style` or the `pyntpot.maps` pac
   colour literals in `Colour(...)` in those six (the same string, so no pixel moves), and
   nothing else changes there. Rewriting any example onto `pigment()` would put docs
   images at risk; that is a later change.
-- `pyproject.toml` `[tool.importlinter]`: the contracts do not change (ADR 0070 rule 1).
+- `pyproject.toml`, but S6's one `[tool.ty.environment] root` line: `[tool.importlinter]`
+  and its contracts do not change (ADR 0070 rule 1), which S9 checks.
 - `tests/support/docs_images.py` budgets: no image is added.
 
 ## Test plan
@@ -787,20 +904,24 @@ slice.
 
 ## File-ownership partition
 
+A file in more than one serial row is owned by each slice in turn, edited on the earlier
+slice's committed result. Only the worktree rows (S4, S6) need files no serial slice owns
+after their cut, and they have them: `pyproject.toml` is S6's alone.
+
 | Track | Owns | After | Parallel |
 |---|---|---|---|
 | S0 | `tests/golden/grid_hashes.py`, `tests/golden/make_docs_images.py`, `grid-hashes.json` | base | no |
-| S1 | `ink/{colour,naming,pigment_table,pigment_registry,compositing,style,__init__}.py` (the four tables in `pigment_table`), importers of the old module, `maps/style_groups.py`, `maps/theme_vocab.py`, registry tests, `docs/reference/ink.md`, `test_public_api.py` | S0 | no |
+| S1 | `ink/{colour,naming,pigment_table,pigment_registry,compositing,style,__init__}.py` (the four tables in `pigment_table`), importers of the old module, `maps/style_groups.py`, `maps/theme_vocab.py`, registry tests, `docs/reference/ink.md`, `test_public_api.py`, `tests/support/theme_dump.py` | S0 | no |
 | S2 | `ink/brush_sheet.py`, `ink/brush.py`, brush branch of `maps/theme_check.py` | S1 | no |
-| S3a | `ink/{colour,style,sheet}.py`, `letters/style.py`, `maps/{style_groups,style,compose_steps,theme_checker,theme_scope,theme_check,theme_vocab,theme_schema}.py`, schemas, the colour call sites in the five grid scripts, `pigment_swatches.py` and `test_style.py`, `tests/support/theme_dump.py`, `tests/property/test_theme_merge.py`, `test_one_hex_parser.py` | S2 | no |
-| S3b | `maps/{theme_colours,theme_pigments,theme_palette,theme_palette_gpl,theme_resolve,theme_schema_tables}.py`, `maps/palettes/`, `maps/__init__.py`, `docs/reference/maps.md`, schemas | S3a | no |
+| S3a | `ink/{colour,style,sheet}.py`, `letters/style.py`, `maps/{style_groups,style,compose_steps,theme_checker,theme_scope,theme_check,theme_vocab,theme_schema}.py`, schemas, the colour call sites in the five grid scripts, `pigment_swatches.py` and `test_style.py`, `tests/unit/maps/{test_theme_vocab,test_theme_schema,test_theme_check}.py`, `tests/unit/ink/test_style_colours.py`, `tests/unit/letters/test_style.py`, `tests/property/test_theme_merge.py`, `test_one_hex_parser.py` | S2 | no |
+| S3b | `maps/{theme_colours,theme_pigments,theme_palette,theme_palette_gpl,theme_resolve,theme_schema_tables}.py`, edits to `maps/{theme_scope,theme_check,theme_schema}.py`, `maps/palettes/`, `maps/__init__.py`, `docs/reference/maps.md`, `test_public_api.py`, schemas, `tests/unit/maps/test_theme_schema.py`, `test_cli.py` (one case) | S3a | no |
 | S4 | `ink/effect_*.py`, `tests/unit/ink/test_effects.py`, `tests/property/test_line_effects.py` | S0 | yes, worktree |
-| S5a | `maps/{line_effects,theme_effects}.py`, plus edits to `style_groups`, `style`, `theme_check`, `theme_vocab`, `theme_schema`, `theme_schema_tables` and `__init__`; `style-fields.md`; `test_theme_merge.py`; `test_theme_imports.py` | S3b | no |
+| S5a | `maps/{line_effects,theme_effects}.py`, plus edits to `style_groups`, `style`, `theme_check`, `theme_vocab`, `theme_scope`, `theme_schema`, `theme_schema_tables` and `__init__`; `style-fields.md`; `test_theme_merge.py`; `tests/unit/maps/{test_theme_schema,test_theme_vocab}.py`; `test_theme_imports.py` | S3b | no |
 | Gate A | `ink/__init__.py` exports, `docs/reference/ink.md`, `test_public_api.py` | S4, S5a | no |
 | S5b | `maps/{effect_pass,route_effects,compose_steps}.py`, `maps/painter/{effects,pen,plates}.py` | gate A | no |
-| S6 | `examples/labelled_grid.py`, the five grid scripts, `tests/support/examples.py`, `tests/architecture/test_examples.py`, `tests/examples/test_labelled_grid.py` | S3a | yes, worktree |
+| S6 | `examples/labelled_grid.py`, the five grid scripts, `tests/support/examples.py`, `tests/architecture/test_examples.py`, `tests/examples/test_labelled_grid.py`, `pyproject.toml` (`[tool.ty.environment] root` only) | S3a | yes, worktree |
 | Gate B | the merged tree | S5b, S6 | no |
-| S7 to S9 | docs, notes, `mutation.md`, the PR | gate B and the effect-trap ruling, if any | no |
+| S7 to S9 | docs, notes (`ink-stroke-density-profile.md` included), `mutation.md`, the PR | gate B and the effect-trap ruling, if any | no |
 
 ## Decisions
 

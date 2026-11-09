@@ -138,10 +138,11 @@ comp-ops), no per-feature z-order, and no generated palettes.
    before, and retuning a pigment repaints every theme that names it, which is correct. A
    name gives its colour only; its transparency rides along from rule 17, in PR 2. The
    schema gives every `Colour` field `anyOf` three branches: an enum of the registry's
-   names, the hex pattern, and the alias pattern `^[a-z][a-z0-9_]*$`. The schema is
-   static and cannot know a theme's aliases or pigments, so the third branch keeps them
-   valid in an editor; the enum still completes names, and the checker stays the path for
-   good errors.
+   names, the hex pattern, and the alias pattern `^[a-z][a-z0-9]*(_[a-z0-9]+)*$` (no
+   leading, trailing or doubled `_`, so every alias is its own `.gpl` normal form). The
+   schema is static and cannot know a theme's aliases or pigments, so the third branch
+   keeps them valid in an editor; the enum still completes names, and the checker stays
+   the path for good errors.
 6. **Collisions are rejected.** A pigment a theme adds (a top-level `pigments:` table) whose
    name equals a built-in is an error at load, pointing at the derived form, `base:
    <pigment>` plus the fields it overrides. Rebinding a map role (`cover.pigments.built:

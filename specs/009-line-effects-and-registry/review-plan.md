@@ -477,3 +477,43 @@ The implementer can apply each of these as written.
     warnings are errors. Refuse `threshold <= 0`, or draw it from `(0, 1]`.
 14. **An uncommitted ADR edit.** The working tree holds an uncommitted edit to ADR 0070
     rule 17 (PR 2). Commit it before S0, so S0's base is clean.
+
+## Re-review resolution
+
+Applied on `d66c2d2`; each finding was checked against the code first.
+
+1. `theme_dump._plain` writes a `str` subclass as `str`, and `tests/support/theme_dump.py`
+   is S1's, dropped from S3a (plan S1 "Test support", S3a, ownership table, `tasks.md`).
+2. S6 adds `"examples"` to `[tool.ty.environment] root` (`pyproject.toml:193-196`) and
+   owns that one line; "Files to leave alone" narrows to the rest of `pyproject.toml`.
+   This widens what `ty` checks and loosens no gate.
+3. S3b owns `test_theme_schema.py` (top-level order pinned, the `propertyNames` walk over
+   group subtrees only, a `colours` and `pigments` key-rule test); S5a owns it and
+   `test_theme_vocab.py` (`effect_presets` and `line_effects` added; the field test and
+   both dict-field tests leave out `LOADER_FIELDS`; no `VOCABULARIES` entry for
+   `basemap.line_effects`).
+4. S3a prescribes `Bound(value, path, line)` and `ThemeScope(pigments, palette, aliases,
+   presets)`: palette and theme aliases split, own versus inherited read from
+   `Bound.path`, theme pigments held by name so an inherited one is replaced in the
+   mapping and the cached `registry` never meets a duplicate. S3b and S5a own
+   `theme_scope.py` in turn; serial ownership is disjoint by sequencing, stated in the
+   plan and above the ownership table.
+5. `check_theme_scoped` takes each `LOADER_FIELDS` key out before `check.table(...)`, with
+   the message "set only by the top-level line_effects.<class>" (or `.route`), pinned.
+6. `ALIAS_PATTERN = "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"`; strategies use `fullmatch=True` and
+   filter off the registry's names (S1, S3b). ADR 0070 rule 5 carried the old pattern, so
+   it is amended.
+7. The move list adds `_sheet_and_colour` (brush branch with it), `_MESSAGES`, `_TABLE`,
+   `_COLOUR` and `_Path` (`theme_check.py:51-65, 247`); `_COLOUR` goes with the colour
+   branch.
+8. `Colour.parse` raises `ValueError` for any non-`str` (plan S1, spec).
+9. A theme pigment needs `base` or `colour` and may give both, `colour` overriding the
+   base's (plan S3b, spec); ADR rule 6 already says so, unchanged.
+10. S8 adds `normalise_colours` and the `PaperStyle`, `WashStyle` and `NibStyle` hooks,
+    tested in `tests/unit/ink/test_style_colours.py` and `tests/unit/letters/test_style.py`
+    (S3a).
+11. `BasemapStyle.__post_init__` raises `ValueError` for a key outside the seven classes;
+    at load `theme_effects` records it as a located problem first.
+12. An S7 task fixes `docs/features/ink-stroke-density-profile.md:8` (not edited now).
+13. Each S4 primitive refuses `threshold <= 0`; strategies draw it from `(0, 1]`.
+14. Already committed in `d66c2d2`; nothing to do.
