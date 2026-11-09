@@ -24,7 +24,8 @@ gate B; S7, S8, S9.
 ## S1: The registry (#72)
 
 - [ ] Red: `test_colour.py`, `test_pigment_registry.py`, `test_one_registry.py`, the
-      property tests, and the maps default ties.
+      property tests (`pigment(hex)` anonymous, `transparency=None`, among them), and the
+      maps default ties in `tests/unit/maps/test_registry_defaults.py` (new).
 - [ ] `ink/colour.py`, `ink/naming.py`, `ink/pigment_table.py`,
       `ink/pigment_registry.py`.
 - [ ] `git mv ink/pigment.py ink/compositing.py`; every importer repointed; no shim.
@@ -40,7 +41,9 @@ gate B; S7, S8, S9.
 
 ## S2: The catalogues as typed tables (#71)
 
-- [ ] Red: read-only tables, `brush_ids()`, nearest-id messages (ink and theme).
+- [ ] Red: read-only tables, `brush_ids()`, nearest-id messages (ink in `test_brush.py`;
+      theme in `tests/unit/maps/test_theme_brush_ids.py`, new, with the `MAJ9-a` row of
+      `test_theme_check.py:182-183` rewritten in place).
 - [ ] `MappingProxyType` tables, `brush_ids`, the suggestion; slice gate green.
 
 ## S3a: `Colour` across every field
@@ -49,7 +52,15 @@ gate B; S7, S8, S9.
       pigment names in a theme; the located miss; upper-case hex lower-cased; `Style()`
       builds.
 - [ ] Red: the coercion guard (`replace(...)` and `Style.model_validate` from a dict
-      give a `Colour`); `test_one_hex_parser.py`.
+      give a `Colour`); `test_one_hex_parser.py`. New cases go in
+      `tests/unit/maps/{test_colour_fields,test_theme_scope,test_theme_colour_names}.py`
+      (new), never in `test_style.py` (384 lines) or `test_theme_check.py` (361).
+- [ ] Rewritten in place, not deleted: `test_theme_schema.py:186-192` (three-branch
+      node), `test_theme_check.py:186-191` (`'red'` reads "is not a pigment or a colour
+      alias"; `'#a8c28'` keeps "is not a # and six hexadecimal digits"),
+      `test_theme_check.py:246-248` (`#C22050` stored as `#c22050`); `RESOLVED_SAMPLE` in
+      `test_style.py` pins `Colour("#f3ead6")` and `Colour("#241c14")`, the
+      `type(got) is type(value)` assertion kept.
 - [ ] Fields retyped; `normalise_colours` and the five `__post_init__` hooks; `Colour`'s
       pydantic hook; `with_route_ink`; `compose_steps._rgb` removed; `ink.rgb` shares
       the arithmetic.
@@ -61,8 +72,10 @@ gate B; S7, S8, S9.
       `normalise_colours` and the `PaperStyle`, `WashStyle` and `NibStyle` hooks.
 - [ ] Pure move of `_Check` and its helpers (`_sheet_and_colour`, `_MESSAGES`, `_TABLE`,
       `_COLOUR`, `_Path` included) to `theme_checker.py`, its own commit.
-- [ ] `theme_scope.py` in its full shape (`Bound`, the four mappings, cached `registry`,
-      `resolve_colour` order); the `theme_checker` adapter, context and messages;
+- [ ] `theme_scope.py` in its full shape (`Bound`, the four mappings with `aliases:
+      Mapping[str, Bound[Pigment]]` and `palette: Bound[object] | None`, cached
+      `registry`, `resolve_pigment` and `resolve_colour` order); the `theme_checker`
+      adapter, context and messages (non-`str`: "{v!r} is not a string");
       `COLOUR_FIELDS` retired; `ALIAS_PATTERN = "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"`.
 - [ ] Schema regenerated; pinned digests unchanged; grid `check`; slice gate green.
       S6's worktree is cut here.
@@ -73,13 +86,18 @@ gate B; S7, S8, S9.
       `.gpl` row, a `.gpl` name that is no alias, two `.gpl` names with one alias, a
       palette alias clashing with an inherited one), inheritance across `extends`, the
       binding rule, a theme pigment with `base` and `colour` both, `Palette.registry_gpl`,
-      the CLI exiting 2 before any fetch, the two properties.
+      the CLI exiting 2 before any fetch, `Palette.pigments` holding the aliased pigment
+      (transparency included) and `.gpl` imports anonymous, the two properties (alias to a
+      name yields its colour and transparency; `.gpl` round trip at the colour level).
 - [ ] `test_theme_schema.py`: the top-level order pinned, the `propertyNames` walk over
       the group subtrees only, the `colours` and `pigments` key-rule test.
 - [ ] `theme_pigments.py`, `theme_colours.py`, `theme_palette.py`,
       `theme_palette_gpl.py`, `palettes/plain.yaml`, in the wheel.
 - [ ] `check_theme_scoped`; `theme_resolve` reads the chain then checks from the base up;
-      `theme_scope.py` filled on S3a's shape.
+      `theme_scope.py` filled on S3a's shape, `palette` narrowed to `Bound[Palette] |
+      None` under `TYPE_CHECKING` (runtime direction `theme_palette -> theme_colours ->
+      theme_scope`); `Palette(name, pigments)`; the `colours` value schema is the
+      three-branch `Colour` node or `{colour, override}`.
 - [ ] `Palette` exported and documented; schema tables; schema regenerated; slice gate
       green.
 
@@ -97,6 +115,11 @@ gate B; S7, S8, S9.
       parent's `cased`; the `LOADER_FIELDS` messages), `test_digest_omits.py`, the
       extended schema guard, a `BasemapStyle` key outside the seven classes refused, the
       two properties.
+- [ ] Pinned field tables: `test_style_groups.py` (`PINNED` rows gain `line_effects` and
+      `effects`; the digest test drops `LOADER_FIELDS` before hashing, so every `SOURCED`
+      pin holds; the two default asserts), `BASEMAP_DEFAULTS` and its test moved to
+      `tests/unit/maps/test_basemap_defaults.py` (new) with `"line_effects": {}`, and
+      `tests/unit/maps/candidates/test_export.py` gaining `"line_effects": {}`.
 - [ ] `test_theme_schema.py` (top-level order with `effect_presets` and `line_effects`;
       key rules; field test leaves out `LOADER_FIELDS`) and `test_theme_vocab.py` (both
       dict-field tests leave out `LOADER_FIELDS`; no `VOCABULARIES` entry for

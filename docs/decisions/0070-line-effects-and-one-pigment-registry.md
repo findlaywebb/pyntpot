@@ -130,13 +130,17 @@ comp-ops), no per-feature z-order, and no generated palettes.
 5. **How a theme names a colour.** Every theme colour field takes a `#rrggbb`, a canonical
    pigment name, or an alias the theme or its palette defines up front. Aliases are a
    top-level theme table, `colours:`, mapping an alias to a pigment name or a hex. An alias
+   stands for a pigment, not a hex: an alias to a name holds that pigment, transparency
+   and Colour Index included, and an alias to a hex holds the anonymous pigment
+   `pigment("#...")` returns (rule 2). An alias
    may not name another alias (no chains) and may not reuse a built-in pigment name. A
    `maps`-side pydantic `BeforeValidator` resolves the value: a leading `#` goes to
    `Colour.parse`, anything else to an alias and then a registry name, and a miss is a
    located error with the nearest name. Strict, as ADR 0069 is: no `#abc` shorthand and no
    CSS names. Names and aliases resolve to hex at load, so an existing hex theme hashes as
    before, and retuning a pigment repaints every theme that names it, which is correct. A
-   name gives its colour only; its transparency rides along from rule 17, in PR 2. The
+   colour field takes its name's colour only; the pigment's transparency, which the alias
+   keeps, is used from rule 17, in PR 2. The
    schema gives every `Colour` field `anyOf` three branches: an enum of the registry's
    names, the hex pattern, and the alias pattern `^[a-z][a-z0-9]*(_[a-z0-9]+)*$` (no
    leading, trailing or doubled `_`, so every alias is its own `.gpl` normal form). The
@@ -148,13 +152,17 @@ comp-ops), no per-feature z-order, and no generated palettes.
    <pigment>` plus the fields it overrides. Rebinding a map role (`cover.pigments.built:
    "#f0b86a"`) stays allowed: that is a binding the theme owns, not a registry entry.
    Shadowing with a warning and namespacing are both rejected (Alternatives).
-7. **Palettes.** A palette is a named, shareable set of aliases. A theme chooses one with a
+7. **Palettes.** A palette is a named, shareable set of aliases, each mapped to the pigment
+   it stands for (`Palette.pigments`), so an alias to a built-in name keeps that
+   pigment's transparency. A palette sees no theme, so its aliases name built-in pigments
+   or hexes. A theme chooses one with a
    top-level `palette:` key, by name or `.yaml` path under ADR 0069's rule for themes, and
    may add aliases of its own. A theme alias that replaces a palette alias is an error
    unless the theme marks it `override`. Bundled palettes are YAML files in the `maps`
    package, read by the theme reader at the boundary, so ADR 0015 holds. A GIMP `.gpl`
-   file imports as a palette's aliases, and the registry or a palette exports as `.gpl`.
-   `.gpl` carries RGB and a name only, so a pigment's transparency and Colour Index code do
+   file imports as a palette's aliases, each an anonymous pigment of its row's hex, and
+   the registry or a palette exports as `.gpl`, writing each name and its hex. `.gpl`
+   carries RGB and a name only, so a pigment's transparency and Colour Index code do
    not travel in it; the YAML and the Python tables stay the source of truth. A `.gpl`
    name is normalised to an alias (lower case, each run of other characters one `_`,
    stripped). A row with no name, a name that does not normalise to an alias (it starts
@@ -304,7 +312,8 @@ comp-ops), no per-feature z-order, and no generated palettes.
 `ink` gains `Colour`, `Pigment`, `PigmentRegistry`, `PIGMENT_REGISTRY`, `pigment`, and
 the effect primitives `casing`, `glow`, `shadow` and `pen_casing`. `maps` gains `Casing`,
 `Glow`, `Shadow` and `EffectStack`, the types the theme fields hold, and `Palette`, which
-reads a palette by name or path, lists the packaged names, and reads and writes `.gpl`
+reads a palette by name or path, maps each alias to its pigment, lists the packaged names,
+and reads and writes `.gpl`
 (rule 7's import and export need a public entry). ADR 0068's rule covers the new names;
 this ADR is the record of the change it requires. No public name is removed or renamed. A
 typed caller that passes a `str` literal to a colour field now wraps it in `Colour(...)`;

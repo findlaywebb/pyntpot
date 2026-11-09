@@ -619,3 +619,15 @@ fourth round.
    an alias to a theme pigment. Use the three-branch `Colour` node.
 7. **Test file sizes.** `test_style.py` is 384 lines and `test_theme_check.py` 361. Put
    S2's and S3a's new cases in new files.
+
+## Round 3 resolution
+
+- **1 (BLOCKING).** S5a owns `test_style_groups.py` (`PINNED` rows gain `line_effects` and `effects`; the digest test drops `LOADER_FIELDS` names before hashing, so `6a536a78d3ad069a` and every `SOURCED` pin hold; two default asserts), and `BASEMAP_DEFAULTS` and its test move to new `test_basemap_defaults.py` with `"line_effects": {}` (plan :685-710, ownership row, `tasks.md` S5a).
+- **1, further pin found.** `tests/unit/maps/candidates/test_export.py:88-121` pins `asdict(CANDIDATE_BASEMAP)` (`maps/candidates/export.py:39`) in full; assigned to S5a, gaining `"line_effects": {}` (plan :702). `test_theme_check.py:358-361`, `test_style.py:91-106` and `painter/test_smoke.py:31-37` pass unchanged (checked against `theme_check.py:103-121`).
+- **2.** S3a pins `Colour("#f3ead6")` and `Colour("#241c14")` in `RESOLVED_SAMPLE`; the `type(got) is type(value)` assertion (`test_style.py:84`) stays (plan :268).
+- **3.** S3a types `palette` as `Bound[object] | None`; S3b narrows it to `Bound[Palette] | None` under `TYPE_CHECKING`; runtime direction `theme_palette -> theme_colours -> theme_scope` stated (plan :311-319, :383-385, :432).
+- **4.** The three tests are named as rewritten in place; `Colour.parse` keeps "{text!r} is not a # and six hexadecimal digits" (`theme_check.py:254`); non-`str` reads "{v!r} is not a string" (`theme_check.py:61`); `'red'` has no difflib match, so its miss has no suggestion clause (plan :297-306).
+- **5.** `pigment("#...")` returns an anonymous `Pigment` named by the hex, `transparency=None`, `colour_index=None`, with a property (plan :172).
+- **6.** The `colours` value schema is the three-branch `Colour` node or `{colour: <node>, override}` (plan :474).
+- **7.** New cases go in new files: S1 `test_registry_defaults.py` (the unnamed maps ties; `test_style_groups.py` is 399 lines), S2 `test_theme_brush_ids.py` (the `MAJ9-a` row at `test_theme_check.py:182-183` rewritten in place), S3a `test_colour_fields.py`, `test_theme_scope.py` and `test_theme_colour_names.py`; each named in its slice and ownership row.
+- **PR 2 re-review 1.** `ThemeScope.aliases: Mapping[str, Bound[Pigment]]` and `Palette(name, pigments: Mapping[str, Pigment])`, a hex alias the anonymous `pigment("#...")`, no separate `colours` mapping; `resolve_pigment` added, `resolve_colour` is its `.colour`, so no digest moves; `.gpl` import yields anonymous pigments and export writes names and hexes; properties revised; ADR rules 5 and 7, the Public names paragraph and the spec updated; no public name changes (plan :311-336, :436-466, :1070).

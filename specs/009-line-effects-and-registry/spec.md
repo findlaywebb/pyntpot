@@ -94,7 +94,9 @@ layout and label code.
 - [ ] A theme's top-level `colours:` maps an alias to a pigment name or a hex, or to
       `{colour: ..., override: true}`. An alias that names another alias, equals a pigment
       name, or replaces an inherited or palette alias without `override` is a located
-      error.
+      error. An alias stands for the pigment it names, transparency included; an alias to
+      a hex stands for the anonymous pigment `pigment("#...")` returns. A colour field
+      that names an alias still resolves to that pigment's hex.
 - [ ] A theme's top-level `pigments:` adds pigments
       (`{base, colour, transparency, colour_index}`, with `base`, `colour` or both; a field
       given overrides the base's) that its colour fields may name. A
@@ -104,7 +106,9 @@ layout and label code.
 - [ ] A theme's top-level `palette:` takes a packaged palette name, or a `.yaml` or
       `.gpl` path relative to the theme file. The package ships the palette `plain`.
       `pyntpot.maps.Palette` reads a palette by name or path, lists the packaged names,
-      imports a GIMP `.gpl`, and exports itself (`to_gpl`) or the registry
+      maps each alias to its pigment (`Palette.pigments`), imports a GIMP `.gpl` (as
+      anonymous pigments: a `.gpl` has no transparency), and exports itself (`to_gpl`,
+      names and hexes) or the registry
       (`Palette.registry_gpl`) as `.gpl`. A `.gpl` row with no name, a name that does not
       normalise to an alias, two rows that normalise to one alias, or a built-in pigment's
       name is a located error.
