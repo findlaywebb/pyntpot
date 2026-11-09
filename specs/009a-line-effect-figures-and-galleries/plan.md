@@ -31,7 +31,8 @@ Four kinds of work, all on PR 1's model.
      | Entry | Transparency |
      | --- | --- |
      | `{pigment: <any ref>, transparency: t}` | `t` |
-     | a pigment name, or an alias to one (its bound `Pigment`) | that pigment's |
+     | a pigment name, or a theme alias to one (its bound `Pigment`) | that pigment's |
+     | a palette alias to a name (`palette: plain` with `water: blue`) | that pigment's (`ultramarine`'s) |
      | a theme pigment with a transparency | its own |
      | a theme pigment with none | the class's built-in |
      | a derived `{base: x}` pigment with none | `x`'s, by the same rule |
@@ -51,18 +52,46 @@ Four kinds of work, all on PR 1's model.
      `TableCheck.leaf` passes `context={"scope": self.scope}`; for a leaf under
      `cover.pigments` it also passes `"cover_class": path[-1]`. The validator,
      `resolve_cover_pigment`, lives in the new `maps/theme_bindings.py` and reads both.
-     It resolves a ref to a `Pigment` (not only a `Colour`): `#` gives an anonymous
-     pigment with no transparency, an alias gives its bound `Pigment` (PR 1's
-     `ThemeScope.aliases: Mapping[str, Bound[Pigment]]`, where a hex alias is a
-     pigment-less `Pigment` with transparency `None`), and a name gives
-     `scope.registry.get(name)`, the theme's extended registry. P0 confirms these shapes on
-     PR 1's tip.
+     It resolves a ref, a bare one or the table's `pigment`, by calling PR 1's
+     `resolve_pigment(ref, scope) -> Pigment` (`theme_scope.py`), and never looks up
+     `scope.aliases`, `scope.palette` or `scope.registry` itself. `resolve_pigment` owns
+     the lookup order (`#` to the anonymous `pigment(ref)`, transparency `None`; then a
+     theme alias, a palette alias and a registry name, an alias giving its bound
+     `Pigment`) and the text of a miss, so a `.gpl` or bundled palette alias resolves as
+     a theme alias does. P0 confirms `resolve_pigment` and these shapes on PR 1's tip.
    - **Python-built values.** `CoverStyle.__post_init__` rebuilds `pigments`: a
      `CoverPigment` keeps its transparency, with its colour through `Colour.parse`; a `str`
      or `Colour` becomes `CoverPigment(Colour.parse(v), <the class's built-in
      transparency>)`. `CoverPigment` carries a plain-dict pydantic hook, as `Colour` does
-     (no pydantic import), accepting a `CoverPigment`, a two-item sequence, or a `str`
-     passed on to `__post_init__`, so `Style.model_validate` from a dict keeps working.
+     (no pydantic import), accepting a `CoverPigment` (which `dataclasses.asdict` keeps),
+     a `{pigment, transparency}` mapping, or a `str` passed on to `__post_init__`, so
+     `Style.model_validate` from a dict keeps working. A list is refused.
+   - **One written form.** Wherever a `CoverPigment` is written out for a reader or the
+     loader, it is a ref string or the mapping `{pigment: "#rrggbb", transparency: t}`
+     (`transparency` left out when `None`), never a list:
+     - `tests/support/theme_dump.py` (the dumped form the merge property loads back);
+     - the schema `default` (`theme_schema._json`);
+     - the `cover.pigments` Default cells of `docs/reference/style-fields.md`, which
+       `tests/docs/test_reference_values.py`'s `entry_value` checks;
+     - the checker, which accepts exactly a ref or that mapping.
+     Only the digest's internal JSON hashes it as a two-item list; that is no written
+     form, and the hashes move in B regardless.
+   - **Located errors for the table form.** `TableCheck.field` sends a `CoverPigment`
+     hint whose value is a mapping through `mapping(value, path, ("pigment",
+     "transparency"), ...)`, so each problem lands at its own key and line (`theme_read`
+     records a line for every nested key):
+     - an unknown inner key reads `unknown key; did you mean transparency?` (or
+       `pigment`), by `TableCheck.unknown`'s nearest name, at
+       `cover.pigments.<class>.<key>`;
+     - the `pigment` value is checked at `cover.pigments.<class>.pigment`, its miss text
+       `resolve_pigment`'s;
+     - `transparency` is checked at `cover.pigments.<class>.transparency` as
+       `Annotated[float, Field(strict=True, ge=0, le=1)]`, which refuses a `bool`, a
+       `str` and a value outside 0 to 1 (an `int` such as `1` is accepted as `1.0`);
+     - a table with no `pigment` is a problem at `cover.pigments.<class>`:
+       `pigment is required`.
+     `resolve_cover_pigment` then builds the leaf from the checked table, with the class
+     from the context.
    - The painter never reads the registry. `PaintJob.transp(key)` reads
      `cover.pigments[key].transparency`, else `paper.km_transparency`.
    - **A leaf, as a `NamedTuple`.** `theme_checker._is_dataclass` would read a dataclass as
