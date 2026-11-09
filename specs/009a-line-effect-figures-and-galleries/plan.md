@@ -251,7 +251,8 @@ All sizes are decimal bytes.
 
 All figures follow the same conventions:
 - painted on `paper_plate` paper (never white);
-- labels lettered in the default hand through `labelled_grid.label_grid`;
+- labels lettered in the default hand through `labelled_grid.label_grid` with the
+  script's `LABELS` constant (below, "Labels");
 - each value lettered at its row or column, and repeated as real text on the page;
 - seeds fixed and named in the caption.
 
@@ -301,29 +302,66 @@ All figures follow the same conventions:
     `offset_px`) does in a theme at scale 1. The caption says so.
   - **Cell painter.** Each script has `paint_cell(kind, **values) -> np.ndarray`, which
     returns the cell's float32 RGB `(h, w, 3)` before lettering and encoding, the
-    primitives' own dtype (009 plan, "The four functions"); `paint_cell(None)` is the
-    plain stroke, painted without calling any primitive: the wash plus the stroke, and for
-    the pen casing sweep the grey tint plus the centre ink line. The tests below use it.
+    primitives' own dtype (009 plan, "The four functions"). It paints in this order:
+    1. the wash, in wash space (1 is the paper);
+    2. the effect, through its `ink` primitive, with `mask` the stroke's density;
+    3. the stroke, composited over the result;
+    4. multiplication by the cell's crop of the `paper_plate`.
+    It returns the result of step 4. `paint_cell(None)` is the plain stroke, painted
+    without calling any primitive: steps 1, 3 and 4, and for the pen casing sweep the grey
+    tint plus the centre ink line. The tests below use it. Because the effect is laid in
+    wash space before the paper multiplies, `paper=None` is right: a casing coloured
+    `#ffffff` there becomes the paper's cream at step 4, never a white ring.
   - **Held values are script literals**, never read from `BUILT_IN_PRESETS`, so D1's
-    tuning moves no sweep. Every sweep holds `threshold=LINE_THRESHOLD` and
-    `paper=None`.
+    tuning moves no sweep. Each swept axis is one numeric tuple literal in the script
+    (for example `WIDTHS_PX = (0.0, 1.0, 2.0, 3.0, 5.0)`), so a caption's values match
+    the code and pass `tests/docs/test_captions.py:197-210`.
+  - **Calls are PR 1's signatures, written in full.** Each primitive takes its value type
+    whole (009 plan, "The four functions"). `threshold` is a keyword defaulting to
+    `LINE_THRESHOLD` (PR 1's ruling), so no script passes it, and no script imports
+    `LINE_THRESHOLD` or `EFFECT_RANGES`: both stay unexported, and an example imports
+    public names only (`tests/architecture/test_examples.py:58-64`). No script calls
+    `maps.effect_pass.lay_stack`, which is private. A colour is a `Colour`: either
+    `Colour("#ffffff")` or `pigment("paynes_grey").colour`, never a bare name, since
+    `normalise_colours` parses hex only. The calls:
+    - `casing(rgb, mask, Casing(width_px=w, colour=c, strength=1.0), paper=None)`;
+    - `glow(rgb, mask, Glow(spread_px=s, blur_px=b, strength=0.8), paper=None)`;
+    - `shadow(rgb, mask, Shadow(offset_px=o, blur_px=b, strength=0.4,
+      colour=pigment("paynes_grey").colour), azimuth_deg=315)`, with no `paper`, which
+      `shadow` does not take;
+    - `pen_casing(rgb, mask, PenCasing(width_px=g, edge_px=e), paper=None)`, which
+      returns `(rgb, edges)`.
+    Any signature a page quotes lists every parameter in order, as
+    `tests/docs/test_docs_signatures.py:58-70` compares them:
+    `casing(rgb, mask, effect, *, threshold=LINE_THRESHOLD, paper=None)`, `glow` and
+    `pen_casing` likewise, and `shadow(rgb, mask, effect, *, azimuth_deg,
+    threshold=LINE_THRESHOLD)`.
+  - **Labels.** Each new script holds one module constant `LABELS = LabelStyle(px=21.0,
+    ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7, col_dy=12)`, the literals of
+    `tutorial_grids`' `LABELS` (009 plan, S6: `LABEL_PX`, `LABEL_INK`, `GRAN_PX *
+    NIB_SCALE` and `SEED`), so every figure letters in the same hand. Column and row
+    names go through `label_grid(img, boxes, columns, rows, LABELS)`; per-cell ids and
+    margin values go through its `extra=` settings. The galleries and setting grids use
+    the same constant.
   - Casing: a `MAJ2-b` road at `width_display_px` 6 over a mixed farmland and wood wash,
     `strength` 1.0. Width 0, 1, 2, 3 and 5 px across, the 0 column painted through
-    `casing(width_px=0)`; casing colour paper (`#ffffff` in wash space) and `paynes_grey`
+    `casing(rgb, mask, Casing(width_px=0.0, colour=c, strength=1.0), paper=None)`; casing
+    colour paper (`Colour("#ffffff")` in wash space) and `pigment("paynes_grey").colour`
     down.
   - Glow: an `RIV1-a` river at `width_display_px` 4 over a dark wood wash, `strength`
-    0.8. A lettered "none" cell, painted through `glow(strength=0)`, then spread 0, 2, 4
-    and 6 px across; blur 0, 3 and 6 px down.
+    0.8. A lettered "none" cell, painted through `glow(rgb, mask, Glow(), paper=None)`,
+    then spread 0, 2, 4 and 6 px across; blur 0, 3 and 6 px down.
   - Shadow: a solid `#c22050` line 4 px wide over farmland, `strength` 0.4, colour
-    `paynes_grey`, `azimuth_deg` 315. A lettered "none" cell, painted through
-    `shadow(strength=0)`, then offset 0, 1.5, 3 and 5 px across; blur 1 and 3 px down.
-    Light from 315 degrees, north-west, so the shadow falls south-east, as the caption
-    says.
+    `pigment("paynes_grey").colour`, `azimuth_deg` 315. A lettered "none" cell, painted
+    through `shadow(rgb, mask, Shadow(), azimuth_deg=315)`, then offset 0, 1.5, 3 and
+    5 px across; blur 1 and 3 px down. Light from 315 degrees, north-west, so the shadow
+    falls south-east, as the caption says.
   - Pen casing: one ink centre line 1.5 px wide over a grey tint (`paynes_grey` at
-    wash strength 0.3). A lettered "none" cell, painted through `pen_casing(width_px=0)`,
-    then gap (`width_px`) 1, 2, 3 and 4 px across; ink width (`edge_px`) 0.75 ("thin")
-    and 1.5 ("thick") down. The cell composites the returned edge layer only when
-    `edges.any()`, so the "none" cell never composites a zero-density layer.
+    wash strength 0.3). A lettered "none" cell, painted through
+    `pen_casing(rgb, mask, PenCasing(), paper=None)`, then gap (`width_px`) 1, 2, 3 and
+    4 px across; ink width (`edge_px`) 0.75 ("thin") and 1.5 ("thick") down. The cell
+    composites the returned edge layer only when `edges.any()`, so the "none" cell never
+    composites a zero-density layer.
   - The test asserts that each sweep's off cell (casing's 0 column; the "none" cell of
     the other three) equals `paint_cell(None)` byte for byte. Spread 0, offset 0 and the
     other values are real settings, not off: at spread 0 a glow still blurs, and at offset
@@ -332,8 +370,9 @@ All figures follow the same conventions:
   `cased`, `halo` and `lifted`. One paint, then four composes, because route effects are
   compose-only (rule 9). `BUILT_IN_PRESETS` is not public (ADR 0070:312-314) and
   `test_examples.py` refuses a private import, and literal copies would drift from D1's
-  tuning, so each cell's style comes from a theme file: the script writes, under
-  `out_dir`, one file per preset holding `extends: <absolute path of
+  tuning, so each cell's style comes from a theme file: the script writes, in a
+  `tempfile.TemporaryDirectory()` (as `how_to_route_ink.py:173` does, so `out_dir` holds
+  only the figure, as `test_explanation_figures.py:63` expects), one file per preset holding `extends: <absolute path of
   examples/themes/ambleside.yaml>` and `line_effects: {route: <name>}`, and loads it
   with `Style.from_yaml`. The none cell is `ambleside.yaml` itself. D1 tunes the presets on a scratch draft of this figure, before
   D3 writes `how_to_line_effects.py`.
@@ -341,6 +380,9 @@ All figures follow the same conventions:
   "glaze" and "RGB" down) over a dark wood wash: the glazed cream barely shows (rule 11).
   `draw-order` has two cells, "each stroke cased" (a seam at the junction) and "casings
   first" (one road), each with a road crossing a river.
+  `line_effect_reasons.py` and `cased_stroke.py` write their primitive calls in the
+  sweeps' form ("Calls are PR 1's signatures, written in full"), pass no `threshold`,
+  and hold the same `LABELS` constant.
 - **Setting grids.** P0 confirms each field name below on PR 1's tip.
 
   | Figure | Across | Down | Held |
@@ -495,6 +537,7 @@ All figures follow the same conventions:
   separates without a dark smear. The values are recorded in Decisions and the new ADR.
   No pin moves: no theme on PR 1's tip names a preset.
 - **D2, the sweeps** (before D1): `examples/line_effect_grids.py`;
+  `examples/labelled_grid.py` (adds `sweep_grid` only);
   `tests/examples/test_line_effect_figures.py`; the four sweep images.
 - **D3, the how-to and reference:** `examples/how_to_line_effects.py`,
   `examples/themes/ambleside-cased.yaml` (`extends: ambleside.yaml`, then its two
@@ -517,8 +560,8 @@ All figures follow the same conventions:
   `examples/cased_stroke.py`, `docs/explanation/line-effects.md`,
   `docs/tutorials/painting-with-python/cased-strokes.md`, the three images, and
   `docs/features/maps-route-{casing,glow,shadow}.md` (deleted).
-- Across D: `examples/labelled_grid.py` gains a `sweep_grid` only if PR 1 has no sweep
-  loop, existing functions untouched; each sub-slice appends its entries to the
+- Across D: D2 adds `sweep_grid` to `examples/labelled_grid.py` (PR 1 has no sweep
+  loop), existing functions untouched; each sub-slice appends its entries to the
   `009a-line-effects` block of `docs_images_009a.py` and its lines to the index pages and
   `mkdocs.yml`.
 

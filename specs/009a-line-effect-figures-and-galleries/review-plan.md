@@ -656,3 +656,12 @@ No new test file is broken without an owner. Checked:
 - the theme enumerators (`test_one_source_of_defaults.py:35-83`, owned by D3);
 - `test_explanation_figures.py` (an explicit `FIGURES` dict, so new scripts are not
   pulled in).
+
+## Round 4 resolution
+
+1. Fixed by PR 1's ruling, not the literal workaround: PR 1's primitives take `threshold` as a keyword defaulting to `LINE_THRESHOLD`, so no script passes it. No script imports `LINE_THRESHOLD` or `EFFECT_RANGES`; both stay unexported. No `THRESHOLD` literal and no `test_the_scripts_threshold_is_the_engines`. P0 confirms the default on PR 1's tip.
+2. Fixed as asked (verified PR 1 plan:582-601): every call is written in full with its value type; `shadow` takes `azimuth_deg=315` and no `paper`; colours are `Colour("#ffffff")` or `pigment("paynes_grey").colour`; off cells use the type's default. A quoted signature lists every parameter in order, `threshold=LINE_THRESHOLD` included. No script calls the private `lay_stack`.
+3. Fixed as asked (verified PR 1 plan:871-890, `tutorial_grids.py:77-83`): each script holds `LABELS = LabelStyle(px=21.0, ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7, col_dy=12)`; per-cell text goes through `extra=`; D2 adds `sweep_grid` and owns `labelled_grid.py` for that alone.
+4. Fixed as asked: `paint_cell` lays the wash in wash space, then the effect, then the stroke, then multiplies by the `paper_plate` crop, and returns that; the spec states the order.
+5. Fixed as asked: P0 confirms the four value types, `LabelStyle`, `letter_over` and `tutorial_grids`' label values, and checks every imported `pyntpot` name is in one of the four public `__all__`s on PR 1's tip.
+6. Applied: the presets figure writes its theme files in a `tempfile.TemporaryDirectory()`; each swept axis is one numeric tuple literal. The `EFFECT_RANGES` note to PR 1 is not carried: PR 1 imports it from the submodule inside `maps`, and no figure needs it.

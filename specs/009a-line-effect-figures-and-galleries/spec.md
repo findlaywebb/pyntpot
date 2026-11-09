@@ -129,10 +129,13 @@ several important settings do.
       Each sweep is painted at scale 1, so a lettered "2 px" is `width_px: 2` in a theme
       at scale 1. Every value a sweep holds is a literal in the script, never read from a
       preset. Each sweep has an off cell painted through its primitive: casing's width 0
-      column, and a lettered "none" cell for glow and shadow (`strength=0`) and pen
-      casing (`width_px=0`). The off cell equals the plain stroke (for pen casing, the
+      column, and a lettered "none" cell for glow, shadow and pen casing, each painted
+      with its value type's default (`Glow()`, `Shadow()`, `PenCasing()`). The off cell equals the plain stroke (for pen casing, the
       tint and the centre ink line), painted without the primitive, as float32 arrays
-      byte for byte, before lettering and encoding.
+      byte for byte, before lettering and encoding. Each cell lays the wash, the effect,
+      the stroke, then the paper plate, in that order. The scripts import public names
+      only: they pass each primitive its effect value type and leave `threshold` at its
+      default, and every figure letters with one shared label style.
 - [ ] The three built-in presets are tuned against the presets figure and the sweeps
       before any image naming one is painted. PR 1's preset and effect property tests
       pass with the tuned values, which the new ADR records.

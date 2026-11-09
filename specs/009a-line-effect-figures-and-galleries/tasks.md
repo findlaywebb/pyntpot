@@ -5,7 +5,9 @@
 - [ ] On PR 1's tip, confirm and record the exact names of:
       - `Colour`, `Pigment`, `pigment`, `PigmentRegistry` and `extended`;
       - `colour_index`;
-      - `casing`, `glow`, `shadow` and `pen_casing` and their signatures;
+      - `casing`, `glow`, `shadow` and `pen_casing` and their signatures, each with
+        `threshold` a keyword defaulting to `LINE_THRESHOLD` (`shadow` with no `paper`);
+      - the value types `Casing`, `Glow`, `Shadow` and `PenCasing` and their fields;
       - `EffectStack`, `BUILT_IN_PRESETS` and the presets `cased`, `halo` and `lifted`;
       - `line_effects:`, `basemap.line_effects` and `route_ink.effects`;
       - `Palette` and `Palette.names()`;
@@ -13,8 +15,14 @@
       - `resolve_pigment(text, scope) -> Pigment` in `theme_scope.py`, which B's resolver
         calls for every ref (theme alias, then palette alias, then registry name);
       - the `Colour` field walker;
-      - `examples/labelled_grid.py`'s `GridSpec` and `label_grid`.
+      - `examples/labelled_grid.py`'s `GridSpec`, `label_grid`, `LabelStyle` and
+        `letter_over`, and `tutorial_grids`' `LABELS` values.
       Update the plan where a name differs.
+- [ ] Check that every `pyntpot` name an example script in this PR imports is in a
+      public `__all__` (`pyntpot.ink`, `pyntpot.letters`, `pyntpot.maps` or
+      `pyntpot`) on PR 1's tip, and that `LINE_THRESHOLD` and `EFFECT_RANGES` are
+      imported by none. If a name is missing, stop and report: exports are PR 1's
+      scope.
 - [ ] Confirm that PR 1's `theme_pigments` gives a derived `{base: x}` pigment `x`'s
       transparency when it sets none. If not, B's resolver follows `base` itself.
 - [ ] Confirm PR 1's tip has `ThemeScope.aliases: Mapping[str, Bound[Pigment]]` (a hex
@@ -119,10 +127,14 @@
 - [ ] Red: `test_line_effect_figures.py` (each off cell equals `paint_cell(None)`, both
       float32, by `tobytes()`; glow never darker).
 - [ ] Green: `line_effect_grids.py` at scale 1 (`casing`, `glow`, `shadow`,
-      `pen-casing`) with the plan's held literals, none read from a preset; `paint_cell`
-      returns float32; the pen casing cell composites its edges only when `edges.any()`,
-      and its plain cell is the tint plus the centre ink line; `sweep_grid` only if
-      needed.
+      `pen-casing`) with the plan's held literals, one numeric tuple per swept axis, none
+      read from a preset; each call in PR 1's form with its value type, no `threshold`
+      passed, colours as `Colour` or `pigment("paynes_grey").colour`; one `LABELS =
+      LabelStyle(...)` constant with `tutorial_grids`' values, per-cell text through
+      `extra=`; `paint_cell` paints wash, effect, stroke, then multiplies by the
+      `paper_plate` crop, and returns float32; the pen casing cell composites its edges
+      only when `edges.any()`, and its plain cell is the tint plus the centre ink line.
+- [ ] Add `sweep_grid` to `examples/labelled_grid.py`, existing functions untouched.
 - [ ] Register four entries in the `009a-line-effects` block (share 600,000); paint,
       copy, check the budgets. Gates.
 
@@ -148,7 +160,8 @@
       `tests/property/test_line_effect_digests.py` to the classes the sampled theme does
       not set; it passes with `ambleside-cased`.
 - [ ] Green: `how_to_line_effects.py` (`card`, `presets`; each preset cell loads a theme
-      file the script writes under `out_dir`, `extends:` the absolute path of
+      file the script writes in a `tempfile.TemporaryDirectory()`, `extends:` the
+      absolute path of
       `ambleside.yaml` with `line_effects: {route: <name>}`, through `Style.from_yaml`;
       no private import) and `examples/themes/ambleside-cased.yaml`
       (`extends: ambleside.yaml`).
@@ -160,7 +173,8 @@
 ## D4: the explanation and tutorial
 
 - [ ] Green: `line_effect_reasons.py` (`glaze-or-rgb`, `draw-order`) and
-      `cased_stroke.py`, each with a test that it runs.
+      `cased_stroke.py`, each with a test that it runs; calls in the sweeps' form, no
+      `threshold` passed, the same `LABELS` constant.
 - [ ] Register three entries; paint, copy, check the budgets.
 - [ ] `explanation/line-effects.md` and `painting-with-python/cased-strokes.md` (the
       cased stroke and the pen casing sweep), index pages and nav.
