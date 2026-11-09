@@ -26,7 +26,8 @@ Four layers, in the ADR's order:
    its group's `__post_init__`. A maps-side validator resolves a hex, an alias or a
    pigment name to a `Colour` at load. The theme gains `colours`, `pigments` and
    `palette`, and `.gpl` comes in and goes out at the maps boundary (ADR 0015).
-3. **Effects (S4, S5a, S5b).** RGB primitives in `ink`. The model, presets and the
+3. **Effects (S4, S5a, S5b).** RGB primitives in `ink`, each taking its effect's value
+   type (`Casing`, `Glow`, `Shadow`, `PenCasing`, also `ink`'s). The stack, presets and the
    `line_effects` and `effect_presets` tables in `maps`, split at load into two group
    fields named in `DIGEST_OMITS_AT_DEFAULT`. The painter and compose take them as
    no-ops at the default.
@@ -73,7 +74,7 @@ file, and `[tool.importlinter]` is untouched.
 | `maps/theme_check.py` | 295 | about 210 | S3a moves `_Check` and its leaf machinery to `maps/theme_checker.py`; the new top-level tables are checked in new `theme_*` modules; `theme_check` dispatches. |
 | `maps/theme_checker.py` | new | about 200 | The moved checker, plus the `Colour` adapter and context. |
 | `maps/theme_resolve.py` | 265 | about 320 | The chain is read first, then checked from the base up. |
-| `maps/style_groups.py` | 336 | about 390 | Effect types live in `maps/line_effects.py`; only two fields, their docs and three one-line `__post_init__` hooks land here. Past 400, `BasemapStyle` moves whole to `maps/style_basemap.py`. |
+| `maps/style_groups.py` | 336 | about 390 | The effect value types live in `ink/effect_types.py` and `EffectStack` in `maps/line_effects.py`; only two fields, their docs and three one-line `__post_init__` hooks land here. Past 400, `BasemapStyle` moves whole to `maps/style_basemap.py`. |
 | `maps/style.py` | 319 | about 330 | Two omit names; `with_route_ink` uses `Colour.parse`. |
 | `maps/theme_schema.py` | 214 | about 240 | The top-level table schemas go in `maps/theme_schema_tables.py`. |
 | `maps/painter/pen.py` | 131 | about 190 | Per-class masks. |
@@ -81,7 +82,7 @@ file, and `[tool.importlinter]` is untouched.
 New files, each written to stay under 250 lines:
 
 - In `ink/`: `colour.py`, `naming.py`, `pigment_table.py`, `pigment_registry.py`,
-  `effect_mask.py`, `effect_casing.py`, `effect_glow.py`, `effect_shadow.py`,
+  `effect_types.py`, `effect_mask.py`, `effect_casing.py`, `effect_glow.py`, `effect_shadow.py`,
   `effect_pen_casing.py`.
 - In `maps/`: `theme_checker.py`, `theme_scope.py`, `theme_colours.py`,
   `theme_pigments.py`, `theme_effects.py`, `theme_schema_tables.py`, `theme_palette.py`,
@@ -99,9 +100,11 @@ submodules.
 
 ## Slices
 
-Order: S0, S1, S2, S3a, S3b, S5a, merge gate A (S4 in), S5b, merge gate B (S6 in), S7, S8,
-S9. S4 runs in a worktree cut after S0. S6 runs in a worktree cut after S3a, because S3a
-wraps colour literals in the five grid scripts S6 rewrites. After its cut, neither
+Order: S0, S1, S2, S3a, S3b, merge gate A (S4 in), S5a, S5b, merge gate B (S6 in), S7,
+S8, S9. S4 and S6 each run in a worktree cut after S3a: S4's value types hold a `Colour`
+and call `normalise_colours` (S3a), and S3a wraps colour literals in the five grid
+scripts S6 rewrites. S5a builds on S4's types, so merge gate A comes before it. After its
+cut, neither
 owns a file any serial slice owns. Serial slices may own the same file in turn (for
 example `maps/theme_scope.py` in S3a, S3b and S5a, or `test_theme_schema.py` in S3a, S3b
 and S5a): each later slice edits on the earlier one's committed result, never at the same
@@ -129,7 +132,8 @@ only the files it owns.
 - **Owns:**
   - New: `ink/colour.py` (`Colour` and the shared channel arithmetic; the type is needed
     here because `Pigment.colour` is a `Colour`), `ink/naming.py`
-    (`nearest(name, known) -> tuple[str, ...]`, difflib with cutoff 0.6, shared with
+    (`nearest(name, known) -> tuple[str, ...]`, difflib with `n=1` and cutoff 0.6, so it
+    returns at most one name and every "; did you mean X?" names one; shared with
     `brush.py` and maps), `ink/pigment_table.py` (`Pigment`, plus `ROLE_PIGMENTS` and
     `TUBE_PIGMENTS` in today's order, `role_transparencies()`, and the four exported
     tables `PIGMENTS`, `TRANSPARENCY`, `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY`,
@@ -159,8 +163,11 @@ only the files it owns.
     (`tests/property/test_theme_merge.py`, in this slice's gate) dumps.
 - **Shapes:**
   - `Colour(text)` accepts only lower-case `#rrggbb`. `Colour.parse` lower-cases; it
-    defines `__slots__ = ()` and no `__init__`. `Colour.parse` raises `ValueError` for
-    any non-`str` before reading it ("is not a string"), so
+    defines `__slots__ = ()` and no `__init__`. `Colour.parse(text: str) -> Colour` is
+    annotated `str`, never `object`, because `object` is not in `ALLOWED`
+    (`tests/architecture/_public_surface.py:30-69`) and `test_public_signatures` would
+    report it. It checks the type at runtime and raises `ValueError` for any non-`str`
+    before reading it ("is not a string"), so
     `Style.model_validate({"route_ink": {"colour": 5}})` is a `value_error` and
     `RouteInkStyle(colour=None)` a `ValueError`, never an `AttributeError`.
   - `Pigment` is `@dataclass(frozen=True, kw_only=True)`.
@@ -175,7 +182,8 @@ only the files it owns.
     its miss is `get`'s message.
 - **Tests first:**
   - `tests/unit/ink/test_colour.py`: parse and refuse cases (`5` and `None` among them,
-    each a `ValueError`); `deepcopy`, `pickle`, `asdict` and `json.dumps` round trips.
+    each a `ValueError`; those two calls carry `# ty: ignore[invalid-argument-type]`, as
+    `tests/unit/ink/test_wash.py:40` does for its deliberate misuse); `deepcopy`, `pickle`, `asdict` and `json.dumps` round trips.
   - `tests/unit/ink/test_pigment_registry.py`: 25 pinned entries; the lookups; the miss
     message; the four tables equal the registry projection.
   - `tests/unit/maps/test_registry_defaults.py` (new; `test_style_groups.py` is 399
@@ -202,14 +210,20 @@ only the files it owns.
 - **Owns:** `ink/brush_sheet.py`, `ink/brush.py`, and the brush-id branch of
   `maps/theme_check.py` (`_sheet_and_colour`, message gains "; did you mean X?"), with
   their tests in `tests/unit/ink/test_brush.py` (101 lines), `tests/unit/maps/test_theme_check.py`
-  (the pinned `MAJ9-a` row at :182-183 rewritten in place to the new message, no new
-  case; the file is 361 lines) and `tests/unit/maps/test_theme_brush_ids.py` (new: the
+  (two pinned rows rewritten in place to the new message, no new case; the file is 361
+  lines) and `tests/unit/maps/test_theme_brush_ids.py` (new: the
   theme-side suggestion cases).
 - **Changes:**
   - Wrap `BRUSH_TREATMENTS` and `BRUSH_COLOURS` (outer and inner) in
     `types.MappingProxyType`, typed `Mapping[...]`. `PEN_ROWS` is already a `frozenset`.
   - Add `brush_ids() -> tuple[str, ...]`, every id `brush_id_known` accepts.
   - `brush_from_id` names `nearest(...)`.
+- **The two pinned rows that change** in `test_theme_check.py` (checked against the 112
+  ids with difflib, `n=1`, cutoff 0.6; `nearest` returns one name for each):
+  - :177-179 (`brush.brushes.lane`, line 3) reads "'LAN9-z' is not a brush on the
+    sheet; did you mean LAN8-a?".
+  - :182-183 (`route.route_pen_brush`, line 2) reads "'MAJ9-a' is not a brush on the
+    sheet; did you mean MAJ8-a?".
 - **Tests first:**
   - The tables refuse assignment.
   - `brush_ids()` equals the cross product the sheet implies, pinned by count and sample.
@@ -243,7 +257,7 @@ only the files it owns.
     `normalise_colours(group, *names)`, which sets each named field through
     `Colour.parse` with `object.__setattr__`, rebuilding a dict field with its values
     parsed. `PaperStyle`, `WashStyle`, `NibStyle`, `CoverStyle` and `RouteInkStyle` each
-    call it from a one-line `__post_init__` (S5a adds `Casing` and `Shadow`).
+    call it from a one-line `__post_init__` (S4 adds `Casing` and `Shadow`, in `ink`).
     `Colour.parse` returns a `Colour` as itself.
   - **Pydantic, without `arbitrary_types_allowed`.** `Colour` defines
     `__get_pydantic_core_schema__(source, handler)` returning the plain dict
@@ -385,7 +399,8 @@ only the files it owns.
   `TYPE_CHECKING` only),
   `maps/__init__.py` (exports `Palette`), `docs/reference/maps.md`,
   `tests/unit/test_public_api.py`, `tests/unit/maps/test_theme_schema.py` (the changes
-  under "Existing schema tests" below), the new tests below, and
+  under "Existing schema tests" below), the new tests below,
+  `tests/unit/maps/test_theme_resolve.py` (one case, below; 258 lines) and
   `tests/unit/maps/test_cli.py` (one case).
 - **Checking order.** `check_theme_scoped(theme, groups, scope) -> (table, problems,
   scope)` is new, in `maps/theme_check.py` beside `check_theme`, which keeps its
@@ -427,8 +442,21 @@ only the files it owns.
   - Read the whole chain first, following the raw `extends` strings and stopping at a
     file whose read found a problem, as today.
   - Then check from the base-most file up, threading the scope.
+  - **A chain whose read stops checks no file.** When the read stops at a problem (a
+    file the reader refuses, an `extends` target that is refused, missing or a cycle),
+    no file of the chain is checked, the files read before the stop included: a file's
+    names bind in the scope of the files below it, and that scope cannot be built, so
+    checking would report every inherited name as "is not a pigment or a colour alias".
+    The error holds only the read and `extends` problems; once they are fixed, the next
+    load reports the check problems. Today a file above the stop is still checked; that
+    is the one change, and the module docstring says so.
   - Problems are collected and raised as today. The cycle, refusal and missing-file
     messages are unchanged.
+  - Test (`test_theme_resolve.py`): `child.yaml` sets `card: {display_px: '5'}` and
+    `route_ink: {colour: sky}` and extends `missing.yaml`; the error holds exactly one
+    problem, the missing-file one at the `extends` line. Every existing case in that file
+    passes unchanged (none combines a stopped read with a check problem;
+    `test_problems_in_two_files_are_both_reported` reads both files).
 - **Runtime import direction:** `theme_palette -> theme_colours -> theme_scope`.
   `theme_scope` imports `Palette` only under `TYPE_CHECKING` and reads a palette's
   `pigments` by attribute, so no cycle forms.
@@ -519,39 +547,61 @@ only the files it owns.
     None`.
 - **Gate:** slice gate; schema regenerated; pinned digests of every theme unchanged.
 
-### S4: Effect primitives (parallel worktree cut after S0)
+### S4: Effect value types and primitives (parallel worktree cut after S3a)
 
-- **Owns:** `ink/effect_mask.py`, `ink/effect_casing.py`, `ink/effect_glow.py`,
-  `ink/effect_shadow.py` and `ink/effect_pen_casing.py` (all new);
-  `tests/unit/ink/test_effects.py`; `tests/property/test_line_effects.py`. It does **not**
-  touch `ink/__init__.py`; merge gate A adds the four exports.
+- **Owns:** `ink/effect_types.py`, `ink/effect_mask.py`, `ink/effect_casing.py`,
+  `ink/effect_glow.py`, `ink/effect_shadow.py` and `ink/effect_pen_casing.py` (all new);
+  `tests/unit/ink/test_effect_types.py`, `tests/unit/ink/test_effects.py`;
+  `tests/property/test_line_effects.py`. It does **not** touch `ink/__init__.py`; merge
+  gate A adds the eight exports.
+- **Value types (`effect_types.py`).** Each effect is a small reusable value type (ADR
+  0070 rule 11), and each primitive takes it whole, so no signature carries an effect's
+  fields one by one and none passes `max-args = 6` (`pyproject.toml`; PLR0913 counts
+  keyword-only parameters too). `src` keeps no `# noqa: PLR0913`. Frozen, `kw_only`,
+  default-constructible, and off at the default:
+  - `Casing(width_px=0.0, colour=Colour("#ffffff"), strength=1.0)`
+  - `Glow(spread_px=0.0, blur_px=0.0, strength=0.0)`
+  - `Shadow(offset_px=0.0, blur_px=0.0, strength=0.0,
+    colour=pigment("paynes_grey").colour)`: the default is read from the registry, so
+    `test_one_registry.py` still finds Payne's grey's hex in one `src` module only.
+  - `PenCasing(width_px=0.0, edge_px=0.0)`, the pen reserve and the width of its two
+    edge lines.
+  - `EFFECT_RANGES` maps each numeric field to its bounds: every `*_px` is at least 0,
+    and every `strength` is from 0 to 1. Each type refuses a value outside it in
+    `__post_init__` (`ValueError` naming the field and its range), and `Casing` and
+    `Shadow` also call `normalise_colours`. `maps/theme_effects.py` reads the same table
+    (S5a), so the ranges have one source.
+  - A `*_px` field is in pixels of the array the effect is laid on. A theme writes
+    display pixels, and `maps/effect_pass.lay_stack` scales them (S5b). The types know
+    nothing of maps: no line class, no stack, no azimuth.
 - **Building blocks:** `noise.chamfer_distance`, `noise.blur` and `noise.smoothstep`;
   `LINE_THRESHOLD = 0.3` lives in `effect_mask.py`. `rgb` is float32 `(h, w, 3)` in 0 to
   1. `mask` is float `(h, w)`. `paper` is `None` (wash space, where 1 is the paper) or an
-  `(h, w, 3)` plate. Widths are in the array's own pixels.
-- **The four functions:**
-  - `casing(rgb, mask, *, width_px, colour, strength=1.0, threshold, paper=None)`
-    returns `rgb` itself when `width_px <= 0`, `strength <= 0` or no mask pixel reaches
-    `threshold`. Otherwise:
-    `a = strength * smoothstep(width_px - chamfer_distance(mask >= threshold), 1.0)` and
+  `(h, w, 3)` plate. A colour enters the maths as `effect.colour.rgb`.
+- **The four functions** (each at most 6 parameters, probed with `ruff check`):
+  - `casing(rgb, mask, effect: Casing, *, threshold, paper=None)` returns `rgb` itself
+    when `effect.width_px == 0`, `effect.strength == 0` or no mask pixel reaches
+    `threshold`. Otherwise, with `w = effect.width_px`:
+    `a = effect.strength * smoothstep(w - chamfer_distance(mask >= threshold), 1.0)` and
     `out = rgb + a * (colour * paper - rgb)`, so white is the paper.
-  - `glow(rgb, mask, *, spread_px, blur_px, strength, threshold, paper=None)` is the
-    identity at `strength <= 0`. Otherwise
-    `core = chamfer_distance(mask >= threshold) <= spread_px`,
-    `a = strength * clip(blur(core, blur_px), 0, 1)` and
+  - `glow(rgb, mask, effect: Glow, *, threshold, paper=None)` is the identity at
+    `effect.strength == 0`. Otherwise
+    `core = chamfer_distance(mask >= threshold) <= effect.spread_px`,
+    `a = effect.strength * clip(blur(core, effect.blur_px), 0, 1)` and
     `out = rgb + a * max(paper - rgb, 0)`. The floor at 0 is what makes "never darkens"
     hold for any input.
-  - `shadow(rgb, mask, *, offset_px, blur_px, strength, colour, azimuth_deg, threshold)`
-    shifts the mask (zero fill, never `np.roll`) by `offset_px` along bearing
-    `b = azimuth_deg + 180`, with `dx = round(offset_px * sin(b))` and
-    `dy = round(-offset_px * cos(b))` in image rows: Python's `round`, half to even, so
-    the shift is a whole-pixel slice and the blur softens the rest. Then
-    `a = strength * blur(shifted) * (1 - clip(mask / threshold, 0, 1))` and
-    `out = where(a > 0, rgb * (1 - a * (1 - colour)), rgb)`.
-  - `pen_casing(rgb, mask, *, width_px, edge_px, threshold, paper=None) -> (rgb, edges)`
-    knocks the wash to the paper inside the reserve (`d <= width_px`). It returns the
-    density of the two ink edge lines (`width_px < d <= width_px + edge_px`). Width 0
-    returns `(rgb, zeros)`.
+  - `shadow(rgb, mask, effect: Shadow, *, azimuth_deg, threshold)` shifts the mask (zero
+    fill, never `np.roll`) by `effect.offset_px` along bearing `b = azimuth_deg + 180`,
+    with `dx = round(offset_px * sin(b))` and `dy = round(-offset_px * cos(b))` in image
+    rows: Python's `round`, half to even, so the shift is a whole-pixel slice and the
+    blur softens the rest. Then
+    `a = effect.strength * blur(shifted, effect.blur_px) * (1 - clip(mask / threshold, 0, 1))`
+    and `out = where(a > 0, rgb * (1 - a * (1 - colour)), rgb)`. The azimuth is a
+    parameter, not a field: it is the scene's light, not the effect's.
+  - `pen_casing(rgb, mask, effect: PenCasing, *, threshold, paper=None) -> (rgb, edges)`
+    knocks the wash to the paper inside the reserve (`d <= effect.width_px`). It returns
+    the density of the two ink edge lines
+    (`width_px < d <= width_px + edge_px`). Width 0 returns `(rgb, zeros)`.
   - No function draws a random number, and each returns a new float32 array clipped to 0
     to 1, except the identity returns.
   - Each refuses `threshold <= 0` with a `ValueError` naming it, before any other work,
@@ -559,15 +609,20 @@ only the files it owns.
 - **Property strategies:**
   - Inputs: `hypothesis.extra.numpy.arrays(np.float32, (h, w, 3), elements=floats(0, 1,
     width=32))` with `h, w` in 8 to 40; a mask from the same strategy with shape `(h, w)`;
-    `paper` as `None` or an array; `threshold` from `floats(0, 1, exclude_min=True)`.
-  - Casing: `width_px` in {0.0, -0.0, negatives} gives a bitwise-identical result
-    (`view(np.uint32)`).
+    `paper` as `None` or an array; `threshold` from `floats(0, 1, exclude_min=True)`;
+    each value type built from `st.builds` with its fields drawn inside `EFFECT_RANGES`.
+  - Casing: `Casing(width_px=w)` for `w` in {0.0, -0.0} gives a bitwise-identical result
+    (`view(np.uint32)`); a negative width never reaches the primitive, because `Casing`
+    refuses it (a unit case).
   - Glow: `out >= rgb` everywhere for any spread, blur, strength and paper.
   - Shadow: `out == rgb` bitwise where `mask >= threshold`, and `out <= rgb` everywhere;
     a unit case pins the rounded `(dx, dy)` for 315 degrees at `offset_px` 1.2 and 2.5.
   - Pen casing: width 0 is the identity and gives zero edges; inside the reserve, minus
     the edge band, `out == paper`.
   - A unit case per function: `threshold` 0 and -0.1 each raise `ValueError`.
+- **`tests/unit/ink/test_effect_types.py`:** the four defaults; each range refused in
+  `__post_init__`; `Shadow().colour == pigment("paynes_grey").colour`; `Casing` and
+  `Shadow` normalise a `str` colour.
 - **Gate:** slice gate in the worktree. Mutation (S8) needs these tests under
   `tests/unit/ink` and `tests/property`, which is where they are.
 
@@ -577,9 +632,9 @@ S5a proceeds whatever the pending ruling on the word "effect" (Approach); its na
 the glossary's.
 
 - **Owns:**
-  - New: `maps/line_effects.py` (`Casing`, `Glow`, `Shadow`, `EffectStack`,
-    `EFFECT_RANGES`, `LINE_CLASSES`, `WATER_GROUP`, `ROAD_GROUP`, `BUILT_IN_PRESETS`; it
-    imports no style) and `maps/theme_effects.py` (imports `theme_checker`).
+  - New: `maps/line_effects.py` (`EffectStack`, `LINE_CLASSES`, `WATER_GROUP`,
+    `ROAD_GROUP`, `BUILT_IN_PRESETS`; it imports `Casing`, `Glow`, `Shadow` and
+    `EFFECT_RANGES` from `pyntpot.ink`, after merge gate A, and imports no style) and `maps/theme_effects.py` (imports `theme_checker`).
   - Edits: `maps/style_groups.py` (`BasemapStyle.line_effects: dict[str, EffectStack]`,
     default `{}`, and `RouteInkStyle.effects: EffectStack = EffectStack()`, with their
     docstrings; `BasemapStyle.__post_init__`; the module docstring loses "holds no
@@ -600,21 +655,14 @@ the glossary's.
     name), and the field-table pins under "Existing pinned field tables" below:
     `tests/unit/maps/test_style_groups.py`, `tests/unit/maps/test_basemap_defaults.py`
     (new) and `tests/unit/maps/candidates/test_export.py`.
-- **Types:** frozen, `kw_only`, and default-constructible.
-  - `Casing(width_px=0.0, colour=Colour("#ffffff"), strength=1.0)`
-  - `Glow(spread_px=0.0, blur_px=0.0, strength=0.0)`
-  - `Shadow(offset_px=0.0, blur_px=0.0, strength=0.0,
-    colour=pigment("paynes_grey").colour)`: the default is read from the registry, so
-    `test_one_registry.py` still finds Payne's grey's hex in one `src` module only.
-  - `EffectStack(effects: tuple[Casing | Glow | Shadow, ...] = ())`.
-  - Widths are in display pixels.
-- **Ranges and off, from one table.** `EFFECT_RANGES` maps each numeric field to its
-  bounds: every `*_px` is at least 0, and every `strength` is from 0 to 1.
-  - `Casing`, `Glow` and `Shadow` refuse a value outside it in `__post_init__`
-    (`ValueError` naming the field and its range); `Casing` and `Shadow` also call
-    `normalise_colours`.
-  - An effect is off when `strength == 0`, or, for a casing, `width_px == 0` (so `-0.0`
-    is off too).
+- **Types.** `Casing`, `Glow` and `Shadow` are S4's, in `ink` (their defaults, ranges and
+  `__post_init__` are there). S5a adds only the stack:
+  - `EffectStack(effects: tuple[Casing | Glow | Shadow, ...] = ())`, frozen and
+    `kw_only`.
+  - A stack's widths are in display pixels; `lay_stack` scales them (S5b).
+  - **Ranges and off.** The range table is `ink`'s `EFFECT_RANGES` (S4); S5a reads it
+    and defines none. An effect is off when `strength == 0`, or, for a casing,
+    `width_px == 0` (so `-0.0` is off too).
   - `EffectStack.__post_init__` refuses two of a kind and drops off effects.
   - `BasemapStyle.__post_init__` first raises `ValueError` for a key outside the seven
     basemap classes (`LINE_CLASSES` less `route`), naming the key, the nearest class and
@@ -717,10 +765,8 @@ the glossary's.
   - "The compose step draws no casing, glow or shadow round the route." becomes "With
     `effects` off, the compose step draws no casing, glow or shadow round the route."
 - **Tests first:**
-  - `tests/unit/maps/test_line_effects.py`: types; at most one of a kind;
-    `LINE_CLASSES == frozenset(BrushStyle().brushes) | {"route"}`; each range refused
-    in `__post_init__`; off effects dropped; `Shadow().colour ==
-    pigment("paynes_grey").colour`; `Casing` and `Shadow` normalise a `str` colour;
+  - `tests/unit/maps/test_line_effects.py`: at most one of a kind;
+    `LINE_CLASSES == frozenset(BrushStyle().brushes) | {"route"}`; off effects dropped;
     `BasemapStyle(line_effects={"route": EffectStack()})` and a misspelt key
     (`"majr"`, suggesting `major`) each raise `ValueError`.
   - `tests/unit/maps/test_theme_effects.py`: every refusal, located (out-of-range
@@ -745,15 +791,15 @@ the glossary's.
 - **Gate:** slice gate (the style-fields comparator and the theme-merge property
   included); schema regenerated; every pinned digest unchanged.
 
-### Merge gate A
+### Merge gate A (after S3b, before S5a)
 
 Merge S4. Then:
 
-- Add `casing`, `glow`, `shadow` and `pen_casing` to `ink/__init__.py`, to
-  `docs/reference/ink.md` and to `INK_PUBLIC`.
+- Add `casing`, `glow`, `shadow`, `pen_casing`, `Casing`, `Glow`, `Shadow` and
+  `PenCasing` to `ink/__init__.py`, to `docs/reference/ink.md` and to `INK_PUBLIC`.
 - Run the slice gate on the merged tree.
 
-### S5b: The painter and compose wiring (serial, after merge gate A)
+### S5b: The painter and compose wiring (serial, after S5a)
 
 - **Owns:** `maps/effect_pass.py`, `maps/painter/effects.py` and `maps/route_effects.py`
   (all new), plus `maps/painter/pen.py`, `maps/painter/plates.py`,
@@ -761,8 +807,10 @@ Merge S4. Then:
   not touch), `tests/unit/maps/painter/test_effects.py` and
   `tests/unit/maps/test_route_effects.py`.
 - **`effect_pass.lay_stack(rgb, mask, stack, *, scale, paper)`** runs a stack's effects
-  in order through the `ink` primitives. It converts display pixels by `scale` and
-  colours by `.rgb`. Shadows take `relief.DEFAULT_SUN.azimuth`, the hillshade's light; a
+  in order through the `ink` primitives, each effect passed whole. It converts display
+  pixels by `scale` with `dataclasses.replace`, multiplying each `*_px` field (the keys
+  of `EFFECT_RANGES` that end in `_px`), so the primitive reads array pixels; the
+  primitive reads the colour's `.rgb` itself. Shadows take `relief.DEFAULT_SUN.azimuth`, the hillshade's light; a
   test pins that this is the constant the relief shades with.
 - **`pen.py`:** `paint_pen` keeps its return. A new `pen_groups(job)` returns each
   group's layers and its per-class masks: the road masks are the band densities already
@@ -800,8 +848,10 @@ Merge S4. Then:
 - **Owns:** `examples/labelled_grid.py` (new), `examples/tutorial_grids.py`,
   `examples/nib_stages.py`, `examples/brush_sheet.py`, `examples/wash_stages.py`,
   `examples/how_to_route_ink.py`, `tests/support/examples.py`,
-  `tests/architecture/test_examples.py`, `tests/examples/test_labelled_grid.py` (new) and,
-  for one line, `pyproject.toml` `[tool.ty.environment] root`.
+  `tests/architecture/test_examples.py`, `tests/examples/test_labelled_grid.py` (new),
+  `test_sheet_script_lists_exactly_the_table_ids` in `tests/docs/test_reference_pages.py`
+  (that one test, :227-232) and, for one line, `pyproject.toml`
+  `[tool.ty.environment] root`.
   The worktree is cut from S3a's checkpoint, so the five scripts already wrap their
   colour literals in `Colour(...)`; S6 keeps those wraps wherever the code moves.
 - **`GridSpec`:** frozen, with `width, cols, rows, cell_h, left, top, gap=14,
@@ -809,10 +859,59 @@ Merge S4. Then:
   `.height` and `.cell_w`. Rounding is reproduced exactly for each layout. Where a layout
   cannot be reproduced, use an origin override rather than a flag. Do not tidy the 12 and
   14 offsets.
-- **`label_grid`:** `label_grid(img, spec, columns, rows, *, px, ink, pen_px, col_dy=14,
-  row_dx=12, row_dy=7, gran_px, seed, extra=())` holds the one nib-plate round trip (the
-  `RGBa` Lanczos downsize kept).
-- **`run_example`** puts `EXAMPLES_DIR` on `sys.path` for the call and restores it after.
+- **`letter_over`:** `letter_over(img, settings, nib, *, gran_px, seed, ground=None)`
+  is the one nib-plate round trip: the plate painted at `NIB_SCALE` (2, every script's
+  value) times the size of `img`, the `RGBa` Lanczos downsize, and the alpha lay. `nib`
+  is the caller's `NibStyle`, `gran_px` the `NibSurface` grain as each script computes it
+  today (for example `GRAN_PX * NIB_SCALE` in `tutorial_grids.py`, `SLOW_GRAN_PX * w /
+  DESIGN_W` in `wash_stages.py`), `seed` the hand's, and `ground` the backing darkness
+  `tutorial_grids._letter` passes (resized bilinear, as today; `None` is bare paper). It
+  raises `RuntimeError` when the hand wrote no marks, as each `_letter` does. Six
+  parameters.
+- **`LabelStyle`:** a frozen record, `LabelStyle(px, ink, pen_px, gran_px, seed,
+  col_dy=14, row_dx=12, row_dy=7)`, the label font size, the label nib's ink and pen
+  width, the plate grain and seed, and the offsets. A dataclass has no hand-written
+  `__init__`, so PLR0913 does not apply; each script holds one module constant of it.
+- **`label_grid`:** `label_grid(img, boxes, columns, rows, style, *, extra=())` letters
+  the column and row names round `boxes` (a `GridSpec.boxes()` result, or a script's own
+  boxes) with `style`, plus the `extra` settings, through `letter_over`. Six parameters.
+  It takes the boxes, not the spec, so `tutorial_grids._labels` stays a delegate.
+- **`tutorial_grids.py` keeps its three helpers.**
+  `docs/tutorials/paint-a-watercolour.md` quotes seven grid functions verbatim (markers
+  at :92, :172, :265, :369, :468, :573 and :690), each calls `_layout`, `_labels` or
+  `_letter`, and its prose at :36 names all three. `tests/docs/test_tutorial_quotes.py:24-34`
+  requires each quoted block to be a substring of the script. So the seven grid
+  functions are not edited, byte for byte, and the three helpers keep today's names and
+  signatures (`tutorial_grids.py:92`, :119 and :162), each body a delegate:
+  - `_layout(cols, rows, cell_h, left, top)` builds the `GridSpec` and returns
+    `spec.boxes(), spec.height`;
+  - `_labels(img, boxes, columns, rows)` is `return label_grid(img, boxes, columns, rows,
+    LABELS)`, with `LABELS = LabelStyle(px=LABEL_PX, ink=LABEL_INK, pen_px=1.5,
+    gran_px=GRAN_PX * NIB_SCALE, seed=SEED, col_dy=12)` (the 12 at :174 kept);
+  - `_letter(img, settings, nib, seed=SEED, ground=None)` is `return letter_over(img,
+    settings, nib, gran_px=GRAN_PX * NIB_SCALE, seed=seed, ground=ground)`, its docstring
+    kept.
+  The tutorial page is not edited: no quote and no prose changes, and no image moves.
+  `docs/how-to/change-the-route-ink.md:79` quotes the cell loop of
+  `how_to_route_ink._grid`, which S6 leaves byte-identical too.
+- **The other four scripts' `_letter`** (`nib_stages.py:195`, `brush_sheet.py:138`,
+  `wash_stages.py:99`) and `how_to_route_ink._lettered` (:157) each keep their name and
+  signature and become a call of `letter_over` with the nib, grain and seed they build
+  today. Those functions letter cell content with a nib, seed and ground that change per
+  cell, so `label_grid` alone cannot replace them; `letter_over` can, and the `RGBa`
+  guard below then holds.
+- **Literals stay in the scripts.** Label tuples and lettered names stay literals in each
+  script, because `tests/docs/test_captions.py:185-205` reads them from the script's
+  syntax tree. `BRUSH_IDS` stays the literal tuple in `brush_sheet.py`.
+- **`support.examples.load_example(stem, run_name)`** (new) runs
+  `runpy.run_path(EXAMPLES_DIR / f"{stem}.py", run_name=run_name)` with `EXAMPLES_DIR`
+  on `sys.path` for the call, restored after, and returns the namespace. `run_path` on a
+  single file does not put its directory on `sys.path`, so without it `from labelled_grid
+  import` raises `ModuleNotFoundError`. `run_example` calls it.
+- **`test_reference_pages.py:227-232`** runs `runpy.run_path(brush_sheet.py)` bare, so it
+  would fail the same way. S6 rewrites that one test to read
+  `load_example("brush_sheet", "example_brush_sheet")["BRUSH_IDS"]`, keeping its
+  `is_file()` guard and assertions; no other test in the file changes.
   `test_examples.py` allows `from labelled_grid import ...` (an `_EXAMPLE_SIBLINGS`
   allowlist), and the helper itself imports only public names.
 - **`ty` resolves the sibling.** `[tool.ty.environment] root` is `["src", "tests"]`, so
@@ -848,8 +947,12 @@ tree.
   get one sentence (the keys exist, all off) pointing at the schema; their guide comes
   with figures in PR 2.
 - **`pigments.md`:** gains a Colour Index column, and the comparator checks it.
-- **Glossary:** code columns for "pigment registry" (`pyntpot.ink.PIGMENT_REGISTRY`) and
-  "palette" (`pyntpot.maps.Palette`); regenerate with
+- **Glossary:** rewrite the "colour alias" entry (`GLOSSARY.md:95`), which says an alias
+  stands "for a pigment name or a hex" and "resolves to its hex", to say an alias stands
+  for a pigment: a named pigment, or the anonymous pigment of a hex, its transparency
+  with it, and a colour field takes that pigment's colour at load. Code columns for
+  "pigment registry" (`pyntpot.ink.PIGMENT_REGISTRY`) and "palette"
+  (`pyntpot.maps.Palette`); regenerate with
   `PYTHONPATH=tests uv run python -m support.glossary`.
 - **Notes:**
   - Delete `docs/features/ink-one-pigment-registry.md`,
@@ -940,7 +1043,7 @@ modules and strategies:
 
 | Property | Module | Strategy |
 |---|---|---|
-| Casing of width 0 is the identity, bit for bit | `tests/property/test_line_effects.py` | float32 RGB and mask arrays, `width_px` in {0, -0, negatives} |
+| Casing of width 0 is the identity, bit for bit | `tests/property/test_line_effects.py` | float32 RGB and mask arrays, `Casing(width_px=w)` for `w` in {0, -0} |
 | Glow never darkens | same | arrays, any spread, blur and strength, paper `None` or an array |
 | Shadow never paints over its casting line | same | arrays, any offset, blur, strength, colour and azimuth |
 | Pen casing: width 0 is the identity; the reserve is paper | same | arrays and widths |
@@ -989,8 +1092,8 @@ slice.
   owned files, tests first and gate. S3b, S5a and S5b are design-heavy and go to the
   strongest model. S0, S2, S6 and S7 are mechanical and can go to a cheaper one. S4 is
   maths with property tests and goes to the strongest model.
-- **Parallel:** S4 runs in a worktree cut after S0 and S6 in one cut after S3a, merged
-  at gates A and B. Everything else is serial on the branch.
+- **Parallel:** S4 and S6 each run in a worktree cut after S3a, merged at gates A
+  (before S5a) and B. Everything else is serial on the branch.
 - **After green:** a fresh-context diff review against the plan, then the elegance pass;
   findings triaged by the orchestrator.
 
@@ -1006,12 +1109,12 @@ after their cut, and they have them: `pyproject.toml` is S6's alone.
 | S1 | `ink/{colour,naming,pigment_table,pigment_registry,compositing,style,__init__}.py` (the four tables in `pigment_table`), importers of the old module, `maps/style_groups.py`, `maps/theme_vocab.py`, registry tests (`tests/unit/maps/test_registry_defaults.py` among them), `docs/reference/ink.md`, `test_public_api.py`, `tests/support/theme_dump.py` | S0 | no |
 | S2 | `ink/brush_sheet.py`, `ink/brush.py`, brush branch of `maps/theme_check.py`, `tests/unit/ink/test_brush.py`, `tests/unit/maps/test_theme_check.py` (the `MAJ9-a` row), `tests/unit/maps/test_theme_brush_ids.py` | S1 | no |
 | S3a | `ink/{colour,style,sheet}.py`, `letters/style.py`, `maps/{style_groups,style,compose_steps,theme_checker,theme_scope,theme_check,theme_vocab,theme_schema}.py`, schemas, the colour call sites in the five grid scripts, `pigment_swatches.py` and `test_style.py`, `tests/unit/maps/{test_theme_vocab,test_theme_schema,test_theme_check,test_colour_fields,test_theme_scope,test_theme_colour_names}.py`, `tests/unit/ink/test_style_colours.py`, `tests/unit/letters/test_style.py`, `tests/property/test_theme_merge.py`, `test_one_hex_parser.py` | S2 | no |
-| S3b | `maps/{theme_colours,theme_pigments,theme_palette,theme_palette_gpl,theme_resolve,theme_schema_tables}.py`, edits to `maps/{theme_scope,theme_check,theme_schema}.py`, `maps/palettes/`, `maps/__init__.py`, `docs/reference/maps.md`, `test_public_api.py`, schemas, `tests/unit/maps/{test_theme_schema,test_theme_colours,test_theme_pigments,test_theme_palette,test_theme_palette_gpl}.py`, `tests/property/{test_theme_colours,test_palette_gpl}.py`, `test_cli.py` (one case) | S3a | no |
-| S4 | `ink/effect_*.py`, `tests/unit/ink/test_effects.py`, `tests/property/test_line_effects.py` | S0 | yes, worktree |
-| S5a | `maps/{line_effects,theme_effects}.py`, plus edits to `style_groups`, `style`, `theme_check`, `theme_vocab`, `theme_scope`, `theme_schema`, `theme_schema_tables` and `__init__`; `style-fields.md`; `test_theme_merge.py`; `tests/unit/maps/{test_theme_schema,test_theme_vocab,test_style_groups,test_basemap_defaults,test_line_effects,test_theme_effects,test_digest_omits}.py`; `tests/unit/maps/candidates/test_export.py`; `tests/property/{test_line_effect_presets,test_line_effect_digests}.py`; `test_theme_imports.py` | S3b | no |
-| Gate A | `ink/__init__.py` exports, `docs/reference/ink.md`, `test_public_api.py` | S4, S5a | no |
-| S5b | `maps/{effect_pass,route_effects,compose_steps}.py`, `maps/painter/{effects,pen,plates}.py` | gate A | no |
-| S6 | `examples/labelled_grid.py`, the five grid scripts, `tests/support/examples.py`, `tests/architecture/test_examples.py`, `tests/examples/test_labelled_grid.py`, `pyproject.toml` (`[tool.ty.environment] root` only) | S3a | yes, worktree |
+| S3b | `maps/{theme_colours,theme_pigments,theme_palette,theme_palette_gpl,theme_resolve,theme_schema_tables}.py`, edits to `maps/{theme_scope,theme_check,theme_schema}.py`, `maps/palettes/`, `maps/__init__.py`, `docs/reference/maps.md`, `test_public_api.py`, schemas, `tests/unit/maps/{test_theme_schema,test_theme_colours,test_theme_pigments,test_theme_palette,test_theme_palette_gpl,test_theme_resolve}.py`, `tests/property/{test_theme_colours,test_palette_gpl}.py`, `test_cli.py` (one case) | S3a | no |
+| S4 | `ink/effect_*.py` (`effect_types.py` among them), `tests/unit/ink/{test_effect_types,test_effects}.py`, `tests/property/test_line_effects.py` | S3a | yes, worktree |
+| S5a | `maps/{line_effects,theme_effects}.py`, plus edits to `style_groups`, `style`, `theme_check`, `theme_vocab`, `theme_scope`, `theme_schema`, `theme_schema_tables` and `__init__`; `style-fields.md`; `test_theme_merge.py`; `tests/unit/maps/{test_theme_schema,test_theme_vocab,test_style_groups,test_basemap_defaults,test_line_effects,test_theme_effects,test_digest_omits}.py`; `tests/unit/maps/candidates/test_export.py`; `tests/property/{test_line_effect_presets,test_line_effect_digests}.py`; `test_theme_imports.py` | gate A | no |
+| Gate A | `ink/__init__.py` exports (eight names), `docs/reference/ink.md`, `test_public_api.py` | S4, S3b | no |
+| S5b | `maps/{effect_pass,route_effects,compose_steps}.py`, `maps/painter/{effects,pen,plates}.py` | S5a | no |
+| S6 | `examples/labelled_grid.py`, the five grid scripts, `tests/support/examples.py`, `tests/architecture/test_examples.py`, `tests/examples/test_labelled_grid.py`, one test of `tests/docs/test_reference_pages.py`, `pyproject.toml` (`[tool.ty.environment] root` only) | S3a | yes, worktree |
 | Gate B | the merged tree | S5b, S6 | no |
 | S7 to S9 | docs, notes (`ink-stroke-density-profile.md` included), `mutation.md`, the PR | gate B and the effect-trap ruling, if any | no |
 
@@ -1057,6 +1160,15 @@ Forks picked with no human in the loop, each with its reason:
 - **Casing colour is laid over the paper,** so white is the paper. Glow is floored at 0,
   so it cannot darken. `LINE_THRESHOLD` is 0.3, a constant, not a theme field. The shadow
   takes `DEFAULT_SUN.azimuth`.
+- **The effect value types live in `ink`.** Each primitive takes its value type
+  (`Casing`, `Glow`, `Shadow`, `PenCasing`) plus the arrays it acts on, so every
+  signature has at most 6 parameters and `src` gains no `# noqa: PLR0913`. `maps` cannot
+  define the types the `ink` primitives take, so they are `ink`'s, one name each, and
+  `maps` adds only `EffectStack`. The same limit gives `label_grid` a `LabelStyle`
+  record.
+- **A chain whose read stops checks no file.** Its scope cannot be built, so checking
+  would cascade misses for inherited names; only the read and `extends` problems are
+  reported (S3b).
 - **Pen casing is a primitive only.** Wiring it into the model needs the line's own ink
   replaced, which is PR 2's design and figures.
 - **`Palette` is public in maps.** Rule 7's import and export need a public entry, and

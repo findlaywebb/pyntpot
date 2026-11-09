@@ -232,7 +232,9 @@ comp-ops), no per-feature z-order, and no generated palettes.
     class, and those pads are built only when a water effect is set. The route is drawn at
     compose, above the whole base plate. No effect draws from `dither_rng`.
 11. **Effects composite on RGB, not by Kubelka-Munk.** An effect is a plain function of the
-    RGB beneath it and a float mask `m`, in `ink`, knowing nothing of maps. This is a
+    RGB beneath it, a float mask `m` and the effect's own small value type (`Casing`,
+    `Glow`, `Shadow`, `PenCasing`, holding its widths, strength and colour), in `ink`,
+    knowing nothing of maps. This is a
     deliberate departure from the compositing pattern, in which every layer is a pigment
     glazed or multiplied by `composite`: a glaze at `km_transparency = 0.06` cannot lay
     cream over a dark wood, and multiplying cannot lighten at all, so neither can make a
@@ -310,8 +312,9 @@ comp-ops), no per-feature z-order, and no generated palettes.
 ### Public names
 
 `ink` gains `Colour`, `Pigment`, `PigmentRegistry`, `PIGMENT_REGISTRY`, `pigment`, and
-the effect primitives `casing`, `glow`, `shadow` and `pen_casing`. `maps` gains `Casing`,
-`Glow`, `Shadow` and `EffectStack`, the types the theme fields hold, and `Palette`, which
+the effect primitives `casing`, `glow`, `shadow` and `pen_casing` with their value types
+`Casing`, `Glow`, `Shadow` and `PenCasing`, which each primitive takes whole. `maps` gains
+`EffectStack`, the stack of `ink`'s effect types the theme fields hold, and `Palette`, which
 reads a palette by name or path, maps each alias to its pigment, lists the packaged names,
 and reads and writes `.gpl`
 (rule 7's import and export need a public entry). ADR 0068's rule covers the new names;

@@ -124,9 +124,10 @@ layout and label code.
 
 ### Line-effect primitives in `ink`
 
-- [ ] `pyntpot.ink` exports `casing`, `glow`, `shadow` and `pen_casing`. Each is a pure
-      function of float32 RGB and a float mask. None knows of maps, and none draws a random
-      number.
+- [ ] `pyntpot.ink` exports `casing`, `glow`, `shadow` and `pen_casing`, and their value
+      types `Casing`, `Glow`, `Shadow` and `PenCasing` (frozen, off at the default). Each
+      primitive is a pure function of float32 RGB, a float mask and its value type, with
+      at most 6 parameters. None knows of maps, and none draws a random number.
 - [ ] Each refuses a threshold at or below 0 with `ValueError`.
 - [ ] Hypothesis properties, on arrays before any dither or encode: a casing of width 0
       is the identity, bit for bit; a glow never darkens a pixel; a shadow never paints
@@ -136,8 +137,8 @@ layout and label code.
 
 ### The line-effect model, presets and theme fields (all off)
 
-- [ ] `pyntpot.maps` exports `Casing`, `Glow`, `Shadow` and `EffectStack`. An
-      `EffectStack` holds at most one of each kind, in order.
+- [ ] `pyntpot.maps` exports `EffectStack`, a stack of `ink`'s `Casing`, `Glow` and
+      `Shadow`. An `EffectStack` holds at most one of each kind, in order.
 - [ ] A theme's top-level `line_effects:` is keyed by `major`, `medium`, `minor`,
       `coast`, `road_major`, `lane`, `track` and `route`. Each value is a preset name or a
       stack (a mapping whose keys are `casing`, `glow` and `shadow`, applied in key
@@ -205,12 +206,12 @@ Under "Changelog" in the PR description:
 ```
 feat(ink): Pigment, PigmentRegistry, PIGMENT_REGISTRY and pigment(): one registry of the 25 built-in pigments, with the nearest names suggested on a miss
 feat(ink): Colour, a lower-case #rrggbb value type, now the type of every colour field
-feat(ink): casing, glow, shadow and pen_casing, line-effect primitives laid on RGB
+feat(ink): casing, glow, shadow and pen_casing, line-effect primitives laid on RGB, each taking its value type (Casing, Glow, Shadow, PenCasing)
 feat(ink): brush_from_id suggests the nearest brush id on a miss
 feat(maps): a theme colour may be a pigment name, or an alias from the theme's colours table or its palette
 feat(maps): a theme may add pigments in a pigments table; a built-in pigment's name is refused
 feat(maps): palettes, chosen by name or path and read from or written to GIMP .gpl files (Palette)
-feat(maps): line_effects and effect_presets theme tables: a casing, glow or shadow per line class and for the route, with the presets cased, halo and lifted, all off by default
+feat(maps): line_effects and effect_presets theme tables: a casing, glow or shadow per line class and for the route (EffectStack), with the presets cased, halo and lifted, all off by default
 fix(maps): a theme's upper-case hex colour is stored in lower case, so it hashes as its lower-case form
 refactor(ink): every colour field is typed Colour; a typed caller now passes Colour("#rrggbb") where it passed a str, and a str still works at runtime
 ```
