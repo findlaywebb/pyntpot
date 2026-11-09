@@ -6,39 +6,39 @@ gate B (S6 in); S7, S8, S9.
 
 ## Start
 
-- [ ] Comment the branch and spec `009` on #72, #71 and #170. Name #104, #105 and #106 as
+- [x] Comment the branch and spec `009` on #72, #71 and #170. Name #104, #105 and #106 as
       generalised, closing in `009a`.
 - [x] ADR 0070 amended to match the plan (review finding 15): two converters, the
       three-branch schema, the glow floor, the loader-only fields and their schema
       shape and ranges, binding down `extends`, off dropped after the final merge, the
       public names and the module rename.
-- [ ] The plan-reviewer passes the revised plan.
+- [x] The plan-reviewer passes the revised plan.
 
 ## S0: Baseline
 
-- [ ] `tests/golden/grid_hashes.py` (`record` and `check`, file and pixel sha256 per
+- [x] `tests/golden/grid_hashes.py` (`record` and `check`, file and pixel sha256 per
       entry of the five grid scripts); `make_docs_images.fixture_options` made public.
-- [ ] On the untouched base: `PYTHONPATH=tests uv run python tests/golden/grid_hashes.py record specs/009-line-effects-and-registry/grid-hashes.json`, committed alone.
-- [ ] `check` passes; slice gate green.
+- [x] On the untouched base: `PYTHONPATH=tests uv run python tests/golden/grid_hashes.py record specs/009-line-effects-and-registry/grid-hashes.json`, committed alone.
+- [x] `check` passes; slice gate green.
 
 ## S1: The registry (#72)
 
-- [ ] Red: `test_colour.py`, `test_pigment_registry.py`, `test_one_registry.py`, the
+- [x] Red: `test_colour.py`, `test_pigment_registry.py`, `test_one_registry.py`, the
       property tests (`pigment(hex)` anonymous, `transparency=None`, among them), and the
       maps default ties in `tests/unit/maps/test_registry_defaults.py` (new).
-- [ ] `ink/colour.py`, `ink/naming.py`, `ink/pigment_table.py`,
+- [x] `ink/colour.py`, `ink/naming.py`, `ink/pigment_table.py`,
       `ink/pigment_registry.py`.
-- [ ] `git mv ink/pigment.py ink/compositing.py`; every importer repointed; no shim.
-- [ ] The four tables (moved to `pigment_table.py`, exported from `pyntpot.ink`) and the
+- [x] `git mv ink/pigment.py ink/compositing.py`; every importer repointed; no shim.
+- [x] The four tables (moved to `pigment_table.py`, exported from `pyntpot.ink`) and the
       two map defaults built from the registry, in today's order; `pigment()` delegates a
       name to `PigmentRegistry.get`, the one miss message.
-- [ ] `Colour.parse(text: str)` annotated `str` (not `object`, which
+- [x] `Colour.parse(text: str)` annotated `str` (not `object`, which
       `test_public_signatures` refuses) and raises `ValueError` for any non-`str`; the
       `5` and `None` cases carry `# ty: ignore[invalid-argument-type]`; alias names drawn
       with `fullmatch=True`.
-- [ ] `theme_dump._plain` writes a `str` subclass as `str`, so the theme-merge property
+- [x] `theme_dump._plain` writes a `str` subclass as `str`, so the theme-merge property
       dumps `Colour` values.
-- [ ] Exports, `test_public_api.py`, `docs/reference/ink.md`; `test_pigment.py` pins
+- [x] Exports, `test_public_api.py`, `docs/reference/ink.md`; `test_pigment.py` pins
       unchanged; grid `check`; slice gate green.
 
 ## S2: The catalogues as typed tables (#71)
