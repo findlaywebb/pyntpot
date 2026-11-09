@@ -275,10 +275,23 @@ comp-ops), no per-feature z-order, and no generated palettes.
     that moves a pixel or a hash goes to PR 2, stacked on PR 1, which is breaking (`!` in its
     title) and regenerates the goldens once at its end.
 17. **A pigment carries its own transparency (PR 2).** `paper.pigment_transparency` is
-    retired, and `cover.pigments` maps a cover class to a pigment reference. When a role
-    names a pigment, its transparency is the role entry's if it sets one, else the
-    pigment's own, else `paper.km_transparency`. The base digest is re-pinned and the pinned
-    plates that move are listed.
+    retired, and `cover.pigments` maps a cover class to a pigment reference: a `#rrggbb`, a
+    pigment name or an alias, or a table `{pigment: <ref>, transparency: <0 to 1>}`. One
+    rule gives every entry its transparency, whatever form it takes:
+    - the entry's own `transparency`, if it sets one;
+    - else the resolved pigment's own: a named pigment's, a theme pigment's, or, for a
+      derived `{base: x}` pigment that sets none, its base's;
+    - else the transparency of the cover class's built-in pigment, the registry's role
+      pigment of the same name, which every cover class has.
+
+    So an alias to a hex (a `.gpl` palette's aliases included), `{pigment: "#rrggbb"}`
+    with no transparency, and a theme pigment whose transparency is unset all take the
+    class's built-in transparency, and a theme that rebinds a class by hex keeps its look.
+    An entry replaces its base theme's whole, so an `extends` child that rebinds a class
+    by bare hex takes the built-in transparency, not its parent's. `paper.km_transparency`
+    applies only to a transparency of `None`, which only Python can build. The resolver
+    gets the cover class from the checker's validation context. The base digest is
+    re-pinned and the pinned plates that move are listed.
 18. **One public way to colour the route (PR 2, #159).** `with_route_ink(colour=c)` also
     sets `nib.label_route_ink = c`, so a fed colour changes every route-coloured thing. A
     theme may still letter the markers in a different shade; a fed colour overrides it.

@@ -224,3 +224,21 @@ should-fixes, then re-review.
     - Split D (4 scripts, 4 pages, 9 images) for Sonnet.
     - State that `separation_pigments` keeps `wash.separation_transparency`, as a designed
       gap.
+
+## Resolution
+
+1. Fixed as asked: casing's 0 column goes through `casing(width_px=0)`; glow, shadow and pen casing get a lettered "none" cell through the primitive (`strength=0`, pen casing `width_px=0`); each off cell is compared with an independently painted `paint_cell(None)` by `tobytes()`; "zero cell" is gone from the spec.
+2. Fixed as asked (orchestrator ruling): one rule for every form (entry's own, else the resolved pigment's own, a derived pigment's base's, else the cover class's built-in pigment's), `km_transparency` only for a Python-built `None`, the class passed as `"cover_class"` in validation context, a parametrised test per form plus the `extends` child, and ADR 0070 rule 17 edited in place (no "amends" row, since 0070 is unmerged). Added beyond the review: a Python-built `str` takes the class's built-in, and `CoverPigment` carries a pydantic hook so `Style.model_validate` keeps working.
+3. Fixed as asked: measured on the nib plate's RGBA, alpha at least 0.9 inside the "start" label's box from `Lettering.labels`, mean nearer `VIOLET` than `#c22050`; spec amended.
+4. Fixed, one part differently: `CoverPigment` goes in `maps/cover_pigment.py` and the resolver in `maps/theme_bindings.py`, but the moved key reuses the existing `theme_check.RENAMED_KEYS` (one entry, exact message in the plan) rather than a new table, because the code already has that mechanism. New tests go in new files; the 009a registry blocks go in `tests/support/docs_images_009a.py` after `DocsImage` moves to `docs_image.py`; the pre-existing 565-line overrun is filed in P0.
+5. Fixed as asked: NamedTuple chosen; `theme_dump` writes `{pigment, transparency}`; `test_theme_merge.py`, `test_smoke.py:246`, `write-a-theme.md:52-53`, the `maps.md` directive, `THEME_NAMES` and a "cover pigment" glossary row added; "role" replaced by "cover class".
+6. Fixed (orchestrator ruling): D1 tunes `BUILT_IN_PRESETS` before any image naming a preset is painted, with PR 1's preset and effect property and unit tests as its gate; values recorded in Decisions and the ADR.
+7. Fixed (orchestrator ruling): bold takes `line_effects: {route: cased}`, the route casing it declared until ADR 0046; it moves `digest()` only, so the moved rows are bold's digest (B then F), base digest (B only), `map-styles/bold` and its master, and `MEAN_RGB["bold"]`.
+8. Fixed as asked: Out of scope says pen casing stays an `ink` primitive with no theme key, and the reference page states it; its sweep moves to the tutorial page.
+9. Fixed: sweeps are painted at scale 1, so a lettered "2 px" is `width_px: 2` at scale 1.
+10. Fixed as asked: `repaint.py OUT <names> --no-lynmouth` after A, B and F, with the expected `changed` set for each.
+11. Fixed as asked: G checks the repaint summary (changed four, added none) before copying, and the recheck summary (changed four, added 40) after; P0 confirms the machine reproduces the goldens exactly.
+12. Fixed as asked: one `Closes #N` line per issue in spec and tasks; P0 comments the branch on all seven issues.
+13. Fixed as asked: a page-and-section table for every image and a table of exact fields and values (`pool` by `Sheet.seed`; `Sheet.gran_px` by `Sheet.fibre`; treatment `dry` by `load`; `relief_strength`); the dryness sweep and galleries are swatch sheets, which reference pages may show.
+14. Adopted: "RIV = STR" shares one column, both ids lettered in the cell and listed in the page table.
+15. Adopted: the trap is cited as CONTRIBUTING.md:143 and left for the user; the `default` map-styles image is dropped from the spec; D is split into D1 to D4; the separation transparency is a stated designed gap.

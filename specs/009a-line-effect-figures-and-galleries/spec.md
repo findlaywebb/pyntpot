@@ -39,8 +39,9 @@ several important settings do.
       rule 4). For each field whose default equals `RouteInkStyle().colour`, a fed colour
       sets it.
 - [ ] One pixel test: after `with_route_ink(colour=VIOLET)`, `letter` writes a nib plate
-      that is not byte-equal to the default's, and the "start" marker label's opaque
-      pixels average within 12 of `VIOLET` per channel.
+      that is not byte-equal to the default's. On that plate's RGBA, the pixels with alpha
+      at least 0.9 inside the box of the "start" marker label (from `Lettering.labels`)
+      have a mean RGB nearer `VIOLET` than `#c22050` by Euclidean distance.
 - [ ] A fed colour moves `lettering_digest()`, pinned as a literal; at the default no
       digest moves.
 - [ ] `docs/how-to/change-the-route-ink.md` says the markers follow a fed colour, that a
@@ -53,21 +54,27 @@ several important settings do.
 - [ ] `PaperStyle.pigment_transparency` is gone. A theme that sets
       `paper.pigment_transparency` fails at load, and the located error names
       `cover.pigments.<class>.transparency`.
+- [ ] `CoverStyle.pigments` maps each cover class to a `pyntpot.maps.CoverPigment`, a
+      `NamedTuple` of a `Colour` and a transparency (a float, or `None`).
 - [ ] Each `cover.pigments` entry is a pigment reference: a `#rrggbb`, a registry name or
       an alias. It may instead be a table `{pigment: <ref>, transparency: <0 to 1>}`. At
-      load the transparency is resolved: the entry's own, else the named pigment's own,
-      else, for a bare `#rrggbb`, the transparency of the built-in pigment the role bound
-      by default, else `paper.km_transparency`.
-- [ ] A bare hex keeps its role's default transparency: a theme that rebinds a role by
-      `#rrggbb` and sets no transparency paints with the transparency the role had
-      before, not `paper.km_transparency`.
-- [ ] A role entry replaces the base theme's binding as a whole. It is never merged key
-      by key.
-- [ ] Every bundled and example theme is migrated, so that every role keeps the colour
-      and transparency it painted with before. Every base plate of every theme is
-      byte-identical before and after. The `default`, `pen-and-ink`, `sepia` and
-      `winter` map-styles images, the place cards, the hero and the social preview do
-      not move.
+      load one rule resolves the transparency of every form: the entry's own, else the
+      resolved pigment's own (a derived `{base: x}` pigment that sets none takes its
+      base's), else the transparency of the cover class's built-in pigment. So a bare
+      hex, an alias to a hex (a `.gpl` palette alias included), `{pigment: "#rrggbb"}`
+      with no transparency and a theme pigment with none all take the cover class's
+      built-in transparency, and a test covers each form.
+- [ ] `paper.km_transparency` applies only to a `CoverPigment(colour, None)` built in
+      Python; no theme can produce one. A `str` value built in Python takes the cover
+      class's built-in transparency, as a theme's bare hex does.
+- [ ] A cover class's entry replaces the base theme's whole. It is never merged key by
+      key, so an `extends` child that rebinds a class by bare hex takes the class's
+      built-in transparency, not its parent's. A test pins this, and the theme how-to and
+      ADR 0070 rule 17 say it.
+- [ ] Every bundled and example theme is migrated, so that every cover class keeps the
+      colour and transparency it painted with before. Every base plate of every theme is
+      byte-identical before and after. The `pen-and-ink`, `sepia` and `winter`
+      map-styles images, the place cards, the hero and the social preview do not move.
 - [ ] `BASE_DIGEST`, `DIGEST`, every theme's `DIGESTS` entry, `GOLDEN_HASH` and the
       Lynmouth `plates.json` hash are re-pinned to measured literals. `LETTERING_DIGEST`
       does not move. Both copies of `theme.schema.json` are regenerated.
@@ -77,7 +84,9 @@ several important settings do.
 - [ ] `examples/brush_gallery.py` paints every brush id, one figure per prefix group:
       `riv-str-lan` (24 ids), `maj` (40) and `trk` (48), 112 in all.
       - Rows are the eight treatments, each lettered with its number and kind.
-      - Columns are the prefix's ink colour columns.
+      - Columns are the prefix's ink colour columns. `RIV` and `STR` are one brush (one
+        colour, no override), so they share a column lettered "RIV = STR", and the page
+        table lists both ids.
       - Each cell holds one S-stroke at 4 px and one at 12 px, with the id lettered
         beneath.
       - A docs test fails if an id of `BRUSH_COLOURS` by `BRUSH_TREATMENTS` is missing.
@@ -106,7 +115,14 @@ several important settings do.
       - glow spread by blur;
       - shadow offset by blur;
       - pen casing gap by ink width.
-      Each sweep's zero cell equals the plain stroke, byte for byte.
+      Each sweep is painted at scale 1, so a lettered "2 px" is `width_px: 2` in a theme
+      at scale 1. Each sweep has an off cell painted through its primitive: casing's
+      width 0 column, and a lettered "none" cell for glow and shadow (`strength=0`) and
+      pen casing (`width_px=0`). The off cell equals the plain stroke, painted without the
+      primitive, byte for byte, before lettering and encoding.
+- [ ] The three built-in presets are tuned against the presets figure and the sweeps
+      before any image naming one is painted. PR 1's preset and effect property tests
+      pass with the tuned values, which the new ADR records.
 - [ ] On the Ambleside fixture:
       - a how-to result card with `road_major` cased and the route haloed, from a new
         `examples/themes/ambleside-cased.yaml`;
@@ -128,8 +144,10 @@ several important settings do.
 - [ ] A Painting with Python page, `docs/tutorials/painting-with-python/cased-strokes.md`,
       with `examples/cased_stroke.py`. Using only the public `ink` effect primitives on a
       free stroke, it casts a casing, a glow and a shadow.
-- [ ] The packaged `bold` theme cases `road_major` with the `cased` preset. Its
-      map-styles image and mean are re-pinned. No other bundled theme adopts an effect.
+- [ ] The packaged `bold` theme cases its route with the `cased` preset
+      (`line_effects: {route: cased}`), the route casing it declared until ADR 0046. Its
+      `digest()` moves and its base and lettering digests do not. Its map-styles image
+      and mean are re-pinned. No other bundled theme adopts an effect.
 
 ### Setting grids (#67)
 
@@ -139,9 +157,11 @@ several important settings do.
       - `dryness`: a brush's dryness by its load.
 - [ ] `examples/relief_grid.py` paints `cover.relief_strength` at 0.5, 1, 1.5 and 2 on an
       Ambleside crop.
-- [ ] Each sweep is shown under the paragraph that describes its setting. Glaze order is
-      the pigment gallery's `glazes`. Wash body and nib angle and width are the existing
-      tutorial and nib grids.
+- [ ] Each sweep is shown under the paragraph that describes its setting, at the page
+      and section `plan.md` names, with the fields and values it lists: `pool` by sheet
+      seed, `Sheet.gran_px` by `Sheet.fibre` (smooth and cold press), treatment `dry` by
+      treatment `load`. Glaze order is the pigment gallery's `glazes`. Wash body and nib
+      angle and width are the existing tutorial and nib grids.
 
 ### Images, budgets, notes
 
@@ -154,14 +174,16 @@ several important settings do.
 - [ ] The notes for #104, #105, #106, #159, #67, #69 and #70 are deleted, along with any
       registry note PR 1 left (#71, #72, #170). Every note that linked to one now points
       at the page that replaced it.
-- [ ] The PR says `Closes #159, #69, #70, #67, #104, #105, #106`.
+- [ ] The PR body has one `Closes #N` line per issue: `Closes #159`, `Closes #69`,
+      `Closes #70`, `Closes #67`, `Closes #104`, `Closes #105` and `Closes #106`. The
+      branch name is commented on each of the seven issues when work starts.
 
 ## Changelog
 
 ```
 feat(maps)!: a cover class binds a pigment that carries its own transparency; paper.pigment_transparency is gone
 fix(maps): a fed route colour also letters the start and finish markers
-feat(maps): the bold theme cases its main roads
+feat(maps): the bold theme cases its route
 docs(docs): galleries of every brush id and every pigment, with glaze pairs and Colour Index codes
 docs(docs): how-to, reference, explanation and a Painting with Python page for casings, glows and shadows
 docs(docs): setting grids for wash pooling, granulation, dryness and relief strength
@@ -178,3 +200,7 @@ docs(docs): setting grids for wash pooling, granulation, dryness and relief stre
 - The public `letters` round trip of #165.
 - Any change to the effect primitives' maths or to PR 1's five grids.
 - Effects in `pen-and-ink`, `sepia` or `winter`.
+- A pen casing in the theme model: pen casing stays an `ink` primitive with no theme key,
+  and the line effects reference page says so as a capability fact.
+- Pigment separation's transparency: `wash.separation_pigments` keeps
+  `wash.separation_transparency`, a designed gap the reference page states.
