@@ -25,8 +25,8 @@ disjoint namespace that no theme can name. An unknown name in engine code is a b
 **A colour is a hex string with no type.** About twelve places can hold a colour; the
 theme reaches eight key paths, every one a plain `str` of `#rrggbb`. The set of colour
 fields is written twice, once by the fields and once by hand in `COLOUR_FIELDS`. Nothing
-lower-cases a theme's hex, so `#C22050` and `#c22050` hash differently. Three functions
-turn hex into RGB (`ink.sheet.rgb` and two in `compose_steps`). A theme cannot say
+lower-cases a theme's hex, so `#C22050` and `#c22050` hash differently. Two functions
+turn hex into RGB (`ink.sheet.rgb` and `compose_steps._rgb`). A theme cannot say
 `ultramarine`: it must copy the hex.
 
 **The casing values nothing read.** The route ink once carried a free `effect` table with
@@ -96,7 +96,9 @@ comp-ops), no per-feature z-order, and no generated palettes.
    of ADR 0069. The import contracts do not change.
 2. **One lookup.** `pigment(ref)` takes a `Pigment` (returned as itself), a canonical name,
    or a `#rrggbb` (an anonymous pigment with `transparency=None`), and otherwise raises
-   `ValueError` naming the nearest names by `difflib.get_close_matches`. `brush_from_id`
+   `ValueError` naming the nearest names by `difflib.get_close_matches`. It is the one
+   documented lookup; a name goes on to `PigmentRegistry.get`, the one place the miss
+   message is written. `brush_from_id`
    suggests the nearest id the same way. The registry is immutable: adding pigments returns
    a new registry and never changes the shared one, so no module state moves under
    `pytest-randomly` or xdist.
@@ -112,9 +114,19 @@ comp-ops), no per-feature z-order, and no generated palettes.
    `dataclasses.asdict` would hash a dict where the digest hashes the string today. As a
    `str` it keeps `==`, `json.dumps`, `asdict` and every existing default working, and a
    hex colour hashes as itself. `.rgb` computes exactly as `ink.sheet.rgb` does now
-   (a float64 division, then float32), and it replaces the three hex-to-RGB converters.
+   (a float64 division, then float32) and `.rgb8` gives the three bytes, so they replace
+   the two hex-to-RGB converters: `compose_steps._rgb` goes, and `ink.rgb` stays public,
+   its behaviour unchanged (the `#` optional, characters after the sixth digit unread),
+   sharing `Colour`'s channel arithmetic, so hex is parsed in `ink/colour.py` only.
    Every colour field of every style group is typed `Colour`; the type marks the field, so
-   `COLOUR_FIELDS` is retired and the schema and checker test the hint instead.
+   `COLOUR_FIELDS` is retired and the schema and checker test the hint instead. A plain
+   `str` still reaches a field at runtime (a caller's keyword, `dataclasses.replace`,
+   `Style.model_validate` from a dict), so each group with a `Colour` field normalises it
+   in `__post_init__` through `Colour.parse`, a dict field rebuilt, and `Colour` gives
+   pydantic its validator through `__get_pydantic_core_schema__`, which returns a
+   plain-dict core schema calling `Colour.parse` and imports nothing from pydantic, so
+   ADR 0015's contract holds and `Style` needs no `arbitrary_types_allowed`. A typed
+   caller wraps a literal in `Colour(...)`; an untyped caller keeps working unchanged.
 5. **How a theme names a colour.** Every theme colour field takes a `#rrggbb`, a canonical
    pigment name, or an alias the theme or its palette defines up front. Aliases are a
    top-level theme table, `colours:`, mapping an alias to a pigment name or a hex. An alias
@@ -125,8 +137,11 @@ comp-ops), no per-feature z-order, and no generated palettes.
    CSS names. Names and aliases resolve to hex at load, so an existing hex theme hashes as
    before, and retuning a pigment repaints every theme that names it, which is correct. A
    name gives its colour only; its transparency rides along from rule 17, in PR 2. The
-   schema emits `anyOf` an enum of the registry's names and the hex pattern, so an editor
-   completes names; the checker stays the path for good errors.
+   schema gives every `Colour` field `anyOf` three branches: an enum of the registry's
+   names, the hex pattern, and the alias pattern `^[a-z][a-z0-9_]*$`. The schema is
+   static and cannot know a theme's aliases or pigments, so the third branch keeps them
+   valid in an editor; the enum still completes names, and the checker stays the path for
+   good errors.
 6. **Collisions are rejected.** A pigment a theme adds (a top-level `pigments:` table) whose
    name equals a built-in is an error at load, pointing at the derived form, `base:
    <pigment>` plus the fields it overrides. Rebinding a map role (`cover.pigments.built:
@@ -139,7 +154,23 @@ comp-ops), no per-feature z-order, and no generated palettes.
    package, read by the theme reader at the boundary, so ADR 0015 holds. A GIMP `.gpl`
    file imports as a palette's aliases, and the registry or a palette exports as `.gpl`.
    `.gpl` carries RGB and a name only, so a pigment's transparency and Colour Index code do
-   not travel in it; the YAML and the Python tables stay the source of truth.
+   not travel in it; the YAML and the Python tables stay the source of truth. A `.gpl`
+   name is normalised to an alias (lower case, each run of other characters one `_`,
+   stripped). A row with no name, a name that does not normalise to an alias (it starts
+   with a digit, say), two rows that normalise to one alias, and a name equal to a
+   built-in pigment are each a located error, never dropped. The registry exports under
+   its canonical names, for other tools; those are built-in names, so that file is not a
+   palette a theme can read back.
+   - **Down `extends`.** Aliases, theme pigments and theme presets accumulate from the
+     base-most theme of the chain up, and replacing an inherited one needs `override:
+     true`. A theme has one palette in effect, the nearest `palette:` in its chain, so a
+     child's `palette:` replaces its parent's. A palette alias equal to an inherited theme
+     alias is an error at the `palette:` line unless the theme rebinds that alias with
+     `override`. Each file's names resolve in the scope it sees when it is checked, so a
+     name binds where it is written: a child that rebinds `sky`, or picks another
+     palette, does not recolour a field its parent set to `sky`. To recolour that field,
+     the child sets the field. A parent theme therefore means the same whoever extends it,
+     and every error names the line where the name was written.
 
 ### Line effects
 
@@ -160,6 +191,27 @@ comp-ops), no per-feature z-order, and no generated palettes.
    route's mask at compose, the pen plate's alpha or the solid line's, and are never painted
    into `pen.webp`. A retraced route is already one merged mask, and its casing and shadow
    use that mask, never one per strand.
+   - **The two fields** are `basemap.line_effects`, a table of line class to stack
+     (`basemap` is a `maps` group; `brush` is `ink`'s and cannot hold `maps` types), and
+     `route_ink.effects`, one stack. Both are loader-only: a theme sets them only through
+     `line_effects`, and naming either inside its group is a located error, so one key
+     path names each thing.
+   - **The schema shape.** `line_effects` keys are an enum of the line classes. A value is
+     `anyOf` a built-in preset name, an alias-pattern string (a theme preset), or a stack
+     object with `additionalProperties: false` and the optional keys `casing`, `glow` and
+     `shadow`, each an object of that effect's fields by the same walk as a style group's
+     sub-table, its colour the three-branch node of rule 5. `effect_presets` keys follow
+     the alias pattern and are not a built-in preset name; each value is a stack object.
+   - **Ranges are checked at load.** A width, spread, blur or offset is at least 0 and a
+     strength is from 0 to 1. A value outside is a located error with the file, key path
+     and line; nothing is clipped. The effect types refuse the same values in
+     `__post_init__`, from one table of ranges.
+   - **Off is nothing.** A casing of width 0 or strength 0, and a glow or a shadow of
+     strength 0, is off. Each file's entry is kept as an explicit stack, an empty one
+     included, so in the merge it replaces the parent's stack whole. Off effects and empty
+     stacks are dropped once, after the final merge, when the groups are built (in the
+     stack's and the basemap group's `__post_init__`). So a child turns off an inherited
+     stack by writing `major: {}`, and a value equal to off moves no digest.
 10. **Draw order.** The basemap draws the water group (`major`, `medium`, `minor`,
     `coast`), then the road group (`road_major`, `lane`, `track`). Within a group, every
     class's effects are laid on what lies beneath the group, in today's class order, and
@@ -177,18 +229,23 @@ comp-ops), no per-feature z-order, and no generated palettes.
     cream over a dark wood, and multiplying cannot lighten at all, so neither can make a
     casing or a glow. The departure is limited to effects; lines and washes still glaze.
     - **Casing:** a ring of width `w` round the line, covering its footprint, from the
-      chamfer distance of `m > τ`; the RGB is blended toward the casing colour over it.
-      The line is glazed over the casing as before, so the casing shows through the line's
-      dry breaks.
-    - **Glow:** a lift toward the paper, `rgb + a(paper - rgb)`, with two numbers, a spread
-      (a hard dilation) and a blur (a soft falloff). It has no colour of its own. At compose
-      the target is the paper plate's pixels, not white, because the card is paper times
-      wash. A pen-route glow thresholds the pen alpha first, so lossy WebP and resize noise
-      do not glow.
+      chamfer distance of `m >= τ`; the RGB is blended toward the casing colour laid over
+      the paper, `rgb + a(c · paper - rgb)` (in wash space the paper is 1), so a white
+      casing is the paper. The line is glazed over the casing as before, so the casing
+      shows through the line's dry breaks.
+    - **Glow:** a lift toward the paper, `rgb + a · max(paper - rgb, 0)`, with two
+      numbers, a spread (a hard dilation) and a blur (a soft falloff). It has no colour of
+      its own. The floor at 0 makes "never darkens" hold for any input; on real plates the
+      card is at or below the paper, so the floor changes nothing there. At compose the
+      target is the paper plate's pixels, not white, because the card is paper times wash.
+      A pen-route glow thresholds the pen alpha first, so lossy WebP and resize noise do
+      not glow.
     - **Shadow:** the mask offset, blurred and laid as a multiplying darken,
       `rgb(1 - a(1 - p))`, masked out wherever the line's density is at or above `τ`.
       Every shadow takes one light direction, the hillshade's azimuth (`Sun.azimuth`,
-      315°, from the north-west), and falls away from it.
+      315°, from the north-west), and falls away from it. The offset is rounded to whole
+      pixels on each axis, half to even, and the shifted mask is zero-filled; the blur
+      softens what a sub-pixel offset would have moved.
 12. **Three invariants.** Each is a Hypothesis property on arrays, before the dither and the
     lossy encode:
     - a casing of width 0 is the identity, bit for bit, by an explicit early return;
@@ -230,11 +287,21 @@ comp-ops), no per-feature z-order, and no generated palettes.
 
 ### Public names
 
-`ink` gains `Colour`, `Pigment`, `pigment`, the registry with its extension, and the effect
-primitives (casing, glow, shadow and pen casing); `maps` gains the effect stack and preset
-types the theme fields need. ADR 0068's rule covers the new names; this ADR is the record of
-the change it requires. A theme gains the top-level keys `colours`, `palette`, `pigments`,
-`line_effects` and `effect_presets`, and the schema is regenerated.
+`ink` gains `Colour`, `Pigment`, `PigmentRegistry`, `PIGMENT_REGISTRY`, `pigment`, and
+the effect primitives `casing`, `glow`, `shadow` and `pen_casing`. `maps` gains `Casing`,
+`Glow`, `Shadow` and `EffectStack`, the types the theme fields hold, and `Palette`, which
+reads a palette by name or path, lists the packaged names, and reads and writes `.gpl`
+(rule 7's import and export need a public entry). ADR 0068's rule covers the new names;
+this ADR is the record of the change it requires. No public name is removed or renamed. A
+typed caller that passes a `str` literal to a colour field now wraps it in `Colour(...)`;
+at runtime a `str` still works (rule 4). A theme gains the top-level keys `colours`,
+`palette`, `pigments`, `line_effects` and `effect_presets`, and the schema is regenerated.
+
+`ink/pigment.py` is renamed `ink/compositing.py`, because the public function `pigment`
+cannot share the package with a submodule of that name (`tests/architecture/test_site.py`).
+ADR 0068 says a module path is not part of the API, so the rename is no breaking change.
+The four exported tables move to `ink/pigment_table.py` beside the registry's entries and
+stay exported from `pyntpot.ink`.
 
 ## Consequences
 

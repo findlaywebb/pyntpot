@@ -252,3 +252,66 @@ miss message has one source.
 ### 20. [CONSIDER] Shadow sub-pixel offset
 
 Say how `offset_px × scale × (dx, dy)` rounds to whole pixels.
+
+## Resolution
+
+Revised on `682677f`; each fix was checked against the code first. ADR 0070 was amended in
+place, its rule numbers unchanged.
+
+1. S3a owns wrapping every `str` colour literal in `Colour(...)`, `pigment_swatches.py` and
+   `how_to_route_ink.py` included; S6's worktree is cut after S3a (plan S3a "Call sites",
+   S6, File-ownership partition, `tasks.md`).
+2. One rule: each group's `__post_init__` normalises through `Colour.parse`
+   (`normalise_colours`), and `Colour.__get_pydantic_core_schema__` returns a plain-dict
+   core schema, so `Style.model_validate` from a dict still builds and `Style` needs no
+   `arbitrary_types_allowed` (checked with pydantic 2.14.2); guard test added (plan S3a,
+   ADR rule 4).
+3. S3a owns `theme_dump._plain` and `_is_colour` (by `isinstance(value, Colour)`, since
+   `asdict` keeps the subclass); S5a drops the loader-only fields from `_BASE` (plan S3a,
+   S5a). `research.md`'s "no YAML writer" is noted as stale in the plan's Approach.
+4. The two `style-fields.md` rows, the empty key sub-table and the route sentence move to
+   S5a (plan S5a "`style-fields.md`").
+5. `Shadow` defaults to `pigment("paynes_grey").colour` (plan S5a "Types").
+6. Each file keeps an explicit stack; off effects and empty stacks are dropped once, after
+   the final merge, in `EffectStack.__post_init__` and `BasemapStyle.__post_init__`; the
+   parent `cased`, child `{}` test added (plan S5a, ADR rule 9 "Off is nothing").
+7. Schema shape prescribed; `theme_schema_tables.top_level_tables(sub_table)` takes the
+   walker as an argument, so no cycle; the S3a guard extends to the effect colours (plan
+   S3b and S5a "Schema", ADR rule 9).
+8. `_Check` moves to `maps/theme_checker.py` (S3a, a pure move); `check_theme_scoped` lives
+   in `theme_check`; the palette modules become `theme_palette.py` and
+   `theme_palette_gpl.py`, and `line_effects.py` joins the guard by name (plan "Line
+   budget", S3a, S3b, S5a).
+9. A name binds in the file where it is written; aliases, pigments and presets accumulate;
+   the nearest `palette:` is in effect; a palette alias clashing with an inherited one is
+   a located error unless rebound with `override`; pinned by tests (plan S3b, ADR rule 7,
+   S7 `write-a-theme.md`).
+10. Both `.gpl` cases are located errors; `of_registry` is replaced by the static
+    `Palette.registry_gpl(registry) -> str`, kept on `Palette` so palettes keep one
+    public name (plan S3b, ADR rule 7).
+11. The four tables move to `ink/pigment_table.py` and are imported from `pyntpot.ink` by
+    the tests that used the old module (plan S1, ADR "Public names").
+12. Not a gate, by the orchestrator's ruling: S4 and S5a proceed using the words only as
+    glossary terms, no slice edits `CLAUDE.md` or `CONTRIBUTING.md`, and a task applies
+    the user's ruling, if given, before S7 (plan Approach, `tasks.md` "Before S7").
+13. `EFFECT_RANGES` drives both the `__post_init__` refusals and located load errors;
+    nothing is clipped; off is `== 0`, so `-0.0` is off and a value equal to off moves no
+    digest (plan S5a, ADR rule 9 "Ranges", "Off is nothing").
+14. The locality test pins `km_glazing=True` for exactness; multiply mode asserts within
+    1e-6 (plan S5b).
+15. ADR 0070 amended before S0: Context and rule 4 (two converters, `ink.rgb` kept, the
+    coercion rule), rule 5 (three branches), rule 7 (`.gpl` cases, registry export,
+    binding down `extends`), rule 9 (the two loader-only fields, schema shape, ranges,
+    off dropped after the merge), rule 11 (`m >= τ`, casing toward colour times paper,
+    the glow floor, shadow rounding), "Public names" (every new name, `Palette`, the
+    module rename); S7 no longer edits the ADR.
+16. A Changelog line states typed callers now pass `Colour(...)`; the title keeps no `!`
+    (spec "Changelog").
+17. `tests/architecture/test_one_hex_parser.py` (S3a) and a `.convert("RGBa")` guard in
+    `test_examples.py` (S6).
+18. S0 says "every entry of the five stems" (23 on `e5578fe`).
+19. `pigment()` is the one documented lookup and delegates a name to
+    `PigmentRegistry.get`, the one place the miss message is written (plan S1, ADR rule
+    2, spec).
+20. The shadow offset rounds each axis with Python's `round`, half to even, then slices
+    with zero fill (plan S4, ADR rule 11).

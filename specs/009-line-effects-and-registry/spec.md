@@ -18,7 +18,7 @@ The map paints from silent copies of the pigment tables. `CoverStyle.pigments` c
 either copy to its table. The ten painter's pigments form a second namespace that no theme
 can name, and a misspelt pigment or brush id fails with no suggestion. A theme colour is an
 untyped hex string. The colour fields are listed twice (`COLOUR_FIELDS`), `#C22050` and
-`#c22050` hash differently, and three functions turn hex into RGB. Nothing draws a casing,
+`#c22050` hash differently, and two functions turn hex into RGB. Nothing draws a casing,
 a glow or a shadow on any line. Five docs scripts each carry their own copy of the grid
 layout and label code.
 
@@ -36,13 +36,15 @@ layout and label code.
 - [ ] `pigment(ref)` returns a `Pigment` given as itself. Given a canonical name, it
       returns the registry entry. Given a `#rrggbb`, it returns an anonymous pigment whose
       name is the hex, with `transparency=None`. Anything else raises `ValueError` naming
-      the nearest names (`difflib`).
+      the nearest names (`difflib`). It is the one documented lookup; a name goes on to
+      `PigmentRegistry.get`, the one place the miss message is written.
 - [ ] `PigmentRegistry.extended(pigments)` returns a new registry and never changes the
       one it was called on. A name that equals a built-in raises `ValueError`, and the
       message points at the derived form (`base: <name>`).
 - [ ] `PIGMENTS`, `TRANSPARENCY`, `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY` are
       built from the registry and still equal their pinned literals
-      (`tests/unit/ink/test_pigment.py`). The defaults of `CoverStyle().pigments` and
+      (`tests/unit/ink/test_pigment.py`). They live in `ink/pigment_table.py` and stay
+      exported from `pyntpot.ink`. The defaults of `CoverStyle().pigments` and
       `PaperStyle().pigment_transparency` are built from the registry, in today's key
       order, and a test ties each to it. No public name is removed or renamed.
 - [ ] Each built-in pigment's hex appears as a string literal in exactly one module under
@@ -69,8 +71,16 @@ layout and label code.
       `wash.separation_pigments.*`, the four `nib` inks, `cover.pigments.*`,
       `route_ink.colour`, and the new effect colours. `COLOUR_FIELDS` is gone. A test fails
       when a field whose default is a `#rrggbb` is not typed `Colour`.
+- [ ] A plain `str` reaching a colour field at runtime is normalised: each group with a
+      `Colour` field parses it in `__post_init__`, so
+      `replace(RouteInkStyle(), colour="#ABCDEF").colour` is a `Colour` equal to
+      `"#abcdef"`, and `Style.model_validate({"route_ink": {"colour": "#c22050"}})` still
+      builds (through `Colour`'s own pydantic hook, which imports no pydantic). Every
+      typed call site in `examples/` and `tests/` wraps its literal in `Colour(...)`, and
+      `ty` is green.
 - [ ] `compose_steps._rgb` is gone (it now uses `Colour.rgb8`). `ink.rgb` stays public, its
-      behaviour unchanged, and shares `Colour`'s channel arithmetic.
+      behaviour unchanged, and shares `Colour`'s channel arithmetic. An architecture test
+      fails when any `src` module but `ink/colour.py` parses hex.
 - [ ] Every theme colour field takes a `#rrggbb`, a pigment name, or an alias. Names and
       aliases resolve to hex at load, so every packaged and example theme keeps its three
       pinned digests.
@@ -92,9 +102,15 @@ layout and label code.
 - [ ] A theme's top-level `palette:` takes a packaged palette name, or a `.yaml` or
       `.gpl` path relative to the theme file. The package ships the palette `plain`.
       `pyntpot.maps.Palette` reads a palette by name or path, lists the packaged names,
-      imports a GIMP `.gpl` and exports itself or the registry as `.gpl`.
+      imports a GIMP `.gpl`, and exports itself (`to_gpl`) or the registry
+      (`Palette.registry_gpl`) as `.gpl`. A `.gpl` row with no name, a name that does not
+      normalise to an alias, two rows that normalise to one alias, or a built-in pigment's
+      name is a located error.
 - [ ] Aliases, theme pigments, the palette and theme presets are inherited down an
-      `extends` chain.
+      `extends` chain, by ADR 0070 rule 7: aliases, pigments and presets accumulate; the
+      nearest `palette:` is the one in effect; a name binds in the file where it is
+      written, so a child that rebinds an alias does not recolour a field its parent set
+      (pinned by a test).
 - [ ] Every unknown pigment, alias, palette, brush id, line class, effect key, effect
       field or preset fails at theme load, before any fetch. Each message names the file,
       the dotted key path, the line, and the nearest valid name. A CLI test shows exit 2
@@ -123,9 +139,12 @@ layout and label code.
       preset name.
 - [ ] At load, `line_effects` is split: the seven basemap classes go to
       `basemap.line_effects` (read by the painter, so `base_digest` moves) and `route`
-      goes to `route_ink.effects` (read at compose, so `digest()` moves). An off effect and
-      an empty stack are dropped at load. Neither field can be set inside its group in a
-      theme.
+      goes to `route_ink.effects` (read at compose, so `digest()` moves). Off effects and
+      empty stacks are dropped once, after the final merge, so a child that writes
+      `major: {}` turns off its parent's `major` stack. Neither field can be set inside
+      its group in a theme.
+- [ ] A negative width, spread, blur or offset, or a strength outside 0 to 1, is a located
+      error at load, never clipped; the effect types refuse the same values.
 - [ ] Hypothesis: expanding a preset gives the same style and the same digests as
       writing out the stack it names; empty or off `line_effects` leaves every digest of
       every packaged and example theme unchanged.
@@ -166,7 +185,8 @@ layout and label code.
 
 ## Changelog
 
-PR title (no `!`: no public name is removed or renamed):
+PR title (no `!`: no public name is removed or renamed, and a `str` passed to a colour
+field still works at runtime):
 
 ```
 feat(ink): one pigment registry, a Colour type for every colour field, and line effects off by default
@@ -184,6 +204,7 @@ feat(maps): a theme may add pigments in a pigments table; a built-in pigment's n
 feat(maps): palettes, chosen by name or path and read from or written to GIMP .gpl files (Palette)
 feat(maps): line_effects and effect_presets theme tables: a casing, glow or shadow per line class and for the route, with the presets cased, halo and lifted, all off by default
 fix(maps): a theme's upper-case hex colour is stored in lower case, so it hashes as its lower-case form
+refactor(ink): every colour field is typed Colour; a typed caller now passes Colour("#rrggbb") where it passed a str, and a str still works at runtime
 ```
 
 ## Out of scope
