@@ -493,3 +493,15 @@ so the docs and the schema would show a form the loader refuses; and the resolve
    - Move `Option` with `DocsImage` (`docs_images.py:59`).
    - After A, `style-fields.md:380` ("paints no plate again") is false for a fed colour.
    - `ambleside-cased.yaml` should `extends: ambleside.yaml`.
+
+## Round 3 resolution
+
+1. Fixed as asked (verified `test_style_groups.py:252,260,348-351`): two `SOURCED` rows move in B with no pixels; P0's grep is `git grep -nwE '[0-9a-f]{16}'`, keeping any hash of style data, which also finds both halves of `GOLDEN_HASH` (`test_pipeline_fetch_paint.py:30`) that the quoted pattern missed.
+2. Fixed as asked (verified `test_reference_values.py:89-113,206-209`, `test_theme_schema.py:100-120,136-140`, `theme_schema.py:167-175`, `theme_dump.py:18-24`): one written form, a ref or `{pigment, transparency}`, never a list, in the dump (`plain_table`), schema default, Default cells and checker; B owns `test_reference_values.py`; the walker descends into an `anyOf`'s object branch; the hook refuses a list. ADR 0070 rule 17 already states both theme forms, so it is not edited.
+3. Fixed as asked (verified PR 1 plan:311-336, 466, 506): `resolve_cover_pigment` calls `resolve_pigment(ref, scope)` only; P0 confirms it; new id `palette-alias-to-name` and an Approach table row.
+4. Fixed as asked (verified PR 1 plan:181-182, 368-370): B owns `test_registry_defaults.py` and `test_theme_colour_names.py`; P0 greps PR 1's tip for `pigment_transparency`, `cover.pigments` and `.pigments[` in `tests/`.
+5. Fixed as asked (verified `test_examples.py:1-8`, `Style.from_yaml` at `style.py:123`, relative `extends` per `theme_resolve.py:11-12`): each preset cell loads a theme file written under `out_dir` with an absolute `extends`.
+6. Fixed as asked (verified `theme_check.py:148-153,201-208`, per-key lines at `theme_read.py:96-104`; a strict pydantic float with `ge=0, le=1` refuses `True` and `"0.5"`, checked here): `TableCheck.field` checks the table key by key; errors parametrised by `ids=`.
+7. Applied: `Option` moves with `DocsImage` (`docs_images.py:59`); B corrects `style-fields.md:380`; `ambleside-cased.yaml` extends `ambleside.yaml`.
+
+Sweep (tests/ grepped per track for touched symbols, fields and 16-hex hashes): one new gap, `test_one_source_of_defaults.py:173-175` counts ten theme files, assigned to D3 (eleven). Checked, no edit needed: `painter/test_job.py:131-134` (a key outside the classes still falls back), `test_route_ink.py` and `test_style.py:340-346` after A, `test_reference_pages.py`'s field coverage, `test_gallery.py` (imports only `IMAGES`), `CLASSIC_PLATE_SHA` and the cache keys (not style data).

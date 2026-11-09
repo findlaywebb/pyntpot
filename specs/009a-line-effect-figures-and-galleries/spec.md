@@ -64,7 +64,15 @@ several important settings do.
       one), else the transparency of the cover class's built-in pigment. So a bare
       hex, an alias to a hex (a `.gpl` palette alias included), `{pigment: "#rrggbb"}`
       with no transparency and a theme pigment with none all take the cover class's
-      built-in transparency, and a test covers each form.
+      built-in transparency, and a test covers each form. A theme or palette alias
+      resolves as PR 1's `resolve_pigment` resolves it.
+- [ ] A `CoverPigment` has one written form: a ref, or `{pigment: "#rrggbb",
+      transparency: t}`, never a list. The theme dump, the schema `default`, the
+      `style-fields.md` Default cells and the checker all use it.
+- [ ] An error in the table form is located at its own key and line:
+      `cover.pigments.<class>.pigment`, `.transparency`, or an unknown inner key with
+      the nearest of `pigment` and `transparency` suggested. `transparency` is a number
+      from 0 to 1; a `bool` or a string is refused.
 - [ ] `paper.km_transparency` applies only to a `CoverPigment(colour, None)` built in
       Python, or a Python-built key outside the 15 cover classes (whose built-in
       transparency is `None`); no theme can produce either. A `str` value built in Python
@@ -131,7 +139,9 @@ several important settings do.
 - [ ] On the Ambleside fixture:
       - a how-to result card with `road_major` cased and the route haloed, from a new
         `examples/themes/ambleside-cased.yaml`;
-      - a figure of the route under each preset: none, `cased`, `halo` and `lifted`.
+      - a figure of the route under each preset: none, `cased`, `halo` and `lifted`,
+        each cell's style loaded from a theme file the script writes, so it uses public
+        names only and follows the tuned presets.
 - [ ] Two explanation figures:
       - a cream casing and a glow over a dark wood wash, glazed and on RGB;
       - casings drawn per stroke against casings drawn as a group, at a junction and at

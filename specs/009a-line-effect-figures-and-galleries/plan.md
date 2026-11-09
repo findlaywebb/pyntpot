@@ -147,6 +147,8 @@ A hash that moves with identical pixels counts as moved (ADR 0070 rule 16).
 | `tests/unit/maps/test_style.py` `DIGEST` (`88b356ada294ff60`) | B | none | `paper` loses `pigment_transparency`; `cover.pigments` values become `CoverPigment`s |
 | `tests/unit/maps/test_style.py` `BASE_DIGEST` (`d9c56c0811177b0f`) | B | none | same, both are base groups |
 | `tests/unit/maps/test_style.py` `LETTERING_DIGEST` (`d15ae2f30e9ca5ce`) | does not move | none | `nib` unchanged at the default |
+| `tests/unit/maps/test_style_groups.py` `SOURCED[PaperStyle]` (`0af5f9f84facb9e9`) | B | none | D7: `pigment_transparency` goes; the pin is the sha256 of `json.dumps(asdict(PaperStyle()))` (`test_style_groups.py:348-351`) |
+| `tests/unit/maps/test_style_groups.py` `SOURCED[CoverStyle]` (`8ff38fcbad0d7a6f`) | B | none | D7: each `pigments` value becomes a `CoverPigment`, which the same hash writes as a two-item list |
 | New pin: `Style().with_route_ink(colour="#6a2c91").lettering_digest()` | A | n/a | rule 18; research measured `d4e48ea6fd28b786` before PR 1, re-measure |
 | `tests/unit/maps/test_theme_named.py` `DIGESTS` for `pen-and-ink`, `sepia`, `winter` (digest and base) | B | none | D7 |
 | `tests/unit/maps/test_theme_named.py` `DIGESTS["bold"]` digest | B, then F | F only, at compose | D7; then `line_effects: {route: cased}`, which moves `digest()` only |
@@ -328,7 +330,12 @@ All figures follow the same conventions:
     0 a shadow still spreads past the line.
 - **Presets.** The Ambleside loop cropped as in `route-ink-grid`, four cells: none,
   `cased`, `halo` and `lifted`. One paint, then four composes, because route effects are
-  compose-only (rule 9). D1 tunes the presets on a scratch draft of this figure, before
+  compose-only (rule 9). `BUILT_IN_PRESETS` is not public (ADR 0070:312-314) and
+  `test_examples.py` refuses a private import, and literal copies would drift from D1's
+  tuning, so each cell's style comes from a theme file: the script writes, under
+  `out_dir`, one file per preset holding `extends: <absolute path of
+  examples/themes/ambleside.yaml>` and `line_effects: {route: <name>}`, and loads it
+  with `Style.from_yaml`. The none cell is `ambleside.yaml` itself. D1 tunes the presets on a scratch draft of this figure, before
   D3 writes `how_to_line_effects.py`.
 - **Explanation figures.** `glaze-or-rgb` is a 2 by 2 grid ("casing" and "glow" across,
   "glaze" and "RGB" down) over a dark wood wash: the glazed cream barely shows (rule 11).
@@ -397,20 +404,32 @@ All figures follow the same conventions:
 - `src/pyntpot/maps/theme_vocab.py`: drop the `pigment_transparency` vocabulary.
 - `src/pyntpot/maps/theme_schema.py`: a `CoverPigment` leaf is `anyOf` the three-branch
   `Colour` node of rule 5 and an object `{pigment: <that node>, transparency: number}`,
-  `additionalProperties: false`, `pigment` required.
+  `additionalProperties: false`, `pigment` required. `_json` writes a `CoverPigment`
+  default as `{"pigment": "#rrggbb", "transparency": t}`, the one written form, so each
+  default is valid against its own `anyOf`.
 - The theme files: `src/pyntpot/maps/themes/{bold,pen-and-ink,sepia,winter}.yaml` and
   `examples/themes/*.yaml`. Migration rule: a cover class a theme only rebinds by hex stays
   a bare hex, because it keeps its class's built-in transparency. A class whose
   transparency the theme set in `pigment_transparency` is written
   `{pigment: <its hex or ref>, transparency: <that value>}`.
 - Both `theme.schema.json` copies, via `PYTHONPATH=tests uv run python -m support.theme_schema`.
-- Pins: `tests/unit/maps/test_style.py`, `test_theme_named.py`, `test_example_themes.py`
-  and `test_pipeline_fetch_paint.py`, plus every file P0's grep of PR 1's tip finds holding
-  a 16-hex digest literal (among them `test_digest_omits.py`, whose "packaged and example
+- Pins: `tests/unit/maps/test_style.py`, `test_theme_named.py`, `test_example_themes.py`,
+  `test_pipeline_fetch_paint.py` and `test_style_groups.py` (`SOURCED[PaperStyle]` and
+  `SOURCED[CoverStyle]`), plus every file P0's grep of PR 1's tip finds holding a 16-hex
+  hash of style data (among them `test_digest_omits.py`, whose "packaged and example
   themes keep their pins" check holds theme digests).
+- PR 1's tests that read the changed fields (P0 greps PR 1's tip for
+  `pigment_transparency` and `cover.pigments`/`.pigments[` in `tests/`; B owns every
+  hit):
+  - `tests/unit/maps/test_registry_defaults.py`: the `PaperStyle().pigment_transparency`
+    assertion goes; `CoverStyle().pigments` equals the registry's role pigments as
+    `CoverPigment(colour, transparency)`, keys in pinned order;
+  - `tests/unit/maps/test_theme_colour_names.py`: `cover.pigments.built: ultramarine`
+    loads as `CoverPigment("#2b3d8f", <ultramarine's transparency>)`, its `.colour`
+    `#2b3d8f`.
 - Field lists and existing tests that read `cover.pigments` or `pigment_transparency`
   (edits only, no new tests there): `test_style_groups.py` (399 lines), `test_theme_vocab.py`,
-  `test_theme_check.py` (361), `test_theme_schema.py`, `tests/unit/maps/test_theme_merge.py`,
+  `test_theme_check.py` (361), `test_theme_schema.py` (see below), `tests/unit/maps/test_theme_merge.py`,
   `tests/architecture/test_one_source_of_defaults.py`, `tests/unit/test_public_api.py`,
   PR 1's coercion guard (`replace(CoverStyle(), pigments={"built": "#ABCDEF"})` now gives a
   `CoverPigment` with `built`'s built-in transparency), and
@@ -419,19 +438,35 @@ All figures follow the same conventions:
   leaf and draws a bare `#rrggbb` for it; `_BASE` loses `paper.pigment_transparency`.
 - `tests/support/theme_dump.py`: `_plain` writes a `CoverPigment` as
   `{"pigment": str(colour), "transparency": t}`, leaving `transparency` out when it is
-  `None`, because a tuple written as a list would not load.
+  `None`, because a tuple written as a list would not load. It becomes public as
+  `plain_table`, which `test_theme_schema.py` reuses.
+- `tests/unit/maps/test_theme_schema.py`:
+  - `test_every_field_is_in_the_schema_with_its_default` (:136-140) builds its expected
+    value with `theme_dump.plain_table`, not `json.dumps`, so a `CoverPigment` default
+    is the mapping;
+  - `keys_outside_the_schema` (:100-120) descends into the `"type": "object"` branch of
+    an `anyOf` when the value is a mapping, so bold's and pen-and-ink's migrated
+    `pigment` and `transparency` keys are inside the schema.
+- `tests/docs/test_reference_values.py` (338 lines; B's, a few lines): `entry_value`
+  (:108-112) writes a `CoverPigment` as `{pigment: "#rrggbb", transparency: t}`, so the
+  `cover.pigments` Default cells it checks (:206-209) are the one written form.
 - New tests: `tests/unit/maps/test_cover_pigments.py` (the type, the default, Python-built
   values, `transp`) and `tests/unit/maps/test_theme_bindings.py` (every theme form, the
   `extends` child, the errors).
 - Docs: `docs/reference/style-fields.md` (including the `label_route_ink` row's new
-  sentence from A), `docs/reference/pigments.md`, `docs/how-to/write-a-theme.md` (the
+  sentence from A, and the `route_ink` section's "changing it paints no plate again"
+  (:380), which A makes false for a fed colour: it becomes "changing it paints no plate
+  again, but a colour fed through `Style.with_route_ink` also sets
+  `nib.label_route_ink`, which strokes the nib plate again"; the `cover.pigments`
+  Default cells in the one written form), `docs/reference/pigments.md`, `docs/how-to/write-a-theme.md` (the
   example at lines 52-53 becomes `CoverPigment(colour='#8f9f6a', transparency=0.05)`;
   "Table fields merge per entry" says a `cover.pigments` entry is replaced whole; the
   transparency rule and the `extends` case near line 247) and `GLOSSARY.md` (a "cover
   pigment" row, code `pyntpot.maps.CoverPigment`; regenerate the glossary outputs).
 
 **C (galleries)**
-- First, a pure move as its own commit: `DocsImage`, its `Kind` and `Encoding` aliases,
+- First, a pure move as its own commit: `DocsImage`, its `Kind`, `Encoding` and `Option`
+  aliases (`docs_images.py:57-59`),
   `master_path`, `IMAGES_DIR`, `MASTERS_DIR` and `MASTER_WIDTH` go from
   `tests/support/docs_images.py` (565 lines) to `tests/support/docs_image.py`; every
   importer is repointed (`tests/golden/{repaint,make_docs_images,test_docs_images,test_repaint}.py`,
@@ -462,11 +497,14 @@ All figures follow the same conventions:
 - **D2, the sweeps** (before D1): `examples/line_effect_grids.py`;
   `tests/examples/test_line_effect_figures.py`; the four sweep images.
 - **D3, the how-to and reference:** `examples/how_to_line_effects.py`,
-  `examples/themes/ambleside-cased.yaml`, `docs/how-to/case-light-or-shadow-a-line.md`,
+  `examples/themes/ambleside-cased.yaml` (`extends: ambleside.yaml`, then its two
+  effects), `docs/how-to/case-light-or-shadow-a-line.md`,
   `docs/reference/line-effects.md`, `tests/examples/test_how_to_line_effects.py`,
   `tests/docs/test_line_effect_values.py` (new: presets, classes, draw order),
-  `tests/unit/maps/test_example_themes.py` (`THEME_NAMES` and `DIGESTS`), the card and
-  presets images.
+  `tests/unit/maps/test_example_themes.py` (`THEME_NAMES` and `DIGESTS`),
+  `tests/architecture/test_one_source_of_defaults.py:173-175`
+  (`test_the_theme_file_checks_see_every_theme` counts ten theme files; it becomes
+  eleven, docstring included), the card and presets images.
   - `tests/property/test_line_effect_digests.py` (PR 1's): it sets `{}` or off effects on
     sampled classes in a child of a sampled theme and expects the sampled theme's
     digests. A child's `{}` replaces the parent's stack whole, so a class the theme sets
@@ -551,11 +589,12 @@ All figures follow the same conventions:
 | #159 digests | `test_route_colour_feed.py::test_a_fed_colour_moves_the_lettering_digest`; `tests/unit/maps/test_style.py::test_a_fed_width_moves_only_the_full_digest` (width-only since A) |
 | #159 pixels | `tests/unit/maps/test_route_ink.py::TestFedColourLettersTheMarkers::test_the_start_label_is_lettered_in_the_fed_colour`: on the nib plate (`Lettering.plate_path`, RGBA) from `letter` after `with_route_ink(colour=VIOLET)`, the pixels with alpha at least 0.9 inside the box of the `Lettering.labels` entry named "start" of kind `marker` (scaled from display pixels to the plate's) have a mean RGB nearer `VIOLET` than `#c22050` by Euclidean distance; and the plate's bytes differ from the default's |
 | #159 cost | `tests/benchmarks/test_maps.py::test_letter_after_route_colour` |
-| D7 every form | `tests/unit/maps/test_theme_bindings.py::test_each_entry_form_resolves_its_transparency`, parametrised with `ids=` over the Approach table's theme rows: `entry-transparency`, `pigment-name`, `alias-to-name`, `theme-pigment-own`, `theme-pigment-none`, `derived-none`, `bare-hex`, `alias-to-hex`, `gpl-alias`, `pigment-table-hex-only` |
+| D7 every form | `tests/unit/maps/test_theme_bindings.py::test_each_entry_form_resolves_its_transparency`, parametrised with `ids=` over the Approach table's theme rows: `entry-transparency`, `pigment-name`, `alias-to-name`, `palette-alias-to-name`, `theme-pigment-own`, `theme-pigment-none`, `derived-none`, `bare-hex`, `alias-to-hex`, `gpl-alias`, `pigment-table-hex-only` |
+| D7 one written form | `tests/unit/maps/test_cover_pigments.py::test_the_dumped_form_loads_back` (a `Style()` written by `theme_dump` loads to an equal style); `test_theme_schema.py::test_every_field_is_in_the_schema_with_its_default`; `tests/docs/test_reference_values.py` (the Default cells) |
 | D7 `extends` | `test_theme_bindings.py::test_an_extends_child_bare_hex_takes_the_built_in_not_its_parents` |
 | D7 Python-built | `tests/unit/maps/test_cover_pigments.py`: `test_a_python_built_none_paints_at_km_transparency` (`PaintJob.transp`), `test_a_python_str_takes_the_classes_built_in_transparency`, `test_a_python_key_outside_the_cover_classes_takes_km_transparency`, `test_model_validate_from_a_dict_builds_cover_pigments`, `test_every_cover_class_is_a_role_pigment_with_a_transparency`, `test_the_default_bindings_are_the_registry_roles` |
 | D7 merge | `tests/unit/maps/test_theme_merge.py::test_a_child_entry_replaces_its_parents_whole` |
-| D7 errors | `test_theme_bindings.py`: `paper.pigment_transparency` reads "renamed to cover.pigments.<class>.transparency" at its line; `cover.pigments.wood.pigment: ultramarin` (nearest name); `transparency` outside 0 to 1; an unknown key in the table |
+| D7 errors | `test_theme_bindings.py::test_each_table_error_is_at_its_own_key`, parametrised with `ids=`, each asserting the problem's key path, line and message: `renamed-key` (`paper.pigment_transparency` reads "renamed to cover.pigments.<class>.transparency" at its line); `unknown-pigment` (`cover.pigments.wood.pigment: ultramarin`, at `.pigment`, with the nearest name); `unknown-inner-key` (`transparancy`, at that key, "did you mean transparency?"); `transparency-above-one`, `transparency-below-zero`; `transparency-bool` (`true`) and `transparency-str` (`"0.1"`), each refused at `.transparency`; `no-pigment` (at the class's line); `list-form` (`["#dfe0b0", 0.06]`, refused at the class) |
 | D7 no pixel moves | `test_cover_pigments.py::test_every_theme_keeps_its_old_class_transparencies` (literal table per theme measured on PR 1's tip before migration); golden map-styles and docs images byte-identical in G |
 | Digests | re-pinned literals in `test_style.py`, `test_theme_named.py`, `test_example_themes.py`, `test_pipeline_fetch_paint.py` |
 | Schema | `tests/unit/maps/test_theme_schema.py` (committed copies current; every theme file within it) |
@@ -649,7 +688,9 @@ no worktrees are needed.
 ## Decisions
 
 - **Binding shape (rule 17).** A ref or `{pigment, transparency}`, resolved at load to a
-  leaf `CoverPigment(colour, transparency)`, a `NamedTuple`. The painter stays
+  leaf `CoverPigment(colour, transparency)`, a `NamedTuple`, through PR 1's
+  `resolve_pigment`. The dump, the schema default, the docs and the checker write and
+  read only those two forms, never a list. The painter stays
   registry-free, and a pigment's retune repaints every theme naming it (rule 5).
 - **Orchestrator ruling: transparency precedence (ADR 0070 rule 17, edited in place).**
   The entry's own, else the resolved pigment's own (a derived pigment's base's), else the

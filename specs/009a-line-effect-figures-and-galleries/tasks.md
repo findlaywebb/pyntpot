@@ -10,6 +10,8 @@
       - `line_effects:`, `basemap.line_effects` and `route_ink.effects`;
       - `Palette` and `Palette.names()`;
       - `ThemeScope`, `resolve_colour`, `theme_checker.TableCheck` and its `leaf` context;
+      - `resolve_pigment(text, scope) -> Pigment` in `theme_scope.py`, which B's resolver
+        calls for every ref (theme alias, then palette alias, then registry name);
       - the `Colour` field walker;
       - `examples/labelled_grid.py`'s `GridSpec` and `label_grid`.
       Update the plan where a name differs.
@@ -21,11 +23,16 @@
       figure need them, and they are PR 1's scope.
 - [ ] Check whether PR 1's `tests/property/test_line_effect_digests.py` draws only the
       classes the sampled theme does not set; record the answer for D3.
-- [ ] Grep PR 1's tip for every quoted 16-hex literal in the tests
-      (`git grep -nE '"[0-9a-f]{16}"' -- 'tests/*.py'`), keep the ones that pin a
-      `digest()`, `base_digest()` or `lettering_digest()` (not fixture cache keys), record
-      each file and pin, and add each file to B's pins (`test_digest_omits.py` among
-      them, for its theme pins).
+- [ ] Grep PR 1's tip for every 16-hex hash in the tests
+      (`git grep -nwE '[0-9a-f]{16}' -- 'tests/*.py'`, which also finds both halves of
+      `GOLDEN_HASH`), keep every hash of style data: a `digest()`, `base_digest()` or
+      `lettering_digest()` pin, a `SOURCED` group pin, or any other hash of a group's or
+      a theme's fields (not fixture cache keys, plate pixel hashes such as
+      `CLASSIC_PLATE_SHA`, or placeholders). Record each file and pin, and add each file
+      to B's pins (`test_style_groups.py` and `test_digest_omits.py` among them).
+- [ ] Grep PR 1's tip for `pigment_transparency`, `cover.pigments` and `.pigments[` in
+      `tests/`; record each hit for B, which owns them (`test_registry_defaults.py` and
+      `test_theme_colour_names.py` among them).
 - [ ] Confirm route effects are wired into `compose_steps.route` and basemap effects into
       the painter's `over` list. If not, stop and report: that is PR 1's scope.
 - [ ] Confirm the setting grids' fields: `wash(..., pool=)`, `Sheet.seed`, `Sheet.gran_px`,
@@ -63,30 +70,40 @@
 ## B: a pigment carries its transparency (D7)
 
 - [ ] Red: `test_cover_pigments.py` and `test_theme_bindings.py` (every form by `ids=`,
-      the `extends` child, Python-built `None`, `str` and a key outside the 15 classes,
-      the errors), the merge and
-      schema tests, the migration literal table.
-- [ ] Green: `maps/cover_pigment.py`; `maps/theme_bindings.py`; the `cover_class` context
-      key in `TableCheck.leaf`; the `RENAMED_KEYS` entry and the
+      `palette-alias-to-name` among them; the `extends` child; Python-built `None`, `str`
+      and a key outside the 15 classes; the dumped form loading back; each table error
+      at its own key and line, with the nearest name for an unknown inner key and `bool`
+      and `str` transparencies refused), the merge and schema tests, the migration
+      literal table.
+- [ ] Green: `maps/cover_pigment.py`; `maps/theme_bindings.py` (every ref through
+      `resolve_pigment`, no direct alias or registry lookup); the `cover_class` context
+      key in `TableCheck.leaf`; the table form checked key by key in `TableCheck.field`; the `RENAMED_KEYS` entry and the
       `test_theme_check.py:146` pin of `RENAMED_KEYS` (now two rows); drop
       `PaperStyle.pigment_transparency`; `CoverStyle.__post_init__`; `PaintJob.transp`;
       painter `.colour` reads; vocabulary; export, `maps.md` directive and public API pin.
-- [ ] Test support: `theme_dump` writes a `CoverPigment` as a table; the merge
-      property's walker draws a bare hex for one. Fix `test_smoke.py:246` and PR 1's
-      coercion guard.
+- [ ] One written form, a ref or `{pigment, transparency}`, never a list: `theme_dump`
+      (its writer public as `plain_table`), the schema `default` (`theme_schema._json`),
+      `test_reference_values.py`'s `entry_value` and the `style-fields.md` Default cells.
+      `test_theme_schema.py`: the default test builds its expected value with
+      `plain_table`, and `keys_outside_the_schema` descends into an `anyOf`'s object
+      branch. The merge property's walker draws a bare hex for a `CoverPigment`. Fix
+      `test_smoke.py:246` and PR 1's coercion guard, `test_registry_defaults.py` and
+      `test_theme_colour_names.py`.
 - [ ] Migrate the four bundled and six example themes; regenerate both schemas.
 - [ ] Byte compare every theme's base plates with P0's record: identical. Repaint with
       `--no-lynmouth` every fixture-reading registry name except `how-to/route-ink.webp`
       (the plan's list of 15): nothing changed.
-- [ ] Re-pin `DIGEST`, `BASE_DIGEST`, theme `DIGESTS`, `GOLDEN_HASH` and every other
-      digest literal P0's grep found to measured literals. `LETTERING_DIGEST` unchanged.
-- [ ] Docs: `style-fields.md`, `pigments.md`, `write-a-theme.md` (the example, the merge
+- [ ] Re-pin `DIGEST`, `BASE_DIGEST`, theme `DIGESTS`, `GOLDEN_HASH`,
+      `SOURCED[PaperStyle]`, `SOURCED[CoverStyle]` and every other hash of style data
+      P0's grep found to measured literals. `LETTERING_DIGEST` unchanged.
+- [ ] Docs: `style-fields.md` (with the `route_ink` section's "paints no plate again"
+      corrected for a fed colour), `pigments.md`, `write-a-theme.md` (the example, the merge
       line, the rule and the `extends` case), the "cover pigment" glossary row. Gates.
 
 ## C: galleries (#69, #70)
 
-- [ ] Pure move: `DocsImage` and its helpers to `tests/support/docs_image.py`, importers
-      repointed. Gates.
+- [ ] Pure move: `DocsImage` and its helpers (`Kind`, `Encoding`, `Option` among them) to
+      `tests/support/docs_image.py`, importers repointed. Gates.
 - [ ] Red: `test_galleries.py`, the coverage tests and `test_gallery_values.py`.
 - [ ] Green: `brush_gallery.py` (`riv-str-lan` with "RIV = STR", `maj`, `trk`);
       `pigment_gallery.py` (`roles`, `painters`, `glazes`, `palettes`).
@@ -124,12 +141,17 @@
 ## D3: the how-to and reference
 
 - [ ] Red: `test_how_to_line_effects.py`, `test_line_effect_values.py`, the
-      `ambleside-cased` entry in `THEME_NAMES` and `DIGESTS`.
+      `ambleside-cased` entry in `THEME_NAMES` and `DIGESTS`, and the theme count in
+      `test_one_source_of_defaults.py::test_the_theme_file_checks_see_every_theme`
+      (ten to eleven).
 - [ ] Unless P0 found it already does, restrict PR 1's
       `tests/property/test_line_effect_digests.py` to the classes the sampled theme does
       not set; it passes with `ambleside-cased`.
-- [ ] Green: `how_to_line_effects.py` (`card`, `presets`) and
-      `examples/themes/ambleside-cased.yaml`.
+- [ ] Green: `how_to_line_effects.py` (`card`, `presets`; each preset cell loads a theme
+      file the script writes under `out_dir`, `extends:` the absolute path of
+      `ambleside.yaml` with `line_effects: {route: <name>}`, through `Style.from_yaml`;
+      no private import) and `examples/themes/ambleside-cased.yaml`
+      (`extends: ambleside.yaml`).
 - [ ] Register two entries; paint, copy, check the budgets.
 - [ ] `case-light-or-shadow-a-line.md` (the card and the three theme sweeps) and
       `reference/line-effects.md` (no image; pen casing has no theme key; pigment
