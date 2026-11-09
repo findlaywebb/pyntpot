@@ -45,6 +45,7 @@ from pyntpot.ink import (
     PAINTERS_PIGMENTS,
     BrushStyle,
     Canvas,
+    Colour,
     PaperStyle,
     Sheet,
     paper_plate,
@@ -109,7 +110,7 @@ CROP: dict[str, float] = {
     "card_grow_mult": 0.9,
 }
 #: The size of the names on the grid, in pixels, the ink they are lettered in and the hand's seed.
-LABEL_PX, LABEL_INK, SEED = 21.0, "#4a3a2a", 7
+LABEL_PX, LABEL_INK, SEED = 21.0, Colour("#4a3a2a"), 7
 #: How many times its size the nib plate is painted before it is brought down.
 NIB_SCALE = 2
 

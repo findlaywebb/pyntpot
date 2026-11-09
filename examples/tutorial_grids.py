@@ -43,6 +43,7 @@ from pyntpot.ink import (
     PIGMENTS,
     BrushStyle,
     Canvas,
+    Colour,
     PaperStyle,
     PigmentLayer,
     Sheet,
@@ -80,7 +81,7 @@ GRAN_PX = 6.0
 #: How many times its size the nib plate is painted before it is brought down.
 NIB_SCALE = 2
 #: The size of a grid's labels, in pixels, and the ink they are lettered in.
-LABEL_PX, LABEL_INK = 21.0, "#4a3a2a"
+LABEL_PX, LABEL_INK = 21.0, Colour("#4a3a2a")
 #: The name the lettered grids write.
 NAME = "Keswick"
 #: The name the nib grid writes: its bowls and diagonals show the nib's angle better than "Keswick".
@@ -107,7 +108,9 @@ def _paper(w: int, h: int, style: PaperStyle | None = None, seed: int = SEED) ->
 
 def _desk(h: int) -> np.ndarray:
     """Paint the darker paper the cells of a tiled grid lie on."""
-    return _paper(W, h, PaperStyle(paper_hex="#d4c8ac", paper_worn=0.0, paper_foxing=0.0), 3)
+    return _paper(
+        W, h, PaperStyle(paper_hex=Colour("#d4c8ac"), paper_worn=0.0, paper_foxing=0.0), 3
+    )
 
 
 def _disc(w: int, h: int, cx: float, cy: float, radius: float) -> np.ndarray:

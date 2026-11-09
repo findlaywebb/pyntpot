@@ -49,6 +49,7 @@ from pyntpot.ink import (
     PAINTERS_PIGMENTS,
     BrushStyle,
     Canvas,
+    Colour,
     PaperStyle,
     Sheet,
     brush_from_id,
@@ -137,7 +138,7 @@ def _name(figure: str, canvas: Canvas, sheet: Sheet, paper: np.ndarray, unit: fl
     paper = (1 - GUIDE_SHARE) * paper + GUIDE_SHARE * guide
     thin = 0.0 if figure == "centreline" else NibStyle().label_pen_thin
     nib = NibStyle(label_size_px=TYPE_PX, label_pen_angle_deg=DEFAULT_ANGLE, label_pen_thin=thin)
-    nib = replace(nib, label_pen_width_px=4.6, label_ink="#241c14", label_wash_spread=0.35)
+    nib = replace(nib, label_pen_width_px=4.6, label_ink=Colour("#241c14"), label_wash_spread=0.35)
     face, hand_style = FaceStyle(), HandStyle()
     hand = Hand(face, hand_style)
     setting = Setting(NAME, TYPE_PX, path=_line(canvas.w / unit, h / unit), wash=figure != "ground")
@@ -247,7 +248,7 @@ def _angles_grid(size: int) -> np.ndarray:
             label_pen_angle_deg=angle,
             label_pen_thin=thin,
             label_pen_width_px=3.4 * unit,
-            label_ink="#241c14",
+            label_ink=Colour("#241c14"),
         )
         setting = Setting(NAME, 52.0 * unit, anchor=(w / 2, 0.7 * ch), align="middle", wash=False)
         out[y : y + ch, x : x + w] = _letter(out[y : y + ch, x : x + w], [setting], nib, SEED)
@@ -259,7 +260,9 @@ def _angles_grid(size: int) -> np.ndarray:
         Setting(f"{t:g}", px, anchor=(96 * unit, y + ch / 2 + 7 * unit), align="end", wash=False)
         for t, (_, y, _, ch) in zip(THINS, boxes[:: len(ANGLES)], strict=True)
     ]
-    return _letter(out, labels, NibStyle(label_ink="#3a2c20", label_pen_width_px=1.6 * unit), SEED)
+    return _letter(
+        out, labels, NibStyle(label_ink=Colour("#3a2c20"), label_pen_width_px=1.6 * unit), SEED
+    )
 
 
 def _hands_grid(size: int) -> np.ndarray:
@@ -268,7 +271,7 @@ def _hands_grid(size: int) -> np.ndarray:
     boxes, h = _cells(size, 3, 3, 104, 12, 12)
     sheet = Sheet(h, size, GRAN_PX * unit, SEED)
     out = paper_plate(sheet, Canvas(0, 0, size, h, size, h), PaperStyle(paper_foxing=0.0), size)
-    nib = NibStyle(label_pen_width_px=2.8 * unit, label_ink="#241c14")
+    nib = NibStyle(label_pen_width_px=2.8 * unit, label_ink=Colour("#241c14"))
     for seed, (x, y, w, ch) in enumerate(boxes, start=1):
         setting = Setting(NAME, 68.0 * unit, anchor=(w / 2, 0.7 * ch), align="middle", wash=False)
         out[y : y + ch, x : x + w] = _letter(out[y : y + ch, x : x + w], [setting], nib, seed)

@@ -45,8 +45,45 @@
           "description": "How strongly the grid's lines darken the paper, 0 to 1."
         },
         "paper_hex": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#f3ead6",
           "description": "The paper's cream, as hex."
         },
@@ -373,8 +410,45 @@
             ]
           },
           "additionalProperties": {
-            "type": "string",
-            "pattern": "^#[0-9a-fA-F]{6}$"
+            "anyOf": [
+              {
+                "enum": [
+                  "built",
+                  "burnt_sienna",
+                  "cerulean",
+                  "farmland",
+                  "heath",
+                  "indigo",
+                  "meadow",
+                  "orchard",
+                  "pale",
+                  "paynes_grey",
+                  "perylene_maroon",
+                  "quinacridone_rose",
+                  "raw_sienna",
+                  "relief",
+                  "rim",
+                  "rock",
+                  "sand",
+                  "sap_green",
+                  "scrub",
+                  "ultramarine",
+                  "water",
+                  "wetland",
+                  "wood",
+                  "works",
+                  "yellow_ochre"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+              }
+            ]
           },
           "default": {
             "wood": "#6e7f8b"
@@ -891,8 +965,45 @@
           "description": "The size the hand is written at, in display pixels."
         },
         "label_ink": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#241c14",
           "description": "The ink the lettering is written in."
         },
@@ -952,20 +1063,131 @@
           "description": "How far out from the marks the backing wash reaches, as a share of the type size."
         },
         "label_route_ink": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#c22050",
           "description": "The ink a name in the route's own colour is written in, read from the theme like every other field; the default is the default route ink."
         },
         "label_water_ink": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#4a7691",
           "description": "The ink the `water` token names."
         },
         "label_in_water_ink": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#f8f4e9",
           "description": "The ink a name written *on* the water is set in. Reversed out of the river in the paper's own cream rather than written into it in a dark ink: the water is a mid-tone, so a dark ink is fighting it from the wrong side. Measured on a painted river, black holds 3.9:1 and this holds 4.7:1, and the difference on the plate is larger than the ratio suggests because the letters no longer share a value with the bridges crossing them."
         }
@@ -1235,8 +1457,45 @@
             ]
           },
           "additionalProperties": {
-            "type": "string",
-            "pattern": "^#[0-9a-fA-F]{6}$"
+            "anyOf": [
+              {
+                "enum": [
+                  "built",
+                  "burnt_sienna",
+                  "cerulean",
+                  "farmland",
+                  "heath",
+                  "indigo",
+                  "meadow",
+                  "orchard",
+                  "pale",
+                  "paynes_grey",
+                  "perylene_maroon",
+                  "quinacridone_rose",
+                  "raw_sienna",
+                  "relief",
+                  "rim",
+                  "rock",
+                  "sand",
+                  "sap_green",
+                  "scrub",
+                  "ultramarine",
+                  "water",
+                  "wetland",
+                  "wood",
+                  "works",
+                  "yellow_ochre"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+              }
+            ]
           },
           "default": {
             "farmland": "#dfe0b0",
@@ -1368,8 +1627,45 @@
           "description": "Width in display pixels; it also sets how near two passes of a retraced route have to come to be drawn as one stroke."
         },
         "colour": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#c22050",
           "description": "Colour as `#rrggbb`."
         },

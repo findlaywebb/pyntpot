@@ -9,6 +9,7 @@ from typing import Any, Literal
 
 import pytest
 
+from pyntpot.ink.pigment_registry import PIGMENT_REGISTRY
 from pyntpot.maps import Style
 from pyntpot.maps.style import _groups
 from pyntpot.maps.theme_schema import theme_schema
@@ -183,13 +184,19 @@ def test_no_key_is_required() -> None:
     assert '"required"' not in json.dumps(theme_schema())
 
 
-def test_a_colour_field_takes_a_hex_pattern() -> None:
-    """A colour field, and each entry of a colour dict field, is a string of `#` and six hex digits."""
+def test_a_colour_field_takes_the_three_branch_node() -> None:
+    """A colour field, and each entry of a colour dict field, is a pigment name, a hex or an alias."""
     schema: Any = theme_schema()
-    pattern = {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"}
-    assert pattern.items() <= schema["properties"]["paper"]["properties"]["paper_hex"].items()
+    node = {
+        "anyOf": [
+            {"enum": sorted(PIGMENT_REGISTRY.names())},
+            {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"},
+            {"type": "string", "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"},
+        ]
+    }
+    assert node["anyOf"] == schema["properties"]["paper"]["properties"]["paper_hex"]["anyOf"]
     pigments = schema["properties"]["cover"]["properties"]["pigments"]
-    assert pigments["additionalProperties"] == pattern
+    assert pigments["additionalProperties"] == node
 
 
 def test_a_group_that_is_no_dataclass_is_refused() -> None:

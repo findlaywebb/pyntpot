@@ -45,6 +45,7 @@ from pyntpot.ink import (
     TRANSPARENCY,
     BrushStyle,
     Canvas,
+    Colour,
     PaperStyle,
     PigmentLayer,
     Sheet,
@@ -110,7 +111,7 @@ def _letter(img: np.ndarray, settings: list[Setting]) -> np.ndarray:
     marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
     dark = np.zeros((h * NIB_SCALE, w * NIB_SCALE), np.float32)
     surface = NibSurface(big, NIB_SCALE, dark, SLOW_GRAN_PX * w / DESIGN_W)
-    nib = NibStyle(label_ink="#3a2c20", label_pen_width_px=1.5 * w / GRID_W)
+    nib = NibStyle(label_ink=Colour("#3a2c20"), label_pen_width_px=1.5 * w / GRID_W)
     groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
     with tempfile.TemporaryDirectory() as scratch:
         written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")

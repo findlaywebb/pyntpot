@@ -12,13 +12,14 @@ from typing import Any
 import pydantic
 import pytest
 
+from pyntpot.ink import Colour
 from pyntpot.maps.style import Style, _digest_fields, _table
 from pyntpot.maps.style_groups import BasemapStyle, CoverStyle, RouteInkStyle
 from pyntpot.maps.theme_errors import ThemeError
 
 #: A sample of resolved default values, as group, field and pinned value.
 RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
-    ("paper", "paper_hex", "#f3ead6"),
+    ("paper", "paper_hex", Colour("#f3ead6")),
     ("paper", "sheet_seed", 11),
     ("paper", "webp_quality", 74),
     ("wash", "wet_bleed_px", 20.0),
@@ -29,7 +30,7 @@ RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
     ("face", "label_route", "centreline"),
     ("face", "label_face", ""),
     ("nib", "label_size_px", 20.0),
-    ("nib", "label_ink", "#241c14"),
+    ("nib", "label_ink", Colour("#241c14")),
     ("hand", "label_seed", 17),
     ("card", "display_px", 900),
     ("card", "supersample", 2),
@@ -47,7 +48,9 @@ RESOLVED_SAMPLE: tuple[tuple[str, str, Any], ...] = (
 )
 
 #: The route ink the reference sheets were painted with, pinned.
-ROUTE_INK = RouteInkStyle(colour="#c22050", px=5.4, drawn_as="solid", blend="normal", opacity=1.0)
+ROUTE_INK = RouteInkStyle(
+    colour=Colour("#c22050"), px=5.4, drawn_as="solid", blend="normal", opacity=1.0
+)
 
 #: The default style's three digests, pinned.
 DIGEST = "88b356ada294ff60"

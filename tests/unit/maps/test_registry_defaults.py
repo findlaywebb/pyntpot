@@ -1,6 +1,6 @@
 """The map's pigment defaults are the registry's, not copies: keys, values and order tie."""
 
-from pyntpot.ink import PIGMENTS, TRANSPARENCY, PaperStyle
+from pyntpot.ink import PIGMENTS, TRANSPARENCY, Colour, PaperStyle
 from pyntpot.maps.style_groups import CoverStyle
 from pyntpot.maps.theme_vocab import VOCABULARIES
 
@@ -40,7 +40,7 @@ def test_paper_transparency_equals_the_registry_in_pinned_order():
 def test_a_default_is_a_fresh_dict_each_time():
     """Editing one group's default leaves the next group and the registry alone."""
     first = CoverStyle().pigments
-    first["farmland"] = "#000000"
+    first["farmland"] = Colour("#000000")
     assert CoverStyle().pigments["farmland"] == "#dfe0b0"
     assert PIGMENTS["farmland"] == "#dfe0b0"
 

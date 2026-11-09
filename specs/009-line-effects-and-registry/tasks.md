@@ -52,36 +52,36 @@ gate B (S6 in); S7, S8, S9.
 
 ## S3a: `Colour` across every field
 
-- [ ] Red: a hex-defaulted field typed `str` fails; the schema three-branch guard;
+- [x] Red: a hex-defaulted field typed `str` fails; the schema three-branch guard;
       pigment names in a theme; the located miss; upper-case hex lower-cased; `Style()`
       builds.
-- [ ] Red: the coercion guard (`replace(...)` and `Style.model_validate` from a dict
+- [x] Red: the coercion guard (`replace(...)` and `Style.model_validate` from a dict
       give a `Colour`); `test_one_hex_parser.py`. New cases go in
       `tests/unit/maps/{test_colour_fields,test_theme_scope,test_theme_colour_names}.py`
       (new), never in `test_style.py` (384 lines) or `test_theme_check.py` (361).
-- [ ] Rewritten in place, not deleted: `test_theme_schema.py:186-192` (three-branch
+- [x] Rewritten in place, not deleted: `test_theme_schema.py:186-192` (three-branch
       node), `test_theme_check.py:186-191` (`'red'` reads "is not a pigment or a colour
       alias"; `'#a8c28'` keeps "is not a # and six hexadecimal digits"),
       `test_theme_check.py:246-248` (`#C22050` stored as `#c22050`); `RESOLVED_SAMPLE` in
       `test_style.py` pins `Colour("#f3ead6")` and `Colour("#241c14")`, the
       `type(got) is type(value)` assertion kept.
-- [ ] Fields retyped; `normalise_colours` and the five `__post_init__` hooks; `Colour`'s
+- [x] Fields retyped; `normalise_colours` and the five `__post_init__` hooks; `Colour`'s
       pydantic hook; `with_route_ink`; `compose_steps._rgb` removed; `ink.rgb` shares
       the arithmetic.
-- [ ] Colour call sites wrapped in `Colour(...)` in the five grid scripts,
+- [x] Colour call sites wrapped in `Colour(...)` in the five grid scripts,
       `pigment_swatches.py` and `test_style.py`; `ty check` green over `examples` and
       `tests`.
-- [ ] `test_theme_merge._is_colour` by `isinstance(value, Colour)`.
-- [ ] `tests/unit/ink/test_style_colours.py` and `tests/unit/letters/test_style.py` cover
+- [x] `test_theme_merge._is_colour` by `isinstance(value, Colour)`.
+- [x] `tests/unit/ink/test_style_colours.py` and `tests/unit/letters/test_style.py` cover
       `normalise_colours` and the `PaperStyle`, `WashStyle` and `NibStyle` hooks.
-- [ ] Pure move of `_Check` and its helpers (`_sheet_and_colour`, `_MESSAGES`, `_TABLE`,
+- [x] Pure move of `_Check` and its helpers (`_sheet_and_colour`, `_MESSAGES`, `_TABLE`,
       `_COLOUR`, `_Path` included) to `theme_checker.py`, its own commit.
-- [ ] `theme_scope.py` in its full shape (`Bound`, the four mappings with `aliases:
+- [x] `theme_scope.py` in its full shape (`Bound`, the four mappings with `aliases:
       Mapping[str, Bound[Pigment]]` and `palette: Bound[object] | None`, cached
       `registry`, `resolve_pigment` and `resolve_colour` order); the `theme_checker`
       adapter, context and messages (non-`str`: "{v!r} is not a string");
       `COLOUR_FIELDS` retired; `ALIAS_PATTERN = "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"`.
-- [ ] Schema regenerated; pinned digests unchanged; grid `check`; slice gate green.
+- [x] Schema regenerated; pinned digests unchanged; grid `check`; slice gate green.
       S6's worktree is cut here.
 
 ## S3b: Aliases, theme pigments, palettes

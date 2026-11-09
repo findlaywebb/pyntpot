@@ -27,6 +27,7 @@ package.
 from dataclasses import dataclass, field
 from typing import Literal
 
+from pyntpot.ink.colour import Colour, normalise_colours
 from pyntpot.ink.pigment_table import PIGMENTS
 from pyntpot.maps.providers.overpass import MINOR_ROADS
 
@@ -158,7 +159,7 @@ class CoverStyle:
             "wood": (0.72, 0.3),
         }
     )
-    pigments: dict[str, str] = field(default_factory=lambda: dict(PIGMENTS))
+    pigments: dict[str, Colour] = field(default_factory=lambda: dict(PIGMENTS))
     pale_base: float = 0.50
     pale_pool: float = 0.16
     wood_texture: float = 0.75
@@ -167,6 +168,10 @@ class CoverStyle:
     wood_tex_strengths: tuple[float, ...] = (0.30, 0.40, 0.48)
     dab_spacings: tuple[float, ...] = (1.7, 1.0, 0.6)
     dab_strengths: tuple[float, ...] = (0.34, 0.36, 0.38)
+
+    def __post_init__(self) -> None:
+        """Normalise the pigment colours to `Colour`, so a plain `str` passed to `replace` is accepted."""
+        normalise_colours(self, "pigments")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -314,6 +319,10 @@ class RouteInkStyle:
 
     drawn_as: Literal["pen", "solid"] = "solid"
     px: float = 5.4
-    colour: str = "#c22050"
+    colour: Colour = Colour("#c22050")  # noqa: RUF009 (an immutable str)
     blend: Literal["normal", "multiply"] = "normal"
     opacity: float = 1.0
+
+    def __post_init__(self) -> None:
+        """Normalise the colour to `Colour`, so a plain `str` passed to `replace` is accepted."""
+        normalise_colours(self, "colour")

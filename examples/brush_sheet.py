@@ -36,6 +36,7 @@ from PIL import Image
 from pyntpot.ink import (
     BrushStyle,
     Canvas,
+    Colour,
     PaperStyle,
     Sheet,
     brush_from_id,
@@ -149,7 +150,7 @@ def _letter(img: np.ndarray, settings: list[Setting]) -> np.ndarray:
     marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
     dark = np.zeros((h * NIB_SCALE, w * NIB_SCALE), np.float32)
     surface = NibSurface(big, NIB_SCALE, dark, GRAN_PX * NIB_SCALE)
-    nib = NibStyle(label_ink="#3a2c20", label_pen_width_px=1.5)
+    nib = NibStyle(label_ink=Colour("#3a2c20"), label_pen_width_px=1.5)
     groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
     with tempfile.TemporaryDirectory() as scratch:
         written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")

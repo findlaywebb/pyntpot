@@ -33,12 +33,6 @@ ROUTE_SS = 4
 ROUTE_BLENDS = ("normal", "multiply")
 
 
-def _rgb(colour: str) -> tuple[int, int, int]:
-    """One `#rrggbb` string as a tuple."""
-    s = colour.lstrip("#")
-    return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
-
-
 def painted_map(plates: Plates) -> Image.Image:
     """The card itself: the wash multiplied over the paper, as the painter composed it.
 
@@ -69,7 +63,7 @@ def route(
 
     Source: `lanczos` in docs/explanation/references.md.
     """
-    colour = _rgb(ink.colour)
+    colour = ink.colour.rgb8
     name = plates.manifest.files.get("pen")
     if name is not None and name != "" and ink.drawn_as == "pen":
         pen = Image.open(plates.directory / name).convert("RGBA")

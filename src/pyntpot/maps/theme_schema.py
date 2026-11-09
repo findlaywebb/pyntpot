@@ -7,9 +7,10 @@ forbids the keys the model does not have.
 Each group is an object of its fields; a field typed as a dataclass is a sub-table, an
 object of its own fields by the same walk. A dict field is an object whose keys are its
 vocabulary in `theme_vocab` and whose values share one schema. A `bool` is a boolean, an
-`int` an integer, a `float` a number, a `str` a string (with the `#rrggbb` pattern at each
-colour field), a `Literal` an enum of its values, a `tuple[X, ...]` an array of `X` and a
-fixed tuple an array of exactly its items. Each field carries its default as JSON and its
+`int` an integer, a `float` a number, a `str` a string, a `Colour` a pigment name, a
+`#rrggbb` string or an alias string (`anyOf` three branches, since the schema cannot know a
+theme's own aliases or pigments), a `Literal` an enum of its values, a `tuple[X, ...]` an
+array of `X` and a fixed tuple an array of exactly its items. Each field carries its default as JSON and its
 description from the `Attributes:` section of its group's docstring; each group and
 sub-table carries its class docstring's summary line. The top level also takes `extends`.
 
@@ -27,9 +28,11 @@ import typing
 from collections.abc import Mapping
 from typing import Literal
 
+from pyntpot.ink.colour import Colour
+from pyntpot.ink.pigment_registry import PIGMENT_REGISTRY
 from pyntpot.maps.style import Style
 from pyntpot.maps.theme_check import EXTENDS
-from pyntpot.maps.theme_vocab import COLOUR_FIELDS, COLOUR_PATTERN, VOCABULARIES
+from pyntpot.maps.theme_vocab import ALIAS_PATTERN, COLOUR_PATTERN, VOCABULARIES
 
 #: The schema's address on the docs site.
 SCHEMA_ID = "https://findlaywebb.github.io/pyntpot/reference/theme.schema.json"
@@ -145,8 +148,14 @@ def _leaf_schema(hint: object, path: _Path) -> dict[str, object]:
     Raises:
         TypeError: When `hint` is a type the walk does not know, a programming error.
     """
-    if hint is str and path in COLOUR_FIELDS:
-        return {"type": "string", "pattern": COLOUR_PATTERN}
+    if hint is Colour:
+        return {
+            "anyOf": [
+                {"enum": sorted(PIGMENT_REGISTRY.names())},
+                {"type": "string", "pattern": COLOUR_PATTERN},
+                {"type": "string", "pattern": ALIAS_PATTERN},
+            ]
+        }
     if hint in _SCALARS:
         return dict(_SCALARS[hint])
     if typing.get_origin(hint) is Literal:
