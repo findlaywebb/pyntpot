@@ -441,6 +441,16 @@ only the files it owns.
 - **`theme_resolve.py`:**
   - Read the whole chain first, following the raw `extends` strings and stopping at a
     file whose read found a problem, as today.
+  - **A non-`str` `extends` ends the chain without stopping the read.** It is not a read
+    problem: the file was read, and there is no target to follow. So the chain ends at
+    that file, every file of it is checked as below, and that file's check reports
+    "extends is a theme name or a .yaml path" at the `extends` line, as
+    `check_theme` does today (`test_theme_check.py:67-73`; `theme_resolve.py:136-137`
+    ends the chain the same way). Counting it as a stopped read would check no file and
+    record no read problem, so the theme would load silently.
+  - Test (`test_theme_resolve.py`): `child.yaml` holds `extends: 5` and
+    `card: {display_px: '5'}`; the error holds exactly two problems, the `extends` one at
+    line 1 and the `display_px` one, so the file was checked.
   - Then check from the base-most file up, threading the scope.
   - **A chain whose read stops checks no file.** When the read stops at a problem (a
     file the reader refuses, an `extends` target that is refused, missing or a cycle),
@@ -566,31 +576,47 @@ only the files it owns.
     `test_one_registry.py` still finds Payne's grey's hex in one `src` module only.
   - `PenCasing(width_px=0.0, edge_px=0.0)`, the pen reserve and the width of its two
     edge lines.
-  - `EFFECT_RANGES` maps each numeric field to its bounds: every `*_px` is at least 0,
-    and every `strength` is from 0 to 1. Each type refuses a value outside it in
-    `__post_init__` (`ValueError` naming the field and its range), and `Casing` and
-    `Shadow` also call `normalise_colours`. `maps/theme_effects.py` reads the same table
-    (S5a), so the ranges have one source.
+  - `EFFECT_RANGES: Mapping[str, tuple[float, float]]` is keyed by field name, and every
+    bound is finite: `width_px`, `edge_px`, `spread_px`, `blur_px` and `offset_px` each
+    from 0 to 16, and `strength` from 0 to 1. Sixteen display pixels is several times the
+    widest preset (2.5) and wider than any line the plates draw, so no sensible effect
+    is refused; it keeps `noise.blur`'s `np.pad` by the radius (`noise.py:179`) and
+    `shadow`'s `round(offset_px * sin b)` far from `MemoryError` and `OverflowError`.
+    `test_effect_types.py` pins the table as a literal.
+  - Each type's `__post_init__` refuses, with a `ValueError` naming the field and its
+    range: any value that is not finite (`nan`, `inf`); a `*_px` below 0; a `strength`
+    outside 0 to 1. A type does not refuse a `*_px` above 16: its pixels are those of the
+    array it is laid on, and `lay_stack` multiplies a theme's display pixels by the
+    render scale (S5b), so the upper bound is a display-pixel bound and is checked at
+    load. `Casing` and `Shadow` also call `normalise_colours`. `maps/line_effects.py`,
+    `maps/theme_effects.py` (S5a) and `maps/effect_pass.py` (S5b) read the same table, so
+    the ranges have one source; it stays unexported, and `maps` imports it from
+    `pyntpot.ink.effect_types`.
   - A `*_px` field is in pixels of the array the effect is laid on. A theme writes
     display pixels, and `maps/effect_pass.lay_stack` scales them (S5b). The types know
     nothing of maps: no line class, no stack, no azimuth.
 - **Building blocks:** `noise.chamfer_distance`, `noise.blur` and `noise.smoothstep`;
-  `LINE_THRESHOLD = 0.3` lives in `effect_mask.py`. `rgb` is float32 `(h, w, 3)` in 0 to
+  `LINE_THRESHOLD = 0.3` lives in `effect_mask.py`, unexported, and is the default of
+  every primitive's `threshold` keyword, so a caller (an example, a Painting with Python
+  stroke) never names it. `rgb` is float32 `(h, w, 3)` in 0 to
   1. `mask` is float `(h, w)`. `paper` is `None` (wash space, where 1 is the paper) or an
   `(h, w, 3)` plate. A colour enters the maths as `effect.colour.rgb`.
 - **The four functions** (each at most 6 parameters, probed with `ruff check`):
-  - `casing(rgb, mask, effect: Casing, *, threshold, paper=None)` returns `rgb` itself
+  - `casing(rgb, mask, effect: Casing, *, threshold=LINE_THRESHOLD, paper=None)` returns
+    `rgb` itself
     when `effect.width_px == 0`, `effect.strength == 0` or no mask pixel reaches
     `threshold`. Otherwise, with `w = effect.width_px`:
     `a = effect.strength * smoothstep(w - chamfer_distance(mask >= threshold), 1.0)` and
     `out = rgb + a * (colour * paper - rgb)`, so white is the paper.
-  - `glow(rgb, mask, effect: Glow, *, threshold, paper=None)` is the identity at
+  - `glow(rgb, mask, effect: Glow, *, threshold=LINE_THRESHOLD, paper=None)` is the
+    identity at
     `effect.strength == 0`. Otherwise
     `core = chamfer_distance(mask >= threshold) <= effect.spread_px`,
     `a = effect.strength * clip(blur(core, effect.blur_px), 0, 1)` and
     `out = rgb + a * max(paper - rgb, 0)`. The floor at 0 is what makes "never darkens"
     hold for any input.
-  - `shadow(rgb, mask, effect: Shadow, *, azimuth_deg, threshold)` shifts the mask (zero
+  - `shadow(rgb, mask, effect: Shadow, *, azimuth_deg, threshold=LINE_THRESHOLD)` shifts
+    the mask (zero
     fill, never `np.roll`) by `effect.offset_px` along bearing `b = azimuth_deg + 180`,
     with `dx = round(offset_px * sin(b))` and `dy = round(-offset_px * cos(b))` in image
     rows: Python's `round`, half to even, so the shift is a whole-pixel slice and the
@@ -598,7 +624,8 @@ only the files it owns.
     `a = effect.strength * blur(shifted, effect.blur_px) * (1 - clip(mask / threshold, 0, 1))`
     and `out = where(a > 0, rgb * (1 - a * (1 - colour)), rgb)`. The azimuth is a
     parameter, not a field: it is the scene's light, not the effect's.
-  - `pen_casing(rgb, mask, effect: PenCasing, *, threshold, paper=None) -> (rgb, edges)`
+  - `pen_casing(rgb, mask, effect: PenCasing, *, threshold=LINE_THRESHOLD, paper=None)
+    -> (rgb, edges)`
     knocks the wash to the paper inside the reserve (`d <= effect.width_px`). It returns
     the density of the two ink edge lines
     (`width_px < d <= width_px + edge_px`). Width 0 returns `(rgb, zeros)`.
@@ -606,11 +633,20 @@ only the files it owns.
     to 1, except the identity returns.
   - Each refuses `threshold <= 0` with a `ValueError` naming it, before any other work,
     because `shadow` divides by it and warnings are errors.
+  - **Docstrings to the public standard now.** Merge gate A exports these names, which
+    puts them under `test_field_docs` (an `Attributes:` entry per field, in field order,
+    and no comment in a class body) and `test_public_signatures` (every `Raises:` entry
+    names a public or built-in exception). Neither test reaches an unexported module, so
+    S4 writes each type's and each primitive's docstring to that standard in the
+    worktree, and gate A edits no `effect_*.py` file. Each primitive's docstring states
+    that `threshold` defaults to `LINE_THRESHOLD` (0.3).
 - **Property strategies:**
   - Inputs: `hypothesis.extra.numpy.arrays(np.float32, (h, w, 3), elements=floats(0, 1,
     width=32))` with `h, w` in 8 to 40; a mask from the same strategy with shape `(h, w)`;
-    `paper` as `None` or an array; `threshold` from `floats(0, 1, exclude_min=True)`;
-    each value type built from `st.builds` with its fields drawn inside `EFFECT_RANGES`.
+    `paper` as `None` or an array; `threshold` from `floats(0.01, 1)`, so no subnormal
+    divides `mask` in float32; each value type built from `st.builds` with each field
+    drawn by `floats(lo, hi, allow_nan=False, allow_infinity=False)` over its
+    `EFFECT_RANGES` entry.
   - Casing: `Casing(width_px=w)` for `w` in {0.0, -0.0} gives a bitwise-identical result
     (`view(np.uint32)`); a negative width never reaches the primitive, because `Casing`
     refuses it (a unit case).
@@ -620,8 +656,13 @@ only the files it owns.
   - Pen casing: width 0 is the identity and gives zero edges; inside the reserve, minus
     the edge band, `out == paper`.
   - A unit case per function: `threshold` 0 and -0.1 each raise `ValueError`.
-- **`tests/unit/ink/test_effect_types.py`:** the four defaults; each range refused in
-  `__post_init__`; `Shadow().colour == pigment("paynes_grey").colour`; `Casing` and
+  - A unit case per function (`parametrize`, `ids=` the function names):
+    `inspect.signature(f).parameters["threshold"].default == LINE_THRESHOLD`, and a call
+    without `threshold` equals one with `threshold=LINE_THRESHOLD`, bit for bit.
+- **`tests/unit/ink/test_effect_types.py`:** the four defaults; `EFFECT_RANGES` equal to
+  its pinned literal; a negative `*_px`, a `strength` outside 0 to 1, and `nan`, `inf`
+  and `-inf` in each numeric field (`parametrize`, `ids=`) refused in `__post_init__`,
+  and `Casing(width_px=100.0)` accepted (array pixels have no upper bound); `Shadow().colour == pigment("paynes_grey").colour`; `Casing` and
   `Shadow` normalise a `str` colour.
 - **Gate:** slice gate in the worktree. Mutation (S8) needs these tests under
   `tests/unit/ink` and `tests/property`, which is where they are.
@@ -633,8 +674,12 @@ the glossary's.
 
 - **Owns:**
   - New: `maps/line_effects.py` (`EffectStack`, `LINE_CLASSES`, `WATER_GROUP`,
-    `ROAD_GROUP`, `BUILT_IN_PRESETS`; it imports `Casing`, `Glow`, `Shadow` and
-    `EFFECT_RANGES` from `pyntpot.ink`, after merge gate A, and imports no style) and `maps/theme_effects.py` (imports `theme_checker`).
+    `ROAD_GROUP`, `BUILT_IN_PRESETS`; it imports `Casing`, `Glow` and `Shadow` from
+    `pyntpot.ink`, after merge gate A, and `EFFECT_RANGES` from
+    `pyntpot.ink.effect_types`, the submodule, as every `maps` module imports `ink`
+    today (for example `theme_check.py:37`), and imports no style) and
+    `maps/theme_effects.py` (imports `theme_checker`, and `EFFECT_RANGES` from
+    `pyntpot.ink.effect_types`).
   - Edits: `maps/style_groups.py` (`BasemapStyle.line_effects: dict[str, EffectStack]`,
     default `{}`, and `RouteInkStyle.effects: EffectStack = EffectStack()`, with their
     docstrings; `BasemapStyle.__post_init__`; the module docstring loses "holds no
@@ -694,14 +739,23 @@ the glossary's.
     `preset` key reads "a line class takes a preset name or a stack, not both". Each
     effect is checked by `TableCheck.table` on its dataclass, so its colour resolves
     through the scope.
-  - Checks each number against `EFFECT_RANGES` and records a value outside as a located
-    problem at `line_effects.<class>.<kind>.<field>` ("strength is 1.4; it must be from 0
-    to 1"). Nothing is clipped, and no `ValueError` from `__post_init__` reaches a theme
-    author.
+  - Checks each number against `EFFECT_RANGES` and records a value outside, or one that
+    is not finite (YAML's `.inf` and `.nan` parse to floats), as a located problem at
+    `line_effects.<class>.<kind>.<field>` ("strength is 1.4; it must be from 0 to 1",
+    "blur_px is inf; it must be from 0 to 16"). Nothing is clipped, and no `ValueError`
+    from `__post_init__` reaches a theme author. A theme's `*_px` are display pixels, so
+    this is where their upper bound is enforced.
   - Keeps every entry the file writes as an explicit `EffectStack`, an empty or all-off
     one included, and drops nothing itself.
   - Splits the result into `{"basemap": {"line_effects": {...}}, "route_ink":
-    {"effects": EffectStack}}` and merges it into the file's table.
+    {"effects": EffectStack}}` and merges it into the file's table, adding only what the
+    file writes: a file without `line_effects` adds neither entry, one whose
+    `line_effects` has no basemap class adds no `basemap.line_effects`, and one without
+    a `route` key adds no `route_ink.effects`. So `check_theme`'s table for a file
+    without `line_effects` is today's (`test_theme_check.py:62-65` passes unchanged),
+    and a child that sets only `major` keeps its parent's route stack. Tested in
+    `test_theme_effects.py`: a parent sets `route: lifted`, a child sets `major: cased`,
+    and the child's style has both.
   - A stack is an object, not a mapping, so `merge` replaces a class's stack whole down
     `extends`: a child's `major: {}` replaces its parent's `cased`. Dropping happens
     once, after the final merge, in the `__post_init__` hooks above, when `Style._build`
@@ -809,8 +863,10 @@ Merge S4. Then:
 - **`effect_pass.lay_stack(rgb, mask, stack, *, scale, paper)`** runs a stack's effects
   in order through the `ink` primitives, each effect passed whole. It converts display
   pixels by `scale` with `dataclasses.replace`, multiplying each `*_px` field (the keys
-  of `EFFECT_RANGES` that end in `_px`), so the primitive reads array pixels; the
-  primitive reads the colour's `.rgb` itself. Shadows take `relief.DEFAULT_SUN.azimuth`, the hillshade's light; a
+  of `EFFECT_RANGES` that end in `_px`, imported from `pyntpot.ink.effect_types`), so
+  the primitive reads array pixels; the primitive reads the colour's `.rgb` itself. It
+  passes no `threshold`, so each primitive takes its `LINE_THRESHOLD` default. Shadows
+  take `relief.DEFAULT_SUN.azimuth`, the hillshade's light; a
   test pins that this is the constant the relief shades with.
 - **`pen.py`:** `paint_pen` keeps its return. A new `pen_groups(job)` returns each
   group's layers and its per-class masks: the road masks are the band densities already
@@ -818,13 +874,19 @@ Merge S4. Then:
   read with the major brush, and is built only when that class has an effect.
   Bristles are keyed by seed and points, so the mask matches the union pad's strokes.
 - **`plates._wash_plate`:** today's body runs unchanged when
-  `style.basemap.line_effects` is empty. Otherwise `painter/effects.lay_wash` composites
-  the sea and rim over the ground, lays the water group's stacks in class order, glazes
+  `style.basemap.line_effects` is empty. Otherwise
+  `painter/effects.lay_wash(job, ground, under, groups) -> np.ndarray` (4 parameters):
+  `job` carries the style (the stacks, `paper` and `km_glazing`) and the scale
+  (`job.style.card.supersample`, render pixels per display pixel), `ground` is
+  `paint_ribbon`'s ground, `under` the sea and rim layers `_wash_plate` builds today,
+  and `groups` is `pen_groups(job)`, each group's layers and per-class masks. The paper
+  is wash space (`paper=None`). It composites the sea and rim over the ground, lays the water group's stacks in class order, glazes
   the water layer, lays the road group's stacks, then glazes the road layers. No
   `dither_rng` draw.
 - **`compose_steps.route`:** when `ink.effects.effects` is empty, today's path runs.
   Otherwise `route_effects.lay` takes the mask: the pen alpha, thresholded at
-  `LINE_THRESHOLD` before use, or the solid line's reduced mask. It lays the stack on the
+  `LINE_THRESHOLD` (imported from `pyntpot.ink.effect_mask`, as it is unexported) before
+  use, or the solid line's reduced mask. It lays the stack on the
   card as float, with `paper` from `plates.paths["paper"]` and `scale=k`, rounds back to
   8 bits, then lays the line as today. The docstring's "No casing, glow or shadow is
   drawn" changes to what is drawn, and states that the consumer's SVG page does not
@@ -911,12 +973,17 @@ Merge S4. Then:
 - **`test_reference_pages.py:227-232`** runs `runpy.run_path(brush_sheet.py)` bare, so it
   would fail the same way. S6 rewrites that one test to read
   `load_example("brush_sheet", "example_brush_sheet")["BRUSH_IDS"]`, keeping its
-  `is_file()` guard and assertions; no other test in the file changes.
+  `is_file()` guard and assertions; no other test in the file changes. That was the
+  file's only `runpy` use, so S6 drops its `import runpy` (`test_reference_pages.py:11`;
+  ruff F401) and imports `load_example`.
   `test_examples.py` allows `from labelled_grid import ...` (an `_EXAMPLE_SIBLINGS`
   allowlist), and the helper itself imports only public names.
 - **`ty` resolves the sibling.** `[tool.ty.environment] root` is `["src", "tests"]`, so
-  `from labelled_grid import ...` is `import-not-found` and `ty` exits 1. S6 adds
-  `"examples"` to `root`, with a comment like the `tests` one. This widens what `ty`
+  `ty` cannot resolve `from labelled_grid import ...`. That alone would not fail the
+  gate (`unresolved-import = "warn"`, `pyproject.toml:200`), but every name imported
+  from the sibling would be unknown to `ty`, so the scripts' calls of `GridSpec`,
+  `letter_over` and `label_grid` would go unchecked. S6 adds `"examples"` to `root`,
+  with a comment like the `tests` one, so those names are typed. This widens what `ty`
   resolves and checks; it loosens no gate, and no other line of `pyproject.toml`
   changes.
 - **Guard:** `test_examples.py` also fails when any of the five grid scripts calls
@@ -1154,11 +1221,15 @@ Forks picked with no human in the loop, each with its reason:
   keeps its explicit stack so the merge replaces its parent's, and the stack's and the
   basemap group's `__post_init__` drop what is off. Writing "off" then equals writing
   nothing, digest included, and a child can turn off an inherited stack.
-- **Effect numbers are range-checked at load.** A negative width or a strength outside 0
-  to 1 is a located error, never clipped, so no stack draws nothing while moving a
-  digest.
+- **Effect numbers are range-checked at load.** A `*_px` outside 0 to 16 display
+  pixels, a strength outside 0 to 1, or a value that is not finite is a located error,
+  never clipped, so no stack draws nothing while moving a digest and no theme passes
+  the load and then crashes the painter. The types refuse a non-finite value, a
+  negative `*_px` and a strength outside 0 to 1; the `*_px` upper bound is a
+  display-pixel bound, so only the load checks it.
 - **Casing colour is laid over the paper,** so white is the paper. Glow is floored at 0,
-  so it cannot darken. `LINE_THRESHOLD` is 0.3, a constant, not a theme field. The shadow
+  so it cannot darken. `LINE_THRESHOLD` is 0.3, a constant, not a theme field, and the
+  default of each primitive's `threshold`, so it stays unexported. The shadow
   takes `DEFAULT_SUN.azimuth`.
 - **The effect value types live in `ink`.** Each primitive takes its value type
   (`Casing`, `Glow`, `Shadow`, `PenCasing`) plus the arrays it acts on, so every

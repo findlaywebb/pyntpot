@@ -128,7 +128,13 @@ layout and label code.
       types `Casing`, `Glow`, `Shadow` and `PenCasing` (frozen, off at the default). Each
       primitive is a pure function of float32 RGB, a float mask and its value type, with
       at most 6 parameters. None knows of maps, and none draws a random number.
-- [ ] Each refuses a threshold at or below 0 with `ValueError`.
+- [ ] Each takes a keyword `threshold`, the mask density a pixel needs to count as the
+      line, defaulting to the unexported `LINE_THRESHOLD` (0.3), so a caller never names
+      the constant: `casing(rgb, mask, effect, *, threshold=LINE_THRESHOLD, paper=None)`,
+      `glow` the same, `shadow(rgb, mask, effect, *, azimuth_deg,
+      threshold=LINE_THRESHOLD)` and `pen_casing(rgb, mask, effect, *,
+      threshold=LINE_THRESHOLD, paper=None)`. Each refuses a threshold at or below 0 with
+      `ValueError`.
 - [ ] Hypothesis properties, on arrays before any dither or encode: a casing of width 0
       is the identity, bit for bit; a glow never darkens a pixel; a shadow never paints
       over its casting line (where the mask is at or above the threshold, the output
@@ -152,8 +158,11 @@ layout and label code.
       `major: {}` turns off its parent's `major` stack. Neither field can be set inside
       its group in a theme. `BasemapStyle` refuses a `line_effects` key outside the seven
       basemap classes, and at load such a key is a located error.
-- [ ] A negative width, spread, blur or offset, or a strength outside 0 to 1, is a located
-      error at load, never clipped; the effect types refuse the same values.
+- [ ] A width, spread, blur or offset outside 0 to 16 display pixels, a strength outside 0
+      to 1, or a value that is not finite (`.inf`, `.nan`), is a located error at load,
+      never clipped. The effect types refuse a value that is not finite, a negative width,
+      spread, blur, offset or edge, and a strength outside 0 to 1; their pixels are the
+      array's, so the 16 display-pixel bound is the load's alone.
 - [ ] Hypothesis: expanding a preset gives the same style and the same digests as
       writing out the stack it names; empty or off `line_effects` leaves every digest of
       every packaged and example theme unchanged.

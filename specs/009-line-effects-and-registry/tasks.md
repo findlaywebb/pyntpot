@@ -99,7 +99,9 @@ gate B (S6 in); S7, S8, S9.
       `theme_palette_gpl.py`, `palettes/plain.yaml`, in the wheel.
 - [ ] A chain whose read stops checks no file: red case in `test_theme_resolve.py` (a
       child with a bad field and an unbound alias, extending a missing file, reports
-      only the missing-file problem); the `theme_resolve` docstring says so.
+      only the missing-file problem); the `theme_resolve` docstring says so. A non-`str`
+      `extends` ends the chain without stopping the read: red case (`extends: 5` with
+      `card: {display_px: '5'}` reports both problems, the `extends` one at line 1).
 - [ ] `check_theme_scoped`; `theme_resolve` reads the chain then checks from the base up;
       `theme_scope.py` filled on S3a's shape, `palette` narrowed to `Bound[Palette] |
       None` under `TYPE_CHECKING` (runtime direction `theme_palette -> theme_colours ->
@@ -110,14 +112,19 @@ gate B (S6 in); S7, S8, S9.
 
 ## S4: Effect value types and primitives (worktree cut after S3a)
 
-- [ ] Red: `tests/unit/ink/test_effect_types.py` (defaults, ranges refused, the Payne's
-      grey default, a `str` colour normalised); the property tests and unit tests of
-      `casing`, `glow`, `shadow` (its rounded offset included) and `pen_casing`; each
-      refuses `threshold <= 0`.
-- [ ] `ink/effect_types.py` (`Casing`, `Glow`, `Shadow`, `PenCasing`, `EFFECT_RANGES`);
-      `ink/effect_mask.py` and the four `effect_*` modules, each primitive taking its
-      value type (at most 6 parameters, no `# noqa: PLR0913`); no export yet; slice gate
-      green in the worktree.
+- [ ] Red: `tests/unit/ink/test_effect_types.py` (defaults, `EFFECT_RANGES` pinned,
+      ranges and `nan`/`inf` refused, `Casing(width_px=100.0)` accepted, the Payne's grey
+      default, a `str` colour normalised); the property tests (fields drawn finite over
+      `EFFECT_RANGES`, `threshold` from `floats(0.01, 1)`) and unit tests of `casing`,
+      `glow`, `shadow` (its rounded offset included) and `pen_casing`; each refuses
+      `threshold <= 0`; each `threshold` defaults to `LINE_THRESHOLD`.
+- [ ] `ink/effect_types.py` (`Casing`, `Glow`, `Shadow`, `PenCasing`, `EFFECT_RANGES:
+      Mapping[str, tuple[float, float]]` keyed by field name, `*_px` 0 to 16, `strength`
+      0 to 1); `ink/effect_mask.py` (`LINE_THRESHOLD`, unexported) and the four
+      `effect_*` modules, each primitive taking its value type and
+      `threshold=LINE_THRESHOLD` (at most 6 parameters, no `# noqa: PLR0913`);
+      docstrings to the `test_field_docs` and `test_public_signatures` standard; no
+      export yet; slice gate green in the worktree.
 
 ## Merge gate A (after S3b, before S5a)
 
@@ -128,7 +135,8 @@ gate B (S6 in); S7, S8, S9.
 ## S5a: The model, presets, theme fields
 
 - [ ] Red: `test_line_effects.py` (at most one of a kind, off dropped, `LINE_CLASSES`),
-      `test_theme_effects.py` (out-of-range located; a child's `major: {}` turns off its
+      `test_theme_effects.py` (out-of-range and non-finite located; a child that sets
+      only `major` keeps its parent's route stack; a child's `major: {}` turns off its
       parent's `cased`; the `LOADER_FIELDS` messages), `test_digest_omits.py`, the
       extended schema guard, a `BasemapStyle` key outside the seven classes refused, the
       two properties.
@@ -142,8 +150,9 @@ gate B (S6 in); S7, S8, S9.
       dict-field tests leave out `LOADER_FIELDS`; no `VOCABULARIES` entry for
       `basemap.line_effects`).
 - [ ] `maps/line_effects.py` (`EffectStack` and the `BasemapStyle` key helper, on `ink`'s
-      `Casing`, `Glow`, `Shadow` and `EFFECT_RANGES`),
-      `maps/theme_effects.py`, the two group fields, `BasemapStyle.__post_init__`,
+      `Casing`, `Glow` and `Shadow`, and `EFFECT_RANGES` from `pyntpot.ink.effect_types`),
+      `maps/theme_effects.py` (the same import; the split adds only the entries the file
+      writes), the two group fields, `BasemapStyle.__post_init__`,
       `DIGEST_OMITS_AT_DEFAULT`, `LOADER_FIELDS` (taken out in `check_theme_scoped`
       before the group check), the dispatch, presets in `theme_scope.py`.
 - [ ] The prescribed `line_effects` and `effect_presets` schema shape; `style-fields.md`
@@ -159,8 +168,9 @@ gate B (S6 in); S7, S8, S9.
       multiply mode) and a route casing; mask pads only when a water
       effect is set; the default path untouched; the shadow takes the hillshade azimuth.
 - [ ] `effect_pass.py` (`lay_stack` scales each `*_px` by `dataclasses.replace` and
-      passes each effect whole), `painter/effects.py`, `pen_groups`, the `_wash_plate` branch,
-      `route_effects.py`, the `compose_steps.route` branch and its docstring.
+      passes each effect whole, `threshold` left at its default), `painter/effects.py`
+      (`lay_wash(job, ground, under, groups)`), `pen_groups`, the `_wash_plate` branch,
+      `route_effects.py` (`LINE_THRESHOLD` from `pyntpot.ink.effect_mask`), the `compose_steps.route` branch and its docstring.
 - [ ] `GOLDEN_HASH` and the route-ink pins unchanged; slice gate green.
 
 ## S6: The grid helper (#170; worktree)
@@ -177,9 +187,11 @@ gate B (S6 in); S7, S8, S9.
       `BRUSH_IDS` stay literals.
 - [ ] `support.examples.load_example` (puts `EXAMPLES_DIR` on `sys.path` for the call);
       `run_example` uses it; `test_reference_pages.py`'s
-      `test_sheet_script_lists_exactly_the_table_ids` loads `brush_sheet.py` through it;
+      `test_sheet_script_lists_exactly_the_table_ids` loads `brush_sheet.py` through it,
+      and the file drops its `import runpy`;
       the `test_examples.py` sibling allowance; `"examples"` added to
-      `[tool.ty.environment] root` in `pyproject.toml`.
+      `[tool.ty.environment] root` in `pyproject.toml`, so `ty` types the sibling's
+      names (an unresolved import only warns).
 - [ ] Grid `check`; golden docs subset; slice gate green.
 
 ## Merge gate B
