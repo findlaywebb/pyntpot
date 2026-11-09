@@ -366,3 +366,15 @@ plan edits the implementer can apply trivially.
    - Spec "Images, budgets" still says the images register in `docs_images.py`. Name
      `docs_images_009a.py`.
    - State that a Python-built key outside the 15 classes gets `None`.
+
+## Re-review resolution
+
+1. Finding 1: PR 1 plan change, pending. PR 1's plan will make `ThemeScope.aliases` a `Mapping[str, Bound[Pigment]]` and give `Palette` its `pigments`; 009a is written against those shapes, with a P0 check that PR 1's tip has them, alias rows in the transparency table resolving through the bound `Pigment`, and the palettes figure reading `Palette.pigments`.
+2. Fixed as asked (verified `tests/unit/maps/test_style.py:347-352`): A lists the test, which becomes `test_a_fed_width_moves_only_the_full_digest`, width-only; the colour case lives in `test_route_colour_feed.py`; the ownership note says A edits that one test and B re-pins the constants.
+3. Fixed as asked: P0 checks whether PR 1's `test_line_effect_digests.py` draws only the classes the sampled theme does not set, and greps PR 1's tip for every quoted 16-hex digest literal, adding each file to B's pins; D3 restricts the property if needed, and F runs it with bold's route set.
+4. Fixed as asked: the sweeps' held values are pinned literals (road width, glow strength, shadow strength, colour and azimuth, pen line and edge widths), never read from a preset; the order is D2, then D1, then D3, with D1 drafting the presets figure in scratch.
+5. Fixed as asked (verified `ink/brush.py:199`): the dryness grid reads `brush_from_id("MAJ2-c", 12, 1.0, style, override="major")`.
+6. Fixed as asked: `paint_cell` returns float32, the pen casing cell composites its edges only when `edges.any()`, and the plain pen cell is the tint plus the centre ink line.
+7. Fixed as asked (verified ADR 0069:323 and `test_theme_check.py:146`): the new ADR records the departure, and B updates the `RENAMED_KEYS` pin.
+8. Fixed as asked (verified from `DocsImage.fixture`): the repaints after B and F pass all 15 fixture-reading names except `how-to/route-ink.webp`.
+9. Applied: the spec names `docs_images_009a.py`; a Python-built key outside the 15 classes gets `None`, so `paper.km_transparency`, with a test.

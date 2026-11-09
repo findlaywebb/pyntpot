@@ -31,27 +31,32 @@ Four kinds of work, all on PR 1's model.
      | Entry | Transparency |
      | --- | --- |
      | `{pigment: <any ref>, transparency: t}` | `t` |
-     | a pigment name, or an alias to one | that pigment's |
+     | a pigment name, or an alias to one (its bound `Pigment`) | that pigment's |
      | a theme pigment with a transparency | its own |
      | a theme pigment with none | the class's built-in |
      | a derived `{base: x}` pigment with none | `x`'s, by the same rule |
      | a bare `#rrggbb` | the class's built-in |
-     | an alias to a hex, a `.gpl` palette alias included | the class's built-in |
+     | an alias to a hex, a `.gpl` palette alias included (a pigment-less `Pigment`, transparency `None`) | the class's built-in |
      | `{pigment: "#rrggbb"}` with no transparency | the class's built-in |
      | an `extends` child's bare hex over a parent's `{pigment, transparency}` | the class's built-in, not the parent's |
      | Python: `CoverPigment(colour, None)` | `paper.km_transparency`, applied by `PaintJob.transp` |
      | Python: a `str` or `Colour` value | the class's built-in |
+     | Python: a key outside the 15 cover classes | `None`, so `paper.km_transparency` |
 
      Every cover class key (the 15 of `theme_vocab`'s `cover.pigments` vocabulary) is a
      role pigment with a float transparency, so a theme can never reach `None`. Only a
-     `CoverPigment(colour, None)` built in Python does.
+     `CoverPigment(colour, None)` built in Python, or a Python-built key outside the 15
+     classes (`built_in_transparency` returns `None` for it), does.
    - **Where it is computed.** The value-level validator needs the dict key. PR 1's
      `TableCheck.leaf` passes `context={"scope": self.scope}`; for a leaf under
      `cover.pigments` it also passes `"cover_class": path[-1]`. The validator,
      `resolve_cover_pigment`, lives in the new `maps/theme_bindings.py` and reads both.
      It resolves a ref to a `Pigment` (not only a `Colour`): `#` gives an anonymous
-     pigment with no transparency, an alias gives its target, and a name gives
-     `scope.registry.get(name)`, the theme's extended registry.
+     pigment with no transparency, an alias gives its bound `Pigment` (PR 1's
+     `ThemeScope.aliases: Mapping[str, Bound[Pigment]]`, where a hex alias is a
+     pigment-less `Pigment` with transparency `None`), and a name gives
+     `scope.registry.get(name)`, the theme's extended registry. P0 confirms these shapes on
+     PR 1's tip.
    - **Python-built values.** `CoverStyle.__post_init__` rebuilds `pigments`: a
      `CoverPigment` keeps its transparency, with its colour through `Colour.parse`; a `str`
      or `Colour` becomes `CoverPigment(Colour.parse(v), <the class's built-in
@@ -70,8 +75,9 @@ Four kinds of work, all on PR 1's model.
      using public names plus PR 1's private `examples/labelled_grid.py` (#170).
    - One page per Diataxis mode for line effects.
    - Two reference galleries and four setting grids.
-   - The three built-in effect presets are tuned in D1, against the presets figure and
-     the sweeps, before any line effect image is painted.
+   - The three built-in effect presets are tuned in D1, against D2's sweeps and a
+     scratch draft of the presets figure, before any image that names a preset is
+     painted. The sweeps hold literal values and name no preset, so D2 paints first.
 4. **One bundled theme adopts an effect**: `bold` takes `line_effects: {route: cased}`.
    - #104 is the route casing (`docs/features/maps-route-casing.md`). Until ADR 0046,
      bold's route ink declared `casing_px = 1.2`, a casing nothing read. The `cased`
@@ -94,6 +100,9 @@ does not list it, so the new ADR records it.
 **New ADR**, numbered by P0 (expected 0071): "Golden regeneration: one route colour,
 pigments that carry their transparency, and bold's cased route". It holds:
 - the `CoverPigment` public name and its leaf rule;
+- the `RENAMED_KEYS` row for `paper.pigment_transparency`, a recorded departure from ADR
+  0069:323, under which a removed field fails as an unknown key: this field's value
+  moved, so the error names where;
 - the tuned preset values (D1);
 - the Lynmouth compare log;
 - the moved-image table below, with differing fractions;
@@ -250,36 +259,48 @@ All figures follow the same conventions:
   overlap shows the mix and the two glaze rows show that order matters. The pair painter
   is the script's own. `wash_stages._glaze_grid` is not lifted.
 - **Palettes.** One row per bundled palette (`Palette.names()`; PR 1 bundles `plain`,
-  rule 7). Each alias is a 0.6 wash swatch, lettered with the alias above and the pigment
-  it names below.
+  rule 7). Each alias is a 0.6 wash swatch, glazed at its pigment's transparency, lettered
+  with the alias above and the pigment it names below, both read from PR 1's
+  `Palette.pigments` (alias to `Pigment`). A hex alias, a pigment-less `Pigment`, is
+  lettered with its hex below and glazed at `paper.km_transparency`.
 - **Effect sweeps.** Each is a grid of one stroke over a wash that gives the effect
   something to separate. Every value is lettered with its unit.
   - **Units.** Each sweep is painted at scale 1, so one array pixel is one display pixel,
     and a cell lettered "2 px" shows what `width_px: 2` (or `spread_px`, `blur_px`,
     `offset_px`) does in a theme at scale 1. The caption says so.
   - **Cell painter.** Each script has `paint_cell(kind, **values) -> np.ndarray`, which
-    returns the cell's float RGB before lettering and encoding; `paint_cell(None)` is the
-    plain stroke, painted without calling any primitive. The tests below use it.
-  - Casing: a `MAJ2-b` road over a mixed farmland and wood wash. Width 0, 1, 2, 3 and
-    5 px across, the 0 column painted through `casing(width_px=0)`; casing colour paper
-    and `paynes_grey` down.
-  - Glow: an `RIV1-a` river over a dark wood wash. A lettered "none" cell, painted
-    through `glow(strength=0)`, then spread 0, 2, 4 and 6 px across; blur 0, 3 and 6 px
+    returns the cell's float32 RGB `(h, w, 3)` before lettering and encoding, the
+    primitives' own dtype (009 plan, "The four functions"); `paint_cell(None)` is the
+    plain stroke, painted without calling any primitive: the wash plus the stroke, and for
+    the pen casing sweep the grey tint plus the centre ink line. The tests below use it.
+  - **Held values are script literals**, never read from `BUILT_IN_PRESETS`, so D1's
+    tuning moves no sweep. Every sweep holds `threshold=LINE_THRESHOLD` and
+    `paper=None`.
+  - Casing: a `MAJ2-b` road at `width_display_px` 6 over a mixed farmland and wood wash,
+    `strength` 1.0. Width 0, 1, 2, 3 and 5 px across, the 0 column painted through
+    `casing(width_px=0)`; casing colour paper (`#ffffff` in wash space) and `paynes_grey`
     down.
-  - Shadow: a solid `#c22050` line over farmland. A lettered "none" cell, painted
-    through `shadow(strength=0)`, then offset 0, 1.5, 3 and 5 px across; blur 1 and 3 px
-    down. Light from 315 degrees, north-west, so the shadow falls south-east, as the
-    caption says.
-  - Pen casing: two ink lines over a grey tint. A lettered "none" cell, painted through
-    `pen_casing(width_px=0)`, then gap 1, 2, 3 and 4 px across; ink width thin and thick
-    down.
+  - Glow: an `RIV1-a` river at `width_display_px` 4 over a dark wood wash, `strength`
+    0.8. A lettered "none" cell, painted through `glow(strength=0)`, then spread 0, 2, 4
+    and 6 px across; blur 0, 3 and 6 px down.
+  - Shadow: a solid `#c22050` line 4 px wide over farmland, `strength` 0.4, colour
+    `paynes_grey`, `azimuth_deg` 315. A lettered "none" cell, painted through
+    `shadow(strength=0)`, then offset 0, 1.5, 3 and 5 px across; blur 1 and 3 px down.
+    Light from 315 degrees, north-west, so the shadow falls south-east, as the caption
+    says.
+  - Pen casing: one ink centre line 1.5 px wide over a grey tint (`paynes_grey` at
+    wash strength 0.3). A lettered "none" cell, painted through `pen_casing(width_px=0)`,
+    then gap (`width_px`) 1, 2, 3 and 4 px across; ink width (`edge_px`) 0.75 ("thin")
+    and 1.5 ("thick") down. The cell composites the returned edge layer only when
+    `edges.any()`, so the "none" cell never composites a zero-density layer.
   - The test asserts that each sweep's off cell (casing's 0 column; the "none" cell of
     the other three) equals `paint_cell(None)` byte for byte. Spread 0, offset 0 and the
     other values are real settings, not off: at spread 0 a glow still blurs, and at offset
     0 a shadow still spreads past the line.
 - **Presets.** The Ambleside loop cropped as in `route-ink-grid`, four cells: none,
   `cased`, `halo` and `lifted`. One paint, then four composes, because route effects are
-  compose-only (rule 9). D1 tunes the presets on this figure.
+  compose-only (rule 9). D1 tunes the presets on a scratch draft of this figure, before
+  D3 writes `how_to_line_effects.py`.
 - **Explanation figures.** `glaze-or-rgb` is a 2 by 2 grid ("casing" and "glow" across,
   "glaze" and "RGB" down) over a dark wood wash: the glazed cream barely shows (rule 11).
   `draw-order` has two cells, "each stroke cased" (a seam at the junction) and "casings
@@ -290,7 +311,7 @@ All figures follow the same conventions:
   | --- | --- | --- | --- |
   | `pool` | `wash(..., pool=)` 0, 0.1, 0.2 and 0.35 | `Sheet.seed` 11 and 29 | one `ultramarine` disc; `Sheet.gran_px` 60, as `wash-body` |
   | `granulation` | `Sheet.gran_px` 3, 6, 12 and 24 | `Sheet.fibre` 0 ("smooth") and 0.35 ("cold press", `PaperStyle.paper_fibre_mix`'s default) | the same disc, `pool` 0.2, seed 11 |
-  | `dryness` | treatment `dry` 0.1, 0.4, 0.7 and 0.9 | treatment `load` 0.5 and 1.2 (the sheet's rows run from 0.4 to 1.6) | `MAJ2-c` at 12 px, every other treatment value row 2's, set through `BrushStyle.brush_overrides["major"]` |
+  | `dryness` | treatment `dry` 0.1, 0.4, 0.7 and 0.9 | treatment `load` 0.5 and 1.2 (the sheet's rows run from 0.4 to 1.6) | `MAJ2-c` at 12 px, every other treatment value row 2's, set in `BrushStyle.brush_overrides["major"]` and read by `brush_from_id("MAJ2-c", 12, 1.0, style, override="major")`; without `override=` it reads `brush_overrides["maj"]` (`ink/brush.py:199`) and the setting does nothing |
   | `relief` | `cover.relief_strength` 0.5, 1, 1.5 and 2 | one row | the Ambleside crop, default style otherwise, four small paints |
 
   `darkness` is not swept: it is a separate treatment value, and the spec's sweep is
@@ -303,7 +324,12 @@ All figures follow the same conventions:
   a fed colour moves `lettering_digest`, a fed width does not.
 - `tests/property/test_route_colour.py` (new): the Hypothesis property.
 - `tests/unit/maps/test_route_colour_feed.py` (new): the structural walk over `Colour`
-  fields, the bold override and the digest pins.
+  fields, the bold override and the fed colour's digest pins.
+- `tests/unit/maps/test_style.py:347-352`: `test_a_fed_ink_moves_only_the_full_digest`
+  feeds `colour` and `width_px` and asserts `LETTERING_DIGEST` holds, which A breaks. It
+  becomes `test_a_fed_width_moves_only_the_full_digest`, feeding `width_px=4.8` alone;
+  the colour case lives in `test_route_colour_feed.py`. A edits only this test; B re-pins
+  the file's constants.
 - `tests/unit/maps/test_route_ink.py`: one new class, `@pytest.mark.golden` and in the
   `test_route_ink` xdist group like its siblings, using the module `painted` fixture.
 - `tests/benchmarks/test_maps.py`: `test_letter_after_route_colour`.
@@ -329,7 +355,12 @@ All figures follow the same conventions:
   `("paper", "pigment_transparency"): "cover.pigments.<class>.transparency"`, so a theme
   that sets it reads, at its line, `paper.pigment_transparency: renamed to
   cover.pigments.<class>.transparency`. The renamed-key mechanism exists already
-  (`TableCheck.unknown`), so no new table is added.
+  (`TableCheck.unknown`), so no new table is added. This departs from ADR 0069:323 (a
+  removed field "fails as an unknown key with its nearest neighbour suggested"): this
+  field's value moved, so the error names its new home, and the new ADR records the
+  departure. `tests/unit/maps/test_theme_check.py:146`
+  (`test_the_real_renamed_table_holds_the_route_ink_row`) pins `RENAMED_KEYS` exactly; B
+  adds the new row to its literal and renames the test for what it then proves.
 - `src/pyntpot/maps/__init__.py`: export `CoverPigment`; `docs/reference/maps.md`: its
   `::: pyntpot.maps.CoverPigment` directive (`tests/architecture/test_site.py`).
 - `src/pyntpot/maps/painter/job.py` (`transp`) and the `.colour` reads at
@@ -345,7 +376,9 @@ All figures follow the same conventions:
   `{pigment: <its hex or ref>, transparency: <that value>}`.
 - Both `theme.schema.json` copies, via `PYTHONPATH=tests uv run python -m support.theme_schema`.
 - Pins: `tests/unit/maps/test_style.py`, `test_theme_named.py`, `test_example_themes.py`
-  and `test_pipeline_fetch_paint.py`.
+  and `test_pipeline_fetch_paint.py`, plus every file P0's grep of PR 1's tip finds holding
+  a 16-hex digest literal (among them `test_digest_omits.py`, whose "packaged and example
+  themes keep their pins" check holds theme digests).
 - Field lists and existing tests that read `cover.pigments` or `pigment_transparency`
   (edits only, no new tests there): `test_style_groups.py` (399 lines), `test_theme_vocab.py`,
   `test_theme_check.py` (361), `test_theme_schema.py`, `tests/unit/maps/test_theme_merge.py`,
@@ -388,14 +421,16 @@ All figures follow the same conventions:
 - `docs/features/docs-brush-id-gallery.md` and `docs-pigment-gallery.md` (deleted).
 
 **D (line effects), in four sub-slices**
-- **D1, tune the presets** (before any line effect image is painted):
+- **D1, tune the presets** (after D2, before any image that names a preset is painted):
   `src/pyntpot/maps/line_effects.py` `BUILT_IN_PRESETS` only, and any PR 1 unit test that
-  pins a preset's numbers. The integrator paints the presets figure and the three theme
-  sweeps into a scratch directory with the provisional values, then tunes until a
+  pins a preset's numbers. The integrator paints a draft of the presets figure (a scratch
+  script, never committed; D3 writes the real one) and D2's casing, glow and shadow
+  sweeps at each preset's values into a scratch directory, starting from the provisional
+  values, then tunes until a
   `cased` casing reads on the 720 px card, `halo` lifts without a hard edge and `lifted`
   separates without a dark smear. The values are recorded in Decisions and the new ADR.
   No pin moves: no theme on PR 1's tip names a preset.
-- **D2, the sweeps:** `examples/line_effect_grids.py`;
+- **D2, the sweeps** (before D1): `examples/line_effect_grids.py`;
   `tests/examples/test_line_effect_figures.py`; the four sweep images.
 - **D3, the how-to and reference:** `examples/how_to_line_effects.py`,
   `examples/themes/ambleside-cased.yaml`, `docs/how-to/case-light-or-shadow-a-line.md`,
@@ -403,6 +438,14 @@ All figures follow the same conventions:
   `tests/docs/test_line_effect_values.py` (new: presets, classes, draw order),
   `tests/unit/maps/test_example_themes.py` (`THEME_NAMES` and `DIGESTS`), the card and
   presets images.
+  - `tests/property/test_line_effect_digests.py` (PR 1's): it sets `{}` or off effects on
+    sampled classes in a child of a sampled theme and expects the sampled theme's
+    digests. A child's `{}` replaces the parent's stack whole, so a class the theme sets
+    (`ambleside-cased`'s `road_major` and `route`; bold's `route` after F) would fail it.
+    Unless P0 found that PR 1's tip already does so, D3 restricts the strategy to the
+    classes the sampled theme does not set. Any theme digest literal P0's grep found
+    outside `test_example_themes.py` gains `ambleside-cased` here if it lists every
+    example theme.
 - **D4, the explanation and tutorial:** `examples/line_effect_reasons.py`,
   `examples/cased_stroke.py`, `docs/explanation/line-effects.md`,
   `docs/tutorials/painting-with-python/cased-strokes.md`, the three images, and
@@ -428,6 +471,9 @@ All figures follow the same conventions:
 - `docs/how-to/write-a-theme.md` ("Bold" section); `test_theme_named.py`
   `DIGESTS["bold"]` digest (its base digest holds), and one test that bold's
   `route_ink.effects` is the `cased` stack and its basemap has no line effects.
+- `tests/property/test_line_effect_digests.py`: no edit after D3's restriction; F runs it
+  with bold's `route` set, and it draws no `route` for bold. Any bold digest literal P0's
+  grep found in another file (`test_digest_omits.py` among them) is re-pinned here.
 
 **G (closing)**
 - Links in `docs/features/maps-bridges-over-water.md:45`,
@@ -473,20 +519,21 @@ All figures follow the same conventions:
 | #159 property | `tests/property/test_route_colour.py::test_a_fed_route_colour_reaches_every_route_coloured_field` |
 | #159 structural | `tests/unit/maps/test_route_colour_feed.py::test_every_colour_field_defaulting_to_the_route_colour_follows_a_fed_one` |
 | #159 theme shade overridden | `test_route_colour_feed.py::test_a_fed_colour_overrides_a_themes_marker_shade` (bold, sepia, winter) |
-| #159 digests | `test_route_colour_feed.py::test_a_fed_colour_moves_the_lettering_digest`, `::test_a_fed_width_alone_moves_only_the_full_digest` |
+| #159 digests | `test_route_colour_feed.py::test_a_fed_colour_moves_the_lettering_digest`; `tests/unit/maps/test_style.py::test_a_fed_width_moves_only_the_full_digest` (width-only since A) |
 | #159 pixels | `tests/unit/maps/test_route_ink.py::TestFedColourLettersTheMarkers::test_the_start_label_is_lettered_in_the_fed_colour`: on the nib plate (`Lettering.plate_path`, RGBA) from `letter` after `with_route_ink(colour=VIOLET)`, the pixels with alpha at least 0.9 inside the box of the `Lettering.labels` entry named "start" of kind `marker` (scaled from display pixels to the plate's) have a mean RGB nearer `VIOLET` than `#c22050` by Euclidean distance; and the plate's bytes differ from the default's |
 | #159 cost | `tests/benchmarks/test_maps.py::test_letter_after_route_colour` |
 | D7 every form | `tests/unit/maps/test_theme_bindings.py::test_each_entry_form_resolves_its_transparency`, parametrised with `ids=` over the Approach table's theme rows: `entry-transparency`, `pigment-name`, `alias-to-name`, `theme-pigment-own`, `theme-pigment-none`, `derived-none`, `bare-hex`, `alias-to-hex`, `gpl-alias`, `pigment-table-hex-only` |
 | D7 `extends` | `test_theme_bindings.py::test_an_extends_child_bare_hex_takes_the_built_in_not_its_parents` |
-| D7 Python-built | `tests/unit/maps/test_cover_pigments.py`: `test_a_python_built_none_paints_at_km_transparency` (`PaintJob.transp`), `test_a_python_str_takes_the_classes_built_in_transparency`, `test_model_validate_from_a_dict_builds_cover_pigments`, `test_every_cover_class_is_a_role_pigment_with_a_transparency`, `test_the_default_bindings_are_the_registry_roles` |
+| D7 Python-built | `tests/unit/maps/test_cover_pigments.py`: `test_a_python_built_none_paints_at_km_transparency` (`PaintJob.transp`), `test_a_python_str_takes_the_classes_built_in_transparency`, `test_a_python_key_outside_the_cover_classes_takes_km_transparency`, `test_model_validate_from_a_dict_builds_cover_pigments`, `test_every_cover_class_is_a_role_pigment_with_a_transparency`, `test_the_default_bindings_are_the_registry_roles` |
 | D7 merge | `tests/unit/maps/test_theme_merge.py::test_a_child_entry_replaces_its_parents_whole` |
 | D7 errors | `test_theme_bindings.py`: `paper.pigment_transparency` reads "renamed to cover.pigments.<class>.transparency" at its line; `cover.pigments.wood.pigment: ultramarin` (nearest name); `transparency` outside 0 to 1; an unknown key in the table |
 | D7 no pixel moves | `test_cover_pigments.py::test_every_theme_keeps_its_old_class_transparencies` (literal table per theme measured on PR 1's tip before migration); golden map-styles and docs images byte-identical in G |
 | Digests | re-pinned literals in `test_style.py`, `test_theme_named.py`, `test_example_themes.py`, `test_pipeline_fetch_paint.py` |
 | Schema | `tests/unit/maps/test_theme_schema.py` (committed copies current; every theme file within it) |
 | Presets tuned | D1's gate: PR 1's `tests/property/test_line_effect_presets.py`, `test_line_effect_digests.py`, `test_line_effects.py`, `tests/unit/maps/test_line_effects.py` and `test_digest_omits.py` pass with the tuned values |
+| Themes that set an effect | `tests/property/test_line_effect_digests.py`, drawing only the classes the sampled theme does not set, green after D3 and after F |
 | Galleries | `tests/examples/test_galleries.py` (each figure at `size=`); `tests/docs/test_reference_pages.py::test_the_brush_gallery_paints_every_id`, `::test_the_pigment_gallery_paints_every_registry_pigment`, `::test_the_palettes_figure_shows_every_bundled_palette`; `tests/docs/test_gallery_values.py::test_the_pigment_gallery_table_matches_the_registry`, `::test_the_brush_gallery_table_lists_every_id` |
-| Effect figures | `tests/examples/test_line_effect_figures.py`: each figure runs; `test_each_sweeps_off_cell_is_the_plain_stroke` (parametrised `ids=["casing", "glow", "shadow", "pen-casing"]`, `paint_cell` arrays compared by `tobytes()`); `test_no_glow_cell_is_darker_than_the_plain_stroke`; `cased_stroke` runs. `tests/examples/test_how_to_line_effects.py` with the Ambleside fixture |
+| Effect figures | `tests/examples/test_line_effect_figures.py`: each figure runs; `test_each_sweeps_off_cell_is_the_plain_stroke` (parametrised `ids=["casing", "glow", "shadow", "pen-casing"]`, float32 `paint_cell` arrays, dtype and shape asserted, compared by `tobytes()`); `test_no_glow_cell_is_darker_than_the_plain_stroke`; `cased_stroke` runs. `tests/examples/test_how_to_line_effects.py` with the Ambleside fixture |
 | Effect reference | `tests/docs/test_line_effect_values.py::test_the_line_effects_page_matches_the_presets_and_classes` |
 | bold | `test_theme_named.py::test_bold_cases_its_route_and_nothing_else` |
 | Setting grids | `tests/examples/test_setting_grids.py` (each figure; relief with the fixture) |
@@ -539,28 +586,36 @@ exact value, not only "changed".
     read `diffs/summary.json`:
     - after A, names `how-to/route-ink.webp how-to/route-ink-grid.webp`: `changed` is
       `route-ink` and its master only (the fix, committed in G);
-    - after B, names `map-styles/{pen-and-ink,sepia,bold,winter}.webp places/{ambleside,oxford,skye,y-fenni,yr-wyddfa}.webp hero.webp`:
-      nothing changed;
-    - after F, the same names: `changed` is `map-styles/bold` and its master only;
+    - after B, every registry name that reads a fixture except `how-to/route-ink.webp`
+      (whose fix A moved): `gallery/route-map.webp tutorials/route-map.webp
+      map-styles/{pen-and-ink,sepia,bold,winter}.webp hero.webp social-preview.jpg
+      places/{ambleside,oxford,skye,y-fenni,yr-wyddfa}.webp how-to/route-ink-grid.webp
+      how-to/command-line.webp` (15 names, from `DocsImage.fixture` on the base; add any
+      fixture-reading name PR 1 or 008a registered): nothing changed;
+    - after F, the same names: `changed` is `map-styles/bold` and its master only (plus
+      `preview/bold` and its master if 008a is on the base);
   - and after B, a byte compare of every theme's base plates on the Ambleside fixture
     against P0's record.
 
 ## File-ownership partition
 
-Dispatch order: **P0 -> A -> B -> C -> D1 -> D2 -> D3 -> D4 -> E -> F -> G**, serial, so
+Dispatch order: **P0 -> A -> B -> C -> D2 -> D1 -> D3 -> D4 -> E -> F -> G**, serial, so
 no worktrees are needed.
 - A precedes B: B owns `style-fields.md` and the `test_style.py` pins, and writes A's
-  `label_route_ink` row.
+  `label_route_ink` row. A edits one `test_style.py` test (the fed width); B then re-pins
+  the file's constants.
 - B precedes F: both edit `bold.yaml`.
-- D1 precedes every line effect image and F, so every image and pin that names a preset
-  is made with the tuned values. C's images name no preset, so C painting first is
-  unaffected.
+- D2 precedes D1: D1 tunes against D2's sweep script, whose held values are literals
+  that name no preset, so D2's committed sweeps do not move when D1 tunes. D1 drafts the
+  presets figure in scratch.
+- D1 precedes D3, D4 and F, so every image and pin that names a preset is made with the
+  tuned values. C's images name no preset, so C painting first is unaffected.
 - C creates `tests/support/docs_images_009a.py`; D2 to D4 and E append their own
   commented blocks to it, and their own lines to `mkdocs.yml` and the index pages (the
   registry's keep-both-blocks rule).
 - Within a track, a file named in "Files to touch" under that track is owned by it
-  alone; a file listed under two tracks is touched only by the later one, on the earlier
-  one's result.
+  alone; a file listed under two tracks is touched by each in dispatch order, each only
+  as its list says, the later on the earlier one's result.
 
 ## Decisions
 

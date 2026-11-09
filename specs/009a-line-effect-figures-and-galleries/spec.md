@@ -60,13 +60,15 @@ several important settings do.
       an alias. It may instead be a table `{pigment: <ref>, transparency: <0 to 1>}`. At
       load one rule resolves the transparency of every form: the entry's own, else the
       resolved pigment's own (a derived `{base: x}` pigment that sets none takes its
-      base's), else the transparency of the cover class's built-in pigment. So a bare
+      base's; an alias resolves to the `Pigment` it binds, a hex alias to a pigment-less
+      one), else the transparency of the cover class's built-in pigment. So a bare
       hex, an alias to a hex (a `.gpl` palette alias included), `{pigment: "#rrggbb"}`
       with no transparency and a theme pigment with none all take the cover class's
       built-in transparency, and a test covers each form.
 - [ ] `paper.km_transparency` applies only to a `CoverPigment(colour, None)` built in
-      Python; no theme can produce one. A `str` value built in Python takes the cover
-      class's built-in transparency, as a theme's bare hex does.
+      Python, or a Python-built key outside the 15 cover classes (whose built-in
+      transparency is `None`); no theme can produce either. A `str` value built in Python
+      takes the cover class's built-in transparency, as a theme's bare hex does.
 - [ ] A cover class's entry replaces the base theme's whole. It is never merged key by
       key, so an `extends` child that rebinds a class by bare hex takes the class's
       built-in transparency, not its parent's. A test pins this, and the theme how-to and
@@ -100,7 +102,8 @@ several important settings do.
       - `glazes` shows six painter's pairs as columns. The rows are: multiplied, A glazed
         over B, and B glazed over A.
       - `palettes` shows every bundled palette: a row of its aliases, each swatch
-        lettered with the alias and the pigment it names.
+        lettered with the alias and the pigment it names (a hex alias with its hex), read
+        from `Palette.pigments`.
       - A docs test fails if a registry pigment or a bundled palette is missing.
 - [ ] `docs/reference/brush-gallery.md` and `docs/reference/pigment-gallery.md` show the
       figures. They repeat every lettered value as real text in a table, which a docs
@@ -116,10 +119,12 @@ several important settings do.
       - shadow offset by blur;
       - pen casing gap by ink width.
       Each sweep is painted at scale 1, so a lettered "2 px" is `width_px: 2` in a theme
-      at scale 1. Each sweep has an off cell painted through its primitive: casing's
-      width 0 column, and a lettered "none" cell for glow and shadow (`strength=0`) and
-      pen casing (`width_px=0`). The off cell equals the plain stroke, painted without the
-      primitive, byte for byte, before lettering and encoding.
+      at scale 1. Every value a sweep holds is a literal in the script, never read from a
+      preset. Each sweep has an off cell painted through its primitive: casing's width 0
+      column, and a lettered "none" cell for glow and shadow (`strength=0`) and pen
+      casing (`width_px=0`). The off cell equals the plain stroke (for pen casing, the
+      tint and the centre ink line), painted without the primitive, as float32 arrays
+      byte for byte, before lettering and encoding.
 - [ ] The three built-in presets are tuned against the presets figure and the sweeps
       before any image naming one is painted. PR 1's preset and effect property tests
       pass with the tuned values, which the new ADR records.
@@ -160,13 +165,14 @@ several important settings do.
 - [ ] Each sweep is shown under the paragraph that describes its setting, at the page
       and section `plan.md` names, with the fields and values it lists: `pool` by sheet
       seed, `Sheet.gran_px` by `Sheet.fibre` (smooth and cold press), treatment `dry` by
-      treatment `load`. Glaze order is the pigment gallery's `glazes`. Wash body and nib
+      treatment `load` (set under `brush_overrides["major"]` and read with
+      `override="major"`). Glaze order is the pigment gallery's `glazes`. Wash body and nib
       angle and width are the existing tutorial and nib grids.
 
 ### Images, budgets, notes
 
-- [ ] Every new image is registered in `tests/support/docs_images.py` under three new
-      slices: `009a-galleries` (500,000 B), `009a-line-effects` (600,000 B) and
+- [ ] Every new image is registered in `tests/support/docs_images_009a.py`, which
+      `tests/support/docs_images.py` folds into its registry, under three new slices: `009a-galleries` (500,000 B), `009a-line-effects` (600,000 B) and
       `009a-setting-grids` (250,000 B). The directory stays within 7,000,000 B.
 - [ ] The goldens are regenerated once, as the last task. The moved pins and images are
       exactly those in `plan.md`'s table, recorded in the new ADR and in the PR body
