@@ -315,3 +315,165 @@ place, its rule numbers unchanged.
     2, spec).
 20. The shadow offset rounds each axis with Python's `round`, half to even, then slices
     with zero fill (plan S4, ADR rule 11).
+
+## Re-review
+
+Reviewer: fresh-context plan reviewer, on `f1b969e`. Each resolution was checked against the
+code, not against its own claims. Experiments are in the session scratchpad (`rr/`).
+
+### Verdict: BLOCK
+
+Four BLOCKING findings remain, all new and all introduced or exposed by the revision: an
+S1 gate that cannot go green, an S6 import that `ty` fails, existing guard tests that S3b
+and S5a break but do not own, and a `ThemeScope` shape too small for S3b's own rules. Each
+fix is a few lines of plan. Once they are applied, the plan can pass without another round
+if the SHOULD-FIX items are folded in at the same time.
+
+### Resolutions verified
+
+- **1 (call sites).** The lines are right: `tutorial_grids.py:83`, `how_to_route_ink.py:112`
+  and `pigment_swatches.py:70` are the constants. `ty` 0.0.97 does not flag
+  `dataclasses.replace(..., colour="#..")` (checked), so `nib_stages.py:140` is a harmless
+  wrap. "Any further site `ty` names is S3a's" closes the list.
+- **2 (coercion).** Checked with pydantic 2.14.2 under `-W error`. The plain-dict hook
+  builds `Style.model_validate` with a `Colour`, a bad value is `value_error` at
+  `("route_ink", "colour")`, the strict `BeforeValidator` reads `info.context`, and
+  `replace(...)` normalises through `__post_init__`. One gap remains: SHOULD-FIX 8.
+  `Style.model_json_schema()` now raises, but nothing calls it.
+- **3.** Holds from S3a on, but the dumper fix comes one slice too late (BLOCKING 1).
+- **4.** `yaml_value` and `yaml_type` give `table` for both `{}` and `EffectStack()`, and an
+  empty `| Key | Default |` table parses to no rows. The S5a rows pass the comparator.
+- **5, 6, 13, 15, 16, 18, 19, 20.** Hold. `merge` replaces an `EffectStack`, because it is
+  no `Mapping`, so a child's `major: {}` turns off its parent's stack
+  (`theme_merge.py:33`).
+- **7.** The schema shape is now prescribed, but the guards that pin it are unowned
+  (BLOCKING 3).
+- **8.** Holds, apart from an incomplete move list (SHOULD-FIX 7).
+- **9 and 10.** The rules are prescribed, but the data shape to carry them is missing
+  (BLOCKING 4).
+- **11.** Holds. One stale path is missed (CONSIDER 1).
+- **12.** "effect" is no retired word in `GLOSSARY.md`, so `test_retired_words.py` does not
+  gate it.
+- **14.** Checked over 200 random stacks: splitting `km_plate` is bit-exact (0 pixels
+  differ), and multiply drifts by at most 6e-8.
+- **17.** Holds. Only `ink/sheet.py:42` and `compose_steps.py:39` parse hex in `src`.
+
+### Findings
+
+#### BLOCKING
+
+1. **[BLOCKING] S1's own gate fails on the YAML dumper (plan :146-148, :242-246).**
+   - **Evidence:** in S1, `CoverStyle().pigments` is built from `Pigment.colour`, so its
+     values are `Colour`.
+   - `test_an_override_and_its_expanded_copy_give_one_digest`
+     (`tests/property/test_theme_merge.py:194-203`, in the slice gate) dumps
+     `merge(_BASE, override)` through `support/theme_dump._plain`.
+   - ruamel's safe dumper raises `RepresenterError` on a `str` subclass (checked). The
+     dumper fix is in S3a, two slices later.
+   - **Fix:** move the `theme_dump._plain` change (a `str` subclass is written as
+     `str(value)`) and the ownership of `tests/support/theme_dump.py` into S1, and drop
+     them from S3a.
+2. **[BLOCKING] S6's `from labelled_grid import ...` fails `ty` (plan :621-623, :725,
+   :690-691).**
+   - **Evidence:** `[tool.ty.environment] root` is `["src", "tests"]`, so the import is
+     `import-not-found`.
+   - `ty` 0.0.97 exits 1 on that warning (checked in a minimal project).
+   - In a copy of the repo with the import added to `wash_stages.py`, adding `"examples"`
+     to `root` gives "All checks passed!" (checked).
+   - **Fix:** S6 owns `pyproject.toml` `[tool.ty.environment] root`, adding `"examples"`.
+     Narrow "Files to leave alone" to `[tool.importlinter]`, which S9 already checks.
+3. **[BLOCKING] S3b and S5a break existing guards they do not own (plan :295-296, :364-373,
+   :455-463).**
+   - **Evidence:**
+     - `tests/unit/maps/test_theme_schema.py:170-178` pins the top-level keys to
+       `["extends", *Style.model_fields]`. S3b adds three keys and S5a adds two.
+     - `:144-155` requires every `propertyNames` node to equal
+       `{"enum": sorted(VOCABULARIES[path])}`, and `entries == set(VOCABULARIES)`. That is a
+       `KeyError` on the `colours`, `pigments`, `effect_presets` and `line_effects` nodes.
+     - `:131-141` requires a group's schema properties to equal its fields. This fails once
+       S5a skips the `LOADER_FIELDS`.
+     - `tests/unit/maps/test_theme_vocab.py:82-106` requires a `VOCABULARIES` entry for every
+       dict field, `basemap.line_effects` included. Adding one then contradicts the schema
+       test above.
+   - S3a owns both test files; S3b and S5a own neither.
+   - **Fix:**
+     - Add `test_theme_schema.py` to S3b and S5a, and `test_theme_vocab.py` to S5a.
+     - Prescribe the top-level order, for example `extends, palette, pigments, colours,
+       effect_presets, line_effects, <groups>`, and the pinned list.
+     - `basemap.line_effects` gets no `VOCABULARIES` entry: `theme_effects` checks its keys
+       against `LINE_CLASSES`.
+     - The field-to-schema test and both dict-field vocabulary tests leave out
+       `LOADER_FIELDS`.
+     - The `propertyNames` test walks only the group subtrees, and a new test pins the four
+       top-level tables' key rules.
+4. **[BLOCKING] `ThemeScope(registry, aliases, presets)` cannot carry S3b's rules, and S3b
+   and S5a do not own `theme_scope.py` (plan :260-264, :293-299, :317-332, :447-463).**
+   - **Evidence:** the rules need four things the shape lacks:
+     - the file each entry came from ("naming the alias and both files", :325-326);
+     - which aliases came from the palette (":322-324", a new `palette:` removes them);
+     - whether an entry is the file's own or inherited (the `override` rule);
+     - a way to replace an inherited theme pigment, which `PigmentRegistry.extended` cannot
+       do because it "refuses duplicate names" (:155).
+   - **Fix:** prescribe the shape in S3a:
+     - `ThemeScope(pigments: Mapping[str, Bound[Pigment]], palette: Bound[Palette] | None,
+       aliases: Mapping[str, Bound[Colour]], presets: Mapping[str, Bound[object]])`, where
+       `Bound(value, path, line)`;
+     - `registry` is a cached property, `PIGMENT_REGISTRY.extended(...)`;
+     - `resolve_colour` looks up a theme alias, then a palette alias, then a registry name.
+   - Add `maps/theme_scope.py` to S3b's and S5a's Owns. S5a types presets as `EffectStack`.
+
+#### SHOULD-FIX
+
+The implementer can apply each of these as written.
+
+5. **The `LOADER_FIELDS` refusal: mechanism and message (plan :456-458, :536).** Group keys
+   are walked in `TableCheck.mapping`, in `theme_checker.py`, which S5a does not own.
+   - **Fix:** in `check_theme_scoped`, before `check.table(...)`, take each
+     `LOADER_FIELDS` key out of the group's mapping.
+   - Record a pinned message at its path: "set only by the top-level line_effects.<class>".
+6. **The `.gpl` round trip is false under `ALIAS_PATTERN = ^[a-z][a-z0-9_]*$` (plan :266,
+   :353-358, :389-390).**
+   - **Evidence:**
+     - `a__b` normalises to `a_b`, and `a_` to `a`, so `to_gpl()` of a valid palette does
+       not read back as itself.
+     - Generated names may equal a built-in name.
+   - **Fix:**
+     - In S3a, set `ALIAS_PATTERN = "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"`, so every alias is
+       its own normal form.
+     - Draw names with `from_regex(ALIAS_PATTERN, fullmatch=True)`, filtered off the
+       registry's names. Use `fullmatch=True` in S1 and S3b too.
+7. **The S3a pure move is incomplete (plan :247-249).** `_Check.leaf` and `_Check.mapping`
+   also use `_sheet_and_colour`, `_MESSAGES`, `_TABLE`, `_COLOUR` and `_Path`. If
+   `_sheet_and_colour` stays in `theme_check`, `theme_checker` must import `theme_check`,
+   which is a cycle.
+   - **Fix:** add them to the move list. The brush branch moves with `_sheet_and_colour`.
+8. **`Colour.parse` on a non-`str` (plan :152-153, :220-228).** If `parse` calls `.lower()`
+   on its input, both of these raise `AttributeError` instead of a `value_error`:
+   - `Style.model_validate({"route_ink": {"colour": 5}})`;
+   - `RouteInkStyle(colour=None)`.
+   - **Fix:** state that `Colour.parse` raises `ValueError` for any non-`str`.
+9. **Theme pigments: "exactly one of `base` and `colour`" (plan :311-312).** This
+   contradicts ADR rule 6 and D4: "`base: <pigment>` plus the fields it overrides".
+   - **Fix:** require `base` or `colour`, and allow both, where `colour` overrides the
+     base's colour.
+10. **S8's scope is wrong (plan :677-684).** S3a adds new functions in both layers:
+    - `NibStyle.__post_init__` in letters;
+    - `PaperStyle.__post_init__`, `WashStyle.__post_init__` and `normalise_colours` in
+      ink.
+    - mutmut selects only `tests/unit/ink`, `tests/unit/letters` and `tests/property`, but
+      the coercion tests are in `tests/unit/maps`.
+    - **Fix:** add these functions to S8's scope, with ink and letters unit tests for them.
+11. **A typo key in `basemap.line_effects` is silently ignored (plan :480).** A Python
+    caller's `BasemapStyle(line_effects={"route": ...})`, or a misspelt key, is accepted
+    and the painter never reads it.
+    - **Fix:** `__post_init__` raises `ValueError` for a key outside the seven basemap
+      classes.
+
+#### CONSIDER
+
+12. **A stale path (plan :137-145).** `docs/features/ink-stroke-density-profile.md:8` cites
+    `ink/pigment.py`. Add it to S1's repoint list.
+13. **The S4 threshold (plan :403-421).** S4's primitives divide `mask / threshold`, and
+    warnings are errors. Refuse `threshold <= 0`, or draw it from `(0, 1]`.
+14. **An uncommitted ADR edit.** The working tree holds an uncommitted edit to ADR 0070
+    rule 17 (PR 2). Commit it before S0, so S0's base is clean.
