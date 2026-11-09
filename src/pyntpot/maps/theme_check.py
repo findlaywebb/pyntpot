@@ -34,7 +34,8 @@ from typing import Any, Literal
 
 import pydantic
 
-from pyntpot.ink.brush import brush_id_known
+from pyntpot.ink.brush import brush_id_known, brush_ids
+from pyntpot.ink.naming import nearest
 from pyntpot.maps.theme_errors import ThemeProblem
 from pyntpot.maps.theme_read import ThemeFile
 from pyntpot.maps.theme_vocab import BRUSH_ID_FIELDS, COLOUR_FIELDS, COLOUR_PATTERN, VOCABULARIES
@@ -249,7 +250,8 @@ def _sheet_and_colour(value: object, path: _Path) -> str | None:
     if not isinstance(value, str):
         return None
     if any(_matches(path, pattern) for pattern in BRUSH_ID_FIELDS) and not brush_id_known(value):
-        return f"{value!r} is not a brush on the sheet"
+        hint = "".join(f"; did you mean {name}?" for name in nearest(value, brush_ids()))
+        return f"{value!r} is not a brush on the sheet{hint}"
     if any(_matches(path, pattern) for pattern in COLOUR_FIELDS) and not _COLOUR.fullmatch(value):
         return f"{value!r} is not a # and six hexadecimal digits"
     return None

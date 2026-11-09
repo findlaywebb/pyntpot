@@ -43,12 +43,12 @@ gate B (S6 in); S7, S8, S9.
 
 ## S2: The catalogues as typed tables (#71)
 
-- [ ] Red: read-only tables, `brush_ids()`, nearest-id messages (ink in `test_brush.py`;
+- [x] Red: read-only tables, `brush_ids()`, nearest-id messages (ink in `test_brush.py`;
       theme in `tests/unit/maps/test_theme_brush_ids.py`, new). Two rows of
       `test_theme_check.py` rewritten in place: :177-179 to "'LAN9-z' is not a brush on
       the sheet; did you mean LAN8-a?" and :182-183 to "'MAJ9-a' is not a brush on the
       sheet; did you mean MAJ8-a?" (`nearest` returns one name, `n=1`).
-- [ ] `MappingProxyType` tables, `brush_ids`, the suggestion; slice gate green.
+- [x] `MappingProxyType` tables, `brush_ids`, the suggestion; slice gate green.
 
 ## S3a: `Colour` across every field
 
