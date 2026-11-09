@@ -64,6 +64,26 @@
 
 *[line classes]: The kind of a line on the map, such as a major road, a lane or a river, by which the style picks its brush and width.
 
+*[pigment registry]: The one catalogue of pigments: each with its canonical name, colour, transparency (or none, meaning the paper's km_transparency) and Colour Index code, looked up by name with the nearest names suggested on a miss. Read-only: adding pigments gives a new registry.
+
+*[line effect]: A casing, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders.
+
+*[line effects]: A casing, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders.
+
+*[effect stack]: A line class's ordered line effects, at most one of each kind, applied in order; a theme gives one, or an effect preset's name, per line class.
+
+*[effect stacks]: A line class's ordered line effects, at most one of each kind, applied in order; a theme gives one, or an effect preset's name, per line class.
+
+*[effect preset]: A named effect stack, such as cased, halo or lifted, that a line class takes by name.
+
+*[effect presets]: A named effect stack, such as cased, halo or lifted, that a line class takes by name.
+
+*[casing]: A line effect: a band of a colour round a line and under it, so the line reads against what it crosses. A pen casing leaves the paper between two ink lines, with the wash beneath it lifted back to the paper.
+
+*[casings]: A line effect: a band of a colour round a line and under it, so the line reads against what it crosses. A pen casing leaves the paper between two ink lines, with the wash beneath it lifted back to the paper.
+
+*[pen casing]: A line effect: a band of a colour round a line and under it, so the line reads against what it crosses. A pen casing leaves the paper between two ink lines, with the wash beneath it lifted back to the paper.
+
 *[glyph]: One character's shape in the face, read as an outline and traced into strokes.
 
 *[glyphs]: One character's shape in the face, read as an outline and traced into strokes.
@@ -129,6 +149,14 @@
 *[style groups]: One layer's share of the style, a frozen dataclass of the fields its readers read: PaperStyle, NibStyle, BasemapStyle and the rest. Each is a frozen, keyword-only dataclass named <Group>Style.
 
 *[base theme]: The theme an override theme's extends names; its values hold wherever the override is silent. default when extends is absent.
+
+*[colour alias]: A theme's or a palette's own name for a colour, standing for a pigment name or a hex; it names no other alias and no built-in pigment, and resolves to its hex when the theme loads.
+
+*[colour aliases]: A theme's or a palette's own name for a colour, standing for a pigment name or a hex; it names no other alias and no built-in pigment, and resolves to its hex when the theme loads.
+
+*[palette]: A named, shareable set of colour aliases that a theme chooses with palette, by name like a theme; it imports from and exports to a GIMP .gpl file.
+
+*[palettes]: A named, shareable set of colour aliases that a theme chooses with palette, by name like a theme; it imports from and exports to a GIMP .gpl file.
 
 *[route ink]: How the route is drawn on the map: its drawn_as (pen or solid), its width in display pixels, its colour, its blend and its opacity; the width also sets how near two passes of a retraced route have to come to be drawn as one stroke. The style field Style.route_ink, a theme's route_ink table; a caller feeds its colour and width through Style.with_route_ink.
 

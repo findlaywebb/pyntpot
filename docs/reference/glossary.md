@@ -29,6 +29,13 @@ Every term these docs use, what it means and where it lives in the code. The doc
 | <span id="term-dab"></span>dab | One small mark of a brush pressed and lifted rather than pulled: the wood's texture is laid in dabs. |  |
 | <span id="term-accumulator"></span>accumulator | The float array a stroke's bristles deposit ink into, before `ink_density` turns it into a density. | `pyntpot.ink.ink_density` |
 | <span id="term-line-class"></span>line class | The kind of a line on the map, such as a major road, a lane or a river, by which the style picks its brush and width. | `pyntpot.ink.BrushStyle` |
+| <span id="term-pigment-registry"></span>pigment registry | The one catalogue of pigments: each with its canonical name, colour, transparency (or none, meaning the paper's `km_transparency`) and Colour Index code, looked up by name with the nearest names suggested on a miss. Read-only: adding pigments gives a new registry. |  |
+| <span id="term-line-effect"></span>line effect | A casing, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders. |  |
+| <span id="term-effect-stack"></span>effect stack | A line class's ordered line effects, at most one of each kind, applied in order; a theme gives one, or an effect preset's name, per line class. |  |
+| <span id="term-effect-preset"></span>effect preset | A named effect stack, such as `cased`, `halo` or `lifted`, that a line class takes by name. |  |
+| <span id="term-casing"></span>casing | A line effect: a band of a colour round a line and under it, so the line reads against what it crosses. A pen casing leaves the paper between two ink lines, with the wash beneath it lifted back to the paper. |  |
+| <span id="term-glow"></span>glow | A line effect that lifts the colours round a line toward the paper, with a hard spread and a soft blur; it never darkens. |  |
+| <span id="term-shadow"></span>shadow | A line effect: a soft, offset darkening beside a line, falling away from the hillshade's light and never over the line itself. |  |
 
 ## Lettering
 
@@ -79,6 +86,8 @@ Every term these docs use, what it means and where it lives in the code. The doc
 | <span id="term-style-group"></span>style group | One layer's share of the style, a frozen dataclass of the fields its readers read: `PaperStyle`, `NibStyle`, `BasemapStyle` and the rest. Each is a frozen, keyword-only dataclass named `<Group>Style`. | `pyntpot.maps.Style` |
 | <span id="term-theme"></span>theme | A YAML file that names a base theme with `extends` and gives only the style fields it changes; a theme name such as `sepia` chooses a packaged one. The default theme is the model's defaults with nothing overridden. | `pyntpot.maps.Style.named`, `pyntpot.maps.Style.from_yaml`, `pyntpot.maps.Style.from_theme` |
 | <span id="term-base-theme"></span>base theme | The theme an override theme's `extends` names; its values hold wherever the override is silent. `default` when `extends` is absent. | `pyntpot.maps.Style.from_theme` |
+| <span id="term-colour-alias"></span>colour alias | A theme's or a palette's own name for a colour, standing for a pigment name or a hex; it names no other alias and no built-in pigment, and resolves to its hex when the theme loads. |  |
+| <span id="term-palette"></span>palette | A named, shareable set of colour aliases that a theme chooses with `palette`, by name like a theme; it imports from and exports to a GIMP `.gpl` file. |  |
 | <span id="term-digest"></span>digest | A hash of some of the style's groups: `base_digest` keys the base plates, `lettering_digest` the lettering and `digest` the whole style, so a change repaints only what its digest covers. | `pyntpot.maps.Style` |
 | <span id="term-route-ink"></span>route ink | How the route is drawn on the map: its `drawn_as` (`pen` or `solid`), its width in display pixels, its colour, its blend and its opacity; the width also sets how near two passes of a retraced route have to come to be drawn as one stroke. The style field `Style.route_ink`, a theme's `route_ink` table; a caller feeds its colour and width through `Style.with_route_ink`. | `pyntpot.maps.Style`, `pyntpot.maps.RouteInkStyle` |
 | <span id="term-credit"></span>credit | One data source's attribution: the full text, a link, and the short line drawn on the map. | `pyntpot.maps.Credit` |

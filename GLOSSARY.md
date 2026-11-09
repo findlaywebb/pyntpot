@@ -35,6 +35,13 @@ every page are generated from this file: after an edit, run
 | dab | One small mark of a brush pressed and lifted rather than pulled: the wood's texture is laid in dabs. | | dab, dabs |
 | accumulator | The float array a stroke's bristles deposit ink into, before `ink_density` turns it into a density. | `pyntpot.ink.ink_density` | accumulator, accumulators |
 | line class | The kind of a line on the map, such as a major road, a lane or a river, by which the style picks its brush and width. | `pyntpot.ink.BrushStyle` | line class, line classes |
+| pigment registry | The one catalogue of pigments: each with its canonical name, colour, transparency (or none, meaning the paper's `km_transparency`) and Colour Index code, looked up by name with the nearest names suggested on a miss. Read-only: adding pigments gives a new registry. | | pigment registry |
+| line effect | A casing, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders. | | line effect, line effects |
+| effect stack | A line class's ordered line effects, at most one of each kind, applied in order; a theme gives one, or an effect preset's name, per line class. | | effect stack, effect stacks |
+| effect preset | A named effect stack, such as `cased`, `halo` or `lifted`, that a line class takes by name. | | effect preset, effect presets |
+| casing | A line effect: a band of a colour round a line and under it, so the line reads against what it crosses. A pen casing leaves the paper between two ink lines, with the wash beneath it lifted back to the paper. | | casing, casings, pen casing |
+| glow | A line effect that lifts the colours round a line toward the paper, with a hard spread and a soft blur; it never darkens. | | no |
+| shadow | A line effect: a soft, offset darkening beside a line, falling away from the hillshade's light and never over the line itself. | | no |
 
 ### Lettering
 
@@ -85,6 +92,8 @@ every page are generated from this file: after an edit, run
 | style group | One layer's share of the style, a frozen dataclass of the fields its readers read: `PaperStyle`, `NibStyle`, `BasemapStyle` and the rest. Each is a frozen, keyword-only dataclass named `<Group>Style`. | `pyntpot.maps.Style` | style group, style groups |
 | theme | A YAML file that names a base theme with `extends` and gives only the style fields it changes; a theme name such as `sepia` chooses a packaged one. The default theme is the model's defaults with nothing overridden. | `pyntpot.maps.Style.named`, `pyntpot.maps.Style.from_yaml`, `pyntpot.maps.Style.from_theme` | no |
 | base theme | The theme an override theme's `extends` names; its values hold wherever the override is silent. `default` when `extends` is absent. | `pyntpot.maps.Style.from_theme` | base theme |
+| colour alias | A theme's or a palette's own name for a colour, standing for a pigment name or a hex; it names no other alias and no built-in pigment, and resolves to its hex when the theme loads. | | colour alias, colour aliases |
+| palette | A named, shareable set of colour aliases that a theme chooses with `palette`, by name like a theme; it imports from and exports to a GIMP `.gpl` file. | | palette, palettes |
 | digest | A hash of some of the style's groups: `base_digest` keys the base plates, `lettering_digest` the lettering and `digest` the whole style, so a change repaints only what its digest covers. | `pyntpot.maps.Style` | no |
 | route ink | How the route is drawn on the map: its `drawn_as` (`pen` or `solid`), its width in display pixels, its colour, its blend and its opacity; the width also sets how near two passes of a retraced route have to come to be drawn as one stroke. The style field `Style.route_ink`, a theme's `route_ink` table; a caller feeds its colour and width through `Style.with_route_ink`. | `pyntpot.maps.Style`, `pyntpot.maps.RouteInkStyle` | route ink |
 | credit | One data source's attribution: the full text, a link, and the short line drawn on the map. | `pyntpot.maps.Credit` | no |
