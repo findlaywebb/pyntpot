@@ -665,3 +665,51 @@ No new test file is broken without an owner. Checked:
 4. Fixed as asked: `paint_cell` lays the wash in wash space, then the effect, then the stroke, then multiplies by the `paper_plate` crop, and returns that; the spec states the order.
 5. Fixed as asked: P0 confirms the four value types, `LabelStyle`, `letter_over` and `tutorial_grids`' label values, and checks every imported `pyntpot` name is in one of the four public `__all__`s on PR 1's tip.
 6. Applied: the presets figure writes its theme files in a `tempfile.TemporaryDirectory()`; each swept axis is one numeric tuple literal. The `EFFECT_RANGES` note to PR 1 is not carried: PR 1 imports it from the submodule inside `maps`, and no figure needs it.
+
+## Round 5
+
+Reviewer: fresh-context plan reviewer, against `a7b0e3c` and PR 1's final `plan.md`.
+
+### Verdict: PASS
+
+No BLOCKING findings. The Round 4 resolutions are applied, and every PR 1 name and call
+in this plan matches PR 1's final plan.
+
+### Round 4 resolutions verified
+
+1. PR 1 plan:599-627 gives `threshold=LINE_THRESHOLD` on all four primitives, with
+   `LINE_THRESHOLD` unexported. Plan :319-338 and tasks :131 and :177 pass no
+   `threshold`. P0 (tasks :21-25) checks that no script imports `LINE_THRESHOLD` or
+   `EFFECT_RANGES`.
+2. The calls at plan :327-333 match PR 1 :605-631 exactly: the value types are passed
+   whole, `shadow` takes `azimuth_deg=315` and no `paper`, and `pen_casing` returns
+   `(rgb, edges)`. The off cells are identities: casing at width 0, glow and shadow at
+   strength 0, and pen casing at width 0, which returns `(rgb, zeros)`. The sweep cells
+   use colours that are `Colour` values, and `normalise_colours` accepts a `Colour`
+   (PR 1 :261).
+3. PR 1 :933-951 gives `LabelStyle` and `label_grid`. The `LABELS` literal matches
+   `tutorial_grids.py:77-84` (`GRAN_PX 6.0 * NIB_SCALE 2 = 12.0`, `col_dy=12`).
+4. `paint_cell` lays wash, then effect, then stroke, then the paper multiply. This order
+   agrees with PR 1's wash-space `paper=None` (:600-602).
+5. P0 checks the public `__all__`s (tasks :21-25).
+6. `how_to_route_ink.py:173` uses `TemporaryDirectory`. `test_explanation_figures.py:63`
+   and `test_captions.py:185-210` are as cited.
+
+### EFFECT_RANGES
+
+Every sweep value is inside the ranges:
+- each `*_px` value (widths, spreads, blurs, offsets, gaps and edges) is between 0 and 6;
+- each strength is 1.0, 0.8 or 0.4.
+
+### SHOULD-FIX
+
+1. **`test_no_glow_cell_is_darker_than_the_plain_stroke`.** Run this check on the output
+   of `glow` before the stroke is composited, or allow a 1e-6 tolerance. An ulp of
+   float32 noise in the composite after the glow could break a strict `>=`.
+2. **P0's list.** Add `Palette.named(name)`. `Palette.names()` gives only the stems, so
+   the palettes figure needs `Palette.named` to reach `Palette.pigments`.
+3. **Plan :334-338.** `test_docs_signatures` checks only spans whose arguments are all
+   bare identifiers (`_SPAN` and `_IDENTIFIER`), so the `*, threshold=LINE_THRESHOLD`
+   form the plan prescribes is never checked. That is harmless. If a page writes a bare
+   form, it must be `(rgb, mask, effect, threshold, paper)`, and for `shadow`,
+   `(rgb, mask, effect, azimuth_deg, threshold)`.
