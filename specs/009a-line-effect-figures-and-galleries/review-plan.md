@@ -505,3 +505,154 @@ so the docs and the schema would show a form the loader refuses; and the resolve
 7. Applied: `Option` moves with `DocsImage` (`docs_images.py:59`); B corrects `style-fields.md:380`; `ambleside-cased.yaml` extends `ambleside.yaml`.
 
 Sweep (tests/ grepped per track for touched symbols, fields and 16-hex hashes): one new gap, `test_one_source_of_defaults.py:173-175` counts ten theme files, assigned to D3 (eleven). Checked, no edit needed: `painter/test_job.py:131-134` (a key outside the classes still falls back), `test_route_ink.py` and `test_style.py:340-346` after A, `test_reference_pages.py`'s field coverage, `test_gallery.py` (imports only `IMAGES`), `CLASSIC_PLATE_SHA` and the cache keys (not style data).
+
+## Round 4
+
+Reviewer: fresh-context plan reviewer, against `70ccd61` and PR 1's revised `plan.md`
+(effect value types in `ink/effect_types.py`, primitives taking their value type,
+`label_grid(img, boxes, columns, rows, style, *, extra=())` with a `LabelStyle`, eight
+`ink` effect exports at merge gate A, `maps` adding only `EffectStack`).
+
+### Verdict: BLOCK
+
+One finding would fail a gate as written. The figure scripts thread `LINE_THRESHOLD`,
+which is not public. The other findings are signature drift from PR 1's latest revision,
+which the implementer can absorb.
+
+### Round 3 resolutions verified
+
+- **1.** `test_style_groups.py:252,260` pin `0af5f9f84facb9e9` and `8ff38fcbad0d7a6f`.
+  The hash is at :350, `json.dumps(asdict(group()), sort_keys=True, default=str)`. Plan
+  rows 150-151 hold.
+- **2.** These are as cited:
+  - `test_reference_values.py:108-112` (`entry_value`) and :206-209;
+  - `test_theme_schema.py:100-120` (the walker has no `anyOf` branch) and :136-140;
+  - `theme_schema.py:167-175` (`_json` sends a tuple to a list, so the `CoverPigment`
+    branch must come before the tuple branch);
+  - `theme_dump.py:18-24`.
+- **3.** `resolve_pigment(text, scope)` is at PR 1 plan:345-349 (the lines moved; the
+  content holds). Theme alias, then palette alias, then registry.
+- **4.** `test_registry_defaults.py` is at PR 1 plan:189 and `test_theme_colour_names.py`
+  at :382.
+- **5.** These are as cited:
+  - `test_examples.py:1-8,58-64`: any `pyntpot.*` module that is not one of the four
+    public `__init__`s is refused;
+  - `Style.from_yaml` at `style.py:123`;
+  - `theme_resolve.py:8-12`: an absolute path is allowed.
+- **6.** `theme_check.py:148-153,201-208` and `theme_read.py:96-104` are as cited. Run
+  here: `Annotated[float, Field(strict=True, ge=0, le=1)]` accepts `1` as `1.0` and
+  refuses `True`, `"0.5"` and `1.5`.
+- **7.** `docs_images.py:57-59` holds `Kind`, `Encoding` and `Option`, and
+  `style-fields.md:380` is as quoted.
+- **Merge.** `theme_resolve.py:133-146` merges *checked* tables, so a `CoverPigment` leaf
+  (a tuple) replaces the parent's whole (`theme_merge.py:30-35`). The leaf rule holds.
+
+### PR 1 names, against PR 1's current plan
+
+These match:
+- `Casing`, `Glow`, `Shadow` and `PenCasing`, with fields `width_px`, `colour`,
+  `strength`, `spread_px`, `blur_px`, `offset_px` and `edge_px`;
+- `Palette.names()` and `Palette.pigments`;
+- `Style.from_yaml` and `line_effects: {route: <preset>}`;
+- `road_major` as a line class;
+- `BUILT_IN_PRESETS` used only in tests and D1.
+
+The mismatches are findings 1 to 3.
+
+### Findings
+
+1. **[BLOCKING] `LINE_THRESHOLD` is not public, so no example can import it.**
+   - **Plan line:** 307-309 ("Every sweep holds `threshold=LINE_THRESHOLD`"). The same
+     need applies to `line_effect_reasons.py` and `cased_stroke.py`, since every
+     primitive requires `threshold`.
+   - **Evidence:**
+     - PR 1 plan:578 puts it in `ink/effect_mask.py`.
+     - Gate A exports exactly eight names (PR 1 plan:798-799), and ADR 0070 "Public
+       names" (:312-316) does not list it.
+     - `from pyntpot.ink.effect_mask import LINE_THRESHOLD` fails
+       `test_examples.py::_is_bad_from_import` (:58-64).
+     - Exporting it would be an unrecorded public-API change.
+   - **Fix:**
+     - Each effect script holds `THRESHOLD = 0.3` as a literal, consistent with the
+       "held values are script literals" rule.
+     - `test_line_effect_figures.py` gains
+       `test_the_scripts_threshold_is_the_engines`, which loads each script with
+       `load_example` and asserts its `THRESHOLD` equals
+       `pyntpot.ink.effect_mask.LINE_THRESHOLD`.
+     - Add this to D2 and D4 and the test-plan row.
+
+2. **[SHOULD-FIX] The sweep calls are written in PR 1's old per-field form, and
+   `shadow` has no `paper`.**
+   - **Plan line:** 307-326, for example `casing(width_px=0)`, `glow(strength=0)`,
+     `pen_casing(width_px=0)`, and "`paper=None`" for every sweep.
+   - **Evidence:** PR 1 plan:582-601 gives:
+     - `casing(rgb, mask, effect: Casing, *, threshold, paper=None)` (`glow` and
+       `pen_casing` likewise);
+     - `shadow(rgb, mask, effect: Shadow, *, azimuth_deg, threshold)`, which has no
+       `paper`, so passing `paper=None` is a `TypeError` and a `ty` error.
+     - `Casing(colour="paynes_grey")` fails, because `normalise_colours` parses hex only.
+   - **Fix:** write each call in full:
+     - `casing(rgb, mask, Casing(width_px=w, colour=c, strength=1.0), threshold=THRESHOLD, paper=None)`,
+       with `c` either `Colour("#ffffff")` or `pigment("paynes_grey").colour`;
+     - `glow(rgb, mask, Glow(spread_px=s, blur_px=b, strength=0.8), threshold=THRESHOLD, paper=None)`;
+     - `shadow(rgb, mask, Shadow(offset_px=o, blur_px=b, strength=0.4), azimuth_deg=315, threshold=THRESHOLD)`;
+     - `pen_casing(rgb, mask, PenCasing(width_px=g, edge_px=e), threshold=THRESHOLD, paper=None)`;
+     - each off cell is the same call with the value type's default (`Glow()`,
+       `Shadow()`, `PenCasing()`, `Casing(width_px=0, ...)`).
+     - Any signature the pages quote with bare names lists all five parameters,
+       because `test_docs_signatures.py:58-70` compares them in order.
+
+3. **[SHOULD-FIX] `label_grid` now takes a `LabelStyle`, and the plan prescribes none.**
+   - **Plan line:** 254 and 520-521; tasks 16.
+   - **Evidence:** PR 1 plan:871-878 gives `label_grid(img, boxes, columns, rows, style,
+     *, extra=())` and `LabelStyle(px, ink, pen_px, gran_px, seed, col_dy=14, row_dx=12,
+     row_dy=7)`. Without a prescription, eight new scripts each pick label size, ink,
+     grain and seed, so "the default hand" will differ figure to figure.
+   - **Fix:**
+     - Each new script holds one `LABELS = LabelStyle(...)` constant, copying
+       `tutorial_grids`' values (PR 1 plan:889-890) as literals.
+     - Per-cell ids and margin values go through `extra=`.
+     - D2 adds `sweep_grid` (PR 1 has no sweep loop), so the condition on that step
+       resolves.
+     - Add `LabelStyle` and `letter_over` to P0's list.
+
+4. **[SHOULD-FIX] `paint_cell` gives no layer order and no space.**
+   - **Plan line:** 302-306, against the conventions at 253 ("painted on
+     `paper_plate`").
+   - **Evidence:**
+     - PR 1 lays a stack on the ground *before* the line (PR 1 plan:820-830). A casing
+       laid after the stroke covers the stroke, because the casing alpha is full inside
+       the mask.
+     - `paper=None` means wash space, where 1 is the paper. A cell already on the cream
+       paper plate would get a pure `#ffffff` ring, not "paper".
+   - **Fix:** state the order: the wash in wash space, then the effect (with mask = the
+     stroke's density), then the stroke composited over it, then multiplication by the
+     `paper_plate` crop. `paint_cell` returns the result after that last step.
+
+5. **[SHOULD-FIX] P0 does not check that names are public.**
+   - **Plan line:** tasks 5-16.
+   - **Evidence:** finding 1 got through because P0 confirms names, not exports.
+   - **Fix:** add the four value types, `LabelStyle` and `letter_over`, and the check
+     "every `pyntpot` name an example imports is in a public `__all__` on PR 1's tip".
+
+6. **[CONSIDER]**
+   - The presets figure writes its theme files into `out_dir`. Other example tests
+     expect one file per call (`test_explanation_figures.py:63`), so use a
+     `tempfile.TemporaryDirectory()`, as `how_to_route_ink.py` already does.
+   - Hold each swept axis as one numeric tuple literal, so captions pass
+     `test_captions.py:197-210`.
+   - Flag this to PR 1, which PR 2 does not use: PR 1 plan:636-637 imports
+     `EFFECT_RANGES` "from `pyntpot.ink`", but gate A does not export it.
+
+### Sweep
+
+No new test file is broken without an owner. Checked:
+- every `with_route_ink` caller (`test_route_ink.py` composes unlettered;
+  `test_style.py:346` holds, since the default `label_route_ink` is `#c22050`);
+- every `pigment_transparency` and `cover.pigments` consumer in `src`, `tests`,
+  `examples` and `docs` (all owned by B; `site_theme.py` reads `PIGMENTS`, not cover);
+- the `docs_images` importers (exactly C's six, plus `test_gallery.py`, which imports
+  only `IMAGES`);
+- the theme enumerators (`test_one_source_of_defaults.py:35-83`, owned by D3);
+- `test_explanation_figures.py` (an explicit `FIGURES` dict, so new scripts are not
+  pulled in).
