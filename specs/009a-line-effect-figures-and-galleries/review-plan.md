@@ -242,3 +242,127 @@ should-fixes, then re-review.
 13. Fixed as asked: a page-and-section table for every image and a table of exact fields and values (`pool` by `Sheet.seed`; `Sheet.gran_px` by `Sheet.fibre`; treatment `dry` by `load`; `relief_strength`); the dryness sweep and galleries are swatch sheets, which reference pages may show.
 14. Adopted: "RIV = STR" shares one column, both ids lettered in the cell and listed in the page table.
 15. Adopted: the trap is cited as CONTRIBUTING.md:143 and left for the user; the `default` map-styles image is dropped from the spec; D is split into D1 to D4; the separation transparency is a stated designed gap.
+
+## Re-review
+
+Reviewer: fresh-context plan reviewer, against `d0010e1` and the working-tree revision of
+PR 1's `plan.md` (in flux; its `ThemeScope` and `Palette` shapes were rechecked there).
+
+### Verdict: BLOCK
+
+There is one blocking finding. Rule 17's "alias to a name" form cannot be computed from
+the shapes PR 1 fixes, and neither can the palettes figure. All the other findings are
+plan edits the implementer can apply trivially.
+
+### Resolutions verified
+
+- **1 (off cells).** Plan 263-279 and the test row at 489 are right in principle. Casing
+  at `width_px <= 0` and glow at `strength <= 0` return `rgb` itself (009 plan:405-410).
+  Shadow at `strength=0` gives `a == 0`, so the `where` keeps `rgb`. See finding 6 for the
+  dtype and the pen casing.
+- **2 (precedence).** The table at plan 31-43 covers every form of ref. ADR 0070 rule 17
+  has been edited in place to match it. The context key reaches the resolver through
+  `TableCheck.leaf`.
+- **Migration moves no pixel.**
+  - `PaintJob.transp` (`painter/job.py:149-152`) is called only with the 15 cover keys
+    (`plates.py:66`, `wood.py:54,84`, `relief.py:26`, `water.py:154,181`,
+    `cover.py:155,176`).
+  - `theme_merge.merge` merges dict entries one by one, so pen-and-ink's unset classes
+    keep the default transparencies.
+  - bold sets all 15 classes, and pen-and-ink sets `pale` and `wood`. No example theme sets
+    a transparency, and none uses `extends`. The rule "bare hex takes the class's built-in
+    transparency" therefore reproduces today's floats exactly.
+- **3 (pixel test).** `Label.kind`, `Label.box` and the `start` marker exist
+  (`lettering/label.py:51-76`, `picks.py:188`).
+- **4, 5.** The new modules, `theme_dump`, the merge property and `test_smoke.py:246` are
+  all listed. The property in `tests/property/test_theme_merge.py:208-218` stays sound
+  with a `{pigment, transparency}` dump.
+- **7 (bold).** `map_styles.FIGURES` is bold's only image consumer, and `MEAN_RGB` is its
+  only other pin. Rule 9 keeps a route stack out of `base_digest` and `lettering_digest`.
+- **10, 11, 12, 13, 14, 15.** Applied. The six importers of `support.docs_images` named at
+  plan 375-376 are complete: `tests/docs/test_gallery.py` imports only `IMAGES`, which
+  stays. No budget or share is raised.
+
+### Findings
+
+1. **[BLOCKING] An alias keeps no pigment, so "alias to a name" and the palettes figure
+   cannot be built.**
+   - **Plan line:** plan 34, 52-54 and 252-254; the `alias-to-name` id at plan 479;
+     spec 102-103.
+   - **Evidence:**
+     - PR 1 fixes `ThemeScope.aliases: Mapping[str, Bound[Colour]]` "so S3b and S5a fill
+       it without changing it" (009 plan:280-284).
+     - PR 1 fixes `Palette(name, colours: Mapping[str, Colour])` (009 plan:389).
+     - With only the hex kept, `cover.pigments.water: blue` (plain's `blue: ultramarine`)
+       cannot reach ultramarine's 0.06.
+     - The public `Palette` cannot name "the pigment it names" either.
+     - B would have to change PR 1's public `Palette` and the frozen scope shape, and no
+       file list or ADR line covers that change.
+   - **Fix:**
+     - In PR 1's plan, which is unmerged: `aliases: Mapping[str, Bound[Pigment]]`, where
+       a hex alias is an anonymous `Pigment` with transparency `None`.
+     - In the same plan: `Palette.pigments: Mapping[str, Pigment]`, with `colours`
+       derived from it.
+     - `resolve_colour` returns `.colour`.
+     - Add a P0 check for these shapes.
+     - `resolve_cover_pigment` reads the bound `Pigment`.
+
+2. **[SHOULD-FIX] Track A cannot go green.**
+   - **Evidence:** `tests/unit/maps/test_style.py:347-352`,
+     `test_a_fed_ink_moves_only_the_full_digest`, asserts that a fed colour keeps
+     `LETTERING_DIGEST`. `test_style.py` is B's (plan 552-553, 561-563).
+   - **Fix:** list that test under A: it becomes width-only, and the colour case lives in
+     `test_route_colour_feed.py`.
+
+3. **[SHOULD-FIX] PR 1's `tests/property/test_line_effect_digests.py` breaks in D3 and F.**
+   - **Evidence:** the property is described at 009 plan:649-652. A child's `{}` replaces
+     the parent's stack whole, so bold and `ambleside-cased` fail it.
+   - **Fix:**
+     - List the property under D3 and F.
+     - Draw only the classes the sampled theme does not set.
+     - Have P0 grep PR 1's tip for 16-hex digest literals (`test_digest_omits.py` "keeps
+       their pins") and add each file to B's pins.
+
+4. **[SHOULD-FIX] D1 runs scripts that D2 and D3 write.**
+   - **Plan line:** plan 391-396 and 550.
+   - **Evidence:**
+     - D1 tunes against the presets figure and the sweeps, but D2 and D3 write those
+       scripts.
+     - The sweeps' held values are unstated: glow strength, shadow strength and colour,
+       and the road width.
+   - **Fix:**
+     - Pin the held values as literals that are independent of the presets.
+     - Order D2, then D1, then D3, with D1 drafting the presets figure in scratch.
+
+5. **[SHOULD-FIX] The dryness grid's override is read under a different key.**
+   - **Evidence:** `brush_from_id` reads `brush_overrides[override or "maj"]`
+     (`ink/brush.py:199`), so setting `["major"]` does nothing.
+   - **Fix:** state `brush_from_id("MAJ2-c", 12, 1.0, style, override="major")`.
+
+6. **[SHOULD-FIX] The off-cell byte compare can fail.**
+   - **Evidence:**
+     - The primitives return float32 (009 plan:426-427).
+     - `pen_casing` at width 0 returns `(rgb, zeros)`, and a zero-density composite may not
+       be exact.
+     - The plain pen cell is undefined.
+   - **Fix:**
+     - `paint_cell` returns float32.
+     - The pen casing's edge layer is composited only when `edges.any()`.
+     - Define the plain pen cell as the tint plus the centre ink line.
+
+7. **[SHOULD-FIX] The `RENAMED_KEYS` entry departs from ADR 0069 and breaks a pin.**
+   - **Evidence:**
+     - ADR 0069:323 says a removed field "fails as an unknown key".
+     - `test_theme_check.py:146` pins `RENAMED_KEYS` exactly.
+   - **Fix:** record the departure in the new ADR, and list the pin under B.
+
+8. **[SHOULD-FIX] The repaints after B and F miss images those tracks reach.**
+   - **Plan line:** plan 542-544.
+   - **Evidence:** the name list omits `gallery/route-map`, `tutorials/route-map`,
+     `social-preview.jpg`, `how-to/command-line.webp` and `how-to/route-ink-grid.webp`.
+   - **Fix:** pass every fixture-reading registry name except `how-to/route-ink.webp`.
+
+9. **[CONSIDER]**
+   - Spec "Images, budgets" still says the images register in `docs_images.py`. Name
+     `docs_images_009a.py`.
+   - State that a Python-built key outside the 15 classes gets `None`.
