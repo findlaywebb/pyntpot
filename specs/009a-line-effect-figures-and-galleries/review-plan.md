@@ -378,3 +378,118 @@ plan edits the implementer can apply trivially.
 7. Fixed as asked (verified ADR 0069:323 and `test_theme_check.py:146`): the new ADR records the departure, and B updates the `RENAMED_KEYS` pin.
 8. Fixed as asked (verified from `DocsImage.fixture`): the repaints after B and F pass all 15 fixture-reading names except `how-to/route-ink.webp`.
 9. Applied: the spec names `docs_images_009a.py`; a Python-built key outside the 15 classes gets `None`, so `paper.km_transparency`, with a test.
+
+## Round 3
+
+Reviewer: fresh-context plan reviewer, against `82cc5a9` and PR 1's revised `plan.md`
+(`ThemeScope.aliases: Mapping[str, Bound[Pigment]]`, `Palette.pigments`, no `colours`).
+
+### Verdict: BLOCK
+
+The re-review resolutions hold. Three findings would fail a gate or break the bar as
+written: a moved pin is missing from the table; a `CoverPigment` has no single written form,
+so the docs and the schema would show a form the loader refuses; and the resolver bypasses
+`resolve_pigment`, so palette aliases cannot resolve.
+
+### Resolutions verified
+
+- **1 (alias shapes).** PR 1 plan:311-316 gives `aliases: Mapping[str, Bound[Pigment]]` (a
+  hex alias is `pigment("#...")`). PR 1 plan:436-442 gives `Palette(name, pigments)` with no
+  `colours`. 009a plan:56, 263-264, spec:106 and tasks:18-21 use these. No `Palette.colours`
+  is left.
+- **2.** `test_style.py:348-352` is as cited.
+- **3.** PR 1 plan:954 samples themes by classes. D3 and F restrict it.
+- **4.** The order D2, then D1, then D3 holds. The provisional presets match PR 1 plan:630-632.
+- **5.** `brush.py:199` reads `brush_overrides.get(override or cls.lower())`.
+- **7.** ADR 0069:323 and `test_theme_check.py:146` are as cited. `TableCheck.unknown`
+  writes "renamed to {new}" at the key's line (`theme_check.py:148-151`).
+- **8.** The registry has 16 entries that read a fixture. All 15 listed are among them,
+  and the plan leaves out only `route-ink`. Every example that imports `pyntpot.maps`
+  writes only images that read a fixture. Only `map_styles` paints `bold`. So B's set (none)
+  and F's set (`map-styles/bold`) are complete.
+- **Names.** These match PR 1's plan:
+  - `basemap.line_effects` and `route_ink.effects`;
+  - `GridSpec` and `label_grid`;
+  - `TableCheck.leaf`'s context;
+  - `cased`, `halo` and `lifted`.
+
+  `#c22050` is the default of `route_ink.colour` and `nib.label_route_ink` only, so the
+  structural test needs no third field.
+
+### Findings
+
+1. **[BLOCKING] A moved pin is missing from the moved table.**
+   - **Plan line:** plan 116-133; tasks 24-28.
+   - **Evidence:**
+     - `tests/unit/maps/test_style_groups.py:252,260` pins `SOURCED[PaperStyle]`
+       `0af5f9f84facb9e9` and `SOURCED[CoverStyle]` `8ff38fcbad0d7a6f`. Each is the sha256
+       of `json.dumps(asdict(group()))` (:348-351).
+     - B removes a `PaperStyle` field and turns each `cover.pigments` value into a
+       two-item list, so both pins move in B.
+     - P0's filter keeps only pins of `digest()`, `base_digest()` or `lettering_digest()`,
+       so it drops these two.
+   - **Fix:**
+     - Add two rows: these two pins move in B, with no pixels, for the D7 reason.
+     - Widen P0's filter to any 16-hex hash of style data.
+
+2. **[BLOCKING] A `CoverPigment` has no single written form.**
+   - **Plan line:** plan 369-371, 391-393 and 397.
+   - **Evidence:** three helpers in the tests write the NamedTuple as a list:
+     - `tests/docs/test_reference_values.py:89-113,206-209`: `entry_value` makes
+       `style-fields.md`'s `cover.pigments` Default cells read `["#dfe0b0", 0.06]`. The
+       schema refuses that form. The file is not B's.
+     - `test_theme_schema.py:136-140`: the schema `default` must equal the JSON dump (a
+       list), which is invalid against the field's own `anyOf`.
+     - `test_theme_schema.py:100-120,234`: the walker finds no `properties` under the
+       `anyOf`, so bold's and pen-and-ink's migrated `pigment` and `transparency` keys
+       are reported as outside the schema.
+   - **Fix:**
+     - One rule: the docs Default cells (`entry_value`), the schema `default`
+       (`theme_schema._json`) and `theme_dump` all write a `CoverPigment` as
+       `{pigment: "#hex", transparency: t}`.
+     - Give `test_reference_values.py` to B.
+     - The walker descends into the object branch of an `anyOf`.
+
+3. **[BLOCKING] The resolver bypasses `resolve_pigment`.**
+   - **Plan line:** plan 54-58; tasks 12.
+   - **Evidence:**
+     - PR 1 plan:313-314 says `aliases` holds theme aliases only. Palette aliases sit
+       under `scope.palette`.
+     - The prescribed lookup (`aliases`, then `scope.registry.get`) cannot resolve a
+       `.gpl` alias (the `gpl-alias` row) or `palette: plain` with `water: blue`, the
+       case at PR 1 plan:1072.
+     - It also duplicates the lookup order and the text of a miss.
+   - **Fix:**
+     - `resolve_cover_pigment` calls `resolve_pigment(ref, scope)` for a bare ref and for
+       the table's `pigment`.
+     - P0 confirms `resolve_pigment` on PR 1's tip.
+     - Add a test id, `palette-alias-to-name`.
+
+4. **[SHOULD-FIX] B breaks PR 1 tests that it does not list.**
+   - **Evidence:** PR 1 plan:181-182 and 368-370.
+     - `test_registry_defaults.py` reads `PaperStyle().pigment_transparency`.
+     - `test_theme_colour_names.py` expects `cover.pigments.built` to load as `#2b3d8f`.
+   - **Fix:** list both files under B. P0 greps PR 1's tip for `pigment_transparency` and
+     `cover.pigments` in `tests/`, and B owns every hit.
+
+5. **[SHOULD-FIX] The presets figure cannot reach the presets.**
+   - **Plan line:** plan 300-303.
+   - **Evidence:** `BUILT_IN_PRESETS` is not public (ADR 0070:312-314), and
+     `test_examples.py` refuses private imports. Literal values would drift from D1's
+     tuning.
+   - **Fix:** each cell loads a theme. The script writes `extends: <ambleside.yaml>` and
+     `line_effects: {route: <name>}` to `out_dir`, then calls `Style.from_yaml`.
+
+6. **[SHOULD-FIX] Errors in the table form have no stated location.**
+   - **Plan line:** plan 529.
+   - **Evidence:** a leaf's problem lands at `cover.pigments.<class>`
+     (`theme_check.py:202-208`), not at `.pigment`. An unknown inner key gets no nearest
+     name. A `bool` passes an `isinstance(int)` check.
+   - **Fix:** check the table's keys with `pigment` and `transparency` as the known
+     names, so each error is at its own line. `transparency` is a strict number from 0 to
+     1, and a `bool` or `str` is refused.
+
+7. **[CONSIDER]**
+   - Move `Option` with `DocsImage` (`docs_images.py:59`).
+   - After A, `style-fields.md:380` ("paints no plate again") is false for a fed colour.
+   - `ambleside-cased.yaml` should `extends: ambleside.yaml`.
