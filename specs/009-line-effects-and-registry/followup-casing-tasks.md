@@ -69,9 +69,9 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [x] Slice gate; golden docs subset passes with no regeneration.
 
 ### C6: mutation testing
-- [ ] `scope.py --base 8be0b017`; `mutmut run --max-children 2` under `prlimit`, with the
+- [x] `scope.py --base 8be0b017`; `mutmut run --max-children 2` under `prlimit`, with the
       out-of-repo `sitecustomize.py` (`Node._nodeid` alias).
-- [ ] Each survivor killed by a focused `tests/unit/ink/` test or named equivalent with its
+- [x] Each survivor killed by a focused `tests/unit/ink/` test or named equivalent with its
       reason; `mutation.md` section added.
 
 ### C7: close PR 1
