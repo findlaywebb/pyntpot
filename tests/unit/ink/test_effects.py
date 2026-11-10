@@ -120,7 +120,8 @@ class TestCasing:
         out = casing(_wash(), _line(), Casing(width_px=3.0))
         assert out.dtype == F32
         assert out[10, 8, 0] == pytest.approx(1.0)
-        assert out[10, 10, 0] == pytest.approx(1.0)
+        assert out[10, 12, 0] == pytest.approx(1.0)
+        assert out[10, 10, 0] == 0.5  # the line's own pixel is left
         assert out[10, 0, 0] == 0.5
 
     def test_the_colour_is_laid_over_the_paper_plate(self) -> None:
@@ -129,12 +130,12 @@ class TestCasing:
         effect = Casing(width_px=3.0, colour=Colour("#808080"))
         out = casing(_wash(), _line(), effect, paper=paper)
         expected = effect.colour.rgb[0] * 0.8
-        assert out[10, 10, 0] == pytest.approx(expected, abs=1e-6)
+        assert out[10, 12, 0] == pytest.approx(expected, abs=1e-6)
 
     def test_strength_scales_the_blend(self) -> None:
         """Half strength lands halfway between the wash and the target."""
         out = casing(_wash(), _line(), Casing(width_px=3.0, strength=0.5))
-        assert out[10, 10, 0] == pytest.approx(0.75)
+        assert out[10, 12, 0] == pytest.approx(0.75)
 
     def test_a_pixel_below_the_threshold_is_not_a_line(self) -> None:
         """A faint mask under the threshold casts nothing."""
@@ -161,8 +162,9 @@ class TestGlow:
     def test_the_core_lifts_by_strength(self) -> None:
         """Inside the core with no blur the lift is strength times the gap to the paper."""
         out = glow(_wash(), _line(), Glow(spread_px=1.0, strength=0.5))
-        assert out[10, 10, 0] == pytest.approx(0.75)
         assert out[10, 8, 0] == pytest.approx(0.75)
+        assert out[10, 12, 0] == pytest.approx(0.75)
+        assert out[10, 10, 0] == 0.5  # the line's own pixel is left
         assert out[10, 0, 0] == 0.5
 
     def test_a_pixel_brighter_than_the_paper_is_left(self) -> None:
@@ -172,9 +174,10 @@ class TestGlow:
         assert np.array_equal(out, _wash())
 
     def test_the_blur_spreads_the_lift_past_the_core(self) -> None:
-        """A blur lifts pixels beyond the spread, less than the core."""
+        """A blur lifts pixels beyond the spread, less beside the line than further out."""
         out = glow(_wash(), _line(), Glow(spread_px=0.0, blur_px=3.0, strength=1.0))
-        assert 0.5 < out[10, 5, 0] < out[10, 10, 0]
+        assert out[10, 10, 0] == 0.5
+        assert 0.5 < out[10, 5, 0] < out[10, 8, 0]
 
 
 class TestShadow:

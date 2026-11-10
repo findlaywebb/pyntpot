@@ -66,3 +66,13 @@ mutant is active, so only a direct call reaches them.
 - `brush_from_id` 5: `"XXXX".join` over a generator of at most one suggestion has no
   separator to show. `brush_from_id` 16: `rpartition` for `partition` on a known id, which
   has exactly one `-`.
+
+## Re-run: casing and glow leave the line's own pixels untouched
+
+`casing` and `glow` were re-run alone (`pyntpot.ink.effect_casing*`, `pyntpot.ink.effect_glow*`)
+after both gained a zero weight where the mask is at or above the threshold. The mutants of the
+new `np.where` lines were all killed by the "never changes a pixel under the line's core"
+properties and the updated unit cases. The ten survivors are the equivalents already listed
+above under their new numbers: `glow` 12, 13, 23 (clip of the blurred 0/1 field), 21 (`astype(None)`),
+49, 51, 60 and `casing` 41, 43, 52 (the `copy` flag on the final `astype`). `pen_casing` is
+unchanged: it alters the wash beneath the pen line, not the line, so it is exempt from the rule.

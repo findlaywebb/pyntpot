@@ -4,8 +4,9 @@ Key function: `pen_casing`. In pen-and-ink a casing is a reserve, so it knocks t
 a line out to the paper and returns the density of the two edge lines for the caller to ink. It
 draws no random number, does not ink the edges itself and is not wired into any line.
 
-Invariants: width 0 returns `(rgb, zeros)` with `rgb` itself; inside the reserve the result is
-the paper exactly; the edge band lies outside the reserve.
+Invariants: it alters only the wash, never an inked line, which the caller draws over the
+reserve; width 0 returns `(rgb, zeros)` with `rgb` itself; inside the reserve the result is the
+paper exactly; the edge band lies outside the reserve.
 """
 
 import numpy as np

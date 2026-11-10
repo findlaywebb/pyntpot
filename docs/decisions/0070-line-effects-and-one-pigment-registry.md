@@ -242,11 +242,15 @@ comp-ops), no per-feature z-order, and no generated palettes.
     - **Casing:** a ring of width `w` round the line, covering its footprint, from the
       chamfer distance of `m >= τ`; the RGB is blended toward the casing colour laid over
       the paper, `rgb + a(c · paper - rgb)` (in wash space the paper is 1), so a white
-      casing is the paper. The line is glazed over the casing as before, so the casing
-      shows through the line's dry breaks.
+      casing is the paper. The weight is 0 wherever `m >= τ`, so the casing paints only
+      the ring outside the line and the line's own pixels are untouched (a casing blended
+      under a translucent stroke shows through it and darkens it); the ring's outer edge
+      stays soft.
     - **Glow:** a lift toward the paper, `rgb + a · max(paper - rgb, 0)`, with two
       numbers, a spread (a hard dilation) and a blur (a soft falloff). It has no colour of
-      its own. The floor at 0 makes "never darkens" hold for any input; on real plates the
+      its own. Its weight is 0 wherever `m >= τ`, so it lifts only the halo and never
+      washes the line out. The floor at 0 makes "never darkens" hold for any input; on real
+      plates the
       card is at or below the paper, so the floor changes nothing there. At compose the
       target is the paper plate's pixels, not white, because the card is paper times wash.
       A pen-route glow thresholds the pen alpha first, so lossy WebP and resize noise do
@@ -257,6 +261,10 @@ comp-ops), no per-feature z-order, and no generated palettes.
       315°, from the north-west), and falls away from it. The offset is rounded to whole
       pixels on each axis, half to even, and the shifted mask is zero-filled; the blur
       softens what a sub-pixel offset would have moved.
+    - **Pen casing** is exempt from the untouched-line rule: it works on the wash beneath
+      the pen line, not on the line, knocking that wash to the paper under the line and its
+      reserve so the caller inks two edge lines with bare paper between them; the pen line
+      itself is inked by the caller over the reserve.
 12. **Three invariants.** Each is a Hypothesis property on arrays, before the dither and the
     lossy encode:
     - a casing of width 0 is the identity, bit for bit, by an explicit early return;

@@ -86,6 +86,20 @@ class TestCasing:
         assert out.min() >= 0.0
         assert out.max() <= 1.0
 
+    @UNTIMED
+    @given(scene=scenes(), effect=CASINGS, threshold=THRESHOLD)
+    def test_casing_never_changes_a_pixel_under_the_lines_core(
+        self,
+        scene: tuple[np.ndarray, np.ndarray, np.ndarray | None],
+        effect: Casing,
+        threshold: float,
+    ) -> None:
+        """Where the mask is at the threshold the casing leaves the wash bit for bit."""
+        rgb, mask, paper = scene
+        out = casing(rgb, mask, effect, threshold=threshold, paper=paper)
+        on_line = mask >= np.float32(threshold)
+        assert np.array_equal(_bits(out)[on_line], _bits(rgb)[on_line])
+
 
 class TestGlow:
     """The glow never darkens."""
@@ -104,6 +118,20 @@ class TestGlow:
         assert out.dtype == np.float32
         assert (out >= rgb).all()
         assert out.max() <= 1.0
+
+    @UNTIMED
+    @given(scene=scenes(), effect=GLOWS, threshold=THRESHOLD)
+    def test_glow_never_changes_a_pixel_under_the_lines_core(
+        self,
+        scene: tuple[np.ndarray, np.ndarray, np.ndarray | None],
+        effect: Glow,
+        threshold: float,
+    ) -> None:
+        """Where the mask is at the threshold the glow leaves the wash bit for bit."""
+        rgb, mask, paper = scene
+        out = glow(rgb, mask, effect, threshold=threshold, paper=paper)
+        on_line = mask >= np.float32(threshold)
+        assert np.array_equal(_bits(out)[on_line], _bits(rgb)[on_line])
 
     @UNTIMED
     @given(scene=scenes(), threshold=THRESHOLD)
