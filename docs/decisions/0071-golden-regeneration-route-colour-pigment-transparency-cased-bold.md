@@ -82,7 +82,7 @@ the default style, the six example themes and the four named themes, `SOURCED[Pa
 `SOURCED[CoverStyle]`, `GOLDEN_HASH`'s base half, and the Lynmouth manifest hash above; bold's
 `digest()` moves a second time for the cased route.
 
-## Added images (20, with a master each)
+## Added images (21, with a master each)
 
 Not moved: no pinned value changes. Each was added in its own slice.
 
@@ -108,6 +108,41 @@ Not moved: no pinned value changes. Each was added in its own slice.
 | `reference/pigment-gallery-glazes.webp` | none, added |
 | `reference/pigment-gallery-painters.webp` | none, added |
 | `reference/pigment-gallery-roles.webp` | none, added |
+| `how-to/reserve-sweep.webp` | none, added (casing follow-up) |
+
+## Follow-up: casings anti-aliased, a reserve and a union
+
+The casing follow-up repaints the casing figures anti-aliased and at 2x, and adds the reserve
+sweep. Against the pre-follow-up tip 9ef36cc6, 10 images and their 10 masters moved:
+
+| Image | Differing fraction | Extent | Reason |
+| --- | --- | --- | --- |
+| `docs/images/explanation/line-effects-draw-order.webp` | 0.905005 | widespread | casings anti-aliased; third cell "casings as a union"; 2x |
+| `docs/images/explanation/line-effects-glaze-or-rgb.webp` | 0.803141 | widespread | casing column anti-aliased; 2x |
+| `docs/images/how-to/casing-sweep.webp` | 0.797262 | widespread | anti-aliased ring; 2x |
+| `docs/images/how-to/glow-sweep.webp` | 0.760201 | widespread | painted at 2x |
+| `docs/images/how-to/line-effects-presets.webp` | 0.133583 | widespread | the cased cell |
+| `docs/images/how-to/line-effects.webp` | 0.210213 | widespread | the cased road_major |
+| `docs/images/how-to/shadow-sweep.webp` | 0.786494 | widespread | painted at 2x |
+| `docs/images/map-styles/bold.webp` | 0.222238 | widespread | the cased route |
+| `docs/images/painting-with-python/cased-stroke.webp` | 0.876009 | widespread | anti-aliased casing; two reserve cells; 3 x 2; 2x |
+| `docs/images/painting-with-python/pen-casing-sweep.webp` | 0.693121 | widespread | continuous edge lines; 2x |
+| `tests/golden/docs/explanation/line-effects-draw-order.png` | 0.888506 | widespread | casings anti-aliased; third cell "casings as a union"; 2x |
+| `tests/golden/docs/explanation/line-effects-glaze-or-rgb.png` | 0.735417 | widespread | casing column anti-aliased; 2x |
+| `tests/golden/docs/how-to/casing-sweep.png` | 0.706397 | widespread | anti-aliased ring; 2x |
+| `tests/golden/docs/how-to/glow-sweep.png` | 0.652824 | widespread | painted at 2x |
+| `tests/golden/docs/how-to/line-effects-presets.png` | 0.013822 | local | the cased cell |
+| `tests/golden/docs/how-to/line-effects.png` | 0.034332 | widespread | the cased road_major |
+| `tests/golden/docs/how-to/shadow-sweep.png` | 0.695962 | widespread | painted at 2x |
+| `tests/golden/docs/map-styles/bold.png` | 0.029825 | local | the cased route |
+| `tests/golden/docs/painting-with-python/cased-stroke.png` | 0.865996 | widespread | anti-aliased casing; two reserve cells; 3 x 2; 2x |
+| `tests/golden/docs/painting-with-python/pen-casing-sweep.png` | 0.690011 | widespread | continuous edge lines; 2x |
+
+The Lynmouth compare is unchanged: every image is byte-identical and `plates.json` stays at
+`90193bbb26f681bf-ebe16b5246aeb21f`. `MEAN_RGB["bold"]` is re-pinned from (214.1, 209.6, 184.8)
+to (214.2, 209.7, 185.0). `how-to/reserve-sweep.webp` and its master are added. Every moved
+image was opened at 2x zoom and judged before the one regeneration; the verdicts are in
+`specs/009a-line-effect-figures-and-galleries/images.md`.
 
 ## Retired image
 
@@ -120,4 +155,5 @@ Not moved: no pinned value changes. Each was added in its own slice.
 - A third-party theme that set `paper.pigment_transparency` fails with the new location named.
   An `extends` child's bare hex no longer keeps its parent's transparency for that class.
 - A pigment's retune repaints every theme naming it.
-- Any other moved image after this ADR is a defect in the slice that moved it.
+- Any other moved image after this ADR and its follow-up section is a defect in the slice that
+  moved it.

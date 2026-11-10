@@ -138,16 +138,16 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [x] No em or en dashes in human-facing prose; strict docs build; gate green.
 
 ### T6: judge, then regenerate once
-- [ ] Scratch repaint of every "Figures" image; `diff_images.py` against the pre-follow-up tip.
-- [ ] Each image opened at 2x zoom beside the research crops and judged for pixelation, dotted
+- [x] Scratch repaint of every "Figures" image; `diff_images.py` against the pre-follow-up tip.
+- [x] Each image opened at 2x zoom beside the research crops and judged for pixelation, dotted
       edges, ringing, the union cell and the reserve cells; verdicts in `images.md`; failures
       back to their track.
-- [ ] Budgets checked: share under 600,000 bytes, every page image under 250,000, no budget
+- [x] Budgets checked: share under 600,000 bytes, every page image under 250,000, no budget
       edited.
-- [ ] One regeneration: docs images, masters, `MEAN_RGB["bold"]`.
-- [ ] `images.md` follow-up section; ADR 0071 amended in place (table, Lynmouth compare, added
+- [x] One regeneration: docs images, masters, `MEAN_RGB["bold"]`.
+- [x] `images.md` follow-up section; ADR 0071 amended in place (table, Lynmouth compare, added
       reserve sweep, closing line).
-- [ ] `uv run pytest -m golden -n 2 --dist loadgroup` green with no further change; full gate
+- [x] `uv run pytest -m golden -n 2 --dist loadgroup` green with no further change; full gate
       green.
 
 ### T7: close PR 2
