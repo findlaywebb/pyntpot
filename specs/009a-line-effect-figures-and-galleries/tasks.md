@@ -227,8 +227,8 @@
 
 ## G: close, regenerate once, review
 
-- [ ] Fix the links in the four notes; delete any registry note PR 1 left.
-- [ ] Repaint everything, once, from the repo root on the pinning machine, and check the
+- [x] Fix the links in the four notes; delete any registry note PR 1 left.
+- [x] Repaint everything, once, from the repo root on the pinning machine, and check the
       summary **before** copying anything:
 
       ```bash
@@ -242,7 +242,7 @@
       (plus `preview/bold` and its master if 008a is on the base); `added` and `removed`
       are empty, because each slice committed its own new images. The Lynmouth compare
       logs byte-identical images. Anything else: stop and find the slice.
-- [ ] Copy the changed files, then regenerate the Lynmouth goldens:
+- [x] Copy the changed files, then regenerate the Lynmouth goldens:
 
       ```bash
       PYTHONPATH=tests uv run python -c "import json,shutil,sys; from pathlib import Path; out=Path(sys.argv[1]); [shutil.copyfile(out / 'tree' / f['path'], f['path']) for f in json.load(open(out / 'diffs' / 'summary.json'))['files'] if f['status'] == 'changed']" "$SCRATCH/repaint"
@@ -251,7 +251,7 @@
 
       `git diff --stat tests/golden/lynmouth` shows `plates.json` alone. Re-pin
       `MEAN_RGB["bold"]`.
-- [ ] The review diff against the stack's base:
+- [x] The review diff against the stack's base:
 
       ```bash
       PYTHONPATH=tests uv run python tests/golden/diff_images.py "$SCRATCH/recheck" --ref "$(git merge-base HEAD origin/claude/quirky-hypatia-z2pii3)"
@@ -260,13 +260,13 @@
       In `$SCRATCH/recheck/diffs/summary.json`: `changed` is the same four files (six
       with 008a); `added` is 40, the 20 new images and their 20 masters; `removed` is
       empty. Run `uv run pytest -m golden -n auto --dist loadgroup`; it passes.
-- [ ] The new ADR: the `CoverPigment` name, the `RENAMED_KEYS` departure from ADR
+- [x] The new ADR: the `CoverPigment` name, the `RENAMED_KEYS` departure from ADR
       0069:323, the tuned presets, the Lynmouth compare log,
       the moved table with fractions. Index row (it does not claim to amend ADR 0070,
       whose rule 17 was edited in place).
 - [ ] `publish_diffs.py "$SCRATCH/recheck" --push`; paste its block under "Golden and docs
       images".
-- [ ] Mutation run (plan's command); record an empty list or each survivor.
+- [x] Mutation run (plan's command); record an empty list or each survivor.
 - [ ] Fresh-context diff review against the plan, then the elegance pass. Dash search of
       human-facing prose finds none.
 - [ ] PR `feat(maps)!: ...` against `claude/quirky-hypatia-z2pii3`, with the changelog

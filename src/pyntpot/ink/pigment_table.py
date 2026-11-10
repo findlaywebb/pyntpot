@@ -4,7 +4,7 @@ Key types: `Pigment`, one pigment with its colour, transparency and Colour Index
 `ROLE_PIGMENTS`, the fifteen a map names by role, and `TUBE_PIGMENTS`, the ten a painter names by
 tube, each in the order the registry holds them. `PIGMENTS`, `TRANSPARENCY`, `PAINTERS_PIGMENTS`
 and `PAINTERS_TRANSPARENCY` are the exported tables, built from those two tuples;
-`role_transparencies` is a fresh copy of the role transparencies, for a style default.
+`role_transparencies` is a fresh copy of the role transparencies, the source of `TRANSPARENCY`.
 
 It looks nothing up and reads no style; `pigment_registry.py` holds the lookup.
 
