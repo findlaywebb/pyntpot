@@ -17,7 +17,8 @@ and `WashStyle`, which `separated` and `fluid_modulate` read. To make and keep a
 (a painted array written to a file).
 To lay an effect round a line: `casing`, `glow` and `shadow` (a ring of colour, a lift
 toward the paper and a multiplying darken, set by `Casing`, `Glow` and `Shadow`) and
-`pen_casing` (a reserve between two ink edge lines, set by `PenCasing`).
+`pen_casing` (a reserve between two ink edge lines, set by `PenCasing`) and `reserve` (the
+paper laid back in a ring, with an optional pool, set by `Reserve`).
 
 It does not letter, read geographic data or touch the network.
 """
@@ -30,8 +31,9 @@ from pyntpot.ink.compositing import PigmentLayer, composite
 from pyntpot.ink.effect_casing import casing
 from pyntpot.ink.effect_glow import glow
 from pyntpot.ink.effect_pen_casing import pen_casing
+from pyntpot.ink.effect_reserve import reserve
 from pyntpot.ink.effect_shadow import shadow
-from pyntpot.ink.effect_types import Casing, Glow, PenCasing, Shadow
+from pyntpot.ink.effect_types import Casing, Glow, PenCasing, Reserve, Shadow
 from pyntpot.ink.io import save_image
 from pyntpot.ink.pad import ink_density
 from pyntpot.ink.paper import paper_plate
@@ -70,6 +72,7 @@ __all__: list[str] = [
     "PigmentLayer",
     "PigmentRegistry",
     "Point",
+    "Reserve",
     "Shadow",
     "Sheet",
     "WashOptions",
@@ -83,6 +86,7 @@ __all__: list[str] = [
     "paper_plate",
     "pen_casing",
     "pigment",
+    "reserve",
     "rgb",
     "save_image",
     "separated",

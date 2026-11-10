@@ -5,7 +5,7 @@ import dataclasses
 import pytest
 
 from pyntpot.ink.colour import Colour
-from pyntpot.ink.effect_types import EFFECT_RANGES, Casing, Glow, PenCasing, Shadow
+from pyntpot.ink.effect_types import EFFECT_RANGES, Casing, Glow, PenCasing, Reserve, Shadow
 from pyntpot.ink.pigment_registry import pigment
 
 NUMERIC = [
@@ -19,6 +19,8 @@ NUMERIC = [
     (Shadow, "strength"),
     (PenCasing, "width_px"),
     (PenCasing, "edge_px"),
+    (Reserve, "width_px"),
+    (Reserve, "pool"),
 ]
 NUMERIC_IDS = [f"{cls.__name__}-{name}" for cls, name in NUMERIC]
 
@@ -46,6 +48,10 @@ class TestDefaults:
         """A default pen casing has no width and no edge."""
         assert dataclasses.astuple(PenCasing()) == (0.0, 0.0)
 
+    def test_reserve(self) -> None:
+        """A default reserve has no width and no pool."""
+        assert dataclasses.astuple(Reserve()) == (0.0, 0.0)
+
     def test_the_types_are_frozen_and_keyword_only(self) -> None:
         """A type refuses assignment and positional arguments."""
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -66,6 +72,7 @@ class TestRanges:
             "blur_px": (0.0, 16.0),
             "offset_px": (0.0, 16.0),
             "strength": (0.0, 1.0),
+            "pool": (0.0, 1.0),
         }
 
     def test_the_table_is_read_only(self) -> None:
@@ -92,6 +99,11 @@ class TestRanges:
         with pytest.raises(ValueError, match=r"strength must be in 0\.0 to 1\.0"):
             cls(strength=1.5)
 
+    def test_a_pool_above_one_is_refused(self) -> None:
+        """A pool of 1.5 names the field and its range."""
+        with pytest.raises(ValueError, match=r"pool must be in 0\.0 to 1\.0"):
+            Reserve(pool=1.5)
+
     def test_negative_zero_is_accepted(self) -> None:
         """A width of -0.0 is zero, not negative."""
         assert Casing(width_px=-0.0).width_px == 0
@@ -105,6 +117,7 @@ class TestRanges:
         """A width above 16 is accepted: the bound is a display-pixel bound checked at load."""
         assert Casing(width_px=100.0).width_px == 100.0
         assert PenCasing(width_px=100.0, edge_px=40.0).edge_px == 40.0
+        assert Reserve(width_px=100.0).width_px == 100.0
 
 
 class TestColours:

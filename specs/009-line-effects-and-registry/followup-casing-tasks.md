@@ -34,15 +34,15 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [x] Slice gate; golden docs subset passes with no regeneration.
 
 ### C3: `Reserve`, `reserve`, `casing_union`
-- [ ] Red: `Reserve` defaults, `pool` range, `check_effect_numbers` upper bound; properties 2,
+- [x] Red: `Reserve` defaults, `pool` range, `check_effect_numbers` upper bound; properties 2,
       3, 5 to 9 at the ink level (float32 masks); `INK_PUBLIC` lists `Reserve` and `reserve`.
-- [ ] `effect_types.Reserve`, `EFFECT_RANGES["pool"]`; `ink/effect_reserve.py` with
+- [x] `effect_types.Reserve`, `EFFECT_RANGES["pool"]`; `ink/effect_reserve.py` with
       `_pool_band(d - width_px)` and `_lay_reserve` (pool deepens only where `b > 0`, taking
       `minimum(out, deepened)`); `ink/effect_union.py` (private), using
       both and `_blend_casing`.
-- [ ] Exports, `docs/reference/ink.md`; glossary terms reserve and casing union, pool and line
+- [x] Exports, `docs/reference/ink.md`; glossary terms reserve and casing union, pool and line
       effect updated; glossary regenerated.
-- [ ] Slice gate green.
+- [x] Slice gate green.
 
 ### C4: the theme model
 - [ ] Red: `EffectStack` with a reserve; the casing-or-reserve refusal; every row of "Located

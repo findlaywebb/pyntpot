@@ -73,6 +73,8 @@
 
 ::: pyntpot.ink.PenCasing
 
+::: pyntpot.ink.Reserve
+
 ::: pyntpot.ink.Shadow
 
 ::: pyntpot.ink.casing
@@ -80,5 +82,7 @@
 ::: pyntpot.ink.glow
 
 ::: pyntpot.ink.pen_casing
+
+::: pyntpot.ink.reserve
 
 ::: pyntpot.ink.shadow

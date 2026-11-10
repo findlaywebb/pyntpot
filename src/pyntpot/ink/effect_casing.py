@@ -18,7 +18,7 @@ from pyntpot.ink.effect_types import Casing
 from pyntpot.ink.noise import F32
 
 
-def _blend_casing(
+def blend_casing(
     rgb: np.ndarray, weight: np.ndarray, effect: Casing, ground: np.ndarray | np.floating
 ) -> np.ndarray:
     """Blend `rgb` toward the casing colour laid over `ground` by `weight`, clipped to 0 to 1.
@@ -72,4 +72,4 @@ def casing(
     weight = effect.strength * ring_coverage(distance, effect.width_px)
     weight = np.where(core, F32(0.0), weight)
     ground = F32(1.0) if paper is None else paper
-    return _blend_casing(rgb, weight, effect, ground)
+    return blend_casing(rgb, weight, effect, ground)
