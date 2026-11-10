@@ -144,10 +144,10 @@
 
 ## D2: the sweeps (#104, #105, #106)
 
-- [ ] Red: `test_line_effect_figures.py` (each off cell equals `paint_cell(None)`, both
+- [x] Red: `test_line_effect_figures.py` (each off cell equals `paint_cell(None)`, both
       float32, by `tobytes()`; glow never darker, checked on glow's output before the
       stroke goes on, or on finished cells within `1e-6`).
-- [ ] Green: `line_effect_grids.py` at scale 1 (`casing`, `glow`, `shadow`,
+- [x] Green: `line_effect_grids.py` at scale 1 (`casing`, `glow`, `shadow`,
       `pen-casing`) with the plan's held literals, one numeric tuple per swept axis, none
       read from a preset; each call in PR 1's form with its value type, no `threshold`
       passed, colours as `Colour` or `pigment("paynes_grey").colour`; one `LABELS =
@@ -155,8 +155,8 @@
       `extra=`; `paint_cell` paints wash, effect, stroke, then multiplies by the
       `paper_plate` crop, and returns float32; the pen casing cell composites its edges
       only when `edges.any()`, and its plain cell is the tint plus the centre ink line.
-- [ ] Add `sweep_grid` to `examples/labelled_grid.py`, existing functions untouched.
-- [ ] Register four entries in the `009a-line-effects` block (share 600,000); paint,
+- [x] Add `sweep_grid` to `examples/labelled_grid.py`, existing functions untouched.
+- [x] Register four entries in the `009a-line-effects` block (share 600,000); paint,
       copy, check the budgets. Gates.
 
 ## D1: tune the presets (main context)

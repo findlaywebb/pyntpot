@@ -168,6 +168,24 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/how_to_route_ink.py` (figure grid, theme `examples/themes/ambleside.yaml`). The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`. The route is drawn in the normal blend, so it keeps its colour over water.*
 
+### [Case, light or shadow a line](how-to/case-light-or-shadow-a-line.md)
+
+![One brown road crossing farmland and wood, cased in the paper's colour in the top row and in Payne's grey in the bottom row, the casing widening from nothing at the left to five pixels at the right.](images/how-to/casing-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure casing). The labels read 0, 1, 2, 3 and 5 across, and paper and paynes_grey down.*
+
+![One blue river over dark green wood in three rows of five. The first column has no glow; the others lift the wood toward the paper in a ring that widens from left to right and softens from the top row to the bottom.](images/how-to/glow-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure glow). The labels read 0, 2, 4 and 6 across, and 0, 3 and 6 down.*
+
+![One crimson line over pale farmland in two rows of five. The first column has no shadow; the others add a grey shadow to the south-east of the line that moves further away from left to right and is softer in the bottom row.](images/how-to/shadow-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure shadow). The labels read 0, 1.5, 3 and 5 across, and 1 and 3 down.*
+
+![A thin ink line over a grey tint in two rows of five. The first column is the bare line; the others leave a strip of bare paper round the line, edged by two ink lines, the strip widening from left to right and the edge lines thicker in the bottom row.](images/painting-with-python/pen-casing-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure pen-casing). The labels read 1, 2, 3 and 4 across, and 0.75 and 1.5 down.*
+
 ### [Letter your own landmarks](how-to/letter-your-own-landmarks.md)
 
 ![The Y Fenni route map: a short maroon route winding through the town between a river and a castle, with landmarks lettered by hand on leader lines.](images/places/y-fenni.webp)

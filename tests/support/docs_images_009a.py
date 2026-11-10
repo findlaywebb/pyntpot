@@ -14,6 +14,7 @@ from support.docs_image import DocsImage
 #: The most each 009a slice's images may weigh together.
 SHARES_009A: dict[str, int] = {
     "009a-galleries": 500_000,
+    "009a-line-effects": 600_000,
 }
 
 
@@ -31,6 +32,21 @@ def _gallery(image: str, stem: str, figure: str, width: int = 720) -> DocsImage:
     )
 
 
+def _sweep(image: str, figure: str, page_dir: str = "how-to", width: int = 720) -> DocsImage:
+    """Return one line effect sweep: lossy, except the pen casing's, which is lossless."""
+    pen = figure == "pen-casing"
+    return DocsImage(
+        f"{page_dir}/{image}.webp",
+        "line_effect_grids",
+        (("figure", figure),),
+        None,
+        width,
+        "page",
+        "webp-lossless" if pen else "webp-lossy",
+        "009a-line-effects",
+    )
+
+
 IMAGES_009A: tuple[DocsImage, ...] = (
     # 009a-galleries: every brush id, every pigment, how pairs glaze and the bundled palettes.
     _gallery("brush-gallery-riv-str-lan", "brush_gallery", "riv-str-lan"),
@@ -40,4 +56,9 @@ IMAGES_009A: tuple[DocsImage, ...] = (
     _gallery("pigment-gallery-painters", "pigment_gallery", "painters"),
     _gallery("pigment-gallery-glazes", "pigment_gallery", "glazes"),
     _gallery("palettes", "pigment_gallery", "palettes"),
+    # 009a-line-effects: the sweeps (the how-to's and the tutorial's), then the slice's other figures.
+    _sweep("casing-sweep", "casing"),
+    _sweep("glow-sweep", "glow"),
+    _sweep("shadow-sweep", "shadow"),
+    _sweep("pen-casing-sweep", "pen-casing", "painting-with-python", 600),
 )

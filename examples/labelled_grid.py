@@ -15,6 +15,8 @@ so each script keeps only what is its own: what goes in a cell, and the names.
   size of an image, brings it down with Lanczos as premultiplied `RGBa`, and lays it by its
   alpha.
 - `label_grid`: letters the column names above and the row names beside a grid's boxes.
+- `sweep_grid`: lays one painted cell in each box of a grid over a copy of the paper, for a
+  grid that sweeps one setting across and another down.
 
 It does not paint cells, choose names or own any literal a caption or tutorial quotes: each
 script keeps its label tuples and lettered names. The names stay in the order the old scripts
@@ -27,7 +29,7 @@ from `pyntpot.letters`, `FaceStyle`, `HandStyle`, `Hand`, `Setting`, `Mark`, `Ni
 """
 
 import tempfile
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -212,3 +214,28 @@ def label_grid(
     ]
     nib = NibStyle(label_ink=style.ink, label_pen_width_px=style.pen_px)
     return letter_over(img, settings, nib, gran_px=style.gran_px, seed=style.seed)
+
+
+def sweep_grid(
+    paper: np.ndarray,
+    boxes: list[list[Box]],
+    paint: Callable[[int, int, Box], np.ndarray],
+) -> np.ndarray:
+    """Lay one painted cell in each box of a grid over a copy of `paper` and return the result.
+
+    `paint(row, col, box)` returns the cell for that box, a float array `(h, w, 3)` of the
+    box's own size, so a sweep script holds only how one cell is painted. `paper` is the whole
+    image, left bare between the cells, and is not changed.
+
+    Raises:
+        ValueError: When a painted cell is not the size of its box.
+    """
+    out = paper.copy()
+    for r, row in enumerate(boxes):
+        for c, box in enumerate(row):
+            x, y, w, h = box
+            cell = paint(r, c, box)
+            if cell.shape[:2] != (h, w):
+                raise ValueError(f"cell {r},{c} is {cell.shape[:2]}, its box is {(h, w)}")
+            out[y : y + h, x : x + w] = cell
+    return out
