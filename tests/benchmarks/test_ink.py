@@ -11,6 +11,7 @@ from pyntpot.ink.bloom import Blooms
 from pyntpot.ink.brush import brush_from_id, ink_aux
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.compositing import PigmentLayer, composite
+from pyntpot.ink.effect_distance import contour_distance
 from pyntpot.ink.noise import chamfer_distance
 from pyntpot.ink.raster import deform_rings, fill_cov
 from pyntpot.ink.sheet import Canvas, Sheet, rgb
@@ -76,6 +77,12 @@ def test_the_distance_transform(benchmark: BenchmarkFixture) -> None:
     pts = _meander().round().astype(int)
     mask[pts[:, 1], pts[:, 0]] = True
     benchmark(chamfer_distance, mask)
+
+
+@pytest.mark.parametrize("radius", [3.0, 8.0], ids=["narrow", "wide"])
+def test_the_contour_distance(benchmark: BenchmarkFixture, radius: float) -> None:
+    """Times the sub-pixel distance from the edge of a lumpy disc, out to a radius."""
+    benchmark(lambda: contour_distance(_blob(), threshold=0.3, radius=radius))
 
 
 @pytest.mark.parametrize("brush_id", ["TRK4-d", "RIV1-a"], ids=["dry-track", "wet-river"])

@@ -237,6 +237,7 @@ PINNED: dict[type, tuple[str, ...]] = {
         "tree_spacing_m",
         "all_variants",
         "line_effects",
+        "casing_unions",
     ),
     LetteringStyle: (
         "label_max",

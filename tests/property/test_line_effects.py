@@ -6,11 +6,11 @@ from hypothesis import strategies as st
 from hypothesis.extra import numpy as hnp
 
 from pyntpot.ink.effect_casing import casing
+from pyntpot.ink.effect_distance import contour_distance
 from pyntpot.ink.effect_glow import glow
 from pyntpot.ink.effect_pen_casing import pen_casing
 from pyntpot.ink.effect_shadow import shadow
 from pyntpot.ink.effect_types import EFFECT_RANGES, Casing, Glow, PenCasing, Shadow
-from pyntpot.ink.noise import chamfer_distance
 
 from support.properties import UNTIMED
 
@@ -68,7 +68,7 @@ class TestCasing:
         """A casing of width 0 or -0 returns the wash bit for bit."""
         rgb, mask, paper = scene
         out = casing(rgb, mask, Casing(width_px=zero), threshold=threshold, paper=paper)
-        assert np.array_equal(_bits(out), _bits(rgb))
+        assert out is rgb
 
     @UNTIMED
     @given(scene=scenes(), effect=CASINGS, threshold=THRESHOLD)
@@ -192,20 +192,26 @@ class TestPenCasing:
 
     @UNTIMED
     @given(scene=scenes(), effect=PEN_CASINGS, threshold=THRESHOLD)
-    def test_the_reserve_is_paper_outside_the_edge_band(
+    def test_the_reserve_is_paper_and_the_band_is_a_fraction_outside_it(
         self,
         scene: tuple[np.ndarray, np.ndarray, np.ndarray | None],
         effect: PenCasing,
         threshold: float,
     ) -> None:
-        """Inside the reserve the output is the paper; the edge band lies outside it, 0 or 1."""
+        """Where the reserve is whole the output is the paper, the band is 0 to 1, and reserve plus band is at most 1."""
         rgb, mask, paper = scene
         out, edges = pen_casing(rgb, mask, effect, threshold=threshold, paper=paper)
         if effect.width_px == 0:
             return
         ground = np.ones_like(rgb) if paper is None else paper
-        reserve = chamfer_distance(mask >= threshold) <= effect.width_px
-        assert (out[reserve] == ground[reserve]).all()
-        assert not edges[reserve].any()
-        assert set(np.unique(edges)) <= {0.0, 1.0}
-        assert (out[~reserve] == rgb[~reserve]).all()
+        d = contour_distance(mask, threshold=threshold, radius=effect.width_px + effect.edge_px + 1)
+        core = mask >= np.float32(threshold)
+        reserve = np.where(core, np.float32(1), np.clip(effect.width_px + 0.5 - d, 0, 1))
+        whole = reserve == 1
+        assert (out[whole] == ground[whole]).all()
+        assert (out[core] == ground[core]).all()
+        assert not edges[core].any()
+        assert edges.min() >= 0.0
+        assert edges.max() <= 1.0
+        assert (reserve + edges <= 1.0 + 1e-6).all()
+        assert (out[reserve == 0] == np.clip(rgb, 0, 1)[reserve == 0]).all()

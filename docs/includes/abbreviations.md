@@ -16,9 +16,9 @@
 
 *[coverage masks]: The array in 0 to 1 that says where a wash goes, 1 inside the shape and 0 outside: the first argument of wash.
 
-*[edge darkening]: The extra density a wash carries in a band just inside its edge, where the pigment gathers as the water dries: a real wash's edge darkening. wash's pool.
+*[edge darkening]: The extra density a wash carries in a band just inside its edge, where the pigment gathers as the water dries: a real wash's edge darkening. wash's pool; a reserve's pool is the same gathering in a faint line just outside its ring.
 
-*[Edge darkening]: The extra density a wash carries in a band just inside its edge, where the pigment gathers as the water dries: a real wash's edge darkening. wash's pool.
+*[Edge darkening]: The extra density a wash carries in a band just inside its edge, where the pigment gathers as the water dries: a real wash's edge darkening. wash's pool; a reserve's pool is the same gathering in a faint line just outside its ring.
 
 *[backrun]: A second front of water pushing deposited pigment ahead of it, leaving a pale centre and a dark, crenellated ridge where it dries.
 
@@ -70,9 +70,9 @@
 
 *[pigment registry]: The one catalogue of pigments: each with its canonical name, colour, transparency (or none, meaning the paper's km_transparency) and Colour Index code, looked up by name with the nearest names suggested on a miss. Read-only: adding pigments gives a new registry.
 
-*[line effect]: A casing, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders.
+*[line effect]: A casing, reserve, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders.
 
-*[line effects]: A casing, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders.
+*[line effects]: A casing, reserve, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders.
 
 *[effect stack]: A line class's ordered line effects, at most one of each kind, applied in order; a theme gives one, or an effect preset's name, per line class.
 
@@ -87,6 +87,14 @@
 *[casings]: A line effect: a band of a colour round a line and under it, so the line reads against what it crosses. A pen casing leaves the paper between two ink lines, with the wash beneath it lifted back to the paper.
 
 *[pen casing]: A line effect: a band of a colour round a line and under it, so the line reads against what it crosses. A pen casing leaves the paper between two ink lines, with the wash beneath it lifted back to the paper.
+
+*[reserve]: A line effect: the paper laid back in a ring round a line, every pigment beneath it lifted, with an optional pool of pigment gathered just outside the ring.
+
+*[reserves]: A line effect: the paper laid back in a ring round a line, every pigment beneath it lifted, with an optional pool of pigment gathered just outside the ring.
+
+*[casing union]: One casing or reserve laid once round several line classes as one footprint, so one class's ring never shows through another's line.
+
+*[casing unions]: One casing or reserve laid once round several line classes as one footprint, so one class's ring never shows through another's line.
 
 *[glyph]: One character's shape in the face, read as an outline and traced into strokes.
 

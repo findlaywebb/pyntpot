@@ -21,7 +21,7 @@ every page are generated from this file: after an edit, run
 | wash | A pigment field laid on the paper. | `pyntpot.ink.wash` | no |
 | coverage mask | The array in 0 to 1 that says where a wash goes, 1 inside the shape and 0 outside: the first argument of `wash`. | `pyntpot.ink.wash` | coverage mask, coverage masks |
 | body | The flat, even part of a wash inside its edge; `wash`'s `base` is the body's density. | `pyntpot.ink.wash` | no |
-| pool | The extra density a wash carries in a band just inside its edge, where the pigment gathers as the water dries: a real wash's edge darkening. `wash`'s `pool`. | `pyntpot.ink.wash` | edge darkening, Edge darkening |
+| pool | The extra density a wash carries in a band just inside its edge, where the pigment gathers as the water dries: a real wash's edge darkening. `wash`'s `pool`; a reserve's `pool` is the same gathering in a faint line just outside its ring. | `pyntpot.ink.wash` | edge darkening, Edge darkening |
 | backrun | A second front of water pushing deposited pigment ahead of it, leaving a pale centre and a dark, crenellated ridge where it dries. | `pyntpot.ink.bloom.bloom`, `pyntpot.ink.Blooms`, `pyntpot.ink.WashOptions` | backrun, backruns, Backruns |
 | glaze | Laying one pigment layer over another so the light passes through both and the colours mix as transparent films, by the Kubelka-Munk model, rather than multiplying; `PaperStyle.km_glazing` turns it on. | `pyntpot.ink.composite`, `pyntpot.ink.PaperStyle` | glaze, glazes, glazed, glazing, Glazing, Kubelka-Munk |
 | pigment | A colour a wash or a mark lays, named by its key; what a full-strength wash of it transmits, and what it shows over black as a share of that. | `pyntpot.ink.PIGMENTS`, `pyntpot.ink.TRANSPARENCY` | no |
@@ -37,10 +37,12 @@ every page are generated from this file: after an edit, run
 | accumulator | The float array a stroke's bristles deposit ink into, before `ink_density` turns it into a density. | `pyntpot.ink.ink_density` | accumulator, accumulators |
 | line class | The kind of a line on the map, such as a major road, a lane or a river, by which the style picks its brush and width. | `pyntpot.ink.BrushStyle` | line class, line classes |
 | pigment registry | The one catalogue of pigments: each with its canonical name, colour, transparency (or none, meaning the paper's `km_transparency`) and Colour Index code, looked up by name with the nearest names suggested on a miss. Read-only: adding pigments gives a new registry. | `pyntpot.ink.PIGMENT_REGISTRY` | pigment registry |
-| line effect | A casing, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders. | | line effect, line effects |
+| line effect | A casing, reserve, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders. | | line effect, line effects |
 | effect stack | A line class's ordered line effects, at most one of each kind, applied in order; a theme gives one, or an effect preset's name, per line class. | `pyntpot.maps.EffectStack` | effect stack, effect stacks |
 | effect preset | A named effect stack, such as `cased`, `halo` or `lifted`, that a line class takes by name. | | effect preset, effect presets |
 | casing | A line effect: a band of a colour round a line and under it, so the line reads against what it crosses. A pen casing leaves the paper between two ink lines, with the wash beneath it lifted back to the paper. | `pyntpot.ink.Casing`, `pyntpot.ink.casing`, `pyntpot.ink.PenCasing`, `pyntpot.ink.pen_casing` | casing, casings, pen casing |
+| reserve | A line effect: the paper laid back in a ring round a line, every pigment beneath it lifted, with an optional pool of pigment gathered just outside the ring. | `pyntpot.ink.Reserve`, `pyntpot.ink.reserve` | reserve, reserves |
+| casing union | One casing or reserve laid once round several line classes as one footprint, so one class's ring never shows through another's line. | | casing union, casing unions |
 | glow | A line effect that lifts the colours round a line toward the paper, with a hard spread and a soft blur; it never darkens. | `pyntpot.ink.Glow`, `pyntpot.ink.glow` | no |
 | shadow | A line effect: a soft, offset darkening beside a line, falling away from the hillshade's light and never over the line itself. | `pyntpot.ink.Shadow`, `pyntpot.ink.shadow` | no |
 

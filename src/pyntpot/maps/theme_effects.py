@@ -4,11 +4,11 @@ Key names: `check_effect_presets`, which checks one file's `effect_presets` tabl
 presets in the scope; `check_line_effects`, which checks its `line_effects` table and returns the
 partial group table that table sets; `EFFECT_PRESETS` and `LINE_EFFECTS`, the two top-level keys.
 
-A stack is a table whose keys are `casing`, `glow` and `shadow`, applied in key order; each
+A stack is a table whose keys are `casing` or `reserve`, `glow` and `shadow`, applied in key order; each
 effect is a sub-table of its dataclass in `ink`, checked by the same rules as a style group's, so
 its colour resolves through the file's scope. A `line_effects` key is a line class, and its value
 is a preset name (a built-in or one in scope) or a stack, never a mix: a `preset` key beside the
-effects is refused. A theme preset takes an alias-shaped name that is no built-in preset, and
+effects is refused, and so is a `casing` beside a `reserve`, at the `reserve` key. A theme preset takes an alias-shaped name that is no built-in preset, and
 replacing an inherited one needs `override: true`, as for an alias.
 
 Every number is checked against `ink`'s `EFFECT_RANGES` and a value outside, or not finite, is a
@@ -29,10 +29,15 @@ import math
 import re
 from typing import Any
 
-from pyntpot.ink import Casing, Glow, Shadow
+from pyntpot.ink import Casing, Glow, Reserve, Shadow
 from pyntpot.ink.effect_types import EFFECT_RANGES
 from pyntpot.ink.naming import did_you_mean
-from pyntpot.maps.line_effects import BUILT_IN_PRESETS, LINE_CLASSES, EffectStack
+from pyntpot.maps.line_effects import (
+    BUILT_IN_PRESETS,
+    CASING_OR_RESERVE,
+    LINE_CLASSES,
+    EffectStack,
+)
 from pyntpot.maps.theme_checker import TableCheck
 from pyntpot.maps.theme_scope import Bound, ThemeScope
 from pyntpot.maps.theme_vocab import ALIAS_PATTERN
@@ -46,8 +51,15 @@ LINE_EFFECTS = "line_effects"
 #: The route's key in `line_effects`, set on `route_ink.effects`; the rest are basemap classes.
 _ROUTE = "route"
 
+type _Effect = Casing | Glow | Shadow | Reserve
+
 #: The effect kinds a stack may hold, by key.
-_KINDS: dict[str, type[Casing | Glow | Shadow]] = {"casing": Casing, "glow": Glow, "shadow": Shadow}
+_KINDS: dict[str, type[_Effect]] = {
+    "casing": Casing,
+    "glow": Glow,
+    "shadow": Shadow,
+    "reserve": Reserve,
+}
 
 #: The key a preset entry may carry beside its effects, to replace an inherited preset.
 _OVERRIDE = "override"
@@ -182,7 +194,7 @@ def _stack(check: TableCheck, item: object, here: _Path, *, mixed: bool) -> Effe
     if not isinstance(item, dict):
         check.problem(here, "is a table of keys")
         return None
-    effects: list[Casing | Glow | Shadow] = []
+    effects: list[_Effect] = []
     for key, value in item.items():
         at = (*here, key)
         if key in _KINDS:
@@ -193,12 +205,13 @@ def _stack(check: TableCheck, item: object, here: _Path, *, mixed: bool) -> Effe
             check.problem(at, _MIXED)
         else:
             check.unknown(at, tuple(_KINDS))
+    if {Casing, Reserve} <= {type(effect) for effect in effects}:
+        check.problem((*here, "reserve"), CASING_OR_RESERVE)
+        effects = [effect for effect in effects if not isinstance(effect, Reserve)]
     return EffectStack(effects=tuple(effects))
 
 
-def _effect(
-    check: TableCheck, kind: type[Casing | Glow | Shadow], value: object, at: _Path
-) -> Casing | Glow | Shadow | None:
+def _effect(check: TableCheck, kind: type[_Effect], value: object, at: _Path) -> _Effect | None:
     """The effect of `kind` the table `value` at `at` holds, or `None` with problems recorded."""
     fields = check.table(kind, value, at)
     if fields is None:

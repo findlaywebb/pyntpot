@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from pyntpot.ink import Casing, Glow, Shadow, pigment
+from pyntpot.ink import Casing, Glow, Reserve, Shadow, pigment
 from pyntpot.maps import EffectStack, Style, ThemeError
 from pyntpot.maps.line_effects import BUILT_IN_PRESETS
 from pyntpot.maps.style import _groups
@@ -256,11 +256,12 @@ class TestTheLoaderFields:
         ]
         assert table == {"basemap": {"roads": "all"}, "route_ink": {}}
 
-    def test_the_fields_are_the_two_loader_ones(self) -> None:
-        """`LOADER_FIELDS` names exactly the two fields and the keys that set them."""
+    def test_the_fields_are_the_three_loader_ones(self) -> None:
+        """`LOADER_FIELDS` names exactly the three fields and the keys that set them."""
         assert LOADER_FIELDS == {
             ("basemap", "line_effects"): "line_effects.<class>",
             ("route_ink", "effects"): "line_effects.route",
+            ("basemap", "casing_unions"): "casing_unions",
         }
 
     def test_a_loader_field_is_refused_when_loading(self, tmp_path: Path) -> None:
@@ -268,4 +269,84 @@ class TestTheLoaderFields:
         problems = _problems(tmp_path, "route_ink:\n  effects:\n    effects: []\n")
         assert problems == [
             (2, "route_ink.effects", "set only by the top-level line_effects.route")
+        ]
+
+
+class TestReserves:
+    """A `reserve` in a stack: read, ranged, and never beside a casing."""
+
+    def test_a_reserve_is_read_in_a_class_and_a_preset(self) -> None:
+        """`reserve` loads in `line_effects` and in `effect_presets`, and a preset expands."""
+        text = "effect_presets:\n  gap: {reserve: {width_px: 2, pool: 0.3}}\nline_effects:\n  lane: gap\n  track: {reserve: {width_px: 1}}\n"
+        table, problems = _check(text)
+        assert problems == []
+        stacks = _stacks(table)
+        assert stacks["lane"].effects == (Reserve(width_px=2.0, pool=0.3),)
+        assert stacks["track"].effects == (Reserve(width_px=1.0),)
+
+    def test_a_reserve_keeps_its_place_beside_a_glow(self) -> None:
+        """A stack is its effects in key order, a reserve among them."""
+        table, problems = _check(
+            "line_effects:\n  lane: {glow: {spread_px: 1, strength: 0.5}, reserve: {width_px: 2}}\n"
+        )
+        assert problems == []
+        assert [type(e) for e in _stacks(table)["lane"].effects] == [Glow, Reserve]
+
+    @pytest.mark.parametrize(
+        ("text", "key", "message"),
+        [
+            ("reserve: {pool: 1.5}", "reserve.pool", "pool is 1.5; it must be from 0 to 1"),
+            ("reserve: {pool: -0.1}", "reserve.pool", "pool is -0.1; it must be from 0 to 1"),
+            (
+                "reserve: {width_px: 16.5}",
+                "reserve.width_px",
+                "width_px is 16.5; it must be from 0 to 16",
+            ),
+            (
+                "reserve: {width_px: .nan}",
+                "reserve.width_px",
+                "width_px is nan; it must be from 0 to 16",
+            ),
+        ],
+        ids=["pool-high", "pool-low", "too-wide", "nan"],
+    )
+    def test_a_reserve_number_out_of_range_is_located(
+        self, text: str, key: str, message: str
+    ) -> None:
+        """A reserve number outside `EFFECT_RANGES` is a located problem, in a class and a preset."""
+        _, problems = _check(f"line_effects:\n  lane:\n    {text}\n")
+        assert problems == [(3, f"line_effects.lane.{key}", message)]
+        _, problems = _check(f"effect_presets:\n  gap:\n    {text}\n")
+        assert problems == [(3, f"effect_presets.gap.{key}", message)]
+
+    def test_an_unknown_reserve_field_names_the_nearest(self) -> None:
+        """A misspelt reserve field is refused with the nearest."""
+        _, problems = _check("line_effects:\n  lane:\n    reserve: {widht_px: 2}\n")
+        assert problems == [
+            (3, "line_effects.lane.reserve.widht_px", "unknown key; did you mean width_px?")
+        ]
+
+    @pytest.mark.parametrize("order", ["casing_first", "reserve_first"])
+    def test_a_casing_and_a_reserve_in_one_class_are_refused(self, order: str) -> None:
+        """Both ring effects in one `line_effects` stack are refused at `reserve`, the casing kept."""
+        pair = ["casing: {width_px: 1}", "reserve: {width_px: 2}"]
+        if order == "reserve_first":
+            pair.reverse()
+        table, problems = _check("line_effects:\n  lane:\n    " + "\n    ".join(pair) + "\n")
+        expected_line = 4 if order == "casing_first" else 3
+        assert problems == [
+            (
+                expected_line,
+                "line_effects.lane.reserve",
+                "a stack takes a casing or a reserve, not both",
+            )
+        ]
+        assert _stacks(table)["lane"].effects == (Casing(width_px=1.0),)
+
+    def test_a_casing_and_a_reserve_in_one_preset_are_refused(self) -> None:
+        """Both ring effects in one preset are refused at `effect_presets.<name>.reserve`."""
+        text = "effect_presets:\n  both:\n    casing: {width_px: 1}\n    reserve: {width_px: 2}\n"
+        _, problems = _check(text)
+        assert problems == [
+            (4, "effect_presets.both.reserve", "a stack takes a casing or a reserve, not both")
         ]

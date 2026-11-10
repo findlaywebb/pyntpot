@@ -8,65 +8,65 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 ## PR 1 (#211), branch `claude/quirky-hypatia-z2pii3`
 
 ### C0: start
-- [ ] ADR 0070 amended in place: rules 8, 9, 10, 11, 12, 13, 15, public names, alternatives;
+- [x] ADR 0070 amended in place: rules 8, 9, 10, 11, 12, 13, 15, public names, alternatives;
       header line naming this follow-up.
-- [ ] `followup-casing.md` committed; base `8be0b017` recorded.
-- [ ] Baseline slice gate green on the untouched tip (`-n 2`, never `-n auto`).
+- [x] `followup-casing.md` committed; base `8be0b017` recorded.
+- [x] Baseline slice gate green on the untouched tip (`-n 2`, never `-n auto`).
 
 ### C1: `contour_distance`
-- [ ] Red: property 1 (float32 masks, shapes a radius + 2 margin from the array edge; exact
+- [x] Red: property 1 (float32 masks, shapes a radius + 2 margin from the array edge; exact
       reference outside only, τ 0.2 to 0.5, 0.4 px; sign only inside, bit for bit); cap cases; τ-exact, one-pixel and array-edge units.
-- [ ] `ink/effect_distance.py`: `contour_distance`, `ring_coverage`; pure numpy.
+- [x] `ink/effect_distance.py`: `contour_distance`, `ring_coverage`; pure numpy.
 - [ ] Accuracy and cost at radius 3, 8, 16, 33 recorded in "Measured"; one form, no two-stage
-      form; `docs/issues/ink-contour-distance-cost.md` and its GitHub issue filed.
+      form; `docs/issues/ink-contour-distance-cost.md` written (its GitHub issue is still to file: no remote writes this session).
 - [ ] Each caller's radius as prescribed: casing `w + 1`, pen casing `w + edge + 1`, reserve
       `w + 2`, union the members' maximum.
-- [ ] Benchmark smoke entry; slice gate green.
+- [x] Benchmark smoke entry; slice gate green.
 
 ### C2: casing and pen casing anti-aliased
-- [ ] Red: `test_effect_quality.py` pins (casing edge at most 0.22 px; pen edge ink 0.70 to
+- [x] Red: `test_effect_quality.py` pins (casing edge at most 0.22 px; pen edge ink 0.70 to
       0.95; pen band wobble at most 0.10 px); `TestTies` and `TestSoftStep` rewritten in place;
       `TestPenCasingWhite` band and the `out[10, 7]` reserve test rewritten; the painter
       `test_effects.py` `_ring` slack set to `w + 2.0`; property 4; properties 2 and 3 for
       `casing`.
-- [ ] `casing` and `pen_casing` on `contour_distance`, with `_blend_casing` shared; docstrings
+- [x] `casing` and `pen_casing` on `contour_distance`, with `_blend_casing` shared; docstrings
       say the width is from the line's edge.
-- [ ] Slice gate; golden docs subset passes with no regeneration.
+- [x] Slice gate; golden docs subset passes with no regeneration.
 
 ### C3: `Reserve`, `reserve`, `casing_union`
-- [ ] Red: `Reserve` defaults, `pool` range, `check_effect_numbers` upper bound; properties 2,
+- [x] Red: `Reserve` defaults, `pool` range, `check_effect_numbers` upper bound; properties 2,
       3, 5 to 9 at the ink level (float32 masks); `INK_PUBLIC` lists `Reserve` and `reserve`.
-- [ ] `effect_types.Reserve`, `EFFECT_RANGES["pool"]`; `ink/effect_reserve.py` with
+- [x] `effect_types.Reserve`, `EFFECT_RANGES["pool"]`; `ink/effect_reserve.py` with
       `_pool_band(d - width_px)` and `_lay_reserve` (pool deepens only where `b > 0`, taking
       `minimum(out, deepened)`); `ink/effect_union.py` (private), using
       both and `_blend_casing`.
-- [ ] Exports, `docs/reference/ink.md`; glossary terms reserve and casing union, pool and line
+- [x] Exports, `docs/reference/ink.md`; glossary terms reserve and casing union, pool and line
       effect updated; glossary regenerated.
-- [ ] Slice gate green.
+- [x] Slice gate green.
 
 ### C4: the theme model
-- [ ] Red: `EffectStack` with a reserve; the casing-or-reserve refusal; every row of "Located
+- [x] Red: `EffectStack` with a reserve; the casing-or-reserve refusal; every row of "Located
       load errors" incl. the CLI exit 2; a child replacing and `[]` clearing `casing_unions`;
       the preset casing-and-reserve row; `BasemapStyle` refusing a bad union (route, unknown,
       duplicate, mixed group, stack problems); members normalised to class order; property 10;
       off-reserve digests; schema order and nodes (reserve with no min or max); `PINNED`,
       `BASEMAP_DEFAULTS` and `tests/unit/maps/candidates/test_export.py:88-121` gain
       `casing_unions`; `casing_unions.py` in `BY_NAME`.
-- [ ] `BasemapStyle` line count checked: past 400 on either branch, pure move to
+- [x] `BasemapStyle` line count checked: past 400 on either branch, pure move to
       `style_basemap.py` first.
-- [ ] `maps/casing_unions.py` (`membership_problems`, `union_problems`: every union message),
+- [x] `maps/casing_unions.py` (`membership_problems`, `union_problems`: every union message),
       `maps/theme_unions.py` (shape and location only); `line_effects`, `theme_effects`,
       `theme_check`, `theme_resolve` (post-merge check), `theme_vocab`, `style_groups`, `style`
       (`DIGEST_OMITS_AT_DEFAULT`), `theme_schema_tables`.
-- [ ] Both schema copies regenerated; `style-fields.md` row; slice gate green.
+- [x] Both schema copies regenerated; `style-fields.md` row; slice gate green.
 
 ### C5: painter and compose
-- [ ] Red, in `test_union_wash.py`: union junction pixel test; union of one at the painter;
+- [x] Red, in `test_union_wash.py`: union junction pixel test; union of one at the painter;
       ring skipped at later members; route reserve exact at compose; `pen_mask` floor cases.
-- [ ] `lay_stack(..., ring=)` and the reserve branch; `_lay_group` unions; soft `pen_mask`;
+- [x] `lay_stack(..., ring=)` and the reserve branch; `_lay_group` unions; soft `pen_mask`;
       `compose_steps.py` docstring sentence corrected.
-- [ ] Largest off-line Lynmouth pen alpha recorded, below 8/255.
-- [ ] Slice gate; golden docs subset passes with no regeneration.
+- [x] Largest off-line Lynmouth pen alpha recorded, below 8/255.
+- [x] Slice gate; golden docs subset passes with no regeneration.
 
 ### C6: mutation testing
 - [ ] `scope.py --base 8be0b017`; `mutmut run --max-children 2` under `prlimit`, with the

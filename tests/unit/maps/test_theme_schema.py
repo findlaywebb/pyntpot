@@ -205,6 +205,7 @@ def test_the_top_level_names_extends_the_five_tables_and_the_groups() -> None:
         "colours",
         "effect_presets",
         "line_effects",
+        "casing_unions",
         *Style.model_fields,
     ]
     assert schema["properties"]["extends"]["type"] == "string"
@@ -241,7 +242,7 @@ def test_a_line_effects_value_is_a_preset_name_or_a_stack() -> None:
     assert names == {"enum": ["cased", "halo", "lifted"]}
     assert theme_preset == {"type": "string", "pattern": ALIAS_PATTERN}
     assert stack["additionalProperties"] is False
-    assert list(stack["properties"]) == ["casing", "glow", "shadow"]
+    assert list(stack["properties"]) == ["casing", "glow", "shadow", "reserve"]
 
 
 def test_an_effect_is_the_walk_of_its_dataclass() -> None:
@@ -266,15 +267,16 @@ def test_an_effect_preset_is_a_stack_that_may_override() -> None:
     """An `effect_presets` value is a stack object that also takes `override`."""
     schema: Any = theme_schema()
     entry = schema["properties"]["effect_presets"]["additionalProperties"]
-    assert list(entry["properties"]) == ["casing", "glow", "shadow", "override"]
+    assert list(entry["properties"]) == ["casing", "glow", "shadow", "reserve", "override"]
     assert entry["properties"]["override"] == {"type": "boolean"}
     assert entry["additionalProperties"] is False
 
 
 def test_a_loader_only_field_is_not_a_schema_property() -> None:
-    """`basemap.line_effects` and `route_ink.effects` are left out of the group subtrees."""
+    """`basemap.line_effects`, `basemap.casing_unions` and `route_ink.effects` are left out of the group subtrees."""
     schema: Any = theme_schema()
     assert "line_effects" not in schema["properties"]["basemap"]["properties"]
+    assert "casing_unions" not in schema["properties"]["basemap"]["properties"]
     assert "effects" not in schema["properties"]["route_ink"]["properties"]
 
 
@@ -386,3 +388,33 @@ class TestTheWalkerFindsAKeyOutsideTheSchema:
         """Known keys, a vocabulary entry and an enum value in its enum report nothing."""
         table = {"extends": "default", "route_ink": {"blend": "multiply"}}
         assert keys_outside_the_schema(table, theme_schema()) == []
+
+
+def test_a_reserve_is_an_object_of_two_numbers_with_no_range() -> None:
+    """`reserve` is the walk of `Reserve`: `width_px` and `pool`, no minimum or maximum."""
+    schema: Any = theme_schema()
+    for stack in (
+        schema["properties"]["line_effects"]["additionalProperties"]["anyOf"][2],
+        schema["properties"]["effect_presets"]["additionalProperties"],
+    ):
+        reserve = stack["properties"]["reserve"]
+        assert reserve["additionalProperties"] is False
+        assert list(reserve["properties"]) == ["width_px", "pool"]
+        for node in reserve["properties"].values():
+            assert node["type"] == "number"
+            assert "minimum" not in node
+            assert "maximum" not in node
+
+
+def test_casing_unions_is_an_array_of_arrays_of_basemap_classes() -> None:
+    """`casing_unions` is non-empty, unique arrays of the seven basemap classes."""
+    schema: Any = theme_schema()
+    node = schema["properties"]["casing_unions"]
+    assert node["type"] == "array"
+    assert node["items"]["type"] == "array"
+    assert node["items"]["minItems"] == 1
+    assert node["items"]["uniqueItems"] is True
+    assert node["items"]["items"] == {
+        "enum": ["major", "medium", "minor", "coast", "road_major", "lane", "track"]
+    }
+    assert "load" in node["description"]

@@ -340,7 +340,11 @@ class TestTheDumpedForm:
         pigments = {**style.cover.pigments, "wood": CoverPigment(Colour("#112233"), None)}
         style = style.model_copy(update={"cover": dc.replace(style.cover, pigments=pigments)})
         table = {name: dc.asdict(getattr(style, name)) for name in Style.model_fields}
-        for name, field in (("basemap", "line_effects"), ("route_ink", "effects")):
+        for name, field in (
+            ("basemap", "line_effects"),
+            ("basemap", "casing_unions"),
+            ("route_ink", "effects"),
+        ):
             del table[name][field]
         path = write_theme(tmp_path, "dumped.yaml", dump_theme(table))
         loaded = Style.from_yaml(path)

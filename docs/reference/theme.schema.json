@@ -404,6 +404,23 @@
               }
             }
           },
+          "reserve": {
+            "type": "object",
+            "description": "The paper laid back in a ring round a line, every pigment beneath it lifted.",
+            "additionalProperties": false,
+            "properties": {
+              "width_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "The ring's width beyond the line's footprint, in pixels of the array it is laid on."
+              },
+              "pool": {
+                "type": "number",
+                "default": 0.0,
+                "description": "How far the pigment gathers into a faint line just outside the ring, 0 to 1; 0 leaves no pool."
+              }
+            }
+          },
           "override": {
             "type": "boolean"
           }
@@ -588,10 +605,47 @@
                     "description": "The colour the shadow multiplies toward; Payne's grey by default."
                   }
                 }
+              },
+              "reserve": {
+                "type": "object",
+                "description": "The paper laid back in a ring round a line, every pigment beneath it lifted.",
+                "additionalProperties": false,
+                "properties": {
+                  "width_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "The ring's width beyond the line's footprint, in pixels of the array it is laid on."
+                  },
+                  "pool": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "How far the pigment gathers into a faint line just outside the ring, 0 to 1; 0 leaves no pool."
+                  }
+                }
               }
             }
           }
         ]
+      }
+    },
+    "casing_unions": {
+      "type": "array",
+      "description": "Groups of basemap line classes whose casings or reserves are laid as one ring. At load, a union lies within water or road, holds a class once across all unions, and its members share one casing colour and strength (or all reserves with one pool).",
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "enum": [
+            "major",
+            "medium",
+            "minor",
+            "coast",
+            "road_major",
+            "lane",
+            "track"
+          ]
+        }
       }
     },
     "paper": {

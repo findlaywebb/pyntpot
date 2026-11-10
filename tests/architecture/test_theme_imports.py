@@ -26,7 +26,7 @@ FORBIDDEN = frozenset({"pyntpot.maps", "pyntpot.maps.style"})
 ALLOWED = "theme_schema.py"
 
 #: The loader modules whose names do not start with `theme_`.
-BY_NAME = ("line_effects.py",)
+BY_NAME = ("line_effects.py", "casing_unions.py")
 
 
 def theme_modules_importing_the_style(maps: Path) -> list[str]:

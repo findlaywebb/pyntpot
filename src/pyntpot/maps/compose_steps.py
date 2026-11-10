@@ -65,9 +65,10 @@ def route(
     the same plate is tinted here. A style with no pen plate draws the line. The ink's
     `blend` (`"normal"` or `"multiply"`) and `opacity` (0 to 1) shape both.
 
-    When `ink.effects` holds effects (a casing, glow or shadow, off by default), they are
-    laid on the card first, round the route's one merged mask: the pen plate's alpha at the
-    line threshold, or the solid line's reduced mask. A casing and a glow lift toward the
+    When `ink.effects` holds effects (a casing, reserve, glow or shadow, off by default), they
+    are laid on the card first, round the route's one merged mask: the pen plate's alpha
+    density above a noise floor (under 8/255 counts as none), or the solid line's reduced
+    mask. A casing, a reserve and a glow lift toward the
     paper plate, a shadow falls as the relief is lit, and the line is then laid over them.
     The consumer's SVG page does not draw route effects; only this composed card does.
 

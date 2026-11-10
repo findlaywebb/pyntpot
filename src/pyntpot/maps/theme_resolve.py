@@ -17,7 +17,9 @@ the next load, once they are fixed, reports the check problems. A non-`str` `ext
 ends the chain without stopping the read: the file is read, has no target to follow, and
 is checked, reporting the `extends` problem itself. A chain whose read finds nothing is
 checked from the file nearest `default` up, threading the scope, and every problem of
-every file is collected. A file met twice in one chain is an `extends` cycle.
+every file is collected. The merged `casing_unions` are then checked against the merged
+stacks, because a child can turn off or recolour a member's casing; each such problem is
+located in the nearest file that writes `casing_unions`. A file met twice in one chain is an `extends` cycle.
 
 A theme an `extends` names that is refused, missing or a cycle is a problem of the
 extending file, at its `extends` key and line, whose message names the target as written;
@@ -46,6 +48,7 @@ from pyntpot.maps.theme_errors import ThemeError, ThemeProblem
 from pyntpot.maps.theme_merge import merge
 from pyntpot.maps.theme_read import ThemeFile, read_theme
 from pyntpot.maps.theme_scope import ThemeScope
+from pyntpot.maps.theme_unions import merged_union_problems
 
 #: The form of a theme name: a lower-case letter, then lower-case letters, digits and `-`.
 NAME = re.compile(r"[a-z][a-z0-9-]*")
@@ -160,6 +163,8 @@ def resolve(
     for table in tables:
         merged = merge(merged, table)
     merged.pop(EXTENDS, None)
+    if found := merged_union_problems(merged, files):
+        raise ThemeError(found)
     return merged
 
 

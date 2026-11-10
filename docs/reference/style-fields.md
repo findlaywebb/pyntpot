@@ -415,6 +415,7 @@ With `effects` off, the compose step draws no casing, glow or shadow round the r
 | `tree_spacing_m` | number | `450.0` | Metres between tree glyphs inside a wood. 0 scatters none. |
 | `all_variants` | boolean | `false` | Build every relief variant rather than the one the mode asks for. |
 | `line_effects` | table | `table` | Set only by the top-level `line_effects` table, one stack per line class; empty by default. |
+| `casing_unions` | list | `[]` | Set only by the top-level `casing_unions` table; empty by default. |
 
 ### `basemap.line_effects`
 

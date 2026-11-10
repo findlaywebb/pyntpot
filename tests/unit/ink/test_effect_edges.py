@@ -49,18 +49,23 @@ class TestTies:
 
 
 class TestSoftStep:
-    """The casing's ring falls off over one pixel."""
+    """The casing's ring is box-filtered coverage of the ring `[0, width]` beyond the contour."""
+
+    def test_the_ring_is_whole_half_a_pixel_beyond_the_contour(self) -> None:
+        """A mask of 1 at threshold 0.5 puts its contour half a pixel out, and the next pixel is whole."""
+        out = casing(_plate(0.5), _row(1.0), Casing(width_px=2.5), threshold=0.5)
+        assert out[0, 1, 0] == 1.0
 
     def test_the_ring_is_whole_half_a_pixel_inside_its_width(self) -> None:
-        """At a width of 2.5 the pixel two away is fully cast and the next not at all."""
-        out = casing(_plate(0.5), _row(1.0), Casing(width_px=2.5))
+        """At a width of 2.5 the pixel two from the contour is fully cast and the next not at all."""
+        out = casing(_plate(0.5), _row(1.0), Casing(width_px=2.5), threshold=1.0)
         assert out[0, 2, 0] == 1.0
         assert out[0, 3, 0] == 0.5
 
-    def test_a_quarter_pixel_inside_the_width_is_a_cubic_step(self) -> None:
-        """At a width of 2.25 the pixel two away is cast 0.84375 of the way to the paper."""
-        out = casing(_plate(0.5), _row(1.0), Casing(width_px=2.25))
-        assert out[0, 2, 0] == pytest.approx(0.5 + 0.84375 * 0.5)
+    def test_a_quarter_pixel_inside_the_width_is_three_quarters_covered(self) -> None:
+        """At a width of 2.25 the pixel two from the contour is cast 0.75 of the way to the paper."""
+        out = casing(_plate(0.5), _row(1.0), Casing(width_px=2.25), threshold=1.0)
+        assert out[0, 2, 0] == pytest.approx(0.5 + 0.75 * 0.5)
 
 
 class TestOutOfRangeBeneath:
@@ -96,10 +101,10 @@ class TestPenCasingWhite:
     """A pen casing leaves bare paper, which is 1, and returns float32 arrays."""
 
     def test_the_reserve_is_exactly_one(self) -> None:
-        """Inside the reserve a dark wash is knocked out to exactly 1."""
+        """Inside the reserve a dark wash is knocked out to exactly 1, and the edge pixel is part paper."""
         out, band = pen_casing(_plate(0.2), _row(1.0), PenCasing(width_px=1.0, edge_px=1.0))
-        assert out[0, :, 0].tolist() == pytest.approx([1.0, 1.0] + [0.2] * 6)
-        assert band[0].tolist() == [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        assert out[0, :, 0].tolist() == pytest.approx([1.0, 1.0, 0.36] + [0.2] * 5)
+        assert band[0].tolist() == pytest.approx([0.0, 0.0, 0.8, 0.2, 0.0, 0.0, 0.0, 0.0])
 
     def test_both_arrays_are_float32(self) -> None:
         """The colour and the edge density are float32 whether on or off."""

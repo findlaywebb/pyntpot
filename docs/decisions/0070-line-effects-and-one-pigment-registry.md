@@ -2,6 +2,10 @@
 
 Status: accepted
 
+Amended in place before merge by
+`specs/009-line-effects-and-registry/followup-casing.md` (casings anti-aliased, casing unions,
+a reserve).
+
 Amends ADR 0015 (what `maps` reads at the boundary: palettes and `.gpl` files), 0027 (the
 lettering's route-coloured ink is no longer independent of a fed colour, rule 18), 0046
 (the dropped route casing, glow and shadow come back as a typed effect stack, rules 8 to
@@ -184,8 +188,9 @@ comp-ops), no per-feature z-order, and no generated palettes.
 ### Line effects
 
 8. **An effect stack per line class.** Each line class holds one optional, ordered effect
-   stack of at most one casing, one glow and one shadow, applied in the stack's order. The
-   keys are the code's line classes, `major`, `medium`, `minor`, `coast`, `road_major`,
+   stack of at most one casing or reserve (never both), one glow and one shadow, applied in the
+   stack's order. A top-level `casing_unions:` table lists unions of basemap line classes
+   (rule 10). The keys are the code's line classes, `major`, `medium`, `minor`, `coast`, `road_major`,
    `lane` and `track`, plus `route`. The package ships three effect presets, `cased`,
    `halo` and `lifted`; a theme may define its own in a top-level `effect_presets:` table,
    and a theme preset may not reuse a built-in preset name. A line class takes a preset
@@ -200,6 +205,15 @@ comp-ops), no per-feature z-order, and no generated palettes.
    route's mask at compose, the pen plate's alpha or the solid line's, and are never painted
    into `pen.webp`. A retraced route is already one merged mask, and its casing and shadow
    use that mask, never one per strand.
+   - **`casing_unions`** is the loader-only `basemap.casing_unions`, so it moves `base_digest`
+     and repaints the plates. Its schema shape is an array of arrays of the seven basemap
+     classes, each with `minItems: 1` and `uniqueItems: true`. Each file is checked for
+     shape, an empty union, an unknown class, `route`, a class in two unions and members that
+     span water and road; the merged table is then checked for members with no casing or
+     reserve, differing casing colours or strengths, mixed kinds and differing pools, each
+     located at the `casing_unions` key in the nearest file of the chain that writes it. The
+     loader puts each union's members in class order, and the unions in the order of their
+     first members, so equal pictures share a digest.
    - **The two fields** are `basemap.line_effects`, a table of line class to stack
      (`basemap` is a `maps` group; `brush` is `ink`'s and cannot hold `maps` types), and
      `route_ink.effects`, one stack. Both are loader-only: a theme sets them only through
@@ -228,7 +242,10 @@ comp-ops), no per-feature z-order, and no generated palettes.
     lines, so a junction reads as one road, and a road crossing a river reads as a
     crossing. Basemap effects are steps inserted into the painter's `over` list between the
     water pad and the road pads; they never re-sort it, and with no effect set the list is
-    today's. Water is one pad, so a per-class water effect builds a mask-only pad for its
+    today's. A union's ring is laid once, from its members' masks, at the place of the
+    union's first member in the group's class order. Its weight is 0 on every member's
+    footprint, so no ring shows through a translucent line of the union. Glows and shadows
+    stay per class. A union lies within one group, and the route joins none. Water is one pad, so a per-class water effect builds a mask-only pad for its
     class, and those pads are built only when a water effect is set. The route is drawn at
     compose, above the whole base plate. No effect draws from `dither_rng`.
 11. **Effects composite on RGB, not by Kubelka-Munk.** An effect is a plain function of the
@@ -239,13 +256,17 @@ comp-ops), no per-feature z-order, and no generated palettes.
     glazed or multiplied by `composite`: a glaze at `km_transparency = 0.06` cannot lay
     cream over a dark wood, and multiplying cannot lighten at all, so neither can make a
     casing or a glow. The departure is limited to effects; lines and washes still glaze.
-    - **Casing:** a ring of width `w` round the line, covering its footprint, from the
-      chamfer distance of `m >= τ`; the RGB is blended toward the casing colour laid over
+    - **Casing:** coverage of the ring `[0, w]` beyond the line's τ contour, from
+      `contour_distance`, a signed sub-pixel Euclidean distance, so the width is measured from
+      the line's edge and the ring is anti-aliased; the RGB is blended toward the casing colour laid over
       the paper, `rgb + a(c · paper - rgb)` (in wash space the paper is 1), so a white
       casing is the paper. The weight is 0 wherever `m >= τ`, so the casing paints only
       the ring outside the line and the line's own pixels are untouched (a casing blended
       under a translucent stroke shows through it and darkens it); the ring's outer edge
-      stays soft.
+      is the box-filtered coverage.
+    - **Reserve:** the paper laid back in a ring round a line, exact where the ring is whole
+      (every pigment beneath lifted); an optional pool deepens the pigment just outside the
+      ring and never touches bare paper.
     - **Glow:** a lift toward the paper, `rgb + a · max(paper - rgb, 0)`, with two
       numbers, a spread (a hard dilation) and a blur (a soft falloff). It has no colour of
       its own. Its weight is 0 wherever `m >= τ`, so it lifts only the halo and never
@@ -253,8 +274,8 @@ comp-ops), no per-feature z-order, and no generated palettes.
       plates the
       card is at or below the paper, so the floor changes nothing there. At compose the
       target is the paper plate's pixels, not white, because the card is paper times wash.
-      A pen-route glow thresholds the pen alpha first, so lossy WebP and resize noise do
-      not glow.
+      Every primitive thresholds the mask itself; the pen route's mask is the alpha's density
+      above a noise floor, which keeps lossy WebP and resize noise from casting a shadow.
     - **Shadow:** the mask offset, blurred and laid as a multiplying darken,
       `rgb(1 - a(1 - p))`, masked out wherever the line's density is at or above `τ`.
       Every shadow takes one light direction, the hillshade's azimuth (`Sun.azimuth`,
@@ -264,22 +285,29 @@ comp-ops), no per-feature z-order, and no generated palettes.
     - **Pen casing** is exempt from the untouched-line rule: it works on the wash beneath
       the pen line, not on the line, knocking that wash to the paper under the line and its
       reserve so the caller inks two edge lines with bare paper between them; the pen line
-      itself is inked by the caller over the reserve.
+      itself is inked by the caller over the reserve. Its reserve and edge band are
+      fractional, from the same distance.
 12. **Three invariants.** Each is a Hypothesis property on arrays, before the dither and the
     lossy encode:
     - a casing of width 0 is the identity, bit for bit, by an explicit early return;
     - a glow never darkens a pixel;
     - a shadow never paints over the line that casts it: where the line's density is at or
       above `τ`, the output equals the output with no shadow.
+
+    The reserve and the union add: a reserve is exact paper where its ring is whole; its pool
+    never lightens and never darkens bare paper; a union ring is never inside a footprint; a
+    union of one is that class's own ring, bit for bit.
     The registry's properties sit beside them: an empty extension is the identity, and a
     caller's pigment never shadows a built-in.
 13. **Pen casing.** In pen-and-ink a casing is a reserve: the paper left between two ink
     lines, with the wash beneath knocked out to the paper. It is an `ink` primitive with its
-    own property tests in PR 1, off by default; its figures come in PR 2.
+    own property tests in PR 1, off by default; its figures come in PR 2. Its edge band is
+    fractional, and the reserve is its watercolour counterpart.
 14. **Lettering is excluded.** No effect applies to lettering, leaders included: the nib
     refuses halos by design, and an effect there would move `lettering_digest`.
 15. **Off by default, and no digest moves.** Every new field defaults to off, and every new
-    field is named in `DIGEST_OMITS_AT_DEFAULT`, under a name unique across groups. A guard
+    field, `casing_unions` included, is named in `DIGEST_OMITS_AT_DEFAULT`, under a name
+    unique across groups. A guard
     test shows every new field at its default leaves `digest()`, `base_digest()` and
     `lettering_digest()` of every packaged and example theme unchanged.
 
@@ -321,7 +349,8 @@ comp-ops), no per-feature z-order, and no generated palettes.
 
 `ink` gains `Colour`, `Pigment`, `PigmentRegistry`, `PIGMENT_REGISTRY`, `pigment`, and
 the effect primitives `casing`, `glow`, `shadow` and `pen_casing` with their value types
-`Casing`, `Glow`, `Shadow` and `PenCasing`, which each primitive takes whole. `maps` gains
+`Casing`, `Glow`, `Shadow` and `PenCasing`, which each primitive takes whole, and the
+reserve with its `Reserve` type. `contour_distance` and `casing_union` stay private. `maps` gains
 `EffectStack`, the stack of `ink`'s effect types the theme fields hold, and `Palette`, which
 reads a palette by name or path, maps each alias to its pigment, lists the packaged names,
 and reads and writes `.gpl`
@@ -387,6 +416,15 @@ stay exported from `pyntpot.ink`.
   junction and crossing rules with nothing to set. Rejected.
 - **A casing per feature** (MapLibre `line-gap-width`). Each feature cases itself and
   junctions show seams. Rejected.
+- **`colour: paper` on a casing.** Breaks the `Colour` type and the schema. Rejected for a
+  `Reserve` type.
+- **`reserve: true` on `Casing`.** Moves the digest of every cased theme and gives two
+  spellings of one thing. Rejected.
+- **`union:` on a casing.** Cannot join a preset. Rejected for the top-level table.
+- **Unions by group.** All or nothing. Rejected.
+- **The route joining a union.** Pulls it into `base_digest`. Rejected.
+- **scipy's EDT for the distance.** A new dependency. Rejected for a pure numpy search.
+- **Changing `chamfer_distance`.** Nine other callers. Rejected for `contour_distance`.
 - **Effects on leaders.** A letters-side change that moves `lettering_digest` and contradicts
   the nib's refusal of halos. Rejected.
 - **#159 by tinting the route-token marks at compose, or by `label_route_ink = None` meaning
