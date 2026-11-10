@@ -22,12 +22,16 @@ only: no `src` file.
    - both figures of `line_effect_reasons.py`.
 
    How:
-   - every `*_px`, stroke width and `GRAN_PX` is doubled on a grid twice the size;
+   - every `*_px`, stroke width and `GRAN_PX` is doubled on a grid twice the size, whose
+     boxes are the 1x boxes scaled by the factor (not a `GridSpec` built at twice the size:
+     `cell_w` uses floor division, `labelled_grid.py:91-95`, so it would not give exactly
+     twice the boxes);
    - the paper and every cell are composited at 2x;
    - the result is reduced once and then lettered at 1x;
    - a "2 px" label still means 2 display pixels.
 
-   Glow and shadow sweeps move too. Decision 27 names the sweeps without exception, and one
+   Glow and shadow sweeps move too, at T3 (they lay no casing, so PR 1's merge leaves them
+   byte-identical). Decision 27 names the sweeps without exception, and one
    scale per script keeps a label meaning one thing; per-figure scales were rejected. The
    Ambleside card, the presets figure and bold are already painted at `supersample: 2` and
    change only through PR 1's casing. The setting grids (`setting_grids.py`) are left alone.
@@ -126,24 +130,31 @@ only: no `src` file.
 
 - [ ] PR 1's follow-up is merged into this branch, and the not-golden gate is green before any
       figure changes.
-- [ ] A scratch repaint after the merge moves exactly the images in "Figures" (less the reserve
-      sweep), and their masters. Nothing else moves: Lynmouth and the other docs images are
+- [ ] A scratch repaint after the merge moves exactly the images in "Figures" less the reserve,
+      glow and shadow sweeps, and their masters. The glow and shadow sweeps lay no casing
+      (`line_effect_grids.py:261-293`) and are still at 1x at T0, so they are byte-identical
+      there and move at T3. Nothing else moves: Lynmouth and the other docs images are
       byte-identical.
 - [ ] Each 2x figure is painted on a grid twice its 1x spec and reduced once with Lanczos to
       its registered width.
       - Its "off" cell still equals the plain stroke cell byte for byte.
       - Every value it letters is the display value.
-      - `tests/examples/test_line_effect_sweeps.py` (new) pins:
+      - `tests/examples/test_line_effect_sweeps.py` (new at T1, holding the sweep tests moved
+        from `test_line_effect_figures.py`) pins:
         - the 2x paint's reduced size;
         - the reserve sweep's off column equals its plain cell;
-        - a pool row is nowhere lighter than the zero-pool row;
+        - a pool row is nowhere lighter than the zero-pool row, asserted on the 2x float arrays
+          before `reduce` (Lanczos's negative lobes and uint8 rounding break the ordering at
+          display size);
         - the thin pen edge line (gap 1, edge 0.75) has edge ink in every column of its span at
-          display size (at least 0.5).
+          display size (at least 0.5), measured on `reduce(band)`, the reduced float band
+          density.
 - [ ] The draw-order union cell equals the "casings first" cell outside the two roads'
       footprints and rings. Inside the first road's footprint it is no lighter than it, and is
-      lighter nowhere.
+      lighter nowhere. Asserted on the 2x float arrays before `reduce`.
 - [ ] The cased-stroke reserve cells: "reserved" equals the paper plate crop where the ring is
-      whole; "reserved, pooled" is nowhere lighter than "reserved".
+      whole; "reserved, pooled" is nowhere lighter than "reserved". Asserted on the 2x float
+      arrays before `reduce`.
 - [ ] Docs as in "Docs"; the docs tests and the strict build are green.
 - [ ] The goldens are regenerated once, at the end (T6), after every figure is judged at 2x
       zoom. `images.md` and ADR 0071 hold the record. The PR body's "Golden and docs images"
@@ -158,9 +169,9 @@ Each file is owned by one track.
 | Track | Owns |
 | --- | --- |
 | T0 merge and inventory | merge conflict resolutions only (expected: `style_groups.py`, `line_effects.py`, `theme_schema_tables.py`, both schema copies regenerated, `style-fields.md`, `ink.md`, `test_public_api.py`) |
-| T1 split | `examples/line_effect_grids.py`, `examples/line_effect_scenes.py` (new): a pure move of the scene builders (`Scene`, `_curve`, `_solid`, `_brushed`, `_washed`, `_scene`, `stroke_density`); 386 lines leaves no room |
-| T2 2x helper | `examples/labelled_grid.py` (`GridSpec.scaled(factor)`, `reduce(rgb, factor)`, `SUPERSAMPLE = 2`), `tests/examples/test_labelled_grid.py` |
-| T3 sweeps | `examples/line_effect_grids.py`, `examples/line_effect_scenes.py`, `tests/support/docs_images_009a.py`, `docs/how-to/case-light-or-shadow-a-line.md`, `tests/examples/test_line_effect_sweeps.py` (new) |
+| T1 split | `examples/line_effect_grids.py`, `examples/line_effect_scenes.py` (new): a pure move of the scene builders (`Scene`, `_curve`, `_solid`, `_brushed`, `_washed`, `_scene`, `stroke_density`); 386 lines leaves no room. Also a pure move of the sweep test classes (`TestFigures`, `TestOffCells`, `TestGlow`, `TestShadow`, `TestHeldValues`, `TestSweepGrid`) from `tests/examples/test_line_effect_figures.py` to `tests/examples/test_line_effect_sweeps.py` (new), with `TestHeldValues`' source scan extended to `line_effect_scenes.py` |
+| T2 2x helper | `examples/labelled_grid.py` (`scaled_boxes(spec, factor)`, the 1x boxes times the factor; `reduce(rgb, factor)`; `SUPERSAMPLE = 2`), `tests/examples/test_labelled_grid.py` |
+| T3 sweeps | `examples/line_effect_grids.py`, `examples/line_effect_scenes.py`, `tests/support/docs_images_009a.py`, `docs/how-to/case-light-or-shadow-a-line.md`, `tests/examples/test_line_effect_sweeps.py`. T3 does not change the lines `cased-strokes.md` quotes from `line_effect_grids.py` (`_reserved` and the `paint_cell` lines, `cased-strokes.md:68-85`), which T4's page owns |
 | T4 essay and stroke | `examples/cased_stroke.py`, `examples/line_effect_reasons.py`, `tests/examples/test_line_effect_figures.py`, `docs/tutorials/painting-with-python/cased-strokes.md`, `docs/explanation/line-effects.md` |
 | T5 reference | `docs/reference/line-effects.md`, `docs/how-to/write-a-theme.md` |
 | T6 regenerate | `docs/images/**`, `tests/golden/docs/**`, `tests/golden/test_map_styles.py` (`MEAN_RGB`), `specs/009a-line-effect-figures-and-galleries/images.md`, `docs/decisions/0071-golden-regeneration-route-colour-pigment-transparency-cased-bold.md` |
@@ -179,7 +190,12 @@ uv run prek run --all-files
 ```
 
 **T1's extra gate.** Repaint the four sweeps into scratch before and after the split; they are
-byte-identical.
+byte-identical. The moved sweep tests pass unchanged in their new file.
+
+**T3 and T4 run in parallel without touching one file.** After T1, the sweep tests are in T3's
+`test_line_effect_sweeps.py` and the essay and stroke tests stay in T4's
+`test_line_effect_figures.py`; the lines the tutorial quotes from `line_effect_grids.py` are
+frozen for T3.
 
 **T3's added image.** If a non-golden registry test needs a registered image on disk, T3 paints
 and commits the added reserve sweep and its master; every moved image still waits for T6.
