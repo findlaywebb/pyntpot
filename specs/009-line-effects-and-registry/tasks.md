@@ -223,7 +223,7 @@ gate B (S6 in); S7, S8, S9.
 
 ## S8: Mutation testing
 
-- [ ] Changed `ink` and `letters` functions (the `PaperStyle`, `WashStyle` and
+- [x] Changed `ink` and `letters` functions (the `PaperStyle`, `WashStyle` and
       `NibStyle` hooks and `normalise_colours` included) run with
       `tests/mutation/scope.py` (moved
       `compositing.py` functions dropped, with the reason); survivors killed or recorded
