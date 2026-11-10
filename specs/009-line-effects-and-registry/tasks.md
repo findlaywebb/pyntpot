@@ -86,28 +86,28 @@ gate B (S6 in); S7, S8, S9.
 
 ## S3b: Aliases, theme pigments, palettes
 
-- [ ] Red: each refusal (chain, built-in name, missing `override`, unknown alias, bad
+- [x] Red: each refusal (chain, built-in name, missing `override`, unknown alias, bad
       `.gpl` row, a `.gpl` name that is no alias, two `.gpl` names with one alias, a
       palette alias clashing with an inherited one), inheritance across `extends`, the
       binding rule, a theme pigment with `base` and `colour` both, `Palette.registry_gpl`,
       the CLI exiting 2 before any fetch, `Palette.pigments` holding the aliased pigment
       (transparency included) and `.gpl` imports anonymous, the two properties (alias to a
       name yields its colour and transparency; `.gpl` round trip at the colour level).
-- [ ] `test_theme_schema.py`: the top-level order pinned, the `propertyNames` walk over
+- [x] `test_theme_schema.py`: the top-level order pinned, the `propertyNames` walk over
       the group subtrees only, the `colours` and `pigments` key-rule test.
-- [ ] `theme_pigments.py`, `theme_colours.py`, `theme_palette.py`,
+- [x] `theme_pigments.py`, `theme_colours.py`, `theme_palette.py`,
       `theme_palette_gpl.py`, `palettes/plain.yaml`, in the wheel.
-- [ ] A chain whose read stops checks no file: red case in `test_theme_resolve.py` (a
+- [x] A chain whose read stops checks no file: red case in `test_theme_resolve.py` (a
       child with a bad field and an unbound alias, extending a missing file, reports
       only the missing-file problem); the `theme_resolve` docstring says so. A non-`str`
       `extends` ends the chain without stopping the read: red case (`extends: 5` with
       `card: {display_px: '5'}` reports both problems, the `extends` one at line 1).
-- [ ] `check_theme_scoped`; `theme_resolve` reads the chain then checks from the base up;
+- [x] `check_theme_scoped`; `theme_resolve` reads the chain then checks from the base up;
       `theme_scope.py` filled on S3a's shape, `palette` narrowed to `Bound[Palette] |
       None` under `TYPE_CHECKING` (runtime direction `theme_palette -> theme_colours ->
       theme_scope`); `Palette(name, pigments)`; the `colours` value schema is the
       three-branch `Colour` node or `{colour, override}`.
-- [ ] `Palette` exported and documented; schema tables; schema regenerated; slice gate
+- [x] `Palette` exported and documented; schema tables; schema regenerated; slice gate
       green.
 
 ## S4: Effect value types and primitives (worktree cut after S3a)

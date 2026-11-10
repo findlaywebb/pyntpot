@@ -9,10 +9,15 @@ A `.yaml` path is read relative to the caller's directory unless absolute; a `.y
 `.toml` path, a `Path` with any other suffix, and a `str` that is no packaged name are
 refused, each with what to write instead. `default` is the base table itself, with no
 file. A theme's `extends`, `default` when absent, names the theme below it by the same
-rule, a relative path read from the extending file's directory, until `default`. Each
-file is read and, when the read found nothing, checked; every problem of every file in
-the chain is collected, and the chain stops at a file whose read found a problem. A file
-met twice in one chain is an `extends` cycle.
+rule, a relative path read from the extending file's directory, until `default`. The
+whole chain is read first, stopping at a file whose read found a problem. A chain whose
+read stops checks no file: a file's names bind in the scope of the files below it, and
+that scope cannot be built, so the error holds only the read and `extends` problems and
+the next load, once they are fixed, reports the check problems. A non-`str` `extends`
+ends the chain without stopping the read: the file is read, has no target to follow, and
+is checked, reporting the `extends` problem itself. A chain whose read finds nothing is
+checked from the file nearest `default` up, threading the scope, and every problem of
+every file is collected. A file met twice in one chain is an `extends` cycle.
 
 A theme an `extends` names that is refused, missing or a cycle is a problem of the
 extending file, at its `extends` key and line, whose message names the target as written;
