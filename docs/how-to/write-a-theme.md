@@ -455,7 +455,9 @@ file is `src/pyntpot/maps/themes/sepia.yaml`; paint with it by `--style sepia`.
 
 The pigments in `cover.pigments` are saturated, and each carries a lower transparency, so
 they lay down denser. `brush.river_mult` widens the rivers. `nib` letters larger
-and heavier. `route_ink` makes the route magenta and 8 pixels wide. Its file is
+and heavier. `route_ink` makes the route magenta and 8 pixels wide, and `line_effects` cases it with
+the `cased` preset, a paper-coloured ring that keeps it apart from the rivers and roads it
+crosses. Its file is
 `src/pyntpot/maps/themes/bold.yaml`; paint with it by `--style bold`.
 
 ### Winter

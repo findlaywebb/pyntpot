@@ -1,7 +1,9 @@
 # yaml-language-server: $schema=theme.schema.json
 # Bold: the default theme turned up. Bright paper, saturated pigments laid denser, wider rivers,
 # heavier lettering and a strong magenta route ink. It overrides the paper, the cover pigments
-# (each with its transparency), the river width, the lettering and the route ink.
+# (each with its transparency), the river width, the lettering and the route ink, and it cases
+# the route with the `cased` line effect: the casing its route ink declared before the route
+# effects existed. The effect is laid at compose, so the plates and the lettering are unchanged.
 
 paper:
   paper_hex: "#fbf6e8"
@@ -50,3 +52,6 @@ route:
 route_ink:
   px: 8.0
   colour: "#e6007a"
+
+line_effects:
+  route: cased

@@ -218,7 +218,7 @@
 
 ## F: bold cases its route
 
-- [ ] `bold.yaml` takes `line_effects: {route: cased}`; header comment; the "Bold"
+- [x] `bold.yaml` takes `line_effects: {route: cased}`; header comment; the "Bold"
       section; `test_bold_cases_its_route_and_nothing_else`; re-pin `DIGESTS["bold"]`'s
       digest and any bold digest P0's grep found elsewhere, its base digest unchanged.
       `test_line_effect_digests.py` passes with bold's `route` set. Repaint B's 15 names
