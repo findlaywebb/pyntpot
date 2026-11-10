@@ -22,10 +22,10 @@ the cell's corner on the doubled paper. The held values are literals of this scr
 preset.
 
 Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `Reserve`, `Shadow`, `casing`, `glow`,
-`reserve`, `shadow`, `pigment`, `Colour`, `PigmentLayer`, `Sheet`, `PaperStyle`, `BrushStyle`, `brush_from_id`,
-`stamp`, `ink_density`, `wash`, `composite`, `rgb` and `save_image`; from `pyntpot.letters`,
-`Setting`; and `LABELS`, `SUPERSAMPLE`, `GridSpec`, `grid_paper`, `label_grid`, `reduce`,
-`scaled_boxes` and `sweep_grid` from `labelled_grid.py`. It introduces none.
+`reserve`, `shadow`, `pigment`, `Colour`, `PigmentLayer`, `Sheet`, `PaperStyle`, `BrushStyle`,
+`brush_from_id`, `stamp`, `ink_density`, `wash`, `composite`, `rgb` and `save_image`; from
+`pyntpot.letters`, `Setting`; and `LABELS`, `SUPERSAMPLE`, `GridSpec`, `grid_paper`, `label_grid`,
+`reduce`, `scaled_boxes` and `sweep_grid` from `labelled_grid.py`. It introduces none.
 
 Run it with `uv run python examples/cased_stroke.py out/`; it writes `out/cased_stroke.png`.
 """
@@ -105,14 +105,14 @@ SPEC = GridSpec(
 
 @cache
 def _paper() -> np.ndarray:
-    """The paper plate of the whole image at `SUPERSAMPLE` times its size; a cell paints over its own crop."""
+    """The paper plate of the whole image at `SUPERSAMPLE` times its size, cropped by each cell."""
     big = SUPERSAMPLE
     return grid_paper(Sheet(SPEC.height * big, WIDTH_PX * big, GRAN_PX * big, SEED))
 
 
 @cache
 def _scene() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """The wash, the stroke's density and its ink as RGB, painted once at `SUPERSAMPLE` times a cell's size.
+    """The wash, the stroke's density and its ink as RGB, at `SUPERSAMPLE` times a cell's size.
 
     Callers must not change them.
     """
@@ -203,7 +203,8 @@ def main(out_dir: Path) -> Path:
         lambda r, c, box: paint_cell(CELLS[r * ACROSS + c], (box[0], box[1])),
     )
     img = reduce(big, SUPERSAMPLE)
-    # The first row is named above its cells by `label_grid`; the second row's names sit in the gap above it.
+    # `label_grid` names the first row above its cells; the second row's names sit in the gap
+    # above it.
     labelled = label_grid(
         img, boxes, CELLS[:ACROSS], ("",) * len(boxes), LABELS, extra=_later(boxes)
     )

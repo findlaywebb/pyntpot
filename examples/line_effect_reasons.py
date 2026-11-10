@@ -15,8 +15,10 @@ painted.
   the first road's line at the fork. In "casings first" both casings are laid, and then both
   roads, so the fork reads as one road, but the second road's ring still lies under the first
   road's glaze and shows through it. In "casings as a union" one casing is laid round the union
-  of the two roads' footprints (the mask is the larger of the two densities), so there is one
-  outline round the fork and no ring inside a road. All three cells lay the river first and plain.
+  of the two roads' footprints (the mask is the larger of the two densities, which for roads of
+  one width is the ring a theme's `casing_unions` lays, apart from a few pixels where the roads
+  meet), so there is one outline round the fork and no ring inside a road. All three cells lay
+  the river first and plain.
 
 The layers go down in one order everywhere: the wash in wash space, where the paper is 1, then
 the effect with the stroke's density as its mask, then the stroke, and last the multiplication by
@@ -29,8 +31,9 @@ paper; `layout(figure)` returns the cells' settings and the names.
 
 Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `casing`, `glow`, `pigment`, `Colour`,
 `PigmentLayer`, `Sheet`, `PaperStyle`, `BrushStyle`, `brush_from_id`, `stamp`, `ink_density`,
-`wash`, `composite`, `rgb` and `save_image`; and `LABELS`, `SUPERSAMPLE`, `GridSpec`, `grid_paper`,
-`label_grid`, `on_paper`, `reduce`, `scaled_boxes` and `sweep_grid` from `labelled_grid.py`. It introduces none.
+`wash`, `composite`, `rgb` and `save_image`; and `LABELS`, `SUPERSAMPLE`, `GridSpec`,
+`grid_paper`, `label_grid`, `on_paper`, `reduce`, `scaled_boxes` and `sweep_grid` from
+`labelled_grid.py`. It introduces none.
 
 Run it with `uv run python examples/line_effect_reasons.py out/ --figure draw-order`; it writes
 `out/line-effects-draw-order.png`.
@@ -155,7 +158,10 @@ def _spec(figure: str) -> GridSpec:
 
 @cache
 def _paper(figure: str) -> np.ndarray:
-    """The paper plate of the whole figure at `SUPERSAMPLE` times its size; a cell paints over its own crop of it."""
+    """The paper plate of the whole figure at `SUPERSAMPLE` times its size.
+
+    A cell paints over its own crop of it.
+    """
     big = SUPERSAMPLE
     return grid_paper(Sheet(_spec(figure).height * big, WIDTH_PX * big, GRAN_PX * big, SEED))
 

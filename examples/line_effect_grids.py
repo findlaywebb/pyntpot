@@ -20,28 +20,30 @@ Each sweep is painted at 2x and reduced once: the paper, the wash, the stroke an
 number are twice their display size on a grid of `scaled_boxes(spec, SUPERSAMPLE)`, `reduce`
 brings the finished paint down with Lanczos, and the names are lettered after that at 1x. So a
 cell lettered "2 px" shows what `width_px: 2` (or `spread_px`, `blur_px`, `offset_px`) does in a
-theme at scale 1, with the edges smooth. The effects are laid in wash space, where the paper is 1, before the paper plate multiplies, so a
-casing in the paper's own colour becomes the paper's cream and never a white ring.
+theme at scale 1, with the edges smooth. The effects are laid in wash space, where the paper is
+1, before the paper plate multiplies, so a casing in the paper's own colour becomes the paper's
+cream and never a white ring.
 
 The wash and the stroke every cell shares are painted by the sibling `line_effect_scenes.py`;
 this script holds the layout, the effects and the lettering.
 
 `paint_cell(figure, ...)` paints one cell at 2x and returns its float32 RGB `(h, w, 3)`, twice the
 display size, before reduction, lettering and encoding. Its `at` and every `*_px` value are in
-display pixels; the cell doubles them. It paints the wash, the effect through its `pyntpot.ink` primitive with the stroke's density
-as the mask, the stroke, then the crop of the paper plate at `at`. With `plain=True` it paints
+display pixels; the cell doubles them. It paints the wash, the effect through its `pyntpot.ink`
+primitive with the stroke's density as the mask, the stroke, then the crop of the paper plate at
+`at`. With `plain=True` it paints
 the stroke with no primitive called (for the pen casing, the tint and the centre line). A sweep's
 off cell is the plain stroke byte for byte. `stroke_density(figure)` is the stroke's mask.
 
 The held values here are literals of this script and read no preset. Each swept axis is one
 numeric tuple, so a caption's labels match the code.
 
-Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `Shadow`, `PenCasing`, `Reserve`, `casing`,
-`glow`, `shadow`, `pen_casing`, `reserve`, `pigment`, `Colour`, `Sheet`, `PaperStyle`,
+Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `Shadow`, `PenCasing`, `Reserve`,
+`casing`, `glow`, `shadow`, `pen_casing`, `reserve`, `pigment`, `Colour`, `Sheet`, `PaperStyle`,
 `composite` and `save_image`; from `pyntpot.letters`, `Setting`; `LABELS`, `SUPERSAMPLE`,
 `GridSpec`, `grid_paper`, `label_grid`, `on_paper`, `reduce`, `scaled_boxes` and `sweep_grid` from
-`labelled_grid.py`; and `Scene`,
-`scene`, `SEED` and `GRAN_PX` from `line_effect_scenes.py`. It introduces none.
+`labelled_grid.py`; and `Scene`, `scene`, `SEED` and `GRAN_PX` from `line_effect_scenes.py`. It
+introduces none.
 
 Run it with `uv run python examples/line_effect_grids.py out/ --figure glow`; it writes
 `out/glow-sweep.png`.
@@ -265,8 +267,9 @@ def paint_cell(
 ) -> np.ndarray:
     """Paint one cell of a figure at 2x and return its float32 RGB `(h, w, 3)`.
 
-    The cell is twice its display size, so `reduce` brings it down. The wash, then the effect through its `pyntpot.ink` primitive, then the stroke, then the
-    paper plate's crop at `at` multiplied in. With no `values` the effect is the primitive's
+    The cell is twice its display size, so `reduce` brings it down. The wash, then the effect
+    through its `pyntpot.ink` primitive, then the stroke, then the paper plate's crop at `at`
+    multiplied in. With no `values` the effect is the primitive's
     default, which is off; the casing's `width_px=0.0` is its off setting. `plain=True` paints
     the stroke with no primitive called.
 

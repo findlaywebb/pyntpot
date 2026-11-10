@@ -108,6 +108,6 @@ The effects are five functions in `pyntpot.ink`, each taking its value type whol
 - `reserve(rgb, mask, effect, *, threshold=LINE_THRESHOLD, paper=None)` returns the colour with the paper laid back in a ring round the line, every pigment under the ring lifted, and the pool laid just outside it.
 - `pen_casing(rgb, mask, effect, *, threshold=LINE_THRESHOLD, paper=None)` returns `tuple[np.ndarray, np.ndarray]`: the wash knocked back to the paper, and the density of the two edge lines.
 
-The ring of a casing, a reserve and a pen casing is measured from the line's contour and anti-aliased on that distance. A casing union is not exported: a picture painted in Python gets the same result from `casing` by passing it the larger of the two densities.
+The ring of a casing, a reserve and a pen casing is measured from the line's contour and anti-aliased on that distance. A casing union is not exported. A picture painted in Python whose members share a width gets nearly the same ring from `casing` by passing it the larger of the members' densities as one mask; the two differ only in a few pixels where the lines meet.
 
 Casing, glow and reserve leave every pixel at or above the threshold as it was, and a shadow never darkens the line that casts it. A glow never darkens.

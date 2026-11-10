@@ -100,12 +100,14 @@ class TestDrawOrder:
         assert (each - first).max() > 0.1
 
     def test_the_union_is_lighter_than_casings_first_nowhere(self):
-        """The union cell is no lighter than casings-first at any pixel, and darker than it somewhere inside a road."""
-        paint_cell = _reasons()["paint_cell"]
-        first = paint_cell("draw-order", 0, 1)
-        union = paint_cell("draw-order", 0, 2)
+        """The union cell is no lighter than casings-first at any pixel, and darker than it inside the first road."""
+        ns = _reasons()
+        _, road_a, _, _ = ns["_roads"]()
+        first = ns["paint_cell"]("draw-order", 0, 1)
+        union = ns["paint_cell"]("draw-order", 0, 2)
+        darker = (union - first).min(axis=2)
         assert (union - first).max() <= 1e-6
-        assert (union - first).min() < -0.02
+        assert darker[road_a.density >= 0.3].min() < -0.02
 
     def test_the_union_equals_casings_first_away_from_the_fork(self):
         """The union and casings-first agree wherever only one road's footprint or ring is near."""
