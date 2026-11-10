@@ -175,24 +175,24 @@ gate B (S6 in); S7, S8, S9.
 
 ## S6: The grid helper (#170; worktree)
 
-- [ ] Red: `boxes()` literals for the five layouts, taken from the old code before any
+- [x] Red: `boxes()` literals for the five layouts, taken from the old code before any
       edit; the guard that no grid script calls `.convert("RGBa")`.
-- [ ] `examples/labelled_grid.py`: `GridSpec`, `LabelStyle`, `letter_over(img, settings,
+- [x] `examples/labelled_grid.py`: `GridSpec`, `LabelStyle`, `letter_over(img, settings,
       nib, *, gran_px, seed, ground=None)` (the one round trip) and `label_grid(img,
       boxes, columns, rows, style, *, extra=())`, each at most 6 parameters.
-- [ ] `tutorial_grids.py` keeps `_layout`, `_labels` and `_letter` with today's
+- [x] `tutorial_grids.py` keeps `_layout`, `_labels` and `_letter` with today's
       signatures as one-line delegates; its seven quoted grid functions byte-identical, so
       `test_tutorial_quotes.py` passes and `paint-a-watercolour.md` is not edited. The
       other scripts' `_letter` / `_lettered` call `letter_over`; label tuples, names and
       `BRUSH_IDS` stay literals.
-- [ ] `support.examples.load_example` (puts `EXAMPLES_DIR` on `sys.path` for the call);
+- [x] `support.examples.load_example` (puts `EXAMPLES_DIR` on `sys.path` for the call);
       `run_example` uses it; `test_reference_pages.py`'s
       `test_sheet_script_lists_exactly_the_table_ids` loads `brush_sheet.py` through it,
       and the file drops its `import runpy`;
       the `test_examples.py` sibling allowance; `"examples"` added to
       `[tool.ty.environment] root` in `pyproject.toml`, so `ty` types the sibling's
       names (an unresolved import only warns).
-- [ ] Grid `check`; golden docs subset; slice gate green.
+- [x] Grid `check`; golden docs subset; slice gate green.
 
 ## Merge gate B
 
