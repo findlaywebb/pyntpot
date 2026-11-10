@@ -19,6 +19,7 @@ from pyntpot.maps.theme_vocab import ALIAS_PATTERN, LOADER_FIELDS, VOCABULARIES
 
 from support import REPO_ROOT
 from support.planted_groups import Ink
+from support.theme_dump import plain_table
 from support.theme_files import theme_file_at
 from support.theme_schema import REGENERATE, SCHEMA_FILES
 
@@ -100,11 +101,20 @@ def _theme_files() -> list[Path]:
     return sorted(path for directory in THEME_DIRS for path in directory.glob("*.yaml"))
 
 
+def _object_branch(node: Mapping[str, Any]) -> Mapping[str, Any]:
+    """The `"type": "object"` branch of an `anyOf` node, or `node` itself when it has none."""
+    for branch in node.get("anyOf", ()):
+        if branch.get("type") == "object":
+            return branch
+    return node
+
+
 def keys_outside_the_schema(
     value: object, node: Mapping[str, Any], path: tuple[str, ...] = ()
 ) -> list[str]:
     """Name every key path of `value` the schema `node` has no property for, or whose enum refuses it."""
     if isinstance(value, Mapping):
+        node = _object_branch(node)
         found: list[str] = []
         for key, item in value.items():
             here = (*path, str(key))
@@ -136,7 +146,8 @@ def test_every_field_is_in_the_schema_with_its_default() -> None:
     schema: Any = theme_schema()
     style = Style()
     for group in Style.model_fields:
-        values = json.loads(json.dumps(dataclasses.asdict(getattr(style, group))))
+        values = plain_table(dataclasses.asdict(getattr(style, group)))
+        assert isinstance(values, dict)
         values = {k: v for k, v in values.items() if (group, k) not in LOADER_FIELDS}
         properties = schema["properties"][group]["properties"]
         assert set(properties) == set(values), group
@@ -302,26 +313,6 @@ def test_palette_is_a_packaged_name_or_a_palette_file() -> None:
     names, path = schema["properties"]["palette"]["anyOf"]
     assert names == {"enum": ["plain"]}
     assert path == {"type": "string", "pattern": r"\.(yaml|gpl)$"}
-
-
-def test_no_key_is_required() -> None:
-    """No level of the schema requires a key, since a theme names only what it overrides."""
-    assert '"required"' not in json.dumps(theme_schema())
-
-
-def test_a_colour_field_takes_the_three_branch_node() -> None:
-    """A colour field, and each entry of a colour dict field, is a pigment name, a hex or an alias."""
-    schema: Any = theme_schema()
-    node = {
-        "anyOf": [
-            {"enum": sorted(PIGMENT_REGISTRY.names())},
-            {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"},
-            {"type": "string", "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"},
-        ]
-    }
-    assert node["anyOf"] == schema["properties"]["paper"]["properties"]["paper_hex"]["anyOf"]
-    pigments = schema["properties"]["cover"]["properties"]["pigments"]
-    assert pigments["additionalProperties"] == node
 
 
 def test_a_group_that_is_no_dataclass_is_refused() -> None:

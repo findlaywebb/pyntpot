@@ -6,7 +6,7 @@ from golden.diff_images import SUMMARY_JSON
 from golden.diff_report import Summary
 from golden.repaint import main, place_docs
 
-from support.docs_images import IMAGES_DIR, MASTERS_DIR
+from support.docs_image import IMAGES_DIR, MASTERS_DIR
 
 
 def test_docs_output_is_placed_at_the_repository_paths(tmp_path: Path) -> None:

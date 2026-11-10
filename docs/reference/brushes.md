@@ -1,6 +1,6 @@
 # Brushes
 
-A brush is one mark-making tool, in render pixels: a tip of bristles stamped along a path. The brush sheet is the catalogue of brush cells. This page lists every brush id and what a row and a column of the sheet set. `brush_from_id` from `pyntpot.ink` builds a brush from an id.
+A brush is one mark-making tool, in render pixels: a tip of bristles stamped along a path. The brush sheet is the catalogue of brush cells. This page lists every brush id and what a row and a column of the sheet set. `brush_from_id` from `pyntpot.ink` builds a brush from an id. The [brush gallery](brush-gallery.md) paints every id.
 
 ![The brush grid: eight brush treatments in one brown ink, stroked as a wave at 3, 6 and 12 pixels wide in three rows. The wet treatments stay whole at every width, the dry ones break into flecks as they widen, and the nibs leave a blot where they touch down.](../images/reference/brush-sheet.webp)
 
@@ -29,6 +29,19 @@ The row sets how the brush behaves. Widths are not part of a row: they come from
 - The rows `5`, `6` and `8` are a nib: a flat core, a touch-down blot, and a line that thins rather than breaking when it runs low. The others are brushes.
 - Row `1` is the wet treatment. Rows `4` and `7` are the driest.
 - `BrushStyle`'s `brush_overrides` can replace a treatment's values for one class.
+
+The grid below sweeps `Dry` and `Load` for one stroke, `MAJ2-c` at 12 pixels, with every other value row `2`'s.
+`Load` is the extra ink where the brush is first set down, which fades within about a brush
+width of the start, so it shows only as a blot at the head of the stroke. The sheet's rows keep it
+between 0.4 and 1.6, where it hardly shows, so the grid runs it on to 8.
+
+![One brown stroke in a grid: a solid line at the left that breaks into speckle towards the right, and a heavier blot at the start of the stroke in the lower rows.](../images/reference/brush-dryness-sweep.webp)
+
+*Painted by `examples/setting_grids.py` (figure dryness). The labels read 0.1, 0.4, 0.7 and 0.9 across, and load 0.5, 3 and 8 down. The values are the `dry` and `load` of `brush_overrides["major"]`.*
+
+The sweep sets the values in `brush_overrides["major"]` and reads them with
+`brush_from_id("MAJ2-c", 12, 1.0, style, override="major")`. Without `override=` the id's own
+prefix, `maj`, is looked up, and the setting does nothing.
 
 ## Ink colours
 

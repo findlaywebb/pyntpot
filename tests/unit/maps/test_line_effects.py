@@ -153,6 +153,14 @@ class TestThePresets:
         kinds = {name: [type(e) for e in stack.effects] for name, stack in BUILT_IN_PRESETS.items()}
         assert kinds == {"cased": [Casing], "halo": [Glow], "lifted": [Shadow]}
 
+    def test_the_presets_hold_the_values_tuned_by_eye(self) -> None:
+        """Each preset is the pinned literal chosen on the Ambleside fixture, not a recomputed value."""
+        assert dict(BUILT_IN_PRESETS) == {
+            "cased": EffectStack(effects=(Casing(width_px=1.8, strength=0.9),)),
+            "halo": EffectStack(effects=(Glow(spread_px=1.5, blur_px=3.0, strength=0.85),)),
+            "lifted": EffectStack(effects=(Shadow(offset_px=2.5, blur_px=2.0, strength=0.45),)),
+        }
+
 
 class TestTheBasemapTable:
     """`BasemapStyle.line_effects` refuses a key outside the seven classes and drops empties."""

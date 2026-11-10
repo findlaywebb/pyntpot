@@ -21,6 +21,10 @@ tutorial. The command line has no route-ink option, so use a script or a
    Leave out either argument to keep the theme's value. The default theme's route is
    pink, `#c22050`, 5.4 pixels wide.
 
+   A fed colour is the colour of the route's "start" and "finish" markers too. It
+   overrides a theme's marker shade, such as the one `bold` or `sepia` sets in
+   `nib.label_route_ink`. A fed width changes only the route.
+
 2. Pass that `style` to every stage, where the script passed `Style.default()`:
 
    ```python
@@ -35,14 +39,15 @@ tutorial. The command line has no route-ink option, so use a script or a
 
 3. Run the script. If you had already painted the map in the old ink, the plates in the
    cache are still current. `paint` logs that it repainted nothing, and the run takes
-   seconds:
+   seconds. The first `letter` after a new colour strokes the nib plate again, which takes
+   about 4.5 seconds, because the markers' ink changed. A new width alone does not:
 
    ```text
    INFO:pyntpot.maps.pipeline:plates in cache/plates/f0a137ce97afcb43 are current, nothing repainted
    INFO:__main__:wrote out/route_ink.png
    ```
 
-   No plate is painted from the route ink. `paint` reads the width only to decide how
+   No base plate is painted from the route ink. `paint` reads the width only to decide how
    near two passes of a retraced route have to come to be drawn as one stroke, and `compose` draws the route over the plates.
 
 ## Result

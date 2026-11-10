@@ -22,7 +22,7 @@ Does not write the committed copies (the test support's regenerator does), valid
 theme, check numeric ranges or brush ids, or read any file. Nothing in `style.py` imports
 this module, so importing the style here forms no cycle.
 
-Invariants: no level has `required`; every object but a dict field's entries has
+Invariants: no level has `required`, but a `CoverPigment` object's `pigment`; every object but a dict field's entries has
 `additionalProperties` false; the schema is a pure function of the groups it is given.
 """
 
@@ -33,9 +33,10 @@ from collections.abc import Mapping
 from typing import Literal
 
 from pyntpot.ink.colour import Colour
+from pyntpot.maps.cover_pigment import CoverPigment
 from pyntpot.maps.style import Style
 from pyntpot.maps.theme_check import EXTENDS
-from pyntpot.maps.theme_schema_tables import colour_schema, top_level_tables
+from pyntpot.maps.theme_schema_tables import colour_schema, cover_pigment_schema, top_level_tables
 from pyntpot.maps.theme_vocab import LOADER_FIELDS, VOCABULARIES
 
 #: The schema's address on the docs site.
@@ -159,6 +160,8 @@ def _leaf_schema(hint: object, path: _Path) -> dict[str, object]:
     """
     if hint is Colour:
         return colour_schema()
+    if hint is CoverPigment:
+        return cover_pigment_schema()
     if hint in _SCALARS:
         return dict(_SCALARS[hint])
     if typing.get_origin(hint) is Literal:
@@ -177,7 +180,12 @@ def _entries_schema(hint: object, path: _Path) -> dict[str, object]:
 
 
 def _json(value: object) -> object:
-    """`value` as JSON data: a dataclass as a dict of its fields, a tuple as a list."""
+    """`value` as JSON data: a dataclass as a dict of its fields, a tuple as a list.
+
+    A `CoverPigment` is the exception, written as its mapping, the one written form.
+    """
+    if isinstance(value, CoverPigment):
+        return value.as_table()
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
         return {spec.name: _json(getattr(value, spec.name)) for spec in dataclasses.fields(value)}
     if isinstance(value, Mapping):

@@ -28,7 +28,8 @@ from PIL import Image
 from pyntpot.maps import OpenTopoData, OverpassFeatures
 
 from support import REPO_ROOT
-from support.docs_images import IMAGES, MASTER_WIDTH, DocsImage, master_path
+from support.docs_image import MASTER_WIDTH, DocsImage, master_path
+from support.docs_images import IMAGES
 from support.examples import run_example
 from support.golden import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION, differing_fraction
 

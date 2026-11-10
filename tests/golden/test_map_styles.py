@@ -24,7 +24,7 @@ CARD_SIZE = (1800, 1281)
 MEAN_RGB: dict[str, tuple[float, float, float]] = {
     "pen-and-ink": (226.8, 221.4, 209.3),
     "sepia": (198.4, 168.6, 118.3),
-    "bold": (212.9, 208.3, 182.8),
+    "bold": (214.2, 209.7, 185.0),
     "winter": (206.2, 213.0, 218.5),
 }
 

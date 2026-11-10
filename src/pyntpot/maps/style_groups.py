@@ -30,8 +30,8 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from pyntpot.ink.colour import Colour, normalise_colours
-from pyntpot.ink.pigment_table import PIGMENTS
 from pyntpot.maps.casing_unions import union_problems
+from pyntpot.maps.cover_pigment import CoverPigment, coerce_cover_pigment, default_pigments
 from pyntpot.maps.line_effects import EffectStack, checked_line_effects
 from pyntpot.maps.providers.overpass import MINOR_ROADS
 
@@ -129,7 +129,12 @@ class CoverStyle:
             painted neighbour's class; a patch nothing painted touches is kept. Zero keeps
             every patch.
         cover_cfg: How dark a wash of each class goes, and how hard its edge pools.
-        pigments: Multiply colours: what a full-strength wash of each pigment transmits.
+        pigments: Each cover class's pigment: the multiply colour a full-strength wash transmits,
+            and its transparency, what it shows over black as a share of over white. A theme
+            gives an entry as a ref or as `{pigment, transparency}`; one with no transparency
+            takes the pigment's own, else the class's built-in. A `None` transparency, which only
+            a Python-built `CoverPigment` or a key outside the cover classes has, takes
+            `paper.km_transparency`.
         pale_base: The pale single wash drawn instead of the classes when cover is off: its
             density.
         pale_pool: How hard that pale wash's edge pools.
@@ -163,7 +168,7 @@ class CoverStyle:
             "wood": (0.72, 0.3),
         }
     )
-    pigments: dict[str, Colour] = field(default_factory=lambda: dict(PIGMENTS))
+    pigments: dict[str, CoverPigment] = field(default_factory=default_pigments)
     pale_base: float = 0.50
     pale_pool: float = 0.16
     wood_texture: float = 0.75
@@ -174,8 +179,12 @@ class CoverStyle:
     dab_strengths: tuple[float, ...] = (0.34, 0.36, 0.38)
 
     def __post_init__(self) -> None:
-        """Normalise the pigment colours to `Colour`, so a plain `str` passed to `replace` is accepted."""
-        normalise_colours(self, "pigments")
+        """Rebuild `pigments` as `CoverPigment`s: a plain `str` takes its class's built-in transparency."""
+        object.__setattr__(
+            self,
+            "pigments",
+            {name: coerce_cover_pigment(name, value) for name, value in self.pigments.items()},
+        )
 
 
 @dataclass(frozen=True, kw_only=True)

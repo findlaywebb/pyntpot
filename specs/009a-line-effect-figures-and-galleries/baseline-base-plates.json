@@ -1,0 +1,189 @@
+{
+ "default": {
+  "hash": "02bbeba32ac10197-d9c56c0811177b0f",
+  "files": {
+   "paper": [
+    1244848,
+    "ed80583b0ae3d4a7"
+   ],
+   "pen": [
+    26782,
+    "93160e64c6d9bb60"
+   ],
+   "wash": [
+    765738,
+    "ec53d1987bdef9eb"
+   ]
+  }
+ },
+ "bold": {
+  "hash": "02bbeba32ac10197-6d77f74215314006",
+  "files": {
+   "paper": [
+    1244618,
+    "a7f28b1d2407c65d"
+   ],
+   "pen": [
+    26782,
+    "c238c2e48e18cb64"
+   ],
+   "wash": [
+    822862,
+    "dd36730852180823"
+   ]
+  }
+ },
+ "pen-and-ink": {
+  "hash": "02bbeba32ac10197-0d40a30d74c111e0",
+  "files": {
+   "paper": [
+    1242176,
+    "5c2b76058cecc63d"
+   ],
+   "pen": [
+    26782,
+    "93160e64c6d9bb60"
+   ],
+   "wash": [
+    623848,
+    "b42502e1f0bc67a6"
+   ]
+  }
+ },
+ "sepia": {
+  "hash": "02bbeba32ac10197-3a2f5fbbd424e347",
+  "files": {
+   "paper": [
+    1301566,
+    "0476d1ef8e18e4b8"
+   ],
+   "pen": [
+    26782,
+    "93160e64c6d9bb60"
+   ],
+   "wash": [
+    757744,
+    "d33eaa6b19b782b2"
+   ]
+  }
+ },
+ "winter": {
+  "hash": "02bbeba32ac10197-c1b7c47d4ea12d6c",
+  "files": {
+   "paper": [
+    1273466,
+    "afdc843e4895d51b"
+   ],
+   "pen": [
+    26782,
+    "93160e64c6d9bb60"
+   ],
+   "wash": [
+    740378,
+    "0f41a841377e56d2"
+   ]
+  }
+ },
+ "ambleside-hero": {
+  "hash": "e2c1b30e408e9487-149792857eb4656a",
+  "files": {
+   "paper": [
+    1243676,
+    "978a142f22453fa3"
+   ],
+   "pen": [
+    51746,
+    "f29d08e4ad109154"
+   ],
+   "wash": [
+    1451096,
+    "b0477613af454a58"
+   ]
+  }
+ },
+ "ambleside": {
+  "hash": "37285639f9693219-1fbd4375dceec789",
+  "files": {
+   "paper": [
+    1244848,
+    "ed80583b0ae3d4a7"
+   ],
+   "pen": [
+    51078,
+    "5dde5e751c93ff26"
+   ],
+   "wash": [
+    1540812,
+    "22148f15a0565d85"
+   ]
+  }
+ },
+ "oxford": {
+  "hash": "00cb7d3fcba64501-0f73e166ba6ba263",
+  "files": {
+   "paper": [
+    1244848,
+    "ed80583b0ae3d4a7"
+   ],
+   "pen": [
+    51156,
+    "5ae950b0c19f4d96"
+   ],
+   "wash": [
+    1526706,
+    "ed8638c7656af7c8"
+   ]
+  }
+ },
+ "skye": {
+  "hash": "dd81d715ab26c169-b54086dfe786d1f0",
+  "files": {
+   "paper": [
+    1244848,
+    "ed80583b0ae3d4a7"
+   ],
+   "pen": [
+    46682,
+    "f291b4bd90a12565"
+   ],
+   "wash": [
+    1739084,
+    "c0da5851ad0182ff"
+   ]
+  }
+ },
+ "y-fenni": {
+  "hash": "baaa5aad95bbe719-90c968b5e78d7058",
+  "files": {
+   "paper": [
+    1083670,
+    "ccae82da530413f3"
+   ],
+   "pen": [
+    64870,
+    "f2e816c6b4488e7f"
+   ],
+   "wash": [
+    1300866,
+    "58e12b002c5170d4"
+   ]
+  }
+ },
+ "yr-wyddfa": {
+  "hash": "777f5af240e3e0ae-58c70051932a610f",
+  "files": {
+   "paper": [
+    1284016,
+    "29cc4ef190d90999"
+   ],
+   "pen": [
+    47828,
+    "358a0f5b5744ba68"
+   ],
+   "wash": [
+    1796114,
+    "83a1be79eaac70cf"
+   ]
+  }
+ }
+}

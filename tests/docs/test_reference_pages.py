@@ -12,8 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from pyntpot.ink import PAINTERS_PIGMENTS, PIGMENTS
+from pyntpot.ink import PAINTERS_PIGMENTS, PIGMENT_REGISTRY, PIGMENTS
 from pyntpot.ink.brush_sheet import BRUSH_COLOURS, BRUSH_TREATMENTS
+from pyntpot.maps import Palette
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.cli import build_parser
 from pyntpot.maps.plates import Manifest
@@ -240,3 +241,36 @@ class TestBrushes:
         text = _page("brushes.md")
         missing = sorted(brush for brush in self._table_ids() if f"`{brush}`" not in text)
         assert not missing, f"brushes.md lacks: {missing}"
+
+
+class TestGalleries:
+    """The gallery scripts paint every id, pigment and palette the library holds."""
+
+    def test_the_brush_gallery_paints_every_id(self):
+        """The ids the brush gallery's figures paint are exactly the ids the brush tables make, each once."""
+        namespace = load_example("brush_gallery", "example_brush_gallery")
+        painted = [i for figure in namespace["FIGURES"] for i in namespace["figure_ids"](figure)]
+        assert len(painted) == len(set(painted)), "the brush gallery paints an id twice"
+        assert set(painted) == TestBrushes._table_ids()
+
+    def test_the_brush_gallery_literal_columns_equal_the_tables(self):
+        """The script's PREFIX_COLUMNS lists, for each prefix, exactly the colour columns the brush tables hold."""
+        columns = load_example("brush_gallery", "example_brush_gallery")["PREFIX_COLUMNS"]
+        assert {prefix: set(letters) for prefix, letters in columns.items()} == {
+            prefix: set(table) for prefix, table in BRUSH_COLOURS.items()
+        }
+
+    def test_the_pigment_gallery_paints_every_registry_pigment(self):
+        """The roles and painters figures hold the registry's names between them, each once."""
+        rows = load_example("pigment_gallery", "example_pigment_gallery")["wash_rows"]
+        names = (*rows("roles", 360).names, *rows("painters", 360).names)
+        assert sorted(names) == sorted(PIGMENT_REGISTRY.names())
+
+    def test_the_palettes_figure_shows_every_bundled_palette(self):
+        """Every bundled palette, and every alias it binds, is a swatch of the palettes figure."""
+        swatches = load_example("pigment_gallery", "example_pigment_gallery")["palette_swatches"]()
+        shown = {(palette, alias) for palette, alias, _ in swatches}
+        expected = {
+            (name, alias) for name in Palette.names() for alias in Palette.named(name).pigments
+        }
+        assert shown == expected

@@ -63,6 +63,21 @@ extra density that band carries.
 
 *Painted by `examples/wash_stages.py` (seed 11, `figure="rim"`).*
 
+How much the band carries is `pool`. The grid below paints one ultramarine disc at four values of it,
+on two sheets that differ only in their seed, so the two rows show what is the paper's doing and
+what is the setting's. The wash's body is 0.4 here, not the 0.8 of the figures above, so there is room
+above it for the band to read: on a heavy body the band runs into the ceiling of 1 and the larger
+values look alike.
+
+![A blue disc four times, from no darker band to a heavy dark ring just inside the edge, on two sheets with different seeds.](../images/explanation/wash-pool-sweep.webp)
+
+*Painted by `examples/setting_grids.py` (figure pool). The labels read 0, 0.25, 0.6 and 1.2 across, and seed 11 and seed 29 down. The value is `pool`, the extra density at the edge.*
+
+At 0 the edge is only as dark as the body, soft and a little uneven. At 0.25 a thin line begins to
+collect inside it. At 0.6 the disc is outlined by its own pigment, the look of a wash left to dry
+flat. At 1.2 the ring is much darker than the middle, which reads as a stain rather than
+a wash. Nothing but `pool` moves along a row.
+
 The band here is the wash's mask minus a blur of itself, scaled so its strongest point is 1
 and multiplied by `pool`; the wash is then 0.8 of body plus 0.55 of band. It is one width
 wherever the edge is. The truer form, an outward flow that decays inward and is wider on a
@@ -80,6 +95,20 @@ the wash multiplies its body by a noise field of that cell.
 ![The same wash on paper with a fine grain: the blue is broken into a pale speckle with darker flecks, and the edge band is still there.](../images/explanation/wash-grain.webp)
 
 *Painted by `examples/wash_stages.py` (seed 11, `figure="grain"`; a 6 pixel grain against the 60 pixel mottle of the stage before).*
+
+The grid below paints that one disc with grain cells of 3, 6, 12 and 24 pixels across, and with
+the paper's `fibre` at 0, 0.35 and 1 down. The fibre is how much of the paper's tooth is a
+laid fibre rather than an even noise; it runs from 0 to 1, and 0.35 is `PaperStyle`'s
+`paper_fibre_mix` default, the cold press of the other figures.
+
+![A blue disc in a grid: its speckle is fine at the left and a broad cloud at the right, and the rows differ in how the paper's tooth streaks through the blue.](../images/explanation/wash-granulation-sweep.webp)
+
+*Painted by `examples/setting_grids.py` (figure granulation). The labels read 3, 6, 12 and 24 across, and 0, 0.35 and 1 down. The grain is `gran_px` in pixels and the rows are the sheet's `fibre`; the pool is 0.25 throughout.*
+
+A small `gran_px` is a fine speckle, and a large one stops being a grain at all and becomes
+the slow cloud of tone the wash already has. The fibre barely moves the speckle. It changes
+the tooth the wash is lightened by, so the rows differ in the streaks and the way the edge
+breaks, and the bottom row, all fibre, shows the paper's laid lines.
 
 Here the grain is its own noise field, drawn from the sheet's seed. In a real wash the
 grain follows the paper: pigment settles in the hollows the dry brush skips over. The wash

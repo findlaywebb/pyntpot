@@ -42,6 +42,10 @@
 
 *[painter's pigments]: A pigment named by the tube a painter buys (ultramarine, burnt_sienna), not by map role; held beside PIGMENTS in its own table and read by no map style.
 
+*[cover pigment]: The pigment one cover class paints: its colour and its own transparency, written in a theme as a reference or as {pigment, transparency} and held in CoverStyle.pigments. One with no transparency of its own takes the pigment's, else the class's built-in.
+
+*[cover pigments]: The pigment one cover class paints: its colour and its own transparency, written in a theme as a reference or as {pigment, transparency} and held in CoverStyle.pigments. One with no transparency of its own takes the pigment's, else the class's built-in.
+
 *[pigment layer]: One layer of the pigment stack composite lays: a density, a pigment colour and optionally its transparency. Not the basemap's layers.
 
 *[pigment layers]: One layer of the pigment stack composite lays: a density, a pigment colour and optionally its transparency. Not the basemap's layers.
@@ -166,7 +170,7 @@
 
 *[palettes]: A named, shareable set of colour aliases that a theme chooses with palette, by name like a theme; it imports from and exports to a GIMP .gpl file.
 
-*[route ink]: How the route is drawn on the map: its drawn_as (pen or solid), its width in display pixels, its colour, its blend and its opacity; the width also sets how near two passes of a retraced route have to come to be drawn as one stroke. The style field Style.route_ink, a theme's route_ink table; a caller feeds its colour and width through Style.with_route_ink.
+*[route ink]: How the route is drawn on the map: its drawn_as (pen or solid), its width in display pixels, its colour, its blend and its opacity; the width also sets how near two passes of a retraced route have to come to be drawn as one stroke. The style field Style.route_ink, a theme's route_ink table; a caller feeds its colour and width through Style.with_route_ink, and a fed colour also sets the ink of the "start" and "finish" markers (nib.label_route_ink).
 
 *[fetch cache]: The directory a fetch keeps its provider payloads in, keyed on the track's box, the margin and the providers' ids, which also holds each key's plates and lettering.
 

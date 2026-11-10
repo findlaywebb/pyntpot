@@ -310,7 +310,7 @@ def nib_cover(
     # the splat then read the set-down's samples alone.
     reach = math.hypot(max(sx - x0 + 1, x1 - sx), max(sy - y0 + 1, y1 - sy))
     n = int(np.searchsorted(lay.tr.t, reach + float(np.abs(lay.off).max()), side="right"))
-    px, py = pos[0][:n], pos[1][:n]
+    px, py = pos[0][:n].astype(np.float64), pos[1][:n].astype(np.float64)
     along = lay.tr.total / max(len(lay.tr.t) - 1, 1)
     across = lay.ink.width[:n] / max(lay.smp.m_hi - 1, 1)
     near = live[:n] & (px > x0 - 1) & (px < x1) & (py > y0 - 1) & (py < y1)

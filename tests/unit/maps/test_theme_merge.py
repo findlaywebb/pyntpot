@@ -3,7 +3,9 @@
 import copy
 import dataclasses
 
+from pyntpot.ink import Colour
 from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.maps import CoverPigment
 from pyntpot.maps.style_groups import CoverStyle
 from pyntpot.maps.theme_merge import merge
 
@@ -30,11 +32,12 @@ class TestMerge:
         """Overriding `cover.pigments.wood` keeps the other fourteen pigments."""
         pigments = CoverStyle().pigments
         merged = merge(
-            {"cover": {"pigments": pigments}}, {"cover": {"pigments": {"wood": "#123456"}}}
+            {"cover": {"pigments": pigments}},
+            {"cover": {"pigments": {"wood": CoverPigment(Colour("#123456"), 0.05)}}},
         )
         got = merged["cover"]
         assert isinstance(got, dict)
-        assert got["pigments"] == {**pigments, "wood": "#123456"}
+        assert got["pigments"] == {**pigments, "wood": CoverPigment(Colour("#123456"), 0.05)}
         assert len(got["pigments"]) == 15
 
     def test_a_table_entry_deep_merges(self) -> None:

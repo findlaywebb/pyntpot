@@ -48,7 +48,6 @@ PINNED: dict[type, tuple[str, ...]] = {
         "paper_edge",
         "sheet_seed",
         "km_glazing",
-        "pigment_transparency",
         "km_transparency",
         "paper_fibre",
         "paper_fibre_mix",
@@ -254,7 +253,7 @@ PINNED: dict[type, tuple[str, ...]] = {
 #: with the pinned digest of its default fields: the first 16 hex digits of the SHA-256
 #: of the fields as sorted-key JSON, which tells `0.2` from `0`.
 SOURCED: dict[type, str] = {
-    PaperStyle: "0af5f9f84facb9e9",
+    PaperStyle: "afbb709ca8a06fde",
     WashStyle: "42edd0f93fa39dea",
     BrushStyle: "0187926c89a1b075",
     FaceStyle: "760ec6039a286528",
@@ -262,7 +261,7 @@ SOURCED: dict[type, str] = {
     NibStyle: "76aa066043386bcf",
     CardStyle: "5e73ba4b178084f2",
     RibbonStyle: "6c8fdf4184013394",
-    CoverStyle: "8ff38fcbad0d7a6f",
+    CoverStyle: "a0c76eb286c16cb5",
     RouteStyle: "e7af799eb721f445",
     LetteringStyle: "252f33e095df0b01",
     RouteInkStyle: "6a536a78d3ad069a",

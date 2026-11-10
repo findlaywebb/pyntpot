@@ -15,7 +15,8 @@ from functools import cache
 from pathlib import Path
 
 from support import REPO_ROOT
-from support.docs_images import IMAGES, DocsImage
+from support.docs_image import DocsImage
+from support.docs_images import IMAGES
 from support.site_pages import DOCS, prose, resolve, site_pages
 
 _IMAGE = re.compile(r"^!\[[^\]]*\]\(\s*<?(?P<href>[^)\s>]+)>?\s*\)\s*$")

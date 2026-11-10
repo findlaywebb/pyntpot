@@ -4,7 +4,9 @@ Key names: `top_level_tables`, the schema nodes of the six tables in the order t
 theme, after `extends`: `palette`, `pigments`, `colours`, `effect_presets`, `line_effects` and
 `casing_unions`;
 `colour_schema`, the node of a `Colour` value, shared with
-`theme_schema` so a colour field and a `colours` entry read alike.
+`theme_schema` so a colour field and a `colours` entry read alike; `cover_pigment_schema`, the
+node of a `CoverPigment`: that colour node, or an object of a required `pigment` and an optional
+`transparency`.
 
 A colour is `anyOf` three branches: an enum of the registry's pigment names, the hex pattern and
 the alias pattern. The schema is static and cannot know a theme's own aliases or pigments, so
@@ -25,8 +27,8 @@ are load-only, and its description says so.
 Does not import the style model or `theme_schema` (the schema imports this module), validate a
 theme or write the committed copies.
 
-Invariants: no node has `required`; every table node forbids other keys where its keys are
-fixed.
+Invariants: no node has `required`, but a `CoverPigment` object's `pigment`; every table node
+forbids other keys where its keys are fixed.
 """
 
 from collections.abc import Callable
@@ -47,6 +49,20 @@ def colour_schema() -> dict[str, object]:
             {"type": "string", "pattern": ALIAS_PATTERN},
         ]
     }
+
+
+def cover_pigment_schema() -> dict[str, object]:
+    """The node of a `CoverPigment` value: a colour node or `{pigment, transparency}`."""
+    table: dict[str, object] = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["pigment"],
+        "properties": {
+            "pigment": colour_schema(),
+            "transparency": {"type": "number"},
+        },
+    }
+    return {"anyOf": [colour_schema(), table]}
 
 
 type SubTable = Callable[[type, tuple[str, ...]], dict[str, object]]

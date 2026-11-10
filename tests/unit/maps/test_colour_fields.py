@@ -3,17 +3,18 @@
 import dataclasses
 import re
 import typing
-from collections.abc import Iterator
 from typing import Any
 
 import pydantic
 import pytest
 
 from pyntpot.ink import Casing, Colour, Glow, Shadow
-from pyntpot.maps import Style
+from pyntpot.maps import CoverPigment, Style
 from pyntpot.maps.style_groups import CoverStyle, RouteInkStyle
 from pyntpot.maps.theme_schema import theme_schema
 from pyntpot.maps.theme_vocab import ALIAS_PATTERN, COLOUR_PATTERN
+
+from support.colour_fields import colour_paths
 
 HEX = re.compile(r"#[0-9a-f]{6}")
 
@@ -34,18 +35,6 @@ def _string_defaults(style: Style) -> dict[_Path, list[object]]:
     return paths
 
 
-def _colour_paths(style: Style) -> Iterator[_Path]:
-    """Every path of `style` whose declared type is `Colour`, a dict field's values as `*`."""
-    for group, info in type(style).model_fields.items():
-        cls = info.annotation
-        assert isinstance(cls, type)
-        for name, hint in typing.get_type_hints(cls).items():
-            if hint is Colour:
-                yield (group, name)
-            elif typing.get_origin(hint) is dict and typing.get_args(hint)[1] is Colour:
-                yield (group, name, "*")
-
-
 class TestFieldTypes:
     """Which fields are `Colour`, in the model and in the schema."""
 
@@ -56,14 +45,14 @@ class TestFieldTypes:
             for path, values in _string_defaults(Style()).items()
             if values and all(isinstance(v, str) and HEX.fullmatch(v) for v in values)
         }
-        assert set(_colour_paths(Style())) == implied
-        assert len(implied) == 8
+        assert set(colour_paths(Style())) == implied
+        assert len(implied) == 7
 
     def test_every_colour_path_has_the_three_branch_node(self):
         """Each `Colour` path, a dict field's values included, is the pigment, hex or alias node."""
         schema: Any = theme_schema()
-        leaves = [_node_at(schema, path) for path in _colour_paths(Style())]
-        assert len(leaves) == 8
+        leaves = [_node_at(schema, path) for path in colour_paths(Style())]
+        assert len(leaves) == 7
         for leaf in leaves:
             _assert_three_branches(leaf)
 
@@ -114,11 +103,11 @@ class TestCoercion:
         assert type(got) is Colour
         assert got == "#abcdef"
 
-    def test_replace_coerces_a_dict_of_colours(self):
-        """`replace` with a dict of upper-case hexes gives a dict of `Colour` values."""
+    def test_replace_coerces_a_dict_of_cover_pigments(self):
+        """`replace` with an upper-case hex gives a `CoverPigment` with `built`'s own transparency."""
         got = dataclasses.replace(CoverStyle(), pigments={"built": "#ABCDEF"}).pigments["built"]
-        assert type(got) is Colour
-        assert got == "#abcdef"
+        assert type(got.colour) is Colour
+        assert got == CoverPigment(Colour("#abcdef"), 0.26)
 
     def test_model_validate_builds_a_colour(self):
         """`Style.model_validate` from a dict holds a `Colour`, stored lower-case."""

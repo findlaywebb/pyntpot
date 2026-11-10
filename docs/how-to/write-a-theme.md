@@ -49,7 +49,7 @@ from the [tutorial](../tutorials/index.md). Every field a theme can set is on th
 3. Check that the theme took. The wood is yours and every other pigment is still sepia's:
 
     ```python
-    style.cover.pigments["wood"]  # '#8f9f6a'
+    style.cover.pigments["wood"]  # CoverPigment(colour='#8f9f6a', transparency=0.05)
     style.cover.pigments["water"] == Style.named("sepia").cover.pigments["water"]  # True
     ```
 
@@ -88,7 +88,17 @@ pyntpot map route.gpx -o out/route.png --cache cache/ --contact https://example.
   out from the base.
 - **Table fields merge per entry.** Naming `cover.pigments.wood` changes the wood and keeps
   every other pigment. An entry that is itself a table, such as `brush.brush_overrides.lane`,
-  merges the same way.
+  merges the same way. The exception is a `cover.pigments` entry, which is replaced whole: a
+  colour and its transparency go together.
+- **A cover pigment carries its transparency.** Each `cover.pigments` entry is a reference (a
+  `#rrggbb`, a pigment name or an alias) or a table `{pigment: <reference>, transparency: <0
+  to 1>}`. Its transparency is the entry's own, else the named pigment's own, else the cover
+  class's built-in one. So a theme that only rebinds a class by hex keeps that class's
+  look, and `wood: {pigment: "#556b2f", transparency: 0.03}` is the way to change it. A
+  child theme that rebinds a class by bare hex takes the built-in transparency, not its
+  parent's, because the child's entry replaces the parent's whole.
+  `paper.pigment_transparency` no longer exists: a theme that sets it is told to use
+  `cover.pigments.<class>.transparency`.
 - **Everything else replaces.** A number, a string, a colour or a list is taken whole:
   setting `brush.blotch_m` to `[200.0, 26.0]` sets both of its numbers.
 - **Booleans are `true` and `false` only.** `no`, `yes`, `on` and `off` are strings, so
@@ -256,6 +266,57 @@ writes none of this paints as before. A preset of your own may not take a built-
 preset's name, and replacing an inherited one needs `override: true` in the preset. The
 [schema](../reference/theme.schema.json) lists every field.
 
+A reserve lays the paper itself back round a line, where a casing lays a colour. It takes
+`width_px` from 0 to 16 and `pool` from 0 to 1, and a class takes a casing or a reserve, not both:
+
+<!-- theme: reserve.yaml -->
+```yaml
+extends: sepia
+line_effects:
+  road_major:
+    reserve: {width_px: 2, pool: 0.3}
+```
+
+`casing_unions:` is a top-level list of lists of classes whose rings are laid as one, so a junction
+is one band. The members are of one group, share one colour and strength, and never include the
+route; `casing_unions: []` turns an inherited set off:
+
+<!-- theme: unions.yaml -->
+```yaml
+extends: sepia
+line_effects:
+  road_major:
+    casing: {width_px: 2, strength: 0.9}
+  lane:
+    casing: {width_px: 2, strength: 0.9}
+casing_unions: [[road_major, lane]]
+```
+
+[Line effects](../reference/line-effects.md) lists every rule and the error each breaks.
+
+## Strengthen or soften the relief
+
+The shaded relief under the washes is `cover.relief_strength`, which multiplies its density and
+the ceiling the density is held to. `1.0` is the default, `0` is no relief and a larger number
+paints the slopes darker:
+
+<!-- theme: relief.yaml -->
+```yaml
+extends: sepia
+cover:
+  relief_strength: 2.0
+```
+
+![Four close windows of the Ambleside card on the slope of Loughrigg Fell, the hillside shaded more heavily from left to right as the strength rises.](../images/how-to/relief-strength.webp)
+
+*Painted by `examples/relief_grid.py` (the Ambleside fixture, the default style). The labels read 0, 2, 4 and 8 across. The value is `relief_strength`.*
+
+At 0 the washes are flat. At 2 the fell carries a shade under the colour, at 4 the slopes
+take on the form of the ground, and at 8 they are dark enough to dull the colour of the land
+under them, which suits a map of mountains. Past about 8 the relief stops growing darker. `1.0`
+is the default's own, a quieter shade than any of these cells. `cover.relief` set to `false`
+turns the relief off whatever its strength.
+
 ## Editor completion
 
 The directive line at the top of a theme names the JSON Schema for theme files:
@@ -421,9 +482,12 @@ file is `src/pyntpot/maps/themes/sepia.yaml`; paint with it by `--style sepia`.
 
 *Painted by `examples/map_styles.py` with `figure="bold"`.*
 
-The pigments in `cover.pigments` are saturated, and `paper.pigment_transparency` is
-lower, so they lay down denser. `brush.river_mult` widens the rivers. `nib` letters larger
-and heavier. `route_ink` makes the route magenta and 8 pixels wide. Its file is
+The pigments in `cover.pigments` are saturated, and each carries a lower transparency, so
+they lay down denser. `brush.river_mult` widens the rivers. `nib` letters larger
+and heavier. `route_ink` makes the route magenta and 8 pixels wide, and `line_effects` cases it with
+`bold_cased`, a preset of its own in `effect_presets`: a cream ring 3.4 pixels wide at full
+strength, wider than the built-in `cased` so that it still reads as a paper margin when the card is
+shown at page width, and keeps the route apart from the rivers and roads it crosses. Its file is
 `src/pyntpot/maps/themes/bold.yaml`; paint with it by `--style bold`.
 
 ### Winter

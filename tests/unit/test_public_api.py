@@ -94,6 +94,7 @@ MAPS_PUBLIC: tuple[str, ...] = (
     "Cache",
     "Card",
     "CardStyle",
+    "CoverPigment",
     "CoverStyle",
     "Credit",
     "DarkGrid",

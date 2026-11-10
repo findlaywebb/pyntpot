@@ -8,8 +8,11 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
+from pyntpot.ink import Colour
+from pyntpot.ink.effect_types import Casing
 from pyntpot.maps import Style
 from pyntpot.maps.cli import main
+from pyntpot.maps.line_effects import BUILT_IN_PRESETS, EffectStack
 from pyntpot.maps.theme_errors import ThemeError, ThemeProblem
 
 from support.paths import FIXTURE_DIR
@@ -18,10 +21,10 @@ NAMES = ("bold", "default", "pen-and-ink", "sepia", "winter")
 PACKAGED = ("bold", "pen-and-ink", "sepia", "winter")
 #: Each packaged theme's digests, measured from the TOML files on f34de97 and unchanged by 008 S1.
 DIGESTS = {
-    "bold": ("2b765c09e23cbcb2", "6d77f74215314006", "2a7a209c41fe7df8"),
-    "pen-and-ink": ("0034f4055bb18feb", "0d40a30d74c111e0", "9c4b7732ec2b6d7d"),
-    "sepia": ("1ea34b096b744d93", "3a2f5fbbd424e347", "9f7523b1ae707038"),
-    "winter": ("0e767aa91ac66511", "c1b7c47d4ea12d6c", "68d9f8d8810bd9bb"),
+    "bold": ("739a529eb5151ef0", "bc7323df2b3f6430", "2a7a209c41fe7df8"),
+    "pen-and-ink": ("d6cd7f31218e42a5", "73a44bc9875190e1", "9c4b7732ec2b6d7d"),
+    "sepia": ("7c12a224dea23ddd", "bb3e691b4240decb", "9f7523b1ae707038"),
+    "winter": ("7a964582841d2c30", "4106da33e2e6f96d", "68d9f8d8810bd9bb"),
 }
 ADR_POINTER = "themes are YAML since ADR 0069"
 
@@ -49,6 +52,23 @@ def test_each_named_theme_keeps_its_digests(name: str) -> None:
     style = Style.named(name)
 
     assert (style.digest(), style.base_digest(), style.lettering_digest()) == DIGESTS[name]
+
+
+def test_bold_cases_its_route_and_nothing_else() -> None:
+    """Bold's route ink carries its own wider cream `bold_cased` casing, which is not the built-in `cased`, no basemap class has an effect, and the plates' digests are those of a bold that sets none."""
+    bold = Style.named("bold")
+    plain = bold.model_copy(
+        update={"route_ink": dataclasses.replace(bold.route_ink, effects=EffectStack())}
+    )
+
+    assert bold.route_ink.effects == EffectStack(
+        effects=(Casing(width_px=3.4, colour=Colour("#fbf6e8"), strength=1.0),)
+    )
+    assert bold.route_ink.effects != BUILT_IN_PRESETS["cased"]
+    assert bold.basemap.line_effects == {}
+    assert bold.digest() != plain.digest()
+    assert bold.base_digest() == plain.base_digest()
+    assert bold.lettering_digest() == plain.lettering_digest()
 
 
 def test_an_unknown_name_lists_the_names() -> None:

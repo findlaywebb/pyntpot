@@ -120,7 +120,7 @@ class TestUnknownKeys:
         """An unknown entry of a dict field leaves the entries after it checked and kept."""
         table, problems = _check("cover:\n  pigments:\n    wod: '#556b2f'\n    wood: '#556b2f'\n")
         assert [(p.key, p.line) for p in problems] == [("cover.pigments.wod", 3)]
-        assert table == {"cover": {"pigments": {"wood": "#556b2f"}}}
+        assert table == {"cover": {"pigments": {"wood": ("#556b2f", 0.05)}}}
 
     def test_an_override_entry_given_a_leaf_is_refused(self):
         """A `brush_overrides` entry set to a scalar is told it is a table of keys."""
@@ -141,9 +141,12 @@ class TestUnknownKeys:
             ("route_ink.style", 2, "renamed to drawn_as")
         ]
 
-    def test_the_real_renamed_table_holds_the_route_ink_row(self):
-        """The real renamed table holds the route ink's `drawn_as` row and nothing else."""
-        assert RENAMED_KEYS == {("route_ink", "style"): "drawn_as"}
+    def test_the_real_renamed_table_holds_exactly_its_two_rows(self):
+        """The real renamed table holds the route ink's `drawn_as` row and the moved transparency."""
+        assert RENAMED_KEYS == {
+            ("route_ink", "style"): "drawn_as",
+            ("paper", "pigment_transparency"): "cover.pigments.<class>.transparency",
+        }
 
 
 class TestStrictValues:

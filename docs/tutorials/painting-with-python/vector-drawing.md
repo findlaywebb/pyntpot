@@ -126,4 +126,4 @@ paper. The lines sit on the pigment.
 - [Pigments](../../reference/pigments.md) lists the keys of `PIGMENTS`, one of the two tables a
   `fill` colour is matched against.
 
-Next: [the how-to guides](../../how-to/index.md), each one task done with the engine.
+Next: [Cased strokes](cased-strokes.md), one stroke cased, lit and shadowed with the primitives.

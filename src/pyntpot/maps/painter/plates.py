@@ -67,7 +67,7 @@ def _wash_plate(job: PaintJob, stack: PlateStack) -> np.ndarray:
     over.append(
         (
             np.clip(rim * style.ribbon.rim_strength, 0, 1),
-            rgb(style.cover.pigments["rim"]),
+            rgb(style.cover.pigments["rim"].colour),
             job.transp("rim"),
         )
     )

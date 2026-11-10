@@ -1,29 +1,16 @@
 # yaml-language-server: $schema=theme.schema.json
 # Bold: the default theme turned up. Bright paper, saturated pigments laid denser, wider rivers,
-# heavier lettering and a strong magenta route ink. It overrides the paper, the transparencies, the
-# cover pigments, the river width, the lettering and the route ink.
+# heavier lettering and a strong magenta route ink. It overrides the paper, the cover pigments
+# (each with its transparency), the river width, the lettering and the route ink, and it cases
+# the route with its own `bold_cased` preset: a wider, full-strength cream casing, because the
+# built-in `cased` ring is tuned close up and is faint on a card shown at page width. The effect
+# is laid at compose, so the plates and the lettering are unchanged.
 
 paper:
   paper_hex: "#fbf6e8"
   paper_worn: 0.08
   paper_vignette: 0.02
   paper_foxing: 0.02
-  pigment_transparency:
-    built: 0.2
-    farmland: 0.06
-    heath: 0.08
-    meadow: 0.05
-    orchard: 0.05
-    pale: 0.07
-    relief: 0.2
-    rim: 0.12
-    rock: 0.15
-    sand: 0.1
-    scrub: 0.05
-    water: 0.02
-    wetland: 0.05
-    wood: 0.03
-    works: 0.2
 
 wash:
   separation_pigments:
@@ -44,21 +31,21 @@ nib:
 
 cover:
   pigments:
-    built: "#f0b86a"
-    farmland: "#f2e04a"
-    heath: "#e8a43c"
-    meadow: "#8fe05a"
-    orchard: "#a8e068"
-    pale: "#b9dc72"
-    relief: "#b79a6c"
-    rim: "#d6a46c"
-    rock: "#d6c9b0"
-    sand: "#ffd86a"
-    scrub: "#7ccf5a"
-    water: "#37a6e6"
-    wetland: "#5fcfb0"
-    wood: "#1f9a4a"
-    works: "#e9a26a"
+    built: {pigment: "#f0b86a", transparency: 0.2}
+    farmland: {pigment: "#f2e04a", transparency: 0.06}
+    heath: {pigment: "#e8a43c", transparency: 0.08}
+    meadow: {pigment: "#8fe05a", transparency: 0.05}
+    orchard: {pigment: "#a8e068", transparency: 0.05}
+    pale: {pigment: "#b9dc72", transparency: 0.07}
+    relief: {pigment: "#b79a6c", transparency: 0.2}
+    rim: {pigment: "#d6a46c", transparency: 0.12}
+    rock: {pigment: "#d6c9b0", transparency: 0.15}
+    sand: {pigment: "#ffd86a", transparency: 0.1}
+    scrub: {pigment: "#7ccf5a", transparency: 0.05}
+    water: {pigment: "#37a6e6", transparency: 0.02}
+    wetland: {pigment: "#5fcfb0", transparency: 0.05}
+    wood: {pigment: "#1f9a4a", transparency: 0.03}
+    works: {pigment: "#e9a26a", transparency: 0.2}
 
 route:
   route_pen_width_px: 3.6
@@ -66,3 +53,9 @@ route:
 route_ink:
   px: 8.0
   colour: "#e6007a"
+
+effect_presets:
+  bold_cased: {casing: {width_px: 3.4, colour: "#fbf6e8", strength: 1.0}}
+
+line_effects:
+  route: bold_cased

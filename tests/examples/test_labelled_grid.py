@@ -280,3 +280,55 @@ class TestLabelGrid:
         foot = Setting("end", 20.0, anchor=(200, spec.height + 25), align="middle", wash=False)
         out = helper["label_grid"](img, spec.boxes(), ["a", "b"], ["x"], style, extra=[foot])
         assert (out[spec.height :] != 1).any()
+
+
+class TestSupersample:
+    """A figure painted at `SUPERSAMPLE` times its size is reduced once and lettered at 1x."""
+
+    def test_the_figures_are_painted_at_twice_their_size(self, helper):
+        """`SUPERSAMPLE` is the 2 the plan fixes for every 2x figure."""
+        assert helper["SUPERSAMPLE"] == 2
+
+    @pytest.mark.parametrize(("keywords", "boxes", "height"), LAYOUTS)
+    def test_scaled_boxes_are_each_box_times_the_factor(self, helper, keywords, boxes, height):
+        """Every scaled box is the 1x box with all four numbers doubled, even where `cell_w` floors."""
+        spec = helper["GridSpec"](**keywords)
+        scaled = helper["scaled_boxes"](spec, 2)
+        assert scaled == [[tuple(2 * v for v in box) for box in row] for row in spec.boxes()]
+
+    def test_a_grid_built_at_twice_the_width_would_not_double_the_boxes(self, helper):
+        """The reason `scaled_boxes` exists: floor division in `cell_w` breaks doubling at 2x width."""
+        spec = helper["GridSpec"](width=720, cols=3, rows=2, cell_h=150, left=92, top=46)
+        twice = helper["GridSpec"](width=1440, cols=3, rows=2, cell_h=300, left=184, top=92)
+        assert twice.boxes() != helper["scaled_boxes"](spec, 2)
+
+    def test_reduce_returns_the_1x_size_as_float32_within_0_to_1(self, helper):
+        """A hard edge, whose Lanczos lobes overshoot, comes back at half size, float32, clipped."""
+        big = np.zeros((40, 60, 3), np.float32)
+        big[:, 30:] = 1.0
+        out = helper["reduce"](big, 2)
+        assert out.shape == (20, 30, 3)
+        assert out.dtype == np.float32
+        assert out.min() >= 0.0 and out.max() <= 1.0
+
+    def test_reduce_keeps_a_flat_colour(self, helper):
+        """A flat 2x paint reduces to the same flat colour."""
+        out = helper["reduce"](np.full((8, 12, 3), 0.4, np.float32), 2)
+        assert np.allclose(out, 0.4, atol=1e-6)
+
+    def test_reduce_refuses_a_size_the_factor_does_not_divide(self, helper):
+        """An array whose sides are not multiples of the factor raises ValueError."""
+        with pytest.raises(ValueError, match="multiple"):
+            helper["reduce"](np.zeros((9, 12, 3), np.float32), 2)
+
+    def test_lettering_a_reduced_figure_is_lettering_at_1x(self, helper):
+        """Reducing a flat 2x paint then lettering at 1x equals lettering the flat 1x paint."""
+        spec = helper["GridSpec"](width=400, cols=2, rows=1, cell_h=60, left=90, top=40)
+        style = helper["LabelStyle"](
+            px=20.0, ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7
+        )
+        flat = np.ones((spec.height, 400, 3), np.float32)
+        big = np.ones((spec.height * 2, 800, 3), np.float32)
+        args = (spec.boxes(), ["a", "b"], ["x"], style)
+        reduced = helper["label_grid"](helper["reduce"](big, 2), *args)
+        assert np.allclose(reduced, helper["label_grid"](flat, *args), atol=1e-6)

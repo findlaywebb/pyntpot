@@ -764,53 +764,10 @@
           "default": true,
           "description": "Kubelka-Munk glazing in place of multiply for the pigment stack. Multiply is transmission with no scattering, so two washes crossing lose chroma and go grey; Kubelka-Munk gives each pigment absorption and scattering derived from what it shows over white and over black, and composites the layers optically, so the greens and blues keep their hue where they meet."
         },
-        "pigment_transparency": {
-          "type": "object",
-          "propertyNames": {
-            "enum": [
-              "built",
-              "farmland",
-              "heath",
-              "meadow",
-              "orchard",
-              "pale",
-              "relief",
-              "rim",
-              "rock",
-              "sand",
-              "scrub",
-              "water",
-              "wetland",
-              "wood",
-              "works"
-            ]
-          },
-          "additionalProperties": {
-            "type": "number"
-          },
-          "default": {
-            "farmland": 0.1,
-            "meadow": 0.09,
-            "orchard": 0.09,
-            "scrub": 0.08,
-            "heath": 0.14,
-            "sand": 0.16,
-            "rock": 0.22,
-            "wetland": 0.08,
-            "built": 0.26,
-            "works": 0.28,
-            "wood": 0.05,
-            "pale": 0.12,
-            "water": 0.04,
-            "relief": 0.3,
-            "rim": 0.18
-          },
-          "description": "Per-pigment transparency, as `TRANSPARENCY`. Ink and anything unnamed takes `km_transparency`."
-        },
         "km_transparency": {
           "type": "number",
           "default": 0.06,
-          "description": "The transparency of ink and of any pigment `pigment_transparency` does not name."
+          "description": "The transparency of ink and of any pigment that carries none of its own."
         },
         "paper_fibre": {
           "type": "boolean",
@@ -2098,62 +2055,164 @@
           "additionalProperties": {
             "anyOf": [
               {
-                "enum": [
-                  "built",
-                  "burnt_sienna",
-                  "cerulean",
-                  "farmland",
-                  "heath",
-                  "indigo",
-                  "meadow",
-                  "orchard",
-                  "pale",
-                  "paynes_grey",
-                  "perylene_maroon",
-                  "quinacridone_rose",
-                  "raw_sienna",
-                  "relief",
-                  "rim",
-                  "rock",
-                  "sand",
-                  "sap_green",
-                  "scrub",
-                  "ultramarine",
-                  "water",
-                  "wetland",
-                  "wood",
-                  "works",
-                  "yellow_ochre"
+                "anyOf": [
+                  {
+                    "enum": [
+                      "built",
+                      "burnt_sienna",
+                      "cerulean",
+                      "farmland",
+                      "heath",
+                      "indigo",
+                      "meadow",
+                      "orchard",
+                      "pale",
+                      "paynes_grey",
+                      "perylene_maroon",
+                      "quinacridone_rose",
+                      "raw_sienna",
+                      "relief",
+                      "rim",
+                      "rock",
+                      "sand",
+                      "sap_green",
+                      "scrub",
+                      "ultramarine",
+                      "water",
+                      "wetland",
+                      "wood",
+                      "works",
+                      "yellow_ochre"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                  }
                 ]
               },
               {
-                "type": "string",
-                "pattern": "^#[0-9a-fA-F]{6}$"
-              },
-              {
-                "type": "string",
-                "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "pigment"
+                ],
+                "properties": {
+                  "pigment": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "built",
+                          "burnt_sienna",
+                          "cerulean",
+                          "farmland",
+                          "heath",
+                          "indigo",
+                          "meadow",
+                          "orchard",
+                          "pale",
+                          "paynes_grey",
+                          "perylene_maroon",
+                          "quinacridone_rose",
+                          "raw_sienna",
+                          "relief",
+                          "rim",
+                          "rock",
+                          "sand",
+                          "sap_green",
+                          "scrub",
+                          "ultramarine",
+                          "water",
+                          "wetland",
+                          "wood",
+                          "works",
+                          "yellow_ochre"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^#[0-9a-fA-F]{6}$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                      }
+                    ]
+                  },
+                  "transparency": {
+                    "type": "number"
+                  }
+                }
               }
             ]
           },
           "default": {
-            "farmland": "#dfe0b0",
-            "meadow": "#cfdfae",
-            "orchard": "#d5dda2",
-            "scrub": "#c9d5a4",
-            "heath": "#e0cda2",
-            "sand": "#ecdfbe",
-            "rock": "#dcd6c6",
-            "wetland": "#bfd2cd",
-            "built": "#ddd3c3",
-            "works": "#d2cbc0",
-            "wood": "#a8c286",
-            "pale": "#d5e0b4",
-            "water": "#9ec4de",
-            "relief": "#c9bda4",
-            "rim": "#c2ad91"
+            "farmland": {
+              "pigment": "#dfe0b0",
+              "transparency": 0.1
+            },
+            "meadow": {
+              "pigment": "#cfdfae",
+              "transparency": 0.09
+            },
+            "orchard": {
+              "pigment": "#d5dda2",
+              "transparency": 0.09
+            },
+            "scrub": {
+              "pigment": "#c9d5a4",
+              "transparency": 0.08
+            },
+            "heath": {
+              "pigment": "#e0cda2",
+              "transparency": 0.14
+            },
+            "sand": {
+              "pigment": "#ecdfbe",
+              "transparency": 0.16
+            },
+            "rock": {
+              "pigment": "#dcd6c6",
+              "transparency": 0.22
+            },
+            "wetland": {
+              "pigment": "#bfd2cd",
+              "transparency": 0.08
+            },
+            "built": {
+              "pigment": "#ddd3c3",
+              "transparency": 0.26
+            },
+            "works": {
+              "pigment": "#d2cbc0",
+              "transparency": 0.28
+            },
+            "wood": {
+              "pigment": "#a8c286",
+              "transparency": 0.05
+            },
+            "pale": {
+              "pigment": "#d5e0b4",
+              "transparency": 0.12
+            },
+            "water": {
+              "pigment": "#9ec4de",
+              "transparency": 0.04
+            },
+            "relief": {
+              "pigment": "#c9bda4",
+              "transparency": 0.3
+            },
+            "rim": {
+              "pigment": "#c2ad91",
+              "transparency": 0.18
+            }
           },
-          "description": "Multiply colours: what a full-strength wash of each pigment transmits."
+          "description": "Each cover class's pigment: the multiply colour a full-strength wash transmits, and its transparency, what it shows over black as a share of over white. A theme gives an entry as a ref or as `{pigment, transparency}`; one with no transparency takes the pigment's own, else the class's built-in. A `None` transparency, which only a Python-built `CoverPigment` or a key outside the cover classes has, takes `paper.km_transparency`."
         },
         "pale_base": {
           "type": "number",

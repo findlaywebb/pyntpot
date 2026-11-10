@@ -13,7 +13,8 @@ from golden.make_docs_images import paint_entry
 from PIL import Image
 
 from support import REPO_ROOT
-from support.docs_images import IMAGES, IMAGES_DIR, MASTERS_DIR, DocsImage, master_path
+from support.docs_image import IMAGES_DIR, MASTERS_DIR, DocsImage, master_path
+from support.docs_images import IMAGES
 from support.golden import MAX_CHANNEL_DELTA, MAX_DIFFERING_FRACTION, differing_fraction
 
 pytestmark = pytest.mark.golden

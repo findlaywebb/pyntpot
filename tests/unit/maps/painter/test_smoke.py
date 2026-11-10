@@ -243,8 +243,8 @@ def test_land_cover_is_one_class_per_pixel_with_the_wood_on_top(tmp_path):
         arr = np.asarray(img.convert("RGB"), np.float32) / 255
     h, w, _ = arr.shape
     centre = arr[h // 2, w // 2]
-    wood = rgb(read(style, "pigments")["wood"])
-    farmland = rgb(read(style, "pigments")["farmland"])
+    wood = rgb(read(style, "pigments")["wood"].colour)
+    farmland = rgb(read(style, "pigments")["farmland"].colour)
     assert abs(centre[1] - centre[2]) > abs(farmland[1] - farmland[2]) * 0.5
     # The wood alone, never the two multiplied together.
     assert centre[2] > (wood * farmland)[2] + 0.02

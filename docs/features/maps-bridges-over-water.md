@@ -41,7 +41,7 @@ the current map shows a tangle.
 - A theme field for the bridge casing, defaulting to off so no pinned image moves.
 
 **Dependencies.** The line-effect model and casing from spec 009 ([ADR 0070](../decisions/0070-line-effects-and-one-pigment-registry.md)). The
-route casing note, `docs/features/maps-route-casing.md`, shares the same casing primitive.
+route's casing, set in a theme as `line_effects: {route: cased}`, shares the same casing primitive; see [Case, light or shadow a line](../how-to/case-light-or-shadow-a-line.md).
 
 **Open questions.**
 

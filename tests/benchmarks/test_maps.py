@@ -99,3 +99,12 @@ def test_compose(
     """Times composing the painted, lettered plates into one card, attribution on."""
     base, style = basemap
     benchmark(compose, painted, lettered, base, style)
+
+
+def test_letter_after_route_colour(
+    benchmark: BenchmarkFixture, basemap: tuple[Basemap, Style], painted: Plates
+) -> None:
+    """Times lettering again after a fed route colour, which re-strokes the nib plate."""
+    base, style = basemap
+    fed = style.with_route_ink(colour="#6a2c91")
+    benchmark(letter, painted, base, None, fed)

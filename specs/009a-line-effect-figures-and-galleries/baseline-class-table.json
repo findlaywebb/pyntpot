@@ -1,0 +1,728 @@
+{
+ "default": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#dfe0b0",
+    0.1
+   ],
+   "meadow": [
+    "#cfdfae",
+    0.09
+   ],
+   "orchard": [
+    "#d5dda2",
+    0.09
+   ],
+   "scrub": [
+    "#c9d5a4",
+    0.08
+   ],
+   "heath": [
+    "#e0cda2",
+    0.14
+   ],
+   "sand": [
+    "#ecdfbe",
+    0.16
+   ],
+   "rock": [
+    "#dcd6c6",
+    0.22
+   ],
+   "wetland": [
+    "#bfd2cd",
+    0.08
+   ],
+   "built": [
+    "#ddd3c3",
+    0.26
+   ],
+   "works": [
+    "#d2cbc0",
+    0.28
+   ],
+   "wood": [
+    "#a8c286",
+    0.05
+   ],
+   "pale": [
+    "#d5e0b4",
+    0.12
+   ],
+   "water": [
+    "#9ec4de",
+    0.04
+   ],
+   "relief": [
+    "#c9bda4",
+    0.3
+   ],
+   "rim": [
+    "#c2ad91",
+    0.18
+   ]
+  }
+ },
+ "bold": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#f2e04a",
+    0.06
+   ],
+   "meadow": [
+    "#8fe05a",
+    0.05
+   ],
+   "orchard": [
+    "#a8e068",
+    0.05
+   ],
+   "scrub": [
+    "#7ccf5a",
+    0.05
+   ],
+   "heath": [
+    "#e8a43c",
+    0.08
+   ],
+   "sand": [
+    "#ffd86a",
+    0.1
+   ],
+   "rock": [
+    "#d6c9b0",
+    0.15
+   ],
+   "wetland": [
+    "#5fcfb0",
+    0.05
+   ],
+   "built": [
+    "#f0b86a",
+    0.2
+   ],
+   "works": [
+    "#e9a26a",
+    0.2
+   ],
+   "wood": [
+    "#1f9a4a",
+    0.03
+   ],
+   "pale": [
+    "#b9dc72",
+    0.07
+   ],
+   "water": [
+    "#37a6e6",
+    0.02
+   ],
+   "relief": [
+    "#b79a6c",
+    0.2
+   ],
+   "rim": [
+    "#d6a46c",
+    0.12
+   ]
+  }
+ },
+ "pen-and-ink": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#e9e5da",
+    0.1
+   ],
+   "meadow": [
+    "#e9e5da",
+    0.09
+   ],
+   "orchard": [
+    "#e1ddd2",
+    0.09
+   ],
+   "scrub": [
+    "#e1ddd2",
+    0.08
+   ],
+   "heath": [
+    "#e1ddd2",
+    0.14
+   ],
+   "sand": [
+    "#e9e5da",
+    0.16
+   ],
+   "rock": [
+    "#d9d5ca",
+    0.22
+   ],
+   "wetland": [
+    "#d9dedc",
+    0.08
+   ],
+   "built": [
+    "#d6d1c5",
+    0.26
+   ],
+   "works": [
+    "#d6d1c5",
+    0.28
+   ],
+   "wood": [
+    "#4a4741",
+    0.03
+   ],
+   "pale": [
+    "#efebe1",
+    0.2
+   ],
+   "water": [
+    "#c9d1d4",
+    0.04
+   ],
+   "relief": [
+    "#6f6a60",
+    0.3
+   ],
+   "rim": [
+    "#bdb7a9",
+    0.18
+   ]
+  }
+ },
+ "sepia": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#d8c58f",
+    0.1
+   ],
+   "meadow": [
+    "#d6c48f",
+    0.09
+   ],
+   "orchard": [
+    "#cfba84",
+    0.09
+   ],
+   "scrub": [
+    "#c4ae78",
+    0.08
+   ],
+   "heath": [
+    "#c9b078",
+    0.14
+   ],
+   "sand": [
+    "#e0cf9f",
+    0.16
+   ],
+   "rock": [
+    "#cdbb93",
+    0.22
+   ],
+   "wetland": [
+    "#bfb08a",
+    0.08
+   ],
+   "built": [
+    "#c9b48a",
+    0.26
+   ],
+   "works": [
+    "#c2ad84",
+    0.28
+   ],
+   "wood": [
+    "#9a8658",
+    0.05
+   ],
+   "pale": [
+    "#d9c593",
+    0.12
+   ],
+   "water": [
+    "#b3a07c",
+    0.04
+   ],
+   "relief": [
+    "#a28a62",
+    0.3
+   ],
+   "rim": [
+    "#9c7f56",
+    0.18
+   ]
+  }
+ },
+ "winter": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#e4eaef",
+    0.1
+   ],
+   "meadow": [
+    "#dbe5ec",
+    0.09
+   ],
+   "orchard": [
+    "#d8e2e8",
+    0.09
+   ],
+   "scrub": [
+    "#c9d6de",
+    0.08
+   ],
+   "heath": [
+    "#d3dce4",
+    0.14
+   ],
+   "sand": [
+    "#e6ebef",
+    0.16
+   ],
+   "rock": [
+    "#cfd6dc",
+    0.22
+   ],
+   "wetland": [
+    "#c3d5de",
+    0.08
+   ],
+   "built": [
+    "#c9d0d8",
+    0.26
+   ],
+   "works": [
+    "#c3cad2",
+    0.28
+   ],
+   "wood": [
+    "#6f8696",
+    0.05
+   ],
+   "pale": [
+    "#dfe7ee",
+    0.12
+   ],
+   "water": [
+    "#8fb8d8",
+    0.04
+   ],
+   "relief": [
+    "#9fb0c0",
+    0.3
+   ],
+   "rim": [
+    "#a9b8c6",
+    0.18
+   ]
+  }
+ },
+ "ambleside-hero": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#cdd391",
+    0.1
+   ],
+   "meadow": [
+    "#bcd08a",
+    0.09
+   ],
+   "orchard": [
+    "#a2b868",
+    0.09
+   ],
+   "scrub": [
+    "#b2bd7c",
+    0.08
+   ],
+   "heath": [
+    "#d9b47c",
+    0.14
+   ],
+   "sand": [
+    "#e0cf9f",
+    0.16
+   ],
+   "rock": [
+    "#a39b8d",
+    0.22
+   ],
+   "wetland": [
+    "#86b0a4",
+    0.08
+   ],
+   "built": [
+    "#cdb899",
+    0.26
+   ],
+   "works": [
+    "#b9ad9c",
+    0.28
+   ],
+   "wood": [
+    "#7fa466",
+    0.05
+   ],
+   "pale": [
+    "#a8c27c",
+    0.12
+   ],
+   "water": [
+    "#3a86b5",
+    0.04
+   ],
+   "relief": [
+    "#b49a7c",
+    0.3
+   ],
+   "rim": [
+    "#8f7757",
+    0.18
+   ]
+  }
+ },
+ "ambleside": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#c0cf86",
+    0.1
+   ],
+   "meadow": [
+    "#a9cc78",
+    0.09
+   ],
+   "orchard": [
+    "#a2b868",
+    0.09
+   ],
+   "scrub": [
+    "#8fa862",
+    0.08
+   ],
+   "heath": [
+    "#d9b47c",
+    0.14
+   ],
+   "sand": [
+    "#e0cf9f",
+    0.16
+   ],
+   "rock": [
+    "#a39b8d",
+    0.22
+   ],
+   "wetland": [
+    "#86b0a4",
+    0.08
+   ],
+   "built": [
+    "#cdb899",
+    0.26
+   ],
+   "works": [
+    "#b9ad9c",
+    0.28
+   ],
+   "wood": [
+    "#5b8f50",
+    0.05
+   ],
+   "pale": [
+    "#a8c27c",
+    0.12
+   ],
+   "water": [
+    "#3a86b5",
+    0.04
+   ],
+   "relief": [
+    "#a98e6e",
+    0.3
+   ],
+   "rim": [
+    "#8f7757",
+    0.18
+   ]
+  }
+ },
+ "oxford": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#c0cf86",
+    0.1
+   ],
+   "meadow": [
+    "#a8c97c",
+    0.09
+   ],
+   "orchard": [
+    "#a2b868",
+    0.09
+   ],
+   "scrub": [
+    "#94ad69",
+    0.08
+   ],
+   "heath": [
+    "#d6b783",
+    0.14
+   ],
+   "sand": [
+    "#e8d6a2",
+    0.16
+   ],
+   "rock": [
+    "#c9c0b0",
+    0.22
+   ],
+   "wetland": [
+    "#8fb5a8",
+    0.08
+   ],
+   "built": [
+    "#ecc98a",
+    0.26
+   ],
+   "works": [
+    "#c4a98a",
+    0.28
+   ],
+   "wood": [
+    "#5c8a55",
+    0.05
+   ],
+   "pale": [
+    "#ead7a3",
+    0.12
+   ],
+   "water": [
+    "#5f95b5",
+    0.04
+   ],
+   "relief": [
+    "#a9906f",
+    0.3
+   ],
+   "rim": [
+    "#a58a5f",
+    0.18
+   ]
+  }
+ },
+ "skye": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#b9c480",
+    0.1
+   ],
+   "meadow": [
+    "#a7c077",
+    0.09
+   ],
+   "orchard": [
+    "#a2b868",
+    0.09
+   ],
+   "scrub": [
+    "#8f9a5c",
+    0.08
+   ],
+   "heath": [
+    "#9a7490",
+    0.14
+   ],
+   "sand": [
+    "#e8d9b0",
+    0.16
+   ],
+   "rock": [
+    "#9a948c",
+    0.22
+   ],
+   "wetland": [
+    "#8aa89a",
+    0.08
+   ],
+   "built": [
+    "#d2bfa6",
+    0.26
+   ],
+   "works": [
+    "#b9ad9c",
+    0.28
+   ],
+   "wood": [
+    "#587a4c",
+    0.05
+   ],
+   "pale": [
+    "#cdc39a",
+    0.12
+   ],
+   "water": [
+    "#4f86ad",
+    0.04
+   ],
+   "relief": [
+    "#b59a6c",
+    0.3
+   ],
+   "rim": [
+    "#c9b58a",
+    0.18
+   ]
+  }
+ },
+ "y-fenni": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#d4c36e",
+    0.1
+   ],
+   "meadow": [
+    "#b5c26e",
+    0.09
+   ],
+   "orchard": [
+    "#b7a95a",
+    0.09
+   ],
+   "scrub": [
+    "#9aa05c",
+    0.08
+   ],
+   "heath": [
+    "#c98a5a",
+    0.14
+   ],
+   "sand": [
+    "#ecd69a",
+    0.16
+   ],
+   "rock": [
+    "#cdb9a5",
+    0.22
+   ],
+   "wetland": [
+    "#93b3a0",
+    0.08
+   ],
+   "built": [
+    "#f1c9a6",
+    0.26
+   ],
+   "works": [
+    "#c79a82",
+    0.28
+   ],
+   "wood": [
+    "#7c8a4a",
+    0.05
+   ],
+   "pale": [
+    "#f0d9ae",
+    0.12
+   ],
+   "water": [
+    "#6fa3a6",
+    0.04
+   ],
+   "relief": [
+    "#b58a6a",
+    0.3
+   ],
+   "rim": [
+    "#b0805a",
+    0.18
+   ]
+  }
+ },
+ "yr-wyddfa": {
+  "km": 0.06,
+  "extra_transparency_keys": [],
+  "classes": {
+   "farmland": [
+    "#b4bd84",
+    0.1
+   ],
+   "meadow": [
+    "#abc57c",
+    0.09
+   ],
+   "orchard": [
+    "#a2b868",
+    0.09
+   ],
+   "scrub": [
+    "#8d8f62",
+    0.08
+   ],
+   "heath": [
+    "#cf9560",
+    0.14
+   ],
+   "sand": [
+    "#dccaa0",
+    0.16
+   ],
+   "rock": [
+    "#c0b3a6",
+    0.22
+   ],
+   "wetland": [
+    "#7fa0a0",
+    0.08
+   ],
+   "built": [
+    "#cbb9a2",
+    0.26
+   ],
+   "works": [
+    "#b3a79a",
+    0.28
+   ],
+   "wood": [
+    "#587a52",
+    0.05
+   ],
+   "pale": [
+    "#dccaa4",
+    0.12
+   ],
+   "water": [
+    "#2f6f9e",
+    0.04
+   ],
+   "relief": [
+    "#756f8c",
+    0.3
+   ],
+   "rim": [
+    "#8a7f96",
+    0.18
+   ]
+  }
+ }
+}

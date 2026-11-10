@@ -132,6 +132,16 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/svg_drawing.py` (seed 5, figure ink).*
 
+### [Cased strokes: case, light and shadow one stroke, and a pen casing](tutorials/painting-with-python/cased-strokes.md)
+
+![One brown stroke over a wash of pale farmland and dark wood, painted six times in a grid of three across and two down: the plain stroke, then with a thin ring of paper round it, then with a soft pale margin, then with a grey shadow to its south-east, then with a reserve of bare paper round it, and last with that reserve pooled, a faint darker edge just outside it.](images/painting-with-python/cased-stroke.webp)
+
+*Painted by `examples/cased_stroke.py`. The names are plain, cased, glow, shadow, reserved and reserved, pooled.*
+
+![A thin ink line over a grey tint in two rows of five. The first column is the bare line; the others leave a strip of bare paper round the line, edged by two ink lines, the strip widening from left to right and the edge lines thicker in the bottom row.](images/painting-with-python/pen-casing-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure pen-casing). The labels read 1, 2, 3 and 4 across, and 0.75 and 1.5 down.*
+
 ## How-to guides
 
 ### [Write a theme](how-to/write-a-theme.md)
@@ -152,6 +162,10 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/map_styles.py` (figure winter).*
 
+![Four close windows of the Ambleside card on the slope of Loughrigg Fell, the hillside shaded more heavily from left to right as the relief strength rises.](images/how-to/relief-strength.webp)
+
+*Painted by `examples/relief_grid.py` (the Ambleside fixture, the default style). The labels read 0, 2, 4 and 8 across.*
+
 ### [Map from the command line](how-to/map-from-the-command-line.md)
 
 ![The Lynmouth route map: a pink route over washes of green and blue, with the river, roads and names lettered by hand.](images/how-to/command-line.webp)
@@ -167,6 +181,32 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 ![Six small copies of the Ambleside map, each cropped to the loop, in two rows of three. The columns are the route in maroon, in indigo and in burnt sienna and are lettered so; the rows are a wet pen line and a dry pen line that thins and breaks, lettered wet pen and dry pen.](images/how-to/route-ink-grid.webp)
 
 *Painted by `examples/how_to_route_ink.py` (figure grid, theme `examples/themes/ambleside.yaml`). The rows are a wet pen (brush `MAJ1-e`) and a dry pen (brush `MAJ3-e`). The columns are the maroon `#7b2335`, indigo and burnt sienna, the last two from `PAINTERS_PIGMENTS`. The route is drawn in the normal blend, so it keeps its colour over water.*
+
+### [Case, light or shadow a line](how-to/case-light-or-shadow-a-line.md)
+
+![The Ambleside map with its main road cased in the paper's colour and its maroon route lifted off the page by a soft shadow.](images/how-to/line-effects.webp)
+
+*Painted by `examples/how_to_line_effects.py` (figure card, theme `examples/themes/ambleside-cased.yaml`).*
+
+![One brown road crossing farmland and wood, cased in the paper's colour in the top row and in Payne's grey in the bottom row, the casing widening from nothing at the left to five pixels at the right.](images/how-to/casing-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure casing). The labels read 0, 1, 2, 3 and 5 across, and paper and paynes_grey down.*
+
+![One brown road crossing farmland and wood, with the paper laid back round it in a ring widening from nothing at the left to five pixels at the right, and a faint pool just outside the ring in the bottom row.](images/how-to/reserve-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure reserve). The labels read 0, 1, 2, 3 and 5 across, and pool 0 and pool 0.3 down.*
+
+![One blue river over dark green wood in three rows of five. The first column has no glow; the others lift the wood toward the paper in a ring that widens from left to right and softens from the top row to the bottom.](images/how-to/glow-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure glow). The labels read none, 0, 2, 4 and 6 across, and 0, 3 and 6 down.*
+
+![One crimson line over pale farmland in two rows of five. The first column has no shadow; the others add a grey shadow to the south-east of the line that moves further away from left to right and is softer in the bottom row.](images/how-to/shadow-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure shadow). The labels read 0, 1.5, 3 and 5 across, and 1 and 3 down.*
+
+![One close window on the Ambleside loop four times, two across and two down, where the route crosses a river beside a road: the route plain, then with a ring of paper round it, then with a soft pale margin, then with a soft shadow to its south-east.](images/how-to/line-effects-presets.webp)
+
+*Painted by `examples/how_to_line_effects.py` (figure presets). The names are none, cased, halo and lifted; each cell is the same close window on the loop.*
 
 ### [Letter your own landmarks](how-to/letter-your-own-landmarks.md)
 
@@ -184,15 +224,47 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Pigments](reference/pigments.md)
 
-![The pigment card: fifteen strips in three rows of five, one for each pigment, each strip a wash that deepens from left to right and lies across a narrow bar of grey-brown ink that shows bare past both ends, with the pigment's key lettered under it. The staining pigments let the bar show through at their deep end; the covering greys and browns veil it.](images/reference/pigment-swatches.webp)
+![The fifteen map pigments, one row each: farmland, meadow, orchard, scrub, heath, sand, rock, wetland, built, works, wood, pale, water, relief and rim. Each row holds three washes of the pigment, light to deep from left to right, with its transparency lettered at the right. The land covers are pale greens, tans and greys; wood and water are the deepest.](images/reference/pigment-gallery-roles.webp)
 
-*Painted by `examples/pigment_swatches.py` (seed 11).* Each key is lettered under its strip, in the order of the page's table.
+*Painted by `examples/pigment_gallery.py` (`figure="roles"`), seed 7.* The labels read 0.3, 0.6 and 0.9 across, and the pigment's key down, in the order of the page's table.
+
+### [Pigment gallery](reference/pigment-gallery.md)
+
+![The ten tube pigments, one row each: ultramarine, cerulean, burnt sienna, raw sienna, yellow ochre, sap green, indigo, perylene maroon, quinacridone rose and Payne's grey. Each row holds three washes, light to deep from left to right, with the transparency and the Colour Index code lettered at the right where there is one.](images/reference/pigment-gallery-painters.webp)
+
+*Painted by `examples/pigment_gallery.py` (`figure="painters"`), seed 7.* The labels read 0.3, 0.6 and 0.9 across, and the pigment's key down.
+
+![Eighteen pairs of overlapping watercolour discs in three rows of six. Each column is one pair, named on two lines above it: cerulean with yellow ochre, cerulean with burnt sienna, ultramarine with yellow ochre, yellow ochre with indigo, yellow ochre with perylene maroon, and cerulean with quinacridone rose. The top row multiplies the two; the middle row glazes the first over the second and the bottom row the second over the first, and the overlap is plainly a different colour in each row: the pigment laid on top shows more of itself.](images/reference/pigment-gallery-glazes.webp)
+
+*Painted by `examples/pigment_gallery.py` (`figure="glazes"`), seed 7.* Each column is one pair, and the rows read multiply, A over B and B over A down.
+
+![The plain palette: ten swatches in two rows of five. Each is a wash with its alias lettered above and the pigment it names below: blue is ultramarine, sky cerulean, green sap green, brown burnt sienna, orange raw sienna, ochre yellow ochre, red quinacridone rose, maroon perylene maroon, navy indigo and grey Payne's grey.](images/reference/palettes.webp)
+
+*Painted by `examples/pigment_gallery.py` (`figure="palettes"`), seed 7.* Each swatch has its alias above and the pigment it names below.
 
 ### [Brushes](reference/brushes.md)
 
 ![The brush grid: eight brush treatments in one brown ink, stroked as a wave at 3, 6 and 12 pixels wide in three rows. The wet treatments stay whole at every width, the dry ones break into flecks as they widen, and the nibs leave a blot where they touch down.](images/reference/brush-sheet.webp)
 
 *Painted by `examples/brush_sheet.py` (seed 11, figure grid).* The labels read the treatment numbers 1 to 8 across, the widths 3 px, 6 px and 12 px down, and wet, soft, gritty, dry, nib, pen, driest and light nib under the columns.
+
+![One brown stroke in a grid of three rows by four: a solid line at the left that breaks into speckle towards the right, and a heavier blot at the start of the stroke in the lower rows.](images/reference/brush-dryness-sweep.webp)
+
+*Painted by `examples/setting_grids.py` (figure dryness). The labels read 0.1, 0.4, 0.7 and 0.9 across, and load 0.5, 3 and 8 down.*
+
+### [Brush gallery](reference/brush-gallery.md)
+
+![Eight rows of strokes in two columns. The left column, lettered RIV = STR, is a blue ink and the right, LAN, a brown one. Down the rows the treatments go from a wet, whole line through gritty and dry strokes that break into flecks, to nibs with a blot where they touch down, to a driest row that is mostly paper showing between specks. Each cell has a narrow stroke over a wide one and its id beneath.](images/reference/brush-gallery-riv-str-lan.webp)
+
+*Painted by `examples/brush_gallery.py` (`figure="riv-str-lan"`), seed 7.* Each cell is lettered with its id; the treatments run 1 wet to 8 light nib down.
+
+![Eight rows of strokes in five columns, lettered a to e: a terracotta, an ochre brown, a dark brown, a warm grey and a near-black ink. Each cell has a narrow stroke over a wide one with its MAJ id beneath. The treatments run from wet and whole at the top, through gritty and dry strokes that fleck, to nibs, and a driest row where the paint barely covers the paper.](images/reference/brush-gallery-maj.webp)
+
+*Painted by `examples/brush_gallery.py` (`figure="maj"`), seed 7.* The five ink columns `a` to `e`.
+
+![Eight rows of strokes in six columns, lettered a to f: a dark brown, a terracotta, a grey, an olive, a dusty rose and a near-black ink. Each cell has a narrow stroke over a wide one with its TRK id beneath. The treatments run from wet and whole at the top, through gritty and dry strokes that fleck, to nibs, and a driest row where the paint barely covers the paper.](images/reference/brush-gallery-trk.webp)
+
+*Painted by `examples/brush_gallery.py` (`figure="trk"`), seed 7.* The six ink columns `a` to `f`.
 
 ### [Letters](reference/letters.md)
 
@@ -216,9 +288,17 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/wash_stages.py` (seed 11, figure rim, size 480).*
 
+![A blue disc four times, from no darker band to a heavy dark ring just inside the edge, on two sheets with different seeds.](images/explanation/wash-pool-sweep.webp)
+
+*Painted by `examples/setting_grids.py` (figure pool). The labels read 0, 0.25, 0.6 and 1.2 across, and seed 11 and seed 29 down.*
+
 ![The same wash on paper with a fine grain: the blue is broken into a pale speckle with darker flecks, and the edge band is still there.](images/explanation/wash-grain.webp)
 
 *Painted by `examples/wash_stages.py` (seed 11, figure grain, size 480).*
+
+![A blue disc in a grid: its speckle is fine at the left and a broad cloud at the right, and the rows differ in how the paper's tooth streaks through the blue.](images/explanation/wash-granulation-sweep.webp)
+
+*Painted by `examples/setting_grids.py` (figure granulation). The labels read 3, 6, 12 and 24 across, and 0, 0.35 and 1 down.*
 
 ![Two overlapping discs, blue on the left and yellow-green on the right, with a deep, dull green where they cross.](images/explanation/wash-overlap.webp)
 
@@ -257,6 +337,16 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 ![The word Keswick written nine times in three rows of three, in dark pen lettering. Every copy is the same word and no two are alike: the letters lean differently, sit at different heights and differ in size.](images/explanation/nib-hands.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, figure hands, size 840). The name is Keswick; the nine copies are nine hand seeds.*
+
+### [Line effects: why they work on colours, not as glazes](explanation/line-effects.md)
+
+![A two by two grid over one dark green wood wash. The top row lays a pale cream ring round a brown road and a blue-green river as a glaze, and the rings barely show; the bottom row lays the same rings as RGB, a clear pale casing and a soft pale glow.](images/explanation/line-effects-glaze-or-rgb.webp)
+
+*Painted by `examples/line_effect_reasons.py` (figure glaze-or-rgb). The labels read casing and glow across, and glaze and RGB down.*
+
+![Three cells, each a river crossed by two roads that fork. On the left each road is cased and drawn in turn, and a pale seam cuts across the first road at the fork. In the middle both casings are laid first and the fork is one road, with a faint pale ring inside the first road. On the right the casings are laid as one union, with one outline round the fork and no ring inside either road.](images/explanation/line-effects-draw-order.webp)
+
+*Painted by `examples/line_effect_reasons.py` (figure draw-order). The labels read each stroke cased, casings first and casings as a union.*
 
 ## Places
 

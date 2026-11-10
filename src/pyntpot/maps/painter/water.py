@@ -150,7 +150,7 @@ def paint_lakes(job: PaintJob, stack: PlateStack) -> None:
                     blooms=job.bloom(lake_cov, "lake"),
                 ),
             ),
-            rgb(job.style.cover.pigments["water"]),
+            rgb(job.style.cover.pigments["water"].colour),
             job.transp("water"),
         )
     )
@@ -178,4 +178,4 @@ def sea_layer(job: PaintJob, stack: PlateStack) -> PigmentLayer | None:
     )
     if job.style.wash.sea_variation:
         dens = sea_patches(dens, sea_cov, job.mpp, job.style.wash)
-    return (dens, rgb(job.style.cover.pigments["water"]), job.transp("water"))
+    return (dens, rgb(job.style.cover.pigments["water"].colour), job.transp("water"))

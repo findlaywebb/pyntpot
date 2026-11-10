@@ -20,14 +20,16 @@ digest of a style that keeps it.
 
 `route_ink` holds the route's ink for `paint` and the compose step, and the basemap group
 says what the basemap draws. The style paints, letters and fetches nothing itself. The route ink
-is the theme's, unless a caller feeds its colour and width with `with_route_ink`; the
+is the theme's, unless a caller feeds its colour and width with `with_route_ink`, and a fed
+colour also letters the route's markers; the
 style knows nothing of what a track records.
 
 Invariants: a theme naming an unknown key, at the top level, inside a group or
 inside the route ink, is rejected, and so is such a key given to `Style(...)` directly,
 by pydantic itself (`extra="forbid"` here, and its refusal of an unexpected keyword for
-each group dataclass); a style never changes once built; changing the route ink moves
-`digest` and neither of the other two.
+each group dataclass); a style never changes once built; changing the route ink's width, drawing
+or blend moves `digest` and neither of the other two, and a fed colour moves `digest` and
+`lettering_digest`.
 """
 
 import dataclasses
@@ -221,14 +223,18 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         """A copy of the style whose route is inked in this colour and spaced for this width.
 
         Only the colour and the width are fed: the route's `drawn_as`, blend and
-        opacity stay the theme's. The compose step draws the route line at the fed
+        opacity stay the theme's. A fed colour is also the ink of the "start" and
+        "finish" markers: it replaces `nib.label_route_ink`, a shade a theme gave
+        them. The compose step draws the route line at the fed
         width, except when `drawn_as` is `"pen"` and a pen plate was painted: then
         it tints that plate, whose stroke width is the `route` group's
         `route_pen_width_px`, so the fed width changes nothing drawn. Otherwise the
         fed width also sets how far apart `paint` draws the strands of a
-        doubled-back route; the pen plate always separates by its own width. Only
-        `digest()` moves, never
-        `base_digest()` or `lettering_digest()`, so no plate is repainted.
+        doubled-back route; the pen plate always separates by its own width.
+
+        A fed colour moves `digest()` and `lettering_digest()`, so the nib plate is
+        stroked again (about 4.5 s), and never `base_digest()`, so no base plate is
+        repainted. A fed width alone moves `digest()` only.
 
         Args:
             colour: The route's colour as `#rrggbb`, or `None` to keep the theme's.
@@ -262,7 +268,10 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
             colour=ink.colour if fed_colour is None else fed_colour,
             px=ink.px if width_px is None else float(width_px),
         )
-        return self.model_copy(update={"route_ink": fed})
+        update: dict[str, object] = {"route_ink": fed}
+        if fed_colour is not None:
+            update["nib"] = dataclasses.replace(self.nib, label_route_ink=fed_colour)
+        return self.model_copy(update=update)
 
 
 def _groups() -> dict[str, type]:
