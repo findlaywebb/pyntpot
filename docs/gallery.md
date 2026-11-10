@@ -162,9 +162,9 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/map_styles.py` (figure winter).*
 
-![Four close windows of the Ambleside card, the land to the east of the lake shaded more heavily from left to right as the relief strength rises.](images/how-to/relief-strength.webp)
+![Four close windows of the Ambleside card on the slope of Loughrigg Fell, the hillside shaded more heavily from left to right as the relief strength rises.](images/how-to/relief-strength.webp)
 
-*Painted by `examples/relief_grid.py` (the Ambleside fixture, the default style). The labels read 0, 1, 2 and 4 across.*
+*Painted by `examples/relief_grid.py` (the Ambleside fixture, the default style). The labels read 0, 2, 4 and 8 across.*
 
 ### [Map from the command line](how-to/map-from-the-command-line.md)
 

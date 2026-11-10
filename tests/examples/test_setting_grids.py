@@ -1,5 +1,7 @@
 """The setting grids run offline, and every swept setting changes the picture it sweeps."""
 
+from itertools import pairwise
+
 import numpy as np
 import pytest
 from golden.make_docs_images import fixture_options
@@ -14,6 +16,25 @@ FIGURES = ("pool", "granulation", "dryness")
 SHAPES = {"pool": (4, 2), "granulation": (4, 3), "dryness": (4, 3)}
 #: The least mean difference between neighbouring cells that a painter can see, in 0 to 1.
 VISIBLE = 0.002
+#: The least mean CIE76 difference between neighbouring relief cells that reads by eye.
+RELIEF_DELTA_E = 3.0
+
+
+def _lab(srgb: np.ndarray) -> np.ndarray:
+    """Convert an sRGB array of 0 to 1 to CIE L*a*b* (D65)."""
+    linear = np.where(srgb > 0.04045, ((srgb + 0.055) / 1.055) ** 2.4, srgb / 12.92)
+    to_xyz = np.array(
+        [
+            [0.4124564, 0.3575761, 0.1804375],
+            [0.2126729, 0.7151522, 0.0721750],
+            [0.0193339, 0.1191920, 0.9503041],
+        ]
+    )
+    xyz = (linear @ to_xyz.T) / np.array([0.95047, 1.0, 1.08883])
+    f = np.where(xyz > 216 / 24389, np.cbrt(xyz), (24389 / 27 * xyz + 16) / 116)
+    return np.stack(
+        [116 * f[..., 1] - 16, 500 * (f[..., 0] - f[..., 1]), 200 * (f[..., 1] - f[..., 2])], -1
+    )
 
 
 def _grids():
@@ -102,3 +123,18 @@ class TestReliefGrid:
             assert image.mode == "RGB"
             pixels = np.asarray(image)
         assert (pixels.min(axis=(0, 1)) != pixels.max(axis=(0, 1))).all()
+
+    @pytest.mark.golden
+    def test_neighbouring_cells_differ_visibly(self, tmp_path):
+        """Each relief cell differs from the one beside it by at least 3 mean CIE76 delta E over the window."""
+        script = load_example("relief_grid", "example_relief_grid")
+        options = fixture_options("ambleside", tmp_path / "cache")
+        strengths = script["STRENGTHS"]
+        cell_w = (
+            script["GRID_W"] - script["LEFT"] - script["PAD"] - script["GAP"] * (len(strengths) - 1)
+        ) // len(strengths)
+        cells = script["paint_cells"](cell_w=cell_w, **options)
+        labs = [_lab(np.asarray(cell.convert("RGB"), np.float64) / 255) for cell in cells]
+        for strength, (left, right) in zip(strengths[1:], pairwise(labs), strict=True):
+            delta_e = np.sqrt(((left - right) ** 2).sum(axis=-1)).mean()
+            assert delta_e >= RELIEF_DELTA_E, (strength, delta_e)

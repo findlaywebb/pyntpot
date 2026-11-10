@@ -2,8 +2,9 @@
 # Bold: the default theme turned up. Bright paper, saturated pigments laid denser, wider rivers,
 # heavier lettering and a strong magenta route ink. It overrides the paper, the cover pigments
 # (each with its transparency), the river width, the lettering and the route ink, and it cases
-# the route with the `cased` line effect: the casing its route ink declared before the route
-# effects existed. The effect is laid at compose, so the plates and the lettering are unchanged.
+# the route with its own `bold_cased` preset: a wider, full-strength cream casing, because the
+# built-in `cased` ring is tuned close up and is faint on a card shown at page width. The effect
+# is laid at compose, so the plates and the lettering are unchanged.
 
 paper:
   paper_hex: "#fbf6e8"
@@ -53,5 +54,8 @@ route_ink:
   px: 8.0
   colour: "#e6007a"
 
+effect_presets:
+  bold_cased: {casing: {width_px: 3.4, colour: "#fbf6e8", strength: 1.0}}
+
 line_effects:
-  route: cased
+  route: bold_cased

@@ -279,13 +279,14 @@ cover:
   relief_strength: 2.0
 ```
 
-![Four close windows of the Ambleside card, the land to the east of the lake shaded more heavily from left to right as the strength rises.](../images/how-to/relief-strength.webp)
+![Four close windows of the Ambleside card on the slope of Loughrigg Fell, the hillside shaded more heavily from left to right as the strength rises.](../images/how-to/relief-strength.webp)
 
-*Painted by `examples/relief_grid.py` (the Ambleside fixture, the default style). The labels read 0, 1, 2 and 4 across. The value is `relief_strength`.*
+*Painted by `examples/relief_grid.py` (the Ambleside fixture, the default style). The labels read 0, 2, 4 and 8 across. The value is `relief_strength`.*
 
-At 0 the washes are flat. At 1 the hills are a quiet shade under the colour, and at 2 they
-carry the form of the ground. At 4 the slopes are dark enough to dull the colour of the land
-under them, which suits a map of mountains. `cover.relief` set to `false`
+At 0 the washes are flat. At 2 the fell carries a shade under the colour, at 4 the slopes
+take on the form of the ground, and at 8 they are dark enough to dull the colour of the land
+under them, which suits a map of mountains. Past about 8 the relief stops growing darker. `1.0`
+is the default's own, a quieter shade than any of these cells. `cover.relief` set to `false`
 turns the relief off whatever its strength.
 
 ## Editor completion
@@ -456,8 +457,9 @@ file is `src/pyntpot/maps/themes/sepia.yaml`; paint with it by `--style sepia`.
 The pigments in `cover.pigments` are saturated, and each carries a lower transparency, so
 they lay down denser. `brush.river_mult` widens the rivers. `nib` letters larger
 and heavier. `route_ink` makes the route magenta and 8 pixels wide, and `line_effects` cases it with
-the `cased` preset, a paper-coloured ring that keeps it apart from the rivers and roads it
-crosses. Its file is
+`bold_cased`, a preset of its own in `effect_presets`: a cream ring 3.4 pixels wide at full
+strength, wider than the built-in `cased` so that it still reads as a paper margin when the card is
+shown at page width, and keeps the route apart from the rivers and roads it crosses. Its file is
 `src/pyntpot/maps/themes/bold.yaml`; paint with it by `--style bold`.
 
 ### Winter
