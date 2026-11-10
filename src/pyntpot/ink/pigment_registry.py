@@ -80,7 +80,7 @@ class PigmentRegistry:
 
         Raises:
             ValueError: When an added name is already in the registry (the message says to name a new
-            pigment with a base) or repeats.
+                pigment with a base) or repeats.
         """
         for p in added:
             if p.name in self:
