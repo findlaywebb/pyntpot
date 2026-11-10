@@ -20,9 +20,8 @@ other numbers writes the stack out in `line_effects:`. It writes `out_dir / "lin
 
 Public names it uses: from `pyntpot.maps`, `Cache`, `Lettering`, `OpenTopoData`,
 `OverpassFeatures`, `Style`, `Track`, `compose`, `fetch`, `letter` and `paint`; from
-`pyntpot.ink`, `Canvas`, `Colour`, `PaperStyle`, `Sheet`, `paper_plate` and `save_image`; from
-`pyntpot.letters`, `Setting`;
-`GridSpec`, `LabelStyle` and `label_grid` from the sibling `labelled_grid.py`. It introduces none.
+`pyntpot.ink`, `Sheet` and `save_image`; from `pyntpot.letters`, `Setting`; `LABELS`, `GridSpec`,
+`grid_paper` and `label_grid` from the sibling `labelled_grid.py`. It introduces none.
 
 Run it with a track, a cache directory, an output directory and a contact::
 
@@ -36,10 +35,10 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-from labelled_grid import GridSpec, LabelStyle, label_grid
+from labelled_grid import LABELS, GridSpec, grid_paper, label_grid
 from PIL import Image
 
-from pyntpot.ink import Canvas, Colour, PaperStyle, Sheet, paper_plate, save_image
+from pyntpot.ink import Sheet, save_image
 from pyntpot.letters import Setting
 from pyntpot.maps import (
     Cache,
@@ -69,7 +68,6 @@ CELLS: tuple[str, ...] = ("none", "cased", "halo", "lifted")
 ACROSS = 2
 #: The presets figure's width in pixels, the room left of the cells, above them, round them and
 #: between them (a row's gap holds the names of the row below).
-#: The cells sit two across and two down.
 GRID_W, LEFT, TOP, PAD, GAP = 720, 12, 44, 12, 34
 #: How many times a cell's width the loop is painted across, so a cell shows a close window of it and
 #: the route is wide enough for each preset to read; and where the window's top left corner is, as shares
@@ -83,14 +81,8 @@ CROP: dict[str, float] = {
     "ribbon_min_m": 260.0,
     "card_grow_mult": 0.9,
 }
-#: The size of the names on the figure, in pixels, the ink they are lettered in and the hand's seed.
-LABEL_PX, LABEL_INK, SEED = 21.0, Colour("#4a3a2a"), 7
-#: How many times its size the nib plate is painted before it is brought down.
-NIB_SCALE = 2
-#: How the names are lettered.
-LABELS = LabelStyle(
-    px=LABEL_PX, ink=LABEL_INK, pen_px=1.5, gran_px=6.0 * NIB_SCALE, seed=SEED, col_dy=12
-)
+#: The seed of the paper's noise and of the dither the file is written with.
+SEED = 7
 
 
 def _card(
@@ -159,8 +151,7 @@ def _presets(
     spec = GridSpec(GRID_W, ACROSS, len(CELLS) // ACROSS, cell_h, LEFT, TOP, GAP, PAD, PAD)
     boxes = spec.boxes()
     sheet = Sheet(spec.height, GRID_W, 6.0, SEED)
-    canvas = Canvas(0, 0, GRID_W, spec.height, GRID_W, spec.height)
-    grid = paper_plate(sheet, canvas, PaperStyle(paper_foxing=0.0), GRID_W)
+    grid = grid_paper(sheet)
     flat = [box for row in boxes for box in row]
     for (x, y, _, _), cell in zip(flat, cells, strict=True):
         resized = cell.resize((cell_w, cell_h), Image.Resampling.LANCZOS)

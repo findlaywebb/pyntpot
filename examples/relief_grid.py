@@ -10,8 +10,8 @@ the strengths are lettered over the cells, in the hand.
 
 Public names it uses: from `pyntpot.maps`, `Cache`, `Lettering`, `OpenTopoData`,
 `OverpassFeatures`, `Style`, `Track`, `compose`, `fetch` and `paint`; from `pyntpot.ink`,
-`Canvas`, `Colour`, `PaperStyle`, `Sheet`, `paper_plate` and `save_image`; `GridSpec`, `LabelStyle`
-and `label_grid` from the sibling `labelled_grid.py`. It introduces none. It writes
+`Sheet` and `save_image`; `LABELS`, `GridSpec`, `grid_paper` and `label_grid` from the sibling
+`labelled_grid.py`. It introduces none. It writes
 `out_dir / "relief_strength.png"`.
 
 Run it with a track, a cache directory, an output directory and a contact::
@@ -25,10 +25,10 @@ import logging
 from pathlib import Path
 
 import numpy as np
-from labelled_grid import GridSpec, LabelStyle, label_grid
+from labelled_grid import LABELS, GridSpec, grid_paper, label_grid
 from PIL import Image
 
-from pyntpot.ink import Canvas, Colour, PaperStyle, Sheet, paper_plate, save_image
+from pyntpot.ink import Sheet, save_image
 from pyntpot.maps import (
     Cache,
     Lettering,
@@ -52,10 +52,8 @@ GRID_W, LEFT, TOP, PAD, GAP = 720, 12, 44, 12, 12
 #: How many times a cell's width the card is painted across, and where the close window's top left
 #: corner is, as shares of the card's width and height. The window is `1 / ZOOM` of the card across.
 ZOOM, WINDOW_AT = 2, (0.28, 0.26)
-#: The hand's seed.
+#: The seed of the paper's noise and of the dither the file is written with.
 SEED = 7
-#: How the names are lettered.
-LABELS = LabelStyle(px=21.0, ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=SEED, col_dy=12)
 
 
 def _style(strength: float, cell_w: int) -> Style:
@@ -125,8 +123,7 @@ def main(
     spec = GridSpec(GRID_W, len(STRENGTHS), 1, cell_h, LEFT, TOP, GAP, PAD, PAD)
     boxes = spec.boxes()
     sheet = Sheet(spec.height, GRID_W, 6.0, SEED)
-    canvas = Canvas(0, 0, GRID_W, spec.height, GRID_W, spec.height)
-    grid = paper_plate(sheet, canvas, PaperStyle(paper_foxing=0.0), GRID_W)
+    grid = grid_paper(sheet)
     for (x, y, _, _), cell in zip(boxes[0], cells, strict=True):
         resized = cell.resize((cell_w, cell_h), Image.Resampling.LANCZOS)
         grid[y : y + cell_h, x : x + cell_w] = np.asarray(resized, np.float32) / 255

@@ -17,13 +17,17 @@ so each script keeps only what is its own: what goes in a cell, and the names.
 - `label_grid`: letters the column names above and the row names beside a grid's boxes.
 - `sweep_grid`: lays one painted cell in each box of a grid over a copy of the paper, for a
   grid that sweeps one setting across and another down.
+- `grid_paper`: the `paper_plate` a grid is painted on, the whole sheet with no foxing.
+- `on_paper`: a cell painted over bare white with its crop of that paper multiplied in.
+- `LABELS`: the one `LabelStyle` the line effect, setting and gallery figures letter in.
 
 It does not paint cells, choose names or own any literal a caption or tutorial quotes: each
 script keeps its label tuples and lettered names. The names stay in the order the old scripts
 lettered them, columns first and then any `extra` settings and then rows, because the hand
 draws each setting from one random stream and a different order is a different hand.
 
-Public names it uses: from `pyntpot.ink`, `Canvas`, `Colour`, `BrushStyle` and `PaperStyle`;
+Public names it uses: from `pyntpot.ink`, `Canvas`, `Colour`, `BrushStyle`, `PaperStyle`,
+`Sheet` and `paper_plate`;
 from `pyntpot.letters`, `FaceStyle`, `HandStyle`, `Hand`, `Setting`, `Mark`, `NibSurface`,
 `NibStyle`, `NibGroups` and `nib_plate`. It introduces none.
 """
@@ -36,7 +40,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from pyntpot.ink import BrushStyle, Canvas, Colour, PaperStyle
+from pyntpot.ink import BrushStyle, Canvas, Colour, PaperStyle, Sheet, paper_plate
 from pyntpot.letters import (
     FaceStyle,
     Hand,
@@ -128,6 +132,11 @@ class LabelStyle:
     col_dy: float = 14
     row_dx: float = 12
     row_dy: float = 7
+
+
+#: How the line effect, setting and gallery figures letter their names: one hand, the literals
+#: of the tutorial grids, with the columns' names 12 pixels above the cells.
+LABELS = LabelStyle(px=21.0, ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7, col_dy=12)
 
 
 def letter_over(
@@ -239,3 +248,20 @@ def sweep_grid(
                 raise ValueError(f"cell {r},{c} is {cell.shape[:2]}, its box is {(h, w)}")
             out[y : y + h, x : x + w] = cell
     return out
+
+
+def grid_paper(sheet: Sheet) -> np.ndarray:
+    """Return the `paper_plate` of the whole of `sheet`, with no foxing, at one pixel to one."""
+    w, h = sheet.w, sheet.h
+    return paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
+
+
+def on_paper(laid: np.ndarray, paper: np.ndarray, at: tuple[int, int]) -> np.ndarray:
+    """Return a cell painted over bare white with the crop of `paper` at `at` multiplied in.
+
+    `laid` is the cell in wash space, where the paper is 1, and `at` its top left corner on
+    `paper`. The result is clipped to 0 to 1 and is float32; neither input is changed.
+    """
+    x, y = at
+    crop = paper[y : y + laid.shape[0], x : x + laid.shape[1]]
+    return np.clip(laid * crop, 0.0, 1.0).astype(np.float32)

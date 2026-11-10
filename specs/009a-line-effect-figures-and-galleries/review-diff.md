@@ -183,3 +183,41 @@ SHOULD-FIX, all eight fixed:
 8. Tasks ticked for the #212 note (name corrected), the plan review, the route-ink repaint, and the branch comments (verified on all seven issues through the REST API).
 
 CONSIDER applied: 9 (blank line), 10 (captions), 11, 12 (signatures; `azimuth_deg` is keyword-only too), 14 (two forms added to `FORMS`), 15 (line count). Declined: 13, because `test_gallery_values.py` parses the header as `letter` #ink and a longer header needs that parser changed; 16, the shadow sweep, because repainting an image is more than a few lines and no image may move here.
+
+## Elegance pass
+
+Simplification only, behaviour identical: every figure's PNG hashes the same before and after,
+and the docs-image goldens, `test_tutorial_quotes` and `test_captions` stay green.
+
+Applied:
+
+- `labelled_grid.py` holds `LABELS`, the one `LabelStyle` literal that seven of the new scripts
+  (and `how_to_line_effects.py` in a derived form, `6.0 * NIB_SCALE`) each repeated. Each script
+  imports it; `how_to_line_effects.py` loses its local `NIB_SCALE`, `LABEL_PX` and `LABEL_INK`
+  (the lettering-over-an-image note's count of `NIB_SCALE` copies drops to 12).
+- `labelled_grid.grid_paper(sheet)` replaces eight copies of
+  `paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)`, and
+  `pigment_gallery._paper`.
+- `labelled_grid.on_paper(laid, paper, at)` replaces the paper-crop multiply in
+  `setting_grids`, `line_effect_grids` and `line_effect_reasons` (whose `_cell` goes).
+  `cased_stroke.paint_cell` keeps it inline because the tutorial quotes that block verbatim.
+- `line_effect_reasons._glaze_or_rgb`: the casing and glow branches each repeated the RGB-or-glaze
+  split; one local `laid_under` picks the primitive and the split is written once.
+- Docstrings' "Public names it uses" lists follow the imports; a stray duplicate comment line
+  in `how_to_line_effects.py` goes; `relief_grid.SEED` says what it seeds now that the hand's
+  seed comes from `LABELS`.
+
+Rejected:
+
+- A shared `_check(figure)`: five copies, but each is two lines and the helper would add an
+  import for no clarity.
+- A shared corner `Setting` (`setting_grids`, `line_effect_grids`) and the "later rows named in
+  the gap above" settings (`cased_stroke`, `how_to_line_effects`): two uses each.
+- A shared `_window` and the paste-resized-cells loop (`relief_grid`, `how_to_line_effects`), and
+  `_scaled(LabelStyle, unit)` (`brush_gallery`, `pigment_gallery`): two uses each.
+- A shared pigment-wash layer with the `km_transparency` fallback (four copies): it is not grid
+  work, so it would need a second sibling module and an `_EXAMPLE_SIBLINGS` entry, and the
+  copies differ in how they place the cover.
+- A shared brushed-stroke helper: the four copies differ in line, seed, style and override.
+- A cached `_spec(figure)` helper across the three figure scripts: each reads its own layout
+  and size tables, so a shared one would take as many arguments as it saves.

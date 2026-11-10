@@ -16,10 +16,10 @@ shadow falls to the south-east.
 and encoding. The held values are literals of this script and read no preset.
 
 Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `Shadow`, `casing`, `glow`, `shadow`,
-`pigment`, `Colour`, `PigmentLayer`, `Sheet`, `Canvas`, `PaperStyle`, `BrushStyle`,
-`brush_from_id`, `stamp`, `ink_density`, `wash`, `composite`, `rgb`, `paper_plate` and
-`save_image`; from `pyntpot.letters`, `Setting`; and `GridSpec`, `LabelStyle`, `label_grid` and `sweep_grid` from `labelled_grid.py`.
-It introduces none.
+`pigment`, `Colour`, `PigmentLayer`, `Sheet`, `PaperStyle`, `BrushStyle`, `brush_from_id`,
+`stamp`, `ink_density`, `wash`, `composite`, `rgb` and `save_image`; from `pyntpot.letters`,
+`Setting`; and `LABELS`, `GridSpec`, `grid_paper`, `label_grid` and `sweep_grid` from
+`labelled_grid.py`. It introduces none.
 
 Run it with `uv run python examples/cased_stroke.py out/`; it writes `out/cased_stroke.png`.
 """
@@ -30,11 +30,10 @@ from functools import cache
 from pathlib import Path
 
 import numpy as np
-from labelled_grid import Box, GridSpec, LabelStyle, label_grid, sweep_grid
+from labelled_grid import LABELS, Box, GridSpec, grid_paper, label_grid, sweep_grid
 
 from pyntpot.ink import (
     BrushStyle,
-    Canvas,
     Casing,
     Colour,
     Glow,
@@ -47,7 +46,6 @@ from pyntpot.ink import (
     composite,
     glow,
     ink_density,
-    paper_plate,
     pigment,
     rgb,
     save_image,
@@ -79,8 +77,6 @@ GRAN_PX = 8.0
 #: The image's width, a cell's height and the room round the cells, in pixels.
 WIDTH_PX, CELL_H = 600, 100
 LEFT, TOP, GAP, PAD_RIGHT, PAD_BOTTOM = 14, 44, 34, 14, 16
-#: How the names are lettered: one hand, the literals of the tutorial grids.
-LABELS = LabelStyle(px=21.0, ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7, col_dy=12)
 
 SPEC = GridSpec(
     WIDTH_PX, ACROSS, len(CELLS) // ACROSS, CELL_H, LEFT, TOP, GAP, PAD_RIGHT, PAD_BOTTOM
@@ -90,11 +86,7 @@ SPEC = GridSpec(
 @cache
 def _paper() -> np.ndarray:
     """The paper plate of the whole image; a cell paints over its own crop of it."""
-    h = SPEC.height
-    sheet = Sheet(h, WIDTH_PX, GRAN_PX, SEED)
-    return paper_plate(
-        sheet, Canvas(0, 0, WIDTH_PX, h, WIDTH_PX, h), PaperStyle(paper_foxing=0.0), WIDTH_PX
-    )
+    return grid_paper(Sheet(SPEC.height, WIDTH_PX, GRAN_PX, SEED))
 
 
 @cache

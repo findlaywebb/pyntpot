@@ -22,10 +22,9 @@ casings are white, so they are the paper's own colour.
 and encoding; `layout(figure)` returns the cells' settings and the names.
 
 Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `casing`, `glow`, `pigment`, `Colour`,
-`PigmentLayer`, `Sheet`, `Canvas`, `PaperStyle`, `BrushStyle`, `brush_from_id`, `stamp`,
-`ink_density`, `wash`, `composite`, `rgb`, `paper_plate` and `save_image`; and `GridSpec`,
-`LabelStyle`, `label_grid` and `sweep_grid` from `labelled_grid.py`. It introduces
-none.
+`PigmentLayer`, `Sheet`, `PaperStyle`, `BrushStyle`, `brush_from_id`, `stamp`, `ink_density`,
+`wash`, `composite`, `rgb` and `save_image`; and `LABELS`, `GridSpec`, `grid_paper`, `label_grid`,
+`on_paper` and `sweep_grid` from `labelled_grid.py`. It introduces none.
 
 Run it with `uv run python examples/line_effect_reasons.py out/ --figure draw-order`; it writes
 `out/line-effects-draw-order.png`.
@@ -38,11 +37,10 @@ from functools import cache
 from pathlib import Path
 
 import numpy as np
-from labelled_grid import GridSpec, LabelStyle, label_grid, sweep_grid
+from labelled_grid import LABELS, GridSpec, grid_paper, label_grid, on_paper, sweep_grid
 
 from pyntpot.ink import (
     BrushStyle,
-    Canvas,
     Casing,
     Colour,
     Glow,
@@ -54,7 +52,6 @@ from pyntpot.ink import (
     composite,
     glow,
     ink_density,
-    paper_plate,
     pigment,
     rgb,
     save_image,
@@ -87,8 +84,6 @@ WIDTH_PX = 720
 CELL_H = {"glaze-or-rgb": 96, "draw-order": 200}
 LEFT = {"glaze-or-rgb": 100, "draw-order": 14}
 TOP, GAP, PAD_RIGHT, PAD_BOTTOM = 44, 12, 14, 16
-#: How every figure's names are lettered: one hand, the literals of the tutorial grids.
-LABELS = LabelStyle(px=21.0, ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7, col_dy=12)
 
 
 @dataclass(frozen=True)
@@ -145,10 +140,7 @@ def _spec(figure: str) -> GridSpec:
 @cache
 def _paper(figure: str) -> np.ndarray:
     """The paper plate of the whole figure; a cell paints over its own crop of it."""
-    h = _spec(figure).height
-    sheet = Sheet(h, WIDTH_PX, GRAN_PX, SEED)
-    canvas = Canvas(0, 0, WIDTH_PX, h, WIDTH_PX, h)
-    return paper_plate(sheet, canvas, PaperStyle(paper_foxing=0.0), WIDTH_PX)
+    return grid_paper(Sheet(_spec(figure).height, WIDTH_PX, GRAN_PX, SEED))
 
 
 def _line(points: tuple[tuple[float, float], ...], n: int = 80) -> np.ndarray:
@@ -188,13 +180,6 @@ def _laid(stroke: Stroke, under: np.ndarray) -> np.ndarray:
     return composite([(stroke.density, stroke.ink)], under, PaperStyle())
 
 
-def _cell(under: np.ndarray, at: tuple[int, int], figure: str) -> np.ndarray:
-    """The finished cell: `under` multiplied by the paper plate's crop at `at`."""
-    x, y = at
-    crop = _paper(figure)[y : y + under.shape[0], x : x + under.shape[1]]
-    return np.clip(under * crop, 0.0, 1.0).astype(np.float32)
-
-
 def _glaze_or_rgb(effect: str, how: str, at: tuple[int, int]) -> np.ndarray:
     """One cell of the glaze-or-rgb grid: `effect` laid under a stroke as a `how`."""
     w, h = _spec("glaze-or-rgb").cell_w, CELL_H["glaze-or-rgb"]
@@ -203,22 +188,21 @@ def _glaze_or_rgb(effect: str, how: str, at: tuple[int, int]) -> np.ndarray:
     wide = effect == "casing"
     stroke = _stroke("MAJ2-b" if wide else "RIV1-a", 6.0 if wide else 4.0, line, sheet, SEED)
     ground = _washed(sheet, *[("wood", 0.0, 0.9)] * 3)
-    zeros = np.zeros_like(ground)
-    if effect == "casing":
-        ring = Casing(width_px=CASING_PX, colour=PAPER_WHITE, strength=1.0)
-        if how == "RGB":
-            under = casing(ground, stroke.density, ring, paper=None)
-        else:
-            weight = casing(zeros, stroke.density, ring, paper=None)[..., 0]
-            under = composite([(weight, rgb(CREAM))], ground, PaperStyle())
+    ring = Casing(width_px=CASING_PX, colour=PAPER_WHITE, strength=1.0)
+    lift = Glow(spread_px=GLOW_SPREAD_PX, blur_px=GLOW_BLUR_PX, strength=GLOW_STRENGTH)
+
+    def laid_under(base: np.ndarray) -> np.ndarray:
+        """`effect` laid round the stroke over `base`, by its RGB primitive."""
+        if effect == "casing":
+            return casing(base, stroke.density, ring, paper=None)
+        return glow(base, stroke.density, lift, paper=None)
+
+    if how == "RGB":
+        under = laid_under(ground)
     else:
-        lift = Glow(spread_px=GLOW_SPREAD_PX, blur_px=GLOW_BLUR_PX, strength=GLOW_STRENGTH)
-        if how == "RGB":
-            under = glow(ground, stroke.density, lift, paper=None)
-        else:
-            weight = glow(zeros, stroke.density, lift, paper=None)[..., 0]
-            under = composite([(weight, rgb(CREAM))], ground, PaperStyle())
-    return _cell(_laid(stroke, under), at, "glaze-or-rgb")
+        weight = laid_under(np.zeros_like(ground))[..., 0]
+        under = composite([(weight, rgb(CREAM))], ground, PaperStyle())
+    return on_paper(_laid(stroke, under), _paper("glaze-or-rgb"), at)
 
 
 def _draw_order(order: str, at: tuple[int, int]) -> np.ndarray:
@@ -249,7 +233,7 @@ def _draw_order(order: str, at: tuple[int, int]) -> np.ndarray:
             under = casing(under, road.density, ring, paper=None)
         for road in (road_a, road_b):
             under = _laid(road, under)
-    return _cell(under, at, "draw-order")
+    return on_paper(under, _paper("draw-order"), at)
 
 
 def paint_cell(figure: str, row: int, col: int, at: tuple[int, int] = (0, 0)) -> np.ndarray:

@@ -6,7 +6,7 @@ GitHub issue: [#165](https://github.com/findlaywebb/pyntpot/issues/165)
 marks onto one RGBA plate and only writes it to disk, returning the path or `None`. A caller
 who wants a word over a painted array does the rest by hand:
 
-1. builds a second `Canvas` at twice the size (`NIB_SCALE = 2`, redefined in 13 example
+1. builds a second `Canvas` at twice the size (`NIB_SCALE = 2`, redefined in 12 example
    scripts), a zero `dark` array and a `NibSurface`, whose canvas is read only for `w` and `h`;
 2. builds a `NibGroups` from five style objects, since it holds no defaults;
 3. calls `nib_plate`, reopens the file with Pillow, resizes it with Lanczos, divides by 255

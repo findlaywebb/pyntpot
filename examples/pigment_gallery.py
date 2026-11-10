@@ -26,11 +26,11 @@ figure before lettering, with each wash's box, so a test can measure the washes 
 
 It paints no map and reads no theme file; the palettes are read through `Palette.named`.
 
-Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `Colour`,
-`PIGMENT_REGISTRY`, `PIGMENTS`, `PAINTERS_PIGMENTS`, `PigmentLayer`, `paper_plate`, `wash`,
-`rgb`, `composite` and `save_image`; from `pyntpot.letters`, `Setting` and
-`NibStyle`; from `pyntpot.maps`, `Palette`; and `GridSpec`, `LabelStyle`, `label_grid` and
-`letter_over` from `labelled_grid.py`. It introduces none.
+Public names it uses: from `pyntpot.ink`, `Sheet`, `PaperStyle`, `PIGMENT_REGISTRY`, `PIGMENTS`,
+`PAINTERS_PIGMENTS`, `PigmentLayer`, `wash`, `rgb`, `composite` and `save_image`; from
+`pyntpot.letters`, `Setting` and `NibStyle`; from `pyntpot.maps`, `Palette`; and `LABELS`,
+`GridSpec`, `LabelStyle`, `grid_paper`, `label_grid` and `letter_over` from `labelled_grid.py`.
+It introduces none.
 
 Run it with `uv run python examples/pigment_gallery.py out/ --figure glazes`; it writes
 `out/pigment-gallery-glazes.png`. `--size` sets the width in pixels, 720 by default.
@@ -43,19 +43,24 @@ from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
-from labelled_grid import Box, GridSpec, LabelStyle, label_grid, letter_over
+from labelled_grid import (
+    LABELS,
+    Box,
+    GridSpec,
+    LabelStyle,
+    grid_paper,
+    label_grid,
+    letter_over,
+)
 
 from pyntpot.ink import (
     PAINTERS_PIGMENTS,
     PIGMENT_REGISTRY,
     PIGMENTS,
-    Canvas,
-    Colour,
     PaperStyle,
     PigmentLayer,
     Sheet,
     composite,
-    paper_plate,
     rgb,
     save_image,
     wash,
@@ -90,8 +95,6 @@ GLAZE_PAIRS: tuple[tuple[str, str], ...] = (
 GLAZE_ROWS: tuple[str, ...] = ("multiply", "A over B", "B over A")
 #: The strength of the glaze figure's discs and of the palettes figure's swatches.
 DISC_STRENGTH, SWATCH_STRENGTH = 0.8, 0.6
-#: How every figure's names are lettered: one hand, at the design width.
-LABELS = LabelStyle(px=21.0, ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7, col_dy=12)
 #: The size of the smaller lettering, and the palettes figure's pigment names, at the design width.
 SMALL_PX = 14.0
 #: Palettes are laid this many swatches to a line.
@@ -123,11 +126,6 @@ def _scaled(style: LabelStyle, unit: float, px: float | None = None) -> LabelSty
         row_dx=style.row_dx * unit,
         row_dy=style.row_dy * unit,
     )
-
-
-def _paper(sheet: Sheet, w: int, h: int) -> np.ndarray:
-    """The `paper_plate` the figure is painted on."""
-    return paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
 
 
 def _mask(w: int, h: int, boxes: list[Box]) -> np.ndarray:
@@ -177,7 +175,7 @@ def wash_rows(figure: str, size: int = DESIGN_W) -> WashRows:
     spec = GridSpec(size, len(STRENGTHS), len(names), 26, 215, 40, 8, 160, 14, unit)
     boxes, w, h = spec.boxes(), size, spec.height
     sheet = Sheet(h, w, GRAN_PX * unit, SEED)
-    out = _paper(sheet, w, h)
+    out = grid_paper(sheet)
     for column, strength in enumerate(STRENGTHS):
         density = wash(_mask(w, h, [row[column] for row in boxes]), sheet, strength, POOL)
         for name, row in zip(names, boxes, strict=True):
@@ -229,7 +227,7 @@ def _glaze_figure(size: int) -> np.ndarray:
     spec = GridSpec(size, len(GLAZE_PAIRS), len(GLAZE_ROWS), 76, 84, 70, 8, 8, 12, unit)
     boxes, w, h = spec.boxes(), size, spec.height
     sheet = Sheet(h, w, GRAN_PX * unit, SEED)
-    out = _paper(sheet, w, h)
+    out = grid_paper(sheet)
     radius = min(0.33 * spec.cell_w, 0.46 * round(76 * unit))
     centres = [
         [(x + bw * cx, y + bh / 2) for row in boxes for x, y, bw, bh in row] for cx in (0.35, 0.65)
@@ -295,7 +293,7 @@ def _palettes_figure(size: int) -> np.ndarray:
     spec = GridSpec(size, PALETTE_COLUMNS, row, 46, 100, 40, 56, 14, 34, unit)
     boxes, w, h = spec.boxes(), size, spec.height
     sheet = Sheet(h, w, GRAN_PX * unit / 2, SEED)
-    out = _paper(sheet, w, h)
+    out = grid_paper(sheet)
     chosen = [boxes[r][c] for r, c, _, _, _ in placed]
     density = wash(_mask(w, h, chosen), sheet, SWATCH_STRENGTH, POOL)
     small = _scaled(LABELS, unit, SMALL_PX)

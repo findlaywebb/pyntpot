@@ -19,9 +19,9 @@ Strokes of one ink are combined before one composite, as `brush_sheet.py` does.
 are private to `pyntpot.ink`; `tests/docs/test_reference_pages.py` pins it to those tables.
 `cell_ids` and `figure_ids` say which ids a figure paints.
 
-Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `BrushStyle`, `Colour`,
-`paper_plate`, `brush_from_id`, `stamp`, `ink_density`, `rgb`, `composite` and `save_image`; from
-`pyntpot.letters`, `Setting`; and `GridSpec`, `LabelStyle` and `label_grid` from `labelled_grid.py`.
+Public names it uses: from `pyntpot.ink`, `Sheet`, `PaperStyle`, `BrushStyle`, `brush_from_id`,
+`stamp`, `ink_density`, `rgb`, `composite` and `save_image`; from `pyntpot.letters`, `Setting`;
+and `LABELS`, `GridSpec`, `LabelStyle`, `grid_paper` and `label_grid` from `labelled_grid.py`.
 It introduces none.
 
 Run it with `uv run python examples/brush_gallery.py out/ --figure maj`; it writes
@@ -34,18 +34,15 @@ import logging
 from pathlib import Path
 
 import numpy as np
-from labelled_grid import GridSpec, LabelStyle, label_grid
+from labelled_grid import LABELS, GridSpec, LabelStyle, grid_paper, label_grid
 
 from pyntpot.ink import (
     BrushStyle,
-    Canvas,
-    Colour,
     PaperStyle,
     Sheet,
     brush_from_id,
     composite,
     ink_density,
-    paper_plate,
     rgb,
     save_image,
     stamp,
@@ -79,8 +76,6 @@ SEED = 7
 CELL_H, GAP, LEFT, TOP, PAD_RIGHT = 50, 26, 128, 44, 14
 #: The size of the ids lettered under the cells, in pixels at the design width.
 ID_PX = 14.0
-#: How every figure's names are lettered: one hand, at the design width.
-LABELS = LabelStyle(px=21.0, ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7, col_dy=12)
 
 
 def _columns(figure: str) -> tuple[tuple[str, ...], ...]:
@@ -151,7 +146,7 @@ def _paint(figure: str, size: int) -> tuple[np.ndarray, list[list[tuple[int, int
     spec = GridSpec(size, len(columns), rows, CELL_H, LEFT, TOP, GAP, PAD_RIGHT, 38, unit)
     boxes, h = spec.boxes(), spec.height
     sheet = Sheet(h, size, GRAN_PX * unit, SEED)
-    paper = paper_plate(sheet, Canvas(0, 0, size, h, size, h), PaperStyle(paper_foxing=0.0), size)
+    paper = grid_paper(sheet)
     by_ink: dict[str, np.ndarray] = {}
     index = 0
     for r, row in enumerate(cell_ids(figure)):

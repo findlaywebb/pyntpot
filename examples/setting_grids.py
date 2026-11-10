@@ -23,9 +23,9 @@ one array pixel to one display pixel. The held values are literals of this scrip
 theme. `paint_cell(figure, row, col)` paints one cell and returns its float32 RGB `(h, w, 3)`
 before lettering and encoding.
 
-Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `BrushStyle`,
-`paper_plate`, `wash`, `pigment`, `rgb`, `composite`, `brush_from_id`, `stamp`, `ink_density`
-and `save_image`; from `pyntpot.letters`, `Setting`; and `GridSpec`, `LabelStyle`, `label_grid`
+Public names it uses: from `pyntpot.ink`, `Sheet`, `PaperStyle`, `BrushStyle`, `wash`,
+`pigment`, `rgb`, `composite`, `brush_from_id`, `stamp`, `ink_density` and `save_image`; from
+`pyntpot.letters`, `Setting`; and `LABELS`, `GridSpec`, `grid_paper`, `label_grid`, `on_paper`
 and `sweep_grid` from `labelled_grid.py`. It introduces none.
 
 Run it with `uv run python examples/setting_grids.py out/ --figure pool`; it writes
@@ -39,18 +39,15 @@ from functools import cache
 from pathlib import Path
 
 import numpy as np
-from labelled_grid import Box, GridSpec, LabelStyle, label_grid, sweep_grid
+from labelled_grid import LABELS, Box, GridSpec, grid_paper, label_grid, on_paper, sweep_grid
 
 from pyntpot.ink import (
     BrushStyle,
-    Canvas,
-    Colour,
     PaperStyle,
     Sheet,
     brush_from_id,
     composite,
     ink_density,
-    paper_plate,
     pigment,
     rgb,
     save_image,
@@ -90,8 +87,6 @@ WIDTH_PX, TOP, GAP, PAD_RIGHT, PAD_BOTTOM = 720, 44, 12, 14, 16
 LEFT = {"pool": 120, "granulation": 190, "dryness": 120}
 #: Each figure's cell height in pixels.
 CELL_H = {"pool": 120, "granulation": 120, "dryness": 76}
-#: How the names are lettered: one hand, the literals of the tutorial grids.
-LABELS = LabelStyle(px=21.0, ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7, col_dy=12)
 
 
 @dataclass(frozen=True)
@@ -145,9 +140,7 @@ def _spec(figure: str) -> GridSpec:
 @cache
 def _paper(figure: str) -> np.ndarray:
     """The paper plate of the whole figure; a cell paints over its own crop of it."""
-    w, h = WIDTH_PX, _spec(figure).height
-    sheet = Sheet(h, w, PAPER_GRAN_PX, SEED)
-    return paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
+    return grid_paper(Sheet(_spec(figure).height, WIDTH_PX, PAPER_GRAN_PX, SEED))
 
 
 def _disc(w: int, h: int) -> np.ndarray:
@@ -209,9 +202,7 @@ def paint_cell(figure: str, row: int, col: int, *, at: tuple[int, int] = (0, 0))
         laid = _washed(white, sheet, GRAN_POOL)
     else:
         laid = _stroke(white, DRYNESS[col], LOADS[row])
-    x, y = at
-    crop = _paper(figure)[y : y + h, x : x + w]
-    return np.clip(laid * crop, 0.0, 1.0).astype(np.float32)
+    return on_paper(laid, _paper(figure), at)
 
 
 def main(out_dir: Path, figure: str = "pool") -> Path:

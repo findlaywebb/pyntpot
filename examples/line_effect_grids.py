@@ -29,10 +29,10 @@ The held values here are literals of this script and read no preset. Each swept 
 numeric tuple, so a caption's labels match the code.
 
 Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `Shadow`, `PenCasing`, `casing`,
-`glow`, `shadow`, `pen_casing`, `pigment`, `Colour`, `PigmentLayer`, `Sheet`, `Canvas`,
-`PaperStyle`, `BrushStyle`, `brush_from_id`, `stamp`, `ink_density`, `wash`, `composite`, `rgb`,
-`paper_plate` and `save_image`; from `pyntpot.letters`, `Setting`; and `GridSpec`, `LabelStyle`,
-`label_grid` and `sweep_grid` from `labelled_grid.py`. It introduces none.
+`glow`, `shadow`, `pen_casing`, `pigment`, `Colour`, `PigmentLayer`, `Sheet`, `PaperStyle`,
+`BrushStyle`, `brush_from_id`, `stamp`, `ink_density`, `wash`, `composite`, `rgb` and
+`save_image`; from `pyntpot.letters`, `Setting`; and `LABELS`, `GridSpec`, `grid_paper`,
+`label_grid`, `on_paper` and `sweep_grid` from `labelled_grid.py`. It introduces none.
 
 Run it with `uv run python examples/line_effect_grids.py out/ --figure glow`; it writes
 `out/glow-sweep.png`.
@@ -46,11 +46,10 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from labelled_grid import Box, GridSpec, LabelStyle, label_grid, sweep_grid
+from labelled_grid import LABELS, Box, GridSpec, grid_paper, label_grid, on_paper, sweep_grid
 
 from pyntpot.ink import (
     BrushStyle,
-    Canvas,
     Casing,
     Colour,
     Glow,
@@ -64,7 +63,6 @@ from pyntpot.ink import (
     composite,
     glow,
     ink_density,
-    paper_plate,
     pen_casing,
     pigment,
     rgb,
@@ -112,8 +110,6 @@ PEN_INK, SOLID_INK, TINT = Colour("#3a2c20"), Colour("#c22050"), 0.3
 WIDTH_PX = {"casing": 720, "glow": 720, "shadow": 720, "pen-casing": 600}
 CELL_H = {"casing": 70, "glow": 62, "shadow": 62, "pen-casing": 62}
 LEFT, TOP, GAP, PAD_RIGHT, PAD_BOTTOM = 150, 44, 12, 14, 16
-#: How every figure's names are lettered: one hand, the literals of the tutorial grids.
-LABELS = LabelStyle(px=21.0, ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7, col_dy=12)
 
 
 @dataclass(frozen=True)
@@ -182,9 +178,7 @@ def _spec(figure: str) -> GridSpec:
 @cache
 def _paper(figure: str) -> np.ndarray:
     """The paper plate of the whole figure; a cell paints over its own crop of it."""
-    w, h = WIDTH_PX[figure], _spec(figure).height
-    sheet = Sheet(h, w, GRAN_PX, SEED)
-    return paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
+    return grid_paper(Sheet(_spec(figure).height, WIDTH_PX[figure], GRAN_PX, SEED))
 
 
 def _curve(w: int, h: int) -> np.ndarray:
@@ -344,9 +338,7 @@ def paint_cell(
     if edges is not None and edges.any():
         under = composite([(edges, scene.ink)], under, PaperStyle())
     laid = composite([(scene.density, scene.ink)], under, PaperStyle())
-    x, y = at
-    crop = _paper(figure)[y : y + laid.shape[0], x : x + laid.shape[1]]
-    return np.clip(laid * crop, 0.0, 1.0).astype(np.float32)
+    return on_paper(laid, _paper(figure), at)
 
 
 def main(out_dir: Path, figure: str = "casing") -> Path:
