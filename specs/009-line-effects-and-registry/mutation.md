@@ -91,8 +91,8 @@ Scope: `uv run python tests/mutation/scope.py --base 46ee0d9b`, run with
 | Total | 778 |
 | Killed by the existing suite (one a timeout) | 680 |
 | Survived the existing suite | 98 |
-| Killed by new tests | 38 (one at the diff review) |
-| Equivalent | 57, and 3 more whose dead code the diff review removed |
+| Killed by new tests | 40 (one at the diff review) |
+| Equivalent | 55, and 3 more whose dead code the diff review removed |
 
 No survivor revealed a bug in `src`. `_shifted`, `check_effect_numbers` and
 `Reserve.__post_init__` had no survivor.
@@ -103,6 +103,11 @@ No survivor revealed a bug in `src`. `_shifted`, `check_effect_numbers` and
   (`_crossings` 45); a core pixel seeding its diagonal neighbours (`_crossings` 58); a float64
   mask read as float32 (`contour_distance` 3, 5); the far edge of the search reach and the
   `radius + 2` cap on a dot (`contour_distance` 45, 51, 58, 62, 66, 69).
+- `tests/unit/ink/test_contour_distance_ulp.py`: the downward and rightward one-pixel steps
+  (`contour_distance` 64, 65). Each changes the distance by one float32 ulp, and in 3,000
+  sampled cases (random strokes, float32 and float64 masks, several widths) it changed an
+  8-bit pixel of `casing`, `pen_casing`, `reserve` or `casing_union` in about 8 percent, so
+  they are not equivalent.
 - `tests/unit/ink/test_effect_reserve_parts.py`: `pool_band` at nine excesses (all 11 mutants);
   `lay_reserve` at half coverage, out-of-range colours and a pool's depth on two grounds (16, 25,
   26, 31, 49, 58, 76); a mask exactly at the threshold in `reserve` (5).
@@ -132,8 +137,6 @@ No survivor revealed a bug in `src`. `_shifted`, `check_effect_numbers` and
 - `_crossings` 71: `<=` for `<` ties only equal-magnitude candidates of the same sign.
 - `contour_distance` 52, 59: the extra offset lies outside the reach circle and is skipped.
   72, 74: `>` for `>=` at an offset of exactly the size gives an empty slice.
-- `contour_distance` 64, 65 (skipping one axis step): the opposite-side core seed two pixels away
-  reaches the same contour point; the results differ by one float32 ulp.
 - `contour_distance` 127, 128, 129: the final `where` only set `big` where the value was
   already `big`, since no distance exceeds it. The diff review removed that `where` as dead
   code, so these mutants no longer exist.
