@@ -125,12 +125,12 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [ ] Added reserve sweep and master committed only if a non-golden test needs them; gate green.
 
 ### T4: cased stroke and the essay figures (worktree after T2)
-- [ ] Red, on the 2x float arrays before `reduce`: the reserve cells (paper where whole; pooled
+- [x] Red, on the 2x float arrays before `reduce`: the reserve cells (paper where whole; pooled
       no lighter); the union cell rules (equal outside, lighter nowhere);
       `TestDrawOrder` updated for three cells; 2x sizes.
-- [ ] `cased_stroke.py` 3 × 2 with reserve cells at 2x; `line_effect_reasons.py` draw-order
+- [x] `cased_stroke.py` 3 × 2 with reserve cells at 2x; `line_effect_reasons.py` draw-order
       third cell and both figures at 2x.
-- [ ] Tutorial page and explanation sections; gate green.
+- [x] Tutorial page and explanation sections; gate green.
 
 ### T5: reference and theme how-to
 - [ ] `reference/line-effects.md` reserve table, "Casing unions" table, draw order, primitives;
