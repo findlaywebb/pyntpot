@@ -43,8 +43,9 @@
       `tests/`; record each hit for B, which owns them (`test_registry_defaults.py` and
       `test_theme_colour_names.py` among them).
 - [x] Confirm route effects are wired into `compose_steps.route` and basemap effects into
-      the painter (`painter/effects.py::lay_wash`, called from `painter/plates.py`; PR 1
-      has no `over` list). If not, stop and report: that is PR 1's scope.
+      the painter (`painter/effects.py::lay_wash`, called from `painter/plates.py`; the
+      basemap stacks are laid by `lay_wash`, not appended to `_wash_plate`'s local `over`
+      list at `plates.py:63`). If not, stop and report: that is PR 1's scope.
 - [x] Confirm the setting grids' fields: `wash(..., pool=)`, `Sheet.seed`, `Sheet.gran_px`,
       `Sheet.fibre`, `PaperStyle.paper_fibre_mix`, `BRUSH_OVERRIDE_KEYS` `dry` and
       `load`, the `brush_from_id` path that takes `brush_overrides`, and
@@ -70,12 +71,12 @@
 
 ## A: one route colour (#159)
 
-- [ ] Red: property, structural, override, digest and pixel tests (the pixel test on the
+- [x] Red: property, structural, override, digest and pixel tests (the pixel test on the
       nib plate's RGBA, nearer `VIOLET` than `#c22050`); benchmark.
-- [ ] Green: `with_route_ink` feeds `nib.label_route_ink`; docstring; pin the fed lettering
+- [x] Green: `with_route_ink` feeds `nib.label_route_ink`; docstring; pin the fed lettering
       digest.
-- [ ] How-to text, glossary row and regenerated glossary; delete the #159 note. Gates.
-- [ ] `test_style.py::test_a_fed_ink_moves_only_the_full_digest` becomes
+- [x] How-to text, glossary row and regenerated glossary; delete the #159 note. Gates.
+- [x] `test_style.py::test_a_fed_ink_moves_only_the_full_digest` becomes
       `test_a_fed_width_moves_only_the_full_digest` (`width_px=4.8` alone); the colour
       case lives in `test_route_colour_feed.py`.
 - [ ] Repaint `how-to/route-ink.webp how-to/route-ink-grid.webp` with `--no-lynmouth`:
@@ -118,24 +119,28 @@
 
 - [ ] Pure move: `DocsImage` and its helpers (`Kind`, `Encoding`, `Option` among them) to
       `tests/support/docs_image.py`, importers repointed. Gates.
-- [ ] Red: `test_galleries.py` (with `test_the_over_ink_bar_shows_transparency`: the veil
-      ratio of the most and the least transparent pigment's over-ink cell differs by at
-      least 0.20, plan "The over-ink bar must show transparency"), the coverage tests and
+- [ ] Red: `test_galleries.py` (with `test_the_pigment_gallery_washes_darken_with_strength`:
+      every registry pigment is painted and its 0.3, 0.6 and 0.9 washes are monotonic in
+      darkness), the coverage tests and
       `test_gallery_values.py`.
 - [ ] Green: `brush_gallery.py` (`riv-str-lan` with "RIV = STR", `maj`, `trk`);
       `pigment_gallery.py` (`roles`, `painters`, `glazes`, `palettes`; the palettes figure
-      reads `Palette.named(name).pigments`; the over-ink bar near-black, darkened or
-      thickened until the test passes, else dropped for washes at three strengths beside
-      the lettered transparency and the test removed with it).
+      reads `Palette.named(name).pigments`, no ink bar: transparency is the three washes
+      beside the lettered value and Colour Index code).
 - [ ] Create `tests/support/docs_images_009a.py`; register seven entries under
       `009a-galleries` (share 500,000). Paint them with
       `PYTHONPATH=tests uv run python tests/golden/make_docs_images.py "$SCRATCH/c" <names>`
       and copy the images and masters in. Check the budgets.
-- [ ] The two reference pages, links and nav; `reference/pigments.md` drops the old
-      card's image and its "Painted by" paragraph for a link to the gallery (the file,
-      master, script and registry entry stay for `docs/gallery.md`). Delete the #69 and
-      #70 notes. Gates and
-      the golden pins of the seven.
+- [ ] The two reference pages, links and nav. Retire the old pigment card in this one
+      commit: delete `docs/images/reference/pigment-swatches.webp`,
+      `tests/golden/docs/reference/pigment-swatches.png` and
+      `examples/pigment_swatches.py`; drop its entry in `tests/support/docs_images.py` and
+      its row in `tests/examples/test_ink_examples.py`; show `pigment-gallery-roles.webp`
+      in `docs/gallery.md` and `docs/reference/pigments.md` with a `*Painted by
+      `examples/pigment_gallery.py`*` caption, and rewrite the `pigments.md` sentence
+      about the bar. Add the seven images to `docs/gallery.md` under the right headings in
+      nav order (`test_gallery.py`). Delete the #69 and #70 notes. Gates and the golden
+      pins of the seven.
 
 ## D2: the sweeps (#104, #105, #106)
 

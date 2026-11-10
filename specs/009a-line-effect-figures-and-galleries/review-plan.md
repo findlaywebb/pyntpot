@@ -713,3 +713,81 @@ Every sweep value is inside the ranges:
    form the plan prescribes is never checked. That is harmless. If a page writes a bare
    form, it must be `(rgb, mask, effect, threshold, paper)`, and for `shadow`,
    `(rgb, mask, effect, azimuth_deg, threshold)`.
+
+## P0 changes review
+
+Scope: commit `6a6d5189` (spec, plan, tasks, `baseline.md`, two baseline JSONs), checked
+against PR 1's code on this branch.
+
+**Verdict: RECONSIDER (two BLOCKING, both small plan edits).** Most important: the over-ink bar
+cannot pass on the `painters` figure, and the plan does not say which figure the test runs on.
+
+### Verified correct
+
+- Basemap effects: `maps/painter/effects.py:41` `lay_wash`, called from
+  `plates.py:74-75` (`_wash_plate`) only when `style.basemap.line_effects` is set. Correct.
+- `Palette.named(name)` (`theme_palette.py:82`, raises `ThemeError` outside `names()`) and
+  `.pigments: Mapping[str, Pigment]` (:61); `Palette` is in `pyntpot.maps.__all__` (:109);
+  `plain.yaml` maps every alias to a registry name. Correct.
+- The casing, glow, shadow and pen-casing primitives, their value types, `Pigment` and
+  `PigmentRegistry` are all in `pyntpot.ink.__all__`. The old script imports only public names.
+- Glow test: `effect_glow.py:52` is `rgb + w * max(ground - rgb, 0)`, so "at least `rgb`"
+  holds exactly before the stroke goes on. Correct.
+- `baseline.md` veil table reproduced independently (flat 0.9 strip, KM): roles
+  `#6a625a` spread 0.129, `#141210` 0.234.
+
+### Findings
+
+1. **[BLOCKING] The painters figure cannot reach 0.20, and "the figure's" pigment is ambiguous.**
+   `PAINTERS_TRANSPARENCY` runs from 0.04 (`perylene_maroon`) to 0.24 (`yellow_ochre`).
+   Measured: `#141210` gives 0.178 and pure `#000000` gives 0.1997. Thickening the bar
+   cannot help, because the ratio is a mean over the bar's rows. So plan 309-325
+   (`test_the_over_ink_bar_shows_transparency`, "lowest and highest of the figure", and
+   "C may darken or thicken") sends the agent into a tuning loop it cannot win on
+   `painters`, or into an unstated choice between a bar on one figure only and a bar on
+   neither. Fix: say the test is parametrised over `roles` and `painters`, and give the
+   rule. Either (a) the bar is kept on `roles` (`#141210`, 0.234) and `painters` uses the
+   fallback with its page saying so, or (b) both figures drop the bar if either fails.
+   Delete "or thicken".
+2. **[BLOCKING] `docs/gallery.md` on the leave-alone list breaks every image slice.**
+   `tests/docs/test_gallery.py:39-46` asserts that every registered image outside `site/`
+   is shown in `gallery.md`. `:49-62` asserts that its `###` page headings run in nav
+   order. The 20 new images (`IMAGES += IMAGES_009A`) therefore fail C, D2, D3, D4 and the
+   setting-grid slice. Fix: take `gallery.md` off plan 684. Each slice adds its own images
+   under their pages' headings, in nav order: new headings for `brush-gallery.md`,
+   `pigment-gallery.md` and the how-to, explanation and tutorial pages.
+3. **[SHOULD-FIX] "PR 1 has no `over` list"** (plan 680, tasks 46-47) is literally false:
+   `plates.py:63` has a local `over` (sea and rim). Write "basemap stacks are laid by
+   `lay_wash`, not appended to `_wash_plate`'s `over`".
+4. **[SHOULD-FIX]** The bar margin was measured on a flat strip. The gallery paints a
+   `wash()` strip on its own sheet, so the agent should expect values a few hundredths off.
+   Spec 108 calls it "a docs test", but it lives in `tests/examples/`.
+
+### Absorbing "retire the old card everywhere" (track C, one commit, so `test_docs_images` files == registry holds)
+
+- Delete `docs/images/reference/pigment-swatches.webp`,
+  `tests/golden/docs/reference/pigment-swatches.png` and `examples/pigment_swatches.py`.
+- `tests/support/docs_images.py:255-264`: drop the entry. The P7.9 share stays, because
+  `brush-sheet` remains.
+- `tests/examples/test_ink_examples.py:67`: drop the row and its `pigment-card` id.
+- `docs/gallery.md:185-189`: show `pigment-gallery-roles.webp` with a
+  `*Painted by `examples/pigment_gallery.py`*` caption that `test_captions.py` accepts
+  (figure `roles`).
+- `docs/reference/pigments.md:5-7`: the roles image and caption, or a link.
+- `docs/reference/pigments.md:48`: rewrite "the pigment card above does not show them",
+  which would be false.
+- Plan edits:
+  - the retired table (182) becomes "deleted";
+  - rows 227, 326-330, 588-590 and Decisions 846-853;
+  - leave-alone 684;
+  - tasks 133-137;
+  - the old card's golden pin leaves the moved and not-moved lists.
+- No ADR is needed: an example script is not public API.
+
+## P0 changes resolution
+
+1. BLOCKING over-ink bar: resolved by ruling; neither pigment gallery has a bar, the veil-ratio test, threshold and "or thicken" are gone, and both figures show three washes beside the lettered transparency and code, with a test that every pigment is painted and the strengths darken monotonically.
+2. BLOCKING `docs/gallery.md`: resolved; it leaves the leave-alone list and each image slice adds its own images under the right heading in nav order.
+3. SHOULD-FIX "PR 1 has no `over` list": reworded in plan and tasks to name `plates.py:63` and `lay_wash` called from `plates.py:74-75`.
+4. SHOULD-FIX flat-strip margin and "docs test" location: moot, as the bar and its test are removed.
+5. Retire the old card everywhere: absorbed into C in one commit (files, master, script, registry entry, test row, `gallery.md` and `pigments.md` roles figure, sentence rewrite, retired-images table).
