@@ -150,6 +150,7 @@ class TestMaskPads:
         assert len(joined) == len(plain)
         for (d1, c1, *_), (d2, c2, *_) in zip(joined, plain, strict=True):
             assert d1 is not None
+            assert d2 is not None
             assert np.array_equal(d1, d2)
             assert c1.tolist() == c2.tolist()
 

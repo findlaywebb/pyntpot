@@ -164,14 +164,14 @@ gate B (S6 in); S7, S8, S9.
 
 ## S5b: Painter and compose wiring
 
-- [ ] Red: locality of a road casing (exact with `km_glazing=True`, within 1e-6 in
+- [x] Red: locality of a road casing (exact with `km_glazing=True`, within 1e-6 in
       multiply mode) and a route casing; mask pads only when a water
       effect is set; the default path untouched; the shadow takes the hillshade azimuth.
-- [ ] `effect_pass.py` (`lay_stack` scales each `*_px` by `dataclasses.replace` and
+- [x] `effect_pass.py` (`lay_stack` scales each `*_px` by `dataclasses.replace` and
       passes each effect whole, `threshold` left at its default), `painter/effects.py`
       (`lay_wash(job, ground, under, groups)`), `pen_groups`, the `_wash_plate` branch,
       `route_effects.py` (`LINE_THRESHOLD` from `pyntpot.ink.effect_mask`), the `compose_steps.route` branch and its docstring.
-- [ ] `GOLDEN_HASH` and the route-ink pins unchanged; slice gate green.
+- [x] `GOLDEN_HASH` and the route-ink pins unchanged; slice gate green.
 
 ## S6: The grid helper (#170; worktree)
 
