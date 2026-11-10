@@ -14,46 +14,55 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [ ] Baseline slice gate green on the untouched tip (`-n 2`, never `-n auto`).
 
 ### C1: `contour_distance`
-- [ ] Red: property 1 (exact reference, 0.3 px, sign bit for bit); cap cases; τ-exact, one-pixel
-      and array-edge units.
+- [ ] Red: property 1 (exact reference outside only, τ 0.2 to 0.5, 0.4 px; sign only inside,
+      bit for bit); cap cases; τ-exact, one-pixel and array-edge units.
 - [ ] `ink/effect_distance.py`: `contour_distance`, `ring_coverage`; pure numpy.
-- [ ] Accuracy and cost at radius 3, 8, 16, 33 recorded in "Measured"; two-stage form added if
-      radius 33 is over 3 s.
+- [ ] Accuracy and cost at radius 3, 8, 16, 33 recorded in "Measured"; one form, no two-stage
+      form; `docs/issues/ink-contour-distance-cost.md` and its GitHub issue filed.
+- [ ] Each caller's radius as prescribed: casing `w + 1`, pen casing `w + edge + 1`, reserve
+      `w + 2`, union the members' maximum.
 - [ ] Benchmark smoke entry; slice gate green.
 
 ### C2: casing and pen casing anti-aliased
 - [ ] Red: `test_effect_quality.py` pins (casing edge at most 0.22 px; pen edge ink 0.70 to
       0.95; pen band wobble at most 0.10 px); `TestTies` and `TestSoftStep` rewritten in place;
-      property 4; properties 2 and 3 for `casing`.
-- [ ] `casing` and `pen_casing` on `contour_distance`; docstrings say the width is from the
-      line's edge.
+      `TestPenCasingWhite` band and the `out[10, 7]` reserve test rewritten; the painter
+      `test_effects.py` `_ring` slack set to `w + 2.0`; property 4; properties 2 and 3 for
+      `casing`.
+- [ ] `casing` and `pen_casing` on `contour_distance`, with `_blend_casing` shared; docstrings
+      say the width is from the line's edge.
 - [ ] Slice gate; golden docs subset passes with no regeneration.
 
 ### C3: `Reserve`, `reserve`, `casing_union`
 - [ ] Red: `Reserve` defaults, `pool` range, `check_effect_numbers` upper bound; properties 2,
       3, 5 to 9 at the ink level; `INK_PUBLIC` lists `Reserve` and `reserve`.
-- [ ] `effect_types.Reserve`, `EFFECT_RANGES["pool"]`; `ink/effect_reserve.py`;
-      `ink/effect_union.py` (private).
-- [ ] Exports, `docs/reference/ink.md`; glossary terms reserve and casing union, and pool
-      updated; glossary regenerated.
+- [ ] `effect_types.Reserve`, `EFFECT_RANGES["pool"]`; `ink/effect_reserve.py` with
+      `_pool_band(d - width_px)` and `_lay_reserve`; `ink/effect_union.py` (private), using
+      both and `_blend_casing`.
+- [ ] Exports, `docs/reference/ink.md`; glossary terms reserve and casing union, pool and line
+      effect updated; glossary regenerated.
 - [ ] Slice gate green.
 
 ### C4: the theme model
 - [ ] Red: `EffectStack` with a reserve; the casing-or-reserve refusal; every row of "Located
       load errors" incl. the CLI exit 2; a child replacing and `[]` clearing `casing_unions`;
-      `BasemapStyle` refusing a bad union; property 10; off-reserve digests; schema order and
-      nodes; unique omit name.
+      the preset casing-and-reserve row; `BasemapStyle` refusing a bad union (route, unknown,
+      duplicate, mixed group, stack problems); members normalised to class order; property 10;
+      off-reserve digests; schema order and nodes (reserve with no min or max); `PINNED` and
+      `BASEMAP_DEFAULTS` gain `casing_unions`; `casing_unions.py` in `BY_NAME`.
 - [ ] `BasemapStyle` line count checked: past 400 on either branch, pure move to
       `style_basemap.py` first.
-- [ ] `maps/casing_unions.py`, `maps/theme_unions.py`; `line_effects`, `theme_effects`,
+- [ ] `maps/casing_unions.py` (`membership_problems`, `union_problems`: every union message),
+      `maps/theme_unions.py` (shape and location only); `line_effects`, `theme_effects`,
       `theme_check`, `theme_resolve` (post-merge check), `theme_vocab`, `style_groups`, `style`
       (`DIGEST_OMITS_AT_DEFAULT`), `theme_schema_tables`.
 - [ ] Both schema copies regenerated; `style-fields.md` row; slice gate green.
 
 ### C5: painter and compose
-- [ ] Red: union junction pixel test; union of one at the painter; ring skipped at later
-      members; route reserve exact at compose; `pen_mask` floor cases.
-- [ ] `lay_stack(..., ring=)` and the reserve branch; `_lay_group` unions; soft `pen_mask`.
+- [ ] Red, in `test_union_wash.py`: union junction pixel test; union of one at the painter;
+      ring skipped at later members; route reserve exact at compose; `pen_mask` floor cases.
+- [ ] `lay_stack(..., ring=)` and the reserve branch; `_lay_group` unions; soft `pen_mask`;
+      `compose_steps.py` docstring sentence corrected.
 - [ ] Largest off-line Lynmouth pen alpha recorded, below 8/255.
 - [ ] Slice gate; golden docs subset passes with no regeneration.
 
@@ -78,30 +87,36 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 ### T0: merge and inventory
 - [ ] PR 1's tip merged; conflicts resolved; schema copies regenerated, not hand-merged.
 - [ ] Not-golden gate green.
-- [ ] Scratch repaint: exactly the "Figures" images (less the reserve sweep) and their masters
-      move; Lynmouth and every other image byte-identical. Otherwise stop and report.
+- [ ] Scratch repaint: exactly the "Figures" images less the reserve, glow and shadow sweeps
+      (still 1x and laying no casing, so byte-identical until T3), and their masters, move;
+      Lynmouth and every other image byte-identical. Otherwise stop and report.
 
 ### T1: split `line_effect_grids.py`
 - [ ] Pure move of the scene builders to `examples/line_effect_scenes.py`, imports repointed, no
       shim.
+- [ ] The sweep tests moved from `test_line_effect_figures.py` to `test_line_effect_sweeps.py`
+      (new, T1's); the source scan extended to `line_effect_scenes.py`.
 - [ ] The four sweeps repaint byte-identical before and after; gate green.
 
 ### T2: the 2x helper
-- [ ] Red: `GridSpec.scaled(2).boxes()` is twice `boxes()`; `reduce` returns the 1x size,
-      float32, within 0 to 1.
-- [ ] `labelled_grid.py` gains `SUPERSAMPLE`, `GridSpec.scaled`, `reduce`; the five grid hashes
+- [ ] Red: `scaled_boxes(spec, 2)` is each 1x box times 2 (no `GridSpec.scaled`: `cell_w`'s
+      floor division would not double); `reduce` returns the 1x size, float32, within 0 to 1.
+- [ ] `labelled_grid.py` gains `SUPERSAMPLE`, `scaled_boxes`, `reduce`; the five grid hashes
       unchanged; gate green.
 
 ### T3: sweeps at 2x and the reserve sweep (worktree after T2)
-- [ ] Red: `test_line_effect_sweeps.py` (reduced size, off column, pool no lighter, thin pen
-      edge continuous).
+- [ ] Red: `test_line_effect_sweeps.py` (reduced size, off column; pool no lighter on the 2x
+      float arrays before `reduce`; thin pen edge continuous on `reduce(band)`).
+- [ ] Glow and shadow sweeps now move (2x); the lines `cased-strokes.md` quotes (`_reserved`,
+      `paint_cell`) left unchanged.
 - [ ] All five sweeps painted at 2x and reduced once, then lettered; `reserve` figure added.
 - [ ] `_sweep("reserve-sweep", "reserve")` registered; how-to sections "Reserve the paper round
       a line" and "Case several classes as one".
 - [ ] Added reserve sweep and master committed only if a non-golden test needs them; gate green.
 
 ### T4: cased stroke and the essay figures (worktree after T2)
-- [ ] Red: the reserve cells (paper where whole; pooled no lighter); the union cell rules;
+- [ ] Red, on the 2x float arrays before `reduce`: the reserve cells (paper where whole; pooled
+      no lighter); the union cell rules (equal outside, lighter nowhere);
       `TestDrawOrder` updated for three cells; 2x sizes.
 - [ ] `cased_stroke.py` 3 × 2 with reserve cells at 2x; `line_effect_reasons.py` draw-order
       third cell and both figures at 2x.
