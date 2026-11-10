@@ -14,8 +14,8 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [ ] Baseline slice gate green on the untouched tip (`-n 2`, never `-n auto`).
 
 ### C1: `contour_distance`
-- [ ] Red: property 1 (exact reference outside only, τ 0.2 to 0.5, 0.4 px; sign only inside,
-      bit for bit); cap cases; τ-exact, one-pixel and array-edge units.
+- [ ] Red: property 1 (float32 masks, shapes a radius + 2 margin from the array edge; exact
+      reference outside only, τ 0.2 to 0.5, 0.4 px; sign only inside, bit for bit); cap cases; τ-exact, one-pixel and array-edge units.
 - [ ] `ink/effect_distance.py`: `contour_distance`, `ring_coverage`; pure numpy.
 - [ ] Accuracy and cost at radius 3, 8, 16, 33 recorded in "Measured"; one form, no two-stage
       form; `docs/issues/ink-contour-distance-cost.md` and its GitHub issue filed.
@@ -35,9 +35,10 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 
 ### C3: `Reserve`, `reserve`, `casing_union`
 - [ ] Red: `Reserve` defaults, `pool` range, `check_effect_numbers` upper bound; properties 2,
-      3, 5 to 9 at the ink level; `INK_PUBLIC` lists `Reserve` and `reserve`.
+      3, 5 to 9 at the ink level (float32 masks); `INK_PUBLIC` lists `Reserve` and `reserve`.
 - [ ] `effect_types.Reserve`, `EFFECT_RANGES["pool"]`; `ink/effect_reserve.py` with
-      `_pool_band(d - width_px)` and `_lay_reserve`; `ink/effect_union.py` (private), using
+      `_pool_band(d - width_px)` and `_lay_reserve` (pool deepens only where `b > 0`, taking
+      `minimum(out, deepened)`); `ink/effect_union.py` (private), using
       both and `_blend_casing`.
 - [ ] Exports, `docs/reference/ink.md`; glossary terms reserve and casing union, pool and line
       effect updated; glossary regenerated.
@@ -48,8 +49,9 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
       load errors" incl. the CLI exit 2; a child replacing and `[]` clearing `casing_unions`;
       the preset casing-and-reserve row; `BasemapStyle` refusing a bad union (route, unknown,
       duplicate, mixed group, stack problems); members normalised to class order; property 10;
-      off-reserve digests; schema order and nodes (reserve with no min or max); `PINNED` and
-      `BASEMAP_DEFAULTS` gain `casing_unions`; `casing_unions.py` in `BY_NAME`.
+      off-reserve digests; schema order and nodes (reserve with no min or max); `PINNED`,
+      `BASEMAP_DEFAULTS` and `tests/unit/maps/candidates/test_export.py:88-121` gain
+      `casing_unions`; `casing_unions.py` in `BY_NAME`.
 - [ ] `BasemapStyle` line count checked: past 400 on either branch, pure move to
       `style_basemap.py` first.
 - [ ] `maps/casing_unions.py` (`membership_problems`, `union_problems`: every union message),

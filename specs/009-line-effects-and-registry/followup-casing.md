@@ -143,8 +143,11 @@ the "no pin moved" check.
       - coverage `c = ring_coverage(d, width_px)`, 0 on the core;
       - output `c * ground + (1 - c) * rgb`;
       - then, when `pool > 0`, a pool band, 0 on the core, deepens each pixel darker than the
-        ground: `ground * (out / ground) ** (1 + pool * b)`. A pixel at or above the ground, or
-        a ground of 0, is left as it is;
+        ground, and only where the band `b > 0`, the pixel is below the ground and the ground is
+        above 0: `out = minimum(out, ground * (out / ground) ** (1 + pool * b))` there. Where
+        `b == 0` the output is untouched (the power is not exact at exponent 1 in float32), and
+        `minimum` means the pool never lightens. A pixel at or above the ground, or a ground of
+        0, is left as it is;
       - the band is computed by one private helper, `_pool_band(excess)`, from
         `excess = d - width_px` (float32, subtracted once by the caller):
         `b = clip(1.5 - excess, 0, 1) - clip(0.5 - excess, 0, 1)`. The paper lay and the pool
@@ -266,13 +269,14 @@ and `threshold` from `floats(0.01, 1)`. New files: `tests/property/test_contour_
 
 1. **`contour_distance` agrees with the exact reference outside the line.** With τ from
    `floats(0.2, 0.5)` (not the shared `floats(0.01, 1)`), within 0.4 px on random anti-aliased
-   half-planes and discs (radius 3 to 12), for every pixel the reference puts from 0 to
-   `radius` outside the contour. Inside the line only the sign is checked (`<= 0`), with the
+   half-planes and discs (radius 3 to 12), drawn with a margin of radius + 2 from the array
+   edge (the nearest contour point may lie off the array), and a float32 mask, for every pixel
+   the reference puts from 0 to `radius` outside the contour. Inside the line only the sign is checked (`<= 0`), with the
    cap value the docstring states for a mask with no core or no outside; the sign holds bit
    for bit for any τ.
 2. **Width 0 is the identity.** A casing, a reserve or a pen casing of width 0 returns `rgb`
    itself (`is`). `casing_union` of members all of width 0 does too.
-3. **The core is untouched.** Wherever `mask >= threshold`, the output equals `rgb` bit for bit,
+3. **The core is untouched.** (Test masks are float32.) Wherever `mask >= threshold`, the output equals `rgb` bit for bit,
    for `casing`, `glow`, `reserve` and `casing_union` (for any member's mask).
 4. **Pen casing, as documented (rule 11's exemption).**
    - It is exact paper wherever `r == 1`, the core included.
@@ -281,7 +285,8 @@ and `threshold` from `floats(0.01, 1)`. New files: `tests/property/test_contour_
 5. **A reserve is exact paper where its ring is whole.** Where coverage is 1, `reserve`'s output
    equals the paper plate pixel bit for bit, with a random paper plate and with `paper=None`.
 6. **A reserve's pool never lightens.** For any `pool`, the output is at most the zero-pool
-   output, channel by channel.
+   output, channel by channel; the pool deepens only where `b > 0`, as
+   `minimum(out, ground * (out / ground) ** (1 + pool * b))`.
 7. **A reserve's pool never darkens bare paper.** Where `rgb == ground`, the output equals the
    ground for any `pool`.
 8. **A union ring is never inside a footprint.** It never changes a pixel where any member's
@@ -397,7 +402,7 @@ reserve)."
 | C1 | `src/pyntpot/ink/effect_distance.py` (new), `tests/unit/ink/test_contour_distance.py` (new), `tests/property/test_contour_distance.py` (new), `tests/benchmarks/test_ink.py`, `docs/issues/ink-contour-distance-cost.md` (new, with its GitHub issue) |
 | C2 | `src/pyntpot/ink/effect_casing.py`, `src/pyntpot/ink/effect_pen_casing.py`, `tests/unit/ink/test_effect_edges.py`, `tests/unit/ink/test_effects.py`, `tests/unit/ink/test_effect_quality.py` (new), `tests/property/test_line_effects.py`, `tests/unit/maps/painter/test_effects.py` (the `_ring` slack only) |
 | C3 | `src/pyntpot/ink/effect_types.py`, `src/pyntpot/ink/effect_reserve.py` (new), `src/pyntpot/ink/effect_union.py` (new), `src/pyntpot/ink/__init__.py`, `tests/unit/ink/test_effect_types.py`, `tests/unit/ink/test_effect_reserve.py` (new), `tests/unit/ink/test_effect_union.py` (new), `tests/property/test_line_effect_rings.py` (new), `tests/unit/test_public_api.py`, `docs/reference/ink.md`, `GLOSSARY.md`, `docs/reference/glossary.md` and the generated tooltips |
-| C4 | `src/pyntpot/maps/casing_unions.py` (new), `src/pyntpot/maps/line_effects.py`, `src/pyntpot/maps/theme_effects.py`, `src/pyntpot/maps/theme_unions.py` (new), `src/pyntpot/maps/theme_check.py`, `src/pyntpot/maps/theme_resolve.py`, `src/pyntpot/maps/theme_vocab.py`, `src/pyntpot/maps/style_groups.py`, `src/pyntpot/maps/style.py`, `src/pyntpot/maps/theme_schema_tables.py`, `src/pyntpot/maps/themes/theme.schema.json`, `docs/reference/theme.schema.json`, `docs/reference/style-fields.md`, `tests/unit/maps/test_line_effects.py`, `tests/unit/maps/test_theme_effects.py`, `tests/unit/maps/test_theme_unions.py` (new), `tests/unit/maps/test_casing_unions.py` (new), `tests/unit/maps/test_theme_schema.py`, `tests/unit/maps/test_digest_omits.py`, `tests/unit/maps/test_style_groups.py` (`"casing_unions"` appended to `PINNED`'s `BasemapStyle` names), `tests/unit/maps/test_basemap_defaults.py` (`"casing_unions": ()` appended), `tests/property/test_line_effect_digests.py`, `tests/property/test_casing_union_digests.py` (new), `tests/architecture/test_theme_imports.py` (`casing_unions.py` added to `BY_NAME`, beside `line_effects.py`) |
+| C4 | `src/pyntpot/maps/casing_unions.py` (new), `src/pyntpot/maps/line_effects.py`, `src/pyntpot/maps/theme_effects.py`, `src/pyntpot/maps/theme_unions.py` (new), `src/pyntpot/maps/theme_check.py`, `src/pyntpot/maps/theme_resolve.py`, `src/pyntpot/maps/theme_vocab.py`, `src/pyntpot/maps/style_groups.py`, `src/pyntpot/maps/style.py`, `src/pyntpot/maps/theme_schema_tables.py`, `src/pyntpot/maps/themes/theme.schema.json`, `docs/reference/theme.schema.json`, `docs/reference/style-fields.md`, `tests/unit/maps/test_line_effects.py`, `tests/unit/maps/test_theme_effects.py`, `tests/unit/maps/test_theme_unions.py` (new), `tests/unit/maps/test_casing_unions.py` (new), `tests/unit/maps/test_theme_schema.py`, `tests/unit/maps/test_digest_omits.py`, `tests/unit/maps/test_style_groups.py` (`"casing_unions"` appended to `PINNED`'s `BasemapStyle` names), `tests/unit/maps/test_basemap_defaults.py` (`"casing_unions": ()` appended), `tests/unit/maps/candidates/test_export.py` (lines 88-121, the `asdict(CANDIDATE_BASEMAP)` pin: `"casing_unions": ()` appended), `tests/property/test_line_effect_digests.py`, `tests/property/test_casing_union_digests.py` (new), `tests/architecture/test_theme_imports.py` (`casing_unions.py` added to `BY_NAME`, beside `line_effects.py`) |
 | C5 | `src/pyntpot/maps/effect_pass.py`, `src/pyntpot/maps/painter/effects.py`, `src/pyntpot/maps/route_effects.py`, `src/pyntpot/maps/compose_steps.py` (the docstring's "alpha at the line threshold" sentence only), `tests/unit/maps/painter/test_union_wash.py` (new; every C5 painter test), `tests/unit/maps/test_route_effects.py` |
 | C6 | `specs/009-line-effects-and-registry/mutation.md` |
 | C7 | this file (ticks, "Measured"), `specs/009-line-effects-and-registry/tasks.md` (one line pointing here) |
@@ -728,3 +733,54 @@ Checked and fine:
 16. Applied in the PR 2 plan and tasks: T1 moves the sweep tests to `test_line_effect_sweeps.py` and extends the source scan to `line_effect_scenes.py`; T3 leaves the quoted lines unchanged.
 17. Applied in the PR 2 plan and tasks: no `GridSpec.scaled`; the 2x boxes are the 1x boxes scaled by the factor.
 18. Applied: union members normalised to class order at load (unions by first member), in the ADR's rule 9 too; the glossary's "line effect" entry names the reserve.
+
+## Re-check
+
+Plan-reviewer, fresh context, on `claude/quirky-hypatia-z2pii3-stacked` (`27d1c383`). Scripts:
+the session scratchpad's `rvx/` and `rvx2/`.
+
+**Verdict: BLOCK.** All five blocking findings are resolved. The resolution's pool helper and
+C4's field addition each turn a gate red (findings 6 and 7).
+
+1. Resolved. With τ 0.2 to 0.5 and reference distances from 0 to the radius outside, `aa.py`
+   is worst at 0.346, 0.319 and 0.324 px at radius 8, 3 and 12. An adversarial search of
+   12,000 shapes (R 3, τ 0.2 and 0.5) is worst at 0.370 px. Sign: 0 violations for τ from
+   0.01 to 1. Caps: radius + 2 with no core, 0 when all core (`rvx2/p1.py`, `p1b.py`, `caps.py`).
+2. Resolved. On the painter's real `road_major` mask (w = 4 at scale 2), the anti-aliased ring
+   reaches w + 1.243 by the chamfer of the core: 12 pixels lie past w + 1, none past w + 2
+   (`rvx2/painter_ring.py`). Swapping the prototype into `effect_pass`, the slack at 1.0 fails
+   as predicted, and `test_route_effects.py` passes.
+3. Resolved. C4 owns `test_style_groups.py` (`PINNED`) and `test_basemap_defaults.py`. Both
+   pin field order, so "appended" requires the field to be declared last.
+4. Resolved. Property 9 states both halves. With shared `ring_coverage`, `_pool_band(d - w)`
+   and `_lay_reserve`, reserve and a union of one differ in 0 of 5,529,600 float32 values
+   (`rvx2/p9.py`). Without them, 47,421 in 1,000,000 at w = 2.7 (`rvx/union1.py`).
+5. Resolved. The PR 2 plan (line 133) and tasks (line 90) expect "Figures" less the reserve,
+   glow and shadow sweeps at T0. `paint_cell` calls `casing` and `pen_casing` only for the
+   casing and pen-casing figures.
+6. **[BLOCKING, new] The pool formula, as written, breaks properties 3 and 6.**
+   - Evidence: `ground * (out / ground) ** (1 + pool * b)` at b = 0 is not the identity in
+     float32. It changes 57,025 of 1,000,000 values on a paper plate, and 73 at ground 1 (the
+     numpy power is not exact at exponent 1). On the prototype it changes 2,619 core values
+     (property 3) and makes 14,598 values lighter than the zero-pool output (property 6)
+     (`rvx2/p3.py`, `p36.py`).
+   - Fix: `_lay_reserve` deepens only where `b > 0`, the pixel is below the ground and the
+     ground is above 0, and takes `minimum(out, deepened)` there. With that guard: 0 lighter
+     (`rvx2/p6.py`).
+7. **[BLOCKING, new] C4 breaks a third unowned pin.**
+   - Evidence: `tests/unit/maps/candidates/test_export.py:88-121` asserts that
+     `dataclasses.asdict(CANDIDATE_BASEMAP)`, a `BasemapStyle`, equals a dict ending
+     `"line_effects": {}`.
+   - Fix: add the file to C4 and append `"casing_unions": ()`.
+8. [SHOULD-FIX] Property 1 needs an array-edge margin. Over every pixel with an "any offset"
+   half-plane, the error is 1.26 to 2.1 px, because the nearest contour point lies off the
+   array. Excluding pixels within radius + 2 of the edge passes.
+9. [CONSIDER] Fix the strategy's mask dtype at float32 (the prototype compares a float32 copy).
+   Otherwise a float64 mask can disagree with `mask >= threshold` at the boundary.
+
+## Re-check resolution
+
+6. Applied: `_lay_reserve` deepens only where `b > 0` (pixel below the ground, ground above 0), taking `minimum(out, deepened)`; the formula is in the Reserve section and properties 3 and 6.
+7. Applied: C4 owns `tests/unit/maps/candidates/test_export.py:88-121` (the `asdict(CANDIDATE_BASEMAP)` pin) and appends `"casing_unions": ()`.
+8. Applied: property 1 draws shapes with a radius + 2 margin from the array edge.
+9. Applied: test masks are float32 (property 1 and property 3).
