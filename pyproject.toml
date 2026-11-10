@@ -193,6 +193,7 @@ python-version = "3.13"
 root = [
     "src",
     "tests",  # resolves the `support` test-helper package (pytest pythonpath twin)
+    "examples",  # resolves the grid scripts' `labelled_grid` sibling, so its names are typed
 ]
 
 [tool.ty.rules]
