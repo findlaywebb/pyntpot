@@ -39,6 +39,17 @@ FORMS = {
         "pigments:\n  my_blue: {base: ultramarine}\ncover:\n  pigments:\n    water: my_blue\n",
         ("#2b3d8f", 0.06),
     ),
+    "table-pigment-name": (
+        "cover:\n  pigments:\n    water: {pigment: cerulean}\n",
+        ("#2a7ab0", 0.22),
+    ),
+    "derived-own": (
+        (
+            "pigments:\n  my_blue: {base: ultramarine, transparency: 0.3}\n"
+            "cover:\n  pigments:\n    water: my_blue\n"
+        ),
+        ("#2b3d8f", 0.3),
+    ),
     "bare-hex": ("cover:\n  pigments:\n    water: '#112233'\n", ("#112233", 0.04)),
     "alias-to-hex": (
         "colours:\n  sky: '#112233'\ncover:\n  pigments:\n    water: sky\n",

@@ -30,7 +30,7 @@ and a blur how softly it falls away.
 
 ![One river over dark wood, with no glow and then a glow at four spreads and three blurs.](../images/how-to/glow-sweep.webp)
 
-*Painted by `examples/line_effect_grids.py` (figure glow). The labels read 0, 2, 4 and 6 across, and 0, 3 and 6 down. The first column has no glow. The spreads and the blurs are in pixels.*
+*Painted by `examples/line_effect_grids.py` (figure glow). The labels read none, 0, 2, 4 and 6 across, and 0, 3 and 6 down. The first column has no glow. The spreads and the blurs are in pixels.*
 
 ## Cast a shadow
 

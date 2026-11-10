@@ -1,12 +1,10 @@
 """A fed route colour is every route-coloured field's colour, and moves the lettering digest."""
 
-import typing
-from collections.abc import Iterator
-
 import pytest
 
-from pyntpot.ink import Colour
 from pyntpot.maps import Style
+
+from support.colour_fields import colour_paths
 
 FED = "#2050c2"
 
@@ -15,22 +13,16 @@ FED_LETTERING_DIGEST = "925e40ac5a5d8bd8"
 FED_DIGEST = "be95e8d02d455997"
 
 
-def _colour_fields(style: Style) -> Iterator[tuple[str, str]]:
-    """Every (group, field) of `style` whose declared type is a single `Colour`."""
-    for group, info in type(style).model_fields.items():
-        assert isinstance(info.annotation, type)
-        for name, hint in typing.get_type_hints(info.annotation).items():
-            if hint is Colour:
-                yield group, name
-
-
 def test_every_colour_field_defaulting_to_the_route_colour_follows_a_fed_one() -> None:
     """Each `Colour` field that defaults to the route's colour is the fed colour; no other `Colour` field moves."""
     style = Style()
     fed = style.with_route_ink(colour=FED)
     route = style.route_ink.colour
     follow = []
-    for path in _colour_fields(style):
+    for path in colour_paths(style):
+        if path[-1] == "*":
+            # A dict of colours is keyed by role; none of them defaults to the route's colour.
+            continue
         group, name = path
         before = getattr(getattr(style, group), name)
         after = getattr(getattr(fed, group), name)

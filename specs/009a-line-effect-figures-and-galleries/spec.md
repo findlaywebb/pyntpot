@@ -146,7 +146,8 @@ several important settings do.
       before any image naming one is painted. PR 1's preset and effect property tests
       pass with the tuned values, which the new ADR records.
 - [ ] On the Ambleside fixture:
-      - a how-to result card with `road_major` cased and the route haloed, from a new
+      - a how-to result card with `road_major` cased and the route lifted (chosen by eye
+        in D3: a shadow sets the maroon route on the page), from a new
         `examples/themes/ambleside-cased.yaml`;
       - a figure of the route under each preset: none, `cased`, `halo` and `lifted`,
         each cell's style loaded from a theme file the script writes, so it uses public
@@ -168,8 +169,10 @@ several important settings do.
 - [ ] A Painting with Python page, `docs/tutorials/painting-with-python/cased-strokes.md`,
       with `examples/cased_stroke.py`. Using only the public `ink` effect primitives on a
       free stroke, it casts a casing, a glow and a shadow.
-- [ ] The packaged `bold` theme cases its route with the `cased` preset
-      (`line_effects: {route: cased}`), the route casing it declared until ADR 0046. Its
+- [ ] The packaged `bold` theme cases its route with its own `bold_cased` preset
+      (`effect_presets: {bold_cased: ...}`, `line_effects: {route: bold_cased}`: cream
+      `#fbf6e8`, 3.4 px, strength 1.0), the route casing it declared until ADR 0046. The
+      shared `cased` preset reads faintly at card scale (ΔE 3.6 against 16.9). Its
       `digest()` moves and its base and lettering digests do not. Its map-styles image
       and mean are re-pinned. No other bundled theme adopts an effect.
 
@@ -179,8 +182,9 @@ several important settings do.
       - `pool`: the wash's edge pooling;
       - `granulation`: the granulation size;
       - `dryness`: a brush's dryness by its load.
-- [ ] `examples/relief_grid.py` paints `cover.relief_strength` at 0.5, 1, 1.5 and 2 on an
-      Ambleside crop.
+- [ ] `examples/relief_grid.py` paints `cover.relief_strength` at 0, 2, 4 and 8 on an
+      Ambleside crop (widened from 0.5 to 2 so each neighbouring pair differs by at least
+      3 CIE76 ΔE on average; the relief saturates near 8).
 - [ ] Each sweep is shown under the paragraph that describes its setting, at the page
       and section `plan.md` names, with the fields and values it lists: `pool` by sheet
       seed, `Sheet.gran_px` by `Sheet.fibre` (smooth and cold press), treatment `dry` by

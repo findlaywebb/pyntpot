@@ -131,7 +131,8 @@ class CoverStyle:
             and its transparency, what it shows over black as a share of over white. A theme
             gives an entry as a ref or as `{pigment, transparency}`; one with no transparency
             takes the pigment's own, else the class's built-in. A `None` transparency, which only
-            Python builds, takes `paper.km_transparency`.
+            a Python-built `CoverPigment` or a key outside the cover classes has, takes
+            `paper.km_transparency`.
         pale_base: The pale single wash drawn instead of the classes when cover is off: its
             density.
         pale_pool: How hard that pale wash's edge pools.

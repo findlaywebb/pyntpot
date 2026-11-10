@@ -108,7 +108,7 @@ Four kinds of work, all on PR 1's model.
    - The three built-in effect presets are tuned in D1, against D2's sweeps and a
      scratch draft of the presets figure, before any image that names a preset is
      painted. The sweeps hold literal values and name no preset, so D2 paints first.
-4. **One bundled theme adopts an effect**: `bold` takes `line_effects: {route: cased}`.
+4. **One bundled theme adopts an effect**: `bold` defines `bold_cased` (cream `#fbf6e8`, 3.4 px, strength 1.0; the shared `cased` reads faintly at card scale, ΔE 3.6 against 16.9) and takes `line_effects: {route: bold_cased}`.
    - #104 is the route casing (`docs/features/maps-route-casing.md`). Until ADR 0046,
      bold's route ink declared `casing_px = 1.2`, a casing nothing read. The `cased`
      preset is that casing, so bold now shows what it always declared.
@@ -153,7 +153,7 @@ A hash that moves with identical pixels counts as moved (ADR 0070 rule 16).
 | `tests/unit/maps/test_style_groups.py` `SOURCED[CoverStyle]` (`8ff38fcbad0d7a6f`) | B | none | D7: each `pigments` value becomes a `CoverPigment`, which the same hash writes as a two-item list |
 | New pin: `Style().with_route_ink(colour="#6a2c91").lettering_digest()` | A | n/a | rule 18; research measured `d4e48ea6fd28b786` before PR 1, re-measure |
 | `tests/unit/maps/test_theme_named.py` `DIGESTS` for `pen-and-ink`, `sepia`, `winter` (digest and base) | B | none | D7 |
-| `tests/unit/maps/test_theme_named.py` `DIGESTS["bold"]` digest | B, then F | F only, at compose | D7; then `line_effects: {route: cased}`, which moves `digest()` only |
+| `tests/unit/maps/test_theme_named.py` `DIGESTS["bold"]` digest | B, then F | F only, at compose | D7; then `line_effects: {route: bold_cased}`, which moves `digest()` only |
 | `tests/unit/maps/test_theme_named.py` `DIGESTS["bold"]` base digest | B only | none | D7; a route effect leaves `base_digest` alone |
 | `tests/unit/maps/test_example_themes.py` `DIGESTS`, six themes (digest and base) | B | none | D7 |
 | New pin: `DIGESTS["ambleside-cased"]`, and the name in `THEME_NAMES` | D3 | n/a | new example theme, pinned after D1's tuning |
@@ -161,7 +161,7 @@ A hash that moves with identical pixels counts as moved (ADR 0070 rule 16).
 | `tests/golden/lynmouth/plates.json` `hash` | G | none | base digest; `paper`, `wash`, `pen`, `labels-centreline` and `map.png` byte-identical |
 | `src/pyntpot/maps/themes/theme.schema.json`, `docs/reference/theme.schema.json` | B | n/a | `CoverPigment` schema; `pigment_transparency` gone |
 | `docs/images/how-to/route-ink.webp`, `tests/golden/docs/how-to/route-ink.png` | G | yes | #159: "start" and "finish" from pink to violet; that is the fix |
-| `docs/images/map-styles/bold.webp`, `tests/golden/docs/map-styles/bold.png` | G | yes | bold's route is cased with `cased`, laid at compose; its base plates and nib plate are byte-identical, so no name moves |
+| `docs/images/map-styles/bold.webp`, `tests/golden/docs/map-styles/bold.png` | G | yes | bold's route is cased with `bold_cased`, laid at compose; its base plates and nib plate are byte-identical, so no name moves |
 | `tests/golden/test_map_styles.py` `MEAN_RGB["bold"]` (212.9, 208.3, 182.8) | G | yes | same card; re-pinned to the measured mean |
 | `docs/images/preview/bold.webp` and master, only if 008a is on the base | G | yes | same, if it composes bold's route |
 
@@ -425,7 +425,7 @@ All figures follow the same conventions:
   | `pool` | `wash(..., pool=)` 0, 0.1, 0.2 and 0.35 | `Sheet.seed` 11 and 29 | one `ultramarine` disc; `Sheet.gran_px` 60, as `wash-body` |
   | `granulation` | `Sheet.gran_px` 3, 6, 12 and 24 | `Sheet.fibre` 0 ("smooth") and 0.35 ("cold press", `PaperStyle.paper_fibre_mix`'s default) | the same disc, `pool` 0.2, seed 11 |
   | `dryness` | treatment `dry` 0.1, 0.4, 0.7 and 0.9 | treatment `load` 0.5 and 1.2 (the sheet's rows run from 0.4 to 1.6) | `MAJ2-c` at 12 px, every other treatment value row 2's, set in `BrushStyle.brush_overrides["major"]` and read by `brush_from_id("MAJ2-c", 12, 1.0, style, override="major")`; without `override=` it reads `brush_overrides["maj"]` (`ink/brush.py:199`) and the setting does nothing |
-  | `relief` | `cover.relief_strength` 0.5, 1, 1.5 and 2 | one row | the Ambleside crop, default style otherwise, four small paints |
+  | `relief` | `cover.relief_strength` 0, 2, 4 and 8 (widened from 0.5 to 2: each neighbouring pair differs by at least 3 CIE76 ΔE, and the relief saturates near 8) | one row | the Ambleside crop, default style otherwise, four small paints |
 
   `darkness` is not swept: it is a separate treatment value, and the spec's sweep is
   dryness by load.
@@ -626,11 +626,11 @@ All figures follow the same conventions:
 - `docs/features/docs-variable-effect-grids.md` (deleted).
 
 **F (bold cases its route)**
-- `src/pyntpot/maps/themes/bold.yaml`: `line_effects: {route: cased}` and its header
+- `src/pyntpot/maps/themes/bold.yaml`: `effect_presets: {bold_cased: ...}`, `line_effects: {route: bold_cased}` and its header
   comment.
 - `docs/how-to/write-a-theme.md` ("Bold" section); `test_theme_named.py`
   `DIGESTS["bold"]` digest (its base digest holds), and one test that bold's
-  `route_ink.effects` is the `cased` stack and its basemap has no line effects.
+  `route_ink.effects` is the `bold_cased` stack and its basemap has no line effects.
 - `tests/property/test_line_effect_digests.py`: no edit after D3's restriction; F runs it
   with bold's `route` set, and it draws no `route` for bold. Any bold digest literal P0's
   grep found in another file (`test_digest_omits.py` among them) is re-pinned here.
@@ -814,7 +814,7 @@ no worktrees are needed.
 - **Orchestrator adjustment: size.** Past the usual review size; kept as one PR because
   the user fixed a two-PR split; tracks are separately committed and each track's images
   are listed so review can go track by track.
-- **Orchestrator ruling: bold adopts `route: cased`; no other theme adopts an effect**
+- **Orchestrator ruling: bold adopts a casing of its own (`route: bold_cased`); no other theme adopts an effect**
   (Approach 4). It realises the route casing bold declared until ADR 0046 and #104 names,
   it moves `digest()` only, and one card moves.
 - **Orchestrator ruling: presets are tuned in D1**, before any image that names one is

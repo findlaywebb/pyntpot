@@ -13,7 +13,7 @@ ADR 0070 fixed two pixel-moving rules for a second pull request: a fed route col
 the start and finish markers (rule 18, #159), and a pigment carries its own transparency, so
 `paper.pigment_transparency` goes (rule 17). That pull request also shows the line effects and
 the registry's catalogues with figures and galleries, and bold, whose theme had declared a
-cased route since ADR 0046, adopts the `cased` preset.
+cased route since ADR 0046, adopts a casing of its own.
 
 ## Decision
 
@@ -40,7 +40,10 @@ cased route since ADR 0046, adopts the `cased` preset.
   | `halo` | `spread_px` 1.0, `blur_px` 2.5, `strength` 0.8 | `spread_px` 1.5, `blur_px` 3.0, `strength` 0.85 |
   | `lifted` | `offset_px` 1.2, `blur_px` 1.5, `strength` 0.35 | `offset_px` 2.5, `blur_px` 2.0, `strength` 0.45 |
 
-- **bold cases its route.** `bold.yaml` sets `line_effects: {route: cased}`. This moves
+- **bold cases its route.** `bold.yaml` defines `bold_cased` in `effect_presets` (colour
+  `#fbf6e8`, `width_px` 3.4, `strength` 1.0) and names it from `line_effects.route`. The
+  built-in `cased`, tuned close up, reads faintly at card scale (ΔE 3.6 against 16.9 for
+  `bold_cased`). This moves
   `digest()` at compose only; bold's base plates and nib plate are byte-identical.
 - **Regenerated once, at the end.** Each figure slice committed its own new images; only two
   images moved, and no other.
@@ -67,7 +70,7 @@ alone changed, and every Lynmouth image is byte-identical.
 | --- | --- | --- | --- |
 | `docs/images/how-to/route-ink.webp` | 0.015441 | widespread | #159: "start" and "finish" from pink to the route colour |
 | `tests/golden/docs/how-to/route-ink.png` (master) | 0.000634 | local | same |
-| `docs/images/map-styles/bold.webp` | 0.300743 | widespread | the route is cased with `cased` |
+| `docs/images/map-styles/bold.webp` | 0.300743 | widespread | the route is cased with `bold_cased` |
 | `tests/golden/docs/map-styles/bold.png` (master) | 0.054654 | local | same |
 
 `MEAN_RGB["bold"]` is re-pinned to (214.1, 209.6, 184.8). The widespread fractions are the
@@ -105,6 +108,7 @@ Not moved: no pinned value changes. Each was added in its own slice.
 | `reference/pigment-gallery-glazes.webp` | none, added |
 | `reference/pigment-gallery-painters.webp` | none, added |
 | `reference/pigment-gallery-roles.webp` | none, added |
+
 ## Retired image
 
 | Image | Reason |

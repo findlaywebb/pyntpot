@@ -2158,7 +2158,7 @@
               "transparency": 0.18
             }
           },
-          "description": "Each cover class's pigment: the multiply colour a full-strength wash transmits, and its transparency, what it shows over black as a share of over white. A theme gives an entry as a ref or as `{pigment, transparency}`; one with no transparency takes the pigment's own, else the class's built-in. A `None` transparency, which only Python builds, takes `paper.km_transparency`."
+          "description": "Each cover class's pigment: the multiply colour a full-strength wash transmits, and its transparency, what it shows over black as a share of over white. A theme gives an entry as a ref or as `{pigment, transparency}`; one with no transparency takes the pigment's own, else the class's built-in. A `None` transparency, which only a Python-built `CoverPigment` or a key outside the cover classes has, takes `paper.km_transparency`."
         },
         "pale_base": {
           "type": "number",

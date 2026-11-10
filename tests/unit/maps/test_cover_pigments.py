@@ -255,6 +255,13 @@ class TestPythonBuilt:
         style = dataclasses.replace(CoverStyle(), pigments={"rim": Colour("#abcdef")})
         assert style.pigments["rim"] == CoverPigment(Colour("#abcdef"), 0.18)
 
+    def test_a_python_table_without_transparency_takes_the_classes_built_in(self) -> None:
+        """A `{pigment: hex}` table built in Python takes the class's transparency, as in a theme."""
+        style = Style.model_validate({"cover": {"pigments": {"relief": {"pigment": "#112233"}}}})
+        assert style.cover.pigments["relief"] == CoverPigment(Colour("#112233"), 0.3)
+        direct = dataclasses.replace(CoverStyle(), pigments={"rim": {"pigment": "#112233"}})
+        assert direct.pigments["rim"] == CoverPigment(Colour("#112233"), 0.18)
+
     def test_a_cover_pigment_keeps_its_transparency(self) -> None:
         """A `CoverPigment` keeps its transparency, its colour through `Colour.parse`."""
         upper = CoverPigment("#ABCDEF", 0.9)  # ty: ignore[invalid-argument-type]
@@ -314,7 +321,7 @@ class TestPythonBuilt:
         assert pigments["wood"] == CoverPigment(Colour("#112233"), 0.2)
         assert pigments["rim"] == CoverPigment(Colour("#445566"), 0.3)
         assert pigments["water"] == CoverPigment(Colour("#778899"), 0.04)
-        assert pigments["relief"] == CoverPigment(Colour("#aabbcc"), None)
+        assert pigments["relief"] == CoverPigment(Colour("#aabbcc"), 0.3)
 
     def test_model_validate_refuses_a_list(self) -> None:
         """`Style.model_validate` refuses a list entry."""

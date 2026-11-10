@@ -194,7 +194,7 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ![One blue river over dark green wood in three rows of five. The first column has no glow; the others lift the wood toward the paper in a ring that widens from left to right and softens from the top row to the bottom.](images/how-to/glow-sweep.webp)
 
-*Painted by `examples/line_effect_grids.py` (figure glow). The labels read 0, 2, 4 and 6 across, and 0, 3 and 6 down.*
+*Painted by `examples/line_effect_grids.py` (figure glow). The labels read none, 0, 2, 4 and 6 across, and 0, 3 and 6 down.*
 
 ![One crimson line over pale farmland in two rows of five. The first column has no shadow; the others add a grey shadow to the south-east of the line that moves further away from left to right and is softer in the bottom row.](images/how-to/shadow-sweep.webp)
 

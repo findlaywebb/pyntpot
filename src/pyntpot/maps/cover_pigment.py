@@ -8,8 +8,9 @@ which turns a Python-built entry into a `CoverPigment`.
 `CoverPigment` is a `NamedTuple`, and so one leaf: the theme checker reads a tuple as a leaf, a
 merge replaces it whole and `dataclasses.asdict` keeps it, so a child theme's entry for a class
 replaces its parent's and never inherits half of it. A transparency of `None` means "take
-`PaperStyle.km_transparency`"; only Python builds one, because every cover class has a built-in
-transparency that a theme's entry falls back to. It carries a plain-function pydantic hook, as
+`PaperStyle.km_transparency`"; only a Python-built `CoverPigment` or a key outside the 15
+classes has one, because every cover class has a built-in transparency that a table, a `str` or
+a theme's entry falls back to. It carries a plain-function pydantic hook, as
 `Colour` does, so `Style.model_validate` accepts a `CoverPigment`, a `{pigment, transparency}`
 mapping or a `str`.
 
@@ -87,8 +88,8 @@ def coerce_cover_pigment(cover_class: str, value: object) -> CoverPigment:
 
     Args:
         cover_class: The entry's key.
-        value: A `CoverPigment` (its transparency kept), a `{pigment, transparency}` mapping,
-            or a `str` or `Colour` (the class's built-in transparency).
+        value: A `CoverPigment` (its transparency kept), a `{pigment, transparency}` mapping
+            or a `str` or `Colour` (the class's built-in transparency when none is given).
 
     Returns:
         The entry with its colour through `Colour.parse`.
@@ -101,21 +102,23 @@ def coerce_cover_pigment(cover_class: str, value: object) -> CoverPigment:
     if isinstance(value, str):
         return CoverPigment(Colour.parse(value), built_in_transparency(cover_class))
     if isinstance(value, Mapping):
-        return _from_table(value)
+        return _from_table(cover_class, value)
     raise ValueError(f"{value!r} is not a colour or a table of pigment and transparency")
 
 
 def _parse(value: object) -> object:
-    """The hook behind the pydantic schema: a table or a `CoverPigment` built, a `str` passed on."""
-    if isinstance(value, CoverPigment | str):
+    """The hook behind the pydantic schema: a `CoverPigment`, `str` or table passed on.
+
+    The entry's class is not known here, so a table is built by `coerce_cover_pigment` once
+    `CoverStyle` knows its key.
+    """
+    if isinstance(value, CoverPigment | str | Mapping):
         return value
-    if isinstance(value, Mapping):
-        return _from_table(value)
     raise ValueError(f"{value!r} is not a colour or a table of pigment and transparency")
 
 
-def _from_table(table: Mapping[str, object]) -> CoverPigment:
-    """A `CoverPigment` from `{pigment, transparency}`; the transparency may be left out."""
+def _from_table(cover_class: str, table: Mapping[str, object]) -> CoverPigment:
+    """A `CoverPigment` from `{pigment, transparency}`; a missing transparency is the class's."""
     unknown = set(table) - _KEYS
     if unknown or "pigment" not in table:
         raise ValueError(f"{dict(table)!r} is not a table of pigment and transparency")
@@ -126,4 +129,6 @@ def _from_table(table: Mapping[str, object]) -> CoverPigment:
         isinstance(transparency, bool) or not isinstance(transparency, int | float)
     ):
         raise ValueError(f"{transparency!r} is not a number")
-    return CoverPigment(Colour.parse(ref), None if transparency is None else float(transparency))
+    if transparency is None:
+        return CoverPigment(Colour.parse(ref), built_in_transparency(cover_class))
+    return CoverPigment(Colour.parse(ref), float(transparency))

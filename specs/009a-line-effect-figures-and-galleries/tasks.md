@@ -58,12 +58,12 @@
       paints any master.
 - [x] Record every theme's base plate bytes on the Ambleside fixture and the per-class
       `(colour, transparency)` table of every theme, as literals for B.
-- [ ] Comment the branch name on #159, #69, #70, #67, #104, #105 and #106 (CLAUDE.md,
+- [x] Comment the branch name on #159, #69, #70, #67, #104, #105 and #106 (CLAUDE.md,
       "Starting").
-- [ ] Search the open issues for the `tests/support/docs_images.py` line budget (565
-      lines); if none, write `docs/issues/tests-docs-images-over-budget.md` and file its
+- [x] Search the open issues for the `tests/support/docs_images.py` line budget (565
+      lines); if none, write `docs/issues/tests-docs-images-over-line-budget.md` and file its
       issue (`chore`, `area: tests`).
-- [ ] Dispatch the plan-reviewer; address findings until it passes.
+- [x] Dispatch the plan-reviewer; address findings until it passes.
 
       P0's outcomes are in `baseline.md`; three items stay open for the integrator: the
       issue comments, the `docs-images-over-budget` note and issue (no open issue exists), and
@@ -79,7 +79,7 @@
 - [x] `test_style.py::test_a_fed_ink_moves_only_the_full_digest` becomes
       `test_a_fed_width_moves_only_the_full_digest` (`width_px=4.8` alone); the colour
       case lives in `test_route_colour_feed.py`.
-- [ ] Repaint `how-to/route-ink.webp how-to/route-ink-grid.webp` with `--no-lynmouth`:
+- [x] Repaint `how-to/route-ink.webp how-to/route-ink-grid.webp` with `--no-lynmouth`:
       `changed` is `route-ink` and its master only. Commit nothing from it.
 
 ## B: a pigment carries its transparency (D7)
@@ -218,7 +218,7 @@
 
 ## F: bold cases its route
 
-- [x] `bold.yaml` takes `line_effects: {route: cased}`; header comment; the "Bold"
+- [x] `bold.yaml` defines `bold_cased` and takes `line_effects: {route: bold_cased}`; header comment; the "Bold"
       section; `test_bold_cases_its_route_and_nothing_else`; re-pin `DIGESTS["bold"]`'s
       digest and any bold digest P0's grep found elsewhere, its base digest unchanged.
       `test_line_effect_digests.py` passes with bold's `route` set. Repaint B's 15 names

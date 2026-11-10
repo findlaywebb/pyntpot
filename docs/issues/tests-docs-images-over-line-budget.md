@@ -4,7 +4,7 @@ GitHub issue: [#212](https://github.com/findlaywebb/pyntpot/issues/212)
 
 Area: tests.
 
-`tests/support/docs_images.py` is 565 lines, over the soft budget of 400 lines per file
+`tests/support/docs_images.py` is 511 lines (565 before `docs_image.py` was split out), over the soft budget of 400 lines per file
 stated in `CLAUDE.md` ("Over budget: split into multiple files along responsibility
 lines; never trim, squeeze, or thin docstrings to fit").
 

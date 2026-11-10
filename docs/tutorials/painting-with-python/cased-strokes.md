@@ -51,9 +51,9 @@ A cell goes down in one order: the wash, then the effect with the stroke's densi
     return np.clip(laid * crop, 0.0, 1.0).astype(np.float32)
 ```
 
-`casing(rgb, mask, effect, threshold, paper)` and `glow(rgb, mask, effect, threshold, paper)` return the wash with a ring round the stroke. `shadow(rgb, mask, effect, azimuth_deg, threshold)` returns it darkened beside the stroke, away from the light, and it has no `paper`. The mask is the stroke's density. A pixel at or above `threshold`, which these calls leave at its default, is the line, and the effect leaves it as it was.
+`casing(rgb, mask, effect, *, threshold, paper)` and `glow(rgb, mask, effect, *, threshold, paper)` return the wash with a ring round the stroke. `shadow(rgb, mask, effect, *, azimuth_deg, threshold)` returns it darkened beside the stroke, away from the light, and it has no `paper`. The mask is the stroke's density. A pixel at or above `threshold`, which these calls leave at its default, is the line, and the effect leaves it as it was.
 
-The effect goes down before the stroke. A casing and a glow paint only the ring outside the stroke, so the stroke laid over them keeps its own colour; a casing laid after the stroke would cover it. The glow only lifts and the shadow only darkens, which is why the cased and glowing cells are never darker than the plain one, and the shadowed cell never lighter.
+The effect goes down before the stroke. A casing and a glow paint only the ring outside the stroke, so the stroke laid over them keeps its own colour; a casing laid after the stroke would eat into its soft edge, and the stroke would not glaze over the ring. The glow only lifts and the shadow only darkens, which is why the cased and glowing cells are never darker than the plain one, and the shadowed cell never lighter.
 
 ## A pen casing
 
@@ -63,7 +63,7 @@ A pen drawing has no washes to case against, but a line can still be set off fro
 
 *Painted by `examples/line_effect_grids.py` (figure pen-casing). The labels read 1, 2, 3 and 4 across, and 0.75 and 1.5 down. The first column has no casing. The gap and the edge lines' width are in pixels.*
 
-`pen_casing(rgb, mask, effect, threshold, paper)` returns two arrays, not one: the tint knocked back to the paper inside the reserve, and the density of the two ink edge lines. The gap is the `PenCasing`'s `width_px`, and the edge lines' width is its `edge_px`.
+`pen_casing(rgb, mask, effect, *, threshold, paper)` returns two arrays, not one: the tint knocked back to the paper inside the reserve, and the density of the two ink edge lines. The gap is the `PenCasing`'s `width_px`, and the edge lines' width is its `edge_px`.
 
 <!-- from examples/line_effect_grids.py -->
 
