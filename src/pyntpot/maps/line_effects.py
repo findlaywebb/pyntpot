@@ -4,7 +4,8 @@ Key types and names: `EffectStack`, the ordered effects of one line class (at mo
 one glow and one shadow, or a reserve in place of the casing, all from `pyntpot.ink`); `LINE_CLASSES`, the eight classes a stack can
 be set on, the basemap's seven and `route`; `WATER_GROUP` and `ROAD_GROUP`, the basemap classes in
 the order the painter draws them; `BUILT_IN_PRESETS`, the three effect presets the package ships,
-`cased`, `halo` and `lifted`; `checked_line_effects`, which the basemap group runs on its table.
+`cased`, `halo` and `lifted`; `checked_line_effects`, which the basemap group runs on its table;
+`ring_effect`, a stack's casing or reserve, the step a casing union lays for its members.
 
 A stack's widths are in display pixels; the compose and paint steps scale them to the array they
 lay the stack on. An effect is off at a strength of 0, or, for a casing, a width of 0 (`-0.0`
@@ -95,6 +96,13 @@ BUILT_IN_PRESETS: Mapping[str, EffectStack] = MappingProxyType(
         "lifted": EffectStack(effects=(Shadow(offset_px=2.5, blur_px=2.0, strength=0.45),)),
     }
 )
+
+
+def ring_effect(stack: EffectStack | None) -> Casing | Reserve | None:
+    """The casing or reserve `stack` holds, or `None` when it holds neither or is `None`."""
+    if stack is None:
+        return None
+    return next((e for e in stack.effects if isinstance(e, Casing | Reserve)), None)
 
 
 def checked_line_effects(stacks: Mapping[str, EffectStack]) -> dict[str, EffectStack]:

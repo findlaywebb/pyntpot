@@ -20,21 +20,12 @@ Kubelka-Munk glazing, and within float rounding in multiply glazing.
 
 import numpy as np
 
-from pyntpot.ink import Casing, Reserve
 from pyntpot.ink.compositing import PigmentLayer, composite
 from pyntpot.ink.noise import F32
 from pyntpot.maps.effect_pass import RingPairs, lay_stack
-from pyntpot.maps.line_effects import ROAD_GROUP, WATER_GROUP
+from pyntpot.maps.line_effects import ROAD_GROUP, WATER_GROUP, ring_effect
 from pyntpot.maps.painter.job import PaintJob
 from pyntpot.maps.painter.pen import PenGroup, PenGroups
-
-
-def _ring_effect(job: PaintJob, cls: str) -> Casing | Reserve | None:
-    """The casing or reserve in the stack of `cls`, or `None`."""
-    stack = job.style.basemap.line_effects.get(cls)
-    if stack is None:
-        return None
-    return next((e for e in stack.effects if isinstance(e, Casing | Reserve)), None)
 
 
 def _union_rings(job: PaintJob, classes: tuple[str, ...], group: PenGroup) -> dict[str, RingPairs]:
@@ -49,7 +40,7 @@ def _union_rings(job: PaintJob, classes: tuple[str, ...], group: PenGroup) -> di
         pairs = tuple(
             (group.masks[cls], effect)
             for cls in members
-            if (effect := _ring_effect(job, cls)) is not None
+            if (effect := ring_effect(job.style.basemap.line_effects.get(cls))) is not None
         )
         if pairs:
             rings[members[0]] = pairs

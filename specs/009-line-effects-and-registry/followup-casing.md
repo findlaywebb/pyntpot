@@ -48,10 +48,10 @@ the "no pin moved" check.
 
 ### `contour_distance` (ink, private)
 
-- [ ] `ink/effect_distance.py` defines
+- [x] `ink/effect_distance.py` defines
       `contour_distance(mask, *, threshold, radius) -> np.ndarray`, float32, the shape of
       `mask`. It is pure numpy: no scipy, no random number.
-- [ ] Sign:
+- [x] Sign:
       - the value is at most 0 wherever `mask >= threshold`, and at least 0 elsewhere, bit for
         bit;
       - inside the line only the sign is claimed, with no magnitude: the value may be 0 on
@@ -61,7 +61,7 @@ the "no pin moved" check.
       - a mask with no pixel below `threshold` (all core) returns the value its docstring
         states for that case, and the unit test pins that value; `-(radius + 2)` is not
         claimed.
-- [ ] Accuracy outside the line, against an exact reference computed by the test from the
+- [x] Accuracy outside the line, against an exact reference computed by the test from the
       shape's geometry (never by the code under test):
       - shapes: an anti-aliased half-plane at any angle and offset (`mask = clip(0.5 - s, 0, 1)`
         for `s` the signed distance to the line), and an anti-aliased disc of radius 3 to 12 px;
@@ -72,16 +72,16 @@ the "no pin moved" check.
       - C1 records the worst observed error in "Measured" below; the tolerance is not widened
         to pass;
       - the visual bar is the quality pins of C2, not this property.
-- [ ] `ring_coverage(distance, width_px) -> np.ndarray` (same module, private) is
+- [x] `ring_coverage(distance, width_px) -> np.ndarray` (same module, private) is
       `clip(width_px + 0.5 - d, 0, 1) * clip(d + 0.5, 0, 1)`: box-filter coverage of the ring
       `[0, width_px]` beyond the edge.
-- [ ] **The radius each caller passes** (the search reaches every pixel its output can touch):
+- [x] **The radius each caller passes** (the search reaches every pixel its output can touch):
       - `casing`: `width_px + 1`;
       - `pen_casing`: `width_px + edge_px + 1`;
       - `reserve`: `width_px + 2` (the pool band reaches `width_px + 1.5`);
       - `casing_union`: the maximum over members of each member's radius by its kind, one
         `contour_distance` call per member at that shared radius.
-- [ ] Cost (recorded in "Measured", not a gate): `contour_distance` on a 1800 × 1281 array at
+- [x] Cost (recorded in "Measured", not a gate): `contour_distance` on a 1800 × 1281 array at
       radius 3, 8, 16 and 33. The review measured the prototype at 0.23 s, 0.76 s, 2.26 s and
       8.46 s. There is one form, the direct disc search; no two-stage form is built (no figure
       passes radius 12, and an unspecified bound beyond 3 px would fail property 1 for wide
@@ -90,19 +90,19 @@ the "no pin moved" check.
 
 ### Casing and pen casing, anti-aliased
 
-- [ ] `casing`'s weight is
+- [x] `casing`'s weight is
       `effect.strength * ring_coverage(contour_distance(mask, ...), width_px)`, forced to 0
       wherever `mask >= threshold`. Its signature and its early returns are unchanged.
       Its blend of the weight with the colour is one private helper in `effect_casing`
       (`_blend_casing`), which `casing_union` calls too, so a union of one blends bit for bit
       as `casing` does.
-- [ ] `pen_casing`:
+- [x] `pen_casing`:
       - reserve coverage `r` is 1 on the core and `clip(width_px + 0.5 - d, 0, 1)` outside;
       - band density is `clip(width_px + edge_px + 0.5 - d, 0, 1) - r` outside the core, and 0
         on it;
       - the output is `r * ground + (1 - r) * rgb`, so the paper is exact wherever `r == 1`.
       Its signature is unchanged.
-- [ ] Quality pins (`tests/unit/ink/test_effect_quality.py`, new). Each uses a straight
+- [x] Quality pins (`tests/unit/ink/test_effect_quality.py`, new). Each uses a straight
       anti-aliased 3 px line at 7°, 20° and 33°:
       - **Casing edge.** For a casing of 1.8 px and of 3.6 px, take the row where the weight
         crosses 0.5 in each column, by linear interpolation. It deviates from a fitted straight
@@ -111,13 +111,13 @@ the "no pin moved" check.
         column on one side is from 0.70 to 0.95 (now as low as 0.00; prototype 0.75 to 0.93).
       - **Pen edge position.** The band's centre deviates from a straight line by at most
         0.10 px (prototype at most 0.08).
-- [ ] The unit pins in `tests/unit/ink/test_effect_edges.py` (`TestTies`, `TestSoftStep`) are
+- [x] The unit pins in `tests/unit/ink/test_effect_edges.py` (`TestTies`, `TestSoftStep`) are
       rewritten in place to the new geometry:
       - a mask exactly at τ still counts as the line;
       - the ring is whole from 0.5 px beyond the contour to 0.5 px inside its width;
       - a quarter pixel inside the width gives coverage 0.75 (box filter), not the cubic step.
       Nothing is deleted.
-- [ ] The other pins C2 breaks in files it owns, each rewritten in place to the new value:
+- [x] The other pins C2 breaks in files it owns, each rewritten in place to the new value:
       - `test_effect_edges.py`, `TestPenCasingWhite`: the band `[0, 0, 1, 0, …]` becomes
         `[0, 0, 0.8, 0.2, …]`;
       - `test_effects.py`, `test_the_reserve_is_paper_and_the_edge_band_lies_outside`:
@@ -130,7 +130,7 @@ the "no pin moved" check.
 
 ### `Reserve` and `reserve` (ink, exported)
 
-- [ ] `Reserve`, in `ink/effect_types.py`:
+- [x] `Reserve`, in `ink/effect_types.py`:
       - a frozen, keyword-only dataclass `Reserve(width_px: float = 0.0, pool: float = 0.0)`,
         off at a width of 0;
       - `EFFECT_RANGES` gains `"pool": (0.0, 1.0)`;
@@ -138,7 +138,7 @@ the "no pin moved" check.
         `_px` (`strength` and `pool`), so `Reserve(pool=1.5)` raises `ValueError` naming
         `pool`;
       - `Reserve(width_px=100.0)` is accepted, as for `Casing`.
-- [ ] `reserve(rgb, mask, effect, *, threshold=LINE_THRESHOLD, paper=None) -> np.ndarray`, in
+- [x] `reserve(rgb, mask, effect, *, threshold=LINE_THRESHOLD, paper=None) -> np.ndarray`, in
       `ink/effect_reserve.py`:
       - coverage `c = ring_coverage(d, width_px)`, 0 on the core;
       - output `c * ground + (1 - c) * rgb`;
@@ -156,10 +156,10 @@ the "no pin moved" check.
         47,421 of 1,000,000 values at w = 2.7, `rvx/union1.py`);
       - it refuses `threshold <= 0`;
       - width 0, or a mask nowhere at the threshold, returns `rgb` itself.
-- [ ] `pyntpot.ink` exports `Reserve` and `reserve`. They are documented in
+- [x] `pyntpot.ink` exports `Reserve` and `reserve`. They are documented in
       `docs/reference/ink.md` and listed in `INK_PUBLIC`. Their docstrings meet
       `test_field_docs` and `test_public_signatures`.
-- [ ] `GLOSSARY.md`:
+- [x] `GLOSSARY.md`:
       - gains **reserve**: the paper laid back in a ring round a line, every pigment beneath it
         lifted, with an optional pool;
       - gains **casing union**: one casing or reserve round several line classes as one
@@ -171,7 +171,7 @@ the "no pin moved" check.
 
 ### Casing unions
 
-- [ ] **The ink primitive.** `ink/effect_union.py` defines
+- [x] **The ink primitive.** `ink/effect_union.py` defines
       `casing_union(rgb, members, *, threshold=LINE_THRESHOLD, paper=None) -> np.ndarray`.
       `members` is a sequence of `(mask, Casing)` or `(mask, Reserve)` pairs, all of one type.
       - The ring's coverage is the maximum of the members' `ring_coverage`, each at its own
@@ -188,7 +188,7 @@ the "no pin moved" check.
         - an empty sequence.
       - It is not exported; `maps` imports it by module, as `effect_pass` imports
         `ink.effect_types`.
-- [ ] **The model.** `maps/casing_unions.py` (new, pure: no loader, no style group). It writes
+- [x] **The model.** `maps/casing_unions.py` (new, pure: no loader, no style group). It writes
       every union message, the per-file rows and the post-merge rows alike; `theme_unions` only
       checks the shape and locates the messages.
       - `membership_problems(unions) -> tuple[tuple[int, int | None, str], ...]` returns one
@@ -203,12 +203,12 @@ the "no pin moved" check.
         unknown class, a duplicate and a mixed group;
       - `EffectStack` accepts a `Reserve`, refuses a casing and a reserve in one stack ("a stack
         takes a casing or a reserve, not both"), and drops a reserve of width 0 as off.
-- [ ] **The field.** `BasemapStyle.casing_unions: tuple[tuple[str, ...], ...] = ()`:
+- [x] **The field.** `BasemapStyle.casing_unions: tuple[tuple[str, ...], ...] = ()`:
       - named in `DIGEST_OMITS_AT_DEFAULT`, under a name unique across the groups;
       - listed in `theme_vocab.LOADER_FIELDS` as set only by the top-level `casing_unions`;
       - naming it under `basemap` is a located error;
       - documented in `docs/reference/style-fields.md`.
-- [ ] **The theme table.**
+- [x] **The theme table.**
       - A top-level `casing_unions:` is a list of lists of basemap line classes, checked in
         `maps/theme_unions.py` (new; the `theme_` prefix keeps it under the loader import
         guard).
@@ -219,7 +219,7 @@ the "no pin moved" check.
         the order of their first members, so two themes that paint the same picture share a
         digest. `BasemapStyle` accepts any order: the unions are disjoint, and a union's ring
         is laid at its first member in class order, so the order paints nothing differently.
-- [ ] **The painter.** `painter/effects._lay_group` lays each union's ring once:
+- [x] **The painter.** `painter/effects._lay_group` lays each union's ring once:
       - at the place of the union's member that comes first in the group's class order and has
         a mask;
       - at the ring's own position in that member's stack;
@@ -228,19 +228,19 @@ the "no pin moved" check.
       - `effect_pass.lay_stack` gains `ring=None` (`None`: the stack's own ring; `()`: no ring;
         pairs: the union's ring, each member's `*_px` scaled);
       - with no union set, `_lay_group` makes today's calls.
-- [ ] **The route joins no union.** Its line effects are laid at compose on the composed card.
+- [x] **The route joins no union.** Its line effects are laid at compose on the composed card.
       `route` in `casing_unions` is a located error.
-- [ ] **A reserve on the route.** `lay_stack` lays a `Reserve` through `reserve`: in wash space
+- [x] **A reserve on the route.** `lay_stack` lays a `Reserve` through `reserve`: in wash space
       in the painter, and against the paper plate at compose.
 
 ### The pen route mask
 
-- [ ] `route_effects.pen_mask` returns the alpha's density, 0 to 1, with every value below
+- [x] `route_effects.pen_mask` returns the alpha's density, 0 to 1, with every value below
       `8/255` set to 0 (the floor keeps Lanczos ringing and lossy noise from casting a
       shadow).
-- [ ] C5 measures the largest off-line alpha on the Lynmouth pen plate and records it in
+- [x] C5 measures the largest off-line alpha on the Lynmouth pen plate and records it in
       "Measured"; it is below the floor.
-- [ ] Unit tests:
+- [x] Unit tests:
       - an alpha of only sub-floor values gives zeros;
       - values at or above the floor are kept exactly;
       - `test_a_route_casing_changes_only_pixels_within_its_ring` still passes, its ring now
@@ -248,16 +248,16 @@ the "no pin moved" check.
 
 ### Schema
 
-- [ ] A stack object gains the optional key `reserve`, an object of the numbers `width_px` and
+- [x] A stack object gains the optional key `reserve`, an object of the numbers `width_px` and
       `pool`, `additionalProperties: false`, with no `minimum` or `maximum`: the schema holds no
       numeric range (`theme_schema_tables.py:19`), and the checker enforces `EFFECT_RANGES`.
       This holds in both `line_effects` and `effect_presets`.
-- [ ] The top level gains `casing_unions`: an array of arrays, each with `minItems: 1` and
+- [x] The top level gains `casing_unions`: an array of arrays, each with `minItems: 1` and
       `uniqueItems: true`, of an enum of the seven basemap classes. It is placed after
       `line_effects`, and `test_theme_schema.py` pins the order.
-- [ ] Cross-member rules (one group; colours agree) are load-only, and the schema's
+- [x] Cross-member rules (one group; colours agree) are load-only, and the schema's
       description says so.
-- [ ] Both committed copies are regenerated (`PYTHONPATH=tests uv run python -m support.theme_schema`)
+- [x] Both committed copies are regenerated (`PYTHONPATH=tests uv run python -m support.theme_schema`)
       and checked.
 
 ## Hypothesis properties
@@ -585,11 +585,29 @@ feat(maps): casing_unions theme table: one casing or reserve round several line 
 fix(ink): casing and pen_casing are anti-aliased, their widths measured from the line's edge
 ```
 
-## Measured (filled by C1 and C5)
+## Measured (filled by C1, C5 and C7)
 
 - `contour_distance` worst error on the reference shapes: 0.315 px (3,000 shapes, τ 0.2 to 0.5, radius 3 to 8, margin radius + 2).
 - Its time at radius 3, 8, 16 and 33 on 1800 × 1281: 0.28 s, 0.74 s, 2.24 s and 8.81 s.
 - Largest off-line pen alpha on the Lynmouth pen plate (more than 3 px from any pixel at 0.3 or above): 3/255, under the 8/255 floor. Within 2 px of the line the soft edge reaches 18/255, which is the line's own fringe.
+- C7, after the diff review's fixes: the full golden suite (`-m golden -n 2 --dist loadgroup`)
+  passes, 123 tests, with no regeneration; the grid hash check reports all 23 images identical;
+  `git diff 8be0b017 -- tests | grep -E '^-.*\b[0-9a-f]{16}\b'` prints nothing; the largest
+  `src` file is 399 lines; every new signature has at most 6 parameters, with no new `noqa`.
+
+## As built (deviations recorded at the diff review)
+
+- The shared helpers are `effect_casing.blend_casing`, `effect_reserve.pool_band` and
+  `effect_reserve.lay_reserve`, without the leading underscore the plan gave them: they are
+  imported across modules and pinned by unit tests. None is exported from `pyntpot.ink`.
+- `casing_union` passes each member the radius of its own kind (`w + 1` for a casing, `w + 2`
+  for a reserve), not the members' maximum. The output is the same: a member's ring reads its
+  distance only up to `w + 0.5` and its pool band up to `w + 1.5`, where both radii are exact,
+  and a wider search adds only candidates beyond that (0 differences on 400 random unions).
+- The mutation run used `--base 46ee0d9b` and `--max-children 3`; `src` is the same at
+  `8be0b017`, so the scope is the same.
+- `line_effects.ring_effect(stack)` is the one lookup of a stack's casing or reserve, used by
+  `casing_unions` and the painter.
 
 ## Risks
 

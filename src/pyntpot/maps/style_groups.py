@@ -308,8 +308,8 @@ class BasemapStyle:
         """
         stacks = checked_line_effects(self.line_effects)
         object.__setattr__(self, "line_effects", stacks)
-        for _, _, message in union_problems(stacks, self.casing_unions)[:1]:
-            raise ValueError(f"casing_unions: {message}")
+        if problems := union_problems(stacks, self.casing_unions):
+            raise ValueError(f"casing_unions: {problems[0][2]}")
 
 
 @dataclass(frozen=True, kw_only=True)

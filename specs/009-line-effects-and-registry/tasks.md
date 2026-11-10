@@ -239,3 +239,8 @@ gate B (S6 in); S7, S8, S9.
       included): `Closes #72` (#72), `Closes #71`
       (#71), `Closes #170` (#170); mutation equivalents; "no image moved" with the grid
       log.
+
+## Follow-up: anti-aliased casings, casing unions and a reserve
+
+- [ ] The casing follow-up on this branch, C0 to C7: `followup-casing.md` (plan),
+      `followup-casing-tasks.md` (ticks) and `followup-review-diff.md` (its diff review).

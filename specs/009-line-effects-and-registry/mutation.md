@@ -76,3 +76,73 @@ properties and the updated unit cases. The ten survivors are the equivalents alr
 above under their new numbers: `glow` 12, 13, 23 (clip of the blurred 0/1 field), 21 (`astype(None)`),
 49, 51, 60 and `casing` 41, 43, 52 (the `copy` flag on the final `astype`). `pen_casing` is
 unchanged: it alters the wash beneath the pen line, not the line, so it is exempt from the rule.
+
+## Casing follow-up
+
+Scope: `uv run python tests/mutation/scope.py --base 46ee0d9b`, run with
+`mutmut run --max-children 3` under `prlimit --as=3500000000` and the same out-of-repo
+`sitecustomize.py`. 15 changed or added `ink` functions: `blend_casing`, `casing`, `pen_casing`,
+`reserve`, `pool_band`, `lay_reserve`, `casing_union`, `_check_members`, `contour_distance`,
+`_crossings`, `_shifted`, `_slices`, `ring_coverage`, `check_effect_numbers` and
+`Reserve.__post_init__`. 778 mutants.
+
+| | mutants |
+| --- | --- |
+| Total | 778 |
+| Killed by the existing suite (one a timeout) | 680 |
+| Survived the existing suite | 98 |
+| Killed by new tests | 38 (one at the diff review) |
+| Equivalent | 57, and 3 more whose dead code the diff review removed |
+
+No survivor revealed a bug in `src`. `_shifted`, `check_effect_numbers` and
+`Reserve.__post_init__` had no survivor.
+
+### Killed (new tests)
+
+- `tests/unit/ink/test_contour_distance_exact.py`: the interpolated crossing on a ramp
+  (`_crossings` 45); a core pixel seeding its diagonal neighbours (`_crossings` 58); a float64
+  mask read as float32 (`contour_distance` 3, 5); the far edge of the search reach and the
+  `radius + 2` cap on a dot (`contour_distance` 45, 51, 58, 62, 66, 69).
+- `tests/unit/ink/test_effect_reserve_parts.py`: `pool_band` at nine excesses (all 11 mutants);
+  `lay_reserve` at half coverage, out-of-range colours and a pool's depth on two grounds (16, 25,
+  26, 31, 49, 58, 76); a mask exactly at the threshold in `reserve` (5).
+- `tests/unit/ink/test_effect_union_edges.py`: each refusal's full message (`_check_members`
+  3, 13, 18, 23, 28); a bar exactly at the threshold under a casing and a reserve union
+  (`casing_union` 17); a pooled one-member reserve union equal to `reserve` (`casing_union` 41).
+- `tests/unit/ink/test_pen_casing_exact.py`: two pixels pinned bit for bit, so the float32
+  blend is told from a float64 one (`pen_casing` 75).
+
+### Equivalent
+
+- `copy=True`, `copy=None` or no `copy` on a final `astype(F32, ...)` of a fresh array
+  (`blend_casing` 8, 10, 19; `pen_casing` 84, 86, 95; `contour_distance` 116, 118, 130;
+  `ring_coverage` 28, 30, 32; `lay_reserve` 21, 23, 32, 69, 71, 79): the flag changes cost, not
+  the result.
+- Radius one larger than needed (`casing` 18, `pen_casing` 17, `reserve` 15, `casing_union` 40,
+  42, 43): the ring and the pool read distances only up to the old radius plus 1.5, where
+  `contour_distance` is already exact.
+- `_slices` 1, 2: an offset of 0 takes the other branch, whose slices are the same full range.
+  `_slices` 7, 11: `slice(n)` is `slice(None, n)`.
+- `_crossings` 4, 7, 49 and `contour_distance` 24: float64 for float32 intermediates of float32
+  values, cast back to float32 on return with a single rounding.
+- `_crossings` 37, 38, 47 and `contour_distance` 32, 33, 38, 39: a clip bound that never binds,
+  because a crossing lies within 1 of its pixel.
+- `_crossings` 52, `contour_distance` 119 and `casing_union` 107, `reserve` 36: `None` makes a
+  NaN or a false condition, which is never selected, never exceeds 0, or leaves the same pixels.
+- `_crossings` 71: `<=` for `<` ties only equal-magnitude candidates of the same sign.
+- `contour_distance` 52, 59: the extra offset lies outside the reach circle and is skipped.
+  72, 74: `>` for `>=` at an offset of exactly the size gives an empty slice.
+- `contour_distance` 64, 65 (skipping one axis step): the opposite-side core seed two pixels away
+  reaches the same contour point; the results differ by one float32 ulp.
+- `contour_distance` 127, 128, 129: the final `where` only set `big` where the value was
+  already `big`, since no distance exceeds it. The diff review removed that `where` as dead
+  code, so these mutants no longer exist.
+- `pen_casing` 19: at a mask exactly at the threshold, `d` is at most 0, so the reserve is 1 and
+  the band 0 either way.
+- `lay_reserve` 33 (`pool >= 0`) was wrongly named equivalent here: at a pool of 0 the power is
+  1, but `ground * (out / ground)` is not `out` in float32 (about one value in nine on a paper
+  plate), and `minimum` keeps the ulp darker. The diff review killed it with
+  `test_a_pool_of_zero_leaves_the_band_bit_for_bit` in `test_effect_reserve_parts.py`.
+- `lay_reserve` 45: at `out == ground` the pooled value is the ground, the same. 46: a ground of
+  0 has no `out` below it. 55, 56, 65, 66: the filler outside `deepen` is discarded by the final
+  `where`.

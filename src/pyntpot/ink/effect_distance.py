@@ -58,9 +58,9 @@ def contour_distance(mask: np.ndarray, *, threshold: float, radius: float) -> np
     """The signed distance in pixels from each pixel centre to the line's contour.
 
     The contour is where the mask crosses `threshold`, placed by linear interpolation between
-    neighbouring pixels, and the distance to it is the minimum over every pixel within
-    `radius + 2` of that pixel of the pixel's offset plus the straight-line step between them.
-    The cost grows with the square of `radius`.
+    neighbouring pixels, and the distance to it is the minimum, over every pixel within
+    `ceil(radius) + 1` of that pixel, of the pixel's offset plus the straight-line step between
+    them. The cost grows with the square of `radius`.
 
     Args:
         mask: The line's density, float `(h, w)`; read as float32.
@@ -96,7 +96,7 @@ def contour_distance(mask: np.ndarray, *, threshold: float, radius: float) -> np
             step = F32(np.hypot(dy, dx))
             np.minimum(best[ty, tx], start[sy, sx] + step, out=best[ty, tx])
     best = np.where(core, np.minimum(best, 0.0), np.maximum(best, 0.0))
-    return np.where(~core & ~seeded & (best >= big), big, best).astype(F32, copy=False)
+    return best.astype(F32, copy=False)
 
 
 def ring_coverage(distance: np.ndarray, width_px: float) -> np.ndarray:
