@@ -113,7 +113,7 @@ class NibStyle:
     """
 
     label_size_px: float = 20.0
-    label_ink: Colour = Colour("#241c14")  # noqa: RUF009 (an immutable str)
+    label_ink: Colour = Colour("#241c14")
     label_brush: str = "MAJ6-e"
     label_pen_width_px: float = 1.05
     label_outline_width_frac: float = 0.62
@@ -125,9 +125,9 @@ class NibStyle:
     label_wash_alpha: float = 0.5
     label_wash_dark_floor: float = 0.22
     label_wash_spread: float = 0.75
-    label_route_ink: Colour = Colour("#c22050")  # noqa: RUF009 (an immutable str)
-    label_water_ink: Colour = Colour("#4a7691")  # noqa: RUF009 (an immutable str)
-    label_in_water_ink: Colour = Colour("#f8f4e9")  # noqa: RUF009 (an immutable str)
+    label_route_ink: Colour = Colour("#c22050")
+    label_water_ink: Colour = Colour("#4a7691")
+    label_in_water_ink: Colour = Colour("#f8f4e9")
 
     def __post_init__(self) -> None:
         """Normalise the four inks to `Colour`, so a plain `str` passed to `replace` is accepted."""

@@ -81,7 +81,7 @@ class PaperStyle:
     grid: bool = False
     grid_spacing_px: float = 26.0
     grid_opacity: float = 0.34
-    paper_hex: Colour = Colour("#f3ead6")  # noqa: RUF009 (an immutable str)
+    paper_hex: Colour = Colour("#f3ead6")
     paper_tooth: float = 0.085
     paper_worn: float = 0.20
     paper_vignette: float = 0.05

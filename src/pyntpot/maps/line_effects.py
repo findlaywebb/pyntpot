@@ -25,17 +25,15 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from pyntpot.ink import Casing, Glow, Shadow
-from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.naming import nearest
 
-#: The basemap's line classes in painting order: the water group, then the road group.
-_BASEMAP = tuple(BrushStyle().brushes)
-
 #: The water classes, in the order the painter draws them.
-WATER_GROUP: tuple[str, ...] = _BASEMAP[:4]
+WATER_GROUP: tuple[str, ...] = ("major", "medium", "minor", "coast")
 
 #: The road classes, in the order the painter draws them.
-ROAD_GROUP: tuple[str, ...] = _BASEMAP[4:]
+ROAD_GROUP: tuple[str, ...] = ("road_major", "lane", "track")
+
+_BASEMAP = (*WATER_GROUP, *ROAD_GROUP)
 
 #: Every class a stack can be set on: the seven basemap classes and the route.
 LINE_CLASSES: frozenset[str] = frozenset(_BASEMAP) | {"route"}

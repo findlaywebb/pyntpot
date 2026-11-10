@@ -723,7 +723,7 @@ a review. Watercolour paints have a standard name: the Colour Index generic name
 (Society of Dyers and Colourists), such as **PB29** ultramarine blue, **PB27** Prussian
 blue, **PBr7** burnt sienna and umbers, **PY43** yellow ochre, **PR101** synthetic iron
 oxide and **PG18** viridian. Makers print it on the tube because tube names vary ([handprint.com pigment
-database](https://www.handprint.com/HP/WCL/waterfs.html)). 
+database](https://www.handprint.com/HP/WCL/waterfs.html)).
 
 ### Hand and Swiss cartography
 

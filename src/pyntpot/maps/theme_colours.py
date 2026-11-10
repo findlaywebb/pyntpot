@@ -102,7 +102,13 @@ def _name_free(
     check: TableCheck, name: str, scope: ThemeScope, here: tuple[str, ...], *, override: bool
 ) -> bool:
     """Whether `name` may be bound as an alias here; the problem is recorded when not."""
-    message = _refusal(name, scope) or (None if override else _replaces(name, scope))
+    message = _refusal(name, scope)
+    if message is None:
+        replaces = _replaces(name, scope)
+        if override and replaces is None:
+            message = f"{name!r} overrides no alias; drop override: true"
+        elif not override:
+            message = replaces
     if message is not None:
         check.problem(here, message)
     return message is None

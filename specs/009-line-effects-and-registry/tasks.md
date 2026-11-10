@@ -112,13 +112,13 @@ gate B (S6 in); S7, S8, S9.
 
 ## S4: Effect value types and primitives (worktree cut after S3a)
 
-- [ ] Red: `tests/unit/ink/test_effect_types.py` (defaults, `EFFECT_RANGES` pinned,
+- [x] Red: `tests/unit/ink/test_effect_types.py` (defaults, `EFFECT_RANGES` pinned,
       ranges and `nan`/`inf` refused, `Casing(width_px=100.0)` accepted, the Payne's grey
       default, a `str` colour normalised); the property tests (fields drawn finite over
       `EFFECT_RANGES`, `threshold` from `floats(0.01, 1)`) and unit tests of `casing`,
       `glow`, `shadow` (its rounded offset included) and `pen_casing`; each refuses
       `threshold <= 0`; each `threshold` defaults to `LINE_THRESHOLD`.
-- [ ] `ink/effect_types.py` (`Casing`, `Glow`, `Shadow`, `PenCasing`, `EFFECT_RANGES:
+- [x] `ink/effect_types.py` (`Casing`, `Glow`, `Shadow`, `PenCasing`, `EFFECT_RANGES:
       Mapping[str, tuple[float, float]]` keyed by field name, `*_px` 0 to 16, `strength`
       0 to 1); `ink/effect_mask.py` (`LINE_THRESHOLD`, unexported) and the four
       `effect_*` modules, each primitive taking its value type and

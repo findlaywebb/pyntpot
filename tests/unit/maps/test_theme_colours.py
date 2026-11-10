@@ -116,6 +116,17 @@ class TestRefusals:
 class TestInheritance:
     """Aliases accumulate up `extends`; replacing one needs `override`."""
 
+    @pytest.mark.parametrize("palette", ["", "palette: plain\n"], ids=["no-palette", "palette"])
+    def test_override_with_nothing_to_override_is_refused(
+        self, tmp_path: Path, palette: str
+    ) -> None:
+        """`override: true` on an alias no file below or palette binds is a located error."""
+        text = f"{palette}colours:\n  lake: {{colour: cerulean, override: true}}\n"
+        path = _write(tmp_path, "t.yaml", text)
+        assert _problems(path) == [
+            (len(palette.splitlines()) + 2, "'lake' overrides no alias; drop override: true")
+        ]
+
     def test_a_child_uses_its_parents_alias(self, tmp_path: Path) -> None:
         """A child field may name an alias its parent bound."""
         _write(tmp_path, "parent.yaml", "colours:\n  sky: cerulean\n")

@@ -332,10 +332,10 @@ class RouteInkStyle:
 
     drawn_as: Literal["pen", "solid"] = "solid"
     px: float = 5.4
-    colour: Colour = Colour("#c22050")  # noqa: RUF009 (an immutable str)
+    colour: Colour = Colour("#c22050")
     blend: Literal["normal", "multiply"] = "normal"
     opacity: float = 1.0
-    effects: EffectStack = EffectStack()  # noqa: RUF009 (a frozen dataclass)
+    effects: EffectStack = EffectStack()
 
     def __post_init__(self) -> None:
         """Normalise the colour to `Colour`, so a plain `str` passed to `replace` is accepted."""

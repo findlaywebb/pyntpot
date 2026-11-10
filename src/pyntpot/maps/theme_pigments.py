@@ -66,24 +66,34 @@ def _name_free(
     check: TableCheck, name: str, item: object, scope: ThemeScope, here: tuple[str, ...]
 ) -> bool:
     """Whether `name` may be added as a pigment here; the problem is recorded when not."""
+    message = _refusal(name, item, scope)
+    if message is not None:
+        check.problem(here, message)
+    return message is None
+
+
+def _refusal(name: str, item: object, scope: ThemeScope) -> str | None:
+    """Why `name` may not be added as a pigment, or `None`."""
     if name in PIGMENT_REGISTRY:
-        check.problem(
-            here, f"{name!r} is a built-in pigment; derive one: my_{name}: {{base: {name}}}"
-        )
-        return False
+        return f"{name!r} is a built-in pigment; derive one: my_{name}: {{base: {name}}}"
     if re.fullmatch(ALIAS_PATTERN, name) is None:
-        check.problem(here, f"{name!r} is not a pigment name: lower-case words joined by single _")
-        return False
+        return f"{name!r} is not a pigment name: lower-case words joined by single _"
     if name in scope.aliases or name in scope.palette_aliases:
-        check.problem(here, f"{name!r} is an alias; a pigment needs a name of its own")
-        return False
+        return f"{name!r} is an alias; a pigment needs a name of its own"
+    return _replacement(name, item, scope)
+
+
+def _replacement(name: str, item: object, scope: ThemeScope) -> str | None:
+    """Why `name` may not be bound given what the scope holds and `override`, or `None`."""
     taken = scope.pigments.get(name)
     override = isinstance(item, dict) and item.get("override") is True
+    if override and taken is None:
+        return f"{name!r} overrides no pigment; drop override: true"
     if taken is not None and not override:
-        where = f"{taken.path}:{taken.line}"
-        check.problem(here, f"{name!r} is already a theme pigment ({where}); add override: true")
-        return False
-    return True
+        return (
+            f"{name!r} is already a theme pigment ({taken.path}:{taken.line}); add override: true"
+        )
+    return None
 
 
 def _pigment(
@@ -114,12 +124,11 @@ def _derive(
     name: str,
     item: dict[str, object],
     given: tuple[Pigment | None, Colour | None, float | None, str | None],
-) -> Pigment | None:
+) -> Pigment:
     """The pigment `name` from its checked `given` base, colour, transparency and index."""
     base, colour, transparency, index = given
     if base is None:
-        if colour is None:
-            return None
+        assert colour is not None  # `_pigment` refused an item with neither base nor colour
         return Pigment(name=name, colour=colour, transparency=transparency, colour_index=index)
     return Pigment(
         name=name,

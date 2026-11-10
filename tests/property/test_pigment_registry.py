@@ -44,7 +44,7 @@ def test_an_empty_extension_resolves_every_name_identically(name: str):
 @given(clash=_pigments(BUILT_IN))
 def test_an_extension_naming_a_built_in_raises(clash: Pigment):
     """A caller's pigment never shadows a built-in."""
-    with pytest.raises(ValueError, match="duplicate pigment"):
+    with pytest.raises(ValueError, match="with base: "):
         PIGMENT_REGISTRY.extended((clash,))
 
 

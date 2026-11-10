@@ -37,11 +37,11 @@ every page are generated from this file: after an edit, run
 | line class | The kind of a line on the map, such as a major road, a lane or a river, by which the style picks its brush and width. | `pyntpot.ink.BrushStyle` | line class, line classes |
 | pigment registry | The one catalogue of pigments: each with its canonical name, colour, transparency (or none, meaning the paper's `km_transparency`) and Colour Index code, looked up by name with the nearest names suggested on a miss. Read-only: adding pigments gives a new registry. | `pyntpot.ink.PIGMENT_REGISTRY` | pigment registry |
 | line effect | A casing, glow or shadow laid round a line class or the route, composited on the colours beneath rather than glazed; off unless a theme sets one. Never applied to lettering or leaders. | | line effect, line effects |
-| effect stack | A line class's ordered line effects, at most one of each kind, applied in order; a theme gives one, or an effect preset's name, per line class. | | effect stack, effect stacks |
+| effect stack | A line class's ordered line effects, at most one of each kind, applied in order; a theme gives one, or an effect preset's name, per line class. | `pyntpot.maps.EffectStack` | effect stack, effect stacks |
 | effect preset | A named effect stack, such as `cased`, `halo` or `lifted`, that a line class takes by name. | | effect preset, effect presets |
-| casing | A line effect: a band of a colour round a line and under it, so the line reads against what it crosses. A pen casing leaves the paper between two ink lines, with the wash beneath it lifted back to the paper. | | casing, casings, pen casing |
-| glow | A line effect that lifts the colours round a line toward the paper, with a hard spread and a soft blur; it never darkens. | | no |
-| shadow | A line effect: a soft, offset darkening beside a line, falling away from the hillshade's light and never over the line itself. | | no |
+| casing | A line effect: a band of a colour round a line and under it, so the line reads against what it crosses. A pen casing leaves the paper between two ink lines, with the wash beneath it lifted back to the paper. | `pyntpot.ink.Casing`, `pyntpot.ink.casing`, `pyntpot.ink.PenCasing`, `pyntpot.ink.pen_casing` | casing, casings, pen casing |
+| glow | A line effect that lifts the colours round a line toward the paper, with a hard spread and a soft blur; it never darkens. | `pyntpot.ink.Glow`, `pyntpot.ink.glow` | no |
+| shadow | A line effect: a soft, offset darkening beside a line, falling away from the hillshade's light and never over the line itself. | `pyntpot.ink.Shadow`, `pyntpot.ink.shadow` | no |
 
 ### Lettering
 

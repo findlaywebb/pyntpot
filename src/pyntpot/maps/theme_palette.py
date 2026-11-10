@@ -183,6 +183,7 @@ def _load(check: TableCheck, value: str, path: tuple[str, ...]) -> Palette | Non
             return None
         return Palette.named(value)
     except ThemeError as exc:
+        check.problem(path, f"palette {value!r} chosen here cannot be loaded; its problems follow")
         check.found.extend(exc.problems)
         return None
 

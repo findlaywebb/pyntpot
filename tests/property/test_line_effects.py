@@ -170,7 +170,7 @@ class TestPenCasing:
         effect: PenCasing,
         threshold: float,
     ) -> None:
-        """Inside the reserve, minus the edge band, the output is the paper; edges stay 0 or 1."""
+        """Inside the reserve the output is the paper; the edge band lies outside it, 0 or 1."""
         rgb, mask, paper = scene
         out, edges = pen_casing(rgb, mask, effect, threshold=threshold, paper=paper)
         if effect.width_px == 0:

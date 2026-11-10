@@ -72,7 +72,9 @@ The tests pin the weaker message (`tests/unit/ink/test_pigment_registry.py:133`,
 Fix: in `extended`, before building, loop over `added` and refuse a name already in `self`:
 
 ```python
-raise ValueError(f"{p.name!r} is already a pigment; derive one instead: my_{p.name}: {{base: {p.name}}}")
+raise ValueError(
+    f"{p.name!r} is already a pigment; derive one instead: my_{p.name}: {{base: {p.name}}}"
+)
 ```
 
 Leave `__post_init__` for repeats within `added`. Update both tests to match `base: wood`.
@@ -227,3 +229,19 @@ Everything else checked matches the spec and plan:
 - Route effects never write `pen.webp`.
 - The grid helper is in place, with the `labelled_grid` sibling.
 - Nothing the plan excludes is in the diff.
+
+## Resolution
+
+- 1: `PigmentRegistry.extended` refuses a built-in name with "to change it, name a new pigment with base: <name>"; both tests updated; the theme path already carried file, key path and line.
+- 2: `theme_check` docstring now says colours are a hex, pigment name or alias, and names `theme_effects` for effect ranges.
+- 3: `TestThePresets` and `TestTheMergeDownExtends` moved to `tests/unit/maps/test_theme_effect_presets.py`; both files under 400 lines.
+- 4: S4 task lines ticked.
+- 5: Glossary code columns filled for effect stack, casing, glow, shadow; glossary outputs regenerated.
+- 6: `extend-immutable-calls` for `Colour` and `EffectStack` added to `pyproject.toml`; all seven `# noqa: RUF009` removed; ruff passes.
+- 7: `WATER_GROUP` and `ROAD_GROUP` are literals; the existing test pins their union to `BrushStyle().brushes`.
+- 8: `override: true` with nothing to override is a located error for aliases, pigments and presets; new tests for each.
+- 9: `check_effect_presets` uses `dataclasses.replace`.
+- 10: the unreachable `_derive` branch is now an assert; `_derive` returns `Pigment`.
+- 11: pen-casing test docstring corrected.
+- 12: `brush.py` module docstring reflowed.
+- 13: a bad palette file adds a problem at the theme's `palette:` line before the palette file's own problems.

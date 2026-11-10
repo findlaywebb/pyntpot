@@ -3,8 +3,8 @@
 Key types: `Brush`, one mark-making tool in render pixels; `brush_from_id`, which builds one
 from a brush sheet cell and the `BrushStyle`; `scaled_brush`, the same tool on a finer grid;
 `ink_aux`, the extra accumulators a brush's flags need; `brush_id_known`, whether a brush id
-names a sheet cell; `brush_ids`, every id it accepts; `BRUSH_OVERRIDE_KEYS`, the keys a `brush_overrides` entry may set. The
-sheet's tables are in `ink.brush_sheet`.
+names a sheet cell; `brush_ids`, every id it accepts; `BRUSH_OVERRIDE_KEYS`, the keys a
+`brush_overrides` entry may set. The sheet's tables are in `ink.brush_sheet`.
 
 A brush id `<PREFIX><row>-<column>`, such as `MAJ2-a`, is an opaque sheet cell name: this
 module never reads the prefix as a feature class. Which class takes which cell is the style's

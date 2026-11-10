@@ -169,10 +169,11 @@ class TestThemePaletteKey:
         assert _problems(path) == [(path, 2, f"no such palette file: {tmp_path / 'gone.yaml'}")]
 
     def test_a_palette_with_a_bad_row_reports_the_palette_file(self, tmp_path: Path) -> None:
-        """The problem is the palette file's, at its own line."""
+        """The problem is the palette file's, at its own line, and the theme's `palette:` line is named."""
         palette = _write(tmp_path, "mine.gpl", "GIMP Palette\n0 0 0\n")
         path = _write(tmp_path, "t.yaml", "palette: mine.gpl\n")
-        assert [(p, line) for p, line, _ in _problems(path)] == [(palette, 2)]
+        found = {(p, line) for p, line, _ in _problems(path)}
+        assert found == {(palette, 2), (path, 1)}
 
     def test_a_palette_that_is_no_string_is_refused(self, tmp_path: Path) -> None:
         """`palette: 5` is refused."""

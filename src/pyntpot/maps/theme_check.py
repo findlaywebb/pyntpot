@@ -19,10 +19,11 @@ field or a sub-table given a value that is not a mapping is refused. Each leaf i
 validated by pydantic in strict mode against its field's type, so `"5"` is not a number,
 `1` is not a boolean and `5.0` is not a whole number, while an integer for a float is
 taken as that float. Brush ids must name a cell on the brush sheet, and colours must be
-`#` and six hexadecimal digits. A field typed as a dataclass is a sub-table, checked by
+a hex, a pigment name or an alias in the file's scope. A field typed as a dataclass is a sub-table, checked by
 the same rules, its entries a nested dict, and `build_group` builds it as that dataclass.
 
-Does not resolve `extends`, merge themes, check numeric ranges or raise; never reports the
+Does not resolve `extends`, merge themes, check a style group's numeric ranges (`theme_effects` checks a line
+effect's, against `EFFECT_RANGES`) or raise; never reports the
 reader's own problems, which the caller reports, and imports no style model: the caller
 passes the groups. The only file it reads is a palette a `palette:` key names, in
 `theme_palette`.

@@ -152,6 +152,13 @@ ignore = [
     "ISC001",   # conflicts with the ruff formatter
 ]
 
+[tool.ruff.lint.flake8-bugbear]
+# Frozen values built in a dataclass field default are immutable (RUF009).
+extend-immutable-calls = [
+    "pyntpot.ink.colour.Colour",
+    "pyntpot.maps.line_effects.EffectStack",
+]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 

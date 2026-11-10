@@ -81,8 +81,15 @@ class PigmentRegistry:
             The extended registry.
 
         Raises:
-            ValueError: When an added name is already in the registry or repeats.
+            ValueError: When an added name is already in the registry (the message says to name a new
+            pigment with a base) or repeats.
         """
+        for p in added:
+            if p.name in self:
+                raise ValueError(
+                    f"pigment {p.name!r} is built in; to change it, name a new pigment with "
+                    f"base: {p.name}"
+                )
         return PigmentRegistry((*self.pigments, *added))
 
 

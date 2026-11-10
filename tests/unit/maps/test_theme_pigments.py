@@ -148,6 +148,13 @@ class TestOverride:
         assert "parent.yaml:2" in problem[1]
         assert problem[1].endswith("add override: true")
 
+    def test_override_with_nothing_to_override_is_refused(self, tmp_path: Path) -> None:
+        """`override: true` on a pigment no file below defines is an error at its key."""
+        text = "pigments:\n  slate: {colour: '#222222', override: true}\n"
+        assert _problems(tmp_path, text) == [
+            (2, "'slate' overrides no pigment; drop override: true")
+        ]
+
     def test_replacing_with_override_takes_the_child(self, tmp_path: Path) -> None:
         """With `override: true` the child's pigment is the one a field resolves to."""
         self._parent(tmp_path)

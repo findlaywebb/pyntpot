@@ -130,7 +130,7 @@ class TestRegistry:
     def test_extending_with_a_built_in_name_is_refused(self):
         """A built-in name cannot be added."""
         clash = dataclasses.replace(PIGMENT_REGISTRY.get("wood"), colour=Colour("#000000"))
-        with pytest.raises(ValueError, match="duplicate pigment 'wood'"):
+        with pytest.raises(ValueError, match="to change it, name a new pigment with base: wood"):
             PIGMENT_REGISTRY.extended((clash,))
 
     def test_extending_leaves_the_base_alone(self):

@@ -24,6 +24,7 @@ after the final merge), build a style, or raise; every problem is recorded on th
 Invariants: every stack returned is valid; a stack with a refused effect keeps the others.
 """
 
+import dataclasses
 import math
 import re
 from typing import Any
@@ -86,9 +87,7 @@ def check_effect_presets(check: TableCheck, value: object, scope: ThemeScope) ->
         stack = _stack(check, body, here, mixed=False)
         if stack is not None:
             presets[name] = Bound(stack, check.theme.path, check.theme.lines[here])
-    return ThemeScope(
-        pigments=scope.pigments, palette=scope.palette, aliases=scope.aliases, presets=presets
-    )
+    return dataclasses.replace(scope, presets=presets)
 
 
 def check_line_effects(check: TableCheck, value: object) -> dict[str, object]:
@@ -143,6 +142,8 @@ def _name_free(
         message = f"{name!r} is not a preset name: lower-case words joined by single _"
     elif name in BUILT_IN_PRESETS:
         message = f"{name!r} is a built-in effect preset; give a preset a name of its own"
+    elif override and taken is None:
+        message = f"{name!r} overrides no effect preset; drop override: true"
     elif taken is not None and not override:
         message = f"{name!r} is already an effect preset ({taken.path}:{taken.line}); "
         message += "add override: true"
