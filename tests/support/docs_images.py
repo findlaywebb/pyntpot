@@ -42,6 +42,7 @@ Markdown that shows them.
 """
 
 from support.docs_image import DocsImage, Encoding
+from support.docs_images_009a import IMAGES_009A, SHARES_009A
 
 #: The most one file may weigh, by kind. The social preview stays under GitHub's 1 MB limit.
 KIND_BUDGET_BYTES: dict[str, int] = {
@@ -71,6 +72,7 @@ SLICE_SHARE_BYTES: dict[str, int] = {
     "P7.V12a": 300_000,
     "P7.V14": 100_000,
     "glyph-sheet": 250_000,
+    **SHARES_009A,
 }
 
 #: The most all of `docs/images/` may weigh.
@@ -203,17 +205,7 @@ IMAGES += (
         "webp-lossy",
         "P7.6c",
     ),
-    # P7.9: the reference's two sheets.
-    DocsImage(
-        "reference/pigment-swatches.webp",
-        "pigment_swatches",
-        (),
-        None,
-        960,
-        "page",
-        "webp-lossy",
-        "P7.9",
-    ),
+    # P7.9: the reference's brush sheet (its pigment card is retired in 009a; the share stays).
     DocsImage(
         "reference/brush-sheet.webp",
         "brush_sheet",
@@ -515,3 +507,5 @@ IMAGES += (
         "glyph-sheet",
     ),
 )
+
+IMAGES += IMAGES_009A

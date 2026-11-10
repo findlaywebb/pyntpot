@@ -110,7 +110,9 @@ nav:
       - reference/cache-layout.md
       - reference/manifest.md
       - reference/pigments.md
+      - reference/pigment-gallery.md
       - reference/brushes.md
+      - reference/brush-gallery.md
       - reference/glossary.md
       - API:
           - reference/pyntpot.md

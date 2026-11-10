@@ -311,7 +311,7 @@ class TestPigmentTables:
     def test_the_map_pigments_are_the_table(self) -> None:
         """Each strip row's colour and transparency are its key's in `PIGMENTS` and `TRANSPARENCY`."""
         text = (REFERENCE / "pigments.md").read_text()
-        rows = _table(text, ["Strip", "Key", "Colour", "Transparency", "Colour Index"])
+        rows = _table(text, ["Row", "Key", "Colour", "Transparency", "Colour Index"])
         assert [_code(row[1]) for row in rows] == list(PIGMENTS)
         for _, key, colour, transparency, colour_index in rows:
             assert _code(colour) == PIGMENTS[_code(key)], key

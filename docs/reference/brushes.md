@@ -1,6 +1,6 @@
 # Brushes
 
-A brush is one mark-making tool, in render pixels: a tip of bristles stamped along a path. The brush sheet is the catalogue of brush cells. This page lists every brush id and what a row and a column of the sheet set. `brush_from_id` from `pyntpot.ink` builds a brush from an id.
+A brush is one mark-making tool, in render pixels: a tip of bristles stamped along a path. The brush sheet is the catalogue of brush cells. This page lists every brush id and what a row and a column of the sheet set. `brush_from_id` from `pyntpot.ink` builds a brush from an id. The [brush gallery](brush-gallery.md) paints every id.
 
 ![The brush grid: eight brush treatments in one brown ink, stroked as a wave at 3, 6 and 12 pixels wide in three rows. The wet treatments stay whole at every width, the dry ones break into flecks as they widen, and the nibs leave a blot where they touch down.](../images/reference/brush-sheet.webp)
 

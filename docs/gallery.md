@@ -184,15 +184,43 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Pigments](reference/pigments.md)
 
-![The pigment card: fifteen strips in three rows of five, one for each pigment, each strip a wash that deepens from left to right and lies across a narrow bar of grey-brown ink that shows bare past both ends, with the pigment's key lettered under it. The staining pigments let the bar show through at their deep end; the covering greys and browns veil it.](images/reference/pigment-swatches.webp)
+![The fifteen map pigments, one row each: farmland, meadow, orchard, scrub, heath, sand, rock, wetland, built, works, wood, pale, water, relief and rim. Each row holds three washes of the pigment, light to deep from left to right, with its transparency lettered at the right. The land covers are pale greens, tans and greys; wood and water are the deepest.](images/reference/pigment-gallery-roles.webp)
 
-*Painted by `examples/pigment_swatches.py` (seed 11).* Each key is lettered under its strip, in the order of the page's table.
+*Painted by `examples/pigment_gallery.py` (`figure="roles"`), seed 7.* The labels read 0.3, 0.6 and 0.9 across, and the pigment's key down, in the order of the page's table.
+
+### [Pigment gallery](reference/pigment-gallery.md)
+
+![The ten tube pigments, one row each: ultramarine, cerulean, burnt sienna, raw sienna, yellow ochre, sap green, indigo, perylene maroon, quinacridone rose and Payne's grey. Each row holds three washes, light to deep from left to right, with the transparency and the Colour Index code lettered at the right where there is one.](images/reference/pigment-gallery-painters.webp)
+
+*Painted by `examples/pigment_gallery.py` (`figure="painters"`), seed 7.* The labels read 0.3, 0.6 and 0.9 across, and the pigment's key down.
+
+![Eighteen pairs of overlapping discs in three rows of six. Each column is one pair, named on two lines above it: ultramarine with burnt sienna, cerulean with yellow ochre, quinacridone rose with ultramarine, indigo with raw sienna, perylene maroon with sap green, and Payne's grey with yellow ochre. The top row multiplies the two; the middle row glazes the first over the second and the bottom row the second over the first, and the overlaps differ a little between the two.](images/reference/pigment-gallery-glazes.webp)
+
+*Painted by `examples/pigment_gallery.py` (`figure="glazes"`), seed 7.* Each column is one pair, and the rows read multiply, A over B and B over A down.
+
+![The plain palette: ten swatches in two rows of five. Each is a wash with its alias lettered above and the pigment it names below: blue is ultramarine, sky cerulean, green sap green, brown burnt sienna, orange raw sienna, ochre yellow ochre, red quinacridone rose, maroon perylene maroon, navy indigo and grey Payne's grey.](images/reference/palettes.webp)
+
+*Painted by `examples/pigment_gallery.py` (`figure="palettes"`), seed 7.* Each swatch has its alias above and the pigment it names below.
 
 ### [Brushes](reference/brushes.md)
 
 ![The brush grid: eight brush treatments in one brown ink, stroked as a wave at 3, 6 and 12 pixels wide in three rows. The wet treatments stay whole at every width, the dry ones break into flecks as they widen, and the nibs leave a blot where they touch down.](images/reference/brush-sheet.webp)
 
 *Painted by `examples/brush_sheet.py` (seed 11, figure grid).* The labels read the treatment numbers 1 to 8 across, the widths 3 px, 6 px and 12 px down, and wet, soft, gritty, dry, nib, pen, driest and light nib under the columns.
+
+### [Brush gallery](reference/brush-gallery.md)
+
+![Eight rows of strokes in two columns. The left column, lettered RIV = STR, is a blue ink and the right, LAN, a brown one. Down the rows the treatments go from a wet, whole line through gritty and dry strokes that break into flecks, to nibs with a blot where they touch down, to a driest row that is mostly paper showing between specks. Each cell has a narrow stroke over a wide one and its id beneath.](images/reference/brush-gallery-riv-str-lan.webp)
+
+*Painted by `examples/brush_gallery.py` (`figure="riv-str-lan"`), seed 7.* Each cell is lettered with its id; the treatments run 1 wet to 8 light nib down.
+
+![Eight rows of strokes in five columns, lettered a to e: a terracotta, an ochre brown, a dark brown, a warm grey and a near-black ink. Each cell has a narrow stroke over a wide one with its MAJ id beneath. The treatments run from wet and whole at the top, through gritty and dry strokes that fleck, to nibs, and a driest row where the paint barely covers the paper.](images/reference/brush-gallery-maj.webp)
+
+*Painted by `examples/brush_gallery.py` (`figure="maj"`), seed 7.* The five ink columns `a` to `e`.
+
+![Eight rows of strokes in six columns, lettered a to f: a dark brown, a terracotta, a grey, an olive, a dusty rose and a near-black ink. Each cell has a narrow stroke over a wide one with its TRK id beneath. The treatments run from wet and whole at the top, through gritty and dry strokes that fleck, to nibs, and a driest row where the paint barely covers the paper.](images/reference/brush-gallery-trk.webp)
+
+*Painted by `examples/brush_gallery.py` (`figure="trk"`), seed 7.* The six ink columns `a` to `f`.
 
 ### [Letters](reference/letters.md)
 

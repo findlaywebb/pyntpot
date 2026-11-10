@@ -64,12 +64,11 @@ def test_an_unknown_tutorial_grid_is_refused(tmp_path):
 @pytest.mark.parametrize(
     ("stem", "options", "width"),
     [
-        ("pigment_swatches", {}, 960),
         ("brush_sheet", {"figure": "grid"}, 960),
         ("brush_sheet", {"figure": "sheet"}, 800),
         ("glyph_sheet", {}, 720),
     ],
-    ids=["pigment-card", "brush-grid", "brush-sheet", "glyph-sheet"],
+    ids=["brush-grid", "brush-sheet", "glyph-sheet"],
 )
 def test_a_reference_sheet_is_one_image_of_its_width(stem, options, width, tmp_path):
     """Each reference sheet writes one PNG of its width that is not one flat colour."""

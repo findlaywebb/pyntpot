@@ -117,21 +117,21 @@
 
 ## C: galleries (#69, #70)
 
-- [ ] Pure move: `DocsImage` and its helpers (`Kind`, `Encoding`, `Option` among them) to
+- [x] Pure move: `DocsImage` and its helpers (`Kind`, `Encoding`, `Option` among them) to
       `tests/support/docs_image.py`, importers repointed. Gates.
-- [ ] Red: `test_galleries.py` (with `test_the_pigment_gallery_washes_darken_with_strength`:
+- [x] Red: `test_galleries.py` (with `test_the_pigment_gallery_washes_darken_with_strength`:
       every registry pigment is painted and its 0.3, 0.6 and 0.9 washes are monotonic in
       darkness), the coverage tests and
       `test_gallery_values.py`.
-- [ ] Green: `brush_gallery.py` (`riv-str-lan` with "RIV = STR", `maj`, `trk`);
+- [x] Green: `brush_gallery.py` (`riv-str-lan` with "RIV = STR", `maj`, `trk`);
       `pigment_gallery.py` (`roles`, `painters`, `glazes`, `palettes`; the palettes figure
       reads `Palette.named(name).pigments`, no ink bar: transparency is the three washes
       beside the lettered value and Colour Index code).
-- [ ] Create `tests/support/docs_images_009a.py`; register seven entries under
+- [x] Create `tests/support/docs_images_009a.py`; register seven entries under
       `009a-galleries` (share 500,000). Paint them with
       `PYTHONPATH=tests uv run python tests/golden/make_docs_images.py "$SCRATCH/c" <names>`
       and copy the images and masters in. Check the budgets.
-- [ ] The two reference pages, links and nav. Retire the old pigment card in this one
+- [x] The two reference pages, links and nav. Retire the old pigment card in this one
       commit: delete `docs/images/reference/pigment-swatches.webp`,
       `tests/golden/docs/reference/pigment-swatches.png` and
       `examples/pigment_swatches.py`; drop its entry in `tests/support/docs_images.py` and

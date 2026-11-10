@@ -2,15 +2,15 @@
 
 A pigment is a colour a wash or a mark lays, named by its key. This page lists every key of `PIGMENTS` and `TRANSPARENCY` from `pyntpot.ink`. The same pigments are in `PIGMENT_REGISTRY`, which also holds each one's Colour Index code.
 
-![The pigment card: fifteen strips in three rows of five, one for each pigment, each strip a wash that deepens from left to right and lies across a narrow bar of grey-brown ink that shows bare past both ends, with the pigment's key lettered under it. The staining pigments let the bar show through at their deep end; the covering greys and browns veil it.](../images/reference/pigment-swatches.webp)
+![The fifteen map pigments, one row each: farmland, meadow, orchard, scrub, heath, sand, rock, wetland, built, works, wood, pale, water, relief and rim. Each row holds three washes of the pigment, light to deep from left to right, with its transparency lettered at the right. The land covers are pale greens, tans and greys; wood and water are the deepest.](../images/reference/pigment-gallery-roles.webp)
 
-*Painted by `examples/pigment_swatches.py`, seed 11.* The strips read left to right, top to bottom, in the order of the table, and each key is lettered under its strip. Every strip lies across a band of black ink and is glazed by Kubelka-Munk: where the band shows through, the pigment stains, and where it is veiled, the pigment covers.
+*Painted by `examples/pigment_gallery.py` (`figure="roles"`), seed 7.* The labels read 0.3, 0.6 and 0.9 across, and the pigment's key down. Each row is a pigment of the table below, in its order, as three washes glazed by Kubelka-Munk at the pigment's own transparency. The [pigment gallery](pigment-gallery.md) shows the painter's pigments, how pairs glaze and the bundled palettes the same way.
 
 ## Entries
 
 `PIGMENTS` maps each key to the colour a full-strength wash of that pigment transmits, as `#rrggbb`. `TRANSPARENCY` maps each key to what the pigment shows over black as a share of what it shows over white. Near 0 is a staining glaze that lets the layer under it through; near 1 is a covering body colour. Only Kubelka-Munk glazing (`PaperStyle.km_glazing`) reads the transparency; multiply ignores it.
 
-| Strip | Key | Colour | Transparency | Colour Index |
+| Row | Key | Colour | Transparency | Colour Index |
 | --- | --- | --- | --- | --- |
 | 1 | `farmland` | `#dfe0b0` | 0.10 | none |
 | 2 | `meadow` | `#cfdfae` | 0.09 | none |
@@ -45,7 +45,7 @@ An unnamed pigment takes `PaperStyle.km_transparency`. The inks are not pigments
 
 ## Painter's pigments
 
-`PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY` are a second pair of tables beside `PIGMENTS` and `TRANSPARENCY`, keyed by the tube a painter names instead of by map role, with the same meaning: a colour as `#rrggbb`, and a transparency in 0 to 1. No map style reads them; they are for painting with the engine directly, and the pigment card above does not show them.
+`PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY` are a second pair of tables beside `PIGMENTS` and `TRANSPARENCY`, keyed by the tube a painter names instead of by map role, with the same meaning: a colour as `#rrggbb`, and a transparency in 0 to 1. No map style reads them; they are for painting with the engine directly, and the figure above does not show them. The [pigment gallery](pigment-gallery.md) paints them as three washes each.
 
 | Key | Colour | Transparency | Colour Index |
 | --- | --- | --- | --- |
