@@ -108,9 +108,9 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
   The four sweep PNGs were byte-identical before and after.
 
 ### T2: the 2x helper
-- [ ] Red: `scaled_boxes(spec, 2)` is each 1x box times 2 (no `GridSpec.scaled`: `cell_w`'s
+- [x] Red: `scaled_boxes(spec, 2)` is each 1x box times 2 (no `GridSpec.scaled`: `cell_w`'s
       floor division would not double); `reduce` returns the 1x size, float32, within 0 to 1.
-- [ ] `labelled_grid.py` gains `SUPERSAMPLE`, `scaled_boxes`, `reduce`; the five grid hashes
+- [x] `labelled_grid.py` gains `SUPERSAMPLE`, `scaled_boxes`, `reduce`; the five grid hashes
       unchanged; gate green.
 
 ### T3: sweeps at 2x and the reserve sweep (worktree after T2)

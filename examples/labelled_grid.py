@@ -19,6 +19,12 @@ so each script keeps only what is its own: what goes in a cell, and the names.
   grid that sweeps one setting across and another down.
 - `grid_paper`: the `paper_plate` a grid is painted on, the whole sheet with no foxing.
 - `on_paper`: a cell painted over bare white with its crop of that paper multiplied in.
+- `SUPERSAMPLE`, `scaled_boxes` and `reduce`: the 2x paint. A figure painted at `SUPERSAMPLE`
+  times its size lays its cells in `scaled_boxes(spec, SUPERSAMPLE)`, which is each 1x box
+  with all four numbers multiplied (a `GridSpec` built at twice the width would not give
+  exactly twice the boxes, because `cell_w` floors). `reduce(rgb, SUPERSAMPLE)` brings the
+  finished paint down once with Lanczos, as float32 clipped to 0 to 1, and the names are
+  lettered after that at 1x with the 1x boxes, so a label keeps its size.
 - `LABELS`: the one `LabelStyle` the line effect, setting and gallery figures letter in.
 
 It does not paint cells, choose names or own any literal a caption or tutorial quotes: each
@@ -55,6 +61,9 @@ from pyntpot.letters import (
 
 #: How many times the size of an image its nib plate is painted before it is brought down.
 NIB_SCALE = 2
+
+#: How many times its display size a 2x figure is painted before `reduce` brings it down.
+SUPERSAMPLE = 2
 
 Box = tuple[int, int, int, int]
 
@@ -248,6 +257,40 @@ def sweep_grid(
                 raise ValueError(f"cell {r},{c} is {cell.shape[:2]}, its box is {(h, w)}")
             out[y : y + h, x : x + w] = cell
     return out
+
+
+def scaled_boxes(spec: GridSpec, factor: int) -> list[list[Box]]:
+    """Return the cells of `spec` with every box number multiplied by `factor`.
+
+    This is the 1x `spec.boxes()` scaled, not a `GridSpec` built at `factor` times the width,
+    whose `cell_w` floors and so would not give exactly `factor` times the boxes.
+    """
+    return [
+        [(x * factor, y * factor, w * factor, h * factor) for x, y, w, h in row]
+        for row in spec.boxes()
+    ]
+
+
+def reduce(rgb: np.ndarray, factor: int) -> np.ndarray:
+    """Return a float `(h, w, 3)` painted at `factor` times its size, brought down once with Lanczos.
+
+    Each channel is resampled as 32-bit float, so nothing is rounded to 8 bits. The result is
+    float32, clipped to 0 to 1 (Lanczos overshoots at a hard edge).
+
+    Raises:
+        ValueError: When a side of `rgb` is not a multiple of `factor`.
+    """
+    h, w = rgb.shape[:2]
+    if h % factor or w % factor:
+        raise ValueError(f"{(h, w)} is not a multiple of {factor} on both sides")
+    size = (w // factor, h // factor)
+    planes = [
+        np.asarray(
+            Image.fromarray(rgb[..., c].astype(np.float32)).resize(size, Image.Resampling.LANCZOS)
+        )
+        for c in range(rgb.shape[2])
+    ]
+    return np.clip(np.stack(planes, axis=-1), 0.0, 1.0).astype(np.float32)
 
 
 def grid_paper(sheet: Sheet) -> np.ndarray:
