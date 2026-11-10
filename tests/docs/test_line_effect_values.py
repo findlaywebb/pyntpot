@@ -8,16 +8,31 @@ table with the effect value types' fields, defaults and `EFFECT_RANGES`, the pre
 import dataclasses
 import re
 
-from pyntpot.ink import Casing, Glow, PenCasing, Shadow
+from pyntpot.ink import Casing, Glow, PenCasing, Reserve, Shadow
 from pyntpot.ink.effect_types import EFFECT_RANGES
-from pyntpot.maps.line_effects import BUILT_IN_PRESETS, LINE_CLASSES, ROAD_GROUP, WATER_GROUP
+from pyntpot.maps.casing_unions import membership_problems, union_problems
+from pyntpot.maps.line_effects import (
+    BUILT_IN_PRESETS,
+    LINE_CLASSES,
+    ROAD_GROUP,
+    WATER_GROUP,
+    EffectStack,
+)
 
 from support.site_pages import DOCS
+
+_SHAPE_MESSAGE = "is a list of lists of line classes"
 
 PAGE = DOCS / "reference" / "line-effects.md"
 _HEADING = re.compile(r"^## (?P<title>.+)$", re.MULTILINE)
 _CODE = re.compile(r"`([^`]+)`")
-_TYPES = {"casing": Casing, "glow": Glow, "shadow": Shadow, "pen casing": PenCasing}
+_TYPES = {
+    "casing": Casing,
+    "glow": Glow,
+    "shadow": Shadow,
+    "reserve": Reserve,
+    "pen casing": PenCasing,
+}
 
 
 def _sections() -> dict[str, str]:
@@ -51,6 +66,7 @@ def test_the_line_effects_page_matches_the_presets_and_classes() -> None:
     _check_classes(sections["Line classes"])
     _check_fields(sections["Effect fields"])
     _check_presets(sections["Preset expansions"])
+    _check_unions(sections["Casing unions"])
     _check_draw_order(sections["Draw order"])
 
 
@@ -117,6 +133,32 @@ def _check_presets(section: str) -> None:
         assert written == held
 
 
+def _check_unions(section: str) -> None:
+    """Each union error is a fragment of a message the union model writes, and each is shown once."""
+    tables = [block for block in section.split("\n\n") if block.startswith("|")]
+    assert [_rows(block)[0] for block in tables] == [
+        ["Rule", "What it means"],
+        ["Error", "Raised when"],
+    ]
+    errors = [_code(row[0]) for row in _rows(tables[1])[1]]
+    unions = [["route"], ["no_such"], [], ["major", "major"], ["major", "lane"], ["lane"]]
+    stacks = {
+        "major": EffectStack(effects=(Casing(width_px=2.0),)),
+        "coast": EffectStack(effects=(Casing(width_px=2.0, strength=0.5),)),
+        "minor": EffectStack(effects=(Reserve(width_px=2.0),)),
+    }
+    messages = [message for _, _, message in membership_problems(unions)]
+    messages += [
+        message
+        for _, _, message in union_problems(stacks, [["major", "coast"], ["major", "minor"]])
+    ]
+    messages += [message for _, _, message in union_problems(stacks, [["road_major"]])]
+    messages.append(_SHAPE_MESSAGE)
+    for error in errors:
+        assert any(error in message for message in messages), error
+    assert len(set(errors)) == len(errors) == 9
+
+
 def _check_draw_order(section: str) -> None:
     """The draw order lists the water group, then the road group, then the route, each group in its order."""
     steps = [line for line in section.splitlines() if re.match(r"\d\. ", line)]
@@ -126,3 +168,4 @@ def _check_draw_order(section: str) -> None:
         named = re.findall(r"`(\w+)`", step)
         assert named == list(group)
     assert "route" in route
+    assert "casing union" in section

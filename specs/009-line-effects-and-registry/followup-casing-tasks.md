@@ -133,9 +133,9 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [x] Tutorial page and explanation sections; gate green.
 
 ### T5: reference and theme how-to
-- [ ] `reference/line-effects.md` reserve table, "Casing unions" table, draw order, primitives;
+- [x] `reference/line-effects.md` reserve table, "Casing unions" table, draw order, primitives;
       `write-a-theme.md` paragraphs.
-- [ ] No em or en dashes in human-facing prose; strict docs build; gate green.
+- [x] No em or en dashes in human-facing prose; strict docs build; gate green.
 
 ### T6: judge, then regenerate once
 - [ ] Scratch repaint of every "Figures" image; `diff_images.py` against the pre-follow-up tip.

@@ -266,6 +266,34 @@ writes none of this paints as before. A preset of your own may not take a built-
 preset's name, and replacing an inherited one needs `override: true` in the preset. The
 [schema](../reference/theme.schema.json) lists every field.
 
+A reserve lays the paper itself back round a line, where a casing lays a colour. It takes
+`width_px` from 0 to 16 and `pool` from 0 to 1, and a class takes a casing or a reserve, not both:
+
+<!-- theme: reserve.yaml -->
+```yaml
+extends: sepia
+line_effects:
+  road_major:
+    reserve: {width_px: 2, pool: 0.3}
+```
+
+`casing_unions:` is a top-level list of lists of classes whose rings are laid as one, so a junction
+is one band. The members are of one group, share one colour and strength, and never include the
+route; `casing_unions: []` turns an inherited set off:
+
+<!-- theme: unions.yaml -->
+```yaml
+extends: sepia
+line_effects:
+  road_major:
+    casing: {width_px: 2, strength: 0.9}
+  lane:
+    casing: {width_px: 2, strength: 0.9}
+casing_unions: [[road_major, lane]]
+```
+
+[Line effects](../reference/line-effects.md) lists every rule and the error each breaks.
+
 ## Strengthen or soften the relief
 
 The shaded relief under the washes is `cover.relief_strength`, which multiplies its density and

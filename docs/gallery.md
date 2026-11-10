@@ -134,9 +134,9 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Cased strokes: case, light and shadow one stroke, and a pen casing](tutorials/painting-with-python/cased-strokes.md)
 
-![One brown stroke over a wash of pale farmland and dark wood, painted four times in a grid of two across and two down: the plain stroke, then with a thin ring of paper round it, then with a soft pale margin, then with a grey shadow to its south-east.](images/painting-with-python/cased-stroke.webp)
+![One brown stroke over a wash of pale farmland and dark wood, painted six times in a grid of three across and two down: the plain stroke, then with a thin ring of paper round it, then with a soft pale margin, then with a grey shadow to its south-east, then with a reserve of bare paper round it, and last with that reserve pooled, a faint darker edge just outside it.](images/painting-with-python/cased-stroke.webp)
 
-*Painted by `examples/cased_stroke.py`. The names are plain, cased, glow and shadow.*
+*Painted by `examples/cased_stroke.py`. The names are plain, cased, glow, shadow, reserved and reserved, pooled.*
 
 ![A thin ink line over a grey tint in two rows of five. The first column is the bare line; the others leave a strip of bare paper round the line, edged by two ink lines, the strip widening from left to right and the edge lines thicker in the bottom row.](images/painting-with-python/pen-casing-sweep.webp)
 
@@ -344,9 +344,9 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/line_effect_reasons.py` (figure glaze-or-rgb). The labels read casing and glow across, and glaze and RGB down.*
 
-![Two cells, each a river crossed by two roads that fork. On the left each road is cased and drawn in turn, and a pale seam cuts across the first road at the fork. On the right both casings are laid first and the fork is one road.](images/explanation/line-effects-draw-order.webp)
+![Three cells, each a river crossed by two roads that fork. On the left each road is cased and drawn in turn, and a pale seam cuts across the first road at the fork. In the middle both casings are laid first and the fork is one road, with a faint pale ring inside the first road. On the right the casings are laid as one union, with one outline round the fork and no ring inside either road.](images/explanation/line-effects-draw-order.webp)
 
-*Painted by `examples/line_effect_reasons.py` (figure draw-order). The labels read each stroke cased and casings first.*
+*Painted by `examples/line_effect_reasons.py` (figure draw-order). The labels read each stroke cased, casings first and casings as a union.*
 
 ## Places
 

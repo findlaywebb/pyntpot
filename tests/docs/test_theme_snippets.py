@@ -1,4 +1,4 @@
-"""Every theme and palette YAML block on the theme how-to loads, or fails, as the page says.
+"""Every theme and palette YAML block on the theme how-to and the line effects how-to loads, or fails, as the page says.
 
 A block is a theme file by default, saved as `my-theme.yaml`. A comment line above the fence
 names it: `<!-- theme: NAME -->` saves a theme as `NAME`, `<!-- theme: NAME broken -->` says
@@ -9,19 +9,34 @@ does not render the page or check prose.
 """
 
 import re
+import shutil
 from pathlib import Path
 
 from pyntpot.maps import Palette, Style, ThemeError
 
 from support.site_pages import DOCS, fenced_blocks
 
-_PAGE = DOCS / "how-to" / "write-a-theme.md"
+EXAMPLE_THEMES = DOCS.parent / "examples" / "themes"
+
+_PAGES = (
+    DOCS / "how-to" / "write-a-theme.md",
+    DOCS / "how-to" / "case-light-or-shadow-a-line.md",
+)
 _MARKER = re.compile(r"<!-- (?P<kind>theme|palette): (?P<name>\S+)(?P<broken> broken)? -->")
 
 
 def test_every_yaml_block_loads_or_fails_as_marked(tmp_path: Path) -> None:
     """Each yaml block loads through the theme checker, or raises `ThemeError` with messages the page prints."""
-    text = _PAGE.read_text()
+    loaded = 0
+    for page in _PAGES:
+        loaded += _check_page(page, tmp_path / page.stem)
+    assert loaded >= 14
+
+
+def _check_page(page: Path, directory: Path) -> int:
+    """Load or fail each yaml block of `page` saved in `directory`, beside the example themes; return how many loaded."""
+    text = page.read_text()
+    shutil.copytree(EXAMPLE_THEMES, directory)
     loaded = 0
     for block in fenced_blocks(text):
         if block.lang != "yaml":
@@ -34,7 +49,7 @@ def test_every_yaml_block_loads_or_fails_as_marked(tmp_path: Path) -> None:
         )
         if all(line.startswith("#") for line in block.code.splitlines()):
             continue
-        path = tmp_path / name
+        path = directory / name
         path.write_text(block.code, encoding="utf-8")
         if kind == "palette":
             Palette.from_file(path)
@@ -49,4 +64,4 @@ def test_every_yaml_block_loads_or_fails_as_marked(tmp_path: Path) -> None:
         else:
             Style.from_theme(path)
         loaded += 1
-    assert loaded >= 10
+    return loaded
