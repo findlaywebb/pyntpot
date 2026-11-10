@@ -27,7 +27,7 @@ EXAMPLES: tuple[str, ...] = (
 )
 
 #: The sibling helper modules in examples/ that a script may import by name.
-_EXAMPLE_SIBLINGS = frozenset({"labelled_grid"})
+_EXAMPLE_SIBLINGS = frozenset({"labelled_grid", "line_effect_scenes"})
 #: The five grid scripts, whose label round trip lives only in `labelled_grid.py`.
 _GRID_SCRIPTS = (
     "tutorial_grids",

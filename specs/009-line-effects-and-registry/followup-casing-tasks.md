@@ -98,11 +98,14 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
   its master; T3 and T4 add the glow and shadow sweeps and the new `how-to/reserve-sweep.webp`.
 
 ### T1: split `line_effect_grids.py`
-- [ ] Pure move of the scene builders to `examples/line_effect_scenes.py`, imports repointed, no
+- [x] Pure move of the scene builders to `examples/line_effect_scenes.py`, imports repointed, no
       shim.
-- [ ] The sweep tests moved from `test_line_effect_figures.py` to `test_line_effect_sweeps.py`
+- [x] The sweep tests moved from `test_line_effect_figures.py` to `test_line_effect_sweeps.py`
       (new, T1's); the source scan extended to `line_effect_scenes.py`.
-- [ ] The four sweeps repaint byte-identical before and after; gate green.
+- [x] The four sweeps repaint byte-identical before and after; gate green.
+- Deviation: `stroke_density` stays in `line_effect_grids.py` (it needs the grid's cell width);
+  `line_effect_scenes.py` holds `scene(figure, w, h)`, `Scene`, `SEED`, `GRAN_PX` and the inks.
+  The four sweep PNGs were byte-identical before and after.
 
 ### T2: the 2x helper
 - [ ] Red: `scaled_boxes(spec, 2)` is each 1x box times 2 (no `GridSpec.scaled`: `cell_w`'s
