@@ -123,7 +123,7 @@ class TestTheBasemapTable:
     def test_a_misspelt_key_names_the_nearest_class_and_the_seven(self) -> None:
         """`majr` is refused with `major` suggested and every class listed."""
         with pytest.raises(
-            ValueError, match="'majr'.*did you mean major\\?.*the classes are major"
+            ValueError, match=r"'majr'.*did you mean major\?.*the classes are major"
         ) as caught:
             BasemapStyle(line_effects={"majr": EffectStack()})
         assert "road_major, lane, track" in str(caught.value)

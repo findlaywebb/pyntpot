@@ -1,19 +1,20 @@
 """A theme's `effect_presets:` and `line_effects:`: every refusal located, the split, the merge."""
 
+import typing
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from pyntpot.ink import Casing, Glow, Shadow, pigment
 from pyntpot.maps import EffectStack, Style, ThemeError
 from pyntpot.maps.line_effects import BUILT_IN_PRESETS
+from pyntpot.maps.style import _groups
 from pyntpot.maps.theme_check import check_theme_scoped
 from pyntpot.maps.theme_scope import ThemeScope
 from pyntpot.maps.theme_vocab import LOADER_FIELDS
 
 from support.theme_files import theme_file
-
-GROUPS = {"basemap": dict, "route_ink": dict}
 
 
 def _write(root: Path, name: str, text: str) -> Path:
@@ -37,10 +38,14 @@ def _style(root: Path, text: str) -> Style:
 
 def _check(text: str) -> tuple[dict[str, object], list[tuple[int | None, str, str]]]:
     """The table and the (line, key, message) problems of checking `text` in the built-in scope."""
-    from pyntpot.maps.style import _groups
-
     table, problems, _ = check_theme_scoped(theme_file(text), _groups(), ThemeScope.built_in())
     return table, [(p.line, p.key, p.message) for p in problems]
+
+
+def _stacks(table: dict[str, object]) -> dict[str, EffectStack]:
+    """The `basemap.line_effects` entry of a checked file table."""
+    basemap = typing.cast("dict[str, Any]", table["basemap"])
+    return typing.cast("dict[str, EffectStack]", basemap["line_effects"])
 
 
 class TestTheSplit:
@@ -78,14 +83,14 @@ class TestTheSplit:
         """`major: {}` and an all-off stack stay as explicit empty stacks, dropped nothing here."""
         table, problems = _check("line_effects:\n  major: {}\n  lane: {casing: {width_px: 0}}\n")
         assert problems == []
-        stacks = table["basemap"]["line_effects"]  # ty: ignore[invalid-argument-type]
+        stacks = _stacks(table)
         assert stacks == {"major": EffectStack(), "lane": EffectStack()}
 
     def test_a_stack_is_the_effects_in_key_order(self) -> None:
         """Effects are applied in the order the stack writes them."""
         text = "line_effects:\n  lane:\n    shadow: {offset_px: 1, strength: 0.4}\n    casing: {width_px: 2}\n"
         table, _ = _check(text)
-        effects = table["basemap"]["line_effects"]["lane"].effects  # ty: ignore[invalid-argument-type]
+        effects = _stacks(table)["lane"].effects
         assert [type(e) for e in effects] == [Shadow, Casing]
 
     def test_a_colour_resolves_through_the_files_scope(self, tmp_path: Path) -> None:
@@ -234,7 +239,7 @@ class TestTheRefusals:
         text = "line_effects:\n  major:\n    casing: {strength: 2}\n    glow: {strength: 0.5, spread_px: 1}\n"
         table, problems = _check(text)
         assert len(problems) == 1
-        stack = table["basemap"]["line_effects"]["major"]  # ty: ignore[invalid-argument-type]
+        stack = _stacks(table)["major"]
         assert stack.effects == (Glow(spread_px=1.0, strength=0.5),)
 
     def test_a_range_error_in_a_preset_is_located_in_the_preset(self) -> None:

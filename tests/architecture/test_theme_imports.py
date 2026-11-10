@@ -1,6 +1,7 @@
 """No loader module imports the style: `style.py` imports the loader, so the reverse is a cycle.
 
-The theme loader's modules are `maps/theme_*.py`. `style.py` imports them, so any of them
+The theme loader's modules are `maps/theme_*.py`, and `maps/line_effects.py`, which `style_groups`
+and the loader both import. `style.py` imports them, so any of them
 that imported `pyntpot.maps.style`, or the `pyntpot.maps` package (whose `__init__` runs
 `style.py`), would close an import cycle. `theme_schema` is the exception: it builds the
 schema from the model and nothing in `style.py` imports it. A relative import is reported
@@ -24,11 +25,16 @@ FORBIDDEN = frozenset({"pyntpot.maps", "pyntpot.maps.style"})
 #: The one loader module allowed to import the style.
 ALLOWED = "theme_schema.py"
 
+#: The loader modules whose names do not start with `theme_`.
+BY_NAME = ("line_effects.py",)
+
 
 def theme_modules_importing_the_style(maps: Path) -> list[str]:
     """Name every forbidden or relative import in `maps/theme_*.py` as `file:line: module`."""
     found: list[str] = []
-    for path in sorted(maps.glob("theme_*.py")):
+    for path in sorted([*maps.glob("theme_*.py"), *(maps / name for name in BY_NAME)]):
+        if not path.is_file():
+            continue
         if path.name == ALLOWED:
             continue
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
@@ -76,6 +82,15 @@ class TestTheCheckFindsAPlantedImport:
             "from pyntpot.maps.style import Style\n", encoding="utf-8"
         )
         assert theme_modules_importing_the_style(tmp_path) == []
+
+    def test_line_effects_is_checked_by_name(self, tmp_path: Path) -> None:
+        """`line_effects.py`, outside the `theme_*` glob, is held to the same rule."""
+        (tmp_path / "line_effects.py").write_text(
+            "from pyntpot.maps.style import Style\n", encoding="utf-8"
+        )
+        assert theme_modules_importing_the_style(tmp_path) == [
+            "line_effects.py:1: pyntpot.maps.style"
+        ]
 
     def test_other_modules_are_not_checked(self, tmp_path: Path) -> None:
         """A module outside `theme_*` may import the style."""

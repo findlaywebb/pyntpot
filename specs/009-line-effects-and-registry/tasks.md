@@ -134,32 +134,32 @@ gate B (S6 in); S7, S8, S9.
 
 ## S5a: The model, presets, theme fields
 
-- [ ] Red: `test_line_effects.py` (at most one of a kind, off dropped, `LINE_CLASSES`),
+- [x] Red: `test_line_effects.py` (at most one of a kind, off dropped, `LINE_CLASSES`),
       `test_theme_effects.py` (out-of-range and non-finite located; a child that sets
       only `major` keeps its parent's route stack; a child's `major: {}` turns off its
       parent's `cased`; the `LOADER_FIELDS` messages), `test_digest_omits.py`, the
       extended schema guard, a `BasemapStyle` key outside the seven classes refused, the
       two properties.
-- [ ] Pinned field tables: `test_style_groups.py` (`PINNED` rows gain `line_effects` and
+- [x] Pinned field tables: `test_style_groups.py` (`PINNED` rows gain `line_effects` and
       `effects`; the digest test drops `LOADER_FIELDS` before hashing, so every `SOURCED`
       pin holds; the two default asserts), `BASEMAP_DEFAULTS` and its test moved to
       `tests/unit/maps/test_basemap_defaults.py` (new) with `"line_effects": {}`, and
       `tests/unit/maps/candidates/test_export.py` gaining `"line_effects": {}`.
-- [ ] `test_theme_schema.py` (top-level order with `effect_presets` and `line_effects`;
+- [x] `test_theme_schema.py` (top-level order with `effect_presets` and `line_effects`;
       key rules; field test leaves out `LOADER_FIELDS`) and `test_theme_vocab.py` (both
       dict-field tests leave out `LOADER_FIELDS`; no `VOCABULARIES` entry for
       `basemap.line_effects`).
-- [ ] `maps/line_effects.py` (`EffectStack` and the `BasemapStyle` key helper, on `ink`'s
+- [x] `maps/line_effects.py` (`EffectStack` and the `BasemapStyle` key helper, on `ink`'s
       `Casing`, `Glow` and `Shadow`, and `EFFECT_RANGES` from `pyntpot.ink.effect_types`),
       `maps/theme_effects.py` (the same import; the split adds only the entries the file
       writes), the two group fields, `BasemapStyle.__post_init__`,
       `DIGEST_OMITS_AT_DEFAULT`, `LOADER_FIELDS` (taken out in `check_theme_scoped`
       before the group check), the dispatch, presets in `theme_scope.py`.
-- [ ] The prescribed `line_effects` and `effect_presets` schema shape; `style-fields.md`
+- [x] The prescribed `line_effects` and `effect_presets` schema shape; `style-fields.md`
       rows for `basemap.line_effects` and `route_ink.effects`; `_BASE` in
       `test_theme_merge.py` without the loader-only fields; `line_effects.py` in the
       theme import guard.
-- [ ] `EffectStack` exported and in `maps.md`; schema regenerated; every pinned digest
+- [x] `EffectStack` exported and in `maps.md`; schema regenerated; every pinned digest
       unchanged; slice gate green.
 
 ## S5b: Painter and compose wiring
