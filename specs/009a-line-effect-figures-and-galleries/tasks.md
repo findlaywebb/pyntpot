@@ -173,23 +173,23 @@
 
 ## D3: the how-to and reference
 
-- [ ] Red: `test_how_to_line_effects.py`, `test_line_effect_values.py`, the
+- [x] Red: `test_how_to_line_effects.py`, `test_line_effect_values.py`, the
       `ambleside-cased` entry in `THEME_NAMES` and `DIGESTS`, and the theme count in
       `test_one_source_of_defaults.py::test_the_theme_file_checks_see_every_theme`
       (ten to eleven).
-- [ ] Restrict PR 1's (P0 found it does not)
+- [x] Restrict PR 1's (P0 found it does not)
       `tests/property/test_line_effect_digests.py` to the classes the sampled theme does
       not set; it passes with `ambleside-cased`.
-- [ ] Green: `how_to_line_effects.py` (`card`, `presets`; each preset cell loads a theme
+- [x] Green: `how_to_line_effects.py` (`card`, `presets`; each preset cell loads a theme
       file the script writes in a `tempfile.TemporaryDirectory()`, `extends:` the
       absolute path of
       `ambleside.yaml` with `line_effects: {route: <name>}`, through `Style.from_yaml`;
       no private import) and `examples/themes/ambleside-cased.yaml`
       (`extends: ambleside.yaml`).
-- [ ] Register two entries; paint, copy, check the budgets.
-- [ ] A page that quotes a primitive's signature quotes it in full (every parameter,
+- [x] Register two entries; paint, copy, check the budgets.
+- [x] A page that quotes a primitive's signature quotes it in full (every parameter,
       `threshold` and `paper` included).
-- [ ] `case-light-or-shadow-a-line.md` (the card and the three theme sweeps) and
+- [x] `case-light-or-shadow-a-line.md` (the card and the three theme sweeps) and
       `reference/line-effects.md` (no image; pen casing has no theme key; pigment
       separation keeps its own transparency), index pages and nav. Gates.
 

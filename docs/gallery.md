@@ -170,6 +170,10 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 ### [Case, light or shadow a line](how-to/case-light-or-shadow-a-line.md)
 
+![The Ambleside map with its main road cased in the paper's colour and its maroon route lifted off the page by a soft shadow.](images/how-to/line-effects.webp)
+
+*Painted by `examples/how_to_line_effects.py` (figure card, theme `examples/themes/ambleside-cased.yaml`).*
+
 ![One brown road crossing farmland and wood, cased in the paper's colour in the top row and in Payne's grey in the bottom row, the casing widening from nothing at the left to five pixels at the right.](images/how-to/casing-sweep.webp)
 
 *Painted by `examples/line_effect_grids.py` (figure casing). The labels read 0, 1, 2, 3 and 5 across, and paper and paynes_grey down.*
@@ -181,6 +185,10 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 ![One crimson line over pale farmland in two rows of five. The first column has no shadow; the others add a grey shadow to the south-east of the line that moves further away from left to right and is softer in the bottom row.](images/how-to/shadow-sweep.webp)
 
 *Painted by `examples/line_effect_grids.py` (figure shadow). The labels read 0, 1.5, 3 and 5 across, and 1 and 3 down.*
+
+![The Ambleside loop four times, two across and two down: the route plain, then with a thin ring of paper round it, then with a soft pale margin, then with a soft shadow to its south-east.](images/how-to/line-effects-presets.webp)
+
+*Painted by `examples/how_to_line_effects.py` (figure presets). The names are none, cased, halo and lifted.*
 
 ![A thin ink line over a grey tint in two rows of five. The first column is the bare line; the others leave a strip of bare paper round the line, edged by two ink lines, the strip widening from left to right and the edge lines thicker in the bottom row.](images/painting-with-python/pen-casing-sweep.webp)
 

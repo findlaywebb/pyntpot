@@ -8,6 +8,7 @@ These pages list what pyntpot has, and nothing else. For how to use it, see the 
 - [The manifest: every key it records](manifest.md)
 - [Pigments: the map pigments and every pigment key](pigments.md)
 - [Pigment gallery: every pigment as three washes, glaze pairs and palettes](pigment-gallery.md)
+- [Line effects: the classes, fields, presets, draw order and digests](line-effects.md)
 - [Brushes: the brush sheet and every brush id](brushes.md)
 - [Brush gallery: every brush id, painted](brush-gallery.md)
 - [Glossary: every term the docs use, and what it means](glossary.md)

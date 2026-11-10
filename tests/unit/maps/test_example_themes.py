@@ -11,6 +11,7 @@ from support import REPO_ROOT
 THEMES_DIR = REPO_ROOT / "examples" / "themes"
 THEME_NAMES = (
     "ambleside",
+    "ambleside-cased",
     "ambleside-hero",
     "skye",
     "yr-wyddfa",
@@ -20,6 +21,7 @@ THEME_NAMES = (
 #: Each example theme's digests, measured from the TOML files on f34de97 and unchanged by 008 S1.
 DIGESTS = {
     "ambleside-hero": ("f49b10327a58beed", "1e300b93eaba4ce5", "6331518a202c936d"),
+    "ambleside-cased": ("1463a90c2162033d", "6878ddb0e85980ac", "6331518a202c936d"),
     "ambleside": ("6a2060ec26882818", "2638b1097f7bac8d", "6331518a202c936d"),
     "oxford": ("3f795f42c5f1efd5", "794a835c65896141", "36480f1b92757e09"),
     "skye": ("fce43b2d9bdce6c8", "dfb1acedf43e4ef3", "1976288541cb3b07"),

@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=../../src/pyntpot/maps/themes/theme.schema.json
+# Ambleside with its lines lit: the look of ambleside.yaml, then a cased main road and a route that
+# lifts off the page with a shadow. Each is one of the built-in effect presets, named by `line_effects`.
+
+extends: ambleside.yaml
+
+line_effects:
+  road_major: cased
+  route: lifted

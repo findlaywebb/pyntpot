@@ -47,6 +47,20 @@ def _sweep(image: str, figure: str, page_dir: str = "how-to", width: int = 720) 
     )
 
 
+def _how_to(image: str, figure: str) -> DocsImage:
+    """Return one how-to figure of the line effects, painted on the Ambleside fixture."""
+    return DocsImage(
+        f"how-to/{image}.webp",
+        "how_to_line_effects",
+        (("figure", figure),),
+        "ambleside",
+        720,
+        "page",
+        "webp-lossy",
+        "009a-line-effects",
+    )
+
+
 IMAGES_009A: tuple[DocsImage, ...] = (
     # 009a-galleries: every brush id, every pigment, how pairs glaze and the bundled palettes.
     _gallery("brush-gallery-riv-str-lan", "brush_gallery", "riv-str-lan"),
@@ -61,4 +75,6 @@ IMAGES_009A: tuple[DocsImage, ...] = (
     _sweep("glow-sweep", "glow"),
     _sweep("shadow-sweep", "shadow"),
     _sweep("pen-casing-sweep", "pen-casing", "painting-with-python", 600),
+    _how_to("line-effects", "card"),
+    _how_to("line-effects-presets", "presets"),
 )

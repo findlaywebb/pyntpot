@@ -171,8 +171,8 @@ def test_no_theme_file_sets_a_key_to_its_base_value():
 
 
 def test_the_theme_file_checks_see_every_theme():
-    """The theme-file checks find all ten themes, so none is skipped by a wrong directory."""
-    assert len(theme_files()) == 10
+    """The theme-file checks find all eleven themes, so none is skipped by a wrong directory."""
+    assert len(theme_files()) == 11
 
 
 class TestTheChecksFindAPlantedDefect:
