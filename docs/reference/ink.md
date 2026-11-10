@@ -66,3 +66,19 @@
 ::: pyntpot.ink.stamp
 
 ::: pyntpot.ink.wash
+
+::: pyntpot.ink.Casing
+
+::: pyntpot.ink.Glow
+
+::: pyntpot.ink.PenCasing
+
+::: pyntpot.ink.Shadow
+
+::: pyntpot.ink.casing
+
+::: pyntpot.ink.glow
+
+::: pyntpot.ink.pen_casing
+
+::: pyntpot.ink.shadow

@@ -128,7 +128,7 @@ gate B (S6 in); S7, S8, S9.
 
 ## Merge gate A (after S3b, before S5a)
 
-- [ ] S4 merged; eight names (`casing`, `glow`, `shadow`, `pen_casing`, `Casing`, `Glow`,
+- [x] S4 merged; eight names (`casing`, `glow`, `shadow`, `pen_casing`, `Casing`, `Glow`,
       `Shadow`, `PenCasing`) exported in `ink`, `ink.md` and `INK_PUBLIC`; slice gate
       green.
 

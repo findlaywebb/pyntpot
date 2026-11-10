@@ -15,6 +15,9 @@ pigments, read-only), `pigment` (the one lookup, by `Pigment`, name or hex), the
 registry, `rgb`, `PigmentLayer`, and the style groups `PaperStyle`, which `composite` reads,
 and `WashStyle`, which `separated` and `fluid_modulate` read. To make and keep an image: `paper_plate` (the cream paper) and `save_image`
 (a painted array written to a file).
+To lay an effect round a line: `casing`, `glow` and `shadow` (a ring of colour, a lift
+toward the paper and a multiplying darken, set by `Casing`, `Glow` and `Shadow`) and
+`pen_casing` (a reserve between two ink edge lines, set by `PenCasing`).
 
 It does not letter, read geographic data or touch the network.
 """
@@ -24,6 +27,11 @@ from pyntpot.ink.brush import Brush, brush_from_id
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.colour import Colour
 from pyntpot.ink.compositing import PigmentLayer, composite
+from pyntpot.ink.effect_casing import casing
+from pyntpot.ink.effect_glow import glow
+from pyntpot.ink.effect_pen_casing import pen_casing
+from pyntpot.ink.effect_shadow import shadow
+from pyntpot.ink.effect_types import Casing, Glow, PenCasing, Shadow
 from pyntpot.ink.io import save_image
 from pyntpot.ink.pad import ink_density
 from pyntpot.ink.paper import paper_plate
@@ -52,25 +60,33 @@ __all__: list[str] = [
     "Brush",
     "BrushStyle",
     "Canvas",
+    "Casing",
     "Colour",
     "Flow",
+    "Glow",
     "PaperStyle",
+    "PenCasing",
     "Pigment",
     "PigmentLayer",
     "PigmentRegistry",
     "Point",
+    "Shadow",
     "Sheet",
     "WashOptions",
     "WashStyle",
     "brush_from_id",
+    "casing",
     "composite",
     "fluid_modulate",
+    "glow",
     "ink_density",
     "paper_plate",
+    "pen_casing",
     "pigment",
     "rgb",
     "save_image",
     "separated",
+    "shadow",
     "stamp",
     "wash",
 ]
