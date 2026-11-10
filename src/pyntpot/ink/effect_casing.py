@@ -4,8 +4,9 @@ Key function: `casing`. It is a plain function of the RGB beneath it, a float ma
 `Casing`, in RGB and not by Kubelka-Munk, and it draws no random number. It knows nothing of
 maps and does not draw the line itself.
 
-Invariants: width 0, strength 0 or a mask nowhere at the threshold returns `rgb` itself; every
-other result is a new float32 array clipped to 0 to 1.
+Invariants: width 0, strength 0 or a mask nowhere at the threshold returns `rgb` itself; where
+the mask is at or above the threshold the output equals `rgb` bit for bit; every other result is
+a new float32 array clipped to 0 to 1.
 """
 
 import numpy as np
@@ -27,7 +28,9 @@ def casing(
 
     With `w = effect.width_px`, the weight is `effect.strength` times a soft step of
     `w - d`, where `d` is the chamfer distance to the pixels of `mask` at `threshold`, and
-    the result is `rgb + a * (colour * paper - rgb)`, so a white casing is the paper.
+    the result is `rgb + a * (colour * paper - rgb)`, so a white casing is the paper. The
+    weight is 0 wherever the mask is at or above `threshold`, so the casing paints only
+    outside the line and never shows through it.
 
     Args:
         rgb: The colour beneath, float32 `(h, w, 3)`, 0 to 1.
@@ -50,6 +53,7 @@ def casing(
     if not core.any():
         return rgb
     weight = effect.strength * smoothstep(effect.width_px - chamfer_distance(core), 1.0)
+    weight = np.where(core, F32(0.0), weight)
     ground = F32(1.0) if paper is None else paper
     target = effect.colour.rgb * ground
     out = rgb + weight[..., None] * (target - rgb)

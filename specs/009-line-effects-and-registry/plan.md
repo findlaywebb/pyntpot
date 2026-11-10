@@ -607,13 +607,15 @@ only the files it owns.
     when `effect.width_px == 0`, `effect.strength == 0` or no mask pixel reaches
     `threshold`. Otherwise, with `w = effect.width_px`:
     `a = effect.strength * smoothstep(w - chamfer_distance(mask >= threshold), 1.0)` and
-    `out = rgb + a * (colour * paper - rgb)`, so white is the paper.
+    `out = rgb + a * (colour * paper - rgb)`, so white is the paper. Then `a` is set to 0
+    wherever `mask >= threshold`, so the line's own pixels are untouched.
   - `glow(rgb, mask, effect: Glow, *, threshold=LINE_THRESHOLD, paper=None)` is the
     identity at
     `effect.strength == 0`. Otherwise
     `core = chamfer_distance(mask >= threshold) <= effect.spread_px`,
     `a = effect.strength * clip(blur(core, effect.blur_px), 0, 1)` and
-    `out = rgb + a * max(paper - rgb, 0)`. The floor at 0 is what makes "never darkens"
+    `out = rgb + a * max(paper - rgb, 0)`, with `a` set to 0 wherever `mask >= threshold`
+    so the line's own pixels are untouched. The floor at 0 is what makes "never darkens"
     hold for any input.
   - `shadow(rgb, mask, effect: Shadow, *, azimuth_deg, threshold=LINE_THRESHOLD)` shifts
     the mask (zero
@@ -650,6 +652,7 @@ only the files it owns.
   - Casing: `Casing(width_px=w)` for `w` in {0.0, -0.0} gives a bitwise-identical result
     (`view(np.uint32)`); a negative width never reaches the primitive, because `Casing`
     refuses it (a unit case).
+  - Casing and glow: `out == rgb` bitwise where `mask >= threshold`.
   - Glow: `out >= rgb` everywhere for any spread, blur, strength and paper.
   - Shadow: `out == rgb` bitwise where `mask >= threshold`, and `out <= rgb` everywhere;
     a unit case pins the rounded `(dx, dy)` for 315 degrees at `offset_px` 1.2 and 2.5.

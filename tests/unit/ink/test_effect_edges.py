@@ -37,15 +37,15 @@ class TestTies:
     """A mask value exactly at the threshold counts as the line."""
 
     def test_casing_counts_a_mask_at_the_threshold(self) -> None:
-        """A mask of 0.25 at threshold 0.25 casts a ring."""
+        """A mask of 0.25 at threshold 0.25 is the line: it is left, and the ring starts beside it."""
         out = casing(_plate(0.5), _row(0.25), Casing(width_px=2.5), threshold=0.25)
-        assert out[0, :, 0].tolist() == [1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5]
+        assert out[0, :, 0].tolist() == [0.5, 1.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5]
 
     def test_glow_counts_a_mask_at_the_threshold(self) -> None:
-        """A mask of 0.25 at threshold 0.25 lifts a core."""
+        """A mask of 0.25 at threshold 0.25 is the line: it is left, and the halo starts beside it."""
         effect = Glow(spread_px=2.0, strength=1.0)
         out = glow(_plate(0.5), _row(0.25), effect, threshold=0.25)
-        assert out[0, :, 0].tolist() == [1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5]
+        assert out[0, :, 0].tolist() == [0.5, 1.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5]
 
 
 class TestSoftStep:

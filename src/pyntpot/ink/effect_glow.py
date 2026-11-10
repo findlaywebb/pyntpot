@@ -4,8 +4,8 @@ Key function: `glow`, with a hard spread and a soft blur and no colour of its ow
 plain function of the RGB beneath it and a float mask, in RGB and not by Kubelka-Munk, and it
 draws no random number. It does not draw the line itself.
 
-Invariants: the lift is floored at 0, so no pixel gets darker for any input; strength 0 returns
-`rgb` itself; every other result is a new float32 array clipped to 0 to 1.
+Invariants: the lift is floored at 0, so no pixel gets darker for any input; where the mask is
+at or above the threshold the output equals `rgb` bit for bit; strength 0 returns `rgb` itself; every other result is a new float32 array clipped to 0 to 1.
 """
 
 import numpy as np
@@ -27,7 +27,8 @@ def glow(
 
     The core is the pixels within `effect.spread_px` of the mask at `threshold`; the weight
     is `effect.strength` times the core blurred by `effect.blur_px`, and the result is
-    `rgb + a * max(paper - rgb, 0)`.
+    `rgb + a * max(paper - rgb, 0)`. The weight is 0 wherever the mask is at or above
+    `threshold`, so the glow lifts only the halo and never washes out the line itself.
 
     Args:
         rgb: The colour beneath, float32 `(h, w, 3)`, 0 to 1.
@@ -46,8 +47,10 @@ def glow(
     check_threshold(threshold)
     if effect.strength == 0:
         return rgb
-    core = chamfer_distance(mask >= threshold) <= effect.spread_px
+    line = mask >= threshold
+    core = chamfer_distance(line) <= effect.spread_px
     weight = effect.strength * np.clip(blur(core.astype(F32), effect.blur_px), 0.0, 1.0)
+    weight = np.where(line, F32(0.0), weight)
     ground = F32(1.0) if paper is None else paper
     out = rgb + weight[..., None] * np.maximum(ground - rgb, 0.0)
     return np.clip(out, 0.0, 1.0).astype(F32, copy=False)
