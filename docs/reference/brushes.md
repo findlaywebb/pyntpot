@@ -30,6 +30,19 @@ The row sets how the brush behaves. Widths are not part of a row: they come from
 - Row `1` is the wet treatment. Rows `4` and `7` are the driest.
 - `BrushStyle`'s `brush_overrides` can replace a treatment's values for one class.
 
+The grid below sweeps `Dry` and `Load` for one stroke, `MAJ2-c` at 12 pixels, with every other value row `2`'s.
+`Load` is the extra ink where the brush is first set down, which fades within about a brush
+width of the start, so it shows only as a blot at the head of the stroke. The sheet's rows keep it
+between 0.4 and 1.6, where it hardly shows, so the grid runs it on to 8.
+
+![One brown stroke in a grid: a solid line at the left that breaks into speckle towards the right, and a heavier blot at the start of the stroke in the lower rows.](../images/reference/brush-dryness-sweep.webp)
+
+*Painted by `examples/setting_grids.py` (figure dryness). The labels read 0.1, 0.4, 0.7 and 0.9 across, and load 0.5, 3 and 8 down. The values are the `dry` and `load` of `brush_overrides["major"]`.*
+
+The sweep sets the values in `brush_overrides["major"]` and reads them with
+`brush_from_id("MAJ2-c", 12, 1.0, style, override="major")`. Without `override=` the id's own
+prefix, `maj`, is looked up, and the setting does nothing.
+
 ## Ink colours
 
 The colour column is read from the id's prefix.

@@ -207,13 +207,13 @@
 
 ## E: setting grids (#67)
 
-- [ ] Red: `test_setting_grids.py` (the dryness grid reads its overrides through
+- [x] Red: `test_setting_grids.py` (the dryness grid reads its overrides through
       `override="major"`).
-- [ ] Green: `setting_grids.py` (`pool`, `granulation`, `dryness`, with the plan's fields
+- [x] Green: `setting_grids.py` (`pool`, `granulation`, `dryness`, with the plan's fields
       and values) and `relief_grid.py`.
-- [ ] Register four entries under `009a-setting-grids` (share 250,000); paint, copy, check
+- [x] Register four entries under `009a-setting-grids` (share 250,000); paint, copy, check
       the budgets.
-- [ ] Sections in `how-the-wash-works.md`, `brushes.md` and `write-a-theme.md`, as the
+- [x] Sections in `how-the-wash-works.md`, `brushes.md` and `write-a-theme.md`, as the
       plan's page table says. Delete the #67 note. Gates.
 
 ## F: bold cases its route

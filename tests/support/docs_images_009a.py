@@ -15,6 +15,7 @@ from support.docs_image import DocsImage
 SHARES_009A: dict[str, int] = {
     "009a-galleries": 500_000,
     "009a-line-effects": 600_000,
+    "009a-setting-grids": 250_000,
 }
 
 
@@ -75,6 +76,20 @@ def _reasons(image: str, figure: str) -> DocsImage:
     )
 
 
+def _setting(image: str, figure: str, page_dir: str) -> DocsImage:
+    """Return one setting grid: a swatch sweep of one wash or brush setting."""
+    return DocsImage(
+        f"{page_dir}/{image}.webp",
+        "setting_grids",
+        (("figure", figure),),
+        None,
+        720,
+        "page",
+        "webp-lossy",
+        "009a-setting-grids",
+    )
+
+
 IMAGES_009A: tuple[DocsImage, ...] = (
     # 009a-galleries: every brush id, every pigment, how pairs glaze and the bundled palettes.
     _gallery("brush-gallery-riv-str-lan", "brush_gallery", "riv-str-lan"),
@@ -102,5 +117,19 @@ IMAGES_009A: tuple[DocsImage, ...] = (
         "page",
         "webp-lossy",
         "009a-line-effects",
+    ),
+    # 009a-setting-grids: what changing a wash, a brush and the relief does, painted side by side.
+    _setting("wash-pool-sweep", "pool", "explanation"),
+    _setting("wash-granulation-sweep", "granulation", "explanation"),
+    _setting("brush-dryness-sweep", "dryness", "reference"),
+    DocsImage(
+        "how-to/relief-strength.webp",
+        "relief_grid",
+        (),
+        "ambleside",
+        720,
+        "page",
+        "webp-lossy",
+        "009a-setting-grids",
     ),
 )

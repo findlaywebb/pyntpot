@@ -266,6 +266,28 @@ writes none of this paints as before. A preset of your own may not take a built-
 preset's name, and replacing an inherited one needs `override: true` in the preset. The
 [schema](../reference/theme.schema.json) lists every field.
 
+## Strengthen or soften the relief
+
+The shaded relief under the washes is `cover.relief_strength`, which multiplies its density and
+the ceiling the density is held to. `1.0` is the default, `0` is no relief and a larger number
+paints the slopes darker:
+
+<!-- theme: relief.yaml -->
+```yaml
+extends: sepia
+cover:
+  relief_strength: 2.0
+```
+
+![Four close windows of the Ambleside card, the land to the east of the lake shaded more heavily from left to right as the strength rises.](../images/how-to/relief-strength.webp)
+
+*Painted by `examples/relief_grid.py` (the Ambleside fixture, the default style). The labels read 0, 1, 2 and 4 across. The value is `relief_strength`.*
+
+At 0 the washes are flat. At 1 the hills are a quiet shade under the colour, and at 2 they
+carry the form of the ground. At 4 the slopes are dark enough to dull the colour of the land
+under them, which suits a map of mountains. `cover.relief` set to `false`
+turns the relief off whatever its strength.
+
 ## Editor completion
 
 The directive line at the top of a theme names the JSON Schema for theme files:

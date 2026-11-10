@@ -162,6 +162,10 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/map_styles.py` (figure winter).*
 
+![Four close windows of the Ambleside card, the land to the east of the lake shaded more heavily from left to right as the relief strength rises.](images/how-to/relief-strength.webp)
+
+*Painted by `examples/relief_grid.py` (the Ambleside fixture, the default style). The labels read 0, 1, 2 and 4 across.*
+
 ### [Map from the command line](how-to/map-from-the-command-line.md)
 
 ![The Lynmouth route map: a pink route over washes of green and blue, with the river, roads and names lettered by hand.](images/how-to/command-line.webp)
@@ -240,6 +244,10 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/brush_sheet.py` (seed 11, figure grid).* The labels read the treatment numbers 1 to 8 across, the widths 3 px, 6 px and 12 px down, and wet, soft, gritty, dry, nib, pen, driest and light nib under the columns.
 
+![One brown stroke in a grid of three rows by four: a solid line at the left that breaks into speckle towards the right, and a heavier blot at the start of the stroke in the lower rows.](images/reference/brush-dryness-sweep.webp)
+
+*Painted by `examples/setting_grids.py` (figure dryness). The labels read 0.1, 0.4, 0.7 and 0.9 across, and load 0.5, 3 and 8 down.*
+
 ### [Brush gallery](reference/brush-gallery.md)
 
 ![Eight rows of strokes in two columns. The left column, lettered RIV = STR, is a blue ink and the right, LAN, a brown one. Down the rows the treatments go from a wet, whole line through gritty and dry strokes that break into flecks, to nibs with a blot where they touch down, to a driest row that is mostly paper showing between specks. Each cell has a narrow stroke over a wide one and its id beneath.](images/reference/brush-gallery-riv-str-lan.webp)
@@ -276,9 +284,17 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/wash_stages.py` (seed 11, figure rim, size 480).*
 
+![A blue disc four times, from no darker band to a heavy dark ring just inside the edge, on two sheets with different seeds.](images/explanation/wash-pool-sweep.webp)
+
+*Painted by `examples/setting_grids.py` (figure pool). The labels read 0, 0.25, 0.6 and 1.2 across, and seed 11 and seed 29 down.*
+
 ![The same wash on paper with a fine grain: the blue is broken into a pale speckle with darker flecks, and the edge band is still there.](images/explanation/wash-grain.webp)
 
 *Painted by `examples/wash_stages.py` (seed 11, figure grain, size 480).*
+
+![A blue disc in a grid: its speckle is fine at the left and a broad cloud at the right, and the rows differ in how the paper's tooth streaks through the blue.](images/explanation/wash-granulation-sweep.webp)
+
+*Painted by `examples/setting_grids.py` (figure granulation). The labels read 3, 6, 12 and 24 across, and 0, 0.35 and 1 down.*
 
 ![Two overlapping discs, blue on the left and yellow-green on the right, with a deep, dull green where they cross.](images/explanation/wash-overlap.webp)
 
