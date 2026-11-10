@@ -36,10 +36,11 @@ from importlib.resources.abc import Traversable
 from pathlib import Path, PurePath
 from typing import NoReturn
 
-from pyntpot.maps.theme_check import EXTENDS, check_theme
+from pyntpot.maps.theme_check import EXTENDS, check_theme_scoped
 from pyntpot.maps.theme_errors import ThemeError, ThemeProblem
 from pyntpot.maps.theme_merge import merge
 from pyntpot.maps.theme_read import ThemeFile, read_theme
+from pyntpot.maps.theme_scope import ThemeScope
 
 #: The form of a theme name: a lower-case letter, then lower-case letters, digits and `-`.
 NAME = re.compile(r"[a-z][a-z0-9-]*")
@@ -115,34 +116,43 @@ def resolve(
             problem found in the chain is in its problems.
     """
     problems: list[ThemeProblem] = []
-    tables: list[dict[str, object]] = []
+    files: list[ThemeFile] = []
     chain: list[Path] = []
     named: str | Path | None = theme
     where = _Named(key="", line=None, directory=relative_to)
+    stopped = False
     while named is not None:
         try:
             file = _load(named, where, chain)
         except ThemeError as exc:
             problems.extend(exc.problems)
+            stopped = True
             break
         if file is None:
             break
-        problems.extend(file.problems)
         if file.problems:
+            problems.extend(file.problems)
+            stopped = True
             break
-        table, found = check_theme(file, groups)
-        problems.extend(found)
-        tables.append(table)
+        files.append(file)
         chain.append(file.path.resolve())
-        extends = table.get(EXTENDS, DEFAULT)
+        extends = file.table.get(EXTENDS, DEFAULT)
         named = extends if isinstance(extends, str) else None
         where = _Named(
             key=EXTENDS, line=file.lines.get((EXTENDS,)), directory=file.path.parent, by=file.path
         )
+    if stopped:
+        raise ThemeError(problems)
+    tables: list[dict[str, object]] = []
+    scope = ThemeScope.built_in()
+    for file in reversed(files):
+        table, found, scope = check_theme_scoped(file, groups, scope)
+        problems.extend(found)
+        tables.append(table)
     if problems:
         raise ThemeError(problems)
     merged = dict(base)
-    for table in reversed(tables):
+    for table in tables:
         merged = merge(merged, table)
     merged.pop(EXTENDS, None)
     return merged

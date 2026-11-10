@@ -12,7 +12,8 @@ own modules, not exported here.
 The seven map style groups sit beside `Style`, one per field of it: `CardStyle`,
 `RibbonStyle`, `CoverStyle`, `RouteStyle`, `BasemapStyle`, `LetteringStyle` and
 `RouteInkStyle`. A theme that cannot be loaded raises `ThemeError`, which holds every
-`ThemeProblem` found, each located by file, key and line. `Features` and `Elevation` are
+`ThemeProblem` found, each located by file, key and line. `Palette` is a named set of colour
+aliases, packaged or read from a YAML or GIMP `.gpl` file, which a theme chooses with `palette:`. `Features` and `Elevation` are
 the protocols a caller's own provider satisfies, and `ElevationGrid` is what an elevation provider returns. `Landmark`,
 `SpanRequest`, `MAX_NOTES` and `MAX_NOTE_CHARS` sit beside `Annotations`, the parts and
 limits of a caller's request. The records `fetch`, `paint` and `letter` hand back are
@@ -59,6 +60,7 @@ from pyntpot.maps.style_groups import (
     RouteStyle,
 )
 from pyntpot.maps.theme_errors import ThemeError, ThemeProblem
+from pyntpot.maps.theme_palette import Palette
 from pyntpot.maps.track import BoundingBox, Track
 from pyntpot.maps.vector_layer_build import (
     HillshadeBand,
@@ -100,6 +102,7 @@ __all__: list[str] = [
     "Manifest",
     "OpenTopoData",
     "OverpassFeatures",
+    "Palette",
     "Plates",
     "Projection",
     "ProviderBudgetExceededError",

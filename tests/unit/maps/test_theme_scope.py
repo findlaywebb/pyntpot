@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from pyntpot.ink import PIGMENT_REGISTRY, Colour, Pigment, pigment
+from pyntpot.maps.theme_palette import Palette
 from pyntpot.maps.theme_scope import Bound, ThemeScope, resolve_colour, resolve_pigment
 
 FILE = Path("theme.yaml")
@@ -13,13 +14,6 @@ FILE = Path("theme.yaml")
 def _bound(value: Pigment, line: int = 3) -> Bound[Pigment]:
     """`value` bound at `line` of the test file."""
     return Bound(value, FILE, line)
-
-
-class _Palette:
-    """A stand-in palette for the scope: only its `pigments` are read."""
-
-    def __init__(self, pigments: dict[str, Pigment]) -> None:
-        self.pigments = pigments
 
 
 class TestBound:
@@ -65,13 +59,13 @@ class TestResolveOrder:
         """With one name in all three, the theme alias wins."""
         scope = ThemeScope(
             aliases={"indigo": _bound(pigment("#111111"))},
-            palette=Bound(_Palette({"indigo": pigment("#222222")}), FILE, 1),
+            palette=Bound(Palette("test", {"indigo": pigment("#222222")}), FILE, 1),
         )
         assert resolve_colour("indigo", scope) == "#111111"
 
     def test_a_palette_alias_beats_a_registry_name(self):
         """A palette alias that is also a registry name wins over the registry."""
-        scope = ThemeScope(palette=Bound(_Palette({"indigo": pigment("#222222")}), FILE, 1))
+        scope = ThemeScope(palette=Bound(Palette("test", {"indigo": pigment("#222222")}), FILE, 1))
         assert resolve_colour("indigo", scope) == "#222222"
 
     def test_a_registry_name_resolves_last(self):

@@ -65,6 +65,8 @@
 
 ::: pyntpot.maps.OverpassFeatures
 
+::: pyntpot.maps.Palette
+
 ::: pyntpot.maps.Plates
 
 ::: pyntpot.maps.Projection

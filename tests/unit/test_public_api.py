@@ -105,6 +105,7 @@ MAPS_PUBLIC: tuple[str, ...] = (
     "Manifest",
     "OpenTopoData",
     "OverpassFeatures",
+    "Palette",
     "Plates",
     "Projection",
     "ProviderBudgetExceededError",

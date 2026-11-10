@@ -22,12 +22,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING
 
 from pyntpot.ink.colour import Colour
 from pyntpot.ink.naming import nearest
 from pyntpot.ink.pigment_registry import PIGMENT_REGISTRY, PigmentRegistry, pigment
 from pyntpot.ink.pigment_table import Pigment
+
+if TYPE_CHECKING:
+    from pyntpot.maps.theme_palette import Palette
 
 
 @dataclass(frozen=True)
@@ -58,7 +61,7 @@ class ThemeScope:
     """
 
     pigments: Mapping[str, Bound[Pigment]] = field(default_factory=dict)
-    palette: Bound[object] | None = None
+    palette: "Bound[Palette] | None" = None
     aliases: Mapping[str, Bound[Pigment]] = field(default_factory=dict)
     presets: Mapping[str, Bound[object]] = field(default_factory=dict)
 
@@ -75,8 +78,9 @@ class ThemeScope:
     @property
     def palette_aliases(self) -> Mapping[str, Pigment]:
         """The palette in effect's aliases, each the `Pigment` it stands for."""
-        palette: Any = None if self.palette is None else self.palette.value
-        return cast("Mapping[str, Pigment]", {} if palette is None else palette.pigments)
+        if self.palette is None:
+            return dict[str, Pigment]()
+        return self.palette.value.pigments
 
 
 def resolve_pigment(text: str, scope: ThemeScope) -> Pigment:

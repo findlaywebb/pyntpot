@@ -1,10 +1,14 @@
 """Checking one theme's table against the model: every key, every value, strictly.
 
 Key names: `check_theme`, which checks a read theme file's table against the style groups
-and returns it converted, with every problem found; `build_group`, which builds one group
-from a full, checked table; `RENAMED_KEYS`, the old key paths and what each is called now.
+and returns it converted, with every problem found; `check_theme_scoped`, the same in the names
+an `extends` chain has bound, returning the scope the next file up inherits; `build_group`,
+which builds one group from a full, checked table; `RENAMED_KEYS`, the old key paths and what
+each is called now.
 
-A theme's top level holds `extends`, a theme name or a `.yaml` path, and the group names.
+A theme's top level holds `extends`, a theme name or a `.yaml` path, `pigments`, `palette` and
+`colours` (each checked by its own `theme_*` module, in that order, into the scope), and the
+group names. A colour field then resolves in the scope its own file sees.
 Every key at every level is checked: a group's fields, a dict field's entries against its
 vocabulary in `theme_vocab`, and a `brush_overrides` entry's keys. An unknown key is
 refused with the nearest known one, and a renamed key with its new name. A group, a dict
@@ -15,9 +19,10 @@ taken as that float. Brush ids must name a cell on the brush sheet, and colours 
 `#` and six hexadecimal digits. A field typed as a dataclass is a sub-table, checked by
 the same rules, its entries a nested dict, and `build_group` builds it as that dataclass.
 
-Does not read files, resolve `extends`, merge themes, check numeric ranges or raise; never
-reports the reader's own problems, which the caller reports, and imports no style model:
-the caller passes the groups.
+Does not resolve `extends`, merge themes, check numeric ranges or raise; never reports the
+reader's own problems, which the caller reports, and imports no style model: the caller
+passes the groups. The only file it reads is a palette a `palette:` key names, in
+`theme_palette`.
 
 Invariants: the returned table holds only valid, converted leaves, each the type its field
 is built from; every problem names its dotted key path and the line of that key, or of its
@@ -28,8 +33,12 @@ from collections.abc import Mapping
 from typing import Any
 
 from pyntpot.maps.theme_checker import TableCheck, group_hints, is_dataclass
+from pyntpot.maps.theme_colours import COLOURS, check_colours
 from pyntpot.maps.theme_errors import ThemeProblem
+from pyntpot.maps.theme_palette import PALETTE, check_palette
+from pyntpot.maps.theme_pigments import PIGMENTS, check_pigments
 from pyntpot.maps.theme_read import ThemeFile
+from pyntpot.maps.theme_scope import ThemeScope
 
 #: Old key paths and what each is called now; a theme that uses one is told the new name.
 RENAMED_KEYS: dict[tuple[str, ...], str] = {
@@ -39,6 +48,16 @@ RENAMED_KEYS: dict[tuple[str, ...], str] = {
 #: The top-level key naming the theme a theme overrides.
 EXTENDS = "extends"
 
+#: The top-level steps that fill the scope, in the order a file is checked.
+_STEPS = (
+    (PIGMENTS, check_pigments),
+    (PALETTE, check_palette),
+    (COLOURS, check_colours),
+)
+
+#: The top-level keys that are names, not groups.
+_NAMES = tuple(key for key, _ in _STEPS)
+
 
 def check_theme(
     theme: ThemeFile,
@@ -46,7 +65,7 @@ def check_theme(
     *,
     renamed: Mapping[tuple[str, ...], str] = RENAMED_KEYS,
 ) -> tuple[dict[str, object], tuple[ThemeProblem, ...]]:
-    """Check `theme`'s table against `groups`, returning it converted and every problem in it.
+    """Check `theme`'s table against `groups` in the built-in scope.
 
     Args:
         theme: A read theme file; only its `table` and `lines` are read.
@@ -57,22 +76,53 @@ def check_theme(
         The table with each valid leaf converted to its field's type and each invalid one
         left out, and every problem found, in line order.
     """
-    check = TableCheck(theme, renamed)
+    table, problems, _ = check_theme_scoped(theme, groups, ThemeScope.built_in(), renamed=renamed)
+    return table, problems
+
+
+def check_theme_scoped(
+    theme: ThemeFile,
+    groups: Mapping[str, type],
+    scope: ThemeScope,
+    *,
+    renamed: Mapping[tuple[str, ...], str] = RENAMED_KEYS,
+) -> tuple[dict[str, object], tuple[ThemeProblem, ...], ThemeScope]:
+    """Check `theme`'s table against `groups`, in the names `scope` holds, and bind its own.
+
+    The file's `pigments` are checked first, then its `palette`, then its `colours`, then the
+    groups, each in the scope the earlier steps built.
+
+    Args:
+        theme: A read theme file; only its `table` and `lines` are read.
+        groups: Each style group's dataclass, by its key in a theme.
+        scope: The names the files below this one bound.
+        renamed: Old key paths and their new names.
+
+    Returns:
+        The table with each valid leaf converted and each invalid one left out (the
+        `pigments`, `palette` and `colours` keys are consumed into the scope, not kept), every
+        problem found in line order, and the scope the files above this one inherit.
+    """
+    check = TableCheck(theme, renamed, scope)
     table: dict[str, object] = {}
     for key, value in theme.table.items():
-        path = (key,)
         if key == EXTENDS:
             if isinstance(value, str):
                 table[key] = value
             else:
-                check.problem(path, "extends is a theme name or a .yaml path")
-        elif key in groups:
-            checked = check.table(groups[key], value, path)
+                check.problem((key,), "extends is a theme name or a .yaml path")
+        elif key not in _NAMES and key not in groups:
+            check.unknown((key,), (EXTENDS, *_NAMES, *groups))
+    for key, step in _STEPS:
+        if key in theme.table:
+            scope = step(check, theme.table[key], scope)
+    check.scope = scope
+    for key, value in theme.table.items():
+        if key in groups:
+            checked = check.table(groups[key], value, (key,))
             if checked is not None:
                 table[key] = checked
-        else:
-            check.unknown(path, (EXTENDS, *groups))
-    return table, check.problems()
+    return table, check.problems(), scope
 
 
 def build_group[G](group: type[G], table: Mapping[str, object]) -> G:

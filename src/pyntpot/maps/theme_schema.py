@@ -10,9 +10,10 @@ vocabulary in `theme_vocab` and whose values share one schema. A `bool` is a boo
 `int` an integer, a `float` a number, a `str` a string, a `Colour` a pigment name, a
 `#rrggbb` string or an alias string (`anyOf` three branches, since the schema cannot know a
 theme's own aliases or pigments), a `Literal` an enum of its values, a `tuple[X, ...]` an
-array of `X` and a fixed tuple an array of exactly its items. Each field carries its default as JSON and its
-description from the `Attributes:` section of its group's docstring; each group and
-sub-table carries its class docstring's summary line. The top level also takes `extends`.
+array of `X` and a fixed tuple an array of exactly its items. Each field carries its default as
+JSON and its description from the `Attributes:` section of its group's docstring; each group and
+sub-table carries its class docstring's summary line. The top level also takes `extends`,
+`palette`, `pigments` and `colours`, whose schemas are in `theme_schema_tables`.
 
 Does not write the committed copies (the test support's regenerator does), validate a
 theme, check numeric ranges or brush ids, or read any file. Nothing in `style.py` imports
@@ -29,10 +30,10 @@ from collections.abc import Mapping
 from typing import Literal
 
 from pyntpot.ink.colour import Colour
-from pyntpot.ink.pigment_registry import PIGMENT_REGISTRY
 from pyntpot.maps.style import Style
 from pyntpot.maps.theme_check import EXTENDS
-from pyntpot.maps.theme_vocab import ALIAS_PATTERN, COLOUR_PATTERN, VOCABULARIES
+from pyntpot.maps.theme_schema_tables import colour_schema, top_level_tables
+from pyntpot.maps.theme_vocab import VOCABULARIES
 
 #: The schema's address on the docs site.
 SCHEMA_ID = "https://findlaywebb.github.io/pyntpot/reference/theme.schema.json"
@@ -75,7 +76,7 @@ def theme_schema(groups: Mapping[str, type] | None = None) -> dict[str, object]:
     """
     if groups is None:
         groups = _style_groups()
-    properties: dict[str, object] = {EXTENDS: dict(_EXTENDS_SCHEMA)}
+    properties: dict[str, object] = {EXTENDS: dict(_EXTENDS_SCHEMA), **top_level_tables()}
     for name, group in groups.items():
         properties[name] = _object_schema(group, (name,))
     return {
@@ -149,13 +150,7 @@ def _leaf_schema(hint: object, path: _Path) -> dict[str, object]:
         TypeError: When `hint` is a type the walk does not know, a programming error.
     """
     if hint is Colour:
-        return {
-            "anyOf": [
-                {"enum": sorted(PIGMENT_REGISTRY.names())},
-                {"type": "string", "pattern": COLOUR_PATTERN},
-                {"type": "string", "pattern": ALIAS_PATTERN},
-            ]
-        }
+        return colour_schema()
     if hint in _SCALARS:
         return dict(_SCALARS[hint])
     if typing.get_origin(hint) is Literal:

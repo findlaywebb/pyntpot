@@ -104,6 +104,18 @@ class TestMap:
         assert _run(tmp_path / "cache", tmp_path / "out.png", "--style", "old.toml") == 2
         assert "themes are YAML since ADR 0069" in caplog.text
 
+    def test_a_misspelt_pigment_exits_2_before_any_fetch(
+        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """`--style` naming `ultramarin` exits 2 with the suggestion; no cache is made, so nothing is fetched."""
+        style = tmp_path / "bad.yaml"
+        style.write_text("route_ink:\n  colour: ultramarin\n", encoding="utf-8")
+        cache = tmp_path / "cache"
+        assert _run(cache, tmp_path / "out.png", "--style", str(style)) == 2
+        assert "did you mean ultramarine?" in caplog.text
+        assert not cache.exists()
+        assert not (tmp_path / "out.png").exists()
+
     @pytest.mark.golden
     def test_the_png_matches_the_golden_map(self, tmp_path: Path) -> None:
         """The composed PNG is within the pixel bound of the golden map."""

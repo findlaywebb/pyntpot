@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../themes/theme.schema.json
+# Plain: ten everyday colour words, each a built-in pigment. A theme that sets
+# `palette: plain` can write `sky` or `navy` where it would write a pigment name.
+
+colours:
+  blue: ultramarine
+  sky: cerulean
+  green: sap_green
+  brown: burnt_sienna
+  orange: raw_sienna
+  ochre: yellow_ochre
+  red: quinacridone_rose
+  maroon: perylene_maroon
+  navy: indigo
+  grey: paynes_grey

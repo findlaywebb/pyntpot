@@ -240,6 +240,32 @@ class TestTheChain:
         assert (bleed, type(bleed)) == (20.0, float)
 
 
+class TestAStoppedRead:
+    """A chain whose read stops checks no file; a non-`str` `extends` does not stop it."""
+
+    def test_a_child_extending_a_missing_file_reports_only_the_missing_file(
+        self, tmp_path: Path
+    ) -> None:
+        """A bad field and an unbound alias in the child are not reported when its parent is missing."""
+        _write(
+            tmp_path,
+            "child.yaml",
+            "extends: missing.yaml\ncard: {display_px: '5'}\nroute_ink: {colour: sky}\n",
+        )
+        (problem,) = _refusal("child.yaml", tmp_path).problems
+        assert (problem.key, problem.line) == ("extends", 1)
+        assert problem.message.startswith("no such theme file")
+
+    def test_a_non_string_extends_ends_the_chain_but_the_file_is_checked(
+        self, tmp_path: Path
+    ) -> None:
+        """`extends: 5` and a bad field report both problems: the `extends` one at line 1."""
+        _write(tmp_path, "child.yaml", "extends: 5\ncard: {display_px: '5'}\n")
+        problems = _refusal("child.yaml", tmp_path).problems
+        assert [(p.key, p.line) for p in problems] == [("extends", 1), ("card.display_px", 2)]
+        assert problems[0].message == "extends is a theme name or a .yaml path"
+
+
 class TestNames:
     """The theme names a directory holds."""
 

@@ -145,14 +145,23 @@ def test_every_field_is_in_the_schema_with_its_default() -> None:
 def test_every_level_forbids_other_keys() -> None:
     """Every object forbids other keys, but a dict field's entries, named from its vocabulary."""
     entries: set[tuple[str, ...]] = set()
-    for path, node in _objects(theme_schema()):
-        if "propertyNames" in node:
-            entries.add(path)
-            assert node["propertyNames"] == {"enum": sorted(VOCABULARIES[path])}, path
-            assert isinstance(node["additionalProperties"], Mapping), path
-        else:
-            assert node["additionalProperties"] is False, path
+    schema: Any = theme_schema()
+    for group in Style.model_fields:
+        for path, node in _objects(schema["properties"][group], (group,)):
+            _check_level(path, node, entries)
     assert entries == set(VOCABULARIES)
+
+
+def _check_level(
+    path: tuple[str, ...], node: Mapping[str, Any], entries: set[tuple[str, ...]]
+) -> None:
+    """Hold one object of a group subtree to the level rule, noting a dict field's entries."""
+    if "propertyNames" in node:
+        entries.add(path)
+        assert node["propertyNames"] == {"enum": sorted(VOCABULARIES[path])}, path
+        assert isinstance(node["additionalProperties"], Mapping), path
+    else:
+        assert node["additionalProperties"] is False, path
 
 
 def test_the_enums_are_the_literals() -> None:
@@ -168,15 +177,67 @@ def test_the_enums_are_the_literals() -> None:
     assert literals > 0
 
 
-def test_extends_is_the_one_extra_top_level_key() -> None:
-    """The top level names `extends`, a string, and the groups, and forbids anything else."""
+def test_the_top_level_names_extends_the_three_tables_and_the_groups() -> None:
+    """The top level names `extends`, `palette`, `pigments`, `colours` and the groups, in order."""
     schema: Any = theme_schema()
     assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert schema["$id"] == SITE_SCHEMA
     assert schema["type"] == "object"
     assert schema["additionalProperties"] is False
-    assert list(schema["properties"]) == ["extends", *Style.model_fields]
+    assert list(schema["properties"]) == [
+        "extends",
+        "palette",
+        "pigments",
+        "colours",
+        *Style.model_fields,
+    ]
     assert schema["properties"]["extends"]["type"] == "string"
+
+
+def test_the_alias_tables_take_alias_shaped_keys_that_are_no_pigment_name() -> None:
+    """`colours` and `pigments` each take keys matching the alias pattern but no built-in name."""
+    schema: Any = theme_schema()
+    rule = {
+        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+        "not": {"enum": sorted(PIGMENT_REGISTRY.names())},
+    }
+    for table in ("colours", "pigments"):
+        assert schema["properties"][table]["propertyNames"] == rule, table
+
+
+def test_a_colours_entry_is_a_colour_or_a_colour_with_override() -> None:
+    """A `colours` value is the three-branch colour node, or an object of `colour` and `override`."""
+    schema: Any = theme_schema()
+    colour = {"anyOf": schema["properties"]["paper"]["properties"]["paper_hex"]["anyOf"]}
+    branches = schema["properties"]["colours"]["additionalProperties"]["anyOf"]
+    assert branches[0] == colour
+    assert set(branches[1]["properties"]) == {"colour", "override"}
+    assert branches[1]["properties"]["colour"] == colour
+    assert branches[1]["additionalProperties"] is False
+
+
+def test_a_pigments_entry_takes_base_colour_transparency_index_and_override() -> None:
+    """A `pigments` value is an object of exactly its five keys, `base` an enum of the registry."""
+    schema: Any = theme_schema()
+    entry = schema["properties"]["pigments"]["additionalProperties"]
+    assert set(entry["properties"]) == {
+        "base",
+        "colour",
+        "transparency",
+        "colour_index",
+        "override",
+    }
+    assert entry["properties"]["base"] == {"enum": sorted(PIGMENT_REGISTRY.names())}
+    assert entry["properties"]["transparency"] == {"type": "number", "minimum": 0, "maximum": 1}
+    assert entry["additionalProperties"] is False
+
+
+def test_palette_is_a_packaged_name_or_a_palette_file() -> None:
+    """`palette` is an enum of the packaged names or a `.yaml` or `.gpl` path."""
+    schema: Any = theme_schema()
+    names, path = schema["properties"]["palette"]["anyOf"]
+    assert names == {"enum": ["plain"]}
+    assert path == {"type": "string", "pattern": r"\.(yaml|gpl)$"}
 
 
 def test_no_key_is_required() -> None:

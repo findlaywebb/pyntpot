@@ -9,6 +9,237 @@
       "type": "string",
       "description": "A theme name or a .yaml path this theme overrides; default when absent."
     },
+    "palette": {
+      "description": "A packaged palette name, or a .yaml or .gpl palette file.",
+      "anyOf": [
+        {
+          "enum": [
+            "plain"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "\\.(yaml|gpl)$"
+        }
+      ]
+    },
+    "pigments": {
+      "type": "object",
+      "description": "Pigments of this theme, by name; each needs a base or a colour.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+        "not": {
+          "enum": [
+            "built",
+            "burnt_sienna",
+            "cerulean",
+            "farmland",
+            "heath",
+            "indigo",
+            "meadow",
+            "orchard",
+            "pale",
+            "paynes_grey",
+            "perylene_maroon",
+            "quinacridone_rose",
+            "raw_sienna",
+            "relief",
+            "rim",
+            "rock",
+            "sand",
+            "sap_green",
+            "scrub",
+            "ultramarine",
+            "water",
+            "wetland",
+            "wood",
+            "works",
+            "yellow_ochre"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "enum": [
+              "built",
+              "burnt_sienna",
+              "cerulean",
+              "farmland",
+              "heath",
+              "indigo",
+              "meadow",
+              "orchard",
+              "pale",
+              "paynes_grey",
+              "perylene_maroon",
+              "quinacridone_rose",
+              "raw_sienna",
+              "relief",
+              "rim",
+              "rock",
+              "sand",
+              "sap_green",
+              "scrub",
+              "ultramarine",
+              "water",
+              "wetland",
+              "wood",
+              "works",
+              "yellow_ochre"
+            ]
+          },
+          "colour": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "transparency": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "colour_index": {
+            "type": "string"
+          },
+          "override": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "colours": {
+      "type": "object",
+      "description": "Colour aliases, by name; each stands for a pigment name or a hex.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+        "not": {
+          "enum": [
+            "built",
+            "burnt_sienna",
+            "cerulean",
+            "farmland",
+            "heath",
+            "indigo",
+            "meadow",
+            "orchard",
+            "pale",
+            "paynes_grey",
+            "perylene_maroon",
+            "quinacridone_rose",
+            "raw_sienna",
+            "relief",
+            "rim",
+            "rock",
+            "sand",
+            "sap_green",
+            "scrub",
+            "ultramarine",
+            "water",
+            "wetland",
+            "wood",
+            "works",
+            "yellow_ochre"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "anyOf": [
+              {
+                "enum": [
+                  "built",
+                  "burnt_sienna",
+                  "cerulean",
+                  "farmland",
+                  "heath",
+                  "indigo",
+                  "meadow",
+                  "orchard",
+                  "pale",
+                  "paynes_grey",
+                  "perylene_maroon",
+                  "quinacridone_rose",
+                  "raw_sienna",
+                  "relief",
+                  "rim",
+                  "rock",
+                  "sand",
+                  "sap_green",
+                  "scrub",
+                  "ultramarine",
+                  "water",
+                  "wetland",
+                  "wood",
+                  "works",
+                  "yellow_ochre"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+              }
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "colour": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "built",
+                      "burnt_sienna",
+                      "cerulean",
+                      "farmland",
+                      "heath",
+                      "indigo",
+                      "meadow",
+                      "orchard",
+                      "pale",
+                      "paynes_grey",
+                      "perylene_maroon",
+                      "quinacridone_rose",
+                      "raw_sienna",
+                      "relief",
+                      "rim",
+                      "rock",
+                      "sand",
+                      "sap_green",
+                      "scrub",
+                      "ultramarine",
+                      "water",
+                      "wetland",
+                      "wood",
+                      "works",
+                      "yellow_ochre"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                  }
+                ]
+              },
+              "override": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      }
+    },
     "paper": {
       "type": "object",
       "description": "The paper: its encoder, grid, texture, seed and the compositing over it.",
