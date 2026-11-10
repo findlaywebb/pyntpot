@@ -132,6 +132,16 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/svg_drawing.py` (seed 5, figure ink).*
 
+### [Cased strokes: case, light and shadow one stroke, and a pen casing](tutorials/painting-with-python/cased-strokes.md)
+
+![One brown stroke over a wash of pale farmland and dark wood, painted four times in a grid of two across and two down: the plain stroke, then with a thin ring of paper round it, then with a soft pale margin, then with a grey shadow to its south-east.](images/painting-with-python/cased-stroke.webp)
+
+*Painted by `examples/cased_stroke.py`. The names are plain, cased, glow and shadow.*
+
+![A thin ink line over a grey tint in two rows of five. The first column is the bare line; the others leave a strip of bare paper round the line, edged by two ink lines, the strip widening from left to right and the edge lines thicker in the bottom row.](images/painting-with-python/pen-casing-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure pen-casing). The labels read 1, 2, 3 and 4 across, and 0.75 and 1.5 down.*
+
 ## How-to guides
 
 ### [Write a theme](how-to/write-a-theme.md)
@@ -189,10 +199,6 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 ![One close window on the Ambleside loop four times, two across and two down, where the route crosses a river beside a road: the route plain, then with a ring of paper round it, then with a soft pale margin, then with a soft shadow to its south-east.](images/how-to/line-effects-presets.webp)
 
 *Painted by `examples/how_to_line_effects.py` (figure presets). The names are none, cased, halo and lifted; each cell is the same close window on the loop.*
-
-![A thin ink line over a grey tint in two rows of five. The first column is the bare line; the others leave a strip of bare paper round the line, edged by two ink lines, the strip widening from left to right and the edge lines thicker in the bottom row.](images/painting-with-python/pen-casing-sweep.webp)
-
-*Painted by `examples/line_effect_grids.py` (figure pen-casing). The labels read 1, 2, 3 and 4 across, and 0.75 and 1.5 down.*
 
 ### [Letter your own landmarks](how-to/letter-your-own-landmarks.md)
 
@@ -311,6 +317,16 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 ![The word Keswick written nine times in three rows of three, in dark pen lettering. Every copy is the same word and no two are alike: the letters lean differently, sit at different heights and differ in size.](images/explanation/nib-hands.webp)
 
 *Painted by `examples/nib_stages.py` (seed 7, figure hands, size 840). The name is Keswick; the nine copies are nine hand seeds.*
+
+### [Line effects: why they work on colours, not as glazes](explanation/line-effects.md)
+
+![A two by two grid over one dark green wood wash. The top row lays a pale cream ring round a brown road and a blue-green river as a glaze, and the rings barely show; the bottom row lays the same rings as RGB, a clear pale casing and a soft pale glow.](images/explanation/line-effects-glaze-or-rgb.webp)
+
+*Painted by `examples/line_effect_reasons.py` (figure glaze-or-rgb). The labels read casing and glow across, and glaze and RGB down.*
+
+![Two cells, each a river crossed by two roads that fork. On the left each road is cased and drawn in turn, and a pale seam cuts across the first road at the fork. On the right both casings are laid first and the fork is one road.](images/explanation/line-effects-draw-order.webp)
+
+*Painted by `examples/line_effect_reasons.py` (figure draw-order). The labels read each stroke cased and casings first.*
 
 ## Places
 

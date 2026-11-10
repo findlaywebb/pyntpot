@@ -61,6 +61,20 @@ def _how_to(image: str, figure: str) -> DocsImage:
     )
 
 
+def _reasons(image: str, figure: str) -> DocsImage:
+    """Return one figure of the line effects essay."""
+    return DocsImage(
+        f"explanation/{image}.webp",
+        "line_effect_reasons",
+        (("figure", figure),),
+        None,
+        720,
+        "page",
+        "webp-lossy",
+        "009a-line-effects",
+    )
+
+
 IMAGES_009A: tuple[DocsImage, ...] = (
     # 009a-galleries: every brush id, every pigment, how pairs glaze and the bundled palettes.
     _gallery("brush-gallery-riv-str-lan", "brush_gallery", "riv-str-lan"),
@@ -77,4 +91,16 @@ IMAGES_009A: tuple[DocsImage, ...] = (
     _sweep("pen-casing-sweep", "pen-casing", "painting-with-python", 600),
     _how_to("line-effects", "card"),
     _how_to("line-effects-presets", "presets"),
+    _reasons("line-effects-glaze-or-rgb", "glaze-or-rgb"),
+    _reasons("line-effects-draw-order", "draw-order"),
+    DocsImage(
+        "painting-with-python/cased-stroke.webp",
+        "cased_stroke",
+        (),
+        None,
+        600,
+        "page",
+        "webp-lossy",
+        "009a-line-effects",
+    ),
 )

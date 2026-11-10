@@ -195,15 +195,15 @@
 
 ## D4: the explanation and tutorial
 
-- [ ] Green: `line_effect_reasons.py` (`glaze-or-rgb`, `draw-order`) and
+- [x] Green: `line_effect_reasons.py` (`glaze-or-rgb`, `draw-order`) and
       `cased_stroke.py`, each with a test that it runs; calls in the sweeps' form, no
       `threshold` passed, the same `LABELS` constant.
-- [ ] Register three entries; paint, copy, check the budgets.
-- [ ] A page that quotes a primitive's signature quotes it in full (every parameter,
+- [x] Register three entries; paint, copy, check the budgets.
+- [x] A page that quotes a primitive's signature quotes it in full (every parameter,
       `threshold` and `paper` included).
-- [ ] `explanation/line-effects.md` and `painting-with-python/cased-strokes.md` (the
+- [x] `explanation/line-effects.md` and `painting-with-python/cased-strokes.md` (the
       cased stroke and the pen casing sweep), index pages and nav.
-- [ ] Delete the #104, #105 and #106 notes. Gates and the golden pins of the nine.
+- [x] Delete the #104, #105 and #106 notes. Gates and the golden pins of the nine.
 
 ## E: setting grids (#67)
 

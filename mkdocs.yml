@@ -93,6 +93,7 @@ nav:
           - Fractals: tutorials/painting-with-python/fractals.md
           - Pictures: tutorials/painting-with-python/pictures.md
           - Vector drawing: tutorials/painting-with-python/vector-drawing.md
+          - Cased strokes: tutorials/painting-with-python/cased-strokes.md
   - How-to guides:
       - how-to/index.md
       - how-to/write-a-theme.md
@@ -125,5 +126,6 @@ nav:
       - explanation/index.md
       - explanation/how-the-wash-works.md
       - explanation/the-hand-and-the-nib.md
+      - explanation/line-effects.md
       - explanation/data-policy.md
       - explanation/references.md
