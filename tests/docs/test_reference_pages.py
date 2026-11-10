@@ -227,7 +227,11 @@ class TestBrushes:
     def test_sheet_script_lists_exactly_the_table_ids(self):
         """The literal tuple in examples/brush_sheet.py equals the ids the brush tables make."""
         script = EXAMPLES / "brush_sheet.py"
-        listed = load_example("brush_sheet", "example_brush_sheet")["BRUSH_IDS"] if script.is_file() else ()
+        listed = (
+            load_example("brush_sheet", "example_brush_sheet")["BRUSH_IDS"]
+            if script.is_file()
+            else ()
+        )
         assert len(listed) == len(set(listed)), "brush_sheet.py lists an id twice"
         assert set(listed) == self._table_ids()
 

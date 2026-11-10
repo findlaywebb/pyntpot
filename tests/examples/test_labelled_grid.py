@@ -21,9 +21,10 @@ def helper():
 
 
 def _regular(
-    left: int, top: int, cell_w: int, cell_h: int, gap: int, cols: int, rows: int
+    origin: tuple[int, int], cell: tuple[int, int], gap: int, cols: int, rows: int
 ) -> list[list[tuple[int, int, int, int]]]:
     """Return the boxes of a regular grid, the way every old layout spaced its cells."""
+    (left, top), (cell_w, cell_h) = origin, cell
     return [
         [(left + c * (cell_w + gap), top + r * (cell_h + gap), cell_w, cell_h) for c in range(cols)]
         for r in range(rows)
@@ -34,13 +35,13 @@ def _regular(
 LAYOUTS = [
     pytest.param(
         {"width": 720, "cols": 3, "rows": 2, "cell_h": 150, "left": 92, "top": 46},
-        _regular(92, 46, 195, 150, 14, 3, 2),
+        _regular((92, 46), (195, 150), 14, 3, 2),
         374,
         id="tutorial-paper",
     ),
     pytest.param(
         {"width": 720, "cols": 3, "rows": 3, "cell_h": 96, "left": 14, "top": 14},
-        _regular(14, 14, 221, 96, 14, 3, 3),
+        _regular((14, 14), (221, 96), 14, 3, 3),
         344,
         id="tutorial-lettering",
     ),
@@ -57,7 +58,7 @@ LAYOUTS = [
             "pad_bottom": 12,
             "unit": 1.0,
         },
-        _regular(110, 54, 185, 108, 12, 4, 3),
+        _regular((110, 54), (185, 108), 12, 4, 3),
         414,
         id="nib-angles-design-size",
     ),
@@ -115,7 +116,7 @@ LAYOUTS = [
             "pad_right": 16,
             "pad_bottom": 42,
         },
-        _regular(74, 44, 101, 84, 8, 8, 3),
+        _regular((74, 44), (101, 84), 8, 8, 3),
         354,
         id="brush-grid",
     ),
@@ -124,13 +125,12 @@ LAYOUTS = [
             "width": 360,
             "cols": 4,
             "rows": 2,
-            "cell_h": 136.0,
-            "left": 110,
-            "top": 52,
-            "gap": 12,
-            "pad_right": 12,
-            "pad_bottom": 14,
-            "unit": 0.45,
+            "cell_h": 61,
+            "left": 50,
+            "top": 23,
+            "gap": 5,
+            "pad_right": 5,
+            "pad_bottom": 6,
         },
         [
             [(50, 23, 72, 61), (127, 23, 72, 61), (204, 23, 72, 61), (281, 23, 72, 61)],
@@ -144,13 +144,12 @@ LAYOUTS = [
             "width": 500,
             "cols": 4,
             "rows": 2,
-            "cell_h": 136.0,
-            "left": 110,
-            "top": 52,
-            "gap": 12,
-            "pad_right": 12,
-            "pad_bottom": 14,
-            "unit": 0.625,
+            "cell_h": 85,
+            "left": 69,
+            "top": 32,
+            "gap": 8,
+            "pad_right": 8,
+            "pad_bottom": 9,
         },
         [
             [(69, 32, 99, 85), (176, 32, 99, 85), (283, 32, 99, 85), (390, 32, 99, 85)],
@@ -158,6 +157,25 @@ LAYOUTS = [
         ],
         219,
         id="wash-glaze-500",
+    ),
+    pytest.param(
+        {
+            "width": 650,
+            "cols": 4,
+            "rows": 2,
+            "cell_h": 111,
+            "left": 89,
+            "top": 42,
+            "gap": 10,
+            "pad_right": 10,
+            "pad_bottom": 11,
+        },
+        [
+            [(89, 42, 130, 111), (229, 42, 130, 111), (369, 42, 130, 111), (509, 42, 130, 111)],
+            [(89, 163, 130, 111), (229, 163, 130, 111), (369, 163, 130, 111), (509, 163, 130, 111)],
+        ],
+        285,
+        id="wash-glaze-650",
     ),
     pytest.param(
         {
@@ -171,7 +189,7 @@ LAYOUTS = [
             "pad_right": 12,
             "pad_bottom": 12,
         },
-        _regular(104, 44, 194, 100, 10, 3, 2),
+        _regular((104, 44), (194, 100), 10, 3, 2),
         266,
         id="route-ink",
     ),
@@ -207,7 +225,7 @@ class TestGridSpec:
             pad_bottom=0,
             trailing_gap=True,
         )
-        assert spec.boxes() == _regular(110, 54, 185, 108, 12, 4, 3)
+        assert spec.boxes() == _regular((110, 54), (185, 108), 12, 4, 3)
         assert spec.height == 414
 
 

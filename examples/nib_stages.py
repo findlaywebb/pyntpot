@@ -28,7 +28,8 @@ The ink, a stroke at a time:
 Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `BrushStyle`,
 `paper_plate`, `wash`, `PAINTERS_PIGMENTS`, `rgb`, `composite`, `brush_from_id`, `stamp`,
 `ink_density` and `save_image`; from `pyntpot.letters`, `FaceStyle`, `HandStyle`, `Hand`,
-`Setting`, `NibSurface`, `NibStyle`, `NibGroups` and `nib_plate`. It introduces none.
+`Setting`, `NibSurface`, `NibStyle`, `NibGroups` and `nib_plate`; and `GridSpec` and
+`letter_over` from the sibling `labelled_grid.py`. It introduces none.
 
 Run it with `uv run python examples/nib_stages.py out/ --figure angles`; it writes
 `out/nib-angles.png`. `--size` sets the image's width in pixels, 360 by default; the two
@@ -43,6 +44,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
+from labelled_grid import GridSpec, letter_over
 from PIL import Image
 
 from pyntpot.ink import (
@@ -199,39 +201,28 @@ def _letter(img: np.ndarray, settings: list[Setting], nib: NibStyle, seed: int) 
     Raises:
         RuntimeError: When the hand wrote no marks, so there is no plate to lay.
     """
-    h, w = img.shape[:2]
-    big = Canvas(0, 0, w * NIB_SCALE, h * NIB_SCALE, w * NIB_SCALE, h * NIB_SCALE)
-    face, hand_style = FaceStyle(), HandStyle()
-    hand = Hand(face, hand_style)
-    rng = hand.generator(seed)
-    marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
-    dark = np.zeros((h * NIB_SCALE, w * NIB_SCALE), np.float32)
-    surface = NibSurface(big, NIB_SCALE, dark, GRAN_PX * NIB_SCALE * w / GRID_W)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
-    with tempfile.TemporaryDirectory() as scratch:
-        written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
-        if written is None:
-            raise RuntimeError("the hand wrote no marks")
-        with Image.open(written) as plate:
-            small = plate.convert("RGBa").resize((w, h), Image.Resampling.LANCZOS)
-            rgba = np.asarray(small.convert("RGBA"), np.float32) / 255
-    alpha = rgba[..., 3:]
-    return img * (1 - alpha) + rgba[..., :3] * alpha
+    gran_px = GRAN_PX * NIB_SCALE * img.shape[1] / GRID_W
+    return letter_over(img, settings, nib, gran_px=gran_px, seed=seed)
 
 
 def _cells(
     size: int, cols: int, rows: int, cell_h: int, left: int, top: int
 ) -> tuple[list[tuple[int, int, int, int]], int]:
     """Return a grid's cells row by row as `(x, y, w, h)` and its height, from sizes at `GRID_W`."""
-    unit, gap = size / GRID_W, round(12 * size / GRID_W)
-    left, top, cell_h = round(left * unit), round(top * unit), round(cell_h * unit)
-    cell_w = (size - left - gap * cols) // cols
-    boxes = [
-        (left + c * (cell_w + gap), top + r * (cell_h + gap), cell_w, cell_h)
-        for r in range(rows)
-        for c in range(cols)
-    ]
-    return boxes, top + rows * (cell_h + gap)
+    spec = GridSpec(
+        size,
+        cols,
+        rows,
+        cell_h,
+        left,
+        top,
+        gap=12,
+        pad_right=0,
+        pad_bottom=0,
+        unit=size / GRID_W,
+        trailing_gap=True,
+    )
+    return [box for row in spec.boxes() for box in row], spec.height
 
 
 def _angles_grid(size: int) -> np.ndarray:
