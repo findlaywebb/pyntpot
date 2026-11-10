@@ -2,15 +2,16 @@
 
 ## P0: check and decide (main context)
 
-- [ ] On PR 1's tip, confirm and record the exact names of:
+- [x] On PR 1's tip, confirm and record the exact names of:
       - `Colour`, `Pigment`, `pigment`, `PigmentRegistry` and `extended`;
-      - `colour_index`;
+      - `Pigment.colour_index` (a field, not a function) and `PigmentRegistry.extended`;
       - `casing`, `glow`, `shadow` and `pen_casing` and their signatures, each with
         `threshold` a keyword defaulting to `LINE_THRESHOLD` (`shadow` with no `paper`);
       - the value types `Casing`, `Glow`, `Shadow` and `PenCasing` and their fields;
       - `EffectStack`, `BUILT_IN_PRESETS` and the presets `cased`, `halo` and `lifted`;
       - `line_effects:`, `basemap.line_effects` and `route_ink.effects`;
-      - `Palette` and `Palette.names()`;
+      - `Palette`, `Palette.names()` and `Palette.named(name)`, whose `.pigments` the
+        palettes figure reads;
       - `ThemeScope`, `resolve_colour`, `theme_checker.TableCheck` and its `leaf` context;
       - `resolve_pigment(text, scope) -> Pigment` in `theme_scope.py`, which B's resolver
         calls for every ref (theme alias, then palette alias, then registry name);
@@ -18,42 +19,43 @@
       - `examples/labelled_grid.py`'s `GridSpec`, `label_grid`, `LabelStyle` and
         `letter_over`, and `tutorial_grids`' `LABELS` values.
       Update the plan where a name differs.
-- [ ] Check that every `pyntpot` name an example script in this PR imports is in a
+- [x] Check that every `pyntpot` name an example script in this PR imports is in a
       public `__all__` (`pyntpot.ink`, `pyntpot.letters`, `pyntpot.maps` or
       `pyntpot`) on PR 1's tip, and that `LINE_THRESHOLD` and `EFFECT_RANGES` are
       imported by none. If a name is missing, stop and report: exports are PR 1's
       scope.
-- [ ] Confirm that PR 1's `theme_pigments` gives a derived `{base: x}` pigment `x`'s
+- [x] Confirm that PR 1's `theme_pigments` gives a derived `{base: x}` pigment `x`'s
       transparency when it sets none. If not, B's resolver follows `base` itself.
-- [ ] Confirm PR 1's tip has `ThemeScope.aliases: Mapping[str, Bound[Pigment]]` (a hex
+- [x] Confirm PR 1's tip has `ThemeScope.aliases: Mapping[str, Bound[Pigment]]` (a hex
       alias a pigment-less `Pigment` with transparency `None`) and `Palette.pigments`
       (alias to `Pigment`). If not, stop and report: B's alias rows and the palettes
       figure need them, and they are PR 1's scope.
-- [ ] Check whether PR 1's `tests/property/test_line_effect_digests.py` draws only the
+- [x] Check whether PR 1's `tests/property/test_line_effect_digests.py` draws only the
       classes the sampled theme does not set; record the answer for D3.
-- [ ] Grep PR 1's tip for every 16-hex hash in the tests
+- [x] Grep PR 1's tip for every 16-hex hash in the tests
       (`git grep -nwE '[0-9a-f]{16}' -- 'tests/*.py'`, which also finds both halves of
       `GOLDEN_HASH`), keep every hash of style data: a `digest()`, `base_digest()` or
       `lettering_digest()` pin, a `SOURCED` group pin, or any other hash of a group's or
       a theme's fields (not fixture cache keys, plate pixel hashes such as
       `CLASSIC_PLATE_SHA`, or placeholders). Record each file and pin, and add each file
       to B's pins (`test_style_groups.py` and `test_digest_omits.py` among them).
-- [ ] Grep PR 1's tip for `pigment_transparency`, `cover.pigments` and `.pigments[` in
+- [x] Grep PR 1's tip for `pigment_transparency`, `cover.pigments` and `.pigments[` in
       `tests/`; record each hit for B, which owns them (`test_registry_defaults.py` and
       `test_theme_colour_names.py` among them).
-- [ ] Confirm route effects are wired into `compose_steps.route` and basemap effects into
-      the painter's `over` list. If not, stop and report: that is PR 1's scope.
-- [ ] Confirm the setting grids' fields: `wash(..., pool=)`, `Sheet.seed`, `Sheet.gran_px`,
+- [x] Confirm route effects are wired into `compose_steps.route` and basemap effects into
+      the painter (`painter/effects.py::lay_wash`, called from `painter/plates.py`; PR 1
+      has no `over` list). If not, stop and report: that is PR 1's scope.
+- [x] Confirm the setting grids' fields: `wash(..., pool=)`, `Sheet.seed`, `Sheet.gran_px`,
       `Sheet.fibre`, `PaperStyle.paper_fibre_mix`, `BRUSH_OVERRIDE_KEYS` `dry` and
       `load`, the `brush_from_id` path that takes `brush_overrides`, and
       `CoverStyle.relief_strength`. Confirm whether 008a's preview images are on the
       base, and which registry notes PR 1 deleted. Take the next free ADR number.
-- [ ] Confirm this machine reproduces the goldens exactly: on PR 1's tip,
+- [x] Confirm this machine reproduces the goldens exactly: on PR 1's tip,
       `PYTHONPATH=tests uv run python tests/golden/repaint.py "$SCRATCH/p0"` gives a
       `summary.json` with nothing `changed`, `added` or `removed`, and the Lynmouth
       compare logs byte-identical. If not, this is not the pinning machine: stop before C
       paints any master.
-- [ ] Record every theme's base plate bytes on the Ambleside fixture and the per-class
+- [x] Record every theme's base plate bytes on the Ambleside fixture and the per-class
       `(colour, transparency)` table of every theme, as literals for B.
 - [ ] Comment the branch name on #159, #69, #70, #67, #104, #105 and #106 (CLAUDE.md,
       "Starting").
@@ -61,6 +63,10 @@
       lines); if none, write `docs/issues/tests-docs-images-over-budget.md` and file its
       issue (`chore`, `area: tests`).
 - [ ] Dispatch the plan-reviewer; address findings until it passes.
+
+      P0's outcomes are in `baseline.md`; three items stay open for the integrator: the
+      issue comments, the `docs-images-over-budget` note and issue (no open issue exists), and
+      the plan-reviewer.
 
 ## A: one route colour (#159)
 
@@ -112,20 +118,30 @@
 
 - [ ] Pure move: `DocsImage` and its helpers (`Kind`, `Encoding`, `Option` among them) to
       `tests/support/docs_image.py`, importers repointed. Gates.
-- [ ] Red: `test_galleries.py`, the coverage tests and `test_gallery_values.py`.
+- [ ] Red: `test_galleries.py` (with `test_the_over_ink_bar_shows_transparency`: the veil
+      ratio of the most and the least transparent pigment's over-ink cell differs by at
+      least 0.20, plan "The over-ink bar must show transparency"), the coverage tests and
+      `test_gallery_values.py`.
 - [ ] Green: `brush_gallery.py` (`riv-str-lan` with "RIV = STR", `maj`, `trk`);
-      `pigment_gallery.py` (`roles`, `painters`, `glazes`, `palettes`).
+      `pigment_gallery.py` (`roles`, `painters`, `glazes`, `palettes`; the palettes figure
+      reads `Palette.named(name).pigments`; the over-ink bar near-black, darkened or
+      thickened until the test passes, else dropped for washes at three strengths beside
+      the lettered transparency and the test removed with it).
 - [ ] Create `tests/support/docs_images_009a.py`; register seven entries under
       `009a-galleries` (share 500,000). Paint them with
       `PYTHONPATH=tests uv run python tests/golden/make_docs_images.py "$SCRATCH/c" <names>`
       and copy the images and masters in. Check the budgets.
-- [ ] The two reference pages, links and nav. Delete the #69 and #70 notes. Gates and
+- [ ] The two reference pages, links and nav; `reference/pigments.md` drops the old
+      card's image and its "Painted by" paragraph for a link to the gallery (the file,
+      master, script and registry entry stay for `docs/gallery.md`). Delete the #69 and
+      #70 notes. Gates and
       the golden pins of the seven.
 
 ## D2: the sweeps (#104, #105, #106)
 
 - [ ] Red: `test_line_effect_figures.py` (each off cell equals `paint_cell(None)`, both
-      float32, by `tobytes()`; glow never darker).
+      float32, by `tobytes()`; glow never darker, checked on glow's output before the
+      stroke goes on, or on finished cells within `1e-6`).
 - [ ] Green: `line_effect_grids.py` at scale 1 (`casing`, `glow`, `shadow`,
       `pen-casing`) with the plan's held literals, one numeric tuple per swept axis, none
       read from a preset; each call in PR 1's form with its value type, no `threshold`
@@ -156,7 +172,7 @@
       `ambleside-cased` entry in `THEME_NAMES` and `DIGESTS`, and the theme count in
       `test_one_source_of_defaults.py::test_the_theme_file_checks_see_every_theme`
       (ten to eleven).
-- [ ] Unless P0 found it already does, restrict PR 1's
+- [ ] Restrict PR 1's (P0 found it does not)
       `tests/property/test_line_effect_digests.py` to the classes the sampled theme does
       not set; it passes with `ambleside-cased`.
 - [ ] Green: `how_to_line_effects.py` (`card`, `presets`; each preset cell loads a theme
@@ -166,6 +182,8 @@
       no private import) and `examples/themes/ambleside-cased.yaml`
       (`extends: ambleside.yaml`).
 - [ ] Register two entries; paint, copy, check the budgets.
+- [ ] A page that quotes a primitive's signature quotes it in full (every parameter,
+      `threshold` and `paper` included).
 - [ ] `case-light-or-shadow-a-line.md` (the card and the three theme sweeps) and
       `reference/line-effects.md` (no image; pen casing has no theme key; pigment
       separation keeps its own transparency), index pages and nav. Gates.
@@ -176,6 +194,8 @@
       `cased_stroke.py`, each with a test that it runs; calls in the sweeps' form, no
       `threshold` passed, the same `LABELS` constant.
 - [ ] Register three entries; paint, copy, check the budgets.
+- [ ] A page that quotes a primitive's signature quotes it in full (every parameter,
+      `threshold` and `paper` included).
 - [ ] `explanation/line-effects.md` and `painting-with-python/cased-strokes.md` (the
       cased stroke and the pen casing sweep), index pages and nav.
 - [ ] Delete the #104, #105 and #106 notes. Gates and the golden pins of the nine.

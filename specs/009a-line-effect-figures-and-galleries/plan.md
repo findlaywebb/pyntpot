@@ -1,8 +1,9 @@
 # 009a: plan
 
 Stacked on PR 1 (`specs/009-line-effects-and-registry`). The PR 1 names below are taken
-from PR 1's revised `plan.md`; slice P0 checks each against that branch's tip, and where a
-name differs, this plan is updated first. Gates as in CLAUDE.md:
+from PR 1's revised `plan.md`; slice P0 checked each against that branch's tip (`7c142c12`,
+PR #211) and where a name differed, this plan was updated first. P0's findings, baselines and
+the list of changes made to this plan are in `baseline.md`. Gates as in CLAUDE.md:
 `uv run pytest -n auto --dist loadgroup -m "not golden and not benchmark" --golden-tolerance`,
 `ruff check .`, `ruff format --check .`, `ty check`, `lint-imports`,
 `prek run --all-files`. Golden-marked tests run per slice only for the images that slice
@@ -146,6 +147,7 @@ A hash that moves with identical pixels counts as moved (ADR 0070 rule 16).
 | --- | --- | --- | --- |
 | `tests/unit/maps/test_style.py` `DIGEST` (`88b356ada294ff60`) | B | none | `paper` loses `pigment_transparency`; `cover.pigments` values become `CoverPigment`s |
 | `tests/unit/maps/test_style.py` `BASE_DIGEST` (`d9c56c0811177b0f`) | B | none | same, both are base groups |
+| `tests/unit/maps/test_digest_omits.py` `DEFAULT_DIGESTS` first two (`88b356ada294ff60`, `d9c56c0811177b0f`) | B | none | the same default style's digest and base digest; the third, `d15ae2f30e9ca5ce`, does not move |
 | `tests/unit/maps/test_style.py` `LETTERING_DIGEST` (`d15ae2f30e9ca5ce`) | does not move | none | `nib` unchanged at the default |
 | `tests/unit/maps/test_style_groups.py` `SOURCED[PaperStyle]` (`0af5f9f84facb9e9`) | B | none | D7: `pigment_transparency` goes; the pin is the sha256 of `json.dumps(asdict(PaperStyle()))` (`test_style_groups.py:348-351`) |
 | `tests/unit/maps/test_style_groups.py` `SOURCED[CoverStyle]` (`8ff38fcbad0d7a6f`) | B | none | D7: each `pigments` value becomes a `CoverPigment`, which the same hash writes as a two-item list |
@@ -172,6 +174,12 @@ Expected **not** to move:
 - `PINNED_LABELS`, the place pins and the smoke lock.
 
 Any other moved image is a defect: stop and find the slice that moved it.
+
+### Image retired from a page (not moved)
+
+| Image | Page | Reason |
+| --- | --- | --- |
+| `docs/images/reference/pigment-swatches.webp` (the old pigment card) | `docs/reference/pigments.md`, replaced by the pigment gallery | its grey-brown ink bar, meant to show transparency, reads as the same grey line on every swatch (P0 measured a veil-ratio spread of 0.13); the gallery's bar must pass a 0.20 margin or becomes washes at three strengths. The file, its master and the script stay for `docs/gallery.md`, which this PR leaves alone, so no pin or registry entry moves |
 
 ### Images added (20, not moved)
 
@@ -216,6 +224,7 @@ theme key (Out of scope) and so nothing for a theme how-to to say.
 | the three `brush-gallery-*` | `docs/reference/brush-gallery.md` | one section per figure: "RIV, STR and LAN", "MAJ", "TRK" |
 | `pigment-gallery-roles`, `-painters` | `docs/reference/pigment-gallery.md` | "Map pigments", "Painter's pigments" |
 | `pigment-gallery-glazes` | same | "Glaze pairs" |
+| (retired) `pigment-swatches` | `docs/reference/pigments.md` | the image and its paragraph give way to a link to the pigment gallery |
 | `palettes` | same | "Palettes" |
 | `line-effects` | `docs/how-to/case-light-or-shadow-a-line.md` | the result image, under the page's first paragraph |
 | `casing-sweep` | same | "Case a line" |
@@ -275,11 +284,50 @@ All figures follow the same conventions:
   columns:
   - washes at 0.3, 0.6 and 0.9, glazed by Kubelka-Munk at the pigment's own
     transparency;
-  - "over ink": a 0.9 strip across a narrow grey-brown bar (the pigment card's device),
-    so a staining pigment shows the bar and a covering one veils it.
+  - "over ink": a 0.9 strip across a narrow bar of ink, so a staining pigment shows the
+    bar and a covering one veils it. This is the old pigment card's device, which failed,
+    so the bar is darker here and a test holds it to a measured margin, else the column
+    becomes washes at three strengths ("The over-ink bar must show transparency", below).
   The right margin letters the transparency (`0.06`) and the Colour Index code (`PB29`).
   The code is left blank where the registry records none (rule 1). The page table holds
   name, hex, transparency, Colour Index code and row.
+- **The over-ink bar must show transparency (orchestrator decision).** The old card
+  (`examples/pigment_swatches.py`) draws a mid grey-brown bar (`#6a625a`) under every
+  swatch to show transparency, but it reads as the same grey line on every swatch.
+  P0 measured why, on the old device (a 0.9 wash across the bar, Kubelka-Munk, the
+  `paper_plate`, Rec. 709 luma of the sRGB composite): the bar's luma divided by the luma of
+  the same pigment's strip beside it, the **veil ratio**, runs only from 0.41 (`water`,
+  transparency 0.04) to 0.54 (`relief`, 0.30), a spread of 0.13. A mid-grey bar is already
+  lighter than the pigments over it, so even a covering pigment cannot lighten it much, and
+  the bar's absolute luma follows the pigment's own hue far more than its transparency. With
+  a near-black bar (`#141210`) the same measurement gives 0.107 and 0.340, a spread of
+  0.23.
+  - **Metric.** The veil ratio, `luma(bar under the strip) / luma(strip beside the bar)`,
+    each the mean of Rec. 709 luma (0.2126 R + 0.7152 G + 0.0722 B) over the sRGB pixels of
+    the painted cell, inside the strip's span and away from its ends, at the 0.9 wash. The
+    ratio and not the bar's raw luma, because raw luma is dominated by the pigment's hue
+    (`perylene_maroon` and `relief` differ by hue before transparency) and the eye reads the
+    bar against its own wash.
+  - **Test.** `tests/examples/test_galleries.py::test_the_over_ink_bar_shows_transparency`
+    paints the over-ink cell for the figure's lowest-transparency pigment (the most
+    transparent: the registry's `transparency` near 0 is a glaze, near 1 a body colour) and
+    its highest, and asserts the two veil ratios differ by at least **0.20** and that the
+    higher-transparency pigment's ratio is the larger. It runs on the painted cell arrays,
+    before lettering and encoding.
+  - **Why 0.20.** The old device's 0.13 is the measured failure the user saw, so the
+    margin must clear it with room: 0.20 is half as much again as that spread, and on the
+    0 to 1 luma scale it is a fifth, enough that two adjacent swatches' bars differ by a
+    lightening the eye reads, not by a rendering difference. The near-black bar's 0.23
+    clears it by 0.03, so C may darken or thicken the bar, never lighten it.
+  - **Fallback.** If no bar colour or size reaches 0.20 in the painted gallery, C drops the
+    bar and shows transparency as washes at three strengths (the 0.3, 0.6 and 0.9 washes
+    the first three columns already hold) beside the lettered transparency value, which
+    the table also holds. The test goes with the bar, and the page says so.
+  - **The old card on `reference/pigments.md`.** The gallery replaces it there: the page's
+    image and its "Painted by `examples/pigment_swatches.py`" paragraph go, and the gallery
+    page is linked in their place. Its retirement is in the retired images table, with this
+    reason. The image, its master, `pigment_swatches.py` and its registry entry stay
+    because `docs/gallery.md`, on the leave-alone list, still shows it.
 - **Pigment gallery `glazes`.** Six columns, each a pair lettered on two lines:
   - `ultramarine` and `burnt_sienna`;
   - `cerulean` and `yellow_ochre`;
@@ -291,9 +339,11 @@ All figures follow the same conventions:
   overlap shows the mix and the two glaze rows show that order matters. The pair painter
   is the script's own. `wash_stages._glaze_grid` is not lifted.
 - **Palettes.** One row per bundled palette (`Palette.names()`; PR 1 bundles `plain`,
-  rule 7). Each alias is a 0.6 wash swatch, glazed at its pigment's transparency, lettered
-  with the alias above and the pigment it names below, both read from PR 1's
-  `Palette.pigments` (alias to `Pigment`). A hex alias, a pigment-less `Pigment`, is
+  rule 7). The script reaches a palette's pigments as `Palette.named(name).pigments` (alias
+  to `Pigment`), public names only; `Palette.named` raises for a name outside
+  `Palette.names()`. Each alias is a 0.6 wash swatch, glazed at its pigment's transparency,
+  lettered with the alias above and the pigment it names below, both read from that
+  mapping. A hex alias, a pigment-less `Pigment`, is
   lettered with its hex below and glazed at `paper.km_transparency`.
 - **Effect sweeps.** Each is a grid of one stroke over a wash that gives the effect
   something to separate. Every value is lettered with its unit.
@@ -331,11 +381,14 @@ All figures follow the same conventions:
       `shadow` does not take;
     - `pen_casing(rgb, mask, PenCasing(width_px=g, edge_px=e), paper=None)`, which
       returns `(rgb, edges)`.
-    Any signature a page quotes lists every parameter in order, as
-    `tests/docs/test_docs_signatures.py:58-70` compares them:
+    **A page that quotes a primitive's signature quotes it in full**: every parameter in
+    order, `threshold` and `paper` included, never a shortened form such as
+    `casing(rgb, mask, effect)`. That holds for every page this PR writes (the how-to, the
+    reference, the explanation and the tutorial), and `tests/docs/test_docs_signatures.py:58-70`
+    compares them:
     `casing(rgb, mask, effect, *, threshold=LINE_THRESHOLD, paper=None)`, `glow` and
-    `pen_casing` likewise, and `shadow(rgb, mask, effect, *, azimuth_deg,
-    threshold=LINE_THRESHOLD)`.
+    `pen_casing` likewise (it returns `tuple[np.ndarray, np.ndarray]`), and `shadow(rgb,
+    mask, effect, *, azimuth_deg, threshold=LINE_THRESHOLD)`.
   - **Labels.** Each new script holds one module constant `LABELS = LabelStyle(px=21.0,
     ink=Colour("#4a3a2a"), pen_px=1.5, gran_px=12.0, seed=7, col_dy=12)`, the literals of
     `tutorial_grids`' `LABELS` (009 plan, S6: `LABEL_PX`, `LABEL_INK`, `GRAN_PX *
@@ -362,6 +415,12 @@ All figures follow the same conventions:
     4 px across; ink width (`edge_px`) 0.75 ("thin") and 1.5 ("thick") down. The cell
     composites the returned edge layer only when `edges.any()`, so the "none" cell never
     composites a zero-density layer.
+  - `test_no_glow_cell_is_darker_than_the_plain_stroke` checks glow's own output, before the
+    stroke goes on: `glow(rgb, mask, ...)` is at least `rgb` at every pixel, which holds
+    exactly because a glow only lifts toward the paper. If it compares finished cells
+    (after the stroke and the `paper_plate` multiply) instead, it allows a tolerance of
+    `1e-6`, because the finished cell is float32 arithmetic of several steps and a bit of
+    rounding is not a darker cell.
   - The test asserts that each sweep's off cell (casing's 0 column; the "none" cell of
     the other three) equals `paint_cell(None)` byte for byte. Spread 0, offset 0 and the
     other values are real settings, not off: at spread 0 a glow still blurs, and at offset
@@ -458,8 +517,10 @@ All figures follow the same conventions:
 - Pins: `tests/unit/maps/test_style.py`, `test_theme_named.py`, `test_example_themes.py`,
   `test_pipeline_fetch_paint.py` and `test_style_groups.py` (`SOURCED[PaperStyle]` and
   `SOURCED[CoverStyle]`), plus every file P0's grep of PR 1's tip finds holding a 16-hex
-  hash of style data (among them `test_digest_omits.py`, whose "packaged and example
-  themes keep their pins" check holds theme digests).
+  hash of style data. P0 found them: `test_digest_omits.py` (`DEFAULT_DIGESTS`, the default
+  style's three digests, of which B moves the first two; it holds no theme digest),
+  `test_style.py`, `test_style_groups.py`, `test_theme_named.py`, `test_example_themes.py`
+  and `test_pipeline_fetch_paint.py`. The list is in `baseline.md`.
 - PR 1's tests that read the changed fields (P0 greps PR 1's tip for
   `pigment_transparency` and `cover.pigments`/`.pigments[` in `tests/`; B owns every
   hit):
@@ -473,8 +534,13 @@ All figures follow the same conventions:
   (edits only, no new tests there): `test_style_groups.py` (399 lines), `test_theme_vocab.py`,
   `test_theme_check.py` (361), `test_theme_schema.py` (see below), `tests/unit/maps/test_theme_merge.py`,
   `tests/architecture/test_one_source_of_defaults.py`, `tests/unit/test_public_api.py`,
-  PR 1's coercion guard (`replace(CoverStyle(), pigments={"built": "#ABCDEF"})` now gives a
-  `CoverPigment` with `built`'s built-in transparency), and
+  PR 1's coercion guard (`tests/unit/maps/test_colour_fields.py:119`,
+  `replace(CoverStyle(), pigments={"built": "#ABCDEF"})` now gives a `CoverPigment` with
+  `built`'s built-in transparency),
+  `tests/unit/maps/painter/test_effects.py:120` (`rgb(job.style.cover.pigments["rim"])`
+  reads `.colour`),
+  `tests/architecture/test_one_source_of_defaults.py:235` (`CoverStyle().pigments["wood"]`
+  written into a theme as `"{wood}"` becomes `wood.colour`), and
   `tests/unit/maps/painter/test_smoke.py:246` (`rgb(...["wood"].colour)`).
 - `tests/property/test_theme_merge.py`: the leaf walker treats a `CoverPigment` as one
   leaf and draws a bare `#rrggbb` for it; `_BASE` loses `paper.pigment_transparency`.
@@ -520,6 +586,8 @@ All figures follow the same conventions:
 - New scripts: `examples/brush_gallery.py`, `examples/pigment_gallery.py`.
 - New pages: `docs/reference/brush-gallery.md`, `docs/reference/pigment-gallery.md`.
 - Link lines in `docs/reference/{brushes,pigments,index}.md`; `mkdocs.yml` nav.
+  `docs/reference/pigments.md` also loses the old card's image and its "Painted by"
+  paragraph (see Decisions); `docs/gallery.md` keeps showing it.
 - `tests/examples/test_galleries.py` (new); `tests/docs/test_reference_pages.py` (238
   lines: id, pigment and palette coverage); `tests/docs/test_gallery_values.py` (new: the
   gallery tables; `test_reference_values.py` is at 338).
@@ -552,8 +620,9 @@ All figures follow the same conventions:
     sampled classes in a child of a sampled theme and expects the sampled theme's
     digests. A child's `{}` replaces the parent's stack whole, so a class the theme sets
     (`ambleside-cased`'s `road_major` and `route`; bold's `route` after F) would fail it.
-    Unless P0 found that PR 1's tip already does so, D3 restricts the strategy to the
-    classes the sampled theme does not set. Any theme digest literal P0's grep found
+    P0 found that PR 1's tip does not restrict it (it draws every class in `LINE_CLASSES`
+    for every sampled theme), so D3 restricts the strategy to the classes the sampled
+    theme does not set. Any theme digest literal P0's grep found
     outside `test_example_themes.py` gains `ambleside-cased` here if it lists every
     example theme.
 - **D4, the explanation and tutorial:** `examples/line_effect_reasons.py`,
@@ -605,7 +674,7 @@ All figures follow the same conventions:
   lifting `_glaze_grid` or `BRUSH_IDS` would re-open that proof. Galleries carry their
   own painters and literals.
 - `examples/labelled_grid.py`'s existing functions: add only.
-- The `ink` effect primitives (`ink/effect_*.py`) and the painter's `over` hook. Figures
+- The `ink` effect primitives (`ink/effect_*.py`) and the painter's `maps/painter/effects.py` (`lay_wash`, which lays the basemap stacks; PR 1 has no `over` list). Figures
   use them; changing them moves PR 1's properties. `BUILT_IN_PRESETS` changes in D1 only.
 - `PIGMENTS`, `TRANSPARENCY`, `PAINTERS_PIGMENTS` and `PAINTERS_TRANSPARENCY`. They are
   public names under rule 3; D7 retires only the `paper` copy.
@@ -643,8 +712,8 @@ All figures follow the same conventions:
 | Schema | `tests/unit/maps/test_theme_schema.py` (committed copies current; every theme file within it) |
 | Presets tuned | D1's gate: PR 1's `tests/property/test_line_effect_presets.py`, `test_line_effect_digests.py`, `test_line_effects.py`, `tests/unit/maps/test_line_effects.py` and `test_digest_omits.py` pass with the tuned values |
 | Themes that set an effect | `tests/property/test_line_effect_digests.py`, drawing only the classes the sampled theme does not set, green after D3 and after F |
-| Galleries | `tests/examples/test_galleries.py` (each figure at `size=`); `tests/docs/test_reference_pages.py::test_the_brush_gallery_paints_every_id`, `::test_the_pigment_gallery_paints_every_registry_pigment`, `::test_the_palettes_figure_shows_every_bundled_palette`; `tests/docs/test_gallery_values.py::test_the_pigment_gallery_table_matches_the_registry`, `::test_the_brush_gallery_table_lists_every_id` |
-| Effect figures | `tests/examples/test_line_effect_figures.py`: each figure runs; `test_each_sweeps_off_cell_is_the_plain_stroke` (parametrised `ids=["casing", "glow", "shadow", "pen-casing"]`, float32 `paint_cell` arrays, dtype and shape asserted, compared by `tobytes()`); `test_no_glow_cell_is_darker_than_the_plain_stroke`; `cased_stroke` runs. `tests/examples/test_how_to_line_effects.py` with the Ambleside fixture |
+| Galleries | `tests/examples/test_galleries.py` (each figure at `size=`); `tests/docs/test_reference_pages.py::test_the_brush_gallery_paints_every_id`, `::test_the_pigment_gallery_paints_every_registry_pigment`, `::test_the_palettes_figure_shows_every_bundled_palette`; `tests/docs/test_gallery_values.py::test_the_pigment_gallery_table_matches_the_registry`, `::test_the_brush_gallery_table_lists_every_id`; `tests/examples/test_galleries.py::test_the_over_ink_bar_shows_transparency` (veil-ratio spread of at least 0.20, or the bar is dropped) |
+| Effect figures | `tests/examples/test_line_effect_figures.py`: each figure runs; `test_each_sweeps_off_cell_is_the_plain_stroke` (parametrised `ids=["casing", "glow", "shadow", "pen-casing"]`, float32 `paint_cell` arrays, dtype and shape asserted, compared by `tobytes()`); `test_no_glow_cell_is_darker_than_the_plain_stroke` (glow's output before the stroke, or finished cells within `1e-6`); `cased_stroke` runs. `tests/examples/test_how_to_line_effects.py` with the Ambleside fixture |
 | Effect reference | `tests/docs/test_line_effect_values.py::test_the_line_effects_page_matches_the_presets_and_classes` |
 | bold | `test_theme_named.py::test_bold_cases_its_route_and_nothing_else` |
 | Setting grids | `tests/examples/test_setting_grids.py` (each figure; relief with the fixture) |
@@ -774,6 +843,14 @@ no worktrees are needed.
   tuned ones here and in the new ADR. bold takes whatever `cased` becomes.
 - **New images are added in their slice; moved ones in G.** The registration test needs
   the files. "Regenerate once" governs what moves.
+- **Orchestrator ruling: the over-ink bar earns its place or goes.** The old pigment
+  card's grey-brown bar reads as the same grey on every swatch. The new gallery's "over
+  ink" device passes `test_the_over_ink_bar_shows_transparency` (veil-ratio spread of at
+  least 0.20 between the most and the least transparent pigment; metric and threshold in
+  "What each figure shows") or is dropped for washes at three strengths beside the lettered
+  transparency value. The gallery replaces the old card on `reference/pigments.md`; the
+  retirement is in the retired images table. The old card's file stays for
+  `docs/gallery.md`.
 - **Brush ids as a script literal**, pinned by a docs test, because `BRUSH_COLOURS` is
   private and no new public name is wanted.
 - **The `effect` trap** is in `CONTRIBUTING.md` (line 143). The user is being asked; no

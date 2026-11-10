@@ -105,7 +105,12 @@ several important settings do.
       - `roles` has 15 rows and `painters` has 10. Each row holds:
         - the name, lettered;
         - washes at strengths 0.3, 0.6 and 0.9;
-        - a 0.9 strip across a grey-brown ink bar, so a stain and a veil differ;
+        - a 0.9 strip across a bar of ink, so a stain and a veil differ. The bar must show
+          transparency: a docs test asserts the veil ratio (the bar's luma under the strip
+          over the luma of the strip beside it) of the most and the least transparent
+          pigment differs by at least 0.20, which the old pigment card's grey-brown bar
+          (0.13) did not. If no bar passes, the bar is dropped and transparency shows as
+          washes at three strengths beside the lettered value;
         - the transparency and the Colour Index code, lettered.
       - `glazes` shows six painter's pairs as columns. The rows are: multiplied, A glazed
         over B, and B glazed over A.
@@ -117,6 +122,7 @@ several important settings do.
       figures. They repeat every lettered value as real text in a table, which a docs
       test checks against the code. Both pages are linked from `brushes.md` and
       `pigments.md` and are in the nav.
+      The pigment gallery replaces the old pigment card on `pigments.md`.
 
 ### Line effects shown and documented (#104, #105, #106, ADR 0070 rules 8 to 14)
 
