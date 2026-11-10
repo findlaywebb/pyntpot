@@ -49,18 +49,18 @@ Every figure is painted on `paper_plate` paper. A wash is the pigment at a densi
 
 ## Glaze pairs
 
-![Eighteen pairs of overlapping discs in three rows of six. Each column is one pair, named on two lines above it: ultramarine with burnt sienna, cerulean with yellow ochre, quinacridone rose with ultramarine, indigo with raw sienna, perylene maroon with sap green, and Payne's grey with yellow ochre. The top row multiplies the two; the middle row glazes the first over the second and the bottom row the second over the first, and the overlaps differ a little between the two.](../images/reference/pigment-gallery-glazes.webp)
+![Eighteen pairs of overlapping watercolour discs in three rows of six. Each column is one pair, named on two lines above it: cerulean with yellow ochre, cerulean with burnt sienna, ultramarine with yellow ochre, yellow ochre with indigo, yellow ochre with perylene maroon, and cerulean with quinacridone rose. The top row multiplies the two; the middle row glazes the first over the second and the bottom row the second over the first, and the overlap is plainly a different colour in each row: the pigment laid on top shows more of itself.](../images/reference/pigment-gallery-glazes.webp)
 
-*Painted by `examples/pigment_gallery.py` (`figure="glazes"`), seed 7.* Each column is one pair, the first pigment named on the upper line and the second under it. The rows read multiply, A over B and B over A down, where A is the first of the pair. Multiplying is the same in either order. Glazing is not: the pigment laid second shows more of itself in the overlap.
+*Painted by `examples/pigment_gallery.py` (`figure="glazes"`), seed 7.* Each column is one pair, the first pigment named on the upper line and the second under it. The rows read multiply, A over B and B over A down, where A is the first of the pair. Multiplying is the same in either order. Glazing is not: the pigment laid on top shows more of itself in the overlap, and these six pairs are chosen because the overlap of A over B is clearly a different colour from B over A (measured, a mean CIE76 colour difference of 9 to 17 between the two rows, where about 3 is the least the eye sees). Multiplying also differs from glazing, by 7 to 17.
 
 | Column | First | Second |
 | --- | --- | --- |
-| 1 | `ultramarine` | `burnt_sienna` |
-| 2 | `cerulean` | `yellow_ochre` |
-| 3 | `quinacridone_rose` | `ultramarine` |
-| 4 | `indigo` | `raw_sienna` |
-| 5 | `perylene_maroon` | `sap_green` |
-| 6 | `paynes_grey` | `yellow_ochre` |
+| 1 | `cerulean` | `yellow_ochre` |
+| 2 | `cerulean` | `burnt_sienna` |
+| 3 | `ultramarine` | `yellow_ochre` |
+| 4 | `yellow_ochre` | `indigo` |
+| 5 | `yellow_ochre` | `perylene_maroon` |
+| 6 | `cerulean` | `quinacridone_rose` |
 
 ## Palettes
 

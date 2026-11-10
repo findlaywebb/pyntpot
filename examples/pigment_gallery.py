@@ -11,8 +11,9 @@ default hand through the sibling `labelled_grid.py`.
 - `painters`: the same, for the ten tube pigments (`PAINTERS_PIGMENTS`).
 - `glazes`: six `GLAZE_PAIRS` across, each lettered on two lines, first the pigment laid under
   or over and then the other. Three rows of two overlapping discs: multiplied, the first over
-  the second, and the second over the first. The two glaze rows differ because glazing is not
-  commutative.
+  the second, and the second over the first. The discs are painted watercolour on the figure's
+  own sheet, granulated, and each pair is chosen so the overlap of A over B is a measurably
+  different colour from B over A, because glazing is not commutative.
 - `palettes`: one block for each bundled palette (`Palette.names()`). Each alias is a 0.6 wash
   glazed at its pigment's transparency, with the alias above it and the pigment it names below.
   A palette alias bound to a bare hex has no transparency of its own, so it glazes at
@@ -78,12 +79,12 @@ STRENGTHS: tuple[float, ...] = (0.3, 0.6, 0.9)
 POOL = 0.25
 #: The six pairs the glaze figure lays, each the pigment named first and the one named second.
 GLAZE_PAIRS: tuple[tuple[str, str], ...] = (
-    ("ultramarine", "burnt_sienna"),
     ("cerulean", "yellow_ochre"),
-    ("quinacridone_rose", "ultramarine"),
-    ("indigo", "raw_sienna"),
-    ("perylene_maroon", "sap_green"),
-    ("paynes_grey", "yellow_ochre"),
+    ("cerulean", "burnt_sienna"),
+    ("ultramarine", "yellow_ochre"),
+    ("yellow_ochre", "indigo"),
+    ("yellow_ochre", "perylene_maroon"),
+    ("cerulean", "quinacridone_rose"),
 )
 #: The glaze figure's rows, down.
 GLAZE_ROWS: tuple[str, ...] = ("multiply", "A over B", "B over A")
@@ -219,24 +220,34 @@ def _wash_figure(figure: str, size: int) -> np.ndarray:
 
 
 def _glaze_figure(size: int) -> np.ndarray:
-    """The lettered glaze figure: six pairs across, multiply, A over B and B over A down."""
+    """The lettered glaze figure: six pairs across, multiply, A over B and B over A down.
+
+    Every disc is painted once on the figure's own sheet, as the tutorial's glaze grid does, and
+    the three rows composite the same two washes of a pair three ways.
+    """
     unit = size / DESIGN_W
-    spec = GridSpec(size, len(GLAZE_PAIRS), len(GLAZE_ROWS), 62, 84, 70, 10, 10, 12, unit)
+    spec = GridSpec(size, len(GLAZE_PAIRS), len(GLAZE_ROWS), 76, 84, 70, 8, 8, 12, unit)
     boxes, w, h = spec.boxes(), size, spec.height
-    sheet = Sheet(h, w, GRAN_PX * unit / 2, SEED)
+    sheet = Sheet(h, w, GRAN_PX * unit, SEED)
     out = _paper(sheet, w, h)
-    cell_w, cell_h = spec.cell_w, round(62 * unit)
-    radius = min(0.3 * cell_w, 0.46 * cell_h)
+    radius = min(0.33 * spec.cell_w, 0.46 * round(76 * unit))
+    centres = [
+        [(x + bw * cx, y + bh / 2) for row in boxes for x, y, bw, bh in row] for cx in (0.35, 0.65)
+    ]
+    washes = [
+        wash(
+            np.maximum.reduce([_disc(w, h, cx, cy, radius) for cx, cy in centres[side]]),
+            sheet,
+            DISC_STRENGTH,
+            POOL,
+        )
+        for side in (0, 1)
+    ]
     for r, row in enumerate(boxes):
         for (x, y, bw, bh), (first, second) in zip(row, GLAZE_PAIRS, strict=True):
-            local = Sheet(bh, bw, GRAN_PX * unit / 2, SEED)
-            discs = [
-                wash(_disc(bw, bh, bw * cx, bh / 2, radius), local, DISC_STRENGTH, POOL)
-                for cx in (0.38, 0.62)
-            ]
-            layers = [_layer(discs[0], first), _layer(discs[1], second)]
-            order = layers[::-1] if GLAZE_ROWS[r] == "B over A" else layers
             crop = (slice(y, y + bh), slice(x, x + bw))
+            layers = [_layer(washes[0][crop], first), _layer(washes[1][crop], second)]
+            order = layers[::-1] if GLAZE_ROWS[r] == "B over A" else layers
             out[crop] = composite(
                 order, out[crop], PaperStyle(km_glazing=GLAZE_ROWS[r] != "multiply")
             )
