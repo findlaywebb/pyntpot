@@ -80,9 +80,9 @@ class EffectStack:
 #: The effect presets the package ships; a theme preset may not reuse one of these names.
 BUILT_IN_PRESETS: Mapping[str, EffectStack] = MappingProxyType(
     {
-        "cased": EffectStack(effects=(Casing(width_px=1.2),)),
-        "halo": EffectStack(effects=(Glow(spread_px=1.0, blur_px=2.5, strength=0.8),)),
-        "lifted": EffectStack(effects=(Shadow(offset_px=1.2, blur_px=1.5, strength=0.35),)),
+        "cased": EffectStack(effects=(Casing(width_px=1.8, strength=0.9),)),
+        "halo": EffectStack(effects=(Glow(spread_px=1.5, blur_px=3.0, strength=0.85),)),
+        "lifted": EffectStack(effects=(Shadow(offset_px=2.5, blur_px=2.0, strength=0.45),)),
     }
 )
 

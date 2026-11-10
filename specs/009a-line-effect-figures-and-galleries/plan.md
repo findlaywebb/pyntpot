@@ -822,6 +822,19 @@ no worktrees are needed.
   The provisional values (`cased` width 1.2; `halo` spread 1.0, blur 2.5, strength 0.8;
   `lifted` offset 1.2, blur 1.5, strength 0.35) are the starting point; D1 records the
   tuned ones here and in the new ADR. bold takes whatever `cased` becomes.
+- **D1: the presets as tuned by eye** (Ambleside fixture, the loop cropped as in
+  `route-ink-grid`, composed once per preset over one paint; the route and, for the road and
+  water classes, `road_major` and `major`/`medium`/`minor`; looked at at display size and zoomed).
+  The provisional values are in the table's second column, the tuned in its third.
+
+  | Preset | Provisional | Tuned | Reason |
+  | --- | --- | --- | --- |
+  | `cased` | `width_px` 1.2, `strength` 1.0 | `width_px` 1.8, `strength` 0.9 | at 1.2 and full strength the ring was a hairline of white, a sticker outline; at 0.9 it blends toward the paper's cream, reading as a reserve a brush left, and 1.8 keeps it legible at display size. At a road junction the ring ran as one band round the joined roads, with no seam |
+  | `halo` | `spread_px` 1.0, `blur_px` 2.5, `strength` 0.8 | `spread_px` 1.5, `blur_px` 3.0, `strength` 0.85 | lifts water and route toward the paper with no hard edge; at spread 2 and strength 0.9 it began to read as a screen glow, and a blur of 4 spread it into a smudge |
+  | `lifted` | `offset_px` 1.2, `blur_px` 1.5, `strength` 0.35 | `offset_px` 2.5, `blur_px` 2.0, `strength` 0.45 | the provisional shadow was invisible at display size; 2.5 px falls south-east of the line as a soft edge, and a blur of 2 keeps it a soft lift, not a dark smear |
+
+  `tests/unit/maps/test_line_effects.py::test_the_presets_hold_the_values_tuned_by_eye` pins
+  them. No test pinned the provisional numbers, so no pin moved.
 - **New images are added in their slice; moved ones in G.** The registration test needs
   the files. "Regenerate once" governs what moves.
 - **Orchestrator ruling: the pigment galleries carry no ink bar.** Both figures show

@@ -161,11 +161,11 @@
 
 ## D1: tune the presets (main context)
 
-- [ ] After D2: paint a scratch draft of the presets figure (D3 writes the real script)
+- [x] After D2: paint a scratch draft of the presets figure (D3 writes the real script)
       and D2's casing, glow and shadow cells at each preset's values into a scratch
       directory, starting from the provisional presets; tune `BUILT_IN_PRESETS` until
       each reads on the 720 px card. Commit nothing painted.
-- [ ] Gate: PR 1's `tests/property/test_line_effect_presets.py`,
+- [x] Gate: PR 1's `tests/property/test_line_effect_presets.py`,
       `test_line_effect_digests.py`, `test_line_effects.py`,
       `tests/unit/maps/test_line_effects.py` and `test_digest_omits.py` pass with the
       tuned values, then the full non-golden gate. Record the values in the plan's
