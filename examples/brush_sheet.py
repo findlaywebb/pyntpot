@@ -18,8 +18,8 @@ those tables.
 
 Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `paper_plate`,
 `BrushStyle`, `brush_from_id`, `stamp`, `ink_density`, `rgb`, `composite` and `save_image`; for
-the grid's lettering, from `pyntpot.letters`, `FaceStyle`, `HandStyle`, `Hand`, `Setting`, `Mark`,
-`NibSurface`, `NibStyle`, `NibGroups` and `nib_plate`.
+the grid's lettering, from `pyntpot.letters`, `Setting`; and `GridSpec`, `LabelStyle` and
+`label_grid` from the sibling `labelled_grid.py`, which lays out the cells and letters the names.
 
 Run it with `uv run python examples/brush_sheet.py out/ --figure grid`; it writes
 `out/brush_grid.png`. The `sheet` figure writes `out/brush_sheet.png`.
@@ -27,11 +27,10 @@ Run it with `uv run python examples/brush_sheet.py out/ --figure grid`; it write
 
 import argparse
 import logging
-import tempfile
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from labelled_grid import GridSpec, LabelStyle, label_grid
 
 from pyntpot.ink import (
     BrushStyle,
@@ -47,17 +46,7 @@ from pyntpot.ink import (
     save_image,
     stamp,
 )
-from pyntpot.letters import (
-    FaceStyle,
-    Hand,
-    HandStyle,
-    Mark,
-    NibGroups,
-    NibStyle,
-    NibSurface,
-    Setting,
-    nib_plate,
-)
+from pyntpot.letters import Setting
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +92,10 @@ GRID_CELL_H, GRID_LEFT, GRID_TOP, GRID_GAP = 84, 74, 44, 8
 NIB_SCALE = 2
 #: The size of the grid's labels, in pixels.
 LABEL_PX = 20.0
+#: How the grid's names are lettered.
+LABELS = LabelStyle(
+    px=LABEL_PX, ink=Colour("#3a2c20"), pen_px=1.5, gran_px=GRAN_PX * NIB_SCALE, seed=SEED
+)
 
 
 def _cell_line(row: int, column: int) -> np.ndarray:
@@ -136,37 +129,13 @@ def _sheet(out_dir: Path) -> Path:
     return path
 
 
-def _letter(img: np.ndarray, settings: list[Setting]) -> np.ndarray:
-    """Letter the settings over `img`, the plate painted at `NIB_SCALE` times and brought down with Lanczos.
-
-    Raises:
-        RuntimeError: When the hand wrote no marks, so there is no plate to lay.
-    """
-    h, w = img.shape[:2]
-    big = Canvas(0, 0, w * NIB_SCALE, h * NIB_SCALE, w * NIB_SCALE, h * NIB_SCALE)
-    face, hand_style = FaceStyle(), HandStyle()
-    hand = Hand(face, hand_style)
-    rng = hand.generator(SEED)
-    marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
-    dark = np.zeros((h * NIB_SCALE, w * NIB_SCALE), np.float32)
-    surface = NibSurface(big, NIB_SCALE, dark, GRAN_PX * NIB_SCALE)
-    nib = NibStyle(label_ink=Colour("#3a2c20"), label_pen_width_px=1.5)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
-    with tempfile.TemporaryDirectory() as scratch:
-        written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
-        if written is None:
-            raise RuntimeError("the hand wrote no marks")
-        with Image.open(written) as plate:
-            small = plate.convert("RGBa").resize((w, h), Image.Resampling.LANCZOS)
-            rgba = np.asarray(small.convert("RGBA"), np.float32) / 255
-    alpha = rgba[..., 3:]
-    return img * (1 - alpha) + rgba[..., :3] * alpha
-
-
 def _grid(out_dir: Path) -> Path:
     """Stroke the eight treatments of one ink at three widths, write `brush_grid.png` into `out_dir` and return its path."""
-    cell_w = (GRID_W - GRID_LEFT - MARGIN - GRID_GAP * (COLUMNS - 1)) // COLUMNS
-    h = GRID_TOP + len(GRID_WIDTHS) * (GRID_CELL_H + GRID_GAP) + 34
+    spec = GridSpec(
+        GRID_W, COLUMNS, len(GRID_WIDTHS), GRID_CELL_H, GRID_LEFT, GRID_TOP, GRID_GAP, MARGIN, 42
+    )
+    cell_w, h = spec.cell_w, spec.height
+    boxes = spec.boxes()
     sheet = Sheet(h, GRID_W, GRAN_PX, SEED)
     paper = paper_plate(
         sheet, Canvas(0, 0, GRID_W, h, GRID_W, h), PaperStyle(paper_foxing=0.0), GRID_W
@@ -176,8 +145,8 @@ def _grid(out_dir: Path) -> Path:
     for r, width in enumerate(GRID_WIDTHS):
         for c in range(COLUMNS):
             brush, ink_hex = brush_from_id(GRID_INK.format(row=c + 1), width, 1.0, BrushStyle())
-            x0 = GRID_LEFT + c * (cell_w + GRID_GAP) + 8
-            y0 = GRID_TOP + r * (GRID_CELL_H + GRID_GAP) + GRID_CELL_H / 2
+            x0 = boxes[r][c][0] + 8
+            y0 = boxes[r][c][1] + GRID_CELL_H / 2
             t = np.linspace(0.0, 1.0, 80)
             line = np.column_stack(
                 [x0 + t * (cell_w - 16), y0 + 0.28 * GRID_CELL_H * np.sin(2 * np.pi * t)]
@@ -187,27 +156,15 @@ def _grid(out_dir: Path) -> Path:
             by_ink[ink_hex] = np.maximum(by_ink.get(ink_hex, 0.0), ink_density(acc, brush, sheet))
     out = composite([(density, rgb(ink)) for ink, density in by_ink.items()], paper, PaperStyle())
 
-    centres = [GRID_LEFT + c * (cell_w + GRID_GAP) + cell_w / 2 for c in range(COLUMNS)]
-    labels = [
-        Setting(str(c + 1), LABEL_PX, anchor=(x, GRID_TOP - 14), align="middle", wash=False)
-        for c, x in enumerate(centres)
+    kinds = [
+        Setting(KINDS[c], LABEL_PX - 3, anchor=(x + w / 2, h - 12), align="middle", wash=False)
+        for c, (x, _, w, _) in enumerate(boxes[0])
     ]
-    labels += [
-        Setting(KINDS[c], LABEL_PX - 3, anchor=(x, h - 12), align="middle", wash=False)
-        for c, x in enumerate(centres)
-    ]
-    labels += [
-        Setting(
-            f"{width:g} px",
-            LABEL_PX,
-            anchor=(GRID_LEFT - 12, GRID_TOP + r * (GRID_CELL_H + GRID_GAP) + GRID_CELL_H / 2 + 7),
-            align="end",
-            wash=False,
-        )
-        for r, width in enumerate(GRID_WIDTHS)
-    ]
+    columns = [str(c + 1) for c in range(COLUMNS)]
+    rows = [f"{width:g} px" for width in GRID_WIDTHS]
+    labelled = label_grid(out, boxes, columns, rows, LABELS, extra=kinds)
     path = out_dir / "brush_grid.png"
-    save_image(_letter(out, labels), path, seed=SEED)
+    save_image(labelled, path, seed=SEED)
     logger.info("wrote %s", path)
     return path
 
