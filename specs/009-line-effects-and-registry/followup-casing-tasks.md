@@ -8,10 +8,10 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 ## PR 1 (#211), branch `claude/quirky-hypatia-z2pii3`
 
 ### C0: start
-- [ ] ADR 0070 amended in place: rules 8, 9, 10, 11, 12, 13, 15, public names, alternatives;
+- [x] ADR 0070 amended in place: rules 8, 9, 10, 11, 12, 13, 15, public names, alternatives;
       header line naming this follow-up.
-- [ ] `followup-casing.md` committed; base `8be0b017` recorded.
-- [ ] Baseline slice gate green on the untouched tip (`-n 2`, never `-n auto`).
+- [x] `followup-casing.md` committed; base `8be0b017` recorded.
+- [x] Baseline slice gate green on the untouched tip (`-n 2`, never `-n auto`).
 
 ### C1: `contour_distance`
 - [ ] Red: property 1 (float32 masks, shapes a radius + 2 margin from the array edge; exact
