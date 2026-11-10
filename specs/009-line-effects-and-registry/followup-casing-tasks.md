@@ -87,11 +87,15 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 ## PR 2 (#213), branch `claude/quirky-hypatia-z2pii3-stacked`
 
 ### T0: merge and inventory
-- [ ] PR 1's tip merged; conflicts resolved; schema copies regenerated, not hand-merged.
-- [ ] Not-golden gate green.
-- [ ] Scratch repaint: exactly the "Figures" images less the reserve, glow and shadow sweeps
+- [x] PR 1's tip merged; conflicts resolved; schema copies regenerated, not hand-merged.
+- [x] Not-golden gate green.
+- [x] Scratch repaint: exactly the "Figures" images less the reserve, glow and shadow sweeps
       (still 1x and laying no casing, so byte-identical until T3), and their masters, move;
       Lynmouth and every other image byte-identical. Otherwise stop and report.
+- Inventory at T0 (scratch repaint, 16 files, Lynmouth identical): the expected moved set is
+  `pen-casing-sweep`, `line-effects-glaze-or-rgb`, `line-effects-presets`, `casing-sweep`,
+  `map-styles/bold`, `line-effects-draw-order`, `cased-stroke`, `line-effects`, each image and
+  its master; T3 and T4 add the glow and shadow sweeps and the new `how-to/reserve-sweep.webp`.
 
 ### T1: split `line_effect_grids.py`
 - [ ] Pure move of the scene builders to `examples/line_effect_scenes.py`, imports repointed, no
