@@ -2,8 +2,9 @@
 
 Key function: `lay`, which takes the card as 8-bit RGB, the route's mask and the paper plate, lays
 the route's `EffectStack` (via `effect_pass.lay_stack`) and returns the card as 8-bit RGB. The
-mask is the pen plate's alpha, taken at `LINE_THRESHOLD`, or the solid line's reduced mask; it is
-one mask for the whole route, so a stretch that is retraced is one line and not two.
+mask is the pen plate's alpha density above a noise floor, or the solid line's reduced mask; it
+is soft, so a casing or reserve is measured from the line's sub-pixel edge, and it is one mask
+for the whole route, so a stretch that is retraced is one line and not two.
 
 Does not draw the route itself, read the pen plate from disk or touch the SVG page, which does not
 draw route effects. It draws no random number. An empty stack returns the card unchanged.
@@ -12,16 +13,19 @@ draw route effects. It draws no random number. An empty stack returns the card u
 import numpy as np
 from PIL import Image
 
-from pyntpot.ink.effect_mask import LINE_THRESHOLD
 from pyntpot.ink.noise import F32
 from pyntpot.maps.effect_pass import lay_stack
 from pyntpot.maps.line_effects import EffectStack
 
+#: The least alpha, of 255, the route mask keeps: below it Lanczos ringing and lossy noise are 0.
+PEN_ALPHA_FLOOR = 8
+
 
 def pen_mask(alpha: Image.Image) -> np.ndarray:
-    """The route mask of a pen plate's alpha: 1 where it is at `LINE_THRESHOLD`, else 0."""
-    density = np.asarray(alpha, F32) / F32(255.0)
-    return (density >= LINE_THRESHOLD).astype(F32)
+    """The route mask of a pen plate's alpha: its density, 0 to 1, with alphas under 8/255 set to 0."""
+    raw = np.asarray(alpha, np.uint8)
+    density = raw.astype(F32) / F32(255.0)
+    return np.where(raw >= PEN_ALPHA_FLOOR, density, F32(0.0)).astype(F32, copy=False)
 
 
 def solid_mask(reduced: Image.Image) -> np.ndarray:

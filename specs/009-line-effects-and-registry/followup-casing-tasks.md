@@ -61,12 +61,12 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [x] Both schema copies regenerated; `style-fields.md` row; slice gate green.
 
 ### C5: painter and compose
-- [ ] Red, in `test_union_wash.py`: union junction pixel test; union of one at the painter;
+- [x] Red, in `test_union_wash.py`: union junction pixel test; union of one at the painter;
       ring skipped at later members; route reserve exact at compose; `pen_mask` floor cases.
-- [ ] `lay_stack(..., ring=)` and the reserve branch; `_lay_group` unions; soft `pen_mask`;
+- [x] `lay_stack(..., ring=)` and the reserve branch; `_lay_group` unions; soft `pen_mask`;
       `compose_steps.py` docstring sentence corrected.
-- [ ] Largest off-line Lynmouth pen alpha recorded, below 8/255.
-- [ ] Slice gate; golden docs subset passes with no regeneration.
+- [x] Largest off-line Lynmouth pen alpha recorded, below 8/255.
+- [x] Slice gate; golden docs subset passes with no regeneration.
 
 ### C6: mutation testing
 - [ ] `scope.py --base 8be0b017`; `mutmut run --max-children 2` under `prlimit`, with the

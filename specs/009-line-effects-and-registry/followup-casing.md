@@ -589,7 +589,7 @@ fix(ink): casing and pen_casing are anti-aliased, their widths measured from the
 
 - `contour_distance` worst error on the reference shapes: 0.315 px (3,000 shapes, τ 0.2 to 0.5, radius 3 to 8, margin radius + 2).
 - Its time at radius 3, 8, 16 and 33 on 1800 × 1281: 0.28 s, 0.74 s, 2.24 s and 8.81 s.
-- Largest off-line pen alpha on the Lynmouth pen plate: …
+- Largest off-line pen alpha on the Lynmouth pen plate (more than 3 px from any pixel at 0.3 or above): 3/255, under the 8/255 floor. Within 2 px of the line the soft edge reaches 18/255, which is the line's own fringe.
 
 ## Risks
 
