@@ -5,7 +5,7 @@ from collections import Counter
 
 import pytest
 
-from pyntpot.ink import Casing
+from pyntpot.ink import Casing, Reserve
 from pyntpot.maps import EffectStack, Style
 from pyntpot.maps.line_effects import BUILT_IN_PRESETS
 from pyntpot.maps.style import DIGEST_OMITS_AT_DEFAULT
@@ -33,6 +33,40 @@ def _with_route_stack() -> Style:
     default = Style()
     ink = dataclasses.replace(default.route_ink, effects=BUILT_IN_PRESETS["cased"])
     return default.model_copy(update={"route_ink": ink})
+
+
+class TestTheUnionsAndReserves:
+    """An empty `casing_unions` and an absent or off reserve move no digest."""
+
+    def test_casing_unions_is_named(self) -> None:
+        """`casing_unions` is in `DIGEST_OMITS_AT_DEFAULT`."""
+        assert "casing_unions" in DIGEST_OMITS_AT_DEFAULT
+
+    def test_a_set_union_moves_the_base_and_whole_digest(self) -> None:
+        """A set union moves `base_digest` and `digest`, not `lettering_digest`."""
+        cased = EffectStack(effects=(Casing(width_px=1.0),))
+        basemap = dataclasses.replace(
+            Style().basemap,
+            line_effects={"major": cased, "minor": cased},
+            casing_unions=(("major", "minor"),),
+        )
+        digest, base, lettering = _digests(Style().model_copy(update={"basemap": basemap}))
+        assert digest != DEFAULT_DIGESTS[0]
+        assert base != DEFAULT_DIGESTS[1]
+        assert lettering == DEFAULT_DIGESTS[2]
+
+    def test_an_off_reserve_moves_nothing(self) -> None:
+        """A reserve of width 0 is dropped, so every digest is the default's."""
+        off = EffectStack(effects=(Reserve(width_px=0.0, pool=0.5),))
+        basemap = dataclasses.replace(Style().basemap, line_effects={"major": off})
+        assert _digests(Style().model_copy(update={"basemap": basemap})) == DEFAULT_DIGESTS
+
+    def test_a_live_reserve_moves_the_base_digest(self) -> None:
+        """A reserve of width 2 on `major` moves `base_digest`."""
+        live = EffectStack(effects=(Reserve(width_px=2.0),))
+        basemap = dataclasses.replace(Style().basemap, line_effects={"major": live})
+        moved = Style().model_copy(update={"basemap": basemap})
+        assert moved.base_digest() != DEFAULT_DIGESTS[1]
 
 
 class TestTheOmitNames:

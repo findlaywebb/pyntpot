@@ -37,6 +37,7 @@ BASEMAP_DEFAULTS: dict[str, Any] = {
     "tree_spacing_m": 450.0,
     "all_variants": False,
     "line_effects": {},
+    "casing_unions": (),
 }
 
 

@@ -8,10 +8,11 @@ each is called now.
 
 A theme's top level holds `extends`, a theme name or a `.yaml` path, `pigments`, `palette` and
 `colours` (each checked by its own `theme_*` module, in that order, into the scope), the group
-names, and `effect_presets` and `line_effects` (checked by `theme_effects` after the groups, the
-second split into `basemap.line_effects` and `route_ink.effects` in the returned table). A colour
-field then resolves in the scope its own file sees. The two group fields that only `line_effects`
-sets, `LOADER_FIELDS` in `theme_vocab`, are refused inside their group, at their own key.
+names, `effect_presets` and `line_effects` (checked by `theme_effects` after the groups, the
+second split into `basemap.line_effects` and `route_ink.effects` in the returned table) and
+`casing_unions` (checked by `theme_unions` last, into `basemap.casing_unions`). A colour
+field then resolves in the scope its own file sees. The three group fields that only `line_effects`
+and `casing_unions` set, `LOADER_FIELDS` in `theme_vocab`, are refused inside their group, at their own key.
 Every key at every level is checked: a group's fields, a dict field's entries against its
 vocabulary in `theme_vocab`, and a `brush_overrides` entry's keys. An unknown key is
 refused with the nearest known one, and a renamed key with its new name. A group, a dict
@@ -50,6 +51,7 @@ from pyntpot.maps.theme_palette import PALETTE, check_palette
 from pyntpot.maps.theme_pigments import PIGMENTS, check_pigments
 from pyntpot.maps.theme_read import ThemeFile
 from pyntpot.maps.theme_scope import ThemeScope
+from pyntpot.maps.theme_unions import CASING_UNIONS, check_casing_unions
 from pyntpot.maps.theme_vocab import LOADER_FIELDS
 
 #: Old key paths and what each is called now; a theme that uses one is told the new name.
@@ -68,7 +70,7 @@ _STEPS = (
 )
 
 #: The top-level keys that are names, not groups.
-_NAMES = (*(key for key, _ in _STEPS), EFFECT_PRESETS, LINE_EFFECTS)
+_NAMES = (*(key for key, _ in _STEPS), EFFECT_PRESETS, LINE_EFFECTS, CASING_UNIONS)
 
 
 def check_theme(
@@ -143,12 +145,14 @@ def check_theme_scoped(
 def _check_effects(
     check: TableCheck, theme: ThemeFile, table: dict[str, object], scope: ThemeScope
 ) -> tuple[ThemeScope, dict[str, object]]:
-    """Check the file's `effect_presets`, then `line_effects`, merging the split into `table`."""
+    """Check the file's `effect_presets`, `line_effects` and `casing_unions`, merging into `table`."""
     if EFFECT_PRESETS in theme.table:
         scope = check_effect_presets(check, theme.table[EFFECT_PRESETS], scope)
         check.scope = scope
     if LINE_EFFECTS in theme.table:
         table = merge(table, check_line_effects(check, theme.table[LINE_EFFECTS]))
+    if CASING_UNIONS in theme.table:
+        table = merge(table, check_casing_unions(check, theme.table[CASING_UNIONS]))
     return scope, table
 
 

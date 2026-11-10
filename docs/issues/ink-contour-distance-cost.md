@@ -1,4 +1,5 @@
 # Wide casings are slow: contour_distance costs the square of its radius
+GitHub issue: [#214](https://github.com/findlaywebb/pyntpot/issues/214)
 
 Area: ink (performance). Label: `performance`, `area: ink`.
 

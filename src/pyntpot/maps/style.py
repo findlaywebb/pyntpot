@@ -75,8 +75,8 @@ _DIGEST_HEX = 16
 #: Fields left out of a group digest while they equal their default, or what its default
 #: factory builds, so a field added later moves no digest of a style that leaves it alone:
 #: the basemap's `name_tags` and `minor_road_classes`, and the cover's `relief_strength` and
-#: `min_patch_px`, and the basemap's `line_effects` and the route ink's `effects` (off by
-#: default; each name is unique across the groups, because the rule matches by name).
+#: `min_patch_px`, and the basemap's `line_effects` and `casing_unions` and the route ink's
+#: `effects` (off by default; each name is unique across the groups, because the rule matches by name).
 DIGEST_OMITS_AT_DEFAULT: tuple[str, ...] = (
     "name_tags",
     "minor_road_classes",
@@ -84,6 +84,7 @@ DIGEST_OMITS_AT_DEFAULT: tuple[str, ...] = (
     "min_patch_px",
     "line_effects",
     "effects",
+    "casing_unions",
 )
 
 

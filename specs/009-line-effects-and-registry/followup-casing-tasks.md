@@ -45,20 +45,20 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [x] Slice gate green.
 
 ### C4: the theme model
-- [ ] Red: `EffectStack` with a reserve; the casing-or-reserve refusal; every row of "Located
+- [x] Red: `EffectStack` with a reserve; the casing-or-reserve refusal; every row of "Located
       load errors" incl. the CLI exit 2; a child replacing and `[]` clearing `casing_unions`;
       the preset casing-and-reserve row; `BasemapStyle` refusing a bad union (route, unknown,
       duplicate, mixed group, stack problems); members normalised to class order; property 10;
       off-reserve digests; schema order and nodes (reserve with no min or max); `PINNED`,
       `BASEMAP_DEFAULTS` and `tests/unit/maps/candidates/test_export.py:88-121` gain
       `casing_unions`; `casing_unions.py` in `BY_NAME`.
-- [ ] `BasemapStyle` line count checked: past 400 on either branch, pure move to
+- [x] `BasemapStyle` line count checked: past 400 on either branch, pure move to
       `style_basemap.py` first.
-- [ ] `maps/casing_unions.py` (`membership_problems`, `union_problems`: every union message),
+- [x] `maps/casing_unions.py` (`membership_problems`, `union_problems`: every union message),
       `maps/theme_unions.py` (shape and location only); `line_effects`, `theme_effects`,
       `theme_check`, `theme_resolve` (post-merge check), `theme_vocab`, `style_groups`, `style`
       (`DIGEST_OMITS_AT_DEFAULT`), `theme_schema_tables`.
-- [ ] Both schema copies regenerated; `style-fields.md` row; slice gate green.
+- [x] Both schema copies regenerated; `style-fields.md` row; slice gate green.
 
 ### C5: painter and compose
 - [ ] Red, in `test_union_wash.py`: union junction pixel test; union of one at the painter;

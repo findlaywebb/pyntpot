@@ -4,7 +4,7 @@ import dataclasses
 
 import pytest
 
-from pyntpot.ink import Casing, Glow, Shadow
+from pyntpot.ink import Casing, Glow, Reserve, Shadow
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.maps import EffectStack
 from pyntpot.maps.line_effects import (
@@ -71,9 +71,31 @@ class TestTheStack:
         assert hash(stack) == hash(EffectStack(effects=(Casing(width_px=1.0),)))
 
     def test_a_non_effect_is_refused(self) -> None:
-        """Something that is no casing, glow or shadow raises `TypeError`."""
-        with pytest.raises(TypeError, match="not a Casing, Glow or Shadow"):
+        """Something that is no casing, glow, shadow or reserve raises `TypeError`."""
+        with pytest.raises(TypeError, match="not a Casing, Glow, Shadow or Reserve"):
             EffectStack(effects=("cased",))  # ty: ignore[invalid-argument-type]
+
+    def test_a_reserve_is_held(self) -> None:
+        """A stack takes a reserve, in order beside a glow."""
+        reserve = Reserve(width_px=2.0, pool=0.3)
+        glow = Glow(spread_px=1.0, strength=0.5)
+        assert EffectStack(effects=(reserve, glow)).effects == (reserve, glow)
+
+    def test_a_reserve_of_width_zero_is_off(self) -> None:
+        """A reserve of width 0 is dropped, so the stack equals the empty one."""
+        assert EffectStack(effects=(Reserve(width_px=0.0, pool=0.5),)) == EffectStack()
+
+    @pytest.mark.parametrize("order", [0, 1], ids=["casing-first", "reserve-first"])
+    def test_a_casing_and_a_reserve_are_refused(self, order: int) -> None:
+        """A stack takes a casing or a reserve, not both, in either order."""
+        pair = (Casing(width_px=1.0), Reserve(width_px=1.0))
+        with pytest.raises(ValueError, match="a casing or a reserve, not both"):
+            EffectStack(effects=pair[::1] if order == 0 else pair[::-1])
+
+    def test_two_reserves_are_refused(self) -> None:
+        """A stack takes at most one reserve."""
+        with pytest.raises(ValueError, match="at most one reserve"):
+            EffectStack(effects=(Reserve(width_px=1.0), Reserve(width_px=2.0)))
 
     def test_a_stack_is_frozen_and_keyword_only(self) -> None:
         """A stack refuses assignment and positional effects."""

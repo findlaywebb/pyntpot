@@ -1,14 +1,15 @@
-"""The line effect model: a stack of casing, glow and shadow, the line classes and the presets.
+"""The line effect model: a stack of casing or reserve, glow and shadow, the line classes and presets.
 
 Key types and names: `EffectStack`, the ordered effects of one line class (at most one casing,
-one glow and one shadow, all from `pyntpot.ink`); `LINE_CLASSES`, the eight classes a stack can
+one glow and one shadow, or a reserve in place of the casing, all from `pyntpot.ink`); `LINE_CLASSES`, the eight classes a stack can
 be set on, the basemap's seven and `route`; `WATER_GROUP` and `ROAD_GROUP`, the basemap classes in
 the order the painter draws them; `BUILT_IN_PRESETS`, the three effect presets the package ships,
 `cased`, `halo` and `lifted`; `checked_line_effects`, which the basemap group runs on its table.
 
 A stack's widths are in display pixels; the compose and paint steps scale them to the array they
 lay the stack on. An effect is off at a strength of 0, or, for a casing, a width of 0 (`-0.0`
-included). A stack drops its off effects when it is built, so a stack written all off equals
+included), or, for a reserve, a width of 0. A stack takes a casing or a reserve, never both,
+because both lay a ring. A stack drops its off effects when it is built, so a stack written all off equals
 `EffectStack()`, and a basemap table of such stacks equals `{}`: a value equal to off moves no
 digest.
 
@@ -24,7 +25,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
-from pyntpot.ink import Casing, Glow, Shadow
+from pyntpot.ink import Casing, Glow, Reserve, Shadow
 from pyntpot.ink.naming import did_you_mean
 
 #: The water classes, in the order the painter draws them.
@@ -39,39 +40,48 @@ _BASEMAP = (*WATER_GROUP, *ROAD_GROUP)
 LINE_CLASSES: frozenset[str] = frozenset(_BASEMAP) | {"route"}
 
 
-def _is_off(effect: Casing | Glow | Shadow) -> bool:
-    """Whether `effect` draws nothing: a strength of 0, or, for a casing, a width of 0."""
-    if effect.strength == 0:
+type _Effect = Casing | Glow | Shadow | Reserve
+
+#: The message for a stack that holds both ring effects.
+CASING_OR_RESERVE = "a stack takes a casing or a reserve, not both"
+
+
+def _is_off(effect: _Effect) -> bool:
+    """Whether `effect` draws nothing: a strength of 0, or, for a casing or reserve, a width of 0."""
+    if isinstance(effect, Casing | Reserve) and effect.width_px == 0:
         return True
-    return isinstance(effect, Casing) and effect.width_px == 0
+    return not isinstance(effect, Reserve) and effect.strength == 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class EffectStack:
-    """The ordered effects of one line class: at most one casing, one glow and one shadow.
+    """The ordered effects of one line class: a casing or a reserve, one glow and one shadow.
 
     Attributes:
         effects: The effects in the order they are applied, none off; an off effect is dropped
             when the stack is built.
     """
 
-    effects: tuple[Casing | Glow | Shadow, ...] = ()
+    effects: tuple[Casing | Glow | Shadow | Reserve, ...] = ()
 
     def __post_init__(self) -> None:
         """Refuse two effects of a kind, drop the off ones and hold the rest as a tuple.
 
         Raises:
-            ValueError: When two effects are of one kind.
-            TypeError: When an effect is no `Casing`, `Glow` or `Shadow`.
+            ValueError: When two effects are of one kind, or a casing and a reserve are both
+                present.
+            TypeError: When an effect is no `Casing`, `Glow`, `Shadow` or `Reserve`.
         """
-        kept: list[Casing | Glow | Shadow] = []
+        kept: list[_Effect] = []
         seen: set[type] = set()
         for effect in self.effects:
-            if not isinstance(effect, Casing | Glow | Shadow):
-                raise TypeError(f"{effect!r} is not a Casing, Glow or Shadow")
+            if not isinstance(effect, Casing | Glow | Shadow | Reserve):
+                raise TypeError(f"{effect!r} is not a Casing, Glow, Shadow or Reserve")
             if type(effect) in seen:
                 raise ValueError(f"a stack takes at most one {type(effect).__name__.lower()}")
             seen.add(type(effect))
+            if {Casing, Reserve} <= seen:
+                raise ValueError(CASING_OR_RESERVE)
             if not _is_off(effect):
                 kept.append(effect)
         object.__setattr__(self, "effects", tuple(kept))

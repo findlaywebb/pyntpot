@@ -29,6 +29,8 @@ _OFF = st.sampled_from(
         {"casing": {"width_px": 2.0, "strength": 0.0}},
         {"glow": {"spread_px": 2.0, "blur_px": 2.0, "strength": 0.0}},
         {"shadow": {"offset_px": 1.0, "strength": 0.0}},
+        {"reserve": {"width_px": 0}},
+        {"reserve": {"width_px": 0, "pool": 0.5}},
         {"casing": {"width_px": 0.0}, "glow": {"strength": 0.0}, "shadow": {"strength": 0.0}},
     )
 )
