@@ -97,7 +97,7 @@ def role_transparencies() -> dict[str, float]:
     """A fresh dict of each map-role pigment's transparency, in registry order.
 
     Returns:
-        Role name to transparency, the default of `PaperStyle.pigment_transparency`.
+        Role name to transparency, the source of `TRANSPARENCY`.
     """
     return _transparencies(ROLE_PIGMENTS)
 
