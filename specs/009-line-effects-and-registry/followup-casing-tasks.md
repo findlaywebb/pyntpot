@@ -115,14 +115,14 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
       unchanged; gate green.
 
 ### T3: sweeps at 2x and the reserve sweep (worktree after T2)
-- [ ] Red: `test_line_effect_sweeps.py` (reduced size, off column; pool no lighter on the 2x
+- [x] Red: `test_line_effect_sweeps.py` (reduced size, off column; pool no lighter on the 2x
       float arrays before `reduce`; thin pen edge continuous on `reduce(band)`).
-- [ ] Glow and shadow sweeps now move (2x); the lines `cased-strokes.md` quotes (`_reserved`,
+- [x] Glow and shadow sweeps now move (2x); the lines `cased-strokes.md` quotes (`_reserved`,
       `paint_cell`) left unchanged.
-- [ ] All five sweeps painted at 2x and reduced once, then lettered; `reserve` figure added.
-- [ ] `_sweep("reserve-sweep", "reserve")` registered; how-to sections "Reserve the paper round
+- [x] All five sweeps painted at 2x and reduced once, then lettered; `reserve` figure added.
+- [x] `_sweep("reserve-sweep", "reserve")` registered; how-to sections "Reserve the paper round
       a line" and "Case several classes as one".
-- [ ] Added reserve sweep and master committed only if a non-golden test needs them; gate green.
+- [x] Added reserve sweep and master committed only if a non-golden test needs them; gate green.
 
 ### T4: cased stroke and the essay figures (worktree after T2)
 - [ ] Red, on the 2x float arrays before `reduce`: the reserve cells (paper where whole; pooled
