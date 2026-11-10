@@ -33,15 +33,14 @@ def _job(
     tmp_path,
     effects: dict[str, EffectStack] | None = None,
     unions: tuple[tuple[str, ...], ...] = (),
+    *,
+    lane_only: bool = False,
 ) -> PaintJob:
-    """A major road and a lane that cross, the style carrying `effects` and `unions`."""
+    """A major road and a lane that cross (or the lane alone), carrying `effects` and `unions`."""
     major = [(float(x), 120.0 + 0.02 * x) for x in range(10, 310, 20)]
     lane = [(150.0 + 0.02 * y, float(y)) for y in range(10, 235, 15)]
-    job = tiny_job(
-        tmp_path,
-        roads=(_road("major", major), _road("minor", lane)),
-        minor_roads=True,
-    )
+    roads = (_road("minor", lane),) if lane_only else (_road("major", major), _road("minor", lane))
+    job = tiny_job(tmp_path, roads=roads, minor_roads=True)
     basemap = dataclasses.replace(
         job.style.basemap, line_effects=effects or {}, casing_unions=unions
     )
@@ -88,6 +87,13 @@ class TestUnionOfCasings:
         effects = {"road_major": EffectStack(effects=(effect,))}
         plain = _plate(_job(tmp_path / "a", effects))
         united = _plate(_job(tmp_path / "b", effects, (("road_major",),)))
+        assert np.array_equal(plain, united)
+
+    def test_a_union_whose_first_member_paints_nothing_is_laid_at_the_next(self, tmp_path):
+        """With no major road on the card, the lane carries the union and is cased as alone."""
+        plain = _plate(_job(tmp_path / "a", _casings(), lane_only=True))
+        united = _plate(_job(tmp_path / "b", _casings(), (("road_major", "lane"),), lane_only=True))
+        assert not np.array_equal(plain, _plate(_job(tmp_path / "c", lane_only=True)))
         assert np.array_equal(plain, united)
 
     def test_each_member_keeps_its_own_width(self, tmp_path):
@@ -149,7 +155,7 @@ class TestRingStep:
         paper = np.full_like(rgb, 0.9)
         stack = EffectStack(effects=(Reserve(width_px=3.0),))
         got = lay_stack(rgb, mask, stack, scale=1.0, paper=paper)
-        assert got[17, 20, 0] == pytest.approx(0.9)
+        assert np.array_equal(got[17, 20], paper[17, 20])
         assert np.array_equal(got[20, 20], rgb[20, 20])
 
 

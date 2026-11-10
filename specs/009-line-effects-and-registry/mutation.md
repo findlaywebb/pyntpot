@@ -91,8 +91,8 @@ Scope: `uv run python tests/mutation/scope.py --base 46ee0d9b`, run with
 | Total | 778 |
 | Killed by the existing suite (one a timeout) | 680 |
 | Survived the existing suite | 98 |
-| Killed by new tests | 37 |
-| Equivalent | 61 |
+| Killed by new tests | 38 (one at the diff review) |
+| Equivalent | 57, and 3 more whose dead code the diff review removed |
 
 No survivor revealed a bug in `src`. `_shifted`, `check_effect_numbers` and
 `Reserve.__post_init__` had no survivor.
@@ -134,12 +134,15 @@ No survivor revealed a bug in `src`. `_shifted`, `check_effect_numbers` and
   72, 74: `>` for `>=` at an offset of exactly the size gives an empty slice.
 - `contour_distance` 64, 65 (skipping one axis step): the opposite-side core seed two pixels away
   reaches the same contour point; the results differ by one float32 ulp.
-- `contour_distance` 127, 128, 129: the final `where` only sets `big` where the value is
-  already `big`, since no distance exceeds it.
+- `contour_distance` 127, 128, 129: the final `where` only set `big` where the value was
+  already `big`, since no distance exceeds it. The diff review removed that `where` as dead
+  code, so these mutants no longer exist.
 - `pen_casing` 19: at a mask exactly at the threshold, `d` is at most 0, so the reserve is 1 and
   the band 0 either way.
-- `lay_reserve` 33 (`pool >= 0`): a pool of 0 raises to the power 1, which libm's `pow`
-  returns to within one ulp.
+- `lay_reserve` 33 (`pool >= 0`) was wrongly named equivalent here: at a pool of 0 the power is
+  1, but `ground * (out / ground)` is not `out` in float32 (about one value in nine on a paper
+  plate), and `minimum` keeps the ulp darker. The diff review killed it with
+  `test_a_pool_of_zero_leaves_the_band_bit_for_bit` in `test_effect_reserve_parts.py`.
 - `lay_reserve` 45: at `out == ground` the pooled value is the ground, the same. 46: a ground of
   0 has no `out` below it. 55, 56, 65, 66: the filler outside `deepen` is discarded by the final
   `where`.

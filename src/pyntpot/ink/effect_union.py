@@ -23,7 +23,8 @@ from pyntpot.ink.effect_reserve import lay_reserve, pool_band
 from pyntpot.ink.effect_types import Casing, Reserve
 from pyntpot.ink.noise import F32
 
-type Member = tuple[np.ndarray, Casing] | tuple[np.ndarray, Reserve]
+#: One member of a union: a line's mask and its ring effect; `casing_union` checks the kinds agree.
+type Member = tuple[np.ndarray, Casing | Reserve]
 
 
 def _check_members(members: Sequence[Member]) -> None:

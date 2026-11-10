@@ -26,7 +26,7 @@ from collections.abc import Mapping, Sequence
 
 from pyntpot.ink import Casing, Reserve
 from pyntpot.ink.naming import did_you_mean
-from pyntpot.maps.line_effects import ROAD_GROUP, WATER_GROUP, EffectStack
+from pyntpot.maps.line_effects import ROAD_GROUP, WATER_GROUP, EffectStack, ring_effect
 
 #: One problem: the union's index, the member's index or `None`, and the message.
 type Problem = tuple[int, int | None, str]
@@ -100,13 +100,6 @@ def union_problems(
     return tuple(found)
 
 
-def _ring(stack: EffectStack | None) -> Casing | Reserve | None:
-    """The casing or reserve `stack` holds, or `None` when it has neither."""
-    if stack is None:
-        return None
-    return next((e for e in stack.effects if isinstance(e, Casing | Reserve)), None)
-
-
 def _stack_problems(
     index: int, union: Sequence[str], stacks: Mapping[str, EffectStack]
 ) -> list[Problem]:
@@ -116,7 +109,7 @@ def _stack_problems(
     for at, name in enumerate(union):
         if name == "route" or name not in (*WATER_GROUP, *ROAD_GROUP):
             continue
-        ring = _ring(stacks.get(name))
+        ring = ring_effect(stacks.get(name))
         if ring is None:
             message = (
                 f"{name} has no casing or reserve; give it one in line_effects, "

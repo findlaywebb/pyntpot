@@ -26,32 +26,16 @@ from pyntpot.maps.line_effects import EffectStack
 from pyntpot.maps.relief import DEFAULT_SUN
 
 #: A casing union's members: each line class's mask with its ring effect, widths in display pixels.
-type RingPairs = tuple[tuple[np.ndarray, Casing | Reserve], ...]
+type RingPairs = tuple[Member, ...]
 
 #: The fields of an effect that are in pixels, and so scale with the array.
 _PX_FIELDS = tuple(name for name in EFFECT_RANGES if name.endswith("_px"))
 
 
-def _scaled(
-    effect: Casing | Glow | Shadow | Reserve, scale: float
-) -> Casing | Glow | Shadow | Reserve:
+def _scaled[E: Casing | Glow | Shadow | Reserve](effect: E, scale: float) -> E:
     """The effect with each of its `*_px` fields multiplied by `scale`."""
     fields = {name: getattr(effect, name) * scale for name in _PX_FIELDS if hasattr(effect, name)}
     return replace(effect, **fields)
-
-
-def _scaled_ring(ring: RingPairs, scale: float) -> list[Member]:
-    """The union's members with each effect's `*_px` fields multiplied by `scale`."""
-    members: list[Member] = []
-    for mask, effect in ring:
-        fields = {
-            name: getattr(effect, name) * scale for name in _PX_FIELDS if hasattr(effect, name)
-        }
-        if isinstance(effect, Casing):
-            members.append((mask, replace(effect, **fields)))
-        else:
-            members.append((mask, replace(effect, **fields)))
-    return members
 
 
 def lay_stack(
@@ -82,7 +66,7 @@ def lay_stack(
     for effect in stack.effects:
         if ring is not None and isinstance(effect, Casing | Reserve):
             if len(ring) > 0:
-                out = casing_union(out, _scaled_ring(ring, scale), paper=paper)
+                out = casing_union(out, [(m, _scaled(e, scale)) for m, e in ring], paper=paper)
             continue
         scaled = _scaled(effect, scale)
         if isinstance(scaled, Casing):

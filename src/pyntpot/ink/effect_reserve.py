@@ -25,15 +25,16 @@ from pyntpot.ink.noise import F32
 
 
 def pool_band(excess: np.ndarray) -> np.ndarray:
-    """The pool's weight from `excess = d - width_px`: a tent from half a pixel inside the ring.
+    """The pool's weight from `excess = d - width_px`: a tent on the ring's outer edge.
 
     Args:
         excess: The distance beyond the ring's outer edge, float32, subtracted once by the
             caller.
 
     Returns:
-        `clip(1.5 - excess, 0, 1) - clip(0.5 - excess, 0, 1)`: 0 well inside the ring, 1 from
-        half a pixel past its edge, and 0 again from 1.5 pixels past it.
+        `clip(1.5 - excess, 0, 1) - clip(0.5 - excess, 0, 1)`: 0 up to half a pixel inside the
+        ring's outer edge, rising to 1 at half a pixel past it, and falling back to 0 at 1.5
+        pixels past it.
     """
     return np.clip(F32(1.5) - excess, 0.0, 1.0) - np.clip(F32(0.5) - excess, 0.0, 1.0)
 

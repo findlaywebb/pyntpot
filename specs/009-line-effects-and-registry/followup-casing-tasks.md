@@ -17,10 +17,11 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [x] Red: property 1 (float32 masks, shapes a radius + 2 margin from the array edge; exact
       reference outside only, τ 0.2 to 0.5, 0.4 px; sign only inside, bit for bit); cap cases; τ-exact, one-pixel and array-edge units.
 - [x] `ink/effect_distance.py`: `contour_distance`, `ring_coverage`; pure numpy.
-- [ ] Accuracy and cost at radius 3, 8, 16, 33 recorded in "Measured"; one form, no two-stage
-      form; `docs/issues/ink-contour-distance-cost.md` written (its GitHub issue is still to file: no remote writes this session).
-- [ ] Each caller's radius as prescribed: casing `w + 1`, pen casing `w + edge + 1`, reserve
-      `w + 2`, union the members' maximum.
+- [x] Accuracy and cost at radius 3, 8, 16, 33 recorded in "Measured"; one form, no two-stage
+      form; `docs/issues/ink-contour-distance-cost.md` written, with its GitHub issue #214.
+- [x] Each caller's radius as prescribed: casing `w + 1`, pen casing `w + edge + 1`, reserve
+      `w + 2`; a union passes each member its own kind's radius, which gives the same output
+      as the members' maximum (see "As built" in `followup-casing.md`).
 - [x] Benchmark smoke entry; slice gate green.
 
 ### C2: casing and pen casing anti-aliased
@@ -75,11 +76,11 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
       reason; `mutation.md` section added.
 
 ### C7: close PR 1
-- [ ] Full golden suite `-m golden -n 2 --dist loadgroup` passes with no regeneration; grid
+- [x] Full golden suite `-m golden -n 2 --dist loadgroup` passes with no regeneration; grid
       hash check passes.
-- [ ] `git diff 8be0b017 -- tests | grep -E '^-.*\b[0-9a-f]{16}\b'` prints nothing.
-- [ ] No `src` file over 400 lines; every new signature at most 6 parameters, no noqa.
-- [ ] Ticks and "Measured" filled; one pointer line in `tasks.md`.
+- [x] `git diff 8be0b017 -- tests | grep -E '^-.*\b[0-9a-f]{16}\b'` prints nothing.
+- [x] No `src` file over 400 lines; every new signature at most 6 parameters, no noqa.
+- [x] Ticks and "Measured" filled; one pointer line in `tasks.md`.
 - [ ] PR body: three Changelog lines, mutation survivors. Pushed.
 - [ ] Merged into `claude/quirky-hypatia-z2pii3-stacked` (T0 below). Push both branches
       together once T6 is green.

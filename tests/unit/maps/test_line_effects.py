@@ -13,6 +13,7 @@ from pyntpot.maps.line_effects import (
     ROAD_GROUP,
     WATER_GROUP,
     checked_line_effects,
+    ring_effect,
 )
 from pyntpot.maps.style_groups import BasemapStyle
 
@@ -96,6 +97,25 @@ class TestTheStack:
         """A stack takes at most one reserve."""
         with pytest.raises(ValueError, match="at most one reserve"):
             EffectStack(effects=(Reserve(width_px=1.0), Reserve(width_px=2.0)))
+
+    @pytest.mark.parametrize(
+        ("effects", "expected"),
+        [
+            ((Glow(spread_px=1.0, strength=0.5), Casing(width_px=1.0)), Casing(width_px=1.0)),
+            ((Reserve(width_px=2.0),), Reserve(width_px=2.0)),
+            ((Shadow(offset_px=1.0, strength=0.3),), None),
+        ],
+        ids=["casing-after-a-glow", "reserve", "neither"],
+    )
+    def test_the_ring_effect_is_the_casing_or_reserve(
+        self, effects: tuple[Casing | Glow | Shadow | Reserve, ...], expected: object
+    ) -> None:
+        """`ring_effect` finds the stack's casing or reserve wherever it sits, or `None`."""
+        assert ring_effect(EffectStack(effects=effects)) == expected
+
+    def test_no_stack_has_no_ring_effect(self) -> None:
+        """A class with no stack has no ring effect."""
+        assert ring_effect(None) is None
 
     def test_a_stack_is_frozen_and_keyword_only(self) -> None:
         """A stack refuses assignment and positional effects."""

@@ -68,6 +68,16 @@ class TestLayReserve:
         """Where the band is 0 a pool changes nothing."""
         assert _lay(0.5, 0.0, 0.0, 1.0) == 0.5
 
+    def test_a_pool_of_zero_leaves_the_band_bit_for_bit(self) -> None:
+        """A pool of 0 is not run at exponent 1: `ground * (out / ground)` is not `out` in float32."""
+        ground = np.linspace(0.6, 0.99, 64, dtype=F32)
+        rgb = np.linspace(0.1, 0.59, 64, dtype=F32)
+        wash = np.repeat(rgb[:, None, None], 64, axis=1).repeat(3, axis=2)
+        plate = np.repeat(ground[None, :, None], 64, axis=0).repeat(3, axis=2)
+        ones = np.ones((64, 64), F32)
+        out = lay_reserve(wash, np.zeros((64, 64), F32), ones, 0.0, plate)
+        assert np.array_equal(out.view(np.uint32), wash.view(np.uint32))
+
 
 class TestReserveTie:
     """A mask exactly at the threshold is the line, and the reserve leaves it."""
