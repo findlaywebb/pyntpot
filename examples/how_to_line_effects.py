@@ -6,8 +6,9 @@ Two figures, picked by `figure`, both painted on the Ambleside fixture.
   look, with its main road cased and its route lifted by a shadow. Both are effect presets named
   under `line_effects:` in the theme, so the script paints nothing special: it loads the theme
   and runs `fetch`, `paint`, `letter` and `compose`.
-- `"presets"` is four small cards cropped to the loop, two across and two down: the route with no effect,
-  then with the `cased`, `halo` and `lifted` presets. The route's effects are laid at compose,
+- `"presets"` is four small cells, two across and two down, each the same close window on the
+  stretch of the loop where the route meets a river and a road: the route with no effect, then with
+  the `cased`, `halo` and `lifted` presets, at a scale where the route is several pixels wide. The route's effects are laid at compose,
   so the plates are painted once and composed four times. Each cell's style comes from a theme
   file the script writes in a temporary directory, holding `extends: <ambleside.yaml>` and
   `line_effects: {route: <preset>}`, and read with `Style.from_yaml`; the no-effect cell is
@@ -70,10 +71,11 @@ ACROSS = 2
 #: between them (a row's gap holds the names of the row below).
 #: The cells sit two across and two down.
 GRID_W, LEFT, TOP, PAD, GAP = 720, 12, 44, 12, 34
-#: How many times a cell's size its card is painted before it is brought down with Lanczos.
-PAINT_SCALE = 2
-#: How much of the route's width a cell draws; the cell is small, so the route is a little heavier.
-CELL_ROUTE_SCALE = 1.5
+#: How many times a cell's width the loop is painted across, so a cell shows a close window of it and
+#: the route is wide enough for each preset to read; and where the window's top left corner is, as shares
+#: of the card's width and height. The window is `1 / ZOOM` of the card across, the same in every cell,
+#: where the route crosses a river and a road.
+ZOOM, WINDOW_AT = 5, (0.70, 0.60)
 #: The ribbon fields that crop a cell to the loop, as `how_to_route_ink.py` crops its grid.
 CROP: dict[str, float] = {
     "ribbon_k": 4.0,
@@ -110,21 +112,20 @@ def _card(
 
 
 def _cell_style(style: Style, cell_w: int) -> Style:
-    """The style at cell size: a card `cell_w` wide at `PAINT_SCALE`, cropped to the loop."""
-    small = style.model_copy(
+    """The style at card size: `cell_w * ZOOM` wide, cropped to the loop."""
+    return style.model_copy(
         update={
-            "card": dataclasses.replace(style.card, display_px=cell_w * PAINT_SCALE),
+            "card": dataclasses.replace(style.card, display_px=cell_w * ZOOM),
             "ribbon": dataclasses.replace(style.ribbon, **CROP),
         }
     )
-    small = small.with_route_ink(width_px=small.route_ink.px * CELL_ROUTE_SCALE)
-    return small.model_copy(
-        update={
-            "route": dataclasses.replace(
-                small.route, route_pen_width_px=small.route.route_pen_width_px * CELL_ROUTE_SCALE
-            )
-        }
-    )
+
+
+def _window(card: Image.Image) -> Image.Image:
+    """The close window of a composed card that its cell shows: the same box in every cell."""
+    width, height = card.size
+    left, top = round(WINDOW_AT[0] * width), round(WINDOW_AT[1] * height)
+    return card.crop((left, top, left + round(width / ZOOM), top + round(height / ZOOM)))
 
 
 def _styles(scratch: Path) -> list[Style]:
@@ -145,7 +146,7 @@ def _presets(
     cache: Cache,
     providers: tuple[OverpassFeatures, OpenTopoData],
 ) -> Path:
-    """Paint the cells once, compose each preset over them, name them and save `line_effects_presets.png`."""
+    """Paint the loop once, compose each preset, crop each to its window, name them and save `line_effects_presets.png`."""
     features, elevation = providers
     cell_w = (GRID_W - LEFT - PAD - GAP * (ACROSS - 1)) // ACROSS
     with tempfile.TemporaryDirectory() as scratch:
@@ -153,7 +154,7 @@ def _presets(
     basemap = fetch(route, cache, features, elevation, styles[0])
     plates = paint(basemap, styles[0], cache.plates_dir(cache.key(route, features, elevation)))
     unlettered = Lettering((), (), None)
-    cells = [compose(plates, unlettered, basemap, s, attribution=False) for s in styles]
+    cells = [_window(compose(plates, unlettered, basemap, s, attribution=False)) for s in styles]
     cell_h = round(cells[0].height * cell_w / cells[0].width)
     spec = GridSpec(GRID_W, ACROSS, len(CELLS) // ACROSS, cell_h, LEFT, TOP, GAP, PAD, PAD)
     boxes = spec.boxes()

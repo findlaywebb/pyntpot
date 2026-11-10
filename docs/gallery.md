@@ -186,9 +186,9 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/line_effect_grids.py` (figure shadow). The labels read 0, 1.5, 3 and 5 across, and 1 and 3 down.*
 
-![The Ambleside loop four times, two across and two down: the route plain, then with a thin ring of paper round it, then with a soft pale margin, then with a soft shadow to its south-east.](images/how-to/line-effects-presets.webp)
+![One close window on the Ambleside loop four times, two across and two down, where the route crosses a river beside a road: the route plain, then with a ring of paper round it, then with a soft pale margin, then with a soft shadow to its south-east.](images/how-to/line-effects-presets.webp)
 
-*Painted by `examples/how_to_line_effects.py` (figure presets). The names are none, cased, halo and lifted.*
+*Painted by `examples/how_to_line_effects.py` (figure presets). The names are none, cased, halo and lifted; each cell is the same close window on the loop.*
 
 ![A thin ink line over a grey tint in two rows of five. The first column is the bare line; the others leave a strip of bare paper round the line, edged by two ink lines, the strip widening from left to right and the edge lines thicker in the bottom row.](images/painting-with-python/pen-casing-sweep.webp)
 

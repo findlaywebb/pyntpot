@@ -54,10 +54,10 @@ line_effects:
   route: lifted
 ```
 
-`road_major` is the main road, which the casing cuts out of the farmland and wood it crosses, and `route` is the route, which the shadow lifts off the page. The four small cards below show the route's three presets next to none, all painted from one set of plates, because a route effect is laid at compose and repaints nothing.
+`road_major` is the main road, which the casing cuts out of the farmland and wood it crosses, and `route` is the route, which the shadow lifts off the page. The four cells below show the route's three presets next to none, all cropped to the same close window on the loop, where the route crosses a river and runs beside a road, and all painted from one set of plates, because a route effect is laid at compose and repaints nothing.
 
-![The Ambleside loop four times, two across and two down: the route plain, then with a thin ring of paper round it, then with a soft pale margin, then with a soft shadow to its south-east.](../images/how-to/line-effects-presets.webp)
+![One close window on the Ambleside loop four times, two across and two down, where the route crosses a river beside a road: the route plain, then with a ring of paper round it, then with a soft pale margin, then with a soft shadow to its south-east.](../images/how-to/line-effects-presets.webp)
 
-*Painted by `examples/how_to_line_effects.py` (figure presets, theme `examples/themes/ambleside.yaml`). The names are none, cased, halo and lifted; each card but the first reads a theme file that extends `ambleside.yaml` and sets `line_effects: {route: <name>}`.*
+*Painted by `examples/how_to_line_effects.py` (figure presets, theme `examples/themes/ambleside.yaml`). The names are none, cased, halo and lifted; each cell but the first reads a theme file that extends `ambleside.yaml` and sets `line_effects: {route: <name>}`.*
 
 A preset suits a line the way its effect does. `cased` separates a road from busy colour, `halo` lifts a river or a route out of dark woodland, and `lifted` sets a route on the page. To use other numbers, write the stack out under the class, or name a preset of your own in `effect_presets:`, both described in [Write a theme](write-a-theme.md). A class on a basemap line repaints the base plates when it changes, and the route does not: see which digest each class moves in [Line effects](../reference/line-effects.md).
