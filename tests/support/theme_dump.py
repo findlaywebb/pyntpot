@@ -16,9 +16,11 @@ def dump_theme(table: Mapping[str, object]) -> str:
 
 
 def _plain(value: object) -> object:
-    """`value` with every mapping a dict and every tuple a list, recursively."""
+    """`value` with every mapping a dict, every tuple a list and every `str` subclass a plain `str`."""
     if isinstance(value, Mapping):
         return {str(key): _plain(item) for key, item in value.items()}
     if isinstance(value, tuple | list):
         return [_plain(item) for item in value]
+    if isinstance(value, str):
+        return str(value)
     return value

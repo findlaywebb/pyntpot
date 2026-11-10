@@ -117,6 +117,8 @@ def test_the_candidate_basemap_is_the_old_candidate_options() -> None:
         "inset_cells": 2,
         "tree_spacing_m": 450.0,
         "all_variants": False,
+        "line_effects": {},
+        "casing_unions": (),
     }
     assert CANDIDATE_CLIP_MARGIN_M == 2600.0
 

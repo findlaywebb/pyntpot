@@ -176,15 +176,23 @@ class TestStrictValues:
             ("card:\n  dark_grid: [80, x]\n", ("card.dark_grid", 2, "'x' is not a whole number")),
             (
                 "brush:\n  brushes:\n    lane: LAN9-z\n",
-                ("brush.brushes.lane", 3, "'LAN9-z' is not a brush on the sheet"),
+                (
+                    "brush.brushes.lane",
+                    3,
+                    "'LAN9-z' is not a brush on the sheet; did you mean LAN8-a?",
+                ),
             ),
             (
                 "route:\n  route_pen_brush: MAJ9-a\n",
-                ("route.route_pen_brush", 2, "'MAJ9-a' is not a brush on the sheet"),
+                (
+                    "route.route_pen_brush",
+                    2,
+                    "'MAJ9-a' is not a brush on the sheet; did you mean MAJ8-a?",
+                ),
             ),
             (
                 "route_ink:\n  colour: red\n",
-                ("route_ink.colour", 2, "'red' is not a # and six hexadecimal digits"),
+                ("route_ink.colour", 2, "'red' is not a pigment or a colour alias"),
             ),
             (
                 "cover:\n  pigments:\n    wood: '#a8c28'\n",
@@ -244,8 +252,8 @@ class TestStrictValues:
         ]
 
     def test_a_colour_may_be_upper_case(self):
-        """Upper-case hexadecimal digits are hexadecimal digits, so the colour is kept."""
-        assert _table("route_ink:\n  colour: '#C22050'\n") == {"route_ink": {"colour": "#C22050"}}
+        """Upper-case hexadecimal digits are hexadecimal digits, so the colour is stored lower-case."""
+        assert _table("route_ink:\n  colour: '#C22050'\n") == {"route_ink": {"colour": "#c22050"}}
 
     def test_an_int_in_a_float_field_is_a_float(self):
         """An integer given for a float field comes back as a plain `float`."""

@@ -9,10 +9,13 @@ from typing import Any, Literal
 
 import pytest
 
+from pyntpot.ink import pigment
+from pyntpot.ink.pigment_registry import PIGMENT_REGISTRY
 from pyntpot.maps import Style
+from pyntpot.maps.line_effects import BUILT_IN_PRESETS, LINE_CLASSES
 from pyntpot.maps.style import _groups
 from pyntpot.maps.theme_schema import theme_schema
-from pyntpot.maps.theme_vocab import VOCABULARIES
+from pyntpot.maps.theme_vocab import ALIAS_PATTERN, LOADER_FIELDS, VOCABULARIES
 
 from support import REPO_ROOT
 from support.planted_groups import Ink
@@ -129,11 +132,12 @@ def test_the_committed_schemas_are_the_generated_one() -> None:
 
 
 def test_every_field_is_in_the_schema_with_its_default() -> None:
-    """Every group field is a schema property whose default is its `Style()` value as JSON."""
+    """Every group field but the loader-only ones is a schema property whose default is its JSON."""
     schema: Any = theme_schema()
     style = Style()
     for group in Style.model_fields:
         values = json.loads(json.dumps(dataclasses.asdict(getattr(style, group))))
+        values = {k: v for k, v in values.items() if (group, k) not in LOADER_FIELDS}
         properties = schema["properties"][group]["properties"]
         assert set(properties) == set(values), group
         for field, value in values.items():
@@ -144,14 +148,23 @@ def test_every_field_is_in_the_schema_with_its_default() -> None:
 def test_every_level_forbids_other_keys() -> None:
     """Every object forbids other keys, but a dict field's entries, named from its vocabulary."""
     entries: set[tuple[str, ...]] = set()
-    for path, node in _objects(theme_schema()):
-        if "propertyNames" in node:
-            entries.add(path)
-            assert node["propertyNames"] == {"enum": sorted(VOCABULARIES[path])}, path
-            assert isinstance(node["additionalProperties"], Mapping), path
-        else:
-            assert node["additionalProperties"] is False, path
+    schema: Any = theme_schema()
+    for group in Style.model_fields:
+        for path, node in _objects(schema["properties"][group], (group,)):
+            _check_level(path, node, entries)
     assert entries == set(VOCABULARIES)
+
+
+def _check_level(
+    path: tuple[str, ...], node: Mapping[str, Any], entries: set[tuple[str, ...]]
+) -> None:
+    """Hold one object of a group subtree to the level rule, noting a dict field's entries."""
+    if "propertyNames" in node:
+        entries.add(path)
+        assert node["propertyNames"] == {"enum": sorted(VOCABULARIES[path])}, path
+        assert isinstance(node["additionalProperties"], Mapping), path
+    else:
+        assert node["additionalProperties"] is False, path
 
 
 def test_the_enums_are_the_literals() -> None:
@@ -167,15 +180,128 @@ def test_the_enums_are_the_literals() -> None:
     assert literals > 0
 
 
-def test_extends_is_the_one_extra_top_level_key() -> None:
-    """The top level names `extends`, a string, and the groups, and forbids anything else."""
+def test_the_top_level_names_extends_the_five_tables_and_the_groups() -> None:
+    """The top level names `extends`, the five tables and the groups, in order."""
     schema: Any = theme_schema()
     assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert schema["$id"] == SITE_SCHEMA
     assert schema["type"] == "object"
     assert schema["additionalProperties"] is False
-    assert list(schema["properties"]) == ["extends", *Style.model_fields]
+    assert list(schema["properties"]) == [
+        "extends",
+        "palette",
+        "pigments",
+        "colours",
+        "effect_presets",
+        "line_effects",
+        "casing_unions",
+        *Style.model_fields,
+    ]
     assert schema["properties"]["extends"]["type"] == "string"
+
+
+def test_the_alias_tables_take_alias_shaped_keys_that_are_no_pigment_name() -> None:
+    """`colours` and `pigments` each take keys matching the alias pattern but no built-in name."""
+    schema: Any = theme_schema()
+    rule = {
+        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+        "not": {"enum": sorted(PIGMENT_REGISTRY.names())},
+    }
+    for table in ("colours", "pigments"):
+        assert schema["properties"][table]["propertyNames"] == rule, table
+
+
+def test_the_effect_tables_take_their_own_keys() -> None:
+    """`effect_presets` takes alias keys that are no built-in preset; `line_effects` the classes."""
+    schema: Any = theme_schema()
+    presets = schema["properties"]["effect_presets"]
+    assert presets["propertyNames"] == {
+        "pattern": ALIAS_PATTERN,
+        "not": {"enum": sorted(BUILT_IN_PRESETS)},
+    }
+    assert schema["properties"]["line_effects"]["propertyNames"] == {"enum": sorted(LINE_CLASSES)}
+
+
+def test_a_line_effects_value_is_a_preset_name_or_a_stack() -> None:
+    """A `line_effects` value is `anyOf` the built-in names, an alias name or a stack object."""
+    schema: Any = theme_schema()
+    names, theme_preset, stack = schema["properties"]["line_effects"]["additionalProperties"][
+        "anyOf"
+    ]
+    assert names == {"enum": ["cased", "halo", "lifted"]}
+    assert theme_preset == {"type": "string", "pattern": ALIAS_PATTERN}
+    assert stack["additionalProperties"] is False
+    assert list(stack["properties"]) == ["casing", "glow", "shadow", "reserve"]
+
+
+def test_an_effect_is_the_walk_of_its_dataclass() -> None:
+    """Each effect in a stack is an object of its fields with their defaults, colours as the node."""
+    schema: Any = theme_schema()
+    stack = schema["properties"]["line_effects"]["additionalProperties"]["anyOf"][2]
+    casing, glow, shadow = (stack["properties"][name] for name in ("casing", "glow", "shadow"))
+    assert list(casing["properties"]) == ["width_px", "colour", "strength"]
+    assert casing["properties"]["width_px"] == {
+        "type": "number",
+        "default": 0.0,
+        "description": casing["properties"]["width_px"]["description"],
+    }
+    assert casing["properties"]["colour"]["default"] == "#ffffff"
+    assert list(glow["properties"]) == ["spread_px", "blur_px", "strength"]
+    assert shadow["properties"]["colour"]["default"] == pigment("paynes_grey").colour
+    assert shadow["additionalProperties"] is False
+    assert "minimum" not in json.dumps(stack)
+
+
+def test_an_effect_preset_is_a_stack_that_may_override() -> None:
+    """An `effect_presets` value is a stack object that also takes `override`."""
+    schema: Any = theme_schema()
+    entry = schema["properties"]["effect_presets"]["additionalProperties"]
+    assert list(entry["properties"]) == ["casing", "glow", "shadow", "reserve", "override"]
+    assert entry["properties"]["override"] == {"type": "boolean"}
+    assert entry["additionalProperties"] is False
+
+
+def test_a_loader_only_field_is_not_a_schema_property() -> None:
+    """`basemap.line_effects`, `basemap.casing_unions` and `route_ink.effects` are left out of the group subtrees."""
+    schema: Any = theme_schema()
+    assert "line_effects" not in schema["properties"]["basemap"]["properties"]
+    assert "casing_unions" not in schema["properties"]["basemap"]["properties"]
+    assert "effects" not in schema["properties"]["route_ink"]["properties"]
+
+
+def test_a_colours_entry_is_a_colour_or_a_colour_with_override() -> None:
+    """A `colours` value is the three-branch colour node, or an object of `colour` and `override`."""
+    schema: Any = theme_schema()
+    colour = {"anyOf": schema["properties"]["paper"]["properties"]["paper_hex"]["anyOf"]}
+    branches = schema["properties"]["colours"]["additionalProperties"]["anyOf"]
+    assert branches[0] == colour
+    assert set(branches[1]["properties"]) == {"colour", "override"}
+    assert branches[1]["properties"]["colour"] == colour
+    assert branches[1]["additionalProperties"] is False
+
+
+def test_a_pigments_entry_takes_base_colour_transparency_index_and_override() -> None:
+    """A `pigments` value is an object of exactly its five keys, `base` an enum of the registry."""
+    schema: Any = theme_schema()
+    entry = schema["properties"]["pigments"]["additionalProperties"]
+    assert set(entry["properties"]) == {
+        "base",
+        "colour",
+        "transparency",
+        "colour_index",
+        "override",
+    }
+    assert entry["properties"]["base"] == {"enum": sorted(PIGMENT_REGISTRY.names())}
+    assert entry["properties"]["transparency"] == {"type": "number", "minimum": 0, "maximum": 1}
+    assert entry["additionalProperties"] is False
+
+
+def test_palette_is_a_packaged_name_or_a_palette_file() -> None:
+    """`palette` is an enum of the packaged names or a `.yaml` or `.gpl` path."""
+    schema: Any = theme_schema()
+    names, path = schema["properties"]["palette"]["anyOf"]
+    assert names == {"enum": ["plain"]}
+    assert path == {"type": "string", "pattern": r"\.(yaml|gpl)$"}
 
 
 def test_no_key_is_required() -> None:
@@ -183,13 +309,19 @@ def test_no_key_is_required() -> None:
     assert '"required"' not in json.dumps(theme_schema())
 
 
-def test_a_colour_field_takes_a_hex_pattern() -> None:
-    """A colour field, and each entry of a colour dict field, is a string of `#` and six hex digits."""
+def test_a_colour_field_takes_the_three_branch_node() -> None:
+    """A colour field, and each entry of a colour dict field, is a pigment name, a hex or an alias."""
     schema: Any = theme_schema()
-    pattern = {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"}
-    assert pattern.items() <= schema["properties"]["paper"]["properties"]["paper_hex"].items()
+    node = {
+        "anyOf": [
+            {"enum": sorted(PIGMENT_REGISTRY.names())},
+            {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"},
+            {"type": "string", "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"},
+        ]
+    }
+    assert node["anyOf"] == schema["properties"]["paper"]["properties"]["paper_hex"]["anyOf"]
     pigments = schema["properties"]["cover"]["properties"]["pigments"]
-    assert pigments["additionalProperties"] == pattern
+    assert pigments["additionalProperties"] == node
 
 
 def test_a_group_that_is_no_dataclass_is_refused() -> None:
@@ -265,3 +397,33 @@ class TestTheWalkerFindsAKeyOutsideTheSchema:
         """Known keys, a vocabulary entry and an enum value in its enum report nothing."""
         table = {"extends": "default", "route_ink": {"blend": "multiply"}}
         assert keys_outside_the_schema(table, theme_schema()) == []
+
+
+def test_a_reserve_is_an_object_of_two_numbers_with_no_range() -> None:
+    """`reserve` is the walk of `Reserve`: `width_px` and `pool`, no minimum or maximum."""
+    schema: Any = theme_schema()
+    for stack in (
+        schema["properties"]["line_effects"]["additionalProperties"]["anyOf"][2],
+        schema["properties"]["effect_presets"]["additionalProperties"],
+    ):
+        reserve = stack["properties"]["reserve"]
+        assert reserve["additionalProperties"] is False
+        assert list(reserve["properties"]) == ["width_px", "pool"]
+        for node in reserve["properties"].values():
+            assert node["type"] == "number"
+            assert "minimum" not in node
+            assert "maximum" not in node
+
+
+def test_casing_unions_is_an_array_of_arrays_of_basemap_classes() -> None:
+    """`casing_unions` is non-empty, unique arrays of the seven basemap classes."""
+    schema: Any = theme_schema()
+    node = schema["properties"]["casing_unions"]
+    assert node["type"] == "array"
+    assert node["items"]["type"] == "array"
+    assert node["items"]["minItems"] == 1
+    assert node["items"]["uniqueItems"] is True
+    assert node["items"]["items"] == {
+        "enum": ["major", "medium", "minor", "coast", "road_major", "lane", "track"]
+    }
+    assert "load" in node["description"]

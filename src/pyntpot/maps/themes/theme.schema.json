@@ -9,6 +9,645 @@
       "type": "string",
       "description": "A theme name or a .yaml path this theme overrides; default when absent."
     },
+    "palette": {
+      "description": "A packaged palette name, or a .yaml or .gpl palette file.",
+      "anyOf": [
+        {
+          "enum": [
+            "plain"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "\\.(yaml|gpl)$"
+        }
+      ]
+    },
+    "pigments": {
+      "type": "object",
+      "description": "Pigments of this theme, by name; each needs a base or a colour.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+        "not": {
+          "enum": [
+            "built",
+            "burnt_sienna",
+            "cerulean",
+            "farmland",
+            "heath",
+            "indigo",
+            "meadow",
+            "orchard",
+            "pale",
+            "paynes_grey",
+            "perylene_maroon",
+            "quinacridone_rose",
+            "raw_sienna",
+            "relief",
+            "rim",
+            "rock",
+            "sand",
+            "sap_green",
+            "scrub",
+            "ultramarine",
+            "water",
+            "wetland",
+            "wood",
+            "works",
+            "yellow_ochre"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "enum": [
+              "built",
+              "burnt_sienna",
+              "cerulean",
+              "farmland",
+              "heath",
+              "indigo",
+              "meadow",
+              "orchard",
+              "pale",
+              "paynes_grey",
+              "perylene_maroon",
+              "quinacridone_rose",
+              "raw_sienna",
+              "relief",
+              "rim",
+              "rock",
+              "sand",
+              "sap_green",
+              "scrub",
+              "ultramarine",
+              "water",
+              "wetland",
+              "wood",
+              "works",
+              "yellow_ochre"
+            ]
+          },
+          "colour": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "transparency": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "colour_index": {
+            "type": "string"
+          },
+          "override": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "colours": {
+      "type": "object",
+      "description": "Colour aliases, by name; each stands for a pigment name or a hex.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+        "not": {
+          "enum": [
+            "built",
+            "burnt_sienna",
+            "cerulean",
+            "farmland",
+            "heath",
+            "indigo",
+            "meadow",
+            "orchard",
+            "pale",
+            "paynes_grey",
+            "perylene_maroon",
+            "quinacridone_rose",
+            "raw_sienna",
+            "relief",
+            "rim",
+            "rock",
+            "sand",
+            "sap_green",
+            "scrub",
+            "ultramarine",
+            "water",
+            "wetland",
+            "wood",
+            "works",
+            "yellow_ochre"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "anyOf": [
+              {
+                "enum": [
+                  "built",
+                  "burnt_sienna",
+                  "cerulean",
+                  "farmland",
+                  "heath",
+                  "indigo",
+                  "meadow",
+                  "orchard",
+                  "pale",
+                  "paynes_grey",
+                  "perylene_maroon",
+                  "quinacridone_rose",
+                  "raw_sienna",
+                  "relief",
+                  "rim",
+                  "rock",
+                  "sand",
+                  "sap_green",
+                  "scrub",
+                  "ultramarine",
+                  "water",
+                  "wetland",
+                  "wood",
+                  "works",
+                  "yellow_ochre"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+              }
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "colour": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "built",
+                      "burnt_sienna",
+                      "cerulean",
+                      "farmland",
+                      "heath",
+                      "indigo",
+                      "meadow",
+                      "orchard",
+                      "pale",
+                      "paynes_grey",
+                      "perylene_maroon",
+                      "quinacridone_rose",
+                      "raw_sienna",
+                      "relief",
+                      "rim",
+                      "rock",
+                      "sand",
+                      "sap_green",
+                      "scrub",
+                      "ultramarine",
+                      "water",
+                      "wetland",
+                      "wood",
+                      "works",
+                      "yellow_ochre"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                  }
+                ]
+              },
+              "override": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "effect_presets": {
+      "type": "object",
+      "description": "Effect presets of this theme, by name; each is a stack of effects.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+        "not": {
+          "enum": [
+            "cased",
+            "halo",
+            "lifted"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "casing": {
+            "type": "object",
+            "description": "A ring of colour round a line, laid over the paper beneath it.",
+            "additionalProperties": false,
+            "properties": {
+              "width_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "The ring's width beyond the line's footprint, in pixels of the array it is laid on."
+              },
+              "colour": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "built",
+                      "burnt_sienna",
+                      "cerulean",
+                      "farmland",
+                      "heath",
+                      "indigo",
+                      "meadow",
+                      "orchard",
+                      "pale",
+                      "paynes_grey",
+                      "perylene_maroon",
+                      "quinacridone_rose",
+                      "raw_sienna",
+                      "relief",
+                      "rim",
+                      "rock",
+                      "sand",
+                      "sap_green",
+                      "scrub",
+                      "ultramarine",
+                      "water",
+                      "wetland",
+                      "wood",
+                      "works",
+                      "yellow_ochre"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                  }
+                ],
+                "default": "#ffffff",
+                "description": "The ring's colour, laid over the paper, so white is the paper."
+              },
+              "strength": {
+                "type": "number",
+                "default": 1.0,
+                "description": "How far the ring blends toward its colour, 0 to 1."
+              }
+            }
+          },
+          "glow": {
+            "type": "object",
+            "description": "A lift of the colour beneath a line toward the paper, with a hard spread and a soft fall.",
+            "additionalProperties": false,
+            "properties": {
+              "spread_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "How far the hard core reaches beyond the line, in pixels of the array."
+              },
+              "blur_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "The softness of the falloff beyond the core, in pixels of the array."
+              },
+              "strength": {
+                "type": "number",
+                "default": 0.0,
+                "description": "How far the colour lifts toward the paper, 0 to 1."
+              }
+            }
+          },
+          "shadow": {
+            "type": "object",
+            "description": "The line's mask offset away from the light, blurred and laid as a multiplying darken.",
+            "additionalProperties": false,
+            "properties": {
+              "offset_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "How far the shadow falls, in pixels of the array; rounded to whole pixels on each axis when laid."
+              },
+              "blur_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "The softness of the shadow's edge, in pixels of the array."
+              },
+              "strength": {
+                "type": "number",
+                "default": 0.0,
+                "description": "How dark the shadow lies, 0 to 1."
+              },
+              "colour": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "built",
+                      "burnt_sienna",
+                      "cerulean",
+                      "farmland",
+                      "heath",
+                      "indigo",
+                      "meadow",
+                      "orchard",
+                      "pale",
+                      "paynes_grey",
+                      "perylene_maroon",
+                      "quinacridone_rose",
+                      "raw_sienna",
+                      "relief",
+                      "rim",
+                      "rock",
+                      "sand",
+                      "sap_green",
+                      "scrub",
+                      "ultramarine",
+                      "water",
+                      "wetland",
+                      "wood",
+                      "works",
+                      "yellow_ochre"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                  }
+                ],
+                "default": "#3b4452",
+                "description": "The colour the shadow multiplies toward; Payne's grey by default."
+              }
+            }
+          },
+          "reserve": {
+            "type": "object",
+            "description": "The paper laid back in a ring round a line, every pigment beneath it lifted.",
+            "additionalProperties": false,
+            "properties": {
+              "width_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "The ring's width beyond the line's footprint, in pixels of the array it is laid on."
+              },
+              "pool": {
+                "type": "number",
+                "default": 0.0,
+                "description": "How far the pigment gathers into a faint line just outside the ring, 0 to 1; 0 leaves no pool."
+              }
+            }
+          },
+          "override": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "line_effects": {
+      "type": "object",
+      "description": "The effects of each line class, and of the route: a preset or a stack.",
+      "propertyNames": {
+        "enum": [
+          "coast",
+          "lane",
+          "major",
+          "medium",
+          "minor",
+          "road_major",
+          "route",
+          "track"
+        ]
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "enum": [
+              "cased",
+              "halo",
+              "lifted"
+            ]
+          },
+          {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "casing": {
+                "type": "object",
+                "description": "A ring of colour round a line, laid over the paper beneath it.",
+                "additionalProperties": false,
+                "properties": {
+                  "width_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "The ring's width beyond the line's footprint, in pixels of the array it is laid on."
+                  },
+                  "colour": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "built",
+                          "burnt_sienna",
+                          "cerulean",
+                          "farmland",
+                          "heath",
+                          "indigo",
+                          "meadow",
+                          "orchard",
+                          "pale",
+                          "paynes_grey",
+                          "perylene_maroon",
+                          "quinacridone_rose",
+                          "raw_sienna",
+                          "relief",
+                          "rim",
+                          "rock",
+                          "sand",
+                          "sap_green",
+                          "scrub",
+                          "ultramarine",
+                          "water",
+                          "wetland",
+                          "wood",
+                          "works",
+                          "yellow_ochre"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^#[0-9a-fA-F]{6}$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                      }
+                    ],
+                    "default": "#ffffff",
+                    "description": "The ring's colour, laid over the paper, so white is the paper."
+                  },
+                  "strength": {
+                    "type": "number",
+                    "default": 1.0,
+                    "description": "How far the ring blends toward its colour, 0 to 1."
+                  }
+                }
+              },
+              "glow": {
+                "type": "object",
+                "description": "A lift of the colour beneath a line toward the paper, with a hard spread and a soft fall.",
+                "additionalProperties": false,
+                "properties": {
+                  "spread_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "How far the hard core reaches beyond the line, in pixels of the array."
+                  },
+                  "blur_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "The softness of the falloff beyond the core, in pixels of the array."
+                  },
+                  "strength": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "How far the colour lifts toward the paper, 0 to 1."
+                  }
+                }
+              },
+              "shadow": {
+                "type": "object",
+                "description": "The line's mask offset away from the light, blurred and laid as a multiplying darken.",
+                "additionalProperties": false,
+                "properties": {
+                  "offset_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "How far the shadow falls, in pixels of the array; rounded to whole pixels on each axis when laid."
+                  },
+                  "blur_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "The softness of the shadow's edge, in pixels of the array."
+                  },
+                  "strength": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "How dark the shadow lies, 0 to 1."
+                  },
+                  "colour": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "built",
+                          "burnt_sienna",
+                          "cerulean",
+                          "farmland",
+                          "heath",
+                          "indigo",
+                          "meadow",
+                          "orchard",
+                          "pale",
+                          "paynes_grey",
+                          "perylene_maroon",
+                          "quinacridone_rose",
+                          "raw_sienna",
+                          "relief",
+                          "rim",
+                          "rock",
+                          "sand",
+                          "sap_green",
+                          "scrub",
+                          "ultramarine",
+                          "water",
+                          "wetland",
+                          "wood",
+                          "works",
+                          "yellow_ochre"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^#[0-9a-fA-F]{6}$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                      }
+                    ],
+                    "default": "#3b4452",
+                    "description": "The colour the shadow multiplies toward; Payne's grey by default."
+                  }
+                }
+              },
+              "reserve": {
+                "type": "object",
+                "description": "The paper laid back in a ring round a line, every pigment beneath it lifted.",
+                "additionalProperties": false,
+                "properties": {
+                  "width_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "The ring's width beyond the line's footprint, in pixels of the array it is laid on."
+                  },
+                  "pool": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "How far the pigment gathers into a faint line just outside the ring, 0 to 1; 0 leaves no pool."
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "casing_unions": {
+      "type": "array",
+      "description": "Groups of basemap line classes whose casings or reserves are laid as one ring. At load, a union lies within water or road, holds a class once across all unions, and its members share one casing colour and strength (or all reserves with one pool).",
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "enum": [
+            "major",
+            "medium",
+            "minor",
+            "coast",
+            "road_major",
+            "lane",
+            "track"
+          ]
+        }
+      }
+    },
     "paper": {
       "type": "object",
       "description": "The paper: its encoder, grid, texture, seed and the compositing over it.",
@@ -45,8 +684,45 @@
           "description": "How strongly the grid's lines darken the paper, 0 to 1."
         },
         "paper_hex": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#f3ead6",
           "description": "The paper's cream, as hex."
         },
@@ -373,8 +1049,45 @@
             ]
           },
           "additionalProperties": {
-            "type": "string",
-            "pattern": "^#[0-9a-fA-F]{6}$"
+            "anyOf": [
+              {
+                "enum": [
+                  "built",
+                  "burnt_sienna",
+                  "cerulean",
+                  "farmland",
+                  "heath",
+                  "indigo",
+                  "meadow",
+                  "orchard",
+                  "pale",
+                  "paynes_grey",
+                  "perylene_maroon",
+                  "quinacridone_rose",
+                  "raw_sienna",
+                  "relief",
+                  "rim",
+                  "rock",
+                  "sand",
+                  "sap_green",
+                  "scrub",
+                  "ultramarine",
+                  "water",
+                  "wetland",
+                  "wood",
+                  "works",
+                  "yellow_ochre"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+              }
+            ]
           },
           "default": {
             "wood": "#6e7f8b"
@@ -891,8 +1604,45 @@
           "description": "The size the hand is written at, in display pixels."
         },
         "label_ink": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#241c14",
           "description": "The ink the lettering is written in."
         },
@@ -952,20 +1702,131 @@
           "description": "How far out from the marks the backing wash reaches, as a share of the type size."
         },
         "label_route_ink": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#c22050",
           "description": "The ink a name in the route's own colour is written in, read from the theme like every other field; the default is the default route ink."
         },
         "label_water_ink": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#4a7691",
           "description": "The ink the `water` token names."
         },
         "label_in_water_ink": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#f8f4e9",
           "description": "The ink a name written *on* the water is set in. Reversed out of the river in the paper's own cream rather than written into it in a dark ink: the water is a mid-tone, so a dark ink is fighting it from the wrong side. Measured on a painted river, black holds 3.9:1 and this holds 4.7:1, and the difference on the plate is larger than the ratio suggests because the letters no longer share a value with the bridges crossing them."
         }
@@ -1235,8 +2096,45 @@
             ]
           },
           "additionalProperties": {
-            "type": "string",
-            "pattern": "^#[0-9a-fA-F]{6}$"
+            "anyOf": [
+              {
+                "enum": [
+                  "built",
+                  "burnt_sienna",
+                  "cerulean",
+                  "farmland",
+                  "heath",
+                  "indigo",
+                  "meadow",
+                  "orchard",
+                  "pale",
+                  "paynes_grey",
+                  "perylene_maroon",
+                  "quinacridone_rose",
+                  "raw_sienna",
+                  "relief",
+                  "rim",
+                  "rock",
+                  "sand",
+                  "sap_green",
+                  "scrub",
+                  "ultramarine",
+                  "water",
+                  "wetland",
+                  "wood",
+                  "works",
+                  "yellow_ochre"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+              }
+            ]
           },
           "default": {
             "farmland": "#dfe0b0",
@@ -1368,8 +2266,45 @@
           "description": "Width in display pixels; it also sets how near two passes of a retraced route have to come to be drawn as one stroke."
         },
         "colour": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
+          "anyOf": [
+            {
+              "enum": [
+                "built",
+                "burnt_sienna",
+                "cerulean",
+                "farmland",
+                "heath",
+                "indigo",
+                "meadow",
+                "orchard",
+                "pale",
+                "paynes_grey",
+                "perylene_maroon",
+                "quinacridone_rose",
+                "raw_sienna",
+                "relief",
+                "rim",
+                "rock",
+                "sand",
+                "sap_green",
+                "scrub",
+                "ultramarine",
+                "water",
+                "wetland",
+                "wood",
+                "works",
+                "yellow_ochre"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+            }
+          ],
           "default": "#c22050",
           "description": "Colour as `#rrggbb`."
         },

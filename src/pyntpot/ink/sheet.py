@@ -18,6 +18,7 @@ import numpy as np
 import numpy.typing as npt
 from PIL import Image
 
+from pyntpot.ink.colour import channels
 from pyntpot.ink.noise import F32, fbm, fbm_aniso
 
 #: The paper's own cream, before anything is laid on it.
@@ -38,8 +39,7 @@ def rgb(hex_s: str) -> np.ndarray:
             hexadecimal (a three- or four-digit short form, for one).
             Characters after the sixth digit are not read.
     """
-    h = hex_s.lstrip("#")
-    return np.array([int(h[i : i + 2], 16) / 255.0 for i in (0, 2, 4)], F32)
+    return channels(hex_s)
 
 
 @dataclass

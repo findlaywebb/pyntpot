@@ -18,8 +18,13 @@ from typing import TYPE_CHECKING
 
 from PIL import Image, ImageChops, ImageDraw
 
+from pyntpot.maps.route_effects import lay as lay_effects
+from pyntpot.maps.route_effects import pen_mask, solid_mask
+
 if TYPE_CHECKING:
     from pathlib import Path
+
+    import numpy as np
 
     from pyntpot.maps.plates import Plates
     from pyntpot.maps.style_groups import RouteInkStyle
@@ -31,12 +36,6 @@ if TYPE_CHECKING:
 ROUTE_SS = 4
 #: The blends a route ink may name.
 ROUTE_BLENDS = ("normal", "multiply")
-
-
-def _rgb(colour: str) -> tuple[int, int, int]:
-    """One `#rrggbb` string as a tuple."""
-    s = colour.lstrip("#")
-    return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
 
 
 def painted_map(plates: Plates) -> Image.Image:
@@ -64,18 +63,26 @@ def route(
 
     The painter's pen plate is white carrying alpha so the page can tint it, so
     the same plate is tinted here. A style with no pen plate draws the line. The ink's
-    `blend` (`"normal"` or `"multiply"`) and `opacity` (0 to 1) shape both. No casing,
-    glow or shadow is drawn.
+    `blend` (`"normal"` or `"multiply"`) and `opacity` (0 to 1) shape both.
+
+    When `ink.effects` holds effects (a casing, reserve, glow or shadow, off by default), they
+    are laid on the card first, round the route's one merged mask: the pen plate's alpha
+    density above a noise floor (under 8/255 counts as none), or the solid line's reduced
+    mask. A casing, a reserve and a glow lift toward the
+    paper plate, a shadow falls as the relief is lit, and the line is then laid over them.
+    The consumer's SVG page does not draw route effects; only this composed card does.
 
     Source: `lanczos` in docs/explanation/references.md.
     """
-    colour = _rgb(ink.colour)
+    colour = ink.colour.rgb8
     name = plates.manifest.files.get("pen")
     if name is not None and name != "" and ink.drawn_as == "pen":
         pen = Image.open(plates.directory / name).convert("RGBA")
         if pen.size != card_img.size:
             pen = pen.resize(card_img.size, Image.Resampling.LANCZOS)
-        _lay(card_img, colour, pen.getchannel("A"), ink.blend, ink.opacity)
+        alpha = pen.getchannel("A")
+        _effects(card_img, plates, pen_mask(alpha), ink, k)
+        _lay(card_img, colour, alpha, ink.blend, ink.opacity)
         return
     # Drawn on a grid `ROUTE_SS` times finer and reduced back, because Pillow's
     # line is hard: at one pixel per pixel a route that runs at any angle but
@@ -90,7 +97,19 @@ def route(
         joint="curve",
     )
     mask = big.resize(card_img.size, Image.Resampling.LANCZOS)
+    _effects(card_img, plates, solid_mask(mask), ink, k)
     _lay(card_img, colour, mask, ink.blend, ink.opacity)
+
+
+def _effects(
+    card_img: Image.Image, plates: Plates, mask: np.ndarray, ink: RouteInkStyle, k: float
+) -> None:
+    """Lay the route's effect stack on the card in place, over `mask`, when it holds any."""
+    if not ink.effects.effects:
+        return
+    paper = Image.open(plates.paths["paper"]).convert("RGB")
+    laid = lay_effects(card_img, mask, ink.effects, scale=k, paper=paper)
+    card_img.paste(laid, (0, 0))
 
 
 def _lay(

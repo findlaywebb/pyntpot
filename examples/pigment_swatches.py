@@ -31,6 +31,7 @@ from pyntpot.ink import (
     TRANSPARENCY,
     BrushStyle,
     Canvas,
+    Colour,
     PaperStyle,
     PigmentLayer,
     Sheet,
@@ -67,7 +68,7 @@ SEED = 11
 #: How many times its size the nib plate is painted before it is brought down.
 NIB_SCALE = 2
 #: The size and the ink of a key's lettering, in pixels.
-KEY_PX, KEY_INK = 21.0, "#3a2c20"
+KEY_PX, KEY_INK = 21.0, Colour("#3a2c20")
 #: The ink bar's colour: a mid grey-brown, where a covering veil reads as a lightening and a stain as a tint.
 BAR_HEX = "#6a625a"
 

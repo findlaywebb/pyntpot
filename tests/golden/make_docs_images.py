@@ -41,7 +41,7 @@ MASTERS_SUBDIR = "masters"
 _FIXTURES = REPO_ROOT / "tests" / "fixtures"
 
 
-def _fixture_options(fixture: str, cache: Path) -> dict[str, object]:
+def fixture_options(fixture: str, cache: Path) -> dict[str, object]:
     """Copy a fixture into `cache` and return the keywords a fixture script takes."""
     shutil.copytree(_FIXTURES / fixture, cache)
     return {
@@ -97,7 +97,7 @@ def paint_entry(entry: DocsImage, work: Path) -> tuple[bytes, bytes]:
     """
     options: dict[str, object] = dict(entry.options)
     if entry.fixture is not None:
-        options.update(_fixture_options(entry.fixture, work / "cache"))
+        options.update(fixture_options(entry.fixture, work / "cache"))
     written = run_example(entry.stem, work / "out", **options)
     with Image.open(written) as opened:
         img = opened.convert("RGB")

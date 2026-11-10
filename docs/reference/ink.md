@@ -13,6 +13,8 @@
 
 ::: pyntpot.ink.PAINTERS_TRANSPARENCY
 
+::: pyntpot.ink.PIGMENT_REGISTRY
+
 ::: pyntpot.ink.Blooms
 
 ::: pyntpot.ink.Box
@@ -23,11 +25,17 @@
 
 ::: pyntpot.ink.Canvas
 
+::: pyntpot.ink.Colour
+
 ::: pyntpot.ink.Flow
 
 ::: pyntpot.ink.PaperStyle
 
+::: pyntpot.ink.Pigment
+
 ::: pyntpot.ink.PigmentLayer
+
+::: pyntpot.ink.PigmentRegistry
 
 ::: pyntpot.ink.Point
 
@@ -47,6 +55,8 @@
 
 ::: pyntpot.ink.paper_plate
 
+::: pyntpot.ink.pigment
+
 ::: pyntpot.ink.rgb
 
 ::: pyntpot.ink.save_image
@@ -56,3 +66,23 @@
 ::: pyntpot.ink.stamp
 
 ::: pyntpot.ink.wash
+
+::: pyntpot.ink.Casing
+
+::: pyntpot.ink.Glow
+
+::: pyntpot.ink.PenCasing
+
+::: pyntpot.ink.Reserve
+
+::: pyntpot.ink.Shadow
+
+::: pyntpot.ink.casing
+
+::: pyntpot.ink.glow
+
+::: pyntpot.ink.pen_casing
+
+::: pyntpot.ink.reserve
+
+::: pyntpot.ink.shadow

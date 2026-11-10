@@ -41,5 +41,5 @@ needs an ADR and a breaking-change entry in the changelog. Pixels must not move:
 and tutorial are rewritten to the new calls and the docs images and goldens stay as they
 are.
 
-**Related.** `docs-examples-review` (#63); `ink-one-pigment-registry` (#72), the colour half
+**Related.** `docs-examples-review` (#63); the one pigment registry (#72, [ADR 0070](../decisions/0070-line-effects-and-one-pigment-registry.md)), the colour half
 of the same boilerplate; `WashOptions`, public from `pyntpot.ink`, which `wash` takes.

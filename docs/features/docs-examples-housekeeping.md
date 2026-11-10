@@ -43,7 +43,7 @@ stays exact. The map scripts' smoke tests can share the offline Lynmouth paint
 (`tests-shared-lynmouth-paint.md`).
 
 **Related.** `docs-examples-review.md` (#63), `tests-shared-lynmouth-paint.md` (#90),
-`docs-labelled-grid-helper.md`.
+the labelled-grid helper (#170), now `examples/labelled_grid.py`.
 
 **Example code names.** `route = Track.from_gpx(track)`,
 `card = compose(...)`, `crest` and `WASH_BODY` for a wash body, and example docstrings that

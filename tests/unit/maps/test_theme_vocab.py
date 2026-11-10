@@ -1,4 +1,4 @@
-"""The theme vocabularies: each dict field's keys, the brush-id fields and the colour fields."""
+"""The theme vocabularies: each dict field's keys, the brush-id fields and the alias pattern."""
 
 import dataclasses
 import re
@@ -11,24 +11,9 @@ from pyntpot.ink.brush_sheet import BRUSH_COLOURS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.maps import Style
 from pyntpot.maps.style_groups import CoverStyle
-from pyntpot.maps.theme_vocab import BRUSH_ID_FIELDS, COLOUR_FIELDS, VOCABULARIES
+from pyntpot.maps.theme_vocab import ALIAS_PATTERN, BRUSH_ID_FIELDS, LOADER_FIELDS, VOCABULARIES
 
 from support.planted_groups import Cloud
-
-HEX = re.compile(r"#[0-9a-f]{6}")
-
-
-def _string_paths(style: Style) -> dict[tuple[str, ...], list[str]]:
-    """Every string-valued path of `style`: a `str` field, or a dict field of strings as `*`."""
-    paths: dict[tuple[str, ...], list[str]] = {}
-    for group in type(style).model_fields:
-        for item in dataclasses.fields(getattr(style, group)):
-            value = getattr(getattr(style, group), item.name)
-            if isinstance(value, str):
-                paths[(group, item.name)] = [value]
-            elif isinstance(value, dict) and all(isinstance(v, str) for v in value.values()):
-                paths[(group, item.name, "*")] = list(value.values())
-    return paths
 
 
 def _has_vocabulary(path: tuple[str, ...]) -> bool:
@@ -47,7 +32,9 @@ def _unvocabularied(name: str, group: type) -> list[tuple[str, ...]]:
     def walk(hint: object, path: tuple[str, ...]) -> None:
         if isinstance(hint, type) and dataclasses.is_dataclass(hint):
             for key, item in typing.get_type_hints(hint).items():
-                if key in {f.name for f in dataclasses.fields(hint)}:
+                if key in {f.name for f in dataclasses.fields(hint)} and (
+                    len(path) != 1 or (path[0], key) not in LOADER_FIELDS
+                ):
                     walk(item, (*path, key))
         elif typing.get_origin(hint) is dict:
             if not _has_vocabulary(path):
@@ -56,17 +43,6 @@ def _unvocabularied(name: str, group: type) -> list[tuple[str, ...]]:
 
     walk(group, (name,))
     return missing
-
-
-def test_the_colour_fields_are_what_the_model_implies():
-    """`COLOUR_FIELDS` is exactly the paths whose default values are all `#rrggbb`, each once."""
-    implied = {
-        path
-        for path, values in _string_paths(Style()).items()
-        if values and all(HEX.fullmatch(value) for value in values)
-    }
-    assert set(COLOUR_FIELDS) == implied
-    assert len(COLOUR_FIELDS) == len(set(COLOUR_FIELDS))
 
 
 def test_the_brush_id_fields_are_the_four_the_brushes_are_read_from():
@@ -87,8 +63,15 @@ def test_every_dict_field_has_a_vocabulary():
         for group in type(style).model_fields
         for item in dataclasses.fields(getattr(style, group))
         if isinstance(getattr(getattr(style, group), item.name), dict)
+        and (group, item.name) not in LOADER_FIELDS
     }
     assert set(VOCABULARIES) == dict_fields | {("brush", "brush_overrides", "*")}
+
+
+def test_the_loader_only_fields_have_no_vocabulary() -> None:
+    """`basemap.line_effects` has no entry: `theme_effects` checks its keys against the classes."""
+    assert ("basemap", "line_effects") in LOADER_FIELDS
+    assert ("basemap", "line_effects") not in VOCABULARIES
 
 
 def test_the_walk_finds_a_dict_field_with_no_vocabulary():
@@ -141,3 +124,31 @@ BRUSH = BrushStyle()
 def test_each_vocabulary_is_its_default_s_keys(path: tuple[str, ...], expected: frozenset[str]):
     """Each dict field's vocabulary is the keys its readers use, from the defaults."""
     assert VOCABULARIES[path] == expected
+
+
+@pytest.mark.parametrize(
+    ("alias", "ok"),
+    [
+        ("sky", True),
+        ("sap_green", True),
+        ("blue2", True),
+        ("_sky", False),
+        ("sky_", False),
+        ("sky__blue", False),
+        ("2blue", False),
+        ("Sky", False),
+    ],
+    ids=[
+        "word",
+        "joined",
+        "digit-inside",
+        "leading",
+        "trailing",
+        "doubled",
+        "digit-first",
+        "upper",
+    ],
+)
+def test_the_alias_pattern_is_each_alias_s_own_normal_form(alias, ok):
+    """`ALIAS_PATTERN` takes lower-case words joined by single underscores, starting with a letter."""
+    assert (re.fullmatch(ALIAS_PATTERN, alias) is not None) is ok

@@ -16,9 +16,10 @@ from pathlib import Path
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from pyntpot.ink.colour import Colour
 from pyntpot.maps.style import Style
 from pyntpot.maps.theme_merge import merge
-from pyntpot.maps.theme_vocab import COLOUR_FIELDS
+from pyntpot.maps.theme_vocab import LOADER_FIELDS
 
 from support.properties import UNTIMED
 from support.theme_dump import dump_theme
@@ -99,9 +100,15 @@ class TestMerge:
 
 type _Path = tuple[str, ...]
 
-#: The default table, one entry per group, as the loader's base.
+#: The default table, one entry per group, as the loader's base, less the loader-only fields,
+#: which a theme sets only through `line_effects` and refuses inside their group.
 _BASE: dict[str, object] = {
-    name: dataclasses.asdict(getattr(Style(), name)) for name in Style.model_fields
+    name: {
+        field: value
+        for field, value in dataclasses.asdict(getattr(Style(), name)).items()
+        if (name, field) not in LOADER_FIELDS
+    }
+    for name in Style.model_fields
 }
 
 
@@ -117,13 +124,9 @@ def _leaves(table: Mapping[str, object], prefix: _Path = ()) -> list[tuple[_Path
     return found
 
 
-def _is_colour(path: _Path) -> bool:
-    """Whether `path` is a colour field, a `*` in a pattern standing for any one key."""
-    return any(
-        len(path) == len(pattern)
-        and all(want in ("*", have) for have, want in zip(path, pattern, strict=True))
-        for pattern in COLOUR_FIELDS
-    )
+def _is_colour(value: object) -> bool:
+    """Whether the leaf `value` is a `Colour`, which `dataclasses.asdict` keeps as the subclass."""
+    return isinstance(value, Colour)
 
 
 def _is_number(value: object) -> bool:
@@ -131,18 +134,18 @@ def _is_number(value: object) -> bool:
     return isinstance(value, int | float) and not isinstance(value, bool)
 
 
-def _drawable(path: _Path, value: object) -> bool:
-    """Whether the leaf `value` at `path` is a kind the property gives a new value."""
+def _drawable(value: object) -> bool:
+    """Whether the leaf `value` is a kind the property gives a new value."""
     if isinstance(value, bool) or _is_number(value):
         return True
     if isinstance(value, tuple):
         return bool(value) and all(_is_number(item) for item in value)
-    return isinstance(value, str) and _is_colour(path)
+    return _is_colour(value)
 
 
 #: Every leaf of the default table the property may change, in table order.
 _CANDIDATES: tuple[tuple[_Path, object], ...] = tuple(
-    (path, value) for path, value in _leaves(_BASE) if _drawable(path, value)
+    (path, value) for path, value in _leaves(_BASE) if _drawable(value)
 )
 
 _HEX = st.text(alphabet="0123456789abcdef", min_size=6, max_size=6).map(lambda h: f"#{h}")

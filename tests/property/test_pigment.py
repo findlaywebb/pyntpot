@@ -7,7 +7,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hnp
 
-from pyntpot.ink.pigment import PigmentLayer, composite
+from pyntpot.ink.compositing import PigmentLayer, composite
 from pyntpot.ink.style import PaperStyle
 
 from support.properties import UNTIMED

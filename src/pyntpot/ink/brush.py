@@ -3,8 +3,8 @@
 Key types: `Brush`, one mark-making tool in render pixels; `brush_from_id`, which builds one
 from a brush sheet cell and the `BrushStyle`; `scaled_brush`, the same tool on a finer grid;
 `ink_aux`, the extra accumulators a brush's flags need; `brush_id_known`, whether a brush id
-names a sheet cell; `BRUSH_OVERRIDE_KEYS`, the keys a `brush_overrides` entry may set. The
-sheet's tables are in `ink.brush_sheet`.
+names a sheet cell; `brush_ids`, every id it accepts; `BRUSH_OVERRIDE_KEYS`, the keys a
+`brush_overrides` entry may set. The sheet's tables are in `ink.brush_sheet`.
 
 A brush id `<PREFIX><row>-<column>`, such as `MAJ2-a`, is an opaque sheet cell name: this
 module never reads the prefix as a feature class. Which class takes which cell is the style's
@@ -20,6 +20,7 @@ import numpy as np
 
 from pyntpot.ink.brush_sheet import BRUSH_COLOURS, BRUSH_TREATMENTS, PEN_ROWS
 from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.ink.naming import did_you_mean
 from pyntpot.ink.noise import F32
 
 #: The keys a `brush_overrides` entry may set: every key the sheet brush reads from it.
@@ -170,6 +171,20 @@ def brush_id_known(brush_id: str) -> bool:
     return row in BRUSH_TREATMENTS and col in BRUSH_COLOURS.get(cls, {})
 
 
+def brush_ids() -> tuple[str, ...]:
+    """Every brush id the sheet carries, the ones `brush_id_known` accepts.
+
+    Returns:
+        The ids in sheet order: by prefix, then row, then colour column.
+    """
+    return tuple(
+        f"{cls}{row}-{col}"
+        for cls, cols in BRUSH_COLOURS.items()
+        for row in BRUSH_TREATMENTS
+        for col in cols
+    )
+
+
 def brush_from_id(
     brush_id: str,
     width_display_px: float,
@@ -190,10 +205,11 @@ def brush_from_id(
         The brush in render pixels, and its ink colour as hex.
 
     Raises:
-        ValueError: When the id names a row or a colour that does not exist.
+        ValueError: When the id names a row or a colour that does not exist; the message names
+            the nearest id when one is close.
     """
     if not brush_id_known(brush_id):
-        raise ValueError(f"no such brush {brush_id!r}")
+        raise ValueError(f"no such brush {brush_id!r}{did_you_mean(brush_id, brush_ids())}")
     cls, rest = brush_id[:3], brush_id[3:]
     row, _, col = rest.partition("-")
     over = style.brush_overrides.get(override or cls.lower(), {})

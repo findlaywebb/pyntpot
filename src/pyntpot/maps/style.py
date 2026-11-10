@@ -34,7 +34,6 @@ import dataclasses
 import hashlib
 import json
 import math
-import re
 import typing
 from collections.abc import Mapping
 from pathlib import Path, PurePath
@@ -43,6 +42,7 @@ from typing import Self
 import pydantic
 
 from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.ink.colour import Colour
 from pyntpot.ink.style import PaperStyle, WashStyle
 from pyntpot.letters.style import FaceStyle, HandStyle, NibStyle
 from pyntpot.maps.style_groups import (
@@ -75,15 +75,17 @@ _DIGEST_HEX = 16
 #: Fields left out of a group digest while they equal their default, or what its default
 #: factory builds, so a field added later moves no digest of a style that leaves it alone:
 #: the basemap's `name_tags` and `minor_road_classes`, and the cover's `relief_strength` and
-#: `min_patch_px`.
+#: `min_patch_px`, and the basemap's `line_effects` and `casing_unions` and the route ink's
+#: `effects` (off by default; each name is unique across the groups, because the rule matches by name).
 DIGEST_OMITS_AT_DEFAULT: tuple[str, ...] = (
     "name_tags",
     "minor_road_classes",
     "relief_strength",
     "min_patch_px",
+    "line_effects",
+    "effects",
+    "casing_unions",
 )
-#: A colour a caller may feed: a `#` and six hexadecimal digits.
-_HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
 
 
 class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
@@ -244,8 +246,12 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
             ValueError: When `colour` is not a `#` and six hexadecimal digits, or
                 `width_px` is a bool, or is not a finite number above zero.
         """
-        if colour is not None and _HEX_COLOUR.fullmatch(colour) is None:
-            raise ValueError(f"route colour {colour!r} is not a # and six hexadecimal digits")
+        try:
+            fed_colour = None if colour is None else Colour.parse(colour)
+        except ValueError as exc:
+            raise ValueError(
+                f"route colour {colour!r} is not a # and six hexadecimal digits"
+            ) from exc
         if width_px is not None and (
             isinstance(width_px, bool) or not math.isfinite(width_px) or width_px <= 0
         ):
@@ -253,7 +259,7 @@ class Style(pydantic.BaseModel, frozen=True, extra="forbid"):
         ink = self.route_ink
         fed = dataclasses.replace(
             ink,
-            colour=ink.colour if colour is None else colour.lower(),
+            colour=ink.colour if fed_colour is None else fed_colour,
             px=ink.px if width_px is None else float(width_px),
         )
         return self.model_copy(update={"route_ink": fed})

@@ -2,9 +2,11 @@
 
 GitHub issue: [#105](https://github.com/findlaywebb/pyntpot/issues/105)
 
-**What exists today.** The compose step lays the route ink through its mask with a `blend`
-and an `opacity` (`pyntpot.maps.compose_steps.route`). Nothing softens the ground round the route,
-so on a dark or busy wash the line has no halo to lift it.
+**What exists today.** The model and the primitive are in. `pyntpot.ink.glow` takes a `Glow`
+(spread, blur, strength) and a theme sets one on any line class, the route included, through
+`line_effects` and `effect_presets` (`EffectStack` from `pyntpot.maps`; the built-in presets
+are `cased`, `halo` and `lifted`). The route's stack is laid at compose. Every default is off,
+so no theme paints a glow yet.
 
 **What the feature would add.** A glow: a soft, blurred band round the route, lighter than
 the ground, at a given width and opacity, drawn under the route.
@@ -16,7 +18,8 @@ P7 critique (`specs/001-port/research/p7/critique/maps.md`) read the default's r
 "glowing magenta" from its colour alone, so a painted glow may not suit a watercolour card;
 weigh that before adding it.
 
-**Possible shape.** Typed fields on `RouteInkStyle` (`glow_px` in display pixels, `glow_opacity`
-from 0 to 1, 0 for none); the compose step blurs the route's mask by `glow_px` and lays the
-paper colour through it at `glow_opacity` before the route. Moves the goldens of any theme
-that sets a glow.
+**What remains.** Figures, the how-to guide and the reference, and any packaged theme that
+turns a glow on (which moves that theme's pinned images and so needs its own golden
+regeneration). The P7 critique's doubt, that a painted glow may not suit a watercolour card,
+is still worth weighing before a packaged theme sets one. These come in the follow-up spec
+(`specs/009a-line-effect-figures-and-galleries/`), which closes this issue.

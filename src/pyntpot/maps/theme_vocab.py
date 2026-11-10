@@ -1,29 +1,32 @@
-"""What a theme may name: each dict field's keys, the brush-id fields and the colour fields.
+"""What a theme may name: each dict field's keys, the brush-id fields and the colour patterns.
 
 Key names: `VOCABULARIES`, the keys a theme may give each dict-valued field, by key path,
 computed from the group defaults so a new class or pigment needs no edit here;
-`BRUSH_ID_FIELDS`, the key paths whose values are brush ids; `COLOUR_FIELDS`, the key paths
-whose values are `#rrggbb` colours. A `*` in a key path stands for every entry of a dict
-field.
+`BRUSH_ID_FIELDS`, the key paths whose values are brush ids; `LOADER_FIELDS`, the group fields
+only the top-level `line_effects` and `casing_unions` tables set, each with the key that sets it;
+`COLOUR_PATTERN` and `ALIAS_PATTERN`, the shapes of a hex colour and of a colour alias. A `*` in a key path stands
+for every entry of a dict field. Which fields hold colours is read from the model: they are
+typed `Colour`.
 
 Checks nothing itself: the checker reads these. Imports the style groups, never the style
 model or the `pyntpot.maps` package, which import the loader.
 
 Invariants: each vocabulary is the set of keys its readers look up, and a `brush_overrides`
 entry's keys are the keys the sheet brush reads; no key path appears twice in
-`BRUSH_ID_FIELDS` or `COLOUR_FIELDS`.
+`BRUSH_ID_FIELDS`.
 """
 
 from pyntpot.ink.brush import BRUSH_OVERRIDE_KEYS
 from pyntpot.ink.brush_sheet import BRUSH_COLOURS
 from pyntpot.ink.brush_style import BrushStyle
+from pyntpot.ink.pigment_table import ROLE_PIGMENTS
 from pyntpot.maps.style_groups import CoverStyle
 
 _COVER = CoverStyle()
 _BRUSH = BrushStyle()
 
 #: The pigment keys: a pigment's transparency and its separating partner are keyed alike.
-_PIGMENTS = frozenset(_COVER.pigments)
+_PIGMENTS = frozenset(p.name for p in ROLE_PIGMENTS)
 
 #: The `brush_overrides` entries a caller names itself: the route's pen and the label nib.
 _CALLER_OVERRIDES = frozenset({"route", "label"})
@@ -51,17 +54,19 @@ BRUSH_ID_FIELDS: tuple[tuple[str, ...], ...] = (
     ("nib", "label_leader_brush"),
 )
 
+#: The group fields a theme sets only through a top-level table (`line_effects` or
+#: `casing_unions`), by key path, each with the key that sets it: naming one inside its group is a located error, and the
+#: schema and the field-table pins leave them out. They have no vocabulary, because the checker
+#: of `line_effects` and `casing_unions` reads the line classes.
+LOADER_FIELDS: dict[tuple[str, str], str] = {
+    ("basemap", "line_effects"): "line_effects.<class>",
+    ("route_ink", "effects"): "line_effects.route",
+    ("basemap", "casing_unions"): "casing_unions",
+}
+
 #: The regular expression a colour string must match in full: `#` and six hexadecimal digits.
 COLOUR_PATTERN = "^#[0-9a-fA-F]{6}$"
 
-#: The key paths whose values are colours, `#` and six hexadecimal digits.
-COLOUR_FIELDS: tuple[tuple[str, ...], ...] = (
-    ("paper", "paper_hex"),
-    ("wash", "separation_pigments", "*"),
-    ("nib", "label_ink"),
-    ("nib", "label_water_ink"),
-    ("nib", "label_in_water_ink"),
-    ("nib", "label_route_ink"),
-    ("cover", "pigments", "*"),
-    ("route_ink", "colour"),
-)
+#: The regular expression an alias must match in full: lower-case words joined by single `_`,
+#: so every alias is its own normal form under the `.gpl` rule.
+ALIAS_PATTERN = "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"

@@ -29,6 +29,8 @@
 
 ::: pyntpot.maps.DarkGrid
 
+::: pyntpot.maps.EffectStack
+
 ::: pyntpot.maps.Elevation
 
 ::: pyntpot.maps.ElevationGrid
@@ -64,6 +66,8 @@
 ::: pyntpot.maps.OpenTopoData
 
 ::: pyntpot.maps.OverpassFeatures
+
+::: pyntpot.maps.Palette
 
 ::: pyntpot.maps.Plates
 

@@ -22,7 +22,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0012 | Mutation threshold |
 | 0013 | The name and the layered package (points to 0002, 0010) |
 | 0014 | How the code was ported |
-| 0015 | Pydantic at the boundary only (0069 adds `ruamel.yaml`, also `maps` only) |
+| 0015 | Pydantic at the boundary only (0069 adds `ruamel.yaml`, also `maps` only; 0070 adds palettes and `.gpl` files to what `maps` reads, and keeps `ink`'s pigment registry as Python tables) |
 | 0016 | Providers as protocols, attribution on by default (points to 0004) |
 | 0017 | The fetch cache key (points to 0004) |
 | 0018 | Build backend and versioning |
@@ -33,7 +33,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0023 | Retire the exemptions mechanism (ends D5's interim relaxation) |
 | 0025 | Second golden regeneration |
 | 0026 | Widen the public API |
-| 0027 | Candidate export, vector layers and route ink |
+| 0027 | Candidate export, vector layers and route ink (its independent `label_route_ink` is amended by 0070 rule 18: a fed route colour also letters the markers) |
 | 0028 | Fetch wraps provider errors |
 | 0029 | Provider errors public and the cache wraps |
 | 0030 | Smoke lock tolerant on CI |
@@ -52,7 +52,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0043 | Lossless plate effort: faster opaque plates, same pixels |
 | 0044 | No pre-release Python job (amends D4) |
 | 0045 | Cover rings fill as a union: the sixth golden regeneration |
-| 0046 | One route ink (amends 0005, 0026, 0027 and 0037; its `style` field is renamed `drawn_as` by 0069) |
+| 0046 | One route ink (amends 0005, 0026, 0027 and 0037; its `style` field is renamed `drawn_as` by 0069; its dropped casing, glow and shadow return as a typed effect stack, and `with_route_ink` also sets the marker ink, by 0070) |
 | 0047 | Names on the paper and off the water: the seventh golden regeneration |
 | 0048 | The label ink token (amends 0008 and 0026) |
 | 0049 | A generator per item: the eighth golden regeneration |
@@ -75,4 +75,5 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0066 | The backing wash fades out from the letters: a golden regeneration |
 | 0067 | A leader's pin is an open ring facing its leader: a golden regeneration |
 | 0068 | One public surface (amends 0004, 0005, 0007, 0026 and 0027) |
-| 0069 | Themes are YAML overrides of one model (supersedes 0020; amends 0002, 0005, 0015, 0037, 0046 and 0068) |
+| 0069 | Themes are YAML overrides of one model (supersedes 0020; amends 0002, 0005, 0015, 0037, 0046 and 0068; amended by 0070: a colour may be a pigment name or an alias, `COLOUR_FIELDS` goes, and route effects are one effect stack split at load) |
+| 0070 | Line effects and one pigment registry (amends 0015, 0027, 0046 and 0069) |

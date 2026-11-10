@@ -17,7 +17,13 @@ import re
 import typing
 from collections.abc import Mapping, Sequence
 
-from pyntpot.ink import PAINTERS_PIGMENTS, PAINTERS_TRANSPARENCY, PIGMENTS, TRANSPARENCY
+from pyntpot.ink import (
+    PAINTERS_PIGMENTS,
+    PAINTERS_TRANSPARENCY,
+    PIGMENT_REGISTRY,
+    PIGMENTS,
+    TRANSPARENCY,
+)
 from pyntpot.ink.brush_sheet import BRUSH_COLOURS, BRUSH_TREATMENTS, PEN_ROWS
 from pyntpot.maps.cli import build_parser
 from pyntpot.maps.style import Style
@@ -288,26 +294,33 @@ class TestCliSynopsis:
         )
 
 
+def _index(key: str) -> str:
+    """Return a registry pigment's Colour Index code as the pigments page writes it, `none` for no code."""
+    return PIGMENT_REGISTRY.get(key).colour_index or "none"
+
+
 class TestPigmentTables:
     """The pigment tables on `pigments.md` hold the pigment tables' colours and transparencies."""
 
     def test_the_map_pigments_are_the_table(self) -> None:
         """Each strip row's colour and transparency are its key's in `PIGMENTS` and `TRANSPARENCY`."""
         text = (REFERENCE / "pigments.md").read_text()
-        rows = _table(text, ["Strip", "Key", "Colour", "Transparency"])
+        rows = _table(text, ["Strip", "Key", "Colour", "Transparency", "Colour Index"])
         assert [_code(row[1]) for row in rows] == list(PIGMENTS)
-        for _, key, colour, transparency in rows:
+        for _, key, colour, transparency, colour_index in rows:
             assert _code(colour) == PIGMENTS[_code(key)], key
             assert float(transparency) == TRANSPARENCY[_code(key)], key
+            assert _code(colour_index) == _index(_code(key)), key
 
     def test_the_painters_pigments_are_the_table(self) -> None:
         """Each painter's row's colour and transparency are its key's in the painter's tables."""
         text = (REFERENCE / "pigments.md").read_text()
-        rows = _table(text, ["Key", "Colour", "Transparency"])
+        rows = _table(text, ["Key", "Colour", "Transparency", "Colour Index"])
         assert [_code(row[0]) for row in rows] == list(PAINTERS_PIGMENTS)
-        for key, colour, transparency in rows:
+        for key, colour, transparency, colour_index in rows:
             assert _code(colour) == PAINTERS_PIGMENTS[_code(key)], key
             assert float(transparency) == PAINTERS_TRANSPARENCY[_code(key)], key
+            assert _code(colour_index) == _index(_code(key)), key
 
 
 class TestBrushTables:

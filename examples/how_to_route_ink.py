@@ -19,8 +19,8 @@ hand's sizes are set in display pixels and would swamp a cell 200 pixels wide.
 Public names it uses: from `pyntpot.maps`, `Cache`, `Lettering`, `OpenTopoData`,
 `OverpassFeatures`, `Style`, `Track`, `compose`, `fetch`, `letter` and `paint`; from
 `pyntpot.ink`, `PAINTERS_PIGMENTS`, `BrushStyle`, `Canvas`, `PaperStyle`, `Sheet`, `paper_plate`
-and `save_image`; from `pyntpot.letters`, `FaceStyle`, `Hand`, `HandStyle`, `Mark`, `NibGroups`,
-`NibStyle`, `NibSurface`, `Setting` and `nib_plate`; it introduces none beyond
+and `save_image`; `GridSpec`, `LabelStyle` and `label_grid` from the sibling `labelled_grid.py`,
+which lays out the grid and letters its names; it introduces none beyond
 `Style.with_route_ink`. It writes `out_dir / "route_ink.png"` (`out_dir / "route_ink_grid.png"` for the grid).
 
 Run it with a track, a cache directory, an output directory and a contact::
@@ -34,32 +34,20 @@ route.
 import argparse
 import dataclasses
 import logging
-import tempfile
-from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
+from labelled_grid import GridSpec, LabelStyle, label_grid
 from PIL import Image
 
 from pyntpot.ink import (
     PAINTERS_PIGMENTS,
-    BrushStyle,
     Canvas,
+    Colour,
     PaperStyle,
     Sheet,
     paper_plate,
     save_image,
-)
-from pyntpot.letters import (
-    FaceStyle,
-    Hand,
-    HandStyle,
-    Mark,
-    NibGroups,
-    NibStyle,
-    NibSurface,
-    Setting,
-    nib_plate,
 )
 from pyntpot.maps import (
     Cache,
@@ -109,9 +97,11 @@ CROP: dict[str, float] = {
     "card_grow_mult": 0.9,
 }
 #: The size of the names on the grid, in pixels, the ink they are lettered in and the hand's seed.
-LABEL_PX, LABEL_INK, SEED = 21.0, "#4a3a2a", 7
+LABEL_PX, LABEL_INK, SEED = 21.0, Colour("#4a3a2a"), 7
 #: How many times its size the nib plate is painted before it is brought down.
 NIB_SCALE = 2
+#: How the grid's names are lettered.
+LABELS = LabelStyle(px=LABEL_PX, ink=LABEL_INK, pen_px=1.5, gran_px=6.0 * NIB_SCALE, seed=SEED)
 
 
 def _base(theme: str | None) -> Style:
@@ -152,33 +142,6 @@ def _row_style(small: Style, brush: str) -> Style:
             "route_ink": ink,
         }
     )
-
-
-def _lettered(grid: np.ndarray, settings: Sequence[Setting]) -> np.ndarray:
-    """Letter the settings over the grid with the hand and return the result.
-
-    The nib plate is painted at `NIB_SCALE` times the grid's size, then brought down to it with
-    Lanczos and laid over the grid by its alpha.
-    """
-    h, w = grid.shape[:2]
-    big_w, big_h = w * NIB_SCALE, h * NIB_SCALE
-    face, hand_style = FaceStyle(), HandStyle()
-    hand = Hand(face, hand_style)
-    rng = hand.generator(SEED)
-    marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
-    canvas = Canvas(0, 0, big_w, big_h, big_w, big_h)
-    surface = NibSurface(canvas, NIB_SCALE, np.zeros((big_h, big_w), np.float32), 6.0 * NIB_SCALE)
-    nib = NibStyle(label_ink=LABEL_INK, label_pen_width_px=1.5)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
-    with tempfile.TemporaryDirectory() as scratch:
-        written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
-        if written is None:
-            raise RuntimeError("the hand wrote no marks")
-        with Image.open(written) as plate:
-            small = plate.convert("RGBa").resize((w, h), Image.Resampling.LANCZOS)
-            rgba = np.asarray(small.convert("RGBA"), np.float32) / 255
-    alpha = rgba[..., 3:]
-    return grid * (1 - alpha) + rgba[..., :3] * alpha
 
 
 def _grid(
@@ -227,27 +190,20 @@ def _grid(
             ]
         )
     cell_h = round(cells[0][0].height * cell_w / cells[0][0].width)
-    grid_h = TOP + len(ROWS) * cell_h + (len(ROWS) - 1) * GAP + PAD
-    sheet = Sheet(grid_h, GRID_W, 6.0, SEED)
-    canvas = Canvas(0, 0, GRID_W, grid_h, GRID_W, grid_h)
+    spec = GridSpec(GRID_W, len(COLOURS), len(ROWS), cell_h, LEFT, TOP, GAP, PAD, PAD)
+    boxes = spec.boxes()
+    sheet = Sheet(spec.height, GRID_W, 6.0, SEED)
+    canvas = Canvas(0, 0, GRID_W, spec.height, GRID_W, spec.height)
     grid = paper_plate(sheet, canvas, PaperStyle(paper_foxing=0.0), GRID_W)
-    settings: list[Setting] = []
-    for r, row_cells in enumerate(cells):
-        y = TOP + r * (cell_h + GAP)
-        for c, cell in enumerate(row_cells):
-            x = LEFT + c * (cell_w + GAP)
+    for row_boxes, row_cells in zip(boxes, cells, strict=True):
+        for (x, y, _, _), cell in zip(row_boxes, row_cells, strict=True):
             resized = cell.resize((cell_w, cell_h), Image.Resampling.LANCZOS)
             grid[y : y + cell_h, x : x + cell_w] = np.asarray(resized, np.float32) / 255
-            if r == 0:
-                anchor = (x + cell_w / 2, TOP - 14)
-                settings.append(
-                    Setting(COLOURS[c][0], LABEL_PX, anchor=anchor, align="middle", wash=False)
-                )
-        anchor = (LEFT - 12, y + cell_h / 2 + 7)
-        settings.append(Setting(ROWS[r][0], LABEL_PX, anchor=anchor, align="end", wash=False))
+    columns = [name for name, _ in COLOURS]
+    rows = [name for name, _ in ROWS]
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "route_ink_grid.png"
-    save_image(_lettered(grid, settings), path, seed=SEED)
+    save_image(label_grid(grid, boxes, columns, rows, LABELS), path, seed=SEED)
     return path
 
 

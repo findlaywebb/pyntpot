@@ -20,8 +20,9 @@ The grids, in the order of the rungs:
 Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `BrushStyle`,
 `paper_plate`, `wash`, `PIGMENTS`, `PAINTERS_PIGMENTS`, `PAINTERS_TRANSPARENCY`, `rgb`,
 `composite`, `brush_from_id`, `stamp`, `ink_density`, `PigmentLayer` and `save_image`; from
-`pyntpot.letters`, `FaceStyle`, `HandStyle`, `Hand`, `Setting`, `Mark`, `NibSurface`,
-`NibStyle`, `NibGroups` and `nib_plate`. It introduces none.
+`pyntpot.letters`, `Setting` and `NibStyle`; and `GridSpec`, `LabelStyle`, `label_grid` and
+`letter_over` from the sibling `labelled_grid.py`, which holds the layout, the label step and
+the nib-plate round trip the grids share. It introduces none.
 
 Run it with `uv run python examples/tutorial_grids.py out/ --figure nib`; it writes
 `out/grid-nib.png`.
@@ -29,13 +30,12 @@ Run it with `uv run python examples/tutorial_grids.py out/ --figure nib`; it wri
 
 import argparse
 import logging
-import tempfile
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal
 
 import numpy as np
-from PIL import Image
+from labelled_grid import GridSpec, LabelStyle, label_grid, letter_over
 
 from pyntpot.ink import (
     PAINTERS_PIGMENTS,
@@ -43,6 +43,7 @@ from pyntpot.ink import (
     PIGMENTS,
     BrushStyle,
     Canvas,
+    Colour,
     PaperStyle,
     PigmentLayer,
     Sheet,
@@ -55,17 +56,7 @@ from pyntpot.ink import (
     stamp,
     wash,
 )
-from pyntpot.letters import (
-    FaceStyle,
-    Hand,
-    HandStyle,
-    Mark,
-    NibGroups,
-    NibStyle,
-    NibSurface,
-    Setting,
-    nib_plate,
-)
+from pyntpot.letters import NibStyle, Setting
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +71,11 @@ GRAN_PX = 6.0
 #: How many times its size the nib plate is painted before it is brought down.
 NIB_SCALE = 2
 #: The size of a grid's labels, in pixels, and the ink they are lettered in.
-LABEL_PX, LABEL_INK = 21.0, "#4a3a2a"
+LABEL_PX, LABEL_INK = 21.0, Colour("#4a3a2a")
+#: How a grid's names are lettered: the nib, the plate's grain, the hand and the offsets (12 above).
+LABELS = LabelStyle(
+    px=LABEL_PX, ink=LABEL_INK, pen_px=1.5, gran_px=GRAN_PX * NIB_SCALE, seed=SEED, col_dy=12
+)
 #: The name the lettered grids write.
 NAME = "Keswick"
 #: The name the nib grid writes: its bowls and diagonals show the nib's angle better than "Keswick".
@@ -91,12 +86,8 @@ Box = tuple[int, int, int, int]
 
 def _layout(cols: int, rows: int, cell_h: int, left: int, top: int) -> tuple[list[list[Box]], int]:
     """Return the cells of a grid, a list for each row, each cell `(x, y, w, h)`, and the grid's height."""
-    cell_w = (W - left - PAD - GAP * (cols - 1)) // cols
-    boxes = [
-        [(left + c * (cell_w + GAP), top + r * (cell_h + GAP), cell_w, cell_h) for c in range(cols)]
-        for r in range(rows)
-    ]
-    return boxes, top + rows * cell_h + (rows - 1) * GAP + PAD
+    spec = GridSpec(W, cols, rows, cell_h, left, top, GAP, PAD, PAD)
+    return spec.boxes(), spec.height
 
 
 def _paper(w: int, h: int, style: PaperStyle | None = None, seed: int = SEED) -> np.ndarray:
@@ -107,7 +98,9 @@ def _paper(w: int, h: int, style: PaperStyle | None = None, seed: int = SEED) ->
 
 def _desk(h: int) -> np.ndarray:
     """Paint the darker paper the cells of a tiled grid lie on."""
-    return _paper(W, h, PaperStyle(paper_hex="#d4c8ac", paper_worn=0.0, paper_foxing=0.0), 3)
+    return _paper(
+        W, h, PaperStyle(paper_hex=Colour("#d4c8ac"), paper_worn=0.0, paper_foxing=0.0), 3
+    )
 
 
 def _disc(w: int, h: int, cx: float, cy: float, radius: float) -> np.ndarray:
@@ -132,31 +125,7 @@ def _letter(
     Raises:
         RuntimeError: When the hand wrote no marks, so there is no plate to lay.
     """
-    h, w = img.shape[:2]
-    big_w, big_h = w * NIB_SCALE, h * NIB_SCALE
-    face, hand_style = FaceStyle(), HandStyle()
-    hand = Hand(face, hand_style)
-    rng = hand.generator(seed)
-    marks: list[Mark] = [mark for s in settings for mark in hand.write(s, rng)]
-    dark = np.zeros((h, w), np.float32) if ground is None else ground.astype(np.float32)
-    dark = np.asarray(Image.fromarray(dark).resize((big_w, big_h), Image.Resampling.BILINEAR))
-    canvas = Canvas(0, 0, big_w, big_h, big_w, big_h)
-    surface = NibSurface(canvas, NIB_SCALE, dark, GRAN_PX * NIB_SCALE)
-    groups = NibGroups(nib, face, hand_style, BrushStyle(), PaperStyle())
-    with tempfile.TemporaryDirectory() as scratch:
-        written = nib_plate(marks, surface, groups, Path(scratch) / "plate.webp")
-        if written is None:
-            raise RuntimeError("the hand wrote no marks")
-        with Image.open(written) as plate:
-            small = plate.convert("RGBa").resize((w, h), Image.Resampling.LANCZOS)
-            rgba = np.asarray(small.convert("RGBA"), np.float32) / 255
-    alpha = rgba[..., 3:]
-    return img * (1 - alpha) + rgba[..., :3] * alpha
-
-
-def _name(value: object) -> str:
-    """A grid label's text: a float without trailing zeros, anything else as it prints."""
-    return f"{value:g}" if isinstance(value, float) else str(value)
+    return letter_over(img, settings, nib, gran_px=GRAN_PX * NIB_SCALE, seed=seed, ground=ground)
 
 
 def _labels(
@@ -166,28 +135,7 @@ def _labels(
     rows: Sequence[object],
 ) -> np.ndarray:
     """Letter a name over each column and beside each row of a grid."""
-    top, left = boxes[0][0][1], boxes[0][0][0]
-    settings = [
-        Setting(
-            _name(text),
-            LABEL_PX,
-            anchor=(x + w / 2, top - 12),
-            align="middle",
-            wash=False,
-        )
-        for text, (x, _, w, _) in zip(columns, boxes[0], strict=True)
-    ]
-    settings += [
-        Setting(
-            _name(text),
-            LABEL_PX,
-            anchor=(left - 12, row[0][1] + row[0][3] / 2 + 7),
-            align="end",
-            wash=False,
-        )
-        for text, row in zip(rows, boxes, strict=True)
-    ]
-    return _letter(img, settings, NibStyle(label_ink=LABEL_INK, label_pen_width_px=1.5))
+    return label_grid(img, boxes, columns, rows, LABELS)
 
 
 def _paper_grid() -> np.ndarray:

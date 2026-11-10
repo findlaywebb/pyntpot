@@ -34,9 +34,9 @@ from typing import Self
 import numpy as np
 
 from pyntpot.ink.bloom import Blooms
+from pyntpot.ink.compositing import PigmentLayer
 from pyntpot.ink.keyed import keyed_rng
 from pyntpot.ink.noise import F32
-from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.polyline import Point
 from pyntpot.ink.sheet import Canvas, Sheet
 from pyntpot.ink.washing import Flow

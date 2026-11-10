@@ -16,6 +16,9 @@ package; a group never imports anything outside `ink`.
 from dataclasses import dataclass, field
 from typing import Literal
 
+from pyntpot.ink.colour import Colour, normalise_colours
+from pyntpot.ink.pigment_table import role_transparencies
+
 
 @dataclass(frozen=True, kw_only=True)
 class PaperStyle:
@@ -78,7 +81,7 @@ class PaperStyle:
     grid: bool = False
     grid_spacing_px: float = 26.0
     grid_opacity: float = 0.34
-    paper_hex: str = "#f3ead6"
+    paper_hex: Colour = Colour("#f3ead6")
     paper_tooth: float = 0.085
     paper_worn: float = 0.20
     paper_vignette: float = 0.05
@@ -86,25 +89,7 @@ class PaperStyle:
     paper_edge: Literal["classic", "warm"] = "warm"
     sheet_seed: int = 11
     km_glazing: bool = True
-    pigment_transparency: dict[str, float] = field(
-        default_factory=lambda: {
-            "farmland": 0.1,
-            "meadow": 0.09,
-            "orchard": 0.09,
-            "scrub": 0.08,
-            "heath": 0.14,
-            "sand": 0.16,
-            "rock": 0.22,
-            "wetland": 0.08,
-            "built": 0.26,
-            "works": 0.28,
-            "wood": 0.05,
-            "pale": 0.12,
-            "water": 0.04,
-            "relief": 0.3,
-            "rim": 0.18,
-        }
-    )
+    pigment_transparency: dict[str, float] = field(default_factory=role_transparencies)
     km_transparency: float = 0.06
     paper_fibre: bool = True
     paper_fibre_mix: float = 0.35
@@ -112,6 +97,10 @@ class PaperStyle:
     paper_fibre_angle: float = 0.42
     paper_fibre_cell_px: float = 4.2
     gran_gamma: float = 1.7
+
+    def __post_init__(self) -> None:
+        """Normalise the paper colour to `Colour`, so a plain `str` passed to `replace` is accepted."""
+        normalise_colours(self, "paper_hex")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -252,7 +241,9 @@ class WashStyle:
     silhouette_deform_min_px: float = 1.6
     silhouette_deform_seed: int = 73
     pigment_separation: bool = True
-    separation_pigments: dict[str, str] = field(default_factory=lambda: {"wood": "#6e7f8b"})
+    separation_pigments: dict[str, Colour] = field(
+        default_factory=lambda: {"wood": Colour("#6e7f8b")}
+    )
     separation_share: float = 0.05
     separation_gamma: float = 2.2
     separation_transparency: float = 0.07
@@ -263,3 +254,7 @@ class WashStyle:
     fluid_amount: float = 0.051429
     fluid_gran: float = 0.6
     fluid_seed: int = 41
+
+    def __post_init__(self) -> None:
+        """Normalise the separation pigments to `Colour`, so a plain `str` passed to `replace` is accepted."""
+        normalise_colours(self, "separation_pigments")

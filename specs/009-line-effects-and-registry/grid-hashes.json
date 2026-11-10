@@ -1,0 +1,94 @@
+{
+  "explanation/nib-angles.webp": {
+    "file": "faab6f3aba1ee6e010ffd01f18a6e5fd7683135d049a1abf24562604b2f77397",
+    "pixels": "f1e854e1e7ef0a2502a11504205a358bb9dca9cbde9d38fd3b53c6989997a83e"
+  },
+  "explanation/nib-backing.webp": {
+    "file": "7e8c22cd952bea2addd57ec7962807a6bf03921ab54e8120f30b6a175c261add",
+    "pixels": "bf080033dca19635682634ab902fb1567d24d69076da287390694302cf2e1e67"
+  },
+  "explanation/nib-centreline.webp": {
+    "file": "8159793b2c951e7989f91498ba31f46fa668a97560068234f1d03a2869912fa1",
+    "pixels": "0e430fb72bd7a814812ce20b4b2ec1b7a23ba05f280fff8907e3a8f1053f9a61"
+  },
+  "explanation/nib-ground.webp": {
+    "file": "dd22f3271846b26900cb12169a4f833b214abfe8025ea4cc5294fdd30f86e4e1",
+    "pixels": "7691556669e7a2e24df012f11250fcf2f141e2de0cc31dcaed7a4df60930839a"
+  },
+  "explanation/nib-hands.webp": {
+    "file": "971b402be84d6eae13435cb7763b3c7c773f4bc87d5896a9f19331c83fe6b478",
+    "pixels": "15c884fc77c6357f1be07047f797c30c028593a4e1d37f76c193e01aaeb5c303"
+  },
+  "explanation/nib-runs-dry.webp": {
+    "file": "fb9e0ceca5dada8113a3be44b965b46bcd4b130ade3d320fc377ae1442fd8e65",
+    "pixels": "ea76bd981404c6186c612f74040bc07668f1b01b9c16dc2c0298896a5d0d8cbc"
+  },
+  "explanation/nib-set-down.webp": {
+    "file": "828aeafb1c31cb96c8f37b6fe792231e744a7093338fa76383b402976c89dcae",
+    "pixels": "670564d2518c3e2da0cf333ebca08c01eb4168feaa6cf86097e629c74a1a1ffb"
+  },
+  "explanation/wash-body.webp": {
+    "file": "f47ab6c3a9edf55eaab3c50466dc4ee2f80d46e826fcf1babc7630945f96eabe",
+    "pixels": "6f436ac8a800bb081ea99ac3504306f2e58d2c37fd9ab4c8d139d6486b0b663c"
+  },
+  "explanation/wash-glaze.webp": {
+    "file": "a8e70bef796a2f5535387a5a61829be2048f660a5231aa4f6cca6aa1e65ba640",
+    "pixels": "2669786d10b55e39239bc4b5075ae5f280d67e90b234eaf739cc85d067a5fc2d"
+  },
+  "explanation/wash-grain.webp": {
+    "file": "460f9720120d7c35baae007e3cefcf05ab65650634778d93a894ad3847cf9ff5",
+    "pixels": "ee696f36ce59d716d75770a823ed86afc166d4d5f136fb2b3ac16674261fa16a"
+  },
+  "explanation/wash-mask.webp": {
+    "file": "07896a115239e459ef5fc9c896f4315509700e8883035463d39de967f4005427",
+    "pixels": "12274a64463cc93b65bd41096aca61f55050b3a958e1663ae29a86c012e74cfe"
+  },
+  "explanation/wash-overlap.webp": {
+    "file": "236de6e382128689f4f7559692a100e1275ae49e2a5e17aaa224b33fa39c5004",
+    "pixels": "4ccd8aad8624a9b5a390364f238aa8db5c5e2fc52a912e9e909b8a69b1c84b91"
+  },
+  "explanation/wash-rim.webp": {
+    "file": "b862c5aa0fc8a2d57a29f2aae0fa72dde40135b60fbc6ee177d0fa51527db376",
+    "pixels": "12bcfa77b1353e14dc84521eb321807db5ce151b9b2515e3c28b473d2fa0dd83"
+  },
+  "how-to/route-ink-grid.webp": {
+    "file": "4a2d81b1903ea9cfbf2a2ebd3615b855da22dc99f669266a4e3732698392c6b7",
+    "pixels": "b2369fb60f4a00ee4794f429857d86dc98c21feace05a0f1b7d2665d19ea3e6f"
+  },
+  "how-to/route-ink.webp": {
+    "file": "6fdd818b5f3795a47f71958aa379de6819121ec6178ee432da2ad4068be94316",
+    "pixels": "8f832b5d80921a7e6b19f3a15e234797f4e961d4df88ec0b4058794b6a0b6db8"
+  },
+  "reference/brush-sheet.webp": {
+    "file": "dba0af5528e375a7dc7b0571d2be55dddd91d61bf51175b8ab39c70b6d8645af",
+    "pixels": "425fd8767bd8929f37966cdc92cf051148a98ad6bc6ab9c938853653d529ba4c"
+  },
+  "tutorials/grid-brush.webp": {
+    "file": "2537045bebe664d1aab5ca35e2214ad6d0102ec05bd5fb0fb36d829f6b2eeb24",
+    "pixels": "9bfbcc874a353c155e2f83d814060376381dc7a12ad90bd5f31b4983b08cdb1e"
+  },
+  "tutorials/grid-composition.webp": {
+    "file": "17b71f7f7c34eca269718a17b268ea3f0b85924fe0ad741e84f9c1fa9e5588df",
+    "pixels": "344a042aef907e31cd4671dbecae0e5daba2369c5ebfb08f7c3c311572448a3f"
+  },
+  "tutorials/grid-lettering.webp": {
+    "file": "a9673225b676e0811c42df77c34bbeba7846f5e87880c0d37189dd33867a01b7",
+    "pixels": "8dfc4b299e416bb76c22a8f3d22a2ba6a885c2a3dd5f21dd910ea9cb0a7aebc5"
+  },
+  "tutorials/grid-nib.webp": {
+    "file": "808b09b8e0b117c1acee4c81c7df8f5202aa242193238eef4b1fff4225e8ee0e",
+    "pixels": "72d860f9cb1ad428bd01cb044724628f30415fe3beef521742e77e8b68781205"
+  },
+  "tutorials/grid-paper.webp": {
+    "file": "9f8fe9003f479928a27b8618a2cc0c3056b6f4c808c319c05db21ca8dd383df7",
+    "pixels": "54f83d08ee654757e49c9ec06a88c5cdf589202cd1a0afad1545d9593e398c05"
+  },
+  "tutorials/grid-pigments.webp": {
+    "file": "8f0227b78347eb35e820ef4760753daccb442b957c1f11c232f0ee9adc8a9265",
+    "pixels": "b7ab732eac0609c5ef4afdae71bdd58942d0059d580ae08c3cc3ab634b80fc00"
+  },
+  "tutorials/grid-wash.webp": {
+    "file": "8d2dc7d814b01fb59833e6bf15b70f83970bcc6c914e7a1ecb555a094246355f",
+    "pixels": "eed4e274856e3a75d7c4e957ca8f80590872aa4fd84aa97bf75711c22c7dd92f"
+  }
+}

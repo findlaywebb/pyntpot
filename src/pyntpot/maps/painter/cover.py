@@ -21,8 +21,8 @@ before it.
 
 import numpy as np
 
+from pyntpot.ink.compositing import PigmentLayer
 from pyntpot.ink.noise import F32, chamfer_distance, smoothstep
-from pyntpot.ink.pigment import PigmentLayer
 from pyntpot.ink.raster import Deform, deform_rings, fill_cov
 from pyntpot.ink.sheet import rgb
 from pyntpot.ink.style import WashStyle

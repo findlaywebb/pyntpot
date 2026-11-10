@@ -168,7 +168,7 @@ Intro line.
 ## `kubelka-munk` Kubelka-Munk glazing
 
 - Canonical source: Kubelka; Munk (1931). *Zeitschrift für technische Physik* 12, 593.
-- Implemented in: `pyntpot.ink.pigment.km_rt`, `pyntpot.ink.pigment.km_plate`
+- Implemented in: `pyntpot.ink.compositing.km_rt`, `pyntpot.ink.compositing.km_plate`
 - Note: one line.
 
 ## Read during design, no technique here
@@ -196,7 +196,7 @@ def test_entries_parses_a_two_entry_file() -> None:
     """The parser maps both keyed headings to their paths and skips the closing section."""
     assert entries(_TWO_ENTRY_FILE) == {
         "zhang-suen": ["pyntpot.letters.skeleton.thin"],
-        "kubelka-munk": ["pyntpot.ink.pigment.km_rt", "pyntpot.ink.pigment.km_plate"],
+        "kubelka-munk": ["pyntpot.ink.compositing.km_rt", "pyntpot.ink.compositing.km_plate"],
     }
 
 

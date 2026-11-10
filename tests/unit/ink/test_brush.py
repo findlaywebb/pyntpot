@@ -6,10 +6,11 @@ from pyntpot.ink.brush import (
     BRUSH_OVERRIDE_KEYS,
     brush_from_id,
     brush_id_known,
+    brush_ids,
     ink_aux,
     scaled_brush,
 )
-from pyntpot.ink.brush_sheet import PEN_ROWS
+from pyntpot.ink.brush_sheet import BRUSH_COLOURS, BRUSH_TREATMENTS, PEN_ROWS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.pad import InkPad
 
@@ -99,3 +100,38 @@ def test_every_phase_2_brush_flag_off_but_the_ink_grid_builds_a_plain_pad():
     pad = InkPad((8, 8), brush, flags_off(BrushStyle, ink_ss=1))
     assert pad.ss == 1 and pad.tol == 0.0 and not pad.any()
     assert InkPad((8, 8), brush, style).ss == 3
+
+
+def test_a_missed_brush_id_names_the_nearest_one():
+    """A brush id one letter off a real cell is refused with that cell suggested."""
+    with pytest.raises(ValueError, match="no such brush 'RIV1-z'; did you mean RIV1-a\\?"):
+        brush_from_id("RIV1-z", 3.0, 2.0, BrushStyle())
+
+
+def test_a_brush_id_far_from_every_cell_is_refused_without_a_suggestion():
+    """When no id is close, the refusal carries no 'did you mean' clause."""
+    with pytest.raises(ValueError, match=r"no such brush 'zzzzzz'$"):
+        brush_from_id("zzzzzz", 3.0, 2.0, BrushStyle())
+
+
+def test_the_catalogue_tables_refuse_assignment():
+    """The sheet's tables, outer and inner, are read-only."""
+    with pytest.raises(TypeError):
+        BRUSH_TREATMENTS["9"] = {}  # ty: ignore[invalid-assignment]
+    with pytest.raises(TypeError):
+        BRUSH_TREATMENTS["1"]["darkness"] = 0.0  # ty: ignore[invalid-assignment]
+    with pytest.raises(TypeError):
+        BRUSH_COLOURS["RIV"] = {}  # ty: ignore[invalid-assignment]
+    with pytest.raises(TypeError):
+        BRUSH_COLOURS["RIV"]["b"] = "#000000"  # ty: ignore[invalid-assignment]
+
+
+def test_brush_ids_is_the_cross_product_the_sheet_implies():
+    """`brush_ids` lists every prefix, row and column once, and `brush_id_known` accepts each."""
+    ids = brush_ids()
+    assert len(ids) == 112
+    assert len(set(ids)) == 112
+    assert ids[0] == "RIV1-a"
+    assert ids[-1] == "TRK8-f"
+    assert "MAJ6-e" in ids
+    assert all(brush_id_known(brush_id) for brush_id in ids)

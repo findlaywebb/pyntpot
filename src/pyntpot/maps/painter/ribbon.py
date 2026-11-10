@@ -15,8 +15,8 @@ top of the ground: the plates phase does.
 
 import numpy as np
 
+from pyntpot.ink.compositing import composite
 from pyntpot.ink.noise import F32, blur, chamfer_distance, fill_holes, smoothstep
-from pyntpot.ink.pigment import composite
 from pyntpot.ink.raster import stroke_mask
 from pyntpot.ink.sheet import Sheet
 from pyntpot.maps.painter.job import PaintJob, PlateStack

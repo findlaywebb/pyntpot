@@ -144,9 +144,9 @@ The costs are answered as follows.
   nothing else at runtime. PyYAML stays banned: one YAML library, and it is the one that
   defaults to 1.2 and keeps positions.
 
-Session F's data-driven brushes and pigments
-(`docs/features/ink-data-driven-brushes-and-pigments.md`) also assumes YAML; this sets the
-precedent, and whether its files are read in `ink` is that session's decision and ADR.
+Session F's data-driven brushes and pigments (#71, since settled by
+`docs/decisions/0070-line-effects-and-one-pigment-registry.md`) also assumed YAML; this set the
+precedent, and whether its files are read in `ink` was that session's decision and ADR.
 
 **Files and names.** `.yaml` is the one extension. A theme given as a value that ends in
 `.yaml` is a path. Any other string is a name, which must match `^[a-z][a-z0-9-]*$` in

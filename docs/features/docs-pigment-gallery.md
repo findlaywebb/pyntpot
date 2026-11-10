@@ -10,7 +10,7 @@ tables, and no page shows them all side by side, nor how they mix.
 **What the feature would add** (maintainer, 2026-10-25). A gallery of every pigment: a
 swatch of each at a few strengths, labelled in the library's hand with its name and its
 aliases, and a few glazes of common pairs so a reader sees how they mix. It pairs with
-the one pigment registry (`ink-one-pigment-registry.md`), which gives the gallery one list
+the one pigment registry (#72, [ADR 0070](../decisions/0070-line-effects-and-one-pigment-registry.md)), which gives the gallery one list
 to paint, and with the brush id gallery (`docs-brush-id-gallery.md`).
 
 **Why it is not a defect.** The pigments are documented and every one paints; the gap is

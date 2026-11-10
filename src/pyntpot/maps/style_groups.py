@@ -15,8 +15,10 @@ are the default look; the default theme is these defaults with nothing overridde
 A field that takes one of a few words is typed as a `Literal` of those words.
 
 It paints, letters and fetches nothing. The route ink knows nothing of what a
-track records, and holds no casing, glow or shadow: the compose step draws
-none. Two `BasemapStyle` fields, `hillshade_opacity` and `pick_places`, have
+track records. Its `effects` and the basemap's `line_effects` are set only by a theme's
+top-level `line_effects` table, the basemap's `casing_unions` only by its top-level
+`casing_unions` table, and all are off by default; at the default the compose step draws
+no casing, glow or shadow. Two `BasemapStyle` fields, `hillshade_opacity` and `pick_places`, have
 no reader and are kept for the upstream consumer. The basemap's clip margin is derived from the card per
 render and is not a style field.
 
@@ -27,6 +29,10 @@ package.
 from dataclasses import dataclass, field
 from typing import Literal
 
+from pyntpot.ink.colour import Colour, normalise_colours
+from pyntpot.ink.pigment_table import PIGMENTS
+from pyntpot.maps.casing_unions import union_problems
+from pyntpot.maps.line_effects import EffectStack, checked_line_effects
 from pyntpot.maps.providers.overpass import MINOR_ROADS
 
 #: The painter fields no module reads, kept by the upstream consumer and left
@@ -157,25 +163,7 @@ class CoverStyle:
             "wood": (0.72, 0.3),
         }
     )
-    pigments: dict[str, str] = field(
-        default_factory=lambda: {
-            "farmland": "#dfe0b0",
-            "meadow": "#cfdfae",
-            "orchard": "#d5dda2",
-            "scrub": "#c9d5a4",
-            "heath": "#e0cda2",
-            "sand": "#ecdfbe",
-            "rock": "#dcd6c6",
-            "wetland": "#bfd2cd",
-            "built": "#ddd3c3",
-            "works": "#d2cbc0",
-            "wood": "#a8c286",
-            "pale": "#d5e0b4",
-            "water": "#9ec4de",
-            "relief": "#c9bda4",
-            "rim": "#c2ad91",
-        }
-    )
+    pigments: dict[str, Colour] = field(default_factory=lambda: dict(PIGMENTS))
     pale_base: float = 0.50
     pale_pool: float = 0.16
     wood_texture: float = 0.75
@@ -184,6 +172,10 @@ class CoverStyle:
     wood_tex_strengths: tuple[float, ...] = (0.30, 0.40, 0.48)
     dab_spacings: tuple[float, ...] = (1.7, 1.0, 0.6)
     dab_strengths: tuple[float, ...] = (0.34, 0.36, 0.38)
+
+    def __post_init__(self) -> None:
+        """Normalise the pigment colours to `Colour`, so a plain `str` passed to `replace` is accepted."""
+        normalise_colours(self, "pigments")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -253,6 +245,16 @@ class BasemapStyle:
         tree_spacing_m: Metres between tree glyphs inside a wood. Zero scatters none.
         all_variants: Build every relief variant rather than the one the mode asks for, so
             a page can switch between them without a rebuild.
+        line_effects: The effect stack of each basemap line class (`major`, `medium`, `minor`,
+            `coast`, `road_major`, `lane`, `track`), keyed by class. Set only by the top-level
+            `line_effects` table of a theme; empty by default, and a class with no effect is
+            absent. A key that is no basemap class is refused.
+        casing_unions: Groups of basemap line classes whose casings or reserves are laid as one
+            ring, each a tuple of class names of one group, water or road. Set only by the
+            top-level `casing_unions` table of a theme; empty by default. The route joins no
+            union. A union is refused when a member is no basemap class, is in another union,
+            has no casing or reserve, or when its members differ in colour, strength, kind or
+            pool.
     """
 
     hillshade_mode: Literal["bands", "raster", "contours", "hachures", "off"] = "off"
@@ -284,6 +286,21 @@ class BasemapStyle:
     inset_cells: int = 2
     tree_spacing_m: float = 450.0
     all_variants: bool = False
+    line_effects: dict[str, EffectStack] = field(default_factory=dict)
+    casing_unions: tuple[tuple[str, ...], ...] = ()
+
+    def __post_init__(self) -> None:
+        """Refuse a `line_effects` key that is no basemap class and a bad union; drop empties.
+
+        Raises:
+            ValueError: With the first problem, when a `line_effects` key is no basemap class
+                or a union is empty, holds a route or an unknown class, repeats a class, spans
+                water and road, or has a member the stacks cannot ring as one.
+        """
+        stacks = checked_line_effects(self.line_effects)
+        object.__setattr__(self, "line_effects", stacks)
+        if problems := union_problems(stacks, self.casing_unions):
+            raise ValueError(f"casing_unions: {problems[0][2]}")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -327,10 +344,17 @@ class RouteInkStyle:
         blend: `"normal"` lays the ink over the card; `"multiply"` multiplies it in, so a
             dark wash stays dark under it. The compose step rejects any other value.
         opacity: How much of the ink is laid, from 0 to 1.
+        effects: The effect stack laid round the route at compose. Set only by the top-level
+            `line_effects.route`; off by default.
     """
 
     drawn_as: Literal["pen", "solid"] = "solid"
     px: float = 5.4
-    colour: str = "#c22050"
+    colour: Colour = Colour("#c22050")
     blend: Literal["normal", "multiply"] = "normal"
     opacity: float = 1.0
+    effects: EffectStack = EffectStack()
+
+    def __post_init__(self) -> None:
+        """Normalise the colour to `Colour`, so a plain `str` passed to `replace` is accepted."""
+        normalise_colours(self, "colour")

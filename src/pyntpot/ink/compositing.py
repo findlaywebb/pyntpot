@@ -1,11 +1,8 @@
-"""Pigments and compositing: the colours a wash transmits and how a stack of layers is laid.
+"""Compositing: how a stack of pigment layers is laid.
 
-Key names: `PIGMENTS`, what a full-strength wash of each pigment transmits; `TRANSPARENCY`,
-what each shows over black as a share of what it shows over white; `PAINTERS_PIGMENTS` and
-`PAINTERS_TRANSPARENCY`, the same two for ten tube pigments a painter names, kept apart from the
-map roles; `PigmentLayer`, one layer of
-the stack; `multiply_plate`, the stack as transmission; `km_rt` and `km_plate`, Kubelka-Munk
-glazing; `composite`, the stack over a backing the way `PaperStyle` asks.
+Key names: `PigmentLayer`, one layer of the stack; `multiply_plate`, the stack as transmission;
+`km_rt` and `km_plate`, Kubelka-Munk glazing; `composite`, the stack over a backing the way
+`PaperStyle` asks.
 
 It paints no wash and writes no file.
 
@@ -17,84 +14,6 @@ import numpy as np
 
 from pyntpot.ink.noise import F32
 from pyntpot.ink.style import PaperStyle
-
-PIGMENTS = {
-    "farmland": "#dfe0b0",
-    "meadow": "#cfdfae",
-    "orchard": "#d5dda2",
-    "scrub": "#c9d5a4",
-    "heath": "#e0cda2",
-    "sand": "#ecdfbe",
-    "rock": "#dcd6c6",
-    "wetland": "#bfd2cd",
-    "built": "#ddd3c3",
-    "works": "#d2cbc0",
-    "wood": "#a8c286",
-    "pale": "#d5e0b4",
-    "water": "#9ec4de",
-    "relief": "#c9bda4",
-    "rim": "#c2ad91",
-}
-"""Multiply colours: what a full-strength wash of each pigment transmits. The inks are darker than
-the washes, because a mark is not a wash."""
-
-
-TRANSPARENCY = {
-    "farmland": 0.10,
-    "meadow": 0.09,
-    "orchard": 0.09,
-    "scrub": 0.08,
-    "heath": 0.14,
-    "sand": 0.16,
-    "rock": 0.22,
-    "wetland": 0.08,
-    "built": 0.26,
-    "works": 0.28,
-    "wood": 0.05,
-    "pale": 0.12,
-    "water": 0.04,
-    "relief": 0.30,
-    "rim": 0.18,
-}
-"""What each pigment shows over black, as a share of what it shows over white. This is the one
-number Kubelka-Munk glazing needs beyond the hex, and it is where a pigment is recorded as
-staining or covering: near 0 is a transparent glaze that lets the layer under it through, near 1
-is a covering body colour. The wood green and the water blue stain; the relief grey and the built
-greys sit on the surface. Anything not named here takes `km_transparency`."""
-
-
-PAINTERS_PIGMENTS = {
-    "ultramarine": "#2b3d8f",
-    "cerulean": "#2a7ab0",
-    "burnt_sienna": "#8a3b1c",
-    "raw_sienna": "#b8692a",
-    "yellow_ochre": "#c99a3a",
-    "sap_green": "#3f6b2a",
-    "indigo": "#2c3346",
-    "perylene_maroon": "#5a1f27",
-    "quinacridone_rose": "#b8215e",
-    "paynes_grey": "#3b4452",
-}
-"""Painter's pigments: the same meaning as `PIGMENTS`, keyed by the tube a painter names rather than
-by map role. No map style reads this table; it is for whoever paints with the engine directly.
-Each colour is what a full-strength wash transmits."""
-
-PAINTERS_TRANSPARENCY = {
-    "ultramarine": 0.06,
-    "cerulean": 0.22,
-    "burnt_sienna": 0.20,
-    "raw_sienna": 0.18,
-    "yellow_ochre": 0.24,
-    "sap_green": 0.07,
-    "indigo": 0.05,
-    "perylene_maroon": 0.04,
-    "quinacridone_rose": 0.05,
-    "paynes_grey": 0.10,
-}
-"""What each painter's pigment shows over black, as a share of what it shows over white, the same
-meaning as `TRANSPARENCY`. Ultramarine, cerulean and the sienna earths sit nearer a covering
-body; the quinacridone, the maroon and the indigo stain."""
-
 
 PigmentLayer = tuple[np.ndarray | None, np.ndarray] | tuple[np.ndarray | None, np.ndarray, float]
 """One layer of the pigment stack: its density, its pigment over white, and, where the caller knows

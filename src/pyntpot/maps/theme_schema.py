@@ -4,14 +4,19 @@ Key name: `theme_schema`, which walks the style groups and returns the schema as
 JSON data, in override form: every key at every level is optional, and every level
 forbids the keys the model does not have.
 
-Each group is an object of its fields; a field typed as a dataclass is a sub-table, an
-object of its own fields by the same walk. A dict field is an object whose keys are its
+Each group is an object of its fields, less its loader-only fields (`LOADER_FIELDS`, set only
+through the top-level `line_effects` table); a field typed as a dataclass is a sub-table, an
+object of its own fields by the same walk, except the loader-only fields (`LOADER_FIELDS`),
+which a theme sets through `line_effects` and which the schema leaves out. A dict field is an object whose keys are its
 vocabulary in `theme_vocab` and whose values share one schema. A `bool` is a boolean, an
-`int` an integer, a `float` a number, a `str` a string (with the `#rrggbb` pattern at each
-colour field), a `Literal` an enum of its values, a `tuple[X, ...]` an array of `X` and a
-fixed tuple an array of exactly its items. Each field carries its default as JSON and its
-description from the `Attributes:` section of its group's docstring; each group and
-sub-table carries its class docstring's summary line. The top level also takes `extends`.
+`int` an integer, a `float` a number, a `str` a string, a `Colour` a pigment name, a
+`#rrggbb` string or an alias string (`anyOf` three branches, since the schema cannot know a
+theme's own aliases or pigments), a `Literal` an enum of its values, a `tuple[X, ...]` an
+array of `X` and a fixed tuple an array of exactly its items. Each field carries its default as
+JSON and its description from the `Attributes:` section of its group's docstring; each group and
+sub-table carries its class docstring's summary line. The top level also takes `extends`,
+`palette`, `pigments`, `colours`, `effect_presets` and `line_effects`, whose schemas are in
+`theme_schema_tables`.
 
 Does not write the committed copies (the test support's regenerator does), validate a
 theme, check numeric ranges or brush ids, or read any file. Nothing in `style.py` imports
@@ -27,9 +32,11 @@ import typing
 from collections.abc import Mapping
 from typing import Literal
 
+from pyntpot.ink.colour import Colour
 from pyntpot.maps.style import Style
 from pyntpot.maps.theme_check import EXTENDS
-from pyntpot.maps.theme_vocab import COLOUR_FIELDS, COLOUR_PATTERN, VOCABULARIES
+from pyntpot.maps.theme_schema_tables import colour_schema, top_level_tables
+from pyntpot.maps.theme_vocab import LOADER_FIELDS, VOCABULARIES
 
 #: The schema's address on the docs site.
 SCHEMA_ID = "https://findlaywebb.github.io/pyntpot/reference/theme.schema.json"
@@ -72,7 +79,10 @@ def theme_schema(groups: Mapping[str, type] | None = None) -> dict[str, object]:
     """
     if groups is None:
         groups = _style_groups()
-    properties: dict[str, object] = {EXTENDS: dict(_EXTENDS_SCHEMA)}
+    properties: dict[str, object] = {
+        EXTENDS: dict(_EXTENDS_SCHEMA),
+        **top_level_tables(_object_schema),
+    }
     for name, group in groups.items():
         properties[name] = _object_schema(group, (name,))
     return {
@@ -107,6 +117,8 @@ def _object_schema(group: type, path: _Path) -> dict[str, object]:
     described = _attributes(group.__doc__ or "")
     properties: dict[str, object] = {}
     for spec in dataclasses.fields(group):
+        if len(path) == 1 and (path[0], spec.name) in LOADER_FIELDS:
+            continue
         node = _value_schema(hints[spec.name], (*path, spec.name))
         node["default"] = _json(getattr(defaults, spec.name))
         if spec.name in described:
@@ -145,8 +157,8 @@ def _leaf_schema(hint: object, path: _Path) -> dict[str, object]:
     Raises:
         TypeError: When `hint` is a type the walk does not know, a programming error.
     """
-    if hint is str and path in COLOUR_FIELDS:
-        return {"type": "string", "pattern": COLOUR_PATTERN}
+    if hint is Colour:
+        return colour_schema()
     if hint in _SCALARS:
         return dict(_SCALARS[hint])
     if typing.get_origin(hint) is Literal:

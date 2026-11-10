@@ -2,10 +2,12 @@
 
 GitHub issue: [#104](https://github.com/findlaywebb/pyntpot/issues/104)
 
-**What exists today.** The compose step lays the route ink through its mask with a `blend`
-and an `opacity` (`pyntpot.maps.compose_steps.route`). Nothing draws a band of another colour
-either side of the line, so a route over a wash of a similar colour has nothing to separate
-it from the ground.
+**What exists today.** The model and the primitive are in. `pyntpot.ink.casing` takes a `Casing`
+(width, colour, strength), and a theme sets a casing on any line class, the route included,
+through `line_effects` and `effect_presets` (`EffectStack` from `pyntpot.maps`; the built-in
+presets are `cased`, `halo` and `lifted`). The route's stack is laid at compose from the
+route's mask, for the solid line and the pen route alike. Every default is off, so no theme
+paints a casing yet.
 
 **What the feature would add.** A casing: a wider stroke under the route, in its own colour
 and width, drawn before the route itself so the route sits inside it. A cream casing reads
@@ -17,8 +19,8 @@ free `effect` table that nothing read. The themes held, on the ink that was draw
 `winter` themes, `1.2` in `bold`, `1.6` in `pen-and-ink`, `0` elsewhere. Those values were
 never seen on a card, so they are a starting point, not a look to restore.
 
-**Possible shape.** Typed fields on `RouteInkStyle` (`casing_colour` as `#rrggbb`, `casing_px` in
-display pixels, 0 for none), checked at load like any other key; the compose step draws the
-casing from the same mask, dilated by `casing_px`, for the solid line and the pen route
-alike. Moves the goldens of any theme that sets a non-zero casing, so it needs its own
-golden regeneration.
+**What remains.** Figures that show the route with and without a casing, the how-to guide and
+the reference, and any packaged theme that turns one on (which moves that theme's pinned
+images and so needs its own golden regeneration). These come in the follow-up spec
+(`specs/009a-line-effect-figures-and-galleries/`), which closes this issue. The theme guide
+([Write a theme](../how-to/write-a-theme.md)) names the keys.

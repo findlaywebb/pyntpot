@@ -26,6 +26,17 @@ EXAMPLES: tuple[str, ...] = (
     "wash",
 )
 
+#: The sibling helper modules in examples/ that a script may import by name.
+_EXAMPLE_SIBLINGS = frozenset({"labelled_grid"})
+#: The five grid scripts, whose label round trip lives only in `labelled_grid.py`.
+_GRID_SCRIPTS = (
+    "tutorial_grids",
+    "nib_stages",
+    "brush_sheet",
+    "wash_stages",
+    "how_to_route_ink",
+)
+
 _PUBLIC_MODULES = ("pyntpot", "pyntpot.ink", "pyntpot.letters", "pyntpot.maps")
 _THIRD_PARTY = frozenset({"numpy", "PIL", "pyntpot"})
 
@@ -59,6 +70,8 @@ def _is_bad_from_import(node: ast.ImportFrom, public: dict[str, frozenset[str]])
     """Return whether a `from ... import ...` is relative, private, or outside the allowed packages."""
     if node.level or node.module is None:
         return True
+    if node.module in _EXAMPLE_SIBLINGS:
+        return not (EXAMPLES_DIR / f"{node.module}.py").is_file()
     if node.module.split(".", maxsplit=1)[0] != "pyntpot":
         return not _allowed_top_level(node.module)
     names = public.get(node.module)
@@ -99,3 +112,17 @@ def test_examples_import_only_public_names() -> None:
             if _is_violation(node, public)
         )
     assert not found, f"examples import a private or disallowed name: {sorted(found)}"
+
+
+def test_no_grid_script_runs_the_rgba_round_trip() -> None:
+    """None of the five grid scripts calls `.convert("RGBa")`, so the label round trip lives only in labelled_grid.py."""
+    found = [
+        f"examples/{stem}.py:{node.lineno}"
+        for stem in _GRID_SCRIPTS
+        for node in ast.walk(ast.parse((EXAMPLES_DIR / f"{stem}.py").read_text()))
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "convert"
+        and any(isinstance(a, ast.Constant) and a.value == "RGBa" for a in node.args)
+    ]
+    assert not found, f"a grid script converts to RGBa itself: {found}"

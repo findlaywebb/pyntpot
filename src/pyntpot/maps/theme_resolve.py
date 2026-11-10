@@ -9,10 +9,17 @@ A `.yaml` path is read relative to the caller's directory unless absolute; a `.y
 `.toml` path, a `Path` with any other suffix, and a `str` that is no packaged name are
 refused, each with what to write instead. `default` is the base table itself, with no
 file. A theme's `extends`, `default` when absent, names the theme below it by the same
-rule, a relative path read from the extending file's directory, until `default`. Each
-file is read and, when the read found nothing, checked; every problem of every file in
-the chain is collected, and the chain stops at a file whose read found a problem. A file
-met twice in one chain is an `extends` cycle.
+rule, a relative path read from the extending file's directory, until `default`. The
+whole chain is read first, stopping at a file whose read found a problem. A chain whose
+read stops checks no file: a file's names bind in the scope of the files below it, and
+that scope cannot be built, so the error holds only the read and `extends` problems and
+the next load, once they are fixed, reports the check problems. A non-`str` `extends`
+ends the chain without stopping the read: the file is read, has no target to follow, and
+is checked, reporting the `extends` problem itself. A chain whose read finds nothing is
+checked from the file nearest `default` up, threading the scope, and every problem of
+every file is collected. The merged `casing_unions` are then checked against the merged
+stacks, because a child can turn off or recolour a member's casing; each such problem is
+located in the nearest file that writes `casing_unions`. A file met twice in one chain is an `extends` cycle.
 
 A theme an `extends` names that is refused, missing or a cycle is a problem of the
 extending file, at its `extends` key and line, whose message names the target as written;
@@ -36,10 +43,12 @@ from importlib.resources.abc import Traversable
 from pathlib import Path, PurePath
 from typing import NoReturn
 
-from pyntpot.maps.theme_check import EXTENDS, check_theme
+from pyntpot.maps.theme_check import EXTENDS, check_theme_scoped
 from pyntpot.maps.theme_errors import ThemeError, ThemeProblem
 from pyntpot.maps.theme_merge import merge
 from pyntpot.maps.theme_read import ThemeFile, read_theme
+from pyntpot.maps.theme_scope import ThemeScope
+from pyntpot.maps.theme_unions import merged_union_problems
 
 #: The form of a theme name: a lower-case letter, then lower-case letters, digits and `-`.
 NAME = re.compile(r"[a-z][a-z0-9-]*")
@@ -115,36 +124,47 @@ def resolve(
             problem found in the chain is in its problems.
     """
     problems: list[ThemeProblem] = []
-    tables: list[dict[str, object]] = []
+    files: list[ThemeFile] = []
     chain: list[Path] = []
     named: str | Path | None = theme
     where = _Named(key="", line=None, directory=relative_to)
+    stopped = False
     while named is not None:
         try:
             file = _load(named, where, chain)
         except ThemeError as exc:
             problems.extend(exc.problems)
+            stopped = True
             break
         if file is None:
             break
-        problems.extend(file.problems)
         if file.problems:
+            problems.extend(file.problems)
+            stopped = True
             break
-        table, found = check_theme(file, groups)
-        problems.extend(found)
-        tables.append(table)
+        files.append(file)
         chain.append(file.path.resolve())
-        extends = table.get(EXTENDS, DEFAULT)
+        extends = file.table.get(EXTENDS, DEFAULT)
         named = extends if isinstance(extends, str) else None
         where = _Named(
             key=EXTENDS, line=file.lines.get((EXTENDS,)), directory=file.path.parent, by=file.path
         )
+    if stopped:
+        raise ThemeError(problems)
+    tables: list[dict[str, object]] = []
+    scope = ThemeScope.built_in()
+    for file in reversed(files):
+        table, found, scope = check_theme_scoped(file, groups, scope)
+        problems.extend(found)
+        tables.append(table)
     if problems:
         raise ThemeError(problems)
     merged = dict(base)
-    for table in reversed(tables):
+    for table in tables:
         merged = merge(merged, table)
     merged.pop(EXTENDS, None)
+    if found := merged_union_problems(merged, files):
+        raise ThemeError(found)
     return merged
 
 
