@@ -27,9 +27,10 @@ from pyntpot.ink.sheet import rgb
 from pyntpot.maps.basemap import Basemap
 from pyntpot.maps.cache import Cache
 from pyntpot.maps.painter.cover import paint_cover
+from pyntpot.maps.painter.effects import lay_wash
 from pyntpot.maps.painter.fluid import paint_fluid
 from pyntpot.maps.painter.job import PaintJob, PlateStack
-from pyntpot.maps.painter.pen import paint_pen, paint_route_pen
+from pyntpot.maps.painter.pen import paint_pen, paint_route_pen, pen_groups
 from pyntpot.maps.painter.relief import paint_relief
 from pyntpot.maps.painter.ribbon import paint_ribbon
 from pyntpot.maps.painter.water import paint_lakes, paint_water, sea_layer
@@ -52,7 +53,11 @@ def _dark_grid(job: PaintJob, lum: np.ndarray) -> DarkGrid:
 
 
 def _wash_plate(job: PaintJob, stack: PlateStack) -> np.ndarray:
-    """The wash: the ground, then the sea, the pooled rim and the ink over it."""
+    """The wash: the ground, then the sea, the pooled rim and the ink over it.
+
+    With no basemap line effect this is one `composite` call; otherwise `lay_wash` lays each
+    ink group's effects beneath its ink.
+    """
     style = job.style
     ground, rim = paint_ribbon(job, stack)
     over: list[PigmentLayer] = []
@@ -66,6 +71,8 @@ def _wash_plate(job: PaintJob, stack: PlateStack) -> np.ndarray:
             job.transp("rim"),
         )
     )
+    if style.basemap.line_effects:
+        return lay_wash(job, ground, over, pen_groups(job))
     over.extend(paint_pen(job))
     return composite(over, ground, style.paper)
 
