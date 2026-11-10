@@ -11,7 +11,7 @@ from pyntpot.ink.brush_sheet import BRUSH_COLOURS
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.maps import Style
 from pyntpot.maps.style_groups import CoverStyle
-from pyntpot.maps.theme_vocab import ALIAS_PATTERN, BRUSH_ID_FIELDS, VOCABULARIES
+from pyntpot.maps.theme_vocab import ALIAS_PATTERN, BRUSH_ID_FIELDS, LOADER_FIELDS, VOCABULARIES
 
 from support.planted_groups import Cloud
 
@@ -32,7 +32,9 @@ def _unvocabularied(name: str, group: type) -> list[tuple[str, ...]]:
     def walk(hint: object, path: tuple[str, ...]) -> None:
         if isinstance(hint, type) and dataclasses.is_dataclass(hint):
             for key, item in typing.get_type_hints(hint).items():
-                if key in {f.name for f in dataclasses.fields(hint)}:
+                if key in {f.name for f in dataclasses.fields(hint)} and (
+                    len(path) != 1 or (path[0], key) not in LOADER_FIELDS
+                ):
                     walk(item, (*path, key))
         elif typing.get_origin(hint) is dict:
             if not _has_vocabulary(path):
@@ -61,8 +63,15 @@ def test_every_dict_field_has_a_vocabulary():
         for group in type(style).model_fields
         for item in dataclasses.fields(getattr(style, group))
         if isinstance(getattr(getattr(style, group), item.name), dict)
+        and (group, item.name) not in LOADER_FIELDS
     }
     assert set(VOCABULARIES) == dict_fields | {("brush", "brush_overrides", "*")}
+
+
+def test_the_loader_only_fields_have_no_vocabulary() -> None:
+    """`basemap.line_effects` has no entry: `theme_effects` checks its keys against the classes."""
+    assert ("basemap", "line_effects") in LOADER_FIELDS
+    assert ("basemap", "line_effects") not in VOCABULARIES
 
 
 def test_the_walk_finds_a_dict_field_with_no_vocabulary():

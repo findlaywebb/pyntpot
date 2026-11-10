@@ -15,8 +15,9 @@ are the default look; the default theme is these defaults with nothing overridde
 A field that takes one of a few words is typed as a `Literal` of those words.
 
 It paints, letters and fetches nothing. The route ink knows nothing of what a
-track records, and holds no casing, glow or shadow: the compose step draws
-none. Two `BasemapStyle` fields, `hillshade_opacity` and `pick_places`, have
+track records. Its `effects` and the basemap's `line_effects` are set only by a theme's
+top-level `line_effects` table and are off by default; at the default the compose step draws
+no casing, glow or shadow. Two `BasemapStyle` fields, `hillshade_opacity` and `pick_places`, have
 no reader and are kept for the upstream consumer. The basemap's clip margin is derived from the card per
 render and is not a style field.
 
@@ -29,6 +30,7 @@ from typing import Literal
 
 from pyntpot.ink.colour import Colour, normalise_colours
 from pyntpot.ink.pigment_table import PIGMENTS
+from pyntpot.maps.line_effects import EffectStack, checked_line_effects
 from pyntpot.maps.providers.overpass import MINOR_ROADS
 
 #: The painter fields no module reads, kept by the upstream consumer and left
@@ -241,6 +243,10 @@ class BasemapStyle:
         tree_spacing_m: Metres between tree glyphs inside a wood. Zero scatters none.
         all_variants: Build every relief variant rather than the one the mode asks for, so
             a page can switch between them without a rebuild.
+        line_effects: The effect stack of each basemap line class (`major`, `medium`, `minor`,
+            `coast`, `road_major`, `lane`, `track`), keyed by class. Set only by the top-level
+            `line_effects` table of a theme; empty by default, and a class with no effect is
+            absent. A key that is no basemap class is refused.
     """
 
     hillshade_mode: Literal["bands", "raster", "contours", "hachures", "off"] = "off"
@@ -272,6 +278,11 @@ class BasemapStyle:
     inset_cells: int = 2
     tree_spacing_m: float = 450.0
     all_variants: bool = False
+    line_effects: dict[str, EffectStack] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Refuse a `line_effects` key that is no basemap class and drop each empty stack."""
+        object.__setattr__(self, "line_effects", checked_line_effects(self.line_effects))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -315,6 +326,8 @@ class RouteInkStyle:
         blend: `"normal"` lays the ink over the card; `"multiply"` multiplies it in, so a
             dark wash stays dark under it. The compose step rejects any other value.
         opacity: How much of the ink is laid, from 0 to 1.
+        effects: The effect stack laid round the route at compose. Set only by the top-level
+            `line_effects.route`; off by default.
     """
 
     drawn_as: Literal["pen", "solid"] = "solid"
@@ -322,6 +335,7 @@ class RouteInkStyle:
     colour: Colour = Colour("#c22050")  # noqa: RUF009 (an immutable str)
     blend: Literal["normal", "multiply"] = "normal"
     opacity: float = 1.0
+    effects: EffectStack = EffectStack()  # noqa: RUF009 (a frozen dataclass)
 
     def __post_init__(self) -> None:
         """Normalise the colour to `Colour`, so a plain `str` passed to `replace` is accepted."""

@@ -386,8 +386,9 @@ A theme may give only these keys.
 | `colour` | string | `"#c22050"` | Colour as `#rrggbb`. |
 | `blend` | one of `normal`, `multiply` | `"normal"` | `"normal"` lays the ink over the map; `"multiply"` multiplies it into the map, so the route darkens a wash instead of covering it. |
 | `opacity` | number | `1.0` | How much of the ink is laid, from 0 to 1. |
+| `effects` | table | `table` | Set only by `line_effects.route`; off by default. |
 
-The compose step draws no casing, glow or shadow round the route.
+With `effects` off, the compose step draws no casing, glow or shadow round the route.
 
 ## `lettering`
 
@@ -436,6 +437,14 @@ The compose step draws no casing, glow or shadow round the route.
 | `inset_cells` | integer | `2` | Cells pulled in for the second, darker pass of pigment inside a wash. |
 | `tree_spacing_m` | number | `450.0` | Metres between tree glyphs inside a wood. 0 scatters none. |
 | `all_variants` | boolean | `false` | Build every relief variant rather than the one the mode asks for. |
+| `line_effects` | table | `table` | Set only by the top-level `line_effects` table, one stack per line class; empty by default. |
+
+### `basemap.line_effects`
+
+Empty by default. A theme gives a stack per line class in the top-level `line_effects` table, never under `basemap`.
+
+| Key | Default |
+| --- | --- |
 
 ## Painter fields in no group
 

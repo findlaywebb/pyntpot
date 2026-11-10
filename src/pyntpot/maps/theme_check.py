@@ -7,8 +7,11 @@ which builds one group from a full, checked table; `RENAMED_KEYS`, the old key p
 each is called now.
 
 A theme's top level holds `extends`, a theme name or a `.yaml` path, `pigments`, `palette` and
-`colours` (each checked by its own `theme_*` module, in that order, into the scope), and the
-group names. A colour field then resolves in the scope its own file sees.
+`colours` (each checked by its own `theme_*` module, in that order, into the scope), the group
+names, and `effect_presets` and `line_effects` (checked by `theme_effects` after the groups, the
+second split into `basemap.line_effects` and `route_ink.effects` in the returned table). A colour
+field then resolves in the scope its own file sees. The two group fields that only `line_effects`
+sets, `LOADER_FIELDS` in `theme_vocab`, are refused inside their group, at their own key.
 Every key at every level is checked: a group's fields, a dict field's entries against its
 vocabulary in `theme_vocab`, and a `brush_overrides` entry's keys. An unknown key is
 refused with the nearest known one, and a renamed key with its new name. A group, a dict
@@ -34,11 +37,19 @@ from typing import Any
 
 from pyntpot.maps.theme_checker import TableCheck, group_hints, is_dataclass
 from pyntpot.maps.theme_colours import COLOURS, check_colours
+from pyntpot.maps.theme_effects import (
+    EFFECT_PRESETS,
+    LINE_EFFECTS,
+    check_effect_presets,
+    check_line_effects,
+)
 from pyntpot.maps.theme_errors import ThemeProblem
+from pyntpot.maps.theme_merge import merge
 from pyntpot.maps.theme_palette import PALETTE, check_palette
 from pyntpot.maps.theme_pigments import PIGMENTS, check_pigments
 from pyntpot.maps.theme_read import ThemeFile
 from pyntpot.maps.theme_scope import ThemeScope
+from pyntpot.maps.theme_vocab import LOADER_FIELDS
 
 #: Old key paths and what each is called now; a theme that uses one is told the new name.
 RENAMED_KEYS: dict[tuple[str, ...], str] = {
@@ -56,7 +67,7 @@ _STEPS = (
 )
 
 #: The top-level keys that are names, not groups.
-_NAMES = tuple(key for key, _ in _STEPS)
+_NAMES = (*(key for key, _ in _STEPS), EFFECT_PRESETS, LINE_EFFECTS)
 
 
 def check_theme(
@@ -90,7 +101,8 @@ def check_theme_scoped(
     """Check `theme`'s table against `groups`, in the names `scope` holds, and bind its own.
 
     The file's `pigments` are checked first, then its `palette`, then its `colours`, then the
-    groups, each in the scope the earlier steps built.
+    groups, then its `effect_presets` and `line_effects`, each in the scope the earlier steps
+    built.
 
     Args:
         theme: A read theme file; only its `table` and `lines` are read.
@@ -100,8 +112,9 @@ def check_theme_scoped(
 
     Returns:
         The table with each valid leaf converted and each invalid one left out (the
-        `pigments`, `palette` and `colours` keys are consumed into the scope, not kept), every
-        problem found in line order, and the scope the files above this one inherit.
+        `pigments`, `palette`, `colours` and `effect_presets` keys are consumed into the scope,
+        not kept; `line_effects` is split into the group fields and merged into the table),
+        every problem found in line order, and the scope the files above this one inherit.
     """
     check = TableCheck(theme, renamed, scope)
     table: dict[str, object] = {}
@@ -119,10 +132,35 @@ def check_theme_scoped(
     check.scope = scope
     for key, value in theme.table.items():
         if key in groups:
-            checked = check.table(groups[key], value, (key,))
+            checked = check.table(groups[key], _without_loader_fields(check, key, value), (key,))
             if checked is not None:
                 table[key] = checked
+    scope, table = _check_effects(check, theme, table, scope)
     return table, check.problems(), scope
+
+
+def _check_effects(
+    check: TableCheck, theme: ThemeFile, table: dict[str, object], scope: ThemeScope
+) -> tuple[ThemeScope, dict[str, object]]:
+    """Check the file's `effect_presets`, then `line_effects`, merging the split into `table`."""
+    if EFFECT_PRESETS in theme.table:
+        scope = check_effect_presets(check, theme.table[EFFECT_PRESETS], scope)
+        check.scope = scope
+    if LINE_EFFECTS in theme.table:
+        table = merge(table, check_line_effects(check, theme.table[LINE_EFFECTS]))
+    return scope, table
+
+
+def _without_loader_fields(check: TableCheck, group: str, value: object) -> object:
+    """`value`, the group's raw table, less each loader-only field, each refused where written."""
+    if not isinstance(value, dict):
+        return value
+    kept = dict(value)
+    for (owner, name), setter in LOADER_FIELDS.items():
+        if owner == group and name in kept:
+            del kept[name]
+            check.problem((group, name), f"set only by the top-level {setter}")
+    return kept
 
 
 def build_group[G](group: type[G], table: Mapping[str, object]) -> G:

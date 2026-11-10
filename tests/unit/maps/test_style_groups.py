@@ -2,7 +2,8 @@
 
 Every painter field is in exactly one group or in `CONSUMER_ONLY`, every
 basemap option is in `BasemapStyle`, each group's defaults are pinned (the
-sourced groups by a digest of their fields, `BasemapStyle`'s as literals), and
+sourced groups by a digest of their fields, `BasemapStyle`'s as literals in
+`test_basemap_defaults`), and
 each group's field names, in order, are pinned here as literals, which pins the
 whole field-to-group table.
 """
@@ -17,6 +18,7 @@ import pytest
 from pyntpot.ink.brush_style import BrushStyle
 from pyntpot.ink.style import PaperStyle, WashStyle
 from pyntpot.letters.style import FaceStyle, HandStyle, NibStyle
+from pyntpot.maps import EffectStack
 from pyntpot.maps.style_groups import (
     CONSUMER_ONLY,
     BasemapStyle,
@@ -27,6 +29,7 @@ from pyntpot.maps.style_groups import (
     RouteInkStyle,
     RouteStyle,
 )
+from pyntpot.maps.theme_vocab import LOADER_FIELDS
 
 #: Each group with its field names in order, copied from the pinned table.
 PINNED: dict[type, tuple[str, ...]] = {
@@ -234,6 +237,7 @@ PINNED: dict[type, tuple[str, ...]] = {
         "inset_cells",
         "tree_spacing_m",
         "all_variants",
+        "line_effects",
     ),
     LetteringStyle: (
         "label_max",
@@ -242,7 +246,7 @@ PINNED: dict[type, tuple[str, ...]] = {
         "label_geom_tol_px",
         "home_glyph",
     ),
-    RouteInkStyle: ("drawn_as", "px", "colour", "blend", "opacity"),
+    RouteInkStyle: ("drawn_as", "px", "colour", "blend", "opacity", "effects"),
 }
 
 #: The groups that were copied from the flat painter style, and the route ink, each
@@ -261,39 +265,6 @@ SOURCED: dict[type, str] = {
     RouteStyle: "e7af799eb721f445",
     LetteringStyle: "252f33e095df0b01",
     RouteInkStyle: "6a536a78d3ad069a",
-}
-
-#: `BasemapStyle`'s defaults, the basemap options' class defaults, as pinned literals.
-BASEMAP_DEFAULTS: dict[str, Any] = {
-    "hillshade_mode": "off",
-    "hillshade_levels": 5,
-    "hillshade_opacity": 0.5,
-    "hachure_spacing_m": 75.0,
-    "hachure_min_slope": 0.035,
-    "hachure_max_length_m": 90.0,
-    "sea_style": "fill",
-    "contour_interval": 50.0,
-    "roads": "key",
-    "minor_road_classes": ("tertiary", "unclassified", "residential", "track", "service"),
-    "rivers": "key",
-    "interaction_m": 60.0,
-    "interaction_run_m": 100.0,
-    "landmarks": "all",
-    "landmark_max": 40,
-    "landmark_radius_m": 300.0,
-    "pick_landmarks": (),
-    "pick_roads": (),
-    "pick_places": (),
-    "name_tags": ("name",),
-    "generalise": False,
-    "cell_m": 60.0,
-    "morph_cells": 2,
-    "min_area_ha": 4.0,
-    "smooth_passes": 3,
-    "blob_jitter_m": 22.0,
-    "inset_cells": 2,
-    "tree_spacing_m": 450.0,
-    "all_variants": False,
 }
 
 GROUP_IDS = [group.__name__ for group in PINNED]
@@ -346,8 +317,14 @@ def test_group_fields_match_the_pinned_table(group: type, names: tuple[str, ...]
 
 @pytest.mark.parametrize(("group", "digest"), SOURCED.items(), ids=SOURCED_IDS)
 def test_group_defaults_equal_the_pinned_digest(group: type, digest: str) -> None:
-    """Each group's default fields, values and types, hash to the digest pinned for them."""
-    blob = json.dumps(dataclasses.asdict(group()), sort_keys=True, default=str)
+    """Each group's default fields, values and types, hash to the digest pinned for them.
+
+    The loader-only fields are left out: they are off at the default and omitted from the
+    digests, so adding one moves no pinned value.
+    """
+    loader_only = {name for _, name in LOADER_FIELDS}
+    fields = {k: v for k, v in dataclasses.asdict(group()).items() if k not in loader_only}
+    blob = json.dumps(fields, sort_keys=True, default=str)
     assert hashlib.sha256(blob.encode()).hexdigest()[:16] == digest
 
 
@@ -357,13 +334,10 @@ def test_multi_layer_field_lands_in_its_table_group(name: str, group: type) -> N
     assert name in _names(group)
 
 
-def test_basemap_defaults_are_the_pinned_literals() -> None:
-    """`BasemapStyle`'s defaults equal the pinned literals, value and type, field by field."""
-    built = BasemapStyle()
-    assert _names(BasemapStyle) == list(BASEMAP_DEFAULTS)
-    for name, value in BASEMAP_DEFAULTS.items():
-        assert getattr(built, name) == value, name
-        assert type(getattr(built, name)) is type(value), name
+def test_the_effect_fields_are_off_by_default() -> None:
+    """`RouteInkStyle().effects` is the empty stack and `BasemapStyle().line_effects` is `{}`."""
+    assert RouteInkStyle().effects == EffectStack()
+    assert BasemapStyle().line_effects == {}
 
 
 @pytest.mark.parametrize("group", [*SOURCED, BasemapStyle], ids=[*SOURCED_IDS, "BasemapStyle"])

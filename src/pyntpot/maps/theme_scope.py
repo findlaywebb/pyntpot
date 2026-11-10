@@ -28,6 +28,7 @@ from pyntpot.ink.colour import Colour
 from pyntpot.ink.naming import nearest
 from pyntpot.ink.pigment_registry import PIGMENT_REGISTRY, PigmentRegistry, pigment
 from pyntpot.ink.pigment_table import Pigment
+from pyntpot.maps.line_effects import EffectStack
 
 if TYPE_CHECKING:
     from pyntpot.maps.theme_palette import Palette
@@ -63,7 +64,7 @@ class ThemeScope:
     pigments: Mapping[str, Bound[Pigment]] = field(default_factory=dict)
     palette: "Bound[Palette] | None" = None
     aliases: Mapping[str, Bound[Pigment]] = field(default_factory=dict)
-    presets: Mapping[str, Bound[object]] = field(default_factory=dict)
+    presets: Mapping[str, Bound[EffectStack]] = field(default_factory=dict)
 
     @classmethod
     def built_in(cls) -> "ThemeScope":

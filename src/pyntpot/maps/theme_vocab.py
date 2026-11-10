@@ -2,7 +2,8 @@
 
 Key names: `VOCABULARIES`, the keys a theme may give each dict-valued field, by key path,
 computed from the group defaults so a new class or pigment needs no edit here;
-`BRUSH_ID_FIELDS`, the key paths whose values are brush ids; `COLOUR_PATTERN` and
+`BRUSH_ID_FIELDS`, the key paths whose values are brush ids; `LOADER_FIELDS`, the group fields
+only the top-level `line_effects` table sets, each with the key that sets it; `COLOUR_PATTERN` and
 `ALIAS_PATTERN`, the shapes of a hex colour and of a colour alias. A `*` in a key path stands
 for every entry of a dict field. Which fields hold colours is read from the model: they are
 typed `Colour`.
@@ -52,6 +53,15 @@ BRUSH_ID_FIELDS: tuple[tuple[str, ...], ...] = (
     ("nib", "label_brush"),
     ("nib", "label_leader_brush"),
 )
+
+#: The group fields a theme sets only through the top-level `line_effects` table, by key path,
+#: each with the key that sets it: naming one inside its group is a located error, and the
+#: schema and the field-table pins leave them out. They have no vocabulary, because the checker
+#: of `line_effects` reads the line classes.
+LOADER_FIELDS: dict[tuple[str, str], str] = {
+    ("basemap", "line_effects"): "line_effects.<class>",
+    ("route_ink", "effects"): "line_effects.route",
+}
 
 #: The regular expression a colour string must match in full: `#` and six hexadecimal digits.
 COLOUR_PATTERN = "^#[0-9a-fA-F]{6}$"

@@ -29,6 +29,8 @@
 
 ::: pyntpot.maps.DarkGrid
 
+::: pyntpot.maps.EffectStack
+
 ::: pyntpot.maps.Elevation
 
 ::: pyntpot.maps.ElevationGrid

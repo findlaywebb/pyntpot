@@ -1,7 +1,8 @@
-"""The schema of a theme's top-level tables: `palette`, `pigments` and `colours`.
+"""The schema of a theme's top-level tables: `palette`, `pigments`, `colours` and the effect tables.
 
-Key names: `top_level_tables`, the schema nodes of the three tables in the order they sit in a
-theme, after `extends`; `colour_schema`, the node of a `Colour` value, shared with
+Key names: `top_level_tables`, the schema nodes of the five tables in the order they sit in a
+theme, after `extends`: `palette`, `pigments`, `colours`, `effect_presets` and `line_effects`;
+`colour_schema`, the node of a `Colour` value, shared with
 `theme_schema` so a colour field and a `colours` entry read alike.
 
 A colour is `anyOf` three branches: an enum of the registry's pigment names, the hex pattern and
@@ -10,6 +11,13 @@ the third branch keeps them valid in an editor; the enum completes names, and th
 the good error. `colours` and `pigments` take keys matching the alias pattern that are no
 built-in pigment name; `colours` takes a colour, or a table of `colour` and `override`.
 
+A stack is an object of the optional keys `casing`, `glow` and `shadow`, each the walk of that
+effect's dataclass, which `top_level_tables` takes as an argument (`sub_table`) so this module
+needs neither `theme_schema` nor the style. `line_effects` takes a line class for each key and,
+for each value, `anyOf` a built-in preset name, an alias-shaped name (a theme preset) or a stack.
+`effect_presets` takes alias-shaped keys that are no built-in preset name and a stack for each
+value, which may also carry `override`. The schema holds no numeric range: the checker does.
+
 Does not import the style model or `theme_schema` (the schema imports this module), validate a
 theme or write the committed copies.
 
@@ -17,7 +25,11 @@ Invariants: no node has `required`; every table node forbids other keys where it
 fixed.
 """
 
+from collections.abc import Callable
+
+from pyntpot.ink import Casing, Glow, Shadow
 from pyntpot.ink.pigment_registry import PIGMENT_REGISTRY
+from pyntpot.maps.line_effects import BUILT_IN_PRESETS, LINE_CLASSES
 from pyntpot.maps.theme_palette import Palette
 from pyntpot.maps.theme_vocab import ALIAS_PATTERN, COLOUR_PATTERN
 
@@ -33,9 +45,26 @@ def colour_schema() -> dict[str, object]:
     }
 
 
-def top_level_tables() -> dict[str, object]:
-    """The nodes of `palette`, `pigments` and `colours`, keyed in that order."""
-    return {"palette": _palette(), "pigments": _pigments(), "colours": _colours()}
+type SubTable = Callable[[type, tuple[str, ...]], dict[str, object]]
+
+
+def top_level_tables(sub_table: SubTable) -> dict[str, object]:
+    """The nodes of the five top-level tables, keyed in the order they sit in a theme.
+
+    Args:
+        sub_table: The walk of a dataclass at a key path as an object schema, with each
+            field's default and description; `theme_schema` passes its own.
+
+    Returns:
+        `palette`, `pigments`, `colours`, `effect_presets` and `line_effects`.
+    """
+    return {
+        "palette": _palette(),
+        "pigments": _pigments(),
+        "colours": _colours(),
+        "effect_presets": _effect_presets(sub_table),
+        "line_effects": _line_effects(sub_table),
+    }
 
 
 def _names() -> dict[str, object]:
@@ -91,6 +120,48 @@ def _colours() -> dict[str, object]:
                         "override": {"type": "boolean"},
                     },
                 },
+            ]
+        },
+    }
+
+
+def _stack(
+    sub_table: SubTable, path: tuple[str, ...], *, override: bool = False
+) -> dict[str, object]:
+    """The node of an effect stack at `path`: the optional `casing`, `glow` and `shadow`.
+
+    A preset entry also takes `override`, to replace an inherited preset.
+    """
+    kinds = {"casing": Casing, "glow": Glow, "shadow": Shadow}
+    properties: dict[str, object] = {
+        name: sub_table(kind, (*path, name)) for name, kind in kinds.items()
+    }
+    if override:
+        properties["override"] = {"type": "boolean"}
+    return {"type": "object", "additionalProperties": False, "properties": properties}
+
+
+def _effect_presets(sub_table: SubTable) -> dict[str, object]:
+    """The node of `effect_presets`: stacks by name, each with an optional `override`."""
+    return {
+        "type": "object",
+        "description": "Effect presets of this theme, by name; each is a stack of effects.",
+        "propertyNames": {"pattern": ALIAS_PATTERN, "not": {"enum": sorted(BUILT_IN_PRESETS)}},
+        "additionalProperties": _stack(sub_table, ("effect_presets", "*"), override=True),
+    }
+
+
+def _line_effects(sub_table: SubTable) -> dict[str, object]:
+    """The node of `line_effects`: a preset name or a stack for each line class."""
+    return {
+        "type": "object",
+        "description": "The effects of each line class, and of the route: a preset or a stack.",
+        "propertyNames": {"enum": sorted(LINE_CLASSES)},
+        "additionalProperties": {
+            "anyOf": [
+                {"enum": sorted(BUILT_IN_PRESETS)},
+                {"type": "string", "pattern": ALIAS_PATTERN},
+                _stack(sub_table, ("line_effects", "*")),
             ]
         },
     }

@@ -9,11 +9,13 @@ from typing import Any, Literal
 
 import pytest
 
+from pyntpot.ink import pigment
 from pyntpot.ink.pigment_registry import PIGMENT_REGISTRY
 from pyntpot.maps import Style
+from pyntpot.maps.line_effects import BUILT_IN_PRESETS, LINE_CLASSES
 from pyntpot.maps.style import _groups
 from pyntpot.maps.theme_schema import theme_schema
-from pyntpot.maps.theme_vocab import VOCABULARIES
+from pyntpot.maps.theme_vocab import ALIAS_PATTERN, LOADER_FIELDS, VOCABULARIES
 
 from support import REPO_ROOT
 from support.planted_groups import Ink
@@ -130,11 +132,12 @@ def test_the_committed_schemas_are_the_generated_one() -> None:
 
 
 def test_every_field_is_in_the_schema_with_its_default() -> None:
-    """Every group field is a schema property whose default is its `Style()` value as JSON."""
+    """Every group field but the loader-only ones is a schema property whose default is its JSON."""
     schema: Any = theme_schema()
     style = Style()
     for group in Style.model_fields:
         values = json.loads(json.dumps(dataclasses.asdict(getattr(style, group))))
+        values = {k: v for k, v in values.items() if (group, k) not in LOADER_FIELDS}
         properties = schema["properties"][group]["properties"]
         assert set(properties) == set(values), group
         for field, value in values.items():
@@ -177,8 +180,8 @@ def test_the_enums_are_the_literals() -> None:
     assert literals > 0
 
 
-def test_the_top_level_names_extends_the_three_tables_and_the_groups() -> None:
-    """The top level names `extends`, `palette`, `pigments`, `colours` and the groups, in order."""
+def test_the_top_level_names_extends_the_five_tables_and_the_groups() -> None:
+    """The top level names `extends`, the five tables and the groups, in order."""
     schema: Any = theme_schema()
     assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert schema["$id"] == SITE_SCHEMA
@@ -189,6 +192,8 @@ def test_the_top_level_names_extends_the_three_tables_and_the_groups() -> None:
         "palette",
         "pigments",
         "colours",
+        "effect_presets",
+        "line_effects",
         *Style.model_fields,
     ]
     assert schema["properties"]["extends"]["type"] == "string"
@@ -203,6 +208,63 @@ def test_the_alias_tables_take_alias_shaped_keys_that_are_no_pigment_name() -> N
     }
     for table in ("colours", "pigments"):
         assert schema["properties"][table]["propertyNames"] == rule, table
+
+
+def test_the_effect_tables_take_their_own_keys() -> None:
+    """`effect_presets` takes alias keys that are no built-in preset; `line_effects` the classes."""
+    schema: Any = theme_schema()
+    presets = schema["properties"]["effect_presets"]
+    assert presets["propertyNames"] == {
+        "pattern": ALIAS_PATTERN,
+        "not": {"enum": sorted(BUILT_IN_PRESETS)},
+    }
+    assert schema["properties"]["line_effects"]["propertyNames"] == {"enum": sorted(LINE_CLASSES)}
+
+
+def test_a_line_effects_value_is_a_preset_name_or_a_stack() -> None:
+    """A `line_effects` value is `anyOf` the built-in names, an alias name or a stack object."""
+    schema: Any = theme_schema()
+    names, theme_preset, stack = schema["properties"]["line_effects"]["additionalProperties"][
+        "anyOf"
+    ]
+    assert names == {"enum": ["cased", "halo", "lifted"]}
+    assert theme_preset == {"type": "string", "pattern": ALIAS_PATTERN}
+    assert stack["additionalProperties"] is False
+    assert list(stack["properties"]) == ["casing", "glow", "shadow"]
+
+
+def test_an_effect_is_the_walk_of_its_dataclass() -> None:
+    """Each effect in a stack is an object of its fields with their defaults, colours as the node."""
+    schema: Any = theme_schema()
+    stack = schema["properties"]["line_effects"]["additionalProperties"]["anyOf"][2]
+    casing, glow, shadow = (stack["properties"][name] for name in ("casing", "glow", "shadow"))
+    assert list(casing["properties"]) == ["width_px", "colour", "strength"]
+    assert casing["properties"]["width_px"] == {
+        "type": "number",
+        "default": 0.0,
+        "description": casing["properties"]["width_px"]["description"],
+    }
+    assert casing["properties"]["colour"]["default"] == "#ffffff"
+    assert list(glow["properties"]) == ["spread_px", "blur_px", "strength"]
+    assert shadow["properties"]["colour"]["default"] == pigment("paynes_grey").colour
+    assert shadow["additionalProperties"] is False
+    assert "minimum" not in json.dumps(stack)
+
+
+def test_an_effect_preset_is_a_stack_that_may_override() -> None:
+    """An `effect_presets` value is a stack object that also takes `override`."""
+    schema: Any = theme_schema()
+    entry = schema["properties"]["effect_presets"]["additionalProperties"]
+    assert list(entry["properties"]) == ["casing", "glow", "shadow", "override"]
+    assert entry["properties"]["override"] == {"type": "boolean"}
+    assert entry["additionalProperties"] is False
+
+
+def test_a_loader_only_field_is_not_a_schema_property() -> None:
+    """`basemap.line_effects` and `route_ink.effects` are left out of the group subtrees."""
+    schema: Any = theme_schema()
+    assert "line_effects" not in schema["properties"]["basemap"]["properties"]
+    assert "effects" not in schema["properties"]["route_ink"]["properties"]
 
 
 def test_a_colours_entry_is_a_colour_or_a_colour_with_override() -> None:

@@ -240,6 +240,360 @@
         ]
       }
     },
+    "effect_presets": {
+      "type": "object",
+      "description": "Effect presets of this theme, by name; each is a stack of effects.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+        "not": {
+          "enum": [
+            "cased",
+            "halo",
+            "lifted"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "casing": {
+            "type": "object",
+            "description": "A ring of colour round a line, laid over the paper beneath it.",
+            "additionalProperties": false,
+            "properties": {
+              "width_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "The ring's width beyond the line's footprint, in pixels of the array it is laid on."
+              },
+              "colour": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "built",
+                      "burnt_sienna",
+                      "cerulean",
+                      "farmland",
+                      "heath",
+                      "indigo",
+                      "meadow",
+                      "orchard",
+                      "pale",
+                      "paynes_grey",
+                      "perylene_maroon",
+                      "quinacridone_rose",
+                      "raw_sienna",
+                      "relief",
+                      "rim",
+                      "rock",
+                      "sand",
+                      "sap_green",
+                      "scrub",
+                      "ultramarine",
+                      "water",
+                      "wetland",
+                      "wood",
+                      "works",
+                      "yellow_ochre"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                  }
+                ],
+                "default": "#ffffff",
+                "description": "The ring's colour, laid over the paper, so white is the paper."
+              },
+              "strength": {
+                "type": "number",
+                "default": 1.0,
+                "description": "How far the ring blends toward its colour, 0 to 1."
+              }
+            }
+          },
+          "glow": {
+            "type": "object",
+            "description": "A lift of the colour beneath a line toward the paper, with a hard spread and a soft fall.",
+            "additionalProperties": false,
+            "properties": {
+              "spread_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "How far the hard core reaches beyond the line, in pixels of the array."
+              },
+              "blur_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "The softness of the falloff beyond the core, in pixels of the array."
+              },
+              "strength": {
+                "type": "number",
+                "default": 0.0,
+                "description": "How far the colour lifts toward the paper, 0 to 1."
+              }
+            }
+          },
+          "shadow": {
+            "type": "object",
+            "description": "The line's mask offset away from the light, blurred and laid as a multiplying darken.",
+            "additionalProperties": false,
+            "properties": {
+              "offset_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "How far the shadow falls, in pixels of the array; rounded to whole pixels on each axis when laid."
+              },
+              "blur_px": {
+                "type": "number",
+                "default": 0.0,
+                "description": "The softness of the shadow's edge, in pixels of the array."
+              },
+              "strength": {
+                "type": "number",
+                "default": 0.0,
+                "description": "How dark the shadow lies, 0 to 1."
+              },
+              "colour": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "built",
+                      "burnt_sienna",
+                      "cerulean",
+                      "farmland",
+                      "heath",
+                      "indigo",
+                      "meadow",
+                      "orchard",
+                      "pale",
+                      "paynes_grey",
+                      "perylene_maroon",
+                      "quinacridone_rose",
+                      "raw_sienna",
+                      "relief",
+                      "rim",
+                      "rock",
+                      "sand",
+                      "sap_green",
+                      "scrub",
+                      "ultramarine",
+                      "water",
+                      "wetland",
+                      "wood",
+                      "works",
+                      "yellow_ochre"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                  }
+                ],
+                "default": "#3b4452",
+                "description": "The colour the shadow multiplies toward; Payne's grey by default."
+              }
+            }
+          },
+          "override": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "line_effects": {
+      "type": "object",
+      "description": "The effects of each line class, and of the route: a preset or a stack.",
+      "propertyNames": {
+        "enum": [
+          "coast",
+          "lane",
+          "major",
+          "medium",
+          "minor",
+          "road_major",
+          "route",
+          "track"
+        ]
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "enum": [
+              "cased",
+              "halo",
+              "lifted"
+            ]
+          },
+          {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "casing": {
+                "type": "object",
+                "description": "A ring of colour round a line, laid over the paper beneath it.",
+                "additionalProperties": false,
+                "properties": {
+                  "width_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "The ring's width beyond the line's footprint, in pixels of the array it is laid on."
+                  },
+                  "colour": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "built",
+                          "burnt_sienna",
+                          "cerulean",
+                          "farmland",
+                          "heath",
+                          "indigo",
+                          "meadow",
+                          "orchard",
+                          "pale",
+                          "paynes_grey",
+                          "perylene_maroon",
+                          "quinacridone_rose",
+                          "raw_sienna",
+                          "relief",
+                          "rim",
+                          "rock",
+                          "sand",
+                          "sap_green",
+                          "scrub",
+                          "ultramarine",
+                          "water",
+                          "wetland",
+                          "wood",
+                          "works",
+                          "yellow_ochre"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^#[0-9a-fA-F]{6}$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                      }
+                    ],
+                    "default": "#ffffff",
+                    "description": "The ring's colour, laid over the paper, so white is the paper."
+                  },
+                  "strength": {
+                    "type": "number",
+                    "default": 1.0,
+                    "description": "How far the ring blends toward its colour, 0 to 1."
+                  }
+                }
+              },
+              "glow": {
+                "type": "object",
+                "description": "A lift of the colour beneath a line toward the paper, with a hard spread and a soft fall.",
+                "additionalProperties": false,
+                "properties": {
+                  "spread_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "How far the hard core reaches beyond the line, in pixels of the array."
+                  },
+                  "blur_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "The softness of the falloff beyond the core, in pixels of the array."
+                  },
+                  "strength": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "How far the colour lifts toward the paper, 0 to 1."
+                  }
+                }
+              },
+              "shadow": {
+                "type": "object",
+                "description": "The line's mask offset away from the light, blurred and laid as a multiplying darken.",
+                "additionalProperties": false,
+                "properties": {
+                  "offset_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "How far the shadow falls, in pixels of the array; rounded to whole pixels on each axis when laid."
+                  },
+                  "blur_px": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "The softness of the shadow's edge, in pixels of the array."
+                  },
+                  "strength": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "How dark the shadow lies, 0 to 1."
+                  },
+                  "colour": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "built",
+                          "burnt_sienna",
+                          "cerulean",
+                          "farmland",
+                          "heath",
+                          "indigo",
+                          "meadow",
+                          "orchard",
+                          "pale",
+                          "paynes_grey",
+                          "perylene_maroon",
+                          "quinacridone_rose",
+                          "raw_sienna",
+                          "relief",
+                          "rim",
+                          "rock",
+                          "sand",
+                          "sap_green",
+                          "scrub",
+                          "ultramarine",
+                          "water",
+                          "wetland",
+                          "wood",
+                          "works",
+                          "yellow_ochre"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^#[0-9a-fA-F]{6}$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+                      }
+                    ],
+                    "default": "#3b4452",
+                    "description": "The colour the shadow multiplies toward; Payne's grey by default."
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
     "paper": {
       "type": "object",
       "description": "The paper: its encoder, grid, texture, seed and the compositing over it.",

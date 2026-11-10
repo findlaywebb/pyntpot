@@ -95,6 +95,7 @@ MAPS_PUBLIC: tuple[str, ...] = (
     "CoverStyle",
     "Credit",
     "DarkGrid",
+    "EffectStack",
     "Elevation",
     "ElevationGrid",
     "ElevationPatch",

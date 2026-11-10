@@ -11,7 +11,9 @@ own modules, not exported here.
 
 The seven map style groups sit beside `Style`, one per field of it: `CardStyle`,
 `RibbonStyle`, `CoverStyle`, `RouteStyle`, `BasemapStyle`, `LetteringStyle` and
-`RouteInkStyle`. A theme that cannot be loaded raises `ThemeError`, which holds every
+`RouteInkStyle`. `EffectStack` is the casing, glow and shadow of one line class, which a theme
+sets in its `line_effects` table and which sit in `BasemapStyle.line_effects` and
+`RouteInkStyle.effects`. A theme that cannot be loaded raises `ThemeError`, which holds every
 `ThemeProblem` found, each located by file, key and line. `Palette` is a named set of colour
 aliases, packaged or read from a YAML or GIMP `.gpl` file, which a theme chooses with `palette:`. `Features` and `Elevation` are
 the protocols a caller's own provider satisfies, and `ElevationGrid` is what an elevation provider returns. `Landmark`,
@@ -37,6 +39,7 @@ from pyntpot.maps.card import Card
 from pyntpot.maps.credit import Credit
 from pyntpot.maps.lettering.label import Label, Span
 from pyntpot.maps.lettering.pipeline import Lettering, letter
+from pyntpot.maps.line_effects import EffectStack
 from pyntpot.maps.pipeline import compose, fetch, paint
 from pyntpot.maps.plates import DarkGrid, Manifest, Plates
 from pyntpot.maps.projection import Projection
@@ -84,6 +87,7 @@ __all__: list[str] = [
     "CoverStyle",
     "Credit",
     "DarkGrid",
+    "EffectStack",
     "Elevation",
     "ElevationGrid",
     "ElevationPatch",

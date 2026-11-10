@@ -19,6 +19,7 @@ from hypothesis import strategies as st
 from pyntpot.ink.colour import Colour
 from pyntpot.maps.style import Style
 from pyntpot.maps.theme_merge import merge
+from pyntpot.maps.theme_vocab import LOADER_FIELDS
 
 from support.properties import UNTIMED
 from support.theme_dump import dump_theme
@@ -99,9 +100,15 @@ class TestMerge:
 
 type _Path = tuple[str, ...]
 
-#: The default table, one entry per group, as the loader's base.
+#: The default table, one entry per group, as the loader's base, less the loader-only fields,
+#: which a theme sets only through `line_effects` and refuses inside their group.
 _BASE: dict[str, object] = {
-    name: dataclasses.asdict(getattr(Style(), name)) for name in Style.model_fields
+    name: {
+        field: value
+        for field, value in dataclasses.asdict(getattr(Style(), name)).items()
+        if (name, field) not in LOADER_FIELDS
+    }
+    for name in Style.model_fields
 }
 
 
