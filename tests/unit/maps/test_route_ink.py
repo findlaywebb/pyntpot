@@ -8,7 +8,18 @@ import numpy as np
 import pytest
 from PIL import Image, ImageChops, ImageStat
 
-from pyntpot.maps import Basemap, Cache, Lettering, Plates, Style, Track, compose, fetch, paint
+from pyntpot.maps import (
+    Basemap,
+    Cache,
+    Lettering,
+    Plates,
+    Style,
+    Track,
+    compose,
+    fetch,
+    letter,
+    paint,
+)
 from pyntpot.maps.compose_steps import route as compose_route
 
 from support.paths import FIXTURE_DIR, KEY
@@ -185,3 +196,40 @@ class TestRouteBlendAndOpacity:
         """An opacity above one raises, naming it."""
         with pytest.raises(ValueError, match=r"1\.5"):
             _routed(painted, PALE, opacity=1.5)
+
+
+#: A violet fed as the route colour, and the pink the markers were lettered in before.
+VIOLET = "#6a2c91"
+PINK = "#c22050"
+
+
+def _rgb(colour: str) -> np.ndarray:
+    """A `#rrggbb` colour as a float RGB triple."""
+    return np.array([int(colour[i : i + 2], 16) for i in (1, 3, 5)], dtype=float)
+
+
+@pytest.mark.golden
+@pytest.mark.xdist_group("test_route_ink")
+class TestFedColourLettersTheMarkers:
+    """A fed route colour letters the "start" and "finish" markers, not just the line."""
+
+    def test_the_start_label_is_lettered_in_the_fed_colour(self, painted: Painted) -> None:
+        """The nib plate's inked pixels in the "start" box are nearer the fed violet than the old pink."""
+        fed_style = painted.style.with_route_ink(colour=VIOLET)
+        default = letter(painted.plates, painted.basemap, None, painted.style)
+        assert default.plate_path is not None
+        default_bytes = default.plate_path.read_bytes()
+        fed = letter(painted.plates, painted.basemap, None, fed_style)
+        assert fed.plate_path is not None
+        start = next(lb for lb in fed.labels if lb.kind == "marker" and lb.name == "start")
+        with Image.open(fed.plate_path) as opened:
+            plate = np.asarray(opened.convert("RGBA")).astype(float)
+        k = plate.shape[1] / painted.plates.card.display[0]
+        assert start.box is not None
+        x0, y0, x1, y1 = (round(v * k) for v in start.box)
+        box = plate[y0:y1, x0:x1]
+        inked = box[box[..., 3] / 255 >= 0.9][:, :3]
+        assert len(inked) > 0
+        mean = inked.mean(axis=0)
+        assert np.linalg.norm(mean - _rgb(VIOLET)) < np.linalg.norm(mean - _rgb(PINK))
+        assert fed.plate_path.read_bytes() != default_bytes

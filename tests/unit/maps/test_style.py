@@ -348,9 +348,9 @@ class TestFedRouteInk:
         assert style.with_route_ink() == style
         assert style.with_route_ink(colour="#c22050", width_px=5.4) == style
 
-    def test_a_fed_ink_moves_only_the_full_digest(self) -> None:
-        """A fed ink moves `digest()` and leaves the base and lettering digests at their pins."""
-        fed = Style.default().with_route_ink(colour="#2050c2", width_px=4.8)
+    def test_a_fed_width_moves_only_the_full_digest(self) -> None:
+        """A fed width moves `digest()` and leaves the base and lettering digests at their pins."""
+        fed = Style.default().with_route_ink(width_px=4.8)
         assert fed.digest() != DIGEST
         assert (fed.base_digest(), fed.lettering_digest()) == (BASE_DIGEST, LETTERING_DIGEST)
 
