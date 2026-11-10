@@ -23,6 +23,8 @@
 
 ::: pyntpot.maps.CardStyle
 
+::: pyntpot.maps.CoverPigment
+
 ::: pyntpot.maps.CoverStyle
 
 ::: pyntpot.maps.Credit

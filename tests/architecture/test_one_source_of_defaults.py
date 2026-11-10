@@ -232,7 +232,7 @@ class TestTheChecksFindAPlantedDefect:
 
     def test_a_restated_dict_entry_is_found(self, tmp_path):
         """A dict-field entry set to its default is reported by its dotted path."""
-        wood = CoverStyle().pigments["wood"]
+        wood = CoverStyle().pigments["wood"].colour
         theme = tmp_path / "t.yaml"
         theme.write_text(f'cover:\n  pigments:\n    wood: "{wood}"\n', encoding="utf-8")
         assert keys_set_to_their_base_value(theme) == ["t.yaml: cover.pigments.wood"]

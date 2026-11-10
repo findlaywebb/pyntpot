@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from pyntpot.ink import Colour
-from pyntpot.maps import Style
+from pyntpot.maps import CoverPigment, Style
 from pyntpot.maps.theme_errors import ThemeError
 
 
@@ -17,10 +17,11 @@ def _theme(tmp_path: Path, text: str) -> Path:
 
 
 def test_a_pigment_name_loads_as_its_hex(tmp_path):
-    """`cover.pigments.built: ultramarine` loads as ultramarine's `#2b3d8f`."""
+    """`cover.pigments.built: ultramarine` loads as ultramarine's `#2b3d8f` and its own transparency."""
     style = Style.from_yaml(_theme(tmp_path, "cover:\n  pigments:\n    built: ultramarine\n"))
-    assert style.cover.pigments["built"] == "#2b3d8f"
-    assert type(style.cover.pigments["built"]) is Colour
+    assert style.cover.pigments["built"] == CoverPigment(Colour("#2b3d8f"), 0.06)
+    assert style.cover.pigments["built"].colour == "#2b3d8f"
+    assert type(style.cover.pigments["built"].colour) is Colour
 
 
 def test_a_pigment_name_loads_into_a_scalar_field(tmp_path):

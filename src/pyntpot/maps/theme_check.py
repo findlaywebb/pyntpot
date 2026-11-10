@@ -55,6 +55,8 @@ from pyntpot.maps.theme_vocab import LOADER_FIELDS
 #: Old key paths and what each is called now; a theme that uses one is told the new name.
 RENAMED_KEYS: dict[tuple[str, ...], str] = {
     ("route_ink", "style"): "drawn_as",  # ADR 0069 (#182)
+    # Its value moved, so the error names where (a departure from ADR 0069's unknown-key rule).
+    ("paper", "pigment_transparency"): "cover.pigments.<class>.transparency",
 }
 
 #: The top-level key naming the theme a theme overrides.

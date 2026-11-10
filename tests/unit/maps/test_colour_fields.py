@@ -10,7 +10,7 @@ import pydantic
 import pytest
 
 from pyntpot.ink import Casing, Colour, Glow, Shadow
-from pyntpot.maps import Style
+from pyntpot.maps import CoverPigment, Style
 from pyntpot.maps.style_groups import CoverStyle, RouteInkStyle
 from pyntpot.maps.theme_schema import theme_schema
 from pyntpot.maps.theme_vocab import ALIAS_PATTERN, COLOUR_PATTERN
@@ -57,13 +57,13 @@ class TestFieldTypes:
             if values and all(isinstance(v, str) and HEX.fullmatch(v) for v in values)
         }
         assert set(_colour_paths(Style())) == implied
-        assert len(implied) == 8
+        assert len(implied) == 7
 
     def test_every_colour_path_has_the_three_branch_node(self):
         """Each `Colour` path, a dict field's values included, is the pigment, hex or alias node."""
         schema: Any = theme_schema()
         leaves = [_node_at(schema, path) for path in _colour_paths(Style())]
-        assert len(leaves) == 8
+        assert len(leaves) == 7
         for leaf in leaves:
             _assert_three_branches(leaf)
 
@@ -114,11 +114,11 @@ class TestCoercion:
         assert type(got) is Colour
         assert got == "#abcdef"
 
-    def test_replace_coerces_a_dict_of_colours(self):
-        """`replace` with a dict of upper-case hexes gives a dict of `Colour` values."""
+    def test_replace_coerces_a_dict_of_cover_pigments(self):
+        """`replace` with an upper-case hex gives a `CoverPigment` with `built`'s own transparency."""
         got = dataclasses.replace(CoverStyle(), pigments={"built": "#ABCDEF"}).pigments["built"]
-        assert type(got) is Colour
-        assert got == "#abcdef"
+        assert type(got.colour) is Colour
+        assert got == CoverPigment(Colour("#abcdef"), 0.26)
 
     def test_model_validate_builds_a_colour(self):
         """`Style.model_validate` from a dict holds a `Colour`, stored lower-case."""

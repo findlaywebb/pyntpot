@@ -11,7 +11,8 @@ own modules, not exported here.
 
 The seven map style groups sit beside `Style`, one per field of it: `CardStyle`,
 `RibbonStyle`, `CoverStyle`, `RouteStyle`, `BasemapStyle`, `LetteringStyle` and
-`RouteInkStyle`. `EffectStack` is the casing, glow and shadow of one line class, which a theme
+`RouteInkStyle`. `CoverPigment` is one entry of `CoverStyle.pigments`: a colour with its own
+transparency. `EffectStack` is the casing, glow and shadow of one line class, which a theme
 sets in its `line_effects` table and which sit in `BasemapStyle.line_effects` and
 `RouteInkStyle.effects`. A theme that cannot be loaded raises `ThemeError`, which holds every
 `ThemeProblem` found, each located by file, key and line. `Palette` is a named set of colour
@@ -36,6 +37,7 @@ from pyntpot.maps.basemap import Basemap, ElevationPatch, Layers, Line, River, R
 from pyntpot.maps.cache import Cache, FetchError, FetchMargins
 from pyntpot.maps.candidates.export import candidate_export
 from pyntpot.maps.card import Card
+from pyntpot.maps.cover_pigment import CoverPigment
 from pyntpot.maps.credit import Credit
 from pyntpot.maps.lettering.label import Label, Span
 from pyntpot.maps.lettering.pipeline import Lettering, letter
@@ -84,6 +86,7 @@ __all__: list[str] = [
     "Cache",
     "Card",
     "CardStyle",
+    "CoverPigment",
     "CoverStyle",
     "Credit",
     "DarkGrid",

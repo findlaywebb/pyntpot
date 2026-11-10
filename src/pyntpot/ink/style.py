@@ -17,7 +17,6 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from pyntpot.ink.colour import Colour, normalise_colours
-from pyntpot.ink.pigment_table import role_transparencies
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -59,10 +58,7 @@ class PaperStyle:
             Kubelka-Munk gives each pigment absorption and scattering derived from what it shows
             over white and over black, and composites the layers optically, so the greens and blues
             keep their hue where they meet.
-        pigment_transparency: Per-pigment transparency, as `TRANSPARENCY`. Ink and anything unnamed
-            takes `km_transparency`.
-        km_transparency: The transparency of ink and of any pigment `pigment_transparency` does not
-            name.
+        km_transparency: The transparency of ink and of any pigment that carries none of its own.
         paper_fibre: One cold-press paper field: a second fibre noise stretched along a sheet-wide
             axis, mixed into the tooth, with granulation then taken from the paper's own height
             rather than an unrelated field. Heavy pigment settles in the pits the dry brush also
@@ -89,7 +85,6 @@ class PaperStyle:
     paper_edge: Literal["classic", "warm"] = "warm"
     sheet_seed: int = 11
     km_glazing: bool = True
-    pigment_transparency: dict[str, float] = field(default_factory=role_transparencies)
     km_transparency: float = 0.06
     paper_fibre: bool = True
     paper_fibre_mix: float = 0.35

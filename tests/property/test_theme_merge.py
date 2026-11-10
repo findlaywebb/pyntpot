@@ -17,6 +17,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from pyntpot.ink.colour import Colour
+from pyntpot.maps.cover_pigment import CoverPigment
 from pyntpot.maps.style import Style
 from pyntpot.maps.theme_merge import merge
 from pyntpot.maps.theme_vocab import LOADER_FIELDS
@@ -135,8 +136,8 @@ def _is_number(value: object) -> bool:
 
 
 def _drawable(value: object) -> bool:
-    """Whether the leaf `value` is a kind the property gives a new value."""
-    if isinstance(value, bool) or _is_number(value):
+    """Whether the leaf `value` is a kind the property gives a new value; a `CoverPigment` is one leaf."""
+    if isinstance(value, bool | CoverPigment) or _is_number(value):
         return True
     if isinstance(value, tuple):
         return bool(value) and all(_is_number(item) for item in value)
@@ -184,7 +185,7 @@ def overrides(draw: st.DrawFn) -> dict[str, object]:
         path, value = _CANDIDATES[index]
         if isinstance(value, bool):
             new: object = not value
-        elif isinstance(value, str):
+        elif isinstance(value, str | CoverPigment):
             new = draw(_HEX)
         else:
             new = _scaled(value, factor)

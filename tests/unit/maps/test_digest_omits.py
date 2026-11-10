@@ -11,7 +11,7 @@ from pyntpot.maps.line_effects import BUILT_IN_PRESETS
 from pyntpot.maps.style import DIGEST_OMITS_AT_DEFAULT
 
 #: The default style's `digest`, `base_digest` and `lettering_digest`, measured before the effect fields.
-DEFAULT_DIGESTS = ("88b356ada294ff60", "d9c56c0811177b0f", "d15ae2f30e9ca5ce")
+DEFAULT_DIGESTS = ("7acbdc3ff326d1fe", "ebe16b5246aeb21f", "d15ae2f30e9ca5ce")
 
 
 def _digests(style: Style) -> tuple[str, str, str]:

@@ -84,19 +84,19 @@
 
 ## B: a pigment carries its transparency (D7)
 
-- [ ] Red: `test_cover_pigments.py` and `test_theme_bindings.py` (every form by `ids=`,
+- [x] Red: `test_cover_pigments.py` and `test_theme_bindings.py` (every form by `ids=`,
       `palette-alias-to-name` among them; the `extends` child; Python-built `None`, `str`
       and a key outside the 15 classes; the dumped form loading back; each table error
       at its own key and line, with the nearest name for an unknown inner key and `bool`
       and `str` transparencies refused), the merge and schema tests, the migration
       literal table.
-- [ ] Green: `maps/cover_pigment.py`; `maps/theme_bindings.py` (every ref through
+- [x] Green: `maps/cover_pigment.py`; `maps/theme_bindings.py` (every ref through
       `resolve_pigment`, no direct alias or registry lookup); the `cover_class` context
       key in `TableCheck.leaf`; the table form checked key by key in `TableCheck.field`; the `RENAMED_KEYS` entry and the
       `test_theme_check.py:146` pin of `RENAMED_KEYS` (now two rows); drop
       `PaperStyle.pigment_transparency`; `CoverStyle.__post_init__`; `PaintJob.transp`;
       painter `.colour` reads; vocabulary; export, `maps.md` directive and public API pin.
-- [ ] One written form, a ref or `{pigment, transparency}`, never a list: `theme_dump`
+- [x] One written form, a ref or `{pigment, transparency}`, never a list: `theme_dump`
       (its writer public as `plain_table`), the schema `default` (`theme_schema._json`),
       `test_reference_values.py`'s `entry_value` and the `style-fields.md` Default cells.
       `test_theme_schema.py`: the default test builds its expected value with
@@ -104,14 +104,14 @@
       branch. The merge property's walker draws a bare hex for a `CoverPigment`. Fix
       `test_smoke.py:246` and PR 1's coercion guard, `test_registry_defaults.py` and
       `test_theme_colour_names.py`.
-- [ ] Migrate the four bundled and six example themes; regenerate both schemas.
-- [ ] Byte compare every theme's base plates with P0's record: identical. Repaint with
+- [x] Migrate the four bundled and six example themes; regenerate both schemas.
+- [x] Byte compare every theme's base plates with P0's record: identical. Repaint with
       `--no-lynmouth` every fixture-reading registry name except `how-to/route-ink.webp`
       (the plan's list of 15): nothing changed.
-- [ ] Re-pin `DIGEST`, `BASE_DIGEST`, theme `DIGESTS`, `GOLDEN_HASH`,
+- [x] Re-pin `DIGEST`, `BASE_DIGEST`, theme `DIGESTS`, `GOLDEN_HASH`,
       `SOURCED[PaperStyle]`, `SOURCED[CoverStyle]` and every other hash of style data
       P0's grep found to measured literals. `LETTERING_DIGEST` unchanged.
-- [ ] Docs: `style-fields.md` (with the `route_ink` section's "paints no plate again"
+- [x] Docs: `style-fields.md` (with the `route_ink` section's "paints no plate again"
       corrected for a fed colour), `pigments.md`, `write-a-theme.md` (the example, the merge
       line, the rule and the `extends` case), the "cover pigment" glossary row. Gates.
 

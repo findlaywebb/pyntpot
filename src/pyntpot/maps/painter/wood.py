@@ -51,7 +51,9 @@ def _texture(job: PaintJob, stack: PlateStack) -> None:
             continue
         field_n = fbm(rh, rw, blotch_px * sc, 3, job.dither_rng)
         dens = np.clip((field_n - 0.40) * 1.7, 0, 1) * stack.wood_mask * strength * weight
-        stack.trimmed.append((blur(dens, 2.0), rgb(cover.pigments["wood"]), job.transp("wood")))
+        stack.trimmed.append(
+            (blur(dens, 2.0), rgb(cover.pigments["wood"].colour), job.transp("wood"))
+        )
 
 
 def _dabs(job: PaintJob, stack: PlateStack) -> None:
@@ -81,7 +83,7 @@ def _dabs(job: PaintJob, stack: PlateStack) -> None:
         dab_r = max(step * 0.17, 4.0)
         dens = np.clip(blur(dabs, dab_r) * (dab_r**2) * 1.5, 0, 1) * stack.wood_mask
         stack.trimmed.append(
-            (dens * strength * weight, rgb(cover.pigments["wood"]), job.transp("wood"))
+            (dens * strength * weight, rgb(cover.pigments["wood"].colour), job.transp("wood"))
         )
 
 

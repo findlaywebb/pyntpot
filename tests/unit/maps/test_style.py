@@ -53,8 +53,8 @@ ROUTE_INK = RouteInkStyle(
 )
 
 #: The default style's three digests, pinned.
-DIGEST = "88b356ada294ff60"
-BASE_DIGEST = "d9c56c0811177b0f"
+DIGEST = "7acbdc3ff326d1fe"
+BASE_DIGEST = "ebe16b5246aeb21f"
 LETTERING_DIGEST = "d15ae2f30e9ca5ce"
 
 

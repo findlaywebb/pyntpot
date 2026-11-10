@@ -41,36 +41,13 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `paper_edge` | one of `classic`, `warm` | `"warm"` | The look of the edge and the foxing. `"warm"` browns a narrow, uneven edge and flecks the sheet with small rust specks; `"classic"` is the grey vignette and broad grey smudges. |
 | `sheet_seed` | integer | `11` | Seed of the paper's noise fields, so the same box paints the same paper. |
 | `km_glazing` | boolean | `true` | Composite the pigment stack by Kubelka-Munk glazing instead of multiply. |
-| `pigment_transparency` | table | table | Table of pigment key to transparency, as `TRANSPARENCY`. See [Pigments](pigments.md). |
-| `km_transparency` | number | `0.06` | Transparency of ink and of any pigment the table does not name. |
+| `km_transparency` | number | `0.06` | Transparency of ink, and of a `cover.pigments` entry built in Python with a transparency of `None`. A theme never reaches it: every cover class has a built-in transparency. |
 | `paper_fibre` | boolean | `true` | Mix a second noise, stretched along one axis, into the paper's tooth, and take granulation from the paper's own height. |
 | `paper_fibre_mix` | number | `0.35` | How much of the fibre noise is mixed into the tooth. |
 | `paper_fibre_stretch` | number | `3.0` | How many times longer than wide a fibre is. |
 | `paper_fibre_angle` | number | `0.42` | Angle of the fibre grain, in radians. |
 | `paper_fibre_cell_px` | number | `4.2` | Size of the fibre's own cell, in render pixels. |
 | `gran_gamma` | number | `1.7` | How sharply granulation follows the paper's pits. Above 1, pigment has to reach a real hollow before it settles. |
-
-### `paper.pigment_transparency`
-
-A theme may give only these keys.
-
-| Key | Default |
-| --- | --- |
-| `farmland` | `0.1` |
-| `meadow` | `0.09` |
-| `orchard` | `0.09` |
-| `scrub` | `0.08` |
-| `heath` | `0.14` |
-| `sand` | `0.16` |
-| `rock` | `0.22` |
-| `wetland` | `0.08` |
-| `built` | `0.26` |
-| `works` | `0.28` |
-| `wood` | `0.05` |
-| `pale` | `0.12` |
-| `water` | `0.04` |
-| `relief` | `0.3` |
-| `rim` | `0.18` |
 
 ## `wash`
 
@@ -315,7 +292,7 @@ Besides these keys, a theme may give a brush-id prefix in lower case (`riv`, `st
 | `relief_strength` | number | `1.0` | Multiplies the relief's density, and the ceiling the density is held to, so 2 paints the slopes twice as dark. |
 | `min_patch_px` | number | `0.0` | Display pixels below which a painted cover patch takes the class of its largest painted neighbour; a patch nothing painted touches, such as an island's wood, is kept. Zero keeps every patch. |
 | `cover_cfg` | table | table | Table of cover class to two numbers: how dark a wash of the class goes and how hard its edge pools. |
-| `pigments` | table | table | Table of pigment key to the colour a full-strength wash transmits, each a `#rrggbb`, a pigment name or a colour alias. See [Pigments](pigments.md). |
+| `pigments` | table | table | Table of cover class to its pigment: a `#rrggbb`, a pigment name or a colour alias, or a table `{pigment, transparency}`. Each entry holds the colour a full-strength wash transmits and the pigment's transparency; one with none takes the pigment's own, else the class's built-in. An entry replaces its parent theme's whole. See [Pigments](pigments.md). |
 | `pale_base` | number | `0.5` | Density of the pale single wash. |
 | `pale_pool` | number | `0.16` | How hard the pale wash's edge pools. |
 | `wood_texture` | number | `0.75` | Slider for the wood's texture, a cross fade over three printed scales. |
@@ -349,21 +326,21 @@ A theme may give only these keys.
 
 | Key | Default |
 | --- | --- |
-| `farmland` | `"#dfe0b0"` |
-| `meadow` | `"#cfdfae"` |
-| `orchard` | `"#d5dda2"` |
-| `scrub` | `"#c9d5a4"` |
-| `heath` | `"#e0cda2"` |
-| `sand` | `"#ecdfbe"` |
-| `rock` | `"#dcd6c6"` |
-| `wetland` | `"#bfd2cd"` |
-| `built` | `"#ddd3c3"` |
-| `works` | `"#d2cbc0"` |
-| `wood` | `"#a8c286"` |
-| `pale` | `"#d5e0b4"` |
-| `water` | `"#9ec4de"` |
-| `relief` | `"#c9bda4"` |
-| `rim` | `"#c2ad91"` |
+| `farmland` | `{pigment: "#dfe0b0", transparency: 0.1}` |
+| `meadow` | `{pigment: "#cfdfae", transparency: 0.09}` |
+| `orchard` | `{pigment: "#d5dda2", transparency: 0.09}` |
+| `scrub` | `{pigment: "#c9d5a4", transparency: 0.08}` |
+| `heath` | `{pigment: "#e0cda2", transparency: 0.14}` |
+| `sand` | `{pigment: "#ecdfbe", transparency: 0.16}` |
+| `rock` | `{pigment: "#dcd6c6", transparency: 0.22}` |
+| `wetland` | `{pigment: "#bfd2cd", transparency: 0.08}` |
+| `built` | `{pigment: "#ddd3c3", transparency: 0.26}` |
+| `works` | `{pigment: "#d2cbc0", transparency: 0.28}` |
+| `wood` | `{pigment: "#a8c286", transparency: 0.05}` |
+| `pale` | `{pigment: "#d5e0b4", transparency: 0.12}` |
+| `water` | `{pigment: "#9ec4de", transparency: 0.04}` |
+| `relief` | `{pigment: "#c9bda4", transparency: 0.3}` |
+| `rim` | `{pigment: "#c2ad91", transparency: 0.18}` |
 
 ## `route`
 
@@ -377,7 +354,7 @@ A theme may give only these keys.
 
 ## `route_ink`
 
-`RouteInkStyle`, from `pyntpot.maps`, read as `Style.default().route_ink`. How the route is drawn on the map. It is read only when the route is placed and drawn, so changing it paints no plate again. `Style.with_route_ink` feeds its colour and width.
+`RouteInkStyle`, from `pyntpot.maps`, read as `Style.default().route_ink`. How the route is drawn on the map. It is read only when the route is placed and drawn, so changing it paints no plate again, but a colour fed through `Style.with_route_ink` also sets `nib.label_route_ink`, which strokes the nib plate again. `Style.with_route_ink` feeds its colour and width.
 
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |

@@ -1,6 +1,7 @@
 """The map's pigment defaults are the registry's, not copies: keys, values and order tie."""
 
-from pyntpot.ink import PIGMENTS, TRANSPARENCY, Colour, PaperStyle
+from pyntpot.ink import PIGMENTS, TRANSPARENCY, Colour
+from pyntpot.maps import CoverPigment
 from pyntpot.maps.style_groups import CoverStyle
 from pyntpot.maps.theme_vocab import VOCABULARIES
 
@@ -24,31 +25,23 @@ ROLES = [
 
 
 def test_cover_pigments_equal_the_registry_in_pinned_order():
-    """`CoverStyle().pigments` is `PIGMENTS`, in the registry's key order."""
+    """`CoverStyle().pigments` is the registry's role pigments as `CoverPigment`s, in key order."""
     pigments = CoverStyle().pigments
     assert list(pigments) == ROLES
-    assert pigments == PIGMENTS
-
-
-def test_paper_transparency_equals_the_registry_in_pinned_order():
-    """`PaperStyle().pigment_transparency` is `TRANSPARENCY`, in the registry's key order."""
-    transparency = PaperStyle().pigment_transparency
-    assert list(transparency) == ROLES
-    assert transparency == TRANSPARENCY
+    assert pigments == {name: CoverPigment(PIGMENTS[name], TRANSPARENCY[name]) for name in ROLES}
 
 
 def test_a_default_is_a_fresh_dict_each_time():
     """Editing one group's default leaves the next group and the registry alone."""
     first = CoverStyle().pigments
-    first["farmland"] = Colour("#000000")
-    assert CoverStyle().pigments["farmland"] == "#dfe0b0"
+    first["farmland"] = CoverPigment(Colour("#000000"), 0.5)
+    assert CoverStyle().pigments["farmland"] == ("#dfe0b0", 0.10)
     assert PIGMENTS["farmland"] == "#dfe0b0"
 
 
 def test_the_theme_pigment_vocabulary_is_the_role_names():
-    """The keys a theme may give the three pigment fields are the registry's role names."""
+    """The keys a theme may give the two pigment fields are the registry's role names."""
     for path in (
-        ("paper", "pigment_transparency"),
         ("wash", "separation_pigments"),
         ("cover", "pigments"),
     ):

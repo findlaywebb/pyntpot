@@ -148,8 +148,10 @@ class PaintJob:
 
     def transp(self, key: str) -> float:
         """What this pigment shows over black, as a share of over white."""
-        paper = self.style.paper
-        return float(paper.pigment_transparency.get(key, paper.km_transparency))
+        entry = self.style.cover.pigments.get(key)
+        if entry is None or entry.transparency is None:
+            return float(self.style.paper.km_transparency)
+        return float(entry.transparency)
 
     @property
     def pen_seed(self) -> int:

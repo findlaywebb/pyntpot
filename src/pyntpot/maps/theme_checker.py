@@ -28,6 +28,8 @@ from pydantic import BeforeValidator
 from pyntpot.ink.brush import brush_id_known, brush_ids
 from pyntpot.ink.colour import Colour
 from pyntpot.ink.naming import did_you_mean
+from pyntpot.maps.cover_pigment import CoverPigment
+from pyntpot.maps.theme_bindings import TABLE_HINTS, resolve_cover_pigment
 from pyntpot.maps.theme_errors import ThemeProblem
 from pyntpot.maps.theme_read import ThemeFile
 from pyntpot.maps.theme_scope import ThemeScope, resolve_colour
@@ -40,12 +42,17 @@ _TABLE = "is a table of keys"
 _MESSAGES: dict[str, str] = {
     "bool_type": "{v!r} is not a boolean (true or false)",
     "float_type": "{v!r} is not a number",
+    "greater_than_equal": "{v!r} is not from 0 to 1",
+    "less_than_equal": "{v!r} is not from 0 to 1",
     "int_type": "{v!r} is not a whole number",
     "string_type": "{v!r} is not a string",
     "tuple_type": "{v!r} is not a list",
 }
 
 type _Path = tuple[str, ...]
+
+#: The depth of a `cover.pigments.<class>` key path.
+_COVER_ENTRY_DEPTH = 3
 
 
 class TableCheck:
@@ -96,7 +103,25 @@ class TableCheck:
             return self.table(hint, value, path)
         if typing.get_origin(hint) is dict:
             return self.entries(typing.get_args(hint)[1], value, path)
+        if hint is CoverPigment and isinstance(value, dict):
+            return self.cover_pigment(value, path)
         return self.leaf(hint, value, path)
+
+    def cover_pigment(self, value: dict[str, object], path: _Path) -> CoverPigment | None:
+        """Check `value` as a `cover.pigments` table at `path`, each key at its own line.
+
+        Returns:
+            The `CoverPigment` the checked table stands for, or None when any key is refused
+            or `pigment` is missing.
+        """
+        before = len(self.found)
+        if "pigment" not in value:
+            self.problem(path, "pigment is required")
+        checked = self.mapping(value, path, tuple(TABLE_HINTS), TABLE_HINTS.__getitem__)
+        if len(self.found) > before:
+            return None
+        built = self.leaf(CoverPigment, checked, path)
+        return built if isinstance(built, CoverPigment) else None
 
     def entries(self, hint: object, value: object, path: _Path) -> dict[str, object] | None:
         """Check `value` as a dict field's entries, each against `hint`; None when no table."""
@@ -131,10 +156,17 @@ class TableCheck:
                 checked[key] = converted
         return checked
 
+    def _context(self, path: _Path) -> dict[str, object]:
+        """The validation context at `path`: the scope, and the cover class under `cover.pigments`."""
+        context: dict[str, object] = {"scope": self.scope}
+        if len(path) == _COVER_ENTRY_DEPTH and path[:2] == ("cover", "pigments"):
+            context["cover_class"] = path[-1]
+        return context
+
     def leaf(self, hint: object, value: object, path: _Path) -> object | None:
         """Validate the leaf `value` strictly against `hint` at `path`; None when refused."""
         try:
-            converted = _adapter(hint).validate_python(value, context={"scope": self.scope})
+            converted = _adapter(hint).validate_python(value, context=self._context(path))
         except pydantic.ValidationError as exc:
             for message in _messages(hint, value, exc):
                 self.problem(path, message)
@@ -243,5 +275,9 @@ def resolve_theme_colour(value: object, info: pydantic.ValidationInfo) -> Colour
 @functools.cache
 def _adapter(hint: object) -> pydantic.TypeAdapter[object]:
     """The strict pydantic validator for the field type `hint`."""
-    form: Any = Annotated[Colour, BeforeValidator(resolve_theme_colour)] if hint is Colour else hint
+    form: Any = hint
+    if hint is Colour:
+        form = Annotated[Colour, BeforeValidator(resolve_theme_colour)]
+    elif hint is CoverPigment:
+        form = Annotated[CoverPigment, BeforeValidator(resolve_cover_pigment)]
     return pydantic.TypeAdapter(form, config=pydantic.ConfigDict(strict=True))

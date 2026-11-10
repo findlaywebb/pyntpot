@@ -42,6 +42,10 @@
 
 *[painter's pigments]: A pigment named by the tube a painter buys (ultramarine, burnt_sienna), not by map role; held beside PIGMENTS in its own table and read by no map style.
 
+*[cover pigment]: The pigment one cover class paints: its colour and its own transparency, written in a theme as a reference or as {pigment, transparency} and held in CoverStyle.pigments. One with no transparency of its own takes the pigment's, else the class's built-in.
+
+*[cover pigments]: The pigment one cover class paints: its colour and its own transparency, written in a theme as a reference or as {pigment, transparency} and held in CoverStyle.pigments. One with no transparency of its own takes the pigment's, else the class's built-in.
+
 *[pigment layer]: One layer of the pigment stack composite lays: a density, a pigment colour and optionally its transparency. Not the basemap's layers.
 
 *[pigment layers]: One layer of the pigment stack composite lays: a density, a pigment colour and optionally its transparency. Not the basemap's layers.

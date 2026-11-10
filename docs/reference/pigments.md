@@ -33,7 +33,7 @@ A pigment is a colour a wash or a mark lays, named by its key. This page lists e
 - The cover classes `farmland`, `meadow`, `orchard`, `scrub`, `heath`, `sand`, `rock`, `wetland`, `built`, `works` and `wood` are the land cover classes the basemap paints.
 - `pale` is the single wash laid instead of the classes when `land_cover` is off.
 - `water`, `relief` and `rim` colour the water, the relief and the pooled edge inside a wash's tear.
-- `CoverStyle.pigments` and `PaperStyle.pigment_transparency` hold the same keys as the style's own fields. See [Style fields](style-fields.md).
+- `CoverStyle.pigments` holds these keys, each a colour with its transparency, a `CoverPigment`; a theme writes an entry as a reference or as `{pigment, transparency}`. See [Style fields](style-fields.md).
 
 ## Colour Index
 

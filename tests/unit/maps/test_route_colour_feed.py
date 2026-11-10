@@ -12,7 +12,7 @@ FED = "#2050c2"
 
 #: The default style fed `FED`, its lettering digest measured, pinned.
 FED_LETTERING_DIGEST = "925e40ac5a5d8bd8"
-FED_DIGEST = "1198854cfc7ed0e6"
+FED_DIGEST = "be95e8d02d455997"
 
 
 def _colour_fields(style: Style) -> Iterator[tuple[str, str]]:

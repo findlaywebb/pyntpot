@@ -49,7 +49,7 @@ from the [tutorial](../tutorials/index.md). Every field a theme can set is on th
 3. Check that the theme took. The wood is yours and every other pigment is still sepia's:
 
     ```python
-    style.cover.pigments["wood"]  # '#8f9f6a'
+    style.cover.pigments["wood"]  # CoverPigment(colour='#8f9f6a', transparency=0.05)
     style.cover.pigments["water"] == Style.named("sepia").cover.pigments["water"]  # True
     ```
 
@@ -88,7 +88,17 @@ pyntpot map route.gpx -o out/route.png --cache cache/ --contact https://example.
   out from the base.
 - **Table fields merge per entry.** Naming `cover.pigments.wood` changes the wood and keeps
   every other pigment. An entry that is itself a table, such as `brush.brush_overrides.lane`,
-  merges the same way.
+  merges the same way. The exception is a `cover.pigments` entry, which is replaced whole: a
+  colour and its transparency go together.
+- **A cover pigment carries its transparency.** Each `cover.pigments` entry is a reference (a
+  `#rrggbb`, a pigment name or an alias) or a table `{pigment: <reference>, transparency: <0
+  to 1>}`. Its transparency is the entry's own, else the named pigment's own, else the cover
+  class's built-in one. So a theme that only rebinds a class by hex keeps that class's
+  look, and `wood: {pigment: "#556b2f", transparency: 0.03}` is the way to change it. A
+  child theme that rebinds a class by bare hex takes the built-in transparency, not its
+  parent's, because the child's entry replaces the parent's whole.
+  `paper.pigment_transparency` no longer exists: a theme that sets it is told to use
+  `cover.pigments.<class>.transparency`.
 - **Everything else replaces.** A number, a string, a colour or a list is taken whole:
   setting `brush.blotch_m` to `[200.0, 26.0]` sets both of its numbers.
 - **Booleans are `true` and `false` only.** `no`, `yes`, `on` and `off` are strings, so
@@ -421,8 +431,8 @@ file is `src/pyntpot/maps/themes/sepia.yaml`; paint with it by `--style sepia`.
 
 *Painted by `examples/map_styles.py` with `figure="bold"`.*
 
-The pigments in `cover.pigments` are saturated, and `paper.pigment_transparency` is
-lower, so they lay down denser. `brush.river_mult` widens the rivers. `nib` letters larger
+The pigments in `cover.pigments` are saturated, and each carries a lower transparency, so
+they lay down denser. `brush.river_mult` widens the rivers. `nib` letters larger
 and heavier. `route_ink` makes the route magenta and 8 pixels wide. Its file is
 `src/pyntpot/maps/themes/bold.yaml`; paint with it by `--style bold`.
 

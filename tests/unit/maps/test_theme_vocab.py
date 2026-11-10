@@ -96,7 +96,6 @@ BRUSH = BrushStyle()
 @pytest.mark.parametrize(
     ("path", "expected"),
     [
-        (("paper", "pigment_transparency"), PIGMENTS),
         (("wash", "separation_pigments"), PIGMENTS),
         (("cover", "pigments"), PIGMENTS),
         (("cover", "cover_cfg"), frozenset(CoverStyle().cover_cfg)),
@@ -110,7 +109,6 @@ BRUSH = BrushStyle()
         (("brush", "brush_overrides", "*"), BRUSH_OVERRIDE_KEYS),
     ],
     ids=[
-        "pigment-transparency",
         "separation-pigments",
         "pigments",
         "cover-cfg",

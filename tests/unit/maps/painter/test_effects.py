@@ -117,7 +117,7 @@ class TestDefaultPath:
         under = [
             (
                 np.clip(rim * job.style.ribbon.rim_strength, 0, 1),
-                rgb(job.style.cover.pigments["rim"]),
+                rgb(job.style.cover.pigments["rim"].colour),
                 job.transp("rim"),
             )
         ]

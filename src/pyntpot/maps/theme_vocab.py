@@ -25,7 +25,7 @@ from pyntpot.maps.style_groups import CoverStyle
 _COVER = CoverStyle()
 _BRUSH = BrushStyle()
 
-#: The pigment keys: a pigment's transparency and its separating partner are keyed alike.
+#: The pigment keys: a cover class's pigment and its separating partner are keyed alike.
 _PIGMENTS = frozenset(p.name for p in ROLE_PIGMENTS)
 
 #: The `brush_overrides` entries a caller names itself: the route's pen and the label nib.
@@ -33,7 +33,6 @@ _CALLER_OVERRIDES = frozenset({"route", "label"})
 
 #: The keys a theme may give each dict-valued field, by key path; `*` is every entry.
 VOCABULARIES: dict[tuple[str, ...], frozenset[str]] = {
-    ("paper", "pigment_transparency"): _PIGMENTS,
     ("wash", "separation_pigments"): _PIGMENTS,
     ("cover", "pigments"): _PIGMENTS,
     ("cover", "cover_cfg"): frozenset(_COVER.cover_cfg),

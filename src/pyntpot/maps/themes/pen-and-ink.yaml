@@ -8,9 +8,6 @@ paper:
   paper_hex: "#f2eee4"
   paper_vignette: 0.03
   paper_foxing: 0.03
-  pigment_transparency:
-    pale: 0.2
-    wood: 0.03
 
 wash:
   separation_pigments:
@@ -42,7 +39,7 @@ cover:
     heath: "#e1ddd2"
     meadow: "#e9e5da"
     orchard: "#e1ddd2"
-    pale: "#efebe1"
+    pale: {pigment: "#efebe1", transparency: 0.2}
     relief: "#6f6a60"
     rim: "#bdb7a9"
     rock: "#d9d5ca"
@@ -50,7 +47,7 @@ cover:
     scrub: "#e1ddd2"
     water: "#c9d1d4"
     wetland: "#d9dedc"
-    wood: "#4a4741"
+    wood: {pigment: "#4a4741", transparency: 0.03}
     works: "#d6d1c5"
 
 route_ink:
