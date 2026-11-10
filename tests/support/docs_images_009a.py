@@ -103,6 +103,7 @@ IMAGES_009A: tuple[DocsImage, ...] = (
     _sweep("casing-sweep", "casing"),
     _sweep("glow-sweep", "glow"),
     _sweep("shadow-sweep", "shadow"),
+    _sweep("reserve-sweep", "reserve"),
     _sweep("pen-casing-sweep", "pen-casing", "painting-with-python", 600),
     _how_to("line-effects", "card"),
     _how_to("line-effects-presets", "presets"),

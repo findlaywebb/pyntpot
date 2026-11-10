@@ -1,6 +1,6 @@
 """The scenes of the line effect sweeps: the wash and the stroke every cell of a figure shares.
 
-Split from `line_effect_grids.py` so that script keeps the sweeps' layout and effects. Four
+Split from `line_effect_grids.py` so that script keeps the sweeps' layout and effects. Five
 scenes, one for each figure the sweeps paint, each a `Scene`: a wash in wash space (where the
 paper is 1), the stroke's density, and the stroke's ink as RGB.
 
@@ -8,9 +8,12 @@ paper is 1), the stroke's density, and the stroke's ink as RGB.
 - `glow`: an `RIV1-a` river, 4 pixels wide, over a dark wood wash.
 - `shadow`: a solid `#c22050` line, 4 pixels wide, over farmland.
 - `pen-casing`: a solid 1.5 pixel `#3a2c20` line over a Payne's grey tint.
+- `reserve`: the casing figure's road and wash.
 
-`scene(figure, w, h)` returns the scene of a cell `w` by `h` pixels, painted once and cached.
-`Scene` is a frozen record of three arrays.
+`scene(figure, w, h, scale=1)` returns the scene of a cell `w` by `h` pixels, painted once and
+cached. At `scale` 2 the cell is painted for a 2x sheet: `w` and `h` are the 2x size, and the
+stroke's width, the margin of its curve and `GRAN_PX` are each multiplied by `scale`, so a
+display pixel stays a display pixel. `Scene` is a frozen record of three arrays.
 
 It paints no effect, letters nothing and writes no file: the effect is the sweep script's. The
 arrays are shared between callers, who must not change them. It holds the seed, the granulation
@@ -49,10 +52,13 @@ GRAN_PX = 8.0
 PEN_INK, SOLID_INK, TINT = Colour("#3a2c20"), Colour("#c22050"), 0.3
 
 
-def _curve(w: int, h: int) -> np.ndarray:
-    """An S-shaped line across a cell of `w` by `h` pixels."""
+def _curve(w: int, h: int, scale: int = 1) -> np.ndarray:
+    """An S-shaped line across a cell of `w` by `h` pixels, `10 * scale` pixels in from each side."""
     t = np.linspace(0.0, 1.0, 70)
-    return np.column_stack([10 + t * (w - 20), h / 2 + 0.16 * h * np.sin(2 * np.pi * t)])
+    margin = 10 * scale
+    return np.column_stack(
+        [margin + t * (w - 2 * margin), h / 2 + 0.16 * h * np.sin(2 * np.pi * t)]
+    )
 
 
 def _solid(points: np.ndarray, width_px: float, shape: tuple[int, int]) -> np.ndarray:
@@ -66,11 +72,13 @@ def _solid(points: np.ndarray, width_px: float, shape: tuple[int, int]) -> np.nd
     return np.clip(width_px / 2 + 0.5 - dist, 0.0, 1.0).astype(np.float32)
 
 
-def _brushed(brush_id: str, width_px: float, sheet: Sheet) -> tuple[np.ndarray, np.ndarray]:
-    """A brush id's stroke along the curve: its density and its ink as RGB."""
-    brush, ink = brush_from_id(brush_id, width_px, 1.0, BrushStyle())
+def _brushed(
+    brush_id: str, width_px: float, sheet: Sheet, scale: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """A brush id's stroke along the curve, `width_px * scale` wide: its density and its ink."""
+    brush, ink = brush_from_id(brush_id, width_px * scale, 1.0, BrushStyle())
     acc = np.zeros((sheet.h, sheet.w), np.float32)
-    stamp(acc, _curve(sheet.w, sheet.h), brush, np.random.default_rng(SEED))
+    stamp(acc, _curve(sheet.w, sheet.h, scale), brush, np.random.default_rng(SEED))
     return ink_density(acc, brush, sheet), rgb(ink)
 
 
@@ -99,23 +107,24 @@ class Scene:
 
 
 @cache
-def scene(figure: str, w: int, h: int) -> Scene:
-    """The wash and the stroke of a figure's cell of `w` by `h` pixels, painted once.
+def scene(figure: str, w: int, h: int, scale: int = 1) -> Scene:
+    """The wash and the stroke of a figure's cell of `w` by `h` pixels at `scale`, painted once.
 
     Callers must not change the arrays.
     """
-    sheet = Sheet(h, w, GRAN_PX, SEED)
-    if figure == "casing":
+    sheet = Sheet(h, w, GRAN_PX * scale, SEED)
+    if figure in ("casing", "reserve"):
         base = _washed(
             sheet, ("farmland", 0.0, 0.6, 0.8), ("wood", 0.4, 1.0, 0.9), ("wood", 0.5, 1.0, 0.9)
         )
-        return Scene(base, *_brushed("MAJ2-b", 6.0, sheet))
+        return Scene(base, *_brushed("MAJ2-b", 6.0, sheet, scale))
     if figure == "glow":
         return Scene(
-            _washed(sheet, *[("wood", 0.0, 1.0, 0.9)] * 3), *_brushed("RIV1-a", 4.0, sheet)
+            _washed(sheet, *[("wood", 0.0, 1.0, 0.9)] * 3), *_brushed("RIV1-a", 4.0, sheet, scale)
         )
+    curve = _curve(w, h, scale)
     if figure == "shadow":
         base = _washed(sheet, ("farmland", 0.0, 1.0, 0.8))
-        return Scene(base, _solid(_curve(w, h), 4.0, (h, w)), rgb(SOLID_INK))
+        return Scene(base, _solid(curve, 4.0 * scale, (h, w)), rgb(SOLID_INK))
     base = _washed(sheet, ("paynes_grey", 0.0, 1.0, TINT))
-    return Scene(base, _solid(_curve(w, h), 1.5, (h, w)), rgb(PEN_INK))
+    return Scene(base, _solid(curve, 1.5 * scale, (h, w)), rgb(PEN_INK))

@@ -192,6 +192,10 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/line_effect_grids.py` (figure casing). The labels read 0, 1, 2, 3 and 5 across, and paper and paynes_grey down.*
 
+![One brown road crossing farmland and wood, with the paper laid back round it in a ring widening from nothing at the left to five pixels at the right, and a faint pool just outside the ring in the bottom row.](images/how-to/reserve-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure reserve). The labels read 0, 1, 2, 3 and 5 across, and pool 0 and pool 0.3 down.*
+
 ![One blue river over dark green wood in three rows of five. The first column has no glow; the others lift the wood toward the paper in a ring that widens from left to right and softens from the top row to the bottom.](images/how-to/glow-sweep.webp)
 
 *Painted by `examples/line_effect_grids.py` (figure glow). The labels read none, 0, 2, 4 and 6 across, and 0, 3 and 6 down.*

@@ -42,6 +42,44 @@ away from the line, and a blur softens its edge.
 
 *Painted by `examples/line_effect_grids.py` (figure shadow). The labels read 0, 1.5, 3 and 5 across, and 1 and 3 down. The first column has no shadow. The offsets and the blurs are in pixels.*
 
+## Reserve the paper round a line
+
+A reserve is masking fluid: the paper is laid back in a ring round a line, and every pigment under the ring is lifted, so the paper shows whole where the ring is whole. A casing is a colour laid over the wash, in the paper's colour or not; a reserve is the paper itself, and the line stays a line you can lay another over. A pool darkens the pixels just outside the ring, where pigment gathers at the edge of the resist. It only darkens: 0 leaves none, and 1 is the strongest.
+
+![One brown road crossing farmland and wood, with the paper laid back round it in a ring widening from nothing at the left to five pixels at the right, and no pool in the top row and a pool of 0.3 in the bottom row, where a faint darker line gathers just outside the ring.](../images/how-to/reserve-sweep.webp)
+
+*Painted by `examples/line_effect_grids.py` (figure reserve). The labels read 0, 1, 2, 3 and 5 across, and pool 0 and pool 0.3 down. The widths are in pixels at scale 1.*
+
+Set it under a line class with `reserve:`, which takes `width_px` from 0 to 16 and `pool` from 0 to 1 (default 0):
+
+```yaml
+extends: ambleside.yaml
+
+line_effects:
+  road_major:
+    reserve: {width_px: 2, pool: 0.3}
+```
+
+A line class takes a casing or a reserve, not both. A line laid later in the draw order, such as the route, goes over the reserve and is not lifted by it.
+
+## Case several classes as one
+
+Where two roads meet, each class's casing is its own ring, and one road's ring can show through the other. A casing union lays the rings of several classes as one, so the junction is one band with no seam. List the classes in `casing_unions:`, a top-level key of the theme:
+
+```yaml
+extends: ambleside.yaml
+
+line_effects:
+  road_major:
+    casing: {width_px: 2, strength: 0.9}
+  lane:
+    casing: {width_px: 2, strength: 0.9}
+
+casing_unions: [[road_major, lane]]
+```
+
+The members of a union are of one group, water or road, never the route, and they share one colour and strength: a union of casings that differ is refused when the theme loads, as is one that mixes casings and reserves. Give `casing_unions: []` to turn an inherited set off. Every field is in [Line effects](../reference/line-effects.md).
+
 ## Use a preset
 
 You do not have to write the numbers. The package ships three effect presets, `cased`, `halo` and `lifted`, and a line class takes one by name. This is the whole of `examples/themes/ambleside-cased.yaml`, the theme the picture at the top is painted in:

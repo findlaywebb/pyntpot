@@ -1,6 +1,6 @@
 """The line effect sweeps: one stroke over a wash, with one effect swept across and down.
 
-Four figures, selected by `figure=`, each painted on `paper_plate` paper and lettered in the
+Five figures, selected by `figure=`, each painted on `paper_plate` paper and lettered in the
 default hand through the sibling `labelled_grid.py`. Every cell holds the same wash and the same
 stroke, so what changes from one cell to the next is the effect and nothing else.
 
@@ -13,17 +13,22 @@ stroke, so what changes from one cell to the next is the effect and nothing else
   is in the north-west, so the shadow falls to the south-east.
 - `pen-casing`: a 1.5 pixel ink line over a grey tint. A cell with no casing, then the reserve's
   gap across (1, 2, 3 and 4 pixels) and the ink edge lines' width down (0.75 and 1.5 pixels).
+- `reserve`: the casing figure's road and wash. The reserve's width across (0, 1, 2, 3 and 5
+  pixels) and its pool down (0 and 0.3).
 
-Each sweep is painted at scale 1: one array pixel is one display pixel, so a cell lettered "2 px"
-shows what `width_px: 2` (or `spread_px`, `blur_px`, `offset_px`) does in a theme at scale 1. The
-effects are laid in wash space, where the paper is 1, before the paper plate multiplies, so a
+Each sweep is painted at 2x and reduced once: the paper, the wash, the stroke and every effect
+number are twice their display size on a grid of `scaled_boxes(spec, SUPERSAMPLE)`, `reduce`
+brings the finished paint down with Lanczos, and the names are lettered after that at 1x. So a
+cell lettered "2 px" shows what `width_px: 2` (or `spread_px`, `blur_px`, `offset_px`) does in a
+theme at scale 1, with the edges smooth. The effects are laid in wash space, where the paper is 1, before the paper plate multiplies, so a
 casing in the paper's own colour becomes the paper's cream and never a white ring.
 
 The wash and the stroke every cell shares are painted by the sibling `line_effect_scenes.py`;
 this script holds the layout, the effects and the lettering.
 
-`paint_cell(figure, ...)` paints one cell and returns its float32 RGB `(h, w, 3)` before lettering
-and encoding: the wash, the effect through its `pyntpot.ink` primitive with the stroke's density
+`paint_cell(figure, ...)` paints one cell at 2x and returns its float32 RGB `(h, w, 3)`, twice the
+display size, before reduction, lettering and encoding. Its `at` and every `*_px` value are in
+display pixels; the cell doubles them. It paints the wash, the effect through its `pyntpot.ink` primitive with the stroke's density
 as the mask, the stroke, then the crop of the paper plate at `at`. With `plain=True` it paints
 the stroke with no primitive called (for the pen casing, the tint and the centre line). A sweep's
 off cell is the plain stroke byte for byte. `stroke_density(figure)` is the stroke's mask.
@@ -31,10 +36,11 @@ off cell is the plain stroke byte for byte. `stroke_density(figure)` is the stro
 The held values here are literals of this script and read no preset. Each swept axis is one
 numeric tuple, so a caption's labels match the code.
 
-Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `Shadow`, `PenCasing`, `casing`,
-`glow`, `shadow`, `pen_casing`, `pigment`, `Colour`, `Sheet`, `PaperStyle`,
-`composite` and `save_image`; from `pyntpot.letters`, `Setting`; `LABELS`, `GridSpec`,
-`grid_paper`, `label_grid`, `on_paper` and `sweep_grid` from `labelled_grid.py`; and `Scene`,
+Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `Shadow`, `PenCasing`, `Reserve`, `casing`,
+`glow`, `shadow`, `pen_casing`, `reserve`, `pigment`, `Colour`, `Sheet`, `PaperStyle`,
+`composite` and `save_image`; from `pyntpot.letters`, `Setting`; `LABELS`, `SUPERSAMPLE`,
+`GridSpec`, `grid_paper`, `label_grid`, `on_paper`, `reduce`, `scaled_boxes` and `sweep_grid` from
+`labelled_grid.py`; and `Scene`,
 `scene`, `SEED` and `GRAN_PX` from `line_effect_scenes.py`. It introduces none.
 
 Run it with `uv run python examples/line_effect_grids.py out/ --figure glow`; it writes
@@ -49,7 +55,18 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from labelled_grid import LABELS, Box, GridSpec, grid_paper, label_grid, on_paper, sweep_grid
+from labelled_grid import (
+    LABELS,
+    SUPERSAMPLE,
+    Box,
+    GridSpec,
+    grid_paper,
+    label_grid,
+    on_paper,
+    reduce,
+    scaled_boxes,
+    sweep_grid,
+)
 from line_effect_scenes import GRAN_PX, SEED, Scene, scene
 
 from pyntpot.ink import (
@@ -58,6 +75,7 @@ from pyntpot.ink import (
     Glow,
     PaperStyle,
     PenCasing,
+    Reserve,
     Shadow,
     Sheet,
     casing,
@@ -65,6 +83,7 @@ from pyntpot.ink import (
     glow,
     pen_casing,
     pigment,
+    reserve,
     save_image,
     shadow,
 )
@@ -73,7 +92,7 @@ from pyntpot.letters import Setting
 logger = logging.getLogger(__name__)
 
 #: The figures, in the order the how-to and the tutorial show them.
-FIGURES: tuple[str, ...] = ("casing", "glow", "shadow", "pen-casing")
+FIGURES: tuple[str, ...] = ("casing", "glow", "shadow", "pen-casing", "reserve")
 #: The casing's widths across, in pixels, and the colours down: the paper's and Payne's grey.
 WIDTHS_PX: tuple[float, ...] = (0.0, 1.0, 2.0, 3.0, 5.0)
 PAPER_WHITE = Colour("#ffffff")
@@ -90,6 +109,9 @@ SHADOW_BLURS_PX: tuple[float, ...] = (1.0, 3.0)
 #: The pen casing's gap across and its ink edge lines' width down, in pixels.
 GAPS_PX: tuple[float, ...] = (1.0, 2.0, 3.0, 4.0)
 EDGES_PX: tuple[float, ...] = (0.75, 1.5)
+#: The reserve's width across, in pixels, and its pool down.
+RESERVE_WIDTHS_PX: tuple[float, ...] = WIDTHS_PX
+POOLS: tuple[float, ...] = (0.0, 0.3)
 #: The names of the edge lines' widths, down.
 EDGE_NAMES: tuple[str, ...] = ("thin", "thick")
 
@@ -98,8 +120,8 @@ AZIMUTH_DEG = 315.0
 #: How strongly the glow lifts and the shadow darkens.
 GLOW_STRENGTH, SHADOW_STRENGTH = 0.8, 0.4
 #: Each figure's image width, cell height and the room left of its grid, in pixels.
-WIDTH_PX = {"casing": 720, "glow": 720, "shadow": 720, "pen-casing": 600}
-CELL_H = {"casing": 70, "glow": 62, "shadow": 62, "pen-casing": 62}
+WIDTH_PX = {"casing": 720, "glow": 720, "shadow": 720, "pen-casing": 600, "reserve": 720}
+CELL_H = {"casing": 70, "glow": 62, "shadow": 62, "pen-casing": 62, "reserve": 70}
 LEFT, TOP, GAP, PAD_RIGHT, PAD_BOTTOM = 150, 44, 12, 14, 16
 
 
@@ -138,6 +160,10 @@ def layout(figure: str) -> Layout:
         ]
         rows = [f"blur {name}" for name in _px(SHADOW_BLURS_PX)]
         return Layout(cells, ["none", *_px(OFFSETS_PX)], rows, "offset")
+    if figure == "reserve":
+        cells = [[{"width_px": w, "pool": p} for w in RESERVE_WIDTHS_PX] for p in POOLS]
+        rows = [f"pool {pool:g}" for pool in POOLS]
+        return Layout(cells, _px(RESERVE_WIDTHS_PX), rows, "width")
     cells = [[{}, *({"width_px": g, "edge_px": e} for g in GAPS_PX)] for e in EDGES_PX]
     rows = [f"{n} {px}" for n, px in zip(EDGE_NAMES, _px(EDGES_PX), strict=True)]
     return Layout(cells, ["none", *_px(GAPS_PX)], rows, "gap")
@@ -169,16 +195,18 @@ def _spec(figure: str) -> GridSpec:
 @cache
 def _paper(figure: str) -> np.ndarray:
     """The paper plate of the whole figure; a cell paints over its own crop of it."""
-    return grid_paper(Sheet(_spec(figure).height, WIDTH_PX[figure], GRAN_PX, SEED))
+    size = _spec(figure).height * SUPERSAMPLE, WIDTH_PX[figure] * SUPERSAMPLE
+    return grid_paper(Sheet(*size, GRAN_PX * SUPERSAMPLE, SEED))
 
 
 def _scene(figure: str) -> Scene:
-    """The scene of a figure's cell, which `line_effect_scenes.py` paints once."""
-    return scene(figure, _spec(figure).cell_w, CELL_H[figure])
+    """The scene of a figure's cell at 2x, which `line_effect_scenes.py` paints once."""
+    w, h = _spec(figure).cell_w * SUPERSAMPLE, CELL_H[figure] * SUPERSAMPLE
+    return scene(figure, w, h, SUPERSAMPLE)
 
 
 def stroke_density(figure: str) -> np.ndarray:
-    """The density of a figure's stroke, the mask its effect is laid by."""
+    """The density of a figure's stroke at 2x, the mask its effect is laid by."""
     _check(figure)
     return _scene(figure).density
 
@@ -210,6 +238,16 @@ def _shadowed(scene: Scene, offset_px: float | None = None, blur_px: float = 0.0
     return shadow(scene.wash, scene.density, effect, azimuth_deg=AZIMUTH_DEG)
 
 
+def _paper_laid(scene: Scene, width_px: float = 0.0, pool: float = 0.0) -> np.ndarray:
+    """The wash with the paper laid back in a ring of `width_px` round the stroke."""
+    return reserve(scene.wash, scene.density, Reserve(width_px=width_px, pool=pool), paper=None)
+
+
+def _doubled(values: dict[str, Any]) -> dict[str, Any]:
+    """The effect's settings with every `*_px` number from display pixels to 2x pixels."""
+    return {k: v * SUPERSAMPLE if k.endswith("_px") else v for k, v in values.items()}
+
+
 def _reserved(
     scene: Scene, width_px: float | None = None, edge_px: float = 0.0
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -225,9 +263,9 @@ def paint_cell(
     at: tuple[int, int] = (0, 0),
     **values: Any,  # noqa: ANN401 - each figure's effect takes its own numbers and colour
 ) -> np.ndarray:
-    """Paint one cell of a figure and return its float32 RGB `(h, w, 3)`.
+    """Paint one cell of a figure at 2x and return its float32 RGB `(h, w, 3)`.
 
-    The wash, then the effect through its `pyntpot.ink` primitive, then the stroke, then the
+    The cell is twice its display size, so `reduce` brings it down. The wash, then the effect through its `pyntpot.ink` primitive, then the stroke, then the
     paper plate's crop at `at` multiplied in. With no `values` the effect is the primitive's
     default, which is off; the casing's `width_px=0.0` is its off setting. `plain=True` paints
     the stroke with no primitive called.
@@ -235,19 +273,22 @@ def paint_cell(
     Args:
         figure: One of `FIGURES`.
         plain: Skip the effect altogether.
-        at: The cell's top left corner on the figure, which picks the paper's crop.
-        **values: The effect's settings: `width_px` and `colour` for the casing, `spread_px` and
-            `blur_px` for the glow, `offset_px` and `blur_px` for the shadow, `width_px` and
-            `edge_px` for the pen casing.
+        at: The cell's top left corner on the figure in display pixels, which picks the paper's
+            crop.
+        **values: The effect's settings in display pixels: `width_px` and `colour` for the
+            casing, `spread_px` and `blur_px` for the glow, `offset_px` and `blur_px` for the
+            shadow, `width_px` and `edge_px` for the pen casing, `width_px` and `pool` for the
+            reserve.
 
     Returns:
-        The cell as float32 RGB, in 0 to 1.
+        The cell as float32 RGB, in 0 to 1, at twice its display size.
 
     Raises:
         ValueError: When `figure` is not one of `FIGURES`.
     """
     _check(figure)
     scene = _scene(figure)
+    values = _doubled(values)
     edges: np.ndarray | None = None
     under = scene.wash
     if not plain:
@@ -258,12 +299,14 @@ def paint_cell(
                 under = _glowed(scene, **values)
             case "shadow":
                 under = _shadowed(scene, **values)
+            case "reserve":
+                under = _paper_laid(scene, **values)
             case _:
                 under, edges = _reserved(scene, **values)
     if edges is not None and edges.any():
         under = composite([(edges, scene.ink)], under, PaperStyle())
     laid = composite([(scene.density, scene.ink)], under, PaperStyle())
-    return on_paper(laid, _paper(figure), at)
+    return on_paper(laid, _paper(figure), (at[0] * SUPERSAMPLE, at[1] * SUPERSAMPLE))
 
 
 def main(out_dir: Path, figure: str = "casing") -> Path:
@@ -284,10 +327,12 @@ def main(out_dir: Path, figure: str = "casing") -> Path:
     boxes = spec.boxes()
 
     def paint(row: int, col: int, box: Box) -> np.ndarray:
-        """Paint the cell of a row and column at its box."""
-        return paint_cell(figure, at=(box[0], box[1]), **made.cells[row][col])
+        """Paint the cell of a row and column at its 2x box."""
+        at = (box[0] // SUPERSAMPLE, box[1] // SUPERSAMPLE)
+        return paint_cell(figure, at=at, **made.cells[row][col])
 
-    img = sweep_grid(_paper(figure), boxes, paint)
+    big = sweep_grid(_paper(figure), scaled_boxes(spec, SUPERSAMPLE), paint)
+    img = reduce(big, SUPERSAMPLE)
     corner = Setting(
         made.corner,
         LABELS.px,

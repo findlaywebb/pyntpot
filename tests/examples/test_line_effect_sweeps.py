@@ -4,12 +4,13 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from pyntpot.ink import PenCasing, pen_casing
 from pyntpot.ink.effect_types import EFFECT_RANGES
 
 from support import REPO_ROOT
 from support.examples import load_example, run_example
 
-FIGURES = ("casing", "glow", "shadow", "pen-casing")
+FIGURES = ("casing", "glow", "shadow", "pen-casing", "reserve")
 
 #: The values that switch each sweep's effect off through its own primitive: the casing's 0
 #: column, and the default (off) effect for the other three.
@@ -18,6 +19,7 @@ OFF: dict[str, dict[str, object]] = {
     "glow": {},
     "shadow": {},
     "pen-casing": {},
+    "reserve": {"width_px": 0.0},
 }
 
 #: One real setting of each sweep, not off.
@@ -26,6 +28,7 @@ SAMPLE: dict[str, dict[str, object]] = {
     "glow": {"spread_px": 4.0, "blur_px": 3.0},
     "shadow": {"offset_px": 3.0, "blur_px": 1.0},
     "pen-casing": {"width_px": 2.0, "edge_px": 1.5},
+    "reserve": {"width_px": 3.0, "pool": 0.3},
 }
 
 
@@ -76,6 +79,62 @@ class TestOffCells:
         painted = namespace["paint_cell"](figure, **values)
         plain = namespace["paint_cell"](figure, plain=True)
         assert painted.tobytes() != plain.tobytes()
+
+
+class TestSupersampled:
+    """Each sweep is painted at 2x and reduced once, so the file is its 1x size."""
+
+    @pytest.mark.parametrize("figure", FIGURES, ids=FIGURES)
+    def test_the_written_image_is_the_registered_width_and_the_grids_height(self, figure, tmp_path):
+        """The PNG is the figure's 1x width by the 1x grid's height, though painted at twice that."""
+        namespace = _grids()
+        path = run_example("line_effect_grids", tmp_path, figure=figure)
+        with Image.open(path) as image:
+            assert image.size == (namespace["WIDTH_PX"][figure], namespace["_spec"](figure).height)
+
+    @pytest.mark.parametrize("figure", FIGURES, ids=FIGURES)
+    def test_a_cell_is_painted_at_twice_its_box(self, figure):
+        """A cell comes back at twice the 1x cell's width and height."""
+        namespace = _grids()
+        spec = namespace["_spec"](figure)
+        cell = namespace["paint_cell"](figure, plain=True)
+        assert cell.shape == (2 * namespace["CELL_H"][figure], 2 * spec.cell_w, 3)
+
+
+class TestReserve:
+    """A reserve lifts the wash to the paper, and its pool only darkens."""
+
+    def test_a_pooled_cell_is_nowhere_lighter_than_the_unpooled_one(self):
+        """On the 2x floats before reduce, each width's 0.3 pool is no lighter than its 0 pool."""
+        paint_cell = _grids()["paint_cell"]
+        for width in _grids()["RESERVE_WIDTHS_PX"][1:]:
+            flat = paint_cell("reserve", width_px=width, pool=0.0)
+            pooled = paint_cell("reserve", width_px=width, pool=0.3)
+            assert (pooled - flat).max() <= 1e-6, width
+            assert (pooled - flat).min() < 0.0, width
+
+    def test_the_reserve_lifts_the_wash_toward_the_paper(self):
+        """A reserved cell is no darker than the plain stroke cell."""
+        paint_cell = _grids()["paint_cell"]
+        plain = paint_cell("reserve", plain=True)
+        reserved = paint_cell("reserve", width_px=3.0, pool=0.0)
+        assert (reserved - plain).min() >= -1e-6
+
+
+class TestPenEdges:
+    """The thin pen edge line stays unbroken once the 2x paint is reduced."""
+
+    def test_the_thin_edge_has_ink_in_every_column_of_its_span(self):
+        """With a 1 px gap and a 0.75 px edge, every column of the line has edge ink of 0.5 or more."""
+        namespace = _grids()
+        scene = namespace["_scene"]("pen-casing")
+        effect = PenCasing(width_px=2.0, edge_px=1.5)
+        _, band = pen_casing(scene.wash, scene.density, effect, paper=None)
+        reduced = namespace["reduce"](np.repeat(band[..., None], 3, axis=2), 2)[..., 0]
+        covered = np.flatnonzero(scene.density.max(axis=0) >= 0.5)
+        span = covered[::2][5:-5] // 2
+        assert len(span) > 20
+        assert (reduced.max(axis=0)[span] >= 0.5).all()
 
 
 class TestGlow:
@@ -129,6 +188,7 @@ class TestHeldValues:
             "SHADOW_BLURS_PX",
             "GAPS_PX",
             "EDGES_PX",
+            "RESERVE_WIDTHS_PX",
         )
         for axis in axes:
             low, high = EFFECT_RANGES["width_px"]
