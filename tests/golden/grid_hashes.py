@@ -25,7 +25,8 @@ from typing import cast
 from make_docs_images import fixture_options
 from PIL import Image
 
-from support.docs_images import IMAGES, DocsImage
+from support.docs_image import DocsImage
+from support.docs_images import IMAGES
 from support.examples import run_example
 
 logger = logging.getLogger("grid_hashes")

@@ -28,7 +28,7 @@ from pathlib import Path
 from golden import diff_images, make_docs_images, make_golden
 
 from support import REPO_ROOT
-from support.docs_images import IMAGES_DIR, MASTERS_DIR
+from support.docs_image import IMAGES_DIR, MASTERS_DIR
 from support.paths import GOLDEN_DIR
 
 logger = logging.getLogger("repaint")

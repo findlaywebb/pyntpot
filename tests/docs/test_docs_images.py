@@ -17,14 +17,12 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
 
 from support import REPO_ROOT
+from support.docs_image import IMAGES_DIR, MASTERS_DIR, master_path
 from support.docs_images import (
     IMAGES,
-    IMAGES_DIR,
     KIND_BUDGET_BYTES,
-    MASTERS_DIR,
     SLICE_SHARE_BYTES,
     TOTAL_BUDGET_BYTES,
-    master_path,
 )
 
 _IMAGES_ROOT = REPO_ROOT / IMAGES_DIR
