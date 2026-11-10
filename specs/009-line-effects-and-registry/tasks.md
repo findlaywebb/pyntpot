@@ -196,7 +196,7 @@ gate B (S6 in); S7, S8, S9.
 
 ## Merge gate B
 
-- [ ] S6 merged; slice gate, grid `check` and golden docs subset green on the merged tree.
+- [x] S6 merged; slice gate, grid `check` and golden docs subset green on the merged tree.
 
 ## Before S7
 
