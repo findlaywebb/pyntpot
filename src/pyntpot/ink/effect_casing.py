@@ -4,16 +4,31 @@ Key function: `casing`. It is a plain function of the RGB beneath it, a float ma
 `Casing`, in RGB and not by Kubelka-Munk, and it draws no random number. It knows nothing of
 maps and does not draw the line itself.
 
-Invariants: width 0, strength 0 or a mask nowhere at the threshold returns `rgb` itself; where
+Invariants: the ring is anti-aliased and its width is measured from the line's edge, not from
+its thresholded pixels; width 0, strength 0 or a mask nowhere at the threshold returns `rgb` itself; where
 the mask is at or above the threshold the output equals `rgb` bit for bit; every other result is
 a new float32 array clipped to 0 to 1.
 """
 
 import numpy as np
 
+from pyntpot.ink.effect_distance import contour_distance, ring_coverage
 from pyntpot.ink.effect_mask import LINE_THRESHOLD, check_threshold
 from pyntpot.ink.effect_types import Casing
-from pyntpot.ink.noise import F32, chamfer_distance, smoothstep
+from pyntpot.ink.noise import F32
+
+
+def _blend_casing(
+    rgb: np.ndarray, weight: np.ndarray, effect: Casing, ground: np.ndarray | np.floating
+) -> np.ndarray:
+    """Blend `rgb` toward the casing colour laid over `ground` by `weight`, clipped to 0 to 1.
+
+    The one blend of a casing, shared by `casing` and a casing union so a union of one agrees
+    with `casing` bit for bit.
+    """
+    target = effect.colour.rgb * ground
+    out = rgb + weight[..., None] * (target - rgb)
+    return np.clip(out, 0.0, 1.0).astype(F32, copy=False)
 
 
 def casing(
@@ -26,10 +41,11 @@ def casing(
 ) -> np.ndarray:
     """Blend a ring round the line toward its colour laid over the paper.
 
-    With `w = effect.width_px`, the weight is `effect.strength` times a soft step of
-    `w - d`, where `d` is the chamfer distance to the pixels of `mask` at `threshold`, and
-    the result is `rgb + a * (colour * paper - rgb)`, so a white casing is the paper. The
-    weight is 0 wherever the mask is at or above `threshold`, so the casing paints only
+    With `w = effect.width_px`, the weight is `effect.strength` times the coverage of the ring
+    `[0, w]` beyond the line's edge, anti-aliased. The edge is the contour of `mask` at
+    `threshold`, so the width is measured from the line's edge and not from its thresholded
+    pixels. The result is `rgb + a * (colour * paper - rgb)`, so a white casing is the paper.
+    The weight is 0 wherever the mask is at or above `threshold`, so the casing paints only
     outside the line and never shows through it.
 
     Args:
@@ -52,9 +68,8 @@ def casing(
     core = mask >= threshold
     if not core.any():
         return rgb
-    weight = effect.strength * smoothstep(effect.width_px - chamfer_distance(core), 1.0)
+    distance = contour_distance(mask, threshold=threshold, radius=effect.width_px + 1)
+    weight = effect.strength * ring_coverage(distance, effect.width_px)
     weight = np.where(core, F32(0.0), weight)
     ground = F32(1.0) if paper is None else paper
-    target = effect.colour.rgb * ground
-    out = rgb + weight[..., None] * (target - rgb)
-    return np.clip(out, 0.0, 1.0).astype(F32, copy=False)
+    return _blend_casing(rgb, weight, effect, ground)

@@ -40,7 +40,7 @@ def _crossings(mask: np.ndarray, core: np.ndarray, tau: np.floating) -> np.ndarr
     for dy, dx in _NEIGHBOURS:
         other = _shifted(mask, dy, dx)
         across = _shifted(core, dy, dx) != core
-        with np.errstate(divide="ignore", invalid="ignore"):
+        with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
             frac = np.clip(np.abs((tau - mask) / (other - mask)), 0.0, 1.0)
         cand = np.where(across, np.where(core, -frac, frac), np.inf).astype(F32)
         best = np.where(np.abs(cand) < np.abs(best), cand, best)

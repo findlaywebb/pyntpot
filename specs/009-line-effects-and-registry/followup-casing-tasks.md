@@ -24,14 +24,14 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [x] Benchmark smoke entry; slice gate green.
 
 ### C2: casing and pen casing anti-aliased
-- [ ] Red: `test_effect_quality.py` pins (casing edge at most 0.22 px; pen edge ink 0.70 to
+- [x] Red: `test_effect_quality.py` pins (casing edge at most 0.22 px; pen edge ink 0.70 to
       0.95; pen band wobble at most 0.10 px); `TestTies` and `TestSoftStep` rewritten in place;
       `TestPenCasingWhite` band and the `out[10, 7]` reserve test rewritten; the painter
       `test_effects.py` `_ring` slack set to `w + 2.0`; property 4; properties 2 and 3 for
       `casing`.
-- [ ] `casing` and `pen_casing` on `contour_distance`, with `_blend_casing` shared; docstrings
+- [x] `casing` and `pen_casing` on `contour_distance`, with `_blend_casing` shared; docstrings
       say the width is from the line's edge.
-- [ ] Slice gate; golden docs subset passes with no regeneration.
+- [x] Slice gate; golden docs subset passes with no regeneration.
 
 ### C3: `Reserve`, `reserve`, `casing_union`
 - [ ] Red: `Reserve` defaults, `pool` range, `check_effect_numbers` upper bound; properties 2,

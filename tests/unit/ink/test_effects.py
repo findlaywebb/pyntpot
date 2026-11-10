@@ -119,8 +119,8 @@ class TestCasing:
         """Beside the line a full white casing is 1 in wash space, and far away is untouched."""
         out = casing(_wash(), _line(), Casing(width_px=3.0))
         assert out.dtype == F32
-        assert out[10, 8, 0] == pytest.approx(1.0)
-        assert out[10, 12, 0] == pytest.approx(1.0)
+        assert out[10, 7, 0] == pytest.approx(1.0)
+        assert out[10, 13, 0] == pytest.approx(1.0)
         assert out[10, 10, 0] == 0.5  # the line's own pixel is left
         assert out[10, 0, 0] == 0.5
 
@@ -130,12 +130,12 @@ class TestCasing:
         effect = Casing(width_px=3.0, colour=Colour("#808080"))
         out = casing(_wash(), _line(), effect, paper=paper)
         expected = effect.colour.rgb[0] * 0.8
-        assert out[10, 12, 0] == pytest.approx(expected, abs=1e-6)
+        assert out[10, 13, 0] == pytest.approx(expected, abs=1e-6)
 
     def test_strength_scales_the_blend(self) -> None:
         """Half strength lands halfway between the wash and the target."""
         out = casing(_wash(), _line(), Casing(width_px=3.0, strength=0.5))
-        assert out[10, 12, 0] == pytest.approx(0.75)
+        assert out[10, 13, 0] == pytest.approx(0.75)
 
     def test_a_pixel_below_the_threshold_is_not_a_line(self) -> None:
         """A faint mask under the threshold casts nothing."""
@@ -235,12 +235,14 @@ class TestPenCasing:
         assert edges.shape == (SIZE, SIZE)
         assert not edges.any()
 
-    def test_the_reserve_is_paper_and_the_edge_band_lies_outside(self) -> None:
-        """Inside the reserve the result is the paper; the next edge_px is the edge band."""
+    def test_the_reserve_is_paper_and_the_edge_band_is_fractional_outside(self) -> None:
+        """The reserve is paper where whole, its edge pixel is part paper, and the band is fractional beyond."""
         out, edges = pen_casing(_wash(), _line(), PenCasing(width_px=2.0, edge_px=1.0))
         assert out[10, 7, 0] == 1.0
-        assert out[10, 6, 0] == 0.5
-        assert edges[10, 6] == 1.0
+        assert out[10, 6, 0] == pytest.approx(0.6)
+        assert out[10, 5, 0] == 0.5
+        assert edges[10, 6] == pytest.approx(0.8)
+        assert edges[10, 5] == pytest.approx(0.2)
         assert edges[10, 7] == 0.0
         assert edges[10, 0] == 0.0
         assert edges.dtype == F32

@@ -58,8 +58,12 @@ def _job(tmp_path, effects=None, *, km_glazing=True) -> PaintJob:
 
 
 def _ring(mask: np.ndarray, width_px: float) -> np.ndarray:
-    """The pixels within `width_px` of the mask's line, and a pixel of slack."""
-    return chamfer_distance(mask >= CORE) <= width_px + 1.0
+    """The pixels within `width_px` of the mask's line, and two pixels of slack.
+
+    The anti-aliased ring is measured from the line's edge and reaches `width_px + 1.24` from
+    the chamfer distance of the core, so a pixel of slack is not enough.
+    """
+    return chamfer_distance(mask >= CORE) <= width_px + 2.0
 
 
 def _plate(job: PaintJob) -> np.ndarray:
