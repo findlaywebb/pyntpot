@@ -8,18 +8,12 @@ from pyntpot.maps.style import _base, _groups
 from pyntpot.maps.theme_errors import ThemeError
 from pyntpot.maps.theme_resolve import NAME, names_in, resolve, theme_names
 
+from support.theme_files import write_theme
+
 
 def _resolve(theme: str | Path, relative_to: Path) -> dict[str, object]:
     """Resolve `theme` from `relative_to` against the real groups and defaults."""
     return resolve(theme, relative_to=relative_to, groups=_groups(), base=_base())
-
-
-def _write(root: Path, name: str, text: str) -> Path:
-    """Write `text` to `root / name`, making its directories."""
-    path = root / name
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
-    return path
 
 
 def _refusal(theme: str | Path, relative_to: Path) -> ThemeError:
@@ -41,13 +35,13 @@ class TestTheRuleForATheme:
 
     def test_a_yaml_path_is_read_relative_to_the_caller(self, tmp_path: Path) -> None:
         """A `.yaml` path is read from `relative_to`, as a `str` or a `Path`."""
-        _write(tmp_path, "t.yaml", "card:\n  display_px: 120\n")
+        write_theme(tmp_path, "t.yaml", "card:\n  display_px: 120\n")
         for theme in ("t.yaml", Path("t.yaml")):
             assert _group(_resolve(theme, tmp_path), "card")["display_px"] == 120
 
     def test_an_absolute_yaml_path_ignores_relative_to(self, tmp_path: Path) -> None:
         """An absolute `.yaml` path is read where it is."""
-        path = _write(tmp_path, "t.yaml", "card:\n  display_px: 120\n")
+        path = write_theme(tmp_path, "t.yaml", "card:\n  display_px: 120\n")
         assert _group(_resolve(path, tmp_path / "elsewhere"), "card")["display_px"] == 120
 
     @pytest.mark.parametrize("theme", ["old.yml", Path("old.yml")], ids=["str", "path"])
@@ -150,9 +144,9 @@ class TestTheChain:
 
     def test_a_three_file_chain_applies_in_order(self, tmp_path: Path) -> None:
         """`c` extends `b` extends `a`: each later file wins, and every earlier key not overridden stays."""
-        _write(tmp_path, "a.yaml", "card:\n  display_px: 100\n  supersample: 3\n")
-        _write(tmp_path, "b.yaml", "extends: a.yaml\ncard:\n  display_px: 200\n")
-        _write(tmp_path, "c.yaml", "extends: b.yaml\nwash:\n  blooms: false\n")
+        write_theme(tmp_path, "a.yaml", "card:\n  display_px: 100\n  supersample: 3\n")
+        write_theme(tmp_path, "b.yaml", "extends: a.yaml\ncard:\n  display_px: 200\n")
+        write_theme(tmp_path, "c.yaml", "extends: b.yaml\nwash:\n  blooms: false\n")
         table = _resolve("c.yaml", tmp_path)
         assert (_group(table, "card")["display_px"], _group(table, "card")["supersample"]) == (
             200,
@@ -163,28 +157,28 @@ class TestTheChain:
 
     def test_a_relative_extends_is_read_from_the_extending_file(self, tmp_path: Path) -> None:
         """`extends: ../shared/base.yaml` is found from the extending file's directory."""
-        _write(tmp_path, "shared/base.yaml", "card:\n  display_px: 300\n")
-        _write(tmp_path, "themes/t.yaml", "extends: ../shared/base.yaml\n")
+        write_theme(tmp_path, "shared/base.yaml", "card:\n  display_px: 300\n")
+        write_theme(tmp_path, "themes/t.yaml", "extends: ../shared/base.yaml\n")
         assert _group(_resolve("themes/t.yaml", tmp_path), "card")["display_px"] == 300
 
     def test_a_two_file_cycle_is_refused(self, tmp_path: Path) -> None:
         """`a` extending `b` extending `a` is refused on the closing `extends` line."""
-        _write(tmp_path, "a.yaml", "extends: b.yaml\n")
-        _write(tmp_path, "b.yaml", "card:\n  display_px: 120\nextends: a.yaml\n")
+        write_theme(tmp_path, "a.yaml", "extends: b.yaml\n")
+        write_theme(tmp_path, "b.yaml", "card:\n  display_px: 120\nextends: a.yaml\n")
         (problem,) = _refusal("a.yaml", tmp_path).problems
         assert problem.message == "extends cycle: a.yaml -> b.yaml -> a.yaml"
         assert (problem.path, problem.key, problem.line) == (tmp_path / "b.yaml", "extends", 3)
 
     def test_a_self_cycle_is_refused(self, tmp_path: Path) -> None:
         """A theme extending itself is refused."""
-        _write(tmp_path, "a.yaml", "extends: a.yaml\n")
+        write_theme(tmp_path, "a.yaml", "extends: a.yaml\n")
         (problem,) = _refusal("a.yaml", tmp_path).problems
         assert problem.message == "extends cycle: a.yaml -> a.yaml"
 
     def test_problems_in_two_files_are_both_reported(self, tmp_path: Path) -> None:
         """A problem in a theme and another in the theme it extends are reported together."""
-        _write(tmp_path, "a.yaml", "wash:\n  blom: true\n")
-        _write(tmp_path, "b.yaml", "extends: a.yaml\ncard:\n  display_px: '5'\n")
+        write_theme(tmp_path, "a.yaml", "wash:\n  blom: true\n")
+        write_theme(tmp_path, "b.yaml", "extends: a.yaml\ncard:\n  display_px: '5'\n")
         error = _refusal("b.yaml", tmp_path)
         assert [(problem.path.name, problem.key) for problem in error.problems] == [
             ("a.yaml", "wash.blom"),
@@ -193,49 +187,49 @@ class TestTheChain:
 
     def test_a_read_problem_is_reported_once(self, tmp_path: Path) -> None:
         """A problem the reader finds is reported once, and the file is not checked as well."""
-        _write(tmp_path, "t.yaml", "a: &x 1\n")
+        write_theme(tmp_path, "t.yaml", "a: &x 1\n")
         assert len(_refusal("t.yaml", tmp_path).problems) == 1
 
     def test_a_refused_extends_is_located_at_its_line(self, tmp_path: Path) -> None:
         """A chained `.toml` theme is refused in the extending file, at its `extends` line."""
-        path = _write(tmp_path, "t.yaml", "card:\n  display_px: 120\nextends: old.toml\n")
+        path = write_theme(tmp_path, "t.yaml", "card:\n  display_px: 120\nextends: old.toml\n")
         (problem,) = _refusal("t.yaml", tmp_path).problems
         assert (problem.path, problem.key, problem.line) == (path, "extends", 3)
         assert problem.message.startswith("'old.toml': themes are YAML since ADR 0069")
 
     def test_an_extends_that_is_no_name_is_in_the_extending_file(self, tmp_path: Path) -> None:
         """`extends: Bold` is refused in the file that says it, naming `Bold` in the message."""
-        path = _write(tmp_path, "badname.yaml", "extends: Bold\n")
+        path = write_theme(tmp_path, "badname.yaml", "extends: Bold\n")
         (problem,) = _refusal("badname.yaml", tmp_path).problems
         assert (problem.path, problem.key, problem.line) == (path, "extends", 1)
         assert problem.message.startswith("'Bold' is neither a theme name nor a .yaml path")
 
     def test_a_missing_extends_target_is_in_the_extending_file(self, tmp_path: Path) -> None:
         """`extends: missing.yaml` is refused at the `extends` line, naming the path it looked at."""
-        path = _write(tmp_path, "t.yaml", "card:\n  display_px: 120\nextends: missing.yaml\n")
+        path = write_theme(tmp_path, "t.yaml", "card:\n  display_px: 120\nextends: missing.yaml\n")
         (problem,) = _refusal("t.yaml", tmp_path).problems
         assert (problem.path, problem.key, problem.line) == (path, "extends", 3)
         assert problem.message == f"no such theme file: {tmp_path / 'missing.yaml'}"
 
     def test_bad_bytes_in_an_extended_file_are_in_that_file(self, tmp_path: Path) -> None:
         """A theme extending a file that is not UTF-8 reports the problem on that file."""
-        _write(tmp_path, "t.yaml", "extends: base.yaml\n")
+        write_theme(tmp_path, "t.yaml", "extends: base.yaml\n")
         (tmp_path / "base.yaml").write_bytes(b"\x80\n")
         (problem,) = _refusal("t.yaml", tmp_path).problems
         assert (problem.path, problem.line) == (tmp_path / "base.yaml", 1)
 
     def test_a_missing_extends_means_default(self, tmp_path: Path) -> None:
         """A theme with no `extends` overrides the base itself."""
-        _write(tmp_path, "t.yaml", "card:\n  display_px: 120\n")
+        write_theme(tmp_path, "t.yaml", "card:\n  display_px: 120\n")
         table = _resolve("t.yaml", tmp_path)
         assert _group(table, "card")["display_px"] == 120
         assert _group(table, "wash") == _group(_base(), "wash")
 
     def test_extends_default_overrides_the_base(self, tmp_path: Path) -> None:
         """`extends: default` overrides the base, each leaf converted to its field's type."""
-        _write(tmp_path, "t.yaml", "extends: default\ncard:\n  display_px: 120\n")
+        write_theme(tmp_path, "t.yaml", "extends: default\ncard:\n  display_px: 120\n")
         assert _group(_resolve("t.yaml", tmp_path), "card")["display_px"] == 120
-        _write(tmp_path, "w.yaml", "extends: default\nwash:\n  wet_bleed_px: 20\n")
+        write_theme(tmp_path, "w.yaml", "extends: default\nwash:\n  wet_bleed_px: 20\n")
         bleed = _group(_resolve("w.yaml", tmp_path), "wash")["wet_bleed_px"]
         assert (bleed, type(bleed)) == (20.0, float)
 
@@ -247,7 +241,7 @@ class TestAStoppedRead:
         self, tmp_path: Path
     ) -> None:
         """A bad field and an unbound alias in the child are not reported when its parent is missing."""
-        _write(
+        write_theme(
             tmp_path,
             "child.yaml",
             "extends: missing.yaml\ncard: {display_px: '5'}\nroute_ink: {colour: sky}\n",
@@ -260,7 +254,7 @@ class TestAStoppedRead:
         self, tmp_path: Path
     ) -> None:
         """`extends: 5` and a bad field report both problems: the `extends` one at line 1."""
-        _write(tmp_path, "child.yaml", "extends: 5\ncard: {display_px: '5'}\n")
+        write_theme(tmp_path, "child.yaml", "extends: 5\ncard: {display_px: '5'}\n")
         problems = _refusal("child.yaml", tmp_path).problems
         assert [(p.key, p.line) for p in problems] == [("extends", 1), ("card.display_px", 2)]
         assert problems[0].message == "extends is a theme name or a .yaml path"
@@ -276,7 +270,7 @@ class TestNames:
     def test_a_directory_names_its_yaml_stems_and_the_default(self, tmp_path: Path) -> None:
         """Each `.yaml` file's stem is a name, with `default`, sorted; the schema is not."""
         for name in ("b.yaml", "a.yaml", "theme.schema.json"):
-            _write(tmp_path, name, "")
+            write_theme(tmp_path, name, "")
         assert names_in(tmp_path) == ("a", "b", "default")
 
     def test_the_packaged_names_include_the_default(self) -> None:

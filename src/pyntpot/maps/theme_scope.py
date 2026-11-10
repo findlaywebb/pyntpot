@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pyntpot.ink.colour import Colour
-from pyntpot.ink.naming import nearest
+from pyntpot.ink.naming import did_you_mean
 from pyntpot.ink.pigment_registry import PIGMENT_REGISTRY, PigmentRegistry, pigment
 from pyntpot.ink.pigment_table import Pigment
 from pyntpot.maps.line_effects import EffectStack
@@ -108,8 +108,7 @@ def resolve_pigment(text: str, scope: ThemeScope) -> Pigment:
     if text in scope.registry:
         return scope.registry.get(text)
     known = (*scope.aliases, *palette, *scope.registry.names())
-    hint = "".join(f"; did you mean {name}?" for name in nearest(text, known))
-    raise ValueError(f"{text!r} is not a pigment or a colour alias{hint}")
+    raise ValueError(f"{text!r} is not a pigment or a colour alias{did_you_mean(text, known)}")
 
 
 def resolve_colour(text: str, scope: ThemeScope) -> Colour:

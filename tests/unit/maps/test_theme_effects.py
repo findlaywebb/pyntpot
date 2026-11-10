@@ -14,26 +14,19 @@ from pyntpot.maps.theme_check import check_theme_scoped
 from pyntpot.maps.theme_scope import ThemeScope
 from pyntpot.maps.theme_vocab import LOADER_FIELDS
 
-from support.theme_files import theme_file
-
-
-def _write(root: Path, name: str, text: str) -> Path:
-    """Write `text` to `root / name`."""
-    path = root / name
-    path.write_text(text, encoding="utf-8")
-    return path
+from support.theme_files import theme_file, write_theme
 
 
 def _problems(root: Path, text: str) -> list[tuple[int | None, str, str]]:
     """The line, key and message of every problem loading the theme `text` raises."""
     with pytest.raises(ThemeError) as caught:
-        Style.from_theme(_write(root, "t.yaml", text))
+        Style.from_theme(write_theme(root, "t.yaml", text))
     return [(p.line, p.key, p.message) for p in caught.value.problems]
 
 
 def _style(root: Path, text: str) -> Style:
     """The style the theme `text` builds."""
-    return Style.from_theme(_write(root, "t.yaml", text))
+    return Style.from_theme(write_theme(root, "t.yaml", text))
 
 
 def _check(text: str) -> tuple[dict[str, object], list[tuple[int | None, str, str]]]:

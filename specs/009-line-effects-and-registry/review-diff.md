@@ -245,3 +245,41 @@ Everything else checked matches the spec and plan:
 - 11: pen-casing test docstring corrected.
 - 12: `brush.py` module docstring reflowed.
 - 13: a bad palette file adds a problem at the theme's `palette:` line before the palette file's own problems.
+
+## Elegance pass
+
+Reviewed `git diff origin/main...HEAD -- src examples tests` for simplification only. Behaviour
+is unchanged: no pixel, hash, digest, message or public name moved, and every gate passed after
+the edits.
+
+Applied:
+
+- **One `did_you_mean` suffix.** Nine sites built `; did you mean X?` by hand (one through
+  `difflib` directly, bypassing `nearest`). `ink/naming.py` now has `did_you_mean(name, known)`,
+  and `brush`, `pigment_registry`, `line_effects`, `theme_checker` (twice), `theme_scope`,
+  `theme_effects`, `theme_palette` and `theme_colours` use it. The messages are byte for byte
+  the same.
+- **Pen water strokes.** `painter/pen.py` names the stroke tuple (`_Stroke`) and adds
+  `_lay_strokes` and `_coast_lines`, so `_water_pad` and `_water_masks` no longer repeat the
+  unzip-and-lay and the coastline comprehension. The order in which strokes are laid and the
+  seeds stay as they were.
+- **Theme test helpers.** Five test modules each had their own `_write` and two their own
+  `_scope`. These are now `write_theme` and `scope_of` in `tests/support/theme_files.py`.
+
+Rejected:
+
+- A `paper_ground(paper)` helper for `F32(1.0) if paper is None else paper` in the casing, glow
+  and pen-casing primitives: it is one expression, clearer inline than as a name in
+  `effect_mask`.
+- A `TableCheck` method for the five top-level `is a table of keys` guards: each returns a
+  different fallback (`scope`, `{}`, `None`), so a shared guard would need a type-narrowing
+  return and save little.
+- Sharing `_problems`, `_style` and `_check` between `test_theme_effects.py` and
+  `test_theme_effect_presets.py`: there are only two copies, and the problem tuple shape differs
+  from module to module.
+- Folding `effect_pass._scaled`'s `hasattr` filter into per-type field lists: it is driven by
+  `EFFECT_RANGES`, so a new `*_px` field scales without an edit.
+- `pen_groups` computes `_water_strokes` twice, once for the pad and once for the masks. It
+  draws no random number and is cheap, so threading it through would only widen the signatures.
+- Examples: S6 already moved the shared grid layout into `labelled_grid.py`, and nothing
+  further was worth changing.

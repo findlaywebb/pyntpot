@@ -30,7 +30,7 @@ from importlib import resources
 from importlib.resources.abc import Traversable
 from pathlib import Path
 
-from pyntpot.ink.naming import nearest
+from pyntpot.ink.naming import did_you_mean
 from pyntpot.ink.pigment_registry import PIGMENT_REGISTRY, PigmentRegistry
 from pyntpot.ink.pigment_table import Pigment
 from pyntpot.maps.theme_checker import TableCheck
@@ -248,8 +248,7 @@ def _missing(path: Path, message: str) -> ThemeProblem:
 def _unknown(name: str) -> str:
     """The message for a packaged palette name that is none."""
     available = ", ".join(Palette.names())
-    hint = "".join(f"; did you mean {near}?" for near in nearest(name, Palette.names()))
-    return f"no palette named {name!r}{hint}; available: {available}"
+    return f"no palette named {name!r}{did_you_mean(name, Palette.names())}; available: {available}"
 
 
 def _packaged() -> Traversable:

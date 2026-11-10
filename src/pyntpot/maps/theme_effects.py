@@ -31,7 +31,7 @@ from typing import Any
 
 from pyntpot.ink import Casing, Glow, Shadow
 from pyntpot.ink.effect_types import EFFECT_RANGES
-from pyntpot.ink.naming import nearest
+from pyntpot.ink.naming import did_you_mean
 from pyntpot.maps.line_effects import BUILT_IN_PRESETS, LINE_CLASSES, EffectStack
 from pyntpot.maps.theme_checker import TableCheck
 from pyntpot.maps.theme_scope import Bound, ThemeScope
@@ -169,8 +169,7 @@ def _preset(check: TableCheck, name: str, here: _Path) -> EffectStack | None:
     if name in check.scope.presets:
         return check.scope.presets[name].value
     known = (*BUILT_IN_PRESETS, *check.scope.presets)
-    hint = "".join(f"; did you mean {near}?" for near in nearest(name, known))
-    check.problem(here, f"{name!r} is not an effect preset{hint}")
+    check.problem(here, f"{name!r} is not an effect preset{did_you_mean(name, known)}")
     return None
 
 

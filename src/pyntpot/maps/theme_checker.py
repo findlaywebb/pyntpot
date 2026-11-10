@@ -17,7 +17,6 @@ key path and the line of that key, or of its nearest ancestor present in the fil
 """
 
 import dataclasses
-import difflib
 import functools
 import typing
 from collections.abc import Callable, Collection, Mapping
@@ -28,7 +27,7 @@ from pydantic import BeforeValidator
 
 from pyntpot.ink.brush import brush_id_known, brush_ids
 from pyntpot.ink.colour import Colour
-from pyntpot.ink.naming import nearest
+from pyntpot.ink.naming import did_you_mean
 from pyntpot.maps.theme_errors import ThemeProblem
 from pyntpot.maps.theme_read import ThemeFile
 from pyntpot.maps.theme_scope import ThemeScope, resolve_colour
@@ -84,8 +83,7 @@ class TableCheck:
         if path in self.renamed:
             self.problem(path, f"renamed to {self.renamed[path]}")
             return
-        near = difflib.get_close_matches(path[-1], sorted(known), n=1, cutoff=0.6)
-        self.problem(path, f"unknown key; did you mean {near[0]}?" if near else "unknown key")
+        self.problem(path, f"unknown key{did_you_mean(path[-1], sorted(known))}")
 
     def table(self, group: type, value: object, path: _Path) -> dict[str, object] | None:
         """Check `value` as a table of `group`'s fields at `path`; None when it is no table."""
@@ -186,8 +184,7 @@ def _sheet_and_colour(value: object, path: _Path) -> str | None:
     if not isinstance(value, str):
         return None
     if any(_matches(path, pattern) for pattern in BRUSH_ID_FIELDS) and not brush_id_known(value):
-        hint = "".join(f"; did you mean {name}?" for name in nearest(value, brush_ids()))
-        return f"{value!r} is not a brush on the sheet{hint}"
+        return f"{value!r} is not a brush on the sheet{did_you_mean(value, brush_ids())}"
     return None
 
 

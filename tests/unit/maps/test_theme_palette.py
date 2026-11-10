@@ -7,12 +7,7 @@ import pytest
 from pyntpot.ink import PIGMENT_REGISTRY, pigment
 from pyntpot.maps import Palette, Style, ThemeError
 
-
-def _write(root: Path, name: str, text: str) -> Path:
-    """Write `text` to `root / name`."""
-    path = root / name
-    path.write_text(text, encoding="utf-8")
-    return path
+from support.theme_files import write_theme
 
 
 def _problems(path: Path) -> list[tuple[Path, int | None, str]]:
@@ -65,14 +60,14 @@ class TestFromFile:
 
     def test_a_yaml_palette_to_a_hex_holds_the_anonymous_pigment(self, tmp_path: Path) -> None:
         """An alias to a hex holds `pigment("#...")`."""
-        path = _write(tmp_path, "mine.yaml", "colours:\n  moss: '#ABCDEF'\n  sea: cerulean\n")
+        path = write_theme(tmp_path, "mine.yaml", "colours:\n  moss: '#ABCDEF'\n  sea: cerulean\n")
         palette = Palette.from_file(path)
         assert palette.name == "mine"
         assert palette.pigments == {"moss": pigment("#abcdef"), "sea": pigment("cerulean")}
 
     def test_a_yaml_palette_holds_only_colours(self, tmp_path: Path) -> None:
         """Another top-level key is a located error at its line, in the palette file."""
-        path = _write(tmp_path, "mine.yaml", "colours:\n  moss: cerulean\npaper: {}\n")
+        path = write_theme(tmp_path, "mine.yaml", "colours:\n  moss: cerulean\npaper: {}\n")
         with pytest.raises(ThemeError) as caught:
             Palette.from_file(path)
         (problem,) = caught.value.problems
@@ -80,7 +75,7 @@ class TestFromFile:
 
     def test_a_palette_alias_to_an_alias_is_refused(self, tmp_path: Path) -> None:
         """The alias rules hold in a palette file."""
-        path = _write(tmp_path, "mine.yaml", "colours:\n  a: cerulean\n  b: a\n")
+        path = write_theme(tmp_path, "mine.yaml", "colours:\n  a: cerulean\n  b: a\n")
         with pytest.raises(ThemeError) as caught:
             Palette.from_file(path)
         assert [(p.line, p.message) for p in caught.value.problems] == [
@@ -89,14 +84,16 @@ class TestFromFile:
 
     def test_a_gpl_file_imports_anonymous_pigments(self, tmp_path: Path) -> None:
         """Every pigment a `.gpl` import yields has no transparency."""
-        path = _write(tmp_path, "mine.gpl", "GIMP Palette\nName: x\n#\n 43  61 143\tSky Blue\n")
+        path = write_theme(
+            tmp_path, "mine.gpl", "GIMP Palette\nName: x\n#\n 43  61 143\tSky Blue\n"
+        )
         palette = Palette.from_file(path)
         assert palette.pigments == {"sky_blue": pigment("#2b3d8f")}
         assert all(p.transparency is None for p in palette.pigments.values())
 
     def test_a_bad_gpl_row_is_located_in_the_gpl_file(self, tmp_path: Path) -> None:
         """A bad row is a problem of the `.gpl` file, at the row's line."""
-        path = _write(tmp_path, "mine.gpl", "GIMP Palette\n0 0 0\n")
+        path = write_theme(tmp_path, "mine.gpl", "GIMP Palette\n0 0 0\n")
         with pytest.raises(ThemeError) as caught:
             Palette.from_file(path)
         (problem,) = caught.value.problems
@@ -131,7 +128,7 @@ class TestGpl:
 
     def test_the_registry_export_is_no_palette_a_theme_can_read_back(self, tmp_path: Path) -> None:
         """Importing it refuses the built-in names."""
-        path = _write(tmp_path, "all.gpl", Palette.registry_gpl())
+        path = write_theme(tmp_path, "all.gpl", Palette.registry_gpl())
         with pytest.raises(ThemeError):
             Palette.from_file(path)
 
@@ -141,50 +138,50 @@ class TestThemePaletteKey:
 
     def test_a_packaged_name_puts_its_aliases_in_scope(self, tmp_path: Path) -> None:
         """`palette: plain` lets a field say `sky`."""
-        path = _write(tmp_path, "t.yaml", "palette: plain\nroute_ink:\n  colour: sky\n")
+        path = write_theme(tmp_path, "t.yaml", "palette: plain\nroute_ink:\n  colour: sky\n")
         assert Style.from_theme(path).route_ink.colour == pigment("cerulean").colour
 
     def test_a_relative_path_is_read_from_the_themes_directory(self, tmp_path: Path) -> None:
         """A `.yaml` path is relative to the file that names it."""
-        _write(tmp_path, "mine.yaml", "colours:\n  moss: '#102030'\n")
-        path = _write(tmp_path, "t.yaml", "palette: mine.yaml\nroute_ink:\n  colour: moss\n")
+        write_theme(tmp_path, "mine.yaml", "colours:\n  moss: '#102030'\n")
+        path = write_theme(tmp_path, "t.yaml", "palette: mine.yaml\nroute_ink:\n  colour: moss\n")
         assert Style.from_theme(path).route_ink.colour == "#102030"
 
     def test_a_gpl_path_works(self, tmp_path: Path) -> None:
         """A `.gpl` palette's alias is a colour in the theme."""
-        _write(tmp_path, "mine.gpl", "GIMP Palette\n16 32 48\tMoss\n")
-        path = _write(tmp_path, "t.yaml", "palette: mine.gpl\nroute_ink:\n  colour: moss\n")
+        write_theme(tmp_path, "mine.gpl", "GIMP Palette\n16 32 48\tMoss\n")
+        path = write_theme(tmp_path, "t.yaml", "palette: mine.gpl\nroute_ink:\n  colour: moss\n")
         assert Style.from_theme(path).route_ink.colour == "#102030"
 
     def test_an_unknown_name_is_located_with_the_suggestion(self, tmp_path: Path) -> None:
         """`palette: plan` is a located error at the key."""
-        path = _write(tmp_path, "t.yaml", "palette: plan\n")
+        path = write_theme(tmp_path, "t.yaml", "palette: plan\n")
         assert _problems(path) == [
             (path, 1, "no palette named 'plan'; did you mean plain?; available: plain")
         ]
 
     def test_a_missing_file_is_located_at_the_key(self, tmp_path: Path) -> None:
         """`palette: gone.yaml` is a problem of the theme at the `palette:` line."""
-        path = _write(tmp_path, "t.yaml", "route_ink: {}\npalette: gone.yaml\n")
+        path = write_theme(tmp_path, "t.yaml", "route_ink: {}\npalette: gone.yaml\n")
         assert _problems(path) == [(path, 2, f"no such palette file: {tmp_path / 'gone.yaml'}")]
 
     def test_a_palette_with_a_bad_row_reports_the_palette_file(self, tmp_path: Path) -> None:
         """The problem is the palette file's, at its own line, and the theme's `palette:` line is named."""
-        palette = _write(tmp_path, "mine.gpl", "GIMP Palette\n0 0 0\n")
-        path = _write(tmp_path, "t.yaml", "palette: mine.gpl\n")
+        palette = write_theme(tmp_path, "mine.gpl", "GIMP Palette\n0 0 0\n")
+        path = write_theme(tmp_path, "t.yaml", "palette: mine.gpl\n")
         found = {(p, line) for p, line, _ in _problems(path)}
         assert found == {(palette, 2), (path, 1)}
 
     def test_a_palette_that_is_no_string_is_refused(self, tmp_path: Path) -> None:
         """`palette: 5` is refused."""
-        path = _write(tmp_path, "t.yaml", "palette: 5\n")
+        path = write_theme(tmp_path, "t.yaml", "palette: 5\n")
         assert _problems(path) == [(path, 1, "is a palette name or a .yaml or .gpl path")]
 
     def test_the_nearest_palette_is_the_one_in_effect(self, tmp_path: Path) -> None:
         """A child's `palette:` takes the parent's palette aliases out of scope."""
-        _write(tmp_path, "mine.yaml", "colours:\n  moss: '#102030'\n")
-        _write(tmp_path, "parent.yaml", "palette: plain\n")
-        path = _write(
+        write_theme(tmp_path, "mine.yaml", "colours:\n  moss: '#102030'\n")
+        write_theme(tmp_path, "parent.yaml", "palette: plain\n")
+        path = write_theme(
             tmp_path,
             "t.yaml",
             "extends: parent.yaml\npalette: mine.yaml\nroute_ink:\n  colour: sky\n",
@@ -195,5 +192,5 @@ class TestThemePaletteKey:
     def test_a_palette_alias_that_is_a_theme_pigment_is_refused(self, tmp_path: Path) -> None:
         """A palette alias equal to a pigment the theme defines clashes."""
         text = "pigments:\n  sky: {colour: '#000000'}\npalette: plain\n"
-        path = _write(tmp_path, "t.yaml", text)
+        path = write_theme(tmp_path, "t.yaml", text)
         assert _problems(path) == [(path, 3, "palette alias 'sky' is a pigment name of the theme")]

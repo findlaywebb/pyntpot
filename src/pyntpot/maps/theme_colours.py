@@ -22,7 +22,7 @@ import dataclasses
 import re
 from collections.abc import Collection, Mapping
 
-from pyntpot.ink.naming import nearest
+from pyntpot.ink.naming import did_you_mean
 from pyntpot.ink.pigment_table import Pigment
 from pyntpot.maps.theme_checker import TableCheck
 from pyntpot.maps.theme_scope import Bound, ThemeScope, resolve_pigment
@@ -150,6 +150,6 @@ def _pigment(
     if text in scope.aliases or text in scope.palette_aliases or text in table:
         check.problem(at, f"{text!r} is an alias; an alias names a pigment or a hex")
         return None
-    hint = "".join(f"; did you mean {name}?" for name in nearest(text, bare.registry.names()))
+    hint = did_you_mean(text, bare.registry.names())
     check.problem(at, f"{text!r} is not a pigment or a hex{hint}")
     return None

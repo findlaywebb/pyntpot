@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from functools import cached_property
 
 from pyntpot.ink.colour import Colour
-from pyntpot.ink.naming import nearest
+from pyntpot.ink.naming import did_you_mean
 from pyntpot.ink.pigment_table import ROLE_PIGMENTS, TUBE_PIGMENTS, Pigment
 
 
@@ -63,9 +63,7 @@ class PigmentRegistry:
         found = self._index.get(name)
         if found is not None:
             return found
-        near = nearest(name, self._index)
-        hint = f"; did you mean {near[0]}?" if near else ""
-        raise ValueError(f"no pigment {name!r}{hint}")
+        raise ValueError(f"no pigment {name!r}{did_you_mean(name, self._index)}")
 
     def __contains__(self, name: object) -> bool:
         """Whether a pigment has the name."""

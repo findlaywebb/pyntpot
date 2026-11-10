@@ -6,10 +6,8 @@ import pytest
 
 from pyntpot.ink import Colour, pigment
 from pyntpot.maps import Style, ThemeError
-from pyntpot.maps.theme_check import check_theme_scoped
-from pyntpot.maps.theme_scope import ThemeScope
 
-from support.theme_files import theme_file
+from support.theme_files import scope_of
 
 
 def _load(tmp_path: Path, text: str) -> Style:
@@ -26,17 +24,12 @@ def _problems(tmp_path: Path, text: str) -> list[tuple[int | None, str]]:
     return [(p.line, p.message) for p in caught.value.problems]
 
 
-def _scope(text: str) -> ThemeScope:
-    """The scope after checking the theme `text` in the built-in scope."""
-    return check_theme_scoped(theme_file(text), {}, ThemeScope.built_in())[2]
-
-
 class TestADerivedPigment:
     """A pigment with a `base`, a `colour`, or both."""
 
     def test_a_base_alone_is_the_base_under_a_new_name(self) -> None:
         """`base: ultramarine` holds ultramarine's colour, transparency and Colour Index."""
-        scope = _scope("pigments:\n  my_blue: {base: ultramarine}\n")
+        scope = scope_of("pigments:\n  my_blue: {base: ultramarine}\n")
         made = scope.registry.get("my_blue")
         base = pigment("ultramarine")
         assert (made.colour, made.transparency, made.colour_index) == (
@@ -48,7 +41,7 @@ class TestADerivedPigment:
 
     def test_a_base_and_a_colour_keep_the_base_transparency(self) -> None:
         """`{base: ultramarine, colour: "#203070"}` is ultramarine's transparency in the new colour."""
-        scope = _scope('pigments:\n  my_blue: {base: ultramarine, colour: "#203070"}\n')
+        scope = scope_of('pigments:\n  my_blue: {base: ultramarine, colour: "#203070"}\n')
         made = scope.registry.get("my_blue")
         assert made.colour == Colour("#203070")
         assert made.transparency == pigment("ultramarine").transparency
@@ -57,12 +50,12 @@ class TestADerivedPigment:
     def test_the_fields_given_override_the_base(self) -> None:
         """A given transparency and colour index replace the base's."""
         text = "pigments:\n  my_blue: {base: ultramarine, transparency: 0.5, colour_index: X}\n"
-        made = _scope(text).registry.get("my_blue")
+        made = scope_of(text).registry.get("my_blue")
         assert (made.transparency, made.colour_index) == (0.5, "X")
 
     def test_a_colour_alone_is_an_anonymous_transparency(self) -> None:
         """A pigment with only a colour has no transparency and no Colour Index."""
-        made = _scope('pigments:\n  slate: {colour: "#ABCDEF"}\n').registry.get("slate")
+        made = scope_of('pigments:\n  slate: {colour: "#ABCDEF"}\n').registry.get("slate")
         assert (made.colour, made.transparency, made.colour_index) == ("#abcdef", None, None)
 
     def test_a_pigment_is_a_name_a_colour_field_takes(self, tmp_path: Path) -> None:
@@ -74,7 +67,7 @@ class TestADerivedPigment:
 
     def test_a_pigment_records_the_file_and_line(self) -> None:
         """The bound entry names its file and its key's line."""
-        bound = _scope("\npigments:\n  slate: {colour: '#abcdef'}\n").pigments["slate"]
+        bound = scope_of("\npigments:\n  slate: {colour: '#abcdef'}\n").pigments["slate"]
         assert (bound.path, bound.line) == (Path("t.yaml"), 3)
 
 

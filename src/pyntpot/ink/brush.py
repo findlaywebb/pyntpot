@@ -20,7 +20,7 @@ import numpy as np
 
 from pyntpot.ink.brush_sheet import BRUSH_COLOURS, BRUSH_TREATMENTS, PEN_ROWS
 from pyntpot.ink.brush_style import BrushStyle
-from pyntpot.ink.naming import nearest
+from pyntpot.ink.naming import did_you_mean
 from pyntpot.ink.noise import F32
 
 #: The keys a `brush_overrides` entry may set: every key the sheet brush reads from it.
@@ -209,8 +209,7 @@ def brush_from_id(
             the nearest id when one is close.
     """
     if not brush_id_known(brush_id):
-        hint = "".join(f"; did you mean {name}?" for name in nearest(brush_id, brush_ids()))
-        raise ValueError(f"no such brush {brush_id!r}{hint}")
+        raise ValueError(f"no such brush {brush_id!r}{did_you_mean(brush_id, brush_ids())}")
     cls, rest = brush_id[:3], brush_id[3:]
     row, _, col = rest.partition("-")
     over = style.brush_overrides.get(override or cls.lower(), {})

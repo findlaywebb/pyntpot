@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from pyntpot.ink import Casing, Glow, Shadow
-from pyntpot.ink.naming import nearest
+from pyntpot.ink.naming import did_you_mean
 
 #: The water classes, in the order the painter draws them.
 WATER_GROUP: tuple[str, ...] = ("major", "medium", "minor", "coast")
@@ -108,8 +108,7 @@ def checked_line_effects(stacks: Mapping[str, EffectStack]) -> dict[str, EffectS
 
 def _unknown_class(key: str, known: tuple[str, ...]) -> str:
     """The refusal of the basemap line-effect key `key` among the classes `known`."""
-    hint = "".join(f"; did you mean {name}?" for name in nearest(key, known))
     return (
-        f"line_effects key {key!r} is not a basemap line class{hint}; "
+        f"line_effects key {key!r} is not a basemap line class{did_you_mean(key, known)}; "
         f"the classes are {', '.join(known)}"
     )

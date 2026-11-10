@@ -62,17 +62,19 @@ class PenGroups(NamedTuple):
     road: PenGroup
 
 
+#: One watercourse stroke: its class, brush, pixel points and width profile.
+type _Stroke = tuple[str, Brush, np.ndarray, np.ndarray | None]
+
+
 def _lines_of(job: PaintJob, line: Line) -> list[np.ndarray]:
     """The drawable parts of a line, as the plate's pixel points."""
     return [job.canvas.px(r) for r in drawable((line,))]
 
 
-def _water_strokes(
-    job: PaintJob, br: dict[str, tuple[Brush, str]]
-) -> list[tuple[str, Brush, np.ndarray, np.ndarray | None]]:
+def _water_strokes(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[_Stroke]:
     """Every watercourse stroke as its class, brush, pixel points and width profile."""
     style = job.style
-    strokes: list[tuple[str, Brush, np.ndarray, np.ndarray | None]] = []
+    strokes: list[_Stroke] = []
     wide: dict[tuple[str, float], Brush] = {}
     for r in job.layers.rivers:
         cls = r.cls
@@ -102,19 +104,27 @@ def _water_strokes(
     return strokes
 
 
-def _water_pad(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[PigmentLayer]:
-    """Every watercourse and the coast in one pad, read back with the major river's brush."""
-    layers = job.layers
-    pad = InkPad(job.shape, br["major"][0], job.style.brush)
-    strokes = _water_strokes(job, br)
+def _lay_strokes(pad: InkPad, strokes: list[_Stroke], seed: int) -> None:
+    """Lay `strokes` on `pad`, each with its brush and width profile."""
     pad.lay(
         [(brush, line) for _cls, brush, line, _prof in strokes],
-        job.style.brush.ink_seed,
+        seed,
         profiles=[prof for _cls, _brush, _line, prof in strokes],
     )
-    coast_lines = [
-        (br["coast"][0], line) for coast in layers.coastline for line in _lines_of(job, coast)
+
+
+def _coast_lines(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[tuple[Brush, np.ndarray]]:
+    """Every coastline part with the coast's brush."""
+    return [
+        (br["coast"][0], line) for coast in job.layers.coastline for line in _lines_of(job, coast)
     ]
+
+
+def _water_pad(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[PigmentLayer]:
+    """Every watercourse and the coast in one pad, read back with the major river's brush."""
+    pad = InkPad(job.shape, br["major"][0], job.style.brush)
+    _lay_strokes(pad, _water_strokes(job, br), job.style.brush.ink_seed)
+    coast_lines = _coast_lines(job, br)
     if coast_lines:
         pad.lay(coast_lines, job.style.brush.ink_seed)
     if not pad.any():
@@ -132,21 +142,9 @@ def _water_masks(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> dict[str, n
             continue
         pad = InkPad(job.shape, br["major"][0], job.style.brush)
         if cls == "coast":
-            pad.lay(
-                [
-                    (br["coast"][0], line)
-                    for c in job.layers.coastline
-                    for line in _lines_of(job, c)
-                ],
-                seed,
-            )
+            pad.lay(_coast_lines(job, br), seed)
         else:
-            mine = [(b, line, prof) for key, b, line, prof in strokes if key == cls]
-            pad.lay(
-                [(b, line) for b, line, _prof in mine],
-                seed,
-                profiles=[prof for _b, _line, prof in mine],
-            )
+            _lay_strokes(pad, [stroke for stroke in strokes if stroke[0] == cls], seed)
         masks[cls] = pad.read(br["major"][0], job.sheet)
     return masks
 

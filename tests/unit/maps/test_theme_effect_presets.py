@@ -11,26 +11,19 @@ from pyntpot.maps.style import _groups
 from pyntpot.maps.theme_check import check_theme_scoped
 from pyntpot.maps.theme_scope import ThemeScope
 
-from support.theme_files import theme_file
-
-
-def _write(root: Path, name: str, text: str) -> Path:
-    """Write `text` to `root / name`."""
-    path = root / name
-    path.write_text(text, encoding="utf-8")
-    return path
+from support.theme_files import theme_file, write_theme
 
 
 def _problems(root: Path, text: str) -> list[tuple[int | None, str, str]]:
     """The line, key and message of every problem loading the theme `text` raises."""
     with pytest.raises(ThemeError) as caught:
-        Style.from_theme(_write(root, "t.yaml", text))
+        Style.from_theme(write_theme(root, "t.yaml", text))
     return [(p.line, p.key, p.message) for p in caught.value.problems]
 
 
 def _style(root: Path, text: str) -> Style:
     """The style the theme `text` builds."""
-    return Style.from_theme(_write(root, "t.yaml", text))
+    return Style.from_theme(write_theme(root, "t.yaml", text))
 
 
 def _check(text: str) -> tuple[dict[str, object], list[tuple[int | None, str, str]]]:
@@ -84,7 +77,7 @@ class TestThePresets:
 
     def test_replacing_an_inherited_preset_needs_override(self, tmp_path: Path) -> None:
         """A child preset of a parent's name needs `override: true`, and names the parent's line."""
-        _write(
+        write_theme(
             tmp_path,
             "parent.yaml",
             "effect_presets:\n  soft: {glow: {strength: 0.5, spread_px: 1}}\n",
@@ -100,7 +93,7 @@ class TestThePresets:
 
     def test_override_replaces_an_inherited_preset(self, tmp_path: Path) -> None:
         """With `override: true` the child's preset is the one a class takes."""
-        _write(
+        write_theme(
             tmp_path,
             "parent.yaml",
             "effect_presets:\n  soft: {glow: {strength: 0.5, spread_px: 1}}\n",
@@ -115,7 +108,7 @@ class TestThePresets:
 
     def test_a_preset_is_inherited_down_extends(self, tmp_path: Path) -> None:
         """A child names a preset its parent defined."""
-        _write(
+        write_theme(
             tmp_path,
             "parent.yaml",
             "effect_presets:\n  soft: {glow: {strength: 0.5, spread_px: 1}}\n",
@@ -125,7 +118,7 @@ class TestThePresets:
 
     def test_a_preset_is_unknown_to_the_parent_that_comes_before_it(self, tmp_path: Path) -> None:
         """A parent cannot name a preset only its child defines."""
-        _write(tmp_path, "parent.yaml", "line_effects:\n  lane: soft\n")
+        write_theme(tmp_path, "parent.yaml", "line_effects:\n  lane: soft\n")
         text = (
             "extends: parent.yaml\neffect_presets:\n  soft: {glow: {strength: 0.5, spread_px: 1}}\n"
         )
@@ -151,14 +144,14 @@ class TestTheMergeDownExtends:
 
     def test_a_child_that_sets_one_class_keeps_the_parents_route(self, tmp_path: Path) -> None:
         """The parent sets `route: lifted`, the child sets `major: cased`, and the child has both."""
-        _write(tmp_path, "parent.yaml", "line_effects:\n  route: lifted\n")
+        write_theme(tmp_path, "parent.yaml", "line_effects:\n  route: lifted\n")
         style = _style(tmp_path, "extends: parent.yaml\nline_effects:\n  major: cased\n")
         assert style.route_ink.effects == BUILT_IN_PRESETS["lifted"]
         assert style.basemap.line_effects == {"major": BUILT_IN_PRESETS["cased"]}
 
     def test_a_child_class_replaces_the_parents_stack_whole(self, tmp_path: Path) -> None:
         """A child's `major: halo` replaces the parent's `major: cased`, not merges with it."""
-        _write(tmp_path, "parent.yaml", "line_effects:\n  major: cased\n  lane: cased\n")
+        write_theme(tmp_path, "parent.yaml", "line_effects:\n  major: cased\n  lane: cased\n")
         style = _style(tmp_path, "extends: parent.yaml\nline_effects:\n  major: halo\n")
         assert style.basemap.line_effects == {
             "major": BUILT_IN_PRESETS["halo"],
@@ -176,7 +169,7 @@ class TestTheMergeDownExtends:
     )
     def test_a_child_turns_off_an_inherited_stack(self, tmp_path: Path, off: str) -> None:
         """The parent sets `major: cased` and the child writes it off: no stack, the default's digests."""
-        _write(tmp_path, "parent.yaml", "line_effects:\n  major: cased\n")
+        write_theme(tmp_path, "parent.yaml", "line_effects:\n  major: cased\n")
         style = _style(tmp_path, f"extends: parent.yaml\nline_effects:\n  {off}\n")
         default = Style()
         assert style.basemap.line_effects == {}
@@ -189,7 +182,7 @@ class TestTheMergeDownExtends:
 
     def test_a_child_turns_off_the_parents_route(self, tmp_path: Path) -> None:
         """The parent sets `route: lifted` and the child's `route: {}` leaves the route with none."""
-        _write(tmp_path, "parent.yaml", "line_effects:\n  route: lifted\n")
+        write_theme(tmp_path, "parent.yaml", "line_effects:\n  route: lifted\n")
         style = _style(tmp_path, "extends: parent.yaml\nline_effects:\n  route: {}\n")
         assert style.route_ink.effects == EffectStack()
         assert style.digest() == Style().digest()
