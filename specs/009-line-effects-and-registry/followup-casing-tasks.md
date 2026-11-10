@@ -14,14 +14,14 @@ Specs: `specs/009-line-effects-and-registry/followup-casing.md` (C slices) and
 - [x] Baseline slice gate green on the untouched tip (`-n 2`, never `-n auto`).
 
 ### C1: `contour_distance`
-- [ ] Red: property 1 (float32 masks, shapes a radius + 2 margin from the array edge; exact
+- [x] Red: property 1 (float32 masks, shapes a radius + 2 margin from the array edge; exact
       reference outside only, τ 0.2 to 0.5, 0.4 px; sign only inside, bit for bit); cap cases; τ-exact, one-pixel and array-edge units.
-- [ ] `ink/effect_distance.py`: `contour_distance`, `ring_coverage`; pure numpy.
+- [x] `ink/effect_distance.py`: `contour_distance`, `ring_coverage`; pure numpy.
 - [ ] Accuracy and cost at radius 3, 8, 16, 33 recorded in "Measured"; one form, no two-stage
-      form; `docs/issues/ink-contour-distance-cost.md` and its GitHub issue filed.
+      form; `docs/issues/ink-contour-distance-cost.md` written (its GitHub issue is still to file: no remote writes this session).
 - [ ] Each caller's radius as prescribed: casing `w + 1`, pen casing `w + edge + 1`, reserve
       `w + 2`, union the members' maximum.
-- [ ] Benchmark smoke entry; slice gate green.
+- [x] Benchmark smoke entry; slice gate green.
 
 ### C2: casing and pen casing anti-aliased
 - [ ] Red: `test_effect_quality.py` pins (casing edge at most 0.22 px; pen edge ink 0.70 to

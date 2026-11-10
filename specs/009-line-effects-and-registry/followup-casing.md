@@ -587,8 +587,8 @@ fix(ink): casing and pen_casing are anti-aliased, their widths measured from the
 
 ## Measured (filled by C1 and C5)
 
-- `contour_distance` worst error on the reference shapes: …
-- Its time at radius 3, 8, 16 and 33 on 1800 × 1281: …
+- `contour_distance` worst error on the reference shapes: 0.315 px (3,000 shapes, τ 0.2 to 0.5, radius 3 to 8, margin radius + 2).
+- Its time at radius 3, 8, 16 and 33 on 1800 × 1281: 0.28 s, 0.74 s, 2.24 s and 8.81 s.
 - Largest off-line pen alpha on the Lynmouth pen plate: …
 
 ## Risks
