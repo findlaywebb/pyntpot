@@ -40,8 +40,7 @@ the current map shows a tangle.
   which pieces get a casing, a wider one, and the late ordering over other roads.
 - A theme field for the bridge casing, defaulting to off so no pinned image moves.
 
-**Dependencies.** The line-effect model and casing from spec 009 (ADR 0070, which is
-cited by the brief but not yet in `docs/decisions/` at the time of writing). The
+**Dependencies.** The line-effect model and casing from spec 009 ([ADR 0070](../decisions/0070-line-effects-and-one-pigment-registry.md)). The
 route casing note, `docs/features/maps-route-casing.md`, shares the same casing primitive.
 
 **Open questions.**

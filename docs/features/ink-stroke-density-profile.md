@@ -5,7 +5,7 @@ GitHub issue: [#171](https://github.com/findlaywebb/pyntpot/issues/171)
 **What exists today.** `stamp` (`pyntpot.ink.stamping`) takes `wprof`, a width multiplier
 sampled evenly from a stroke's start to its end, and nothing else that varies along the
 stroke. `ink_density` turns the whole accumulator into one density, and a `PigmentLayer`
-(`ink/pigment.py`) is one density with one pigment and at most one transparency. So a stroke that fades or changes colour has to
+(`ink/compositing.py`) is one density with one pigment and at most one transparency. So a stroke that fades or changes colour has to
 be cut up. The spirograph in `examples/curves.py` (`_paint_spirograph`) does this: it splits
 the path into 16 pieces with `np.array_split`, extends each by two points so the pieces
 meet (`min(idx[-1] + 3, len(points))`), stamps each into its own accumulator, scales each
@@ -28,5 +28,5 @@ moves. The colour half needs the pigment registry first and probably an ADR, sin
 that re-pins `curves/spirograph.webp` on purpose. Until then, the page could say plainly
 that the cutting is a workaround.
 
-**Related.** `ink-one-pigment-registry.md` (#72) for the blending half;
+**Related.** the one pigment registry (#72, [ADR 0070](../decisions/0070-line-effects-and-one-pigment-registry.md)) for the blending half;
 `docs-examples-review.md` (#63).

@@ -99,7 +99,162 @@ pyntpot map route.gpx -o out/route.png --cache cache/ --contact https://example.
 
 Every key and value is checked when the theme loads, before anything is fetched: unknown
 keys at every level, each value's type, the choices of a field such as `drawn_as`, brush
-ids and `#rrggbb` colours.
+ids and colours: a `#rrggbb`, a pigment name or an alias.
+
+## Name a colour
+
+Every colour field takes one of three things: a `#rrggbb`, the name of a pigment, or an
+alias that your theme or its palette defines. The names of the built-in pigments are on the
+[pigments](../reference/pigments.md) page; `ultramarine` and `cerulean` are two. Names are
+lower case, and hex is stored lower case whatever you write.
+
+<!-- theme: names.yaml -->
+```yaml
+extends: sepia
+colours:
+  loch: cerulean
+  slate: "#4a5560"
+route_ink:
+  colour: slate
+cover:
+  pigments:
+    water: loch
+```
+
+`colours:` is a table of alias to a pigment name or a hex. An alias stands for a pigment: an
+alias to a name is that pigment, and an alias to a hex is the anonymous pigment of that hex.
+A colour field takes the pigment's colour when the theme loads, so the two fields above are
+`#4a5560` and cerulean's `#2a7ab0`. An alias cannot name another alias, and it cannot reuse a
+built-in pigment name. When an alias needs to replace one that a base theme or a palette
+already defines, write it as a table with `override`:
+
+<!-- theme: override.yaml -->
+```yaml
+extends: names.yaml
+colours:
+  loch: {colour: indigo, override: true}
+```
+
+An alias is lower case words joined by single underscores, such as `loch` or `moss_green`.
+
+## Share colours with a palette
+
+A palette is a named set of aliases. `palette: plain` gives a theme ten everyday colour
+words, such as `sky` and `navy`, each one a built-in pigment:
+
+<!-- theme: plain.yaml -->
+```yaml
+extends: sepia
+palette: plain
+route_ink:
+  colour: navy
+```
+
+`Palette.names()` lists the packaged palettes. A palette of your own is a YAML file that holds
+only `colours:`, named by path like a theme (`palette: my-palette.yaml`, read from the
+directory of the file that names it):
+
+<!-- palette: my-palette.yaml -->
+```yaml
+colours:
+  moss: "#6b7a3a"
+  sea: cerulean
+```
+
+A GIMP `.gpl` palette file works the same way: `palette: my-palette.gpl`. Each row's name
+becomes an alias, in lower case with each run of other characters turned into one
+underscore, and each takes the anonymous pigment of the row's colour. A row with no name,
+a name that starts with a digit, two rows that give one alias, and a name that is a built-in
+pigment are each an error, never dropped. To make a `.gpl` from a palette, or from the
+pigments, in Python:
+
+```python
+from pathlib import Path
+
+from pyntpot.maps import Palette
+
+Path("plain.gpl").write_text(Palette.named("plain").to_gpl())
+Path("pigments.gpl").write_text(Palette.registry_gpl())
+```
+
+A `.gpl` file holds a colour and a name only, so a pigment's transparency does not travel in
+it. The pigments file is for other tools: it uses the built-in names, so a theme cannot
+read it back as a palette. A theme alias of the same name as one in its palette is an error
+unless the theme marks it `override`.
+
+## Add a pigment
+
+`pigments:` adds pigments of your own to a theme. Give a colour, and optionally a
+`transparency` from 0 to 1 and a `colour_index` code, or derive one from a built-in with
+`base`, changing only the fields you give:
+
+<!-- theme: pigments.yaml -->
+```yaml
+extends: sepia
+pigments:
+  slate: {colour: "#4a5560", transparency: 0.3}
+  loch_blue: {base: cerulean, colour: "#2a6f9e"}
+route_ink:
+  colour: loch_blue
+```
+
+A pigment may not take a built-in name; `ultramarine: {colour: "#000000"}` is refused, and
+the message gives the derived form, `my_ultramarine: {base: ultramarine}`. To change what a
+map role looks like, set the role (`cover.pigments.built`) instead.
+
+## How names bind down `extends`
+
+Aliases, pigments and effect presets accumulate from the base-most theme of an `extends`
+chain upwards, and replacing an inherited one needs `override: true`. A name binds in the
+file that writes it. So a child that rebinds an alias does not recolour a field its parent
+set with that alias:
+
+<!-- theme: parent.yaml -->
+```yaml
+extends: sepia
+colours:
+  sky: cerulean
+route_ink:
+  colour: sky
+```
+
+<!-- theme: child.yaml -->
+```yaml
+extends: parent.yaml
+colours:
+  sky: {colour: indigo, override: true}
+```
+
+The child's route is still cerulean, because `sky` meant cerulean where the parent wrote
+it. To recolour the route, the child sets `route_ink.colour: sky` itself. A theme has one
+palette in effect, the nearest `palette:` in its chain, so a child's `palette:` replaces its
+parent's.
+
+## Line effects
+
+A line effect is something laid round a line: a casing (a ring of another colour), a glow (a
+soft lift toward the paper) or a shadow. A stack holds at most one of each. `line_effects:`
+gives a stack to a line class, and the route:
+
+<!-- theme: effects.yaml -->
+```yaml
+extends: sepia
+effect_presets:
+  soft: {glow: {spread_px: 1, blur_px: 3, strength: 0.5}}
+line_effects:
+  route: halo
+  lane: soft
+```
+
+The keys are `major`, `medium`, `minor`, `coast`, `road_major`, `lane`, `track` and
+`route`. A value is one of the three built-in presets, `cased`, `halo` and `lifted`; the
+name of an `effect_presets:` entry of your own; or a stack written out. A casing takes
+`width_px`, `colour` and `strength`, a glow `spread_px`, `blur_px` and `strength`, and a
+shadow `offset_px`, `blur_px`, `strength` and `colour`. A `_px` is from 0 to 16 and a
+`strength` from 0 to 1; a value outside is an error. Every default is off, so a theme that
+writes none of this paints as before. A preset of your own may not take a built-in
+preset's name, and replacing an inherited one needs `override: true` in the preset. The
+[schema](../reference/theme.schema.json) lists every field.
 
 ## Editor completion
 
@@ -124,6 +279,7 @@ editor works offline: point the directive line at that file's path instead.
 `Style.from_yaml`, `Style.named` and `Style.from_theme` raise `ThemeError` with every
 problem in the theme, not only the first. Take this broken copy of `my-theme.yaml`:
 
+<!-- theme: my-theme.yaml broken -->
 ```yaml
 # yaml-language-server: $schema=https://findlaywebb.github.io/pyntpot/reference/theme.schema.json
 extends: sepia
@@ -147,6 +303,27 @@ Each line is one problem: the file's full path and line, the dotted key, and wha
 wrong. The fixes are `blooms: false`, `grid: false` and `drawn_as: pen`. A problem in a
 theme that yours extends names that theme's file. In Python, the error's `problems` holds
 each as a `ThemeProblem` with its `path`, `key`, `line` and `message`.
+
+Colour names and effect presets are checked the same way. This theme misspells a
+pigment, uses an alias nothing defines and names a preset that does not exist:
+
+<!-- theme: my-theme.yaml broken -->
+```yaml
+extends: sepia
+colours:
+  sky: ultramarin
+route_ink:
+  colour: sky
+line_effects:
+  route: halo
+  lane: gloww
+```
+
+```
+pyntpot.maps.theme_errors.ThemeError: /home/you/maps/my-theme.yaml:3: colours.sky: 'ultramarin' is not a pigment or a hex; did you mean ultramarine?
+/home/you/maps/my-theme.yaml:5: route_ink.colour: 'sky' is not a pigment or a colour alias
+/home/you/maps/my-theme.yaml:8: line_effects.lane: 'gloww' is not an effect preset
+```
 
 `pyntpot map --style my-theme.yaml` prints the same lines, each after `pyntpot map: `,
 and exits with status 2 before it fetches anything.

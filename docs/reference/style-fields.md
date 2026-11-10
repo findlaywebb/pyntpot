@@ -33,7 +33,7 @@ A change to a group moves the digests it feeds, and only those plates are painte
 | `grid` | boolean | `false` | Draw the notebook grid on the paper. |
 | `grid_spacing_px` | number | `26.0` | Spacing of the notebook grid, in pixels. |
 | `grid_opacity` | number | `0.34` | Opacity of the notebook grid. |
-| `paper_hex` | string | `"#f3ead6"` | The paper's colour as `#rrggbb`. |
+| `paper_hex` | string | `"#f3ead6"` | The paper's colour. A `#rrggbb`, a pigment name or a colour alias. |
 | `paper_tooth` | number | `0.085` | Strength of the paper's texture. |
 | `paper_worn` | number | `0.2` | Strength of the worn border. |
 | `paper_vignette` | number | `0.05` | Strength of the vignette. |
@@ -111,7 +111,7 @@ A theme may give only these keys.
 | `silhouette_deform_min_px` | number | `1.6` | Segment length below which the recursion stops, in render pixels. |
 | `silhouette_deform_seed` | integer | `73` | Seed of the deformation. |
 | `pigment_separation` | boolean | `true` | Lay a second, heavier pigment over the classes named in `separation_pigments`, so the two separate as the wash dries. |
-| `separation_pigments` | table | table | Table of class to the second pigment's colour over white. A class not named stays one wash. |
+| `separation_pigments` | table | table | Table of class to the second pigment's colour over white, a `#rrggbb`, a pigment name or a colour alias. A class not named stays one wash. |
 | `separation_share` | number | `0.05` | Share of the wash's density the heavy pigment carries. |
 | `separation_gamma` | number | `2.2` | How sharply the heavy pigment follows the paper's pits. |
 | `separation_transparency` | number | `0.07` | What the heavy pigment shows over black, as a share of over white. |
@@ -246,7 +246,7 @@ Besides these keys, a theme may give a brush-id prefix in lower case (`riv`, `st
 | Field | Type | Default | Sets |
 | --- | --- | --- | --- |
 | `label_size_px` | number | `20.0` | Size the hand is written at, in display pixels. |
-| `label_ink` | string | `"#241c14"` | Ink the lettering is written in, as `#rrggbb`. |
+| `label_ink` | string | `"#241c14"` | Ink the lettering is written in. A `#rrggbb`, a pigment name or a colour alias. |
 | `label_brush` | string | `"MAJ6-e"` | Brush id of the nib the lettering is written with. |
 | `label_pen_width_px` | number | `1.05` | The nib's width, in display pixels. |
 | `label_outline_width_frac` | number | `0.62` | Width of the finer nib the outline trace writes with, as a share of `label_pen_width_px`. |
@@ -258,9 +258,9 @@ Besides these keys, a theme may give a brush-id prefix in lower case (`riv`, `st
 | `label_wash_alpha` | number | `0.5` | Opacity of the backing wash. |
 | `label_wash_dark_floor` | number | `0.22` | Darkness of the ground below which no backing wash is laid. |
 | `label_wash_spread` | number | `0.75` | How far the backing wash reaches round the ink, as a multiple of the label size. |
-| `label_route_ink` | string | `"#c22050"` | Ink of a name in the route's own colour. |
-| `label_water_ink` | string | `"#4a7691"` | Ink of a name written beside water. |
-| `label_in_water_ink` | string | `"#f8f4e9"` | Ink of a name written on the water, reversed out in the paper's cream. |
+| `label_route_ink` | string | `"#c22050"` | Ink of a name in the route's own colour. A `#rrggbb`, a pigment name or a colour alias. |
+| `label_water_ink` | string | `"#4a7691"` | Ink of a name written beside water. A `#rrggbb`, a pigment name or a colour alias. |
+| `label_in_water_ink` | string | `"#f8f4e9"` | Ink of a name written on the water, reversed out in the paper's cream. A `#rrggbb`, a pigment name or a colour alias. |
 
 ## `hand`
 
@@ -315,7 +315,7 @@ Besides these keys, a theme may give a brush-id prefix in lower case (`riv`, `st
 | `relief_strength` | number | `1.0` | Multiplies the relief's density, and the ceiling the density is held to, so 2 paints the slopes twice as dark. |
 | `min_patch_px` | number | `0.0` | Display pixels below which a painted cover patch takes the class of its largest painted neighbour; a patch nothing painted touches, such as an island's wood, is kept. Zero keeps every patch. |
 | `cover_cfg` | table | table | Table of cover class to two numbers: how dark a wash of the class goes and how hard its edge pools. |
-| `pigments` | table | table | Table of pigment key to the colour a full-strength wash transmits. See [Pigments](pigments.md). |
+| `pigments` | table | table | Table of pigment key to the colour a full-strength wash transmits, each a `#rrggbb`, a pigment name or a colour alias. See [Pigments](pigments.md). |
 | `pale_base` | number | `0.5` | Density of the pale single wash. |
 | `pale_pool` | number | `0.16` | How hard the pale wash's edge pools. |
 | `wood_texture` | number | `0.75` | Slider for the wood's texture, a cross fade over three printed scales. |
@@ -383,7 +383,7 @@ A theme may give only these keys.
 | --- | --- | --- | --- |
 | `drawn_as` | one of `pen`, `solid` | `"solid"` | How the route is drawn: `"pen"` tints the pen plate when the `route` group painted one; `"solid"` draws a line. |
 | `px` | number | `5.4` | Width in display pixels. It also sets how near two passes of a retraced route have to come to be drawn as one stroke. |
-| `colour` | string | `"#c22050"` | Colour as `#rrggbb`. |
+| `colour` | string | `"#c22050"` | Colour. A `#rrggbb`, a pigment name or a colour alias. |
 | `blend` | one of `normal`, `multiply` | `"normal"` | `"normal"` lays the ink over the map; `"multiply"` multiplies it into the map, so the route darkens a wash instead of covering it. |
 | `opacity` | number | `1.0` | How much of the ink is laid, from 0 to 1. |
 | `effects` | table | `table` | Set only by `line_effects.route`; off by default. |

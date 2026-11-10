@@ -200,26 +200,26 @@ gate B (S6 in); S7, S8, S9.
 
 ## Before S7
 
-- [ ] Apply the user's ruling on the "effect" trap in `CONTRIBUTING.md`, if given, before
-      S7. Until then S4 and S5a proceed, using "line effect", "casing", "glow",
+- [x] Apply the user's ruling on the "effect" trap in `CONTRIBUTING.md`, if given, before
+      S7 (no ruling given; files untouched). Until then S4 and S5a proceed, using "line effect", "casing", "glow",
       "shadow", "effect stack" and "effect preset" only as glossary terms; no slice edits
       `CLAUDE.md` or `CONTRIBUTING.md`.
 
 ## S7: Docs and notes
 
-- [ ] `write-a-theme.md` (colours, aliases, palettes, theme pigments, binding down
+- [x] `write-a-theme.md` (colours, aliases, palettes, theme pigments, binding down
       `extends`); the `pigments.md` Colour Index column and its comparator; the colour
       rows' text in `style-fields.md`.
-- [ ] Glossary: the "colour alias" entry says an alias stands for a pigment (a named one,
+- [x] Glossary: the "colour alias" entry says an alias stands for a pigment (a named one,
       or a hex's anonymous pigment, transparency included), not "a pigment name or a
       hex"; code columns; `PYTHONPATH=tests uv run python -m support.glossary`.
-- [ ] Notes for #72, #71 and #170 deleted, links repointed; route casing, glow and shadow
+- [x] Notes for #72, #71 and #170 deleted, links repointed; route casing, glow and shadow
       notes updated.
-- [ ] `docs/features/maps-bridges-over-water.md` and `docs/features/maps-water-lining.md`
+- [x] `docs/features/maps-bridges-over-water.md` and `docs/features/maps-water-lining.md`
       cite ADR 0070, linked, in place of "not yet in `docs/decisions/`".
-- [ ] `docs/features/ink-stroke-density-profile.md:8` cites `ink/compositing.py`, not
+- [x] `docs/features/ink-stroke-density-profile.md:8` cites `ink/compositing.py`, not
       `ink/pigment.py`.
-- [ ] The em and en dash grep is empty; slice gate green.
+- [x] The em and en dash grep is empty; slice gate green.
 
 ## S8: Mutation testing
 

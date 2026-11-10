@@ -30,8 +30,7 @@ library whose point is the look of pen and wash.
 - The distance field lives in `ink`, the contour tracing and the theme in `maps`, so the
   boundary rule holds.
 
-**Dependencies.** The glow primitive and its distance field (spec 009, ADR 0070, cited
-by the brief but not yet in `docs/decisions/` at the time of writing). The brush
+**Dependencies.** The glow primitive and its distance field (spec 009, [ADR 0070](../decisions/0070-line-effects-and-one-pigment-registry.md)). The brush
 registry from the same spec for the line's brush.
 
 **Open questions.**

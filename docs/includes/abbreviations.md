@@ -150,9 +150,9 @@
 
 *[base theme]: The theme an override theme's extends names; its values hold wherever the override is silent. default when extends is absent.
 
-*[colour alias]: A theme's or a palette's own name for a colour, standing for a pigment name or a hex; it names no other alias and no built-in pigment, and resolves to its hex when the theme loads.
+*[colour alias]: A theme's or a palette's own name for a pigment: a named pigment, or the anonymous pigment of a hex, its transparency with it. It names no other alias and no built-in pigment, and a colour field that names it takes that pigment's colour when the theme loads.
 
-*[colour aliases]: A theme's or a palette's own name for a colour, standing for a pigment name or a hex; it names no other alias and no built-in pigment, and resolves to its hex when the theme loads.
+*[colour aliases]: A theme's or a palette's own name for a pigment: a named pigment, or the anonymous pigment of a hex, its transparency with it. It names no other alias and no built-in pigment, and a colour field that names it takes that pigment's colour when the theme loads.
 
 *[palette]: A named, shareable set of colour aliases that a theme chooses with palette, by name like a theme; it imports from and exports to a GIMP .gpl file.
 
