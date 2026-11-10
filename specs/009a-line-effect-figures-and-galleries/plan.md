@@ -833,6 +833,15 @@ no worktrees are needed.
   | `halo` | `spread_px` 1.0, `blur_px` 2.5, `strength` 0.8 | `spread_px` 1.5, `blur_px` 3.0, `strength` 0.85 | lifts water and route toward the paper with no hard edge; at spread 2 and strength 0.9 it began to read as a screen glow, and a blur of 4 spread it into a smudge |
   | `lifted` | `offset_px` 1.2, `blur_px` 1.5, `strength` 0.35 | `offset_px` 2.5, `blur_px` 2.0, `strength` 0.45 | the provisional shadow was invisible at display size; 2.5 px falls south-east of the line as a soft edge, and a blur of 2 keeps it a soft lift, not a dark smear |
 
+  **Re-judged after PR 1's fix 8be0b017** (casing and glow leave every pixel at or past the
+  threshold untouched). The sweeps were repainted: the casing and glow sweeps and their masters
+  changed (a `paynes_grey` casing is now a brown road inside a dark ring, and a glow lifts round
+  the line without washing it out); the shadow and pen casing sweeps came out byte-identical. The
+  three presets were painted again on the Ambleside crop for the route, `road_major` and the
+  `major`, `medium` and `minor` water classes. `cased` reads as a thin paper ring, `halo` is a soft
+  pale margin with the line's own colour intact (the haze on rivers the old maths gave is gone) and
+  `lifted` a soft south-east edge. No value is retuned.
+
   `tests/unit/maps/test_line_effects.py::test_the_presets_hold_the_values_tuned_by_eye` pins
   them. No test pinned the provisional numbers, so no pin moved.
 - **New images are added in their slice; moved ones in G.** The registration test needs
