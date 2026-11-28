@@ -311,3 +311,89 @@ still unpacks `base, pool = ...cover_cfg...`, and `CoverStyle.pale_base` still f
 body (`:174`). These are theme keys, so renaming them would be a breaking theme change and
 is rightly out of scope. Say so in 0073's consequences, so the elegance pass does not
 "fix" them inside this PR.
+
+## Re-review (revision 2)
+
+Reviewer: the same plan reviewer. Read on `e56bcce1` (rebased on `38179789`), ty 0.0.100.
+The rebase changes only tooling (8 files: workflows, `pyproject.toml`, `uv.lock`). On the
+new toolchain the tree is still `ruff format` clean (813 files) and `ruff check` clean, so
+`ruff check --fix --select F401` can only remove imports the D7 drop leaves unused.
+
+### Verdict: PASS
+
+All four blocking findings are resolved, each with a concrete prescription that I
+checked against the code. The revision adds no blocking contradiction. Three small items
+remain. Fix them while implementing: none of them can make the end result wrong, and the
+gates would catch the first one.
+
+### The blocking findings
+
+1. **The codemod and the negative tests: resolved.**
+   - Codemod rule 1 means positional arguments only, so an existing keyword is never
+     touched.
+   - S2's "Order inside the slice" writes the three negative tests after the codemod,
+     in the same commit. The codemod never sees them (D11).
+   - S1's explicit side is `brush_from_id("MAJ6-e", 3.0, scale=1.0, style=BrushStyle())`,
+     by keyword, so it survives rule 1 and keeps proving that `style=None` means
+     `BrushStyle()`.
+   - Watching the negative tests fail on a worktree of S1's commit is sound: there each
+     positional call is still accepted, so each test fails with "DID NOT RAISE".
+2. **D7's fallout: resolved.**
+   - The F401 pass and the 14 named files are correct. I re-ran the AST scan: no file
+     under `src/` or `tests/` loses its last `BrushStyle` use.
+   - I read the `BrushStyle` mention in each of the 14 module docstrings. Thirteen
+     mention it only in the "Public names" sentence. `brush_stroke.py` also has the
+     `:3-5` sentence, which the plan rewords.
+   - The spec's callers criterion now lists exactly what may change beyond the calls,
+     and the "Reading the diff" list matches it.
+3. **`test_docs_signatures.py:76-77`: resolved.** S2 owns the file, and the file is in
+   "Files to touch" and in the partition.
+4. **The starred `Sheet` calls: resolved.** Rule 3 gives the exact rewrite for all four
+   sites, and rule 6 refuses any other starred or `**` form, loudly.
+
+The should-fix and consider findings (5 to 15) are applied. I checked the two that carry
+risk:
+- **The docs call check (finding 10).** I prototyped the check as specified on this base,
+  with the plain parse first and then the `def _():` wrap. It finds 30 positional target
+  calls across README, the how-to and the four tutorial pages, and skips no block that
+  contains a target call. So it is a real gate, not an empty grep.
+- **The ADR number (finding 7).** 0072 is
+  `docs/decisions/0072-preview-fixture-in-the-lynmouth-box.md` on
+  `origin/claude/lucid-shannon-v36myd` (spec 008a), so skipping it is correct.
+
+### Remaining items (none blocking)
+
+1. **[SHOULD-FIX] `brush_from_id`'s negative test must not carry `missing-argument`.**
+   - The plan says, under "Running the gates", that "a positional call to these
+     signatures is `# ty: ignore[too-many-positional-arguments, missing-argument]`
+     (measured)". `tasks.md` S2 prescribes those two codes for all three negative tests.
+   - That holds for `Sheet` and `wash`. It does not hold for
+     `brush_from_id("MAJ6-e", 3.0, 2.0)`: every keyword-only parameter there has a
+     default, so ty 0.0.100 reports only `too-many-positional-arguments`. I checked it
+     on a scratch file, and the two-code ignore then fails ty with
+     "`unused-ignore-comment`: Unused `ty: ignore` directive: 'missing-argument'".
+   - S2's own bullet hedges ("the ignore codes ty reports for it"), but the general
+     sentence and the task line do not.
+   - Fix: `# ty: ignore[too-many-positional-arguments]` for the `brush_from_id` case, in
+     the plan sentence and in `tasks.md`.
+2. **[SHOULD-FIX] S5 asks for a spelling-only proof that `brush_from_id` cannot pass.**
+   - S5's "Spelling-only" bullet says to show each of the five functions is
+     spelling-only by normalised `ast.dump` against the base. `brush_from_id`'s body
+     gains S1's `style = BrushStyle() if style is None else style`, so its dump differs
+     from `origin/main` whatever the normalisation.
+   - `brush_from_id` is mutated anyway, so this does not change the outcome. But an
+     agent told to "show it" will either stall or write a normaliser that hides a real
+     change.
+   - Fix: give the proof only for `wash`, `nib_brushes`, `_sheet` and `_backing_wash`,
+     and say that `brush_from_id` has a new line and is mutated with the recorded
+     equivalents as the check.
+3. **[CONSIDER] The S0 self-test's import path.**
+   - `grid_hashes.py:25` imports `from make_docs_images import fixture_options`, a bare
+     sibling import. It resolves under pytest only because `tests/golden/` has no
+     `__init__.py`, so prepend mode puts that directory on `sys.path`. Then
+     `make_docs_images` is loaded twice, under two names, beside the
+     `golden.make_docs_images` that `repaint.py:28` imports.
+   - Switching to `from golden.make_docs_images import fixture_options`, as `repaint.py`
+     does, works both from `test_output_hashes.py` and from the documented
+     `PYTHONPATH=tests uv run python tests/golden/output_hashes.py ...` command.
+   - S0 already owns the file, so this is a one-line change in that slice.

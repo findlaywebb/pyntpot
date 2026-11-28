@@ -254,3 +254,65 @@ spec and ADR 0073.
   `tempfile` in `src/` today.
 - **Budgets.** Every touched `src` file stays under 400. `test_nib.py` is 403 lines, but
   the line budget scans `src` only (`test_boundaries.py:41-54`).
+
+## Re-review (revision 2)
+
+Reviewer: the same plan reviewer. Measured on `e56bcce1` (rebased on `38179789`, which
+changes nothing under `src/` since `f6c8302a`), Pillow 13.0.0.
+
+### Verdict: PASS
+
+Finding 1, the blocking one, is resolved, and I re-measured it. Findings 2 to 9 are
+applied as prescribed. I found no new blocking contradiction or under-specified decision.
+The plan, spec and tasks agree with each other.
+
+### Finding 1 re-measured
+
+- **The shape.** `shrunk_rgba` is now
+  `rgba_image(...).convert("RGBa").resize(size, LANCZOS).convert("RGBA")` (plan S1,
+  `:155-162`; tasks S1). I replayed `draw_attribution` with it on the rebased tree: 0
+  pixels differ from today at scale 1.0 (factor 2), 2.0 and 3.0 (factor 1).
+- **The S1 pins hold.**
+  - The same-size plate `(200, 100, 50)` at alpha `3/255` reads `(170, 85, 85, 3)`.
+  - A 2x shrink equals `Image.fromarray(<uint8 RGBA>).resize(size, LANCZOS)`.
+- **The S3 cases hold.** With the prescribed `Setting("Keswick", 22.0, anchor=(8.0, 52.0))`
+  at seed 11, the ink spans columns 6 to 72 at `scale=1` and 8 to 70 at `scale=2`. The
+  corner `[0, 159]` is exactly the image's at both scales.
+- **The wording is corrected.** The caveat is in the spec's Problem section and the plan's
+  Approach. ADR 0073 rules 8 and 9 in 010's "ADR 0073 contents"
+  (`specs/010-.../plan.md:120-139`) now say the explicit premultiply is what makes the
+  attribution bit-identical at the card's own size.
+
+### Findings 2 to 9
+
+| # | What revision 2 does | Status |
+|---|---|---|
+| 2 | Recipe written out: grain `5.0 * 2`, zero and ramp darkness, corner `[0, 159]`. It also says never to drop the multiply. | Applied |
+| 3 | `references.md` is in S3's owned files, and `nib_rgba` cites `nib` and is listed. | Applied |
+| 4 | Lossless-only wording in the spec AC, the docstring and the test. | Applied |
+| 5 | The `fix`-line case is in `test_attribution.py`, which S4a now owns. | Applied |
+| 6 | S0 names the base commit, and S7 runs `--base "$BASE"`. | Applied |
+| 7 | The two real note-mention files are named, with a `git grep` gate. | Applied |
+| 8 | S1's decode test is reframed as calls-through. | Applied |
+| 9 | Round-trip AST check widened; all three builders use `key=KEY`; the key goes in `OUTSIDE_THE_HASH`; `groups` uses `is None`. | Applied |
+
+I confirmed on the base that the lossy-versus-default attribution case in finding 5 fails
+for the right reason. Drawing at scale 2.0 on a 1440 by 600 card gives different bytes
+today, so the test is a true red-first test. After S4a it passes, because the in-memory
+path never reads `plate_lossless`.
+
+### Remaining notes (non-blocking)
+
+- **[CONSIDER] How to build the lossy style for the S4a test.**
+  - `Style` is a frozen `pydantic.BaseModel` (`maps/style.py:93`), not a dataclass, so
+    `dataclasses.replace(style, ...)` raises `TypeError`.
+  - Build it as
+    `s.model_copy(update={"paper": dataclasses.replace(s.paper, plate_lossless=False)})`,
+    with `s = Style.default()`. `tests/support/basemaps.py:52` builds styles the same way.
+    I used exactly this to measure the base failure above.
+  - The plan's phrase "a style whose `paper` is `replace(style.paper, ...)`" is not wrong,
+    but naming `model_copy` saves the agent a detour.
+- **[CONSIDER] ADR 0072 cannot be checked from this tree.** The plan says "ADR 0073, not
+  0072: spec 008a holds 0072". No file on this branch names ADR 0072, including
+  `specs/008a-theme-preview-card/`. No test requires contiguous ADR numbers, so a gap is
+  harmless. If 008a does not take 0072, the gap stays, which is 010's concern.

@@ -309,7 +309,7 @@ Everything else is serial.
     writes no file, rather than one proxy for it. It fails on the base for
     `attribution.py`.
   - `tests/unit/maps/test_attribution.py`, a new case backing the Changelog's `fix` line.
-    A style whose `paper` is `replace(style.paper, plate_lossless=False)` draws the same
+    A style built as `style.model_copy(update={"paper": dataclasses.replace(style.paper, plate_lossless=False)})` (Style is a frozen pydantic model; see `tests/support/basemaps.py:52`) draws the same
     bytes as `Style.default()`, on a 1440 by 600 card at scale 2.0. It fails on the base,
     where the plate goes through a lossy file, and passes after. The existing cases stay
     unchanged.
