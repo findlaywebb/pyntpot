@@ -15,22 +15,22 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4, S5, S6, all
 
 ## S0: Baseline hashes
 
-- [ ] Red: `tests/golden/test_output_hashes.py` (a narrowed check ignores other stems,
+- [x] Red: `tests/golden/test_output_hashes.py` (a narrowed check ignores other stems,
       reports a missing or changed selected entry, refuses an unknown stem).
-- [ ] `git mv tests/golden/grid_hashes.py tests/golden/output_hashes.py`; every registered
+- [x] `git mv tests/golden/grid_hashes.py tests/golden/output_hashes.py`; every registered
       stem by default, `--stem` repeatable with plan S0's semantics;
       `git grep grid_hashes -- ':!specs'` empty. Commit 1.
-- [ ] On the untouched base: `record specs/010-blank-paper-and-keyword-arguments/output-hashes.json`.
+- [x] On the untouched base: `record specs/010-blank-paper-and-keyword-arguments/output-hashes.json`.
       Commit 2, alone, base commit and run time in the message.
-- [ ] `check` passes; slice gate green.
+- [x] `check` passes; slice gate green.
 
 ## S1: The additive half
 
-- [ ] Red: `Canvas.pixels` (equal, scale 1, identity, refuses 0); `paper_plate` default
+- [x] Red: `Canvas.pixels` (equal, scale 1, identity, refuses 0); `paper_plate` default
       (grid on: equal and differs at half width; grid off: equal only); `brush_from_id`
       defaults against `brush_from_id(id, w, scale=1.0, style=BrushStyle())`, written by
       keyword.
-- [ ] `Canvas.pixels`, `display_px=None`, `scale=1.0, style=None`; slice gate green.
+- [x] `Canvas.pixels`, `display_px=None`, `scale=1.0, style=None`; slice gate green.
 
 ## S2: The flip and the forced migration (one commit)
 

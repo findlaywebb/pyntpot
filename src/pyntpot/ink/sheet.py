@@ -13,6 +13,7 @@ canvas projects with north up.
 """
 
 from dataclasses import dataclass, field
+from typing import Self
 
 import numpy as np
 import numpy.typing as npt
@@ -61,6 +62,24 @@ class Canvas:
     y1: float
     w: int
     h: int
+
+    @classmethod
+    def pixels(cls, *, w: int, h: int) -> Self:
+        """A canvas that is only its pixel grid: one world unit per render pixel.
+
+        Args:
+            w: The grid's width, in render pixels.
+            h: The grid's height, in render pixels.
+
+        Returns:
+            `Canvas(0.0, 0.0, float(w), float(h), w, h)`, whose `scale` is 1.
+
+        Raises:
+            ValueError: When `w` or `h` is under 1.
+        """
+        if w < 1 or h < 1:
+            raise ValueError(f"a pixel canvas is at least 1 by 1, got w={w}, h={h}")
+        return cls(0.0, 0.0, float(w), float(h), w, h)
 
     @property
     def scale(self) -> float:

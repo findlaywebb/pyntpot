@@ -188,8 +188,8 @@ def brush_ids() -> tuple[str, ...]:
 def brush_from_id(
     brush_id: str,
     width_display_px: float,
-    scale: float,
-    style: BrushStyle,
+    scale: float = 1.0,
+    style: BrushStyle | None = None,
     override: str | None = None,
 ) -> tuple[Brush, str]:
     """One class's brush and ink colour, from a brush sheet id.
@@ -197,8 +197,9 @@ def brush_from_id(
     Args:
         brush_id: A cell on the brush sheet, `RIV1-a` or `TRK4-d`.
         width_display_px: The width this class is painted at on screen.
-        scale: Render pixels per display pixel.
-        style: The brush style, for the shared geometry and the overrides.
+        scale: Render pixels per display pixel; 1.0 paints at display size.
+        style: The brush style, for the shared geometry and the overrides; `None` is
+            `BrushStyle()`, the default look.
         override: Key into `style.brush_overrides`; None reads the id's prefix, lower case.
 
     Returns:
@@ -212,6 +213,7 @@ def brush_from_id(
         raise ValueError(f"no such brush {brush_id!r}{did_you_mean(brush_id, brush_ids())}")
     cls, rest = brush_id[:3], brush_id[3:]
     row, _, col = rest.partition("-")
+    style = BrushStyle() if style is None else style
     over = style.brush_overrides.get(override or cls.lower(), {})
     brush = _sheet_brush(row, over, width_display_px, scale, style)
     _load_reservoir(brush, style)

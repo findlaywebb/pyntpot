@@ -135,3 +135,19 @@ def test_brush_ids_is_the_cross_product_the_sheet_implies():
     assert ids[-1] == "TRK8-f"
     assert "MAJ6-e" in ids
     assert all(brush_id_known(brush_id) for brush_id in ids)
+
+
+class TestBrushFromIdDefaults:
+    """`brush_from_id` reads scale 1.0 and the default look when they are left out."""
+
+    def test_the_defaults_are_scale_one_and_the_default_style(self):
+        """Leaving out `scale` and `style` equals writing `scale=1.0, style=BrushStyle()`."""
+        bare = brush_from_id("MAJ6-e", 3.0)
+        explicit = brush_from_id("MAJ6-e", 3.0, scale=1.0, style=BrushStyle())
+        assert bare == explicit
+
+    def test_a_scale_other_than_one_still_changes_the_width(self):
+        """The scale default is not sticky: `scale=2.0` doubles the brush's width."""
+        wide, _ = brush_from_id("MAJ6-e", 3.0, scale=2.0)
+        narrow, _ = brush_from_id("MAJ6-e", 3.0)
+        assert wide.width == pytest.approx(2.0 * narrow.width)

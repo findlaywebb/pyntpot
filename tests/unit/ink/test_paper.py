@@ -166,3 +166,28 @@ class TestWarmEdge:
             clean = _big(PaperStyle(paper_foxing=0.0), gran_px)
             shares.append((np.abs(_big(PaperStyle(), gran_px) - clean).max(axis=2) > 0).mean())
         assert abs(shares[0] - shares[1]) < 0.001
+
+
+class TestDefaultDisplayWidth:
+    """`display_px=None` measures the grid against the canvas's own width."""
+
+    @staticmethod
+    def _plate(style: PaperStyle, display_px: int | None) -> np.ndarray:
+        """The paper of a 90 by 60 canvas on a fresh sheet, so every call draws the same fields."""
+        sheet = Sheet(h=60, w=90, gran_px=4.0, seed=11)
+        canvas = Canvas(0, 0, 90, 60, 90, 60)
+        if display_px is None:
+            return paper_plate(sheet, canvas, style)
+        return paper_plate(sheet, canvas, style, display_px)
+
+    def test_the_grid_defaults_to_the_canvas_width(self):
+        """With the grid on, the default equals `canvas.w` and differs from half of it."""
+        style = dataclasses.replace(PaperStyle(), grid=True)
+        default = self._plate(style, None)
+        assert np.array_equal(default, self._plate(style, 90))
+        assert not np.array_equal(default, self._plate(style, 45))
+
+    def test_without_a_grid_the_default_changes_nothing(self):
+        """With the grid off, the default equals the explicit `canvas.w` call."""
+        style = dataclasses.replace(PaperStyle(), grid=False)
+        assert np.array_equal(self._plate(style, None), self._plate(style, 90))

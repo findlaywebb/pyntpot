@@ -1,9 +1,10 @@
 """Tests for the sheet: what a fibre of zero leaves alone, and the paper carried up to a finer grid."""
 
 import numpy as np
+import pytest
 from PIL import Image
 
-from pyntpot.ink.sheet import Sheet
+from pyntpot.ink.sheet import Canvas, Sheet
 
 
 def test_a_sheet_with_no_fibre_is_the_sheet_it_always_was():
@@ -52,3 +53,28 @@ class TestPaperOnAFinerGrid:
         again = sheet._paper_on(60, 80)
         assert again is not first
         assert not again.any()
+
+
+class TestCanvasPixels:
+    """`Canvas.pixels` is a canvas that is only its pixel grid."""
+
+    def test_it_equals_the_canvas_built_by_hand(self):
+        """`Canvas.pixels(w=90, h=60)` is `Canvas(0, 0, 90, 60, 90, 60)`."""
+        assert Canvas.pixels(w=90, h=60) == Canvas(0, 0, 90, 60, 90, 60)
+
+    def test_one_world_unit_is_one_pixel(self):
+        """The scale is exactly 1 and `px` returns its points unchanged."""
+        canvas = Canvas.pixels(w=90, h=60)
+        assert canvas.scale == 1.0
+        points = np.array([[0.0, 0.0], [12.5, 30.0]])
+        assert np.array_equal(canvas.px(points), np.array([[0.0, 60.0], [12.5, 30.0]]))
+
+    @pytest.mark.parametrize(
+        ("w", "h"),
+        [(0, 60), (90, 0), (-1, 60)],
+        ids=["zero-width", "zero-height", "negative-width"],
+    )
+    def test_a_side_under_one_is_refused(self, w: int, h: int):
+        """A width or height under 1 raises ValueError."""
+        with pytest.raises(ValueError, match="at least 1"):
+            Canvas.pixels(w=w, h=h)
