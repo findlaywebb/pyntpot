@@ -548,3 +548,32 @@ last ulp of a libm.
   annotations' `landmarks` (see the landmark note above).
 - In the `__main__` block, `shutil.copytree` needs a destination that does not exist yet.
   Copy to `Path(tmp) / "cache"`, as `make_docs_images.py:47` does.
+
+## Re-review (revision 3)
+
+This is a short confirmation pass on revision 3 (`8650ba5c`), checking only that R1 and R2
+are resolved and that decisions 15 to 19 do not contradict decisions 1 to 14.
+
+### Verdict: PASS
+
+- **R1 is resolved.** Decision 15 puts `DISPLAY_PX = 600` and the style copy at the start of
+  `preview`, and has `main` pass `Style.from_theme(...)` unchanged. Decision 10 still says
+  `main` copies the style. The plan's header now states that decisions 15 to 19 override
+  decisions 10 and 11 where they disagree, so there is one rule.
+- **R2 is resolved.** Decision 16 takes the coast, island, `Foreland Point` and river mouth
+  geometry verbatim. It replaces the coast rows' placement rules in finding 5's table. It
+  runs finding 3's presence assertions on the y-fenni style as well as on `Style()`.
+  - These agree with decision 2: every listed feature is within 350 m of the track box, and
+    the coast runs to the fetch-box edge.
+  - They agree with decision 6: the riverside and stream stretches lie south of the coast,
+    and every track point is at least 300 m from it.
+- **Decisions 17 to 19 introduce no new contradiction.**
+  - `test_make_preview.py` is again shared, P1 then P2 (P2 adds the `NOTE_POINT` check).
+    The slices are serial and each half is named, so this is acceptable.
+
+Two editorial notes, neither blocking:
+- The test plan's "Features meet each other" row still names only `Style()`. Decision 16
+  adds the y-fenni style.
+- Decision 10 says the fixture README records `NOTE_POINT`. The README is written in P1,
+  before the example exists, so it should record the riverside stretch's index range, and
+  P2 picks `NOTE_POINT` inside that range.
