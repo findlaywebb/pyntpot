@@ -54,5 +54,6 @@ def plate_brushes(
         "track": style.brush_width_px["track"],
     }
     return {
-        key: brush_from_id(style.brushes[key], widths[key], scale, style, key) for key in widths
+        key: brush_from_id(style.brushes[key], widths[key], scale=scale, style=style, override=key)
+        for key in widths
     }

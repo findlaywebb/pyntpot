@@ -28,9 +28,9 @@ or `Hand` again.
    paper's noise. A pen brush `stamp`s your own points as a line:
 
    ```python
-   density = wash(mask, sheet, 0.6, 0.3)
+   density = wash(mask, sheet, body=0.6, pool=0.3)
 
-   brush, ink_hex = brush_from_id("MAJ6-e", 3.0, 1.0, BrushStyle())
+   brush, ink_hex = brush_from_id("MAJ6-e", 3.0)
    acc = np.zeros((H, W), np.float32)
    stamp(acc, line, brush, np.random.default_rng(SEED))
    line_density = ink_density(acc, brush, sheet)

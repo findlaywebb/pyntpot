@@ -137,14 +137,14 @@ def _paint_rose(
     points: np.ndarray, sheet: Sheet, size: int, rng: np.random.Generator
 ) -> list[PigmentLayer]:
     """Return the rose's layers: a wash for each petal, then one brush stroke round each."""
-    wet, _ = brush_from_id("RIV2-a", 14.0 * size / SIZE, 1.0, BrushStyle())
+    wet, _ = brush_from_id("RIV2-a", 14.0 * size / SIZE)
     petals = np.zeros((size, size), np.float32)
     strokes = np.zeros((size, size), np.float32)
     yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
     for i in range(5):
         petal = _petal(points, i)
         drift = rng.normal(0.0, 0.006 * size, 2)
-        body = wash(_cover(petal + drift, size), sheet, rng.uniform(0.3, 0.5), 0.45)
+        body = wash(_cover(petal + drift, size), sheet, body=rng.uniform(0.3, 0.5), pool=0.45)
         reach = np.hypot(*(petal - size / 2).T).max()
         deepen = 1.45 - 0.9 * np.hypot(xx - size / 2, yy - size / 2) / reach
         body = np.clip(body * deepen, 0.0, 1.0)
@@ -176,10 +176,14 @@ def _paint_spirograph(
 ) -> list[PigmentLayer]:
     """Return the spirograph's layers: a pale wash for each loop, then one long stroke that changes colour as it runs drier."""
     layers: list[PigmentLayer] = [
-        (wash(_cover(loop, size), sheet, 0.2, 0.3), rgb(PAINTERS_PIGMENTS["cerulean"]), 0.22)
+        (
+            wash(_cover(loop, size), sheet, body=0.2, pool=0.3),
+            rgb(PAINTERS_PIGMENTS["cerulean"]),
+            0.22,
+        )
         for loop in _loops(points, 9, 222)
     ]
-    brush, _ = brush_from_id("TRK3-a", 6.0 * size / SIZE, 1.0, BrushStyle())
+    brush, _ = brush_from_id("TRK3-a", 6.0 * size / SIZE)
     pieces = np.array_split(np.arange(len(points)), 16)
     for idx in pieces:
         t0, t1 = idx[0] / len(points), (idx[-1] + 1) / len(points)
@@ -209,7 +213,7 @@ ink colour the brush came with.
 <!-- from examples/curves.py -->
 
 ```python
-        brush, ink_hex = brush_from_id("MAJ6-e", nib_px * size / SIZE + 1.0, 1.0, BrushStyle())
+        brush, ink_hex = brush_from_id("MAJ6-e", nib_px * size / SIZE + 1.0)
         acc = np.zeros((size, size), np.float32)
         stamp(acc, points, brush, rng)
         out = composite([(ink_density(acc, brush, sheet), rgb(ink_hex))], paper, style)

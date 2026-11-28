@@ -187,7 +187,7 @@ def _hills(scene: _Scene, rng: np.random.Generator) -> tuple[list[Layer], np.nda
     layers: list[Layer] = []
     for ridge, (key, crest, gran) in zip(ridges, looks, strict=True):
         cover = ((yy >= ridge[None, :]) & (yy < shore + 2) & scene.inside).astype(np.float32)
-        dens = wash(cover, scene.sheet, crest, 0.25)
+        dens = wash(cover, scene.sheet, body=crest, pool=0.25)
         mist = 0.62 + 0.38 * np.exp(-np.clip(yy - ridge[None, :], 0, None) / (0.14 * h))
         grain = np.clip((scene.sheet.gran - 0.5) * 2.4, -0.7, 1.0)
         dens = np.clip(dens * mist * (1.0 + gran * 0.5 * grain), 0, 1).astype(np.float32)
@@ -200,7 +200,9 @@ def _sky(scene: _Scene, far: np.ndarray) -> Layer:
     top, yy = 0.07 * scene.h, scene.yy
     cover = ((yy < far[None, :] + 4) & (yy > top) & scene.inside).astype(np.float32)
     grade = np.clip((yy - top) / (far[None, :] - top + 1), 0, 1) ** 1.4
-    return (wash(cover, scene.sheet, 0.5, 0.1) * grade).astype(np.float32), rgb(PIGMENTS["sand"])
+    return (wash(cover, scene.sheet, body=0.5, pool=0.1) * grade).astype(np.float32), rgb(
+        PIGMENTS["sand"]
+    )
 
 
 def _trees(scene: _Scene, rng: np.random.Generator) -> Layer:
@@ -211,7 +213,7 @@ def _trees(scene: _Scene, rng: np.random.Generator) -> Layer:
     left = _blobs(rng, grid, (margin, 0.30 * w, shore + 0.02 * h, 0.03 * h, 11))
     right = _blobs(rng, grid, (0.78 * w, w - margin, shore + 0.02 * h, 0.03 * h, 9))
     cover = ((island | left | right) & scene.inside).astype(np.float32)
-    dens = wash(cover, scene.sheet, 0.95, 0.35)
+    dens = wash(cover, scene.sheet, body=0.95, pool=0.35)
     dens = dens * (1.0 + 0.6 * np.clip((scene.sheet.gran - 0.5) * 2.4, -0.7, 1.0))
     return np.clip(dens, 0, 1).astype(np.float32), rgb(PIGMENTS["wood"])
 
@@ -223,7 +225,11 @@ def _lake(scene: _Scene, rng: np.random.Generator, sources: list[Layer]) -> list
     lake = ((yy >= shore) & (yy < lake_end + wobble[None, :]) & scene.inside).astype(np.float32)
     streak = _streaks(rng, h, w, max(w // 90, 3))
     depth = np.clip((yy - shore) / (lake_end - shore), 0, 1)
-    water = wash(lake, scene.sheet, 0.66, 0.20) * (0.8 + 0.4 * streak) * (1.0 - 0.4 * depth**2)
+    water = (
+        wash(lake, scene.sheet, body=0.66, pool=0.20)
+        * (0.8 + 0.4 * streak)
+        * (1.0 - 0.4 * depth**2)
+    )
     layers: list[Layer] = [(np.clip(water, 0, 1).astype(np.float32), rgb(PIGMENTS["water"]))]
 
     ripple = 2.2 * (w / 720) * np.sin(np.arange(h) * 0.9) + rng.normal(0, 0.6, h)
@@ -274,7 +280,7 @@ def main(out_dir: Path, size: int = 720) -> Path:
     w, h = size, size * 2 // 3
     gran_px = max(size / 120, 2.0)
     rng = np.random.default_rng(SEED)
-    sheet = Sheet(h, w, gran_px, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=gran_px, seed=SEED)
     canvas = Canvas(0, 0, w, h, w, h)
     paper = paper_plate(sheet, canvas, PaperStyle(), w)
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)

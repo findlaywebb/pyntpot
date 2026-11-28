@@ -30,7 +30,7 @@ casings are white, so they are the paper's own colour.
 paper; `layout(figure)` returns the cells' settings and the names.
 
 Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `casing`, `glow`, `pigment`, `Colour`,
-`PigmentLayer`, `Sheet`, `PaperStyle`, `BrushStyle`, `brush_from_id`, `stamp`, `ink_density`,
+`PigmentLayer`, `Sheet`, `PaperStyle`, `brush_from_id`, `stamp`, `ink_density`,
 `wash`, `composite`, `rgb` and `save_image`; and `LABELS`, `SUPERSAMPLE`, `GridSpec`,
 `grid_paper`, `label_grid`, `on_paper`, `reduce`, `scaled_boxes` and `sweep_grid` from
 `labelled_grid.py`. It introduces none.
@@ -59,7 +59,6 @@ from labelled_grid import (
 )
 
 from pyntpot.ink import (
-    BrushStyle,
     Casing,
     Colour,
     Glow,
@@ -163,7 +162,9 @@ def _paper(figure: str) -> np.ndarray:
     A cell paints over its own crop of it.
     """
     big = SUPERSAMPLE
-    return grid_paper(Sheet(_spec(figure).height * big, WIDTH_PX * big, GRAN_PX * big, SEED))
+    return grid_paper(
+        Sheet(w=WIDTH_PX * big, h=_spec(figure).height * big, gran_px=GRAN_PX * big, seed=SEED)
+    )
 
 
 def _line(points: tuple[tuple[float, float], ...], n: int = 80) -> np.ndarray:
@@ -176,7 +177,7 @@ def _line(points: tuple[tuple[float, float], ...], n: int = 80) -> np.ndarray:
 
 def _stroke(brush_id: str, width_px: float, line: np.ndarray, sheet: Sheet, seed: int) -> Stroke:
     """A brush id's stroke along `line`: its density and its ink as RGB."""
-    brush, ink = brush_from_id(brush_id, width_px, 1.0, BrushStyle())
+    brush, ink = brush_from_id(brush_id, width_px)
     acc = np.zeros((sheet.h, sheet.w), np.float32)
     stamp(acc, line, brush, np.random.default_rng(seed))
     return Stroke(ink_density(acc, brush, sheet), rgb(ink))
@@ -194,7 +195,7 @@ def _washed(sheet: Sheet, *layers: tuple[str, float, float]) -> np.ndarray:
         cover = np.broadcast_to((xx >= lo).astype(np.float32), (sheet.h, sheet.w))
         pig = pigment(name)
         km = PaperStyle().km_transparency if pig.transparency is None else pig.transparency
-        stack.append((wash(cover, sheet, body, 0.0), rgb(pig.colour), km))
+        stack.append((wash(cover, sheet, body=body, pool=0.0), rgb(pig.colour), km))
     return composite(stack, np.ones((sheet.h, sheet.w, 3), np.float32), PaperStyle())
 
 
@@ -207,7 +208,7 @@ def _glaze_or_rgb(effect: str, how: str, at: tuple[int, int]) -> np.ndarray:
     """One cell of the glaze-or-rgb grid: `effect` laid under a stroke as a `how`."""
     big = SUPERSAMPLE
     w, h = _spec("glaze-or-rgb").cell_w * big, CELL_H["glaze-or-rgb"] * big
-    sheet = Sheet(h, w, GRAN_PX * big, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX * big, seed=SEED)
     line = _line(((10 * big, h * 0.6), (w / 2, h * 0.2), (w - 10 * big, h * 0.6)))
     wide = effect == "casing"
     width = (6.0 if wide else 4.0) * big
@@ -238,7 +239,7 @@ def _roads() -> tuple[Stroke, Stroke, Stroke, np.ndarray]:
     """
     big = SUPERSAMPLE
     w, h = _spec("draw-order").cell_w * big, CELL_H["draw-order"] * big
-    sheet = Sheet(h, w, GRAN_PX * big, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX * big, seed=SEED)
     edge, road = 6 * big, 6.0 * big
     river = _stroke(
         "RIV1-a",

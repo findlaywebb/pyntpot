@@ -20,7 +20,7 @@ arrays are shared between callers, who must not change them. It holds the seed, 
 size and the pen tint's strength the sweeps share.
 
 Public names it uses: from `pyntpot.ink`, `Colour`, `pigment`, `PigmentLayer`, `Sheet`,
-`PaperStyle`, `BrushStyle`, `brush_from_id`, `stamp`, `ink_density`, `wash`, `composite` and
+`PaperStyle`, `brush_from_id`, `stamp`, `ink_density`, `wash`, `composite` and
 `rgb`. It introduces none.
 """
 
@@ -30,7 +30,6 @@ from functools import cache
 import numpy as np
 
 from pyntpot.ink import (
-    BrushStyle,
     Colour,
     PaperStyle,
     PigmentLayer,
@@ -76,7 +75,7 @@ def _brushed(
     brush_id: str, width_px: float, sheet: Sheet, scale: int
 ) -> tuple[np.ndarray, np.ndarray]:
     """A brush id's stroke along the curve, `width_px * scale` wide: its density and its ink."""
-    brush, ink = brush_from_id(brush_id, width_px * scale, 1.0, BrushStyle())
+    brush, ink = brush_from_id(brush_id, width_px * scale)
     acc = np.zeros((sheet.h, sheet.w), np.float32)
     stamp(acc, _curve(sheet.w, sheet.h, scale), brush, np.random.default_rng(SEED))
     return ink_density(acc, brush, sheet), rgb(ink)
@@ -93,7 +92,7 @@ def _washed(sheet: Sheet, *layers: tuple[str, float, float, float]) -> np.ndarra
         cover = np.broadcast_to(((xx >= lo) & (xx <= hi)).astype(np.float32), (sheet.h, sheet.w))
         pig = pigment(name)
         km = PaperStyle().km_transparency if pig.transparency is None else pig.transparency
-        stack.append((wash(cover, sheet, body, 0.0), rgb(pig.colour), km))
+        stack.append((wash(cover, sheet, body=body, pool=0.0), rgb(pig.colour), km))
     return composite(stack, np.ones((sheet.h, sheet.w, 3), np.float32), PaperStyle())
 
 
@@ -112,7 +111,7 @@ def scene(figure: str, w: int, h: int, scale: int = 1) -> Scene:
 
     Callers must not change the arrays.
     """
-    sheet = Sheet(h, w, GRAN_PX * scale, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX * scale, seed=SEED)
     if figure in ("casing", "reserve"):
         base = _washed(
             sheet, ("farmland", 0.0, 0.6, 0.8), ("wood", 0.4, 1.0, 0.9), ("wood", 0.5, 1.0, 0.9)

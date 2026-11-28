@@ -62,7 +62,7 @@ Here is the whole of `main`:
 ```python
 def main(out_dir: Path) -> Path:
     """Paint the paper, write it into `out_dir` as `paper.png` and return that path."""
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
     path = out_dir / "paper.png"
@@ -132,13 +132,13 @@ INFO:__main__:wrote out/wash.png
 ```python
 def main(out_dir: Path) -> Path:
     """Lay a disc of water over the paper, write it into `out_dir` as `wash.png` and return that path."""
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
     yy, xx = np.mgrid[0:H, 0:W]
     disc = ((xx - W / 2) ** 2 + (yy - H / 2) ** 2 <= (0.3 * min(W, H)) ** 2).astype(np.float32)
-    density = wash(disc, sheet, 0.6, 0.3)
+    density = wash(disc, sheet, body=0.6, pool=0.3)
 
     out = composite([(density, rgb(PIGMENTS["water"]))], paper, PaperStyle())
     path = out_dir / "wash.png"
@@ -179,9 +179,9 @@ def _wash_grid() -> np.ndarray:
     for r, seed in enumerate(seeds):
         for c, body in enumerate(bodies):
             x, y, w, ch = boxes[r][c]
-            sheet = Sheet(ch, w, GRAN_PX, seed)
+            sheet = Sheet(w=w, h=ch, gran_px=GRAN_PX, seed=seed)
             paper = paper_plate(sheet, Canvas(0, 0, w, ch, w, ch), PaperStyle(sheet_seed=seed), w)
-            density = wash(_disc(w, ch, w / 2, ch / 2, 0.36 * ch), sheet, body, 0.5)
+            density = wash(_disc(w, ch, w / 2, ch / 2, 0.36 * ch), sheet, body=body, pool=0.5)
             out[y : y + ch, x : x + w] = composite(
                 [(density, rgb(PIGMENTS["water"]))], paper, PaperStyle()
             )
@@ -217,7 +217,7 @@ def _stroke(
     brush_id: str, width_px: float, line: np.ndarray, sheet: Sheet
 ) -> tuple[np.ndarray, str]:
     """Stamp one stroke of a brush sheet cell along a line; return its density and ink hex."""
-    brush, ink_hex = brush_from_id(brush_id, width_px, 1.0, BrushStyle())
+    brush, ink_hex = brush_from_id(brush_id, width_px)
     acc = np.zeros((H, W), np.float32)
     stamp(acc, line, brush, np.random.default_rng(SEED))
     return ink_density(acc, brush, sheet), ink_hex
@@ -225,7 +225,7 @@ def _stroke(
 
 def main(out_dir: Path) -> Path:
     """Paint a wet and a dry stroke on the paper, write `brush_stroke.png` into `out_dir` and return its path."""
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
@@ -268,13 +268,13 @@ def _brush_grid() -> np.ndarray:
     """Paint four brushes across, each at three widths down, on one sheet of paper."""
     brushes, widths = ("RIV1-a", "MAJ3-b", "TRK4-d", "MAJ7-e"), (3.0, 6.0, 12.0)
     boxes, h = _layout(len(brushes), len(widths), 80, 92, 46)
-    sheet = Sheet(h, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=h, gran_px=GRAN_PX, seed=SEED)
     out = paper_plate(sheet, Canvas(0, 0, W, h, W, h), PaperStyle(paper_foxing=0.0), W)
     t = np.linspace(0.0, 1.0, 120)
     for r, width in enumerate(widths):
         for c, brush_id in enumerate(brushes):
             x, y, w, ch = boxes[r][c]
-            brush, ink_hex = brush_from_id(brush_id, width, 1.0, BrushStyle())
+            brush, ink_hex = brush_from_id(brush_id, width)
             acc = np.zeros((h, W), np.float32)
             wave = y + ch / 2 + 0.26 * ch * np.sin(2 * np.pi * t)
             stamp(
@@ -325,13 +325,13 @@ def _disc(centre_x: float) -> np.ndarray:
 
 def main(out_dir: Path) -> Path:
     """Composite two overlapping washes both ways, write `pigments.png` into `out_dir` and return its path."""
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
     layers: list[PigmentLayer] = [
         (
-            wash(_disc(centre_x), sheet, 0.6, 0.3),
+            wash(_disc(centre_x), sheet, body=0.6, pool=0.3),
             rgb(PAINTERS_PIGMENTS[key]),
             PAINTERS_TRANSPARENCY[key],
         )
@@ -377,14 +377,14 @@ def _pigment_grid() -> np.ndarray:
         ("burnt_sienna", "cerulean"),
     )
     boxes, h = _layout(len(pairs), 2, 150, 92, 46)
-    sheet = Sheet(h, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=h, gran_px=GRAN_PX, seed=SEED)
     out = paper_plate(sheet, Canvas(0, 0, W, h, W, h), PaperStyle(paper_foxing=0.0), W)
     for r, glazed in enumerate((False, True)):
         for c, pair in enumerate(pairs):
             x, y, w, ch = boxes[r][c]
             layers: list[PigmentLayer] = [
                 (
-                    wash(_disc(W, h, x + w * cx, y + ch / 2, 0.36 * ch), sheet, 0.7, 0.4),
+                    wash(_disc(W, h, x + w * cx, y + ch / 2, 0.36 * ch), sheet, body=0.7, pool=0.4),
                     rgb(PAINTERS_PIGMENTS[key]),
                     PAINTERS_TRANSPARENCY[key],
                 )
@@ -421,7 +421,7 @@ INFO:__main__:wrote out/nib_line.png
 ```python
 def main(out_dir: Path) -> Path:
     """Draw a spiral with a pen nib, write `nib_line.png` into `out_dir` and return its path."""
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
@@ -429,7 +429,7 @@ def main(out_dir: Path) -> Path:
     radius = 0.42 * min(W, H) * (0.1 + 0.9 * theta / theta[-1])
     line = np.column_stack([W / 2 + radius * np.cos(theta), H / 2 + radius * np.sin(theta)])
 
-    brush, ink_hex = brush_from_id("MAJ6-e", 3.0, 1.0, BrushStyle())
+    brush, ink_hex = brush_from_id("MAJ6-e", 3.0)
     acc = np.zeros((H, W), np.float32)
     stamp(acc, line, brush, np.random.default_rng(SEED))
     density = ink_density(acc, brush, sheet)
@@ -524,7 +524,7 @@ def main(out_dir: Path) -> Path:
         RuntimeError: When the hand wrote no marks, so there is no plate to lay.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
@@ -628,7 +628,7 @@ def main(out_dir: Path) -> Path:
         RuntimeError: When the hand wrote no marks, so there is no plate to lay.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 

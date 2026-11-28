@@ -54,7 +54,7 @@ def test_the_foxing_on_a_card_sheet_is_a_few_small_specks(job):
     style, canvas, grain = job.style.paper, job.canvas, job.sheet.gran_px
 
     def plate(**over: float) -> np.ndarray:
-        sheet = Sheet(canvas.h, canvas.w, grain, style.sheet_seed)
+        sheet = Sheet(w=canvas.w, h=canvas.h, gran_px=grain, seed=style.sheet_seed)
         return paper_plate(sheet, canvas, dataclasses.replace(style, **over), canvas.w)
 
     hit = np.abs(plate() - plate(paper_foxing=0.0)).max(axis=2) > 0

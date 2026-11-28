@@ -30,7 +30,7 @@ Source: `multiply-compositing` in [references](references.md).
 
 ## The body: an edge that gives way, a tone that drifts
 
-`wash(cover, sheet, base, pool, options)` takes the coverage mask and returns a density;
+`wash(cover, sheet, body, pool, options)` takes the coverage mask and returns a density;
 `options`, a `WashOptions`, from `pyntpot.ink`, is optional, and this page leaves it out.
 With `pool` at 0 it lays the body alone, and already the disc is a different thing. The
 mask is blurred, then cut against two scales of noise from the sheet, so the edge is soft

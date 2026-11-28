@@ -28,7 +28,7 @@ line, down to the shore:
 <!-- from examples/derwentwater.py -->
 ```python
         cover = ((yy >= ridge[None, :]) & (yy < shore + 2) & scene.inside).astype(np.float32)
-        dens = wash(cover, scene.sheet, crest, 0.25)
+        dens = wash(cover, scene.sheet, body=crest, pool=0.25)
 ```
 
 `scene.inside` is the picture less its side margins, so no wash reaches the left or right edge.

@@ -25,7 +25,7 @@ of the picture.
 
 Public names: nothing new. From `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`,
 `paper_plate`, `wash`, `PIGMENTS`, `TRANSPARENCY`, `PAINTERS_PIGMENTS`,
-`PAINTERS_TRANSPARENCY`, `rgb`, `composite`, `BrushStyle`, `brush_from_id`, `stamp`,
+`PAINTERS_TRANSPARENCY`, `rgb`, `composite`, `brush_from_id`, `stamp`,
 `ink_density` and `save_image`.
 
 It writes one file: `svg_drawing.png` for `painting`, `svg_drawing-<figure>.png` for the
@@ -53,7 +53,6 @@ from pyntpot.ink import (
     PAINTERS_TRANSPARENCY,
     PIGMENTS,
     TRANSPARENCY,
-    BrushStyle,
     Canvas,
     PaperStyle,
     PigmentLayer,
@@ -237,7 +236,7 @@ def _washes(
         pigment = _nearest(shape.fill)
         layers.append(
             (
-                wash(cover, sheet, WASH_BODY, WASH_POOL),
+                wash(cover, sheet, body=WASH_BODY, pool=WASH_POOL),
                 rgb(_COLOURS[pigment]),
                 _TRANSPARENCY[pigment],
             )
@@ -255,9 +254,7 @@ def _inks(
     for shape in shapes:
         if shape.stroke == "none":
             continue
-        brush, _ = brush_from_id(
-            PENS[shape.pen], shape.width * fit[0] * PEN_SHARE, 1.0, BrushStyle()
-        )
+        brush, _ = brush_from_id(PENS[shape.pen], shape.width * fit[0] * PEN_SHARE)
         acc = np.zeros((h, w), np.float32)
         for loop in shape.loops:
             stamp(acc, _points(loop, fit), brush, rng)
@@ -294,7 +291,7 @@ def main(out_dir: Path, figure: str = "painting", size: int = 720) -> Path:
     if figure == "flat":
         out = _flat(shapes, fit, h, w)
     else:
-        sheet = Sheet(h, w, max(size / 120, 2.0), SEED)
+        sheet = Sheet(w=w, h=h, gran_px=max(size / 120, 2.0), seed=SEED)
         style = PaperStyle(km_glazing=True)
         paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), style, w)
         layers = _washes(shapes, fit, sheet, h, w) if figure != "ink" else []

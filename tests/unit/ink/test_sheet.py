@@ -9,9 +9,9 @@ from pyntpot.ink.sheet import Canvas, Sheet
 
 def test_a_sheet_with_no_fibre_is_the_sheet_it_always_was():
     """The fibre draws last, so the five fields and the stream after them hold."""
-    plain = Sheet(60, 90, gran_px=6.0, seed=4)
-    same = Sheet(60, 90, gran_px=6.0, seed=4, fibre=0.0)
-    laid = Sheet(60, 90, gran_px=6.0, seed=4, fibre=0.35)
+    plain = Sheet(w=90, h=60, gran_px=6.0, seed=4)
+    same = Sheet(w=90, h=60, gran_px=6.0, seed=4, fibre=0.0)
+    laid = Sheet(w=90, h=60, gran_px=6.0, seed=4, fibre=0.35)
     for name in ("paper", "coarse", "fine", "wet", "gran"):
         assert np.array_equal(getattr(plain, name), getattr(same, name))
         if name != "paper":
@@ -31,7 +31,7 @@ class TestPaperOnAFinerGrid:
 
     def test_it_is_the_bilinear_grow_and_is_made_once(self):
         """The same grid gives the same read-only array, equal to a fresh grow."""
-        sheet = Sheet(30, 40, gran_px=6.0, seed=4)
+        sheet = Sheet(w=40, h=30, gran_px=6.0, seed=4)
         first = sheet._paper_on(90, 120)
         assert sheet._paper_on(90, 120) is first
         assert not first.flags.writeable
@@ -39,7 +39,7 @@ class TestPaperOnAFinerGrid:
 
     def test_each_grid_gets_its_own(self):
         """A second grid is grown for itself, not handed the first."""
-        sheet = Sheet(30, 40, gran_px=6.0, seed=4)
+        sheet = Sheet(w=40, h=30, gran_px=6.0, seed=4)
         twice, thrice = sheet._paper_on(60, 80), sheet._paper_on(90, 120)
         assert twice.shape == (60, 80)
         assert thrice.shape == (90, 120)
@@ -47,7 +47,7 @@ class TestPaperOnAFinerGrid:
 
     def test_a_replaced_paper_is_grown_afresh(self):
         """A sheet given another paper array grows that one, not the copy kept from the first."""
-        sheet = Sheet(30, 40, gran_px=6.0, seed=4)
+        sheet = Sheet(w=40, h=30, gran_px=6.0, seed=4)
         first = sheet._paper_on(60, 80)
         sheet.paper = np.zeros_like(sheet.paper)
         again = sheet._paper_on(60, 80)
@@ -78,3 +78,25 @@ class TestCanvasPixels:
         """A width or height under 1 raises ValueError."""
         with pytest.raises(ValueError, match="at least 1"):
             Canvas.pixels(w=w, h=h)
+
+
+class TestSheetTakesKeywords:
+    """`Sheet` is keyword-only, width first, and the order of the keywords does not matter."""
+
+    def test_a_positional_call_is_refused(self):
+        """`Sheet(240, 360, 8.0, 11)` raises TypeError."""
+        with pytest.raises(TypeError):
+            Sheet(240, 360, 8.0, 11)  # ty: ignore[too-many-positional-arguments, missing-argument]
+
+    def test_the_five_fields_are_height_by_width(self):
+        """Each field of `Sheet(w=360, h=240, ...)` has shape `(240, 360)`."""
+        sheet = Sheet(w=360, h=240, gran_px=8.0, seed=11)
+        for name in ("paper", "coarse", "fine", "wet", "gran"):
+            assert getattr(sheet, name).shape == (240, 360)
+
+    def test_keyword_order_cannot_matter(self):
+        """`Sheet(h=240, w=360, ...)` gives the same five arrays, bit for bit."""
+        width_first = Sheet(w=360, h=240, gran_px=8.0, seed=11)
+        height_first = Sheet(h=240, w=360, seed=11, gran_px=8.0)
+        for name in ("paper", "coarse", "fine", "wet", "gran"):
+            assert np.array_equal(getattr(width_first, name), getattr(height_first, name))

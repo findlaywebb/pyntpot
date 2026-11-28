@@ -99,12 +99,12 @@ def main(out_dir: Path) -> Path:
         RuntimeError: When the hand wrote no marks, so there is no plate to lay.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
     layers: list[PigmentLayer] = [
-        (wash(_disc(cx, cy, r), sheet, 0.6, 0.3), rgb(PIGMENTS[key]), TRANSPARENCY[key])
+        (wash(_disc(cx, cy, r), sheet, body=0.6, pool=0.3), rgb(PIGMENTS[key]), TRANSPARENCY[key])
         for key, cx, cy, r in (
             ("water", 0.5 * W, 0.5 * H, 0.46 * H),
             ("wood", 0.79 * W, 0.57 * H, 0.17 * H),

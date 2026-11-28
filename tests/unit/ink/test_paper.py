@@ -14,7 +14,9 @@ from support.paths import CLASSIC_PLATE
 
 def _paper(style: PaperStyle, display_px: int = 90) -> np.ndarray:
     """The paper plate of a 90 by 60 canvas, painted on a fresh sheet."""
-    return paper_plate(Sheet(60, 90, 4.0, 11), Canvas(0, 0, 90, 60, 90, 60), style, display_px)
+    return paper_plate(
+        Sheet(w=90, h=60, gran_px=4.0, seed=11), Canvas(0, 0, 90, 60, 90, 60), style, display_px
+    )
 
 
 class TestPaperPlate:
@@ -65,7 +67,7 @@ def _classic() -> PaperStyle:
 
 def _big(style: PaperStyle, gran_px: float = 3.0) -> np.ndarray:
     """The paper plate of a 360 by 240 canvas on a fresh sheet."""
-    sheet = Sheet(240, 360, gran_px, 11)
+    sheet = Sheet(w=360, h=240, gran_px=gran_px, seed=11)
     return paper_plate(sheet, Canvas(0, 0, 360, 240, 360, 240), style, 360)
 
 
@@ -113,7 +115,7 @@ class TestClassicEdge:
         """After either edge the sheet's next noise draw is the same field."""
         after = []
         for edge in ("classic", "warm"):
-            sheet = Sheet(60, 90, 4.0, 11)
+            sheet = Sheet(w=90, h=60, gran_px=4.0, seed=11)
             paper_plate(sheet, Canvas(0, 0, 90, 60, 90, 60), PaperStyle(paper_edge=edge), 90)
             after.append(sheet.noise(26.0, 2))
         assert np.array_equal(after[0], after[1])

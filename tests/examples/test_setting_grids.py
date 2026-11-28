@@ -97,8 +97,8 @@ class TestDryness:
     def test_the_override_key_reaches_the_brush(self):
         """With `override="major"` the swept dryness is the brush's; without it the id's own prefix is read."""
         style = BrushStyle(brush_overrides={"major": {"dry": 0.9}})
-        swept, _ = brush_from_id("MAJ2-c", 12.0, 1.0, style, override="major")
-        unread, _ = brush_from_id("MAJ2-c", 12.0, 1.0, style)
+        swept, _ = brush_from_id("MAJ2-c", 12.0, style=style, override="major")
+        unread, _ = brush_from_id("MAJ2-c", 12.0, style=style)
         assert swept.dry == 0.9
         assert unread.dry != 0.9
 

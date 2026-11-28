@@ -17,7 +17,7 @@ wet brush, and `ink_density` turns it into a darker green. Each dab draws from a
 its own, so a last-digit difference on another platform can change one dab and no other.
 
 Public names it uses, all from `pyntpot.ink`: `Sheet`, `Canvas`, `PaperStyle`, `paper_plate`,
-`wash`, `PIGMENTS`, `TRANSPARENCY`, `rgb`, `composite`, `brush_from_id`, `BrushStyle`, `stamp`,
+`wash`, `PIGMENTS`, `TRANSPARENCY`, `rgb`, `composite`, `brush_from_id`, `stamp`,
 `ink_density` and `save_image`.
 
 Run it with `uv run python examples/fern.py out/`; it writes `out/fern.png`. It takes
@@ -34,7 +34,6 @@ from PIL import Image, ImageFilter
 from pyntpot.ink import (
     PIGMENTS,
     TRANSPARENCY,
-    BrushStyle,
     Canvas,
     PaperStyle,
     PigmentLayer,
@@ -113,7 +112,7 @@ def _thicken(cover: np.ndarray, px: int) -> np.ndarray:
 def _dabs(points: np.ndarray, w: int, h: int, scale: float, sheet: Sheet, seed: int) -> np.ndarray:
     """Dab a wet brush at up to `MAX_DABS` sampled points, each a short stroke leaning up the frond."""
     rng = np.random.default_rng(seed)
-    brush, _ = brush_from_id("RIV1-a", 2.0 * scale, 1.0, BrushStyle())
+    brush, _ = brush_from_id("RIV1-a", 2.0 * scale)
     pick = points[rng.choice(len(points), size=min(MAX_DABS, len(points)), replace=False)]
     acc = np.zeros((h, w), np.float32)
     for i, (x, y, _) in enumerate(pick):
@@ -130,7 +129,7 @@ def main(out_dir: Path, size: int = SIZE, seed: int = SEED) -> Path:
     """Iterate the fern, wash it in two greens, write `fern.png` into `out_dir` and return its path."""
     w, h = size, size * 4 // 3
     scale = size / SIZE
-    sheet = Sheet(h, w, GRAN_PX * scale, seed)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX * scale, seed=seed)
     canvas = Canvas(0, 0, w, h, w, h)
     style = PaperStyle(km_glazing=True, paper_foxing=0.03)
     paper = paper_plate(sheet, canvas, style, w)
@@ -140,12 +139,12 @@ def main(out_dir: Path, size: int = SIZE, seed: int = SEED) -> Path:
     leaflets = points[points[:, 2] >= LEFT_LEAFLET]
     layers: list[PigmentLayer] = [
         (
-            wash(_thicken(_cover(_count(leaflets, w, h), 1.0), 1), sheet, 0.55, 0.25),
+            wash(_thicken(_cover(_count(leaflets, w, h), 1.0), 1), sheet, body=0.55, pool=0.25),
             rgb(PIGMENTS["scrub"]),
             TRANSPARENCY["scrub"],
         ),
         (
-            wash(_thicken(_cover(_count(frond, w, h), 1.0), 1), sheet, 0.75, 0.3),
+            wash(_thicken(_cover(_count(frond, w, h), 1.0), 1), sheet, body=0.75, pool=0.3),
             rgb(PIGMENTS["wood"]),
             TRANSPARENCY["wood"],
         ),

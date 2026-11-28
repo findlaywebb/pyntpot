@@ -8,7 +8,7 @@ from pyntpot.ink.sheet import Sheet
 
 def two_squares(h: int = 200, w: int = 320) -> tuple[Sheet, np.ndarray, np.ndarray]:
     """Two land classes meeting along a seam, on a sheet, for the wash tests."""
-    sheet = Sheet(h, w, gran_px=8.0, seed=5)
+    sheet = Sheet(w=w, h=h, gran_px=8.0, seed=5)
     left = np.zeros((h, w), np.float32)
     left[40:160, 40:160] = 1.0
     right = np.zeros((h, w), np.float32)

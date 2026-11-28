@@ -34,8 +34,8 @@ def padded(
     """One straight stroke's density, through the pad the painter uses."""
     h, length = 44, 1500
     style = flags_off(BrushStyle, **style_over)
-    brush, _ = brush_from_id(brush_id, width_px, 2.0, style, over)
-    sheet = Sheet(h, length, gran_px=9.0, seed=sheet_seed)
+    brush, _ = brush_from_id(brush_id, width_px, scale=2.0, style=style, override=over)
+    sheet = Sheet(w=length, h=h, gran_px=9.0, seed=sheet_seed)
     pts = np.stack([np.linspace(20.0, length - 20.0, 900), np.full(900, h / 2)], axis=1)
     pad = InkPad((h, length), brush, style)
     pad.lay([(brush, pts)], seed)
@@ -119,11 +119,11 @@ def test_a_road_split_into_ways_is_one_mark_again():
     whole = np.stack([np.linspace(20.0, w - 20.0, 901), np.full(901, h / 2)], axis=1)
     pieces = [whole[i * 150 : (i + 1) * 150 + 1] for i in range(6)]
     assert len(chain_lines(pieces, 2.5)) == 1
-    sheet = Sheet(h, w, gran_px=9.0, seed=11)
+    sheet = Sheet(w=w, h=h, gran_px=9.0, seed=11)
 
     def lay(lines: list[np.ndarray], **style_over: object) -> np.ndarray:
         style = flags_off(BrushStyle, **style_over)
-        brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
+        brush, _ = brush_from_id("MAJ2-a", 3.6, scale=2.0, style=style, override="road_major")
         pad = InkPad((h, w), brush, style)
         pad.lay([(brush, line) for line in lines], 91)
         return pad.read(brush, sheet).sum(axis=0)[60:-60]
@@ -163,11 +163,11 @@ def test_a_finer_grid_converges_on_the_mark_the_brush_describes():
     h, w = 90, 500
     t = np.linspace(20.0, w - 20.0, 900)
     pts = np.stack([t, 8.0 + t / 7.0], axis=1)  # a shallow diagonal: the worst case
-    sheet = Sheet(h, w, gran_px=9.0, seed=11)
+    sheet = Sheet(w=w, h=h, gran_px=9.0, seed=11)
 
     def at(ss: int) -> np.ndarray:
         style = BrushStyle(ink_ss=ss)
-        brush, _ = brush_from_id("MAJ6-e", 3.0, 2.0, style, "route")
+        brush, _ = brush_from_id("MAJ6-e", 3.0, scale=2.0, style=style, override="route")
         pad = InkPad((h, w), brush, style)
         assert pad.acc.shape == (h * ss, w * ss)
         pad.lay([(brush, pts)], 91)
@@ -192,13 +192,13 @@ def test_a_finer_grid_lays_the_mark_where_the_plate_grid_does():
     left of where the plate's own grid lays it: a third of a pixel at `ink_ss` 3.
     """
     h, w = 40, 300
-    sheet = Sheet(h, w, gran_px=9.0, seed=11)
+    sheet = Sheet(w=w, h=h, gran_px=9.0, seed=11)
     pts = np.stack([np.linspace(20.0, w - 20.0, 400), np.full(400, 20.0)], axis=1)
 
     def mean_row(ss: int) -> float:
         """The density-weighted mean row of the stroke painted at one grid factor."""
         style = BrushStyle(ink_ss=ss)
-        brush, _ = brush_from_id("MAJ6-e", 3.0, 2.0, style, "route")
+        brush, _ = brush_from_id("MAJ6-e", 3.0, scale=2.0, style=style, override="route")
         pad = InkPad((h, w), brush, style)
         pad.lay([(brush, pts)], 91)
         dens = pad.read(brush, sheet).astype(np.float64)
@@ -241,9 +241,9 @@ class TestDensityOnlyWhereLaid:
 
     def _density(self, dry: float, pap: np.ndarray) -> tuple[np.ndarray, float]:
         """The density `ink_density` gives with bleed off, and the brush's threshold."""
-        brush, _ = brush_from_id("MAJ6-e", 3.0, 2.0, BrushStyle(), "route")
+        brush, _ = brush_from_id("MAJ6-e", 3.0, scale=2.0, override="route")
         brush = replace(brush, dry=dry)
-        sheet = Sheet(self.H, self.W, gran_px=9.0, seed=11)
+        sheet = Sheet(w=self.W, h=self.H, gran_px=9.0, seed=11)
         return ink_density(self._laid(), brush, sheet, None, pap, bleed=False), brush.thr
 
     def test_an_unlaid_pixel_is_plus_zero_and_a_laid_one_is_the_full_grid_value(self):

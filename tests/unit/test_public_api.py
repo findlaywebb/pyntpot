@@ -169,8 +169,8 @@ def test_version_is_a_dotted_release() -> None:
 
 
 def test_sheet_constructs_from_the_top_level() -> None:
-    """`pyntpot.Sheet(64, 64, 8.0)` constructs a sheet."""
-    assert pyntpot.Sheet(64, 64, 8.0) is not None
+    """`pyntpot.Sheet(w=64, h=64, gran_px=8.0)` constructs a sheet."""
+    assert pyntpot.Sheet(w=64, h=64, gran_px=8.0) is not None
 
 
 @pytest.mark.parametrize("module", LAYERS, ids=["ink", "letters", "maps"])

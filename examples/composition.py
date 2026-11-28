@@ -81,9 +81,9 @@ def _wash_and_stroke(sheet: Sheet) -> tuple[np.ndarray, np.ndarray, str]:
     """Return a water wash's density over a disc, one wet brush stroke's density and its colour."""
     yy, xx = np.mgrid[0:H, 0:W]
     disc = ((xx - W / 2) ** 2 + (yy - 0.46 * H) ** 2 <= (0.36 * min(W, H)) ** 2).astype(np.float32)
-    wash_density = wash(disc, sheet, 0.6, 0.3)
+    wash_density = wash(disc, sheet, body=0.6, pool=0.3)
 
-    brush, _ = brush_from_id("RIV1-a", 6.0, 1.0, BrushStyle())
+    brush, _ = brush_from_id("RIV1-a", 6.0)
     acc = np.zeros((H, W), np.float32)
     x = np.linspace(0.1 * W, 0.9 * W, 200)
     line = np.column_stack([x, 0.74 * H + 0.04 * H * np.sin(2 * np.pi * x / W)])
@@ -105,7 +105,7 @@ def main(out_dir: Path) -> Path:
         RuntimeError: When the hand wrote no marks, so there is no plate to lay.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 

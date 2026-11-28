@@ -150,7 +150,7 @@ def _presets(
     cell_h = round(cells[0].height * cell_w / cells[0].width)
     spec = GridSpec(GRID_W, ACROSS, len(CELLS) // ACROSS, cell_h, LEFT, TOP, GAP, PAD, PAD)
     boxes = spec.boxes()
-    sheet = Sheet(spec.height, GRID_W, 6.0, SEED)
+    sheet = Sheet(w=GRID_W, h=spec.height, gran_px=6.0, seed=SEED)
     grid = grid_paper(sheet)
     flat = [box for row in boxes for box in row]
     for (x, y, _, _), cell in zip(flat, cells, strict=True):

@@ -40,7 +40,7 @@ between 0.4 and 1.6, where it hardly shows, so the grid runs it on to 8.
 *Painted by `examples/setting_grids.py` (figure dryness). The labels read 0.1, 0.4, 0.7 and 0.9 across, and load 0.5, 3 and 8 down. The values are the `dry` and `load` of `brush_overrides["major"]`.*
 
 The sweep sets the values in `brush_overrides["major"]` and reads them with
-`brush_from_id("MAJ2-c", 12, 1.0, style, override="major")`. Without `override=` the id's own
+`brush_from_id("MAJ2-c", 12, style=style, override="major")`. Without `override=` the id's own
 prefix, `maj`, is looked up, and the setting does nothing.
 
 ## Ink colours

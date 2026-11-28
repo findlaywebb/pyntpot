@@ -54,7 +54,7 @@ def blot(
 
     The pen is `width` render pixels wide with the given pool and gain, on a 201 by 221 plate.
     """
-    brush, _ = brush_from_id("MAJ1-e", 3.0, 2.0, flags_off(BrushStyle))
+    brush, _ = brush_from_id("MAJ1-e", 3.0, scale=2.0, style=flags_off(BrushStyle))
     brush = dataclasses.replace(brush, width=width, pool=pool, pool_gain=gain)
     marks = []
     for b in (brush, dataclasses.replace(brush, pool=0.0)):

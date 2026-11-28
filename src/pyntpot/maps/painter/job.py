@@ -87,8 +87,8 @@ class PaintJob:
         rw, rh = card.render
         paper = style.paper
         sheet = Sheet(
-            rh,
-            rw,
+            w=rw,
+            h=rh,
             gran_px=max(basemap.layers.gran_m / card.mpp, 3.0),
             seed=paper.sheet_seed,
             fibre=paper.paper_fibre_mix if paper.paper_fibre else 0.0,

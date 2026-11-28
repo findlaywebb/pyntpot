@@ -24,7 +24,7 @@ def repro_pen(pen_reservoir: float = 22.0, pen_starve: bool = True) -> Brush:
         pen_thin=1.0,
         ink_dip_mult=1.4,
     )
-    pen, _ = brush_from_id("MAJ6-e", 5.0, 1.0, style)
+    pen, _ = brush_from_id("MAJ6-e", 5.0, style=style)
     return pen
 
 
@@ -82,7 +82,7 @@ def dry_run(pen_starve: bool = True) -> tuple[np.ndarray, Brush]:
     pts = np.stack([np.linspace(20.0, length - 20.0, 500), np.full(500, h / 2)], axis=1)
     acc = np.zeros((h, length), np.float32)
     stamp(acc, pts, pen, np.random.default_rng(3))
-    ink = ink_density(acc, pen, Sheet(h, length, gran_px=6.0, seed=1)).sum(axis=0)
+    ink = ink_density(acc, pen, Sheet(w=length, h=h, gran_px=6.0, seed=1)).sum(axis=0)
     return np.convolve(ink, np.ones(3) / 3, mode="same")[40:640], pen
 
 

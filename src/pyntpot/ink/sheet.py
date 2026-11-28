@@ -104,16 +104,17 @@ class Canvas:
         return out
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Sheet:
     """The paper's own noise fields, shared by every wash and every mark.
 
     The fields are made once, in `__post_init__`, and are not edited in place after it:
     the paper carried up to an ink pad's finer grid is kept per grid on that promise.
+    Every field is passed by keyword.
 
     Attributes:
-        h: The sheet's height, in render pixels.
         w: The sheet's width, in render pixels.
+        h: The sheet's height, in render pixels.
         gran_px: The cell of the granulation field, in render pixels.
         seed: The seed the five fields are drawn from.
         fibre: Cold press. Above 0 a second noise field, stretched along one sheet-wide axis, is
@@ -131,8 +132,8 @@ class Sheet:
         gran: Granulation noise at `gran_px`.
     """
 
-    h: int
     w: int
+    h: int
     gran_px: float
     seed: int = 11
     fibre: float = 0.0

@@ -98,8 +98,8 @@ class TestDecoupled:
         """Lengthening one stroke, so it draws more, leaves the stroke laid after it as it was."""
         h, w = 90, 400
         style = flags_off(BrushStyle)
-        brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
-        sheet = Sheet(h, w, gran_px=9.0, seed=11)
+        brush, _ = brush_from_id("MAJ2-a", 3.6, scale=2.0, style=style, override="road_major")
+        sheet = Sheet(w=w, h=h, gran_px=9.0, seed=11)
 
         def laid(first: np.ndarray) -> np.ndarray:
             pad = InkPad((h, w), brush, style)
@@ -124,7 +124,7 @@ class TestDecoupled:
     def test_an_edge_that_moves_moves_no_bloom_far_from_it(self):
         """Trimming one far edge of a wash leaves the blooms across the rest of it as they were."""
         h, w = 260, 400
-        sheet = Sheet(h, w, gran_px=8.0, seed=5)
+        sheet = Sheet(w=w, h=h, gran_px=8.0, seed=5)
         a = np.zeros((h, w), np.float32)
         a[20:240, 20:380] = 1.0
         trimmed = a.copy()
@@ -148,7 +148,7 @@ class TestDecoupled:
         a thousandth, where a resized or reseated bloom differs by tenths.
         """
         h, w = 300, 460
-        sheet = Sheet(h, w, gran_px=8.0, seed=5)
+        sheet = Sheet(w=w, h=h, gran_px=8.0, seed=5)
         cover = np.zeros((h, w), np.float32)
         cover[30:270, 30:430] = 1.0
         trimmed = cover.copy()
@@ -156,7 +156,7 @@ class TestDecoupled:
 
         def lay(c: np.ndarray, blooms: Blooms | None):
             options = WashOptions(flow=Flow(exp=0.125, ref_frac=0.02, frac=0.38), blooms=blooms)
-            return wash(c, sheet, 0.52, 0.20, options)
+            return wash(c, sheet, body=0.52, pool=0.20, options=options)
 
         blooms = Blooms(seed=3, count=6, radius_frac=0.17, lift=0.45, warp=0.45)
         before = lay(cover, blooms) - lay(cover, None)
@@ -173,7 +173,7 @@ class TestPadStreams:
         """The pad lays a stroke as `stamp` does from the seed, the stroke's key and a count of 0."""
         h, w = 60, 300
         style = BrushStyle(ink_ss=1, ink_starve=True)
-        brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
+        brush, _ = brush_from_id("MAJ2-a", 3.6, scale=2.0, style=style, override="road_major")
         line = line_at(30.0, 20.0, 280.0)
         pad = InkPad((h, w), brush, style)
         pad.lay([(brush, line)], 91)
@@ -189,7 +189,7 @@ class TestPadStreams:
         """The same stroke laid twice in one call is told apart from itself by its count."""
         h, w = 60, 300
         style = flags_off(BrushStyle, ink_ss=1)
-        brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
+        brush, _ = brush_from_id("MAJ2-a", 3.6, scale=2.0, style=style, override="road_major")
         line = line_at(30.0, 20.0, 280.0)
         pad = InkPad((h, w), brush, style)
         pad.lay([(brush, line), (brush, line)], 91)
@@ -201,7 +201,7 @@ class TestPadStreams:
     def test_profiles_must_match_the_strokes(self):
         """A width profile list shorter than the strokes is refused, not silently cut."""
         style = BrushStyle(ink_ss=1)
-        brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
+        brush, _ = brush_from_id("MAJ2-a", 3.6, scale=2.0, style=style, override="road_major")
         pad = InkPad((60, 300), brush, style)
         with pytest.raises(ValueError, match="shorter"):
             pad.lay(
@@ -214,8 +214,8 @@ class TestPadStreams:
         """With joining on, ways are grouped by brush, so each is stamped with its own."""
         h, w = 60, 300
         style = flags_off(BrushStyle, ink_ss=1, ink_joins=True)
-        wide, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
-        fine, _ = brush_from_id("MAJ2-a", 1.2, 2.0, style, "road_major")
+        wide, _ = brush_from_id("MAJ2-a", 3.6, scale=2.0, style=style, override="road_major")
+        fine, _ = brush_from_id("MAJ2-a", 1.2, scale=2.0, style=style, override="road_major")
         first, second = line_at(15.0, 20.0, 280.0), line_at(45.0, 20.0, 280.0)
         pad = InkPad((h, w), wide, style)
         pad.lay([(wide, first), (fine, second)], 91)
@@ -229,7 +229,7 @@ class TestPadStreams:
         """Two ways meeting end to end are one stroke at a pixel's tolerance and two at none."""
         h, w = 60, 300
         style = flags_off(BrushStyle, ink_ss=1, ink_joins=True, ink_join_tol_px=tol)
-        brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
+        brush, _ = brush_from_id("MAJ2-a", 3.6, scale=2.0, style=style, override="road_major")
         left, right = line_at(30.0, 20.0, 150.0, 120), line_at(30.0, 150.0, 280.0, 120)
         pad = InkPad((h, w), brush, style)
         pad.lay([(brush, left), (brush, right)], 91)

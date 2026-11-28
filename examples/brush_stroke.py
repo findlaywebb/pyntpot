@@ -1,13 +1,13 @@
 """Rung 3 of the tutorial: two brush strokes, one wet and one dry.
 
 A brush comes from a cell of the brush sheet: `brush_from_id` reads an id such as
-`RIV1-a` (a wet river brush) or `TRK4-d` (a dry track brush) with the `BrushStyle`
-defaults, and returns the brush and its ink colour as hex. `stamp` lays one stroke's
+`RIV1-a` (a wet river brush) or `TRK4-d` (a dry track brush) with the default brush style,
+and returns the brush and its ink colour as hex. `stamp` lays one stroke's
 bristles along a path into an accumulator, and `ink_density` turns that accumulator into
 ink density on the paper's tooth. Each stroke is composited over the paper in the
 colour its brush came with.
 
-Public names it introduces: `BrushStyle`, `brush_from_id`, `stamp` and `ink_density`,
+Public names it introduces: `brush_from_id`, `stamp` and `ink_density`,
 beside the earlier rungs' `Sheet`, `Canvas`, `PaperStyle`, `paper_plate`, `rgb`,
 `composite` and `save_image`, all from `pyntpot.ink`.
 
@@ -22,7 +22,6 @@ from pathlib import Path
 import numpy as np
 
 from pyntpot.ink import (
-    BrushStyle,
     Canvas,
     PaperStyle,
     Sheet,
@@ -49,7 +48,7 @@ def _stroke(
     brush_id: str, width_px: float, line: np.ndarray, sheet: Sheet
 ) -> tuple[np.ndarray, str]:
     """Stamp one stroke of a brush sheet cell along a line; return its density and ink hex."""
-    brush, ink_hex = brush_from_id(brush_id, width_px, 1.0, BrushStyle())
+    brush, ink_hex = brush_from_id(brush_id, width_px)
     acc = np.zeros((H, W), np.float32)
     stamp(acc, line, brush, np.random.default_rng(SEED))
     return ink_density(acc, brush, sheet), ink_hex
@@ -57,7 +56,7 @@ def _stroke(
 
 def main(out_dir: Path) -> Path:
     """Paint a wet and a dry stroke on the paper, write `brush_stroke.png` into `out_dir` and return its path."""
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 

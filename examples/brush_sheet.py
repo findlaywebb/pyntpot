@@ -17,7 +17,7 @@ private to `pyntpot.ink`; `tests/docs/test_reference_pages.py` checks it against
 those tables.
 
 Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `paper_plate`,
-`BrushStyle`, `brush_from_id`, `stamp`, `ink_density`, `rgb`, `composite` and `save_image`; for
+`brush_from_id`, `stamp`, `ink_density`, `rgb`, `composite` and `save_image`; for
 the grid's lettering, from `pyntpot.letters`, `Setting`; and `GridSpec`, `LabelStyle` and
 `label_grid` from the sibling `labelled_grid.py`, which lays out the cells and letters the names.
 
@@ -33,7 +33,6 @@ import numpy as np
 from labelled_grid import GridSpec, LabelStyle, label_grid
 
 from pyntpot.ink import (
-    BrushStyle,
     Canvas,
     Colour,
     PaperStyle,
@@ -110,12 +109,12 @@ def _sheet(out_dir: Path) -> Path:
     """Stroke every brush id on the paper, write `brush_sheet.png` into `out_dir` and return its path."""
     rows = len(BRUSH_IDS) // COLUMNS
     w, h = 2 * MARGIN + COLUMNS * CELL_W, 2 * MARGIN + rows * CELL_H
-    sheet = Sheet(h, w, GRAN_PX, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX, seed=SEED)
     paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
 
     by_ink: dict[str, np.ndarray] = {}
     for index, brush_id in enumerate(BRUSH_IDS):
-        brush, ink_hex = brush_from_id(brush_id, STROKE_PX, 1.0, BrushStyle())
+        brush, ink_hex = brush_from_id(brush_id, STROKE_PX)
         acc = np.zeros((h, w), np.float32)
         line = _cell_line(*divmod(index, COLUMNS))
         stamp(acc, line, brush, np.random.default_rng(SEED + index))
@@ -136,7 +135,7 @@ def _grid(out_dir: Path) -> Path:
     )
     cell_w, h = spec.cell_w, spec.height
     boxes = spec.boxes()
-    sheet = Sheet(h, GRID_W, GRAN_PX, SEED)
+    sheet = Sheet(w=GRID_W, h=h, gran_px=GRAN_PX, seed=SEED)
     paper = paper_plate(
         sheet, Canvas(0, 0, GRID_W, h, GRID_W, h), PaperStyle(paper_foxing=0.0), GRID_W
     )
@@ -144,7 +143,7 @@ def _grid(out_dir: Path) -> Path:
     by_ink: dict[str, np.ndarray] = {}
     for r, width in enumerate(GRID_WIDTHS):
         for c in range(COLUMNS):
-            brush, ink_hex = brush_from_id(GRID_INK.format(row=c + 1), width, 1.0, BrushStyle())
+            brush, ink_hex = brush_from_id(GRID_INK.format(row=c + 1), width)
             x0 = boxes[r][c][0] + 8
             y0 = boxes[r][c][1] + GRID_CELL_H / 2
             t = np.linspace(0.0, 1.0, 80)

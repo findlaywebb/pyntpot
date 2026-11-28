@@ -17,7 +17,7 @@ The grids, in the order of the rungs:
 - `lettering`: "Keswick" written by nine hand seeds, three by three.
 - `composition`: three hand seeds across, the name's backing wash off and on down.
 
-Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `BrushStyle`,
+Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`,
 `paper_plate`, `wash`, `PIGMENTS`, `PAINTERS_PIGMENTS`, `PAINTERS_TRANSPARENCY`, `rgb`,
 `composite`, `brush_from_id`, `stamp`, `ink_density`, `PigmentLayer` and `save_image`; from
 `pyntpot.letters`, `Setting` and `NibStyle`; and `GridSpec`, `LabelStyle`, `label_grid` and
@@ -41,7 +41,6 @@ from pyntpot.ink import (
     PAINTERS_PIGMENTS,
     PAINTERS_TRANSPARENCY,
     PIGMENTS,
-    BrushStyle,
     Canvas,
     Colour,
     PaperStyle,
@@ -92,7 +91,7 @@ def _layout(cols: int, rows: int, cell_h: int, left: int, top: int) -> tuple[lis
 
 def _paper(w: int, h: int, style: PaperStyle | None = None, seed: int = SEED) -> np.ndarray:
     """Paint a piece of paper `w` by `h` pixels."""
-    sheet = Sheet(h, w, GRAN_PX, seed)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX, seed=seed)
     return paper_plate(sheet, Canvas(0, 0, w, h, w, h), style or PaperStyle(paper_foxing=0.0), w)
 
 
@@ -160,9 +159,9 @@ def _wash_grid() -> np.ndarray:
     for r, seed in enumerate(seeds):
         for c, body in enumerate(bodies):
             x, y, w, ch = boxes[r][c]
-            sheet = Sheet(ch, w, GRAN_PX, seed)
+            sheet = Sheet(w=w, h=ch, gran_px=GRAN_PX, seed=seed)
             paper = paper_plate(sheet, Canvas(0, 0, w, ch, w, ch), PaperStyle(sheet_seed=seed), w)
-            density = wash(_disc(w, ch, w / 2, ch / 2, 0.36 * ch), sheet, body, 0.5)
+            density = wash(_disc(w, ch, w / 2, ch / 2, 0.36 * ch), sheet, body=body, pool=0.5)
             out[y : y + ch, x : x + w] = composite(
                 [(density, rgb(PIGMENTS["water"]))], paper, PaperStyle()
             )
@@ -173,13 +172,13 @@ def _brush_grid() -> np.ndarray:
     """Paint four brushes across, each at three widths down, on one sheet of paper."""
     brushes, widths = ("RIV1-a", "MAJ3-b", "TRK4-d", "MAJ7-e"), (3.0, 6.0, 12.0)
     boxes, h = _layout(len(brushes), len(widths), 80, 92, 46)
-    sheet = Sheet(h, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=h, gran_px=GRAN_PX, seed=SEED)
     out = paper_plate(sheet, Canvas(0, 0, W, h, W, h), PaperStyle(paper_foxing=0.0), W)
     t = np.linspace(0.0, 1.0, 120)
     for r, width in enumerate(widths):
         for c, brush_id in enumerate(brushes):
             x, y, w, ch = boxes[r][c]
-            brush, ink_hex = brush_from_id(brush_id, width, 1.0, BrushStyle())
+            brush, ink_hex = brush_from_id(brush_id, width)
             acc = np.zeros((h, W), np.float32)
             wave = y + ch / 2 + 0.26 * ch * np.sin(2 * np.pi * t)
             stamp(
@@ -201,14 +200,14 @@ def _pigment_grid() -> np.ndarray:
         ("burnt_sienna", "cerulean"),
     )
     boxes, h = _layout(len(pairs), 2, 150, 92, 46)
-    sheet = Sheet(h, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=h, gran_px=GRAN_PX, seed=SEED)
     out = paper_plate(sheet, Canvas(0, 0, W, h, W, h), PaperStyle(paper_foxing=0.0), W)
     for r, glazed in enumerate((False, True)):
         for c, pair in enumerate(pairs):
             x, y, w, ch = boxes[r][c]
             layers: list[PigmentLayer] = [
                 (
-                    wash(_disc(W, h, x + w * cx, y + ch / 2, 0.36 * ch), sheet, 0.7, 0.4),
+                    wash(_disc(W, h, x + w * cx, y + ch / 2, 0.36 * ch), sheet, body=0.7, pool=0.4),
                     rgb(PAINTERS_PIGMENTS[key]),
                     PAINTERS_TRANSPARENCY[key],
                 )
@@ -249,10 +248,10 @@ def _lettering_grid() -> np.ndarray:
 
 def _composition_cell(w: int, h: int, seed: int, *, backing: bool) -> np.ndarray:
     """Paint a wash, a wet stroke and the name over them in one cell, and return the cell."""
-    sheet = Sheet(h, w, GRAN_PX, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX, seed=SEED)
     paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
-    density = wash(_disc(w, h, w / 2, 0.46 * h, 0.36 * h), sheet, 0.9, 0.3)
-    brush, stroke_hex = brush_from_id("RIV1-a", 4.0, 1.0, BrushStyle())
+    density = wash(_disc(w, h, w / 2, 0.46 * h, 0.36 * h), sheet, body=0.9, pool=0.3)
+    brush, stroke_hex = brush_from_id("RIV1-a", 4.0)
     acc = np.zeros((h, w), np.float32)
     x = np.linspace(0.08 * w, 0.92 * w, 160)
     wave = 0.82 * h + 0.05 * h * np.sin(2 * np.pi * x / w)

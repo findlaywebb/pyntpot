@@ -188,6 +188,7 @@ def brush_ids() -> tuple[str, ...]:
 def brush_from_id(
     brush_id: str,
     width_display_px: float,
+    *,
     scale: float = 1.0,
     style: BrushStyle | None = None,
     override: str | None = None,

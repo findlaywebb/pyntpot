@@ -6,7 +6,7 @@ sequence is the brush stroke's: `stamp` the line into an accumulator, `ink_densi
 on the paper's tooth, and `composite` it over the paper in the ink colour the brush came
 with.
 
-Public names it uses: `BrushStyle`, `brush_from_id`, `stamp`, `ink_density`, `Sheet`,
+Public names it uses: `brush_from_id`, `stamp`, `ink_density`, `Sheet`,
 `Canvas`, `PaperStyle`, `paper_plate`, `rgb`, `composite` and `save_image`, all from
 `pyntpot.ink`; it introduces none beyond the brush stroke's.
 
@@ -20,7 +20,6 @@ from pathlib import Path
 import numpy as np
 
 from pyntpot.ink import (
-    BrushStyle,
     Canvas,
     PaperStyle,
     Sheet,
@@ -47,7 +46,7 @@ TURNS = 3
 
 def main(out_dir: Path) -> Path:
     """Draw a spiral with a pen nib, write `nib_line.png` into `out_dir` and return its path."""
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
@@ -55,7 +54,7 @@ def main(out_dir: Path) -> Path:
     radius = 0.42 * min(W, H) * (0.1 + 0.9 * theta / theta[-1])
     line = np.column_stack([W / 2 + radius * np.cos(theta), H / 2 + radius * np.sin(theta)])
 
-    brush, ink_hex = brush_from_id("MAJ6-e", 3.0, 1.0, BrushStyle())
+    brush, ink_hex = brush_from_id("MAJ6-e", 3.0)
     acc = np.zeros((H, W), np.float32)
     stamp(acc, line, brush, np.random.default_rng(SEED))
     density = ink_density(acc, brush, sheet)

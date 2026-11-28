@@ -34,24 +34,24 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4, S5, S6, all
 
 ## S2: The flip and the forced migration (one commit)
 
-- [ ] `Sheet` `kw_only`, `w` before `h`, `Attributes:` reordered; `wash(*, body, pool,
+- [x] `Sheet` `kw_only`, `w` before `h`, `Attributes:` reordered; `wash(*, body, pool,
       options)`; `brush_from_id(*, scale, style, override)`.
-- [ ] Scratch codemod over `src`, `tests`, `examples` by plan S2's six rules: positional
+- [x] Scratch codemod over `src`, `tests`, `examples` by plan S2's six rules: positional
       arguments only, never an existing keyword; the starred-`Sheet` rule for the four
       named calls; loud refusal of any other starred or `**` form; drop positional literal
       `1.0` scale and bare `BrushStyle()` style. Then `ruff format`.
-- [ ] `ruff check --fix --select F401 src tests examples` (only `BrushStyle` in the 14
+- [x] `ruff check --fix --select F401 src tests examples` (only `BrushStyle` in the 14
       files); `BrushStyle` out of those 14 module docstrings and `brush_stroke.py:3-5`
       reworded; tutorial blocks re-copied.
-- [ ] `test_docs_signatures.py:76-77` read `body`; `test_public_api.py:172` docstring;
+- [x] `test_docs_signatures.py:76-77` read `body`; `test_public_api.py:172` docstring;
       `test_benchmark_inputs.py` flags a benchmark `brush_from_id` with no `style=` (red
       first on a scratch call).
-- [ ] Markdown by hand: README, the four tutorial pages re-quoted, the how-to, the
+- [x] Markdown by hand: README, the four tutorial pages re-quoted, the how-to, the
       explanation's prose signature, the brushes reference example.
-- [ ] Negative tests written after the codemod (positional `Sheet`, `wash`,
+- [x] Negative tests written after the codemod (positional `Sheet`, `wash`,
       `brush_from_id` raise `TypeError`, with `ty: ignore[too-many-positional-arguments,
       missing-argument]`; `Sheet` keyword order irrelevant), seen failing on a worktree of S1.
-- [ ] Diff read line by line against plan S2's list; `uv run ty check` green; docs call
+- [x] Diff read line by line against plan S2's list; `uv run ty check` green; docs call
       check reports nothing; slice gate and coverage gate green.
 
 ## S3: Records

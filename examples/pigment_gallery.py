@@ -174,10 +174,10 @@ def wash_rows(figure: str, size: int = DESIGN_W) -> WashRows:
     unit = size / DESIGN_W
     spec = GridSpec(size, len(STRENGTHS), len(names), 26, 215, 40, 8, 160, 14, unit)
     boxes, w, h = spec.boxes(), size, spec.height
-    sheet = Sheet(h, w, GRAN_PX * unit, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX * unit, seed=SEED)
     out = grid_paper(sheet)
     for column, strength in enumerate(STRENGTHS):
-        density = wash(_mask(w, h, [row[column] for row in boxes]), sheet, strength, POOL)
+        density = wash(_mask(w, h, [row[column] for row in boxes]), sheet, body=strength, pool=POOL)
         for name, row in zip(names, boxes, strict=True):
             x, y, bw, bh = row[column]
             crop = (slice(y, y + bh), slice(x, x + bw))
@@ -226,7 +226,7 @@ def _glaze_figure(size: int) -> np.ndarray:
     unit = size / DESIGN_W
     spec = GridSpec(size, len(GLAZE_PAIRS), len(GLAZE_ROWS), 76, 84, 70, 8, 8, 12, unit)
     boxes, w, h = spec.boxes(), size, spec.height
-    sheet = Sheet(h, w, GRAN_PX * unit, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX * unit, seed=SEED)
     out = grid_paper(sheet)
     radius = min(0.33 * spec.cell_w, 0.46 * round(76 * unit))
     centres = [
@@ -236,8 +236,8 @@ def _glaze_figure(size: int) -> np.ndarray:
         wash(
             np.maximum.reduce([_disc(w, h, cx, cy, radius) for cx, cy in centres[side]]),
             sheet,
-            DISC_STRENGTH,
-            POOL,
+            body=DISC_STRENGTH,
+            pool=POOL,
         )
         for side in (0, 1)
     ]
@@ -292,10 +292,10 @@ def _palettes_figure(size: int) -> np.ndarray:
             row += 1
     spec = GridSpec(size, PALETTE_COLUMNS, row, 46, 100, 40, 56, 14, 34, unit)
     boxes, w, h = spec.boxes(), size, spec.height
-    sheet = Sheet(h, w, GRAN_PX * unit / 2, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX * unit / 2, seed=SEED)
     out = grid_paper(sheet)
     chosen = [boxes[r][c] for r, c, _, _, _ in placed]
-    density = wash(_mask(w, h, chosen), sheet, SWATCH_STRENGTH, POOL)
+    density = wash(_mask(w, h, chosen), sheet, body=SWATCH_STRENGTH, pool=POOL)
     small = _scaled(LABELS, unit, SMALL_PX)
     notes: list[Setting] = []
     for (r, _, palette, alias, bound), (x, y, bw, bh) in zip(placed, chosen, strict=True):

@@ -198,7 +198,7 @@ def _spec(figure: str) -> GridSpec:
 def _paper(figure: str) -> np.ndarray:
     """The paper plate of the whole figure; a cell paints over its own crop of it."""
     size = _spec(figure).height * SUPERSAMPLE, WIDTH_PX[figure] * SUPERSAMPLE
-    return grid_paper(Sheet(*size, GRAN_PX * SUPERSAMPLE, SEED))
+    return grid_paper(Sheet(w=size[1], h=size[0], gran_px=GRAN_PX * SUPERSAMPLE, seed=SEED))
 
 
 def _scene(figure: str) -> Scene:

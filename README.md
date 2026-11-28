@@ -107,13 +107,13 @@ SEED = 11
 
 def main(out_dir: Path) -> Path:
     """Lay a disc of water over the paper, write it into `out_dir` as `wash.png` and return that path."""
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
     yy, xx = np.mgrid[0:H, 0:W]
     disc = ((xx - W / 2) ** 2 + (yy - H / 2) ** 2 <= (0.3 * min(W, H)) ** 2).astype(np.float32)
-    density = wash(disc, sheet, 0.6, 0.3)
+    density = wash(disc, sheet, body=0.6, pool=0.3)
 
     out = composite([(density, rgb(PIGMENTS["water"]))], paper, PaperStyle())
     path = out_dir / "wash.png"

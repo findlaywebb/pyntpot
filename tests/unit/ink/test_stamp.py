@@ -20,11 +20,11 @@ from support.flags_off import flags_off
 
 def test_a_dry_brush_breaks_where_a_wet_one_does_not():
     """Dryness is one number, and it is what makes a track scratchy."""
-    sheet = Sheet(60, 220, gran_px=6.0, seed=3)
+    sheet = Sheet(w=220, h=60, gran_px=6.0, seed=3)
     line = np.stack([np.linspace(10, 210, 80), np.full(80, 30.0)], axis=1)
     marks = {}
     for key, brush_id in (("wet", "RIV1-a"), ("dry", "TRK4-d")):
-        brush, _ = brush_from_id(brush_id, 3.0, 2.0, BrushStyle())
+        brush, _ = brush_from_id(brush_id, 3.0, scale=2.0)
         acc = np.zeros((60, 220), np.float32)
         stamp(acc, line, brush, np.random.default_rng(7))
         marks[key] = ink_density(acc, brush, sheet)
@@ -42,7 +42,7 @@ def test_a_dry_brush_breaks_where_a_wet_one_does_not():
 )
 def test_a_stroke_that_enters_at_the_edge_is_not_set_down(start: tuple[float, float]) -> None:
     """A stroke starting on or off the plate's edge carries no set-down ink and no blot."""
-    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, BrushStyle(), "lane")
+    tuned, _ = brush_from_id("LAN5-a", 2.0, scale=2.0, override="lane")
     line = np.array([start, (100.0, 20.0)])
     marks = []
     for brush in (tuned, replace(tuned, load=0.0, pool=0.0)):
@@ -55,7 +55,7 @@ def test_a_stroke_that_enters_at_the_edge_is_not_set_down(start: tuple[float, fl
 
 def test_a_stroke_entering_at_the_edge_lays_what_a_bare_one_lays_further_in() -> None:
     """Entering at x 0, a lane lays what the same lane with no load or pool lays from x 10."""
-    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, BrushStyle(), "lane")
+    tuned, _ = brush_from_id("LAN5-a", 2.0, scale=2.0, override="lane")
     entering = np.zeros((40, 200), np.float32)
     stamp(entering, np.array([(0.0, 20.0), (100.0, 20.0)]), tuned, np.random.default_rng(5))
     inside = np.zeros((40, 210), np.float32)
@@ -71,7 +71,7 @@ def test_a_stroke_entering_at_the_edge_lays_what_a_bare_one_lays_further_in() ->
 )
 def test_a_stroke_one_pixel_in_from_the_edge_is_set_down(start: tuple[float, float]) -> None:
     """A stroke starting one plate pixel inside the edge is on the paper, and is set down."""
-    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, BrushStyle(), "lane")
+    tuned, _ = brush_from_id("LAN5-a", 2.0, scale=2.0, override="lane")
     line = np.array([start, (100.0, 20.0)])
     marks = []
     for brush in (tuned, replace(tuned, load=0.0, pool=0.0)):
@@ -83,8 +83,8 @@ def test_a_stroke_one_pixel_in_from_the_edge_is_set_down(start: tuple[float, flo
 
 def test_two_strokes_crossing_never_double():
     """Saturation is what stops a crossing reaching twice the black."""
-    sheet = Sheet(60, 60, gran_px=6.0, seed=2)
-    brush, _ = brush_from_id("MAJ2-a", 3.0, 2.0, BrushStyle())
+    sheet = Sheet(w=60, h=60, gran_px=6.0, seed=2)
+    brush, _ = brush_from_id("MAJ2-a", 3.0, scale=2.0)
     across = np.stack([np.linspace(5, 55, 40), np.full(40, 30.0)], axis=1)
     down = np.stack([np.full(40, 30.0), np.linspace(5, 55, 40)], axis=1)
     one = np.zeros((60, 60), np.float32)
@@ -103,8 +103,8 @@ def long_stroke(
     """One straight 1500 px stroke's density, as a swatch image paints it."""
     h = 44
     style = flags_off(BrushStyle, **style_over)
-    brush, _ = brush_from_id(brush_id, width_px, 2.0, style, over)
-    sheet = Sheet(h, length, gran_px=9.0, seed=11)
+    brush, _ = brush_from_id(brush_id, width_px, scale=2.0, style=style, override=over)
+    sheet = Sheet(w=length, h=h, gran_px=9.0, seed=11)
     pts = np.stack([np.linspace(20.0, length - 20.0, 900), np.full(900, h / 2)], axis=1)
     acc = np.zeros((h, length), np.float32)
     aux = ink_aux((h, length), brush)
@@ -158,8 +158,8 @@ def turned_stroke(vertical: bool, **style_over: object) -> tuple[np.ndarray, She
     """The same dry brush drawn across the same paper, one way then the other."""
     size = 420
     style = flags_off(BrushStyle, **style_over)
-    brush, _ = brush_from_id("TRK4-d", 6.0, 2.0, style, "track")
-    sheet = Sheet(size, size, gran_px=9.0, seed=11)
+    brush, _ = brush_from_id("TRK4-d", 6.0, scale=2.0, style=style, override="track")
+    sheet = Sheet(w=size, h=size, gran_px=9.0, seed=11)
     t = np.linspace(20.0, size - 20.0, 600)
     mid = np.full(600, size / 2)
     pts = np.stack([mid, t] if vertical else [t, mid], axis=1)
@@ -251,7 +251,7 @@ def tip_across(
         `(windows, samples across)`, each row a normalised cross-tip profile.
     """
     style = flags_off(BrushStyle, **style_over)
-    b, _ = brush_from_id(brush_id, width_px, 2.0, style, over)
+    b, _ = brush_from_id(brush_id, width_px, scale=2.0, style=style, override=over)
     sb = scaled_brush(b, ss)
     h, w = 150 * ss, 360 * ss
     # A shallow diagonal, so the tip crosses the pixel grid the way a road on
@@ -326,7 +326,7 @@ def test_both_tip_knobs_are_wired_and_each_one_earns_its_place():
     assert style.bristle_drift_coherence == 0.25
     assert style.bristle_bandlimit_px == 0.9
     assert style.bristle_contrast == 1.0
-    b, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
+    b, _ = brush_from_id("MAJ2-a", 3.6, scale=2.0, style=style, override="road_major")
     assert (b.coherence, b.band_px, b.contrast) == (0.25, 0.9, 1.0)
     assert scaled_brush(b, 3).coherence == 0.25
 
@@ -363,13 +363,13 @@ def test_a_corner_is_rounded_to_the_brush_rather_than_stamped_through():
     leg_a = np.stack([np.linspace(20.0, 100.0, 300), np.full(300, 60.0)], axis=1)
     leg_b = np.stack([np.full(300, 100.0), np.linspace(60.0, 180.0, 300)], axis=1)
     pts = np.concatenate([leg_a, leg_b])
-    sheet = Sheet(h, w, gran_px=9.0, seed=11)
+    sheet = Sheet(w=w, h=h, gran_px=9.0, seed=11)
     yy, xx = np.mgrid[0:h, 0:w]
     outside = (xx > 100) & (yy < 60)
 
     def mark(smooth: bool) -> tuple[np.ndarray, Brush]:
         style = BrushStyle(stroke_smooth=smooth)
-        brush, _ = brush_from_id("MAJ2-a", 3.6, 2.0, style, "road_major")
+        brush, _ = brush_from_id("MAJ2-a", 3.6, scale=2.0, style=style, override="road_major")
         acc = np.zeros((h, w), np.float32)
         aux = ink_aux((h, w), brush)
         stamp(acc, pts, brush, np.random.default_rng(91), aux=aux)

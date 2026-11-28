@@ -191,7 +191,7 @@ of its width:
             slice(pad + row * ch, pad + (row + 1) * ch),
             slice(pad + col * cw, pad + (col + 1) * cw),
         )
-        sheet = Sheet(ch, cw, GRAN_PX * cw / 600, seed + i)
+        sheet = Sheet(w=cw, h=ch, gran_px=GRAN_PX * cw / 600, seed=seed + i)
         for target, density in zip(densities, paint_fern((ch, cw), sheet, seed + i), strict=True):
             target[window] = density
 ```
@@ -332,7 +332,7 @@ def _lay(
     """Stamp each `(path, widths)` into `acc` with a brush of `row` as wide as its stroke starts, tapering by `wprof`."""
     for i, (path, widths) in enumerate(strokes):
         width = max(float(widths.max()), floor)
-        brush, _ = brush_from_id(row, width, 1.0, STYLE)
+        brush, _ = brush_from_id(row, width, style=STYLE)
         along = np.r_[0.0, np.cumsum(np.hypot(*np.diff(path, axis=0).T))]
         at = np.linspace(0.0, along[-1], 48)
         wprof = np.maximum(np.interp(at, along, widths), floor) / width
@@ -410,7 +410,7 @@ It pastes the cell's layers into the grid's. The paper is laid once, under all n
     for i in range(across * down):
         rng = np.random.default_rng([seed, i])
         shape = Shape() if figure == "tree" else perturbed(Shape(), rng)
-        cell_sheet = Sheet(ch, cw, GRAN_PX * cw / REFERENCE, seed + i)
+        cell_sheet = Sheet(w=cw, h=ch, gran_px=GRAN_PX * cw / REFERENCE, seed=seed + i)
         row, col = divmod(i, across)
         window = (slice(row * ch, (row + 1) * ch), slice(col * cw, (col + 1) * cw))
         for name, density in paint_tree((ch, cw), cell_sheet, shape, seed + i).items():

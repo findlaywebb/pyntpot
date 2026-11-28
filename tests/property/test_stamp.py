@@ -73,7 +73,7 @@ class TestStamp:
         self, path: np.ndarray, brush_id: str, seed: int
     ) -> None:
         """Two canvases stamped from one seed are identical."""
-        brush, _ = brush_from_id(brush_id, 3.0, 2.0, BrushStyle())
+        brush, _ = brush_from_id(brush_id, 3.0, scale=2.0)
         first, second = _canvas(), _canvas()
         stamp(first, path, brush, np.random.default_rng(seed))
         stamp(second, path, brush, np.random.default_rng(seed))
@@ -83,7 +83,7 @@ class TestStamp:
     @given(path=PATHS, brush_id=BRUSH_IDS, seed=SEEDS)
     def test_it_leaves_the_path_alone(self, path: np.ndarray, brush_id: str, seed: int) -> None:
         """The path array passed in is unchanged."""
-        brush, _ = brush_from_id(brush_id, 3.0, 2.0, BrushStyle())
+        brush, _ = brush_from_id(brush_id, 3.0, scale=2.0)
         before = path.copy()
         stamp(_canvas(), path, brush, np.random.default_rng(seed))
         assert np.array_equal(path, before)
@@ -94,7 +94,7 @@ class TestStamp:
         self, path: np.ndarray, brush_id: str, seed: int
     ) -> None:
         """A path no longer than 2 px leaves the canvas empty."""
-        brush, _ = brush_from_id(brush_id, 3.0, 2.0, BrushStyle())
+        brush, _ = brush_from_id(brush_id, 3.0, scale=2.0)
         canvas = _canvas()
         stamp(canvas, path, brush, np.random.default_rng(seed))
         assert not canvas.any()
@@ -108,7 +108,7 @@ class TestStamp:
         self, path: np.ndarray, width: float, seed: int
     ) -> None:
         """A nib's set-down blot lays no ink more than 3 px past the stroke's own ink, at any width."""
-        pen, _ = brush_from_id("MAJ6-e", width, 2.0, BrushStyle())
+        pen, _ = brush_from_id("MAJ6-e", width, scale=2.0)
         assert pen.pool > 0
         with_blot, without = _canvas(), _canvas()
         stamp(with_blot, path, pen, np.random.default_rng(seed))
@@ -119,7 +119,7 @@ class TestStamp:
 
 def _blot_ink(render_px: float, line: np.ndarray, seed: int) -> float:
     """The ink a `MAJ6-e` pen's set-down blot adds at scale 2: with its pool less without."""
-    pen, _ = brush_from_id("MAJ6-e", render_px / 2, 2.0, flags_off(BrushStyle))
+    pen, _ = brush_from_id("MAJ6-e", render_px / 2, scale=2.0, style=flags_off(BrushStyle))
     marks = []
     for brush in (pen, replace(pen, pool=0.0)):
         acc = np.zeros((60, 120), np.float32)
@@ -159,7 +159,7 @@ class TestNibReload:
             pen_thin=1.0,
             ink_dip_mult=dip_mult,
         )
-        pen, _ = brush_from_id("MAJ6-e", width, 1.0, style)
+        pen, _ = brush_from_id("MAJ6-e", width, style=style)
         dips = pen.dip_px * np.arange(1, 9)
         eps = 1e-7 * pen.dip_px
         before, after = _nib_spent(dips - eps, pen), _nib_spent(dips + eps, pen)
