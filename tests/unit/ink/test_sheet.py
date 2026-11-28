@@ -79,6 +79,13 @@ class TestCanvasPixels:
         with pytest.raises(ValueError, match="at least 1"):
             Canvas.pixels(w=w, h=h)
 
+    @pytest.mark.parametrize(
+        ("w", "h"), [(1, 1), (1, 5), (5, 1)], ids=["one", "one-wide", "one-high"]
+    )
+    def test_a_side_of_one_is_taken(self, w: int, h: int):
+        """A width or height of exactly 1 is a canvas of that grid."""
+        assert Canvas.pixels(w=w, h=h) == Canvas(0, 0, w, h, w, h)
+
 
 class TestSheetTakesKeywords:
     """`Sheet` is keyword-only, width first, and the order of the keywords does not matter."""

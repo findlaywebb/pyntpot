@@ -70,12 +70,12 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4, S5, S6, all
 
 ## S5: Mutation testing
 
-- [ ] By plan S5's rule: `Canvas.pixels` and `paper_plate` in full; the five
+- [x] By plan S5's rule: `Canvas.pixels` and `paper_plate` in full; the five
       spelling-only functions shown spelling-only by normalised AST (recorded);
       `wash` and `brush_from_id` mutated, survivors checked against 006, 008 and 009's
       equivalents with reasons re-checked; the three `letters` functions left out, with
       the reason.
-- [ ] Survivors killed (no test file past 400) or named in `mutation.md`; past 150 lines
+- [x] Survivors killed (no test file past 400) or named in `mutation.md`; past 150 lines
       for one function, the rest filed in `docs/issues/` and on GitHub.
 
 ## S6: Final review and PR
