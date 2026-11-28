@@ -18,11 +18,11 @@ Plan: `plan.md` revision 3 (decisions 1 to 19). Review: `review-plan.md`.
 
 ## P2: Example and goldens
 
-- [ ] Red: `tests/golden/test_theme_preview.py` (golden paint test; unmarked theme-set test).
-- [ ] Green: `examples/theme_preview.py` (decisions 10, 15); `NOTE_POINT` check in
+- [x] Red: `tests/golden/test_theme_preview.py` (golden paint test; unmarked theme-set test).
+- [x] Green: `examples/theme_preview.py` (decisions 10, 15); `NOTE_POINT` check in
       `test_make_preview.py` (decision 18).
-- [ ] `CARD_SIZE`, `MEAN_RGB` and the label sets measured once and pinned as literals.
-- [ ] Timed CLI run `uv run python examples/theme_preview.py --theme default out/`; time
+- [x] `CARD_SIZE`, `MEAN_RGB` and the label sets measured once and pinned as literals.
+- [x] Timed CLI run `uv run python examples/theme_preview.py --theme default out/`; time
       recorded for the PR body.
 
 ## P3: Docs
