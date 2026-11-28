@@ -100,7 +100,7 @@ def preview(
     return compose(plates, lettering, basemap, style), lettering
 
 
-def main(  # noqa: PLR0913 (the script contract fixes these keywords)
+def main(
     out_dir: Path,
     *,
     track: Path,
