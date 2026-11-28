@@ -4,7 +4,7 @@ GitHub issue: [#79](https://github.com/findlaywebb/pyntpot/issues/79) (a preview
 map styles; note `docs/features/maps-theme-preview-card.md`).
 
 Branch: its own, cut from `main` after feature 008 merges. Decision record: an amendment
-to ADR 0032 (one new fixture directory and its box), written as ADR 0070 in this spec's
+to ADR 0032 (one new fixture directory and its box), written as ADR 0072 in this spec's
 first slice. Depends on 008: named themes, YAML themes, `Style.named`, `Style.from_theme`.
 
 ## Problem

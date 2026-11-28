@@ -4,6 +4,48 @@ Written ahead of 008's merge; slice P0 re-checks every path and name below again
 `main` with 008 merged before anything is built. Gates as in `specs/008-themes-as-data/plan.md`
 "Running the gates".
 
+## P0 findings (checked against `main` at `f6c8302`, 2026-11-28)
+
+These supersede anything below that disagrees.
+
+1. **Confirmed:** `Style.named`, `Style.themes()` (sorted, `default` among them: `bold`,
+   `default`, `pen-and-ink`, `sepia`, `winter`), `Style.from_theme(theme, *, relative_to=)`
+   public in `pyntpot.maps.style`; packaged themes are `.yaml` in
+   `src/pyntpot/maps/themes/`; seven example themes in `examples/themes/*.yaml`.
+   `examples/place_card.py` paints offline from a cache that holds the payloads; the script
+   contract is `main(out_dir, **options) -> Path` (`tests/support/examples.py`).
+2. **ADR number:** 0070 and 0071 are taken (line effects; a golden regeneration), so the
+   fixture ADR is **0072**.
+3. **Docs image registry:** `tests/support/docs_images.py` is 511 lines (#212). The five
+   preview images go in a new `tests/support/docs_images_008a.py` (`IMAGES_008A`,
+   `SHARES_008A = {"008a-preview": <measured, rounded up to 50 kB>}`), appended in
+   `docs_images.py` exactly as `IMAGES_009A` is. Nothing else in that file moves.
+4. **Margins and the box.** The default margins are 1500 m (features, elevation) and
+   2600 m (land cover). Lynmouth's box is about 5.6 km east to west, so with the default
+   land cover margin the land cover box cannot lie inside it. Decision: the preview fixture
+   is recorded with `PREVIEW_MARGINS = FetchMargins(800, 800)` (in `tests/support/paths.py`
+   beside `PREVIEW_KEY`, as plain floats `PREVIEW_MARGIN_M = 800.0` because `paths.py`
+   imports only `pathlib`), and the track's box is at most 2.4 km east to west and
+   3.0 km north to south, centred on (51.225, -3.84). The feature box and land cover box
+   are then the same box, about 4.0 by 4.6 km, wholly inside Lynmouth's. The generator
+   asserts this before writing. `examples/theme_preview.py` passes the same margins.
+   Payload files are exempt from the coordinate scan by `KEYS`, as every fixture's are,
+   but every coordinate they hold is inside the box all the same; the fixture test proves
+   it.
+5. **Payload formats** (from `tests/fixtures/lynmouth/`): the two Overpass payloads are
+   `{"version", "generator", "osm3s", "elements": [...]}` with nodes (`lat`, `lon`, `tags`)
+   and ways (`geometry: [{lat, lon}, ...]`, `tags`; multipolygons as relations with
+   `members` carrying `role` and `geometry`, as the Lynmouth payload does); the elevation
+   payload is `{"n", "bbox": [s, w, n, e], "lats", "lons", "elev": n*n}`. The generator
+   copies the shape the loaders read, not the provider's `generator` text: it writes
+   `"generator": "tests/fixtures/make_preview.py"`.
+6. **The example's inputs.** `examples/theme_preview.py`'s `main(out_dir, *, track,
+   cache_dir, theme=None) -> Path`, like `place_card.py`, with `display_px` fixed at 600;
+   the providers are built with `budget=0` so a cache miss fails loudly instead of
+   fetching. The CLI form copies `tests/fixtures/preview/` to a temporary cache (painting
+   writes plates into the cache) and takes `--theme` and the output directory. The docs
+   runner passes `fixture="preview"` as it does `"ambleside"`.
+
 ## Slices
 
 ### P0 — Check and decide (serial)
@@ -13,7 +55,7 @@ Written ahead of 008's merge; slice P0 re-checks every path and name below again
    `examples/place_card.py`'s
    offline path (it paints from a cache that already holds the payloads, so the providers
    are never called). If any differs, update this plan first.
-2. Write ADR 0070, "A preview fixture in the Lynmouth box" (amends 0032): one new fixture
+2. Write ADR 0072, "A preview fixture in the Lynmouth box" (amends 0032): one new fixture
    directory, `preview`, synthetic, inside the Lynmouth box, budget 600,000 bytes; why
    synthetic (every interaction on one card) and why that box (a real coast, a real
    river and real names to letter; the coordinate gate needs a real box). Index row.
@@ -58,7 +100,9 @@ Written ahead of 008's merge; slice P0 re-checks every path and name below again
 
 ### P3 — Docs images and pages (serial)
 
-**Owned.** `tests/support/docs_images.py` (five entries), `docs/images/preview/*`,
+**Owned.** `tests/support/docs_images_008a.py` (new: `IMAGES_008A`, `SHARES_008A`, on the
+`docs_images_009a.py` pattern), `tests/support/docs_images.py` (two lines only: the import
+and the append, because the file is already over budget, #212), `docs/images/preview/*`,
 `tests/golden/docs/preview/*`, `docs/how-to/write-a-theme.md`, `docs/gallery.md`,
 `docs/features/maps-theme-preview-card.md` (deleted).
 
