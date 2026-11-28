@@ -61,7 +61,10 @@ MIN_PATCH_PX = 400
 #: Every packaged theme and every example theme file.
 THEMES = (
     *Style.themes(),
-    *(f"examples/themes/{p.name}" for p in sorted((REPO_ROOT / "examples" / "themes").glob("*.yaml"))),
+    *(
+        f"examples/themes/{p.name}"
+        for p in sorted((REPO_ROOT / "examples" / "themes").glob("*.yaml"))
+    ),
 )
 
 #: The tags of every feature element in writing order, and of every land cover element.
@@ -123,7 +126,7 @@ def _pairs(node: Any) -> Iterator[tuple[float, float]]:
     """Yield every latitude and longitude pair in a parsed payload, at any depth."""
     if isinstance(node, dict):
         if "lat" in node and "lon" in node:
-            yield node["lat"], node["lon"]
+            yield float(node["lat"]), float(node["lon"])
         for value in node.values():
             yield from _pairs(value)
     elif isinstance(node, list):
@@ -142,21 +145,27 @@ def _fetched(cache: Path, theme: str | None, display_px: int) -> Basemap:
     """Fetch the preview's basemap from a cache directory in a theme at a card width."""
     features = OverpassFeatures(CONTACT, ("http://127.0.0.1:9/api/interpreter",), budget=0)
     elevation = OpenTopoData(CONTACT, "http://127.0.0.1:9", budget=0)
-    style = Style.from_theme(theme, relative_to=REPO_ROOT) if theme else Style()
-    style = style.model_copy(update={"card": dataclasses.replace(style.card, display_px=display_px)})
+    style = Style.from_theme(theme, relative_to=REPO_ROOT) if theme is not None else Style()
+    style = style.model_copy(
+        update={"card": dataclasses.replace(style.card, display_px=display_px)}
+    )
     track = Track.from_gpx(cache / "track.gpx")
     return fetch(track, Cache(cache), features, elevation, style)
 
 
 @pytest.fixture(scope="module", params=[None, SMALLEST], ids=["default", "y-fenni"])
-def preview_card(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory) -> Basemap:
+def preview_card(
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> Basemap:
     """The preview's basemap at the preview width, in the default style and the smallest card's."""
     cache = _copy(tmp_path_factory.mktemp("preview"))
     return _fetched(cache, request.param, PREVIEW_PX)
 
 
 @pytest.fixture(scope="module", params=[None, SMALLEST], ids=["default", "y-fenni"])
-def judged_card(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory) -> Basemap:
+def judged_card(
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> Basemap:
     """The preview's basemap at the width small patches are judged at."""
     cache = _copy(tmp_path_factory.mktemp("judged"))
     return _fetched(cache, request.param, JUDGED_PX)
@@ -206,7 +215,10 @@ class TestTheCommittedFiles:
     def test_every_name_is_one_the_spec_allows(self) -> None:
         """The names on the payloads are exactly the seven real names of the Lynmouth area."""
         names = {
-            e["tags"]["name"] for kind in ("overpass", "landcover") for e in _elements(kind) if "name" in e["tags"]
+            e["tags"]["name"]
+            for kind in ("overpass", "landcover")
+            for e in _elements(kind)
+            if "name" in e["tags"]
         }
         assert names == NAMES
 
@@ -266,22 +278,37 @@ class TestTheRoute:
         points = _track()
         along = cumulative_length(points)
         retraced = [
-            any(abs(along[j] - along[i]) >= 400 and math.dist(p, points[j]) <= 30 for j in range(len(points)))
+            any(
+                abs(along[j] - along[i]) >= 400 and math.dist(p, points[j]) <= 30
+                for j in range(len(points))
+            )
             for i, p in enumerate(points)
         ]
         road = _metres(_tagged("overpass", highway="unclassified")["geometry"])
-        rivers = [_metres(e["geometry"]) for e in _elements("overpass") if e["tags"].get("name") == "East Lyn River"]
+        rivers = [
+            _metres(e["geometry"])
+            for e in _elements("overpass")
+            if e["tags"].get("name") == "East Lyn River"
+        ]
         by_road = [foot_on(p, road)[0] <= 20 for p in points]
         by_river = [min(foot_on(p, line)[0] for line in rivers) <= 40 for p in points]
         assert any(retraced)
-        assert _longest_run(points, along, [r and b for r, b in zip(retraced, by_road, strict=True)]) >= 300
-        assert _longest_run(points, along, [r and b for r, b in zip(retraced, by_river, strict=True)]) >= 300
+        assert (
+            _longest_run(points, along, [r and b for r, b in zip(retraced, by_road, strict=True)])
+            >= 300
+        )
+        assert (
+            _longest_run(points, along, [r and b for r, b in zip(retraced, by_river, strict=True)])
+            >= 300
+        )
 
     def test_the_route_crosses_the_west_lyn_river_once(self) -> None:
         """The track crosses the stream at exactly one place."""
         stream = _metres(_tagged("overpass", waterway="stream")["geometry"])
         points = _track()
-        crossings = sum(segments_cross(a, b, c, d) for a, b in pairwise(points) for c, d in pairwise(stream))
+        crossings = sum(
+            segments_cross(a, b, c, d) for a, b in pairwise(points) for c, d in pairwise(stream)
+        )
         assert crossings == 1
 
 
@@ -334,18 +361,26 @@ class TestTheFeaturesMeet:
         names = {c["name"] for c in preview_card.candidates}
         assert {"Lynmouth", "Lynton", "Countisbury", "Foreland Point", "Watersmeet"} <= names
 
-    def test_small_patches_are_under_the_fold_at_nine_hundred_pixels(self, judged_card: Basemap) -> None:
+    def test_small_patches_are_under_the_fold_at_nine_hundred_pixels(
+        self, judged_card: Basemap
+    ) -> None:
         """A meadow and a heath patch are each smaller than 400 display px squared at 900 px."""
         mpp = judged_card.card.mpp_display
         small = {
-            cls: [r for r in judged_card.layers.cover[cls] if abs(signed_area(list(r))) / 2 / mpp**2 < MIN_PATCH_PX]
+            cls: [
+                r
+                for r in judged_card.layers.cover[cls]
+                if abs(signed_area(list(r))) / 2 / mpp**2 < MIN_PATCH_PX
+            ]
             for cls in ("meadow", "heath")
         }
         assert all(small.values())
 
 
 @pytest.mark.parametrize("theme", THEMES, ids=[Path(t).stem for t in THEMES])
-def test_each_theme_paints_its_card_inside_the_fetch_box_with_lanes(theme: str, tmp_path: Path) -> None:
+def test_each_theme_paints_its_card_inside_the_fetch_box_with_lanes(
+    theme: str, tmp_path: Path
+) -> None:
     """Every theme's card lies inside the fetch box and the preview box, and paints lanes but for ambleside-hero."""
     cache = _copy(tmp_path)
     basemap = _fetched(cache, theme, PREVIEW_PX)

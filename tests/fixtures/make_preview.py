@@ -27,6 +27,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
+from typing import Any
 
 from fixtures.preview_payloads import (
     PROJECTION,
@@ -185,7 +186,9 @@ def _box_ring(box: tuple[float, float, float, float]) -> list[Point]:
     return [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
 
 
-def _ellipse(centre: Point, rx: float, ry: float, count: int, *, anticlockwise: bool) -> list[Point]:
+def _ellipse(
+    centre: Point, rx: float, ry: float, count: int, *, anticlockwise: bool
+) -> list[Point]:
     """Return a closed ring of `count` vertices round a centre, wound as asked."""
     sign = 1 if anticlockwise else -1
     angles = [sign * 2 * math.pi * k / count for k in range(count)]
@@ -212,10 +215,12 @@ def _along(road: Sequence[Point], x0: float, x1: float, dy: float) -> list[Point
 
 def _sample(corners: Sequence[Point]) -> list[Point]:
     """Return corners joined by points no more than `STEP_M` apart, the corners themselves kept."""
-    out = [corners[0]]
+    out: list[Point] = [corners[0]]
     for (xa, ya), (xb, yb) in pairwise(corners):
         steps = max(1, math.ceil(math.dist((xa, ya), (xb, yb)) / STEP_M))
-        out += [(xa + (xb - xa) * k / steps, ya + (yb - ya) * k / steps) for k in range(1, steps + 1)]
+        out += [
+            (xa + (xb - xa) * k / steps, ya + (yb - ya) * k / steps) for k in range(1, steps + 1)
+        ]
     return out
 
 
@@ -264,7 +269,9 @@ def route() -> Route:
     ]
     before = _sample([*start, *_along(MINOR, -600.0, 350.0, 6.0)])
     walk = _sample([before[-1], *river_out, *river_back])
-    after = _sample([walk[-1], *_along(MINOR, 380.0, 750.0, 6.0), *_along(MINOR, 750.0, -100.0, -6.0), *finish])
+    after = _sample(
+        [walk[-1], *_along(MINOR, 380.0, 750.0, 6.0), *_along(MINOR, 750.0, -100.0, -6.0), *finish]
+    )
     return Route([*before, *walk[1:], *after[1:]], len(before), len(before) + len(walk) - 2)
 
 
@@ -291,7 +298,7 @@ def coast_gap(point: Point) -> float:
     return foot_on(point, COAST)[0]
 
 
-def _features(ids: Elements) -> list[dict[str, object]]:
+def _features(ids: Elements) -> list[dict[str, Any]]:
     """Make the feature payload's elements: coast, water, roads, woods, then places and landmarks."""
     lake_ring = _ellipse(LAKE, LAKE_RX, LAKE_RY, LAKE_N, anticlockwise=True)
     lake_island = _ellipse(LAKE, LAKE_ISLAND_R, LAKE_ISLAND_R, LAKE_ISLAND_N, anticlockwise=False)
@@ -321,7 +328,7 @@ def _features(ids: Elements) -> list[dict[str, object]]:
     ]
 
 
-def _landcover(ids: Elements) -> list[dict[str, object]]:
+def _landcover(ids: Elements) -> list[dict[str, Any]]:
     """Make the land cover payload's elements: the gravel bar, the large patches, the small ones."""
     bar = [*BAR, BAR[0]]
     made = [ids.way({"natural": "shingle"}, bar)]
@@ -356,7 +363,7 @@ def make(out_dir: Path) -> str:
     track = Track.from_gpx(gpx)
     key = Cache(out_dir).key(track, OverpassFeatures(CONTACT), OpenTopoData(CONTACT))
     half_x, half_y = _fetch_box_edges(track)
-    if EDGE_X > half_x or EDGE_Y > half_y:
+    if half_x < EDGE_X or half_y < EDGE_Y:
         raise ValueError(f"the layout reaches past the fetch box ({half_x:.1f}, {half_y:.1f})")
     ids = Elements()
     texts = {

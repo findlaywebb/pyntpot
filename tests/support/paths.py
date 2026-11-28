@@ -23,6 +23,10 @@ Y_FENNI_KEY: str = "31d229011257f9fa"
 AMBLESIDE_KEY: str = "f0a137ce97afcb43"
 SKYE_KEY: str = "ada01f635902a1fd"
 
+#: The cache key of the synthetic preview fixture, `tests/fixtures/preview`, made by
+#: `tests/fixtures/make_preview.py`: its track with the shipped providers and default margins.
+PREVIEW_KEY: str = "3fa415870ecbe1a8"
+
 #: The directory holding every fixture, Lynmouth's included.
 FIXTURES: Path = _TESTS / "fixtures"
 

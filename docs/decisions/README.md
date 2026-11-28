@@ -78,3 +78,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0069 | Themes are YAML overrides of one model (supersedes 0020; amends 0002, 0005, 0015, 0037, 0046 and 0068; amended by 0070: a colour may be a pigment name or an alias, `COLOUR_FIELDS` goes, and route effects are one effect stack split at load) |
 | 0070 | Line effects and one pigment registry (amends 0015, 0027, 0046 and 0069) |
 | 0071 | Golden regeneration: one route colour, pigments that carry their transparency, and bold's cased route (applies 0070 rules 17 and 18) |
+| 0072 | A preview fixture in the Lynmouth box (amends 0032 for `preview/` only: made up, not recorded; real names at made-up places; Lynmouth's box; 600,000 bytes) |

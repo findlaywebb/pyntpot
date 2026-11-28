@@ -4,16 +4,16 @@ Plan: `plan.md` revision 3 (decisions 1 to 19). Review: `review-plan.md`.
 
 ## P1: ADR and fixture
 
-- [ ] Branch named on #79.
-- [ ] ADR 0072 "A preview fixture in the Lynmouth box" (decision 12) and its index row.
-- [ ] Red: `tests/fixtures/test_make_preview.py` — byte equality with the committed fixture,
+- [x] Branch named on #79.
+- [x] ADR 0072 "A preview fixture in the Lynmouth box" (decision 12) and its index row.
+- [x] Red: `tests/fixtures/test_make_preview.py` — byte equality with the committed fixture,
       `PREVIEW_KEY`, every coordinate in `BOXES["preview"]`, names from the spec's list,
       presence on `Style()` and the y-fenni style (finding 3, decision 16), small patches at
       900 px (decision 4), doubling back (decision 6), per-theme card inside the fetch box and
       lanes painted (decision 17).
-- [ ] Green: `tests/fixtures/make_preview.py` and `tests/fixtures/preview_payloads.py`
+- [x] Green: `tests/fixtures/make_preview.py` and `tests/fixtures/preview_payloads.py`
       (decisions 1 to 9, 16, 19); fixture written and committed with its `README.md`.
-- [ ] `tests/support/paths.py` `PREVIEW_KEY`; `tests/architecture/test_coordinates.py`
+- [x] `tests/support/paths.py` `PREVIEW_KEY`; `tests/architecture/test_coordinates.py`
       `BOXES`, `KEYS`, `BUDGETS` entries; gates green.
 
 ## P2: Example and goldens
