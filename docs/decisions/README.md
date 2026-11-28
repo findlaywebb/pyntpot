@@ -38,7 +38,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0029 | Provider errors public and the cache wraps |
 | 0030 | Smoke lock tolerant on CI |
 | 0031 | Third golden regeneration: the East Lyn label |
-| 0032 | Focus-place fixtures (amends D10) |
+| 0032 | Focus-place fixtures (amends D10; amended by 0072 for `preview/`) |
 | 0033 | Docs images and examples (amends 0006 and 0026) |
 | 0034 | A docs site on GitHub Pages (amends D13) |
 | 0035 | Lettering name tags (amends 0005) |

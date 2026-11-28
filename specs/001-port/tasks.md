@@ -235,7 +235,7 @@ Not part of the port. Each item becomes its own spec under `specs/` when it is t
 - [ ] A gallery painting every brush id, lettered with its id (`docs/features/docs-brush-id-gallery.md`)
 - [ ] One pigment registry of `Pigment` objects; layers, brushes and themes take a pigment by name and resolve it, with overrides (`docs/features/ink-one-pigment-registry.md`)
 - [ ] A gallery of every pigment, with names, aliases and glazes (`docs/features/docs-pigment-gallery.md`)
-- [ ] A preview card for map styles that holds every feature and awkward interaction (`specs/008a-theme-preview-card/`, issue #79)
+- [x] A preview card for map styles that holds every feature and awkward interaction (#79: `specs/008a-theme-preview-card/`)
 - [ ] Retire Lynmouth as the test place once the API and the goldens are stable, moving the goldens and tests to the focus places (`docs/features/tests-retire-lynmouth.md`)
 - [x] Faster painting and gates: the golden run in minutes, not half an hour (#81: `specs/002-parallel-gates/`, `specs/003-painter-hot-paths/`)
 - [ ] Themes in YAML that declare only their overrides over a base theme (`docs/features/maps-themes-as-overrides.md`)

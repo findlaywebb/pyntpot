@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from architecture.test_coordinates import BOXES  # the gate's table is the one source of the box; it must stay in the gate's exempt file
+from architecture.test_coordinates import (
+    BOXES,
+)  # the gate's table is the one source of the box; it must stay in the gate's exempt file
 from fixtures.make_preview import make
 
 from pyntpot.ink.polyline import cumulative_length, foot_on, segments_cross

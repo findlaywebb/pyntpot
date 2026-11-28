@@ -57,7 +57,7 @@ mutation run.
    tests/fixtures/make_preview.py; not OpenStreetMap data."}`. The generator takes an output
    directory; its test writes to `tmp_path` and asserts byte equality with the committed files.
 9. **Generator split** (finding 15): `tests/fixtures/make_preview.py` (layout in metres, the
-   element table, `main(out_dir)`) and `tests/fixtures/preview_payloads.py` (projection,
+   element table, `make(out_dir)` and a command-line `main()`) and `tests/fixtures/preview_payloads.py` (projection,
    rounding, the three payload writers, the GPX and README writers). Each under 400 lines.
 10. **The example's interface** (finding 2), in `examples/theme_preview.py`:
     `preview(style, *, track, cache_dir, features, elevation) -> tuple[Image.Image, Lettering]`
@@ -107,7 +107,7 @@ mutation run.
     relative_to=REPO_ROOT)` (the smallest card).
 17. **Test ownership** (R3). The per-theme frame and lane checks are in P1's
     `tests/fixtures/test_make_preview.py`, looping over `Style.themes()` plus
-    `sorted(examples/themes/*.yaml)`; it imports nothing from another test module. The
+    `sorted(examples/themes/*.yaml)`; it imports nothing from another test module, with one named exception: `from architecture.test_coordinates import BOXES`, because the gate's table is the one source of the box and must stay in the gate's exempt file. The
     theme-set test (`set(MEAN_RGB) == ...`) is unmarked in `tests/golden/test_theme_preview.py`;
     only the paint test there carries `pytest.mark.golden`.
 18. **One source for `NOTE_POINT`** (R4): the example holds it; `test_make_preview.py` reads
@@ -117,12 +117,20 @@ mutation run.
     seven decimals before writing, as coordinates are. `Watersmeet` stays in the fixture as
     an unannotated landmark candidate; it is not added to the annotations (a curated
     landmark suppresses automatic ones, so it is not expected among the labels).
+20. **The roads' crossings are kept as they are.** The major road crosses the minor road, the
+    East Lyn River and the West Lyn River, and the minor road crosses the East Lyn River. The
+    minor road's (330, -297) vertex is not moved, since that would move the pinned goldens and
+    docs images; `test_the_roads_cross_the_rivers_and_each_other` pins the crossings in metres.
+21. **The test split.** `tests/fixtures/test_make_preview.py` keeps the committed-files and
+    route tests; `tests/fixtures/test_preview_card.py` takes the features-meet class, the
+    per-theme frame and lane test and the `NOTE_POINT` test; the helpers they share are in
+    `tests/support/preview_fixture.py`.
 
 ## Files to touch
 
 - `docs/decisions/0072-preview-fixture-in-the-lynmouth-box.md` (new), `docs/decisions/README.md` (row)
 - `tests/fixtures/make_preview.py`, `tests/fixtures/preview_payloads.py` (new)
-- `tests/fixtures/test_make_preview.py` (new; non-golden)
+- `tests/fixtures/test_make_preview.py`, `tests/fixtures/test_preview_card.py` (new; non-golden), `tests/support/preview_fixture.py` (new; their shared helpers)
 - `tests/fixtures/preview/` (new: `track.gpx`, three payloads, `README.md`)
 - `tests/support/paths.py` (`PREVIEW_KEY` only)
 - `tests/architecture/test_coordinates.py` (`BOXES`, `KEYS`, `BUDGETS` entries and the import)
@@ -132,7 +140,7 @@ mutation run.
 - `docs/images/preview/*.webp`, `tests/golden/docs/preview/*` (painted by `make_docs_images.py`)
 - `docs/how-to/write-a-theme.md`, `docs/gallery.md`
 - `docs/features/maps-theme-preview-card.md` (deleted)
-- `specs/008a-theme-preview-card/tasks.md`, `spec.md` (ticks)
+- `specs/008a-theme-preview-card/tasks.md`, `spec.md` (ticks), `specs/001-port/tasks.md` (tick)
 
 ## Files to leave alone
 

@@ -457,12 +457,19 @@ each changes, or pass the name to `--style`.
 paints any theme on the preview fixture, a made-up route in the Lynmouth box that holds every
 feature a theme can get wrong.
 
-The preview card is the quick way to see a theme whole. It paints the synthetic route in the
+The preview card is the quick way to see a theme whole. To preview your own theme, run:
+
+```bash
+uv run python examples/theme_preview.py --theme path/to/my-theme.yaml out/
+```
+
+A theme path is relative to the repository's top directory. The card is saved as
+`out/preview.png`. It paints the synthetic route in the
 preview fixture, `tests/fixtures/preview/`, offline, and gathers the coast, the river that splits,
 the lake, roads over water and the small patches of every cover class on one card, so you can see
-how they meet in your colours. This is the default theme.
+how they meet in your colours. The card below is in the default theme.
 
-![The synthetic Lynmouth preview card in the default theme: a pale wash of green and tan land, a coast with an island, a river splitting round a bar, a lake, roads over the water and a magenta route lettered with a landmark and a journal note.](../images/preview/default.webp)
+![The synthetic Lynmouth preview card in the default theme: a pale wash of green and tan land, a coast with an island, a river splitting round a bar, a lake with an island, roads over the water and a magenta route lettered with a landmark and a journal note.](../images/preview/default.webp)
 
 *Painted by `examples/theme_preview.py` with `theme="default"`.*
 

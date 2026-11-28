@@ -13,8 +13,11 @@ back beside a stream, an island in a lake) are scattered across the places or mi
 that holds all of them cannot be recorded, because no real place has them in one frame, so
 the preview is made up. ADR 0032's "Fixture rules, for every fixture" assume a recorded
 place: a track built from OpenStreetMap ways, payloads recorded through the shipped providers
-and licensed ODbL, and no coordinate outside the gate's table. The preview breaks each of
-the three on purpose.
+and licensed ODbL, and the exempt-files rule, "the plan, this ADR and every other file carry
+no coordinate". The preview breaks the first two on purpose and departs from the third: its generator
+holds the layout's centre as a coordinate pair, inside the box, and its test imports the
+gate's `BOXES` table from `architecture.test_coordinates` rather than carrying a box of its
+own, so the box has one source.
 
 ## Decision
 
@@ -31,6 +34,8 @@ For `tests/fixtures/preview/` only, ADR 0032 changes as follows; everything else
   and the GPX lies inside it, and the generator holds its own centre inside it, as the
   scanned source of a fixture generator must. The payloads and the README are exempt as for
   every fixture, by the entry's key.
+- **A README of its own kind.** The README names the generator in place of the source, date
+  and way ids, and the data is under the repository's licence.
 - **Real names at made-up places, by design.** Every name on the fixture is a real place or
   feature of the Lynmouth area (Lynmouth, Lynton, East Lyn River, West Lyn River,
   Countisbury, Watersmeet, Foreland Point), standing where the layout needs it, not where it
