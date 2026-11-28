@@ -1,6 +1,7 @@
 # 008a — plan
 
-Revision 2 (2026-11-28), after the plan review (`review-plan.md`, verdict BLOCK, 8 blocking
+Revision 3 (2026-11-28): the re-review's R1 to R5 are folded in below (decisions 15 to
+19, which override decisions 10 and 11 where they disagree). Revision 2 followed the plan review (`review-plan.md`, verdict BLOCK, 8 blocking
 and 6 should-fix findings, all accepted). Checked against `main` at `3817978`. Where this
 plan says "review finding N", the fix that finding prescribes is part of this plan, word for
 word; this file states the decisions and where each one is used.
@@ -90,6 +91,33 @@ mutation run.
 14. **The credit** reads "© OpenStreetMap contributors" over synthetic data because it is the
     provider's credit; kept, and said in the fixture README (finding 16).
 
+15. **The width lives in `preview`** (R1). `examples/theme_preview.py` holds
+    `DISPLAY_PX = 600`; `preview` copies the style with `card.display_px = DISPLAY_PX` as its
+    first step, so a direct call (the golden test) and `main` paint the same card. `main`
+    passes `Style.from_theme(...)` unchanged. In `__main__`, `copytree` into
+    `Path(tmp) / "cache"`.
+16. **The sea's geometry** (R2), in the generator's metre frame with origin at the track
+    box's centre (x east, y north): the coast way drawn east to west through
+    (2249, 450), (900, 450), (600, 700), (300, 1150), (-2249, 1150), sea to the north; the
+    offshore island a closed anticlockwise ring of at least 24 vertices, centre (950, 900),
+    radius 110 m; `Foreland Point` (lighthouse node) at (1050, 450); the `East Lyn River`
+    mouth on the segment (600, 700) to (300, 1150); every track point at least 300 m from
+    the coast. This replaces the coast rows' placement rules in finding 5's table. Finding
+    3's presence assertions run on `Style()` and on `Style.from_theme("examples/themes/y-fenni.yaml",
+    relative_to=REPO_ROOT)` (the smallest card).
+17. **Test ownership** (R3). The per-theme frame and lane checks are in P1's
+    `tests/fixtures/test_make_preview.py`, looping over `Style.themes()` plus
+    `sorted(examples/themes/*.yaml)`; it imports nothing from another test module. The
+    theme-set test (`set(MEAN_RGB) == ...`) is unmarked in `tests/golden/test_theme_preview.py`;
+    only the paint test there carries `pytest.mark.golden`.
+18. **One source for `NOTE_POINT`** (R4): the example holds it; `test_make_preview.py` reads
+    it with `support.examples.load_example` and asserts that track point is within 40 m of
+    the `East Lyn River` and at least 300 m from the coast.
+19. **Elevation box rounding** (R5): the elevation `bbox`, `lats` and `lons` are rounded to
+    seven decimals before writing, as coordinates are. `Watersmeet` stays in the fixture as
+    an unannotated landmark candidate; it is not added to the annotations (a curated
+    landmark suppresses automatic ones, so it is not expected among the labels).
+
 ## Files to touch
 
 - `docs/decisions/0072-preview-fixture-in-the-lynmouth-box.md` (new), `docs/decisions/README.md` (row)
@@ -99,8 +127,7 @@ mutation run.
 - `tests/support/paths.py` (`PREVIEW_KEY` only)
 - `tests/architecture/test_coordinates.py` (`BOXES`, `KEYS`, `BUDGETS` entries and the import)
 - `examples/theme_preview.py` (new)
-- `tests/golden/test_theme_preview.py` (new; golden) and the non-golden theme-set test (in
-  `tests/fixtures/test_make_preview.py`)
+- `tests/golden/test_theme_preview.py` (new; the golden paint test and the unmarked theme-set test)
 - `tests/support/docs_images_008a.py` (new), `tests/support/docs_images.py` (three edits)
 - `docs/images/preview/*.webp`, `tests/golden/docs/preview/*` (painted by `make_docs_images.py`)
 - `docs/how-to/write-a-theme.md`, `docs/gallery.md`
@@ -136,8 +163,8 @@ mutation run.
   Red first: the fixture test against an empty dir. Then the generator, run once, commit its
   output.
 - **P2 Example and goldens.** Owns `examples/theme_preview.py`,
-  `tests/golden/test_theme_preview.py`, the per-theme frame checks and the theme-set test in
-  `test_make_preview.py`. Measure `CARD_SIZE`, mean RGB and label sets once, pin literals.
+  `tests/golden/test_theme_preview.py` (the golden paint test and the unmarked theme-set
+  test), and the `NOTE_POINT` check in `test_make_preview.py` (decision 18). Measure `CARD_SIZE`, mean RGB and label sets once, pin literals.
   Timed CLI run.
 - **P3 Docs.** Owns `docs_images_008a.py`, the three `docs_images.py` edits, the images and
   masters, the how-to, the gallery, the deleted note.
