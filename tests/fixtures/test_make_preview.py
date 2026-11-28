@@ -28,6 +28,7 @@ from pyntpot.maps.cache import MARGIN_M
 from pyntpot.maps.rings import point_in_ring, signed_area
 
 from support import REPO_ROOT
+from support.examples import load_example
 from support.paths import FIXTURES, PREVIEW_KEY
 
 #: The committed fixture.
@@ -393,3 +394,17 @@ def test_each_theme_paints_its_card_inside_the_fetch_box_with_lanes(
     assert box_south <= south <= north <= box_north
     assert box_west <= west <= east <= box_east
     assert basemap.layers.minor_roads == (Path(theme).stem != NO_LANES)
+
+
+def test_the_example_pins_its_note_on_the_riverside_away_from_the_coast() -> None:
+    """The example's `NOTE_POINT` is a track point within 40 m of the East Lyn River and 300 m from the coast."""
+    note_point = load_example("theme_preview", "example_theme_preview")["NOTE_POINT"]
+    point = _track()[note_point]
+    coast = _metres(_elements("overpass")[0]["geometry"])
+    rivers = [
+        _metres(e["geometry"])
+        for e in _elements("overpass")
+        if e["tags"].get("name") == "East Lyn River"
+    ]
+    assert min(foot_on(point, line)[0] for line in rivers) <= 40
+    assert foot_on(point, coast)[0] >= 300
