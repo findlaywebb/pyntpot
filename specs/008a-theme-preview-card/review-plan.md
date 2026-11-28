@@ -416,3 +416,135 @@ The geometry, the three writers and the README writer are four responsibilities.
 - The card's credit reads "© OpenStreetMap contributors" over synthetic data, because it is
   the provider's credit. The spec asks for the credit, so keep it, but say so in the fixture
   README.
+
+## Re-review (revision 2)
+
+Checked revision 2 of `plan.md` on branch `claude/lucid-shannon-v36myd`, with `main` at `3817978`.
+The only change on main is a toolchain bump, and it touches none of the code cited above.
+
+### Verdict: BLOCK
+
+Revision 2 takes every finding as binding, and fixes findings 1 to 8 as prescribed. Two new
+problems remain, and an agent cannot one-shot the plan with either of them:
+
+- The plan has two homes for the 600 px copy of the style.
+- The coast rows of finding 5's table, which the plan adopts verbatim, make the island
+  impossible to place inside the smallest card. Decision 2 requires it there.
+
+The table's flaw is mine. Both fixes are one line or one short table.
+
+### Resolutions verified
+
+| Finding | Status | Where in revision 2 |
+| --- | --- | --- |
+| 1 Card frame | resolved: 1.5 x 1.6 km track, default margins, data region, per-theme frame and lanes checks | decisions 1-2, test plan row 3 |
+| 2 Example signature | resolved, except finding R1 | decision 10 |
+| 3 Presence test on `fetch` | resolved | test plan row 3 |
+| 4 Small patches | resolved | decision 4 |
+| 5 Element table | adopted verbatim; its coast rows conflict with decision 2 (finding R2) | decision 3 |
+| 6 Key from the read-back GPX | resolved | decision 7 |
+| 7 Golden size, labels, theme set | resolved; the test's placement is weak (finding R3) | decision 11 |
+| 8 Docs registration | resolved | decision 13 |
+| 9-14, 16 | resolved | decisions 5, 6, 8, 12, 14; files list; P4 |
+| 15 Generator split | resolved | decision 9 |
+
+I checked the points the brief raises:
+
+- **Landmark lookup by name is sound.** `journal_picks` looks a coordinate-less `Landmark` up
+  in `basemap.candidates` by name (`lettering/picks.py:41,68-72`). The candidates are every
+  named node inside the card (`osm_elements.py:357-360`, `candidates/landmarks.py:193-197`),
+  and the cap is far above this fixture's handful of names. With `y-fenni`'s
+  `name_tags: [name:cy, name]` the name still falls back to `name`.
+  - One consequence to expect: once any curated landmark lands, the heuristic landmarks are
+    not lettered (`lettering/pipeline.py:176-179`). `Watersmeet` will therefore not be
+    lettered unless it is added to the annotations' `landmarks`. That is fine for the spec,
+    which asks for "a named landmark", and the label pins will show it.
+- **The elevation rule and the island agree.** Decision 5 makes the island's ring land at the
+  20 m floor, and the sea 0 m. The grid spacing is about 57 m (80 samples over 4.5 km), so a
+  110 m-radius island holds several land samples. The step from the sea at 0 m to the hill
+  at the coast reads as a cliff, which is right for this coast.
+
+### Findings
+
+#### BLOCKING
+
+**R1. The 600 px copy has two possible homes.**
+- Decision 10 has `main` copy the style with `card.display_px = 600` and then call `preview`.
+- Decision 11 has the golden test call `preview(...)` directly and pin `CARD_SIZE` at width
+  1200.
+- A test that passes `Style.from_theme(theme)` to `preview` paints at the default 900 px: an
+  1800 px PNG, different labels, and different mean RGB from the docs images. The agent must
+  either copy the style again in the test, which makes two sources, or notice and restructure.
+
+*Fix:* `preview` applies the copy itself, as its first line:
+`style = style.model_copy(update={"card": replace(style.card, display_px=DISPLAY_PX)})`,
+with `DISPLAY_PX = 600` a module constant. `main` passes `Style.from_theme(theme,
+relative_to=REPO_ROOT)` unchanged. Every caller then gets the 600 px card.
+
+**R2. Finding 5's coast rows contradict decision 2, so the island cannot be placed.**
+- In the plan's metre frame (origin at the track box's centre, x east, y north), the track
+  box is x -750 to 750 and y -800 to 800.
+- The smallest card, `y-fenni`, reaches y 1220. The default card reaches y 1756, and the
+  largest, `yr-wyddfa`, y 1905. The fetch box reaches y 2300.
+- The table says the coast runs "north of the track, at least 300 m off it". Read as a
+  straight line north of the track box, that puts the coast at or above y 1100. That leaves
+  at most 120 m of sea inside the smallest card.
+- The island needs a perimeter of at least 600 m, so it is about 190 m across. It cannot sit
+  in that strip, yet decision 2 requires every listed feature inside the smallest card.
+- The agent will either break decision 2 silently, because no test checks the smallest
+  card's contents, or come back.
+
+*Fix:* prescribe where the sea lies, and test the smallest card.
+
+- **The coast** is drawn east to west through these metre points: (2249, 450), (900, 450),
+  (600, 700), (300, 1150), (-2249, 1150). The sea is north of it.
+- **The island** is centred at (950, 900), radius 110 m, as an anticlockwise closed ring of
+  at least 24 vertices. Its perimeter is about 690 m.
+- **`Foreland Point`** is placed at (1050, 450), on the coast east of the bend.
+- **The river's mouth** is on the coast segment from (600, 700) to (300, 1150).
+- These positions keep every listed feature within 350 m of the track box. The island
+  reaches x 1060, and the coast's west part is at y 1150.
+- **The track** keeps at least 300 m from every coast vertex and segment. East of x 600 it
+  therefore stays at or below y 150. It reaches the track box's north edge, y 800, west of
+  x 0.
+
+Then add to `test_make_preview.py`: run finding 3's presence assertions on
+`Style.from_theme("examples/themes/y-fenni.yaml", relative_to=REPO_ROOT)`, the smallest card,
+as well as on `Style()`. Skip the lane assertion, which the per-theme loop already covers.
+
+#### SHOULD-FIX
+
+**R3. Put the theme-set test beside `MEAN_RGB`, and the per-theme fixture checks in P1.**
+- The plan puts the non-golden theme-set test in `tests/fixtures/test_make_preview.py`. That
+  test must then import `MEAN_RGB` from the golden module (`golden.test_theme_preview`, a
+  namespace import of a test module).
+- It also gives P2 the per-theme frame and lanes checks, which prove P1's layout. If they
+  fail, P2 must edit the generator, and P1 owns the generator.
+
+*Fix:*
+- The per-theme checks belong to P1. They loop over
+  `(*Style.themes(), *sorted(f"examples/themes/{p.name}" for p in (REPO_ROOT / "examples" /
+  "themes").glob("*.yaml")))`, so they do not depend on the golden test.
+- The theme-set test belongs to P2, inside `tests/golden/test_theme_preview.py`. Put the
+  `golden` mark on the paint test as a decorator, not as `pytestmark`. Leave
+  `test_every_theme_has_a_pinned_mean` unmarked, computing the same expression inline, so it
+  runs in the fast suite.
+- `test_make_preview.py` is then P1's alone.
+
+**R4. `NOTE_POINT` has two homes.** The example holds the literal, and the generator decides
+which track point is riverside. *Fix:* `test_make_preview.py` reads `NOTE_POINT` from
+`load_example("theme_preview", "example_theme_preview")`. It asserts that the read-back
+track's point at that index lies within 40 m of the `East Lyn River`, and at least 300 m from
+the coast. P1 creates the constant, and the example imports nothing from tests.
+
+**R5. Round the elevation `bbox` too.** Decision 8 rounds "coordinates". The `bbox` and the
+grid's `lats` and `lons` are computed from `track.bounding_box` by `cos`, so round all three
+to seven decimals before `ElevationGrid(...)`. Then the committed bytes do not rest on the
+last ulp of a libm.
+
+#### CONSIDER
+
+- If the card should letter `Watersmeet` too, list it after `Foreland Point` in the
+  annotations' `landmarks` (see the landmark note above).
+- In the `__main__` block, `shutil.copytree` needs a destination that does not exist yet.
+  Copy to `Path(tmp) / "cache"`, as `make_docs_images.py:47` does.
