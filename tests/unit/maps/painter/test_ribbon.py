@@ -26,7 +26,7 @@ class TestRibbonAlpha:
 
     def test_a_loop_is_filled_only_when_asked(self):
         """The inside of a loop is painted with fill on and left bare with it off."""
-        sheet = Sheet(120, 120, gran_px=6.0, seed=4)
+        sheet = Sheet(w=120, h=120, gran_px=6.0, seed=4)
         d = _loop_distance()
         filled, _ = ribbon_alpha(d, 6.0, sheet, 1.0, fill=True)
         band, _ = ribbon_alpha(d, 6.0, sheet, 1.0, fill=False)
@@ -36,7 +36,7 @@ class TestRibbonAlpha:
 
     def test_the_coast_stops_the_ribbon_and_its_rim(self):
         """Nothing the ribbon carries is laid on the sea side of a surveyed coast."""
-        sheet = Sheet(120, 120, gran_px=6.0, seed=4)
+        sheet = Sheet(w=120, h=120, gran_px=6.0, seed=4)
         d = _loop_distance()
         land = np.ones((120, 120), np.float32)
         land[:, 70:] = 0.0

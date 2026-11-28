@@ -20,16 +20,16 @@ from support.flags_off import flags_off
 def test_a_brush_id_names_a_treatment_and_a_colour():
     """The five approved picks resolve to the rows and inks they name."""
     style = BrushStyle()
-    major, colour = brush_from_id("MAJ2-a", 3.6, 2.0, style)
+    major, colour = brush_from_id("MAJ2-a", 3.6, scale=2.0, style=style)
     assert colour == "#b5623f"
     assert major.width == pytest.approx(7.2)
-    track, olive = brush_from_id("TRK4-d", 2.4, 2.0, style)
+    track, olive = brush_from_id("TRK4-d", 2.4, scale=2.0, style=style)
     assert olive == "#6f6636"
     assert track.dry > major.dry  # the track is the dry, broken brush
-    lane, umber = brush_from_id("LAN5-a", 1.8, 2.0, style, "lane")
+    lane, umber = brush_from_id("LAN5-a", 1.8, scale=2.0, style=style, override="lane")
     assert umber == "#6b4423"
     assert lane.pool == pytest.approx(1.4)  # the pen touch-down, as last tuned
-    river, cobalt = brush_from_id("RIV1-a", 8.4, 2.0, style)
+    river, cobalt = brush_from_id("RIV1-a", 8.4, scale=2.0, style=style)
     assert cobalt == "#255d80"
     assert river.dry < track.dry
 
@@ -37,9 +37,9 @@ def test_a_brush_id_names_a_treatment_and_a_colour():
 def test_a_brush_id_that_names_nothing_is_refused():
     """A style naming a brush the sheet does not carry fails where it is set."""
     with pytest.raises(ValueError, match="no such brush"):
-        brush_from_id("MAJ9-a", 3.0, 2.0, BrushStyle())
+        brush_from_id("MAJ9-a", 3.0, scale=2.0)
     with pytest.raises(ValueError, match="no such brush"):
-        brush_from_id("RIV1-z", 3.0, 2.0, BrushStyle())
+        brush_from_id("RIV1-z", 3.0, scale=2.0)
 
 
 @pytest.mark.parametrize("key", sorted(BRUSH_OVERRIDE_KEYS), ids=sorted(BRUSH_OVERRIDE_KEYS))
@@ -47,16 +47,16 @@ def test_every_override_key_changes_the_brush(key: str):
     """Each override key, set to a value no treatment holds, changes the brush it builds."""
     plain = BrushStyle(brush_overrides={})
     over = BrushStyle(brush_overrides={"lane": {key: 0.317}})
-    without, _ = brush_from_id("LAN5-a", 1.8, 2.0, plain, "lane")
-    with_key, _ = brush_from_id("LAN5-a", 1.8, 2.0, over, "lane")
+    without, _ = brush_from_id("LAN5-a", 1.8, scale=2.0, style=plain, override="lane")
+    with_key, _ = brush_from_id("LAN5-a", 1.8, scale=2.0, style=over, override="lane")
     assert with_key != without
 
 
 def test_without_an_override_key_the_overrides_are_read_by_the_lower_case_prefix():
     """With no override key, the brush reads the overrides under its id's prefix, lower case."""
     over = BrushStyle(brush_overrides={"riv": {"darkness": 0.317}})
-    plain, _ = brush_from_id("RIV1-a", 8.4, 2.0, BrushStyle(brush_overrides={}))
-    read, _ = brush_from_id("RIV1-a", 8.4, 2.0, over)
+    plain, _ = brush_from_id("RIV1-a", 8.4, scale=2.0, style=BrushStyle(brush_overrides={}))
+    read, _ = brush_from_id("RIV1-a", 8.4, scale=2.0, style=over)
     assert read != plain
 
 
@@ -74,7 +74,7 @@ def test_every_phase_1_brush_flag_off_builds_a_plain_brush():
     """With the phase 1 flags off, the brush carries no reservoir, no directional break and no aux."""
     style = flags_off(BrushStyle)
     assert not (style.ink_starve or style.dry_directional or style.pen_starve)
-    brush, _ = brush_from_id("TRK4-d", 2.4, 2.0, style, "track")
+    brush, _ = brush_from_id("TRK4-d", 2.4, scale=2.0, style=style, override="track")
     assert not (brush.starve or brush.dir_dry or brush.pen_starve)
     assert ink_aux((8, 8), brush) is None
 
@@ -82,8 +82,8 @@ def test_every_phase_1_brush_flag_off_builds_a_plain_brush():
 def test_a_brush_never_takes_the_nib_treatment_or_the_other_way_round():
     """The two reservoirs are separate flags on separate tools."""
     both = BrushStyle(ink_starve=True, pen_starve=True)
-    track, _ = brush_from_id("TRK4-d", 2.4, 2.0, both, "track")
-    lane, _ = brush_from_id("LAN5-a", 1.8, 2.0, both, "lane")
+    track, _ = brush_from_id("TRK4-d", 2.4, scale=2.0, style=both, override="track")
+    lane, _ = brush_from_id("LAN5-a", 1.8, scale=2.0, style=both, override="lane")
     assert track.starve and not track.pen_starve
     assert lane.pen_starve and not lane.starve
     assert frozenset({"5", "6", "8"}) == PEN_ROWS
@@ -94,7 +94,7 @@ def test_every_phase_2_brush_flag_off_but_the_ink_grid_builds_a_plain_pad():
     style = flags_off(BrushStyle)
     assert style.ink_ss == 3
     assert not (style.brush_organic or style.ink_joins or style.stroke_smooth)
-    brush, _ = brush_from_id("TRK4-d", 2.4, 2.0, style, "track")
+    brush, _ = brush_from_id("TRK4-d", 2.4, scale=2.0, style=style, override="track")
     assert not brush.organic and brush.smooth == 0.0 and brush.unit == 1.0
     assert scaled_brush(brush, 1) is brush
     pad = InkPad((8, 8), brush, flags_off(BrushStyle, ink_ss=1))
@@ -105,13 +105,13 @@ def test_every_phase_2_brush_flag_off_but_the_ink_grid_builds_a_plain_pad():
 def test_a_missed_brush_id_names_the_nearest_one():
     """A brush id one letter off a real cell is refused with that cell suggested."""
     with pytest.raises(ValueError, match="no such brush 'RIV1-z'; did you mean RIV1-a\\?"):
-        brush_from_id("RIV1-z", 3.0, 2.0, BrushStyle())
+        brush_from_id("RIV1-z", 3.0, scale=2.0)
 
 
 def test_a_brush_id_far_from_every_cell_is_refused_without_a_suggestion():
     """When no id is close, the refusal carries no 'did you mean' clause."""
     with pytest.raises(ValueError, match=r"no such brush 'zzzzzz'$"):
-        brush_from_id("zzzzzz", 3.0, 2.0, BrushStyle())
+        brush_from_id("zzzzzz", 3.0, scale=2.0)
 
 
 def test_the_catalogue_tables_refuse_assignment():
@@ -135,3 +135,25 @@ def test_brush_ids_is_the_cross_product_the_sheet_implies():
     assert ids[-1] == "TRK8-f"
     assert "MAJ6-e" in ids
     assert all(brush_id_known(brush_id) for brush_id in ids)
+
+
+class TestBrushFromIdDefaults:
+    """`brush_from_id` reads scale 1.0 and the default look when they are left out."""
+
+    def test_the_defaults_are_scale_one_and_the_default_style(self):
+        """Leaving out `scale` and `style` equals writing `scale=1.0, style=BrushStyle()`."""
+        bare = brush_from_id("MAJ6-e", 3.0)
+        explicit = brush_from_id("MAJ6-e", 3.0, scale=1.0, style=BrushStyle())
+        assert bare == explicit
+
+    def test_a_scale_other_than_one_still_changes_the_width(self):
+        """The scale default is not sticky: `scale=2.0` doubles the brush's width."""
+        wide, _ = brush_from_id("MAJ6-e", 3.0, scale=2.0)
+        narrow, _ = brush_from_id("MAJ6-e", 3.0)
+        assert wide.width == pytest.approx(2.0 * narrow.width)
+
+
+def test_a_positional_scale_is_refused():
+    """`brush_from_id("MAJ6-e", 3.0, 2.0)` raises TypeError: `scale` is a keyword."""
+    with pytest.raises(TypeError, match="positional"):
+        brush_from_id("MAJ6-e", 3.0, 2.0)  # ty: ignore[too-many-positional-arguments]

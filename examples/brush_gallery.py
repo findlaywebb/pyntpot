@@ -19,7 +19,7 @@ Strokes of one ink are combined before one composite, as `brush_sheet.py` does.
 are private to `pyntpot.ink`; `tests/docs/test_reference_pages.py` pins it to those tables.
 `cell_ids` and `figure_ids` say which ids a figure paints.
 
-Public names it uses: from `pyntpot.ink`, `Sheet`, `PaperStyle`, `BrushStyle`, `brush_from_id`,
+Public names it uses: from `pyntpot.ink`, `Sheet`, `PaperStyle`, `brush_from_id`,
 `stamp`, `ink_density`, `rgb`, `composite` and `save_image`; from `pyntpot.letters`, `Setting`;
 and `LABELS`, `GridSpec`, `LabelStyle`, `grid_paper` and `label_grid` from `labelled_grid.py`.
 It introduces none.
@@ -37,7 +37,6 @@ import numpy as np
 from labelled_grid import LABELS, GridSpec, LabelStyle, grid_paper, label_grid
 
 from pyntpot.ink import (
-    BrushStyle,
     PaperStyle,
     Sheet,
     brush_from_id,
@@ -145,7 +144,7 @@ def _paint(figure: str, size: int) -> tuple[np.ndarray, list[list[tuple[int, int
     columns, rows = _columns(figure), len(KINDS)
     spec = GridSpec(size, len(columns), rows, CELL_H, LEFT, TOP, GAP, PAD_RIGHT, 38, unit)
     boxes, h = spec.boxes(), spec.height
-    sheet = Sheet(h, size, GRAN_PX * unit, SEED)
+    sheet = Sheet(w=size, h=h, gran_px=GRAN_PX * unit, seed=SEED)
     paper = grid_paper(sheet)
     by_ink: dict[str, np.ndarray] = {}
     index = 0
@@ -153,7 +152,7 @@ def _paint(figure: str, size: int) -> tuple[np.ndarray, list[list[tuple[int, int
         for c, ids in enumerate(row):
             x, y, w, cell_h = boxes[r][c]
             for width, share in zip(WIDTHS_PX, (0.26, 0.72), strict=True):
-                brush, ink = brush_from_id(ids[0], width, unit, BrushStyle())
+                brush, ink = brush_from_id(ids[0], width, scale=unit)
                 acc = np.zeros((h, size), np.float32)
                 line = _stroke(x, y + share * cell_h, w, 0.08 * cell_h)
                 stamp(acc, line, brush, np.random.default_rng(SEED + index))

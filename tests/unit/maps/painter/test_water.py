@@ -29,9 +29,9 @@ class TestSeaPatches:
     def test_the_sea_dries_in_broad_patches_rather_than_flat(self):
         """The largest wash on the card stops reading as a fill."""
         cov = _sea_cover()
-        sheet = Sheet(*cov.shape, gran_px=8.0, seed=5)
+        sheet = Sheet(w=cov.shape[1], h=cov.shape[0], gran_px=8.0, seed=5)
         style = WashStyle(sea_variation=True)
-        flat = wash(cov, sheet, 0.60, 0.34, WashOptions(rim_px=7.0))
+        flat = wash(cov, sheet, body=0.60, pool=0.34, options=WashOptions(rim_px=7.0))
         varied = sea_patches(flat, cov, 3.0, style)
         body = cov > 0.5
         assert varied.min() >= 0.0 and varied.max() <= 1.0

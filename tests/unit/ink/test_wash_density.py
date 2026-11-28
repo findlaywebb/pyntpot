@@ -28,7 +28,7 @@ def block() -> tuple[Sheet, np.ndarray]:
     """A sheet and a block of cover over most of it, so every paper field shows in the wash."""
     cover = np.zeros((H, W), np.float32)
     cover[8:88, 10:118] = 1.0
-    return Sheet(H, W, gran_px=6.0, seed=7), cover
+    return Sheet(w=W, h=H, gran_px=6.0, seed=7), cover
 
 
 class TestWashDensity:
@@ -39,7 +39,7 @@ class TestWashDensity:
         """Edge, rim, granulation, wet area and the final softening all show in the pinned sums."""
         options, total, weighted = PINNED[name]
         sheet, cover = block()
-        dens = wash(cover, sheet, 0.52, 0.20, options)
+        dens = wash(cover, sheet, body=0.52, pool=0.20, options=options)
         assert float(dens.sum(dtype=np.float64)) == pytest.approx(total, rel=1e-7)
         assert float((dens * RAMP).sum(dtype=np.float64)) == pytest.approx(weighted, rel=1e-7)
 
@@ -53,14 +53,14 @@ class TestWashDensity:
     ) -> None:
         """Settings that push the density past one or below zero are clipped to exactly that range."""
         sheet, cover = block()
-        dens = wash(cover, sheet, base, pool, options)
+        dens = wash(cover, sheet, body=base, pool=pool, options=options)
         assert float(dens.min()) == 0.0
         assert float(dens.max()) == 1.0
 
     def test_no_cover_lays_zeros_of_the_covers_shape(self) -> None:
         """An empty cover gives a zero density of the cover's own shape and type."""
         sheet, _ = block()
-        dens = wash(np.zeros((H, W), np.float32), sheet, 0.52, 0.20)
+        dens = wash(np.zeros((H, W), np.float32), sheet, body=0.52, pool=0.20)
         assert dens.shape == (H, W)
         assert dens.dtype == np.float32
         assert not dens.any()
@@ -68,6 +68,8 @@ class TestWashDensity:
     def test_a_bleed_at_the_blur_floor_is_no_bleed(self) -> None:
         """A bleed of 0.4 px is too small to blur, so it leaves the wash bit for bit unbled."""
         sheet, cover = block()
-        floor = wash(cover, sheet, 0.52, 0.20, WashOptions(wet=RAMP, bleed_px=0.4))
-        none = wash(cover, sheet, 0.52, 0.20, WashOptions(wet=RAMP, bleed_px=0.0))
+        floor = wash(
+            cover, sheet, body=0.52, pool=0.20, options=WashOptions(wet=RAMP, bleed_px=0.4)
+        )
+        none = wash(cover, sheet, body=0.52, pool=0.20, options=WashOptions(wet=RAMP, bleed_px=0.0))
         assert np.array_equal(floor, none)

@@ -24,13 +24,13 @@ def density(layer: PigmentLayer) -> np.ndarray:
 def test_a_wash_given_no_option_is_the_wash_it_always_was():
     """Passing the phase 1 arguments at their inert values changes nothing."""
     sheet, left, _ = two_squares()
-    plain = wash(left, sheet, 0.52, 0.20, WashOptions(rim_px=7.0))
+    plain = wash(left, sheet, body=0.52, pool=0.20, options=WashOptions(rim_px=7.0))
     same = wash(
         left,
         sheet,
-        0.52,
-        0.20,
-        WashOptions(rim_px=7.0, wet=None, gran_gamma=0.0, flow=None, blooms=None),
+        body=0.52,
+        pool=0.20,
+        options=WashOptions(rim_px=7.0, wet=None, gran_gamma=0.0, flow=None, blooms=None),
     )
     assert np.array_equal(plain, same)
 
@@ -55,12 +55,14 @@ def test_flow_and_blooms_take_only_keywords():
 
 def test_granulation_settles_in_the_pits_the_dry_brush_breaks_on():
     """Bound to the paper's own height, not to an fbm unrelated to it."""
-    sheet = Sheet(200, 300, gran_px=8.0, seed=5, fibre=0.35)
+    sheet = Sheet(w=300, h=200, gran_px=8.0, seed=5, fibre=0.35)
     square_m = np.zeros((200, 300), np.float32)
     square_m[40:160, 60:240] = 1.0
     body = square_m > 0.5
-    loose = wash(square_m, sheet, 0.55, 0.22, WashOptions(rim_px=7.0))
-    bound = wash(square_m, sheet, 0.55, 0.22, WashOptions(rim_px=7.0, gran_gamma=1.7))
+    loose = wash(square_m, sheet, body=0.55, pool=0.22, options=WashOptions(rim_px=7.0))
+    bound = wash(
+        square_m, sheet, body=0.55, pool=0.22, options=WashOptions(rim_px=7.0, gran_gamma=1.7)
+    )
 
     def follows(d: np.ndarray) -> float:
         a = d[body] - d[body].mean()
@@ -80,9 +82,9 @@ def test_two_classes_wet_at_once_bleed_into_each_other_rather_than_butt():
     assert wet[100, 41] < 0.1, "the outer edge is not"
 
     def total(wet: np.ndarray | None = None) -> np.ndarray:
-        return wash(left, sheet, 0.52, 0.20, WashOptions(rim_px=7.0, wet=wet)) + wash(
-            right, sheet, 0.58, 0.26, WashOptions(rim_px=7.0, wet=wet)
-        )
+        return wash(
+            left, sheet, body=0.52, pool=0.20, options=WashOptions(rim_px=7.0, wet=wet)
+        ) + wash(right, sheet, body=0.58, pool=0.26, options=WashOptions(rim_px=7.0, wet=wet))
 
     dry = total()
     damp = total(wet)
@@ -99,7 +101,7 @@ def test_two_classes_wet_at_once_bleed_into_each_other_rather_than_butt():
 
 def test_the_flow_rim_is_wider_on_a_bigger_wash():
     """Mask minus blur is one width everywhere; a drying edge is not."""
-    sheet = Sheet(260, 400, gran_px=8.0, seed=5)
+    sheet = Sheet(w=400, h=260, gran_px=8.0, seed=5)
     depths = {}
     for tag, radius in (("small", 18), ("big", 90)):
         yy, xx = np.ogrid[:260, :400]
@@ -122,13 +124,13 @@ def test_a_bloom_lifts_the_centre_and_deposits_it_at_the_front():
     sheet, left, _ = two_squares()
     body = left > 0.5
     core = body & (chamfer_distance(~body) > 12)
-    flat = wash(left, sheet, 0.52, 0.20, WashOptions(rim_px=7.0))
+    flat = wash(left, sheet, body=0.52, pool=0.20, options=WashOptions(rim_px=7.0))
     blown = wash(
         left,
         sheet,
-        0.52,
-        0.20,
-        WashOptions(
+        body=0.52,
+        pool=0.20,
+        options=WashOptions(
             rim_px=7.0, blooms=Blooms(seed=3, count=6, radius_frac=0.17, lift=0.45, warp=0.45)
         ),
     )
@@ -139,9 +141,9 @@ def test_a_bloom_lifts_the_centre_and_deposits_it_at_the_front():
     again = wash(
         left,
         sheet,
-        0.52,
-        0.20,
-        WashOptions(
+        body=0.52,
+        pool=0.20,
+        options=WashOptions(
             rim_px=7.0, blooms=Blooms(seed=3, count=6, radius_frac=0.17, lift=0.45, warp=0.45)
         ),
     )
@@ -151,7 +153,7 @@ def test_a_bloom_lifts_the_centre_and_deposits_it_at_the_front():
 def test_a_class_that_is_not_named_stays_the_one_wash_it_was():
     """Only the classes a theme names separate, and only when the flag is on."""
     sheet, left, _ = two_squares(80, 120)
-    dens = wash(left, sheet, 0.72, 0.30, WashOptions(rim_px=7.0))
+    dens = wash(left, sheet, body=0.72, pool=0.30, options=WashOptions(rim_px=7.0))
     pig = rgb(PIGMENTS["wood"])
     for style in (WashStyle(), WashStyle(pigment_separation=True)):
         out = separated(dens, "heath", pig, 0.14, sheet, style)
@@ -162,7 +164,7 @@ def test_a_class_that_is_not_named_stays_the_one_wash_it_was():
 def test_the_heavy_pigment_settles_in_the_tooth_and_the_light_one_floats():
     """Two pigments out of one wash: one in the pits, one over them."""
     sheet, left, _ = two_squares(200, 320)
-    dens = wash(left, sheet, 0.72, 0.30, WashOptions(rim_px=7.0))
+    dens = wash(left, sheet, body=0.72, pool=0.30, options=WashOptions(rim_px=7.0))
     style = flags_off(WashStyle, pigment_separation=True)
     light, heavy = separated(dens, "wood", rgb(PIGMENTS["wood"]), 0.05, sheet, style)
     body = left > 0.5
@@ -184,9 +186,9 @@ def test_the_heavy_pigment_settles_in_the_tooth_and_the_light_one_floats():
 def test_the_fluid_pass_modulates_the_washes_and_never_becomes_them():
     """The rule the pass is held to: a failure degrades to today's plate."""
     wet, _, _ = fluid_fields()
-    sheet = Sheet(96, 128, gran_px=8.0, seed=5)
+    sheet = Sheet(w=128, h=96, gran_px=8.0, seed=5)
     style = WashStyle(fluid_pass=True)
-    before = wash(wet, sheet, 0.55, 0.22, WashOptions(rim_px=7.0))
+    before = wash(wet, sheet, body=0.55, pool=0.22, options=WashOptions(rim_px=7.0))
     layers: list[PigmentLayer] = [(before.copy(), rgb(PIGMENTS["wood"]), 0.05)]
     after = density(fluid_modulate(layers, wet, sheet, style)[0])
     body = wet > 0.5
@@ -202,7 +204,14 @@ def test_the_fluid_pass_modulates_the_washes_and_never_becomes_them():
 
 def test_a_sheet_with_nothing_wet_on_it_comes_back_untouched():
     """A pass that has nothing to do hands the plate straight back."""
-    sheet = Sheet(64, 64, gran_px=8.0, seed=5)
+    sheet = Sheet(w=64, h=64, gran_px=8.0, seed=5)
     layers: list[PigmentLayer] = [(np.zeros((64, 64), np.float32), rgb(PIGMENTS["wood"]))]
     same = fluid_modulate(layers, np.zeros((64, 64), np.float32), sheet, WashStyle(fluid_pass=True))
     assert same is layers
+
+
+def test_a_positional_density_is_refused():
+    """`wash(cover, sheet, 0.6, 0.3)` raises TypeError: `body` and `pool` are keywords."""
+    sheet, left, _ = two_squares()
+    with pytest.raises(TypeError, match="positional"):
+        wash(left, sheet, 0.6, 0.3)  # ty: ignore[too-many-positional-arguments, missing-argument]

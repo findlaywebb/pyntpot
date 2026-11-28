@@ -11,7 +11,7 @@ wash pooled, and uneven along its length; the site repeats it sideways. `"palett
 times for text and the header on the light scheme. Its contrast is checked by
 `tests/examples/test_site_theme.py`.
 
-Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`, `BrushStyle`,
+Public names it uses: from `pyntpot.ink`, `Sheet`, `Canvas`, `PaperStyle`,
 `PIGMENTS`, `paper_plate`, `brush_from_id`, `stamp`, `ink_density`, `composite`, `rgb` and
 `save_image`.
 
@@ -34,7 +34,6 @@ import numpy as np
 
 from pyntpot.ink import (
     PIGMENTS,
-    BrushStyle,
     Canvas,
     PaperStyle,
     Sheet,
@@ -248,7 +247,7 @@ def _seamless(pixels: np.ndarray) -> np.ndarray:
 
 def _paint_paper(width: int) -> np.ndarray:
     """Paint the page's paper `width` pixels square, so that it tiles."""
-    sheet = Sheet(width, width, GRAN_PX, SEED)
+    sheet = Sheet(w=width, h=width, gran_px=GRAN_PX, seed=SEED)
     plate = paper_plate(sheet, Canvas(0, 0, width, width, width, width), _paper(), width)
     return _seamless(plate)
 
@@ -256,10 +255,10 @@ def _paint_paper(width: int) -> np.ndarray:
 def _paint_rule(width: int) -> np.ndarray:
     """Paint one wavering stroke of a river brush on pure white, touched down and tapering out, `width` pixels wide."""
     height = max(8, round(width * RULE_ASPECT))
-    sheet = Sheet(height, width, GRAN_PX, SEED)
+    sheet = Sheet(w=width, h=height, gran_px=GRAN_PX, seed=SEED)
     x = np.linspace(0.02 * width, 0.98 * width, 240)
     y = height / 2 + 0.16 * height * np.sin(2 * np.pi * 1.5 * x / width)
-    brush, ink_hex = brush_from_id(RULE_BRUSH, RULE_BRUSH_SHARE * height, 1.0, BrushStyle())
+    brush, ink_hex = brush_from_id(RULE_BRUSH, RULE_BRUSH_SHARE * height)
     t = np.linspace(0.0, 1.0, 64)
     taper = np.minimum(np.minimum(t / 0.05, (1.0 - t) / 0.4), 1.0) ** 0.7 * 0.8 + 0.2
     acc = np.zeros((height, width), np.float32)
@@ -288,7 +287,7 @@ def _paint_header(width: int) -> np.ndarray:
     rows = np.linspace(0.0, 1.0, height)[:, None]
     pool = 0.25 * np.clip((rows - 0.8) / 0.2, 0.0, 1.0) ** 2
     glaze = low + (high - low) * along + 0.12 * grain + pool
-    sheet = Sheet(height, width, GRAN_PX, SEED)
+    sheet = Sheet(w=width, h=height, gran_px=GRAN_PX, seed=SEED)
     paper = paper_plate(sheet, Canvas(0, 0, width, height, width, height), _paper(), width)
     return np.clip(paper * rgb(PIGMENTS["water"]) ** glaze[..., None], 0.0, 1.0)
 

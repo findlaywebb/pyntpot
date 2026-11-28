@@ -21,3 +21,16 @@ is about how well they teach.
 of nesting at most, settings grouped in a small dataclass or a dict where they belong
 together, no unexplained numbers), a findings table under `specs/`, and fixes in small
 slices that keep every docs image pin exact unless a picture is meant to change.
+
+## The sweep onto the new calls (010b)
+
+ADR 0073 added `Canvas.pixels`, a default `display_px` on `paper_plate`, and keyword
+arguments for `Sheet`, `wash` and `brush_from_id`. The examples and tutorials still spell
+the older long forms, which spec 010's change leaves untouched so that no image moves. The
+sweep belongs here:
+
+- the 42 `Canvas(0, 0, w, h, w, h)` in 25 example files, and the watercolour tutorial's 12,
+  move onto `Canvas.pixels`;
+- the 35 `display_px` arguments are dropped where they equal the canvas width;
+- the `letter_over` and `basemap.key` sweeps of 010a add their own lines here;
+- tidy ruff's reflow of `_sky` in `examples/derwentwater.py` (`rgb(\n PIGMENTS["sand"]\n)`).

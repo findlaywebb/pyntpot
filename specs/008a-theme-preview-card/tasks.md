@@ -37,4 +37,4 @@ Plan: `plan.md` revision 3 (decisions 1 to 19). Review: `review-plan.md`.
 - [x] Full gates, golden suite included.
 - [x] Fresh-context diff review against the plan; findings triaged and applied.
 - [x] Spec acceptance criteria ticked against evidence.
-- [ ] PR `feat(maps): a theme preview card that holds every feature and the awkward meetings between them`, `Closes #79`; merged when CI is green.
+- [x] PR `feat(maps): a theme preview card that holds every feature and the awkward meetings between them`, `Closes #79`; merged when CI is green.

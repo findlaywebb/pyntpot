@@ -126,7 +126,7 @@ def _ground(sheet: Sheet, w: int, h: int) -> np.ndarray:
         + 0.04 * np.sin(8 * angle)
     )
     cover = (np.hypot(dx, dy) <= reach).astype(np.float32)
-    return wash(cover, sheet, 1.0, 0.6)
+    return wash(cover, sheet, body=1.0, pool=0.6)
 
 
 def _name(figure: str, canvas: Canvas, sheet: Sheet, paper: np.ndarray, unit: float) -> np.ndarray:
@@ -180,7 +180,7 @@ def _stroke(
 ) -> np.ndarray:
     """Stamp each line with the pen nib, read the ink back on the paper and lay it over `paper`."""
     unit = canvas.w / DESIGN_W
-    brush, ink_hex = brush_from_id("MAJ6-e", width_px, unit, style)
+    brush, ink_hex = brush_from_id("MAJ6-e", width_px, scale=unit, style=style)
     acc = np.zeros((canvas.h, canvas.w), np.float32)
     rng = np.random.default_rng(SEED)
     for line in lines:
@@ -229,7 +229,7 @@ def _angles_grid(size: int) -> np.ndarray:
     """Letter the name with the nib at four angles across and three `label_pen_thin`s down, on one sheet."""
     unit = size / GRID_W
     boxes, h = _cells(size, len(ANGLES), len(THINS), 108, 110, 54)
-    sheet = Sheet(h, size, GRAN_PX * unit, SEED)
+    sheet = Sheet(w=size, h=h, gran_px=GRAN_PX * unit, seed=SEED)
     out = paper_plate(sheet, Canvas(0, 0, size, h, size, h), PaperStyle(paper_foxing=0.0), size)
     px = 22.0 * unit
     for (x, y, w, ch), (thin, angle) in zip(
@@ -260,7 +260,7 @@ def _hands_grid(size: int) -> np.ndarray:
     """Letter the name nine times, once for each of nine hand seeds, three by three."""
     unit = size / GRID_W
     boxes, h = _cells(size, 3, 3, 104, 12, 12)
-    sheet = Sheet(h, size, GRAN_PX * unit, SEED)
+    sheet = Sheet(w=size, h=h, gran_px=GRAN_PX * unit, seed=SEED)
     out = paper_plate(sheet, Canvas(0, 0, size, h, size, h), PaperStyle(paper_foxing=0.0), size)
     nib = NibStyle(label_pen_width_px=2.8 * unit, label_ink=Colour("#241c14"))
     for seed, (x, y, w, ch) in enumerate(boxes, start=1):
@@ -293,7 +293,7 @@ def main(out_dir: Path, figure: str = "angles", size: int = DESIGN_W) -> Path:
         return path
     w, h = size, size * 5 // 9
     unit = size / DESIGN_W
-    sheet = Sheet(h, w, GRAN_PX * unit, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX * unit, seed=SEED)
     canvas = Canvas(0, 0, w, h, w, h)
     paper = paper_plate(sheet, canvas, PaperStyle(paper_foxing=0.0), w)
     if figure in {"set-down", "runs-dry"}:

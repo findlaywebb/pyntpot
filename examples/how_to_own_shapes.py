@@ -130,14 +130,14 @@ def main(out_dir: Path) -> Path:
         RuntimeError: When the hand wrote no marks, so there is no plate to lay.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
     skyline = _smoothed(SKYLINE)
-    density = wash(_outline_mask(skyline), sheet, 0.6, 0.3)
+    density = wash(_outline_mask(skyline), sheet, body=0.6, pool=0.3)
 
-    brush, ink_hex = brush_from_id("MAJ6-e", 3.0, 1.0, BrushStyle())
+    brush, ink_hex = brush_from_id("MAJ6-e", 3.0)
     acc = np.zeros((H, W), np.float32)
     swell = 0.65 + 0.35 * np.sin(np.linspace(0.0, 4.5 * np.pi, 24) + 0.5)
     stamp(acc, skyline, brush, np.random.default_rng(SEED), wprof=swell)

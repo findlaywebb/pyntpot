@@ -20,7 +20,7 @@ every page are generated from this file: after an edit, run
 | canvas | A world-unit box and the pixel grid it paints to. | `pyntpot.ink.Canvas` | no |
 | wash | A pigment field laid on the paper. | `pyntpot.ink.wash` | no |
 | coverage mask | The array in 0 to 1 that says where a wash goes, 1 inside the shape and 0 outside: the first argument of `wash`. | `pyntpot.ink.wash` | coverage mask, coverage masks |
-| body | The flat, even part of a wash inside its edge; `wash`'s `base` is the body's density. | `pyntpot.ink.wash` | no |
+| body | The flat, even part of a wash inside its edge; `wash`'s `body` is the body's density. | `pyntpot.ink.wash` | no |
 | pool | The extra density a wash carries in a band just inside its edge, where the pigment gathers as the water dries: a real wash's edge darkening. `wash`'s `pool`; a reserve's `pool` is the same gathering in a faint line just outside its ring. | `pyntpot.ink.wash` | edge darkening, Edge darkening |
 | backrun | A second front of water pushing deposited pigment ahead of it, leaving a pale centre and a dark, crenellated ridge where it dries. | `pyntpot.ink.bloom.bloom`, `pyntpot.ink.Blooms`, `pyntpot.ink.WashOptions` | backrun, backruns, Backruns |
 | glaze | Laying one pigment layer over another so the light passes through both and the colours mix as transparent films, by the Kubelka-Munk model, rather than multiplying; `PaperStyle.km_glazing` turns it on. | `pyntpot.ink.composite`, `pyntpot.ink.PaperStyle` | glaze, glazes, glazed, glazing, Glazing, Kubelka-Munk |

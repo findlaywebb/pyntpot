@@ -71,7 +71,7 @@ def main(out_dir: Path) -> Path:
         RuntimeError: When the hand wrote no marks, so there is no plate to lay.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 

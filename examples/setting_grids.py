@@ -140,7 +140,7 @@ def _spec(figure: str) -> GridSpec:
 @cache
 def _paper(figure: str) -> np.ndarray:
     """The paper plate of the whole figure; a cell paints over its own crop of it."""
-    return grid_paper(Sheet(_spec(figure).height, WIDTH_PX, PAPER_GRAN_PX, SEED))
+    return grid_paper(Sheet(w=WIDTH_PX, h=_spec(figure).height, gran_px=PAPER_GRAN_PX, seed=SEED))
 
 
 def _disc(w: int, h: int) -> np.ndarray:
@@ -155,7 +155,7 @@ def _washed(under: np.ndarray, sheet: Sheet, pool: float) -> np.ndarray:
     h, w = under.shape[:2]
     blue = pigment("ultramarine")
     transparency = PaperStyle().km_transparency if blue.transparency is None else blue.transparency
-    density = wash(_disc(w, h), sheet, BODY, pool)
+    density = wash(_disc(w, h), sheet, body=BODY, pool=pool)
     return composite([(density, rgb(blue.colour), transparency)], under, PaperStyle())
 
 
@@ -164,8 +164,8 @@ def _stroke(under: np.ndarray, dry: float, load: float) -> np.ndarray:
     h, w = under.shape[:2]
     major = {**BrushStyle().brush_overrides[OVERRIDE], "dry": dry, "load": load}
     style = BrushStyle(brush_overrides={OVERRIDE: major})
-    brush, ink = brush_from_id(BRUSH_ID, STROKE_PX, 1.0, style, override=OVERRIDE)
-    sheet = Sheet(h, w, PAPER_GRAN_PX, SEED)
+    brush, ink = brush_from_id(BRUSH_ID, STROKE_PX, style=style, override=OVERRIDE)
+    sheet = Sheet(w=w, h=h, gran_px=PAPER_GRAN_PX, seed=SEED)
     t = np.linspace(0.0, 1.0, 80)
     line = np.column_stack([10 + t * (w - 20), h / 2 + 0.2 * h * np.sin(2 * np.pi * t)])
     acc = np.zeros((h, w), np.float32)
@@ -195,10 +195,10 @@ def paint_cell(figure: str, row: int, col: int, *, at: tuple[int, int] = (0, 0))
     w, h = _spec(figure).cell_w, CELL_H[figure]
     white = np.ones((h, w, 3), np.float32)
     if figure == "pool":
-        sheet = Sheet(h, w, SLOW_GRAN_PX, POOL_SEEDS[row])
+        sheet = Sheet(w=w, h=h, gran_px=SLOW_GRAN_PX, seed=POOL_SEEDS[row])
         laid = _washed(white, sheet, POOLS[col])
     elif figure == "granulation":
-        sheet = Sheet(h, w, GRAN_PXS[col], SEED, fibre=FIBRES[row])
+        sheet = Sheet(w=w, h=h, gran_px=GRAN_PXS[col], seed=SEED, fibre=FIBRES[row])
         laid = _washed(white, sheet, GRAN_POOL)
     else:
         laid = _stroke(white, DRYNESS[col], LOADS[row])

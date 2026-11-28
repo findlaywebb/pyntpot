@@ -14,7 +14,7 @@ Every term these docs use, what it means and where it lives in the code. The doc
 | <span id="term-canvas"></span>canvas | A world-unit box and the pixel grid it paints to. | `pyntpot.ink.Canvas` |
 | <span id="term-wash"></span>wash | A pigment field laid on the paper. | `pyntpot.ink.wash` |
 | <span id="term-coverage-mask"></span>coverage mask | The array in 0 to 1 that says where a wash goes, 1 inside the shape and 0 outside: the first argument of `wash`. | `pyntpot.ink.wash` |
-| <span id="term-body"></span>body | The flat, even part of a wash inside its edge; `wash`'s `base` is the body's density. | `pyntpot.ink.wash` |
+| <span id="term-body"></span>body | The flat, even part of a wash inside its edge; `wash`'s `body` is the body's density. | `pyntpot.ink.wash` |
 | <span id="term-pool"></span>pool | The extra density a wash carries in a band just inside its edge, where the pigment gathers as the water dries: a real wash's edge darkening. `wash`'s `pool`; a reserve's `pool` is the same gathering in a faint line just outside its ring. | `pyntpot.ink.wash` |
 | <span id="term-backrun"></span>backrun | A second front of water pushing deposited pigment ahead of it, leaving a pale centre and a dark, crenellated ridge where it dries. | `pyntpot.ink.bloom.bloom`, `pyntpot.ink.Blooms`, `pyntpot.ink.WashOptions` |
 | <span id="term-glaze"></span>glaze | Laying one pigment layer over another so the light passes through both and the colours mix as transparent films, by the Kubelka-Munk model, rather than multiplying; `PaperStyle.km_glazing` turns it on. | `pyntpot.ink.composite`, `pyntpot.ink.PaperStyle` |

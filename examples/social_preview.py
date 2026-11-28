@@ -114,7 +114,9 @@ def _sheet(card: Image.Image, work: Path) -> np.ndarray:
     top = round((fitted.height - H) * CROP_AT)
     crop = fitted.crop((0, top, W, top + H))
     sheet = np.asarray(crop, np.float32) / 255
-    paper = paper_plate(Sheet(H, W, GRAN_PX, SEED), Canvas(0, 0, W, H, W, H), PaperStyle(), W)
+    paper = paper_plate(
+        Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED), Canvas(0, 0, W, H, W, H), PaperStyle(), W
+    )
     mask = _patch_mask()
     sheet = sheet * (1 - mask) + paper * mask
     word = _wordmark(work)

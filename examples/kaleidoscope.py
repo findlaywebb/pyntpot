@@ -18,7 +18,7 @@ way `nib_line.py` draws its spiral.
 The figure keeps a clear margin of bare paper all round: its outer ring reaches 40% of
 the image's width from the centre.
 
-Public names it uses: `PIGMENTS`, `BrushStyle`, `Canvas`, `PaperStyle`, `PigmentLayer`,
+Public names it uses: `PIGMENTS`, `Canvas`, `PaperStyle`, `PigmentLayer`,
 `Sheet`, `brush_from_id`, `composite`, `ink_density`, `paper_plate`, `rgb`, `save_image`, `stamp`
 and `wash`, all from `pyntpot.ink`; it introduces none beyond the curves script's.
 
@@ -40,7 +40,6 @@ from PIL import Image, ImageDraw
 
 from pyntpot.ink import (
     PIGMENTS,
-    BrushStyle,
     Canvas,
     PaperStyle,
     PigmentLayer,
@@ -154,17 +153,17 @@ def main(out_dir: Path, size: int = SIZE) -> Path:
         The path of the image, `kaleidoscope.png`.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
-    sheet = Sheet(size, size, GRAN_PX, SEED)
+    sheet = Sheet(w=size, h=size, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, size, size, size, size)
     paper = paper_plate(sheet, canvas, PaperStyle(), size)
 
     washes: list[PigmentLayer] = [
-        (wash(_cover(shapes, size), sheet, 0.55, 0.35), rgb(PIGMENTS[pigment]))
+        (wash(_cover(shapes, size), sheet, body=0.55, pool=0.35), rgb(PIGMENTS[pigment]))
         for pigment, shapes in SHAPES.items()
     ]
     paper = composite(washes, paper, PaperStyle())
 
-    brush, ink_hex = brush_from_id("MAJ6-e", 2.0 * size / SIZE + 1.0, 1.0, BrushStyle())
+    brush, ink_hex = brush_from_id("MAJ6-e", 2.0 * size / SIZE + 1.0)
     acc = np.zeros((size, size), np.float32)
     rng = np.random.default_rng(SEED)
     ring = _to_xy([(1.0, a) for a in np.linspace(0.0, 360.0, 361)], 0, size, mirror=False)

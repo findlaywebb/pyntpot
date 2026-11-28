@@ -54,13 +54,13 @@ def _disc(centre_x: float) -> np.ndarray:
 
 def main(out_dir: Path) -> Path:
     """Composite two overlapping washes both ways, write `pigments.png` into `out_dir` and return its path."""
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
 
     layers: list[PigmentLayer] = [
         (
-            wash(_disc(centre_x), sheet, 0.6, 0.3),
+            wash(_disc(centre_x), sheet, body=0.6, pool=0.3),
             rgb(PAINTERS_PIGMENTS[key]),
             PAINTERS_TRANSPARENCY[key],
         )

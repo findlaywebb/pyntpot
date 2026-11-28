@@ -149,7 +149,7 @@ def _class_washes(job: PaintJob, stack: PlateStack, order: list[str]) -> list[Pi
         )
         layers.extend(
             separated(
-                wash(cov, job.sheet, base, pool, options),
+                wash(cov, job.sheet, body=base, pool=pool, options=options),
                 cls,
                 rgb(style.cover.pigments[cls].colour),
                 job.transp(cls),
@@ -171,7 +171,7 @@ def _pale_wash(job: PaintJob, stack: PlateStack) -> PigmentLayer:
         blooms=job.bloom(pale, "pale"),
     )
     return (
-        wash(pale, job.sheet, cover.pale_base, cover.pale_pool, options),
+        wash(pale, job.sheet, body=cover.pale_base, pool=cover.pale_pool, options=options),
         rgb(cover.pigments["pale"].colour),
         job.transp("pale"),
     )

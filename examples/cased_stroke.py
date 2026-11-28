@@ -22,7 +22,7 @@ the cell's corner on the doubled paper. The held values are literals of this scr
 preset.
 
 Public names it uses: from `pyntpot.ink`, `Casing`, `Glow`, `Reserve`, `Shadow`, `casing`, `glow`,
-`reserve`, `shadow`, `pigment`, `Colour`, `PigmentLayer`, `Sheet`, `PaperStyle`, `BrushStyle`,
+`reserve`, `shadow`, `pigment`, `Colour`, `PigmentLayer`, `Sheet`, `PaperStyle`,
 `brush_from_id`, `stamp`, `ink_density`, `wash`, `composite`, `rgb` and `save_image`; from
 `pyntpot.letters`, `Setting`; and `LABELS`, `SUPERSAMPLE`, `GridSpec`, `grid_paper`, `label_grid`,
 `reduce`, `scaled_boxes` and `sweep_grid` from `labelled_grid.py`. It introduces none.
@@ -49,7 +49,6 @@ from labelled_grid import (
 )
 
 from pyntpot.ink import (
-    BrushStyle,
     Casing,
     Colour,
     Glow,
@@ -107,7 +106,9 @@ SPEC = GridSpec(
 def _paper() -> np.ndarray:
     """The paper plate of the whole image at `SUPERSAMPLE` times its size, cropped by each cell."""
     big = SUPERSAMPLE
-    return grid_paper(Sheet(SPEC.height * big, WIDTH_PX * big, GRAN_PX * big, SEED))
+    return grid_paper(
+        Sheet(w=WIDTH_PX * big, h=SPEC.height * big, gran_px=GRAN_PX * big, seed=SEED)
+    )
 
 
 @cache
@@ -118,21 +119,21 @@ def _scene() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     big = SUPERSAMPLE
     w, h = SPEC.cell_w * big, CELL_H * big
-    sheet = Sheet(h, w, GRAN_PX * big, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=GRAN_PX * big, seed=SEED)
     xx = np.arange(w, dtype=np.float32)[None, :] / w
     stack: list[PigmentLayer] = []
     for name, lo, hi in (("farmland", 0.0, 0.6), ("wood", 0.4, 1.0), ("wood", 0.5, 1.0)):
         cover = np.broadcast_to(((xx >= lo) & (xx <= hi)).astype(np.float32), (h, w))
         pig = pigment(name)
         km = PaperStyle().km_transparency if pig.transparency is None else pig.transparency
-        stack.append((wash(cover, sheet, 0.8, 0.0), rgb(pig.colour), km))
+        stack.append((wash(cover, sheet, body=0.8, pool=0.0), rgb(pig.colour), km))
     ground = composite(stack, np.ones((h, w, 3), np.float32), PaperStyle())
 
     t = np.linspace(0.0, 1.0, 70)
     line = np.column_stack(
         [10 * big + t * (w - 20 * big), h / 2 + 0.16 * h * np.sin(2 * np.pi * t)]
     )
-    brush, ink = brush_from_id(BRUSH_ID, STROKE_PX * big, 1.0, BrushStyle())
+    brush, ink = brush_from_id(BRUSH_ID, STROKE_PX * big)
     acc = np.zeros((h, w), np.float32)
     stamp(acc, line, brush, np.random.default_rng(SEED))
     return ground, ink_density(acc, brush, sheet), rgb(ink)

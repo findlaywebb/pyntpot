@@ -173,7 +173,7 @@ def paint(nibs: Mapping[str, NibStyle] | None = None) -> np.ndarray:
         RuntimeError: When the hand wrote no marks for a cell or a line.
     """
     named: Mapping[str, NibStyle] = dict[str, NibStyle]() if nibs is None else nibs
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     paper = paper_plate(sheet, Canvas(0, 0, W, H, W, H), PaperStyle(paper_foxing=0.0), W)
     face, hand_style, default = FaceStyle(), HandStyle(), NibStyle()
     hand = Hand(face, hand_style)

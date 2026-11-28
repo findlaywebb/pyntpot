@@ -192,7 +192,7 @@ def _grid(
     cell_h = round(cells[0][0].height * cell_w / cells[0][0].width)
     spec = GridSpec(GRID_W, len(COLOURS), len(ROWS), cell_h, LEFT, TOP, GAP, PAD, PAD)
     boxes = spec.boxes()
-    sheet = Sheet(spec.height, GRID_W, 6.0, SEED)
+    sheet = Sheet(w=GRID_W, h=spec.height, gran_px=6.0, seed=SEED)
     canvas = Canvas(0, 0, GRID_W, spec.height, GRID_W, spec.height)
     grid = paper_plate(sheet, canvas, PaperStyle(paper_foxing=0.0), GRID_W)
     for row_boxes, row_cells in zip(boxes, cells, strict=True):

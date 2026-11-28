@@ -62,7 +62,7 @@ class TestBloomLaid:
         """Seats, sizes, boxes, warps, fronts and the clip all show in the pinned sums."""
         blooms, total, low = PINNED[name]
         a, dens = plate()
-        bloom(dens, a, Sheet(120, 160, gran_px=6.0, seed=2), blooms)
+        bloom(dens, a, Sheet(w=160, h=120, gran_px=6.0, seed=2), blooms)
         assert float(dens.sum(dtype=np.float64)) == pytest.approx(total, rel=1e-7)
         assert float(dens.min()) == pytest.approx(low, abs=1e-6)
         assert float(dens.max()) == 1.0
@@ -80,7 +80,7 @@ class TestBloomLaid:
         a = np.zeros((120, 160), np.float32)
         a[20 : 20 + rows, 20:29] = 1.0
         dens = np.full((120, 160), 0.5, np.float32)
-        bloom(dens, a, Sheet(120, 160, gran_px=6.0, seed=2), blooms)
+        bloom(dens, a, Sheet(w=160, h=120, gran_px=6.0, seed=2), blooms)
         assert np.array_equal(dens, np.full((120, 160), 0.5, np.float32))
 
     def test_sixty_four_thick_pixels_are_enough(self):
@@ -91,7 +91,7 @@ class TestBloomLaid:
         bloom(
             dens,
             a,
-            Sheet(60, 60, gran_px=6.0, seed=2),
+            Sheet(w=60, h=60, gran_px=6.0, seed=2),
             Blooms(seed=5, count=1, radius_frac=0.17, lift=0.45, warp=0.45),
         )
         assert not np.array_equal(dens, np.full((60, 60), 0.5, np.float32))
@@ -108,7 +108,7 @@ class TestBloomLaid:
         bloom(
             dens,
             a,
-            Sheet(h, w, gran_px=6.0, seed=2),
+            Sheet(w=w, h=h, gran_px=6.0, seed=2),
             Blooms(seed=5, count=2, radius_frac=0.17, lift=0.45, warp=0.45),
         )
         assert (not np.array_equal(dens, np.full((h, w), 0.5, np.float32))) is laid
@@ -121,7 +121,7 @@ class TestBloomLaid:
         bloom(
             dens,
             a,
-            Sheet(60, 60, gran_px=6.0, seed=2),
+            Sheet(w=60, h=60, gran_px=6.0, seed=2),
             Blooms(seed=5, count=1, radius_frac=0.17, lift=0.45, warp=0.45),
         )
         assert np.array_equal(dens, np.full((60, 60), 0.5, np.float32))
@@ -138,7 +138,7 @@ class TestBloomLaid:
         bloom(
             dens,
             a,
-            Sheet(8, 8, gran_px=6.0, seed=2),
+            Sheet(w=8, h=8, gran_px=6.0, seed=2),
             Blooms(seed=5, count=64, radius_frac=0.01, lift=0.45, warp=4.0),
         )
         assert float(dens.max()) == 0.5

@@ -20,7 +20,7 @@ class TestReliefDensity:
         grid = ElevationPatch(
             n=n, x0=0.0, y0=0.0, x1=320.0, y1=240.0, values=values, low=0, high=280
         )
-        sheet = Sheet(*job.shape, gran_px=6.0, seed=3)
+        sheet = Sheet(w=job.shape[1], h=job.shape[0], gran_px=6.0, seed=3)
         dens = relief_density(grid, job.canvas, sheet)
         assert dens.shape == job.shape
         assert dens.max() > 0.0
@@ -35,7 +35,7 @@ class TestReliefDensity:
         grid = ElevationPatch(
             n=n, x0=0.0, y0=0.0, x1=320.0, y1=240.0, values=values, low=0, high=280
         )
-        sheet = Sheet(*job.shape, gran_px=6.0, seed=3)
+        sheet = Sheet(w=job.shape[1], h=job.shape[0], gran_px=6.0, seed=3)
         plain = relief_density(grid, job.canvas, sheet)
         strong = relief_density(grid, job.canvas, sheet, strength=2.0)
         assert strong.mean() > 1.5 * plain.mean()

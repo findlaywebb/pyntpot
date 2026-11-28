@@ -158,9 +158,9 @@ def nib_brushes(
         made[key], _hex = brush_from_id(
             nib.label_brush if pen else nib.label_leader_brush,
             mark_width_px(nib, role, size, outline=face.label_route == "outline"),
-            scale,
-            brush,
-            "label",
+            scale=scale,
+            style=brush,
+            override="label",
         )
         b = made[key]
         b.pool *= 0.22
@@ -178,8 +178,8 @@ def _sheet(surface: NibSurface, paper: PaperStyle) -> Sheet:
     """The paper the nib's ink is gated on, at the surface's own size."""
     rw, rh = surface.canvas.w, surface.canvas.h
     return Sheet(
-        rh,
-        rw,
+        w=rw,
+        h=rh,
         gran_px=surface.gran_px,
         seed=paper.sheet_seed,
         fibre=paper.paper_fibre_mix if paper.paper_fibre else 0.0,
@@ -228,9 +228,9 @@ def _backing_wash(
     dens = wash(
         (near < reach * _GRAIN_REACH).astype(F32),
         sheet,
-        0.85,
-        0.0,
-        WashOptions(gran=0.3, gran_gamma=paper.gran_gamma if paper.paper_fibre else 0.0),
+        body=0.85,
+        pool=0.0,
+        options=WashOptions(gran=0.3, gran_gamma=paper.gran_gamma if paper.paper_fibre else 0.0),
     )
     dens = dens * feather
     floor = nib.label_wash_dark_floor

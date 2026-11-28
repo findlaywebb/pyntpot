@@ -73,8 +73,8 @@ class TestQuotedSignatures:
     @pytest.mark.parametrize(
         ("text", "flagged"),
         [
-            ("`wash(cover, sheet, base, pool)` here.", True),
-            ("`wash(cover, sheet, base, pool, options)` here.", False),
+            ("`wash(cover, sheet, body, pool)` here.", True),
+            ("`wash(cover, sheet, body, pool, options)` here.", False),
             ("`wash(cover=1)` here.", False),
             ("```\nwash(cover)\n```", False),
         ],

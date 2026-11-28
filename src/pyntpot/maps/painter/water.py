@@ -138,9 +138,9 @@ def paint_lakes(job: PaintJob, stack: PlateStack) -> None:
             wash(
                 lake_cov,
                 job.sheet,
-                0.62,
-                0.32,
-                WashOptions(
+                body=0.62,
+                pool=0.32,
+                options=WashOptions(
                     wobble=2.4,
                     dry=1.2,
                     rim_px=max(5.0, 70.0 / job.mpp),
@@ -164,9 +164,9 @@ def sea_layer(job: PaintJob, stack: PlateStack) -> PigmentLayer | None:
     dens = wash(
         sea_cov,
         job.sheet,
-        0.60,
-        0.34,
-        WashOptions(
+        body=0.60,
+        pool=0.34,
+        options=WashOptions(
             wobble=2.0,
             dry=1.0,
             rim_px=max(6.0, 110.0 / job.mpp),

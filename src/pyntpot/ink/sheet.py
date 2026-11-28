@@ -2,7 +2,8 @@
 
 Key types: `Sheet`, the paper's own noise fields, seeded, shared by every wash and every
 mark; `Canvas`, a box in world units and the pixel grid it is painted on, which
-projects world-unit points into render pixels. `rgb` reads a hex colour as floats and `PAPER`
+projects world-unit points into render pixels (`Canvas.pixels` is the canvas that is only its
+pixel grid). `rgb` reads a hex colour as floats and `PAPER`
 is the paper's own cream.
 
 It paints nothing: it is the surface painting is done on.
@@ -13,6 +14,7 @@ canvas projects with north up.
 """
 
 from dataclasses import dataclass, field
+from typing import Self
 
 import numpy as np
 import numpy.typing as npt
@@ -62,6 +64,26 @@ class Canvas:
     w: int
     h: int
 
+    @classmethod
+    def pixels(cls, *, w: int, h: int) -> Self:
+        """A canvas that is only its pixel grid: one world unit per render pixel.
+
+        Args:
+            w: The grid's width, in render pixels.
+            h: The grid's height, in render pixels.
+
+        Returns:
+            `Canvas(0.0, 0.0, float(w), float(h), w, h)`, whose `scale` is 1.
+            World y runs up from the bottom edge: `px` maps `(x, y)` to `(x, h - y)`; a
+            pixel-space mask drawn with y down needs no projection.
+
+        Raises:
+            ValueError: When `w` or `h` is under 1.
+        """
+        if w < 1 or h < 1:
+            raise ValueError(f"a pixel canvas is at least 1 by 1, got w={w}, h={h}")
+        return cls(0.0, 0.0, float(w), float(h), w, h)
+
     @property
     def scale(self) -> float:
         """Render pixels per world unit."""
@@ -85,16 +107,18 @@ class Canvas:
         return out
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Sheet:
     """The paper's own noise fields, shared by every wash and every mark.
 
     The fields are made once, in `__post_init__`, and are not edited in place after it:
     the paper carried up to an ink pad's finer grid is kept per grid on that promise.
+    Every constructor argument is passed by keyword, width first, as `Canvas` and Pillow order
+    them; the five computed fields are `(h, w)` arrays.
 
     Attributes:
-        h: The sheet's height, in render pixels.
         w: The sheet's width, in render pixels.
+        h: The sheet's height, in render pixels.
         gran_px: The cell of the granulation field, in render pixels.
         seed: The seed the five fields are drawn from.
         fibre: Cold press. Above 0 a second noise field, stretched along one sheet-wide axis, is
@@ -112,8 +136,8 @@ class Sheet:
         gran: Granulation noise at `gran_px`.
     """
 
-    h: int
     w: int
+    h: int
     gran_px: float
     seed: int = 11
     fibre: float = 0.0

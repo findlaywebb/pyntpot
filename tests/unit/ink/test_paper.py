@@ -14,7 +14,9 @@ from support.paths import CLASSIC_PLATE
 
 def _paper(style: PaperStyle, display_px: int = 90) -> np.ndarray:
     """The paper plate of a 90 by 60 canvas, painted on a fresh sheet."""
-    return paper_plate(Sheet(60, 90, 4.0, 11), Canvas(0, 0, 90, 60, 90, 60), style, display_px)
+    return paper_plate(
+        Sheet(w=90, h=60, gran_px=4.0, seed=11), Canvas(0, 0, 90, 60, 90, 60), style, display_px
+    )
 
 
 class TestPaperPlate:
@@ -65,7 +67,7 @@ def _classic() -> PaperStyle:
 
 def _big(style: PaperStyle, gran_px: float = 3.0) -> np.ndarray:
     """The paper plate of a 360 by 240 canvas on a fresh sheet."""
-    sheet = Sheet(240, 360, gran_px, 11)
+    sheet = Sheet(w=360, h=240, gran_px=gran_px, seed=11)
     return paper_plate(sheet, Canvas(0, 0, 360, 240, 360, 240), style, 360)
 
 
@@ -113,7 +115,7 @@ class TestClassicEdge:
         """After either edge the sheet's next noise draw is the same field."""
         after = []
         for edge in ("classic", "warm"):
-            sheet = Sheet(60, 90, 4.0, 11)
+            sheet = Sheet(w=90, h=60, gran_px=4.0, seed=11)
             paper_plate(sheet, Canvas(0, 0, 90, 60, 90, 60), PaperStyle(paper_edge=edge), 90)
             after.append(sheet.noise(26.0, 2))
         assert np.array_equal(after[0], after[1])
@@ -166,3 +168,28 @@ class TestWarmEdge:
             clean = _big(PaperStyle(paper_foxing=0.0), gran_px)
             shares.append((np.abs(_big(PaperStyle(), gran_px) - clean).max(axis=2) > 0).mean())
         assert abs(shares[0] - shares[1]) < 0.001
+
+
+class TestDefaultDisplayWidth:
+    """`display_px=None` measures the grid against the canvas's own width."""
+
+    @staticmethod
+    def _plate(style: PaperStyle, display_px: int | None) -> np.ndarray:
+        """The paper of a 90 by 60 canvas on a fresh sheet, so every call draws the same fields."""
+        sheet = Sheet(w=90, h=60, gran_px=4.0, seed=11)
+        canvas = Canvas(0, 0, 90, 60, 90, 60)
+        if display_px is None:
+            return paper_plate(sheet, canvas, style)
+        return paper_plate(sheet, canvas, style, display_px)
+
+    def test_the_grid_defaults_to_the_canvas_width(self):
+        """With the grid on, the default equals `canvas.w` and differs from half of it."""
+        style = dataclasses.replace(PaperStyle(), grid=True)
+        default = self._plate(style, None)
+        assert np.array_equal(default, self._plate(style, 90))
+        assert not np.array_equal(default, self._plate(style, 45))
+
+    def test_without_a_grid_the_default_changes_nothing(self):
+        """With the grid off, the default equals the explicit `canvas.w` call."""
+        style = dataclasses.replace(PaperStyle(), grid=False)
+        assert np.array_equal(self._plate(style, None), self._plate(style, 90))

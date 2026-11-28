@@ -36,7 +36,7 @@ GLAZING = {"multiply": False, "kubelka-munk": True}
 @pytest.fixture(scope="module")
 def sheet() -> Sheet:
     """One square sheet, built once."""
-    return Sheet(SIDE, SIDE, gran_px=6.0, seed=3)
+    return Sheet(w=SIDE, h=SIDE, gran_px=6.0, seed=3)
 
 
 def _blob() -> np.ndarray:
@@ -60,7 +60,7 @@ def test_stamp_a_2000_point_path(benchmark: BenchmarkFixture) -> None:
     """Times stamping a plain river brush, every phase flag off, along a 2000 point sine path."""
     x = np.linspace(20, 1180, 2000)
     path = np.stack([x, 200 + 120 * np.sin(x / 90)], axis=1)
-    brush, _ = brush_from_id("RIV1-a", 3.0, 2.0, flags_off(BrushStyle))
+    brush, _ = brush_from_id("RIV1-a", 3.0, scale=2.0, style=flags_off(BrushStyle))
     benchmark(
         lambda: stamp(np.zeros((400, 1200), np.float32), path, brush, np.random.default_rng(7))
     )
@@ -68,7 +68,7 @@ def test_stamp_a_2000_point_path(benchmark: BenchmarkFixture) -> None:
 
 def test_building_a_sheet(benchmark: BenchmarkFixture) -> None:
     """Times building a sheet's five noise fields from one seed."""
-    benchmark(Sheet, SIDE, SIDE, 6.0, 11)
+    benchmark(Sheet, w=SIDE, h=SIDE, gran_px=6.0, seed=11)
 
 
 def test_the_distance_transform(benchmark: BenchmarkFixture) -> None:
@@ -88,7 +88,7 @@ def test_the_contour_distance(benchmark: BenchmarkFixture, radius: float) -> Non
 @pytest.mark.parametrize("brush_id", ["TRK4-d", "RIV1-a"], ids=["dry-track", "wet-river"])
 def test_stamping_a_long_stroke(benchmark: BenchmarkFixture, brush_id: str) -> None:
     """Times stamping one plain brush, every phase flag off, along a winding 2000 point path."""
-    brush, _ = brush_from_id(brush_id, 3.0, 2.0, flags_off(BrushStyle))
+    brush, _ = brush_from_id(brush_id, 3.0, scale=2.0, style=flags_off(BrushStyle))
     pts = _meander()
     aux = ink_aux((SIDE, SIDE), brush)
     benchmark(
@@ -101,7 +101,7 @@ def test_stamping_a_long_stroke(benchmark: BenchmarkFixture, brush_id: str) -> N
 def test_stamping_a_starved_directional_brush(benchmark: BenchmarkFixture) -> None:
     """Times a stroke with the reservoir and the directional break on and every other flag off."""
     style = flags_off(BrushStyle, ink_starve=True, dry_directional=True)
-    brush, _ = brush_from_id("TRK4-d", 3.0, 2.0, style, "track")
+    brush, _ = brush_from_id("TRK4-d", 3.0, scale=2.0, style=style, override="track")
     pts = _meander()
     aux = ink_aux((SIDE, SIDE), brush)
     benchmark(
@@ -114,14 +114,14 @@ def test_stamping_a_starved_directional_brush(benchmark: BenchmarkFixture) -> No
 def test_laying_a_wash(benchmark: BenchmarkFixture, sheet: Sheet) -> None:
     """Times one pigment's wash over a lumpy disc, on the plain edge."""
     cover = _blob()
-    benchmark(wash, cover, sheet, 0.52, 0.20)
+    benchmark(wash, cover, sheet, body=0.52, pool=0.20)
 
 
 def test_laying_a_wet_wash(benchmark: BenchmarkFixture, sheet: Sheet) -> None:
     """Times a wash inside a wet area, bleeding and granulating from the paper's pits."""
     cover = _blob()
     options = WashOptions(wet=np.clip(cover * 0.8, 0.0, 1.0), gran_gamma=1.6)
-    benchmark(wash, cover, sheet, 0.52, 0.20, options)
+    benchmark(wash, cover, sheet, body=0.52, pool=0.20, options=options)
 
 
 def _lumpy_ring() -> list[tuple[float, float]]:
@@ -145,7 +145,7 @@ def test_laying_a_deformed_wash_with_blooms(benchmark: BenchmarkFixture, sheet: 
 
     def lay() -> np.ndarray:
         cover = fill_cov(deform_rings(ring, (9, 0.26, 4, 0.55, 16.0, 0.5)), canvas)
-        return wash(cover, sheet, 0.52, 0.20, options)
+        return wash(cover, sheet, body=0.52, pool=0.20, options=options)
 
     benchmark(lay)
 
@@ -156,7 +156,11 @@ def test_compositing_a_stack(benchmark: BenchmarkFixture, sheet: Sheet, glazing:
     cover = _blob()
     keys = ("farmland", "wood", "water", "heath")
     layers: list[PigmentLayer] = [
-        (wash(np.roll(cover, 40 * i, axis=1), sheet, 0.5, 0.2), rgb(PIGMENTS[k]), TRANSPARENCY[k])
+        (
+            wash(np.roll(cover, 40 * i, axis=1), sheet, body=0.5, pool=0.2),
+            rgb(PIGMENTS[k]),
+            TRANSPARENCY[k],
+        )
         for i, k in enumerate(keys)
     ]
     base = np.ones((SIDE, SIDE, 3), np.float32)

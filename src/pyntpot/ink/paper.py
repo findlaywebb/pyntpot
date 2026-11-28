@@ -38,7 +38,9 @@ def _tinted(img: np.ndarray, strength: np.ndarray, tint: np.ndarray) -> None:
     img *= 1.0 - strength[..., None] * (1.0 - tint)
 
 
-def paper_plate(sheet: Sheet, canvas: Canvas, style: PaperStyle, display_px: int) -> np.ndarray:
+def paper_plate(
+    sheet: Sheet, canvas: Canvas, style: PaperStyle, display_px: int | None = None
+) -> np.ndarray:
     """Paint the paper: cream rag, a worn border, a vignette, a little foxing, a grid if asked.
 
     Args:
@@ -47,9 +49,9 @@ def paper_plate(sheet: Sheet, canvas: Canvas, style: PaperStyle, display_px: int
         canvas: The raster painted on; only its `w` and `h` are read.
         style: The paper's colour, tooth, wear, vignette, foxing and grid.
         display_px: The width, in pixels, the style's `grid_spacing_px` is
-            measured against; the canvas width is the usual value, and gives
-            a line every `grid_spacing_px` canvas pixels. Read only when the
-            style asks for a grid.
+            measured against; `None` is the canvas width, which gives a line
+            every `grid_spacing_px` canvas pixels. Read only when the style
+            asks for a grid.
 
     Returns:
         An `(h, w, 3)` float array in 0 to 1.
@@ -82,7 +84,8 @@ def paper_plate(sheet: Sheet, canvas: Canvas, style: PaperStyle, display_px: int
         fox = np.clip((n120 - 0.80) * 5.0, 0, 1)
         img *= (1.0 - style.paper_foxing * fox)[..., None]
     if style.grid:
-        step = max(style.grid_spacing_px * canvas.w / max(display_px, 1), 4.0)
+        width = canvas.w if display_px is None else display_px
+        step = max(style.grid_spacing_px * canvas.w / max(width, 1), 4.0)
         rows = (np.arange(h) % step < 1.0)[:, None]
         cols = (np.arange(w) % step < 1.0)[None, :]
         line = np.clip(rows * 1.0 + cols * 0.55, 0, 1).astype(F32)

@@ -244,7 +244,7 @@ def _lay(
     """Stamp each `(path, widths)` into `acc` with a brush of `row` as wide as its stroke starts, tapering by `wprof`."""
     for i, (path, widths) in enumerate(strokes):
         width = max(float(widths.max()), floor)
-        brush, _ = brush_from_id(row, width, 1.0, STYLE)
+        brush, _ = brush_from_id(row, width, style=STYLE)
         along = np.r_[0.0, np.cumsum(np.hypot(*np.diff(path, axis=0).T))]
         at = np.linspace(0.0, along[-1], 48)
         wprof = np.maximum(np.interp(at, along, widths), floor) / width
@@ -272,7 +272,7 @@ def _leaves(tips: np.ndarray, cell: tuple[int, int], sheet: Sheet, seed: int) ->
     """Dab a wet brush round the tips, short strokes leaning every way: the leaves, light and dark."""
     h, w = cell
     rng = np.random.default_rng(seed)
-    brush, _ = brush_from_id("RIV1-a", max(w * 0.012, 1.0), 1.0, STYLE)
+    brush, _ = brush_from_id("RIV1-a", max(w * 0.012, 1.0), style=STYLE)
     acc = [np.zeros((h, w), np.float32), np.zeros((h, w), np.float32)]
     for i, (x, y) in enumerate(tips):
         dab_rng = np.random.default_rng([seed, i])
@@ -295,17 +295,17 @@ def paint_tree(
     tips = np.array([(*limb.path[-1], limb.depth) for limb in limbs if limb.depth >= DEPTH - 2])
     warm = tips[rng.random(len(tips)) < rng.uniform(0.1, 0.4), :2]
     layers = {
-        "canopy": wash(_crown(tips[:, :2], w * 0.075, cell, rng), sheet, 0.3, 0.15),
+        "canopy": wash(_crown(tips[:, :2], w * 0.075, cell, rng), sheet, body=0.3, pool=0.15),
         "canopy2": wash(
             _crown(tips[rng.random(len(tips)) < DEEP_SHARE, :2], w * 0.05, cell, rng),
             sheet,
-            0.3,
-            0.15,
+            body=0.3,
+            pool=0.15,
         ),
-        "warm": wash(_crown(warm, w * 0.07, cell, rng), sheet, 0.4, 0.3),
+        "warm": wash(_crown(warm, w * 0.07, cell, rng), sheet, body=0.4, pool=0.3),
     }
     ground = np.zeros((h, w), np.float32)
-    dry, _ = brush_from_id("TRK4-d", w * 0.025, 1.0, STYLE)
+    dry, _ = brush_from_id("TRK4-d", w * 0.025, style=STYLE)
     stamp(
         ground,
         np.array([(w * 0.34, h * (FOOT + 0.007)), (w * 0.66, h * (FOOT + 0.004))]),
@@ -315,8 +315,8 @@ def paint_tree(
     )
     layers["ground"] = 0.4 * ink_density(ground, dry, sheet)
 
-    wet, _ = brush_from_id("RIV2-a", limbs[0].w_start, 1.0, STYLE)
-    nib, _ = brush_from_id("MAJ6-e", 1.0, 1.0, STYLE)
+    wet, _ = brush_from_id("RIV2-a", limbs[0].w_start, style=STYLE)
+    nib, _ = brush_from_id("MAJ6-e", 1.0, style=STYLE)
     brushed, penned = np.zeros((h, w), np.float32), np.zeros((h, w), np.float32)
     _lay(brushed, _strokes(limbs, penned=False), "RIV2-a", 1.0, seed)
     _lay(penned, _strokes(limbs, penned=True), "MAJ6-e", 0.55, seed + 1)
@@ -366,7 +366,10 @@ def main(out_dir: Path, figure: str = "tree", size: int | None = None, seed: int
     w, h = width, width * 4 // 3
     style = PaperStyle(km_glazing=True, paper_foxing=0.03)
     paper = paper_plate(
-        Sheet(h, w, GRAN_PX * w / REFERENCE, seed), Canvas(0, 0, w, h, w, h), style, w
+        Sheet(w=w, h=h, gran_px=GRAN_PX * w / REFERENCE, seed=seed),
+        Canvas(0, 0, w, h, w, h),
+        style,
+        w,
     )
 
     across, down = (1, 1) if figure == "tree" else (ACROSS, DOWN)
@@ -375,7 +378,7 @@ def main(out_dir: Path, figure: str = "tree", size: int | None = None, seed: int
     for i in range(across * down):
         rng = np.random.default_rng([seed, i])
         shape = Shape() if figure == "tree" else perturbed(Shape(), rng)
-        cell_sheet = Sheet(ch, cw, GRAN_PX * cw / REFERENCE, seed + i)
+        cell_sheet = Sheet(w=cw, h=ch, gran_px=GRAN_PX * cw / REFERENCE, seed=seed + i)
         row, col = divmod(i, across)
         window = (slice(row * ch, (row + 1) * ch), slice(col * cw, (col + 1) * cw))
         for name, density in paint_tree((ch, cw), cell_sheet, shape, seed + i).items():

@@ -91,17 +91,23 @@ def _glaze_grid(size: int) -> np.ndarray:
     )
     cell_w, cell_h, h = spec.cell_w, round(CELL_H * size), spec.height
     boxes = spec.boxes()
-    sheet = Sheet(h, size, SLOW_GRAN_PX * unit / 2, SEED)
+    sheet = Sheet(w=size, h=h, gran_px=SLOW_GRAN_PX * unit / 2, seed=SEED)
     paper = paper_plate(sheet, Canvas(0, 0, size, h, size, h), PaperStyle(paper_foxing=0.0), size)
 
     out = paper
     blue, warm = rgb(PAINTERS_PIGMENTS["ultramarine"]), rgb(PAINTERS_PIGMENTS["burnt_sienna"])
-    cell_sheet = Sheet(cell_h, cell_w, SLOW_GRAN_PX * unit / 2, SEED)
+    cell_sheet = Sheet(w=cell_w, h=cell_h, gran_px=SLOW_GRAN_PX * unit / 2, seed=SEED)
     under = wash(
-        _circle(cell_w, cell_h, 0.4 * cell_w, cell_h / 2, 0.34 * cell_h), cell_sheet, 0.8, 0.4
+        _circle(cell_w, cell_h, 0.4 * cell_w, cell_h / 2, 0.34 * cell_h),
+        cell_sheet,
+        body=0.8,
+        pool=0.4,
     )
     over = wash(
-        _circle(cell_w, cell_h, 0.62 * cell_w, cell_h / 2, 0.34 * cell_h), cell_sheet, 0.9, 0.4
+        _circle(cell_w, cell_h, 0.62 * cell_w, cell_h / 2, 0.34 * cell_h),
+        cell_sheet,
+        body=0.9,
+        pool=0.4,
     )
     for row in range(2):
         for col, transparency in enumerate(STEPS):
@@ -152,15 +158,15 @@ def main(out_dir: Path, figure: str = "rim", size: int = DESIGN_W) -> Path:
     w, h = size, size * 2 // 3
     unit = size / DESIGN_W
     gran = (FINE_GRAN_PX if figure in {"grain", "overlap"} else SLOW_GRAN_PX) * unit
-    sheet = Sheet(h, w, gran, SEED)
+    sheet = Sheet(w=w, h=h, gran_px=gran, seed=SEED)
     paper = paper_plate(sheet, Canvas(0, 0, w, h, w, h), PaperStyle(paper_foxing=0.0), w)
     pool = POOL if figure != "body" else 0.0
 
     blue = _disc(w, h, 0.5 if figure in {"mask", "body", "rim", "grain"} else 0.4)
-    density = blue * BODY if figure == "mask" else wash(blue, sheet, BODY, pool)
+    density = blue * BODY if figure == "mask" else wash(blue, sheet, body=BODY, pool=pool)
     layers: list[PigmentLayer] = [(density, rgb(PIGMENTS["water"]), TRANSPARENCY["water"])]
     if figure == "overlap":
-        green = wash(_disc(w, h, 0.62), sheet, BODY, POOL)
+        green = wash(_disc(w, h, 0.62), sheet, body=BODY, pool=POOL)
         layers.append((green, rgb(PIGMENTS["farmland"]), TRANSPARENCY["farmland"]))
 
     out = composite(layers, paper, PaperStyle(km_glazing=False))

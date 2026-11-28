@@ -25,7 +25,7 @@ THIN_BLOT_INK_BEFORE = 15.468
 
 def blot_ink(width_display_px: float, path: np.ndarray, shape: tuple[int, int]) -> np.ndarray:
     """What a `MAJ6-e` pen's set-down blot adds to the accumulator: with its pool less without."""
-    pen, _ = brush_from_id("MAJ6-e", width_display_px, 2.0, BrushStyle())
+    pen, _ = brush_from_id("MAJ6-e", width_display_px, scale=2.0)
     marks = []
     for brush in (pen, replace(pen, pool=0.0)):
         acc = np.zeros(shape, np.float32)
@@ -36,7 +36,7 @@ def blot_ink(width_display_px: float, path: np.ndarray, shape: tuple[int, int]) 
 
 def test_the_pen_sets_down_where_it_touches_and_nowhere_else():
     """A nib meeting the paper: extra ink over about a width, then nothing."""
-    tuned, _ = brush_from_id("LAN5-a", 2.0, 2.0, flags_off(BrushStyle), "lane")
+    tuned, _ = brush_from_id("LAN5-a", 2.0, scale=2.0, style=flags_off(BrushStyle), override="lane")
     assert tuned.load > 0 and tuned.pool > 0
     assert tuned.load_px == pytest.approx(tuned.width * 0.85)
     bare = replace(tuned, load=0.0, pool=0.0)
@@ -66,8 +66,8 @@ def test_a_wide_pen_leaves_no_grey_ring_round_its_ink(
     width: float, band: tuple[float, float]
 ) -> None:
     """A pen 5 or 12 render px wide adds under 0.01 of density 1 to 2 px out from its ink, and nothing 3 to 8 px out."""
-    sheet = Sheet(80, 140, gran_px=6.0, seed=4)
-    pen, _ = brush_from_id("MAJ6-e", width, 2.0, BrushStyle())
+    sheet = Sheet(w=140, h=80, gran_px=6.0, seed=4)
+    pen, _ = brush_from_id("MAJ6-e", width, scale=2.0)
     line = np.stack([np.linspace(30, 100, 60), np.full(60, 30.0)], axis=1)
     dens = []
     for brush in (pen, replace(pen, pool=0.0)):
@@ -83,7 +83,7 @@ def test_a_wide_pen_leaves_no_grey_ring_round_its_ink(
 def test_a_start_at_zero_pressure_that_turns_back_lays_no_blot_off_its_ink():
     """A 10 render px pen that sets down, barely moves and turns back lays its blot on its own ink only."""
     path = np.array([(3.0, 7.0), (3.0, 7.1875), (2.0, 2.0)])
-    pen, _ = brush_from_id("MAJ6-e", 5.0, 2.0, BrushStyle())
+    pen, _ = brush_from_id("MAJ6-e", 5.0, scale=2.0)
     marks = []
     for brush in (pen, replace(pen, pool=0.0)):
         acc = np.zeros((60, 220), np.float32)
@@ -104,7 +104,7 @@ def test_a_pen_3_5_px_or_wider_lays_no_blot_on_paper_its_stroke_does_not(
 ) -> None:
     """A pen 3.5, 4 or 12 render px wide adds blot ink only to pixels the same stroke without it inks."""
     line = np.stack([np.linspace(30, 100, 60), np.full(60, 30.3)], axis=1)
-    pen, _ = brush_from_id("MAJ6-e", width, 2.0, BrushStyle())
+    pen, _ = brush_from_id("MAJ6-e", width, scale=2.0)
     bare = np.zeros((80, 140), np.float32)
     stamp(bare, line, replace(pen, pool=0.0), np.random.default_rng(9))
     blot = blot_ink(width, line, (80, 140))
@@ -132,7 +132,7 @@ def test_a_thin_pen_s_start_keeps_most_of_its_blot(width: float, dy: float) -> N
 def test_a_stroke_from_far_off_the_plate_in_one_axis_lays_no_blot():
     """A stroke that starts 80 px above the plate, its column on it, inks the plate but no blot."""
     line = np.stack([np.full(60, 60.0), np.linspace(-80, 40, 60)], axis=1)
-    pen, _ = brush_from_id("MAJ6-e", 1.3, 2.0, BrushStyle())
+    pen, _ = brush_from_id("MAJ6-e", 1.3, scale=2.0)
     acc = np.zeros((60, 120), np.float32)
     stamp(acc, line, pen, np.random.default_rng(9))
     assert acc[:40].sum() > 0

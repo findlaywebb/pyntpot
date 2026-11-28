@@ -84,7 +84,7 @@ def _water_strokes(job: PaintJob, br: dict[str, tuple[Brush, str]]) -> list[_Str
             key = (cls, round(px, 2))
             if key not in wide:
                 wide[key] = brush_from_id(
-                    style.brush.brushes[cls], px, job.scale, style.brush, cls
+                    style.brush.brushes[cls], px, scale=job.scale, style=style.brush, override=cls
                 )[0]
             brush = wide[key]
         # `r.profile` is the width along the river as a share of its widest point, so
@@ -199,7 +199,11 @@ def paint_route_pen(job: PaintJob, stack: PlateStack) -> None:
     if not route.route_pen:
         return
     brush, _ = brush_from_id(
-        route.route_pen_brush, route.route_pen_width_px, job.scale, job.style.brush, "route"
+        route.route_pen_brush,
+        route.route_pen_width_px,
+        scale=job.scale,
+        style=job.style.brush,
+        override="route",
     )
     pad = InkPad(job.shape, brush, job.style.brush)
     line = merge_strands(

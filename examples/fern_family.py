@@ -21,7 +21,7 @@ It does not choose between ferns, vary the pigments or draw anything but the nin
 
 Public names it uses, all from `pyntpot.ink`: `Sheet`, `Canvas`, `PaperStyle`, `paper_plate`,
 `wash`, `PIGMENTS`, `TRANSPARENCY`, `rgb`, `PigmentLayer`, `composite`, `brush_from_id`,
-`BrushStyle`, `stamp`, `ink_density` and `save_image`.
+`stamp`, `ink_density` and `save_image`.
 
 Run it with `uv run python examples/fern_family.py out/`; it writes `out/fern-family.png`. It
 takes `size`, the grid's width in pixels (its height is four thirds of that), and `seed`.
@@ -37,7 +37,6 @@ from PIL import Image, ImageFilter
 from pyntpot.ink import (
     PIGMENTS,
     TRANSPARENCY,
-    BrushStyle,
     Canvas,
     PaperStyle,
     PigmentLayer,
@@ -137,7 +136,7 @@ def _thicken(cover: np.ndarray, px: int) -> np.ndarray:
 def _dabs(frond: np.ndarray, w: int, h: int, sheet: Sheet, rng: np.random.Generator) -> np.ndarray:
     """Dab a wet brush at sampled points of the frond, each a short stroke leaning up the frond."""
     scale = w / 600
-    brush, _ = brush_from_id("RIV1-a", 2.0 * scale, 1.0, BrushStyle())
+    brush, _ = brush_from_id("RIV1-a", 2.0 * scale)
     count = min(round(FULL_DABS * w * h / FULL_AREA), len(frond))
     acc = np.zeros((h, w), np.float32)
     for x, y, _ in frond[rng.choice(len(frond), size=count, replace=False)]:
@@ -158,8 +157,8 @@ def paint_fern(cell: tuple[int, int], sheet: Sheet, seed: int) -> list[np.ndarra
     leaflets = pixels[pixels[:, 2] >= LEFT_LEAFLET]
     detail = _cover(_count(pixels, w, h), 0.25)
     return [
-        wash(_thicken(_cover(_count(leaflets, w, h), 1.0), 1), sheet, 0.55, 0.25),
-        wash(_thicken(_cover(_count(frond, w, h), 1.0), 1), sheet, 0.75, 0.3),
+        wash(_thicken(_cover(_count(leaflets, w, h), 1.0), 1), sheet, body=0.55, pool=0.25),
+        wash(_thicken(_cover(_count(frond, w, h), 1.0), 1), sheet, body=0.75, pool=0.3),
         0.55 * detail * (0.7 + 0.6 * sheet.gran),
         0.5 * _dabs(frond, w, h, sheet, rng),
     ]
@@ -170,7 +169,9 @@ def main(out_dir: Path, size: int = SIZE, seed: int = SEED) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     w, h = size, size * 4 // 3
     style = PaperStyle(km_glazing=True, paper_foxing=0.03)
-    paper = paper_plate(Sheet(h, w, GRAN_PX * size / 600, seed), Canvas(0, 0, w, h, w, h), style, w)
+    paper = paper_plate(
+        Sheet(w=w, h=h, gran_px=GRAN_PX * size / 600, seed=seed), Canvas(0, 0, w, h, w, h), style, w
+    )
     pad = round(MARGIN * w)
     cw, ch = (w - 2 * pad) // ACROSS, (h - 2 * pad) // DOWN
     densities = [np.zeros((h, w), np.float32) for _ in range(4)]
@@ -180,7 +181,7 @@ def main(out_dir: Path, size: int = SIZE, seed: int = SEED) -> Path:
             slice(pad + row * ch, pad + (row + 1) * ch),
             slice(pad + col * cw, pad + (col + 1) * cw),
         )
-        sheet = Sheet(ch, cw, GRAN_PX * cw / 600, seed + i)
+        sheet = Sheet(w=cw, h=ch, gran_px=GRAN_PX * cw / 600, seed=seed + i)
         for target, density in zip(densities, paint_fern((ch, cw), sheet, seed + i), strict=True):
             target[window] = density
     pigments = ("scrub", "wood", "wood", "wood")

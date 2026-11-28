@@ -132,7 +132,8 @@ class WashOptions:
 def wash(
     cover: np.ndarray,
     sheet: Sheet,
-    base: float,
+    *,
+    body: float,
     pool: float,
     options: WashOptions | None = None,
 ) -> np.ndarray:
@@ -153,7 +154,7 @@ def wash(
     Args:
         cover: Coverage in 0 to 1.
         sheet: The paper's noise fields.
-        base: Density of the flat body of the wash.
+        body: Density of the flat body of the wash.
         pool: Extra density where the pigment pools at the edge.
         options: The wash's edge, body, wet area and extras; the defaults when
             it is not given.
@@ -176,7 +177,7 @@ def wash(
         rim = rim / peak
     if o.wet is not None:
         rim = rim * (1.0 - o.wet * o.rim_drop)
-    dens = a * base + rim * pool
+    dens = a * body + rim * pool
     dens *= 1.0 + o.uneven * (sheet.wet - 0.5) * 2.0
     if o.gran_gamma > 0:
         pits = sheet.pits(o.gran_gamma)

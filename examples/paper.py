@@ -29,7 +29,7 @@ SEED = 11
 
 def main(out_dir: Path) -> Path:
     """Paint the paper, write it into `out_dir` as `paper.png` and return that path."""
-    sheet = Sheet(H, W, GRAN_PX, SEED)
+    sheet = Sheet(w=W, h=H, gran_px=GRAN_PX, seed=SEED)
     canvas = Canvas(0, 0, W, H, W, H)
     paper = paper_plate(sheet, canvas, PaperStyle(), W)
     path = out_dir / "paper.png"

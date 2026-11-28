@@ -19,7 +19,9 @@ def test_a_short_ring_is_not_shifted_off_its_path_by_the_shared_drift():
     ring moved in or out along its normal by up to three times the drift's own reach, and
     a small letter's bowl closed. Across many seeds the ink's mean radius stays within it.
     """
-    brush, _ = brush_from_id("MAJ2-a", 2.0, 2.0, BrushStyle(brush_organic=True), "road_major")
+    brush, _ = brush_from_id(
+        "MAJ2-a", 2.0, scale=2.0, style=BrushStyle(brush_organic=True), override="road_major"
+    )
     assert brush.organic and brush.coherence > 0
     rx, ry = 5.3, 7.4
     turns = np.linspace(0.0, 2.0 * np.pi, 124)
@@ -44,7 +46,9 @@ def test_the_shared_drift_keeps_the_field_s_spread_and_mean_and_leans_its_way():
     it (a short stroke's mean is not blown up into a shift), and it still correlates with
     the field it came from.
     """
-    brush, _ = brush_from_id("MAJ2-a", 2.0, 2.0, BrushStyle(brush_organic=True), "road_major")
+    brush, _ = brush_from_id(
+        "MAJ2-a", 2.0, scale=2.0, style=BrushStyle(brush_organic=True), override="road_major"
+    )
     m = brush.bristles
     t = np.linspace(0.0, 40.0, int(40.0 / brush.step) + 2).astype(np.float32)
     cell = 6.283 * 62.0 * brush.unit * brush.org_mult
@@ -69,7 +73,9 @@ def _neighbour_lean(drift: np.ndarray) -> float:
 
 def test_neighbouring_bristles_drift_together_once_the_drift_is_shared():
     """At the brush's coherence, neighbours drift more alike than the separate fields they came from."""
-    brush, _ = brush_from_id("MAJ2-a", 2.0, 2.0, BrushStyle(brush_organic=True), "road_major")
+    brush, _ = brush_from_id(
+        "MAJ2-a", 2.0, scale=2.0, style=BrushStyle(brush_organic=True), override="road_major"
+    )
     assert 0 < brush.coherence < 1
     m = brush.bristles
     t = np.linspace(0.0, 40.0, int(40.0 / brush.step) + 2).astype(np.float32)
@@ -88,7 +94,9 @@ def test_the_break_along_is_the_next_lattice_field_at_its_own_cell():
     A brush whose unit and organic multiplier differ from one, so neither can stand in
     for the other in the cell.
     """
-    brush, _ = brush_from_id("MAJ2-a", 2.0, 2.0, BrushStyle(brush_organic=True), "road_major")
+    brush, _ = brush_from_id(
+        "MAJ2-a", 2.0, scale=2.0, style=BrushStyle(brush_organic=True), override="road_major"
+    )
     brush = replace(brush, unit=1.5, org_mult=0.7)
     m = brush.bristles
     t = np.linspace(0.0, 40.0, int(40.0 / brush.step) + 2).astype(np.float32)
