@@ -34,7 +34,7 @@ jobs:
 
       - run: uv sync --locked
 
-      - uses: CodSpeedHQ/action@v5.6.3
+      - uses: CodSpeedHQ/action@v5.8.0
         with:
           mode: simulation
           run: uv run pytest tests/benchmarks --codspeed
