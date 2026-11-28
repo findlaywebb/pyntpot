@@ -27,10 +27,10 @@ Plan: `plan.md` revision 3 (decisions 1 to 19). Review: `review-plan.md`.
 
 ## P3: Docs
 
-- [ ] `tests/support/docs_images_008a.py` and the three `docs_images.py` edits (decision 13).
-- [ ] Images painted by `make_docs_images.py`; masters committed; docs image tests green.
-- [ ] `docs/how-to/write-a-theme.md` and `docs/gallery.md` placements and captions.
-- [ ] `docs/features/maps-theme-preview-card.md` deleted.
+- [x] `tests/support/docs_images_008a.py` and the three `docs_images.py` edits (decision 13).
+- [x] Images painted by `make_docs_images.py`; masters committed; docs image tests green.
+- [x] `docs/how-to/write-a-theme.md` and `docs/gallery.md` placements and captions.
+- [x] `docs/features/maps-theme-preview-card.md` deleted.
 
 ## P4: Review and PR
 

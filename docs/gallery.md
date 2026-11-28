@@ -162,6 +162,26 @@ Every picture in these docs is painted by pyntpot from a script in `examples/`, 
 
 *Painted by `examples/map_styles.py` (figure winter).*
 
+![The synthetic Lynmouth preview card in the default theme: a pale wash of green and tan land, a coast with an island, a river splitting round a bar, a lake, roads over the water and a magenta route lettered with a landmark and a journal note.](images/preview/default.webp)
+
+*Painted by `examples/theme_preview.py` with `theme="default"`.*
+
+![The synthetic Lynmouth preview card in the pen-and-ink theme: near-black ink on pale paper, with grey land tints, a coast with an island, a split river, a lake and a black route.](images/preview/pen-and-ink.webp)
+
+*Painted by `examples/theme_preview.py` with `theme="pen-and-ink"`.*
+
+![The synthetic Lynmouth preview card in the sepia theme: faded browns on yellowed paper with a dark vignette, the coast, island, split river and lake in brown, and a rust-brown route.](images/preview/sepia.webp)
+
+*Painted by `examples/theme_preview.py` with `theme="sepia"`.*
+
+![The synthetic Lynmouth preview card in the bold theme: saturated greens, oranges and blues, the coast, island, split river and lake, and a thick magenta route.](images/preview/bold.webp)
+
+*Painted by `examples/theme_preview.py` with `theme="bold"`.*
+
+![The synthetic Lynmouth preview card in the winter theme: cool greys and blues on pale blue-white paper, the coast, island, split river and lake, and a scarlet route.](images/preview/winter.webp)
+
+*Painted by `examples/theme_preview.py` with `theme="winter"`.*
+
 ![Four close windows of the Ambleside card on the slope of Loughrigg Fell, the hillside shaded more heavily from left to right as the relief strength rises.](images/how-to/relief-strength.webp)
 
 *Painted by `examples/relief_grid.py` (the Ambleside fixture, the default style). The labels read 0, 2, 4 and 8 across.*

@@ -42,6 +42,7 @@ Markdown that shows them.
 """
 
 from support.docs_image import DocsImage, Encoding
+from support.docs_images_008a import IMAGES_008A, SHARES_008A
 from support.docs_images_009a import IMAGES_009A, SHARES_009A
 
 #: The most one file may weigh, by kind. The social preview stays under GitHub's 1 MB limit.
@@ -72,6 +73,7 @@ SLICE_SHARE_BYTES: dict[str, int] = {
     "P7.V12a": 300_000,
     "P7.V14": 100_000,
     "glyph-sheet": 250_000,
+    **SHARES_008A,
     **SHARES_009A,
 }
 
@@ -508,4 +510,5 @@ IMAGES += (
     ),
 )
 
+IMAGES += IMAGES_008A
 IMAGES += IMAGES_009A
