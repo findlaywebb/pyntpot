@@ -243,6 +243,26 @@
     "file": "f7f2fcba9641de242a4f8a30216b9b8039133c5b7a798837a56ca11f8fca9bde",
     "pixels": "33527a4726df0b416395c18fa83763e6a9d52a5cd006c28079e5eff98933dc5a"
   },
+  "preview/bold.webp": {
+    "file": "5fbb4c11ff49ad69d9ed59680adaf7e3bd5c4b95be9269a3472e460d214fba57",
+    "pixels": "5d22239767823dcb5aec1412d550183717c520a510dd31ab878bbf6304624722"
+  },
+  "preview/default.webp": {
+    "file": "ba3a19a8ea177466f54812dc52a126b7729708d36c849c3243938a769cb0455c",
+    "pixels": "ce419e6a75045495f6139d8b30407b994d6be15ff6e6da7fceb76541be24e699"
+  },
+  "preview/pen-and-ink.webp": {
+    "file": "6379da92ef7422b93cf3eb328585d4fc67f195e6ca175633fd84ad158cb5293b",
+    "pixels": "cd5e345124351b3b9863aa0f2eaa5a2fb3964939f4a87647bf2a40b8e706f001"
+  },
+  "preview/sepia.webp": {
+    "file": "e9ecdc7d1ab58738045c1d8270cd77cc0e9869fdc422528c3b8097ff1a8647fd",
+    "pixels": "f79052b2c5be5951c9ead541092a19b50de7b5e8909f9266c1c87fd8f2c009ea"
+  },
+  "preview/winter.webp": {
+    "file": "1aa493da742b3565dce0450fbbcf5bbf4b22ca8b551e4d79249cb32ba92cf9ab",
+    "pixels": "fd98c555e5fa87540646cde4c7a9cf57eab8428ae2c2e8d549ea18ad69124a2c"
+  },
   "reference/brush-dryness-sweep.webp": {
     "file": "9915b610fe90bead22057b0d8beaa5c46970b1643d6470cd74994ed774947eeb",
     "pixels": "01fccd3e59679681a793b25b45e27fb42be46a4fc3d22f217147e9b4fc3ce17d"
