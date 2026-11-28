@@ -64,7 +64,6 @@ class Elements:
     def __init__(self) -> None:
         """Start numbering at 1."""
         self._last = 0
-        self.made: list[dict[str, Any]] = []
 
     def _next(self) -> int:
         """Return the next element id."""
@@ -143,8 +142,8 @@ A synthetic route and the provider payloads cached for it, made by
 every element are made up, so none of it is ODbL data. The names are real names of the
 Lynmouth area (Lynmouth, Lynton, East Lyn River, West Lyn River, Countisbury, Watersmeet,
 Foreland Point) standing at made-up places, by design. Features with no real name there carry
-no name tag. The card's credit reads "© OpenStreetMap contributors" over this data because
-it is the provider's credit.
+no name tag. The card's credits read "© OpenStreetMap contributors" over this
+data and "elevation: NASA SRTM" over the synthetic grid, because each is its provider's credit.
 
 Regenerate with `PYTHONPATH=tests uv run python -m fixtures.make_preview OUT_DIR`; the fixture
 test runs it into a temporary directory and compares every file byte for byte.
@@ -193,11 +192,12 @@ within 350 m of the track's box, so it is inside the smallest card.
 
 ## The route
 
-It starts at Lynton's side, runs along the minor road and out to the east and back, walks up
-the East Lyn River's bank beside the gravel bar and back down, crosses the river and the West
-Lyn River once, and ends south of the stream. It keeps at least 300 m from the coast. It
-doubles back beside the minor road (out to the east and back, within 20 m of the road) and
-beside the river (up the bank and back, within 40 m of the channel).
+It starts at Lynton's side, runs down to the minor road and along it to the river, walks up
+the East Lyn River's bank beside the gravel bar and back down, then runs out east along the
+road and back, and ends south of the stream. It crosses the East Lyn River twice and the West
+Lyn River once. It keeps at least 300 m from the coast. It doubles back beside the minor road
+(out to the east and back, within 20 m of the road) and beside the river (up the bank and
+back, within 40 m of the channel).
 
 The riverside stretch, the walk up the bank and back down it, is track points {river_first}
 to {river_last} (counting from 0). A journal note lies on one of them.

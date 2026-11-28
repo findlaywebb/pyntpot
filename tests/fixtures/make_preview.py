@@ -354,7 +354,8 @@ def make(out_dir: Path) -> str:
         The key the payloads are named by, from the track as read back from its GPX.
 
     Raises:
-        ValueError: When the layout reaches past the features fetch box.
+        ValueError: When the layout reaches past the features fetch box, or a track point is
+            within `COAST_CLEARANCE_M` of the coast.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     walk = route()
@@ -365,6 +366,9 @@ def make(out_dir: Path) -> str:
     half_x, half_y = _fetch_box_edges(track)
     if half_x < EDGE_X or half_y < EDGE_Y:
         raise ValueError(f"the layout reaches past the fetch box ({half_x:.1f}, {half_y:.1f})")
+    nearest = min(coast_gap(p) for p in walk.points)
+    if nearest < COAST_CLEARANCE_M:
+        raise ValueError(f"the route comes within {nearest:.1f} m of the coast")
     ids = Elements()
     texts = {
         f"overpass-{key}.json": payload_text(_features(ids)),

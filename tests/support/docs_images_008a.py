@@ -17,7 +17,7 @@ SHARES_008A: dict[str, int] = {
 }
 
 #: The packaged themes, each painted once.
-THEMES_008A: tuple[str, ...] = ("default", "pen-and-ink", "sepia", "bold", "winter")
+_THEMES: tuple[str, ...] = ("default", "pen-and-ink", "sepia", "bold", "winter")
 
 IMAGES_008A: tuple[DocsImage, ...] = tuple(
     DocsImage(
@@ -30,5 +30,5 @@ IMAGES_008A: tuple[DocsImage, ...] = tuple(
         "webp-lossy",
         "008a-preview",
     )
-    for name in THEMES_008A
+    for name in _THEMES
 )

@@ -15,7 +15,7 @@ Run it with a theme and an output directory::
 
 The card is saved as `preview.png`. It copies the fixture into a temporary directory and
 makes no request: its providers have no budget. It does not fetch, record or write anything
-beside the card.
+beside the card and the plates in the cache directory it is given.
 """
 
 import argparse

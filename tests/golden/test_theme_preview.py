@@ -96,7 +96,7 @@ def test_the_pinned_themes_are_every_packaged_and_example_theme() -> None:
 
 
 @pytest.mark.golden
-@pytest.mark.parametrize("theme", list(MEAN_RGB), ids=list(MEAN_RGB))
+@pytest.mark.parametrize("theme", list(MEAN_RGB), ids=[Path(t).stem for t in MEAN_RGB])
 def test_the_theme_paints_the_preview_card(tmp_path: Path, theme: str) -> None:
     """From the fixture's cache alone, the theme paints a card of the pinned size, mean colour and labels."""
     cache = tmp_path / "cache"
