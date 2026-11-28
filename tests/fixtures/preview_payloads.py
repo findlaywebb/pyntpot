@@ -121,7 +121,9 @@ def elevation_text(box: BoundingBox, height: Callable[[Point], float]) -> str:
         height: A function from a point in metres to its elevation; rounded here to whole metres.
 
     Returns:
-        `ElevationGrid.to_json()` of an `ELEVATION_SAMPLES` square grid.
+        `ElevationGrid.to_json()` of an `ELEVATION_SAMPLES` square grid, with the trailing
+        newline every committed text file ends with (the end-of-file hook asks for it, and
+        the recorded fixtures' elevation files end so).
     """
     n = ELEVATION_SAMPLES
     south, west, north, east = (round(v, DEGREE_PLACES) for v in box)
@@ -131,7 +133,7 @@ def elevation_text(box: BoundingBox, height: Callable[[Point], float]) -> str:
     grid = ElevationGrid(
         n=n, box=BoundingBox(south, west, north, east), lats=lats, lons=lons, elev=elev
     )
-    return grid.to_json()
+    return grid.to_json() + "\n"
 
 
 README = """\
