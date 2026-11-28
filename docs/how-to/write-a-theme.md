@@ -453,12 +453,35 @@ each over the default.
 [`examples/map_styles.py`](https://github.com/findlaywebb/pyntpot/blob/main/examples/map_styles.py)
 paints the Ambleside route in one of them. Read the files beside the pictures to see what
 each changes, or pass the name to `--style`.
+[`examples/theme_preview.py`](https://github.com/findlaywebb/pyntpot/blob/main/examples/theme_preview.py)
+paints any theme on the preview fixture, a made-up route in the Lynmouth box that holds every
+feature a theme can get wrong.
+
+The preview card is the quick way to see a theme whole. To preview your own theme, run:
+
+```bash
+uv run python examples/theme_preview.py --theme path/to/my-theme.yaml out/
+```
+
+A theme path is relative to the repository's top directory. The card is saved as
+`out/preview.png`. It paints the synthetic route in the
+preview fixture, `tests/fixtures/preview/`, offline, and gathers the coast, the river that splits,
+the lake, roads over water and the small patches of every cover class on one card, so you can see
+how they meet in your colours. The card below is in the default theme.
+
+![The synthetic Lynmouth preview card in the default theme: a pale wash of green and tan land, a coast with an island, a river splitting round a bar, a lake with an island, roads over the water and a magenta route lettered with a landmark and a journal note.](../images/preview/default.webp)
+
+*Painted by `examples/theme_preview.py` with `theme="default"`.*
 
 ### Pen and ink
 
 ![A route map of Ambleside in near-black ink on pale paper, with grey roads and rivers, a pale grey tint for the land and a black route.](../images/map-styles/pen-and-ink.webp)
 
 *Painted by `examples/map_styles.py` with `figure="pen-and-ink"`.*
+
+![The synthetic Lynmouth preview card in the pen-and-ink theme: near-black ink on pale paper, with grey land tints, a coast with an island, a split river, a lake and a black route.](../images/preview/pen-and-ink.webp)
+
+*Painted by `examples/theme_preview.py` with `theme="pen-and-ink"`.*
 
 The colour washes are off. `land_cover` is false in `cover`, so the land takes pale grey
 tints. `brush.brushes` picks other brushes for the roads and rivers, `brush.river_mult`
@@ -471,6 +494,10 @@ thins the rivers, and `route_ink` makes the route black. Its file is
 
 *Painted by `examples/map_styles.py` with `figure="sepia"`.*
 
+![The synthetic Lynmouth preview card in the sepia theme: faded browns on yellowed paper with a dark vignette, the coast, island, split river and lake in brown, and a rust-brown route.](../images/preview/sepia.webp)
+
+*Painted by `examples/theme_preview.py` with `theme="sepia"`.*
+
 The `paper` group yellows the paper and raises the wear, the foxing and the vignette.
 Every pigment in `cover.pigments` is a faded brown or ochre. The brush ids in
 `brush.brushes` differ from the default's, and the rivers and roads come out brown. Its
@@ -481,6 +508,10 @@ file is `src/pyntpot/maps/themes/sepia.yaml`; paint with it by `--style sepia`.
 ![A route map of Ambleside in saturated greens, oranges and blues, with a thick magenta route.](../images/map-styles/bold.webp)
 
 *Painted by `examples/map_styles.py` with `figure="bold"`.*
+
+![The synthetic Lynmouth preview card in the bold theme: saturated greens, oranges and blues, the coast, island, split river and lake, and a thick magenta route.](../images/preview/bold.webp)
+
+*Painted by `examples/theme_preview.py` with `theme="bold"`.*
 
 The pigments in `cover.pigments` are saturated, and each carries a lower transparency, so
 they lay down denser. `brush.river_mult` widens the rivers. `nib` letters larger
@@ -495,6 +526,10 @@ shown at page width, and keeps the route apart from the rivers and roads it cros
 ![A route map of Ambleside in cool greys and blues on pale blue-white paper, with a scarlet route.](../images/map-styles/winter.webp)
 
 *Painted by `examples/map_styles.py` with `figure="winter"`.*
+
+![The synthetic Lynmouth preview card in the winter theme: cool greys and blues on pale blue-white paper, the coast, island, split river and lake, and a scarlet route.](../images/preview/winter.webp)
+
+*Painted by `examples/theme_preview.py` with `theme="winter"`.*
 
 The paper is a pale blue-white without foxing, and the pigments are greys and blues. The
 roads are grey-brown. The route is the one warm colour on the map. Its file is

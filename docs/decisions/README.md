@@ -38,7 +38,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0029 | Provider errors public and the cache wraps |
 | 0030 | Smoke lock tolerant on CI |
 | 0031 | Third golden regeneration: the East Lyn label |
-| 0032 | Focus-place fixtures (amends D10) |
+| 0032 | Focus-place fixtures (amends D10; amended by 0072 for `preview/`) |
 | 0033 | Docs images and examples (amends 0006 and 0026) |
 | 0034 | A docs site on GitHub Pages (amends D13) |
 | 0035 | Lettering name tags (amends 0005) |
@@ -78,3 +78,4 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0069 | Themes are YAML overrides of one model (supersedes 0020; amends 0002, 0005, 0015, 0037, 0046 and 0068; amended by 0070: a colour may be a pigment name or an alias, `COLOUR_FIELDS` goes, and route effects are one effect stack split at load) |
 | 0070 | Line effects and one pigment registry (amends 0015, 0027, 0046 and 0069) |
 | 0071 | Golden regeneration: one route colour, pigments that carry their transparency, and bold's cased route (applies 0070 rules 17 and 18) |
+| 0072 | A preview fixture in the Lynmouth box (amends 0032 for `preview/` only: made up, not recorded; real names at made-up places; Lynmouth's box; 600,000 bytes) |

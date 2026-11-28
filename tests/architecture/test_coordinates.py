@@ -17,6 +17,7 @@ from support.paths import (
     FIXTURES,
     KEY,
     OXFORD_KEY,
+    PREVIEW_KEY,
     SKYE_KEY,
     Y_FENNI_KEY,
     YR_WYDDFA_KEY,
@@ -30,6 +31,8 @@ BOXES = {
     "y-fenni": (51.81, -3.03, 51.83, -3.01),
     "ambleside": (54.43, -3.02, 54.45, -2.96),
     "skye": (57.06, -6.78, 57.69, -5.74),
+    # The synthetic preview fixture lies inside Lynmouth's box (ADR 0072).
+    "preview": (51.19, -3.88, 51.26, -3.80),
 }
 
 #: Each fixture's cache key, which names its payload files.
@@ -40,6 +43,7 @@ KEYS = {
     "y-fenni": Y_FENNI_KEY,
     "ambleside": AMBLESIDE_KEY,
     "skye": SKYE_KEY,
+    "preview": PREVIEW_KEY,
 }
 
 #: Budgets in bytes on disk: 6 MB for a fixture directory, more for the entries below (ADR 0032).
@@ -51,6 +55,8 @@ BUDGETS = {
     # Skye is simplified and dropped but still over 12 MB; the maintainer ruled not to stop it
     # for a slight overrun (2026-10-25).
     "skye": 13_000_000,
+    # Synthetic: three small payloads and a track (ADR 0072).
+    "preview": 600_000,
 }
 
 
