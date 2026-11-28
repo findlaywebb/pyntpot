@@ -56,17 +56,17 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4, S5, S6, all
 
 ## S3: Records
 
-- [ ] Glossary "body" row; regenerated.
-- [ ] `docs/features/ink-blank-paper-by-size.md` deleted, links repointed to ADR 0073;
+- [x] Glossary "body" row; regenerated.
+- [x] `docs/features/ink-blank-paper-by-size.md` deleted, links repointed to ADR 0073;
       `docs-tutorial-opening-programs.md:15,21` name #166 and ADR 0073; the 010b sweep
       section added to `docs/features/docs-examples-review.md`.
-- [ ] Slice gate, strict docs build, dash check;
+- [x] Slice gate, strict docs build, dash check;
       `git grep ink-blank-paper-by-size -- ':!specs' ':!docs/decisions'` empty.
 
 ## S4: The pixel proof
 
-- [ ] `output_hashes.py check` against S0: 91 entries unchanged.
-- [ ] Golden suite green with no regeneration; `git status --porcelain docs/images tests/golden` empty.
+- [x] `output_hashes.py check` against S0: 96 entries unchanged (the 91 recorded plus the five 008a preview images).
+- [x] Golden suite green with no regeneration; `git status --porcelain docs/images tests/golden` empty.
 
 ## S5: Mutation testing
 
