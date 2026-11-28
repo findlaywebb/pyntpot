@@ -80,7 +80,7 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4, S5, S6, all
 
 ## S6: Final review and PR
 
-- [ ] Fresh-context diff review against the plan; elegance pass; findings triaged.
+- [x] Fresh-context diff review against the plan; elegance pass; findings triaged.
 - [ ] PR: title `feat(ink)!: take the sheet's size, the wash's densities and the brush scale by keyword`,
       the five Changelog lines, `Closes #166`, mutation equivalents, "Golden and docs
       images: none moved" with the S4 evidence.
