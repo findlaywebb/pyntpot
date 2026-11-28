@@ -26,7 +26,7 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4, S5, S6, all
 
 ## S1: The additive half
 
-- [x] Red: `Canvas.pixels` (equal, scale 1, identity, refuses 0); `paper_plate` default
+- [x] Red: `Canvas.pixels` (equal, scale exactly 1, `px` maps `(x, y)` to `(x, h - y)` with no scaling, refuses 0); `paper_plate` default
       (grid on: equal and differs at half width; grid off: equal only); `brush_from_id`
       defaults against `brush_from_id(id, w, scale=1.0, style=BrushStyle())`, written by
       keyword.

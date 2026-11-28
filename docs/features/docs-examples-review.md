@@ -32,4 +32,5 @@ sweep belongs here:
 - the 42 `Canvas(0, 0, w, h, w, h)` in 25 example files, and the watercolour tutorial's 12,
   move onto `Canvas.pixels`;
 - the 35 `display_px` arguments are dropped where they equal the canvas width;
-- the `letter_over` and `basemap.key` sweeps of 010a add their own lines here.
+- the `letter_over` and `basemap.key` sweeps of 010a add their own lines here;
+- tidy ruff's reflow of `_sky` in `examples/derwentwater.py` (`rgb(\n PIGMENTS["sand"]\n)`).

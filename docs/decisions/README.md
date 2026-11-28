@@ -32,8 +32,8 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0022 | Retire the banned-term test (supersedes D16's enforcement clause) |
 | 0023 | Retire the exemptions mechanism (ends D5's interim relaxation) |
 | 0025 | Second golden regeneration |
-| 0026 | Widen the public API (amended by 0073: `brush_from_id` takes `scale`, `style` and `override` by keyword, and `NibGroups` has defaults) |
-| 0027 | Candidate export, vector layers and route ink (its independent `label_route_ink` is amended by 0070 rule 18: a fed route colour also letters the markers; amended by 0073: a caller reads the key from `basemap.key`) |
+| 0026 | Widen the public API (amended by 0073: `brush_from_id` takes `scale`, `style` and `override` by keyword, and `NibGroups` has defaults (rules 5 to 11, in 010a)) |
+| 0027 | Candidate export, vector layers and route ink (its independent `label_route_ink` is amended by 0070 rule 18: a fed route colour also letters the markers; amended by 0073: a caller reads the key from `basemap.key` (rules 5 to 11, in 010a)) |
 | 0028 | Fetch wraps provider errors |
 | 0029 | Provider errors public and the cache wraps |
 | 0030 | Smoke lock tolerant on CI |
@@ -74,7 +74,7 @@ the contract speaking — change the ADR first, then the checks, never the other
 | 0065 | A name set along water keeps its letters off it: a golden regeneration |
 | 0066 | The backing wash fades out from the letters: a golden regeneration |
 | 0067 | A leader's pin is an open ring facing its leader: a golden regeneration |
-| 0068 | One public surface (amends 0004, 0005, 0007, 0026 and 0027; amended by 0073: `wash` takes `body`, `pool` and `options` by keyword, and `Basemap` gains a required keyword-only `key`) |
+| 0068 | One public surface (amends 0004, 0005, 0007, 0026 and 0027; amended by 0073: `wash` takes `body`, `pool` and `options` by keyword, and `Basemap` gains a required keyword-only `key` (rules 5 to 11, in 010a)) |
 | 0069 | Themes are YAML overrides of one model (supersedes 0020; amends 0002, 0005, 0015, 0037, 0046 and 0068; amended by 0070: a colour may be a pigment name or an alias, `COLOUR_FIELDS` goes, and route effects are one effect stack split at load) |
 | 0070 | Line effects and one pigment registry (amends 0015, 0027, 0046 and 0069) |
 | 0071 | Golden regeneration: one route colour, pigments that carry their transparency, and bold's cased route (applies 0070 rules 17 and 18) |

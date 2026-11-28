@@ -63,7 +63,7 @@ class TestCanvasPixels:
         assert Canvas.pixels(w=90, h=60) == Canvas(0, 0, 90, 60, 90, 60)
 
     def test_one_world_unit_is_one_pixel(self):
-        """The scale is exactly 1 and `px` returns its points unchanged."""
+        """The scale is exactly 1 and `px` maps `(x, y)` to `(x, h - y)`: no scaling, north up."""
         canvas = Canvas.pixels(w=90, h=60)
         assert canvas.scale == 1.0
         points = np.array([[0.0, 0.0], [12.5, 30.0]])
@@ -92,7 +92,7 @@ class TestSheetTakesKeywords:
 
     def test_a_positional_call_is_refused(self):
         """`Sheet(240, 360, 8.0, 11)` raises TypeError."""
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match="positional"):
             Sheet(240, 360, 8.0, 11)  # ty: ignore[too-many-positional-arguments, missing-argument]
 
     def test_the_five_fields_are_height_by_width(self):

@@ -213,5 +213,5 @@ def test_a_sheet_with_nothing_wet_on_it_comes_back_untouched():
 def test_a_positional_density_is_refused():
     """`wash(cover, sheet, 0.6, 0.3)` raises TypeError: `body` and `pool` are keywords."""
     sheet, left, _ = two_squares()
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="positional"):
         wash(left, sheet, 0.6, 0.3)  # ty: ignore[too-many-positional-arguments, missing-argument]

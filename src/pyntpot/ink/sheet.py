@@ -2,7 +2,8 @@
 
 Key types: `Sheet`, the paper's own noise fields, seeded, shared by every wash and every
 mark; `Canvas`, a box in world units and the pixel grid it is painted on, which
-projects world-unit points into render pixels. `rgb` reads a hex colour as floats and `PAPER`
+projects world-unit points into render pixels (`Canvas.pixels` is the canvas that is only its
+pixel grid). `rgb` reads a hex colour as floats and `PAPER`
 is the paper's own cream.
 
 It paints nothing: it is the surface painting is done on.
@@ -73,6 +74,8 @@ class Canvas:
 
         Returns:
             `Canvas(0.0, 0.0, float(w), float(h), w, h)`, whose `scale` is 1.
+            World y runs up from the bottom edge: `px` maps `(x, y)` to `(x, h - y)`; a
+            pixel-space mask drawn with y down needs no projection.
 
         Raises:
             ValueError: When `w` or `h` is under 1.
@@ -110,7 +113,8 @@ class Sheet:
 
     The fields are made once, in `__post_init__`, and are not edited in place after it:
     the paper carried up to an ink pad's finer grid is kept per grid on that promise.
-    Every field is passed by keyword.
+    Every constructor argument is passed by keyword, width first, as `Canvas` and Pillow order
+    them; the five computed fields are `(h, w)` arrays.
 
     Attributes:
         w: The sheet's width, in render pixels.

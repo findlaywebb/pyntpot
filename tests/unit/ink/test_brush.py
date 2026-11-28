@@ -155,5 +155,5 @@ class TestBrushFromIdDefaults:
 
 def test_a_positional_scale_is_refused():
     """`brush_from_id("MAJ6-e", 3.0, 2.0)` raises TypeError: `scale` is a keyword."""
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="positional"):
         brush_from_id("MAJ6-e", 3.0, 2.0)  # ty: ignore[too-many-positional-arguments]

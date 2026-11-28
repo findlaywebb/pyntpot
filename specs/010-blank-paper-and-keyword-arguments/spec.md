@@ -48,8 +48,8 @@ specs 008 and 009 added scripts; these supersede them.)
       five noise fields it draws are unchanged: for the same size, grain, seed and fibre,
       every field is bit-identical to today's.
 - [ ] `Canvas.pixels(*, w, h)` returns the canvas whose box is its own pixel grid:
-      `Canvas(0.0, 0.0, float(w), float(h), w, h)`, so its `scale` is 1 and `px` is the
-      identity. A width or height under 1 raises `ValueError`. `Canvas`'s constructor is
+      `Canvas(0.0, 0.0, float(w), float(h), w, h)`, so its `scale` is exactly 1 and `px` maps
+      `(x, y)` to `(x, h - y)` (no scaling, north up). A width or height under 1 raises `ValueError`. `Canvas`'s constructor is
       unchanged.
 - [ ] `paper_plate(sheet, canvas, style, display_px=None)`: with `display_px` left out,
       the grid is measured against `canvas.w`, and the paper is bit-identical to passing
@@ -94,7 +94,7 @@ specs 008 and 009 added scripts; these supersede them.)
 
 - [ ] The sha256 of every file each registered docs image's script writes, and of its RGB
       pixels, recorded on the branch base, is unchanged
-      (`tests/golden/output_hashes.py check`, all 91 entries).
+      (`tests/golden/output_hashes.py check`, 96 entries (91 recorded on 38179789, the five 008a preview images on e89eff3e)).
 - [ ] The golden suite passes with no regeneration: no file under `docs/images/`,
       `tests/golden/docs/` or `tests/golden/lynmouth/` changes, and no pinned literal
       (`GOLDEN_HASH`, `DIGEST`, `BASE_DIGEST`, `LETTERING_DIGEST`, the theme digests, any

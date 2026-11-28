@@ -11,7 +11,7 @@ setup (blank paper, the sheet, lettering the result) before the idea the page is
 **What the feature would add.** A short program at the top of each page, complete enough
 to copy and run, that paints the page's idea and nothing else, before the page walks the
 full script. Setting up blank paper and lettering over an image each take several calls
-today, so the opening programs are shorter once those take one call each: #166 (closed by
+today, so the opening programs are shorter once those take one call each: #166 (decided by
 ADR 0073; the sweep is under `docs-examples-review.md`) and
 `letters-lettering-over-an-image.md` (#165).
 
@@ -19,5 +19,5 @@ ADR 0073; the sweep is under `docs-examples-review.md`) and
 program, so the verbatim-quote and command tests cover it with no new test. It should land
 after #165 and #166, or be shortened when they land.
 
-**Related.** #166, closed by ADR 0073; the sweep is under `docs-examples-review.md`.
-`letters-lettering-over-an-image.md` (#165), `docs-examples-housekeeping.md` (#174).
+**Related.** #166 (ADR 0073; the sweep is under `docs-examples-review.md`);
+`letters-lettering-over-an-image.md` (#165); `docs-examples-housekeeping.md` (#174).

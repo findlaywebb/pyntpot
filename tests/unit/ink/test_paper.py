@@ -176,7 +176,7 @@ class TestDefaultDisplayWidth:
     @staticmethod
     def _plate(style: PaperStyle, display_px: int | None) -> np.ndarray:
         """The paper of a 90 by 60 canvas on a fresh sheet, so every call draws the same fields."""
-        sheet = Sheet(h=60, w=90, gran_px=4.0, seed=11)
+        sheet = Sheet(w=90, h=60, gran_px=4.0, seed=11)
         canvas = Canvas(0, 0, 90, 60, 90, 60)
         if display_px is None:
             return paper_plate(sheet, canvas, style)

@@ -147,8 +147,8 @@ def main(out_dir: Path) -> Path:
     return path
 ```
 
-The two numbers after the sheet, `0.6` and `0.3`, set the strength of the body and the
-extra pigment that pools just inside the edge.
+`body=0.6` and `pool=0.3` set the strength of the body and the extra pigment that pools
+just inside the edge.
 
 ### What to notice
 
@@ -188,7 +188,7 @@ def _wash_grid() -> np.ndarray:
     return _labels(out, boxes, bodies, [f"seed {seed}" for seed in seeds])
 ```
 
-The `0.5` after `body` is the pooled edge. Try changing it to `0.0`, and the dark band inside each edge fades.
+`pool=0.5` is the pooled edge. Try changing it to `0.0`, and the dark band inside each edge fades.
 
 ## Pull a brush
 
