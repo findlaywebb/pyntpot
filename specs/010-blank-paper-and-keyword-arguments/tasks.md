@@ -6,7 +6,7 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4, S5, S6, all
 
 ## Start
 
-- [ ] Comment the branch name and spec `010` on #166.
+- [x] Comment the branch name and spec `010` on #166.
 - [x] ADR 0073 written from `plan.md`, "ADR 0073 contents" (rules 1 to 11; 5 to 11 land
       in 010a, which may amend them), amending 0007, 0026, 0027 and 0068 and quoting only
       sentences they contain; 0072 skipped (spec 008a holds it).
