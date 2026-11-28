@@ -593,4 +593,3 @@ Forks picked with no human in the loop, each with its reason:
 
 Every finding of `review-plan.md` is applied as the review prescribes. That includes the
 three "consider" findings, which cost a line each. None is rejected.
-
