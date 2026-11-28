@@ -729,3 +729,15 @@ suggestion:
 - **Finding 2:** the review offered narrowing D7 to `scale`. This plan keeps D7 whole and
   prescribes its fallout (D7).
 None is rejected.
+
+## Implementation notes from the re-review (binding)
+
+1. The `brush_from_id` negative test carries `# ty: ignore[too-many-positional-arguments]`
+   only: every keyword-only parameter there has a default, so ty 0.0.100 reports no
+   `missing-argument` (a two-code ignore fails with `unused-ignore-comment`). The `Sheet` and
+   `wash` negative tests keep both codes.
+2. S5's spelling-only proof covers `wash`, `nib_brushes`, `_sheet` and `_backing_wash`.
+   `brush_from_id` gains the `style = BrushStyle() if style is None else style` line, so it is
+   mutated and checked against its recorded equivalents instead.
+3. `output_hashes.py` imports `from golden.make_docs_images import fixture_options`, as
+   `repaint.py:28` does.
