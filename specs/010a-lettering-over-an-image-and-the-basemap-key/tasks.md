@@ -1,5 +1,7 @@
 # 010a — tasks
 
+Revision 2: matches `plan.md` revision 2.
+
 Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4a, then the merge gate
 (S4b in, which may run in a worktree cut after S0), S5, S6, S7, S8. Stacks on 010.
 
@@ -12,13 +14,15 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4a, then the m
 
 ## S0: Baseline hashes
 
-- [ ] On the untouched base: `output_hashes.py record specs/010a-lettering-over-an-image-and-the-basemap-key/output-hashes.json`, committed alone; `check` passes.
+- [ ] On the untouched base: `output_hashes.py record specs/010a-lettering-over-an-image-and-the-basemap-key/output-hashes.json`, committed alone, the base commit named in the message (S7's mutation base); `check` passes.
 
 ## S1: The plate resize in `ink`
 
-- [ ] Red: `rgba_image` rounding at pinned literals; `save_rgba` writes it; `shrunk_rgba`
-      size and premultiplied (no red from a transparent half); `grown_bilinear`.
-- [ ] `ink/plate_resize.py`; `save_rgba` uses `rgba_image`; slice gate green.
+- [ ] Red: `rgba_image` rounding at pinned literals; `save_rgba` calls through it;
+      `shrunk_rgba` size and premultiplied (no red from a transparent half); the same-size
+      pin `(200, 100, 50)` at alpha `3 / 255` reads `(170, 85, 85, 3)`; `grown_bilinear`.
+- [ ] `ink/plate_resize.py` with `shrunk_rgba` as `.convert("RGBa").resize(...).convert("RGBA")`;
+      `save_rgba` uses `rgba_image`; slice gate green.
 
 ## S2: Split the backing wash (pure move)
 
@@ -29,9 +33,12 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4a, then the m
 
 ## S3: `nib_rgba`, `letter_over`, `NibGroups` defaults
 
-- [ ] Red: `test_nib_rgba.py`; `test_letter_over.py` (the two parity tests against the
-      examples' recipe, defaults, copy, unchanged input, far pixel, errors);
-      `NibGroups` defaults in `test_style.py`.
+- [ ] Red: `test_nib_rgba.py` (decode claim with the default lossless `PaperStyle()`);
+      `test_letter_over.py` (the two parity tests against the recipe written out, grain
+      `5.0 * 2`, `Setting("Keswick", 22.0, anchor=(8.0, 52.0))`, zero and ramp darkness;
+      defaults, copy, unchanged input, corner `[0, 159]`, `scale=1`, errors); `NibGroups`
+      defaults in `test_style.py`.
+- [ ] `nib_rgba` cites `nib`; `references.md`'s `nib` entry lists it.
 - [ ] `nib_rgba`, `nib_plate` over it; `letter_over` in `letters/image_lettering.py`;
       `NibGroups` `default_factory` fields.
 - [ ] Exports, `letters` docstring, `docs/reference/letters.md`, `test_public_api.py`.
@@ -39,18 +46,21 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4a, then the m
 
 ## S4a: The attribution in memory
 
-- [ ] Red: `tests/architecture/test_no_plate_round_trip.py` (fails on `attribution.py`).
+- [ ] Red: `tests/architecture/test_no_plate_round_trip.py` (no `nib_plate`, `Image.open`
+      or `tempfile` in `attribution.py`; no `tempfile` in `letters`; fails on the base);
+      the lossy-style case in `test_attribution.py` (fails on the base).
 - [ ] `draw_attribution` on `nib_rgba` and `shrunk_rgba`; no temporary directory.
 - [ ] Slice gate; golden `test_map_styles.py` and `test_places.py`; output hashes of
       `route_map`, `place_card` and `map_styles` unchanged.
 
 ## S4b: The basemap's key
 
-- [ ] Red: `fetch(...).key == KEY == cache.key(...)`; `canonical` ignores `key`; a
-      `Basemap` without `key` raises `TypeError`.
+- [ ] Red: `fetch(...).key == KEY == cache.key(...)`; `("key", "0" * 16)` in
+      `OUTSIDE_THE_HASH`; a `Basemap` without `key` raises `TypeError`
+      (`ty: ignore[missing-argument]`).
 - [ ] `Basemap.key` (required, keyword-only, last, documented); `build_basemap` sets it;
       module invariant rewritten; CLI and `tests/support/golden.py` read `basemap.key`;
-      the three test builders pass `key=`.
+      the three test builders pass `key=KEY`.
 - [ ] Slice gate and coverage gate green.
 
 ## Merge gate
@@ -60,8 +70,10 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4a, then the m
 ## S5: Records
 
 - [ ] Glossary "nib plate" and "basemap" rows; regenerated.
-- [ ] The #165 and #167 notes deleted, links repointed to ADR 0073; their sweep added to
-      `docs-examples-review.md` under 010b.
+- [ ] The #165 and #167 notes deleted; the mentions in `docs-how-to-write-a-provider.md`
+      and `docs-tutorial-opening-programs.md` name the issues and ADR 0073; their sweep,
+      with the grid `gran_px` halving sentence, added to `docs-examples-review.md` under
+      010b; the `git grep` gate empty.
 - [ ] Slice gate, strict docs build, dash check.
 
 ## S6: The pixel proof
@@ -71,8 +83,8 @@ Slices and files are in `plan.md`. Order: Start, S0, S1, S2, S3, S4a, then the m
 
 ## S7: Mutation testing
 
-- [ ] Patterns from `scope.py`, `backing_wash` dropped as moved; survivors killed or
-      named in `mutation.md`.
+- [ ] Patterns from `scope.py --base <S0's recorded base>`, `backing_wash` dropped as
+      moved; survivors killed or named in `mutation.md`.
 
 ## S8: Final review and PR
 

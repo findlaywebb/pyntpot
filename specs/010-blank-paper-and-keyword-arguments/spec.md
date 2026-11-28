@@ -1,5 +1,9 @@
 # 010 — Blank paper by size, and keyword arguments for the ink engine
 
+Revision 2 (after `review-plan.md`): the callers criterion names the two edits D7 forces;
+the docs criterion names an AST check over fenced blocks; the ADR criterion names the
+index; ADR 0073 skips 0072, which spec 008a holds.
+
 GitHub issue: [#166](https://github.com/findlaywebb/pyntpot/issues/166) (blank paper set
 up from a size alone). This PR closes it.
 
@@ -65,19 +69,26 @@ specs 008 and 009 added scripts; these supersede them.)
 
 - [ ] Every caller of `Sheet`, `wash` and `brush_from_id` in `src/`, `tests/`,
       `examples/`, `README.md` and `docs/` uses the new form. Only the call's spelling
-      changes. A `brush_from_id` call drops a `scale` that is the literal 1 or 1.0 and a
-      `style` that is a bare `BrushStyle()`, because those are now the defaults. Nothing
-      else in those files changes (`Canvas.pixels` and the `display_px` default are
-      adopted by 010b, not here).
+      changes, positional arguments only: an existing keyword argument is never touched.
+      A `brush_from_id` call drops a positional `scale` that is the literal 1 or 1.0 and a
+      positional `style` that is a bare `BrushStyle()`, because those are now the defaults.
+      Beyond the calls, exactly these change: a `BrushStyle` import that the drop left
+      unused (14 example files) and that name in the same files' module-docstring list of
+      the names they use, the tutorial blocks quoting those lines, one test docstring
+      (`tests/unit/test_public_api.py:172`), the extractor self-test literals in
+      `tests/docs/test_docs_signatures.py`, and a `brush_from_id` case added to
+      `tests/architecture/test_benchmark_inputs.py`. Nothing else in those files changes
+      (`Canvas.pixels` and the `display_px` default are adopted by 010b, not here).
 - [ ] Every tutorial block stays a verbatim quote of its script
       (`tests/docs/test_tutorial_quotes.py`), the README's quick start stays a quote of
       `examples/wash.py` (`tests/docs/test_readme.py`), and every quoted signature in prose
       lists every parameter (`tests/docs/test_docs_signatures.py`):
       `docs/explanation/how-the-wash-works.md` reads `wash(cover, sheet, body, pool,
       options)` and `docs/reference/brushes.md`'s example is in the keyword form.
-- [ ] No `docs/` page or `README.md` code block still calls `Sheet` with a positional
-      size, `wash` with a positional density or `brush_from_id` with a positional scale
-      (the grep in `plan.md`, "Gates", is empty).
+- [ ] No fenced code block in `README.md` or a `docs/` page (outside `decisions/` and
+      `features/`) calls `Sheet` with a positional argument, or `wash` or `brush_from_id`
+      with more than two: the AST check over fenced blocks in `plan.md`, "Running the
+      gates", reports nothing.
 
 ### Pixels do not move
 
@@ -91,19 +102,27 @@ specs 008 and 009 added scripts; these supersede them.)
 
 ### Records
 
-- [ ] ADR 0073 is written and accepted. It amends ADR 0007 (the façade's documented
-      signatures of `Sheet` and `wash`), 0026 (`brush_from_id`; `NibGroups`) and 0068
-      (`wash`'s signature; `Basemap`'s construction) and 0027 (where a caller gets the
-      key), and states which rules land here and which in 010a.
+- [ ] ADR 0073 is written and accepted. It amends ADR 0007 (`Sheet` and `wash` are its
+      façade names), 0026 (its member rule binds documented signatures; `brush_from_id`;
+      `NibGroups`), 0068 (`wash`'s "keeps the signature" sentence; `Basemap`'s
+      construction) and 0027 (where a caller gets the key), quoting only sentences those
+      ADRs contain. It states that rules 5 to 11 land in 010a, which may amend them.
+      `docs/decisions/README.md` has its row and an "amended by 0073" clause on each of the
+      four amended rows. (0072 is skipped: spec 008a holds it and lands first.)
 - [ ] `GLOSSARY.md`'s "body" row reads "`wash`'s `body`" and the glossary page and
       tooltips are regenerated.
 - [ ] `docs/features/ink-blank-paper-by-size.md` is deleted and every link to it
       repointed; the sweep it described (examples and the tutorial onto `Canvas.pixels`
       and the `display_px` default) is added to `docs/features/docs-examples-review.md`
-      (#63) as the 010b work. The PR body says `Closes #166`.
-- [ ] Mutation testing has run on the changed `ink` and `letters` functions (`plan.md`,
-      S5). Each survivor is killed or named as equivalent, with its reason (`mutation.md`,
-      PR description).
+      (#63) as the 010b work. The two mentions in
+      `docs/features/docs-tutorial-opening-programs.md` name #166 and ADR 0073 instead,
+      and `git grep ink-blank-paper-by-size -- ':!specs' ':!docs/decisions'` is empty. The
+      PR body says `Closes #166`.
+- [ ] Mutation testing has run by `plan.md`'s S5 rule: `Canvas.pixels` and `paper_plate`
+      in full, `wash` and `brush_from_id` against their recorded equivalents, and the
+      spelling-only `letters` functions shown spelling-only. Each survivor is killed or
+      named as equivalent, with its reason (`mutation.md`, PR description), or, past the
+      150-line bound, filed as an issue.
 - [ ] No file under `src/` is over 400 lines; no mocking; logging only. Gates green:
       `uv run pytest -n auto --dist loadgroup`, `uv run ruff check .`, `uv run ty check`,
       `uv run lint-imports`, `prek run --all-files`, and the golden suite.

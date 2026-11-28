@@ -1,5 +1,10 @@
 # 010a — Lettering over an image in one call, and the basemap's key
 
+Revision 2 (after `review-plan.md`): the premultiply claim is limited to a resize that
+changes the size; `nib_plate` writes `nib_rgba`'s arrays exactly only with `plate_lossless`
+on; the round-trip check bans `nib_plate` and `Image.open` in the attribution; the `fix`
+line has a test; ADR 0073 skips 0072, which spec 008a holds.
+
 GitHub issues: [#165](https://github.com/findlaywebb/pyntpot/issues/165) (lettering over an
 image in one call) and [#167](https://github.com/findlaywebb/pyntpot/issues/167) (fetch
 hands back what paint needs). This PR closes both.
@@ -23,8 +28,9 @@ defined in 12 scripts. The library does it too: `maps/attribution.py` writes the
 attribution plate into a temporary directory and reopens it. (The note's 14 copies in 13
 scripts were counted before spec 009 folded five grid scripts into `labelled_grid.py`. Its
 "drift" between scripts that convert through `"RGBa"` and those that do not is no drift in
-pixels: Pillow premultiplies an RGBA image inside `resize`, so the two give the same
-pixels, measured.)
+pixels: Pillow premultiplies an RGBA image inside a `resize` that changes the size, so
+at the examples' 2x shrink the two give the same pixels, measured. At the same size Pillow
+copies without premultiplying, which is why the shared shrink premultiplies explicitly.)
 
 **The basemap's key (#167).** `fetch` gets the cache key from `cache.ensure` and drops it,
 so every caller rebuilds it, passing the providers a second time:
@@ -42,9 +48,10 @@ so every caller rebuilds it, passing the providers a second time:
       plate's straight colour `(h, w, 3)` and alpha `(h, w)`, floats in 0 to 1 at the
       surface's size (float32 for a float32 darkness, measured), uncast, exactly as
       `nib_plate` composes them, or `None` when there is nothing to draw (no marks, or no mark of two
-      points). `nib_plate` writes exactly these arrays: the file it writes decodes to the
-      8-bit form of `nib_rgba`'s alpha everywhere and of its colour wherever the alpha is
-      above 0.
+      points). With `plate_lossless` on (the default), `nib_plate` writes exactly these
+      arrays: the file it writes decodes to the 8-bit form of `nib_rgba`'s alpha
+      everywhere and of its colour wherever the alpha is above 0. With it off, the colour
+      is written lossy, as today.
 - [ ] `pyntpot.letters` exports `letter_over(image, marks, groups=None, *, gran_px,
       scale=2, dark=None)`, which returns `image` with the marks lettered on it (ADR 0073
       rule 6), as a new array, leaving `image` unchanged:
@@ -54,16 +61,21 @@ so every caller rebuilds it, passing the providers a second time:
     darkness and with a darkness ramp brought up bilinearly as `labelled_grid.py` does;
   - `groups=None` gives the same result as `NibGroups()`;
   - with nothing to draw it returns an array equal to `image`, not `image` itself;
-  - a pixel far from every mark (where the shrunk alpha is 0) is exactly the image's;
+  - a pixel far from every mark (where the shrunk alpha is 0) is exactly the image's,
+    at `scale=2` and at `scale=1` (a shrink to the same size);
   - an `image` that is not `(h, w, 3)`, a `dark` that is not `(h, w)`, or a `scale`
     under 1 raises `ValueError`.
 - [ ] `NibGroups()` equals `NibGroups(NibStyle(), FaceStyle(), HandStyle(), BrushStyle(),
       PaperStyle())`, `NibGroups(nib=n)` keeps the other four at their defaults, and
       positional construction still works.
-- [ ] `maps/attribution.py` strokes the attribution with `nib_rgba` and writes no file;
-      no module in `letters` or `maps/attribution.py` imports `tempfile`
-      (architecture test). The shrink both use lives once, in `ink` (private), shared with
-      `save_rgba`'s 8-bit conversion.
+- [ ] `maps/attribution.py` strokes the attribution with `nib_rgba` and writes no file:
+      it calls neither `nib_plate` nor `Image.open` and imports no `tempfile`, and no
+      module in `letters` imports `tempfile` (architecture test). The shrink both use
+      lives once, in `ink` (private), shared with `save_rgba`'s 8-bit conversion. It
+      premultiplies explicitly, so a shrink to the same size, as the attribution makes on
+      a card supersampled 2x or more, is bit-identical to today (a pinned test).
+- [ ] A style whose `paper.plate_lossless` is off draws the same attribution bytes as
+      the default style (the `fix` line; `tests/unit/maps/test_attribution.py`).
 
 ### The basemap's key (#167)
 

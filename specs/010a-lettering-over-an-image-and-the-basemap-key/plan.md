@@ -1,5 +1,27 @@
 # 010a — plan
 
+**Revision 2**, after the plan review (`review-plan.md`, verdict BLOCK), rebased on
+`38179789` (main with the toolchain bump: ty 0.0.100). What changed:
+
+- Finding 1 (blocking): `shrunk_rgba` premultiplies explicitly
+  (`.convert("RGBa").resize(...).convert("RGBA")`), because Pillow skips its own
+  premultiply when the size does not change, and the attribution strokes at the card's
+  own size at supersample 2. S1 adds a pinned same-size test and S3 a `scale=1` case. The
+  Approach, the spec's Problem section, and ADR 0073 rules 8 and 9 (in 010's "ADR 0073
+  contents") say the premultiply happens only in a resize that changes the size.
+- Findings 2 to 6 (should-fix), all applied: the parity recipe is written out, with the
+  grain at `5.0 * 2`, the setting, the ramp and the corner. `references.md` is S3's. The
+  lossless-only wording is in the spec, the `nib_rgba` docstring and the decode test. The
+  attribution `fix` line has a test in `test_attribution.py`. S0 records the mutation
+  base and S7 uses it.
+- Findings 7 to 9 (consider), all applied: the real note-mention files are named. S1's
+  libwebp decode test is replaced by a calls-through test. The round-trip AST check bans
+  `nib_plate` and `Image.open` in `attribution.py`. The three builders use `key=KEY`. The
+  canonical case goes in `OUTSIDE_THE_HASH`. `NibGroups() if groups is None else groups`.
+- ADR 0073, not 0072: spec 008a holds 0072 and lands before 010.
+- ty codes re-checked under ty 0.0.100: a `Basemap` built without `key` raises
+  `missing-argument` (measured on a scratch file).
+
 ## Approach
 
 ADR 0073 rules 5 to 11 are the design (written in 010, `specs/010-blank-paper-and-keyword-arguments/plan.md`,
@@ -28,8 +50,13 @@ were each written by `nib_plate`, reopened and shrunk with Lanczos as the exampl
 and compared with the same arrays converted in memory to 8-bit RGBA (`save_rgba`'s own
 rounding) and shrunk the same way:
 
-- `.convert("RGBa").resize(...)` and `.convert("RGBA").resize(...)` give identical pixels:
-  Pillow converts RGBA to RGBa inside `resize`.
+- At a 2x shrink, `.convert("RGBa").resize(...)` and `.convert("RGBA").resize(...)` give
+  identical pixels, because Pillow converts RGBA to RGBa inside a `resize` that changes
+  the size. A `resize` to the same size is a plain copy, with no premultiply: Pillow
+  returns `self.copy()` before its premultiply branch. So the shared shrink converts to
+  `RGBa` explicitly, as `maps/attribution.py` does today. The 010a review measured the
+  attribution at supersample 2 and 3, where its plate is the card's own size: the explicit
+  form gives 0 differing pixels, and a bare `.resize` gives 17,743 and 30,110.
 - The file and the in-memory plate have identical alpha everywhere and identical colour
   wherever the alpha is above 0. They differ only in the colour of fully transparent
   pixels (8584, 51179 and 33731 of them), which libwebp's lossless encoder is free to
@@ -109,6 +136,10 @@ Everything else is serial.
   `PYTHONPATH=tests uv run python tests/golden/output_hashes.py record specs/010a-lettering-over-an-image-and-the-basemap-key/output-hashes.json`,
   committed alone. (010's JSON is not reused: it was recorded before 010's own diff, and
   the base of this PR is after it.)
+- **The mutation base.** The commit message names the base commit, `git rev-parse HEAD`
+  before this commit. It is `origin/main` once 010 has merged, or 010's tip if this
+  branch was cut from it. S7 runs `scope.py --base <that commit>`, so 010's `ink`
+  changes are never mutated under 010a.
 - **Gate:** `check` passes on the base.
 
 ### S1: The plate resize in `ink` (serial)
@@ -122,9 +153,13 @@ Everything else is serial.
     image a plate is stored as, each channel `clip(x * 255 + 0.5, 0, 255)` truncated to
     `uint8`, today's `save_rgba` lines moved here unchanged.
   - `shrunk_rgba(rgb, alpha, size: tuple[int, int]) -> Image.Image`:
-    `rgba_image(rgb, alpha).resize(size, Image.Resampling.LANCZOS)`. The docstring states
-    that Pillow premultiplies RGBA in the resize, so a transparent pixel's colour never
-    reaches the result, and that the 8-bit step is kept on purpose (ADR 0073 rule 8).
+    `rgba_image(rgb, alpha).convert("RGBa").resize(size, Image.Resampling.LANCZOS).convert("RGBA")`.
+    The docstring says the premultiply is explicit, and why: Pillow skips its own
+    premultiply when the size does not change, and the attribution strokes at the card's
+    own size whenever the card is supersampled 2x or more. It also says a transparent
+    pixel's colour never reaches the result, and that the 8-bit step is kept on purpose
+    (ADR 0073 rule 8). At any changed size this is exactly the operation Pillow runs inside
+    `RGBA.resize`, so the examples' recipe and the parity tests are unaffected.
   - `grown_bilinear(values: np.ndarray, size: tuple[int, int]) -> np.ndarray`: a float
     field brought to `size` (width, height) as `Image.fromarray(values.astype(F32),
     "F").resize(size, BILINEAR)`, as float32; the form `examples/labelled_grid.py` and
@@ -134,10 +169,17 @@ Everything else is serial.
   - `rgba_image` rounds to nearest at pinned literals: 0.0, `0.5 / 255`, `0.499 / 255`,
     1.0 and an out-of-range 1.2 and -0.1 give 0, 1, 0, 255, 255, 0 (parametrized with
     `ids=`), for colour and alpha.
-  - `save_rgba`'s file decodes to `rgba_image`'s alpha everywhere and colour wherever
-    alpha is above 0 (lossless; a small random plate with some zero alpha).
+  - `save_rgba` calls through `rgba_image`: on a small random plate with some zero alpha,
+    the `uint8` array decoded from the lossless file equals `np.asarray(rgba_image(...))`
+    wherever alpha is above 0. This is the only decode test in S1. The libwebp property
+    itself is the spec's criterion, tested once in S3 (review finding 8).
   - `shrunk_rgba` returns `size`, and premultiplies: a 4 by 4 plate whose left half is red
     at alpha 0 and right half blue at alpha 1, shrunk to 2 by 2, has no red in any pixel.
+  - **The same-size pin** (review finding 1): a plate of colour `(200, 100, 50)` at alpha
+    `3 / 255`, shrunk to its own size, reads `(170, 85, 85, 3)`, the lossy RGBa round trip
+    today's attribution relies on. A bare `.resize` would return `(200, 100, 50, 3)`, so
+    this test fails on revision 1's shape. A 2x shrink of the same plate equals
+    `Image.fromarray(<its uint8 RGBA>, "RGBA").resize(size, LANCZOS)`.
   - `grown_bilinear` returns `(h, w)` float32, keeps a constant field constant, and
     zeros stay exactly zero.
 - **Gate:** slice gate.
@@ -166,7 +208,8 @@ Everything else is serial.
 
 - **Owns:** `src/pyntpot/letters/nib.py`, `src/pyntpot/letters/image_lettering.py` (new),
   `src/pyntpot/letters/style.py` (`NibGroups`), `src/pyntpot/letters/__init__.py`,
-  `docs/reference/letters.md`, `tests/unit/test_public_api.py`,
+  `docs/reference/letters.md`, `docs/explanation/references.md` (the `nib` entry),
+  `tests/unit/test_public_api.py`,
   `tests/unit/letters/test_nib_rgba.py` (new), `tests/unit/letters/test_letter_over.py`
   (new), `tests/unit/letters/test_style.py` (51 lines).
 - **`nib_rgba(marks: Sequence[Mark], surface: NibSurface, groups: NibGroups) ->
@@ -174,7 +217,12 @@ Everything else is serial.
   compositing loop, returning `(out_rgb, out_a)` uncast. `nib_plate` becomes: call it;
   return `None` on `None`; `save_rgba(rgb, alpha, path, paper.paper_quality,
   lossless=paper.plate_lossless)`; return `path`. Both docstrings say what the other
-  does. The module docstring's "writes the file" becomes "returns it as arrays
+  does. `nib_rgba`'s docstring says the file `nib_plate` writes holds exactly these arrays
+  with `plate_lossless` on (the default). With it off, the colour is written lossy.
+  `nib_rgba` carries the citation `` Source: `nib` in docs/explanation/references.md ``,
+  and `nib_plate` keeps its own. The `nib` entry's "Implemented in" line in
+  `references.md` (`:155`) adds `` `pyntpot.letters.nib.nib_rgba` ``, so
+  `tests/architecture/test_reference_keys.py` holds. The module docstring's "writes the file" becomes "returns it as arrays
   (`nib_rgba`) or writes it (`nib_plate`)", and its invariant "with nothing to draw no
   file is written" also says `nib_rgba` returns `None`.
 - **`NibGroups`**: each field `= field(default_factory=NibStyle)` and so on, in today's
@@ -191,7 +239,8 @@ Everything else is serial.
      else `grown_bilinear(dark, big)`. (Zeros grown are zeros, so the `None` branch
      equals `labelled_grid.py`'s, which grows a zero array.)
   4. `surface = NibSurface(Canvas.pixels(w=big[0], h=big[1]), float(scale), darkness,
-     gran_px * scale)`; `drawn = nib_rgba(marks, surface, groups or NibGroups())`;
+     gran_px * scale)`; `drawn = nib_rgba(marks, surface, NibGroups() if groups is None
+     else groups)`;
      `None` returns `image.copy()`.
   5. `rgba = np.asarray(shrunk_rgba(*drawn, (w, h)), np.float32) / 255`;
      `alpha = rgba[..., 3:]`; return `image * (1 - alpha) + rgba[..., :3] * alpha`, the
@@ -205,20 +254,37 @@ Everything else is serial.
   page's alphabetical order; `test_public_api.py`'s `LETTERS_PUBLIC` gains both.
 - **Tests first:**
   - `test_nib_rgba.py`: `None` for no marks and for marks all under two points; shapes
-    and range; the same marks give the same arrays; `nib_plate`'s file decodes to
+    and range; the same marks give the same arrays. With the default `PaperStyle()`
+    (`plate_lossless` on, which the test's docstring says), `nib_plate`'s file decodes to
     `rgba_image(*nib_rgba(...))` in alpha everywhere and in colour where alpha is above 0.
+    With `plate_lossless` off the colour is lossy, and the test says it does not claim
+    that case.
   - `test_letter_over.py`, on a 160 by 80 painted image (`paper_plate` on a keyword
-    `Sheet`) and marks a `Hand` writes for "Keswick" at seed 11, `gran_px=5.0`:
-    - **the parity test**, the heart of the PR: `letter_over(image, marks,
-      gran_px=5.0)` equals, bit for bit, the examples' recipe written out in the test
-      (`NibSurface` at twice the size over zeros, `nib_plate` into `tmp_path`,
-      `Image.open(...).convert("RGBA").resize((w, h), LANCZOS)`, `/ 255`, the blend);
-      and again with a darkness ramp, the recipe growing it as `labelled_grid.py` does.
-      This pins that 010b's sweep moves no pixel;
+    `Sheet`), with marks a `Hand` writes for `Setting("Keswick", 22.0, anchor=(8.0,
+    52.0))` at seed 11, and `gran_px=5.0`:
+    - **the parity tests**, the heart of the PR. `letter_over(image, marks, gran_px=5.0)`
+      equals, bit for bit, the examples' recipe written out in the test:
+      - `NibSurface(Canvas.pixels(w=320, h=160), 2, dark2, 5.0 * 2)`, with the plate's
+        grain at `5.0 * 2`, because the examples pass the plate's grain
+        (`GRAN_PX * NIB_SCALE`, `examples/word.py:121`) and `letter_over` takes the
+        image's (D8). Never "fix" a failing parity test by dropping `letter_over`'s
+        multiply;
+      - `nib_plate` into `tmp_path`;
+      - `Image.open(p).convert("RGBA").resize((160, 80), LANCZOS)`;
+      - `np.asarray(..., np.float32) / 255`, then the blend.
+      There are two cases:
+      - `dark2` is `np.zeros((160, 320), np.float32)` and `dark=None`;
+      - the ramp `np.tile(np.linspace(0, 1, 160, dtype=np.float32), (80, 1))`, passed as
+        `dark`, with the recipe growing it as `labelled_grid.py:176-177` does:
+        `np.asarray(Image.fromarray(ramp).resize((320, 160), BILINEAR))`.
+      The review ran exactly these through the file and the in-memory path: bit-identical,
+      zero and ramp. They pin that 010b's sweep moves no pixel;
     - `groups=None` equals `groups=NibGroups()`;
     - no marks: the result equals `image` and `result is not image`;
     - the input array is unchanged after the call;
-    - a corner pixel far from the name equals the image's exactly;
+    - the corner pixel `[0, 159]`, far from the name, equals the image's exactly;
+    - `scale=1` runs without error, and the same corner pixel is exactly the image's
+      (the same-size shrink, review finding 1);
     - `ValueError` for a 2-D image, a 4-channel image, a `dark` of the wrong shape, and
       `scale=0` (parametrized, `ids=`).
   - `test_style.py`: `NibGroups()` equals the five explicit defaults; `NibGroups(nib=n)`
@@ -227,7 +293,7 @@ Everything else is serial.
 
 ### S4a: The attribution in memory (serial, after S3)
 
-- **Owns:** `src/pyntpot/maps/attribution.py`,
+- **Owns:** `src/pyntpot/maps/attribution.py`, `tests/unit/maps/test_attribution.py`,
   `tests/architecture/test_no_plate_round_trip.py` (new).
 - **Change:** the `tempfile.TemporaryDirectory` block becomes `nib.nib_rgba` on the same
   surface (its canvas `Canvas.pixels(w=big[0], h=big[1])`, the same `float(factor)`, the
@@ -235,12 +301,21 @@ Everything else is serial.
   attribution drew nothing" as today, then `plate = shrunk_rgba(rgb, alpha, block)` and
   today's paste. The imports of `tempfile`, `Path` (if now unused) and `Image.open` go.
   The module docstring's "shrunk with Lanczos" sentence says it is done in memory.
-- **Test first:** `test_no_plate_round_trip.py`: no module under `src/pyntpot/letters/`,
-  and not `src/pyntpot/maps/attribution.py`, imports `tempfile` (an AST walk, in the style
-  of `test_one_hex_parser.py`). It fails on the base for `attribution.py`.
+- **Tests first:**
+  - `test_no_plate_round_trip.py`, an AST walk in the style of `test_one_hex_parser.py`,
+    with two checks. `src/pyntpot/maps/attribution.py` calls neither `nib_plate` nor
+    `Image.open` and imports no `tempfile`. No module under `src/pyntpot/letters/`
+    imports `tempfile`. This checks what the spec cares about, that the attribution
+    writes no file, rather than one proxy for it. It fails on the base for
+    `attribution.py`.
+  - `tests/unit/maps/test_attribution.py`, a new case backing the Changelog's `fix` line.
+    A style whose `paper` is `replace(style.paper, plate_lossless=False)` draws the same
+    bytes as `Style.default()`, on a 1440 by 600 card at scale 2.0. It fails on the base,
+    where the plate goes through a lossy file, and passes after. The existing cases stay
+    unchanged.
 - **Gate:** slice gate; the golden subset with the attribution; `output_hashes.py check
   --stem route_map --stem place_card --stem map_styles` (the cards with the attribution)
-  unchanged. `tests/unit/maps/test_attribution.py` stays green unchanged.
+  unchanged. This gate is what caught revision 1's same-size defect, and it stays.
 
 ### S4b: The basemap's key (parallel-capable; worktree cut after S0)
 
@@ -260,14 +335,16 @@ Everything else is serial.
     carries its key.
   - `cli.py`: `plates = pipeline.paint(basemap, style, cache.plates_dir(basemap.key))`;
     the `key = cache.key(...)` line goes. `tests/support/golden.py` the same.
-  - The three test builders pass `key=KEY` (`support.paths.KEY`, the Lynmouth key) or the
-    key their fixture already names.
+  - All three test builders pass `key=KEY` from `support.paths`: `tests/support/basemaps.py:92`,
+    `tests/unit/maps/painter/jobs.py:59` and `tests/unit/maps/test_basemap.py:115`. No test
+    paints a synthetic basemap into `plates_dir(basemap.key)`.
 - **Tests first:**
   - `test_pipeline_fetch_paint.py`: the fetched basemap's `key` equals `KEY` and equals
     `cache.key(track, features, elevation)` for the fixture providers.
-  - `test_basemap.py`: `dataclasses.replace(basemap, key="0" * 16).canonical() ==
-    basemap.canonical()`; building one without `key` raises `TypeError` (with
-    `# ty: ignore[missing-argument]`).
+  - `test_basemap.py`: add `("key", "0" * 16)` to the existing `OUTSIDE_THE_HASH` table
+    (`:147-156`), whose parametrized test already says a field outside the hash leaves
+    it. Building one without `key` raises `TypeError`, with
+    `# ty: ignore[missing-argument]` (the code ty 0.0.100 reports, measured).
   - `tests/unit/maps/test_cli.py` and `tests/golden/test_places.py` stay green unchanged.
 - **Gate:** slice gate, coverage gate. **Merge gate (before S5):** merge S4b into the
   branch, run the slice gate and the coverage gate on the merged tree, and commit the merge
@@ -278,9 +355,14 @@ Everything else is serial.
 - **Owns:** `GLOSSARY.md` and the regenerated glossary files,
   `docs/features/letters-lettering-over-an-image.md` and
   `docs/features/maps-fetch-hands-back-the-plates-dir.md` (both deleted),
-  `docs/features/docs-examples-review.md`, every file that links the two deleted notes
-  (`git grep -l` outside `specs/` and `docs/decisions/`; `docs/features/cli-wider-commands.md`
-  and `docs/features/letters-nib-follows-writing-line.md` are among the candidates).
+  `docs/features/docs-examples-review.md`, and every file that names the two deleted
+  notes. Measured, `git grep -l` outside `specs/` and `docs/decisions/` finds two, both
+  plain-text mentions, not links:
+  - `docs/features/docs-how-to-write-a-provider.md`;
+  - `docs/features/docs-tutorial-opening-programs.md`.
+  Each mention becomes the issue number and ADR 0073. The gate is
+  `git grep 'letters-lettering-over-an-image\|maps-fetch-hands-back-the-plates-dir' --
+  ':!specs' ':!docs/decisions'`, which must be empty.
 - **Glossary:** "nib plate" adds `pyntpot.letters.nib_rgba`, `pyntpot.letters.letter_over`
   to its code column and one clause: `nib_rgba` hands it back as arrays without writing
   it. "basemap" adds: it carries the cache key it was built under. Regenerate.
@@ -289,7 +371,10 @@ Everything else is serial.
   trips and `labelled_grid.letter_over` onto `letter_over`, with `NIB_SCALE` gone from
   the 12 scripts; the 8 key lines in 6 scripts and the four docs pages onto
   `basemap.key`; the tutorial and `paint-your-own-shapes.md` teaching `letter_over`;
-  `test_letters_examples.py`'s plate-file pin retired with the plate files.
+  `test_letters_examples.py`'s plate-file pin retired with the plate files. Add one
+  sentence: the grid scripts' `gran_px` (`labelled_grid.LABELS.gran_px`, 12.0) is in
+  plate pixels and halves on the sweep, because `letter_over` takes the image's grain.
+  `(g / 2) * 2 == g` exactly, so no pixel moves.
 - **Gate:** slice gate, strict docs build, no em or en dash in the changed prose.
 
 ### S6: The pixel proof (serial)
@@ -304,7 +389,7 @@ Everything else is serial.
 
 ```bash
 patterns=$(mktemp)
-uv run python tests/mutation/scope.py --base origin/main --out "$patterns"
+uv run python tests/mutation/scope.py --base "$BASE" --out "$patterns"   # BASE: the commit S0's message names
 xargs -r -a "$patterns" prlimit --as=3500000000 -- uv run mutmut run
 uv run mutmut results | grep -v 'not checked'
 ```
@@ -320,7 +405,7 @@ uv run mutmut results | grep -v 'not checked'
   `tests/property`, or record it as equivalent, with the reason, in
   `specs/010a-lettering-over-an-image-and-the-basemap-key/mutation.md` and the PR
   description. Expect `+ 0.5` to `+ 0.49` style mutants of the rounding to die on S1's
-  pinned literals; `scale < 1` to `scale <= 1` dies on `scale=1` being accepted (add that
+  pinned literals; `scale < 1` to `scale <= 1` dies on S3's `scale=1` case (add that
   case if it survives).
 
 ### S8: Final review and PR (serial, fresh context)
@@ -343,10 +428,12 @@ uv run mutmut results | grep -v 'not checked'
   `src/pyntpot/maps/{attribution,basemap,layers,pipeline,cli}.py`,
   `tests/support/{golden,basemaps}.py`, `tests/unit/maps/painter/jobs.py`,
   `tests/unit/letters/{test_nib,test_style}.py`,
-  `tests/unit/maps/{test_basemap,test_pipeline_fetch_paint}.py`,
-  `tests/unit/test_public_api.py`, `docs/reference/letters.md`, `GLOSSARY.md` and its
-  generated files, `docs/features/docs-examples-review.md`, the files linking the two
-  deleted notes.
+  `tests/unit/maps/{test_basemap,test_pipeline_fetch_paint,test_attribution}.py`,
+  `tests/unit/test_public_api.py`, `docs/reference/letters.md`,
+  `docs/explanation/references.md` (the `nib` entry), `GLOSSARY.md` and its generated
+  files, `docs/features/docs-examples-review.md`,
+  `docs/features/{docs-how-to-write-a-provider,docs-tutorial-opening-programs}.md` (the
+  mentions of the two deleted notes only).
 - Deleted: `docs/features/letters-lettering-over-an-image.md`,
   `docs/features/maps-fetch-hands-back-the-plates-dir.md`.
 - `specs/010a-lettering-over-an-image-and-the-basemap-key/{output-hashes.json,mutation.md,tasks.md}`.
@@ -382,12 +469,14 @@ uv run mutmut results | grep -v 'not checked'
 | `letter_over` equals the examples' recipe (zero and ramp darkness) | `test_letter_over.py`, the parity tests (S3) |
 | `letter_over` defaults, copy, unchanged input, far pixel, errors | `test_letter_over.py` (S3) |
 | `NibGroups` defaults and positional construction | `tests/unit/letters/test_style.py` (S3) |
-| The 8-bit conversion and premultiplied shrink, once in `ink` | `tests/unit/ink/test_plate_resize.py` (S1) |
-| The attribution writes no file | `tests/architecture/test_no_plate_round_trip.py` (S4a); its pixels by S6 |
+| The 8-bit conversion and premultiplied shrink, once in `ink` | `tests/unit/ink/test_plate_resize.py` (S1): rounding pins, calls-through, no red bleed, the same-size `(170, 85, 85, 3)` pin; `test_letter_over.py`'s `scale=1` case (S3) |
+| The attribution writes no file | `tests/architecture/test_no_plate_round_trip.py` (S4a: no `nib_plate`, `Image.open` or `tempfile`); its pixels by the S4a hash gate and S6 |
+| The attribution `fix` line (lossy styles letter it losslessly) | `tests/unit/maps/test_attribution.py`'s new case (S4a) |
+| `nib_rgba` cites `nib` and is listed | `tests/architecture/test_reference_keys.py` (S3) |
 | `Basemap.key` set by `fetch`, required, outside `canonical` | `tests/unit/maps/test_pipeline_fetch_paint.py`, `test_basemap.py` (S4b); `test_field_docs.py` for its entry |
 | CLI and golden support read `basemap.key` | `tests/unit/maps/test_cli.py`, the golden suite (S6) |
 | Exports and reference | `tests/unit/test_public_api.py`, `test_public_signatures.py`, `tests/docs/test_reference_pages.py`, the strict docs build |
-| Glossary and notes | `tests/docs/test_glossary.py`, `test_docs_links.py` |
+| Glossary and notes | `tests/docs/test_glossary.py`, `test_docs_links.py`, the S5 `git grep` gate |
 | Pixels do not move | `output_hashes.py check` (S6), the golden suite |
 | Mutation | S7, `mutation.md` |
 
@@ -415,8 +504,8 @@ marks, which a property over random marks would only make slower.
 | S0 | `output-hashes.json` | base (010 merged) | no |
 | S1 | `ink/{plate_resize,io}.py`, `tests/unit/ink/{test_plate_resize,test_io}.py` | S0 | no |
 | S2 | `letters/{nib,backing_wash}.py`, `tests/unit/letters/{test_nib,test_backing_wash}.py` | S1 | no |
-| S3 | `letters/{nib,image_lettering,style,__init__}.py`, `docs/reference/letters.md`, `test_public_api.py`, `tests/unit/letters/{test_nib_rgba,test_letter_over,test_style}.py` | S2 | no |
-| S4a | `maps/attribution.py`, `tests/architecture/test_no_plate_round_trip.py` | S3 | no |
+| S3 | `letters/{nib,image_lettering,style,__init__}.py`, `docs/reference/letters.md`, `docs/explanation/references.md`, `test_public_api.py`, `tests/unit/letters/{test_nib_rgba,test_letter_over,test_style}.py` | S2 | no |
+| S4a | `maps/attribution.py`, `tests/unit/maps/test_attribution.py`, `tests/architecture/test_no_plate_round_trip.py` | S3 | no |
 | S4b | `maps/{basemap,layers,pipeline,cli}.py`, `tests/support/{golden,basemaps}.py`, `tests/unit/maps/painter/jobs.py`, `tests/unit/maps/{test_basemap,test_pipeline_fetch_paint}.py` | S0 | yes, worktree; merged before S5 |
 | S5 | `GLOSSARY.md` and generated files, the notes and their links | S4a, merge gate | no |
 | S6 | none (checks) | S5 | no |
@@ -469,7 +558,8 @@ Forks picked with no human in the loop, each with its reason:
   PIL card, on a block-sized plate over a 0.35 darkness, and pastes the block; `letter_over`
   works on a float array the size of the plate. Sharing `shrunk_rgba` is the right seam;
   bending `letter_over` to fit would add parameters only the attribution uses.
-- **D10. A style with `plate_lossless` off now letters its attribution losslessly.** The
+- **D10. A style with `plate_lossless` off now letters its attribution losslessly**
+  (tested in S4a, review finding 5). The
   attribution was never a plate kept on disk; the lossy file was an artefact of the round
   trip. No shipped or example style turns the flag off, so no image moves; the Changelog
   says so as a `fix`.
@@ -487,3 +577,20 @@ Forks picked with no human in the loop, each with its reason:
   pages are the sweep (010b).
 - **D13. #165 and #167 close here.** Their APIs exist and the reference documents them;
   the remaining work is the sweep, recorded under #63 as 010b.
+- **D14. `shrunk_rgba` converts to `RGBa` explicitly** (review finding 1). This is the
+  attribution's own form today. At a changed size it is the same operation Pillow runs
+  inside `RGBA.resize`, so the examples are unaffected. It is the one form that is
+  bit-identical at the card's own size too. Relying on Pillow's implicit premultiply would
+  move every map card's attribution at the default supersample.
+- **D15. The parity recipe passes the plate's grain, `5.0 * 2`** (finding 2). The
+  examples pass the plate's grain and `letter_over` takes the image's, so the recipe
+  multiplies and `letter_over` multiplies. A failing parity test is never fixed by
+  dropping `letter_over`'s multiply.
+- **D16. The mutation base is the commit S0 records** (finding 6), so a branch cut from
+  010's tip never mutates 010's `ink` functions under 010a.
+
+### Review findings, accepted and rejected
+
+Every finding of `review-plan.md` is applied as the review prescribes. That includes the
+three "consider" findings, which cost a line each. None is rejected.
+
